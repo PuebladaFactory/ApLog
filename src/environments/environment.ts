@@ -6,12 +6,12 @@
 export const environment = {
   production: false,
   firebase: {
-    apiKey: '<your-key>',
-    authDomain: '<your-project-authdomain>',
-    databaseURL: '<your-database-URL>',
-    projectId: '<your-project-id>',
-    storageBucket: '<your-storage-bucket>',
-    messagingSenderId: '<your-messaging-sender-id>'
+    projectId: 'lplog-31164',
+    appId: '1:665246214539:web:230a8899ff2995db53e78e',
+    storageBucket: 'lplog-31164.appspot.com',
+    apiKey: 'AIzaSyC_8_UyQNPIX6-nm02Al1hFuuz3O-OSDMo',
+    authDomain: 'lplog-31164.firebaseapp.com',
+    messagingSenderId: '665246214539',
   }
 };
 /*

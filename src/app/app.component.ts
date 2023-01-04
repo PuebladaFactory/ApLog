@@ -11,12 +11,10 @@ import { AuthService } from './servicios/autentificacion/auth.service';
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit {
-  title = 'LinkinPark';
+  title = 'ApLog';
   // $estado;
 
-  clientes!: any;
-  vehiculos!: any;
-  tarifas!: any;
+
 
   constructor(
 
