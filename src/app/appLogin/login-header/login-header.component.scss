@@ -1,0 +1,31 @@
+
+.wrapper{
+    position: absolute;
+    top: 0;
+    left:0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    text-align: center;
+    width: 200px;
+    height: 200px;
+}
+.circle{
+    border-radius: 100%;
+    width: 200px;
+    height: 200px;
+    border: 1px solid #32AAEE;
+    display: block;
+    box-shadow: 0px 10px 5px #32AAEE;
+    cursor: pointer;
+}
+#text{
+    font: Arial;
+    font-size: 170px;
+    font-weight: solid;
+    color: #32AAEE;   
+    text-align: right;
+vertical-align: middle;
+    
+    
+}
