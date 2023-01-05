@@ -63,6 +63,9 @@ import { BtnEditarComponent } from './shared/btn-editar/btn-editar.component';
 import { BtnEliminarComponent } from './shared/btn-eliminar/btn-eliminar.component';
 import { BtnReimpresionComponent } from './shared/btn-reimpresion/btn-reimpresion.component';
 
+import { ChoferModule } from './chofer/chofer.module';
+import { AdminModule } from './admin/admin.module';
+
 
 
 
@@ -107,6 +110,8 @@ import { BtnReimpresionComponent } from './shared/btn-reimpresion/btn-reimpresio
     NgbModule, //se importa la clase RouterModule y se le indica la const donde estan las rutas
     ReactiveFormsModule,
     HttpClientModule,
+    ChoferModule,
+    AdminModule,
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),

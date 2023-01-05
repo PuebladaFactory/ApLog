@@ -43,7 +43,7 @@ export class AuthService {
         this.SetUserData(result.user);
         this.afAuth.authState.subscribe((user) => {
           if (user) {
-            this.router.navigate(['/home']);
+            this.router.navigate(['/chofer']);
           }
         });
       })
@@ -93,7 +93,7 @@ export class AuthService {
   // Sign in with Google
   GoogleAuth() {
     return this.AuthLogin(new auth.GoogleAuthProvider()).then((res: any) => {
-
+      
     });
   }
 
@@ -154,8 +154,10 @@ export class AuthService {
   getUsuario(id: string) {
     this.dbFirebase.getUsuarioUid(id).subscribe((data) => {
       this.usuario = data;
+      console.log("auth.service. el usuario logueado: ", data);      
       this.storage.setInfo(`usuario`, data);
-      this.setearColeccion();
+      //this.setearColeccion();
+      this.filtrarRoles()
     });
   }
 
@@ -163,9 +165,23 @@ export class AuthService {
     this.dbFirebase.setearColeccion(this.usuario.coleccion);
     this.storage.initializer()
     this.router.navigate(['/home']);
+    /* if(this.usuario.roles.user){
+      this.router.navigate(['/chofer']);
+    } else {
+      this.router.navigate(['/home']);
+    } */
+    
   }
 
-
+  filtrarRoles(){
+     if(this.usuario.roles.user){
+      this.router.navigate(['/chofer']);
+    } else if(this.usuario.roles.admin){
+      this.router.navigate(['/admin']);
+    } else{
+      this.router.navigate(['/home']);
+    }
+  }
 
 
 }
