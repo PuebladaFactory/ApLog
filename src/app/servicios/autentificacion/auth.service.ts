@@ -156,15 +156,15 @@ export class AuthService {
       this.usuario = data;
       console.log("auth.service. el usuario logueado: ", data);      
       this.storage.setInfo(`usuario`, data);
-      //this.setearColeccion();
+      this.setearColeccion();
       this.filtrarRoles()
     });
   }
 
   setearColeccion() {
     this.dbFirebase.setearColeccion(this.usuario.coleccion);
-    this.storage.initializer()
-    this.router.navigate(['/home']);
+    //this.storage.initializer()
+    //this.router.navigate(['/home']);
     /* if(this.usuario.roles.user){
       this.router.navigate(['/chofer']);
     } else {

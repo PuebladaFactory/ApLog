@@ -1,0 +1,98 @@
+<h1>Choferes</h1>
+
+<table class="table table-dark table-striped">
+    <thead>
+        <tr>
+          <th scope="col">Id Chofer</th>
+          <th scope="col">Apellido</th>
+          <th scope="col">Nombre</th>
+          <th scope="col">Correo</th>
+          <th scope="col">Celular</th>
+          <th scope="col">Fecha Nacimiento</th>
+          <th scope="col">Patente</th>
+          <th scope="col">Categoria</th>
+          <th scope="col"></th>          
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor=" let chofer of choferes">
+          <th scope="row">{{chofer.idChofer}} </th>
+          <td>{{chofer.apellido}}</td>
+          <td>{{chofer.nombre}}</td>         
+          <td>{{chofer.email}}</td>
+          <td>{{chofer.celular}}</td>
+          <td>{{chofer.fechaNac}}</td>
+          <td>{{chofer.dominio}}</td>
+          <td>{{chofer.categoria}}</td>
+          <td><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(chofer)"></app-btn-editar> </td>
+        </tr>        
+      </tbody>
+    
+    
+</table>
+
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Editar Cliente</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label for="Nombre">Nombre</label>
+            <div class="input-group">
+              <input formControlName="nombre" class="form-control edicion" required type="text">            
+            </div>
+          </div>    
+          <div class="form-group">
+            <label for="Apellido">Apellido</label>
+            <div class="input-group">
+              <input formControlName="apellido" class="form-control" required type="text">
+            </div>
+          </div>    
+          <div class="form-group">
+              <label for="Email">Email</label>
+              <div class="input-group">
+                <input formControlName="email" class="form-control" required type="email">
+              </div>
+          </div>       
+          <div class="form-group">
+              <label for="Celular">Celular</label>
+              <div class="input-group">
+                <input formControlName="celular" class="form-control" required type="text">
+              </div>
+          </div>   
+          <div class="form-group">
+            <label for="FechaNac">Fecha Nacimiento</label>
+            <div class="input-group">
+              <input formControlName="fechaNac" class="form-control" required type="date">
+            </div>
+          </div>        
+          <div class="form-group">
+            <label for="Dominio">dominio</label>
+            <div class="input-group">
+              <input formControlName="dominio" class="form-control" required type="text">
+            </div>
+          </div>      
+          <div class="form-group">
+            <label for="Categoria">Categoria Vehiculo</label>
+            <select class="form-select form-select-md mb-3" (change)="changeCategoria($event)">
+              <option value={{categoriaSeleccionada}}>Elegir Categoria</option>
+              <option *ngFor="let categoria of categorias">
+                {{categoria.categoria}}
+              </option>
+            </select>
+          </div>   
+      
+          <div >        
+            <button  type="submit" class="btn btn-secondary" data-bs-dismiss="modal">Guardar</button>
+          </div>  
+      
+        </form>
+      </div>      
+    </div>
+  </div>
+</div>

@@ -18,7 +18,7 @@ export class DbFirestoreService {
   }
 
   getAll(componente:string) {
-    let dataCollection = collection(this.firestore, `/${this.coleccion}/datos/${componente}`);
+    let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
         
     return collectionData(dataCollection, {
       idField: 'id',
@@ -54,12 +54,14 @@ getByFieldValue(componente:string, campo:string, value:string){
 
 
   get(id: string) {
-    const estacionamiento1DocumentReference = doc(this.firestore, `/${this.coleccion}/datos/${id}`);
+    const estacionamiento1DocumentReference = doc(this.firestore, `/Vantruck/datos/${id}`);
     return docData(estacionamiento1DocumentReference, { idField: 'id' });
   }
 
   create(componente:string, item: any) {
-    let dataCollection = collection(this.firestore, `/${this.coleccion}/datos/${componente}`);
+    console.log("db.service, metodo create: ",this.coleccion);
+    
+    let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
     return addDoc(dataCollection, item);
   }
 
@@ -67,14 +69,14 @@ getByFieldValue(componente:string, campo:string, value:string){
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
     const estacionamiento1DocumentReference = doc(
       this.firestore,
-      `/${this.coleccion}/datos/${componente}/${item.id}`
+      `/Vantruck/datos/${componente}/${item.id}`
     );
     return updateDoc(estacionamiento1DocumentReference, { ...item });
   }
 
   delete(componente:string, id: string) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
-    const estacionamiento1DocumentReference = doc(this.firestore, `/${this.coleccion}/datos/${componente}/${id}`);
+    const estacionamiento1DocumentReference = doc(this.firestore, `/Vantruck/datos/${componente}/${id}`);
     return deleteDoc(estacionamiento1DocumentReference);
   }
 

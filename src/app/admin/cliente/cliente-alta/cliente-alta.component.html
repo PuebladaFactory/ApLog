@@ -1,0 +1,38 @@
+<h1 class="mt-5">Alta Cliente</h1>
+
+<div class="container d-flex justify-content-center align-self-center">
+
+
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label for="RazonSocial">Razon Social</label>
+      <div class="input-group">
+        <input formControlName="razonSocial" class="form-control edicion" required type="text">            
+      </div>
+    </div>    
+    <div class="form-group">
+      <label for="Direccion">Direccion</label>
+      <div class="input-group">
+        <input formControlName="direccion" class="form-control" required type="text">
+      </div>
+    </div>    
+    <div class="form-group">
+        <label for="Email">Email</label>
+        <div class="input-group">
+          <input formControlName="email" class="form-control" required type="email">
+        </div>
+    </div>       
+    <div class="form-group">
+        <label for="Telefono">Telefono</label>
+        <div class="input-group">
+          <input formControlName="telefono" class="form-control" required type="text">
+        </div>
+    </div>         
+    <button class="btn btn-secondary mt-2" type="submit">
+      Guardar 
+    </button>
+
+  </form>
+
+</div>

@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { AdminRoutingModule } from './admin-routing.module';
 import { AdminHomeComponent } from './admin-home/admin-home.component';
 import { AdminSidebarComponent } from './admin-sidebar/admin-sidebar.component';
-
+import { ClienteModule } from './cliente/cliente.module';
+import { ChoferesModule } from './choferes/choferes.module';
 
 @NgModule({
   declarations: [
@@ -13,7 +14,9 @@ import { AdminSidebarComponent } from './admin-sidebar/admin-sidebar.component';
   ],
   imports: [
     CommonModule,
-    AdminRoutingModule
+    AdminRoutingModule,
+    ClienteModule,
+    ChoferesModule
   ]
 })
 export class AdminModule { }

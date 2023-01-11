@@ -58,13 +58,11 @@ import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
 import { EmpresaFormComponent } from './perfil-empresa/empresa-form/empresa-form.component';
 import { PerfilEmpresaComponent } from './perfil-empresa/perfil-empresa.component';
 import { PerfilUsuarioComponent } from './perfil-usuario/perfil-usuario.component';
-import { BtnAgregarComponent } from './shared/btn-agregar/btn-agregar.component';
-import { BtnEditarComponent } from './shared/btn-editar/btn-editar.component';
-import { BtnEliminarComponent } from './shared/btn-eliminar/btn-eliminar.component';
-import { BtnReimpresionComponent } from './shared/btn-reimpresion/btn-reimpresion.component';
 
 import { ChoferModule } from './chofer/chofer.module';
 import { AdminModule } from './admin/admin.module';
+import { SharedModule } from './shared/shared.module';
+import { ChoferesModule } from './admin/choferes/choferes.module';
 
 
 
@@ -76,14 +74,12 @@ import { AdminModule } from './admin/admin.module';
     HeaderComponent,
     LoginComponent,
     HomeComponent,
-    BtnAgregarComponent,
-    BtnEditarComponent,
-    BtnEliminarComponent,
+   
 
 
     PagenotfoundComponent,
 
-    BtnReimpresionComponent,
+   
 
 
 
@@ -111,12 +107,15 @@ import { AdminModule } from './admin/admin.module';
     ReactiveFormsModule,
     HttpClientModule,
     ChoferModule,
+    ChoferesModule,
     AdminModule,
+    SharedModule,
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),
 
   ],
+
   providers: [
 
     AuthService,

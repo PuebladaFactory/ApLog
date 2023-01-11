@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { BtnEliminarComponent } from './btn-eliminar.component';
+import { ClienteAltaComponent } from './cliente-alta.component';
 
-describe('BtnEliminarComponent', () => {
-  let component: BtnEliminarComponent;
-  let fixture: ComponentFixture<BtnEliminarComponent>;
+describe('ClienteAltaComponent', () => {
+  let component: ClienteAltaComponent;
+  let fixture: ComponentFixture<ClienteAltaComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ BtnEliminarComponent ]
+      declarations: [ ClienteAltaComponent ]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(BtnEliminarComponent);
+    fixture = TestBed.createComponent(ClienteAltaComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
