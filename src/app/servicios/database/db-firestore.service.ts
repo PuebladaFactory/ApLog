@@ -46,7 +46,7 @@ getByFieldValue(componente:string, campo:string, value:string){
   // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
   // orden solo asc o desc
 
-  let dataCollection = `/${this.coleccion}/datos/${componente}`;
+  let dataCollection = `/Vantruck/datos/${componente}`;
   return this.firestore2.collection(dataCollection, ref => ref
     .where(campo, '==', value))
     .valueChanges(({  idField: 'id' })); }

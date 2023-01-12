@@ -63,6 +63,7 @@ import { ChoferModule } from './chofer/chofer.module';
 import { AdminModule } from './admin/admin.module';
 import { SharedModule } from './shared/shared.module';
 import { ChoferesModule } from './admin/choferes/choferes.module';
+import { OperacionesModule } from './admin/operaciones/operaciones.module';
 
 
 
@@ -109,6 +110,7 @@ import { ChoferesModule } from './admin/choferes/choferes.module';
     ChoferModule,
     ChoferesModule,
     AdminModule,
+    OperacionesModule,
     SharedModule,
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => getFirestore()),

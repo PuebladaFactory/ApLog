@@ -1,0 +1,68 @@
+<h1>Operaciones del día</h1>
+
+<table class="table table-dark table-striped">
+    <thead>
+        <tr>
+          <th scope="col">Fecha</th>
+          <th scope="col">N° Operación</th>
+          <th scope="col">Cliente</th>
+          <th scope="col">Chofer</th>          
+          <th scope="col"></th>          
+          <th scope="col"></th>          
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor=" let op of operaciones">
+          <th scope="row">{{op.fecha}} </th>
+          <td>{{op.idOperacion}}</td>
+          <td>{{op.cliente.razonSocial}}</td>
+          <td>{{op.chofer.apellido}}</td>          
+          <td><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(op)" ></app-btn-editar> </td>          
+          <td><app-btn-eliminar [name]="'Anular'" (click)="eliminarOperacion(op.id)"></app-btn-eliminar></td>
+        </tr>    
+      </tbody>
+</table>
+
+ 
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Editar Cliente</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+              <label for="Fecha">Fecha</label>
+              <div class="input-group">
+                <input formControlName="fecha" class="form-control edicion" required type="date">            
+              </div>
+            </div>    
+            <div class="form-group">
+              <label for="Cliente">Cliente</label>
+              <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
+                  <option value={{clienteSeleccionado}}>Elegir Cliente</option>
+                  <option *ngFor="let cliente of clientes">
+                    {{cliente.razonSocial}}
+                  </option>
+              </select>
+            </div>    
+            <div class="form-group">
+                <label for="Chofer">Chofer</label>
+                <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
+                  <option value={{choferSeleccionado}}>Elegir Chofer</option>
+                  <option *ngFor="let chofer of choferes">
+                    {{chofer.apellido}}
+                  </option>
+              </select>
+            </div>           
+            <button class="btn btn-secondary mt-2" type="submit" data-bs-dismiss="modal">
+              Guardar 
+            </button>
+        
+          </form>
+      </div>      
+    </div>
+  </div>
+</div> 

@@ -16,7 +16,7 @@ export class ClienteControlComponent implements OnInit {
   constructor(private dbFirebase: DbFirestoreService,) {}
 
   ngOnInit(): void {
-    this.getAll();  
+    //this.getAll();  
    
   }
 

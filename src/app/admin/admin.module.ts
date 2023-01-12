@@ -6,6 +6,7 @@ import { AdminHomeComponent } from './admin-home/admin-home.component';
 import { AdminSidebarComponent } from './admin-sidebar/admin-sidebar.component';
 import { ClienteModule } from './cliente/cliente.module';
 import { ChoferesModule } from './choferes/choferes.module';
+import { OperacionesModule } from './operaciones/operaciones.module';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import { ChoferesModule } from './choferes/choferes.module';
     CommonModule,
     AdminRoutingModule,
     ClienteModule,
-    ChoferesModule
+    ChoferesModule, 
+    OperacionesModule
   ]
 })
 export class AdminModule { }

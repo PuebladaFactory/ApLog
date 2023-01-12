@@ -5,7 +5,8 @@ import { ClienteAltaComponent } from './cliente/cliente-alta/cliente-alta.compon
 
 const routes: Routes = [
   {path: '', component: AdminHomeComponent,
-   children: [    
+   children: [
+    { path: '', redirectTo: '/op/op-diarias', pathMatch: 'full' },    
     {
       path: 'clientes',
       loadChildren: () => import('./cliente/cliente.module').then(m => m.ClienteModule)
@@ -13,6 +14,10 @@ const routes: Routes = [
     {
       path: 'choferes',
       loadChildren: () => import('./choferes/choferes.module').then(m => m.ChoferesModule)
+    },  
+    {
+      path: 'op',
+      loadChildren: () => import('./operaciones/operaciones.module').then(m => m.OperacionesModule)
     },  
 ]  },  
 /* {
