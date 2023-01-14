@@ -13,20 +13,8 @@ export class ChoferesControlComponent implements OnInit {
   componente:string = 'choferes'
   data:any;  
 
-  constructor(private dbFirebase: DbFirestoreService,) {}
+  constructor() {}
 
-  ngOnInit(): void {
-    //this.getAll();  
-   
+  ngOnInit(): void {   
   }
-
-  getAll(){
-    this.dbFirebase.getAll(this.componente).subscribe(data => {
-      this.data = data;
-      localStorage.setItem(`${this.componente}`, JSON.stringify(data))
-      console.log(this.data);
-    })
-  }
-  
-
 }

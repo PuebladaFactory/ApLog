@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
   selector: 'app-op-diarias',
@@ -15,22 +15,26 @@ export class OpDiariasComponent implements OnInit {
 
   componente:string = "operaciones"
   form:any;
-  operaciones!: Operacion[];
+  //operaciones$: any;
   opEditar!: Operacion;
-  clientes!: Cliente[];
-  choferes!: Chofer[];
+  clientes$: any;
+  choferes$: any;
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
+  opActivas$!: any;
 
-  constructor(private fb: FormBuilder, private dbFirebase: DbFirestoreService, private router: Router) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
     this.form = this.fb.group({      
       fecha: [""],    
     })
    }
   ngOnInit(): void {
-    this.getChoferes();
-    this.getClientes();
-    this.getOperaciones();
+    this.choferes$ = this.storageService.choferes$; 
+    this.clientes$ = this.storageService.clientes$; 
+    //this.operaciones$ = this.storageService.operaciones$;   
+    //console.log("estas son las operaciones: ", this.operaciones$);
+    this.opActivas$ = this.storageService.opActivas$
+    this.getOperacionesActivas(); 
   }
 
   
@@ -60,36 +64,30 @@ export class OpDiariasComponent implements OnInit {
    }
 
    update(): void {
+
+    this.storageService.updateItem(this.componente, this.opEditar)
+    this.ngOnInit()  
+    this.form.reset()     
    
-    this.dbFirebase.update(this.componente, this.opEditar)
-      .then((data) => console.log(data))
-      .then(() => this.ngOnInit())
-      .then(() => this.form.reset())
-      .catch((e) => console.log(e.message));
   }
 
-  eliminarOperacion(id:any){
-    this.dbFirebase.delete(this.componente, id)
-      .then((data) => console.log(data))
-      .then(() => this.ngOnInit())
-      //.then(() => this.router.navigate(['/operaciones/listado']))
-      .catch((e) => console.log(e.message));
+  eliminarOperacion(op: Operacion){
+    this.storageService.deleteItem(this.componente, op);
+    this.ngOnInit();    
   }
-
-  getClientes(){
-    this.clientes = JSON.parse(localStorage.getItem("clientes")||`{}`)
-  }
-
-  getChoferes(){
-    this.choferes = JSON.parse(localStorage.getItem("choferes")||`{}`)
-  }
-
-  getOperaciones(){
-    this.operaciones = JSON.parse(localStorage.getItem("operaciones")||`{}`)
-    this.operaciones = this.operaciones.filter(function(op:Operacion){
+ 
+  getOperacionesActivas(){    
+    this.storageService.getByFieldValue(this.componente, "estado", 1)
+    console.log("estas son las operaciones activas: ", this.opActivas$.source._value);
+    
+    /*  this.opActivas = this.operaciones$.source._value.filter(function(op:Operacion){
       return op.estado === 1
-    })
-    console.log("estas son las operaciones activas: ", this.operaciones);
+    })  */
+   /*  this.opActivas = this.operaciones$.source._value
+    this.opActivas = this.opActivas.filter(function(op:Operacion){
+    return op.estado === 1
+    })  
+    console.log("estas son las operaciones activas: ", this.opActivas); */
     
   }
 
@@ -97,7 +95,7 @@ export class OpDiariasComponent implements OnInit {
     console.log(e.target.value)
     let clienteForm
 
-    clienteForm = this.clientes.filter(function (cliente: any) { 
+    clienteForm = this.clientes$.source._value.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     })
 
@@ -110,7 +108,7 @@ export class OpDiariasComponent implements OnInit {
     console.log(e.target.value)
     let choferForm
 
-    choferForm = this.choferes.filter(function (chofer: any) { 
+    choferForm = this.choferes$.source._value.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     })
 

@@ -1,4 +1,4 @@
-<h1>Operaciones del día</h1>
+<h1>Operaciones Programadas</h1>
 
 <table class="table table-dark table-striped">
     <thead>
@@ -12,13 +12,13 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor=" let op of operaciones">
+        <tr *ngFor=" let op of opActivas$.source._value">
           <th scope="row">{{op.fecha}} </th>
           <td>{{op.idOperacion}}</td>
           <td>{{op.cliente.razonSocial}}</td>
           <td>{{op.chofer.apellido}}</td>          
           <td><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(op)" ></app-btn-editar> </td>          
-          <td><app-btn-eliminar [name]="'Anular'" (click)="eliminarOperacion(op.id)"></app-btn-eliminar></td>
+          <td><app-btn-eliminar [name]="'Anular'" (click)="eliminarOperacion(op)"></app-btn-eliminar></td>
         </tr>    
       </tbody>
 </table>
@@ -43,7 +43,7 @@
               <label for="Cliente">Cliente</label>
               <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
                   <option value={{clienteSeleccionado}}>Elegir Cliente</option>
-                  <option *ngFor="let cliente of clientes">
+                  <option *ngFor="let cliente of clientes$.source._value">
                     {{cliente.razonSocial}}
                   </option>
               </select>
@@ -52,7 +52,7 @@
                 <label for="Chofer">Chofer</label>
                 <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
                   <option value={{choferSeleccionado}}>Elegir Chofer</option>
-                  <option *ngFor="let chofer of choferes">
+                  <option *ngFor="let chofer of choferes$.source._value">
                     {{chofer.apellido}}
                   </option>
               </select>

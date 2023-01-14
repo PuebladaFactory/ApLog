@@ -31,7 +31,7 @@ getAllSorted(componente:string, campo:string, orden:any) {
   // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
   // orden solo asc o desc
 
-  let dataCollection = `/${this.coleccion}/datos/${componente}`;
+  let dataCollection = `/Vantruck/datos/${componente}`;
 
   return this.firestore2.collection(dataCollection, ref => ref
     .orderBy(campo, orden))
@@ -41,7 +41,7 @@ getAllSorted(componente:string, campo:string, orden:any) {
 // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
 
 
-getByFieldValue(componente:string, campo:string, value:string){
+getByFieldValue(componente:string, campo:string, value:any){
   // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
   // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
   // orden solo asc o desc

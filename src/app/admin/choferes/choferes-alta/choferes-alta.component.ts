@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Chofer } from 'src/app/interfaces/chofer';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
   selector: 'app-choferes-alta',
@@ -27,7 +27,7 @@ export class ChoferesAltaComponent implements OnInit {
 
   
 
-  constructor(private fb: FormBuilder, private dbFirebase: DbFirestoreService, private router:Router) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
     this.form = this.fb.group({
       
       nombre: [""], 
@@ -60,12 +60,10 @@ export class ChoferesAltaComponent implements OnInit {
 
    addItem(): void {
    
-    this.dbFirebase.create(this.componente, this.chofer)
-      .then((data) => console.log(data))
-      .then(() => this.ngOnInit())
-      .then(() => this.form.reset())
-      .then(() => this.router.navigate(['/choferes/listado']))
-      .catch((e) => console.log(e.message));
+    this.storageService.addItem(this.componente, this.chofer)
+    this.form.reset() 
+    this.ngOnInit()
+    this.router.navigate(['/choferes/listado'])
   }
 
   

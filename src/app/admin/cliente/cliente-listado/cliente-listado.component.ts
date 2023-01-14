@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 
 @Component({
@@ -11,13 +11,13 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 })
 export class ClienteListadoComponent implements OnInit {
   
-  clientes!: Cliente[];
+  clientes$!: any;
   edicion:boolean = false;
   clienteEditar!: Cliente;
   form:any;
   componente:string ="clientes"
 
-  constructor(private fb: FormBuilder, private dbFirebase: DbFirestoreService,){
+  constructor(private fb: FormBuilder, private storageService: StorageService,){
     this.form = this.fb.group({
       
       razonSocial: [""], 
@@ -29,12 +29,9 @@ export class ClienteListadoComponent implements OnInit {
   }
   
   ngOnInit(): void { 
-    this.leerClientes()  
+    this.clientes$ = this.storageService.clientes$; 
   }
-
-  leerClientes(){
-    this.clientes = JSON.parse(localStorage.getItem("clientes")||`{}`)
-  }
+  
 
   abrirEdicion(cliente:Cliente):void {
     this.clienteEditar = cliente;    
@@ -63,12 +60,11 @@ export class ClienteListadoComponent implements OnInit {
    }
 
    update(): void {
+
+    this.storageService.updateItem(this.componente, this.clienteEditar)
+    this.form.reset()
+    this.ngOnInit()
    
-    this.dbFirebase.update(this.componente, this.clienteEditar)
-      .then((data) => console.log(data))
-      .then(() => this.ngOnInit())
-      .then(() => this.form.reset())
-      .catch((e) => console.log(e.message));
   }
 
 }

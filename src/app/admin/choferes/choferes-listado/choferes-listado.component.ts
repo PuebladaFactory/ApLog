@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Chofer } from 'src/app/interfaces/chofer';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 
 @Component({
@@ -13,6 +12,7 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 export class ChoferesListadoComponent implements OnInit {
   
   choferes!: Chofer[];
+  choferes$!: any;
   form:any;
   categorias = [
     { id: 0, categoria: 'maxi', },
@@ -24,7 +24,7 @@ export class ChoferesListadoComponent implements OnInit {
   choferEditar!: Chofer;
   componente:string = 'choferes';
 
-  constructor(private fb: FormBuilder, private dbFirebase: DbFirestoreService,){
+  constructor(private fb: FormBuilder, private storageService: StorageService,){
     this.form = this.fb.group({
       
       nombre: [""], 
@@ -37,11 +37,7 @@ export class ChoferesListadoComponent implements OnInit {
   }
   
   ngOnInit(): void { 
-    this.leerClientes()  
-  }
-
-  leerClientes(){
-    this.choferes = JSON.parse(localStorage.getItem("choferes")||`{}`)
+    this.choferes$ = this.storageService.choferes$; 
   }
 
   changeCategoria(e: any) {
@@ -83,12 +79,11 @@ export class ChoferesListadoComponent implements OnInit {
    }
 
    update(): void {
-   
-    this.dbFirebase.update(this.componente, this.choferEditar)
-      .then((data) => console.log(data))
-      .then(() => this.ngOnInit())
-      .then(() => this.form.reset())
-      .catch((e) => console.log(e.message));
+
+      this.storageService.updateItem(this.componente, this.choferEditar)
+      this.form.reset()
+      this.ngOnInit()
+
   }
 
 }

@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { Operacion } from 'src/app/interfaces/operacion';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
   selector: 'app-admin-home',
@@ -14,48 +16,17 @@ export class AdminHomeComponent implements OnInit {
   activo:boolean = false;
   clientes!: Cliente[];
   choferes!: Chofer[];
+  operaciones!: Operacion[];
 
-  constructor(private dbFirebase: DbFirestoreService,) { }
+  constructor(private dbFirebase: DbFirestoreService, private storageService: StorageService,) { }
 
   ngOnInit(): void {
-    this.getTodo();
+    this.storageService.initializer();
   }
 
   toogleSidebar(){
     this.activo = !this.activo;
     console.log(this.activo);
   }
-
-  getTodo(){
-    this.getClientes();
-    this.getChoferes();
-    this.getOperaciones();
-  }
-
-  getClientes(){
-    this.dbFirebase.getAll('clientes').subscribe(data => {
-      this.clientes = data;
-      localStorage.setItem(`clientes`, JSON.stringify(data))
-      console.log(this.clientes);
-    })
-  }
-
-  getChoferes(){
-    this.dbFirebase.getAll('choferes').subscribe(data => {
-      this.choferes = data;
-      localStorage.setItem(`choferes`, JSON.stringify(data))
-      console.log(this.choferes);
-    })
-  }
-
-  getOperaciones(){
-    this.dbFirebase.getAll('operaciones').subscribe(data => {
-      this.choferes = data;
-      localStorage.setItem(`operaciones`, JSON.stringify(data))
-      console.log(this.choferes);
-    })
-  }
-
-
 
 }

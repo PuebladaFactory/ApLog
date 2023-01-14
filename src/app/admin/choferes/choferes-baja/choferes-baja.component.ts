@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Chofer } from 'src/app/interfaces/chofer';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 
 @Component({
@@ -11,28 +11,22 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 })
 export class ChoferesBajaComponent implements OnInit {
   
-  choferes!: Chofer[];
+  choferes$!: any;
   searchText: string = "";
   componente: string = "choferes";
 
-  constructor(private dbFirebase: DbFirestoreService, private router: Router){
+  constructor(private storageService: StorageService, private router: Router){
 
   }
   
   ngOnInit(): void { 
-    this.leerChoferes()  
+    this.choferes$ = this.storageService.choferes$; 
   }
 
-  leerChoferes(){
-    this.choferes = JSON.parse(localStorage.getItem("choferes")||`{}`)
-  }
-
-  eliminarChofer(id:any){
-    this.dbFirebase.delete(this.componente, id)
-      .then((data) => console.log(data))
-      .then(() => this.ngOnInit())
-      .then(() => this.router.navigate(['/choferes/listado']))
-      .catch((e) => console.log(e.message));
+  eliminarChofer(chofer:Chofer){
+    this.storageService.deleteItem(this.componente, chofer);
+    this.ngOnInit();
+    this.router.navigate(['/choferes/listado']);
   }
 
 }

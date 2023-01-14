@@ -12,7 +12,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor=" let cliente of clientes">
+        <tr *ngFor=" let cliente of clientes$.source._value">
           <th scope="row">{{cliente.idCliente}} </th>
           <td>{{cliente.razonSocial}}</td>
           <td>{{cliente.direccion}}</td>

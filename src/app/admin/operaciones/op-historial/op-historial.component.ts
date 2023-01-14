@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
   selector: 'app-op-historial',
@@ -10,24 +11,27 @@ import { Operacion } from 'src/app/interfaces/operacion';
 })
 export class OpHistorialComponent implements OnInit {
   
-  operaciones!: Operacion[];  
-  clientes!: Cliente[];
-  choferes!: Chofer[];
+  //operaciones$: any;  
+  clientes$: any;
+  choferes$: any;
   detalleOp!: Operacion;
+  opCerradas$!:any;
+  componente: string = "operaciones"
 
-  constructor() {    
+  constructor(private storageService: StorageService) {    
    }
   
   ngOnInit(): void { 
+    this.choferes$ = this.storageService.choferes$; 
+    this.clientes$ = this.storageService.clientes$; 
+    //this.operaciones$ = this.storageService.operaciones$;    
+    this.opCerradas$ = this.storageService.opCerradas$
     this.getOperacionesCerradas();
   }
 
   getOperacionesCerradas(){
-    this.operaciones = JSON.parse(localStorage.getItem("operaciones")||`{}`)
-    this.operaciones = this.operaciones.filter(function(op:Operacion){
-      return op.estado === 0
-    })
-    console.log("estas son las operaciones cerradas: ", this.operaciones);
+    this.storageService.getByFieldValue(this.componente, "estado", 0)
+    console.log("estas son las operaciones cerradas: ", this.opCerradas$.source._value);
     
   }
 

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 
 @Component({
@@ -11,28 +11,23 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 })
 export class ClienteBajaComponent implements OnInit {
   
-  clientes!: Cliente[];
+  clientes$!: any;
   searchText: string = "";
   componente: string = "clientes";
 
-  constructor(private dbFirebase: DbFirestoreService, private router:Router){
+  constructor(private storageService: StorageService, private router:Router){
 
   }
   
   ngOnInit(): void { 
-    this.leerClientes()  
+    this.clientes$ = this.storageService.clientes$; 
   }
 
-  leerClientes(){
-    this.clientes = JSON.parse(localStorage.getItem("clientes")||`{}`)
-  }
+  eliminarCliente(cliente: Cliente){
 
-  eliminarCliente(id:any){
-    this.dbFirebase.delete(this.componente, id)
-      .then((data) => console.log(data))
-      .then(() => this.ngOnInit())
-      .then(() => this.router.navigate(['/clientes/listado']))
-      .catch((e) => console.log(e.message));
+    this.storageService.deleteItem(this.componente, cliente);
+    this.ngOnInit();
+    this.router.navigate(['/clientes/listado']);
   }
 
 }

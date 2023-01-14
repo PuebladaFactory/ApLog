@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
   selector: 'app-cliente-alta',
@@ -17,7 +17,7 @@ export class ClienteAltaComponent implements OnInit {
   form:any;
   cliente!: Cliente;
 
-  constructor(private fb: FormBuilder, private dbFirebase: DbFirestoreService, private router: Router) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
     this.form = this.fb.group({
       
       razonSocial: [""], 
@@ -46,13 +46,12 @@ export class ClienteAltaComponent implements OnInit {
    }
 
    addItem(): void {
+
+    this.storageService.addItem(this.componente, this.cliente)
+    this.form.reset() 
+    this.ngOnInit()
+    this.router.navigate(['/clientes/listado'])
    
-    this.dbFirebase.create(this.componente, this.cliente)
-      .then((data) => console.log(data))
-      .then(() => this.ngOnInit())
-      .then(() => this.form.reset())
-      .then(() => this.router.navigate(['/clientes/listado']))
-      .catch((e) => console.log(e.message));
   }
 
 }
