@@ -10,6 +10,7 @@ import { ChoferOperacionComponent } from './chofer-operacion/chofer-operacion.co
 import { ChoferSidebarComponent } from './chofer-sidebar/chofer-sidebar.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from '../shared/shared.module';
+import { ChoferHistorialComponent } from './chofer-historial/chofer-historial.component';
 
 
 
@@ -20,7 +21,8 @@ import { SharedModule } from '../shared/shared.module';
     ChoferLegajoComponent,
     ChoferLiquidacionComponent,
     ChoferOperacionComponent,
-    ChoferSidebarComponent,    
+    ChoferSidebarComponent,
+    ChoferHistorialComponent,    
   ],
   imports: [
     CommonModule,

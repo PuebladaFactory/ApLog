@@ -6,8 +6,15 @@ a{
 ul, li {
     list-style-type: none; 
     padding: 0;
+    font-size: 12px;
 }
 
 #menu{
     height: 90vh;
+}
+
+.accordion-item, .accordion-button{
+    background: #002b5c;
+    color:white;
+    border: none;
 }

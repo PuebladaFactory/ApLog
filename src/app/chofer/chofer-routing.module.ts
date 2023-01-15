@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { ChoferHistorialComponent } from './chofer-historial/chofer-historial.component';
 import { ChoferHomeComponent } from './chofer-home/chofer-home.component';
 import { ChoferLegajoComponent } from './chofer-legajo/chofer-legajo.component';
 import { ChoferLiquidacionComponent } from './chofer-liquidacion/chofer-liquidacion.component';
@@ -29,8 +30,13 @@ const routes: Routes = [
         pathMatch: 'full',
       },
       {
-        path: 'operaciones',
+        path: 'opActivas',
         component: ChoferOperacionComponent,   
+        pathMatch: 'full',
+      },
+      {
+        path: 'historial',
+        component: ChoferHistorialComponent,   
         pathMatch: 'full',
       },
       {

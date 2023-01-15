@@ -21,11 +21,7 @@ export class OpHistorialComponent implements OnInit {
   ngOnInit(): void { 
     this.opCerradas$ = this.storageService.opCerradas$    
   }
-
-  getOperacionesCerradas(){
-    this.storageService.getByFieldValue(this.componente, "estado", 0)
-    console.log("estas son las operaciones cerradas: ", this.opCerradas$.source._value);    
-  }
+  
 
   seleccionarOp(op:Operacion){
     this.detalleOp = op;
