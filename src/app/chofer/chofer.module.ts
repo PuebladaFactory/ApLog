@@ -9,6 +9,7 @@ import { ChoferLiquidacionComponent } from './chofer-liquidacion/chofer-liquidac
 import { ChoferOperacionComponent } from './chofer-operacion/chofer-operacion.component';
 import { ChoferSidebarComponent } from './chofer-sidebar/chofer-sidebar.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { SharedModule } from '../shared/shared.module';
 
 
 
@@ -25,7 +26,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     CommonModule,
     ChoferRoutingModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    SharedModule
   ]
 })
 export class ChoferModule { }

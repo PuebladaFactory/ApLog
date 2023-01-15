@@ -7,7 +7,6 @@ export interface Operacion {
     fecha: Date;
     km: number | null;
     peaje: number | null;
-    adicionales: number | null;
     documentacion: string | null;
     cliente: Cliente;
     chofer: Chofer;

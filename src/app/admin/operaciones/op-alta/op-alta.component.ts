@@ -5,6 +5,7 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
   selector: 'app-op-alta',
@@ -16,13 +17,13 @@ export class OpAltaComponent implements OnInit {
   componente:string = "operacionesActivas"
   form:any;
   op!: Operacion;
-  clientes!: Cliente[];
-  choferes!: Chofer[];
+  clientes$!: any;
+  choferes$!: any;
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
 
 
-  constructor(private fb: FormBuilder, private dbFirebase: DbFirestoreService, private router: Router) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
     this.form = this.fb.group({      
       fecha: [""],  
           
@@ -30,23 +31,24 @@ export class OpAltaComponent implements OnInit {
    }
 
   ngOnInit(): void {
-    this.getClientes();
-    this.getChoferes();
+    this.clientes$ = this.storageService.clientes$;
+    this.choferes$ = this.storageService.choferes$;    
+   
   }
 
-  getClientes(){
+  /* getClientes(){
     this.clientes = JSON.parse(localStorage.getItem("clientes")||`{}`)
   }
 
   getChoferes(){
     this.choferes = JSON.parse(localStorage.getItem("choferes")||`{}`)
-  }
+  } */
 
   changeCliente(e: any) {
     console.log(e.target.value)
-    let clienteForm
+    let clienteForm = this.clientes$.source._value
 
-    clienteForm = this.clientes.filter(function (cliente: any) { 
+    clienteForm = clienteForm.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     })
 
@@ -57,9 +59,9 @@ export class OpAltaComponent implements OnInit {
 
   changeChofer(e: any) {
     console.log(e.target.value)
-    let choferForm
+    let choferForm = this.choferes$.source._value
 
-    choferForm = this.choferes.filter(function (chofer: any) { 
+    choferForm = choferForm.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     })
 
@@ -83,13 +85,16 @@ export class OpAltaComponent implements OnInit {
    }
 
    addItem(): void {
+
+    this.storageService.addItem(this.componente, this.op);
+    this.router.navigate(['/op/op-diarias'])
    
-    this.dbFirebase.create(this.componente, this.op)
+   /*  this.dbFirebase.create(this.componente, this.op)
       .then((data) => console.log(data))
       .then(() => this.ngOnInit())
       .then(() => this.form.reset())
       .then(() => this.router.navigate(['/op/op-diarias']))
-      .catch((e) => console.log(e.message));
+      .catch((e) => console.log(e.message)); */
   }
 
 
