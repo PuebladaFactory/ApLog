@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
 
 @Component({
   selector: 'app-chofer-sidebar',
@@ -8,12 +9,13 @@ import { Router } from '@angular/router';
 })
 export class ChoferSidebarComponent implements OnInit {
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private authService: AuthService ) { }
 
   ngOnInit(): void {
   }
 
   volverLogin(){
+    this.authService.SignOut()
     this.router.navigate(['login'])
   }
 

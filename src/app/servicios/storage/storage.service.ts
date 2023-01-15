@@ -68,13 +68,13 @@ export class StorageService {
         break;
       }
 
-      case "opActivas": {
+      case "operacionesActivas": {
         this._opActivas$.next(data)
         break;
       }
 
 
-      case "opCerradas": {
+      case "operacionesCerradas": {
         this._opCerradas$.next(data)
         break;
       }
@@ -127,13 +127,23 @@ export class StorageService {
   // Al inicio de la aplicacion se carga el storage con los datos de la base
   // al estar suscripto, cualquier cambio en la base se refleja en el storage.
 
-  initializer() {
+  initializerAdmin() {
 
     this.getAllSorted("clientes", 'idCliente', 'asc')
     this.getAllSorted("choferes", 'idChofer', 'asc')
-    this.getAllSorted("operaciones", 'fecha', 'asc')
+    //this.getAllSorted("operaciones", 'fecha', 'asc')
+    this.getAllSorted("operacionesActivas", 'fecha', 'asc')
+    this.getAllSorted("operacionesCerradas", 'fecha', 'asc')
     //this.getByFieldValue("operaciones", "estado", 1)
     //this.getByFieldValue("operaciones", "estado", 0)
+
+  }
+
+  initializerUser(idChofer:any) {
+    this.getByFieldValue("choferes", "idChofer", idChofer)
+    this.getByFieldValue("operacionesActivas", "chofer.idChofer", idChofer)
+    this.getByFieldValue("operacionesCerradas", "chofer.idChofer", idChofer)
+    
 
   }
 
@@ -159,12 +169,11 @@ export class StorageService {
 
   }
 
-  getByFieldValue(componete: any, campo:any, value:any){
+  getByFieldValue(componente: any, campo:any, value:any){
     this.dbFirebase
-      .getByFieldValue(componete, campo, value)
+      .getByFieldValue(componente, campo, value)
       .subscribe(data => {
-        this.updateObservable("opCerradas", data)
-        this.updateObservable("opActivas", data)
+        this.setInfo(componente, data)
       })
   }
 

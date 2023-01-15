@@ -4,7 +4,7 @@
 
 
 
-  <form [formGroup]="perfilForm" (ngSubmit)="onSubmit()">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <div class="form-group">
       <label for="Nombre">Nombre</label>
       <div class="input-group">
@@ -36,9 +36,9 @@
         </div>
     </div>     
     <div class="form-group">
-        <label for="Patente">Patente</label>
+        <label for="Dominio">Patente</label>
         <div class="input-group">
-          <input formControlName="patente" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
+          <input formControlName="dominio" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
         </div>
     </div>   
     <div class="form-group">

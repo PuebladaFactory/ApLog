@@ -10,29 +10,21 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
   styleUrls: ['./op-historial.component.scss']
 })
 export class OpHistorialComponent implements OnInit {
-  
-  //operaciones$: any;  
-  clientes$: any;
-  choferes$: any;
+   
   detalleOp!: Operacion;
   opCerradas$!:any;
-  componente: string = "operaciones"
+  componente: string = "operacionesCerradas"
 
   constructor(private storageService: StorageService) {    
    }
   
   ngOnInit(): void { 
-    this.choferes$ = this.storageService.choferes$; 
-    this.clientes$ = this.storageService.clientes$; 
-    //this.operaciones$ = this.storageService.operaciones$;    
-    this.opCerradas$ = this.storageService.opCerradas$
-    this.getOperacionesCerradas();
+    this.opCerradas$ = this.storageService.opCerradas$    
   }
 
   getOperacionesCerradas(){
     this.storageService.getByFieldValue(this.componente, "estado", 0)
-    console.log("estas son las operaciones cerradas: ", this.opCerradas$.source._value);
-    
+    console.log("estas son las operaciones cerradas: ", this.opCerradas$.source._value);    
   }
 
   seleccionarOp(op:Operacion){

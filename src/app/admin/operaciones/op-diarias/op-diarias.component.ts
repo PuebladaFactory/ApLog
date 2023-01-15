@@ -13,7 +13,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 })
 export class OpDiariasComponent implements OnInit {
 
-  componente:string = "operaciones"
+  componente:string = "operacionesActivas"
   form:any;
   //operaciones$: any;
   opEditar!: Operacion;
@@ -33,8 +33,7 @@ export class OpDiariasComponent implements OnInit {
     this.clientes$ = this.storageService.clientes$; 
     //this.operaciones$ = this.storageService.operaciones$;   
     //console.log("estas son las operaciones: ", this.operaciones$);
-    this.opActivas$ = this.storageService.opActivas$
-    this.getOperacionesActivas(); 
+    this.opActivas$ = this.storageService.opActivas$    
   }
 
   
@@ -74,21 +73,6 @@ export class OpDiariasComponent implements OnInit {
   eliminarOperacion(op: Operacion){
     this.storageService.deleteItem(this.componente, op);
     this.ngOnInit();    
-  }
- 
-  getOperacionesActivas(){    
-    this.storageService.getByFieldValue(this.componente, "estado", 1)
-    console.log("estas son las operaciones activas: ", this.opActivas$.source._value);
-    
-    /*  this.opActivas = this.operaciones$.source._value.filter(function(op:Operacion){
-      return op.estado === 1
-    })  */
-   /*  this.opActivas = this.operaciones$.source._value
-    this.opActivas = this.opActivas.filter(function(op:Operacion){
-    return op.estado === 1
-    })  
-    console.log("estas son las operaciones activas: ", this.opActivas); */
-    
   }
 
   changeCliente(e: any) {

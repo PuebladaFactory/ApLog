@@ -38,7 +38,7 @@ export class LoginComponent implements OnInit {
       .catch((e) => console.log(e.message));
   }
 
-  accionAsincrona = async () => {
+  /* accionAsincrona = async () => {
     console.log("pasa por aca 1?");
     this.spinner = true;
     return new Promise<void>((resolve, reject) => {
@@ -52,7 +52,7 @@ export class LoginComponent implements OnInit {
         console.log("pasa por aca 3?");
         this.spinner = false;
       });
-  }
+  } */
 
 
 

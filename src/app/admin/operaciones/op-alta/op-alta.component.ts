@@ -13,7 +13,7 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 })
 export class OpAltaComponent implements OnInit {
 
-  componente:string = "operaciones"
+  componente:string = "operacionesActivas"
   form:any;
   op!: Operacion;
   clientes!: Cliente[];

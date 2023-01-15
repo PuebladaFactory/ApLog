@@ -17,11 +17,18 @@ export class AdminHomeComponent implements OnInit {
   clientes!: Cliente[];
   choferes!: Chofer[];
   operaciones!: Operacion[];
+  usuario!: any;
 
   constructor(private dbFirebase: DbFirestoreService, private storageService: StorageService,) { }
 
   ngOnInit(): void {
-    this.storageService.initializer();
+    this.usuario = this.storageService.loadInfo("usuario");
+    console.log("esto es admin-home. usuario: ", this.usuario);
+    if(this.usuario.roles.admin){
+      this.storageService.initializerAdmin();
+    }
+    
+    //this.storageService.initializer();
   }
 
   toogleSidebar(){

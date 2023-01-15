@@ -49,7 +49,8 @@ getByFieldValue(componente:string, campo:string, value:any){
   let dataCollection = `/Vantruck/datos/${componente}`;
   return this.firestore2.collection(dataCollection, ref => ref
     .where(campo, '==', value))
-    .valueChanges(({  idField: 'id' })); }
+    .valueChanges(({  idField: 'id' })); 
+  }
 
 
 
