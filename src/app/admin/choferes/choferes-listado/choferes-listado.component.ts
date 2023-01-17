@@ -32,7 +32,7 @@ export class ChoferesListadoComponent implements OnInit {
   adicionalKm!: AdicionalKm;
 
   constructor(private fb: FormBuilder, private storageService: StorageService,){
-    this.form = this.fb.group({      
+    this.form = this.fb.group({                          //formulario para el perfil 
       nombre: [""], 
       apellido: [""],      
       fechaNac: [""],
@@ -41,13 +41,13 @@ export class ChoferesListadoComponent implements OnInit {
       dominio: [""],
     });
 
-    this.jornadaForm = this.fb.group({           
+    this.jornadaForm = this.fb.group({                     //formulario para la jornada
       base: [""],      
       carga: [""],
       publicidad: [""],  
      });
 
-    this.adicionalForm = this.fb.group({        
+    this.adicionalForm = this.fb.group({                   //formulario para los adicionales de la jornada
       adicionalKm1: [""], 
       adicionalKm2: [""],
       adicionalKm3: [""],
@@ -67,11 +67,12 @@ export class ChoferesListadoComponent implements OnInit {
     //console.log(this.categoriaSeleccionada);    
   }
 
+
+  //este es el metodo que arma el objeto (chofer) que muestra el modal para editar
   abrirEdicion(chofer:Chofer):void {
     this.choferEditar = chofer;    
-    console.log("este es el chofer a editar: ", this.choferEditar);
-    this.armarForm();
-    
+    //console.log("este es el chofer a editar: ", this.choferEditar);
+    this.armarForm();    
   }
 
   armarForm(){
@@ -94,24 +95,24 @@ export class ChoferesListadoComponent implements OnInit {
     this.choferEditar.celular = this.form.value.celular;
     this.choferEditar.dominio = this.form.value.dominio
     this.choferEditar.categoria = this.categoriaSeleccionada;
-    console.log("este es el cliente editado: ", this.choferEditar);
+    //console.log("este es el cliente editado: ", this.choferEditar);
     this.update(this.choferEditar);    
    }
 
    update(item:any): void {
-
       this.storageService.updateItem(this.componente, item);
       this.form.reset();
       this.ngOnInit();
   }
 
+  //este es el metodo que arma el objeto (jornada) que muestra el modal para editar
   jornada(idChofer: number){    
     let jornadaFormulario
     jornadaFormulario = this.jornadas$.source._value.filter(function (jornada: Jornada) { 
       return jornada.idChofer === idChofer
     });
     this.jornadaEditar = jornadaFormulario[0];
-    console.log("jornadaEditar: ",this.jornadaEditar);       
+    //console.log("jornadaEditar: ",this.jornadaEditar);       
     this.armarJornada();   
   }
 
@@ -139,7 +140,7 @@ export class ChoferesListadoComponent implements OnInit {
     this.jornadaChofer.id = this.jornadaEditar.id
     this.jornadaChofer.km = this.adicionalKm;  
     this.jornadaChofer.idChofer = this.jornadaEditar.idChofer;
-    console.log("esta es la jornada: ", this.jornadaChofer);
+    //console.log("esta es la jornada: ", this.jornadaChofer);
     this.update(this.jornadaChofer)
   }
 

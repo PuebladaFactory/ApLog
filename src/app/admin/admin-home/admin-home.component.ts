@@ -23,14 +23,15 @@ export class AdminHomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.usuario = this.storageService.loadInfo("usuario");
-    console.log("esto es admin-home. usuario: ", this.usuario);
+    //si el rol es "admin", llama al initializer;
+    //esto se hace para q no llame al servico cuando se inicia la app y hubiera otro rol
     if(this.usuario.roles.admin){
       this.storageService.initializerAdmin();
-    }
-    
+    }    
     //this.storageService.initializer();
   }
 
+  // muestra y oculta la barra lateral
   toogleSidebar(){
     this.activo = !this.activo;
     console.log(this.activo);

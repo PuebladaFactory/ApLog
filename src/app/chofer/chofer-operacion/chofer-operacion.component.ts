@@ -12,32 +12,26 @@ export class ChoferOperacionComponent implements OnInit {
 
   componente:string = "operacionesActivas"
   form:any;
-  //operaciones$: any;
-  //opEditar!: Operacion;
-  //clientes$: any;
-  //choferes$: any;
-  //clienteSeleccionado!: Cliente;
-  //choferSeleccionado!: Chofer;
   opActivas$!: any;
   opCerrada!: Operacion;
   opForm: any;
 
   constructor(private fb: FormBuilder, private storageService: StorageService) {
     this.opForm = this.fb.group({
-      
-      
         km: [''],
         peaje: [''],        
         remito: [''],       
-    })
+    });
    }
 
   ngOnInit(): void {
+    //console.log("esto es chofer-operacion");    
     this.opActivas$ = this.storageService.opActivas$ 
+    //console.log(this.opActivas$.source._value);    
   }
 
   onSubmit(){
-    console.log(this.opForm.value);
+    //console.log(this.opForm.value);
     this.opCerrada.km = this.opForm.value.km;
     this.opCerrada.peaje = this.opForm.value.peaje;
     //this.opCerrada.documentacion = this.opForm.remito;

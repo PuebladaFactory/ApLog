@@ -18,38 +18,28 @@ export class ClienteAltaComponent implements OnInit {
   cliente!: Cliente;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
-    this.form = this.fb.group({
-      
+    this.form = this.fb.group({      
       razonSocial: [""], 
       direccion: [""],
       email: [""],
-      telefono: [""],
-      
-  })
+      telefono: [""],      
+    })
    }
 
    ngOnInit(): void {}
 
-
-
    onSubmit(){
-    console.log(new Date().getTime());
-    
+    //console.log(new Date().getTime());    
     this.cliente = this.form.value
-
     this.cliente.idCliente = new Date().getTime();
-
-    console.log(this.cliente); 
-    
-    this.addItem()
-    
+    //console.log(this.cliente);     
+    this.addItem();    
    }
 
    addItem(): void {
-
     this.storageService.addItem(this.componente, this.cliente)
-    this.form.reset() 
-    this.ngOnInit()
+    /* this.form.reset() 
+    this.ngOnInit() */
     this.router.navigate(['/clientes/listado'])
    
   }

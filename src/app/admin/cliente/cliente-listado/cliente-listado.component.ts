@@ -18,24 +18,21 @@ export class ClienteListadoComponent implements OnInit {
   componente:string ="clientes"
 
   constructor(private fb: FormBuilder, private storageService: StorageService,){
-    this.form = this.fb.group({
-      
+    this.form = this.fb.group({      
       razonSocial: [""], 
       direccion: [""],
       email: [""],
-      telefono: [""],
-      
-  })
+      telefono: [""],      
+    })
   }
   
   ngOnInit(): void { 
     this.clientes$ = this.storageService.clientes$; 
   }
   
-
   abrirEdicion(cliente:Cliente):void {
     this.clienteEditar = cliente;    
-    console.log("este es el cliente a editar: ", this.clienteEditar);
+    //console.log("este es el cliente a editar: ", this.clienteEditar);
     this.armarForm();
     
   }
@@ -54,17 +51,14 @@ export class ClienteListadoComponent implements OnInit {
     this.clienteEditar.direccion = this.form.value.direccion;
     this.clienteEditar.email = this.form.value.email;
     this.clienteEditar.telefono = this.form.value.telefono;
-
-    console.log("este es el cliente editado: ", this.clienteEditar);
+    //console.log("este es el cliente editado: ", this.clienteEditar);
     this.update();    
    }
 
    update(): void {
-
-    this.storageService.updateItem(this.componente, this.clienteEditar)
-    this.form.reset()
-    this.ngOnInit()
-   
+    this.storageService.updateItem(this.componente, this.clienteEditar);
+    this.form.reset();
+    this.ngOnInit();
   }
 
 }

@@ -33,7 +33,7 @@ export class ChoferesAltaComponent implements OnInit {
    adicionalKm!:AdicionalKm;  
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
-    this.form = this.fb.group({      
+    this.form = this.fb.group({                             //formulario para el perfil 
       nombre: [""], 
       apellido: [""],      
       fechaNac: [""],
@@ -42,13 +42,13 @@ export class ChoferesAltaComponent implements OnInit {
       dominio: [""],
   });
 
-    this.jornadaForm = this.fb.group({           
+    this.jornadaForm = this.fb.group({                    //formulario para la jornada
       base: [""],      
       carga: [""],
       publicidad: [""],  
   });
 
-    this.adicionalForm = this.fb.group({        
+    this.adicionalForm = this.fb.group({                  //formulario para los adicionales de la jornada
       adicionalKm1: [""], 
       adicionalKm2: [""],
       adicionalKm3: [""],
@@ -61,6 +61,9 @@ export class ChoferesAltaComponent implements OnInit {
 
 
 
+   // es el mismo metodo para guardar el chofer y la jornada
+   // primero arma cada uno de los objetos
+   // y desp guarda el objeto en la coleccion que le corresponde
    onSubmit(){    
     this.armarChofer();
     this.armarJornada();
@@ -71,7 +74,7 @@ export class ChoferesAltaComponent implements OnInit {
     this.componente = "choferes"
     this.chofer = this.form.value;
     this.chofer.categoria = this.categoriaSeleccionada;
-    this.chofer.idChofer = new Date().getTime();
+    this.chofer.idChofer = new Date().getTime(); 
     //console.log("este es el chofer: ",this.chofer);     
     this.addItem(this.chofer)
    }
@@ -93,11 +96,9 @@ export class ChoferesAltaComponent implements OnInit {
 
   
   changeCategoria(e: any) {
-    //console.log(e.target.value)  ; 
-    
+    //console.log(e.target.value)  ;     
     this.categoriaSeleccionada = e.target.value
-    console.log(this.categoriaSeleccionada);
-    
+    console.log(this.categoriaSeleccionada);    
   }
 
 }

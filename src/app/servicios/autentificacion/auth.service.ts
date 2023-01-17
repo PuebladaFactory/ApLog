@@ -161,6 +161,7 @@ export class AuthService {
     });
   }
 
+  //por alguno motivo no funciona
   setearColeccion() {
     this.dbFirebase.setearColeccion(this.usuario.coleccion);
     //this.storage.initializer()
@@ -173,6 +174,9 @@ export class AuthService {
     
   }
 
+
+  // de acuerdo al rol, navega a la ruta correspondiente
+  // esto habria que hacerlo con guards, pero los guards trabajan sacando la info del token
   filtrarRoles(){
      if(this.usuario.roles.user){
       this.router.navigate(['/chofer']);

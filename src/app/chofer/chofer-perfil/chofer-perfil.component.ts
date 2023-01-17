@@ -16,8 +16,7 @@ export class ChoferPerfilComponent implements OnInit {
   perfilModificado!:any;
 
   constructor(private fb: FormBuilder, private storageService: StorageService,) {
-    this.form = this.fb.group({
-     
+    this.form = this.fb.group({     
       nombre: [""], 
       apellido: [""],
       fechaNac: [""],
@@ -25,23 +24,22 @@ export class ChoferPerfilComponent implements OnInit {
       celular: [""],
       dominio: [""],
       categoria: [""],
-  })
+     })
    }
 
   ngOnInit(): void {
     //this.perfil = this.storageService.loadInfo("choferes")
     this.perfil$ = this.storageService.choferes$
-    console.log("esto es chofer-perfil. perfil: ", this.perfil$);
+    //console.log("esto es chofer-perfil. perfil: ", this.perfil$);
     this.armarForm()
   }
 
   onSubmit(){
-    console.log(this.form.value);
+    //console.log(this.form.value);
     this.perfilModificado = this.form.value
     this.perfilModificado.id = this.perfil$.source._value[0].id;
     this.perfilModificado.idChofer = this.perfil$.source._value[0].idChofer;
-    console.log("esto es chofer-perfil. perfilModificado: ", this.perfilModificado);
-    
+    //console.log("esto es chofer-perfil. perfilModificado: ", this.perfilModificado);    
     this.update()
    /*  this.ngOnInit()
     this.editarPerfil(); */
@@ -49,12 +47,10 @@ export class ChoferPerfilComponent implements OnInit {
   }
 
   update(): void {
-
     this.storageService.updateItem("choferes", this.perfilModificado);
     this.storageService.setInfo("choferes", this.perfilModificado);
     this.editarPerfil();
-    this.ngOnInit()
-   
+    this.ngOnInit();   
   }
 
   editarPerfil(){
@@ -62,8 +58,7 @@ export class ChoferPerfilComponent implements OnInit {
   }
 
   armarForm(){
-    this.form.patchValue({
-      
+    this.form.patchValue({      
       nombre: this.perfil$.source._value[0].nombre, 
       apellido: this.perfil$.source._value[0].apellido,
       fechaNac: this.perfil$.source._value[0].fechaNac,

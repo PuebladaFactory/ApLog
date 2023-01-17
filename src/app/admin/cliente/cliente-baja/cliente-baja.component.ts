@@ -15,18 +15,15 @@ export class ClienteBajaComponent implements OnInit {
   searchText: string = "";
   componente: string = "clientes";
 
-  constructor(private storageService: StorageService, private router:Router){
-
-  }
+  constructor(private storageService: StorageService, private router:Router){}
   
   ngOnInit(): void { 
     this.clientes$ = this.storageService.clientes$; 
   }
 
   eliminarCliente(cliente: Cliente){
-
     this.storageService.deleteItem(this.componente, cliente);
-    this.ngOnInit();
+    /* this.ngOnInit(); */
     this.router.navigate(['/clientes/listado']);
   }
 

@@ -30,9 +30,7 @@ export class OpDiariasComponent implements OnInit {
    }
   ngOnInit(): void {
     this.choferes$ = this.storageService.choferes$; 
-    this.clientes$ = this.storageService.clientes$; 
-    //this.operaciones$ = this.storageService.operaciones$;   
-    //console.log("estas son las operaciones: ", this.operaciones$);
+    this.clientes$ = this.storageService.clientes$;
     this.opActivas$ = this.storageService.opActivas$    
   }
 
@@ -41,7 +39,7 @@ export class OpDiariasComponent implements OnInit {
     this.opEditar = op;    
     this.clienteSeleccionado = op.cliente;
     this.choferSeleccionado = op.chofer;
-    console.log("este es la op a editar: ", this.opEditar);
+    //console.log("este es la op a editar: ", this.opEditar);
     this.armarForm();
     
   }
@@ -56,18 +54,14 @@ export class OpDiariasComponent implements OnInit {
     this.opEditar.fecha = this.form.value.fecha;
     this.opEditar.cliente = this.clienteSeleccionado;
     this.opEditar.chofer  = this.choferSeleccionado;
-    
-
-    console.log("este es el cliente editado: ", this.opEditar);
+    //console.log("este es el cliente editado: ", this.opEditar);
     this.update();    
    }
 
    update(): void {
-
     this.storageService.updateItem(this.componente, this.opEditar)
-    this.ngOnInit()  
-    this.form.reset()     
-   
+    this.ngOnInit();  
+    this.form.reset();        
   }
 
   eliminarOperacion(op: Operacion){
@@ -76,29 +70,23 @@ export class OpDiariasComponent implements OnInit {
   }
 
   changeCliente(e: any) {
-    console.log(e.target.value)
-    let clienteForm
-
+    //console.log(e.target.value)
+    let clienteForm;
     clienteForm = this.clientes$.source._value.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
-    })
-
+    });
     this.clienteSeleccionado = clienteForm[0];               
-    console.log(this.clienteSeleccionado);
-
+    //console.log(this.clienteSeleccionado);
   }
 
   changeChofer(e: any) {
-    console.log(e.target.value)
-    let choferForm
-
+    //console.log(e.target.value)
+    let choferForm;
     choferForm = this.choferes$.source._value.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
-    })
-
+    });
     this.choferSeleccionado = choferForm[0];               
-    console.log(this.choferSeleccionado);
-
+    //console.log(this.choferSeleccionado);
   }
 
 

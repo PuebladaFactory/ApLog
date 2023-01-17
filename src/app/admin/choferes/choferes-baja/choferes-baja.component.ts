@@ -15,9 +15,7 @@ export class ChoferesBajaComponent implements OnInit {
   searchText: string = "";
   componente: string = "choferes";
 
-  constructor(private storageService: StorageService, private router: Router){
-
-  }
+  constructor(private storageService: StorageService, private router: Router){}
   
   ngOnInit(): void { 
     this.choferes$ = this.storageService.choferes$; 
@@ -25,7 +23,7 @@ export class ChoferesBajaComponent implements OnInit {
 
   eliminarChofer(chofer:Chofer){
     this.storageService.deleteItem(this.componente, chofer);
-    this.ngOnInit();
+    /* this.ngOnInit(); */
     this.router.navigate(['/choferes/listado']);
   }
 

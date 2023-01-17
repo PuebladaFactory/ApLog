@@ -15,18 +15,6 @@ export class ClienteControlComponent implements OnInit {
 
   constructor(private dbFirebase: DbFirestoreService,) {}
 
-  ngOnInit(): void {
-    //this.getAll();  
-   
+  ngOnInit(): void {     
   }
-
-  getAll(){
-    this.dbFirebase.getAll(this.componente).subscribe(data => {
-      this.data = data;
-      localStorage.setItem(`${this.componente}`, JSON.stringify(data))
-      console.log(this.data);
-    })
-  }
-  
-
 }

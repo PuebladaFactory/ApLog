@@ -135,20 +135,21 @@ export class StorageService {
   // Al inicio de la aplicacion se carga el storage con los datos de la base
   // al estar suscripto, cualquier cambio en la base se refleja en el storage.
 
+
+  // metodo initializer si el rol es admin
   initializerAdmin() {
 
     this.getAllSorted("clientes", 'idCliente', 'asc')
     this.getAllSorted("choferes", 'idChofer', 'asc')
-    //this.getAllSorted("operaciones", 'fecha', 'asc')
     this.getAllSorted("operacionesActivas", 'fecha', 'asc')
     this.getAllSorted("operacionesCerradas", 'fecha', 'asc')
     this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
     this.getAllSorted("jornadas", 'idChofer', 'asc')
-    //this.getByFieldValue("operaciones", "estado", 1)
-    //this.getByFieldValue("operaciones", "estado", 0)
+   
 
   }
 
+  // metodo initializer si el rol es user
   initializerUser(idChofer:any) {
     this.getByFieldValue("choferes", "idChofer", idChofer)
     this.getByFieldValue("operacionesActivas", "chofer.idChofer", idChofer)
