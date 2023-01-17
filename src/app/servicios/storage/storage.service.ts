@@ -43,6 +43,9 @@ export class StorageService {
   private _opCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public opCerradas$ = this._opCerradas$.asObservable()
 
+  private _jornadas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public jornadas$ = this._jornadas$.asObservable()
+
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -76,6 +79,11 @@ export class StorageService {
 
       case "operacionesCerradas": {
         this._opCerradas$.next(data)
+        break;
+      }
+
+      case "jornadas": {
+        this._jornadas$.next(data)
         break;
       }
 
@@ -134,6 +142,8 @@ export class StorageService {
     //this.getAllSorted("operaciones", 'fecha', 'asc')
     this.getAllSorted("operacionesActivas", 'fecha', 'asc')
     this.getAllSorted("operacionesCerradas", 'fecha', 'asc')
+    this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
+    this.getAllSorted("jornadas", 'idChofer', 'asc')
     //this.getByFieldValue("operaciones", "estado", 1)
     //this.getByFieldValue("operaciones", "estado", 0)
 

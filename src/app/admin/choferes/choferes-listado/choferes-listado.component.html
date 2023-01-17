@@ -12,6 +12,7 @@
           <th scope="col">Patente</th>
           <th scope="col">Categoria</th>
           <th scope="col"></th>          
+          <th scope="col"></th>   
         </tr>
       </thead>
       <tbody>
@@ -25,12 +26,11 @@
           <td>{{chofer.dominio}}</td>
           <td>{{chofer.categoria}}</td>
           <td><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(chofer)"></app-btn-editar> </td>
+          <td><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#jornadaModal" [name]="'Jornada'" (click)="jornada(chofer.idChofer)"></app-btn-editar> </td>
         </tr>        
-      </tbody>
-    
+      </tbody>   
     
 </table>
-
 
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -91,6 +91,100 @@
             <button  type="submit" class="btn btn-secondary" data-bs-dismiss="modal">Guardar</button>
           </div>  
       
+        </form>
+      </div>      
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="jornadaModal" tabindex="-1" aria-labelledby="jornadaModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="jornadaModalLabel">Editar Jornada</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h2>Jornada</h2>
+        
+        <form [formGroup]="jornadaForm" (ngSubmit)="onSubmitJornada()">         
+          <div class="form-group">       
+            <table>
+              <tbody>
+                <tr class="form-group">
+                  <td>Base: </td>
+                  <td>
+                    <input formControlName="base" class="form-control edicion" required type="number">   
+                  </td>
+                </tr>         
+                <tr class="form-group">
+                  <td>Carga: </td>
+                  <td>
+                    <input formControlName="carga" class="form-control" required type="number">
+                  </td>
+                </tr>
+                <tr class="form-group">
+                  <td>Publicidad: </td>
+                  <td>
+                    <input formControlName="publicidad" class="form-control" required type="number">
+                  </td>
+                </tr>
+              </tbody>
+              
+            </table>
+            
+          </div>    
+         
+          <form [formGroup]="adicionalForm"  >
+              <label for="Km">Adicional por Km: </label>
+              <thead>
+                <tr>
+                  <th>Distancia</th>
+                  <th>Valor</th>
+                </tr>          
+              </thead>
+              <tbody>            
+                <tr>
+                  <td>0-100 km</td>
+                  <td>
+                    <input class="form-control edicion" required type="text" disabled value="0">            
+                  </td>
+                </tr>
+                <tr>
+                  <td>101-150 km</td>
+                  <td>
+                    <input formControlName="adicionalKm1" class="form-control edicion" required type="number">            
+                  </td>
+                </tr>
+                <tr>
+                  <td>151-200 km</td>
+                  <td>
+                    <input formControlName="adicionalKm2" class="form-control edicion" required type="number">            
+                  </td>
+                </tr>
+                <tr>
+                  <td>201-250 km</td>
+                  <td>
+                    <input formControlName="adicionalKm3" class="form-control edicion" required type="number">            
+                  </td>
+                </tr>
+                <tr>
+                  <td>251-300 km</td>
+                  <td>
+                    <input formControlName="adicionalKm4" class="form-control edicion" required type="number">            
+                  </td>
+                </tr>
+                <tr>
+                  <td>301-350 km</td>
+                  <td>
+                    <input formControlName="adicionalKm5" class="form-control edicion" required type="number">            
+                  </td>
+                </tr>
+              </tbody>
+          </form>
+          <div >        
+            <button  type="submit" class="btn btn-secondary" data-bs-dismiss="modal">Guardar</button>
+          </div>        
         </form>
       </div>      
     </div>
