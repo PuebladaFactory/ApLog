@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -12,6 +13,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
   styleUrls: ['./op-diarias.component.scss']
 })
 export class OpDiariasComponent implements OnInit {
+  
 
   componente:string = "operacionesActivas"
   form:any;
@@ -21,9 +23,13 @@ export class OpDiariasComponent implements OnInit {
   choferes$: any;
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
-  opActivas$!: any;
+  opActivas$!: any;  
+  public show: boolean = false;
+  public buttonName: any = 'Consultar Operaciones';
+  consultasOp$!:any;
+  titulo: string = "consultasOpActivas"
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, ) {
     this.form = this.fb.group({      
       fecha: [""],    
     })
@@ -31,7 +37,10 @@ export class OpDiariasComponent implements OnInit {
   ngOnInit(): void {
     this.choferes$ = this.storageService.choferes$; 
     this.clientes$ = this.storageService.clientes$;
-    this.opActivas$ = this.storageService.opActivas$    
+    //this.opActivas$ = this.storageService.opActivas$;
+    this.consultasOp$ = this.storageService.consultasOpActivas$;
+    console.log("esto es op-diarias. consultasOp: ", this.consultasOp$);
+        
   }
 
   
@@ -88,7 +97,18 @@ export class OpDiariasComponent implements OnInit {
     this.choferSeleccionado = choferForm[0];               
     //console.log(this.choferSeleccionado);
   }
+ 
 
+  toggle() {
+    this.show = !this.show;
+    // Change the name of the button.
+    if (this.show) this.buttonName = 'Cerrar';
+    else this.buttonName = 'Consultar Operaciones';
+  }
 
+  getMsg(msg: any) {
+    console.log(msg, 'from parent');
+    this.ngOnInit()
+  }
 
 }

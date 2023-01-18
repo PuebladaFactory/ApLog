@@ -13,18 +13,35 @@ export class OpHistorialComponent implements OnInit {
    
   detalleOp!: Operacion;
   opCerradas$!:any;
-  componente: string = "operacionesCerradas"
+  componente: string = "operacionesCerradas";
+  public show: boolean = false;
+  public buttonName: any = 'Consultar Operaciones';
+  consultasOp$!:any;
+  titulo: string = "consultasOpCerradas"
 
   constructor(private storageService: StorageService) {    
    }
   
   ngOnInit(): void { 
-    this.opCerradas$ = this.storageService.opCerradas$    
+    //this.opCerradas$ = this.storageService.opCerradas$ 
+    this.consultasOp$ = this.storageService.consultasOpCerradas$;   
   }
   
 
   seleccionarOp(op:Operacion){
     this.detalleOp = op;
+  }
+
+  toggle() {
+    this.show = !this.show;
+    // Change the name of the button.
+    if (this.show) this.buttonName = 'Cerrar';
+    else this.buttonName = 'Consultar Operaciones';
+  }
+
+  getMsg(msg: any) {
+    console.log(msg, 'from parent');
+    this.ngOnInit()
   }
 
 }

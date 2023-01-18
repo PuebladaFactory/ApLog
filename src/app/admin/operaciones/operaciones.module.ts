@@ -9,6 +9,8 @@ import { OpHistorialComponent } from './op-historial/op-historial.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
+import { ConsultaOpComponent } from './consulta-op/consulta-op.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
 @NgModule({
@@ -16,7 +18,8 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
     OpControlComponent,
     OpAltaComponent,
     OpDiariasComponent,
-    OpHistorialComponent
+    OpHistorialComponent,
+    ConsultaOpComponent,
   ],
   imports: [
     CommonModule,
@@ -24,7 +27,8 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    Ng2SearchPipeModule
+    Ng2SearchPipeModule,
+    NgbModule
   ]
 })
 export class OperacionesModule { }

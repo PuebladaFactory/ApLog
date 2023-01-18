@@ -1,4 +1,15 @@
 <h1>Operaciones Programadas</h1>
+<div>
+  <button (click)="toggle()" id="bt" class="btn btn-outline-secondary">
+    {{ buttonName }}
+  </button>
+</div>
+
+<ng-container *ngIf="show">
+  <app-consulta-op (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-consulta-op>
+</ng-container>
+
+
 
 <table class="table table-dark table-striped">
     <thead>
@@ -12,7 +23,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor=" let op of opActivas$.source._value">
+        <tr *ngFor=" let op of consultasOp$.source._value">
           <th scope="row">{{op.fecha}} </th>
           <td>{{op.idOperacion}}</td>
           <td>{{op.cliente.razonSocial}}</td>

@@ -1,5 +1,15 @@
 <h1>Operaciones cerradas</h1>
 
+<div>
+  <button (click)="toggle()" id="bt" class="btn btn-outline-secondary">
+    {{ buttonName }}
+  </button>
+</div>
+
+<ng-container *ngIf="show">
+  <app-consulta-op (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-consulta-op>
+</ng-container>
+
 <table class="table table-dark table-striped">
     <thead>
         <tr>
@@ -10,7 +20,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor=" let op of opCerradas$.source._value" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="seleccionarOp(op)">
+        <tr *ngFor=" let op of consultasOp$.source._value" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="seleccionarOp(op)">
           <th scope="row">{{op.fecha}} </th>
           <td>{{op.idOperacion}}</td>
           <td>{{op.cliente.razonSocial}}</td>

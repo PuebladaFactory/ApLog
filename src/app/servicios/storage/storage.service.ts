@@ -46,6 +46,12 @@ export class StorageService {
   private _jornadas$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public jornadas$ = this._jornadas$.asObservable()
 
+  private _consultasOpActivas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public consultasOpActivas$ = this._consultasOpActivas$.asObservable()
+
+  private _consultasOpCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public consultasOpCerradas$ = this._consultasOpCerradas$.asObservable()
+
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -84,6 +90,16 @@ export class StorageService {
 
       case "jornadas": {
         this._jornadas$.next(data)
+        break;
+      }
+
+      case "consultasOpActivas": {
+        this._consultasOpActivas$.next(data)
+        break;
+      }
+
+      case "consultasOpCerradas": {
+        this._consultasOpCerradas$.next(data)
         break;
       }
 
@@ -173,9 +189,7 @@ export class StorageService {
 
         this.setInfo(componente, data)
         // this.updateObservable(componente, data)
-        console.log("storage initializer ", componente, data)
-
-
+        console.log("storage initializer ", componente, data);
       });
 
   }
@@ -187,6 +201,14 @@ export class StorageService {
         this.setInfo(componente, data)
       })
   }
+
+  getByDateValue(componente:string, campo:string, value1:any, value2:any, titulo:string){
+    this.dbFirebase
+    .getByDateValue(componente, campo, value1, value2)
+    .subscribe(data => {
+      this.setInfo(titulo , data)
+    })
+    }
 
 
 
