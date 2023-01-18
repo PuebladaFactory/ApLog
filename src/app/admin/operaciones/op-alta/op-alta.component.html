@@ -1,38 +1,42 @@
-<h1 class="mt-5">Alta Operacion</h1>
+<div id="caja" class="border border-2 p-4 rounded-4">
+    <h1 >Alta Operacion</h1>
 
-<div class="container d-flex justify-content-center align-self-center">
+    <div class="container d-flex justify-content-center align-self-center">
 
 
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <div class="form-group">
-      <label for="Fecha">Fecha</label>
-      <div class="input-group">
-        <input formControlName="fecha" class="form-control edicion" required type="date">            
-      </div>
-    </div>    
-    <div class="form-group">
-      <label for="Cliente">Cliente</label>
-      <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
-          <option value={{clienteSeleccionado}}>Elegir Cliente</option>
-          <option *ngFor="let cliente of clientes$.source._value">
-            {{cliente.razonSocial}}
-          </option>
-      </select>
-    </div>    
-    <div class="form-group">
-        <label for="Chofer">Chofer</label>
-        <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
-          <option value={{choferSeleccionado}}>Elegir Chofer</option>
-          <option *ngFor="let chofer of choferes$.source._value">
-            {{chofer.apellido}}
-          </option>
-      </select>
-    </div>           
-    <button class="btn btn-secondary mt-2" type="submit">
-      Guardar 
-    </button>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="Fecha">Fecha</label>
+          <div class="input-group">
+            <input formControlName="fecha" class="form-control edicion" required type="date">            
+          </div>
+        </div>    
+        <div class="form-group">
+          <label for="Cliente">Cliente</label>
+          <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
+              <option value={{clienteSeleccionado}}>Elegir Cliente</option>
+              <option *ngFor="let cliente of clientes$.source._value">
+                {{cliente.razonSocial}}
+              </option>
+          </select>
+        </div>    
+        <div class="form-group">
+            <label for="Chofer">Chofer</label>
+            <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
+              <option value={{choferSeleccionado}}>Elegir Chofer</option>
+              <option *ngFor="let chofer of choferes$.source._value">
+                {{chofer.apellido}}
+              </option>
+          </select>
+        </div>           
+        <button class="btn btn-secondary mt-2" type="submit">
+          Guardar 
+        </button>
 
-  </form>
+      </form>
 
+    </div>
 </div>
+
+

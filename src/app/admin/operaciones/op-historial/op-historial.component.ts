@@ -17,7 +17,11 @@ export class OpHistorialComponent implements OnInit {
   public show: boolean = false;
   public buttonName: any = 'Consultar Operaciones';
   consultasOp$!:any;
-  titulo: string = "consultasOpCerradas"
+  titulo: string = "consultasOpCerradas";
+  btnConsulta:boolean = false;
+  date:any = new Date();
+  primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth(), 1).toISOString().split('T')[0];
+  ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];
 
   constructor(private storageService: StorageService) {    
    }
@@ -25,6 +29,7 @@ export class OpHistorialComponent implements OnInit {
   ngOnInit(): void { 
     //this.opCerradas$ = this.storageService.opCerradas$ 
     this.consultasOp$ = this.storageService.consultasOpCerradas$;   
+    this.consultaMes();
   }
   
 
@@ -39,9 +44,11 @@ export class OpHistorialComponent implements OnInit {
     else this.buttonName = 'Consultar Operaciones';
   }
 
-  getMsg(msg: any) {
-    console.log(msg, 'from parent');
-    this.ngOnInit()
+  consultaMes(){
+    if(!this.btnConsulta){            
+      this.storageService.getByDateValue("operacionesCerradas", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+    }     
   }
+
 
 }

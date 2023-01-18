@@ -44,21 +44,21 @@ export class ConsultaOpComponent implements OnInit {
       this.model1.year,
       this.model1.month - 1,
       this.model1.day,      
-    ).toISOString();
-    //console.log(this.fechasConsulta.fechaDesde);
+    ).toISOString().split('T')[0];
+    console.log(this.fechasConsulta.fechaDesde);
 
     this.fechasConsulta.fechaHasta = new Date(
       this.model2.year,
       this.model2.month - 1,
       this.model2.day,      
-    ).toISOString();
-    //console.log(this.fechasConsulta.fechaHasta);
+    ).toISOString().split('T')[0];
+    console.log(this.fechasConsulta.fechaHasta);
 
     this.consultaOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta);
 
     //this.titulo = 'consulta facturacion';
     if(this.titulo === "consultasOpActivas"){
-      this.msgBackOpDiarias(this.respuesta);
+      this.msgBackOpDiarias();
     } else {
       this.msgBackOpHistorial(this.respuesta);
     }
@@ -70,15 +70,8 @@ export class ConsultaOpComponent implements OnInit {
     //console.log(this.consultaFacturacion);
     //this.ngOnInit()
   }
-  msgBackOpDiarias(item: any) {
-    /* let value = {
-      op: this.titulo,
-      item: item,
-    };  */
-    //console.log(value);
-
-    this.newItemEvent.emit(item);
-    //this.ngOnInit();
+  msgBackOpDiarias() {
+    this.newItemEvent.emit();    
   }
 
   msgBackOpHistorial(item: any) {

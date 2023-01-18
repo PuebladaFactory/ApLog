@@ -26,8 +26,13 @@ export class OpDiariasComponent implements OnInit {
   opActivas$!: any;  
   public show: boolean = false;
   public buttonName: any = 'Consultar Operaciones';
+  public showAlta: boolean = false;
+  public buttonNameAlta: any = 'Alta';
   consultasOp$!:any;
   titulo: string = "consultasOpActivas"
+  btnConsulta:boolean = false;
+  hoy: any = new Date().toISOString().split('T')[0];
+  yesterday: any = new Date(Date.now() - 864e5).toISOString().split('T')[0];
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, ) {
     this.form = this.fb.group({      
@@ -39,8 +44,8 @@ export class OpDiariasComponent implements OnInit {
     this.clientes$ = this.storageService.clientes$;
     //this.opActivas$ = this.storageService.opActivas$;
     this.consultasOp$ = this.storageService.consultasOpActivas$;
-    console.log("esto es op-diarias. consultasOp: ", this.consultasOp$);
-        
+    //console.log("esto es op-diarias. consultasOp: ", this.consultasOp$);
+    this.consultaOpDelDia()    
   }
 
   
@@ -106,9 +111,21 @@ export class OpDiariasComponent implements OnInit {
     else this.buttonName = 'Consultar Operaciones';
   }
 
-  getMsg(msg: any) {
-    console.log(msg, 'from parent');
-    this.ngOnInit()
+  toggleAltaOp() {
+    this.showAlta = !this.showAlta;
+    // Change the name of the button.
+    if (this.showAlta) this.buttonNameAlta = 'Cerrar';
+    else this.buttonNameAlta = 'Alta';
   }
 
+  consultaOpDelDia(){
+     if(!this.btnConsulta){            
+      this.storageService.getByDateValue("operacionesActivas", "fecha", this.hoy, this.hoy, this.titulo);    
+    }     
+  }
+
+  getMsg(msg: any) {
+    this.btnConsulta = true;
+  }
+ 
 }

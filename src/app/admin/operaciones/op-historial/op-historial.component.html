@@ -7,8 +7,12 @@
 </div>
 
 <ng-container *ngIf="show">
-  <app-consulta-op (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-consulta-op>
+  <app-consulta-op  [titulo]="titulo"></app-consulta-op>
 </ng-container>
+
+<h3 *ngIf="!btnConsulta">Historial de Operaciones: {{primerDia}} / {{ultimoDia}} </h3>
+
+<h3 *ngIf="btnConsulta">Resultado de la consulta: </h3>
 
 <table class="table table-dark table-striped">
     <thead>
