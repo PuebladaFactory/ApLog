@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ChoferSidebarComponent } from '../chofer-sidebar/chofer-sidebar.component';
 
 @Component({
   selector: 'app-chofer-home',
@@ -9,6 +10,9 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
   styleUrls: ['./chofer-home.component.css']
 })
 export class ChoferHomeComponent implements OnInit {
+
+  @ViewChild(ChoferSidebarComponent)
+  sidenav!: ChoferSidebarComponent
 
   activo:boolean = false;
   user:any;
@@ -34,7 +38,9 @@ export class ChoferHomeComponent implements OnInit {
 
   // muestra y oculta la barra lateral
   toogleSidebar(){
-    this.activo = !this.activo;
+    this.activo = !this.activo;    
     //console.log(this.activo);
   }
+
+
 }

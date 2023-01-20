@@ -6,7 +6,16 @@ a{
 ul, li {
     list-style-type: none; 
     padding: 0;
-    font-size: 12px;
+    font-size: 14px;
+}
+
+p{
+    font-size: 14px;
+    margin:0;    
+}
+
+#btn-acordion{
+    padding:0;
 }
 
 #menu{

@@ -27,12 +27,13 @@ export class OpDiariasComponent implements OnInit {
   public show: boolean = false;
   public buttonName: any = 'Consultar Operaciones';
   public showAlta: boolean = false;
-  public buttonNameAlta: any = 'Alta';
+  public buttonNameAlta: any = 'Alta de Operación';
   consultasOp$!:any;
   titulo: string = "consultasOpActivas"
   btnConsulta:boolean = false;
   hoy: any = new Date().toISOString().split('T')[0];
   yesterday: any = new Date(Date.now() - 864e5).toISOString().split('T')[0];
+  searchText: string = "";
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, ) {
     this.form = this.fb.group({      
@@ -115,7 +116,7 @@ export class OpDiariasComponent implements OnInit {
     this.showAlta = !this.showAlta;
     // Change the name of the button.
     if (this.showAlta) this.buttonNameAlta = 'Cerrar';
-    else this.buttonNameAlta = 'Alta';
+    else this.buttonNameAlta = 'Alta de Operación';
   }
 
   consultaOpDelDia(){

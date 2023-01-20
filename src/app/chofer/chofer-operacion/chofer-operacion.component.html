@@ -7,16 +7,16 @@
           <th scope="col">N° Operación</th>
           <th scope="col">Cliente</th>
           <th scope="col">Chofer</th>          
-          <th scope="col"></th>                    
+          <th scope="col" id="bt"></th>                    
         </tr>
       </thead>
       <tbody>
         <tr *ngFor=" let op of opActivas$.source._value">
-          <th scope="row">{{op.fecha}} </th>
-          <td>{{op.idOperacion}}</td>
-          <td>{{op.cliente.razonSocial}}</td>
-          <td>{{op.chofer.apellido}}</td>          
-          <td><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" [name]="'Cerrar Operación'" (click)="abrirOp(op)" ></app-btn-editar> </td>                    
+          <th class="align-middle" scope="row">{{op.fecha}} </th>
+          <td class="align-middle">{{op.idOperacion}}</td>
+          <td class="align-middle">{{op.cliente.razonSocial}}</td>
+          <td class="align-middle">{{op.chofer.apellido}}</td>          
+          <td class="align-middle"><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" [name]="'Cerrar Operación'" (click)="abrirOp(op)" ></app-btn-editar> </td>                    
         </tr>    
       </tbody>
 </table>

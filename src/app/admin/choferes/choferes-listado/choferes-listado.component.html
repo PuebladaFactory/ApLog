@@ -3,30 +3,31 @@
 <table class="table table-dark table-striped">
     <thead>
         <tr>
-          <th scope="col">Id Chofer</th>
-          <th scope="col">Apellido</th>
-          <th scope="col">Nombre</th>
-          <th scope="col">Correo</th>
-          <th scope="col">Celular</th>
-          <th scope="col">Fecha Nacimiento</th>
-          <th scope="col">Patente</th>
-          <th scope="col">Categoria</th>
-          <th scope="col"></th>          
-          <th scope="col"></th>   
+          <th class="tabla" scope="col">Id Chofer</th>
+          <th class="tabla" scope="col">Apellido</th>
+          <th class="tabla" scope="col">Nombre</th>
+          <th class="tabla" scope="col">Correo</th>
+          <th class="tabla" scope="col">Celular</th>
+          <th class="tabla" scope="col">Fecha Nacimiento</th>
+          <th class="tabla" scope="col">Patente</th>
+          <th class="tabla" scope="col">Categoria</th>
+          <th scope="col" id="botones"></th>                    
         </tr>
       </thead>
       <tbody>
         <tr *ngFor=" let chofer of choferes$.source._value">
-          <th scope="row">{{chofer.idChofer}} </th>
-          <td>{{chofer.apellido}}</td>
-          <td>{{chofer.nombre}}</td>         
-          <td>{{chofer.email}}</td>
-          <td>{{chofer.celular}}</td>
-          <td>{{chofer.fechaNac}}</td>
-          <td>{{chofer.dominio}}</td>
-          <td>{{chofer.categoria}}</td>
-          <td><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(chofer)"></app-btn-editar> </td>
-          <td><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#jornadaModal" [name]="'Jornada'" (click)="jornada(chofer.idChofer)"></app-btn-editar> </td>
+          <th class="align-middle" scope="row">{{chofer.idChofer}} </th>
+          <td class="align-middle">{{chofer.apellido}}</td>
+          <td class="align-middle">{{chofer.nombre}}</td>         
+          <td class="align-middle">{{chofer.email}}</td>
+          <td class="align-middle">{{chofer.celular}}</td>
+          <td class="align-middle">{{chofer.fechaNac}}</td>
+          <td class="align-middle">{{chofer.dominio}}</td>
+          <td class="align-middle">{{chofer.categoria}}</td>
+          <td class="align-middle">
+              <app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(chofer)"></app-btn-editar>          
+              <app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#jornadaModal" [name]="'Jornada'" (click)="jornada(chofer.idChofer)"></app-btn-editar> 
+          </td>
         </tr>        
       </tbody>   
     

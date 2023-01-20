@@ -8,17 +8,17 @@
           <th scope="col">Domicilio</th>
           <th scope="col">Correo</th>
           <th scope="col">Telefono</th>
-          <th scope="col"></th>          
+          <th scope="col" id="botones"></th>          
         </tr>
       </thead>
       <tbody>
         <tr *ngFor=" let cliente of clientes$.source._value">
-          <th scope="row">{{cliente.idCliente}} </th>
-          <td>{{cliente.razonSocial}}</td>
-          <td>{{cliente.direccion}}</td>
-          <td>{{cliente.email}}</td>
-          <td>{{cliente.telefono}}</td>
-          <td><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(cliente)" ></app-btn-editar> </td>          
+          <th class="align-middle" scope="row">{{cliente.idCliente}} </th>
+          <td class="align-middle">{{cliente.razonSocial}}</td>
+          <td class="align-middle">{{cliente.direccion}}</td>
+          <td class="align-middle">{{cliente.email}}</td>
+          <td class="align-middle">{{cliente.telefono}}</td>
+          <td class="align-middle"><app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(cliente)" ></app-btn-editar> </td>          
         </tr>    
       </tbody>
 </table>

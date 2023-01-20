@@ -22,6 +22,7 @@ export class OpHistorialComponent implements OnInit {
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth(), 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];
+  searchText: string = "";
 
   constructor(private storageService: StorageService) {    
    }
@@ -48,6 +49,10 @@ export class OpHistorialComponent implements OnInit {
     if(!this.btnConsulta){            
       this.storageService.getByDateValue("operacionesCerradas", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
     }     
+  }
+
+  getMsg(msg: any) {
+    this.btnConsulta = true;
   }
 
 

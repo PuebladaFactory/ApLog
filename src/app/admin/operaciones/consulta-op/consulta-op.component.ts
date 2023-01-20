@@ -60,7 +60,7 @@ export class ConsultaOpComponent implements OnInit {
     if(this.titulo === "consultasOpActivas"){
       this.msgBackOpDiarias();
     } else {
-      this.msgBackOpHistorial(this.respuesta);
+      this.msgBackOpHistorial();
     }
     
 
@@ -74,14 +74,14 @@ export class ConsultaOpComponent implements OnInit {
     this.newItemEvent.emit();    
   }
 
-  msgBackOpHistorial(item: any) {
+  msgBackOpHistorial() {
    /*  let value = {
       op: this.titulo,
       item: item,
     };  */
     //console.log(value);
 
-    this.newItemEvent.emit(item);
+    this.newItemEvent.emit();
     //this.ngOnInit();
   }
 

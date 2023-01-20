@@ -65,11 +65,28 @@ a:focus {
     background: #002b5c;
     color: #fff;
     transition: all 0.3s;
+    z-index: 10;
+    /* position: absolute; */
 }
 
 #sidebar.active {
-    margin-left: -200px;
+    margin-left: -200px;  
+    transition: all 0.3s;  
 }
+
+/* ESTO LO VOY A USAR CUANDO ESCUCHE LOS BREAKPOINTS 
+///////////////////////////////////////////////////////// */
+ /* button{
+    margin-left: 200px;
+    transition: all 0.3s;
+}
+
+button.active{
+    margin-left: 0px;
+    transition: all 0.3s;
+} */
+/* //////////////////////////////////////////////////////////////// */
+
 /* 
 #sidebar .sidebar-header {
     padding: 20px;
