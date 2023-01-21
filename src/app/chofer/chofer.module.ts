@@ -11,6 +11,9 @@ import { ChoferSidebarComponent } from './chofer-sidebar/chofer-sidebar.componen
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from '../shared/shared.module';
 import { ChoferHistorialComponent } from './chofer-historial/chofer-historial.component';
+import { ConsultaComponent } from './consulta/consulta.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
 
 
@@ -22,14 +25,17 @@ import { ChoferHistorialComponent } from './chofer-historial/chofer-historial.co
     ChoferLiquidacionComponent,
     ChoferOperacionComponent,
     ChoferSidebarComponent,
-    ChoferHistorialComponent,    
+    ChoferHistorialComponent,
+    ConsultaComponent,    
   ],
   imports: [
     CommonModule,
     ChoferRoutingModule,
     FormsModule,
     ReactiveFormsModule,
-    SharedModule
+    SharedModule,
+    NgbModule,
+    Ng2SearchPipeModule
   ]
 })
 export class ChoferModule { }

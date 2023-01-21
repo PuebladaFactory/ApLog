@@ -15,20 +15,20 @@
                         <th scope="col">Celular</th>
                         <th scope="col">Patente</th>
                         <th scope="col">Categoria</th>
-                        <th scope="col"></th>          
+                        <th id="btn-eliminar" scope="col"></th>          
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <th scope="row">{{chofer.idChofer}} </th>
-                        <td>{{chofer.apellido}}</td>
-                        <td>{{chofer.nombre}}</td>
-                        <td>{{chofer.email}}</td>
-                        <td>{{chofer.fechaNac}}</td>
-                        <td>{{chofer.celular}}</td>
-                        <td>{{chofer.dominio}}</td>
-                        <td>{{chofer.categoria}}</td>
-                        <td><app-btn-eliminar (click)="eliminarChofer(chofer)"></app-btn-eliminar> </td>
+                        <th class="align-middle" scope="row">{{chofer.idChofer}} </th>
+                        <td class="align-middle">{{chofer.apellido}}</td>
+                        <td class="align-middle">{{chofer.nombre}}</td>
+                        <td class="align-middle">{{chofer.email}}</td>
+                        <td class="align-middle">{{chofer.fechaNac}}</td>
+                        <td class="align-middle">{{chofer.celular}}</td>
+                        <td class="align-middle">{{chofer.dominio}}</td>
+                        <td class="align-middle">{{chofer.categoria}}</td>
+                        <td class="align-middle"><app-btn-eliminar (click)="eliminarChofer(chofer)"></app-btn-eliminar> </td>
                     </tr>        
                     </tbody>    
             </table>       

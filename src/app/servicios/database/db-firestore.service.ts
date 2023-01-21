@@ -62,6 +62,17 @@ getByFieldValue(componente:string, campo:string, value:any){
       .where(campo, ">=", value1).where(campo, "<=", value2))
       .valueChanges(({  idField: 'id' })); 
     }
+
+  getByDateValueAndFieldValue(componente:string, campo:string, value1:any, value2:any, campo2:string, value3:any){
+    // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
+    // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
+    // orden solo asc o desc
+  
+    let dataCollection = `/Vantruck/datos/${componente}`;
+    return this.firestore2.collection(dataCollection, ref => ref
+      .where(campo, ">=", value1).where(campo, "<=", value2).where(campo2, '==', value3))
+      .valueChanges(({  idField: 'id' })); 
+    }
   
 
 

@@ -1,5 +1,19 @@
 <h1>Operaciones cerradas</h1>
 
+<div class="mt-5">
+  <button (click)="toggle()" id="bt" class="btn btn-outline-secondary">
+    {{ buttonName }}
+  </button>
+</div>
+
+<ng-container *ngIf="show">
+  <app-consulta (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-consulta>  
+</ng-container>
+
+<h3 *ngIf="!btnConsulta" class="mt-5">Historial de Operaciones: {{primerDia}} / {{ultimoDia}} </h3>
+
+<h3 *ngIf="btnConsulta" class="mt-5">Resultado de la consulta: </h3>
+
 <table class="table table-dark table-striped">
     <thead>
         <tr>

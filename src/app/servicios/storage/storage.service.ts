@@ -210,6 +210,16 @@ export class StorageService {
     })
     }
 
+    getByDateValueAndFieldValue(componente:string, campo:string, value1:any, value2:any, titulo:string, campo2:string, value3:any){
+    this.dbFirebase
+    .getByDateValueAndFieldValue(componente, campo, value1, value2, campo2, value3)
+    .subscribe(data => {
+      this.setInfo(titulo , data)
+      console.log("esta es la consulta por fechas y por id: ", data);
+      
+    })
+    }
+
 
 
   addItem(componente: string, item: any): void {
