@@ -11,9 +11,7 @@ describe('BtnEliminarComponent', () => {
       declarations: [ BtnEliminarComponent ]
     })
     .compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(BtnEliminarComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -18,7 +18,7 @@ export class DbFirestoreService {
   }
 
   getAll(componente:string) {
-    let dataCollection = collection(this.firestore, `/${this.coleccion}/datos/${componente}`);
+    let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
         
     return collectionData(dataCollection, {
       idField: 'id',
@@ -31,7 +31,7 @@ getAllSorted(componente:string, campo:string, orden:any) {
   // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
   // orden solo asc o desc
 
-  let dataCollection = `/${this.coleccion}/datos/${componente}`;
+  let dataCollection = `/Vantruck/datos/${componente}`;
 
   return this.firestore2.collection(dataCollection, ref => ref
     .orderBy(campo, orden))
@@ -41,25 +41,51 @@ getAllSorted(componente:string, campo:string, orden:any) {
 // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
 
 
-getByFieldValue(componente:string, campo:string, value:string){
+getByFieldValue(componente:string, campo:string, value:any){
   // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
   // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
   // orden solo asc o desc
 
-  let dataCollection = `/${this.coleccion}/datos/${componente}`;
+  let dataCollection = `/Vantruck/datos/${componente}`;
   return this.firestore2.collection(dataCollection, ref => ref
     .where(campo, '==', value))
-    .valueChanges(({  idField: 'id' })); }
+    .valueChanges(({  idField: 'id' })); 
+  }
+
+  getByDateValue(componente:string, campo:string, value1:any, value2:any){
+    // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
+    // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
+    // orden solo asc o desc
+  
+    let dataCollection = `/Vantruck/datos/${componente}`;
+    return this.firestore2.collection(dataCollection, ref => ref
+      .where(campo, ">=", value1).where(campo, "<=", value2))
+      .valueChanges(({  idField: 'id' })); 
+    }
+
+  getByDateValueAndFieldValue(componente:string, campo:string, value1:any, value2:any, campo2:string, value3:any){
+    // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
+    // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
+    // orden solo asc o desc
+  
+    let dataCollection = `/Vantruck/datos/${componente}`;
+    return this.firestore2.collection(dataCollection, ref => ref
+      .where(campo, ">=", value1).where(campo, "<=", value2).where(campo2, '==', value3))
+      .valueChanges(({  idField: 'id' })); 
+    }
+  
 
 
 
   get(id: string) {
-    const estacionamiento1DocumentReference = doc(this.firestore, `/${this.coleccion}/datos/${id}`);
+    const estacionamiento1DocumentReference = doc(this.firestore, `/Vantruck/datos/${id}`);
     return docData(estacionamiento1DocumentReference, { idField: 'id' });
   }
 
   create(componente:string, item: any) {
-    let dataCollection = collection(this.firestore, `/${this.coleccion}/datos/${componente}`);
+    console.log("db.service, metodo create: ",this.coleccion);
+    
+    let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
     return addDoc(dataCollection, item);
   }
 
@@ -67,14 +93,14 @@ getByFieldValue(componente:string, campo:string, value:string){
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
     const estacionamiento1DocumentReference = doc(
       this.firestore,
-      `/${this.coleccion}/datos/${componente}/${item.id}`
+      `/Vantruck/datos/${componente}/${item.id}`
     );
     return updateDoc(estacionamiento1DocumentReference, { ...item });
   }
 
   delete(componente:string, id: string) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
-    const estacionamiento1DocumentReference = doc(this.firestore, `/${this.coleccion}/datos/${componente}/${id}`);
+    const estacionamiento1DocumentReference = doc(this.firestore, `/Vantruck/datos/${componente}/${id}`);
     return deleteDoc(estacionamiento1DocumentReference);
   }
 

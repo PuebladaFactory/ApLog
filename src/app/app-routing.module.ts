@@ -17,6 +17,8 @@ const redirectLoggedInToHome = () => redirectLoggedInTo(['home']);
 
 const appRoutes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
+  {path: 'chofer', loadChildren: () => import('./chofer/chofer.module').then(m => m.ChoferModule)},
+  {path: 'admin', loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule)},
   {
     path: 'home',
     component: HomeComponent,

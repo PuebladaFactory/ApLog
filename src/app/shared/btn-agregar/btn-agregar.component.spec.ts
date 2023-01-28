@@ -11,9 +11,7 @@ describe('BtnAgregarComponent', () => {
       declarations: [ BtnAgregarComponent ]
     })
     .compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(BtnAgregarComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

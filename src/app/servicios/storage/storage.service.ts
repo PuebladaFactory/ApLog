@@ -25,37 +25,46 @@ export class StorageService {
 
   // Observables //
 
-  private _playa$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public playa$ = this._playa$.asObservable()
+  private _clientes$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public clientes$ = this._clientes$.asObservable()
 
-  private _tarifas$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public tarifas$ = this._tarifas$.asObservable()
+  private _choferes$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public choferes$ = this._choferes$.asObservable()
 
   private _usuario$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public usuario$ = this._usuario$.asObservable()
 
-  private _clientes$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public clientes$ = this._clientes$.asObservable()
+  private _operaciones$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public operaciones$ = this._operaciones$.asObservable()
 
-  private _cajaLog$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public cajaLog$ = this._cajaLog$.asObservable()
+  private _opActivas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public opActivas$ = this._opActivas$.asObservable()
 
-  private _facturacion$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public facturacion$ = this._facturacion$.asObservable()
+  private _opCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public opCerradas$ = this._opCerradas$.asObservable()
 
-  private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public logger$ = this._logger$.asObservable()
+  private _jornadas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public jornadas$ = this._jornadas$.asObservable()
+
+  private _consultasOpActivas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public consultasOpActivas$ = this._consultasOpActivas$.asObservable()
+
+  private _consultasOpCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public consultasOpCerradas$ = this._consultasOpCerradas$.asObservable()
+
+  /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public logger$ = this._logger$.asObservable() */
 
 
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
-      case "playa": {
-        this._playa$.next(data)
+      case "clientes": {
+        this._clientes$.next(data)
         break;
       }
-      case "tarifas": {
-        this._tarifas$.next(data)
+      case "choferes": {
+        this._choferes$.next(data)
         break;
       }
       case "usuario": {
@@ -63,27 +72,41 @@ export class StorageService {
         break;
       }
 
-      case "clientes": {
-        this._clientes$.next(data)
+      case "operaciones": {
+        this._operaciones$.next(data)
+        break;
+      }
+
+      case "operacionesActivas": {
+        this._opActivas$.next(data)
         break;
       }
 
 
-      case "cajaLog": {
-        this._cajaLog$.next(data)
+      case "operacionesCerradas": {
+        this._opCerradas$.next(data)
         break;
       }
 
-
-      case "facturacion": {
-        this._facturacion$.next(data)
+      case "jornadas": {
+        this._jornadas$.next(data)
         break;
       }
 
-      case "logger": {
+      case "consultasOpActivas": {
+        this._consultasOpActivas$.next(data)
+        break;
+      }
+
+      case "consultasOpCerradas": {
+        this._consultasOpCerradas$.next(data)
+        break;
+      }
+
+      /*case "logger": {
         this._logger$.next(data)
         break;
-      }
+      } */
 
       default: {
         //statements; 
@@ -109,6 +132,7 @@ export class StorageService {
   loadInfo(componente: any) {
     const data = JSON.parse(localStorage.getItem(componente) || "")
     this.updateObservable(componente, data)
+    return data;
   }
 
   clearInfo(componente: any) {
@@ -118,7 +142,7 @@ export class StorageService {
 
   clearAllLocalStorage() {
     localStorage.clear()
-    this._playa$.next(null)
+    //this._playa$.next(null)
   }
 
 
@@ -127,15 +151,26 @@ export class StorageService {
   // Al inicio de la aplicacion se carga el storage con los datos de la base
   // al estar suscripto, cualquier cambio en la base se refleja en el storage.
 
-  initializer() {
 
-    this.getAllSorted("playa", 'fechas.fechaDate', 'asc')
-    this.getAllSorted("tarifas", 'categoria', 'asc')
-    this.getAllSorted("clientes", 'apellido', 'asc')
-    this.getAllSorted("cajaLog", 'apertura', 'asc')
-    this.getAllSorted("facturacion", 'fechaOp', 'asc')
-    this.getAllSorted("logger", 'Fecha', 'asc')
+  // metodo initializer si el rol es admin
+  initializerAdmin() {
 
+    this.getAllSorted("clientes", 'idCliente', 'asc')
+    this.getAllSorted("choferes", 'idChofer', 'asc')
+    this.getAllSorted("operacionesActivas", 'fecha', 'asc')
+    this.getAllSorted("operacionesCerradas", 'fecha', 'asc')
+    this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
+    this.getAllSorted("jornadas", 'idChofer', 'asc')
+   
+
+  }
+
+  // metodo initializer si el rol es user
+  initializerUser(idChofer:any) {
+    this.getByFieldValue("choferes", "idChofer", idChofer)
+    this.getByFieldValue("operacionesActivas", "chofer.idChofer", idChofer)
+    this.getByFieldValue("operacionesCerradas", "chofer.idChofer", idChofer)
+    
 
   }
 
@@ -154,18 +189,42 @@ export class StorageService {
 
         this.setInfo(componente, data)
         // this.updateObservable(componente, data)
-        console.log("storage initializer ", componente, data)
-
-
+        console.log("storage initializer ", componente, data);
       });
 
   }
+
+  getByFieldValue(componente: any, campo:any, value:any){
+    this.dbFirebase
+      .getByFieldValue(componente, campo, value)
+      .subscribe(data => {
+        this.setInfo(componente, data)
+      })
+  }
+
+  getByDateValue(componente:string, campo:string, value1:any, value2:any, titulo:string){
+    this.dbFirebase
+    .getByDateValue(componente, campo, value1, value2)
+    .subscribe(data => {
+      this.setInfo(titulo , data)
+    })
+    }
+
+    getByDateValueAndFieldValue(componente:string, campo:string, value1:any, value2:any, titulo:string, campo2:string, value3:any){
+    this.dbFirebase
+    .getByDateValueAndFieldValue(componente, campo, value1, value2, campo2, value3)
+    .subscribe(data => {
+      this.setInfo(titulo , data)
+      console.log("esta es la consulta por fechas y por id: ", data);
+      
+    })
+    }
 
 
 
   addItem(componente: string, item: any): void {
 
-    item.fechaOp = new Date()
+    //item.fechaOp = new Date()
     console.log(" storage add item ", componente, item,)
 
 

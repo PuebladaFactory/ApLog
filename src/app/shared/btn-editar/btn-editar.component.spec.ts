@@ -11,9 +11,7 @@ describe('BtnEditarComponent', () => {
       declarations: [ BtnEditarComponent ]
     })
     .compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(BtnEditarComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
