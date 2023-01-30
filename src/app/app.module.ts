@@ -51,13 +51,9 @@ import { LoginComponent } from './appLogin/login/login.component';
 import { LogoutComponent } from './appLogin/logout/logout.component';
 import { SignUpComponent } from './appLogin/sign-up/sign-up.component';
 import { VerifyEmailComponent } from './appLogin/verify-email/verify-email.component';
-import { HeaderComponent } from './home/header/header.component';
-import { HomeComponent } from './home/home.component';
-import { NavbarComponent } from './home/navbar/navbar.component';
+
 import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
-import { EmpresaFormComponent } from './perfil-empresa/empresa-form/empresa-form.component';
-import { PerfilEmpresaComponent } from './perfil-empresa/perfil-empresa.component';
-import { PerfilUsuarioComponent } from './perfil-usuario/perfil-usuario.component';
+
 
 import { ChoferModule } from './chofer/chofer.module';
 import { AdminModule } from './admin/admin.module';
@@ -72,9 +68,9 @@ import { OperacionesModule } from './admin/operaciones/operaciones.module';
 @NgModule({
   declarations: [
     AppComponent,
-    HeaderComponent,
+   
     LoginComponent,
-    HomeComponent,
+   
    
 
 
@@ -92,11 +88,11 @@ import { OperacionesModule } from './admin/operaciones/operaciones.module';
     SignUpComponent,
     LoginHeaderComponent,
 
-    PerfilUsuarioComponent,
-    PerfilEmpresaComponent,
-    EmpresaFormComponent,
+   
+   
+  
 
-    NavbarComponent,
+    
 
   ],
   imports: [

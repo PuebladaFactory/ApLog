@@ -4,9 +4,6 @@ import { RouterModule, Routes } from '@angular/router';
 import { ForgotPasswordComponent } from './appLogin/forgot-password/forgot-password.component';
 import { LoginComponent } from './appLogin/login/login.component';
 import { VerifyEmailComponent } from './appLogin/verify-email/verify-email.component';
-import { HomeComponent } from './home/home.component';
-import { PerfilEmpresaComponent } from './perfil-empresa/perfil-empresa.component';
-import { PerfilUsuarioComponent } from './perfil-usuario/perfil-usuario.component';
 
 // const routes: Routes = [];
 
@@ -19,30 +16,7 @@ const appRoutes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   {path: 'chofer', loadChildren: () => import('./chofer/chofer.module').then(m => m.ChoferModule)},
   {path: 'admin', loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule)},
-  {
-    path: 'home',
-    component: HomeComponent,
-    ...canActivate(redirectUnauthorizedToLogin),
-    children: [
-      {
-        path: '',
-        redirectTo: 'playa',
-        pathMatch: 'full',
-      },
-
-      {
-        path: 'usuario',
-        component: PerfilUsuarioComponent,
-        ...canActivate(redirectUnauthorizedToLogin),
-      },
-      {
-        path: 'empresa',
-        component: PerfilEmpresaComponent,
-        ...canActivate(redirectUnauthorizedToLogin),
-      },
-
-    ],
-  },
+  
   { path: 'login', component: LoginComponent }, // la ruta al login
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'verify-email-address', component: VerifyEmailComponent },
