@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Cliente } from 'src/app/interfaces/cliente';
+import { LoginComponent } from 'src/app/appLogin/login/login.component';
+import { Cliente, Contacto } from 'src/app/interfaces/cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 
@@ -15,14 +16,25 @@ export class ClienteListadoComponent implements OnInit {
   edicion:boolean = false;
   clienteEditar!: Cliente;
   form:any;
-  componente:string ="clientes"
+  componente:string ="clientes";
+  //mostrar:boolean = false;
+  formContacto: any;
+  contactoEditar!: Contacto;
+  indice!:number;
 
   constructor(private fb: FormBuilder, private storageService: StorageService,){
     this.form = this.fb.group({      
       razonSocial: [""], 
       direccion: [""],
-      email: [""],
-      telefono: [""],      
+      cuit: [""],      
+    })
+
+    this.formContacto = this.fb.group({
+      puesto:[""],
+      apellido:[""],
+      nombre: [""],
+      telefono: [""],
+      email:[""],
     })
   }
   
@@ -41,17 +53,23 @@ export class ClienteListadoComponent implements OnInit {
     this.form.patchValue({
       razonSocial: this.clienteEditar.razonSocial,
       direccion: this.clienteEditar.direccion,
-      email: this.clienteEditar.email,
-      telefono: this.clienteEditar.telefono,
+      cuit: this.clienteEditar.cuit
+      /* email: this.clienteEditar.email,
+      telefono: this.clienteEditar.telefono, */
     })
   }
 
   onSubmit(){   
     this.clienteEditar.razonSocial = this.form.value.razonSocial;
     this.clienteEditar.direccion = this.form.value.direccion;
-    this.clienteEditar.email = this.form.value.email;
-    this.clienteEditar.telefono = this.form.value.telefono;
+    this.clienteEditar.cuit = this.form.value.cuit;
+    //this.clienteEditar.contactos = this.formContacto.value;
+    /* this.clienteEditar.email = this.form.value.email;
+    this.clienteEditar.telefono = this.form.value.telefono; */
     //console.log("este es el cliente editado: ", this.clienteEditar);
+    console.log("estos son los contactos: ", this.formContacto.value);
+    console.log("estos es el clienteEditar: ", this.clienteEditar);
+    
     this.update();    
    }
 
@@ -60,5 +78,34 @@ export class ClienteListadoComponent implements OnInit {
     this.form.reset();
     this.ngOnInit();
   }
+
+  editarPerfil(){
+    this.edicion = !this.edicion;
+  }
+
+  armarContacto(contacto: Contacto, i: number){
+    console.log(i);
+    this.indice = i;
+    this.contactoEditar = contacto;
+    this.formContacto.patchValue({
+      puesto: contacto.puesto,
+      apellido: contacto.apellido,
+      nombre: contacto.nombre,
+      telefono: contacto.telefono,
+      email: contacto.email,
+    })
+  }
+
+  guardarContacto(){
+    //console.log(this.formContacto.value);
+    this.contactoEditar = this.formContacto.value;
+    //console.log(this.contactoEditar);
+    this.clienteEditar.contactos[this.indice] = this.contactoEditar;
+    console.log(this.clienteEditar);
+    
+  }
+  /* toogleMostrar(){
+    this.mostrar = !this.mostrar;
+  } */
 
 }
