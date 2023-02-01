@@ -1,7 +1,35 @@
 th{
-    width: 19%;
+    width: 12.5%;
 }
 
 #botones{
-    width: 5%;
+    width: 6%;
+}
+
+#plus{
+    width: 3%;
+}
+
+select{
+   background-color:#212529;
+   color: white;
+}
+
+/* #contactos td{
+    background-color: red;
+    justify-content: space-between;
+    width: 25%;
+} */
+.fila-contacto{
+    //background-color: red;    
+    width: 203.8px;
+}
+
+.isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+}
+  
+.isDisabled:hover {
+    cursor: not-allowed;
 }

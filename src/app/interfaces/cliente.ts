@@ -2,7 +2,17 @@ export interface Cliente {
     id:any | null;
     idCliente: number;
     razonSocial: string;
+    cuit: number;
     direccion: string;
-    email: string;
-    telefono: number;
+    contactos: Contacto [];
+}
+
+export interface Contacto {    
+    puesto:string;
+    apellido: string;
+    nombre:string;
+    telefono:number;
+    email:string;
+    
+    
 }
