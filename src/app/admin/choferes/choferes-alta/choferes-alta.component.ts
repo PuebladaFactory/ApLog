@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Chofer } from 'src/app/interfaces/chofer';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { AdicionalKm, Jornada } from 'src/app/interfaces/jornada';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -18,6 +18,8 @@ export class ChoferesAltaComponent implements OnInit {
   componente!:string; 
   form:any;
   jornadaForm:any;
+  vehiculoForm: any;
+  seguimientoForm: any;
   adicionalForm:any;
   chofer!: Chofer;  
   categorias = [
@@ -26,23 +28,39 @@ export class ChoferesAltaComponent implements OnInit {
   { id: 2, categoria: 'liviano', },
   { id: 3, categoria: 'otro', },
   ];
+  seguimiento: boolean = false;
   categoriaSeleccionada!:string;
-
+  tipoCombustible!:string;
+  tarjetaCombustible!:string;
   jornada!:Jornada;
-
+  vehiculo!:Vehiculo;
    adicionalKm!:AdicionalKm;  
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
     this.form = this.fb.group({                             //formulario para el perfil 
       nombre: [""], 
-      apellido: [""],      
+      apellido: [""], 
+      cuit: [""],            
       fechaNac: [""],
       email: [""],
-      celular: [""],
-      dominio: [""],
+      celularContacto: [""],
+      celularEmergencia: [""],
+      domicilio: [""],     
+
   });
 
-    this.jornadaForm = this.fb.group({                    //formulario para la jornada
+    this.vehiculoForm = this.fb.group({
+      dominio: [""], 
+      marca:[""], 
+      modelo: [""],         
+    })
+
+    this.seguimientoForm = this.fb.group({
+      proveedor: [""],
+      marcaGps: [""],
+    })
+
+   /*  this.jornadaForm = this.fb.group({                    //formulario para la jornada
       base: [""],      
       carga: [""],
       publicidad: [""],  
@@ -54,7 +72,7 @@ export class ChoferesAltaComponent implements OnInit {
       adicionalKm3: [""],
       adicionalKm4: [""],
       adicionalKm5: [""],
-  });
+  }); */
    }
 
    ngOnInit(): void {}
@@ -66,24 +84,39 @@ export class ChoferesAltaComponent implements OnInit {
    // y desp guarda el objeto en la coleccion que le corresponde
    onSubmit(){    
     this.armarChofer();
-    this.armarJornada();
+    this.armarVehiculo();    
+    this.addItem(this.chofer)
     this.router.navigate(['/choferes/listado']);    
    }
 
    armarChofer(){
     this.componente = "choferes"
     this.chofer = this.form.value;
-    this.chofer.categoria = this.categoriaSeleccionada;
+   /*  this.chofer.categoria = this.categoriaSeleccionada; */
     this.chofer.idChofer = new Date().getTime(); 
-    //console.log("este es el chofer: ",this.chofer);     
-    this.addItem(this.chofer)
+    console.log("este es el chofer: ",this.chofer);     
+    
    }
 
    addItem(item:any): void {   
     this.storageService.addItem(this.componente, item);   
   }  
 
-  armarJornada(){     
+  armarVehiculo(){   
+    this.vehiculo = this.vehiculoForm.value;
+    this.vehiculo.categoria = this.categoriaSeleccionada;
+    this.vehiculo.tipoCombustible = this.tipoCombustible;
+    this.vehiculo.tarjetaCombustible = this.tarjetaCombustible;
+    if(this.seguimiento){
+      this.vehiculo.satelital = this.seguimientoForm.value;
+    }else{
+      this.vehiculo.satelital = "No";
+    }
+    //console.log(this.vehiculo);
+    this.chofer.vehiculo = this.vehiculo;
+  }
+
+  /* armarJornada(){     
     this.componente = "jornadas"
     this.adicionalKm = this.adicionalForm.value
     //console.log("esto es adicionalKm: ", this.adicionalKm);
@@ -92,13 +125,36 @@ export class ChoferesAltaComponent implements OnInit {
     this.jornada.idChofer = this.chofer.idChofer;    
     //console.log("esta es la jornada: ", this.jornada);
     this.addItem(this.jornada)
-  }
+  } */
 
   
-  changeCategoria(e: any) {
-    //console.log(e.target.value)  ;     
-    this.categoriaSeleccionada = e.target.value
-    console.log(this.categoriaSeleccionada);    
+  changeCategoria(e: any) {    
+    this.categoriaSeleccionada = e.target.value   
+  }
+
+  changeTipoCombustible(e: any) {    
+    this.tipoCombustible = e.target.value   
+  }
+
+  changeTarjetaombustible(e: any) {    
+    this.tarjetaCombustible = e.target.value   
+  }
+
+  seguimientoSatelital(e:any){    
+    switch (e.target.value) {
+      case "Si":{
+        this.seguimiento = true;
+        break;
+      }
+      case "No":{
+        this.seguimiento = false;
+        break;
+      }
+      default:{
+        break;
+      }
+    }
+    
   }
 
 }

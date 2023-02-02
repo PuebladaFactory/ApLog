@@ -24,45 +24,155 @@
                 </div>
               </div>    
               <div class="form-group">
-                  <label for="Email">Email</label>
-                  <div class="input-group">
-                    <input formControlName="email" class="form-control" required type="email">
-                  </div>
-              </div>       
+                <label for="Cuit">CUIT</label>
+                <div class="input-group">
+                  <input formControlName="cuit" class="form-control" required type="text">
+                </div>
+              </div>                 
               <div class="form-group">
-                  <label for="Celular">Celular</label>
+                  <label for="Celular de contacto">Celular de Contacto</label>
                   <div class="input-group">
-                    <input formControlName="celular" class="form-control" required type="text">
+                    <input formControlName="celularContacto" class="form-control" required type="text">
                   </div>
               </div>   
+              <div class="form-group">
+                <label for="Celular de emergencia">Celular de Emergencia</label>
+                <div class="input-group">
+                  <input formControlName="celularEmergencia" class="form-control" required type="text">
+                </div>
+              </div>   
+              <div class="form-group">
+                <label for="Domicilio">Domicilio</label>
+                <div class="input-group">
+                  <input formControlName="domicilio" class="form-control" required type="text">
+                </div>
+              </div> 
+              <div class="form-group">
+                <label for="Email">Email</label>
+                <div class="input-group">
+                  <input formControlName="email" class="form-control" required type="email">
+                </div>
+            </div>       
               <div class="form-group">
                 <label for="FechaNac">Fecha Nacimiento</label>
                 <div class="input-group">
                   <input formControlName="fechaNac" class="form-control" required type="date">
                 </div>
               </div>        
-              <div class="form-group">
-                <label for="Dominio">dominio</label>
-                <div class="input-group">
-                  <input formControlName="dominio" class="form-control" required type="text">
-                </div>
-              </div>      
-              <div class="form-group">
-                <label for="Categoria">Categoria Vehiculo</label>
-                <select class="form-select form-select-md mb-3" (change)="changeCategoria($event)" required>
-                  <option value={{categoriaSeleccionada}} required>Elegir Categoria</option>
-                  <option *ngFor="let categoria of categorias" required>
-                    {{categoria.categoria}}
-                  </option>
-                </select>
-              </div>   
+              
         
               
         
             </form>
         
           </div>
+        
           <div>
+              <h2>Datos Vehiculo</h2>
+              <form [formGroup]="vehiculoForm">
+                  <div class="form-group">
+                      <label for="Dominio">Dominio</label>
+                      <div class="input-group">
+                        <input formControlName="dominio" class="form-control" required type="text">
+                      </div>
+                  </div>  
+                  <div class="form-group">
+                    <label for="Marca">Marca</label>
+                    <div class="input-group">
+                      <input formControlName="marca" class="form-control" required type="text">
+                    </div>
+                  </div> 
+                  <div class="form-group">
+                      <label for="Modelo">Modelo</label>
+                      <div class="input-group">
+                        <input formControlName="modelo" class="form-control" required type="text">
+                      </div>
+                  </div>     
+                  <div class="form-group">
+                      <label for="Categoria">Categoria Vehiculo</label>
+                      <select class="form-select form-select-md mb-3" (change)="changeCategoria($event)" required>
+                        <option value={{categoriaSeleccionada}} required>Elegir Categoria</option>
+                        <option *ngFor="let categoria of categorias" required>
+                          {{categoria.categoria}}
+                        </option>
+                      </select>
+                  </div> 
+                  <div class="form-group">
+                      <label for="Categoria">Tipo de Combustible</label>
+                      <select class="form-select form-select-md mb-3" (change)="changeTipoCombustible($event)" required>
+                        <option >Elegir Categoria</option>
+                        <option value="gas">Gas</option>
+                        <option value="nafta">Nafta</option>                        
+                      </select>
+                  </div> 
+                  <div class="form-group">
+                      <label for="Categoria">Tarjeta de Combustible</label>
+                      <select class="form-select form-select-md mb-3" (change)="changeTarjetaombustible($event)" required>
+                        <option >Seleccione</option>
+                        <option value="si">si</option>
+                        <option value="no">no</option>                        
+                      </select>
+                  </div> 
+                  <div class="form-group">
+                      <label for="Categoria">Seguimiento Satelital</label>
+                      <select class="form-select form-select-md mb-3" (change)="seguimientoSatelital($event)" required>
+                        <option >Seleccionar</option>
+                        <option value="si">si</option>   
+                        <option value="no">no</option>                        
+                      </select>
+                  </div> 
+                  <div *ngIf="seguimiento">
+                      <form [formGroup]="seguimientoForm">
+                          <h4 for="Categoria">Detalle Seguimiento Satelital</h4>
+                          <label for="proveedor">Proveedor</label>
+                          <div class="input-group">
+                            <input formControlName="proveedor" class="form-control" required type="text">
+                          </div>
+                          <label for="Marca">Marca</label>
+                          <div class="input-group">
+                            <input formControlName="marcaGps" class="form-control" required type="text">
+                          </div>
+                      </form>                      
+                  </div> 
+                  
+              </form>
+          </div>
+
+       </div>
+  
+    
+
+       <button class="btn btn-secondary mt-2" type="submit" [disabled]="form.invalid || vehiculoForm.invalid ">
+        Guardar 
+       </button>
+ 
+ 
+  </form>  
+
+
+</div>
+
+
+<!-- <div class="form-group">
+  <label for="Dominio">dominio</label>
+  <div class="input-group">
+    <input formControlName="dominio" class="form-control" required type="text">
+  </div>
+</div>      
+<div class="form-group">
+  <label for="Categoria">Categoria Vehiculo</label>
+  <select class="form-select form-select-md mb-3" (change)="changeCategoria($event)" required>
+    <option value={{categoriaSeleccionada}} required>Elegir Categoria</option>
+    <option *ngFor="let categoria of categorias" required>
+      {{categoria.categoria}}
+    </option>
+  </select>
+</div>    -->
+
+
+
+
+ <!--  <div>
     
             <h2>Jornada</h2>
         
@@ -142,15 +252,4 @@
                   </tbody>
               </form>
             </form>          
-          </div>
-       </div>
-  
-       <button class="btn btn-secondary mt-2" type="submit" [disabled]="form.invalid || jornadaForm.invalid || adicionalForm.invalid">
-        Guardar 
-       </button>
- 
- 
-  </form>  
-
-
-</div>
+          </div> -->
