@@ -81,8 +81,8 @@ export class ChoferesListadoComponent implements OnInit {
       apellido: this.choferEditar.apellido,      
       fechaNac: this.choferEditar.fechaNac,
       email: this.choferEditar.email,
-      celular: this.choferEditar.celular,
-      dominio: this.choferEditar.dominio,
+      /* celular: this.choferEditar.celular,
+      dominio: this.choferEditar.dominio, */
     })
   }
 
@@ -92,9 +92,9 @@ export class ChoferesListadoComponent implements OnInit {
     this.choferEditar.apellido = this.form.value.apellido;
     this.choferEditar.fechaNac = this.form.value.fechaNac;
     this.choferEditar.email = this.form.value.email;
-    this.choferEditar.celular = this.form.value.celular;
+    /* this.choferEditar.celular = this.form.value.celular;
     this.choferEditar.dominio = this.form.value.dominio
-    this.choferEditar.categoria = this.categoriaSeleccionada;
+    this.choferEditar.categoria = this.categoriaSeleccionada; */
     //console.log("este es el cliente editado: ", this.choferEditar);
     this.update(this.choferEditar);    
    }

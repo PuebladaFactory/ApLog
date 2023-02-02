@@ -3,11 +3,29 @@ export interface Chofer {
     idChofer: number;
     nombre: string;
     apellido: string;
-    celular: string;
+    cuit: number;
+    celularContacto: number;
+    celularEmergencia: number;
+    domicilio: string;
     email: string;
     fechaNac: Date;
-    dominio: string;
-    categoria: string;
+    vehiculo: Vehiculo;
+    
+    
 }
 
+export interface Vehiculo {
+    dominio: string;
+    marca:string;
+    modelo: string;
+    tipoCombustible: string;    
+    categoria: string;
+    satelital: SeguimientoSatelital | string;
+    tarjetaCombustible: string;
+}
+
+export interface SeguimientoSatelital {
+    proveedor: string;
+    marcaGps: string;
+}
 
