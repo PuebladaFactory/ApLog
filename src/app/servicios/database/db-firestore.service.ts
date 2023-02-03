@@ -73,6 +73,20 @@ getByFieldValue(componente:string, campo:string, value:any){
       .where(campo, ">=", value1).where(campo, "<=", value2).where(campo2, '==', value3))
       .valueChanges(({  idField: 'id' })); 
     }
+
+    getByDoubleValue(componente:string, campo1:string, campo2:string, value1:any, orden:any) {
+      // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
+      // orden solo asc o desc
+    
+      let dataCollection = `/Vantruck/datos/${componente}`;
+    
+      return this.firestore2.collection(dataCollection, ref => ref
+        .where(campo1, "==", value1).orderBy(campo2, orden))
+        .valueChanges(({  idField: 'id' })); 
+      }
+    
+
+      
   
 
 

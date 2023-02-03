@@ -1,13 +1,11 @@
-export interface Jornada {
+export interface TarifaChofer {
     id:any;
-    idJornada:number;
-    base: number;
-    km:AdicionalKm;
-    peaje: number | null;
-    carga: number;
-    combustible: number | null;
+    idTarifa:number;
+    valorJornada: number;
+    km:AdicionalKm;    
     publicidad: number;
-    idChofer: number;    
+    idChofer: number;
+    fecha: string;    
 
 }
 

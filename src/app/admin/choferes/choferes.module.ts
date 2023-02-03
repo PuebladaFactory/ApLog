@@ -8,7 +8,9 @@ import { ChoferesAltaComponent } from './choferes-alta/choferes-alta.component';
 import { ChoferesBajaComponent } from './choferes-baja/choferes-baja.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
-import { Ng2SearchPipeModule } from 'ng2-search-filter'; 
+import { Ng2SearchPipeModule } from 'ng2-search-filter';
+import { ChoferesTarifaComponent } from './choferes-tarifa/choferes-tarifa.component';
+
 
 
 
@@ -17,7 +19,9 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
     ChoferesControlComponent,
     ChoferesListadoComponent,
     ChoferesAltaComponent,
-    ChoferesBajaComponent
+    ChoferesBajaComponent,
+    ChoferesTarifaComponent,
+    
   ],
   imports: [
     CommonModule,

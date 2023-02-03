@@ -1,0 +1,219 @@
+<div class="container">
+    <h1>Tarifas Chofer</h1>
+    <div class="d-flex justify-content-evenly">
+        <div>
+            <h2>Seleccionar Chofer: </h2>
+            <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
+                <option selected>Seleccione</option>
+                <option *ngFor="let chofer of choferes$.source._value">
+                  {{chofer.apellido}} {{chofer.nombre}}
+                </option>
+              </select>
+        </div>
+        <div>
+            <h2>Asignar Tarifa</h2> 
+            <form *ngIf="choferSeleccionado !== undefined else sinSeleccion" [formGroup]="tarifaForm"  (ngSubmit)="onSubmit()">             
+                <div class="form-group">       
+                  <table>
+                    <tbody>
+                      <tr class="form-group">
+                        <td class="parametro">Valor Jornada: </td>
+                        <td>
+                          <input formControlName="valorJornada" class="form-control edicion" required type="number">   
+                        </td>
+                      </tr>                               
+                      <tr class="form-group">
+                        <td class="parametro">Publicidad: </td>
+                        <td>
+                          <input formControlName="publicidad" class="form-control" required type="number">
+                        </td>
+                      </tr>
+                    </tbody>
+                    
+                  </table>
+                  
+                </div>    
+               
+                <form [formGroup]="adicionalForm" >
+                    <h4>Adicional por Km: </h4>
+                    <thead>
+                      <tr>
+                        <th>Distancia</th>
+                        <th>Valor</th>
+                      </tr>          
+                    </thead>
+                    <tbody>            
+                      <tr>
+                        <td class="parametro">0-100 km</td>
+                        <td>
+                          <input class="form-control edicion" required type="text" disabled value="0">            
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="parametro">101-150 km</td>
+                        <td>
+                          <input formControlName="adicionalKm1" class="form-control edicion" required type="number">            
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="parametro">151-200 km</td>
+                        <td>
+                          <input formControlName="adicionalKm2" class="form-control edicion" required type="number">            
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="parametro">201-250 km</td>
+                        <td>
+                          <input formControlName="adicionalKm3" class="form-control edicion" required type="number">            
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="parametro">251-300 km</td>
+                        <td>
+                          <input formControlName="adicionalKm4" class="form-control edicion" required type="number">            
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="parametro">301-350 km</td>
+                        <td>
+                          <input formControlName="adicionalKm5" class="form-control edicion" required type="number">            
+                        </td>
+                      </tr>
+                    </tbody>
+                </form>
+            
+              
+              <div>
+                <button type="submit" class="btn btn-outline-secondary" [disabled]="tarifaForm.invalid || adicionalForm.invalid " >
+                  Guardar
+                </button>
+              </div>
+            </form>  
+            <ng-template #sinSeleccion>
+              <h4>Seleccione chofer</h4>
+            </ng-template>
+        </div>
+        <div>
+          <h2>Última Tarifa Aplicada</h2> 
+          <div *ngIf="choferSeleccionado !== undefined else sinSeleccion" >             
+              <div class="form-group">       
+                <table>
+                  <tbody>
+                    <tr class="form-group">
+                      <td class="parametro">Valor Jornada: </td>
+                      <td>
+                        <input  class="form-control edicion" required type="text">   
+                      </td>
+                    </tr>                               
+                    <tr class="form-group">
+                      <td class="parametro">Publicidad: </td>
+                      <td>
+                        <input  class="form-control" required type="text">
+                      </td>
+                    </tr>
+                  </tbody>
+                  
+                </table>
+                
+              </div>    
+             
+              <div>
+                  <h4>Adicional por Km: </h4>
+                  <thead>
+                    <tr>
+                      <th>Distancia</th>
+                      <th>Valor</th>
+                    </tr>          
+                  </thead>
+                  <tbody>            
+                    <tr>
+                      <td class="parametro">0-100 km</td>
+                      <td>
+                        <input class="form-control edicion" required type="text" disabled value="0">            
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="parametro">101-150 km</td>
+                      <td>
+                        <input class="form-control edicion" required type="text">            
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="parametro">151-200 km</td>
+                      <td>
+                        <input class="form-control edicion" required type="text">            
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="parametro">201-250 km</td>
+                      <td>
+                        <input class="form-control edicion" required type="text">            
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="parametro">251-300 km</td>
+                      <td>
+                        <input class="form-control edicion" required type="text">            
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="parametro">301-350 km</td>
+                      <td>
+                        <input formControlName="adicionalKm5" class="form-control edicion" required type="text">            
+                      </td>
+                    </tr>
+                  </tbody>
+                </div>          
+            
+          
+            </div>           
+      </div>
+    </div>
+    <div>
+        <h2>Historial de Tarifas</h2>
+        <div *ngIf="choferSeleccionado !== undefined else sinSeleccion">
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                      <th class="tabla align-baseline" scope="col">Fecha</th>
+                      <th class="tabla align-baseline" scope="col">Jornada</th>
+                      <th class="tabla align-baseline" scope="col">Publicidad</th>
+                      <th colspan="5">  
+                          <tr><th>Adicionales por Km</th></tr>  
+                          <tr>                            
+                            <th class="tabla" scope="col">101-150 km</th>          
+                            <th class="tabla" scope="col">151-200 km</th>
+                            <th class="tabla" scope="col">201-250 km</th>
+                            <th class="tabla" scope="col">251-300 km</th>
+                            <th class="tabla" scope="col">301-350 km</th>                        
+                          </tr>
+                      </th>                
+                    </tr>
+                </thead>
+                <tbody>        
+                    <tr *ngFor=" let tarifa of historialTarifas$.source._value">                        
+                        <td class="align-middle valores">{{tarifa.fecha}}</td>
+                        <td class="align-middle valores">{{tarifa.valorJornada}}</td>         
+                        <td class="align-middle valores">{{tarifa.publicidad}}</td>
+                        <td colspan="5">
+                          <tr>
+                          <td class="align-middle valores">{{tarifa.km.adicionalKm1}}</td>             
+                          <td class="align-middle valores">{{tarifa.km.adicionalKm2}}</td>
+                          <td class="align-middle valores">{{tarifa.km.adicionalKm3}}</td>
+                          <td class="align-middle valores">{{tarifa.km.adicionalKm4}}</td>
+                          <td class="align-middle valores">{{tarifa.km.adicionalKm5}}</td>                                        
+                          </tr>
+                        </td>
+                        
+                      </tr>
+                    <!-- <td class="align-middle">
+                        <app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(chofer)"></app-btn-editar>          
+                        <app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#jornadaModal" [name]="'Jornada'" (click)="jornada(chofer.idChofer)"></app-btn-editar> 
+                    </td> -->
+                    
+                </tbody>   
+              
+            </table>
+        </div>    
+    </div>
+</div>
