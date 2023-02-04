@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -21,8 +22,9 @@ export class ChoferesTarifaComponent implements OnInit {
   adicionalKm!:AdicionalKm;  
   chofer!: Chofer;
   historialTarifas$!: any;
+  ultimaTarifaAplicada!:any
 
-  constructor(private fb: FormBuilder, private storageService: StorageService){
+  constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
    this.tarifaForm = this.fb.group({                    //formulario para la jornada
       valorJornada: [""],            
       publicidad: [""],  
@@ -43,16 +45,16 @@ export class ChoferesTarifaComponent implements OnInit {
   }
 
   changeChofer(e: any) {    
-    console.log(e.target.value);
+    //console.log(e.target.value);
     let apellido = e.target.value.split(" ")[0];
-    console.log(apellido);
+    //console.log(apellido);
     
     
     this.choferSeleccionado = e.target.value;
     this.choferSeleccionado = this.choferes$.source._value.filter(function (chofer:any){
       return chofer.apellido === apellido
     })
-    console.log("este es el chofer seleccionado: ", this.choferSeleccionado);
+   // console.log("este es el chofer seleccionado: ", this.choferSeleccionado);
     this.buscarTarifas();
   }
 
@@ -69,7 +71,7 @@ export class ChoferesTarifaComponent implements OnInit {
     this.tarifa.idChofer = this.choferSeleccionado[0].idChofer;    
     this.tarifa.fecha = new Date().toISOString().split('T')[0];
     this.tarifa.idTarifa = new Date().getTime(); 
-    console.log("esta es la tarifa: ", this.tarifa);
+    //console.log("esta es la tarifa: ", this.tarifa);
     this.addItem(this.tarifa)
   } 
 
@@ -78,16 +80,39 @@ export class ChoferesTarifaComponent implements OnInit {
   }  
 
   buscarTarifas(){
-    console.log(this.choferSeleccionado[0].idChofer);
+    //console.log(this.choferSeleccionado[0].idChofer);
     
-    this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
-    console.log(this.historialTarifas$);
+    this.storageService.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer)
+    //this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
+    //console.log("este es el historial de tarifas: ",this.historialTarifas$);
     
-    //this.ultimaTarifa()    
+    this.ultimaTarifa()    
   }
-
+//CONSULTO DIRECTAMENTE A LA DB PQ NO ME TOMA LAS CONSULTAS MULTIPLES A FIRESTORE.
+//CORREJIR!!!!!!!!!!!!!
   ultimaTarifa(){
-    this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
-    console.log(this.historialTarifas$.source._value[0]);
-  }
+    let ultimaTarifa:any
+    //this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
+    this.dbFirebase.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer)
+    .subscribe(data =>{
+    let tarifas:any = data;
+     
+        let ultTarifa = Math.max(...tarifas.map((o: { idTarifa: any; }) => o.idTarifa))
+        //console.log("esta es la ultima tarifa: ",  ultTarifa);   
+        this.buscarUltimaTarifa(ultTarifa);     
+    });
+     
+    }
+
+    buscarUltimaTarifa(idTarifa:number){
+      this.dbFirebase.getByFieldValue(this.componente, "idTarifa", idTarifa)
+      .subscribe(data =>{
+        this.ultimaTarifaAplicada = data;      
+        console.log("esta es la ultima tarifa: ",  this.ultimaTarifaAplicada);   
+        
+    });
+    }
+   
+   
+  
 }
