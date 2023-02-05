@@ -92,82 +92,86 @@
             <ng-template #sinSeleccion>
               <h4>Seleccione chofer</h4>
             </ng-template>
+            <ng-template #sinTarifas>
+              <h4>El chofer no tiene tarifas asignadas</h4>
+            </ng-template>
         </div>
-        <div>
+        <!-- <div>
           <h2>Última Tarifa Aplicada</h2> 
-          <div *ngIf="choferSeleccionado !== undefined else sinSeleccion" >             
-              <div class="form-group">       
-                <table>
-                  <tbody>
-                    <tr class="form-group">
-                      <td class="parametro">Valor Jornada: </td>
-                      <td>
-                        <input  class="form-control isDisabled" required type="text" value="{{ultimaTarifaAplicada[0].valorJornada}} ">   
-                      </td>
-                    </tr>                               
-                    <tr class="form-group">
-                      <td class="parametro">Publicidad: </td>
-                      <td>
-                        <input  class="form-control isDisabled" required type="text" value="{{ultimaTarifaAplicada[0].publicidad}} ">
-                      </td>
-                    </tr>
-                  </tbody>
-                  
-                </table>
-                
-              </div>    
-             
+          <div *ngIf="choferSeleccionado !== undefined else sinSeleccion" > 
               <div>
-                  <h4>Adicional por Km: </h4>
-                  <thead>
-                    <tr>
-                      <th>Distancia</th>
-                      <th>Valor</th>
-                    </tr>          
-                  </thead>
-                  <tbody>            
-                    <tr>
-                      <td class="parametro">0-100 km</td>
-                      <td>
-                        <input class="form-control isDisabled" required type="text" disabled value="0">            
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="parametro">101-150 km</td>
-                      <td>
-                        <input class="form-control isDisabled" required type="text" value="{{ultimaTarifaAplicada[0].km.adicionalKm1}} ">            
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="parametro">151-200 km</td>
-                      <td>
-                        <input class="form-control isDisabled" required type="text" value="{{ultimaTarifaAplicada[0].km.adicionalKm2}} ">            
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="parametro">201-250 km</td>
-                      <td>
-                        <input class="form-control isDisabled" required type="text" value="{{ultimaTarifaAplicada[0].km.adicionalKm3}} ">            
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="parametro">251-300 km</td>
-                      <td>
-                        <input class="form-control isDisabled" required type="text" value="{{ultimaTarifaAplicada[0].km.adicionalKm4}} ">            
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="parametro">301-350 km</td>
-                      <td>
-                        <input class="form-control isDisabled" required type="text" value="{{ultimaTarifaAplicada[0].km.adicionalKm5}} ">            
-                      </td>
-                    </tr>
-                  </tbody>
-                </div>          
-            
+                  <div class="form-group">       
+                    <table  *ngFor="let tarifa of historialTarifas$.source._value; let i = index">
+                      <tbody *ngIf="i === 0">
+                        <tr class="form-group">
+                          <td class="parametro">Valor Jornada: </td>
+                          <td>
+                            <input  class="form-control isDisabled" required type="text" value="{{tarifa.valorJornada}}">   
+                          </td>
+                        </tr>                               
+                        <tr class="form-group">
+                          <td class="parametro">Publicidad: </td>
+                          <td>
+                            <input  class="form-control isDisabled" required type="text" value="{{tarifa.publicidad}}" >
+                          </td>
+                        </tr>
+                      </tbody>
+                      
+                    </table>
+                    
+                  </div>    
+                
+                  <div >
+                      <h4>Adicional por Km: </h4>
+                      <thead>
+                        <tr>
+                          <th>Distancia</th>
+                          <th>Valor</th>
+                        </tr>          
+                      </thead>
+                      <tbody>            
+                        <tr>
+                          <td class="parametro">0-100 km</td>
+                          <td>
+                            <input class="form-control isDisabled" required type="text" disabled value="0">            
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="parametro">101-150 km</td>
+                          <td>
+                            <input class="form-control isDisabled" required type="text">            
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="parametro">151-200 km</td>
+                          <td>
+                            <input class="form-control isDisabled" required type="text">            
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="parametro">201-250 km</td>
+                          <td>
+                            <input class="form-control isDisabled" required type="text">            
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="parametro">251-300 km</td>
+                          <td>
+                            <input class="form-control isDisabled" required type="text">            
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="parametro">301-350 km</td>
+                          <td>
+                            <input class="form-control isDisabled" required type="text" >            
+                          </td>
+                        </tr>
+                      </tbody>
+                  </div>          
+              </div>
           
             </div>           
-      </div>
+        </div> -->
     </div>
     <div>
         <h2>Historial de Tarifas</h2>
@@ -192,16 +196,16 @@
                 </thead>
                 <tbody>        
                     <tr *ngFor=" let tarifa of historialTarifas$.source._value">                        
-                        <td class="align-middle valores">{{tarifa.fecha}}</td>
-                        <td class="align-middle valores">{{tarifa.valorJornada}}</td>         
-                        <td class="align-middle valores">{{tarifa.publicidad}}</td>
-                        <td colspan="5">
+                        <td *ngIf="tarifa.idChofer === choferSeleccionado[0].idChofer" class="align-middle valores">{{tarifa.fecha}}</td>
+                        <td *ngIf="tarifa.idChofer === choferSeleccionado[0].idChofer" class="align-middle valores">{{tarifa.valorJornada}}</td>         
+                        <td *ngIf="tarifa.idChofer === choferSeleccionado[0].idChofer" class="align-middle valores">{{tarifa.publicidad}}</td>
+                        <td *ngIf="tarifa.idChofer === choferSeleccionado[0].idChofer" colspan="5">
                           <tr>
-                          <td class="align-middle valores">{{tarifa.km.adicionalKm1}}</td>             
-                          <td class="align-middle valores">{{tarifa.km.adicionalKm2}}</td>
-                          <td class="align-middle valores">{{tarifa.km.adicionalKm3}}</td>
-                          <td class="align-middle valores">{{tarifa.km.adicionalKm4}}</td>
-                          <td class="align-middle valores">{{tarifa.km.adicionalKm5}}</td>                                        
+                          <td *ngIf="tarifa.idChofer === choferSeleccionado[0].idChofer" class="align-middle valores">{{tarifa.km.adicionalKm1}}</td>             
+                          <td *ngIf="tarifa.idChofer === choferSeleccionado[0].idChofer" class="align-middle valores">{{tarifa.km.adicionalKm2}}</td>
+                          <td *ngIf="tarifa.idChofer === choferSeleccionado[0].idChofer" class="align-middle valores">{{tarifa.km.adicionalKm3}}</td>
+                          <td *ngIf="tarifa.idChofer === choferSeleccionado[0].idChofer" class="align-middle valores">{{tarifa.km.adicionalKm4}}</td>
+                          <td *ngIf="tarifa.idChofer === choferSeleccionado[0].idChofer" class="align-middle valores">{{tarifa.km.adicionalKm5}}</td>                                        
                           </tr>
                         </td>
                         

@@ -23,6 +23,7 @@ export class ChoferesTarifaComponent implements OnInit {
   chofer!: Chofer;
   historialTarifas$!: any;
   ultimaTarifaAplicada!:any
+  
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
    this.tarifaForm = this.fb.group({                    //formulario para la jornada
@@ -42,6 +43,9 @@ export class ChoferesTarifaComponent implements OnInit {
   ngOnInit(): void {   
     this.choferes$ = this.storageService.choferes$;  
     this.historialTarifas$ = this.storageService.historialTarifas$;
+    let tarifas = this.historialTarifas$.source._value;
+    console.log(tarifas);
+         
   }
 
   changeChofer(e: any) {    
@@ -54,7 +58,7 @@ export class ChoferesTarifaComponent implements OnInit {
     this.choferSeleccionado = this.choferes$.source._value.filter(function (chofer:any){
       return chofer.apellido === apellido
     })
-   // console.log("este es el chofer seleccionado: ", this.choferSeleccionado);
+   console.log("este es el chofer seleccionado: ", this.choferSeleccionado);
     this.buscarTarifas();
   }
 
@@ -76,42 +80,60 @@ export class ChoferesTarifaComponent implements OnInit {
   } 
 
   addItem(item:any): void {   
-    this.storageService.addItem(this.componente, item);   
+    this.storageService.addItem(this.componente, item); 
+    this.adicionalForm.reset();
+    this.tarifaForm.reset();
+    this.ngOnInit();
   }  
 
   buscarTarifas(){
-    //console.log(this.choferSeleccionado[0].idChofer);
-    
-    this.storageService.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer)
+    //console.log(this.choferSeleccionado[0].idChofer);    
+    //this.storageService.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer)
     //this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
-    //console.log("este es el historial de tarifas: ",this.historialTarifas$);
-    
-    this.ultimaTarifa()    
+    //console.log("este es el historial de tarifas: ",this.historialTarifas$);    
+    //this.storageService.getByDoubleValue( this.componente, "idChofer", "idTarifa", this.choferSeleccionado[0].idChofer, "desc")
+    this.storageService.getAllSorted(this.componente, "fecha", "desc")
+    //this.ultimaTarifa()  
+    this.ngOnInit();  
   }
+
 //CONSULTO DIRECTAMENTE A LA DB PQ NO ME TOMA LAS CONSULTAS MULTIPLES A FIRESTORE.
 //CORREJIR!!!!!!!!!!!!!
-  ultimaTarifa(){
-    let ultimaTarifa:any
+// EN LUGAR DE LLAMAR A LA DB CONSULTA EN EL LOCALSTORAGE
+  ultimaTarifa(){   
     //this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
-    this.dbFirebase.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer)
+   /*  this.dbFirebase.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer)
     .subscribe(data =>{
     let tarifas:any = data;
      
         let ultTarifa = Math.max(...tarifas.map((o: { idTarifa: any; }) => o.idTarifa))
         //console.log("esta es la ultima tarifa: ",  ultTarifa);   
         this.buscarUltimaTarifa(ultTarifa);     
-    });
+    }); */
+    /* let tarifas: any;
+    tarifas = this.storageService.loadInfo(this.componente);
+    let ultTarifa =  Math.max(...tarifas.map((o: { idTarifa: any; }) => o.idTarifa))
+    console.log("esta es el id de la ultima tarifa: ",  ultTarifa);
+    this.ultimaTarifaAplicada = tarifas.filter((tarifa: { idTarifa: number; }) => tarifa.idTarifa === ultTarifa); 
+    console.log("esta es la ultima tarifa: ",  tarifas); */
+    if(this.historialTarifas$.source._value.hasOwnProperty("idTarifa")){
+        console.log("tiene datos: ",  this.historialTarifas$.source._value);        
+    } else {
+      console.log("SIN datos: ",  this.historialTarifas$.source._value);
+    }
+  
+   
      
     }
 
-    buscarUltimaTarifa(idTarifa:number){
+   /*  buscarUltimaTarifa(idTarifa:number){
       this.dbFirebase.getByFieldValue(this.componente, "idTarifa", idTarifa)
       .subscribe(data =>{
         this.ultimaTarifaAplicada = data;      
         console.log("esta es la ultima tarifa: ",  this.ultimaTarifaAplicada);   
         
     });
-    }
+    } */
    
    
   
