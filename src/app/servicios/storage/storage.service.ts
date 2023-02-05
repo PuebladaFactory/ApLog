@@ -52,6 +52,9 @@ export class StorageService {
   private _consultasOpCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public consultasOpCerradas$ = this._consultasOpCerradas$.asObservable()
 
+  private _historialTarifas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public historialTarifas$ = this._historialTarifas$.asObservable()
+
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -100,6 +103,11 @@ export class StorageService {
 
       case "consultasOpCerradas": {
         this._consultasOpCerradas$.next(data)
+        break;
+      }
+
+      case "tarifasChofer": {
+        this._historialTarifas$.next(data)
         break;
       }
 
@@ -219,7 +227,14 @@ export class StorageService {
       
     })
     }
-
+    
+    getByDoubleValue(componente:string, campo1:string, campo2:string, value1:any, order:any, ){
+      this.dbFirebase
+      .getByDoubleValue(componente, campo1, campo2, value1, order)
+      .subscribe(data => {
+        this.setInfo(componente , data)
+      })
+      }
 
 
   addItem(componente: string, item: any): void {

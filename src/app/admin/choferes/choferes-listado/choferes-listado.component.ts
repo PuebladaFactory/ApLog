@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Chofer, SeguimientoSatelital, Vehiculo } from 'src/app/interfaces/chofer';
-import { AdicionalKm, Jornada } from 'src/app/interfaces/jornada';
+import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 
@@ -29,8 +29,8 @@ export class ChoferesListadoComponent implements OnInit {
   choferEditar!: Chofer;
   componente!:string; 
   jornadas$:any;
-  jornadaChofer!: Jornada;
-  jornadaEditar!: Jornada;
+  jornadaChofer!: TarifaChofer;
+  jornadaEditar!: TarifaChofer;
   adicionalKm!: AdicionalKm;
   tipoCombustible!:string;
   tarjetaCombustible!:string;  
@@ -78,10 +78,7 @@ export class ChoferesListadoComponent implements OnInit {
   }
   
   ngOnInit(): void { 
-    this.choferes$ = this.storageService.choferes$; 
-    this.choferes = structuredClone(this.choferes$.source._value);
-    console.log("estos son los choferes: ", this.choferes);
-    
+    this.choferes$ = this.storageService.choferes$;     
     this.jornadas$ = this.storageService.jornadas$
   }
 

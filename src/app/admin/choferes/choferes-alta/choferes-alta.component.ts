@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
-import { AdicionalKm, Jornada } from 'src/app/interfaces/jornada';
+import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -32,7 +32,7 @@ export class ChoferesAltaComponent implements OnInit {
   categoriaSeleccionada!:string;
   tipoCombustible!:string;
   tarjetaCombustible!:string;
-  jornada!:Jornada;
+  jornada!:TarifaChofer;
   vehiculo!:Vehiculo;
    adicionalKm!:AdicionalKm;  
 
