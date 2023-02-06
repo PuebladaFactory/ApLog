@@ -29,7 +29,8 @@
               <th scope="col" class="">Fecha</th>
               <th scope="col" class="">N° Operación</th>
               <th scope="col" class="">Cliente</th>
-              <th scope="col" class="">Chofer</th>          
+              <th scope="col" class="">Chofer</th>  
+              <th scope="col" class="">Categoria</th>                        
               <th scope="col" class=""></th>          
              
             </tr>
@@ -40,6 +41,7 @@
               <td class="align-middle">{{op.idOperacion}}</td>
               <td class="align-middle">{{op.cliente.razonSocial}}</td>
               <td class="align-middle">{{op.chofer.apellido}}</td>          
+              <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td>          
               <td class="d-flex justify-content-evenly align-middle">
                   <app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(op)" ></app-btn-editar> 
                   <app-btn-eliminar [name]="'Anular'" (click)="eliminarOperacion(op)"></app-btn-eliminar>
@@ -60,7 +62,7 @@
         <h1 class="modal-title fs-5" id="exampleModalLabel">Editar Operaciones</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body"  *ngIf="opEditar !== undefined" >
         <form [formGroup]="form" (ngSubmit)="onSubmit()">
             <div class="form-group">
               <label for="Fecha">Fecha</label>
@@ -71,7 +73,7 @@
             <div class="form-group">
               <label for="Cliente">Cliente</label>
               <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
-                  <option value={{clienteSeleccionado}}>Elegir Cliente</option>
+                  <option>{{opEditar.cliente.razonSocial}}</option>
                   <option *ngFor="let cliente of clientes$.source._value">
                     {{cliente.razonSocial}}
                   </option>
@@ -80,7 +82,7 @@
             <div class="form-group">
                 <label for="Chofer">Chofer</label>
                 <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
-                  <option value={{choferSeleccionado}}>Elegir Chofer</option>
+                  <option>{{opEditar.chofer.apellido}}</option>
                   <option *ngFor="let chofer of choferes$.source._value">
                     {{chofer.apellido}}
                   </option>

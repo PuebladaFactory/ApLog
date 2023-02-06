@@ -21,7 +21,8 @@
           <th scope="col">Fecha</th>
           <th scope="col">N° Operación</th>
           <th scope="col">Cliente</th>
-          <th scope="col">Chofer</th>          
+          <th scope="col">Chofer</th>
+          <th scope="col" class="">Categoria</th>               
         </tr>
       </thead>
       <tbody>
@@ -29,7 +30,8 @@
           <th class="align-middle" scope="row">{{op.fecha}} </th>
           <td class="align-middle">{{op.idOperacion}}</td>
           <td class="align-middle">{{op.cliente.razonSocial}}</td>
-          <td class="align-middle">{{op.chofer.apellido}}</td>                    
+          <td class="align-middle">{{op.chofer.apellido}}</td>        
+          <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td>                      
         </tr>    
       </tbody>
 </table>
