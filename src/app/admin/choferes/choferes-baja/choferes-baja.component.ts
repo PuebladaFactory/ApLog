@@ -21,10 +21,23 @@ export class ChoferesBajaComponent implements OnInit {
     this.choferes$ = this.storageService.choferes$; 
   }
 
-  eliminarChofer(chofer:Chofer){
+  eliminarChofer(chofer:Chofer){    
+    
+    if(chofer.vehiculo.tarjetaCombustible === "si" || chofer.vehiculo.satelital !== "no"){
+       if (chofer.vehiculo.tarjetaCombustible === "si" && chofer.vehiculo.satelital !== "no"){
+        alert("El chofer que desea eliminar tiene asignada una tarjeta de combustible y seguimiento satelital")
+       } else if (chofer.vehiculo.tarjetaCombustible === "si" && chofer.vehiculo.satelital === "no"){
+            alert("El chofer que desea eliminar tiene asignada una tarjeta de combustible")
+          } else {
+                alert("El chofer que desea eliminar tiene asignado seguimiento satelital")
+              }
+    }
+
     this.storageService.deleteItem(this.componente, chofer);
     /* this.ngOnInit(); */
     this.router.navigate(['/choferes/listado']);
   }
+
+  
 
 }

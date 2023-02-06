@@ -35,13 +35,13 @@ export class OpAltaComponent implements OnInit {
   }
 
   changeCliente(e: any) {
-    //console.log(e.target.value)
+    console.log(e.target.value)
     let clienteForm = this.clientes$.source._value;
     clienteForm = clienteForm.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     });
     this.clienteSeleccionado = clienteForm[0];               
-    //console.log(this.clienteSeleccionado);
+    console.log(this.clienteSeleccionado);
 
   }
 
@@ -52,7 +52,7 @@ export class OpAltaComponent implements OnInit {
       return chofer.apellido === e.target.value
     });
     this.choferSeleccionado = choferForm[0];               
-    //console.log(this.choferSeleccionado);
+    console.log(this.choferSeleccionado);
   }
 
   onSubmit(){
@@ -61,7 +61,7 @@ export class OpAltaComponent implements OnInit {
     this.op.chofer = this.choferSeleccionado;
     this.op.cliente = this.clienteSeleccionado;
     this.op.idOperacion = new Date().getTime();
-    this.op.estado = 1;
+    //this.op.estado = 1;
     //console.log(this.op);     
     this.addItem();
     
