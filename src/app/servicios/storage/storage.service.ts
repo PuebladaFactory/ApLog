@@ -55,6 +55,12 @@ export class StorageService {
   private _historialTarifas$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public historialTarifas$ = this._historialTarifas$.asObservable()
 
+  private _legajos$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public legajos$ = this._legajos$.asObservable()
+
+  private _perfilChofer$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public perfilChofer$ = this._perfilChofer$.asObservable()
+
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -109,6 +115,16 @@ export class StorageService {
       case "tarifasChofer": {
         this._historialTarifas$.next(data)
         break;
+      }
+
+      case "legajos": {
+        this._legajos$.next(data);
+        break;
+      }
+
+      case "perfilChofer":{
+        this._perfilChofer$.next(data);
+        break
       }
 
       /*case "logger": {
@@ -228,11 +244,11 @@ export class StorageService {
     })
     }
     
-    getByDoubleValue(componente:string, campo1:string, campo2:string, value1:any, order:any, ){
+    getByFieldValueTitle(componente:string, campo:string, value:any, titulo:string, ){
       this.dbFirebase
-      .getByDoubleValue(componente, campo1, campo2, value1, order)
+      .getByFieldValue(componente, campo, value)
       .subscribe(data => {
-        this.setInfo(componente , data)
+        this.setInfo(titulo , data)
       })
       }
 

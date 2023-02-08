@@ -10,6 +10,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ChoferesTarifaComponent } from './choferes-tarifa/choferes-tarifa.component';
+import { ChoferesLegajoComponent } from './choferes-legajo/choferes-legajo.component';
 
 
 
@@ -21,6 +22,7 @@ import { ChoferesTarifaComponent } from './choferes-tarifa/choferes-tarifa.compo
     ChoferesAltaComponent,
     ChoferesBajaComponent,
     ChoferesTarifaComponent,
+    ChoferesLegajoComponent,
     
   ],
   imports: [

@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { Legajo, Documentacion } from 'src/app/interfaces/legajo';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -34,7 +35,8 @@ export class ChoferesAltaComponent implements OnInit {
   tarjetaCombustible!:string;
   jornada!:TarifaChofer;
   vehiculo!:Vehiculo;
-   adicionalKm!:AdicionalKm;  
+  adicionalKm!:AdicionalKm;  
+  legajo!: any;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
     this.form = this.fb.group({                             //formulario para el perfil 
@@ -59,7 +61,7 @@ export class ChoferesAltaComponent implements OnInit {
       proveedor: [""],
       marcaGps: [""],
     })
-
+    
    /*  this.jornadaForm = this.fb.group({                    //formulario para la jornada
       base: [""],      
       carga: [""],
@@ -85,7 +87,8 @@ export class ChoferesAltaComponent implements OnInit {
    onSubmit(){    
     this.armarChofer();
     this.armarVehiculo();    
-    this.addItem(this.chofer)
+    this.addItem(this.chofer);
+    this.armarLegajo() 
     this.router.navigate(['/choferes/listado']);    
    }
 
@@ -99,7 +102,8 @@ export class ChoferesAltaComponent implements OnInit {
    }
 
    addItem(item:any): void {   
-    this.storageService.addItem(this.componente, item);   
+    this.storageService.addItem(this.componente, item); 
+     
   }  
 
   armarVehiculo(){   
@@ -154,6 +158,22 @@ export class ChoferesAltaComponent implements OnInit {
         break;
       }
     }
+    
+  }
+
+  armarLegajo(){
+    console.log("chofer: ", this.chofer);
+    let legajo: any = {
+      idChofer : this.chofer.idChofer,
+      idLegajo : new Date().getTime(),
+    }
+    this.componente = "legajos";    
+    //console.log("este es el legajo trucho: ", legajo);
+    
+    this.legajo = legajo
+    this.addItem(this.legajo)
+
+    console.log("este es el legajo del chofer: ", this.legajo);
     
   }
 
