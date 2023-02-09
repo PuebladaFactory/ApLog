@@ -15,6 +15,7 @@ export class ChoferOperacionComponent implements OnInit {
   opActivas$!: any;
   opCerrada!: Operacion;
   opForm: any;
+  hoy: any = new Date().toISOString().split('T')[0];
 
   constructor(private fb: FormBuilder, private storageService: StorageService) {
     this.opForm = this.fb.group({
@@ -28,6 +29,8 @@ export class ChoferOperacionComponent implements OnInit {
     //console.log("esto es chofer-operacion");    
     this.opActivas$ = this.storageService.opActivas$ 
     //console.log(this.opActivas$.source._value);    
+    //console.log(this.hoy);
+    
   }
 
   onSubmit(){
@@ -56,5 +59,7 @@ export class ChoferOperacionComponent implements OnInit {
     this.opForm.reset();
     this.ngOnInit();
   }
+
+
 
 }

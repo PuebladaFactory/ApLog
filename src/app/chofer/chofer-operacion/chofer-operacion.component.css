@@ -3,11 +3,17 @@ form{
 }
 
 th{
-    width: 22.5%
+    width: 20%
 }
 
 #bt{
-    width: 10%;
+    width: 18%;
 }
+
+#alerta{
+    background-color:red
+}
+
+
 
 
