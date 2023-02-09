@@ -19,8 +19,7 @@ export class ChoferOperacionComponent implements OnInit {
 
   constructor(private fb: FormBuilder, private storageService: StorageService) {
     this.opForm = this.fb.group({
-        km: [''],
-        peaje: [''],        
+        km: [''],       
         remito: [''],       
     });
    }
