@@ -22,7 +22,8 @@ export class ChoferesTarifaComponent implements OnInit {
   adicionalKm!:AdicionalKm;  
   chofer!: Chofer;
   historialTarifas$!: any;
-  ultimaTarifaAplicada!:any
+  $ultimaTarifaAplicada!:any;
+  $tarifasChofer:any;
   
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
@@ -42,9 +43,7 @@ export class ChoferesTarifaComponent implements OnInit {
   
   ngOnInit(): void {   
     this.choferes$ = this.storageService.choferes$;  
-    this.historialTarifas$ = this.storageService.historialTarifas$;
-    let tarifas = this.historialTarifas$.source._value;
-    console.log(tarifas);
+    this.historialTarifas$ = this.storageService.historialTarifas$;   
          
   }
 
@@ -88,11 +87,16 @@ export class ChoferesTarifaComponent implements OnInit {
 
   buscarTarifas(){
     //console.log(this.choferSeleccionado[0].idChofer);    
-    //this.storageService.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer)
+    this.storageService.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer);
+    this.storageService.historialTarifas$.subscribe(data =>{
+      this.$tarifasChofer = data;
+      this.$tarifasChofer.sort((x:TarifaChofer, y:TarifaChofer) => y.idTarifa - x.idTarifa);
+      console.log(this.$tarifasChofer);
+    })
     //this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
     //console.log("este es el historial de tarifas: ",this.historialTarifas$);    
     //this.storageService.getByDoubleValue( this.componente, "idChofer", "idTarifa", this.choferSeleccionado[0].idChofer, "desc")
-    this.storageService.getAllSorted(this.componente, "fecha", "desc")
+    //this.storageService.getAllSorted(this.componente, "fecha", "desc")
     //this.ultimaTarifa()  
     this.ngOnInit();  
   }
@@ -116,11 +120,11 @@ export class ChoferesTarifaComponent implements OnInit {
     console.log("esta es el id de la ultima tarifa: ",  ultTarifa);
     this.ultimaTarifaAplicada = tarifas.filter((tarifa: { idTarifa: number; }) => tarifa.idTarifa === ultTarifa); 
     console.log("esta es la ultima tarifa: ",  tarifas); */
-    if(this.historialTarifas$.source._value.hasOwnProperty("idTarifa")){
+    /* if(this.historialTarifas$.source._value.hasOwnProperty("idTarifa")){
         console.log("tiene datos: ",  this.historialTarifas$.source._value);        
     } else {
       console.log("SIN datos: ",  this.historialTarifas$.source._value);
-    }
+    } */
   
    
      

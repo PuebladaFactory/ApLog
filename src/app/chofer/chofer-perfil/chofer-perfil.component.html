@@ -18,6 +18,30 @@
       </div>
     </div>
     <div class="form-group">
+      <label for="Cuit">CUIT</label>
+      <div class="input-group">
+        <input formControlName="cuit" class="form-control" required type="text"  [ngClass]="{'isDisabled': !edicion}">
+      </div>
+    </div>                 
+    <div class="form-group">
+        <label for="Celular de contacto">Celular de Contacto</label>
+        <div class="input-group">
+          <input formControlName="celularContacto" class="form-control" required type="text"  [ngClass]="{'isDisabled': !edicion}">
+        </div>
+    </div>   
+    <div class="form-group">
+      <label for="Celular de emergencia">Celular de Emergencia</label>
+      <div class="input-group">
+        <input formControlName="celularEmergencia" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
+      </div>
+    </div>   
+    <div class="form-group">
+      <label for="Domicilio">Domicilio</label>
+      <div class="input-group">
+        <input formControlName="domicilio" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
+      </div>
+    </div> 
+    <div class="form-group">
         <label for="FechaNac">Fecha de Nacimiento</label>
         <div class="input-group">
           <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{'isDisabled': !edicion}">
@@ -28,26 +52,7 @@
         <div class="input-group">
           <input formControlName="email" class="form-control" required type="email" [ngClass]="{'isDisabled': !edicion}">
         </div>
-    </div>       
-    <div class="form-group">
-        <label for="Celular">Celular</label>
-        <div class="input-group">
-          <input formControlName="celular" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-        </div>
-    </div>     
-    <div class="form-group">
-        <label for="Dominio">Patente</label>
-        <div class="input-group">
-          <input formControlName="dominio" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-        </div>
-    </div>   
-    <div class="form-group">
-        <label for="Categoria">Categoria del vehículo</label>
-        <div class="input-group">
-          <input formControlName="categoria" class="form-control" required type="enum" [ngClass]="{'isDisabled': !edicion}">
-        </div>
-    </div>     
-   
+    </div>        
     <button *ngIf="!edicion" class="btn btn-secondary mt-2" type="button" (click)="editarPerfil()">
         Editar 
     </button>

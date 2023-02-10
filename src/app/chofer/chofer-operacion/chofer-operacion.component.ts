@@ -15,11 +15,12 @@ export class ChoferOperacionComponent implements OnInit {
   opActivas$!: any;
   opCerrada!: Operacion;
   opForm: any;
+  hoy: any = new Date().toISOString().split('T')[0];
+  $opAct:any;
 
   constructor(private fb: FormBuilder, private storageService: StorageService) {
     this.opForm = this.fb.group({
-        km: [''],
-        peaje: [''],        
+        km: [''],       
         remito: [''],       
     });
    }
@@ -28,12 +29,23 @@ export class ChoferOperacionComponent implements OnInit {
     //console.log("esto es chofer-operacion");    
     this.opActivas$ = this.storageService.opActivas$ 
     //console.log(this.opActivas$.source._value);    
+    //console.log(this.hoy);
+    this.storageService.opActivas$.subscribe( data=>{
+      this.$opAct = data
+      this.$opAct.sort((x:Operacion, y:Operacion) => x.idOperacion - y.idOperacion);
+      console.log(this.$opAct);
+
+      
+    })
+    
+
+    
+    
   }
 
   onSubmit(){
     //console.log(this.opForm.value);
-    this.opCerrada.km = this.opForm.value.km;
-    this.opCerrada.peaje = this.opForm.value.peaje;
+    this.opCerrada.km = this.opForm.value.km;    
     //this.opCerrada.documentacion = this.opForm.remito;
     this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
     //console.log("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
@@ -56,5 +68,7 @@ export class ChoferOperacionComponent implements OnInit {
     this.opForm.reset();
     this.ngOnInit();
   }
+
+
 
 }

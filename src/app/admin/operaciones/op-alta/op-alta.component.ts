@@ -69,8 +69,8 @@ export class OpAltaComponent implements OnInit {
 
    addItem(): void {
     this.storageService.addItem(this.componente, this.op);
-    //this.form.reset();
-    this.router.navigate(['/op/op-diarias']);     
+    this.form.reset();
+    //this.router.navigate(['/op/op-diarias']);     
   }
 
 }

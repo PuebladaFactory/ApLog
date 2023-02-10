@@ -21,6 +21,8 @@ export class ClienteListadoComponent implements OnInit {
   formContacto: any;
   contactoEditar!: Contacto;
   indice!:number;
+  $clientes:any;
+
 
   constructor(private fb: FormBuilder, private storageService: StorageService,){
     this.form = this.fb.group({      
@@ -40,6 +42,9 @@ export class ClienteListadoComponent implements OnInit {
   
   ngOnInit(): void { 
     this.clientes$ = this.storageService.clientes$; 
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    })
   }
   
   abrirEdicion(cliente:Cliente):void {

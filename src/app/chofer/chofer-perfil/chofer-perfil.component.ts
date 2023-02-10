@@ -18,12 +18,13 @@ export class ChoferPerfilComponent implements OnInit {
   constructor(private fb: FormBuilder, private storageService: StorageService,) {
     this.form = this.fb.group({     
       nombre: [""], 
-      apellido: [""],
+      apellido: [""], 
+      cuit: [""],            
       fechaNac: [""],
       email: [""],
-      celular: [""],
-      dominio: [""],
-      categoria: [""],
+      celularContacto: [""],
+      celularEmergencia: [""],
+      domicilio: [""],     
      })
    }
 
@@ -60,12 +61,13 @@ export class ChoferPerfilComponent implements OnInit {
   armarForm(){
     this.form.patchValue({      
       nombre: this.perfil$.source._value[0].nombre, 
-      apellido: this.perfil$.source._value[0].apellido,
+      apellido: this.perfil$.source._value[0].apellido,    
+      cuit:this.perfil$.source._value[0].cuit,            
+      celularContacto: this.perfil$.source._value[0].celularContacto,
+      celularEmergencia: this.perfil$.source._value[0].celularEmergencia,
+      domicilio: this.perfil$.source._value[0].domicilio,    
       fechaNac: this.perfil$.source._value[0].fechaNac,
-      email: this.perfil$.source._value[0].email,
-      celular: this.perfil$.source._value[0].celular,
-      dominio: this.perfil$.source._value[0].dominio,
-      categoria: this.perfil$.source._value[0].categoria,
+      email: this.perfil$.source._value[0].email,     
     })
   }
 
