@@ -23,14 +23,19 @@ export class OpHistorialComponent implements OnInit {
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];
   searchText: string = "";
+  $opCerradas: any;
 
   constructor(private storageService: StorageService) {    
    }
   
   ngOnInit(): void { 
     //this.opCerradas$ = this.storageService.opCerradas$ 
-    this.consultasOp$ = this.storageService.consultasOpCerradas$;   
+    //this.consultasOp$ = this.storageService.consultasOpCerradas$; 
+    this.storageService.consultasOpCerradas$.subscribe(data=>{
+      this.$opCerradas = data;
+    })  
     this.consultaMes();
+   
   }
   
 
@@ -54,6 +59,11 @@ export class OpHistorialComponent implements OnInit {
 
   getMsg(msg: any) {
     this.btnConsulta = true;
+  }
+
+  mostrarRemito(documentacion:string){ 
+    //aca leeria de la db para buscar el remito
+    alert("aca iria la imagen")
   }
 
 
