@@ -14,12 +14,12 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor=" let cliente of clientes$.source._value" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(cliente)">
+        <tr *ngFor=" let cliente of $clientes" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(cliente)">
             <th class="align-middle" scope="row">{{cliente.idCliente}} </th>
             <td class="align-middle">{{cliente.razonSocial}}</td>
             <td class="align-middle">{{cliente.direccion}}</td>
             <td class="align-middle">{{cliente.cuit}}</td>
-            <td colspan="4" class="align-middle">             
+            <!-- <td colspan="4" class="align-middle">             
                 <tr *ngFor=" let contacto of cliente.contactos; let i = index">
                     <div *ngIf="i === 0">
                         <td class="fila-contacto align-middle"> {{contacto.puesto}} </td>  
@@ -28,7 +28,11 @@
                         <td class="fila-contacto align-middle"> {{contacto.email}} </td> 
                     </div>                         
                 </tr>     
-            </td>            
+            </td>             -->
+            <td class="fila-contacto align-middle"> {{cliente.contactos[0].puesto}} </td>  
+            <td class="fila-contacto align-middle"> {{cliente.contactos[0].apellido}} </td>                       
+            <td class="fila-contacto align-middle"> {{cliente.contactos[0].telefono}} </td>
+            <td class="fila-contacto align-middle"> {{cliente.contactos[0].email}} </td> 
         </tr>    
     </tbody>
 </table>
