@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
+import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { DbFirestoreService } from '../../database/db-firestore.service';
 import { StorageService } from '../../storage/storage.service';
 
 @Injectable({
@@ -10,18 +11,14 @@ import { StorageService } from '../../storage/storage.service';
 export class LiquidacionChoferService {
 
   $tarifaChofer:any;
-  liquidacionChofer!:FacturaChofer;
+  liquidacionChofer!:FacturaOpChofer;
   total!:number;
+  $adicional!:number;
 
-  constructor(private storageService: StorageService) { }
+  constructor(private storageService: StorageService, private dbFirebase: DbFirestoreService,) { }
 
-  liquidacionOperacion(op: Operacion){
-    console.log("liquidacionOperacion");
-    
-    this.buscarTarifa(op.chofer.idChofer, op);
-    //this.calcularLiquidacion(op);
-    this.crearFactura(op)
-    return this.liquidacionChofer
+  liquidacionOperacion(op: Operacion){        
+    this.buscarTarifa(op.chofer.idChofer, op);   
 
   }
 
@@ -32,20 +29,20 @@ export class LiquidacionChoferService {
       todasLasTarifas = data;
       todasLasTarifas.sort((x:TarifaChofer, y:TarifaChofer) => y.idTarifa - x.idTarifa);
       this.$tarifaChofer = todasLasTarifas[0]
-      console.log("esta es liquidacionChoferService. tarifa del chofer: ", this.$tarifaChofer);      
+      //console.log("esta es liquidacionChoferService. tarifa del chofer: ", this.$tarifaChofer);      
       this.calcularLiquidacion(op);
     })
   }
 
-  calcularLiquidacion(op:Operacion){
-    let valor:number = this.$tarifaChofer.valorJornada;
-    let adicional:number = this.calcularAdicional(op);
-    console.log("tarifa base: ", valor, " adicional: ", adicional ); ;
+  calcularLiquidacion(op:Operacion){    
+    this.$adicional = this.calcularAdicional(op);
+    //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
     
-    this.total = valor + adicional;
+    this.total = this.$tarifaChofer.valorJornada + this.$adicional;
 
-    console.log("esta es liquidacionChoferService. liquidacion del chofer: ", this.total);
-    
+    //console.log("esta es liquidacionChoferService. liquidacion del chofer: ", this.total);
+
+    this.crearFactura(op);    
   }
 
   calcularAdicional(op:Operacion){
@@ -88,17 +85,25 @@ export class LiquidacionChoferService {
       idFacturaChofer: new Date().getTime(),
       idOperacion: op.idOperacion,        
       idchofer: op.chofer.idChofer,
-      importeTotal: this.total,
+      valorJornada: this.$tarifaChofer.valorJornada,
+      adicional: this.$adicional,      
+      total: this.total,
     }
     
     this.altaFacturaChofer()
   }
 
   altaFacturaChofer(){
-    console.log("liquidacion-chofer. facturaChofer: ", this.liquidacionChofer);
-    
-    this.storageService.addItem("facturaChofer", this.liquidacionChofer);    
-    
-    //this.router.navigate(['/op/op-diarias'])
+    //console.log("liquidacion-chofer. facturaChofer: ", this.liquidacionChofer);    
+    this.storageService.addItem("facturaOpChofer", this.liquidacionChofer);    
+    //this.traerFacturas();
   }
+
+  //METODO CREADO PARA COMPROBAR COMO TRAE LAS FACTURAS
+  /* traerFacturas(){
+    this.dbFirebase.getAll("facturaOpChofer").subscribe(data =>{
+      console.log("estas son las facturas: ", data);
+      
+    })
+  } */
 }
