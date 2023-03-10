@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturacionOp } from 'src/app/interfaces/facturacion-op';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { LiquidacionChoferService } from '../liquidacion-chofer/liquidacion-chofer.service';
@@ -8,20 +9,15 @@ import { LiquidacionChoferService } from '../liquidacion-chofer/liquidacion-chof
 })
 export class FacturacionOpService {
 
-  facturaOp!: FacturacionOp;
+  facturaChofer?: FacturaChofer;
 
   constructor(private liquidacionChofer: LiquidacionChoferService) { }
 
-  facturacionOp(op:Operacion){    
-    this.facturaOp = {
-      id: null,
-      idFacturacionOp : new Date().getTime(),
-      operacion : op,
-      liquidacionChofer : this.liquidacionChofer.liquidacionOperacion(op),
-      facturacionCliente : 0,
-    }
+  facturacionOp(op:Operacion){
+    console.log("facturacionOp");    
+    this.facturaChofer = this.liquidacionChofer.liquidacionOperacion(op)
    
-    console.log(this.facturaOp);
+    console.log("esta es la factura de la op: ", this.facturaChofer);
     
   }
 }
