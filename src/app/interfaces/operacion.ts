@@ -5,8 +5,7 @@ export interface Operacion {
     id: any;
     idOperacion: number;
     fecha: Date;
-    km: number | null;
-    peaje: number | null;
+    km: number | null;    
     documentacion: string | null;
     cliente: Cliente;
     chofer: Chofer;

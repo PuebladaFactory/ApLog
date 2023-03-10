@@ -21,6 +21,8 @@ export class OpDiariasComponent implements OnInit {
   opEditar!: Operacion;
   clientes$: any;
   choferes$: any;
+  $clientes: any;
+  $choferes: any;
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
   opActivas$!: any;  
@@ -29,6 +31,7 @@ export class OpDiariasComponent implements OnInit {
   public showAlta: boolean = false;
   public buttonNameAlta: any = 'Alta de Operación';
   consultasOp$!:any;
+  $consultasOp!:any;
   titulo: string = "consultasOpActivas"
   btnConsulta:boolean = false;
   hoy: any = new Date().toISOString().split('T')[0];
@@ -41,10 +44,19 @@ export class OpDiariasComponent implements OnInit {
     })
    }
   ngOnInit(): void {
-    this.choferes$ = this.storageService.choferes$; 
-    this.clientes$ = this.storageService.clientes$;
+    //this.choferes$ = this.storageService.choferes$; 
+    this.storageService.choferes$.subscribe(data => {
+      this.$choferes = data;
+    });
+    //this.clientes$ = this.storageService.clientes$;
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    });    
     //this.opActivas$ = this.storageService.opActivas$;
-    this.consultasOp$ = this.storageService.consultasOpActivas$;
+    //this.consultasOp$ = this.storageService.consultasOpActivas$;
+    this.storageService.consultasOpActivas$.subscribe(data => {
+      this.$consultasOp = data;
+    });
     //console.log("esto es op-diarias. consultasOp: ", this.consultasOp$);
     this.consultaOpDelDia()    
   }

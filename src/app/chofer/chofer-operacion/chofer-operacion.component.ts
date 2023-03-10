@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -18,7 +19,7 @@ export class ChoferOperacionComponent implements OnInit {
   hoy: any = new Date().toISOString().split('T')[0];
   $opAct:any;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private facturacionServ: FacturacionOpService) {
     this.opForm = this.fb.group({
         km: [''],       
         remito: [''],       
@@ -60,11 +61,13 @@ export class ChoferOperacionComponent implements OnInit {
 
   altaOperacionesCerradas(){
     this.storageService.addItem("operacionesCerradas", this.opCerrada);    
+    
     //this.router.navigate(['/op/op-diarias'])
   }
 
   bajaOperacionesActivas(){
     this.storageService.deleteItem("operacionesActivas", this.opCerrada);
+    this.facturacionServ.facturacionOp(this.opCerrada)
     this.opForm.reset();
     this.ngOnInit();
   }
