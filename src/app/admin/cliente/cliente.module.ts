@@ -9,6 +9,7 @@ import { ClienteBajaComponent } from './cliente-baja/cliente-baja.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
+import { ClienteTarifaComponent } from './cliente-tarifa/cliente-tarifa.component';
 
 
 
@@ -17,7 +18,8 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
     ClienteControlComponent,
     ClienteListadoComponent,
     ClienteAltaComponent,
-    ClienteBajaComponent
+    ClienteBajaComponent,
+    ClienteTarifaComponent
   ],
   imports: [
     CommonModule,
