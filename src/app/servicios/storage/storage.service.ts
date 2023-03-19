@@ -55,6 +55,9 @@ export class StorageService {
   private _historialTarifas$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public historialTarifas$ = this._historialTarifas$.asObservable()
 
+  private _historialTarifasClientes$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  public historialTarifasClientes$ = this._historialTarifasClientes$.asObservable()
+
   private _legajos$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public legajos$ = this._legajos$.asObservable()
 
