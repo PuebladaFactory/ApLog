@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { Adicionales, TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+
+import { Adicionales, AdicionalKm, TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -16,14 +17,20 @@ export class ClienteTarifaComponent implements OnInit {
   clientes$:any;
   clienteSeleccionado!: Cliente[];
   cargasGeneralesForm: any;
-  adicionalForm: any;
+  unidadesConFrioForm: any;
+  adicionalKmForm: any;
   tarifa!:TarifaCliente;  
   historialTarifas$!: any;
   $ultimaTarifaAplicada!:any;
   $tarifasCliente:any;
   adicionalCGForm:any;
+  adicionalUCFForm: any;
+  acompanianteForm:any;
   adicionalCG: boolean = false;
   adicionalesCargasGenerales: Adicionales[] = [];
+  adicionalesUnidadesConFrio: Adicionales[] = [];
+  adicionalKm: AdicionalKm [] = [];
+
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
     this.cargasGeneralesForm = this.fb.group({                    //formulario para la carga general
@@ -41,14 +48,32 @@ export class ClienteTarifaComponent implements OnInit {
    this.adicionalCGForm = this.fb.group({                    //formulario para los extras de la carga general
     concepto:[""],
     valor:[""],
+  });
+
+  this.unidadesConFrioForm = this.fb.group({                    //formulario para la carga general
+      
+    utilitario:[""],
+    furgon:[""],
+    camionLiviano:[""],
+    chasis:[""],
+    balancin:[""],
+    semiRemolqueLocal:[""],
+    //adicionalCargasGenerales: Adicionales[]|null;
+
 });
 
-     this.adicionalForm = this.fb.group({                  //formulario para los adicionales de la jornada
-       adicionalKm1: [""], 
-       adicionalKm2: [""],
-       adicionalKm3: [""],
-       adicionalKm4: [""],
-       adicionalKm5: [""],
+    this.adicionalUCFForm = this.fb.group({                    //formulario para los extras de la carga general
+      concepto:[""],
+      valor:[""],
+    });
+
+    this.acompanianteForm = this.fb.group({
+      acompaniante: [""],
+    })
+
+     this.adicionalKmForm = this.fb.group({                  //formulario para los adicionales de la jornada
+      adicionalKm:[""],
+      valor:[""],
    });
    }
    
@@ -109,7 +134,7 @@ export class ClienteTarifaComponent implements OnInit {
 
   addItem(item:any): void {   
     this.storageService.addItem(this.componente, item); 
-    this.adicionalForm.reset();
+    this.adicionalKmForm.reset();
     //this.tarifaForm.reset();
     this.ngOnInit();
   }  
@@ -125,6 +150,30 @@ export class ClienteTarifaComponent implements OnInit {
 
   eliminarAdicionalCG(indice:number){
     this.adicionalesCargasGenerales.splice(indice, 1);    
+  }
+
+  guardarAdicionalUCF(){
+    console.log(this.adicionalCGForm.value);
+    
+     
+     this.adicionalesUnidadesConFrio.push(this.adicionalUCFForm.value);
+     this.adicionalUCFForm.reset();
+     //this.adicionalCG = false;
+   }
+ 
+   eliminarAdicionalUCF(indice:number){
+     this.adicionalesUnidadesConFrio.splice(indice, 1);    
+   }
+
+   guardarAdicionalKm(){
+    console.log(this.adicionalKmForm.value);
+    this.adicionalKm.push(this.adicionalKmForm.value);
+    this.adicionalKmForm.reset();
+    //this.adicionalCG = false;
+   }
+
+   eliminarAdicionalKm(indice:number){
+    this.adicionalKm.splice(indice, 1);    
   }
 
   adicionalCGToogle(){

@@ -3,24 +3,8 @@ export interface TarifaCliente {
     idTarifaCliente:number;
     idCliente: number;
     fecha: string;    
-    cargasGenerales:{
-        utilitario:number;
-        furgon:number;
-        camionLiviano:number;
-        chasis:number;
-        balancin:number;
-        semiRemolqueLocal:number;
-        adicionalCargasGenerales: Adicionales[]|null;
-    };
-    unidadesConFrio:{
-        utilitario:number;
-        furgon:number;
-        camionLiviano:number;
-        chasis:number;
-        balancin:number;
-        semiRemolqueLocal:number;
-        adicionalCargasGenerales: Adicionales[]|null;
-    };
+    cargasGenerales: CargasGenerales;
+    unidadesConFrio: UnidadesConFrio;
     adicionales:{
         acompaniante: number;
         adicionalKm: AdicionalKm[];
@@ -30,6 +14,25 @@ export interface TarifaCliente {
 
 }
 
+export interface CargasGenerales {
+    utilitario:number;
+    furgon:number;
+    camionLiviano:number;
+    chasis:number;
+    balancin:number;
+    semiRemolqueLocal:number;
+    adicionalCargasGenerales: Adicionales[]|null;
+}
+
+export interface UnidadesConFrio{
+    utilitario:number;
+    furgon:number;
+    camionLiviano:number;
+    chasis:number;
+    balancin:number;
+    semiRemolqueLocal:number;
+    adicionalCargasGenerales: Adicionales[]|null;
+}
 
 export interface AdicionalKm {    
     adicionalKm:number;
