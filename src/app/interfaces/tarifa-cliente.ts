@@ -5,12 +5,7 @@ export interface TarifaCliente {
     fecha: string;    
     cargasGenerales: CargasGenerales;
     unidadesConFrio: UnidadesConFrio;
-    adicionales:{
-        acompaniante: number;
-        adicionalKm: AdicionalKm[];
-    },   
-    
-    
+    adicionales: AdicionalTarifa;
 
 }
 
@@ -31,11 +26,16 @@ export interface UnidadesConFrio{
     chasis:number;
     balancin:number;
     semiRemolqueLocal:number;
-    adicionalCargasGenerales: Adicionales[]|null;
+    adicionalUnidadesConFrio: Adicionales[]|null;
+}
+
+export interface AdicionalTarifa {    
+    acompaniante: number;
+    adicionalKm: AdicionalKm[];
 }
 
 export interface AdicionalKm {    
-    adicionalKm:number;
+    adicionalKm:string;
     valor:number;
 }
 

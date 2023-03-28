@@ -18,7 +18,7 @@
       <h2>Asignar Tarifa</h2> 
       
         <div class="d-flex justify-content-evenly" *ngIf="clienteSeleccionado !== undefined else sinSeleccion" >
-            <div>
+            <div> <!-- cargas generasles -->
               <h3>Cargas Generales: </h3>  
               <form [formGroup]="cargasGeneralesForm"  (ngSubmit)="onSubmit()">             
                   <div class="form-group">       
@@ -110,7 +110,7 @@
                   </div>
               </form>      
             </div>
-            <div>
+            <div> <!-- unidades con frio -->
                 <h3>Unidades con Frio</h3>
                 <form [formGroup]="unidadesConFrioForm"  (ngSubmit)="onSubmit()">             
                     <div class="form-group">       
@@ -202,7 +202,7 @@
                     </div>
                 </form>  
             </div>
-            <div>                    
+            <div>   <!-- adicionales                  -->
                   <h3>Adicionales</h3>
                   <form [formGroup]="acompanianteForm"  (ngSubmit)="onSubmit()">
                       <tr class="form-group">
@@ -231,14 +231,14 @@
                       <form [formGroup]="adicionalKmForm" (ngSubmit)="onSubmit()">
                             
                         <tr>
-                            <th class="parametro">Concepto </th>
+                            <th class="parametro">Adicional Km </th>
                             <th > Valor</th>
                         </tr>
                       
                         <tr class="form-group" >                          
                           
                             <td class="parametro" >
-                                <input formControlName="concepto" class="form-control" required type="text">
+                                <input formControlName="adicionalKm" class="form-control" required type="text">
                             </td>
                             <td>
                                 <input formControlName="valor" class="form-control" required type="number">                              
@@ -259,7 +259,7 @@
         </div>
      
         <div>
-          <button type="submit" class="btn btn-outline-secondary" [disabled]="cargasGeneralesForm.invalid || unidadesConFrioForm.invalid || adicionalKmForm.invalid " >
+          <button type="submit" class="btn btn-outline-secondary" (click)="onSubmit()">
             Guardar
           </button>
         </div>

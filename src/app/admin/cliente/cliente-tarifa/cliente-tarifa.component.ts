@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Cliente } from 'src/app/interfaces/cliente';
 
-import { Adicionales, AdicionalKm, TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+import { Adicionales, AdicionalKm, AdicionalTarifa, CargasGenerales, TarifaCliente, UnidadesConFrio } from 'src/app/interfaces/tarifa-cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -19,7 +19,12 @@ export class ClienteTarifaComponent implements OnInit {
   cargasGeneralesForm: any;
   unidadesConFrioForm: any;
   adicionalKmForm: any;
+
   tarifa!:TarifaCliente;  
+  cargasGenerales!: CargasGenerales;
+  unidadesConFrio!: UnidadesConFrio;
+  adicionales!: AdicionalTarifa;
+
   historialTarifas$!: any;
   $ultimaTarifaAplicada!:any;
   $tarifasCliente:any;
@@ -116,11 +121,38 @@ export class ClienteTarifaComponent implements OnInit {
   }
 
   onSubmit() {
+    //this.armarTarifa();
+    //console.log("tarifa cliente");
+    //console.log(this.cargasGeneralesForm.value, this.unidadesConFrioForm.value, this.acompanianteForm.value);
     this.armarTarifa();
+    this.addItem(this.tarifa);
+   
+
+    
   }
 
   armarTarifa(){     
-   /* 
+   
+    this.armarCargasGenerales();
+    this.armarUnidadesConFrio();
+    this.armarAdicionales();   
+
+    this.tarifa = {
+      id:null,
+      idTarifaCliente:new Date().getTime(),
+      idCliente: this.clienteSeleccionado[0].idCliente,
+      fecha: new Date().toISOString().split('T')[0],
+      cargasGenerales: this.cargasGenerales,
+      unidadesConFrio: this.unidadesConFrio,
+      adicionales: this.adicionales,
+    };  
+    
+   
+    
+    console.log("tarifa: ", this.tarifa);
+    
+    
+    /* 
     this.adicionalKm = this.adicionalForm.value
     //console.log("esto es adicionalKm: ", this.adicionalKm);
     this.tarifa = this.tarifaForm.value;
@@ -132,12 +164,23 @@ export class ClienteTarifaComponent implements OnInit {
     this.addItem(this.tarifa) */
   } 
 
-  addItem(item:any): void {   
-    this.storageService.addItem(this.componente, item); 
-    this.adicionalKmForm.reset();
-    //this.tarifaForm.reset();
-    this.ngOnInit();
-  }  
+  armarCargasGenerales(){
+    this.cargasGenerales = this.cargasGeneralesForm.value;
+    this.cargasGenerales.adicionalCargasGenerales = this.adicionalesCargasGenerales;
+    console.log("cargas generales: ", this.cargasGenerales);
+  }
+
+  armarUnidadesConFrio(){
+    this.unidadesConFrio = this.unidadesConFrioForm.value;
+    this.unidadesConFrio.adicionalUnidadesConFrio = this.adicionalesUnidadesConFrio;
+    console.log("unidades con frio: ", this.unidadesConFrio);
+  }
+
+  armarAdicionales(){
+    this.adicionales = this.acompanianteForm.value;
+    this.adicionales.adicionalKm = this.adicionalKm  
+    console.log("adicionales: ", this.adicionales);
+  }
 
   guardarAdicionalCG(){
    console.log(this.adicionalCGForm.value);
@@ -174,13 +217,19 @@ export class ClienteTarifaComponent implements OnInit {
 
    eliminarAdicionalKm(indice:number){
     this.adicionalKm.splice(indice, 1);    
-  }
+  }  
 
-  adicionalCGToogle(){
-    console.log("hola");
-    console.log(this.adicionalCG);
-    
-    this.adicionalCG = !this.adicionalCG;
-    console.log(this.adicionalCG);
-  }
+  
+  addItem(item:any): void {   
+    this.storageService.addItem(this.componente, item); 
+    //this.adicionalKmForm.reset();
+    //this.tarifaForm.reset();
+    this.cargasGeneralesForm.reset();
+    this.unidadesConFrioForm.reset();
+    this.acompanianteForm.reset();
+    this.adicionalesCargasGenerales = [];
+    this.adicionalesUnidadesConFrio = [];
+    this.adicionalKm = [];
+    this.ngOnInit();
+  }  
 }
