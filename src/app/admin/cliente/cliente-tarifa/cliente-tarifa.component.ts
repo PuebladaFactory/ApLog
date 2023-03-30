@@ -105,8 +105,10 @@ export class ClienteTarifaComponent implements OnInit {
   buscarTarifas(){
     //console.log(this.choferSeleccionado[0].idChofer);    
     this.storageService.getByFieldValue(this.componente, "idCliente", this.clienteSeleccionado[0].idCliente);
-    this.storageService.historialTarifas$.subscribe(data =>{
+    this.storageService.historialTarifasClientes$.subscribe(data =>{
+      console.log(data);
       this.$tarifasCliente = data;
+      console.log(this.$tarifasCliente);
       this.$tarifasCliente.sort((x:TarifaCliente, y:TarifaCliente) => y.idTarifaCliente - x.idTarifaCliente);
       console.log(this.$tarifasCliente);
     })

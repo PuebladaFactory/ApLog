@@ -265,12 +265,84 @@
         </div>
       
       <ng-template #sinSeleccion>
-        <h4>Seleccione chofer</h4>
+        <h4>Seleccione cliente</h4>
       </ng-template>
       <ng-template #sinTarifas>
-        <h4>El chofer aun no tiene tarifas asignadas</h4>
+        <h4>El cliente aun no tiene tarifas asignadas</h4>
       </ng-template>
   </div> 
+
+  <div> 
+    <h2>Historial de Tarifas</h2>
+    <div *ngIf="clienteSeleccionado !== undefined else sinSeleccion">
+        <div *ngIf="$tarifasCliente.length > 0; else sinTarifas">
+            <table class="table table-dark table-striped">
+              <thead>
+                  <tr>
+                    <th class="tabla align-baseline" scope="col">Fecha</th>                    
+                    <th colspan="7">  
+                        <tr><th>Cargas Generales</th></tr>  
+                        <tr>                            
+                          <th class="tabla" scope="col">Utilitario</th>          
+                          <th class="tabla" scope="col">Furgon</th>
+                          <th class="tabla" scope="col">Camion Liviano</th>
+                          <th class="tabla" scope="col">Chasis</th>
+                          <th class="tabla" scope="col">Balancin</th>                        
+                          <th class="tabla" scope="col">Semi Remolque Local</th>                        
+                          <th class="tabla" scope="col">Adicionales</th>                        
+                        </tr>
+                    </th>   
+                    <th colspan="7">  
+                      <tr><th>Unidades Con Frio</th></tr>  
+                      <tr>                            
+                        <th class="tabla" scope="col">Utilitario</th>          
+                        <th class="tabla" scope="col">Furgon</th>
+                        <th class="tabla" scope="col">Camion Liviano</th>
+                        <th class="tabla" scope="col">Chasis</th>
+                        <th class="tabla" scope="col">Balancin</th>                        
+                        <th class="tabla" scope="col">Semi Remolque Local</th>                        
+                        <th class="tabla" scope="col">Adicionales</th>                        
+                      </tr>
+                    </th>    
+                    <th colspan="2">  
+                      <tr><th>Adicionales</th></tr>  
+                      <tr>                            
+                        <th class="tabla" scope="col">Acompañante</th>          
+                        <th class="tabla" scope="col">Adicionales por km</th>
+                        
+                      </tr>
+                  </th>                             
+                  </tr>
+              </thead>
+              <tbody *ngFor=" let tarifa of historialTarifas$.source._value; let i=index">        
+                  <tr >                        
+                      <td class="align-middle valores">{{tarifa.fecha}}</td>
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.utilitario}}</td>         
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.furgon}}</td>
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.camionLiviano}}</td>
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.chasis}}</td>
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.balancin}}</td>
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.semiRemolqueLocal}}</td>
+                      <td class="align-middle valores"> nada</td>
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.utilitario}}</td>         
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.furgon}}</td>
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.camionLiviano}}</td>
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.chasis}}</td>
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.balancin}}</td>
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.semiRemolqueLocal}}</td>
+                      <td class="align-middle valores"> nada</td>
+                      <td class="align-middle valores">{{tarifa.adicionales.acompaniante}}</td>
+                      <td class="align-middle valores"> nada</td>
+                     
+                      
+                    </tr>
+              </tbody>   
+            
+          </table>
+        </div>
+        
+    </div>    
+</div>
   
 </div>
 

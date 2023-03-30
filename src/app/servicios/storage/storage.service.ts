@@ -120,6 +120,11 @@ export class StorageService {
         break;
       }
 
+      case "tarifasCliente": {
+        this._historialTarifasClientes$.next(data)
+        break;
+      }
+
       case "legajos": {
         this._legajos$.next(data);
         break;
