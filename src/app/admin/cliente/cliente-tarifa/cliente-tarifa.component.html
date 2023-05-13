@@ -1,5 +1,5 @@
 <div class="container">
-    <h1>Tarifas Chofer</h1>
+    <h1>Tarifas Cliente</h1>
     <div class="d-flex justify-content-evenly">
         <div>
             <h2>Seleccionar Cliente: </h2>
@@ -214,7 +214,7 @@
                       <table *ngIf="adicionalKm.length > 0" >
                           <tr *ngFor="let adicional of adicionalKm, let i = index">
                             <td class="parametro">
-                              {{adicional.adicionalKm}}
+                              {{adicional.distancia}}
                             </td>
                             <td>
                               {{adicional.valor}}
@@ -235,12 +235,13 @@
                             <th > Valor</th>
                         </tr>
                       
-                        <tr class="form-group" >                          
-                          
-                            <td class="parametro" >
-                                <input formControlName="adicionalKm" class="form-control" required type="text">
+                        <tr >                          
+                            
+                            <td class="input-group align-middle">
+                                <span class="input-group-text"> Hasta: </span >
+                                <input formControlName="distancia" class="form-control" required type="text">
                             </td>
-                            <td>
+                            <td class="align-middle">
                                 <input formControlName="valor" class="form-control" required type="number">                              
                             </td>
                             <td class="align-middle">

@@ -37,6 +37,7 @@ export class ClienteTarifaComponent implements OnInit {
   adicionalKm: AdicionalKm [] = [];
 
 
+
   constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
     this.cargasGeneralesForm = this.fb.group({                    //formulario para la carga general
       
@@ -77,7 +78,7 @@ export class ClienteTarifaComponent implements OnInit {
     })
 
      this.adicionalKmForm = this.fb.group({                  //formulario para los adicionales de la jornada
-      adicionalKm:[""],
+      distancia: [""],
       valor:[""],
    });
    }

@@ -30,22 +30,23 @@ export class FacturacionClienteService {
       todasLasTarifas.sort((x:TarifaCliente, y:TarifaCliente) => y.idTarifaCliente - x.idTarifaCliente);
       this.$tarifaCliente = todasLasTarifas[0]
       console.log("esta es facturacionClienteService. tarifa del cliente: ", this.$tarifaCliente);      
-      //this.calcularLiquidacion(op);
+      this.calcularFacturacion(op);
     })
   }
 
-  /* calcularLiquidacion(op:Operacion){    
+  calcularFacturacion(op:Operacion){    
     this.$adicional = this.calcularAdicional(op);
     //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
     
-    this.total = this.$tarifaChofer.valorJornada + this.$adicional;
+    this.total = this.$tarifaCliente.valorJornada + this.$adicional;
 
     //console.log("esta es liquidacionChoferService. liquidacion del chofer: ", this.total);
 
-    this.crearFactura(op);    
+    //this.crearFactura(op);    
   }
 
   calcularAdicional(op:Operacion){
+    //armar objeto para los adicionales para los km
     let adicional: number;
     switch(true){
       case (op.km !== null && op.km <= 100):{
@@ -53,23 +54,23 @@ export class FacturacionClienteService {
         return adicional;
       }
       case (op.km !== null && op.km <= 150):{
-        adicional = this.$tarifaChofer.km.adicionalKm1;
+        adicional = this.$tarifaCliente.km.adicionalKm1;
         return adicional;
       }
       case (op.km !== null && op.km <= 200):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2;
+        adicional = this.$tarifaCliente.km.adicionalKm1 + this.$tarifaCliente.km.adicionalKm2;
         return adicional;
       }
       case (op.km !== null && op.km <= 250):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2 + this.$tarifaChofer.km.adicionalKm3;
+        adicional = this.$tarifaCliente.km.adicionalKm1 + this.$tarifaCliente.km.adicionalKm2 + this.$tarifaCliente.km.adicionalKm3;
         return adicional;
       }
       case (op.km !== null && op.km <= 300):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2 + this.$tarifaChofer.km.adicionalKm3 + this.$tarifaChofer.km.adicionalKm4;
+        adicional = this.$tarifaCliente.km.adicionalKm1 + this.$tarifaCliente.km.adicionalKm2 + this.$tarifaCliente.km.adicionalKm3 + this.$tarifaCliente.km.adicionalKm4;
         return adicional;
       }
       case (op.km !== null && op.km <= 350):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2 + this.$tarifaChofer.km.adicionalKm3 + this.$tarifaChofer.km.adicionalKm4 + this.$tarifaChofer.km.adicionalKm5;
+        adicional = this.$tarifaCliente.km.adicionalKm1 + this.$tarifaCliente.km.adicionalKm2 + this.$tarifaCliente.km.adicionalKm3 + this.$tarifaCliente.km.adicionalKm4 + this.$tarifaCliente.km.adicionalKm5;
         return adicional;
       }
       default:{ 
@@ -77,7 +78,7 @@ export class FacturacionClienteService {
       }
     }
   }
-
+/* 
   crearFactura(op:Operacion){
 
     this.liquidacionChofer = {
@@ -97,7 +98,7 @@ export class FacturacionClienteService {
     //console.log("liquidacion-chofer. facturaChofer: ", this.liquidacionChofer);    
     this.storageService.addItem("facturaOpChofer", this.liquidacionChofer);    
     //this.traerFacturas();
-  } */
+  }  */
 
   //METODO CREADO PARA COMPROBAR COMO TRAE LAS FACTURAS
   /* traerFacturas(){
