@@ -77,9 +77,10 @@ export class ClienteTarifaComponent implements OnInit {
       acompaniante: [""],
     })
 
+    //esto solo permite un modelos de adicionales de km. Cambiar mas adelante
      this.adicionalKmForm = this.fb.group({                  //formulario para los adicionales de la jornada
-      distancia: [""],
-      valor:[""],
+      primerSector: [""],
+      sectorSiguiente:[""],
    });
    }
    
@@ -181,7 +182,7 @@ export class ClienteTarifaComponent implements OnInit {
 
   armarAdicionales(){
     this.adicionales = this.acompanianteForm.value;
-    this.adicionales.adicionalKm = this.adicionalKm  
+    this.adicionales.adicionalKm = this.adicionalKmForm.value;  
     console.log("adicionales: ", this.adicionales);
   }
 
@@ -211,17 +212,17 @@ export class ClienteTarifaComponent implements OnInit {
      this.adicionalesUnidadesConFrio.splice(indice, 1);    
    }
 
-   guardarAdicionalKm(){
+  /*  guardarAdicionalKm(){
     console.log(this.adicionalKmForm.value);
     this.adicionalKm.push(this.adicionalKmForm.value);
     this.adicionalKmForm.reset();
     //this.adicionalCG = false;
-   }
+   } */
 
-   eliminarAdicionalKm(indice:number){
+  /*  eliminarAdicionalKm(indice:number){
     this.adicionalKm.splice(indice, 1);    
   }  
-
+ */
   
   addItem(item:any): void {   
     this.storageService.addItem(this.componente, item); 

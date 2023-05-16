@@ -35,8 +35,8 @@ export interface AdicionalTarifa {
 }
 
 export interface AdicionalKm {    
-    distancia:number;
-    valor:number;
+    primerSector: number;
+    sectorSiguiente:number;
 }
 
 export interface Adicionales {    
@@ -44,5 +44,6 @@ export interface Adicionales {
     valor: number;
     
 }
+
 
 
