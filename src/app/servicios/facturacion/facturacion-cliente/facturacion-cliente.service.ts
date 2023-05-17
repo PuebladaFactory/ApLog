@@ -15,7 +15,7 @@ export class FacturacionClienteService {
   total!:number;
   $adicional!:number;
   ayudante:boolean = false;
-  jornada!:number;
+  $jornada!:number;
 
   constructor(private storageService: StorageService, private dbFirebase: DbFirestoreService,) { }
 
@@ -40,11 +40,11 @@ export class FacturacionClienteService {
     this.$adicional = this.calcularAdicional(op);
     //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
     
-    this.jornada = this.calcularJornada(op)
+    this.$jornada = this.calcularJornada(op)
 
-    this.total = this.$tarifaCliente.valorJornada + this.$adicional;
+    this.total = this.$jornada + this.$adicional;
 
-    //console.log("esta es liquidacionChoferService. liquidacion del chofer: ", this.total);
+    console.log("esta es liquidacionChoferService. liquidacion del chofer: ", this.total);
 
     //this.crearFactura(op);    
   }
