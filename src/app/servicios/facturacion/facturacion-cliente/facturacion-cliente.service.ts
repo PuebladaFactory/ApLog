@@ -11,7 +11,7 @@ import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 export class FacturacionClienteService {
 
   $tarifaCliente:any;
-  facturacionChofer!:FacturaOpCliente;
+  facturacionCliente!:FacturaOpCliente;
   total!:number;
   $adicional!:number;
   ayudante:boolean = false;
@@ -46,7 +46,7 @@ export class FacturacionClienteService {
 
     console.log("esta es liquidacionChoferService. liquidacion del chofer: ", this.total);
 
-    //this.crearFactura(op);    
+    this.crearFactura(op);    
   }
 
   calcularAdicional(op:Operacion){
@@ -129,15 +129,15 @@ export class FacturacionClienteService {
       }
     }
   }
-/* 
+
   crearFactura(op:Operacion){
 
-    this.liquidacionChofer = {
+    this.facturacionCliente = {
       id: null,
-      idFacturaChofer: new Date().getTime(),
+      idFacturaCliente: new Date().getTime(),
       idOperacion: op.idOperacion,        
-      idchofer: op.chofer.idChofer,
-      valorJornada: this.$tarifaChofer.valorJornada,
+      idCliente: op.chofer.idChofer,
+      valorJornada: this.$jornada,
       adicional: this.$adicional,      
       total: this.total,
     }
@@ -147,9 +147,9 @@ export class FacturacionClienteService {
 
   altaFacturaChofer(){
     //console.log("liquidacion-chofer. facturaChofer: ", this.liquidacionChofer);    
-    this.storageService.addItem("facturaOpChofer", this.liquidacionChofer);    
+    this.storageService.addItem("facturaOpCliente", this.facturacionCliente);    
     //this.traerFacturas();
-  }  */
+  }  
 
   //METODO CREADO PARA COMPROBAR COMO TRAE LAS FACTURAS
   /* traerFacturas(){
