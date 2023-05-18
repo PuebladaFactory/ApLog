@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -26,7 +25,7 @@ export class ChoferesTarifaComponent implements OnInit {
   $tarifasChofer:any;
   
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
+  constructor(private fb: FormBuilder, private storageService: StorageService){
    this.tarifaForm = this.fb.group({                    //formulario para la jornada
       valorJornada: [""],            
       publicidad: [""],  

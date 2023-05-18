@@ -1,0 +1,356 @@
+<div class="container">
+    <h1>Tarifas Cliente</h1>
+    <div class="d-flex justify-content-evenly">
+        <div>
+            <h2>Seleccionar Cliente: </h2>
+            <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
+                <option selected>Seleccione</option>
+                <option *ngFor="let cliente of clientes$.source._value">
+                  {{cliente.razonSocial}} 
+                </option>
+              </select>
+        </div>
+       
+     
+    </div>
+
+    <div>
+      <h2>Asignar Tarifa</h2> 
+      
+        <div class="d-flex justify-content-evenly" *ngIf="clienteSeleccionado !== undefined else sinSeleccion" >
+            <div> <!-- cargas generasles -->
+              <h3>Cargas Generales: </h3>  
+              <form [formGroup]="cargasGeneralesForm"  (ngSubmit)="onSubmit()">             
+                  <div class="form-group">       
+                      <table>
+                        <tbody>
+                          <tr class="form-group">
+                            <td class="parametro">Utilitario: </td>
+                            <td>
+                              <input formControlName="utilitario" class="form-control edicion" required type="number">   
+                            </td>
+                          </tr>                               
+                          <tr class="form-group">
+                            <td class="parametro">Furgon: </td>
+                            <td>
+                              <input formControlName="furgon" class="form-control" required type="number">
+                            </td>
+                          </tr>
+                          <tr class="form-group">
+                            <td class="parametro">Camion Liviano: </td>
+                            <td>
+                              <input formControlName="camionLiviano" class="form-control edicion" required type="number">   
+                            </td>
+                          </tr>                               
+                          <tr class="form-group">
+                            <td class="parametro">Chasis: </td>
+                            <td>
+                              <input formControlName="chasis" class="form-control" required type="number">
+                            </td>
+                          </tr>
+                          <tr class="form-group">
+                            <td class="parametro">Balancin: </td>
+                            <td>
+                              <input formControlName="balancin" class="form-control edicion" required type="number">   
+                            </td>
+                          </tr>                               
+                          <tr class="form-group">
+                            <td class="parametro">Semi Remolque Local: </td>
+                            <td>
+                              <input formControlName="semiRemolqueLocal" class="form-control" required type="number">
+                            </td>
+                          </tr>
+                          <table *ngIf="adicionalesCargasGenerales.length > 0" >
+                              <tr *ngFor="let adicional of adicionalesCargasGenerales, let i = index">
+                                <td class="parametro">
+                                  {{adicional.concepto}}
+                                </td>
+                                <td>
+                                  {{adicional.valor}}
+                                </td>
+                                <td>
+                                  <svg type="button" (click)="eliminarAdicionalCG(i)" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                    <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
+                                  </svg>
+                                </td>
+                              </tr>                          
+                          </table>
+                        </tbody>
+                      </table>
+                        
+                          <form [formGroup]="adicionalCGForm" (ngSubmit)="onSubmit()">
+                          
+                        
+                            <tr  >
+                                <th class="parametro">Concepto </th>
+                                <th > Valor</th>
+                            </tr>
+                          
+                            <tr class="form-group" >                          
+                              
+                                <td class="parametro" >
+                                    <input formControlName="concepto" class="form-control" required type="text">
+                                </td>
+                                <td>
+                                    <input formControlName="valor" class="form-control" required type="number">                              
+                                </td>
+                                <td class="align-middle">
+                                    <svg type="button" (click)="guardarAdicionalCG()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                    </svg>
+                                </td>  
+    
+                            </tr>
+                        
+                        
+                          </form>    
+                          
+                  </div>
+              </form>      
+            </div>
+            <div> <!-- unidades con frio -->
+                <h3>Unidades con Frio</h3>
+                <form [formGroup]="unidadesConFrioForm"  (ngSubmit)="onSubmit()">             
+                    <div class="form-group">       
+                        <table>
+                          <tbody>
+                            <tr class="form-group">
+                              <td class="parametro">Utilitario: </td>
+                              <td>
+                                <input formControlName="utilitario" class="form-control edicion" required type="number">   
+                              </td>
+                            </tr>                               
+                            <tr class="form-group">
+                              <td class="parametro">Furgon: </td>
+                              <td>
+                                <input formControlName="furgon" class="form-control" required type="number">
+                              </td>
+                            </tr>
+                            <tr class="form-group">
+                              <td class="parametro">Camion Liviano: </td>
+                              <td>
+                                <input formControlName="camionLiviano" class="form-control edicion" required type="number">   
+                              </td>
+                            </tr>                               
+                            <tr class="form-group">
+                              <td class="parametro">Chasis: </td>
+                              <td>
+                                <input formControlName="chasis" class="form-control" required type="number">
+                              </td>
+                            </tr>
+                            <tr class="form-group">
+                              <td class="parametro">Balancin: </td>
+                              <td>
+                                <input formControlName="balancin" class="form-control edicion" required type="number">   
+                              </td>
+                            </tr>                               
+                            <tr class="form-group">
+                              <td class="parametro">Semi Remolque Local: </td>
+                              <td>
+                                <input formControlName="semiRemolqueLocal" class="form-control" required type="number">
+                              </td>
+                            </tr>
+                            <table *ngIf="adicionalesUnidadesConFrio.length > 0" >
+                                <tr *ngFor="let adicional of adicionalesUnidadesConFrio, let i = index">
+                                  <td class="parametro">
+                                    {{adicional.concepto}}
+                                  </td>
+                                  <td>
+                                    {{adicional.valor}}
+                                  </td>
+                                  <td>
+                                    <svg type="button" (click)="eliminarAdicionalUCF(i)" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
+                                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                      <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
+                                    </svg>
+                                  </td>
+                                </tr>                          
+                            </table>
+                          </tbody>
+                        </table>
+                          
+                            <form [formGroup]="adicionalUCFForm" (ngSubmit)="onSubmit()">
+                            
+                          
+                              <tr  >
+                                  <th class="parametro">Concepto </th>
+                                  <th > Valor</th>
+                              </tr>
+                            
+                              <tr class="form-group" >                          
+                                
+                                  <td class="parametro" >
+                                      <input formControlName="concepto" class="form-control" required type="text">
+                                  </td>
+                                  <td>
+                                      <input formControlName="valor" class="form-control" required type="number">                              
+                                  </td>
+                                  <td class="align-middle">
+                                      <svg type="button" (click)="guardarAdicionalUCF()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                      </svg>
+                                  </td>  
+      
+                              </tr>
+                          
+                          
+                            </form>    
+                            
+                    </div>
+                </form>  
+            </div>
+            <div>   <!-- adicionales                  -->
+                  <h3>Adicionales</h3>
+                  <form [formGroup]="acompanianteForm"  (ngSubmit)="onSubmit()">
+                      <tr class="form-group">
+                          <td class="parametro align-middle">Acompañante: </td>
+                          <td>
+                            <input formControlName="acompaniante" class="form-control edicion" required type="number">   
+                          </td>
+                      </tr> 
+                    <!--   <table *ngIf="adicionalKm.length > 0" >
+                          <tr *ngFor="let adicional of adicionalKm, let i = index">
+                            <td class="parametro">
+                              {{adicional.primerSector}}
+                            </td>
+                            <td>
+                              {{adicional.sectorSiguiente}}
+                            </td>
+                            <td>
+                              <svg type="button" (click)="eliminarAdicionalKm(i)" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
+                              </svg>
+                            </td>
+                          </tr>                          
+                      </table> -->
+                
+                      <form [formGroup]="adicionalKmForm" (ngSubmit)="onSubmit()">
+                            
+                        <tr>
+                            <th >Adicional Km </th>
+                            <th > Valor</th>
+                        </tr>
+                      
+                        <tr >   
+                            <td class="input-group align-middle">
+                                + DE 80 KM - HASTA 150:
+                            </td>
+                            <td>
+                                <input formControlName="primerSector" class="form-control" required type="number">
+                            </td>
+                        </tr>       
+                        <tr>
+                          <td class="input-group align-middle">
+                            + DE 150 KM X CADA 50 KM 
+                          </td>
+                          <td>
+                              <input formControlName="sectorSiguiente" class="form-control" required type="number">
+                          </td>
+                            <!-- <td class="align-middle">
+                                <svg type="button" (click)="guardarAdicionalKm()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                </svg>
+                            </td>   -->
+
+                        </tr>
+                    
+                    
+                      </form>    
+                  </form>
+            </div>
+        </div>
+     
+        <div>
+          <button type="submit" class="btn btn-outline-secondary" (click)="onSubmit()">
+            Guardar
+          </button>
+        </div>
+      
+      <ng-template #sinSeleccion>
+        <h4>Seleccione cliente</h4>
+      </ng-template>
+      <ng-template #sinTarifas>
+        <h4>El cliente aun no tiene tarifas asignadas</h4>
+      </ng-template>
+  </div> 
+
+  <div> 
+    <h2>Historial de Tarifas</h2>
+    <div *ngIf="clienteSeleccionado !== undefined else sinSeleccion">
+        <div *ngIf="$tarifasCliente.length > 0; else sinTarifas">
+            <table class="table table-dark table-striped">
+              <thead>
+                  <tr>
+                    <th class="tabla align-baseline" scope="col">Fecha</th>                    
+                    <th colspan="7">  
+                        <tr><th>Cargas Generales</th></tr>  
+                        <tr>                            
+                          <th class="tabla" scope="col">Utilitario</th>          
+                          <th class="tabla" scope="col">Furgon</th>
+                          <th class="tabla" scope="col">Camion Liviano</th>
+                          <th class="tabla" scope="col">Chasis</th>
+                          <th class="tabla" scope="col">Balancin</th>                        
+                          <th class="tabla" scope="col">Semi Remolque Local</th>                        
+                          <th class="tabla" scope="col">Adicionales</th>                        
+                        </tr>
+                    </th>   
+                    <th colspan="7">  
+                      <tr><th>Unidades Con Frio</th></tr>  
+                      <tr>                            
+                        <th class="tabla" scope="col">Utilitario</th>          
+                        <th class="tabla" scope="col">Furgon</th>
+                        <th class="tabla" scope="col">Camion Liviano</th>
+                        <th class="tabla" scope="col">Chasis</th>
+                        <th class="tabla" scope="col">Balancin</th>                        
+                        <th class="tabla" scope="col">Semi Remolque Local</th>                        
+                        <th class="tabla" scope="col">Adicionales</th>                        
+                      </tr>
+                    </th>    
+                    <th colspan="2">  
+                      <tr><th>Adicionales</th></tr>  
+                      <tr>                            
+                        <th class="tabla" scope="col">Acompañante</th>          
+                        <th class="tabla" scope="col">Adicionales por km</th>
+                        
+                      </tr>
+                  </th>                             
+                  </tr>
+              </thead>
+              <tbody *ngFor=" let tarifa of historialTarifas$.source._value; let i=index">        
+                  <tr >                        
+                      <td class="align-middle valores">{{tarifa.fecha}}</td>
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.utilitario}}</td>         
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.furgon}}</td>
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.camionLiviano}}</td>
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.chasis}}</td>
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.balancin}}</td>
+                      <td class="align-middle valores">{{tarifa.cargasGenerales.semiRemolqueLocal}}</td>
+                      <td class="align-middle valores"> nada</td>
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.utilitario}}</td>         
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.furgon}}</td>
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.camionLiviano}}</td>
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.chasis}}</td>
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.balancin}}</td>
+                      <td class="align-middle valores">{{tarifa.unidadesConFrio.semiRemolqueLocal}}</td>
+                      <td class="align-middle valores"> nada</td>
+                      <td class="align-middle valores">{{tarifa.adicionales.acompaniante}}</td>
+                      <td class="align-middle valores"> nada</td>
+                     
+                      
+                    </tr>
+              </tbody>   
+            
+          </table>
+        </div>
+        
+    </div>    
+</div>
+  
+</div>
+
+
