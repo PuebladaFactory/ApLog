@@ -12,6 +12,7 @@
           <th class="tabla" scope="col">Categoria</th>
           <th class="tabla" scope="col">Tipo Combustible</th>
           <th class="tabla" scope="col">Tarjeta</th>
+          <th class="tabla" scope="col">Refrigeración</th>                     
           <th class="tabla" scope="col">Seguimiento</th>                     
         </tr>
       </thead>
@@ -26,9 +27,13 @@
               <td class="align-middle">{{chofer.vehiculo.categoria}}</td>
               <td class="align-middle">{{chofer.vehiculo.tipoCombustible}}</td>
               <td class="align-middle">{{chofer.vehiculo.tarjetaCombustible}}</td>
+              <td class="align-middle" *ngIf="chofer.vehiculo.refrigeracion else sinRefrigeracion">si</td>
               <td *ngIf="chofer.vehiculo.satelital === 'no' else seguimiento" class="align-middle">no</td>
               <ng-template #seguimiento>
                 <td class="align-middle">si</td>
+              </ng-template>
+              <ng-template #sinRefrigeracion>
+                <td class="align-middle">no</td>
               </ng-template>
             </tr>
           <!-- <td class="align-middle">
@@ -152,6 +157,21 @@
                     <option value="no">no</option>                        
                 </select>
             </div> 
+            <div class="form-group">
+              <label for="Categoria mt-2">Refrigeracion</label>
+              <select class="form-select form-select-md mb-3" (change)="selectRefrigeracion($event)" *ngIf="refrigeracion else sinRefrigeracion"  required [ngClass]="{'isDisabled': !edicion}">
+                <option>si</option>
+                <option value="si">si</option>   
+                <option value="no">no</option>                        
+              </select>
+              <ng-template #sinRefrigeracion>
+                <select class="form-select form-select-md mb-3" (change)="selectRefrigeracion($event)" required [ngClass]="{'isDisabled': !edicion}">
+                  <option>no</option>
+                  <option value="si">si</option>   
+                  <option value="no">no</option>                        
+                </select>
+              </ng-template>
+          </div> 
             <div class="form-group">
                 <label for="Categoria">Seguimiento Satelital</label>                
                   <select class="form-select form-select-md mb-3" (change)="seguimientoSatelital($event)" required *ngIf="seguimiento else sinSeguimiento" [ngClass]="{'isDisabled': !edicion}">

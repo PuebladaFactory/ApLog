@@ -37,6 +37,7 @@ export class ChoferesAltaComponent implements OnInit {
   vehiculo!:Vehiculo;
   adicionalKm!:AdicionalKm;  
   legajo!: any;
+  refrigeracion!:boolean;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
     this.form = this.fb.group({                             //formulario para el perfil 
@@ -116,6 +117,7 @@ export class ChoferesAltaComponent implements OnInit {
     }else{
       this.vehiculo.satelital = "no";
     }
+    this.vehiculo.refrigeracion = this.refrigeracion;
     //console.log(this.vehiculo);
     this.chofer.vehiculo = this.vehiculo;
   }
@@ -159,6 +161,22 @@ export class ChoferesAltaComponent implements OnInit {
       }
     }
     
+  }
+
+  selectRefrigeracion(e:any){ 
+    switch (e.target.value) {
+      case "si":{
+        this.refrigeracion = true;
+        break;
+      }
+      case "no":{
+        this.refrigeracion = false;
+        break;
+      }
+      default:{
+        break;
+      }
+    }
   }
 
   armarLegajo(){

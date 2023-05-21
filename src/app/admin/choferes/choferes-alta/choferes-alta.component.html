@@ -113,6 +113,14 @@
                         <option value="no">no</option>                        
                       </select>
                   </div> 
+                <div class="form-group">
+                    <label for="Categoria mt-2">Refrigeracion</label>
+                    <select class="form-select form-select-md mb-3" (change)="selectRefrigeracion($event)" required>
+                      <option >Seleccionar</option>
+                      <option value="si">si</option>   
+                      <option value="no">no</option>                        
+                    </select>
+                </div> 
                   <div class="form-group">
                       <label for="Categoria">Seguimiento Satelital</label>
                       <select class="form-select form-select-md mb-3" (change)="seguimientoSatelital($event)" required>
@@ -120,7 +128,7 @@
                         <option value="si">si</option>   
                         <option value="no">no</option>                        
                       </select>
-                  </div> 
+                  </div>                  
                   <div *ngIf="seguimiento">
                       <form [formGroup]="seguimientoForm">
                           <h4 for="Categoria">Detalle Seguimiento Satelital</h4>

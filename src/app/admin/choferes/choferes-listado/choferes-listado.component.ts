@@ -38,6 +38,7 @@ export class ChoferesListadoComponent implements OnInit {
   seguimiento: boolean = false;
   satelital!: any;
   edicion:boolean = false;
+  refrigeracion!:boolean; 
 
   constructor(private fb: FormBuilder, private storageService: StorageService,){
     this.form = this.fb.group({                          //formulario para el perfil 
@@ -119,7 +120,11 @@ export class ChoferesListadoComponent implements OnInit {
     this.categoriaSeleccionada = this.choferEditar.vehiculo.categoria;
     this.tipoCombustible = this.choferEditar.vehiculo.tipoCombustible;
     this.tarjetaCombustible = this.choferEditar.vehiculo.tarjetaCombustible;
-    
+    if(this.choferEditar.vehiculo.refrigeracion){
+      this.refrigeracion = true
+    } else{
+      this.refrigeracion = false
+    }
     this.armarSeguimientoSatelital();
   }
 
@@ -140,7 +145,7 @@ export class ChoferesListadoComponent implements OnInit {
   }
 
   editarPerfil(){
-    this.edicion = !this.edicion;
+    this.edicion = true;
   }
 
   onSubmit(){ 
@@ -158,6 +163,7 @@ export class ChoferesListadoComponent implements OnInit {
       this.form.reset();
       this.vehiculoForm.reset();
       this.seguimientoForm.reset();
+      this.edicion = false;
       this.ngOnInit();
   }
 
@@ -178,6 +184,7 @@ export class ChoferesListadoComponent implements OnInit {
     this.vehiculo.categoria = this.categoriaSeleccionada;
     this.vehiculo.tipoCombustible = this.tipoCombustible;
     this.vehiculo.tarjetaCombustible = this.tarjetaCombustible;
+    this.vehiculo.refrigeracion = this.refrigeracion;
     if(this.seguimiento){
       this.vehiculo.satelital = this.seguimientoForm.value;
     }else{
@@ -249,6 +256,22 @@ export class ChoferesListadoComponent implements OnInit {
       }
     }
     
+  }
+
+  selectRefrigeracion(e:any){ 
+    switch (e.target.value) {
+      case "si":{
+        this.refrigeracion = true;
+        break;
+      }
+      case "no":{
+        this.refrigeracion = false;
+        break;
+      }
+      default:{
+        break;
+      }
+    }
   }
 
 }
