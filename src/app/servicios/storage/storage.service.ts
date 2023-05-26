@@ -62,7 +62,10 @@ export class StorageService {
   public legajos$ = this._legajos$.asObservable()
 
   private _perfilChofer$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public perfilChofer$ = this._perfilChofer$.asObservable()
+  public perfilChofer$ = this._perfilChofer$.asObservable();
+
+  private _proveedores$ = new BehaviorSubject<any>(null) //aca va interface my data
+  public proveedores$ = this._proveedores$.asObservable();
 
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
@@ -132,6 +135,11 @@ export class StorageService {
 
       case "perfilChofer":{
         this._perfilChofer$.next(data);
+        break
+      }
+
+      case "proveedores":{
+        this._proveedores$.next(data);
         break
       }
 

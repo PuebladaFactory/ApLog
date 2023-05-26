@@ -3,6 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Legajo, Documentacion } from 'src/app/interfaces/legajo';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -38,6 +39,8 @@ export class ChoferesAltaComponent implements OnInit {
   adicionalKm!:AdicionalKm;  
   legajo!: any;
   refrigeracion!:boolean;
+  proveedores$!: any; 
+  proveedorSeleccionado!: string;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
     this.form = this.fb.group({                             //formulario para el perfil 
@@ -78,7 +81,9 @@ export class ChoferesAltaComponent implements OnInit {
   }); */
    }
 
-   ngOnInit(): void {}
+   ngOnInit(): void {
+    this.proveedores$ = this.storageService.proveedores$;
+   }
 
 
 
@@ -98,6 +103,7 @@ export class ChoferesAltaComponent implements OnInit {
     this.chofer = this.form.value;
    /*  this.chofer.categoria = this.categoriaSeleccionada; */
     this.chofer.idChofer = new Date().getTime(); 
+    this.chofer.proveedor = this.proveedorSeleccionado;
     console.log("este es el chofer: ",this.chofer);     
     
    }
@@ -133,6 +139,19 @@ export class ChoferesAltaComponent implements OnInit {
     this.addItem(this.jornada)
   } */
 
+  changeProveedor(e:any){
+    console.log(e.target.value);
+    //let razonSocial = e.target.value.split(" ")[0];
+    //console.log(apellido);
+    
+    
+    this.proveedorSeleccionado = e.target.value;
+    /* this.clienteSeleccionado = this.clientes$.source._value.filter(function (cliente:any){
+      return cliente.razonSocial === e.target.value
+    }) */
+   console.log("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
+    //this.buscarTarifas();
+  }
   
   changeCategoria(e: any) {    
     this.categoriaSeleccionada = e.target.value   

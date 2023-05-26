@@ -11,6 +11,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ConsultaOpComponent } from './consulta-op/consulta-op.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { OpCargaManualComponent } from './op-carga-manual/op-carga-manual.component';
 
 
 @NgModule({
@@ -20,6 +21,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     OpDiariasComponent,
     OpHistorialComponent,
     ConsultaOpComponent,
+    OpCargaManualComponent,
   ],
   imports: [
     CommonModule,

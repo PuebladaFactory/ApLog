@@ -149,6 +149,7 @@ export class AuthService {
   }
 
 
+
   // METODOS DE LA APP NO DEL LOGIN
 
   getUsuario(id: string) {
@@ -186,6 +187,7 @@ export class AuthService {
       this.router.navigate(['/home']);
     }
   }
+
 
 
 }
