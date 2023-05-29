@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "dev": "demoapplog",
+    "prod": "lplog-31164"
+  },
+  "targets": {}
+}
