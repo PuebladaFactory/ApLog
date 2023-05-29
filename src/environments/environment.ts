@@ -2,8 +2,23 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+//ENVIRONMENT PARA DEMO
 
 export const environment = {
+  production: false,
+  firebase: {
+    apiKey: "AIzaSyCM-WuXYmaZU0AJQk7jVXyrSt1eMGIC0ps",
+    authDomain: "demoapplog.firebaseapp.com",
+    projectId: "demoapplog",
+    storageBucket: "demoapplog.appspot.com",
+    messagingSenderId: "333531493406",
+    appId: "1:333531493406:web:2be93d73101e7f569fea0f",
+    measurementId: "G-77CC9T9J1N"
+  }
+};
+
+// ENVIROMENT PARA PRODUCCION
+/* export const environment = {
   production: false,
   firebase: {
     projectId: 'lplog-31164',
@@ -13,7 +28,7 @@ export const environment = {
     authDomain: 'lplog-31164.firebaseapp.com',
     messagingSenderId: '665246214539',
   }
-};
+}; */
 /*
  * For easier debugging in development mode, you can import the following file
  * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.

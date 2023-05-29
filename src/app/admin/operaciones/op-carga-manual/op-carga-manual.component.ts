@@ -4,15 +4,14 @@ import { Router } from '@angular/router';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-op-alta',
-  templateUrl: './op-alta.component.html',
-  styleUrls: ['./op-alta.component.scss']
+  selector: 'app-op-carga-manual',
+  templateUrl: './op-carga-manual.component.html',
+  styleUrls: ['./op-carga-manual.component.scss']
 })
-export class OpAltaComponent implements OnInit {
+export class OpCargaManualComponent implements OnInit {
 
   componente:string = "operacionesActivas"
   form:any;
@@ -21,16 +20,16 @@ export class OpAltaComponent implements OnInit {
   choferes$!: any;
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
-
+  refrigeracion!:boolean;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
     this.form = this.fb.group({      
-      fecha: [""],            
+      fecha: [""],    
       observaciones: [""],
     })
    }
 
-  ngOnInit(): void {
+   ngOnInit(): void {
     this.clientes$ = this.storageService.clientes$;
     this.choferes$ = this.storageService.choferes$;       
   }
@@ -56,12 +55,29 @@ export class OpAltaComponent implements OnInit {
     console.log(this.choferSeleccionado);
   }
 
+  selectRefrigeracion(e:any){ 
+    switch (e.target.value) {
+      case "si":{
+        this.refrigeracion = true;
+        break;
+      }
+      case "no":{
+        this.refrigeracion = false;
+        break;
+      }
+      default:{
+        break;
+      }
+    }
+  }
+
   onSubmit(){
         
     this.op = this.form.value;
     this.op.chofer = this.choferSeleccionado;
     this.op.cliente = this.clienteSeleccionado;
     this.op.idOperacion = new Date().getTime();
+    
     //this.op.estado = 1;
     //console.log(this.op);     
     this.addItem();

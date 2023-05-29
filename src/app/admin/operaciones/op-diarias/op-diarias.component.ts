@@ -30,6 +30,8 @@ export class OpDiariasComponent implements OnInit {
   public buttonName: any = 'Consultar Operaciones';
   public showAlta: boolean = false;
   public buttonNameAlta: any = 'Alta de Operación';
+  public showManual: boolean = false;
+  public buttonNameManual: any = 'Carga Manual';
   consultasOp$!:any;
   $consultasOp!:any;
   titulo: string = "consultasOpActivas"
@@ -129,6 +131,13 @@ export class OpDiariasComponent implements OnInit {
     // Change the name of the button.
     if (this.showAlta) this.buttonNameAlta = 'Cerrar';
     else this.buttonNameAlta = 'Alta de Operación';
+  }
+
+  toggleManualOp() {
+    this.showManual = !this.showManual;
+    // Change the name of the button.
+    if (this.showManual) this.buttonNameManual = 'Cerrar';
+    else this.buttonNameManual = 'Alta de Operación';
   }
 
   consultaOpDelDia(){

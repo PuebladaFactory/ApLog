@@ -1,14 +1,7 @@
 {
-  "targets": {
-    "lplog-31164": {
-      "hosting": {
-        "ApLog": [
-          "lplog-31164"
-        ]
-      }
-    }
-  },
   "projects": {
-    "default": "lplog-31164"
-  }
+    "dev": "demoapplog",
+    "prod": "lplog-31164"
+  },
+  "targets": {}
 }

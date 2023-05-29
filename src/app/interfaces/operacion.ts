@@ -9,5 +9,6 @@ export interface Operacion {
     documentacion: string | null;
     cliente: Cliente;
     chofer: Chofer;
+    observaciones: string;
     estado: number;
 }

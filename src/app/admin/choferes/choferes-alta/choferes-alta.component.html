@@ -59,7 +59,16 @@
                   <input formControlName="fechaNac" class="form-control" required type="date">
                 </div>
               </div>        
-              
+              <div class="form-group">
+                <label for="Proveedor">Proveedor</label>
+                <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)" required>
+                  <option>Elegir Proveedor</option>
+                  <option value="monotributista">monotributista</option>
+                  <option *ngFor="let proovedor of proveedores$" required>
+                    {{proovedor.razonSocial}}
+                  </option>
+                </select>
+            </div> 
         
               
         

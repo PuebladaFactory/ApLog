@@ -1,3 +1,5 @@
+import { Proveedor } from "./proveedor";
+
 export interface Chofer {
     id:any;
     idChofer: number;
@@ -10,6 +12,7 @@ export interface Chofer {
     email: string;
     fechaNac: Date;
     vehiculo: Vehiculo;
+    proveedor: Proveedor["razonSocial"]|string|null;   
     
     
 }

@@ -7,6 +7,10 @@
   <button (click)="toggleAltaOp()" id="bt" class="btn btn-outline-secondary bt">
     {{ buttonNameAlta }}
   </button>
+  <br>
+  <button (click)="toggleManualOp()" id="bt" class="btn btn-outline-secondary bt">
+    {{ buttonNameManual }}
+  </button>
 </div>
 <div class="d-flex justify-content-evenly align-items-center">
       <ng-container *ngIf="show" class="col-6">
@@ -15,6 +19,10 @@
 
       <ng-container *ngIf="showAlta" class="col-6">
         <app-op-alta></app-op-alta>
+      </ng-container>
+
+      <ng-container *ngIf="showManual" class="col-6">
+        <app-op-carga-manual></app-op-carga-manual>
       </ng-container>
 </div>
 <h3 *ngIf="!btnConsulta" class="mt-5">Operaciones del Dia: {{hoy}} </h3>
@@ -31,6 +39,7 @@
               <th scope="col" class="">Cliente</th>
               <th scope="col" class="">Chofer</th>  
               <th scope="col" class="">Categoria</th>                        
+              <th scope="col" class="">Observaciones</th> 
               <th scope="col" class=""></th>          
              
             </tr>
@@ -42,6 +51,7 @@
               <td class="align-middle">{{op.cliente.razonSocial}}</td>
               <td class="align-middle">{{op.chofer.apellido}}</td>          
               <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td>          
+              <td class="align-middle">{{op.observaciones}}</td>
               <td class="d-flex justify-content-evenly align-middle">
                   <app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(op)" ></app-btn-editar> 
                   <app-btn-eliminar [name]="'Anular'" (click)="eliminarOperacion(op)"></app-btn-eliminar>

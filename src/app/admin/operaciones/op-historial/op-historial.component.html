@@ -22,7 +22,8 @@
           <th scope="col">N° Operación</th>
           <th scope="col">Cliente</th>
           <th scope="col">Chofer</th>
-          <th scope="col" class="">Categoria</th>               
+          <th scope="col">Categoria</th>               
+          <th scope="col">Observaciones</th>               
         </tr>
       </thead>
       <tbody>
@@ -31,7 +32,8 @@
           <td class="align-middle">{{op.idOperacion}}</td>
           <td class="align-middle">{{op.cliente.razonSocial}}</td>
           <td class="align-middle">{{op.chofer.apellido}}</td>        
-          <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td>                      
+          <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td> 
+          <td class="align-middle">{{op.observaciones}}</td>                     
         </tr>    
       </tbody>
 </table>
