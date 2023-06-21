@@ -6,13 +6,13 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <div class="form-group">
-      <label for="Nombre">Nombre</label>
-      <div class="input-group">
-        <input formControlName="nombre" class="form-control edicion" required type="text" [ngClass]="{'isDisabled': !edicion}" >            
+      <label for="Nombre">Nombre111</label>
+            <div class="input-group">
+        <input formControlName="nombre" class="form-control edicion" required type="text"[ngClass]="{'isDisabled': !edicion}" >
       </div>
     </div>    
     <div class="form-group">
-      <label for="Apellido">Apellido</label>
+      <label for="Apellido">Apellido222</label>
       <div class="input-group">
         <input formControlName="apellido" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
       </div>
@@ -56,7 +56,7 @@
     <button *ngIf="!edicion" class="btn btn-secondary mt-2" type="button" (click)="editarPerfil()">
         Editar 
     </button>
-    <button *ngIf="edicion" class="btn btn-secondary mt-2" type="submit">
+    <button *ngIf="edicion" class="btn btn-secondary mt-2" type="submit" >
       Guardar 
     </button>
 

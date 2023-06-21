@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Legajo, Documentacion } from 'src/app/interfaces/legajo';
@@ -44,26 +44,26 @@ export class ChoferesAltaComponent implements OnInit {
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
     this.form = this.fb.group({                             //formulario para el perfil 
-      nombre: [""], 
-      apellido: [""], 
-      cuit: [""],            
-      fechaNac: [""],
-      email: [""],
-      celularContacto: [""],
-      celularEmergencia: [""],
-      domicilio: [""],     
+      nombre: ["", [Validators.required, Validators.maxLength(30)]], 
+      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
+      cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],            
+      fechaNac: ["",Validators.required],
+      email: ["",[Validators.required, Validators.email]],
+      celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
+      celularEmergencia: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
+      domicilio: ["", [Validators.required, Validators.maxLength(50)]],     
 
   });
 
     this.vehiculoForm = this.fb.group({
       dominio: [""], 
-      marca:[""], 
-      modelo: [""],         
+      marca:["",[Validators.required, Validators.maxLength(50)]], 
+      modelo: ["",[Validators.required, Validators.maxLength(50)]],         
     })
 
     this.seguimientoForm = this.fb.group({
-      proveedor: [""],
-      marcaGps: [""],
+      proveedor: ["",[Validators.required, Validators.maxLength(50)]],
+      marcaGps: ["",[Validators.required, Validators.maxLength(50)]],
     })
     
    /*  this.jornadaForm = this.fb.group({                    //formulario para la jornada

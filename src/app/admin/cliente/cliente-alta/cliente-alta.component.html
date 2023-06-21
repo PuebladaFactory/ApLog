@@ -73,7 +73,7 @@
           </div>
           <ng-container *ngIf="mostrarFormulario">
             <div class="modal-body">
-              <form [formGroup]="formContacto" novalidate>
+              <form [formGroup]="formContacto">
                 <div class="form-group">
                   <label for="Puesto">Puesto</label>
                   <div class="input-group">
@@ -132,7 +132,7 @@
               </form>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="guardarContacto()">
+              <button class="btn btn-secondary" type="submit" [disabled]="form.invalid || formContacto.invalid"  (click)="guardarContacto()">
                 Guardar
               </button>
             </div>

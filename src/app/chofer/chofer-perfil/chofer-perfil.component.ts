@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, Validators} from '@angular/forms';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 
@@ -14,17 +14,18 @@ export class ChoferPerfilComponent implements OnInit {
   edicion:boolean = false;
   perfil$!:any;
   perfilModificado!:any;
+nombre: any;
 
   constructor(private fb: FormBuilder, private storageService: StorageService,) {
     this.form = this.fb.group({     
-      nombre: [""], 
-      apellido: [""], 
-      cuit: [""],            
+      nombre: ["",[Validators.maxLength(20)]], 
+      apellido: ["",[Validators.maxLength(20)]], 
+      cuit: ["",[Validators.minLength(11),Validators.maxLength(11)]],            
       fechaNac: [""],
-      email: [""],
-      celularContacto: [""],
-      celularEmergencia: [""],
-      domicilio: [""],     
+      email: ["",[Validators.email]],
+      celularContacto: ["",[Validators.minLength(11),Validators.maxLength(11)]],
+      celularEmergencia: ["",[Validators.minLength(11),Validators.maxLength(11)]],
+      domicilio: ["",[Validators.maxLength(50)]],     
      })
    }
 
