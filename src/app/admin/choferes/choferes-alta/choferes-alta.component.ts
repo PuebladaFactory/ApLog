@@ -56,14 +56,14 @@ export class ChoferesAltaComponent implements OnInit {
   });
 
     this.vehiculoForm = this.fb.group({
-      dominio: [""], 
+      dominio: ["",[Validators.required, Validators.maxLength(8)]], 
       marca:["",[Validators.required, Validators.maxLength(50)]], 
-      modelo: ["",[Validators.required, Validators.maxLength(50)]],         
+      modelo: ["",[Validators.required, Validators.maxLength(30)]],         
     })
 
     this.seguimientoForm = this.fb.group({
-      proveedor: ["",[Validators.required, Validators.maxLength(50)]],
-      marcaGps: ["",[Validators.required, Validators.maxLength(50)]],
+      proveedor: ["",[Validators.required, Validators.maxLength(30)]],
+      marcaGps: ["",[Validators.required, Validators.maxLength(30)]],
     })
     
    /*  this.jornadaForm = this.fb.group({                    //formulario para la jornada

@@ -22,7 +22,7 @@ export class ClienteAltaComponent implements OnInit {
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
     this.form = this.fb.group({      
-      razonSocial: ["",[Validators.required, Validators.maxLength(50)]], 
+      razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
       cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
       direccion: ["",[Validators.required, Validators.maxLength(50)]],      
     });
@@ -30,8 +30,8 @@ export class ClienteAltaComponent implements OnInit {
     this.formContacto = this.fb.group({      
       puesto: [""], 
       apellido: ["",[Validators.required, Validators.maxLength(30)]],
-      nombre: ["",[Validators.required, Validators.maxLength(50)]],      
-      telefono: ["",[Validators.required, Validators.maxLength(10)]],
+      nombre: ["",[Validators.required, Validators.maxLength(30)]],      
+      telefono: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
       email: ["",[Validators.required, Validators.email]],
     })
    }
