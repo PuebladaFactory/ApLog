@@ -56,7 +56,7 @@ export class ChoferesAltaComponent implements OnInit {
   });
 
     this.vehiculoForm = this.fb.group({
-      dominio: ["",[Validators.required, Validators.maxLength(8)]], 
+      dominio: ["",[Validators.required,Validators.minLength(6), Validators.maxLength(8)]], 
       marca:["",[Validators.required, Validators.maxLength(50)]], 
       modelo: ["",[Validators.required, Validators.maxLength(30)]],         
     })
