@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Cliente, Contacto } from 'src/app/interfaces/cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -22,17 +22,17 @@ export class ClienteAltaComponent implements OnInit {
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
     this.form = this.fb.group({      
-      razonSocial: [""], 
-      cuit: [""],
-      direccion: [""],      
+      razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
+      cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
+      direccion: ["",[Validators.required, Validators.maxLength(50)]],      
     });
 
     this.formContacto = this.fb.group({      
       puesto: [""], 
-      apellido: [""],
-      nombre: [""],      
-      telefono: [""],
-      email: [""],
+      apellido: ["",[Validators.required, Validators.maxLength(30)]],
+      nombre: ["",[Validators.required, Validators.maxLength(30)]],      
+      telefono: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
+      email: ["",[Validators.required, Validators.email]],
     })
    }
 

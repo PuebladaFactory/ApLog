@@ -16,7 +16,7 @@
             <div class="form-group">
               <label for="Cuit">CUIT</label>
               <div class="input-group">
-                <input formControlName="cuit" class="form-control edicion" required type="text">            
+                <input formControlName="cuit" class="form-control edicion" required type="text" [placeholder]="'ej: 31456784569'">            
               </div>
             </div>    
             <div class="form-group">
@@ -51,7 +51,7 @@
               </div>
             </div>
             </div>     
-            <button class="btn btn-secondary mt-2" type="submit">
+            <button class="btn btn-secondary mt-2" type="submit" [disabled]="form.invalid || form.invalid " >
               Guardar 
             </button>
         
@@ -73,7 +73,7 @@
           </div>
           <ng-container *ngIf="mostrarFormulario">
             <div class="modal-body">
-              <form [formGroup]="formContacto" novalidate>
+              <form [formGroup]="formContacto">
                 <div class="form-group">
                   <label for="Puesto">Puesto</label>
                   <div class="input-group">
@@ -81,7 +81,7 @@
                       formControlName="puesto"
                       class="form-control"
                       required
-                      type="text"                  
+                      type="text" [placeholder]="'ej:  director de logistica'"                 
                     />
                   </div>
                 </div>
@@ -114,7 +114,7 @@
                       formControlName="telefono"
                       class="form-control"
                       required
-                      type="text"
+                      type="text" [placeholder]="'ej: 1134567890'"
                     />
                   </div>
                 </div>
@@ -125,14 +125,14 @@
                       formControlName="email"
                       class="form-control"
                       required
-                      type="email"
+                      type="email" [placeholder]="'ej:  davidcortes@gmail.com'"
                     />
                   </div>
                 </div>           
               </form>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="guardarContacto()">
+              <button class="btn btn-secondary" type="submit" [disabled]="form.invalid || formContacto.invalid"  (click)="guardarContacto()">
                 Guardar
               </button>
             </div>
