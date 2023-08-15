@@ -100,7 +100,9 @@ getByFieldValue(componente:string, campo:string, value:any){
     console.log("db.service, metodo create: ",this.coleccion);
     
     let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
-    return addDoc(dataCollection, item);
+    return addDoc(dataCollection, item).then(() =>
+      console.log('Create. Escritura en la base de datos en: ', componente)
+    );
   }
 
   update(componente: string, item: any) {

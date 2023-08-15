@@ -60,6 +60,7 @@ import { AdminModule } from './admin/admin.module';
 import { SharedModule } from './shared/shared.module';
 import { ChoferesModule } from './admin/choferes/choferes.module';
 import { OperacionesModule } from './admin/operaciones/operaciones.module';
+import { ProveedoresModule } from './admin/proveedores/proveedores.module';
 
 
 
@@ -108,6 +109,7 @@ import { OperacionesModule } from './admin/operaciones/operaciones.module';
     AdminModule,
     OperacionesModule,
     SharedModule,
+    ProveedoresModule,
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),
