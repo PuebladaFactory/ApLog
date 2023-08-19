@@ -6,6 +6,7 @@ import { ProveedoresAltaComponent } from './proveedores-alta/proveedores-alta.co
 import { ProveedoresBajaComponent } from './proveedores-baja/proveedores-baja.component';
 import { ProveedoresListadoComponent } from './proveedores-listado/proveedores-listado.component';
 import { ProveedoresTarifaComponent } from './proveedores-tarifa/proveedores-tarifa.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 
 @NgModule({
@@ -17,6 +18,8 @@ import { ProveedoresTarifaComponent } from './proveedores-tarifa/proveedores-tar
   ],
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     ProveedoresRoutingModule
   ]
 })
