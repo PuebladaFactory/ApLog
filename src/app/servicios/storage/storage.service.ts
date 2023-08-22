@@ -67,6 +67,9 @@ export class StorageService {
   private _proveedores$ = new BehaviorSubject<any>(null) //aca va interface my data
   public proveedores$ = this._proveedores$.asObservable();
 
+  private _historialTarifasProveedores$ = new BehaviorSubject<any>(null)
+  public historialTarifasProveedores$ = this._historialTarifasProveedores$.asObservable();
+
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -125,6 +128,11 @@ export class StorageService {
 
       case "tarifasCliente": {
         this._historialTarifasClientes$.next(data)
+        break;
+      }
+
+      case "tarifasProveedor": {
+        this._historialTarifasProveedores$.next(data)
         break;
       }
 
@@ -202,6 +210,7 @@ export class StorageService {
     //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
     this.getAllSorted("jornadas", 'idChofer', 'asc')
     this.getAllSorted("proveedores", 'idProveedor', 'asc')
+    
    
 
   }
