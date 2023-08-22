@@ -12,7 +12,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class ProveedoresAltaComponent implements OnInit {
   @Input() data:any
 
-  componente:string = "clientes"
+  componente:string = "proveedores"
   form:any;
   formContacto:any;
   proveedor!: Proveedor;
@@ -50,7 +50,7 @@ export class ProveedoresAltaComponent implements OnInit {
     this.storageService.addItem(this.componente, this.proveedor)
     /* this.form.reset() 
     this.ngOnInit() */
-    this.router.navigate(['/clientes/listado'])   
+    this.router.navigate(['/proveedores/listado'])   
   }
 
   toggle() {
