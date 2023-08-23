@@ -21,6 +21,7 @@ export class OpCargaManualComponent implements OnInit {
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
   refrigeracion!:boolean;
+  ayudante!:boolean;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
     this.form = this.fb.group({      
@@ -55,6 +56,16 @@ export class OpCargaManualComponent implements OnInit {
     console.log(this.choferSeleccionado);
   }
 
+  changeProveedor(e: any) {
+    //console.log(e.target.value)
+    let choferForm = this.choferes$.source._value;
+    choferForm = choferForm.filter(function (chofer: any) { 
+      return chofer.apellido === e.target.value
+    });
+    this.choferSeleccionado = choferForm[0];               
+    console.log(this.choferSeleccionado);
+  }
+
   selectRefrigeracion(e:any){ 
     switch (e.target.value) {
       case "si":{
@@ -63,6 +74,22 @@ export class OpCargaManualComponent implements OnInit {
       }
       case "no":{
         this.refrigeracion = false;
+        break;
+      }
+      default:{
+        break;
+      }
+    }
+  }
+
+  selectAyudante(e:any){ 
+    switch (e.target.value) {
+      case "si":{
+        this.ayudante = true;
+        break;
+      }
+      case "no":{
+        this.ayudante = false;
         break;
       }
       default:{

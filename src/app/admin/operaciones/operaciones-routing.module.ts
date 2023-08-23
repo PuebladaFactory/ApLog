@@ -5,7 +5,7 @@ import { OpDiariasComponent } from './op-diarias/op-diarias.component';
 import { OpHistorialComponent } from './op-historial/op-historial.component';
 
 const routes: Routes = [
-  {path: 'alta', component:OpAltaComponent},
+    {path: 'alta', component:OpAltaComponent},
     {path: 'op-diarias', component:OpDiariasComponent},
     {path: 'historial', component:OpHistorialComponent}
 ];

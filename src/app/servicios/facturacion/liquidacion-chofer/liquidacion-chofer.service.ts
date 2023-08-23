@@ -94,8 +94,8 @@ export class LiquidacionChoferService {
   }
 
   altaFacturaChofer(){
-    //console.log("liquidacion-chofer. facturaChofer: ", this.liquidacionChofer);    
-    this.storageService.addItem("facturaOpChofer", this.liquidacionChofer);    
+    console.log("liquidacion-chofer. facturaChofer: ", this.liquidacionChofer);    
+    //this.storageService.addItem("facturaOpChofer", this.liquidacionChofer);    
     //this.traerFacturas();
   }
 

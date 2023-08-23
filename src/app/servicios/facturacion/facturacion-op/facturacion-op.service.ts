@@ -14,7 +14,10 @@ export class FacturacionOpService {
   facturacionOp(op:Operacion){
     //console.log("facturacionOp");    
     this.liquidacionChofer.liquidacionOperacion(op);
+    console.log("ya hizo la liquidacion del Chofer");
+    
     this.facturacionCliente.liquidacionOperacion(op);
+    console.log("ya hizo la liquidacion del Cliente");
     
     
   }
