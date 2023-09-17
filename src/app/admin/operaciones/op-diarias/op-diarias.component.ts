@@ -101,7 +101,7 @@ export class OpDiariasComponent implements OnInit {
   changeCliente(e: any) {
     //console.log(e.target.value)
     let clienteForm;
-    clienteForm = this.clientes$.source._value.filter(function (cliente: any) { 
+    clienteForm = this.$clientes.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     });
     this.clienteSeleccionado = clienteForm[0];               
@@ -111,7 +111,7 @@ export class OpDiariasComponent implements OnInit {
   changeChofer(e: any) {
     //console.log(e.target.value)
     let choferForm;
-    choferForm = this.choferes$.source._value.filter(function (chofer: any) { 
+    choferForm = this.$choferes.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     });
     this.choferSeleccionado = choferForm[0];               
