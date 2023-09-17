@@ -53,7 +53,7 @@ export class OpHistorialComponent implements OnInit {
   consultaMes(){
     if(!this.btnConsulta){   
       console.log(this.primerDia, this.ultimoDia)         
-      this.storageService.getByDateValue("operacionesCerradas", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+      this.storageService.getByDateValue("operacionesActivas", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
     }     
   }
 
@@ -64,6 +64,10 @@ export class OpHistorialComponent implements OnInit {
   mostrarRemito(documentacion:string){ 
     //aca leeria de la db para buscar el remito
     alert("aca iria la imagen")
+  }
+
+  facturarOp(op:Operacion){
+    alert("Aca factura la operación");
   }
 
 

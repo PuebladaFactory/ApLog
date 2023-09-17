@@ -1,4 +1,4 @@
-<h1 class="text-center">Operaciones cerradas</h1>
+<h1 class="text-center">Operaciones Abiertas</h1>
 
 <div class="mt-5">
   <button (click)="toggle()" id="bt" class="btn btn-outline-secondary">
@@ -24,16 +24,20 @@
           <th scope="col">Chofer</th>
           <th scope="col">Categoria</th>               
           <th scope="col">Observaciones</th>               
+          <th scope="col" class="botones">Detalle</th>
+          <th scope="col" class="botones">Facturar</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor=" let op of $opCerradas | filter: searchText" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="seleccionarOp(op)">
+        <tr *ngFor=" let op of $opCerradas | filter: searchText" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="seleccionarOp(op)">
           <th class="align-middle" scope="row">{{op.fecha}} </th>
           <td class="align-middle">{{op.idOperacion}}</td>
           <td class="align-middle">{{op.cliente.razonSocial}}</td>
           <td class="align-middle">{{op.chofer.apellido}}</td>        
           <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td> 
-          <td class="align-middle">{{op.observaciones}}</td>                     
+          <td class="align-middle">{{op.observaciones}}</td>          
+          <td class="align-middle"> <app-btn-editar name="Detalle" (click)="seleccionarOp(op)"></app-btn-editar> </td>
+          <td class="align-middle"> <app-btn-eliminar name="Facturar" (click)="facturarOp(op)"></app-btn-eliminar> </td>           
         </tr>    
       </tbody>
 </table>
