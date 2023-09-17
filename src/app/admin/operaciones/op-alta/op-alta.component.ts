@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
@@ -19,8 +19,11 @@ export class OpAltaComponent implements OnInit {
   op!: Operacion;
   clientes$!: any;
   choferes$!: any;
+  $choferes!: Chofer[];
+  $clientes!: Cliente[];
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
+  checkboxesSeleccionados: boolean[] = [];
 
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
@@ -31,13 +34,19 @@ export class OpAltaComponent implements OnInit {
    }
 
   ngOnInit(): void {
-    this.clientes$ = this.storageService.clientes$;
-    this.choferes$ = this.storageService.choferes$;       
+    /* this.clientes$ = this.storageService.clientes$; */
+    /* this.choferes$ = this.storageService.choferes$;        */
+    this.storageService.choferes$.subscribe(data => {
+      this.$choferes = data;
+    });
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    });   
   }
 
   changeCliente(e: any) {
     console.log(e.target.value)
-    let clienteForm = this.clientes$.source._value;
+    let clienteForm = this.$clientes;
     clienteForm = clienteForm.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     });
@@ -46,32 +55,72 @@ export class OpAltaComponent implements OnInit {
 
   }
 
-  changeChofer(e: any) {
+  /* changeChofer(e: any) {
     //console.log(e.target.value)
-    let choferForm = this.choferes$.source._value;
+    let choferForm = this.choferes$;
     choferForm = choferForm.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     });
     this.choferSeleccionado = choferForm[0];               
     console.log(this.choferSeleccionado);
-  }
+  } */
 
   onSubmit(){
-        
-    this.op = this.form.value;
-    this.op.chofer = this.choferSeleccionado;
-    this.op.cliente = this.clienteSeleccionado;
-    this.op.idOperacion = new Date().getTime();
-    //this.op.estado = 1;
-    //console.log(this.op);     
-    this.addItem();
+
+    let checkbox = this.getIndicesSeleccionados()
+    console.log("checkboxs: ",checkbox);
+    const choferesCheckboxs: any[] = [];
+    for (const index of checkbox) {
+      if (index >= 0) {
+        choferesCheckboxs.push(this.$choferes[index]);
+      }
+    }
+    console.log("objetoSeleccionado: ", choferesCheckboxs);
+
+    choferesCheckboxs.forEach(chofer =>{
+      this.armarOp(chofer)
+    })
+    this.form.reset();
     
    }
 
+   armarOp(chofer:Chofer){
+    console.log("armarOp. chofer: ", chofer);
+    
+    this.op = this.form.value;
+    this.op.chofer = chofer;
+    this.op.cliente = this.clienteSeleccionado;
+    this.op.idOperacion = new Date().getTime();
+    //this.op.estado = 1;
+    console.log("esta es la operacion: ", this.op);     
+    this.addItem();
+   }
+
    addItem(): void {
-    this.storageService.addItem(this.componente, this.op);
-    this.form.reset();
+    this.storageService.addItem(this.componente, this.op); 
+   
+    /* this.form.reset(); */
     //this.router.navigate(['/op/op-diarias']);     
+
+
   }
 
+  
+  // Método para manejar el cambio de estado de un checkbox
+  toggleCheckbox(index: number) {
+    this.checkboxesSeleccionados[index] = !this.checkboxesSeleccionados[index];
+    console.log("este es el indice: ", index, "y este el estado: ", this.checkboxesSeleccionados[index]);
+    
+  }
+
+
+
+ // map para crear un nuevo array de índices donde los elementos con valor true en checkboxesSeleccionados tendrán el índice correspondiente
+ // y los elementos con valor false tendrán -1. 
+ // Luego, utiliza filter para eliminar todos los -1 del array resultante, dejando solo los índices de los elementos con valor true.
+ getIndicesSeleccionados(): number[] {
+  return this.checkboxesSeleccionados
+    .map((valor, index) => (valor === true ? index : -1))
+    .filter(index => index !== -1);
+}
 }
