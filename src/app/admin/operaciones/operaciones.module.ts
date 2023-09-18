@@ -12,6 +12,7 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ConsultaOpComponent } from './consulta-op/consulta-op.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { OpCargaManualComponent } from './op-carga-manual/op-carga-manual.component';
+import { OpCerradasComponent } from './op-cerradas/op-cerradas.component';
 
 
 @NgModule({
@@ -22,6 +23,7 @@ import { OpCargaManualComponent } from './op-carga-manual/op-carga-manual.compon
     OpHistorialComponent,
     ConsultaOpComponent,
     OpCargaManualComponent,
+    OpCerradasComponent,
   ],
   imports: [
     CommonModule,
