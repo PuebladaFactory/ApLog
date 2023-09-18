@@ -1,4 +1,4 @@
-<h1 class="text-center">Operaciones Abiertas</h1>
+<h1 class="text-center">Operaciones Facturadas</h1>
 
 <div class="mt-5">
   <button (click)="toggle()" id="bt" class="btn btn-outline-secondary">
@@ -24,20 +24,20 @@
           <th scope="col">Chofer</th>
           <th scope="col">Categoria</th>               
           <th scope="col">Observaciones</th>               
-          <th scope="col" class="botones">Detalle</th>
-          <th scope="col" class="botones">Facturar</th>
+          <th scope="col">Factura Cliente</th>
+          <th scope="col">Factura Cliente</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor=" let op of $opCerradas | filter: searchText">
+        <tr *ngFor=" let op of $opCerradas | filter: searchText" type="button" data-bs-target="#exampleModal" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="seleccionarOp(op)">
           <th class="align-middle" scope="row">{{op.fecha}} </th>
           <td class="align-middle">{{op.idOperacion}}</td>
           <td class="align-middle">{{op.cliente.razonSocial}}</td>
           <td class="align-middle">{{op.chofer.apellido}}</td>        
           <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td> 
           <td class="align-middle">{{op.observaciones}}</td>          
-          <td class="align-middle"> <app-btn-editar name="Detalle" data-bs-target="#exampleModal" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="seleccionarOp(op)"></app-btn-editar> </td>
-          <td class="align-middle"> <app-btn-eliminar name="Factura" data-bs-target="#exampleModal" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="facturarOp(op)"></app-btn-eliminar> </td>           
+          <td class="align-middle"> $100000 </td>
+          <td class="align-middle"> $100000 </td>           
         </tr>    
       </tbody>
 </table>
@@ -51,7 +51,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h1 class="modal-title fs-5" id="exampleModalLabel">Detalle Operación</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="facturarFalso()"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body" *ngIf="detalleOp !== undefined">          
               <div>
@@ -71,27 +71,17 @@
               </div> 
               <div>
                 <h3>Observaciones: {{detalleOp.observaciones}} </h3>                 
-              </div>
-              <form [formGroup]="opForm" (ngSubmit)="onSubmit()" *ngIf="facturar">                            
-                  <div class="form-group">
-                      <label for="Km">Km recorridos</label>
-                      <div class="input-group">
-                        <input formControlName="km" class="form-control" required type="number">
-                      </div>
-                  </div>    
-                  <div class="form-group">              
-                      <div class="mb-3">
-                        <label for="formFile" class="form-label">Cargar remito de operacion</label>
-                        <input class="form-control" formControlName="remito" type="file" id="formFile">
-                      </div>                    
-                  </div>    
-              
-                  <button class="btn btn-secondary" type="submit" data-bs-dismiss="modal" aria-label="Close">
-                    Facturar 
-                  </button>
-            
-              </form>
-              <button class="btn btn-secondary mt-2" type="submit" data-bs-dismiss="modal" *ngIf="!facturar">
+              </div>  
+              <div>
+                <h3>Factura Cliente: $100000 </h3>                 
+              </div>                  
+              <div>
+                <h3>Factura Chofer: $100000 </h3>                 
+              </div>      
+              <div>
+                <h3>Aca vendria el remito </h3>                 
+              </div>              
+              <button class="btn btn-secondary mt-2" type="submit" data-bs-dismiss="modal" >
                 Cerrar 
               </button>   
                  

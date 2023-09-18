@@ -1,8 +1,13 @@
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder } from '@angular/forms';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+
+//ESTE COMPONENTE ES OPERACIONES ABIERTAS!!!!!!!!!!!!!!!!!!!!!
+
 
 @Component({
   selector: 'app-op-historial',
@@ -24,8 +29,15 @@ export class OpHistorialComponent implements OnInit {
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];
   searchText: string = "";
   $opCerradas: any;
+  facturar: boolean = false;
+  opForm: any;
+  opCerrada!: Operacion;
 
-  constructor(private storageService: StorageService) {    
+  constructor(private fb: FormBuilder, private storageService: StorageService, private facturacionServ: FacturacionOpService) {
+    this.opForm = this.fb.group({
+        km: [''],       
+        remito: [''],       
+    });
    }
   
   ngOnInit(): void { 
@@ -67,7 +79,39 @@ export class OpHistorialComponent implements OnInit {
   }
 
   facturarOp(op:Operacion){
-    alert("Aca factura la operación");
+    this.facturar = true;
+    this.opCerrada = op
+    this.seleccionarOp(op);
+
+  }
+
+  onSubmit(){
+    //console.log(this.opForm.value);
+    this.opCerrada.km = this.opForm.value.km;    
+    //this.opCerrada.documentacion = this.opForm.remito;
+    this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
+    //console.log("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
+    this.altaOperacionesCerradas();
+    this.bajaOperacionesActivas()
+    
+  }
+
+  altaOperacionesCerradas(){
+    this.storageService.addItem("operacionesCerradas", this.opCerrada);    
+    
+    //this.router.navigate(['/op/op-diarias'])
+  }
+
+  bajaOperacionesActivas(){
+    this.storageService.deleteItem("operacionesActivas", this.opCerrada);
+    this.facturacionServ.facturacionOp(this.opCerrada)
+    this.opForm.reset();
+    this.facturar = false;
+    this.ngOnInit();
+  }
+
+  facturarFalso(){
+    this.facturar = false;
   }
 
 

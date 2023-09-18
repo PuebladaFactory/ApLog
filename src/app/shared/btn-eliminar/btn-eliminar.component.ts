@@ -4,7 +4,7 @@ import { Component, Input, OnInit } from '@angular/core';
   selector: 'app-btn-eliminar',
 
   template: `
-<button *ngIf="name !== 'Facturar'" class="btn btn-primary" style="border-radius: 10%; margin: 10px ; " 
+<button *ngIf="name !== 'Factura'" class="btn btn-primary" style="border-radius: 10%; margin: 10px ; " 
 [disabled]=disabled>
   
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
@@ -14,7 +14,7 @@ import { Component, Input, OnInit } from '@angular/core';
   {{name || "Eliminar"}}
 </button>
 
-<button *ngIf="name === 'Facturar'" class="btn btn-primary" style="border-radius: 10%; margin: 10px ; " 
+<button *ngIf="name === 'Factura'" class="btn btn-primary" style="border-radius: 10%; margin: 10px ; " 
 [disabled]=disabled>
   
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16">
