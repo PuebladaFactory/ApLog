@@ -23,6 +23,10 @@ const routes: Routes = [
       path: 'proveedores',
       loadChildren: () => import('./proveedores/proveedores.module').then(m => m.ProveedoresModule)
     },  
+    {
+      path: 'facturacion',
+      loadChildren: () => import('./facturacion/facturacion.module').then(m => m.FacturacionModule)
+    },  
 ]  },  
 /* {
   path: 'clientes',
