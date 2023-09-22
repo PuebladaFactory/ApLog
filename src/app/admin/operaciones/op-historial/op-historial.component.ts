@@ -78,7 +78,7 @@ export class OpHistorialComponent implements OnInit {
     alert("aca iria la imagen")
   }
 
-  facturarOp(op:Operacion){
+  crearFacturaOp(op:Operacion){
     this.facturar = true;
     this.opCerrada = op
     this.seleccionarOp(op);
@@ -93,25 +93,29 @@ export class OpHistorialComponent implements OnInit {
     //console.log("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
     this.altaOperacionesCerradas();
     this.bajaOperacionesActivas()
-    
+    this.facturarOp();
   }
 
   altaOperacionesCerradas(){
-    this.storageService.addItem("operacionesCerradas", this.opCerrada);    
+    //this.storageService.addItem("operacionesCerradas", this.opCerrada);    
     
     //this.router.navigate(['/op/op-diarias'])
   }
 
   bajaOperacionesActivas(){
     this.storageService.deleteItem("operacionesActivas", this.opCerrada);
-    this.facturacionServ.facturacionOp(this.opCerrada)
-    this.opForm.reset();
-    this.facturar = false;
-    this.ngOnInit();
+    
   }
 
   facturarFalso(){
     this.facturar = false;
+  }
+
+  facturarOp(){
+    this.facturacionServ.facturarOperacion(this.opCerrada);    
+    this.opForm.reset();
+    this.facturar = false;
+    //this.ngOnInit();
   }
 
 
