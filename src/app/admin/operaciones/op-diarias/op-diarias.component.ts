@@ -60,7 +60,8 @@ export class OpDiariasComponent implements OnInit {
       this.$consultasOp = data;
     });
     //console.log("esto es op-diarias. consultasOp: ", this.consultasOp$);
-    this.consultaOpDelDia()    
+    this.consultaOpDelDia();
+    this.toggleAltaOp();    
   }
 
   
