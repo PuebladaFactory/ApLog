@@ -5,6 +5,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { FacturacionClienteService } from '../facturacion-cliente/facturacion-cliente.service';
 import { StorageService } from '../../storage/storage.service';
 import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { DbFirestoreService } from '../../database/db-firestore.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +19,7 @@ export class FacturacionOpService {
   $tarifas!: any;
   ultimaTarifa!: TarifaChofer;
 
-  constructor( private facturacionCliente: FacturacionClienteService, private storageService: StorageService) { }
+  constructor( private facturacionCliente: FacturacionClienteService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
 
 /*   facturacionOp(op:Operacion){
     //console.log("facturacionOp");    
@@ -30,8 +31,10 @@ export class FacturacionOpService {
     
   } */
 
-  facturarOperacion(op: Operacion){        
+  facturarOperacion(op: Operacion)  :FacturaOpChofer{        
     this.facturarOpChofer(op);
+    return this.facturaChofer
+    
     
     //this.storageService.addItem("facturaOpChofer", op);    
   }
@@ -129,14 +132,16 @@ export class FacturacionOpService {
       total: this.total,
     }
     //console.log(this.facturaChofer);
-
-    this.altaFacturaChofer()
+    
+    //this.altaFacturaChofer()
   }
 
-  altaFacturaChofer(){
+  altaFacturaChofer() {
     console.log("liquidacion-chofer. facturaChofer: ", this.facturaChofer);    
-    this.storageService.addItem("facturaOpChofer", this.facturaChofer);    
+     //this.storageService.addItem("facturaOpChofer", this.facturaChofer);     
+    //this.addItem("facturaOpChofer", this.facturaChofer)
     //this.traerFacturas();
+   
   }
 
   //METODO CREADO PARA COMPROBAR COMO TRAE LAS FACTURAS
@@ -146,4 +151,15 @@ export class FacturacionOpService {
       
     })
   }  */
+  addItem(componente: string, item: any): void {
+
+    //item.fechaOp = new Date()
+    console.log(" storage add item ", componente, item,)
+
+
+    this.dbFirebase.create(componente, item)
+      // .then((data) => console.log(data))
+      // .then(() => this.ngOnInit())
+      .catch((e) => console.log(e.message));
+  }
 }

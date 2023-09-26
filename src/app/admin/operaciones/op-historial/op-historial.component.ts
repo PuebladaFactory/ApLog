@@ -1,8 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -32,8 +35,11 @@ export class OpHistorialComponent implements OnInit {
   facturar: boolean = false;
   opForm: any;
   opCerrada!: Operacion;
+  facturaHDP!: FacturaOpChofer;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private facturacionServ: FacturacionOpService) {
+  private subscriptions: Subscription[] = [];
+
+  constructor(private fb: FormBuilder, private storageService: StorageService, private facturacionServ: FacturacionOpService, private dbFirebase: DbFirestoreService) {
     this.opForm = this.fb.group({
         km: [''],       
         remito: [''],       
@@ -43,11 +49,18 @@ export class OpHistorialComponent implements OnInit {
   ngOnInit(): void { 
     //this.opCerradas$ = this.storageService.opCerradas$ 
     //this.consultasOp$ = this.storageService.consultasOpCerradas$; 
-    this.storageService.consultasOpCerradas$.subscribe(data=>{
+    /* this.storageService.consultasOpCerradas$.subscribe(data => {
+      this.$opCerradas = data;}) */
+
+    this.subscriptions.push(this.storageService.consultasOpCerradas$.subscribe(data => {
       this.$opCerradas = data;
-    })  
+    })); 
     this.consultaMes();
    
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(subscription => subscription.unsubscribe());
   }
   
 
@@ -112,11 +125,29 @@ export class OpHistorialComponent implements OnInit {
   }
 
   facturarOp(){
-    this.facturacionServ.facturarOperacion(this.opCerrada);    
+    this.facturaHDP = this.facturacionServ.facturarOperacion(this.opCerrada);    
+    console.log("esta es la factura FINAL: ", this.facturaHDP);
+    
+    this.addItem("facturaOpChofer", this.facturaHDP)
     this.opForm.reset();
     this.facturar = false;
-    //this.ngOnInit();
+    this.ngOnDestroy();
+    this.ngOnInit();
   }
+
+  addItem(componente: string, item: any): void {
+
+    this.storageService.addItem("facturaOpChofer", this.facturaHDP);     
+  /*   //item.fechaOp = new Date()
+    console.log(" storage add item ", componente, item,)
+
+
+    this.dbFirebase.create(componente, item)
+      // .then((data) => console.log(data))
+      // .then(() => this.ngOnInit())
+      .catch((e) => console.log(e.message)); */
+  }
+
 
 
 }
