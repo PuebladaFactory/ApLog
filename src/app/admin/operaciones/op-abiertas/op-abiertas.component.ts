@@ -2,8 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
+import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
 import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -30,11 +33,12 @@ export class OpAbiertasComponent implements OnInit {
   facturar: boolean = false;
   opForm: any;
   opCerrada!: Operacion;
-  facturaHDP!: FacturaOpChofer;
+  facturaChofer!: FacturaOpChofer;
+  facturaCliente!: FacturaOpCliente;
 
   private subscriptions: Subscription[] = [];
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private facturacionServ: FacturacionOpService, private dbFirebase: DbFirestoreService) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private facturacionServ: FacturacionOpService, private dbFirebase: DbFirestoreService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService) {
     this.opForm = this.fb.group({
         km: [''],       
         remito: [''],       
@@ -101,7 +105,7 @@ export class OpAbiertasComponent implements OnInit {
     //console.log("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
     this.altaOperacionesCerradas();
     this.bajaOperacionesActivas()
-    this.facturarOp();
+    this.facturarOpChofer();
   }
 
   altaOperacionesCerradas(){
@@ -119,11 +123,23 @@ export class OpAbiertasComponent implements OnInit {
     this.facturar = false;
   }
 
-  facturarOp(){
-    this.facturaHDP = this.facturacionServ.facturarOperacion(this.opCerrada);    
-    console.log("esta es la factura FINAL: ", this.facturaHDP);
+  facturarOpChofer(){
+    this.facturaChofer = this.facOpChoferService.facturarOperacion(this.opCerrada);    
+    console.log("esta es la factura FINAL: ", this.facturaChofer);
     
-    this.addItem("facturaOpChofer", this.facturaHDP)
+    this.addItem("facturaOpChofer", this.facturaChofer)
+    /* this.opForm.reset();
+    this.facturar = false;
+    this.ngOnDestroy();
+    this.ngOnInit(); */
+    //this.facturarOpCliente();
+  }
+
+  facturarOpCliente(){
+    /* this.facturaCliente = this.facOpChoferService.facturarOperacion(this.opCerrada);     */
+    console.log("esta es la factura FINAL: ", this.facturaChofer);
+    
+    this.addItem("facturaOpChofer", this.facturaChofer)
     this.opForm.reset();
     this.facturar = false;
     this.ngOnDestroy();
@@ -132,7 +148,7 @@ export class OpAbiertasComponent implements OnInit {
 
   addItem(componente: string, item: any): void {
 
-    this.storageService.addItem("facturaOpChofer", this.facturaHDP);     
+    this.storageService.addItem("facturaOpChofer", this.facturaChofer);     
   /*   //item.fechaOp = new Date()
     console.log(" storage add item ", componente, item,)
 
