@@ -24,6 +24,8 @@ export class OpAltaComponent implements OnInit {
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
   checkboxesSeleccionados: boolean[] = [];
+  unidadesConFrio: boolean = false;
+  acompaniante: boolean = false;
 
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
@@ -53,6 +55,27 @@ export class OpAltaComponent implements OnInit {
     this.clienteSeleccionado = clienteForm[0];               
     console.log(this.clienteSeleccionado);
 
+  }
+
+  selectUCF(e: any) {
+    console.log(e.target.value)
+    if(e.target.value === "si"){
+      this.unidadesConFrio = true;
+    }else{
+      this.unidadesConFrio = false;
+    }   
+    
+  }
+
+  selectAcompaniante(e: any) {
+    console.log(e.target.value)
+    console.log(e.target.value)
+    if(e.target.value === "si"){
+      this.acompaniante = true;
+    }else{
+      this.acompaniante = false;
+    }
+    //console.log("acompaniante: ", this.acompaniante);
   }
 
   /* changeChofer(e: any) {
@@ -91,7 +114,12 @@ export class OpAltaComponent implements OnInit {
     this.op.chofer = chofer;
     this.op.cliente = this.clienteSeleccionado;
     this.op.idOperacion = new Date().getTime();
+    this.op.unidadesConFrio = this.unidadesConFrio;
+    this.op.acompaniante = this.acompaniante
     //this.op.estado = 1;
+    //console.log("UCF: ", this.unidadesConFrio);
+    //console.log("AC: ", this.acompaniante);
+    
     console.log("esta es la operacion: ", this.op);     
     this.addItem();
    }

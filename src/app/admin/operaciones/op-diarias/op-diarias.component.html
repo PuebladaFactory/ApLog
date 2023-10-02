@@ -39,6 +39,8 @@
               <th scope="col" class="">Cliente</th>
               <th scope="col" class="">Chofer</th>  
               <th scope="col" class="">Categoria</th>                        
+              <th scope="col" class="">UcF</th>    
+              <th scope="col" class="">A</th>    
               <th scope="col" class="">Observaciones</th> 
               <th scope="col" class=""></th>          
              
@@ -51,7 +53,11 @@
               <td class="align-middle">{{op.cliente.razonSocial}}</td>
               <td class="align-middle">{{op.chofer.apellido}}</td>          
               <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td>          
-              <td class="align-middle">{{op.observaciones}}</td>
+              <td class="align-middle" *ngIf="op.unidadesConFrio">Si</td>
+              <td class="align-middle" *ngIf="!op.unidadesConFrio">No</td>
+              <td class="align-middle" *ngIf="op.acompaniante">Si</td>
+              <td class="align-middle" *ngIf="!op.acompaniante">No</td>
+              <td class="align-middle">{{op.observaciones}}</td>          
               <td class="d-flex justify-content-evenly align-middle">
                   <app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(op)" ></app-btn-editar> 
                   <app-btn-eliminar [name]="'Anular'" (click)="eliminarOperacion(op)"></app-btn-eliminar>
@@ -97,7 +103,29 @@
                     {{chofer.apellido}}
                   </option>
               </select>
-            </div>           
+            </div>     
+            <div class="form-group">
+              <label for="UCF">Unidades con Frio</label>
+              <select class="form-select" aria-label="Default select example" (change)="selectUCF($event)">
+                  <option selected>Seleccione</option>
+                  <option value="si">Si</option>
+                  <option value="no">No</option>              
+              </select>
+          </div>         
+          <div class="form-group">
+            <label for="Acompaniante">Acompañante</label>
+            <select class="form-select" aria-label="Default select example" (change)="selectAcompaniante($event)">
+                <option selected>Seleccione</option>
+                <option value="si">Si</option>
+                <option value="no">No</option>              
+            </select>
+        </div>   
+        <div class="form-group">
+          <label for="Observaciones">Observaciones</label>
+          <div class="input-group">
+            <textarea  formControlName="observaciones" class="form-control edicion" required type="text"></textarea>            
+          </div>
+        </div>                   
             <button class="btn btn-secondary mt-2" type="submit" data-bs-dismiss="modal">
               Guardar 
             </button>

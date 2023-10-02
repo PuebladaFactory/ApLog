@@ -211,6 +211,7 @@ export class StorageService {
     this.getAllSorted("jornadas", 'idChofer', 'asc')
     this.getAllSorted("proveedores", 'idProveedor', 'asc')
     this.getAllSorted("tarifasChofer", 'fecha', 'asc')
+    this.getAllSorted("tarifasCliente", 'fecha', 'asc')
     this.getAllSorted("tarifasProveedor", 'fecha', 'asc')
    
 

@@ -22,7 +22,9 @@
           <th scope="col">N° Operación</th>
           <th scope="col">Cliente</th>
           <th scope="col">Chofer</th>
-          <th scope="col">Categoria</th>               
+          <th scope="col">Categoria</th>   
+          <th scope="col">UcF</th> 
+          <th scope="col">A</th>                           
           <th scope="col">Observaciones</th>               
           <th scope="col" class="botones">Detalle</th>
           <th scope="col" class="botones">Facturar</th>
@@ -35,6 +37,10 @@
           <td class="align-middle">{{op.cliente.razonSocial}}</td>
           <td class="align-middle">{{op.chofer.apellido}}</td>        
           <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td> 
+          <td class="align-middle" *ngIf="op.unidadesConFrio">Si</td>
+          <td class="align-middle" *ngIf="!op.unidadesConFrio">No</td>
+          <td class="align-middle" *ngIf="op.acompaniante">Si</td>
+          <td class="align-middle" *ngIf="!op.acompaniante">No</td>
           <td class="align-middle">{{op.observaciones}}</td>          
           <td class="align-middle"> <app-btn-editar name="Detalle" data-bs-target="#exampleModal" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="seleccionarOp(op)"></app-btn-editar> </td>
           <td class="align-middle"> <app-btn-eliminar name="Factura" data-bs-target="#exampleModal" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="crearFacturaOp(op)"></app-btn-eliminar> </td>           

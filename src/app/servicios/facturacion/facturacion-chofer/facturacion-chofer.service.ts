@@ -24,7 +24,7 @@ export class FacturacionChoferService {
   $proveedores!: Proveedor[];
   proveedorOp!: Proveedor;
 
-  constructor( private facturacionCliente: FacturacionClienteService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
+  constructor(private storageService: StorageService) { }
 
   choferes(){
     this.storageService.choferes$.subscribe(data => {

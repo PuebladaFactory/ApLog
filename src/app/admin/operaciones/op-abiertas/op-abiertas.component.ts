@@ -38,7 +38,7 @@ export class OpAbiertasComponent implements OnInit {
 
   private subscriptions: Subscription[] = [];
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private facturacionServ: FacturacionOpService, private dbFirebase: DbFirestoreService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService) {
     this.opForm = this.fb.group({
         km: [''],       
         remito: [''],       
@@ -125,21 +125,21 @@ export class OpAbiertasComponent implements OnInit {
 
   facturarOpChofer(){
     this.facturaChofer = this.facOpChoferService.facturarOperacion(this.opCerrada);    
-    console.log("esta es la factura FINAL: ", this.facturaChofer);
+    console.log("esta es la factura-chofer FINAL: ", this.facturaChofer);
     
     this.addItem("facturaOpChofer", this.facturaChofer)
     /* this.opForm.reset();
     this.facturar = false;
     this.ngOnDestroy();
     this.ngOnInit(); */
-    //this.facturarOpCliente();
+    this.facturarOpCliente();
   }
 
   facturarOpCliente(){
-    /* this.facturaCliente = this.facOpChoferService.facturarOperacion(this.opCerrada);     */
-    console.log("esta es la factura FINAL: ", this.facturaChofer);
+    this.facturaCliente = this.facOpClienteService.facturarOperacion(this.opCerrada);    
+    console.log("esta es la factura-cliente FINAL: ", this.facturaCliente);
     
-    this.addItem("facturaOpChofer", this.facturaChofer)
+    this.addItem("facturaOpChofer", this.facturaCliente)
     this.opForm.reset();
     this.facturar = false;
     this.ngOnDestroy();
@@ -148,7 +148,7 @@ export class OpAbiertasComponent implements OnInit {
 
   addItem(componente: string, item: any): void {
 
-    this.storageService.addItem("facturaOpChofer", this.facturaChofer);     
+    this.storageService.addItem(componente, item);     
   /*   //item.fechaOp = new Date()
     console.log(" storage add item ", componente, item,)
 

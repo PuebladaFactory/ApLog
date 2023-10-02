@@ -39,10 +39,14 @@ export class OpDiariasComponent implements OnInit {
   hoy: any = new Date().toISOString().split('T')[0];
   yesterday: any = new Date(Date.now() - 864e5).toISOString().split('T')[0];
   searchText: string = "";
+  unidadesConFrio: boolean = false;
+  acompaniante: boolean = false;
+  
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, ) {
     this.form = this.fb.group({      
       fecha: [""],    
+      observaciones: [""],
     })
    }
   ngOnInit(): void {
@@ -69,6 +73,9 @@ export class OpDiariasComponent implements OnInit {
     this.opEditar = op;    
     this.clienteSeleccionado = op.cliente;
     this.choferSeleccionado = op.chofer;
+    this.unidadesConFrio = op.unidadesConFrio;
+    this.acompaniante = op.acompaniante;
+
     //console.log("este es la op a editar: ", this.opEditar);
     this.armarForm();
     
@@ -76,22 +83,27 @@ export class OpDiariasComponent implements OnInit {
 
   armarForm(){
     this.form.patchValue({
-      fecha: this.opEditar.fecha
+      fecha: this.opEditar.fecha,
+      observaciones: this.opEditar.observaciones
     })
   }
 
   onSubmit(){   
     this.opEditar.fecha = this.form.value.fecha;
+    this.opEditar.observaciones = this.form.value.observaciones;
     this.opEditar.cliente = this.clienteSeleccionado;
     this.opEditar.chofer  = this.choferSeleccionado;
-    //console.log("este es el cliente editado: ", this.opEditar);
+    this.opEditar.unidadesConFrio = this.unidadesConFrio;
+    this.opEditar.acompaniante = this.acompaniante;
+    console.log("este es el cliente editado: ", this.opEditar);
     this.update();    
    }
 
    update(): void {
     this.storageService.updateItem(this.componente, this.opEditar)
     this.ngOnInit();  
-    this.form.reset();        
+    this.form.reset();   
+
   }
 
   eliminarOperacion(op: Operacion){
@@ -149,6 +161,27 @@ export class OpDiariasComponent implements OnInit {
 
   getMsg(msg: any) {
     this.btnConsulta = true;
+  }
+
+  selectUCF(e: any) {
+    console.log(e.target.value)
+    if(e.target.value === "si"){
+      this.unidadesConFrio = true;
+    }else{
+      this.unidadesConFrio = false;
+    }   
+    
+  }
+
+  selectAcompaniante(e: any) {
+    console.log(e.target.value)
+    console.log(e.target.value)
+    if(e.target.value === "si"){
+      this.acompaniante = true;
+    }else{
+      this.acompaniante = false;
+    }
+    //console.log("acompaniante: ", this.acompaniante);
   }
  
 }
