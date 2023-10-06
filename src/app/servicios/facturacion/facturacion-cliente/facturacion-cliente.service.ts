@@ -17,6 +17,9 @@ export class FacturacionClienteService {
   clienteOp!: Cliente;
   $tarifas!: TarifaCliente[];
   ultimaTarifa!: TarifaCliente;
+  categoriaMonto!: number;
+  acompanianteMonto!: number;
+  adicionalKmMonto!: number;
 
   constructor(private storageService: StorageService ) { }
 
@@ -33,7 +36,19 @@ export class FacturacionClienteService {
   }
 
   facturarOpCliente(op:Operacion){
-    this.buscarCliente(op);    
+    this.buscarCliente(op);   
+    if(!op.unidadesConFrio){
+      this.facturarCG(op);
+    } else {
+      this.facturarUcF(op);
+    }
+    if(op.acompaniante){
+      this.facturarAcompaniante(op);
+    }    
+    this.facturarAdicionalKm(op);
+    
+    
+
   }
 
   buscarCliente(op: Operacion){
@@ -44,7 +59,7 @@ export class FacturacionClienteService {
     //console.log("choferSeleccionado: ", choferSeleccionado);
     this.clienteOp = opCliente[0];
     console.log("clienteOp: ", this.clienteOp);
-    this.buscarTarifa(op)
+    this.buscarTarifa(op);
   }
 
   buscarTarifa(op: Operacion){    
@@ -54,13 +69,100 @@ export class FacturacionClienteService {
       console.log("data Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
-      /* this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifaCliente: number; }, tarifaActual: { idTarifaCliente: number; }) => {
+      this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: TarifaCliente, tarifaActual: TarifaCliente) => {
         return tarifaActual.idTarifaCliente > tarifaMaxima.idTarifaCliente ? tarifaActual : tarifaMaxima;
-      }); */
+      }); 
 
       // Ahora, tarifaMasElevada contiene la tarifa con el idTarifa más elevado
       console.log("ultima: ", this.ultimaTarifa);
       //this.calcularLiquidacion(op);
     });  
   }
+
+  facturarCG(op: Operacion){
+    console.log("cargas generales");
+    
+    switch (op.chofer.vehiculo.categoria) {
+      case "mini":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.utilitario
+        break;
+
+      case "maxi":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.furgon
+      break;
+
+      case "camion":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.camionLiviano
+      break;
+
+      case "chasis":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.chasis
+      break;
+
+      case "balancin":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.balancin
+      break;
+
+      case "semiRemolqueLocal":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.semiRemolqueLocal
+      break;
+    
+      default:
+        break;
+    }
+  }
+
+  facturarUcF(op: Operacion){
+    console.log("Unidades con frio");
+    switch (op.chofer.vehiculo.categoria) {
+      case "mini":
+        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.utilitario
+        break;
+
+      case "maxi":
+        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.furgon
+      break;
+
+      case "camion":
+        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.camionLiviano
+      break;
+
+      case "chasis":
+        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.chasis
+      break;
+
+      case "balancin":
+        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.balancin
+      break;
+
+      case "semiRemolqueLocal":
+        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.semiRemolqueLocal
+      break;
+    
+      default:
+        break;
+    } 
+  }
+
+  facturarAcompaniante(op: Operacion){
+    this.acompanianteMonto = this.ultimaTarifa.adicionales.acompaniante
+    console.log("acompañante: ", this.acompanianteMonto);
+  }
+
+  facturarAdicionalKm(op: Operacion){
+    if(op.km !== null){
+      if(op.km < 80){
+        this.adicionalKmMonto = 0;
+      } else if (op.km < 151) {
+        this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm[0].primerSector
+      } else{
+        let adicionalExtra:number;
+        adicionalExtra = Math.floor((op.km - 150) % 50)
+        console.log("ADICIONAAAALLLLL KMMM: ", adicionalExtra);
+        
+      }  
+    }
+    
+  }
+
 }
