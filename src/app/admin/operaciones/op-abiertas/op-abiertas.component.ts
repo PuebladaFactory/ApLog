@@ -109,7 +109,7 @@ export class OpAbiertasComponent implements OnInit {
   }
 
   altaOperacionesCerradas(){
-    //this.storageService.addItem("operacionesCerradas", this.opCerrada);    
+    this.storageService.addItem("operacionesCerradas", this.opCerrada);    
     
     //this.router.navigate(['/op/op-diarias'])
   }

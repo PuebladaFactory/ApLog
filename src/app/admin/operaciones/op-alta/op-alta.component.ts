@@ -24,7 +24,7 @@ export class OpAltaComponent implements OnInit {
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
   checkboxesSeleccionados: boolean[] = [];
-  unidadesConFrio: boolean = false;
+  unidadesConFrio!: boolean;
   acompaniante: boolean = false;
 
 
@@ -150,5 +150,14 @@ export class OpAltaComponent implements OnInit {
   return this.checkboxesSeleccionados
     .map((valor, index) => (valor === true ? index : -1))
     .filter(index => index !== -1);
+}
+
+getChoferesConRefrigeracion(): Chofer[] {
+  if(this.unidadesConFrio){
+    return this.$choferes.filter(chofer => chofer.vehiculo.refrigeracion);
+  }else{
+    return this.$choferes.filter(chofer => !chofer.vehiculo.refrigeracion);
+  }
+  
 }
 }
