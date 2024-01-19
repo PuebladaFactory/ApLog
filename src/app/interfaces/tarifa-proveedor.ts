@@ -1,8 +1,6 @@
 export interface TarifaProveedor {
     id:any;
-    idTarifa:number;
-    valorJornada: number;
-    km:AdicionalKm;    
+    idTarifa:number;       
     publicidad: number;
     idProveedor: number;
     fecha: string;   
@@ -13,22 +11,22 @@ export interface TarifaProveedor {
 }
 
 export interface CargasGenerales {
-    utilitario:number;
-    furgon:number;
-    camionLiviano:number;
-    chasis:number;
-    balancin:number;
-    semiRemolqueLocal:number;
+    utilitarioJornada:number;
+    furgonJornada:number;
+    camionLivianoJornada:number;
+    chasisJornada:number;
+    balancinJornada:number;
+    semiRemolqueLocalJornada:number;
     adicionalCargasGenerales: Adicionales[]|null;
 }
 
 export interface UnidadesConFrio{
-    utilitario:number;
-    furgon:number;
-    camionLiviano:number;
-    chasis:number;
-    balancin:number;
-    semiRemolqueLocal:number;
+    utilitarioJornada:number;
+    furgonJornada:number;
+    camionLivianoJornada:number;
+    chasisJornada:number;
+    balancinJornada:number;
+    semiRemolqueLocalJornada:number;
     adicionalUnidadesConFrio: Adicionales[]|null;
 }
 
