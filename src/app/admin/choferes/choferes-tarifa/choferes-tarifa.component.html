@@ -12,7 +12,8 @@
         </div>
         <div>
             <h2>Asignar Tarifa</h2> 
-            <form *ngIf="choferSeleccionado !== undefined else sinSeleccion" [formGroup]="tarifaForm"  (ngSubmit)="onSubmit()">             
+            <form *ngIf="choferSeleccionado !== undefined || tarifaProveedor !
+            == false else sinSeleccion" [formGroup]="tarifaForm"  (ngSubmit)="onSubmit()">             
                 <div class="form-group">       
                   <table>
                     <tbody>

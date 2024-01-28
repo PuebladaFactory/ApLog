@@ -14,6 +14,7 @@
           <th class="tabla" scope="col">Tarjeta</th>
           <th class="tabla" scope="col">Refrigeración</th>                     
           <th class="tabla" scope="col">Seguimiento</th>                     
+          <th class="tabla" scope="col">Proveedor</th>
         </tr>
       </thead>
       <tbody *ngFor=" let chofer of choferes$.source._value">        
@@ -35,6 +36,7 @@
               <ng-template #sinRefrigeracion>
                 <td class="align-middle">no</td>
               </ng-template>
+              <td class="align-middle">{{chofer.proveedor}}</td>
             </tr>
           <!-- <td class="align-middle">
               <app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(chofer)"></app-btn-editar>          

@@ -23,6 +23,7 @@ export class ChoferesTarifaComponent implements OnInit {
   historialTarifas$!: any;
   $ultimaTarifaAplicada!:any;
   $tarifasChofer:any;
+  tarifaProveedor!:boolean
   
 
   constructor(private fb: FormBuilder, private storageService: StorageService){
@@ -43,7 +44,7 @@ export class ChoferesTarifaComponent implements OnInit {
   ngOnInit(): void {   
     this.choferes$ = this.storageService.choferes$;  
     this.historialTarifas$ = this.storageService.historialTarifas$;   
-         
+    this.tarifaProveedor = false;     
   }
 
   changeChofer(e: any) {    
@@ -57,7 +58,11 @@ export class ChoferesTarifaComponent implements OnInit {
       return chofer.apellido === apellido
     })
    console.log("este es el chofer seleccionado: ", this.choferSeleccionado);
+   if(this.choferSeleccionado[0].proveedor === "monotributista" ){
+    this.tarifaProveedor = true;
+   } else{
     this.buscarTarifas();
+   }
   }
 
   onSubmit() {

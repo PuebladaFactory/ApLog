@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 
 
 import { AdicionalKm, AdicionalTarifa, Adicionales, CargasGenerales, TarifaProveedor, UnidadesConFrio } from 'src/app/interfaces/tarifa-proveedor';
@@ -16,7 +17,7 @@ export class ProveedoresTarifaComponent implements OnInit {
 
   componente:string = "tarifasProveedor";
   $proveedores:any;
-  proveedorSeleccionado!: Cliente[];
+  proveedorSeleccionado!: Proveedor[];
   cargasGeneralesForm: any;
   unidadesConFrioForm: any;
   adicionalKmForm: any;
@@ -90,7 +91,7 @@ export class ProveedoresTarifaComponent implements OnInit {
         this.$proveedores = data;
       });
      /* this.$proveedores = this.storageService.proveedores$;   */
-     this.historialTarifas$ = this.storageService.historialTarifasClientes$;   
+     //this.historialTarifas$ = this.storageService.historialTarifasProveedores$;   
           
    }
 
@@ -101,20 +102,20 @@ export class ProveedoresTarifaComponent implements OnInit {
     
     
     this.proveedorSeleccionado = e.target.value;
-    this.proveedorSeleccionado = this.$proveedores.source._value.filter(function (cliente:any){
+    this.proveedorSeleccionado = this.$proveedores.filter(function (cliente:any){
       return cliente.razonSocial === e.target.value
     })
-   console.log("este es el cliente seleccionado: ", this.proveedorSeleccionado);
+   console.log("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
     this.buscarTarifas();
   }
 
   buscarTarifas(){
     //console.log(this.choferSeleccionado[0].idChofer);    
-    this.storageService.getByFieldValue(this.componente, "idCliente", this.proveedorSeleccionado[0].idCliente);
-    this.storageService.historialTarifasClientes$.subscribe(data =>{
-      console.log(data);
+    this.storageService.getByFieldValue(this.componente, "idProveedor", this.proveedorSeleccionado[0].idProveedor);
+    this.storageService.historialTarifasProveedores$.subscribe(data =>{
+      //console.log(data);
       this.$tarifasProveedor = data;
-      console.log(this.$tarifasProveedor);
+      console.log("todas las tarifas del proveedor: ", this.$tarifasProveedor);
       this.$tarifasProveedor.sort((x:TarifaProveedor, y:TarifaProveedor) => y.idTarifa - x.idTarifa);
       console.log(this.$tarifasProveedor);
     })
@@ -148,7 +149,7 @@ export class ProveedoresTarifaComponent implements OnInit {
     this.tarifa = {
       id:null,
       idTarifa:new Date().getTime(),
-      idProveedor: this.proveedorSeleccionado[0].idCliente,
+      idProveedor: this.proveedorSeleccionado[0].idProveedor,
       fecha: new Date().toISOString().split('T')[0],
       cargasGenerales: this.cargasGenerales,
       unidadesConFrio: this.unidadesConFrio,

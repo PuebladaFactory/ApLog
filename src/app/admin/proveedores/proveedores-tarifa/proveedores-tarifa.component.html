@@ -274,10 +274,10 @@
       </div>
     
     <ng-template #sinSeleccion>
-      <h4>Seleccione cliente</h4>
+      <h4>Seleccione proveedor</h4>
     </ng-template>
     <ng-template #sinTarifas>
-      <h4>El cliente aun no tiene tarifas asignadas</h4>
+      <h4>El proveedor aun no tiene tarifas asignadas</h4>
     </ng-template>
 </div> 
 
@@ -323,22 +323,22 @@
                 </th>                             
                 </tr>
             </thead>
-            <tbody *ngFor=" let tarifa of historialTarifas$.source._value; let i=index">        
+            <tbody *ngFor=" let tarifa of $tarifasProveedor; let i=index">        
                 <tr >                        
                     <td class="align-middle valores">{{tarifa.fecha}}</td>
-                    <td class="align-middle valores">{{tarifa.cargasGenerales.utilitario}}</td>         
-                    <td class="align-middle valores">{{tarifa.cargasGenerales.furgon}}</td>
-                    <td class="align-middle valores">{{tarifa.cargasGenerales.camionLiviano}}</td>
-                    <td class="align-middle valores">{{tarifa.cargasGenerales.chasis}}</td>
-                    <td class="align-middle valores">{{tarifa.cargasGenerales.balancin}}</td>
-                    <td class="align-middle valores">{{tarifa.cargasGenerales.semiRemolqueLocal}}</td>
+                    <td class="align-middle valores">{{tarifa.cargasGenerales.utilitarioJornada}}</td>         
+                    <td class="align-middle valores">{{tarifa.cargasGenerales.furgonJornada}}</td>
+                    <td class="align-middle valores">{{tarifa.cargasGenerales.camionLivianoJornada}}</td>
+                    <td class="align-middle valores">{{tarifa.cargasGenerales.chasisJornada}}</td>
+                    <td class="align-middle valores">{{tarifa.cargasGenerales.balancinJornada}}</td>
+                    <td class="align-middle valores">{{tarifa.cargasGenerales.semiRemolqueLocalJornada}}</td>
                     <td class="align-middle valores"> nada</td>
-                    <td class="align-middle valores">{{tarifa.unidadesConFrio.utilitario}}</td>         
-                    <td class="align-middle valores">{{tarifa.unidadesConFrio.furgon}}</td>
-                    <td class="align-middle valores">{{tarifa.unidadesConFrio.camionLiviano}}</td>
-                    <td class="align-middle valores">{{tarifa.unidadesConFrio.chasis}}</td>
-                    <td class="align-middle valores">{{tarifa.unidadesConFrio.balancin}}</td>
-                    <td class="align-middle valores">{{tarifa.unidadesConFrio.semiRemolqueLocal}}</td>
+                    <td class="align-middle valores">{{tarifa.unidadesConFrio.utilitarioJornada}}</td>         
+                    <td class="align-middle valores">{{tarifa.unidadesConFrio.furgonJornada}}</td>
+                    <td class="align-middle valores">{{tarifa.unidadesConFrio.camionLivianoJornada}}</td>
+                    <td class="align-middle valores">{{tarifa.unidadesConFrio.chasisJornada}}</td>
+                    <td class="align-middle valores">{{tarifa.unidadesConFrio.balancinJornada}}</td>
+                    <td class="align-middle valores">{{tarifa.unidadesConFrio.semiRemolqueLocalJornada}}</td>
                     <td class="align-middle valores"> nada</td>
                     <td class="align-middle valores">{{tarifa.adicionales.acompaniante}}</td>
                     <td class="align-middle valores"> nada</td>
