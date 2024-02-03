@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl } from '@angular/forms';
+import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+
 
 @Component({
   selector: 'app-op-alta',
@@ -21,16 +22,16 @@ export class OpAltaComponent implements OnInit {
   choferes$!: any;
   $choferes!: Chofer[];
   $clientes!: Cliente[];
-  clienteSeleccionado!: Cliente;
-  choferSeleccionado!: Chofer;
-  checkboxesSeleccionados: boolean[] = [];
-  unidadesConFrio!: boolean;
-  acompaniante: boolean = false;
+  clienteSeleccionado!: Cliente |  any;
+  choferSeleccionado!: Chofer |  any;
+  checkboxesSeleccionados: boolean[]  |  any= [];
+  unidadesConFrio!: boolean |  any;
+  acompaniante: boolean |  any = false ;
 
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
     this.form = this.fb.group({      
-      fecha: [""],            
+      fecha: ["", Validators.required],            
       observaciones: [""],
     })
    }
@@ -95,7 +96,37 @@ export class OpAltaComponent implements OnInit {
     const choferesCheckboxs: any[] = [];
     for (const index of checkbox) {
       if (index >= 0) {
-        choferesCheckboxs.push(this.$choferes[index]);
+        let choferes = this.getChoferesConRefrigeracion();
+        console.log(choferes);
+        
+        choferesCheckboxs.push(choferes[index]);
+      }
+    }
+    console.log("objetoSeleccionado: ", choferesCheckboxs);
+
+    choferesCheckboxs.forEach(chofer =>{
+      if (this.form.get('fecha').value) {
+        // La fecha está presente, guardar el formulario
+        this.armarOp(chofer)
+      } else {
+        // Muestra un mensaje de error o realiza otra acción
+        alert("error")
+      }
+     
+    })
+    this.form.reset();
+
+    
+
+    /* let checkbox = this.getIndicesSeleccionados()
+    console.log("checkboxs: ",checkbox);
+    const choferesCheckboxs: any[] = [];
+    for (const index of checkbox) {
+      if (index >= 0) {
+        let choferes = this.getChoferesConRefrigeracion();
+        console.log(choferes);
+        
+        choferesCheckboxs.push(choferes[index]);
       }
     }
     console.log("objetoSeleccionado: ", choferesCheckboxs);
@@ -103,7 +134,7 @@ export class OpAltaComponent implements OnInit {
     choferesCheckboxs.forEach(chofer =>{
       this.armarOp(chofer)
     })
-    this.form.reset();
+    this.form.reset(); */
     
    }
 
@@ -127,7 +158,8 @@ export class OpAltaComponent implements OnInit {
    addItem(): void {
     this.storageService.addItem(this.componente, this.op); 
    
-    /* this.form.reset(); */
+    //this.form.reset(); 
+    //this.resetearVista();
     //this.router.navigate(['/op/op-diarias']);     
 
 
@@ -148,8 +180,8 @@ export class OpAltaComponent implements OnInit {
  // Luego, utiliza filter para eliminar todos los -1 del array resultante, dejando solo los índices de los elementos con valor true.
  getIndicesSeleccionados(): number[] {
   return this.checkboxesSeleccionados
-    .map((valor, index) => (valor === true ? index : -1))
-    .filter(index => index !== -1);
+    .map((valor: boolean, index: any) => (valor === true ? index : -1))
+    .filter((index: number) => index !== -1);
 }
 
 getChoferesConRefrigeracion(): Chofer[] {
@@ -159,5 +191,25 @@ getChoferesConRefrigeracion(): Chofer[] {
     return this.$choferes.filter(chofer => !chofer.vehiculo.refrigeracion);
   }
   
+}
+resetearVista() {
+  // Aquí puedes realizar cualquier lógica necesaria antes de resetear la vista
+
+  // Ahora, puedes resetear la vista de diferentes maneras, por ejemplo, limpiando o reiniciando variables.
+  // Por ejemplo, si tienes una variable llamada 'datos' que se muestra en la vista, puedes reiniciarla:
+  this.clienteSeleccionado = null;
+  this.choferSeleccionado = null
+  //this.checkboxesSeleccionados = null
+  this.unidadesConFrio = null
+  this.acompaniante = null;
+
+  // También puedes forzar un cambio de detección para actualizar la vista
+  // Esto asumiría que 'datos' está vinculado a la vista y cualquier cambio en 'datos' actualizará la vista.
+  // Esto se hace utilizando el cambio de detección de Angular.
+ /*  this.ref.detectChanges(); */
+}
+
+get Fecha() {
+  return this.form.get('fecha');
 }
 }

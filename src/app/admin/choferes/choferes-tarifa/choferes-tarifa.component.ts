@@ -12,7 +12,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class ChoferesTarifaComponent implements OnInit {
   
   componente:string = "tarifasChofer";
-  choferes$:any;
+  $choferes:any;
   choferSeleccionado!: Chofer[];
   tarifaForm: any;
   adicionalForm: any;
@@ -42,7 +42,10 @@ export class ChoferesTarifaComponent implements OnInit {
   }
   
   ngOnInit(): void {   
-    this.choferes$ = this.storageService.choferes$;  
+    this.storageService.choferes$.subscribe(data => {
+      this.$choferes = data;
+    });
+    
     this.historialTarifas$ = this.storageService.historialTarifas$;   
     this.tarifaProveedor = false;     
   }
@@ -54,11 +57,11 @@ export class ChoferesTarifaComponent implements OnInit {
     
     
     this.choferSeleccionado = e.target.value;
-    this.choferSeleccionado = this.choferes$.source._value.filter(function (chofer:any){
+    this.choferSeleccionado = this.$choferes.filter(function (chofer:any){
       return chofer.apellido === apellido
     })
    console.log("este es el chofer seleccionado: ", this.choferSeleccionado);
-   if(this.choferSeleccionado[0].proveedor === "monotributista" ){
+   if(this.choferSeleccionado[0].proveedor !== "monotributista" ){
     this.tarifaProveedor = true;
    } else{
     this.buscarTarifas();
@@ -94,6 +97,7 @@ export class ChoferesTarifaComponent implements OnInit {
     this.storageService.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer);
     this.storageService.historialTarifas$.subscribe(data =>{
       this.$tarifasChofer = data;
+      console.log(this.$tarifasChofer);
       this.$tarifasChofer.sort((x:TarifaChofer, y:TarifaChofer) => y.idTarifa - x.idTarifa);
       console.log(this.$tarifasChofer);
     })
