@@ -29,6 +29,12 @@
                           <input formControlName="publicidad" class="form-control" required type="number">
                         </td>
                       </tr>
+                      <tr class="form-group">
+                        <td class="parametro">Acompañante: </td>
+                        <td>
+                          <input formControlName="acompaniante" class="form-control" required type="number">
+                        </td>
+                      </tr>
                     </tbody>
                     
                   </table>
@@ -112,7 +118,7 @@
               <div *ngIf="choferSeleccionado !== undefined else sinSeleccion" > 
                   <div *ngIf="$tarifasChofer.length > 0; else sinTarifas">
                       <div class="form-group">       
-                        <table  *ngFor="let tarifa of historialTarifas$.source._value; let i = index">
+                        <table  *ngFor="let tarifa of $historialTarifas; let i = index">
                           <tbody *ngIf="i === 0">
                             <tr class="form-group">
                               <td class="parametro">Valor Jornada: </td>
@@ -126,6 +132,12 @@
                                 <input  class="form-control isDisabled" required type="text" value="{{tarifa.publicidad}}" >
                               </td>
                             </tr>
+                            <tr class="form-group">
+                              <td class="parametro">Acompañante: </td>
+                              <td>
+                                <input  class="form-control isDisabled" required type="text" value="{{tarifa.acompaniante}}" >
+                              </td>
+                            </tr>
                           </tbody>
                           
                         </table>
@@ -134,7 +146,7 @@
                     
                       <div >
                           <h4>Adicional por Km: </h4>
-                          <table *ngFor="let tarifa of historialTarifas$.source._value; let i = index">
+                          <table *ngFor="let tarifa of $historialTarifas; let i = index">
                               <thead *ngIf="i === 0">
                                 <tr>
                                   <th>Distancia</th>
@@ -181,7 +193,7 @@
                               </tbody>
                         </table>
                       </div>    
-                      <div *ngFor="let tarifa of historialTarifas$.source._value; let i = index">
+                      <div *ngFor="let tarifa of $historialTarifas; let i = index">
                           <div *ngIf="i === 0">
                               <h4>Fecha de la tarifa: {{tarifa.fecha}}</h4>  
                           </div>                      
@@ -203,6 +215,7 @@
                             <th class="tabla align-baseline" scope="col">Fecha</th>
                             <th class="tabla align-baseline" scope="col">Jornada</th>
                             <th class="tabla align-baseline" scope="col">Publicidad</th>
+                            <th class="tabla align-baseline" scope="col">Acompañante</th>
                             <th colspan="5">  
                                 <tr><th>Adicionales por Km</th></tr>  
                                 <tr>                            
@@ -215,11 +228,12 @@
                             </th>                
                           </tr>
                       </thead>
-                      <tbody *ngFor=" let tarifa of historialTarifas$.source._value; let i=index">        
+                      <tbody *ngFor=" let tarifa of $tarifasChofer; let i=index">        
                           <tr *ngIf="i !== 0">                        
                               <td class="align-middle valores">{{tarifa.fecha}}</td>
                               <td class="align-middle valores">{{tarifa.valorJornada}}</td>         
                               <td class="align-middle valores">{{tarifa.publicidad}}</td>
+                              <td class="align-middle valores">{{tarifa.acompaniante}}</td>
                               <td colspan="5">
                                 <tr>
                                 <td class="align-middle valores">{{tarifa.km.adicionalKm1}}</td>             

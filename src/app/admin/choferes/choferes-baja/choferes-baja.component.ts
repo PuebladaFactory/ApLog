@@ -11,14 +11,18 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 })
 export class ChoferesBajaComponent implements OnInit {
   
-  choferes$!: any;
-  searchText: string = "";
+  $choferes!: any;
+  searchText!: string ;
   componente: string = "choferes";
 
   constructor(private storageService: StorageService, private router: Router){}
   
   ngOnInit(): void { 
-    this.choferes$ = this.storageService.choferes$; 
+    //this.choferes$ = this.storageService.choferes$; 
+    this.storageService.choferes$.subscribe(data => {
+      this.$choferes = data;
+    });
+    
   }
 
   eliminarChofer(chofer:Chofer){    

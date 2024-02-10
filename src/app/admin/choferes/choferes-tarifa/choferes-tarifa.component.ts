@@ -21,6 +21,7 @@ export class ChoferesTarifaComponent implements OnInit {
   adicionalKm!:AdicionalKm;  
   chofer!: Chofer;
   historialTarifas$!: any;
+  $historialTarifas!: TarifaChofer [];
   $ultimaTarifaAplicada!:any;
   $tarifasChofer:any;
   tarifaProveedor!:boolean
@@ -29,7 +30,8 @@ export class ChoferesTarifaComponent implements OnInit {
   constructor(private fb: FormBuilder, private storageService: StorageService){
    this.tarifaForm = this.fb.group({                    //formulario para la jornada
       valorJornada: [""],            
-      publicidad: [""],  
+      publicidad: [""], 
+      acompaniante: [""] 
   });
 
     this.adicionalForm = this.fb.group({                  //formulario para los adicionales de la jornada
@@ -45,8 +47,12 @@ export class ChoferesTarifaComponent implements OnInit {
     this.storageService.choferes$.subscribe(data => {
       this.$choferes = data;
     });
+
+    this.storageService.historialTarifas$.subscribe(data => {
+      this.$historialTarifas = data;
+    });
     
-    this.historialTarifas$ = this.storageService.historialTarifas$;   
+    //this.historialTarifas$ = this.storageService.historialTarifas$;   
     this.tarifaProveedor = false;     
   }
 
@@ -89,6 +95,7 @@ export class ChoferesTarifaComponent implements OnInit {
     this.storageService.addItem(this.componente, item); 
     this.adicionalForm.reset();
     this.tarifaForm.reset();
+    //this.$tarifasChofer = null;
     this.ngOnInit();
   }  
 
@@ -106,7 +113,7 @@ export class ChoferesTarifaComponent implements OnInit {
     //this.storageService.getByDoubleValue( this.componente, "idChofer", "idTarifa", this.choferSeleccionado[0].idChofer, "desc")
     //this.storageService.getAllSorted(this.componente, "fecha", "desc")
     //this.ultimaTarifa()  
-    this.ngOnInit();  
+    //this.ngOnInit();  
   }
 
 //CONSULTO DIRECTAMENTE A LA DB PQ NO ME TOMA LAS CONSULTAS MULTIPLES A FIRESTORE.

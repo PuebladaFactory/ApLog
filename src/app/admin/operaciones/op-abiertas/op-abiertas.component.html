@@ -23,8 +23,9 @@
           <th scope="col">Cliente</th>
           <th scope="col">Chofer</th>
           <th scope="col">Categoria</th>   
+          <th scope="col">Proveedor</th> 
           <th scope="col">UcF</th> 
-          <th scope="col">A</th>                           
+          <th scope="col">A</th>                                     
           <th scope="col">Observaciones</th>               
           <th scope="col" class="botones">Detalle</th>
           <th scope="col" class="botones">Facturar</th>
@@ -37,6 +38,7 @@
           <td class="align-middle">{{op.cliente.razonSocial}}</td>
           <td class="align-middle">{{op.chofer.apellido}}</td>        
           <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td> 
+          <td class="align-middle"> {{ op.chofer.proveedor === 'monotributista' ? 'No' : op.chofer.proveedor }}</td> 
           <td class="align-middle" *ngIf="op.unidadesConFrio">Si</td>
           <td class="align-middle" *ngIf="!op.unidadesConFrio">No</td>
           <td class="align-middle" *ngIf="op.acompaniante">Si</td>
@@ -68,9 +70,15 @@
               </div> 
               <div>
                 <h3>Cliente: {{detalleOp.cliente.razonSocial}} </h3>                
-              </div> 
+              </div>               
               <div>
                 <h3>Chofer: {{detalleOp.chofer.apellido}} </h3>                
+              </div> 
+              <div>
+                <h3>Categoria: {{detalleOp.chofer.vehiculo.categoria}} </h3>                
+              </div> 
+              <div>
+                <h3>Proveedor: {{ detalleOp.chofer.proveedor === 'monotributista' ? 'No' : detalleOp.chofer.proveedor }} </h3>                
               </div> 
               <div>
                 <h3>Aca vendrian los adicionales </h3>                

@@ -3,11 +3,13 @@ import { FormBuilder } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
+import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
 import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
 import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
+import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -34,11 +36,12 @@ export class OpAbiertasComponent implements OnInit {
   opForm: any;
   opCerrada!: Operacion;
   facturaChofer!: FacturaOpChofer;
+  facturaProveedor!: FacturaOpProveedor; 
   facturaCliente!: FacturaOpCliente;
 
   private subscriptions: Subscription[] = [];
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService, private facOpProveedorService: FacturacionProveedorService ) {
     this.opForm = this.fb.group({
         km: [''],       
         remito: [''],       
@@ -104,8 +107,13 @@ export class OpAbiertasComponent implements OnInit {
     this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
     //console.log("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
     this.altaOperacionesCerradas();
-    this.bajaOperacionesActivas()
-    this.facturarOpChofer();
+    this.bajaOperacionesActivas();
+    if(this.detalleOp.chofer.proveedor === "monotributista"){
+      this.facturarOpChofer();
+    } else{
+      this.facturarOpProveedor();
+    }
+    
   }
 
   altaOperacionesCerradas(){
@@ -124,15 +132,27 @@ export class OpAbiertasComponent implements OnInit {
   }
 
   facturarOpChofer(){
-    this.facturaChofer = this.facOpChoferService.facturarOperacion(this.opCerrada);    
+    this.facturaChofer = this.facOpChoferService.facturarOpChofer(this.opCerrada);    
     console.log("esta es la factura-chofer FINAL: ", this.facturaChofer);
     
     this.addItem("facturaOpChofer", this.facturaChofer)
-    /* this.opForm.reset();
+    this.opForm.reset();
     this.facturar = false;
-    this.ngOnDestroy();
-    this.ngOnInit(); */
-    this.facturarOpCliente();
+    //this.ngOnDestroy();
+    this.ngOnInit();
+    //this.facturarOpCliente();
+  }
+
+  facturarOpProveedor(){
+    this.facturaProveedor = this.facOpProveedorService.facturarOpProveedor(this.opCerrada);    
+    console.log("esta es la factura-proveedor FINAL: ", this.facturaProveedor);
+    
+    this.addItem("facturaOpProveedor", this.facturaProveedor)
+    this.opForm.reset();
+    this.facturar = false;
+    //this.ngOnDestroy();
+    this.ngOnInit(); 
+   //this.facturarOpCliente();
   }
 
   facturarOpCliente(){

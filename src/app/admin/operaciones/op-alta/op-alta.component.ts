@@ -22,8 +22,8 @@ export class OpAltaComponent implements OnInit {
   choferes$!: any;
   $choferes!: Chofer[];
   $clientes!: Cliente[];
-  clienteSeleccionado!: Cliente |  any;
-  choferSeleccionado!: Chofer |  any;
+  clienteSeleccionado!: Cliente ;
+  choferSeleccionado!: Chofer[] ;
   checkboxesSeleccionados: boolean[]  |  any= [];
   unidadesConFrio!: boolean |  any;
   acompaniante: boolean |  any = false ;
@@ -68,8 +68,7 @@ export class OpAltaComponent implements OnInit {
     
   }
 
-  selectAcompaniante(e: any) {
-    console.log(e.target.value)
+  selectAcompaniante(e: any) {    
     console.log(e.target.value)
     if(e.target.value === "si"){
       this.acompaniante = true;
@@ -79,19 +78,31 @@ export class OpAltaComponent implements OnInit {
     //console.log("acompaniante: ", this.acompaniante);
   }
 
-  /* changeChofer(e: any) {
-    //console.log(e.target.value)
-    let choferForm = this.choferes$;
-    choferForm = choferForm.filter(function (chofer: any) { 
-      return chofer.apellido === e.target.value
+   changeChofer(e: any) {
+    console.log(e.target.value)
+    console.log(this.$choferes);
+    
+    let apellido = e.target.value.split(" ")[0];
+    
+    this.choferSeleccionado = this.$choferes.filter(function (chofer: any) { 
+      return chofer.apellido === apellido
     });
-    this.choferSeleccionado = choferForm[0];               
-    console.log(this.choferSeleccionado);
-  } */
+    //this.choferSeleccionado = choferForm;               
+    console.log(this.choferSeleccionado); 
+  } 
 
   onSubmit(){
 
-    let checkbox = this.getIndicesSeleccionados()
+    if (this.form.get('fecha').value) {
+      // La fecha está presente, guardar el formulario
+      this.armarOp()
+    } else {
+      // Muestra un mensaje de error o realiza otra acción
+      alert("falta la fecha")
+    } 
+
+ 
+    /* let checkbox = this.getIndicesSeleccionados()
     console.log("checkboxs: ",checkbox);
     const choferesCheckboxs: any[] = [];
     for (const index of checkbox) {
@@ -113,8 +124,8 @@ export class OpAltaComponent implements OnInit {
         alert("error")
       }
      
-    })
-    this.form.reset();
+    }) */
+    this.form.reset(); 
 
     
 
@@ -138,11 +149,11 @@ export class OpAltaComponent implements OnInit {
     
    }
 
-   armarOp(chofer:Chofer){
-    console.log("armarOp. chofer: ", chofer);
+   armarOp(){
+    console.log("armarOp. chofer: ", this.choferSeleccionado);
     
     this.op = this.form.value;
-    this.op.chofer = chofer;
+    this.op.chofer = this.choferSeleccionado[0];
     this.op.cliente = this.clienteSeleccionado;
     this.op.idOperacion = new Date().getTime();
     this.op.unidadesConFrio = this.unidadesConFrio;
@@ -158,7 +169,7 @@ export class OpAltaComponent implements OnInit {
    addItem(): void {
     this.storageService.addItem(this.componente, this.op); 
    
-    //this.form.reset(); 
+    this.form.reset(); 
     //this.resetearVista();
     //this.router.navigate(['/op/op-diarias']);     
 
@@ -167,22 +178,22 @@ export class OpAltaComponent implements OnInit {
 
   
   // Método para manejar el cambio de estado de un checkbox
-  toggleCheckbox(index: number) {
+ /*  toggleCheckbox(index: number) {
     this.checkboxesSeleccionados[index] = !this.checkboxesSeleccionados[index];
     console.log("este es el indice: ", index, "y este el estado: ", this.checkboxesSeleccionados[index]);
     
   }
-
+ */
 
 
  // map para crear un nuevo array de índices donde los elementos con valor true en checkboxesSeleccionados tendrán el índice correspondiente
  // y los elementos con valor false tendrán -1. 
  // Luego, utiliza filter para eliminar todos los -1 del array resultante, dejando solo los índices de los elementos con valor true.
- getIndicesSeleccionados(): number[] {
+ /* getIndicesSeleccionados(): number[] {
   return this.checkboxesSeleccionados
     .map((valor: boolean, index: any) => (valor === true ? index : -1))
     .filter((index: number) => index !== -1);
-}
+} */
 
 getChoferesConRefrigeracion(): Chofer[] {
   if(this.unidadesConFrio){
@@ -192,7 +203,7 @@ getChoferesConRefrigeracion(): Chofer[] {
   }
   
 }
-resetearVista() {
+/* resetearVista() {
   // Aquí puedes realizar cualquier lógica necesaria antes de resetear la vista
 
   // Ahora, puedes resetear la vista de diferentes maneras, por ejemplo, limpiando o reiniciando variables.
@@ -206,10 +217,9 @@ resetearVista() {
   // También puedes forzar un cambio de detección para actualizar la vista
   // Esto asumiría que 'datos' está vinculado a la vista y cualquier cambio en 'datos' actualizará la vista.
   // Esto se hace utilizando el cambio de detección de Angular.
- /*  this.ref.detectChanges(); */
-}
+} */
 
-get Fecha() {
+ get Fecha() {
   return this.form.get('fecha');
-}
+} 
 }
