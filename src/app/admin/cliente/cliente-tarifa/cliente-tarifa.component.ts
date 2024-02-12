@@ -15,6 +15,7 @@ export class ClienteTarifaComponent implements OnInit {
 
   componente:string = "tarifasCliente";
   clientes$:any;
+  $clientes!: any;
   clienteSeleccionado!: Cliente[];
   cargasGeneralesForm: any;
   unidadesConFrioForm: any;
@@ -85,8 +86,11 @@ export class ClienteTarifaComponent implements OnInit {
    }
    
    ngOnInit(): void {   
-     this.clientes$ = this.storageService.clientes$;  
+     //this.clientes$ = this.storageService.clientes$;  
      this.historialTarifas$ = this.storageService.historialTarifasClientes$;   
+     this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    })
           
    }
 
@@ -97,7 +101,7 @@ export class ClienteTarifaComponent implements OnInit {
     
     
     this.clienteSeleccionado = e.target.value;
-    this.clienteSeleccionado = this.clientes$.source._value.filter(function (cliente:any){
+    this.clienteSeleccionado = this.$clientes.filter(function (cliente:any){
       return cliente.razonSocial === e.target.value
     })
    console.log("este es el cliente seleccionado: ", this.clienteSeleccionado);

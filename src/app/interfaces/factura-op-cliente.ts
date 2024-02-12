@@ -3,7 +3,7 @@ export interface FacturaOpCliente {
     id: any|null;
     idFacturaCliente: number;
     idOperacion: number
-    fecha: Date;        
+    fecha: string;        
     idCliente: number;
     valorJornada: number;
     adicional: number;        

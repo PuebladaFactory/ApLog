@@ -47,7 +47,7 @@ export class FacturacionClienteService {
     }    
     this.facturarAdicionalKm(op);
     
-    
+    this.crearFacturaCliente(op);
 
   }
 
@@ -108,6 +108,7 @@ export class FacturacionClienteService {
       break;
     
       default:
+        alert("error categoria CG")
         break;
     }
   }
@@ -140,6 +141,7 @@ export class FacturacionClienteService {
       break;
     
       default:
+        alert("error categoria UcF")
         break;
     } 
   }
@@ -154,15 +156,46 @@ export class FacturacionClienteService {
       if(op.km < 80){
         this.adicionalKmMonto = 0;
       } else if (op.km < 151) {
-        this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm[0].primerSector
+        this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector
       } else{
-        let adicionalExtra:number;
-        adicionalExtra = Math.floor((op.km - 150) % 50)
-        console.log("ADICIONAAAALLLLL KMMM: ", adicionalExtra);
+        let resto:number;
+        let secciones:number;
         
+        resto = op.km - 150;
+        secciones = resto / 50;
+        //console.log("secciones: ", secciones);
+        secciones = Math.floor(secciones);
+
+        if(((op.km - 150) % 50) === 0){
+          //alert("cuenta redonda");
+          this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector + this.ultimaTarifa.adicionales.adicionalKm.sectorSiguiente*secciones;
+          console.log("adicional KM: ", this.adicionalKmMonto);           
+
+        } else{
+          //alert("con resto");
+          this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector + ((this.ultimaTarifa.adicionales.adicionalKm.sectorSiguiente)*(secciones+1));
+          console.log("adicional KM: ", this.adicionalKmMonto);
+        }         
       }  
     }
     
+  }
+
+  crearFacturaCliente(op:Operacion){
+
+    this.facturaCliente = {
+      id: null,
+      idFacturaCliente: new Date().getTime(),
+      idOperacion: op.idOperacion,   
+      idCliente: op.cliente.idCliente,
+      fecha: new Date().toLocaleDateString('en-GB'),      
+      valorJornada: this.categoriaMonto,
+      adicional: this.acompanianteMonto + this.adicionalKmMonto,    
+      total: this.categoriaMonto + (this.acompanianteMonto + this.adicionalKmMonto),
+    }
+    //console.log(this.facturaChofer);
+    
+    //this.altaFacturaChofer()
   }
 
 }

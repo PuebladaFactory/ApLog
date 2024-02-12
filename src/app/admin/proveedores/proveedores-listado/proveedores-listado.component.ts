@@ -39,7 +39,7 @@ export class ProveedoresListadoComponent implements OnInit {
   }
   
   ngOnInit(): void { 
-    this.proveedores$ = this.storageService.proveedores$; 
+    //this.proveedores$ = this.storageService.proveedores$; 
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
     })

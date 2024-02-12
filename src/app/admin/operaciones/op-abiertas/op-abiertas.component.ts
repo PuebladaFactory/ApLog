@@ -140,7 +140,7 @@ export class OpAbiertasComponent implements OnInit {
     this.facturar = false;
     //this.ngOnDestroy();
     this.ngOnInit();
-    //this.facturarOpCliente();
+    this.facturarOpCliente();
   }
 
   facturarOpProveedor(){
@@ -152,14 +152,14 @@ export class OpAbiertasComponent implements OnInit {
     this.facturar = false;
     //this.ngOnDestroy();
     this.ngOnInit(); 
-   //this.facturarOpCliente();
+    this.facturarOpCliente();
   }
 
   facturarOpCliente(){
     this.facturaCliente = this.facOpClienteService.facturarOperacion(this.opCerrada);    
     console.log("esta es la factura-cliente FINAL: ", this.facturaCliente);
     
-    //this.addItem("facturaOpChofer", this.facturaCliente)
+    this.addItem("facturaOpCliente", this.facturaCliente)
     this.opForm.reset();
     this.facturar = false;
     this.ngOnDestroy();

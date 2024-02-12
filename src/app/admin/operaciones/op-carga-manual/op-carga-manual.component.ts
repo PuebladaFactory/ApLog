@@ -17,7 +17,9 @@ export class OpCargaManualComponent implements OnInit {
   form:any;
   op!: Operacion;
   clientes$!: any;
+  $clientes!:any;
   choferes$!: any;
+  $choferes!: any;
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
   refrigeracion!:boolean;
@@ -31,13 +33,19 @@ export class OpCargaManualComponent implements OnInit {
    }
 
    ngOnInit(): void {
-    this.clientes$ = this.storageService.clientes$;
-    this.choferes$ = this.storageService.choferes$;       
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    })
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    })
+    //this.clientes$ = this.storageService.clientes$;
+    //this.choferes$ = this.storageService.choferes$;       
   }
 
   changeCliente(e: any) {
     console.log(e.target.value)
-    let clienteForm = this.clientes$.source._value;
+    let clienteForm = this.$clientes;
     clienteForm = clienteForm.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     });
@@ -48,7 +56,7 @@ export class OpCargaManualComponent implements OnInit {
 
   changeChofer(e: any) {
     //console.log(e.target.value)
-    let choferForm = this.choferes$.source._value;
+    let choferForm = this.$choferes;
     choferForm = choferForm.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     });
@@ -58,7 +66,7 @@ export class OpCargaManualComponent implements OnInit {
 
   changeProveedor(e: any) {
     //console.log(e.target.value)
-    let choferForm = this.choferes$.source._value;
+    let choferForm = this.$choferes;
     choferForm = choferForm.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     });
