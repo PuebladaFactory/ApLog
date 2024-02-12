@@ -210,19 +210,21 @@ export class StorageService {
     //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
     this.getAllSorted("jornadas", 'idChofer', 'asc')
     this.getAllSorted("proveedores", 'idProveedor', 'asc')
-    
+    this.getAllSorted("tarifasChofer", 'fecha', 'asc')
+    this.getAllSorted("tarifasCliente", 'fecha', 'asc')
+    this.getAllSorted("tarifasProveedor", 'fecha', 'asc')
    
 
   }
 
   // metodo initializer si el rol es user
-  initializerUser(idChofer:any) {
+/*   initializerUser(idChofer:any) {
     this.getByFieldValue("choferes", "idChofer", idChofer)
     this.getByFieldValue("operacionesActivas", "chofer.idChofer", idChofer)
     this.getByFieldValue("operacionesCerradas", "chofer.idChofer", idChofer)
     
 
-  }
+  } */
 
 
 
@@ -238,7 +240,7 @@ export class StorageService {
       .subscribe(data => {
 
         this.setInfo(componente, data)
-        // this.updateObservable(componente, data)
+        this.updateObservable(componente, data)
         console.log("storage initializer ", componente, data);
       });
 

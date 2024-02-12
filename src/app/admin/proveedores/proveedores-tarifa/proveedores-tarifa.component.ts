@@ -1,8 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Vehiculo } from 'src/app/interfaces/chofer';
+import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+
+
+import { AdicionalKm, AdicionalTarifa, Adicionales, CargasGenerales, TarifaProveedor, UnidadesConFrio } from 'src/app/interfaces/tarifa-proveedor';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -13,84 +16,107 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class ProveedoresTarifaComponent implements OnInit {
 
   componente:string = "tarifasProveedor";
-  proveedores$:any;
+  $proveedores:any;
   proveedorSeleccionado!: Proveedor[];
-  tarifaForm: any;
-  adicionalForm: any;
-  tarifa!:TarifaChofer;
-  vehiculo!:Vehiculo;
-  adicionalKm!:AdicionalKm;  
-  proveedor!: Proveedor;
+  cargasGeneralesForm: any;
+  unidadesConFrioForm: any;
+  adicionalKmForm: any;
+
+  tarifa!:TarifaProveedor;  
+  cargasGenerales!: CargasGenerales;
+  unidadesConFrio!: UnidadesConFrio;
+  adicionales!: AdicionalTarifa;
+
   historialTarifas$!: any;
   $ultimaTarifaAplicada!:any;
   $tarifasProveedor:any;
-  
+  adicionalCGForm:any;
+  adicionalUCFForm: any;
+  acompanianteForm:any;
+  adicionalCG: boolean = false;
+  adicionalesCargasGenerales: Adicionales[] = [];
+  adicionalesUnidadesConFrio: Adicionales[] = [];
+  adicionalKm: AdicionalKm [] = [];
 
-  constructor(private fb: FormBuilder, private storageService: StorageService){
-   this.tarifaForm = this.fb.group({                    //formulario para la jornada
-      valorJornada: [""],            
-      publicidad: [""],  
+
+
+  constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
+    this.cargasGeneralesForm = this.fb.group({                    //formulario para la carga general
+      
+        utilitarioJornada:[""],
+        furgonJornada:[""],
+        camionLivianoJornada:[""],
+        chasisJornada:[""],
+        balancinJornada:[""],
+        semiRemolqueLocalJornada:[""],
+        //adicionalCargasGenerales: Adicionales[]|null;
+    
+   });
+ 
+   this.adicionalCGForm = this.fb.group({                    //formulario para los extras de la carga general
+    concepto:[""],
+    valor:[""],
   });
 
-    this.adicionalForm = this.fb.group({                  //formulario para los adicionales de la jornada
-      adicionalKm1: [""], 
-      adicionalKm2: [""],
-      adicionalKm3: [""],
-      adicionalKm4: [""],
-      adicionalKm5: [""],
-  });
-  }
-  
-  ngOnInit(): void {   
-    this.proveedores$ = this.storageService.proveedores$;  
-    this.historialTarifas$ = this.storageService.historialTarifasProveedores$;   
-         
-  }
+  this.unidadesConFrioForm = this.fb.group({                    //formulario para la carga general
+      
+    utilitarioJornada:[""],
+    furgonJornada:[""],
+    camionLivianoJornada:[""],
+    chasisJornada:[""],
+    balancinJornada:[""],
+    semiRemolqueLocalJornada:[""],
+    //adicionalCargasGenerales: Adicionales[]|null;
 
-  changeProveedor(e: any) {    
-    //console.log(e.target.value);
-    let razonSocial = e.target.value;
-    console.log(razonSocial);
+});
+
+    this.adicionalUCFForm = this.fb.group({                    //formulario para los extras de la carga general
+      concepto:[""],
+      valor:[""],
+    });
+
+    this.acompanianteForm = this.fb.group({
+      acompaniante: [""],
+    })
+
+    //esto solo permite un modelos de adicionales de km. Cambiar mas adelante
+     this.adicionalKmForm = this.fb.group({                  //formulario para los adicionales de la jornada
+      primerSector: [""],
+      sectorSiguiente:[""],
+   });
+   }
+   
+   ngOnInit(): void {   
+      this.storageService.proveedores$.subscribe(data => {
+        this.$proveedores = data;
+      });
+     /* this.$proveedores = this.storageService.proveedores$;   */
+     //this.historialTarifas$ = this.storageService.historialTarifasProveedores$;   
+          
+   }
+
+   changeCliente(e: any) {    
+    console.log(e.target.value);
+    //let razonSocial = e.target.value.split(" ")[0];
+    //console.log(apellido);
     
     
     this.proveedorSeleccionado = e.target.value;
-    this.proveedorSeleccionado = this.proveedores$.source._value.filter(function (proveedor:any){
-      return proveedor.razonSocial === razonSocial
+    this.proveedorSeleccionado = this.$proveedores.filter(function (cliente:any){
+      return cliente.razonSocial === e.target.value
     })
    console.log("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
     this.buscarTarifas();
   }
 
-  onSubmit() {
-    this.armarTarifa();
-  }
-
-  armarTarifa(){     
-   
-    this.adicionalKm = this.adicionalForm.value
-    //console.log("esto es adicionalKm: ", this.adicionalKm);
-    this.tarifa = this.tarifaForm.value;
-    this.tarifa.km = this.adicionalKm;
-    this.tarifa.idChofer = this.proveedorSeleccionado[0].idProveedor;    
-    this.tarifa.fecha = new Date().toISOString().split('T')[0];
-    this.tarifa.idTarifa = new Date().getTime(); 
-    //console.log("esta es la tarifa: ", this.tarifa);
-    this.addItem(this.tarifa)
-  } 
-
-  addItem(item:any): void {   
-    this.storageService.addItem(this.componente, item); 
-    this.adicionalForm.reset();
-    this.tarifaForm.reset();
-    this.ngOnInit();
-  }  
-
   buscarTarifas(){
-    console.log(this.proveedorSeleccionado[0].idProveedor);    
-    this.storageService.getByFieldValue(this.componente, "idChofer", this.proveedorSeleccionado[0].idProveedor);  
+    //console.log(this.choferSeleccionado[0].idChofer);    
+    this.storageService.getByFieldValue(this.componente, "idProveedor", this.proveedorSeleccionado[0].idProveedor);
     this.storageService.historialTarifasProveedores$.subscribe(data =>{
+      //console.log(data);
       this.$tarifasProveedor = data;
-      this.$tarifasProveedor.sort((x:TarifaChofer, y:TarifaChofer) => y.idTarifa - x.idTarifa);
+      console.log("todas las tarifas del proveedor: ", this.$tarifasProveedor);
+      this.$tarifasProveedor.sort((x:TarifaProveedor, y:TarifaProveedor) => y.idTarifa - x.idTarifa);
       console.log(this.$tarifasProveedor);
     })
     //this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
@@ -98,46 +124,125 @@ export class ProveedoresTarifaComponent implements OnInit {
     //this.storageService.getByDoubleValue( this.componente, "idChofer", "idTarifa", this.choferSeleccionado[0].idChofer, "desc")
     //this.storageService.getAllSorted(this.componente, "fecha", "desc")
     //this.ultimaTarifa()  
-    this.ngOnInit();  
+   
+    //porque esto???
+    //this.ngOnInit();  
   }
 
-//CONSULTO DIRECTAMENTE A LA DB PQ NO ME TOMA LAS CONSULTAS MULTIPLES A FIRESTORE.
-//CORREJIR!!!!!!!!!!!!!
-// EN LUGAR DE LLAMAR A LA DB CONSULTA EN EL LOCALSTORAGE
-  ultimaTarifa(){   
-    //this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
-   /*  this.dbFirebase.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer)
-    .subscribe(data =>{
-    let tarifas:any = data;
-     
-        let ultTarifa = Math.max(...tarifas.map((o: { idTarifa: any; }) => o.idTarifa))
-        //console.log("esta es la ultima tarifa: ",  ultTarifa);   
-        this.buscarUltimaTarifa(ultTarifa);     
-    }); */
-    /* let tarifas: any;
-    tarifas = this.storageService.loadInfo(this.componente);
-    let ultTarifa =  Math.max(...tarifas.map((o: { idTarifa: any; }) => o.idTarifa))
-    console.log("esta es el id de la ultima tarifa: ",  ultTarifa);
-    this.ultimaTarifaAplicada = tarifas.filter((tarifa: { idTarifa: number; }) => tarifa.idTarifa === ultTarifa); 
-    console.log("esta es la ultima tarifa: ",  tarifas); */
-    /* if(this.historialTarifas$.source._value.hasOwnProperty("idTarifa")){
-        console.log("tiene datos: ",  this.historialTarifas$.source._value);        
-    } else {
-      console.log("SIN datos: ",  this.historialTarifas$.source._value);
-    } */
-  
+  onSubmit() {
+    //this.armarTarifa();
+    //console.log("tarifa cliente");
+    //console.log(this.cargasGeneralesForm.value, this.unidadesConFrioForm.value, this.acompanianteForm.value);
+    this.armarTarifa();
+    this.addItem(this.tarifa);
    
-     
-    }
 
-   /*  buscarUltimaTarifa(idTarifa:number){
-      this.dbFirebase.getByFieldValue(this.componente, "idTarifa", idTarifa)
-      .subscribe(data =>{
-        this.ultimaTarifaAplicada = data;      
-        console.log("esta es la ultima tarifa: ",  this.ultimaTarifaAplicada);   
-        
-    });
-    } */
+    
+  }
+
+  armarTarifa(){     
    
+    this.armarCargasGenerales();
+    this.armarUnidadesConFrio();
+    this.armarAdicionales();   
+
+    this.tarifa = {
+      id:null,
+      idTarifa:new Date().getTime(),
+      idProveedor: this.proveedorSeleccionado[0].idProveedor,
+      fecha: new Date().toISOString().split('T')[0],
+      cargasGenerales: this.cargasGenerales,
+      unidadesConFrio: this.unidadesConFrio,
+      adicionales: this.adicionales,
+     
+     
+      publicidad: 0,
+    };  
+    
+   
+    
+    console.log("tarifa: ", this.tarifa);
+    
+    
+    /* 
+    this.adicionalKm = this.adicionalForm.value
+    //console.log("esto es adicionalKm: ", this.adicionalKm);
+    this.tarifa = this.tarifaForm.value;
+    this.tarifa.km = this.adicionalKm;
+    this.tarifa.idChofer = this.choferSeleccionado[0].idChofer;    
+    this.tarifa.fecha = new Date().toISOString().split('T')[0];
+    this.tarifa.idTarifa = new Date().getTime(); 
+    //console.log("esta es la tarifa: ", this.tarifa);
+    this.addItem(this.tarifa) */
+  } 
+
+  armarCargasGenerales(){
+    this.cargasGenerales = this.cargasGeneralesForm.value;
+    this.cargasGenerales.adicionalCargasGenerales = this.adicionalesCargasGenerales;
+    console.log("cargas generales: ", this.cargasGenerales);
+  }
+
+  armarUnidadesConFrio(){
+    this.unidadesConFrio = this.unidadesConFrioForm.value;
+    this.unidadesConFrio.adicionalUnidadesConFrio = this.adicionalesUnidadesConFrio;
+    console.log("unidades con frio: ", this.unidadesConFrio);
+  }
+
+  armarAdicionales(){
+    this.adicionales = this.acompanianteForm.value;
+    this.adicionales.adicionalKm = this.adicionalKmForm.value;  
+    console.log("adicionales: ", this.adicionales);
+  }
+
+  guardarAdicionalCG(){
+   console.log(this.adicionalCGForm.value);
+   
+    
+    this.adicionalesCargasGenerales.push(this.adicionalCGForm.value);
+    this.adicionalCGForm.reset();
+    //this.adicionalCG = false;
+  }
+
+  eliminarAdicionalCG(indice:number){
+    this.adicionalesCargasGenerales.splice(indice, 1);    
+  }
+
+  guardarAdicionalUCF(){
+    console.log(this.adicionalCGForm.value);
+    
+     
+     this.adicionalesUnidadesConFrio.push(this.adicionalUCFForm.value);
+     this.adicionalUCFForm.reset();
+     //this.adicionalCG = false;
+   }
+ 
+   eliminarAdicionalUCF(indice:number){
+     this.adicionalesUnidadesConFrio.splice(indice, 1);    
+   }
+
+  /*  guardarAdicionalKm(){
+    console.log(this.adicionalKmForm.value);
+    this.adicionalKm.push(this.adicionalKmForm.value);
+    this.adicionalKmForm.reset();
+    //this.adicionalCG = false;
+   } */
+
+  /*  eliminarAdicionalKm(indice:number){
+    this.adicionalKm.splice(indice, 1);    
+  }  
+ */
+  
+  addItem(item:any): void {   
+    this.storageService.addItem(this.componente, item); 
+    //this.adicionalKmForm.reset();
+    //this.tarifaForm.reset();
+    this.cargasGeneralesForm.reset();
+    this.unidadesConFrioForm.reset();
+    this.acompanianteForm.reset();
+    this.adicionalesCargasGenerales = [];
+    this.adicionalesUnidadesConFrio = [];
+    this.adicionalKm = [];
+    this.ngOnInit();
+  }  
 
 }

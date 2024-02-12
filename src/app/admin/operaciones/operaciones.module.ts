@@ -13,6 +13,7 @@ import { ConsultaOpComponent } from './consulta-op/consulta-op.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { OpCargaManualComponent } from './op-carga-manual/op-carga-manual.component';
 import { OpCerradasComponent } from './op-cerradas/op-cerradas.component';
+import { OpAbiertasComponent } from './op-abiertas/op-abiertas.component';
 
 
 @NgModule({
@@ -24,6 +25,7 @@ import { OpCerradasComponent } from './op-cerradas/op-cerradas.component';
     ConsultaOpComponent,
     OpCargaManualComponent,
     OpCerradasComponent,
+    OpAbiertasComponent,
   ],
   imports: [
     CommonModule,

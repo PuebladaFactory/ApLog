@@ -31,7 +31,7 @@ export interface UnidadesConFrio{
 
 export interface AdicionalTarifa {    
     acompaniante: number;
-    adicionalKm: AdicionalKm[];
+    adicionalKm: AdicionalKm;
 }
 
 export interface AdicionalKm {    

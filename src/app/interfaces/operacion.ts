@@ -11,4 +11,6 @@ export interface Operacion {
     chofer: Chofer;
     observaciones: string;
     estado: number;
+    unidadesConFrio: boolean;
+    acompaniante: boolean;
 }

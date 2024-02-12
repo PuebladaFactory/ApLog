@@ -39,7 +39,7 @@ export class ChoferesAltaComponent implements OnInit {
   adicionalKm!:AdicionalKm;  
   legajo!: any;
   refrigeracion!:boolean;
-  proveedores$!: any; 
+  $proveedores!: any; 
   proveedorSeleccionado!: string;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
@@ -82,7 +82,10 @@ export class ChoferesAltaComponent implements OnInit {
    }
 
    ngOnInit(): void {
-    this.proveedores$ = this.storageService.proveedores$;
+    //this.proveedores$ = this.storageService.proveedores$;
+    this.storageService.proveedores$.subscribe(data => {
+      this.$proveedores = data;
+    });
    }
 
 

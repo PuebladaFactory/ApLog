@@ -12,13 +12,17 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class ClienteBajaComponent implements OnInit {
   
   clientes$!: any;
-  searchText: string = "";
+  $clientes!:any;
+  searchText!: string ;
   componente: string = "clientes";
 
   constructor(private storageService: StorageService, private router:Router){}
   
   ngOnInit(): void { 
     this.clientes$ = this.storageService.clientes$; 
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    })
   }
 
   eliminarCliente(cliente: Cliente){

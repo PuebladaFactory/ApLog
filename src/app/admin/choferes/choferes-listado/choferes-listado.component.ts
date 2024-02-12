@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Chofer, SeguimientoSatelital, Vehiculo } from 'src/app/interfaces/chofer';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -13,7 +14,8 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class ChoferesListadoComponent implements OnInit {
   
   choferes!: any;
-  choferes$!: any;
+  $choferes!: any;
+  $proveedores!: any;
   form:any;
   vehiculoForm:any;
   seguimientoForm:any;
@@ -39,6 +41,7 @@ export class ChoferesListadoComponent implements OnInit {
   satelital!: any;
   edicion:boolean = false;
   refrigeracion!:boolean; 
+  proveedorSeleccionado!: any;
 
   constructor(private fb: FormBuilder, private storageService: StorageService,){
     this.form = this.fb.group({                          //formulario para el perfil 
@@ -79,7 +82,13 @@ export class ChoferesListadoComponent implements OnInit {
   }
   
   ngOnInit(): void { 
-    this.choferes$ = this.storageService.choferes$;     
+    this.storageService.choferes$.subscribe(data => {
+      this.$choferes = data;
+    });
+    this.storageService.proveedores$.subscribe(data => {
+      this.$proveedores = data;
+    });
+    //this.choferes$ = this.storageService.choferes$;     
     this.jornadas$ = this.storageService.jornadas$
   }
 
@@ -94,6 +103,7 @@ export class ChoferesListadoComponent implements OnInit {
   abrirEdicion(chofer:Chofer):void {
     this.choferEditar = chofer;    
     //console.log("este es el chofer a editar: ", this.choferEditar);
+    this.proveedorSeleccionado = chofer.proveedor;
     this.armarForm();    
   }
 
@@ -107,7 +117,7 @@ export class ChoferesListadoComponent implements OnInit {
       celularContacto: this.choferEditar.celularContacto,
       celularEmergencia: this.choferEditar.celularEmergencia,
       domicilio: this.choferEditar.domicilio,           
-    });
+    });    
     this.armarVehiculo();   
   }
 
@@ -148,6 +158,10 @@ export class ChoferesListadoComponent implements OnInit {
     this.edicion = true;
   }
 
+  cerrarEdicion(){
+    this.edicion = false;
+  }
+
   onSubmit(){ 
     this.datosPersonales();
     this.datosVehiculo();
@@ -168,7 +182,8 @@ export class ChoferesListadoComponent implements OnInit {
   }
 
   datosPersonales(){
-    this.componente = "choferes"  
+    this.componente = "choferes";  
+    this.choferEditar.proveedor = this.proveedorSeleccionado;
     this.choferEditar.nombre = this.form.value.nombre;
     this.choferEditar.apellido = this.form.value.apellido;
     this.choferEditar.cuit = this.form.value.cuit;    
@@ -272,6 +287,20 @@ export class ChoferesListadoComponent implements OnInit {
         break;
       }
     }
+  }
+
+  changeProveedor(e:any){
+    console.log(e.target.value);
+    //let razonSocial = e.target.value.split(" ")[0];
+    //console.log(apellido);
+    
+    
+    this.proveedorSeleccionado = e.target.value;
+    /* this.clienteSeleccionado = this.clientes$.source._value.filter(function (cliente:any){
+      return cliente.razonSocial === e.target.value
+    }) */
+   console.log("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
+    //this.buscarTarifas();
   }
 
 }

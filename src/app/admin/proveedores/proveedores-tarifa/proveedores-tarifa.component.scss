@@ -1,0 +1,23 @@
+.parametro{
+    width: 10rem;
+}
+.tabla{
+    width: 18rem;
+}
+
+.valores{
+    width: 18rem;
+}
+
+.isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+}
+  
+.isDisabled:hover {
+    cursor: not-allowed;
+}
+
+.adicional{
+    //width: 100rem;
+}

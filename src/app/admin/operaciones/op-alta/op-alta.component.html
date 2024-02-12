@@ -20,29 +20,59 @@
                 {{cliente.razonSocial}}
               </option>
           </select>
-        </div>    
+        </div>   
         <div class="form-group">
-            <label for="Chofer">Chofer</label>            
-            <div class="accordion accordion-flush w-100" id="accordionFlushExample">
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
-                    Seleccionar Chofer
-                  </button>
-                </h2>
-                <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
-                    <div class="form-check d-flex justify-content-between align-items-center" *ngFor="let chofer of $choferes; let i = index" >
-                       
-                        <label class="form-check-label"  for="reverseCheck">
-                          {{chofer.apellido}} {{chofer.nombre}}
-                        </label>
-                        <input class="form-check-input me-2" type="checkbox" value="" id="reverseCheck"   (change)="toggleCheckbox(i)">
-                    </div>
-                  
+          <label for="UCF">Unidades con Frio</label>
+          <select class="form-select" aria-label="Default select example" (change)="selectUCF($event)">
+              <option selected>Seleccione</option>
+              <option value="si">Si</option>
+              <option value="no">No</option>              
+          </select>
+      </div>          
+        <div class="form-group">
+            <label for="Chofer">Chofer</label>      
+            <div *ngIf="unidadesConFrio !== undefined">
+         <!--      <div class="accordion accordion-flush w-100" id="accordionFlushExample">
+                <div class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                      Seleccionar Chofer
+                    </button>
+                  </h2>
+                  <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                      <div class="form-check d-flex justify-content-between align-items-center" *ngFor="let chofer of getChoferesConRefrigeracion(); let i = index" >
+                         
+                          <label class="form-check-label"  for="reverseCheck">
+                            {{chofer.apellido}} {{chofer.nombre}}
+                          </label>
+                          <input class="form-check-input me-2" type="checkbox" value="" id="reverseCheck"   (change)="toggleCheckbox(i)">
+                      </div>
+                    
+                  </div>
                 </div>
-              </div>
-            </div>  
-        </div>       
+              </div>  -->
+                <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
+                    <option>Elegir Chofer</option>
+                    <option *ngFor="let chofer of getChoferesConRefrigeracion()">
+                      {{chofer.apellido}} {{chofer.nombre}}
+                    </option>
+                </select>
+            </div>      
+            <div *ngIf="unidadesConFrio === undefined || null">
+              <select class="form-select" aria-label="Default select example">
+                <option selected> Seleccionar Chofer</option>
+                <option value="si">Debe definir si el vehículo necesita refrigeración</option>                
+            </select>
+            </div>
+        </div>          
+        <div class="form-group">
+          <label for="Acompaniante">Acompañante</label>
+          <select class="form-select" aria-label="Default select example" (change)="selectAcompaniante($event)">
+              <option selected>Seleccione</option>
+              <option value="si">Si</option>
+              <option value="no">No</option>              
+          </select>
+      </div>       
         <div class="form-group">
           <label for="Observaciones">Observaciones</label>
           <div class="input-group">

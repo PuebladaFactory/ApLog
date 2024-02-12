@@ -14,9 +14,10 @@
           <th class="tabla" scope="col">Tarjeta</th>
           <th class="tabla" scope="col">Refrigeración</th>                     
           <th class="tabla" scope="col">Seguimiento</th>                     
+          <th class="tabla" scope="col">Proveedor</th>
         </tr>
       </thead>
-      <tbody *ngFor=" let chofer of choferes$.source._value">        
+      <tbody *ngFor=" let chofer of $choferes">        
           <tr *ngIf="chofer.hasOwnProperty('vehiculo')" type="button" (click)="abrirEdicion(chofer)" data-bs-toggle="modal" data-bs-target="#exampleModal">
               <th class="align-middle" scope="row">{{chofer.idChofer}} </th>
               <td class="align-middle">{{chofer.apellido}}</td>
@@ -35,6 +36,7 @@
               <ng-template #sinRefrigeracion>
                 <td class="align-middle">no</td>
               </ng-template>
+              <td class="align-middle">{{chofer.proveedor}}</td>
             </tr>
           <!-- <td class="align-middle">
               <app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(chofer)"></app-btn-editar>          
@@ -50,7 +52,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h1 class="modal-title fs-5" id="exampleModalLabel">Editar Chofer</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"  (click)="cerrarEdicion()"></button>
       </div>
       <div class="modal-body">
         <div class="d-flex justify-content-between">
@@ -109,7 +111,17 @@
                 <div class="input-group">
                     <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{'isDisabled': !edicion}">
                 </div>
-            </div>  
+            </div>              
+            <div class="form-group">
+              <label for="Proveedor">Proveedor</label>
+              <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)" required [ngClass]="{'isDisabled': !edicion}">
+                <option>{{proveedorSeleccionado}}</option>
+                <option value="monotributista">monotributista</option>
+                <option *ngFor="let proveedor of $proveedores">
+                  {{proveedor.razonSocial}}
+                </option>
+              </select>
+            </div>
         </form>
 
         <h3>Datos del Vehiculo</h3>

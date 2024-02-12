@@ -64,7 +64,7 @@
                 <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)" required>
                   <option>Elegir Proveedor</option>
                   <option value="monotributista">monotributista</option>
-                  <option *ngFor="let proveedor of proveedores$.source._value">
+                  <option *ngFor="let proveedor of $proveedores">
                     {{proveedor.razonSocial}}
                   </option>
                 </select>

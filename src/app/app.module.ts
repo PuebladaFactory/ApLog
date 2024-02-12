@@ -55,12 +55,13 @@ import { VerifyEmailComponent } from './appLogin/verify-email/verify-email.compo
 import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
 
 
-import { ChoferModule } from './chofer/chofer.module';
+
 import { AdminModule } from './admin/admin.module';
 import { SharedModule } from './shared/shared.module';
 import { ChoferesModule } from './admin/choferes/choferes.module';
 import { OperacionesModule } from './admin/operaciones/operaciones.module';
 import { ProveedoresModule } from './admin/proveedores/proveedores.module';
+import { FacturacionModule } from './admin/facturacion/facturacion.module';
 
 
 
@@ -104,12 +105,13 @@ import { ProveedoresModule } from './admin/proveedores/proveedores.module';
     NgbModule, //se importa la clase RouterModule y se le indica la const donde estan las rutas
     ReactiveFormsModule,
     HttpClientModule,
-    ChoferModule,
+    
     ChoferesModule,
     AdminModule,
     OperacionesModule,
     SharedModule,
     ProveedoresModule,
+    FacturacionModule,
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),

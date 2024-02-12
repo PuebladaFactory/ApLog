@@ -6,6 +6,7 @@ export interface TarifaChofer {
     publicidad: number;
     idChofer: number;
     fecha: string;    
+    acompaniante: number | null;
 
 }
 

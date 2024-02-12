@@ -1,0 +1,116 @@
+<h1 class="text-center">Operaciones Abiertas</h1>
+
+<div class="mt-5">
+  <button (click)="toggle()" id="bt" class="btn btn-outline-secondary">
+    {{ buttonName }}
+  </button>
+</div>
+
+<ng-container *ngIf="show">
+  <app-consulta-op (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-consulta-op>
+</ng-container>
+
+<h3 *ngIf="!btnConsulta" class="mt-5">Historial de Operaciones: {{primerDia}} / {{ultimoDia}} </h3>
+
+<h3 *ngIf="btnConsulta" class="mt-5">Resultado de la consulta: </h3>
+
+<input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer, cliente o número de operación">
+<table class="table table-dark table-striped" *ngIf="($opCerradas | filter: searchText).length > 0; else noResults">
+    <thead>
+        <tr>
+          <th scope="col">Fecha</th>
+          <th scope="col">N° Operación</th>
+          <th scope="col">Cliente</th>
+          <th scope="col">Chofer</th>
+          <th scope="col">Categoria</th>   
+          <th scope="col">Proveedor</th> 
+          <th scope="col">UcF</th> 
+          <th scope="col">A</th>                                     
+          <th scope="col">Observaciones</th>               
+          <th scope="col" class="botones">Detalle</th>
+          <th scope="col" class="botones">Facturar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor=" let op of $opCerradas | filter: searchText">
+          <th class="align-middle" scope="row">{{op.fecha}} </th>
+          <td class="align-middle">{{op.idOperacion}}</td>
+          <td class="align-middle">{{op.cliente.razonSocial}}</td>
+          <td class="align-middle">{{op.chofer.apellido}}</td>        
+          <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td> 
+          <td class="align-middle"> {{ op.chofer.proveedor === 'monotributista' ? 'No' : op.chofer.proveedor }}</td> 
+          <td class="align-middle" *ngIf="op.unidadesConFrio">Si</td>
+          <td class="align-middle" *ngIf="!op.unidadesConFrio">No</td>
+          <td class="align-middle" *ngIf="op.acompaniante">Si</td>
+          <td class="align-middle" *ngIf="!op.acompaniante">No</td>
+          <td class="align-middle">{{op.observaciones}}</td>          
+          <td class="align-middle"> <app-btn-editar name="Detalle" data-bs-target="#exampleModal" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="seleccionarOp(op)"></app-btn-editar> </td>
+          <td class="align-middle"> <app-btn-eliminar name="Factura" data-bs-target="#exampleModal" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="crearFacturaOp(op)"></app-btn-eliminar> </td>           
+        </tr>    
+      </tbody>
+</table>
+
+<ng-template #noResults>
+  <p>Sin resultados para: "{{searchText}}".</p>
+</ng-template>  
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Detalle Operación</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="facturarFalso()"></button>
+        </div>
+        <div class="modal-body" *ngIf="detalleOp !== undefined">          
+              <div>
+                <h3>N° Operacion: {{detalleOp.idOperacion}} </h3>                
+              </div>    
+              <div>
+                <h3> Fecha: {{detalleOp.fecha}} </h3>                
+              </div> 
+              <div>
+                <h3>Cliente: {{detalleOp.cliente.razonSocial}} </h3>                
+              </div>               
+              <div>
+                <h3>Chofer: {{detalleOp.chofer.apellido}} </h3>                
+              </div> 
+              <div>
+                <h3>Categoria: {{detalleOp.chofer.vehiculo.categoria}} </h3>                
+              </div> 
+              <div>
+                <h3>Proveedor: {{ detalleOp.chofer.proveedor === 'monotributista' ? 'No' : detalleOp.chofer.proveedor }} </h3>                
+              </div> 
+              <div>
+                <h3>Aca vendrian los adicionales </h3>                
+              </div> 
+              <div>
+                <h3>Observaciones: {{detalleOp.observaciones}} </h3>                 
+              </div>
+              <form [formGroup]="opForm" (ngSubmit)="onSubmit()" *ngIf="facturar">                            
+                  <div class="form-group">
+                      <label for="Km">Km recorridos</label>
+                      <div class="input-group">
+                        <input formControlName="km" class="form-control" required type="number">
+                      </div>
+                  </div>    
+                  <div class="form-group">              
+                      <div class="mb-3">
+                        <label for="formFile" class="form-label">Cargar remito de operacion</label>
+                        <input class="form-control" formControlName="remito" type="file" id="formFile">
+                      </div>                    
+                  </div>    
+              
+                  <button class="btn btn-secondary" type="submit" data-bs-dismiss="modal" aria-label="Close">
+                    Facturar 
+                  </button>
+            
+              </form>
+              <button class="btn btn-secondary mt-2" type="submit" data-bs-dismiss="modal" *ngIf="!facturar">
+                Cerrar 
+              </button>   
+                 
+              
+        </div>      
+      </div>
+    </div>
+  </div> 

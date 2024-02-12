@@ -16,7 +16,7 @@
           <label for="Cliente">Cliente</label>
           <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
               <option value={{clienteSeleccionado}}>Elegir Cliente</option>
-              <option *ngFor="let cliente of clientes$.source._value">
+              <option *ngFor="let cliente of $clientes">
                 {{cliente.razonSocial}}
               </option>
           </select>
@@ -33,7 +33,7 @@
             <label for="Chofer">Chofer</label>
             <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
               <option value={{choferSeleccionado}}>Elegir Chofer</option>
-              <option *ngFor="let chofer of choferes$.source._value">
+              <option *ngFor="let chofer of $choferes">
                 {{chofer.apellido}}
               </option>
           </select>

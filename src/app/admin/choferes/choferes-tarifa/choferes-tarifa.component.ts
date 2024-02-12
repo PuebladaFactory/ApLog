@@ -12,7 +12,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class ChoferesTarifaComponent implements OnInit {
   
   componente:string = "tarifasChofer";
-  choferes$:any;
+  $choferes:any;
   choferSeleccionado!: Chofer[];
   tarifaForm: any;
   adicionalForm: any;
@@ -21,14 +21,17 @@ export class ChoferesTarifaComponent implements OnInit {
   adicionalKm!:AdicionalKm;  
   chofer!: Chofer;
   historialTarifas$!: any;
+  $historialTarifas!: TarifaChofer [];
   $ultimaTarifaAplicada!:any;
   $tarifasChofer:any;
+  tarifaProveedor!:boolean
   
 
   constructor(private fb: FormBuilder, private storageService: StorageService){
    this.tarifaForm = this.fb.group({                    //formulario para la jornada
       valorJornada: [""],            
-      publicidad: [""],  
+      publicidad: [""], 
+      acompaniante: [""] 
   });
 
     this.adicionalForm = this.fb.group({                  //formulario para los adicionales de la jornada
@@ -41,9 +44,16 @@ export class ChoferesTarifaComponent implements OnInit {
   }
   
   ngOnInit(): void {   
-    this.choferes$ = this.storageService.choferes$;  
-    this.historialTarifas$ = this.storageService.historialTarifas$;   
-         
+    this.storageService.choferes$.subscribe(data => {
+      this.$choferes = data;
+    });
+
+    this.storageService.historialTarifas$.subscribe(data => {
+      this.$historialTarifas = data;
+    });
+    
+    //this.historialTarifas$ = this.storageService.historialTarifas$;   
+    this.tarifaProveedor = false;     
   }
 
   changeChofer(e: any) {    
@@ -53,11 +63,15 @@ export class ChoferesTarifaComponent implements OnInit {
     
     
     this.choferSeleccionado = e.target.value;
-    this.choferSeleccionado = this.choferes$.source._value.filter(function (chofer:any){
+    this.choferSeleccionado = this.$choferes.filter(function (chofer:any){
       return chofer.apellido === apellido
     })
    console.log("este es el chofer seleccionado: ", this.choferSeleccionado);
+   if(this.choferSeleccionado[0].proveedor !== "monotributista" ){
+    this.tarifaProveedor = true;
+   } else{
     this.buscarTarifas();
+   }
   }
 
   onSubmit() {
@@ -81,6 +95,7 @@ export class ChoferesTarifaComponent implements OnInit {
     this.storageService.addItem(this.componente, item); 
     this.adicionalForm.reset();
     this.tarifaForm.reset();
+    //this.$tarifasChofer = null;
     this.ngOnInit();
   }  
 
@@ -89,6 +104,7 @@ export class ChoferesTarifaComponent implements OnInit {
     this.storageService.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer);
     this.storageService.historialTarifas$.subscribe(data =>{
       this.$tarifasChofer = data;
+      console.log(this.$tarifasChofer);
       this.$tarifasChofer.sort((x:TarifaChofer, y:TarifaChofer) => y.idTarifa - x.idTarifa);
       console.log(this.$tarifasChofer);
     })
@@ -97,7 +113,7 @@ export class ChoferesTarifaComponent implements OnInit {
     //this.storageService.getByDoubleValue( this.componente, "idChofer", "idTarifa", this.choferSeleccionado[0].idChofer, "desc")
     //this.storageService.getAllSorted(this.componente, "fecha", "desc")
     //this.ultimaTarifa()  
-    this.ngOnInit();  
+    //this.ngOnInit();  
   }
 
 //CONSULTO DIRECTAMENTE A LA DB PQ NO ME TOMA LAS CONSULTAS MULTIPLES A FIRESTORE.
