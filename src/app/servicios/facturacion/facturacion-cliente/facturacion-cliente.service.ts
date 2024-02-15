@@ -44,9 +44,14 @@ export class FacturacionClienteService {
     }
     if(op.acompaniante){
       this.facturarAcompaniante(op);
+    }else{
+      this.acompanianteMonto = 0
     }    
     this.facturarAdicionalKm(op);
     
+
+
+
     this.crearFacturaCliente(op);
 
   }
@@ -186,12 +191,13 @@ export class FacturacionClienteService {
     this.facturaCliente = {
       id: null,
       idFacturaCliente: new Date().getTime(),
-      idOperacion: op.idOperacion,   
+      operacion: op,
       idCliente: op.cliente.idCliente,
-      fecha: new Date().toLocaleDateString('en-GB'),      
+      fecha: new Date().toISOString().split('T')[0],      
       valorJornada: this.categoriaMonto,
       adicional: this.acompanianteMonto + this.adicionalKmMonto,    
       total: this.categoriaMonto + (this.acompanianteMonto + this.adicionalKmMonto),
+      liquidacion: false,
     }
     //console.log(this.facturaChofer);
     

@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { Cliente } from 'src/app/interfaces/cliente';
+import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
   selector: 'app-facturacion-cliente',
@@ -7,45 +10,79 @@ import { Component, OnInit } from '@angular/core';
 })
 export class FacturacionClienteComponent implements OnInit  {
 
-  consultaTipo: 'anual' | 'mensual' = 'mensual'; // Inicialmente la consulta es anual
-  aniosDisponibles: number[] = [2022, 2023, 2024]; // Lista de años disponibles
-  mesSeleccionado: number = 1; // Inicialmente seleccionado el mes de enero
-  mesesDisponibles: { nombre: string, numero: number }[] = [
-    { nombre: 'Enero', numero: 1 },
-    { nombre: 'Febrero', numero: 2 },
-    { nombre: 'Marzo', numero: 3 },
-    { nombre: 'Abril', numero: 4 },
-    { nombre: 'Mayo', numero: 5 },
-    { nombre: 'Junio', numero: 6 },
-    { nombre: 'Julio', numero: 7 },
-    { nombre: 'Agosto', numero: 8 },
-    { nombre: 'Septiembre', numero: 9 },
-    { nombre: 'Octubre', numero: 10 },
-    { nombre: 'Noviembre', numero: 11 },
-    { nombre: 'Diciembre', numero: 12 }
-  ];
-  anioSeleccionado!: number;
-
-  constructor(){
-    
-  }
+  btnConsulta:boolean = false;
+  searchText!:string
+  fechasConsulta: any = {
+    fechaDesde: 0,
+    fechaHasta: 0,
+  };
+  $facturasOpCliente: any;
+  date:any = new Date();
+  primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
+  ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
+  datosTabla: any[] = [];
+  
+  constructor(private storageService: StorageService){}
 
   ngOnInit(): void {
+    this.storageService.consultasFacOpCliente$.subscribe(data => {
+      this.$facturasOpCliente = data;
+    });
+    this.consultaMes(); 
+  }
+
+  consultaMes(){
+    if(!this.btnConsulta){   
+      //console.log(this.primerDia, this.ultimoDia)         
+      this.consultaOperaciones(this.primerDia, this.ultimoDia);
+    }     
+  }
+
+  getMsg(msg: any) {
+    this.btnConsulta = true;
+    //console.log(msg);        
+    //alert("llega el msj")
+    this.consultaOperaciones(msg.fechaDesde, msg.fechaHasta);
+  }
+
+  consultaOperaciones(fechaDesde:any, fechaHasta:any){   
+    //console.log("desde: ", fechaDesde, "hasta: ", fechaHasta);
+    this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");    
+    //console.log("consulta facturas op clientes: ", this.$facturasOpCliente);  
+    //this.agruparClientes();      
+    this.procesarDatosParaTabla();
+  }
+
+  procesarDatosParaTabla() {
+    const clientesMap = new Map<number, any>();
+
+    this.$facturasOpCliente.forEach((factura: FacturaOpCliente) => {
+      if (!clientesMap.has(factura.idCliente)) {
+        clientesMap.set(factura.idCliente, {
+          idCliente: factura.idCliente,
+          razonSocial: factura.operacion.cliente.razonSocial,
+          cantOp: 0,
+          opSinFacturar: 0,
+          opFacturadas: 0,
+          total: 0
+        });
+      }
+
+      const cliente = clientesMap.get(factura.idCliente);
+      cliente.cantOp++;
+      if (factura.liquidacion) {
+        cliente.opFacturadas += factura.total;
+      } else {
+        cliente.opSinFacturar += factura.total;
+      }
+      cliente.total += factura.total;
+    });
+
+    this.datosTabla = Array.from(clientesMap.values());
+    console.log("Datos para la tabla: ", this.datosTabla);
     
   }
 
-  seleccionarConsulta(tipo: 'anual' | 'mensual'): void {
-    this.consultaTipo = tipo;
-  }
 
-  // Método para ejecutar la consulta
-  ejecutarConsulta(): void {
-    if (this.consultaTipo === 'anual') {
-      console.log('Consulta anual del año', this.anioSeleccionado);
-      // Aquí puedes implementar la lógica para consultar datos anuales
-    } else {
-      console.log('Consulta mensual del mes', this.mesSeleccionado);
-      // Aquí puedes implementar la lógica para consultar datos mensuales
-    }
-  }
+  
 }

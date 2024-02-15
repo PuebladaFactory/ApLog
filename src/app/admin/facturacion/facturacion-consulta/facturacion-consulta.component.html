@@ -1,1 +1,33 @@
-<p>facturacion-consulta works!</p>
+<div class="border border-2 p-4 rounded-4 ">
+    <h2>Consulta de datos</h2>
+  
+    <div>
+      <label for="consultaAnual">Consulta Anual:</label>
+      <input type="radio" id="consultaAnual" name="consultaTipo" (change)="seleccionarConsulta('anual')" [(ngModel)]="consultaTipo" value="anual">
+    </div>
+  
+    <div>
+      <label for="consultaMensual">Consulta Mensual:</label>
+      <input type="radio" id="consultaMensual" name="consultaTipo" (change)="seleccionarConsulta('mensual')" [(ngModel)]="consultaTipo" value="mensual">
+    </div>
+  
+    <div *ngIf="consultaTipo === 'anual'">
+      <label for="anio">Seleccione el año:</label>
+      <select id="anio" (change)="changeAnio($event)" >
+        <option >{{anioActual}}</option>
+        <option *ngFor="let anio of aniosDisponibles" [value]="anio">{{ anio }}</option>
+      </select>
+    </div>
+  
+    <div *ngIf="consultaTipo === 'mensual'">
+      <label for="mes">Seleccione el mes:</label>
+      <select id="mes"(change)="changeMes($event)">
+        <option>{{mesSeleccionado.nombre}}</option>
+        <option *ngFor="let mes of mesesDisponibles" [value]="mes.numero" >{{ mes.nombre }}</option>
+      </select>
+    </div> 
+</div>
+
+<div class="text-end mt-2">
+    <button class="text-center btn btn-outline-light" (click)="ejecutarConsulta()">Consultar</button>
+</div>

@@ -25,19 +25,25 @@ export class OpAbiertasComponent implements OnInit {
   public show: boolean = false;
   public buttonName: any = 'Consultar Operaciones';
   consultasOp$!:any;
-  titulo: string = "consultasOpCerradas";
+  titulo: string = "consultasOpActivas";
   btnConsulta:boolean = false;
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];
   searchText: string = "";
   $opCerradas: any;
+  
+  $consultasOp: any;
   facturar: boolean = false;
   opForm: any;
   opCerrada!: Operacion;
   facturaChofer!: FacturaOpChofer;
   facturaProveedor!: FacturaOpProveedor; 
   facturaCliente!: FacturaOpCliente;
+  fechasConsulta: any = {
+    fechaDesde: 0,
+    fechaHasta: 0,
+  };
 
   private subscriptions: Subscription[] = [];
 
@@ -54,16 +60,16 @@ export class OpAbiertasComponent implements OnInit {
     /* this.storageService.consultasOpCerradas$.subscribe(data => {
       this.$opCerradas = data;}) */
 
-    this.subscriptions.push(this.storageService.consultasOpCerradas$.subscribe(data => {
-      this.$opCerradas = data;
-    })); 
+    this.storageService.consultasOpActivas$.subscribe(data => {
+      this.$consultasOp = data;
+    });
     this.consultaMes();
    
   }
 
-  ngOnDestroy(): void {
+/*   ngOnDestroy(): void {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());
-  }
+  } */
   
 
   seleccionarOp(op:Operacion){
@@ -86,6 +92,10 @@ export class OpAbiertasComponent implements OnInit {
 
   getMsg(msg: any) {
     this.btnConsulta = true;
+    //console.log("mensajeeee: ", msg);
+    this.fechasConsulta = msg;
+    console.log("mensajeeee: ", this.fechasConsulta);
+    
   }
 
   mostrarRemito(documentacion:string){ 
@@ -106,7 +116,7 @@ export class OpAbiertasComponent implements OnInit {
     //this.opCerrada.documentacion = this.opForm.remito;
     this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
     //console.log("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
-    this.altaOperacionesCerradas();
+    //this.altaOperacionesCerradas();
     this.bajaOperacionesActivas();
     if(this.detalleOp.chofer.proveedor === "monotributista"){
       this.facturarOpChofer();
@@ -116,11 +126,11 @@ export class OpAbiertasComponent implements OnInit {
     
   }
 
-  altaOperacionesCerradas(){
+ /*  altaOperacionesCerradas(){
     this.storageService.addItem("operacionesCerradas", this.opCerrada);    
     
     //this.router.navigate(['/op/op-diarias'])
-  }
+  } */
 
   bajaOperacionesActivas(){
     this.storageService.deleteItem("operacionesActivas", this.opCerrada);
@@ -162,7 +172,7 @@ export class OpAbiertasComponent implements OnInit {
     this.addItem("facturaOpCliente", this.facturaCliente)
     this.opForm.reset();
     this.facturar = false;
-    this.ngOnDestroy();
+    //this.ngOnDestroy();
     this.ngOnInit();
   }
 

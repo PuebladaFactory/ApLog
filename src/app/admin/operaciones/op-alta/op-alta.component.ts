@@ -157,7 +157,10 @@ export class OpAltaComponent implements OnInit {
     this.op.cliente = this.clienteSeleccionado;
     this.op.idOperacion = new Date().getTime();
     this.op.unidadesConFrio = this.unidadesConFrio;
-    this.op.acompaniante = this.acompaniante
+    this.op.acompaniante = this.acompaniante;
+    this.op.facturada = false,
+    this.op.facturaCliente = null;
+    this.op.facturaChofer = null;
     //this.op.estado = 1;
     //console.log("UCF: ", this.unidadesConFrio);
     //console.log("AC: ", this.acompaniante);

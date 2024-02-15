@@ -1,9 +1,11 @@
+import { Operacion } from "./operacion";
+
 export interface FacturaOpProveedor {
 
     id: any|null;
     idFacturaProveedor: number;
     fecha: string;
-    idOperacion: number;        
+    operacion: Operacion;
     idProveedor: number;
     idChofer: number;
     valorJornada: number;

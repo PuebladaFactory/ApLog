@@ -1,8 +1,10 @@
+import { Operacion } from "./operacion";
+
 export interface FacturaOpChofer {
     
         id: any|null;
         idFacturaChofer: number;
-        idOperacion: number;      
+        operacion: Operacion;
         fecha: string;  
         idChofer: number;
         valorJornada: number;

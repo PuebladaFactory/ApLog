@@ -1,36 +1,34 @@
 <div class="container">
     <div class=" d-flex">
         <h1 class="text-center w-100 mx-auto">Facturación de Clientes</h1>
-        <div class="flex-shrink-1 border border-2 p-4 rounded-4 w-25">
-            <h2>Consulta de datos</h2>
-          
-            <div>
-              <label for="consultaAnual">Consulta Anual:</label>
-              <input type="radio" id="consultaAnual" name="consultaTipo" (change)="seleccionarConsulta('anual')" [(ngModel)]="consultaTipo" value="anual">
-            </div>
-          
-            <div>
-              <label for="consultaMensual">Consulta Mensual:</label>
-              <input type="radio" id="consultaMensual" name="consultaTipo" (change)="seleccionarConsulta('mensual')" [(ngModel)]="consultaTipo" value="mensual">
-            </div>
-          
-            <div *ngIf="consultaTipo === 'anual'">
-              <label for="anio">Seleccione el año:</label>
-              <select id="anio" [(ngModel)]="anioSeleccionado">
-                <option *ngFor="let anio of aniosDisponibles" [value]="anio">{{ anio }}</option>
-              </select>
-            </div>
-          
-            <div *ngIf="consultaTipo === 'mensual'">
-              <label for="mes">Seleccione el mes:</label>
-              <select id="mes" [(ngModel)]="mesSeleccionado">
-                <option *ngFor="let mes of mesesDisponibles" [value]="mes.numero">{{ mes.nombre }}</option>
-              </select>
-            </div>
-          
-            <!-- Aquí puedes agregar botones o acciones para ejecutar la consulta -->
-        </div>
+        <app-facturacion-consulta (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" class="flex-shrink-1 w-25"></app-facturacion-consulta>      
     </div>    
+
+    <div class="mt-2">
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                  <th scope="col" class=""></th>
+                  <th scope="col" class="">Razon Social</th>
+                  <th scope="col" class="">Cant Op</th>
+                  <th scope="col" class="">op sin Facturar</th>  
+                  <th scope="col" class="">op Facturadas</th>                        
+                  <th scope="col" class="">Total</th>                      
+                </tr>
+            </thead>
+             <tbody>
+                <tr *ngFor="let cliente of datosTabla">
+                    <td>{{ cliente.idCliente }}</td>
+                    <td>{{ cliente.razonSocial }}</td>
+                    <td>{{ cliente.cantOp }}</td>
+                    <td>{{ cliente.opSinFacturar }}</td>
+                    <td>{{ cliente.opFacturadas }}</td>
+                    <td>{{ cliente.total }}</td>
+                </tr>                
+            </tbody> 
+        </table>
+    </div>
+
     
 </div>
 
