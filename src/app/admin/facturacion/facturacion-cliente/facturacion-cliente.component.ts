@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
-import { ConsultasService } from 'src/app/servicios/consultas/consultas.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -25,15 +24,19 @@ export class FacturacionClienteComponent implements OnInit  {
   datosTabla: any[] = [];
   mostrarTabla: boolean[] = [];
   tablaDetalle: any[] = [];
+  tituloFacOpCliente: string = "facturaOpCliente";
+  facturasLiquidadas: any[] = []; // Nuevo array para almacenar las facturas liquidadas
+  totalFacturasLiquidadas: number = 0; // Variable para almacenar el total de las facturas liquidadas
+
   
-  constructor(private storageService: StorageService, private consultasService:ConsultasService){
+  constructor(private storageService: StorageService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTabla = new Array(this.datosTabla.length).fill(false);
   }
 
   ngOnInit(): void {
-  
-    this.consultasService.consultaOperaciones("facturaOpCliente", "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente" );
+      
+    this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
     this.storageService.consultasFacOpCliente$.subscribe(data => {
       this.$facturasOpCliente = data;
       this.procesarDatosParaTabla()
@@ -58,7 +61,7 @@ export class FacturacionClienteComponent implements OnInit  {
 
   consultaOperaciones(fechaDesde:any, fechaHasta:any){   
     //console.log("desde: ", fechaDesde, "hasta: ", fechaHasta);
-    this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");    
+    this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");    
     //console.log("consulta facturas op clientes: ", this.$facturasOpCliente);  
     //this.agruparClientes();      
     this.procesarDatosParaTabla();
@@ -67,36 +70,41 @@ export class FacturacionClienteComponent implements OnInit  {
   procesarDatosParaTabla() {
     const clientesMap = new Map<number, any>();
 
-    this.$facturasOpCliente.forEach((factura: FacturaOpCliente) => {
-      if (!clientesMap.has(factura.idCliente)) {
-        clientesMap.set(factura.idCliente, {
-          idCliente: factura.idCliente,
-          razonSocial: factura.operacion.cliente.razonSocial,
-          cantOp: 0,
-          opSinFacturar: 0,
-          opFacturadas: 0,
-          total: 0
-        });
-      }
+    if(this.$facturasOpCliente !== null){
+      this.$facturasOpCliente.forEach((factura: FacturaOpCliente) => {
+        if (!clientesMap.has(factura.idCliente)) {
+          clientesMap.set(factura.idCliente, {
+            idCliente: factura.idCliente,
+            razonSocial: factura.operacion.cliente.razonSocial,
+            cantOp: 0,
+            opSinFacturar: 0,
+            opFacturadas: 0,
+            total: 0
+          });
+        }
+  
+        const cliente = clientesMap.get(factura.idCliente);
+        cliente.cantOp++;
+        if (factura.liquidacion) {
+          cliente.opFacturadas += factura.total;
+        } else {
+          cliente.opSinFacturar += factura.total;
+        }
+        cliente.total += factura.total;
+      });
+  
+      this.datosTabla = Array.from(clientesMap.values());
+      console.log("Datos para la tabla: ", this.datosTabla); 
+    }
 
-      const cliente = clientesMap.get(factura.idCliente);
-      cliente.cantOp++;
-      if (factura.liquidacion) {
-        cliente.opFacturadas += factura.total;
-      } else {
-        cliente.opSinFacturar += factura.total;
-      }
-      cliente.total += factura.total;
-    });
-
-    this.datosTabla = Array.from(clientesMap.values());
-    console.log("Datos para la tabla: ", this.datosTabla); 
+    
     
   }
  
   liquidarFac(factura: FacturaOpCliente){
     console.log("esta es la FACTURA: ", factura);
     factura.liquidacion = true;
+    this.storageService.updateItem(this.tituloFacOpCliente, factura)
     this.procesarDatosParaTabla();
      
   }
@@ -109,9 +117,41 @@ export class FacturacionClienteComponent implements OnInit  {
       return factura.idCliente === cliente.idCliente
     });
     console.log("TABLA DETALLE: ", this.tablaDetalle);
-    
+
     
   }
+
+  getQuincena(fecha: string): string {
+    // Convierte la fecha a objeto Date
+    const fechaObj = new Date(fecha);
+    // Obtiene el día del mes
+    const dia = fechaObj.getDate();
+    // Determina si la fecha está en la primera o segunda quincena
+    if (dia <= 15) {
+      return '1° quincena';
+    } else {
+      return '2° quincena';
+    }
+  }
+
+  liquidarFacCliente(idCliente: any) {
+    console.log("cliente: ", idCliente);
+    
+    console.log(idCliente);
+    
+     // Filtrar las facturas del cliente actual y que estén liquidadas
+     this.facturasLiquidadas = this.tablaDetalle.filter(factura =>
+      factura.operacion.cliente.idCliente === idCliente && factura.liquidacion
+    );
+    console.log("facturas Liquidadas: ", this.facturasLiquidadas);
+    
+
+    // Calcular el total de las facturas liquidadas
+    this.totalFacturasLiquidadas = this.facturasLiquidadas.reduce((total, factura) => total + factura.total, 0);
+    console.log("TOTAL facturas Liquidadas: ", this.totalFacturasLiquidadas);
+    alert("aca crearia el detalle de liquidacion para las empresas")
+  }
+
 
   
 }

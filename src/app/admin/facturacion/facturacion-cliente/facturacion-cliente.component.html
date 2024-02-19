@@ -4,34 +4,7 @@
         <app-facturacion-consulta (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" class="flex-shrink-1 w-25"></app-facturacion-consulta>      
     </div>    
 
-    <div class="mt-2">
-       <!--  <table class="table table-dark table-striped" *ngIf="datosTabla.length > 0">
-            <thead>
-                <tr>
-                  <th scope="col" class=""></th>
-                  <th scope="col" class="">Razon Social</th>
-                  <th scope="col" class="">Cant Op</th>
-                  <th scope="col" class="">op sin Facturar</th>  
-                  <th scope="col" class="">op Facturadas</th>                        
-                  <th scope="col" class="">Total</th>                      
-                </tr>
-            </thead>
-             <tbody>
-                <tr *ngFor="let cliente of datosTabla, let i = index">
-                    <td id="{{i}}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" type="button" (click)="mostrarMasDatos(i) ">
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                        </svg> 
-                    </td>
-                    <td>{{ cliente.razonSocial }}</td>
-                    <td>{{ cliente.cantOp }}</td>
-                    <td>{{ cliente.opSinFacturar }}</td>
-                    <td>{{ cliente.opFacturadas }}</td>
-                    <td>{{ cliente.total }}</td>
-                </tr>                
-            </tbody> 
-        </table> -->
+    <div class="mt-2">       
         <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer, cliente o número de operación">
         <table class="table table-dark table-striped">
             <thead>
@@ -39,9 +12,10 @@
                 <th scope="col" class=""></th>
                 <th scope="col" class="">Razon Social</th>
                 <th scope="col" class="">Cant Op</th>
-                <th scope="col" class="">op sin Facturar</th>  
-                <th scope="col" class="">op Facturadas</th>                        
-                <th scope="col" class="">Total</th>                      
+                <th scope="col" class="">Sin Facturar</th>  
+                <th scope="col" class="">A Cobrar</th>                        
+                <th scope="col" class="">Total</th>  
+                <th scope="col" class="">Facturar</th> 
               </tr>
             </thead>
             <tbody>
@@ -65,6 +39,12 @@
                         <td>{{ cliente.opSinFacturar }}</td>
                         <td>{{ cliente.opFacturadas }}</td>
                         <td>{{ cliente.total }}</td>
+                        <td> 
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-receipt" viewBox="0 0 16 16" type="button" (click)="liquidarFacCliente(cliente.idCliente)" [ngClass]="{'isDisabled': !mostrarTabla[i]}">
+                            <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27m.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0z"/>
+                            <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5"/>
+                          </svg>
+                        </td>
                     </tr>
               <!-- Aquí agregamos la tabla adicional -->
                     <tr *ngIf="mostrarTabla[i]" >
@@ -73,11 +53,12 @@
                         
                         <!-- Aquí irían los datos adicionales del cliente -->
                         <!-- Por ejemplo: -->
-                        <input class="form-control mt-2" type="text" [(ngModel)]="searchText2" placeholder="Buscar por chofer, cliente o número de operación">
+                        <!-- <input class="form-control mt-2" type="text" [(ngModel)]="searchText2" placeholder="Buscar por chofer, cliente o número de operación"> -->
                         <table class="table table-dark table-striped table-bordered ">
                             <thead>
                             <tr>
                                 <th scope="col" class="">Fecha</th>
+                                <th scope="col" class="">Quincena</th>
                                 <th scope="col" class="">Id</th>
                                 <th scope="col" class="">Chofer</th>
                                 <th scope="col" class="">Km</th>  
@@ -88,8 +69,9 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr *ngFor="let factura of tablaDetalle | filter: searchText2" [hidden]="!mostrarTabla[i]">
+                            <tr *ngFor="let factura of tablaDetalle" [hidden]="!mostrarTabla[i]">
                                 <td>{{factura.fecha}}</td>
+                                <td>{{ getQuincena(factura.fecha) }}</td>
                                 <td>{{factura.operacion.idOperacion}}</td>
                                 <td>{{factura.operacion.chofer.apellido}} {{factura.operacion.chofer.nombre}}</td>
                                 <td>{{factura.operacion.km}}</td>

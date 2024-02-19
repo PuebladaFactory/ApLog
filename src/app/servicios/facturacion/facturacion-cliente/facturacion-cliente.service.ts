@@ -190,10 +190,10 @@ export class FacturacionClienteService {
 
     this.facturaCliente = {
       id: null,
-      idFacturaCliente: new Date().getTime(),
+      idFacturaOpCliente: new Date().getTime(),
       operacion: op,
       idCliente: op.cliente.idCliente,
-      fecha: new Date().toISOString().split('T')[0],      
+      fecha: op.fecha,      
       valorJornada: this.categoriaMonto,
       adicional: this.acompanianteMonto + this.adicionalKmMonto,    
       total: this.categoriaMonto + (this.acompanianteMonto + this.adicionalKmMonto),
