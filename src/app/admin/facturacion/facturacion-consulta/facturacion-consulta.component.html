@@ -1,23 +1,23 @@
 <div class="border border-2 p-4 rounded-4 ">
     <h2>Consulta de datos</h2>
   
-    <div>
+  <!--   <div>
       <label for="consultaAnual">Consulta Anual:</label>
       <input type="radio" id="consultaAnual" name="consultaTipo" (change)="seleccionarConsulta('anual')" [(ngModel)]="consultaTipo" value="anual">
-    </div>
+    </div> -->
   
-    <div>
+    <!-- <div>
       <label for="consultaMensual">Consulta Mensual:</label>
       <input type="radio" id="consultaMensual" name="consultaTipo" (change)="seleccionarConsulta('mensual')" [(ngModel)]="consultaTipo" value="mensual">
-    </div>
+    </div> -->
   
-    <div *ngIf="consultaTipo === 'anual'">
+   <!--  <div *ngIf="consultaTipo === 'anual'">
       <label for="anio">Seleccione el año:</label>
       <select id="anio" (change)="changeAnio($event)" >
         <option >{{anioActual}}</option>
         <option *ngFor="let anio of aniosDisponibles" [value]="anio">{{ anio }}</option>
       </select>
-    </div>
+    </div> -->
   
     <div *ngIf="consultaTipo === 'mensual'">
       <label for="mes">Seleccione el mes:</label>

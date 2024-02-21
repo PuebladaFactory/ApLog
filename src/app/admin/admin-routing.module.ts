@@ -27,6 +27,10 @@ const routes: Routes = [
       path: 'facturacion',
       loadChildren: () => import('./facturacion/facturacion.module').then(m => m.FacturacionModule)
     },  
+    {
+      path: 'liquidacion',
+      loadChildren: () => import('./liquidacion/liquidacion.module').then(m => m.LiquidacionModule)
+    },  
 ]  },  
 /* {
   path: 'clientes',

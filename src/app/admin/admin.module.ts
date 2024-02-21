@@ -9,6 +9,7 @@ import { ChoferesModule } from './choferes/choferes.module';
 import { OperacionesModule } from './operaciones/operaciones.module';
 import { ProveedoresModule } from './proveedores/proveedores.module';
 import { FacturacionModule } from './facturacion/facturacion.module';
+import { LiquidacionModule } from './liquidacion/liquidacion.module';
 
 @NgModule({
   declarations: [
@@ -23,6 +24,7 @@ import { FacturacionModule } from './facturacion/facturacion.module';
     OperacionesModule,
     ProveedoresModule,
     FacturacionModule,
+    LiquidacionModule
   ]
 })
 export class AdminModule { }
