@@ -60,7 +60,7 @@ export class ConsultaOpComponent implements OnInit {
   }
 
   msgBack() {
-    this.newItemEvent.emit();    
+    this.newItemEvent.emit(this.fechasConsulta);    
   }
 
   consultaOperaciones(fechaDesde:any, fechaHasta:any){

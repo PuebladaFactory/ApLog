@@ -70,10 +70,16 @@ export class StorageService {
   private _historialTarifasProveedores$ = new BehaviorSubject<any>(null)
   public historialTarifasProveedores$ = this._historialTarifasProveedores$.asObservable();
 
+  private _facturaOpCliente$ = new BehaviorSubject<any>(null) //aca va interface my data
+  public facturaOpCliente$ = this._facturaOpCliente$.asObservable();
+
+  private _consultasFacOpCliente$ = new BehaviorSubject<any>(null) //aca va interface my data
+  public consultasFacOpCliente$ = this._consultasFacOpCliente$.asObservable();
+
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
-
+  
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
@@ -151,6 +157,16 @@ export class StorageService {
         break
       }
 
+      case "facturaOpCliente":{
+        this._facturaOpCliente$.next(data);
+        break
+      }
+
+      case "consultasFacOpCliente": {
+        this._consultasFacOpCliente$.next(data)
+        break;
+      }
+
       /*case "logger": {
         this._logger$.next(data)
         break;
@@ -206,9 +222,10 @@ export class StorageService {
     this.getAllSorted("clientes", 'idCliente', 'asc')
     this.getAllSorted("choferes", 'idChofer', 'asc')
     this.getAllSorted("operacionesActivas", 'fecha', 'desc')
-    this.getAllSorted("operacionesCerradas", 'fecha', 'desc')
+    this.getAllSorted("facturaOpCliente", 'fecha', 'desc')
+//    this.getAllSorted("operacionesCerradas", 'fecha', 'desc')
     //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
-    this.getAllSorted("jornadas", 'idChofer', 'asc')
+    //this.getAllSorted("jornadas", 'idChofer', 'asc')
     this.getAllSorted("proveedores", 'idProveedor', 'asc')
     this.getAllSorted("tarifasChofer", 'fecha', 'asc')
     this.getAllSorted("tarifasCliente", 'fecha', 'asc')
@@ -241,7 +258,7 @@ export class StorageService {
 
         this.setInfo(componente, data)
         this.updateObservable(componente, data)
-        console.log("storage initializer ", componente, data);
+        //console.log("storage initializer ", componente, data);
       });
 
   }
@@ -267,7 +284,7 @@ export class StorageService {
     .getByDateValueAndFieldValue(componente, campo, value1, value2, campo2, value3)
     .subscribe(data => {
       this.setInfo(titulo , data)
-      console.log("esta es la consulta por fechas y por id: ", data);
+      //console.log("esta es la consulta por fechas y por id: ", data);
       
     })
     }
@@ -297,7 +314,7 @@ export class StorageService {
 
   deleteItem(componente: string, item: any): void {
 
-    console.log(" storage delete item ", componente, item,)
+    //console.log(" storage delete item ", componente, item,)
 
     this.dbFirebase.delete(componente, item.id)
       // .then((data) => console.log(data))
@@ -308,7 +325,7 @@ export class StorageService {
   }
 
   updateItem(componente: string, item: any): void {
-    console.log(" storage update item ", componente, item,)
+    //console.log(" storage update item ", componente, item,)
 
     this.dbFirebase.update(componente, item)
       // .then((data) => console.log(data))

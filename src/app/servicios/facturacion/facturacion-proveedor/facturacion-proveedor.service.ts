@@ -290,11 +290,11 @@ export class FacturacionProveedorService {
 
     this.facturaProveedor = {
       id: null,
-      idFacturaProveedor: new Date().getTime(),
-      idOperacion: op.idOperacion,        
+      idFacturaOpProveedor: new Date().getTime(),
+      operacion: op,        
       idProveedor: this.proveedorOp.id,
       idChofer: op.chofer.idChofer,
-      fecha: new Date().toLocaleDateString('en-GB'),      
+      fecha: op.fecha,
       valorJornada: 1000,
       adicional: this.$adicional,      
       total: this.total,

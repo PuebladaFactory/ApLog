@@ -4,10 +4,13 @@ import { FacturacionClienteComponent } from './facturacion-cliente/facturacion-c
 import { FacturacionChoferComponent } from './facturacion-chofer/facturacion-chofer.component';
 import { FacturacionGeneralComponent } from './facturacion-general/facturacion-general.component';
 
+
 const routes: Routes = [
   {path: 'cliente', component:FacturacionClienteComponent},
   {path: 'chofer', component:FacturacionChoferComponent},
   {path: 'general', component:FacturacionGeneralComponent},
+  
+   
 ];
 
 @NgModule({

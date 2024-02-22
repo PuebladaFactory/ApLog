@@ -95,7 +95,7 @@ export class OpDiariasComponent implements OnInit {
     this.opEditar.chofer  = this.choferSeleccionado;
     this.opEditar.unidadesConFrio = this.unidadesConFrio;
     this.opEditar.acompaniante = this.acompaniante;
-    console.log("este es el cliente editado: ", this.opEditar);
+    console.log("este es la op editada: ", this.opEditar);
     this.update();    
    }
 

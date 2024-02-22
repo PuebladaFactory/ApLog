@@ -9,8 +9,10 @@ export interface Operacion {
     documentacion: string | null;
     cliente: Cliente;
     chofer: Chofer;
-    observaciones: string;
-    estado: number;
+    observaciones: string;    
     unidadesConFrio: boolean;
     acompaniante: boolean;
+    facturada: boolean;
+    facturaCliente: number | null;
+    facturaChofer: number | null;
 }

@@ -1,0 +1,14 @@
+<div class="container">
+    <div class=" d-flex">
+        <h1 class="text-center w-100 mx-auto">Liquidación</h1>
+        <app-facturacion-consulta (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" class="flex-shrink-1 w-25"></app-facturacion-consulta>      
+    </div>  
+    <div>
+        <h2>Clientes:</h2>
+        <app-liq-cliente></app-liq-cliente>
+    </div>
+    <div>
+        <h2>Choferes:</h2>
+        <app-liq-chofer></app-liq-chofer>
+    </div>
+</div>

@@ -122,7 +122,7 @@ export class FacturacionOpService {
 
   crearFactura(op:Operacion){
 
-    this.facturaChofer = {
+   /*  this.facturaChofer = {
       id: null,
       idFacturaChofer: new Date().getTime(),
       idOperacion: op.idOperacion,   
@@ -131,7 +131,7 @@ export class FacturacionOpService {
       valorJornada: this.$tarifaChofer.valorJornada,
       adicional: this.$adicional,      
       total: this.total,
-    }
+    } */
     //console.log(this.facturaChofer);
     
     //this.altaFacturaChofer()

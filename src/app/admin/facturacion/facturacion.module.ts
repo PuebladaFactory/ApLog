@@ -12,12 +12,13 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
+
 @NgModule({
   declarations: [
     FacturacionClienteComponent,
     FacturacionChoferComponent,
     FacturacionGeneralComponent,
-    FacturacionConsultaComponent
+    FacturacionConsultaComponent,    
   ],
   imports: [
     CommonModule,
@@ -26,8 +27,12 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    Ng2SearchPipeModule
+    Ng2SearchPipeModule, 
+    
 
+  ],
+  exports:[
+    FacturacionConsultaComponent,       
   ]
 })
 export class FacturacionModule { }

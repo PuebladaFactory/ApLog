@@ -191,9 +191,9 @@ export class FacturacionChoferService {
 
     this.facturaChofer = {
       id: null,
-      idFacturaChofer: new Date().getTime(),
-      idOperacion: op.idOperacion,        
-      fecha: new Date().toLocaleDateString('en-GB'),
+      idFacturaOpChofer: new Date().getTime(),
+      operacion: op,        
+      fecha: op.fecha,      
       idChofer: op.chofer.idChofer,
       valorJornada: this.$tarifaChofer.valorJornada,
       adicional: this.$adicional,      
