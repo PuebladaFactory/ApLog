@@ -24,12 +24,12 @@ export class LiqClienteComponent {
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
-  datosTabla: any[] = [];
-  mostrarTabla: boolean[] = [];
+  datosTablaCliente: any[] = [];
+  mostrarTablaCliente: boolean[] = [];
   tablaDetalle: any[] = [];
   tituloFacOpCliente: string = "facturaOpCliente";
-  facturasLiquidadas: any[] = []; // Nuevo array para almacenar las facturas liquidadas
-  totalFacturasLiquidadas: number = 0; // Variable para almacenar el total de las facturas liquidadas
+  facturasLiquidadasCliente: any[] = []; // Nuevo array para almacenar las facturas liquidadas
+  totalFacturasLiquidadasCliente: number = 0; // Variable para almacenar el total de las facturas liquidadas
   razonSocFac!: string ;
   form!: any;
   facturaCliente!: FacturaCliente;  
@@ -40,7 +40,7 @@ export class LiqClienteComponent {
   
   constructor(private storageService: StorageService, private fb: FormBuilder){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
-    this.mostrarTabla = new Array(this.datosTabla.length).fill(false);
+    this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false);
     this.form = this.fb.group({      
       detalle: [""],       
     })
@@ -83,8 +83,8 @@ export class LiqClienteComponent {
         cliente.total += factura.total;
       });
   
-      this.datosTabla = Array.from(clientesMap.values());
-      console.log("Datos para la tabla: ", this.datosTabla); 
+      this.datosTablaCliente = Array.from(clientesMap.values());
+      //console.log("Datos para la tabla: ", this.datosTablaCliente); 
     }
 
     
@@ -92,7 +92,7 @@ export class LiqClienteComponent {
   }
  
   liquidarFac(factura: FacturaOpCliente){
-    console.log("esta es la FACTURA: ", factura);
+    //console.log("esta es la FACTURA: ", factura);
     factura.liquidacion = true;
     this.storageService.updateItem(this.tituloFacOpCliente, factura)
     this.procesarDatosParaTabla();     
@@ -106,11 +106,11 @@ export class LiqClienteComponent {
 
   mostrarMasDatos(index: number, cliente:any) {   
    // Cambiar el estado del botón en la posición indicada
-   this.mostrarTabla[index] = !this.mostrarTabla[index];
-   console.log("CLIENTE: ", cliente);
+   this.mostrarTablaCliente[index] = !this.mostrarTablaCliente[index];
+   //console.log("CLIENTE: ", cliente);
 
    // Obtener el id del cliente utilizando el índice proporcionado
-   let clienteId = this.datosTabla[index].idCliente;
+   let clienteId = this.datosTablaCliente[index].idCliente;
 
    // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
    let facturasCliente = this.$facturasOpCliente.filter((factura: FacturaOpCliente) => {
@@ -118,12 +118,12 @@ export class LiqClienteComponent {
    });
    this.facturasPorCliente.set(clienteId, facturasCliente);
 
-   console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
+   //console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
 
   }
 
   cerrarTabla(index: number){
-    this.mostrarTabla[index] = !this.mostrarTabla[index];
+    this.mostrarTablaCliente[index] = !this.mostrarTablaCliente[index];
   }
 
  // Modifica la función getQuincena para que acepte una fecha como parámetro
@@ -145,55 +145,55 @@ export class LiqClienteComponent {
     let facturasIdCliente:any = this.facturasPorCliente.get(idCliente);
     this.razonSocFac = razonSocial;
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
-    this.facturasLiquidadas = facturasIdCliente.filter((factura: FacturaOpCliente) => {
+    this.facturasLiquidadasCliente = facturasIdCliente.filter((factura: FacturaOpCliente) => {
         return factura.liquidacion === true;
     });
 
     // Calcular el total sumando los montos de las facturas liquidadas
-    this.totalFacturasLiquidadas = 0;
-    this.facturasLiquidadas.forEach((factura: FacturaOpCliente) => {
-      this.totalFacturasLiquidadas += factura.total;
+    this.totalFacturasLiquidadasCliente = 0;
+    this.facturasLiquidadasCliente.forEach((factura: FacturaOpCliente) => {
+      this.totalFacturasLiquidadasCliente += factura.total;
     });
 
     this.indiceSeleccionado = index;
-    console.log("Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadas);
-    console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadas);
-    console.log("indice: ", this.indiceSeleccionado);
+    //console.log("Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadas);
+    //console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadas);
+    //console.log("indice: ", this.indiceSeleccionado);
     
   }
   
 
   editarDetalle(factura:FacturaOpCliente){
     this.facturaEditada = factura;
-    console.log(this.facturaEditada);
+    //console.log(this.facturaEditada);
     this.form.patchValue({
       detalle: factura.operacion.observaciones,      
     });    
   }
 
   guardarDetalle(){    
-    console.log(this.facturaEditada);
+    //console.log(this.facturaEditada);
     this.facturaEditada.operacion.observaciones = this.form.value.detalle;
-    console.log(this.facturaEditada.operacion.observaciones);
+    //console.log(this.facturaEditada.operacion.observaciones);
     this.storageService.updateItem("facturaOpCliente", this.facturaEditada);
 
 
   }
 
   onSubmit() {
-    console.log(this.facturasLiquidadas);
-    console.log(this.form.value);
-    if(this.facturasLiquidadas.length > 0){
+    //console.log(this.facturasLiquidadas);
+    //console.log(this.form.value);
+    if(this.facturasLiquidadasCliente.length > 0){
       this.facturaCliente = {
         id: null,
         fecha: new Date().toISOString().split('T')[0],
         idFacturaCliente: new Date().getTime(),
-        idCliente: this.facturasLiquidadas[0].idCliente,
-        operaciones: this.facturasLiquidadas,
-        total: this.totalFacturasLiquidadas,
+        idCliente: this.facturasLiquidadasCliente[0].idCliente,
+        operaciones: this.facturasLiquidadasCliente,
+        total: this.totalFacturasLiquidadasCliente,
       }
 
-      console.log("FACTURA CLIENTE: ", this.facturaCliente);
+      //console.log("FACTURA CLIENTE: ", this.facturaCliente);
       
       this.addItem(this.facturaCliente);
 

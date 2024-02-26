@@ -5,7 +5,7 @@
     </div>  
     <div>
         <h2>Clientes:</h2>
-        <app-liq-cliente></app-liq-cliente>
+        <app-liq-cliente  (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta"></app-liq-cliente>
     </div>
     <div>
         <h2>Choferes:</h2>

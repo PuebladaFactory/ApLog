@@ -198,6 +198,7 @@ export class FacturacionChoferService {
       valorJornada: this.$tarifaChofer.valorJornada,
       adicional: this.$adicional,      
       total: this.total,
+      liquidacion: false,
     }
     
     console.log("factura chofer FINAL: ", this.facturaChofer);

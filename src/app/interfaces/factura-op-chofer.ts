@@ -10,6 +10,7 @@ export interface FacturaOpChofer {
         valorJornada: number;
         adicional: number;        
         total: number;
+        liquidacion: boolean;
 
         
     
