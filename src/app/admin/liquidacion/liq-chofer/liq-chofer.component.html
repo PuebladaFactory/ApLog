@@ -1,1 +1,158 @@
-<p>liq-chofer works!</p>
+<input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer, chofer o número de operación">
+<table class="table table-dark table-striped">
+    <thead>
+      <tr>
+        <th scope="col" class=""></th>
+        <th scope="col" class="">Apellido</th>
+        <th scope="col" class="">Cant Op</th>
+        <th scope="col" class="">Sin Facturar</th>  
+        <th scope="col" class="">A Cobrar</th>                        
+        <th scope="col" class="">Total</th>  
+        <th scope="col" class="">Facturar</th> 
+      </tr>
+    </thead>
+    <tbody>
+        <ng-container *ngFor="let chofer of datosTablaChofer | filter: searchText; let i = index">
+            <tr>
+                <td>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, chofer)">
+                    <ng-container *ngIf="!mostrarTablaChofer[i]">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                    </ng-container>
+                    <ng-container *ngIf="mostrarTablaChofer[i]">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                        <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
+                    
+                    </ng-container>
+                </svg>
+                </td>
+                <td>{{ chofer.apellido }}</td>
+                <td>{{ chofer.cantOp }}</td>
+                <td>{{ chofer.opSinFacturar }}</td>
+                <td>{{ chofer.opFacturadas }}</td>
+                <td>{{ chofer.total }}</td>
+                <td> 
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-receipt" viewBox="0 0 16 16" type="button" (click)="liquidarFacChofer(chofer.idChofer, chofer.apellido, i)" [ngClass]="{'isDisabled': !mostrarTablaChofer[i]}" data-bs-target="#exampleModal2" data-bs-toggle="modal">
+                    <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27m.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0z"/>
+                    <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5"/>
+                  </svg>
+                </td>
+            </tr>
+      <!-- Aquí agregamos la tabla adicional -->
+      <tr *ngIf="mostrarTablaChofer[i]" >
+        <td  [attr.colspan]="datosTablaChofer.length + 6">
+            <!-- Aquí irían los datos adicionales del chofer -->
+            <table class="table table-dark table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col" class="">Fecha</th>
+                        <th scope="col" class="">Quincena</th>
+                        <th scope="col" class="">Id</th>
+                        <th scope="col" class="">Cliente</th>
+                        <th scope="col" class="">Km</th>  
+                        <th scope="col" class="">A</th>  
+                        <th scope="col" class="">Total</th>                        
+                        <th scope="col" class="">Facturado</th>
+                        <th scope="col" class="">Facturar</th>                        
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let facturaChofer of facturasPorChofer.get(chofer.idChofer)">
+                        <td>{{facturaChofer.fecha}}</td>
+                        <td>{{ getQuincena(facturaChofer.fecha) }}</td>
+                        <td>{{facturaChofer.operacion.idOperacion}}</td>
+                        <td>{{facturaChofer.operacion.cliente.razonSocial}} </td>
+                        <td>{{facturaChofer.operacion.km}}</td>
+                        <td>{{facturaChofer.adicional}}</td>
+                        <td>{{facturaChofer.total}}</td>
+                        <td>{{facturaChofer.liquidacion}}</td>
+                        <td>
+                            <svg *ngIf="!facturaChofer.liquidacion" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16" type="button" (click)="liquidarFac(facturaChofer)">
+                                <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z"/>
+                            </svg>
+                            <svg *ngIf="facturaChofer.liquidacion" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-ban" viewBox="0 0 16 16" type="button" (click)="cancelarliquidacion(facturaChofer)">
+                                <path d="M15 8a6.97 6.97 0 0 0-1.71-4.584l-9.874 9.875A7 7 0 0 0 15 8M2.71 12.584l9.874-9.875a7 7 0 0 0-9.874 9.874ZM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0"/>
+                            </svg>
+                        </td>
+                    </tr>
+                </tbody> 
+            </table>
+        </td>
+    </tr>
+        </ng-container>
+    </tbody> 
+  </table>
+
+
+  <div class="modal fade" id="exampleModal2" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-2" id="exampleModalToggleLabel2">Liquidación de Servicios</h1>
+                    
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>        
+        <div class="modal-body">
+            <h3>{{apellido}}</h3>
+            <table class="table table-success table-striped table-bordered w-100">
+                <thead>
+                    <tr>
+                        <th scope="col" class="">Fecha</th>
+                        <th scope="col" class="">Quincena</th>
+                        <th scope="col" class="">Concepto Chofer</th>
+                        <th scope="col" class="">A cobrar</th>                              
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let facturaChofer of facturasLiquidadasChofer">
+                        <td>{{facturaChofer.fecha}}</td>
+                        <td>{{ getQuincena(facturaChofer.fecha) }}</td>
+                        <td>
+                            <div class="d-flex justify-content-between">
+                                {{facturaChofer.operacion.observaciones}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" (click)="editarDetalle(facturaChofer)"  data-bs-target="#exampleModalToggle3" data-bs-toggle="modal">
+                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                                </svg>
+                            </div>
+                        </td>                    
+                        <td class="">{{facturaChofer.total}}</td>                                        
+                    </tr>
+                </tbody> 
+                <tfoot>
+                    <td colspan="3" class="table-active">Total</td>
+                    <td>{{totalFacturasLiquidadasChofer}}</td>
+                </tfoot>
+            </table>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal2" (click)="onSubmit()" >Guardar</button>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+<div class="modal fade" id="exampleModalToggle3" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-2" id="exampleModalToggleLabel2">Editar Detalle</h1>
+                    
+          <button type="button" class="btn-close" data-bs-target="#exampleModal" data-bs-toggle="modal" aria-label="Close"></button>
+        </div>        
+        <div class="modal-body">
+            <form [formGroup]="form">
+                <div class="input-group">
+                    <span class="input-group-text" id="basic-addon3">Detalle: </span>
+                    <input type="text" formControlName="detalle" class="form-control" required>
+                </div>                   
+            </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary"  data-bs-target="#exampleModal2" data-bs-toggle="modal" (click)="guardarDetalle()" >Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div> 
+ 

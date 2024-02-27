@@ -12,15 +12,15 @@
       </tr>
     </thead>
     <tbody>
-        <ng-container *ngFor="let cliente of datosTabla | filter: searchText; let i = index">
+        <ng-container *ngFor="let cliente of datosTablaCliente | filter: searchText; let i = index">
             <tr>
                 <td>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, cliente)">
-                    <ng-container *ngIf="!mostrarTabla[i]">
+                    <ng-container *ngIf="!mostrarTablaCliente[i]">
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
                     </ng-container>
-                    <ng-container *ngIf="mostrarTabla[i]">
+                    <ng-container *ngIf="mostrarTablaCliente[i]">
                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                         <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
                     
@@ -33,15 +33,15 @@
                 <td>{{ cliente.opFacturadas }}</td>
                 <td>{{ cliente.total }}</td>
                 <td> 
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-receipt" viewBox="0 0 16 16" type="button" (click)="liquidarFacCliente(cliente.idCliente, cliente.razonSocial, i)" [ngClass]="{'isDisabled': !mostrarTabla[i]}" data-bs-target="#exampleModal" data-bs-toggle="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-receipt" viewBox="0 0 16 16" type="button" (click)="liquidarFacCliente(cliente.idCliente, cliente.razonSocial, i)" [ngClass]="{'isDisabled': !mostrarTablaCliente[i]}" data-bs-target="#exampleModal" data-bs-toggle="modal">
                     <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27m.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0z"/>
                     <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5"/>
                   </svg>
                 </td>
             </tr>
       <!-- Aquí agregamos la tabla adicional -->
-      <tr *ngIf="mostrarTabla[i]" >
-        <td  [attr.colspan]="datosTabla.length + 6">
+      <tr *ngIf="mostrarTablaCliente[i]" >
+        <td  [attr.colspan]="datosTablaCliente.length + 6">
             <!-- Aquí irían los datos adicionales del cliente -->
             <table class="table table-dark table-striped table-bordered">
                 <thead>
@@ -105,23 +105,23 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let factura of facturasLiquidadas">
-                        <td>{{factura.fecha}}</td>
-                        <td>{{ getQuincena(factura.fecha) }}</td>
+                    <tr *ngFor="let facturaCliente of facturasLiquidadasCliente">
+                        <td>{{facturaCliente.fecha}}</td>
+                        <td>{{ getQuincena(facturaCliente.fecha) }}</td>
                         <td>
                             <div class="d-flex justify-content-between">
-                                {{factura.operacion.observaciones}}
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" (click)="editarDetalle(factura)"  data-bs-target="#exampleModalToggle2" data-bs-toggle="modal">
+                                {{facturaCliente.operacion.observaciones}}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" (click)="editarDetalle(facturaCliente)"  data-bs-target="#exampleModalToggle2" data-bs-toggle="modal">
                                     <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
                                 </svg>
                             </div>
                         </td>                    
-                        <td class="">{{factura.total}}</td>                                        
+                        <td class="">{{facturaCliente.total}}</td>                                        
                     </tr>
                 </tbody> 
                 <tfoot>
                     <td colspan="3" class="table-active">Total</td>
-                    <td>{{totalFacturasLiquidadas}}</td>
+                    <td>{{totalFacturasLiquidadasCliente}}</td>
                 </tfoot>
             </table>
         </div>
