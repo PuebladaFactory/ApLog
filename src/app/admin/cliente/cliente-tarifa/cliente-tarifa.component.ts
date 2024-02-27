@@ -235,6 +235,7 @@ export class ClienteTarifaComponent implements OnInit {
     this.cargasGeneralesForm.reset();
     this.unidadesConFrioForm.reset();
     this.acompanianteForm.reset();
+    this.adicionalKmForm.reset();
     this.adicionalesCargasGenerales = [];
     this.adicionalesUnidadesConFrio = [];
     this.adicionalKm = [];

@@ -292,14 +292,15 @@ export class FacturacionProveedorService {
       id: null,
       idFacturaOpProveedor: new Date().getTime(),
       operacion: op,        
-      idProveedor: this.proveedorOp.id,
+      idProveedor: this.proveedorOp.idProveedor,
       idChofer: op.chofer.idChofer,
       fecha: op.fecha,
       valorJornada: 1000,
       adicional: this.$adicional,      
       total: this.total,
+      liquidacion: false,
     }
-    //console.log(this.facturaChofer);
+    console.log("FACTURA PROVEEDOR: ", this.facturaProveedor);
     
     //this.altaFacturaChofer()
   }
