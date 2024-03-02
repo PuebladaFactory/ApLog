@@ -8,9 +8,9 @@
     {{ buttonNameAlta }}
   </button>
   <br>
-  <button (click)="toggleManualOp()" id="bt" class="btn btn-outline-secondary bt">
+ <!--  <button (click)="toggleManualOp()" id="bt" class="btn btn-outline-secondary bt">
     {{ buttonNameManual }}
-  </button>
+  </button> -->
 </div>
 <div class="d-flex justify-content-evenly align-items-center">
       <ng-container *ngIf="show" class="col-6">
@@ -21,9 +21,9 @@
         <app-op-alta></app-op-alta>
       </ng-container>
 
-      <ng-container *ngIf="showManual" class="col-6">
+    <!--   <ng-container *ngIf="showManual" class="col-6">
         <app-op-carga-manual></app-op-carga-manual>
-      </ng-container>
+      </ng-container> -->
 </div>
 <h3 *ngIf="!btnConsulta" class="mt-5">Operaciones del Dia: {{hoy}} </h3>
 

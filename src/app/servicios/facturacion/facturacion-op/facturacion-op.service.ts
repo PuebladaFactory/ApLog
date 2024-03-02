@@ -40,11 +40,11 @@ export class FacturacionOpService {
   }
 
   facturarOpChofer(op:Operacion){
-    this.buscarTarifa(op.chofer.idChofer, op);   
+    /* this.buscarTarifa(op.chofer.idChofer, op);    */
   }
 
   buscarTarifa(idChofer: number, op: Operacion){    
-    this.storageService.historialTarifas$.subscribe(data => {
+    /* this.storageService.historialTarifas$.subscribe(data => {
       this.$tarifas = data.filter((tarifa: { idChofer: number; }) => tarifa.idChofer === idChofer);
 
       console.log("Todas: ",this.$tarifas);
@@ -57,7 +57,7 @@ export class FacturacionOpService {
       // Ahora, tarifaMasElevada contiene la tarifa con el idTarifa más elevado
       console.log("ultima: ", this.ultimaTarifa);
       this.calcularLiquidacion(op);
-    });  
+    });   */
   }
 
     
@@ -74,7 +74,7 @@ export class FacturacionOpService {
   //}
 
   calcularLiquidacion(op:Operacion){    
-    this.$tarifaChofer = this.ultimaTarifa
+  /*   this.$tarifaChofer = this.ultimaTarifa
     console.log("esta es la tarifa a facturar: ", this.$tarifaChofer);
     
     this.$adicional = this.calcularAdicional(op);
@@ -84,11 +84,11 @@ export class FacturacionOpService {
 
     //console.log("esta es facturaChoferService. liquidacion del chofer: ", this.total);
 
-    this.crearFactura(op);    
+    this.crearFactura(op);     */
   }
 
   calcularAdicional(op:Operacion){
-    let adicional: number;
+   /*  let adicional: number;
     switch(true){
       case (op.km !== null && op.km <= 100):{
         adicional = 0;
@@ -117,7 +117,7 @@ export class FacturacionOpService {
       default:{ 
         return adicional=0;
       }
-    }
+    } */
   }
 
   crearFactura(op:Operacion){
@@ -138,7 +138,7 @@ export class FacturacionOpService {
   }
 
   altaFacturaChofer() {
-    console.log("liquidacion-chofer. facturaChofer: ", this.facturaChofer);    
+    //console.log("liquidacion-chofer. facturaChofer: ", this.facturaChofer);    
      //this.storageService.addItem("facturaOpChofer", this.facturaChofer);     
     //this.addItem("facturaOpChofer", this.facturaChofer)
     //this.traerFacturas();
@@ -154,13 +154,13 @@ export class FacturacionOpService {
   }  */
   addItem(componente: string, item: any): void {
 
-    //item.fechaOp = new Date()
+    /* //item.fechaOp = new Date()
     console.log(" storage add item ", componente, item,)
 
 
     this.dbFirebase.create(componente, item)
       // .then((data) => console.log(data))
       // .then(() => this.ngOnInit())
-      .catch((e) => console.log(e.message));
+      .catch((e) => console.log(e.message)); */
   }
 }
