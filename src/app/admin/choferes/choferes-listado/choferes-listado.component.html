@@ -18,7 +18,7 @@
         </tr>
       </thead>
       <tbody *ngFor=" let chofer of $choferes">        
-          <tr *ngIf="chofer.hasOwnProperty('vehiculo')" type="button" (click)="abrirEdicion(chofer)" data-bs-toggle="modal" data-bs-target="#exampleModal">
+          <tr *ngIf="chofer.hasOwnProperty('vehiculo')" (click)="abrirEdicion(chofer)" data-bs-toggle="modal" data-bs-target="#exampleModal">
               <th class="align-middle" scope="row">{{chofer.idChofer}} </th>
               <td class="align-middle">{{chofer.apellido}}</td>
               <td class="align-middle">{{chofer.nombre}}</td>         
