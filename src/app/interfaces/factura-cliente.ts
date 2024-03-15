@@ -7,5 +7,6 @@ export interface FacturaCliente {
     idCliente: number;    
     operaciones: FacturaOpCliente [];
     total: number;
+    cobrado:boolean;
     
 }

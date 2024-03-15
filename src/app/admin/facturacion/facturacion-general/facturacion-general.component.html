@@ -1,122 +1,21 @@
 <h1 class="text-center">Facturación</h1>
-<!-- <div class="mt-5">
-  <button (click)="toggle()" id="bt" class="btn btn-outline-secondary bt">
-    {{ buttonName }}
-  </button>
-<br>
-  <button (click)="toggleAltaOp()" id="bt" class="btn btn-outline-secondary bt">
-    {{ buttonNameAlta }}
-  </button>
-  <br>
-  <button (click)="toggleManualOp()" id="bt" class="btn btn-outline-secondary bt">
-    {{ buttonNameManual }}
-  </button>
-</div> -->
-<!-- <div class="d-flex justify-content-evenly align-items-center">
-      <ng-container *ngIf="show" class="col-6">
-        <app-consulta-op (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-consulta-op>
-      </ng-container>
-
-      <ng-container *ngIf="showAlta" class="col-6">
-        <app-op-alta></app-op-alta>
-      </ng-container>
-
-      <ng-container *ngIf="showManual" class="col-6">
-        <app-op-carga-manual></app-op-carga-manual>
-      </ng-container>
-</div>
-<h3 *ngIf="!btnConsulta" class="mt-5">Operaciones del Dia: {{hoy}} </h3>
-
-<h3 *ngIf="btnConsulta" class="mt-5">Resultado de la consulta: </h3> -->
-
-<!-- <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer, cliente o número de operación"> -->
-
-    <table class="table table-dark table-striped" >
-        <thead>
-            <tr>
-              <th scope="col" rowspan="2" class="">Año</th>
-              <th scope="col" rowspan="2" class="">Mes</th>
-              <th scope="col" rowspan="2" class="">Quincena</th>
-              <th scope="col" colspan="4" class="">Clientes</th>  
-              <th scope="col" colspan="4" class="">Choferes</th>  
-            </tr>
-            <tr>
-                <th scope="col" class="">Nombre</th>
-                <th scope="col" class="">Operaciones</th>
-                <th scope="col" class="">Facturado</th>
-                <th scope="col" class="">A Pagar</th>
-                <th scope="col" class="">Razon Social</th>
-                <th scope="col" class="">Operaciones</th>
-                <th scope="col" class="">Facturado</th>
-                <th scope="col" class="">A Pagar</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- <tr *ngFor=" let op of $consultasOp | filter: searchText">
-              <th scope="row" class="align-middle">{{op.fecha}} </th>
-              <td class="align-middle">{{op.idOperacion}}</td>
-              <td class="align-middle">{{op.cliente.razonSocial}}</td>
-              <td class="align-middle">{{op.chofer.apellido}}</td>          
-              <td class="align-middle">{{op.chofer.vehiculo.categoria}}</td>          
-              <td class="align-middle">{{op.observaciones}}</td>
-              <td class="d-flex justify-content-evenly align-middle">
-                  <app-btn-editar type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(op)" ></app-btn-editar> 
-                  <app-btn-eliminar [name]="'Anular'" (click)="eliminarOperacion(op)"></app-btn-eliminar>
-              </td>
-            </tr>     -->
-          </tbody>
-          <tfoot>
-            <tr>
-                <th scope="row" colspan="11">Total:</th>
-            </tr>
-          </tfoot>
-        
-    </table>
-
-
-<!-- <ng-template #noResults>
-  <p>Sin resultados para: "{{searchText}}".</p>
-</ng-template>   -->
- 
-<!-- <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Editar Operaciones</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body"  *ngIf="opEditar !== undefined" >
-        <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="form-group">
-              <label for="Fecha">Fecha</label>
-              <div class="input-group">
-                <input formControlName="fecha" class="form-control edicion" required type="date">            
-              </div>
-            </div>    
-            <div class="form-group">
-              <label for="Cliente">Cliente</label>
-              <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
-                  <option>{{opEditar.cliente.razonSocial}}</option>
-                  <option *ngFor="let cliente of $clientes">
-                    {{cliente.razonSocial}}
-                  </option>
-              </select>
-            </div>    
-            <div class="form-group">
-                <label for="Chofer">Chofer</label>
-                <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
-                  <option>{{opEditar.chofer.apellido}}</option>
-                  <option *ngFor="let chofer of $choferes">
-                    {{chofer.apellido}}
-                  </option>
-              </select>
-            </div>           
-            <button class="btn btn-secondary mt-2" type="submit" data-bs-dismiss="modal">
-              Guardar 
-            </button>
-        
-          </form>
-      </div>      
-    </div>
+<div class="d-flex justify-content-between">
+  <div class="border border-rounded rounded-4">
+    <div class="m-5">
+        <h2>Resumen</h2>
+        <p>Facturación Total: </p>
+        <p>liquidación Total: </p>
+        <P>Falta Pagar:</P>
+        <P>Falta Cobrar:</P>
+    </div>  
   </div>
-</div>  -->
+  <div>
+    <app-facturacion-consulta></app-facturacion-consulta>
+  </div>
+</div>
+
+<div class="mt-4">       
+  <h2>Clientes</h2> 
+  <app-facturacion-cliente></app-facturacion-cliente>
+</div>
+

@@ -191,6 +191,7 @@ export class LiqClienteComponent {
         idCliente: this.facturasLiquidadasCliente[0].idCliente,
         operaciones: this.facturasLiquidadasCliente,
         total: this.totalFacturasLiquidadasCliente,
+        cobrado:false,
       }
 
       //console.log("FACTURA CLIENTE: ", this.facturaCliente);
