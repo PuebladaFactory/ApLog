@@ -11,4 +11,5 @@ export interface FacturaOpCliente {
     adicional: number;        
     total: number;
     liquidacion: boolean;
+    montoFacturaChofer: number;
 }

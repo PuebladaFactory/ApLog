@@ -85,6 +85,13 @@ export class StorageService {
   private _consultasFacCliente$ = new BehaviorSubject<any>(null) //aca va interface my data
   public consultasFacCliente$ = this._consultasFacCliente$.asObservable();
 
+  private _consultasFacChofer$ = new BehaviorSubject<any>(null) //aca va interface my data
+  public consultasFacChofer$ = this._consultasFacChofer$.asObservable();
+
+  private _consultasFacProveedor$ = new BehaviorSubject<any>(null) //aca va interface my data
+  public consultasFacProveedor$ = this._consultasFacProveedor$.asObservable();
+  
+
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -188,6 +195,16 @@ export class StorageService {
 
       case "consultasFacCliente": {
         this._consultasFacCliente$.next(data)
+        break;
+      }
+
+      case "consultasFacChofer": {
+        this._consultasFacChofer$.next(data)
+        break;
+      }
+
+      case "consultasFacProveedor": {
+        this._consultasFacProveedor$.next(data)
         break;
       }
 

@@ -3,14 +3,20 @@
   <div class="border border-rounded rounded-4">
     <div class="m-5">
         <h2>Resumen</h2>
-        <p>Facturación Total: </p>
-        <p>liquidación Total: </p>
-        <P>Falta Pagar:</P>
-        <P>Falta Cobrar:</P>
+        <div class="d-flex">
+            <div class="me-5">
+                <p>Ingreso Total por Op: ${{totalIngresosOp}}</p>
+                <p>Pago Total por Op: ${{totalPagosOp}}</p>
+            </div>
+            <div class="me-5">
+                <P>Falta Cobrar: ${{totalFaltaCobrar}}</P>  
+                <P>Falta Pagar: ${{totalFaltaPagar}}</P>                
+            </div>        
+        </div>        
     </div>  
   </div>
   <div>
-    <app-facturacion-consulta></app-facturacion-consulta>
+    <app-facturacion-consulta  [componenteConsulta]="componenteConsulta" (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" ></app-facturacion-consulta>
   </div>
 </div>
 
@@ -19,3 +25,12 @@
   <app-facturacion-cliente></app-facturacion-cliente>
 </div>
 
+<div class="mt-4">       
+  <h2>Choferes</h2> 
+  <app-facturacion-chofer></app-facturacion-chofer>
+</div>
+
+<div class="mt-4">       
+  <h2>Proveedores</h2> 
+  <app-facturacion-proveedor></app-facturacion-proveedor>
+</div>

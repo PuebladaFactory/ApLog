@@ -8,5 +8,7 @@ export interface FacturaChofer {
     idChofer: number;    
     operaciones: FacturaOpChofer [];
     total: number;
+    cobrado:boolean;
+    montoFacturaCliente:number;
 
 }

@@ -8,5 +8,7 @@ export interface FacturaCliente {
     operaciones: FacturaOpCliente [];
     total: number;
     cobrado:boolean;
+    montoFacturaChofer:number;
+
     
 }

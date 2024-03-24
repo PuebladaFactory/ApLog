@@ -145,7 +145,7 @@ export class OpAbiertasComponent implements OnInit {
     this.facturaChofer = this.facOpChoferService.facturarOpChofer(this.opCerrada);    
     console.log("esta es la factura-chofer FINAL: ", this.facturaChofer);
     
-    this.addItem("facturaOpChofer", this.facturaChofer)
+    //this.addItem("facturaOpChofer", this.facturaChofer)
     this.opForm.reset();
     this.facturar = false;
     //this.ngOnDestroy();
@@ -157,7 +157,7 @@ export class OpAbiertasComponent implements OnInit {
     this.facturaProveedor = this.facOpProveedorService.facturarOpProveedor(this.opCerrada);    
     console.log("esta es la factura-proveedor FINAL: ", this.facturaProveedor);
     
-    this.addItem("facturaOpProveedor", this.facturaProveedor)
+    //this.addItem("facturaOpProveedor", this.facturaProveedor)
     this.opForm.reset();
     this.facturar = false;
     //this.ngOnDestroy();
@@ -169,9 +169,10 @@ export class OpAbiertasComponent implements OnInit {
     this.facturaCliente = this.facOpClienteService.facturarOperacion(this.opCerrada);    
     console.log("esta es la factura-cliente FINAL: ", this.facturaCliente);
     
-    this.addItem("facturaOpCliente", this.facturaCliente)
+    //this.addItem("facturaOpCliente", this.facturaCliente)
     this.opForm.reset();
     this.facturar = false;
+    this.armarFacturas()
     //this.ngOnDestroy();
     this.ngOnInit();
   }
@@ -187,5 +188,20 @@ export class OpAbiertasComponent implements OnInit {
       // .then((data) => console.log(data))
       // .then(() => this.ngOnInit())
       .catch((e) => console.log(e.message)); */
+  }
+
+  armarFacturas(){
+    
+    if(this.detalleOp.chofer.proveedor === "monotributista"){
+      this.facturaCliente.montoFacturaChofer = this.facturaChofer.total.valueOf();      
+      this.facturaChofer.montoFacturaCliente = this.facturaCliente.total.valueOf();
+      this.addItem("facturaOpCliente", this.facturaCliente);
+      this.addItem("facturaOpChofer", this.facturaChofer);
+    } else{
+      this.facturaCliente.montoFacturaChofer = this.facturaProveedor.total.valueOf();    
+      this.facturaProveedor.montoFacturaCliente = this.facturaCliente.total.valueOf();
+      this.addItem("facturaOpCliente", this.facturaCliente);
+      this.addItem("facturaOpProveedor", this.facturaProveedor)
+    }
   }
 }

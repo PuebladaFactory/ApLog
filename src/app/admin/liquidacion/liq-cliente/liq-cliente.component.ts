@@ -30,6 +30,7 @@ export class LiqClienteComponent {
   tituloFacOpCliente: string = "facturaOpCliente";
   facturasLiquidadasCliente: any[] = []; // Nuevo array para almacenar las facturas liquidadas
   totalFacturasLiquidadasCliente: number = 0; // Variable para almacenar el total de las facturas liquidadas
+  totalFacturasLiquidadasChofer: number = 0 ; // Variable para almacenar el total de las facturas liquidadas
   razonSocFac!: string ;
   form!: any;
   facturaCliente!: FacturaCliente;  
@@ -61,6 +62,7 @@ export class LiqClienteComponent {
     const clientesMap = new Map<number, any>();
 
     if(this.$facturasOpCliente !== null){
+      console.log("Facturas OP CLiente: ", this.$facturasOpCliente);
       this.$facturasOpCliente.forEach((factura: FacturaOpCliente) => {
         if (!clientesMap.has(factura.idCliente)) {
           clientesMap.set(factura.idCliente, {
@@ -84,7 +86,7 @@ export class LiqClienteComponent {
       });
   
       this.datosTablaCliente = Array.from(clientesMap.values());
-      //console.log("Datos para la tabla: ", this.datosTablaCliente); 
+      console.log("Datos para la tabla: ", this.datosTablaCliente); 
     }
 
     
@@ -92,7 +94,7 @@ export class LiqClienteComponent {
   }
  
   liquidarFac(factura: FacturaOpCliente){
-    //console.log("esta es la FACTURA: ", factura);
+    console.log("esta es la FACTURA: ", factura);
     factura.liquidacion = true;
     this.storageService.updateItem(this.tituloFacOpCliente, factura)
     this.procesarDatosParaTabla();     
@@ -118,7 +120,7 @@ export class LiqClienteComponent {
    });
    this.facturasPorCliente.set(clienteId, facturasCliente);
 
-   //console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
+   console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
 
   }
 
@@ -153,6 +155,11 @@ export class LiqClienteComponent {
     this.totalFacturasLiquidadasCliente = 0;
     this.facturasLiquidadasCliente.forEach((factura: FacturaOpCliente) => {
       this.totalFacturasLiquidadasCliente += factura.total;
+    });
+
+    this.totalFacturasLiquidadasChofer = 0;
+    this.facturasLiquidadasCliente.forEach((factura: FacturaOpCliente) => {
+      this.totalFacturasLiquidadasChofer += factura.montoFacturaChofer;
     });
 
     this.indiceSeleccionado = index;
@@ -192,6 +199,7 @@ export class LiqClienteComponent {
         operaciones: this.facturasLiquidadasCliente,
         total: this.totalFacturasLiquidadasCliente,
         cobrado:false,
+        montoFacturaChofer: this.totalFacturasLiquidadasChofer
       }
 
       //console.log("FACTURA CLIENTE: ", this.facturaCliente);
