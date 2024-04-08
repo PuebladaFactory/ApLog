@@ -198,6 +198,7 @@ export class FacturacionClienteService {
       adicional: this.acompanianteMonto + this.adicionalKmMonto,    
       total: this.categoriaMonto + (this.acompanianteMonto + this.adicionalKmMonto),
       liquidacion: false,
+      montoFacturaChofer: 0,
     }
     //console.log(this.facturaChofer);
     

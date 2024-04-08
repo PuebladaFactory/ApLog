@@ -7,4 +7,6 @@ export interface FacturaProveedor {
     idProveedor: number;    
     operaciones: FacturaOpProveedor [];
     total: number;
+    cobrado:boolean;
+    montoFacturaCliente:number;
 }

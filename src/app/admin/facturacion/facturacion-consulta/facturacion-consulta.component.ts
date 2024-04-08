@@ -12,8 +12,9 @@ export class FacturacionConsultaComponent implements OnInit {
     fechaDesde: 0,
     fechaHasta: 0,
   };
+  @Input() componenteConsulta!: string;
   
-
+  
   consultaTipo: 'anual' | 'mensual' = 'mensual'; // Inicialmente la consulta es anual
   aniosDisponibles: number[] = []; // Lista de años disponibles
   mesSeleccionado!: {nombre:string, numero:number} ; // Inicialmente seleccionado el mes de enero

@@ -10,7 +10,7 @@ export class LiqGralComponent implements OnInit {
   
   @Output() newItemEvent = new EventEmitter<any>();
 
-
+  componenteConsulta: string = "Liquidacion"
   fechasConsulta: any = {
     fechaDesde: 0,
     fechaHasta: 0,

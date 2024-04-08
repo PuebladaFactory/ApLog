@@ -10,22 +10,22 @@ import { StorageService } from '../../storage/storage.service';
 })
 export class LiquidacionChoferService {
 
-  $tarifaChofer!:TarifaChofer;
+  /* $tarifaChofer!:TarifaChofer;
   liquidacionChofer!:FacturaOpChofer;
   total!:number;
   $adicional!:number;
   $tarifas!: any;
-  ultimaTarifa!: TarifaChofer;
+  ultimaTarifa!: TarifaChofer; */
 
   constructor(private storageService: StorageService, private dbFirebase: DbFirestoreService,) { }
 
   liquidacionOperacion(op: Operacion){        
-    this.buscarTarifa(op.chofer.idChofer, op);   
+  //  this.buscarTarifa(op.chofer.idChofer, op);   
     //this.storageService.addItem("facturaOpChofer", op);    
   }
 
   buscarTarifa(idChofer: number, op: Operacion){    
-    this.storageService.historialTarifas$.subscribe(data => {
+    /* this.storageService.historialTarifas$.subscribe(data => {
       this.$tarifas = data.filter((tarifa: { idChofer: number; }) => tarifa.idChofer === idChofer);
 
       console.log("Todas: ",this.$tarifas);
@@ -38,7 +38,7 @@ export class LiquidacionChoferService {
       // Ahora, tarifaMasElevada contiene la tarifa con el idTarifa más elevado
       console.log("ultima: ", this.ultimaTarifa);
       this.calcularLiquidacion(op);
-    });  
+    });   */
   }
 
     
@@ -55,7 +55,7 @@ export class LiquidacionChoferService {
   //}
 
   calcularLiquidacion(op:Operacion){    
-    this.$tarifaChofer = this.ultimaTarifa
+    /* this.$tarifaChofer = this.ultimaTarifa
     console.log("esta es la tarifa a facturar: ", this.$tarifaChofer);
     
     this.$adicional = this.calcularAdicional(op);
@@ -65,11 +65,11 @@ export class LiquidacionChoferService {
 
     //console.log("esta es liquidacionChoferService. liquidacion del chofer: ", this.total);
 
-    this.crearFactura(op);    
+    this.crearFactura(op);     */
   }
 
   calcularAdicional(op:Operacion){
-    let adicional: number;
+    /* let adicional: number;
     switch(true){
       case (op.km !== null && op.km <= 100):{
         adicional = 0;
@@ -98,11 +98,11 @@ export class LiquidacionChoferService {
       default:{ 
         return adicional=0;
       }
-    }
+    } */
   }
 
   crearFactura(op:Operacion){
-
+/* 
     this.liquidacionChofer = {
       id: null,
       idFacturaChofer: new Date().getTime(),
@@ -114,12 +114,12 @@ export class LiquidacionChoferService {
     }
     //console.log(this.liquidacionChofer);
 
-    this.altaFacturaChofer()
+    this.altaFacturaChofer() */
   }
 
   altaFacturaChofer(){
-    console.log("liquidacion-chofer. facturaChofer: ", this.liquidacionChofer);    
-    this.storageService.addItem("facturaOpChofer", this.liquidacionChofer);    
+    /* console.log("liquidacion-chofer. facturaChofer: ", this.liquidacionChofer);    
+    this.storageService.addItem("facturaOpChofer", this.liquidacionChofer);     */
     //this.traerFacturas();
   }
 

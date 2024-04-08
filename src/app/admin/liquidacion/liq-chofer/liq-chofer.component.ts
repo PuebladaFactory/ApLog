@@ -31,6 +31,7 @@ export class LiqChoferComponent implements OnInit {
   tituloFacOpChofer: string = "facturaOpChofer";
   facturasLiquidadasChofer: any[] = []; // Nuevo array para almacenar las facturas liquidadas
   totalFacturasLiquidadasChofer: number = 0; // Variable para almacenar el total de las facturas liquidadas
+  totalFacturasLiquidadasCliente: number = 0; // Variable para almacenar el total de las facturas liquidadas
   apellido!: string ;
   form!: any;
   facturaChofer!: FacturaChofer;  
@@ -112,7 +113,7 @@ export class LiqChoferComponent implements OnInit {
   mostrarMasDatos(index: number, chofer:any) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
-   //console.log("Chofer: ", chofer);
+   ////console.log("Chofer: ", chofer);
 
    // Obtener el id del cliente utilizando el índice proporcionado
    let choferId = this.datosTablaChofer[index].idChofer;
@@ -147,14 +148,14 @@ export class LiqChoferComponent implements OnInit {
 
   liquidarFacChofer(idChofer: any, apellido: string, index: number){
     // Obtener las facturas del cliente
-    //console.log("IDCHOFER: ", idChofer);
+    ////console.log("IDCHOFER: ", idChofer);
     
     let facturasIdChofer:any = this.facturasPorChofer.get(idChofer);    
-    ////console.log("FACTURAS POR CHOFER: ", facturasIdChofer );
+    //////console.log("FACTURAS POR CHOFER: ", facturasIdChofer );
     
 
     this.apellido = apellido;
-    //console.log("APELLIDO: ", this.apellido);
+    ////console.log("APELLIDO: ", this.apellido);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasChofer = facturasIdChofer.filter((factura: FacturaOpChofer) => {
@@ -167,34 +168,40 @@ export class LiqChoferComponent implements OnInit {
       this.totalFacturasLiquidadasChofer += factura.total;
     });
 
+    this.totalFacturasLiquidadasCliente = 0;
+    this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
+      this.totalFacturasLiquidadasCliente += factura.montoFacturaCliente;
+    });
+
     this.indiceSeleccionado = index;
     //console.log("Facturas liquidadas del cliente", apellido + ":", this.facturasLiquidadasChofer);
-    //console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasChofer);
-    //console.log("indice: ", this.indiceSeleccionado);
+    //console.log("Total de las facturas liquidadas chofer:", this.totalFacturasLiquidadasChofer);
+    //console.log("Total de las facturas liquidadas cliente:", this.totalFacturasLiquidadasCliente);
+    ////console.log("indice: ", this.indiceSeleccionado);
     
   }
   
 
   editarDetalle(factura:FacturaOpChofer){
     this.facturaEditada = factura;
-    //console.log(this.facturaEditada);
+    ////console.log(this.facturaEditada);
     this.form.patchValue({
       detalle: factura.operacion.observaciones,      
     });    
   }
 
   guardarDetalle(){    
-    //console.log(this.facturaEditada);
+    ////console.log(this.facturaEditada);
     this.facturaEditada.operacion.observaciones = this.form.value.detalle;
-    //console.log(this.facturaEditada.operacion.observaciones);
+    ////console.log(this.facturaEditada.operacion.observaciones);
     this.storageService.updateItem("facturaOpChofer", this.facturaEditada);
 
 
   }
 
   onSubmit() {
-    //console.log(this.facturasLiquidadasChofer);
-    //console.log(this.form.value);
+    //console.log("factura chofer antes: ", this.facturasLiquidadasChofer);
+    ////console.log(this.form.value);
     if(this.facturasLiquidadasChofer.length > 0){
       this.facturaChofer = {
         id: null,
@@ -203,6 +210,8 @@ export class LiqChoferComponent implements OnInit {
         idChofer: this.facturasLiquidadasChofer[0].idChofer,
         operaciones: this.facturasLiquidadasChofer,
         total: this.totalFacturasLiquidadasChofer,
+        cobrado:false,
+        montoFacturaCliente: this.totalFacturasLiquidadasCliente,
       }
 
       //console.log("FACTURA CHOFER: ", this.facturaChofer);

@@ -1,5 +1,5 @@
 // ENVIRONMENT PARA DEMO
-/* export const environment = {
+export const environment = {
   production: true,
   firebase: {
     apiKey: "AIzaSyCM-WuXYmaZU0AJQk7jVXyrSt1eMGIC0ps",
@@ -10,12 +10,12 @@
     appId: "1:333531493406:web:2be93d73101e7f569fea0f",
     measurementId: "G-77CC9T9J1N"
   }
-}; */
+};
 
 
 // ENVIRONMENT PARA PRODUCCION
 
-export const environment = {
+/* export const environment = {
   production: true,
   firebase: {
     apiKey: "AIzaSyC_8_UyQNPIX6-nm02Al1hFuuz3O-OSDMo",
@@ -25,4 +25,4 @@ export const environment = {
     messagingSenderId: "665246214539",
     appId: "1:665246214539:web:230a8899ff2995db53e78e"
   }
-}; 
+};  */

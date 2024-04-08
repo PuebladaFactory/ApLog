@@ -30,6 +30,7 @@ export class LiqProveedorComponent implements OnInit {
   tituloFacOpProveedor: string = "facturaOpProveedor";
   facturasLiquidadasProveedor: any[] = []; // Nuevo array para almacenar las facturas liquidadas
   totalFacturasLiquidadasProveedor: number = 0; // Variable para almacenar el total de las facturas liquidadas
+  totalFacturasLiquidadasCliente: number = 0; // Variable para almacenar el total de las facturas liquidadas
   razonSocial!: string ;
   form!: any;
   facturaProveedor!: FacturaProveedor;  
@@ -63,7 +64,7 @@ export class LiqProveedorComponent implements OnInit {
     const proveedoresMap = new Map<number, any>();
 
     if(this.$facturasOpProveedor !== null){
-      console.log("Facturas OP Proveedor: ", this.$facturasOpProveedor);
+      //console.log("Facturas OP Proveedor: ", this.$facturasOpProveedor);
       
       this.$facturasOpProveedor.forEach((factura: FacturaOpProveedor) => {
         if (!proveedoresMap.has(factura.idChofer)) {
@@ -88,7 +89,7 @@ export class LiqProveedorComponent implements OnInit {
       });
   
       this.datosTablaProveedor = Array.from(proveedoresMap.values());
-      console.log("Datos para la tabla: ", this.datosTablaProveedor); 
+      //console.log("Datos para la tabla: ", this.datosTablaProveedor); 
     }
 
     
@@ -96,7 +97,7 @@ export class LiqProveedorComponent implements OnInit {
   }
  
   liquidarFac(factura: FacturaOpProveedor){
-    console.log("esta es la FACTURA: ", factura);
+    //console.log("esta es la FACTURA: ", factura);
     factura.liquidacion = true;
     this.storageService.updateItem(this.tituloFacOpProveedor, factura)
     this.procesarDatosParaTabla();     
@@ -111,7 +112,7 @@ export class LiqProveedorComponent implements OnInit {
   mostrarMasDatos(index: number, proveedor:any) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
-   console.log("Proveedor: ", proveedor);
+   //console.log("Proveedor: ", proveedor);
 
    // Obtener el id del cliente utilizando el índice proporcionado
    let proveedorId = this.datosTablaProveedor[index].idProveedor;
@@ -123,7 +124,7 @@ export class LiqProveedorComponent implements OnInit {
    });
    this.facturasPorProveedor.set(proveedorId, facturasProveedor);
 
-   console.log("FACTURAS DEL PROVEEDOR: ", facturasProveedor);  
+   //console.log("FACTURAS DEL PROVEEDOR: ", facturasProveedor);  
 
   }
 
@@ -147,14 +148,14 @@ export class LiqProveedorComponent implements OnInit {
 
   liquidarFacProveedor(idChofer: any, razonSocial: string, index: number){
     // Obtener las facturas del cliente
-    console.log("IDCHOFER: ", idChofer);
+    //console.log("IDCHOFER: ", idChofer);
     
     let facturasIdChofer:any = this.facturasPorProveedor.get(idChofer);    
-    //console.log("FACTURAS POR CHOFER: ", facturasIdChofer );
+    ////console.log("FACTURAS POR CHOFER: ", facturasIdChofer );
     
 
     this.razonSocial = razonSocial;
-    console.log("razonSocial: ", this.razonSocial);
+    //console.log("razonSocial: ", this.razonSocial);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasProveedor = facturasIdChofer.filter((factura: FacturaOpProveedor) => {
@@ -167,34 +168,39 @@ export class LiqProveedorComponent implements OnInit {
       this.totalFacturasLiquidadasProveedor += factura.total;
     });
 
+    this.totalFacturasLiquidadasCliente = 0;
+    this.facturasLiquidadasProveedor.forEach((factura: FacturaOpProveedor) => {
+      this.totalFacturasLiquidadasCliente += factura.montoFacturaCliente;
+    });
+
     this.indiceSeleccionado = index;
-    console.log("Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadasProveedor);
-    console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasProveedor);
-    console.log("indice: ", this.indiceSeleccionado);
+    //console.log("Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadasProveedor);
+    //console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasProveedor);
+    //console.log("indice: ", this.indiceSeleccionado);
     
   }
   
 
   editarDetalle(factura:FacturaOpProveedor){
     this.facturaEditada = factura;
-    console.log(this.facturaEditada);
+    //console.log(this.facturaEditada);
     this.form.patchValue({
       detalle: factura.operacion.observaciones,      
     });    
   }
 
   guardarDetalle(){    
-    console.log(this.facturaEditada);
+    //console.log(this.facturaEditada);
     this.facturaEditada.operacion.observaciones = this.form.value.detalle;
-    console.log(this.facturaEditada.operacion.observaciones);
+    //console.log(this.facturaEditada.operacion.observaciones);
     this.storageService.updateItem("FacturaOpProveedor", this.facturaEditada);
 
 
   }
 
   onSubmit() {
-    console.log(this.facturasLiquidadasProveedor);
-    console.log(this.form.value);
+    //console.log(this.facturasLiquidadasProveedor);
+    //console.log(this.form.value);
     if(this.facturasLiquidadasProveedor.length > 0){
       this.facturaProveedor = {
         id: null,
@@ -203,9 +209,11 @@ export class LiqProveedorComponent implements OnInit {
         idProveedor: this.facturasLiquidadasProveedor[0].idProveedor,
         operaciones: this.facturasLiquidadasProveedor,
         total: this.totalFacturasLiquidadasProveedor,
+        cobrado:false,
+        montoFacturaCliente: this.totalFacturasLiquidadasCliente,
       }
 
-      console.log("FACTURA PROVEEDOR: ", this.facturaProveedor);
+      //console.log("FACTURA PROVEEDOR: ", this.facturaProveedor);
       
       this.addItem(this.facturaProveedor);
 
