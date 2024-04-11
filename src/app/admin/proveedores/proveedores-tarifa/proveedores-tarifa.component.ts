@@ -33,8 +33,7 @@ export class ProveedoresTarifaComponent implements OnInit {
   acompanianteForm:any;
   acompanianteEditForm:any;  
   adicionalKm: AdicionalKm [] = [];
-  tarifasEspeciales!: TarifaEspecial | null ;
-  tEspecial: boolean = false;
+  tarifasEspeciales!: TarifaEspecial | null ;  
   tarifaEditar!: TarifaProveedor;
 
 
@@ -110,20 +109,7 @@ this.acompanianteEditForm = this.fb.group({
    console.log("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
     this.buscarTarifas();
   }
-  
-  changeTarifaEspecial(e: any) {    
-    console.log(e.target.value);
-    //let razonSocial = e.target.value.split(" ")[0];
-    //console.log(apellido);
-    //this.tEspecial = !this.tEspecial;
-    if (e.target.value === "si"){
-      this.tEspecial = true;
-    }else{
-      this.tEspecial = false;
-    }
-    console.log(this.tEspecial);    
-  }
-
+ 
   buscarTarifas(){
     //console.log(this.choferSeleccionado[0].idChofer);    
     this.storageService.getByFieldValue(this.componente, "idProveedor", this.proveedorSeleccionado[0].idProveedor);
@@ -148,13 +134,7 @@ this.acompanianteEditForm = this.fb.group({
     this.armarCargasGenerales();
     //this.armarUnidadesConFrio();
     this.armarAdicionales();   
-    console.log(this.tEspecial);
     
-    if(this.tEspecial){
-      this.guardarTarifaEspecial()
-    }else{
-      this.tarifasEspeciales = null;
-    };   
 
     this.tarifa = {
       id:null,
@@ -164,8 +144,7 @@ this.acompanianteEditForm = this.fb.group({
       cargasGenerales: this.cargasGenerales,
       //unidadesConFrio: this.unidadesConFrio,
       adicionales: this.adicionales,
-      tarifaEspecial: this.tarifasEspeciales,
-      tEspecial: this.tEspecial,
+      tarifaEspecial: this.tarifasEspeciales,      
     };  
     console.log("tarifa: ", this.tarifa);
   } 
@@ -190,18 +169,17 @@ this.acompanianteEditForm = this.fb.group({
       }
     }
     console.log("adicionales: ", this.adicionales);
+    this.guardarTarifaEspecial();
   }
 
 
    guardarTarifaEspecial(){
-    if(this.tarifasEspeciales !== null){
-      this.tarifasEspeciales = {
-        concepto : this.tarifaEspecialForm.value.concepto,
-        valor : this.tarifaEspecialForm.value.valor,
-      }      
+    this.tarifasEspeciales = {
+      concepto : this.tarifaEspecialForm.value.concepto,
+      valor : this.tarifaEspecialForm.value.valor,
     }          
      /* this.tEspecial = !this.tEspecial; */
-     this.tEspecial = true
+    
      console.log(this.tarifasEspeciales);     
     }
 

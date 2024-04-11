@@ -26,8 +26,7 @@ export class ChoferesTarifaComponent implements OnInit {
   $tarifasChofer:any;
   tarifaProveedor!:boolean
   tarifaEspecialForm!:any;
-  tEspecial:boolean = false;
-  tEspecialEdit:boolean = false;
+  
   tarifaEspecial!: TarifaEspecial | null;
   tarifaEditForm!:any;
   adicionalEditForm!:any;
@@ -102,20 +101,7 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
     this.buscarTarifas();
    }
   }
-
-  changeTarifaEspecial(e: any) {    
-    console.log(e.target.value);
-    //let razonSocial = e.target.value.split(" ")[0];
-    //console.log(apellido);
-    //this.tEspecial = !this.tEspecial;
-    if (e.target.value === "si"){
-      this.tEspecial = true;
-    }else{
-      this.tEspecial = false;
-    }
-    console.log(this.tEspecial);
-    
-  }
+ 
 
   onSubmit() {
     this.armarTarifa();
@@ -128,8 +114,7 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
     //console.log("esto es adicionalKm: ", this.adicionalKm);
     this.tarifa = this.tarifaForm.value;
     this.tarifa.km = this.adicionalKm;
-    this.tarifa.tarifaEspecial = this.tarifaEspecial;
-    this.tarifa.tEspecial = this.tEspecial;
+    this.tarifa.tarifaEspecial = this.tarifaEspecial;    
     this.tarifa.idChofer = this.choferSeleccionado[0].idChofer;    
     this.tarifa.fecha = new Date().toISOString().split('T')[0];
     this.tarifa.idTarifa = new Date().getTime(); 
@@ -207,24 +192,17 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
     }
 
     armarTarifaespecial(){
-
-      if(this.tEspecial){
-        this.tarifaEspecial = {
-          concepto: this.tarifaEspecialForm.value.concepto,
-          valor: this.tarifaEspecialForm.value.valor,
-        };        
-      } else {
-        this.tarifaEspecial = null;
-      }
-
-      
+      this.tarifaEspecial = {
+        concepto: this.tarifaEspecialForm.value.concepto,
+        valor: this.tarifaEspecialForm.value.valor,
+      };        
     }
 
     editarTarifa(tarifa:TarifaChofer){
       console.log(tarifa);
       
       this.tarifaEditar = tarifa;
-      this.tEspecialEdit = tarifa.tEspecial;
+      
       console.log(this.tarifaEditar);
       this.armarTarifaEditar();      
       
@@ -252,23 +230,6 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
       });
     }
 
-    changeTarifaEspecialEdit(e: any) {    
-      console.log(e.target.value);
-      //let razonSocial = e.target.value.split(" ")[0];
-      //console.log(apellido);
-      //this.tEspecial = !this.tEspecial;
-      if (e.target.value === "si"){
-        this.tEspecialEdit = true;
-        this.tarifaEditar.tEspecial = true;
-      }else{
-        this.tEspecialEdit = false;
-        this.tarifaEditar.tEspecial = false;
-        this.tarifaEditar.tarifaEspecial = null;
-      }
-      console.log(this.tEspecialEdit);
-      
-    }
-
     onSubmitEdit(){
       this.armarTarifaModificada();
     }
@@ -291,8 +252,7 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
         publicidad: this.tarifaEditForm.value.publicidad,
         idChofer: this.tarifaEditar.idChofer,
         fecha: this.tarifaEditar.fecha,
-        acompaniante: this.tarifaEditForm.value.acompaniante,
-        tEspecial: this.tarifaEditar.tEspecial,
+        acompaniante: this.tarifaEditForm.value.acompaniante,        
         tarifaEspecial: {
           concepto: this.tarifaEspecialEditForm.value.concepto,
           valor: this.tarifaEspecialEditForm.value.valor,

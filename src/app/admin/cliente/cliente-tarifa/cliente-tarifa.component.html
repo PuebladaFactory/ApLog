@@ -67,17 +67,9 @@
                                     </td>
                                 </tr>                        
                             </tbody>
-                        </table>                            
-                            <tr>
-                                <td class="parametro align-middle">Tarifa Especial:</td>
-                                <select class="form-select form-select-md" (change)="changeTarifaEspecial($event)" required>
-                                  <option >Seleccione</option>
-                                  <option value="si">si</option>
-                                  <option value="no">no</option>                        
-                                </select>
-                            </tr>
-                            <form *ngIf="tEspecial" [formGroup]="tarifaEspecialForm" (ngSubmit)="onSubmit()">                         
-                          
+                        </table>                                                 
+                            <form [formGroup]="tarifaEspecialForm" (ngSubmit)="onSubmit()">                         
+                                <h5 class="parametro align-middle mt-2">Tarifa Especial:</h5>
                                 <tr>
                                     <th class="parametro">Concepto </th>
                                     <th > Valor</th>
@@ -217,9 +209,9 @@
                           <td class="align-middle valores">{{tarifa.cargasGenerales.chasis}}</td>
                           <td class="align-middle valores">{{tarifa.cargasGenerales.balancin}}</td>
                           <td class="align-middle valores">{{tarifa.cargasGenerales.semiRemolqueLocal}}</td>  
-                          <td class="align-middle valores">{{ tarifa.tarifaEspecial !== null ? tarifa.tarifaEspecial.concepto : 0 }}</td>
-                          <td class="align-middle valores">{{ tarifa.tarifaEspecial !== null ? tarifa.tarifaEspecial.valor : 0 }}</td>                                            
-                          <td class="align-middle valores">{{tarifa.adicionales.acompaniante}}</td>
+                          <td class="align-middle valores">{{tarifa.tarifaEspecial !== null && tarifa.tarifaEspecial.concepto !== "" ? tarifa.tarifaEspecial.concepto : "sin asignar" }}</td>
+                              <td class="align-middle valores">{{tarifa.tarifaEspecial !== null && (tarifa.tarifaEspecial.valor > 0 || tarifa.tarifaEspecial.valor !== "") ? tarifa.tarifaEspecial.valor : "sin asignar" }}</td>                                            
+                          <td class="align-middle valores">{{tarifa.adicionales.acompaniante !== null || tarifa.adicionales.acompaniante !== "" || tarifa.adicionales.acompaniante > 0 ? tarifa.adicionales.acompaniante : "sin asignar"}}</td>
                           <td class="align-middle valores">{{tarifa.adicionales.adicionalKm.primerSector.valor}}</td>
                           <td class="align-middle valores">{{tarifa.adicionales.adicionalKm.sectoresSiguientes.valor}}</td>
                           <td>
@@ -298,23 +290,23 @@
                                     </tr>
                                 </tbody>
                             </table>       
-                              
-                                <form [formGroup]="tarifaEspecialEditForm" (ngSubmit)="onSubmitEdit()" >                         
-                                    <h5 class="mt-2">Tarifa Especial</h5>
-                                    <tr class="form-group">
-                                        <td class="parametro">Concepto: </td>
-                                        <td>
-                                          <input formControlName="concepto" class="form-control" required type="text">
-                                        </td>
-                                    </tr>
-                                    
-                                    <tr class="form-group">
-                                        <td class="parametro">Valor: </td>
-                                        <td>
-                                          <input formControlName="valor" class="form-control" required type="number">
-                                        </td>
-                                    </tr>                  
-                                </form>                        
+                            <form [formGroup]="tarifaEspecialEditForm" (ngSubmit)="onSubmitEdit()" >                         
+                                  <h5 class="parametro align-middle">Tarifa Especial:</h5>
+                                  <tr class="form-group">
+                                      <td class="parametro">Concepto: </td>
+                                      <td>
+                                        <input formControlName="concepto" class="form-control" required type="text">
+                                      </td>
+                                  </tr>
+                                  
+                                  <tr class="form-group">
+                                      <td class="parametro">Valor: </td>
+                                      <td>
+                                        <input formControlName="valor" class="form-control" required type="number">
+                                      </td>
+                                  </tr>
+                        
+                              </form>       
                         </div>
                     </form> 
                     <form [formGroup]="acompanianteEditForm" (ngSubmit)="onSubmitEdit()">            

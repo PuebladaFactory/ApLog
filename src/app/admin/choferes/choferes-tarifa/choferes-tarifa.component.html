@@ -40,18 +40,10 @@
                     
                   </table>
                   
-                </div>     
-                <tr class="mt-2">
-                  <td class="parametro align-middle">Tarifa Especial:</td>
-                  <select class="form-select form-select-md" (change)="changeTarifaEspecial($event)" required>
-                    <option >Seleccione</option>
-                    <option value="si">si</option>
-                    <option value="no">no</option>                        
-                  </select>
-                </tr>
+                </div>                     
          
-                  <form  *ngIf="tEspecial" [formGroup]="tarifaEspecialForm" (ngSubmit)="onSubmit()">                         
-              
+                  <form [formGroup]="tarifaEspecialForm" (ngSubmit)="onSubmit()">                         
+                    <h5 class="mt-2">Tarifa Especial</h5>
                     <tr>
                         <th class="parametro">Concepto </th>
                         <th > Valor</th>
@@ -165,8 +157,8 @@
                               <td class="align-middle valores">{{tarifa.km.primerSector.valor}}</td>
                               <td class="align-middle valores">{{tarifa.km.sectoresSiguientes.intervalo}}</td>
                               <td class="align-middle valores">{{tarifa.km.sectoresSiguientes.valor}}</td>   
-                              <td class="align-middle valores">{{ tarifa.tarifaEspecial !== null ? tarifa.tarifaEspecial.concepto : 0 }}</td>
-                              <td class="align-middle valores">{{ tarifa.tarifaEspecial !== null ? tarifa.tarifaEspecial.valor : 0 }}</td>                                                                     
+                              <td class="align-middle valores">{{tarifa.tarifaEspecial !== null && tarifa.tarifaEspecial.concepto !== "" ? tarifa.tarifaEspecial.concepto : "sin asignar" }}</td>
+                              <td class="align-middle valores">{{tarifa.tarifaEspecial !== null && (tarifa.tarifaEspecial.valor > 0 || tarifa.tarifaEspecial.valor !== "") ? tarifa.tarifaEspecial.valor : "sin asignar" }}</td>                                            
                               <td>
                                 <svg xmlns="http://www.w3.org/2000/svg" type="button" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16" (click)="editarTarifa(tarifa)" data-bs-toggle="modal" data-bs-target="#exampleModalToggle">
                                   <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
@@ -218,17 +210,9 @@
                 <input formControlName="acompaniante" class="form-control" required type="number">
               </td>
             </tr>
-          </form> 
-          <tr class="mt-2">
-            <td class="parametro align-middle">Tarifa Especial:</td>
-            <select class="form-select form-select-md" (change)="changeTarifaEspecialEdit($event)" required>
-              <option >Seleccione</option>
-              <option value="si">si</option>
-              <option value="no">no</option>                        
-            </select>
-          </tr>
-          <form *ngIf="tEspecialEdit" [formGroup]="tarifaEspecialEditForm" (ngSubmit)="onSubmitEdit()" >                         
-          
+          </form>           
+          <form [formGroup]="tarifaEspecialEditForm" (ngSubmit)="onSubmitEdit()" >                         
+            <h5 class="mt-2">Tarifa Especial</h5>
             <tr class="form-group">
                 <td class="parametro">Concepto: </td>
                 <td>
@@ -243,41 +227,41 @@
                 </td>
             </tr>
       
-        </form>   
-        <form [formGroup]="adicionalEditForm" (ngSubmit)="onSubmitEdit()">            
-          <tr >
-              <td class="parametro align-middle">Primer sector desde: </td>
+            </form>   
+            <form [formGroup]="adicionalEditForm" (ngSubmit)="onSubmitEdit()">            
+              <tr >
+                  <td class="parametro align-middle">Primer sector desde: </td>
 
-              <td class="input-group ">
+                  <td class="input-group ">
+                      
+                      <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number">
+                      <span class="input-group-text"> km </span>
+                
+                      <span class="input-group-text ms-2"> $ </span>
+                      <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number">                                
+                  </td>
+              </tr>
+              <tr >
+                  <td>Intervalos cada: </td>   
+                  <td class="input-group ">
+                      <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number">
+                      <span class="input-group-text"> km </span>
                   
-                  <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number">
-                  <span class="input-group-text"> km </span>
-             
-                  <span class="input-group-text ms-2"> $ </span>
-                  <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number">                                
-              </td>
-          </tr>
-          <tr >
-              <td>Intervalos cada: </td>   
-              <td class="input-group ">
-                  <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number">
-                  <span class="input-group-text"> km </span>
-              
-                  <span class="input-group-text ms-2"> $ </span>
-                  <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number">
-              </td>
-          </tr>  
-       
-      </form>     
-      </div>  
-      <div class="modal-footer">
-        <button class="btn btn-primary" (click)="onSubmitEdit()" data-bs-dismiss="modal" aria-label="Close">
-          Guardar
-        </button>
-      </div>          
+                      <span class="input-group-text ms-2"> $ </span>
+                      <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number">
+                  </td>
+              </tr>  
+          
+          </form>     
+          </div>  
+          <div class="modal-footer">
+            <button class="btn btn-primary" (click)="onSubmitEdit()" data-bs-dismiss="modal" aria-label="Close">
+              Guardar
+            </button>
+          </div>          
+        </div>
+        
+      </div>
     </div>
-    
-  </div>
-</div>
 </div>
 

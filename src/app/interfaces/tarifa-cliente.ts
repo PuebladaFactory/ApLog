@@ -3,11 +3,11 @@ export interface TarifaCliente {
     idTarifaCliente:number;
     idCliente: number;
     fecha: string;    
-    cargasGenerales: CargasGenerales | null;
+    cargasGenerales: CargasGenerales;
     //unidadesConFrio: UnidadesConFrio;
     adicionales: AdicionalTarifa;
-    tEspecial: boolean;
-    tarifaEspecial: TarifaEspecial  | null
+    //tEspecial: boolean;
+    tarifaEspecial: TarifaEspecial;
 }
 
 export interface CargasGenerales {

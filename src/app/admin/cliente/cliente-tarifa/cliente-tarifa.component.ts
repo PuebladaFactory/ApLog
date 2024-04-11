@@ -31,9 +31,9 @@ export class ClienteTarifaComponent implements OnInit {
   acompanianteForm:any;
   acompanianteEditForm:any;  
   adicionalKm: AdicionalKm [] = [];
-  tarifasEspeciales!: TarifaEspecial | null ;
-  tEspecial: boolean = false;
+  tarifasEspeciales!: TarifaEspecial;  
   tarifaEditar!: TarifaCliente;
+  
 
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
@@ -109,19 +109,6 @@ this.acompanianteEditForm = this.fb.group({
     this.buscarTarifas();
   }
   
-  changeTarifaEspecial(e: any) {    
-    console.log(e.target.value);
-    //let razonSocial = e.target.value.split(" ")[0];
-    //console.log(apellido);
-    //this.tEspecial = !this.tEspecial;
-    if (e.target.value === "si"){
-      this.tEspecial = true;
-    }else{
-      this.tEspecial = false;
-    }
-    console.log(this.tEspecial);    
-  }
-
   buscarTarifas(){
     //console.log(this.choferSeleccionado[0].idChofer);    
     this.storageService.getByFieldValue(this.componente, "idCliente", this.clienteSeleccionado[0].idCliente);
@@ -145,14 +132,7 @@ this.acompanianteEditForm = this.fb.group({
   armarTarifa(){        
     this.armarCargasGenerales();
     //this.armarUnidadesConFrio();
-    this.armarAdicionales();   
-    console.log(this.tEspecial);
-    
-    if(this.tEspecial){
-      this.guardarTarifaEspecial()
-    }else{
-      this.tarifasEspeciales = null;
-    };   
+    this.armarAdicionales();       
 
     this.tarifa = {
       id:null,
@@ -163,7 +143,7 @@ this.acompanianteEditForm = this.fb.group({
       //unidadesConFrio: this.unidadesConFrio,
       adicionales: this.adicionales,
       tarifaEspecial: this.tarifasEspeciales,
-      tEspecial: this.tEspecial,
+      
     };  
     console.log("tarifa: ", this.tarifa);
   } 
@@ -188,18 +168,16 @@ this.acompanianteEditForm = this.fb.group({
       }
     }
     console.log("adicionales: ", this.adicionales);
+    this.guardarTarifaEspecial();
   }
 
 
    guardarTarifaEspecial(){
-    if(this.tarifasEspeciales !== null){
-      this.tarifasEspeciales = {
-        concepto : this.tarifaEspecialForm.value.concepto,
-        valor : this.tarifaEspecialForm.value.valor,
-      }      
-    }          
-     /* this.tEspecial = !this.tEspecial; */
-     this.tEspecial = true
+
+    this.tarifasEspeciales = {
+      concepto : this.tarifaEspecialForm.value.concepto,
+      valor : this.tarifaEspecialForm.value.valor,
+    }      
      console.log(this.tarifasEspeciales);     
     }
 
@@ -211,14 +189,15 @@ this.acompanianteEditForm = this.fb.group({
     this.tarifaEspecialForm.reset();
     this.acompanianteForm.reset();
     this.adicionalKmForm.reset();
-    this.tarifasEspeciales = null;
+    //this.tarifasEspeciales = null;
     //this.adicionalesUnidadesConFrio = [];
     this.adicionalKm = [];
     this.ngOnInit();
   }  
 
   editarTarifa(tarifa:TarifaCliente){
-    this.tarifaEditar = tarifa;
+    this.tarifaEditar = tarifa;  
+    console.log(this.tarifaEditar);
     this.armarTarifaEditar();
   }
 
@@ -228,13 +207,13 @@ this.acompanianteEditForm = this.fb.group({
 
   armarTarifaEditar(){
     this.cargasGeneralesEditForm.patchValue({
-      utilitario:this.tarifaEditar.cargasGenerales?.utilitario,
-      furgon:this.tarifaEditar.cargasGenerales?.furgon,
-      furgonGrande:this.tarifaEditar.cargasGenerales?.furgonGrande,
-      chasisLiviano:this.tarifaEditar.cargasGenerales?.chasisLiviano,
-      chasis:this.tarifaEditar.cargasGenerales?.chasis,
-      balancin:this.tarifaEditar.cargasGenerales?.balancin,
-      semiRemolqueLocal:this.tarifaEditar.cargasGenerales?.semiRemolqueLocal,        
+      utilitario:this.tarifaEditar.cargasGenerales.utilitario,
+      furgon:this.tarifaEditar.cargasGenerales.furgon,
+      furgonGrande:this.tarifaEditar.cargasGenerales.furgonGrande,
+      chasisLiviano:this.tarifaEditar.cargasGenerales.chasisLiviano,
+      chasis:this.tarifaEditar.cargasGenerales.chasis,
+      balancin:this.tarifaEditar.cargasGenerales.balancin,
+      semiRemolqueLocal:this.tarifaEditar.cargasGenerales.semiRemolqueLocal,        
     });
     this.adicionalKmEditForm.patchValue({
       distanciaPrimerSector: this.tarifaEditar.adicionales.adicionalKm.primerSector.distancia,
@@ -268,11 +247,11 @@ this.acompanianteEditForm = this.fb.group({
     }
     }; 
     this.tarifaEditar.cargasGenerales = this.cargasGeneralesEditForm.value;
-    let tarEsp:any ={
+    this.tarifaEditar.tarifaEspecial ={
       concepto: this.tarifaEspecialEditForm.value.concepto,
       valor: this.tarifaEspecialEditForm.value.valor
     }
-    this.tarifaEditar.tarifaEspecial = tarEsp;
+    
     console.log(this.tarifaEditar);
     this.updateTarifa();
   }

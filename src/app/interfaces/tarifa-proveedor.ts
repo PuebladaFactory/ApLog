@@ -6,7 +6,7 @@ export interface TarifaProveedor {
     cargasGenerales: CargasGenerales | null;
     //unidadesConFrio: UnidadesConFrio;
     adicionales: AdicionalTarifa;
-    tEspecial: boolean;
+    //tEspecial: boolean;
     tarifaEspecial: TarifaEspecial  | null
 }
 

@@ -7,7 +7,7 @@ export interface TarifaChofer {
     idChofer: number;
     fecha: string;    
     acompaniante: number | null;
-    tEspecial: boolean;
+    //tEspecial: boolean;
     tarifaEspecial: TarifaEspecial  | null
     
 

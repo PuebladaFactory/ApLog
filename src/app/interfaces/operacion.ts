@@ -15,4 +15,5 @@ export interface Operacion {
     facturada: boolean;
     facturaCliente: number | null;
     facturaChofer: number | null;
+    tarifaEspecial: boolean;
 }
