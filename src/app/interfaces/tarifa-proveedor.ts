@@ -1,34 +1,36 @@
 export interface TarifaProveedor {
     id:any;
-    idTarifa:number;       
-    publicidad: number;
+    idTarifaProveedor:number;
     idProveedor: number;
-    fecha: string;   
-    cargasGenerales: CargasGenerales;
-    unidadesConFrio: UnidadesConFrio;
-    adicionales: AdicionalTarifa;   
-
+    fecha: string;    
+    cargasGenerales: CargasGenerales | null;
+    //unidadesConFrio: UnidadesConFrio;
+    adicionales: AdicionalTarifa;
+    tEspecial: boolean;
+    tarifaEspecial: TarifaEspecial  | null
 }
 
 export interface CargasGenerales {
-    utilitarioJornada:number;
-    furgonJornada:number;
-    camionLivianoJornada:number;
-    chasisJornada:number;
-    balancinJornada:number;
-    semiRemolqueLocalJornada:number;
-    adicionalCargasGenerales: Adicionales[]|null;
+    utilitario:number;
+    furgon:number;
+    furgonGrande:number;
+    chasisLiviano:number;
+    chasis:number;
+    balancin:number;
+    semiRemolqueLocal:number;
+    //adicionalCargasGenerales: Adicionales|null;   
+    
 }
 
-export interface UnidadesConFrio{
-    utilitarioJornada:number;
-    furgonJornada:number;
-    camionLivianoJornada:number;
-    chasisJornada:number;
-    balancinJornada:number;
-    semiRemolqueLocalJornada:number;
+/* export interface UnidadesConFrio{
+    utilitario:number;
+    furgon:number;
+    camionLiviano:number;
+    chasis:number;
+    balancin:number;
+    semiRemolqueLocal:number;
     adicionalUnidadesConFrio: Adicionales[]|null;
-}
+} */
 
 export interface AdicionalTarifa {    
     acompaniante: number;
@@ -36,13 +38,23 @@ export interface AdicionalTarifa {
 }
 
 export interface AdicionalKm {    
-    primerSector: number;
-    sectorSiguiente:number;
+    primerSector: {
+        distancia: number;
+        valor: number;
+    }
+    sectoresSiguientes:{
+        intervalo: number;
+        valor: number;
+    }
 }
+/* export interface Adicionales {    
+    concepto: string;
+    valor: number;
+    
+} */
 
-export interface Adicionales {    
+export interface TarifaEspecial {    
     concepto: string;
     valor: number;
     
 }
-

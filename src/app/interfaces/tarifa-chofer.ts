@@ -7,14 +7,25 @@ export interface TarifaChofer {
     idChofer: number;
     fecha: string;    
     acompaniante: number | null;
+    tEspecial: boolean;
+    tarifaEspecial: TarifaEspecial  | null
+    
 
 }
 
 export interface AdicionalKm {    
-    adicionalKm1:number;
-    adicionalKm2:number;
-    adicionalKm3:number;
-    adicionalKm4:number;
-    adicionalKm5:number;
+    primerSector: {
+        distancia: number;
+        valor: number;
+    }
+    sectoresSiguientes:{
+        intervalo: number;
+        valor: number;
+    }
+}
+
+export interface TarifaEspecial {    
+    concepto: string;
+    valor: number;
     
 }

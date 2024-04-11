@@ -87,7 +87,7 @@ export class FacturacionClienteService {
   facturarCG(op: Operacion){
     console.log("cargas generales");
     
-    switch (op.chofer.vehiculo.categoria) {
+    /* switch (op.chofer.vehiculo.categoria) {
       case "mini":
         this.categoriaMonto = this.ultimaTarifa.cargasGenerales.utilitario
         break;
@@ -115,12 +115,12 @@ export class FacturacionClienteService {
       default:
         alert("error categoria CG")
         break;
-    }
+    } */
   }
 
   facturarUcF(op: Operacion){
     console.log("Unidades con frio");
-    switch (op.chofer.vehiculo.categoria) {
+  /*   switch (op.chofer.vehiculo.categoria) {
       case "mini":
         this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.utilitario
         break;
@@ -148,7 +148,7 @@ export class FacturacionClienteService {
       default:
         alert("error categoria UcF")
         break;
-    } 
+    }  */
   }
 
   facturarAcompaniante(op: Operacion){
@@ -157,7 +157,7 @@ export class FacturacionClienteService {
   }
 
   facturarAdicionalKm(op: Operacion){
-    if(op.km !== null){
+   /*  if(op.km !== null){
       if(op.km < 80){
         this.adicionalKmMonto = 0;
       } else if (op.km < 151) {
@@ -182,7 +182,7 @@ export class FacturacionClienteService {
           console.log("adicional KM: ", this.adicionalKmMonto);
         }         
       }  
-    }
+    } */
     
   }
 

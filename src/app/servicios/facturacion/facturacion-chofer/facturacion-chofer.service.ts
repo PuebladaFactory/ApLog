@@ -156,7 +156,7 @@ export class FacturacionChoferService {
     }
     
     switch(true){
-      case (op.km !== null && op.km <= 100):{
+    /*   case (op.km !== null && op.km <= 100):{
         adicional = 0;
         return adicional + acompaniante;
       }
@@ -180,7 +180,7 @@ export class FacturacionChoferService {
       case (op.km !== null && op.km > 300):{
         adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2 + this.$tarifaChofer.km.adicionalKm3 + this.$tarifaChofer.km.adicionalKm4 + this.$tarifaChofer.km.adicionalKm5;
         return adicional + acompaniante;
-      }
+      } */
       default:{ 
         return adicional=0;
       }
