@@ -44,7 +44,8 @@ export class ClienteTarifaComponent implements OnInit {
         chasisLiviano:[""],
         chasis:[""],
         balancin:[""],
-        semiRemolqueLocal:[""],        
+        semiRemolqueLocal:[""],
+        portacontenedores:[""],        
    });
  
     this.tarifaEspecialForm = this.fb.group({                    //formulario para los extras de la carga general
@@ -70,7 +71,8 @@ export class ClienteTarifaComponent implements OnInit {
     chasisLiviano:[""],
     chasis:[""],
     balancin:[""],
-    semiRemolqueLocal:[""],        
+    semiRemolqueLocal:[""],    
+    portacontenedores:[""],    
 });
 
 this.tarifaEspecialEditForm = this.fb.group({                    //formulario para los extras de la carga general
@@ -213,7 +215,8 @@ this.acompanianteEditForm = this.fb.group({
       chasisLiviano:this.tarifaEditar.cargasGenerales.chasisLiviano,
       chasis:this.tarifaEditar.cargasGenerales.chasis,
       balancin:this.tarifaEditar.cargasGenerales.balancin,
-      semiRemolqueLocal:this.tarifaEditar.cargasGenerales.semiRemolqueLocal,        
+      semiRemolqueLocal:this.tarifaEditar.cargasGenerales.semiRemolqueLocal,    
+      portacontenedores:this.tarifaEditar.cargasGenerales.portacontenedores,    
     });
     this.adicionalKmEditForm.patchValue({
       distanciaPrimerSector: this.tarifaEditar.adicionales.adicionalKm.primerSector.distancia,

@@ -11,13 +11,14 @@ export interface TarifaCliente {
 }
 
 export interface CargasGenerales {
-    utilitario:number;
-    furgon:number;
+    utilitario:number;   //mini
+    furgon:number;       //maxi
     furgonGrande:number;
-    chasisLiviano:number;
+    chasisLiviano:number;   //camion
     chasis:number;
     balancin:number;
     semiRemolqueLocal:number;
+    portacontenedores: number;
     //adicionalCargasGenerales: Adicionales|null;   
     
 }

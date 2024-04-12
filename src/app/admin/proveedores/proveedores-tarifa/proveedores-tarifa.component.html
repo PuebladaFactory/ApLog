@@ -65,7 +65,13 @@
                                   <td>
                                     <input formControlName="semiRemolqueLocal" class="form-control" required type="number">
                                   </td>
-                              </tr>                        
+                              </tr>   
+                              <tr class="form-group">
+                                <td class="parametro">Portacontenedores: </td>
+                                <td>
+                                  <input formControlName="portacontenedores" class="form-control" required type="number">
+                                </td>
+                            </tr>                                      
                           </tbody>
                       </table>     
                           <form [formGroup]="tarifaEspecialForm" (ngSubmit)="onSubmit()">                         
@@ -152,7 +158,7 @@
               <table class="table table-dark table-striped">
                 <thead>
                     <tr>
-                        <th colspan="8" class="text-center">
+                        <th colspan="9" class="text-center">
                           Cargas Generales  
                         </th>   
                         <th colspan="2" class="text-center">
@@ -173,7 +179,8 @@
                         <th class="tabla" scope="col">Chasis Liviano</th>
                         <th class="tabla" scope="col">Chasis</th>
                         <th class="tabla" scope="col">Balancin</th>                        
-                        <th class="tabla" scope="col">Semi Remolque Local</th>    
+                        <th class="tabla" scope="col">Semi Remolque Local</th> 
+                        <th class="tabla" scope="col">Portacontenedores</th>    
                         <th class="tabla" scope="col">Concepto</th>
                         <th class="tabla" scope="col">Valor</th>   
                         <th class="tabla" scope="col">A</th>          
@@ -193,6 +200,7 @@
                         <td class="align-middle valores">{{tarifa.cargasGenerales.chasis}}</td>
                         <td class="align-middle valores">{{tarifa.cargasGenerales.balancin}}</td>
                         <td class="align-middle valores">{{tarifa.cargasGenerales.semiRemolqueLocal}}</td>  
+                        <td class="align-middle valores">{{tarifa.cargasGenerales.portacontenedores}}</td>  
                         <td class="align-middle valores">{{tarifa.tarifaEspecial !== null && tarifa.tarifaEspecial.concepto !== "" ? tarifa.tarifaEspecial.concepto : "sin asignar" }}</td>
                               <td class="align-middle valores">{{tarifa.tarifaEspecial !== null && (tarifa.tarifaEspecial.valor > 0 || tarifa.tarifaEspecial.valor !== "") ? tarifa.tarifaEspecial.valor : "sin asignar" }}</td>                                            
                         <td class="align-middle valores">{{tarifa.adicionales.acompaniante !== null || tarifa.adicionales.acompaniante !== "" || tarifa.adicionales.acompaniante > 0 ? tarifa.adicionales.acompaniante : "sin asignar"}}</td>
@@ -272,6 +280,12 @@
                                         <input formControlName="semiRemolqueLocal" class="form-control" required type="number">
                                       </td>
                                   </tr>
+                                  <tr class="form-group">
+                                    <td class="parametro">Portacontenedores: </td>
+                                    <td>
+                                      <input formControlName="portacontenedores" class="form-control" required type="number">
+                                    </td>
+                                </tr>
                               </tbody>
                           </table>       
                             

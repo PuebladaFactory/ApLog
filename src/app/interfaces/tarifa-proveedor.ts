@@ -3,11 +3,11 @@ export interface TarifaProveedor {
     idTarifaProveedor:number;
     idProveedor: number;
     fecha: string;    
-    cargasGenerales: CargasGenerales | null;
+    cargasGenerales: CargasGenerales;
     //unidadesConFrio: UnidadesConFrio;
     adicionales: AdicionalTarifa;
     //tEspecial: boolean;
-    tarifaEspecial: TarifaEspecial  | null
+    tarifaEspecial: TarifaEspecial ; 
 }
 
 export interface CargasGenerales {
@@ -18,6 +18,7 @@ export interface CargasGenerales {
     chasis:number;
     balancin:number;
     semiRemolqueLocal:number;
+    portacontenedores: number;
     //adicionalCargasGenerales: Adicionales|null;   
     
 }

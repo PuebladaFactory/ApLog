@@ -33,7 +33,7 @@ export class ProveedoresTarifaComponent implements OnInit {
   acompanianteForm:any;
   acompanianteEditForm:any;  
   adicionalKm: AdicionalKm [] = [];
-  tarifasEspeciales!: TarifaEspecial | null ;  
+  tarifasEspeciales!: TarifaEspecial;  
   tarifaEditar!: TarifaProveedor;
 
 
@@ -45,7 +45,8 @@ export class ProveedoresTarifaComponent implements OnInit {
         chasisLiviano:[""],
         chasis:[""],
         balancin:[""],
-        semiRemolqueLocal:[""],        
+        semiRemolqueLocal:[""],
+        portacontenedores:[""],        
    });
  
     this.tarifaEspecialForm = this.fb.group({                    //formulario para los extras de la carga general
@@ -71,7 +72,8 @@ export class ProveedoresTarifaComponent implements OnInit {
     chasisLiviano:[""],
     chasis:[""],
     balancin:[""],
-    semiRemolqueLocal:[""],        
+    semiRemolqueLocal:[""],    
+    portacontenedores:[""],    
 });
 
 this.tarifaEspecialEditForm = this.fb.group({                    //formulario para los extras de la carga general
@@ -191,7 +193,7 @@ this.acompanianteEditForm = this.fb.group({
     this.tarifaEspecialForm.reset();
     this.acompanianteForm.reset();
     this.adicionalKmForm.reset();
-    this.tarifasEspeciales = null;
+    //this.tarifasEspeciales = null;
     //this.adicionalesUnidadesConFrio = [];
     this.adicionalKm = [];
     this.ngOnInit();
@@ -208,13 +210,14 @@ this.acompanianteEditForm = this.fb.group({
 
   armarTarifaEditar(){
     this.cargasGeneralesEditForm.patchValue({
-      utilitario:this.tarifaEditar.cargasGenerales?.utilitario,
-      furgon:this.tarifaEditar.cargasGenerales?.furgon,
-      furgonGrande:this.tarifaEditar.cargasGenerales?.furgonGrande,
-      chasisLiviano:this.tarifaEditar.cargasGenerales?.chasisLiviano,
-      chasis:this.tarifaEditar.cargasGenerales?.chasis,
-      balancin:this.tarifaEditar.cargasGenerales?.balancin,
-      semiRemolqueLocal:this.tarifaEditar.cargasGenerales?.semiRemolqueLocal,        
+      utilitario:this.tarifaEditar.cargasGenerales.utilitario,
+      furgon:this.tarifaEditar.cargasGenerales.furgon,
+      furgonGrande:this.tarifaEditar.cargasGenerales.furgonGrande,
+      chasisLiviano:this.tarifaEditar.cargasGenerales.chasisLiviano,
+      chasis:this.tarifaEditar.cargasGenerales.chasis,
+      balancin:this.tarifaEditar.cargasGenerales.balancin,
+      semiRemolqueLocal:this.tarifaEditar.cargasGenerales.semiRemolqueLocal,     
+      portacontenedores:this.tarifaEditar.cargasGenerales.portacontenedores,     
     });
     this.adicionalKmEditForm.patchValue({
       distanciaPrimerSector: this.tarifaEditar.adicionales.adicionalKm.primerSector.distancia,
