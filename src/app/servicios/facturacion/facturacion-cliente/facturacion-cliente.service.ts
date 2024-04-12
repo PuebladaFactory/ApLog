@@ -6,6 +6,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
+import { parseActionCodeURL } from 'firebase/auth';
 
 @Injectable({
   providedIn: 'root'
@@ -37,20 +38,22 @@ export class FacturacionClienteService {
 
   facturarOpCliente(op:Operacion){
     this.buscarCliente(op);   
-    if(!op.unidadesConFrio){
-      this.facturarCG(op);
-    } else {
-      this.facturarUcF(op);
-    }
-    if(op.acompaniante){
-      this.facturarAcompaniante(op);
-    }else{
-      this.acompanianteMonto = 0
-    }    
-    this.facturarAdicionalKm(op);
     
 
+    if(op.tarifaEspecial){
+      this.facturarTarifaEspecial(op);
+      console.log("pasa por aca 1°");
+      
+    } else{
+      this.facturarCG(op);
 
+      if(op.acompaniante){
+        this.facturarAcompaniante(op);
+      }else{
+        this.acompanianteMonto = 0
+      }    
+      this.facturarAdicionalKm(op);
+    }
 
     this.crearFacturaCliente(op);
 
@@ -96,8 +99,12 @@ export class FacturacionClienteService {
         this.categoriaMonto = this.ultimaTarifa.cargasGenerales.furgon
       break;
 
-      case "camion":
-        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.camionLiviano
+      case "furgon grande":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.furgonGrande
+      break;
+
+      case "camión liviano":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.chasisLiviano
       break;
 
       case "chasis":
@@ -108,48 +115,21 @@ export class FacturacionClienteService {
         this.categoriaMonto = this.ultimaTarifa.cargasGenerales.balancin
       break;
 
-      case "semiRemolqueLocal":
+      case "semi remolque local":
         this.categoriaMonto = this.ultimaTarifa.cargasGenerales.semiRemolqueLocal
+      break;
+
+      case "portacontenedores":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.portacontenedores
       break;
     
       default:
         alert("error categoria CG")
         break;
-    }
-  }
-
-  facturarUcF(op: Operacion){
-    console.log("Unidades con frio");
-    switch (op.chofer.vehiculo.categoria) {
-      case "mini":
-        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.utilitario
-        break;
-
-      case "maxi":
-        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.furgon
-      break;
-
-      case "camion":
-        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.camionLiviano
-      break;
-
-      case "chasis":
-        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.chasis
-      break;
-
-      case "balancin":
-        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.balancin
-      break;
-
-      case "semiRemolqueLocal":
-        this.categoriaMonto = this.ultimaTarifa.unidadesConFrio.semiRemolqueLocal
-      break;
-    
-      default:
-        alert("error categoria UcF")
-        break;
     } 
   }
+
+ 
 
   facturarAcompaniante(op: Operacion){
     this.acompanianteMonto = this.ultimaTarifa.adicionales.acompaniante
@@ -158,27 +138,27 @@ export class FacturacionClienteService {
 
   facturarAdicionalKm(op: Operacion){
     if(op.km !== null){
-      if(op.km < 80){
+      if(op.km < this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia){
         this.adicionalKmMonto = 0;
-      } else if (op.km < 151) {
-        this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector
+      } else if (op.km < (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo)) {
+        this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor;
       } else{
         let resto:number;
         let secciones:number;
         
-        resto = op.km - 150;
-        secciones = resto / 50;
+        resto = op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo);
+        secciones = resto / this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo;
         //console.log("secciones: ", secciones);
         secciones = Math.floor(secciones);
 
-        if(((op.km - 150) % 50) === 0){
+        if(((op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo)) % this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo) === 0){
           //alert("cuenta redonda");
-          this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector + this.ultimaTarifa.adicionales.adicionalKm.sectorSiguiente*secciones;
+          this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor*secciones;
           console.log("adicional KM: ", this.adicionalKmMonto);           
 
         } else{
           //alert("con resto");
-          this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector + ((this.ultimaTarifa.adicionales.adicionalKm.sectorSiguiente)*(secciones+1));
+          this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + ((this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor)*(secciones+1));
           console.log("adicional KM: ", this.adicionalKmMonto);
         }         
       }  
@@ -200,9 +180,18 @@ export class FacturacionClienteService {
       liquidacion: false,
       montoFacturaChofer: 0,
     }
-    //console.log(this.facturaChofer);
+    console.log(this.facturaCliente);
     
     //this.altaFacturaChofer()
+  }
+
+  facturarTarifaEspecial(op: Operacion){
+    
+    this.categoriaMonto = this.ultimaTarifa.tarifaEspecial.valor;
+    this.acompanianteMonto = 0;
+    this.adicionalKmMonto = 0;
+    console.log("pasa por aca 2°");
+    
   }
 
 }

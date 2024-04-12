@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
-import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { AdicionalKm, TarifaChofer, TarifaEspecial } from 'src/app/interfaces/tarifa-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -25,7 +25,13 @@ export class ChoferesTarifaComponent implements OnInit {
   $ultimaTarifaAplicada!:any;
   $tarifasChofer:any;
   tarifaProveedor!:boolean
+  tarifaEspecialForm!:any;
   
+  tarifaEspecial!: TarifaEspecial;
+  tarifaEditForm!:any;
+  adicionalEditForm!:any;
+  tarifaEspecialEditForm!:any;
+  tarifaEditar!:TarifaChofer;
 
   constructor(private fb: FormBuilder, private storageService: StorageService){
    this.tarifaForm = this.fb.group({                    //formulario para la jornada
@@ -35,12 +41,34 @@ export class ChoferesTarifaComponent implements OnInit {
   });
 
     this.adicionalForm = this.fb.group({                  //formulario para los adicionales de la jornada
-      adicionalKm1: [""], 
-      adicionalKm2: [""],
-      adicionalKm3: [""],
-      adicionalKm4: [""],
-      adicionalKm5: [""],
+      distanciaPrimerSector: [""],
+      valorPrimerSector:[""],
+      distanciaIntervalo:[""],
+      valorIntervalo:[""],
   });
+
+  this.tarifaEspecialForm = this.fb.group({                    //formulario para los extras de la carga general
+    concepto:[""],
+    valor:[""],
+  });
+
+  this.tarifaEditForm = this.fb.group({                    //formulario para la jornada
+    valorJornada: [""],            
+    publicidad: [""], 
+    acompaniante: [""] 
+});
+
+  this.adicionalEditForm = this.fb.group({                  //formulario para los adicionales de la jornada
+    distanciaPrimerSector: [""],
+    valorPrimerSector:[""],
+    distanciaIntervalo:[""],
+    valorIntervalo:[""],
+});
+
+this.tarifaEspecialEditForm = this.fb.group({                    //formulario para los extras de la carga general
+  concepto:[""],
+  valor:[""],
+});
   }
   
   ngOnInit(): void {   
@@ -73,6 +101,7 @@ export class ChoferesTarifaComponent implements OnInit {
     this.buscarTarifas();
    }
   }
+ 
 
   onSubmit() {
     this.armarTarifa();
@@ -80,13 +109,16 @@ export class ChoferesTarifaComponent implements OnInit {
 
   armarTarifa(){     
    
-    this.adicionalKm = this.adicionalForm.value
+    this.armarAdicionalKm();
+    this.armarTarifaespecial();
     //console.log("esto es adicionalKm: ", this.adicionalKm);
     this.tarifa = this.tarifaForm.value;
     this.tarifa.km = this.adicionalKm;
+    this.tarifa.tarifaEspecial = this.tarifaEspecial;    
     this.tarifa.idChofer = this.choferSeleccionado[0].idChofer;    
     this.tarifa.fecha = new Date().toISOString().split('T')[0];
     this.tarifa.idTarifa = new Date().getTime(); 
+    this.tarifa.id = null;
     //console.log("esta es la tarifa: ", this.tarifa);
     this.addItem(this.tarifa)
   } 
@@ -95,6 +127,7 @@ export class ChoferesTarifaComponent implements OnInit {
     this.storageService.addItem(this.componente, item); 
     this.adicionalForm.reset();
     this.tarifaForm.reset();
+    this.tarifaEspecialForm.reset();
     //this.$tarifasChofer = null;
     this.ngOnInit();
   }  
@@ -144,6 +177,106 @@ export class ChoferesTarifaComponent implements OnInit {
    
      
     }
+
+    armarAdicionalKm(){
+      this.adicionalKm = {
+        primerSector:{
+          distancia: this.adicionalForm.value.distanciaPrimerSector,
+          valor:this.adicionalForm.value.valorPrimerSector,
+        },
+        sectoresSiguientes:{
+          intervalo:this.adicionalForm.value.distanciaIntervalo,
+          valor: this.adicionalForm.value.valorIntervalo,
+        },
+      };     
+    }
+
+    armarTarifaespecial(){
+      this.tarifaEspecial = {
+        concepto: this.tarifaEspecialForm.value.concepto,
+        valor: this.tarifaEspecialForm.value.valor,
+      };        
+    }
+
+    editarTarifa(tarifa:TarifaChofer){
+      console.log(tarifa);
+      
+      this.tarifaEditar = tarifa;
+      
+      console.log(this.tarifaEditar);
+      this.armarTarifaEditar();      
+      
+    }
+  
+    eliminarTarifa(tarifa:TarifaChofer){
+      this.storageService.deleteItem(this.componente, tarifa);
+    }
+
+    armarTarifaEditar(){
+      this.tarifaEditForm.patchValue({
+        valorJornada: this.tarifaEditar.valorJornada,            
+        publicidad: this.tarifaEditar.publicidad,            
+        acompaniante: this.tarifaEditar.acompaniante,            
+      });
+      this.adicionalEditForm.patchValue({
+        distanciaPrimerSector: this.tarifaEditar.km.primerSector.distancia,
+        valorPrimerSector:this.tarifaEditar.km.primerSector.valor,
+        distanciaIntervalo:this.tarifaEditar.km.sectoresSiguientes.intervalo,
+        valorIntervalo:this.tarifaEditar.km.sectoresSiguientes.valor,
+      });
+      this.tarifaEspecialEditForm.patchValue({
+        concepto:this.tarifaEditar.tarifaEspecial?.concepto,
+        valor: this.tarifaEditar.tarifaEspecial?.valor,
+      });
+    }
+
+    onSubmitEdit(){
+      this.armarTarifaModificada();
+    }
+
+    armarTarifaModificada(){
+      this.tarifaEditar ={
+        id:null,
+        idTarifa:this.tarifaEditar.idTarifa,
+        valorJornada: this.tarifaEditForm.value.valorJornada,
+        km:{
+          primerSector: {
+            distancia: this.adicionalEditForm.value.distanciaPrimerSector,
+            valor: this.adicionalEditForm.value.valorPrimerSector,
+        },
+        sectoresSiguientes:{
+            intervalo: this.adicionalEditForm.value.distanciaIntervalo,
+            valor: this.adicionalEditForm.value.valorIntervalo,
+        }
+        },
+        publicidad: this.tarifaEditForm.value.publicidad,
+        idChofer: this.tarifaEditar.idChofer,
+        fecha: this.tarifaEditar.fecha,
+        acompaniante: this.tarifaEditForm.value.acompaniante,        
+        tarifaEspecial: {
+          concepto: this.tarifaEspecialEditForm.value.concepto,
+          valor: this.tarifaEspecialEditForm.value.valor,
+        }
+        
+      } 
+
+  /*     this.tarifaEditar = this.tarifaEditForm.value;
+      this.tarifaEditar.tarifaEspecial = this.tarifaEspecialEditForm.value;
+      this.tarifaEditar.valorJornada = this.tarifaEditForm.value.valorJornada;
+      this.tarifaEditar.publicidad = this.tarifaEditForm.value.publicidad;
+      this.tarifaEditar.acompaniante = this.tarifaEditForm.value.acompaniante; */
+
+
+      console.log(this.tarifaEditar);
+      
+      this.updateTarifa();
+      
+    }
+
+    updateTarifa(){
+      this.storageService.updateItem(this.componente,this.tarifaEditar);
+    }
+
 
    /*  buscarUltimaTarifa(idTarifa:number){
       this.dbFirebase.getByFieldValue(this.componente, "idTarifa", idTarifa)

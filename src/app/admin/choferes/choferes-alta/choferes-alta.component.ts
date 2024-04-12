@@ -25,10 +25,14 @@ export class ChoferesAltaComponent implements OnInit {
   adicionalForm:any;
   chofer!: Chofer;  
   categorias = [
-  { id: 0, categoria: 'maxi', },
-  { id: 1, categoria: 'mini', },
-  { id: 2, categoria: 'liviano', },
-  { id: 3, categoria: 'otro', },
+  { id: 0, categoria: 'mini', },
+  { id: 1, categoria: 'maxi', },
+  { id: 2, categoria: 'furgon grande', },
+  { id: 3, categoria: 'camión liviano', },
+  { id: 4, categoria: 'chasis', },
+  { id: 5, categoria: 'balancin', },
+  { id: 6, categoria: 'semi remolque local', },
+  { id: 7, categoria: 'portacontenedores', },
   ];
   seguimiento: boolean = false;
   categoriaSeleccionada!:string;
@@ -157,6 +161,8 @@ export class ChoferesAltaComponent implements OnInit {
   }
   
   changeCategoria(e: any) {    
+    console.log(e.target.value);
+    
     this.categoriaSeleccionada = e.target.value   
   }
 

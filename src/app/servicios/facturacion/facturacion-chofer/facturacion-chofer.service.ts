@@ -135,17 +135,24 @@ export class FacturacionChoferService {
     this.$tarifaChofer = this.ultimaTarifa
     console.log("esta es la tarifa a facturar: ", this.$tarifaChofer);
     
-    this.$adicional = this.calcularAdicional(op, this.ultimaTarifa);
-    //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
-    
-    this.total = this.$tarifaChofer.valorJornada + this.$adicional;
+    if(op.tarifaEspecial){
+      
+      this.facturarTarifaEspecial(op);
 
-    //console.log("esta es facturaChoferService. liquidacion del chofer: ", this.total);
+    } else{
+
+      this.$adicional = this.calcularAdicional(op, this.ultimaTarifa);
+      //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
+      
+      this.total = this.$tarifaChofer.valorJornada + this.$adicional;
+  
+      //console.log("esta es facturaChoferService. liquidacion del chofer: ", this.total);
+    }
 
     this.crearFacturaChofer(op);    
   }
 
-  calcularAdicional(op:Operacion, tarifa: TarifaChofer): number {
+  calcularAdicional(op:Operacion, tarifa: TarifaChofer) {
     let acompaniante: any;
     let adicional: any;
     
@@ -155,7 +162,7 @@ export class FacturacionChoferService {
       acompaniante = 0;
     }
     
-    switch(true){
+    /* switch(true){
       case (op.km !== null && op.km <= 100):{
         adicional = 0;
         return adicional + acompaniante;
@@ -184,6 +191,36 @@ export class FacturacionChoferService {
       default:{ 
         return adicional=0;
       }
+    } */
+
+    if(op.km !== null){
+      if(op.km < this.ultimaTarifa.km.primerSector.distancia){
+        adicional = 0;
+        return adicional + acompaniante;
+      } else if (op.km < (this.ultimaTarifa.km.primerSector.distancia + this.ultimaTarifa.km.sectoresSiguientes.intervalo)) {
+        adicional = this.ultimaTarifa.km.primerSector.valor;
+        return adicional + acompaniante;
+      } else{
+        let resto:number;
+        let secciones:number;
+        
+        resto = op.km - (this.ultimaTarifa.km.primerSector.distancia + this.ultimaTarifa.km.sectoresSiguientes.intervalo);
+        secciones = resto / this.ultimaTarifa.km.sectoresSiguientes.intervalo;
+        //console.log("secciones: ", secciones);
+        secciones = Math.floor(secciones);
+
+        if(((op.km - (this.ultimaTarifa.km.primerSector.distancia + this.ultimaTarifa.km.sectoresSiguientes.intervalo)) % this.ultimaTarifa.km.sectoresSiguientes.intervalo) === 0){
+          //alert("cuenta redonda");
+          adicional = this.ultimaTarifa.km.primerSector.valor + this.ultimaTarifa.km.sectoresSiguientes.valor*secciones;
+          console.log("adicional KM: ", adicional);           
+          return adicional + acompaniante;
+        } else{
+          //alert("con resto");
+          adicional = this.ultimaTarifa.km.primerSector.valor + ((this.ultimaTarifa.km.sectoresSiguientes.valor)*(secciones+1));
+          console.log("adicional KM: ", adicional);
+          return adicional + acompaniante;
+        }         
+      }  
     }
   }
 
@@ -205,6 +242,12 @@ export class FacturacionChoferService {
     console.log("factura chofer FINAL: ", this.facturaChofer);
     
     //this.altaFacturaChofer()
+  }
+
+  facturarTarifaEspecial(op:Operacion){
+    this.total = this.$tarifaChofer.tarifaEspecial.valor;
+    this.$adicional = 0;
+    this.$tarifaChofer.valorJornada = this.$tarifaChofer.tarifaEspecial.valor;
   }
   
 }

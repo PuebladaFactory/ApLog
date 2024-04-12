@@ -4,7 +4,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 
 
-import { AdicionalKm, AdicionalTarifa, Adicionales, CargasGenerales, TarifaProveedor, UnidadesConFrio } from 'src/app/interfaces/tarifa-proveedor';
+import { AdicionalKm, AdicionalTarifa, CargasGenerales, TarifaEspecial, TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -15,92 +15,95 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 })
 export class ProveedoresTarifaComponent implements OnInit {
 
-  componente:string = "tarifasProveedor";
-  $proveedores:any;
+  componente:string = "tarifasProveedor";  
+  $proveedores!: any;
   proveedorSeleccionado!: Proveedor[];
   cargasGeneralesForm: any;
-  unidadesConFrioForm: any;
+  cargasGeneralesEditForm: any; 
   adicionalKmForm: any;
-
+  adicionalKmEditForm: any;
   tarifa!:TarifaProveedor;  
-  cargasGenerales!: CargasGenerales;
-  unidadesConFrio!: UnidadesConFrio;
+  cargasGenerales!: CargasGenerales;  
   adicionales!: AdicionalTarifa;
-
   historialTarifas$!: any;
   $ultimaTarifaAplicada!:any;
   $tarifasProveedor:any;
-  adicionalCGForm:any;
-  adicionalUCFForm: any;
+  tarifaEspecialForm:any;
+  tarifaEspecialEditForm:any;  
   acompanianteForm:any;
-  adicionalCG: boolean = false;
-  adicionalesCargasGenerales: Adicionales[] = [];
-  adicionalesUnidadesConFrio: Adicionales[] = [];
+  acompanianteEditForm:any;  
   adicionalKm: AdicionalKm [] = [];
-
+  tarifasEspeciales!: TarifaEspecial;  
+  tarifaEditar!: TarifaProveedor;
 
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
-    this.cargasGeneralesForm = this.fb.group({                    //formulario para la carga general
-      
-        utilitarioJornada:[""],
-        furgonJornada:[""],
-        camionLivianoJornada:[""],
-        chasisJornada:[""],
-        balancinJornada:[""],
-        semiRemolqueLocalJornada:[""],
-        //adicionalCargasGenerales: Adicionales[]|null;
-    
+    this.cargasGeneralesForm = this.fb.group({                    //formulario para la carga general      
+        utilitario:[""],
+        furgon:[""],
+        furgonGrande:[""],
+        chasisLiviano:[""],
+        chasis:[""],
+        balancin:[""],
+        semiRemolqueLocal:[""],
+        portacontenedores:[""],        
    });
  
-   this.adicionalCGForm = this.fb.group({                    //formulario para los extras de la carga general
-    concepto:[""],
-    valor:[""],
-  });
-
-  this.unidadesConFrioForm = this.fb.group({                    //formulario para la carga general
-      
-    utilitarioJornada:[""],
-    furgonJornada:[""],
-    camionLivianoJornada:[""],
-    chasisJornada:[""],
-    balancinJornada:[""],
-    semiRemolqueLocalJornada:[""],
-    //adicionalCargasGenerales: Adicionales[]|null;
-
-});
-
-    this.adicionalUCFForm = this.fb.group({                    //formulario para los extras de la carga general
-      concepto:[""],
-      valor:[""],
+    this.tarifaEspecialForm = this.fb.group({                    //formulario para los extras de la carga general
+        concepto:[""],
+        valor:[""],
     });
-
+  
     this.acompanianteForm = this.fb.group({
       acompaniante: [""],
     })
-
-    //esto solo permite un modelos de adicionales de km. Cambiar mas adelante
+    
      this.adicionalKmForm = this.fb.group({                  //formulario para los adicionales de la jornada
-      primerSector: [""],
-      sectorSiguiente:[""],
+      distanciaPrimerSector: [""],
+      valorPrimerSector:[""],
+      distanciaIntervalo:[""],
+      valorIntervalo:[""],
    });
+
+   this.cargasGeneralesEditForm = this.fb.group({                    //formulario para la carga general      
+    utilitario:[""],
+    furgon:[""],
+    furgonGrande:[""],
+    chasisLiviano:[""],
+    chasis:[""],
+    balancin:[""],
+    semiRemolqueLocal:[""],    
+    portacontenedores:[""],    
+});
+
+this.tarifaEspecialEditForm = this.fb.group({                    //formulario para los extras de la carga general
+    concepto:[""],
+    valor:[""],
+});
+
+this.acompanianteEditForm = this.fb.group({
+  acompaniante: [""],
+})
+
+ this.adicionalKmEditForm = this.fb.group({                  //formulario para los adicionales de la jornada
+  distanciaPrimerSector: [""],
+  valorPrimerSector:[""],
+  distanciaIntervalo:[""],
+  valorIntervalo:[""],
+});
    }
    
-   ngOnInit(): void {   
-      this.storageService.proveedores$.subscribe(data => {
-        this.$proveedores = data;
-      });
-     /* this.$proveedores = this.storageService.proveedores$;   */
-     //this.historialTarifas$ = this.storageService.historialTarifasProveedores$;   
-          
+   ngOnInit(): void {        
+     this.historialTarifas$ = this.storageService.historialTarifasProveedores$;   
+     this.storageService.proveedores$.subscribe(data => {
+      this.$proveedores = data;
+    })          
    }
 
    changeCliente(e: any) {    
     console.log(e.target.value);
     //let razonSocial = e.target.value.split(" ")[0];
     //console.log(apellido);
-    
-    
     this.proveedorSeleccionado = e.target.value;
     this.proveedorSeleccionado = this.$proveedores.filter(function (cliente:any){
       return cliente.razonSocial === e.target.value
@@ -108,25 +111,17 @@ export class ProveedoresTarifaComponent implements OnInit {
    console.log("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
     this.buscarTarifas();
   }
-
+ 
   buscarTarifas(){
     //console.log(this.choferSeleccionado[0].idChofer);    
     this.storageService.getByFieldValue(this.componente, "idProveedor", this.proveedorSeleccionado[0].idProveedor);
     this.storageService.historialTarifasProveedores$.subscribe(data =>{
-      //console.log(data);
+      console.log(data);
       this.$tarifasProveedor = data;
-      console.log("todas las tarifas del proveedor: ", this.$tarifasProveedor);
-      this.$tarifasProveedor.sort((x:TarifaProveedor, y:TarifaProveedor) => y.idTarifa - x.idTarifa);
       console.log(this.$tarifasProveedor);
-    })
-    //this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
-    //console.log("este es el historial de tarifas: ",this.historialTarifas$);    
-    //this.storageService.getByDoubleValue( this.componente, "idChofer", "idTarifa", this.choferSeleccionado[0].idChofer, "desc")
-    //this.storageService.getAllSorted(this.componente, "fecha", "desc")
-    //this.ultimaTarifa()  
-   
-    //porque esto???
-    //this.ngOnInit();  
+      this.$tarifasProveedor.sort((x:TarifaProveedor, y:TarifaProveedor) => y.idTarifaProveedor - x.idTarifaProveedor);
+      console.log(this.$tarifasProveedor);
+    })   
   }
 
   onSubmit() {
@@ -135,114 +130,138 @@ export class ProveedoresTarifaComponent implements OnInit {
     //console.log(this.cargasGeneralesForm.value, this.unidadesConFrioForm.value, this.acompanianteForm.value);
     this.armarTarifa();
     this.addItem(this.tarifa);
-   
-
-    
   }
 
-  armarTarifa(){     
-   
+  armarTarifa(){        
     this.armarCargasGenerales();
-    this.armarUnidadesConFrio();
+    //this.armarUnidadesConFrio();
     this.armarAdicionales();   
+    
 
     this.tarifa = {
       id:null,
-      idTarifa:new Date().getTime(),
+      idTarifaProveedor:new Date().getTime(),
       idProveedor: this.proveedorSeleccionado[0].idProveedor,
       fecha: new Date().toISOString().split('T')[0],
       cargasGenerales: this.cargasGenerales,
-      unidadesConFrio: this.unidadesConFrio,
+      //unidadesConFrio: this.unidadesConFrio,
       adicionales: this.adicionales,
-     
-     
-      publicidad: 0,
+      tarifaEspecial: this.tarifasEspeciales,      
     };  
-    
-   
-    
     console.log("tarifa: ", this.tarifa);
-    
-    
-    /* 
-    this.adicionalKm = this.adicionalForm.value
-    //console.log("esto es adicionalKm: ", this.adicionalKm);
-    this.tarifa = this.tarifaForm.value;
-    this.tarifa.km = this.adicionalKm;
-    this.tarifa.idChofer = this.choferSeleccionado[0].idChofer;    
-    this.tarifa.fecha = new Date().toISOString().split('T')[0];
-    this.tarifa.idTarifa = new Date().getTime(); 
-    //console.log("esta es la tarifa: ", this.tarifa);
-    this.addItem(this.tarifa) */
   } 
 
   armarCargasGenerales(){
-    this.cargasGenerales = this.cargasGeneralesForm.value;
-    this.cargasGenerales.adicionalCargasGenerales = this.adicionalesCargasGenerales;
+    this.cargasGenerales = this.cargasGeneralesForm.value; 
     console.log("cargas generales: ", this.cargasGenerales);
   }
 
-  armarUnidadesConFrio(){
-    this.unidadesConFrio = this.unidadesConFrioForm.value;
-    this.unidadesConFrio.adicionalUnidadesConFrio = this.adicionalesUnidadesConFrio;
-    console.log("unidades con frio: ", this.unidadesConFrio);
-  }
-
   armarAdicionales(){
-    this.adicionales = this.acompanianteForm.value;
-    this.adicionales.adicionalKm = this.adicionalKmForm.value;  
+    this.adicionales = {
+      acompaniante: this.acompanianteForm.value.acompaniante,
+      adicionalKm:{
+        primerSector: {
+          distancia: this.adicionalKmForm.value.distanciaPrimerSector,
+          valor: this.adicionalKmForm.value.valorPrimerSector,
+      },
+      sectoresSiguientes:{
+          intervalo: this.adicionalKmForm.value.distanciaIntervalo,
+          valor: this.adicionalKmForm.value.valorIntervalo,
+      }
+      }
+    }
     console.log("adicionales: ", this.adicionales);
+    this.guardarTarifaEspecial();
   }
 
-  guardarAdicionalCG(){
-   console.log(this.adicionalCGForm.value);
-   
+
+   guardarTarifaEspecial(){
+    this.tarifasEspeciales = {
+      concepto : this.tarifaEspecialForm.value.concepto,
+      valor : this.tarifaEspecialForm.value.valor,
+    }          
+     /* this.tEspecial = !this.tEspecial; */
     
-    this.adicionalesCargasGenerales.push(this.adicionalCGForm.value);
-    this.adicionalCGForm.reset();
-    //this.adicionalCG = false;
-  }
+     console.log(this.tarifasEspeciales);     
+    }
 
-  eliminarAdicionalCG(indice:number){
-    this.adicionalesCargasGenerales.splice(indice, 1);    
-  }
-
-  guardarAdicionalUCF(){
-    console.log(this.adicionalCGForm.value);
-    
-     
-     this.adicionalesUnidadesConFrio.push(this.adicionalUCFForm.value);
-     this.adicionalUCFForm.reset();
-     //this.adicionalCG = false;
-   }
- 
-   eliminarAdicionalUCF(indice:number){
-     this.adicionalesUnidadesConFrio.splice(indice, 1);    
-   }
-
-  /*  guardarAdicionalKm(){
-    console.log(this.adicionalKmForm.value);
-    this.adicionalKm.push(this.adicionalKmForm.value);
-    this.adicionalKmForm.reset();
-    //this.adicionalCG = false;
-   } */
-
-  /*  eliminarAdicionalKm(indice:number){
-    this.adicionalKm.splice(indice, 1);    
-  }  
- */
-  
   addItem(item:any): void {   
     this.storageService.addItem(this.componente, item); 
     //this.adicionalKmForm.reset();
     //this.tarifaForm.reset();
     this.cargasGeneralesForm.reset();
-    this.unidadesConFrioForm.reset();
+    this.tarifaEspecialForm.reset();
     this.acompanianteForm.reset();
-    this.adicionalesCargasGenerales = [];
-    this.adicionalesUnidadesConFrio = [];
+    this.adicionalKmForm.reset();
+    //this.tarifasEspeciales = null;
+    //this.adicionalesUnidadesConFrio = [];
     this.adicionalKm = [];
     this.ngOnInit();
   }  
+
+  editarTarifa(tarifa:TarifaProveedor){
+    this.tarifaEditar = tarifa;
+    this.armarTarifaEditar();
+  }
+
+  eliminarTarifa(tarifa:TarifaProveedor){    
+    this.storageService.deleteItem(this.componente, tarifa);
+  }
+
+  armarTarifaEditar(){
+    this.cargasGeneralesEditForm.patchValue({
+      utilitario:this.tarifaEditar.cargasGenerales.utilitario,
+      furgon:this.tarifaEditar.cargasGenerales.furgon,
+      furgonGrande:this.tarifaEditar.cargasGenerales.furgonGrande,
+      chasisLiviano:this.tarifaEditar.cargasGenerales.chasisLiviano,
+      chasis:this.tarifaEditar.cargasGenerales.chasis,
+      balancin:this.tarifaEditar.cargasGenerales.balancin,
+      semiRemolqueLocal:this.tarifaEditar.cargasGenerales.semiRemolqueLocal,     
+      portacontenedores:this.tarifaEditar.cargasGenerales.portacontenedores,     
+    });
+    this.adicionalKmEditForm.patchValue({
+      distanciaPrimerSector: this.tarifaEditar.adicionales.adicionalKm.primerSector.distancia,
+      valorPrimerSector:this.tarifaEditar.adicionales.adicionalKm.primerSector.valor,
+      distanciaIntervalo:this.tarifaEditar.adicionales.adicionalKm.sectoresSiguientes.intervalo,
+      valorIntervalo:this.tarifaEditar.adicionales.adicionalKm.sectoresSiguientes.valor,
+    });
+    this.tarifaEspecialEditForm.patchValue({
+      concepto:this.tarifaEditar.tarifaEspecial?.concepto,
+      valor:this.tarifaEditar.tarifaEspecial?.valor,
+    });
+    this.acompanianteEditForm.patchValue({
+      acompaniante: this.tarifaEditar.adicionales.acompaniante,
+    });
+  }
+
+  onSubmitEdit(){
+    this.armarTarifaModificada();
+  }
+
+  armarTarifaModificada(){
+    this.tarifaEditar.adicionales.acompaniante = this.acompanianteEditForm.value.acompaniante;
+    this.tarifaEditar.adicionales.adicionalKm = {
+      primerSector: {
+        distancia: this.adicionalKmEditForm.value.distanciaPrimerSector,
+        valor: this.adicionalKmEditForm.value.valorPrimerSector,
+    },
+    sectoresSiguientes:{
+        intervalo: this.adicionalKmEditForm.value.distanciaIntervalo,
+        valor: this.adicionalKmEditForm.value.valorIntervalo,
+    }
+    }; 
+    this.tarifaEditar.cargasGenerales = this.cargasGeneralesEditForm.value;
+    let tarEsp:any ={
+      concepto: this.tarifaEspecialEditForm.value.concepto,
+      valor: this.tarifaEspecialEditForm.value.valor
+    }
+    this.tarifaEditar.tarifaEspecial = tarEsp;
+    console.log(this.tarifaEditar);
+    this.updateTarifa();
+  }
+
+  updateTarifa(){
+    this.storageService.updateItem(this.componente,this.tarifaEditar);
+  }
 
 }

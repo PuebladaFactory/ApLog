@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { CargasGenerales, TarifaProveedor, UnidadesConFrio } from 'src/app/interfaces/tarifa-proveedor';
+import { CargasGenerales, TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { StorageService } from '../../storage/storage.service';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Vehiculo } from 'src/app/interfaces/chofer';
@@ -151,7 +151,7 @@ export class FacturacionProveedorService {
  */
 
   switch (vehiculo.categoria) {
-    case 'mini':
+   /*  case 'mini':
       return tarifaProveedor.unidadesConFrio.utilitarioJornada;
     case 'maxi':
       return tarifaProveedor.unidadesConFrio.furgonJornada;
@@ -162,7 +162,7 @@ export class FacturacionProveedorService {
     case 'balancin':
       return tarifaProveedor.unidadesConFrio.balancinJornada;
     case 'semiRemolqueLocal':
-      return tarifaProveedor.unidadesConFrio.semiRemolqueLocalJornada;
+      return tarifaProveedor.unidadesConFrio.semiRemolqueLocalJornada; */
     default:
       alert("error categoria UCF")
       return undefined; // Manejar categorías no reconocidas según tus necesidades
@@ -175,7 +175,7 @@ export class FacturacionProveedorService {
  
 
   switch (vehiculo.categoria) {
-    case 'mini':
+    /* case 'mini':
       return tarifaProveedor.cargasGenerales.utilitarioJornada;
     case 'maxi':
       return tarifaProveedor.cargasGenerales.furgonJornada;
@@ -186,7 +186,7 @@ export class FacturacionProveedorService {
     case 'balancin':
       return tarifaProveedor.cargasGenerales.balancinJornada;
     case 'semiRemolqueLocal':
-      return tarifaProveedor.cargasGenerales.semiRemolqueLocalJornada;
+      return tarifaProveedor.cargasGenerales.semiRemolqueLocalJornada; */
     default:
       alert("error categoria CG")
       return undefined; // Manejar categorías no reconocidas según tus necesidades
@@ -212,7 +212,7 @@ export class FacturacionProveedorService {
         console.log("adicional km: ", 0);
       break;
       case (op.km >80 && op.km<=150):
-        adicionalKm = tarifa.adicionales.adicionalKm.primerSector;
+        //adicionalKm = tarifa.adicionales.adicionalKm.primerSector;
         console.log("adicional km: ", tarifa.adicionales.adicionalKm.primerSector);
         
       break;
@@ -227,12 +227,12 @@ export class FacturacionProveedorService {
         console.log("math.floor secciones: ", secciones);
         if(((op.km - 150) % 50) === 0){
           //alert("cuenta redonda");
-          adicionalKm = tarifa.adicionales.adicionalKm.primerSector + tarifa.adicionales.adicionalKm.sectorSiguiente*secciones;
+          //adicionalKm = tarifa.adicionales.adicionalKm.primerSector + tarifa.adicionales.adicionalKm.sectorSiguiente*secciones;
           console.log("adicional KM: ", adicionalKm);           
 
         } else{
           //alert("con resto");
-          adicionalKm = tarifa.adicionales.adicionalKm.primerSector + ((tarifa.adicionales.adicionalKm.sectorSiguiente)*(secciones+1));
+          //adicionalKm = tarifa.adicionales.adicionalKm.primerSector + ((tarifa.adicionales.adicionalKm.sectorSiguiente)*(secciones+1));
           console.log("adicional KM: ", adicionalKm);
         }
         
