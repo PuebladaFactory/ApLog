@@ -135,12 +135,19 @@ export class FacturacionChoferService {
     this.$tarifaChofer = this.ultimaTarifa
     console.log("esta es la tarifa a facturar: ", this.$tarifaChofer);
     
-    this.$adicional = this.calcularAdicional(op, this.ultimaTarifa);
-    //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
-    
-    this.total = this.$tarifaChofer.valorJornada + this.$adicional;
+    if(op.tarifaEspecial){
+      
+      this.facturarTarifaEspecial(op);
 
-    //console.log("esta es facturaChoferService. liquidacion del chofer: ", this.total);
+    } else{
+
+      this.$adicional = this.calcularAdicional(op, this.ultimaTarifa);
+      //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
+      
+      this.total = this.$tarifaChofer.valorJornada + this.$adicional;
+  
+      //console.log("esta es facturaChoferService. liquidacion del chofer: ", this.total);
+    }
 
     this.crearFacturaChofer(op);    
   }
@@ -235,6 +242,12 @@ export class FacturacionChoferService {
     console.log("factura chofer FINAL: ", this.facturaChofer);
     
     //this.altaFacturaChofer()
+  }
+
+  facturarTarifaEspecial(op:Operacion){
+    this.total = this.$tarifaChofer.tarifaEspecial.valor;
+    this.$adicional = 0;
+    this.$tarifaChofer.valorJornada = this.$tarifaChofer.tarifaEspecial.valor;
   }
   
 }

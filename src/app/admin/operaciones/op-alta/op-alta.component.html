@@ -32,13 +32,13 @@
           </div>
           <div class="form-group">
               <label for="TarifaEspecial">TarifaEspecial</label>
-              <select class="form-select" aria-label="Default select example">
+              <select class="form-select" aria-label="Default select example" (change)="selectTarifaEspecial($event)">
                   <option selected>Seleccione</option>
                   <option value="si">Si</option>
                   <option value="no">No</option>              
               </select>
           </div>                                        
-          <div class="form-group mt-2">
+          <div *ngIf="!tarifaEspecial" class="form-group mt-2">
               <label for="Acompaniante">Acompañante</label>
               <select class="form-select form-select-md mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
                   <option selected>Seleccione</option>

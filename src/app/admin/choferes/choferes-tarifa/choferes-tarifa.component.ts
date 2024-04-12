@@ -27,7 +27,7 @@ export class ChoferesTarifaComponent implements OnInit {
   tarifaProveedor!:boolean
   tarifaEspecialForm!:any;
   
-  tarifaEspecial!: TarifaEspecial | null;
+  tarifaEspecial!: TarifaEspecial;
   tarifaEditForm!:any;
   adicionalEditForm!:any;
   tarifaEspecialEditForm!:any;

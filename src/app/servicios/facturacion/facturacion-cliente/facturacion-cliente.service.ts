@@ -6,6 +6,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
+import { parseActionCodeURL } from 'firebase/auth';
 
 @Injectable({
   providedIn: 'root'
@@ -37,17 +38,22 @@ export class FacturacionClienteService {
 
   facturarOpCliente(op:Operacion){
     this.buscarCliente(op);   
-    this.facturarCG(op);
-   
-    if(op.acompaniante){
-      this.facturarAcompaniante(op);
-    }else{
-      this.acompanianteMonto = 0
-    }    
-    this.facturarAdicionalKm(op);
     
 
+    if(op.tarifaEspecial){
+      this.facturarTarifaEspecial(op);
+      console.log("pasa por aca 1°");
+      
+    } else{
+      this.facturarCG(op);
 
+      if(op.acompaniante){
+        this.facturarAcompaniante(op);
+      }else{
+        this.acompanianteMonto = 0
+      }    
+      this.facturarAdicionalKm(op);
+    }
 
     this.crearFacturaCliente(op);
 
@@ -174,9 +180,18 @@ export class FacturacionClienteService {
       liquidacion: false,
       montoFacturaChofer: 0,
     }
-    //console.log(this.facturaChofer);
+    console.log(this.facturaCliente);
     
     //this.altaFacturaChofer()
+  }
+
+  facturarTarifaEspecial(op: Operacion){
+    
+    this.categoriaMonto = this.ultimaTarifa.tarifaEspecial.valor;
+    this.acompanianteMonto = 0;
+    this.adicionalKmMonto = 0;
+    console.log("pasa por aca 2°");
+    
   }
 
 }

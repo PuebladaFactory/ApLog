@@ -80,6 +80,7 @@ export class OpAltaComponent implements OnInit {
     console.log(e.target.value)
     if(e.target.value === "si"){
       this.tarifaEspecial = true;
+      this.acompaniante = false;
     }else{
       this.tarifaEspecial = false;
     }  
@@ -109,12 +110,7 @@ export class OpAltaComponent implements OnInit {
     this.op.facturada = false,
     this.op.facturaCliente = null;
     this.op.facturaChofer = null;
-    
-    if(this.tarifaEspecial){
-      this.op.tarifaEspecial = true;
-    } else {
-      this.op.tarifaEspecial = false;
-    }
+    this.op.tarifaEspecial = this.tarifaEspecial;    
     
     console.log("esta es la operacion: ", this.op);     
     this.addItem();

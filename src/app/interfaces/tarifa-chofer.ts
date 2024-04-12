@@ -6,9 +6,9 @@ export interface TarifaChofer {
     publicidad: number;
     idChofer: number;
     fecha: string;    
-    acompaniante: number | null;
+    acompaniante: number;
     //tEspecial: boolean;
-    tarifaEspecial: TarifaEspecial  | null
+    tarifaEspecial: TarifaEspecial;  
     
 
 }
