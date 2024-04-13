@@ -236,7 +236,7 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
 
     armarTarifaModificada(){
       this.tarifaEditar ={
-        id:null,
+        id:this.tarifaEditar.id,
         idTarifa:this.tarifaEditar.idTarifa,
         valorJornada: this.tarifaEditForm.value.valorJornada,
         km:{
