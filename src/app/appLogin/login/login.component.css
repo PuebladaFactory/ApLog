@@ -1,7 +1,6 @@
 
 @import "https://use.fontawesome.com/releases/v5.5.0/css/all.css";
 
-
 .wrapper{
     position: absolute;
     top: 0;
@@ -57,7 +56,10 @@ body {
 }
 
 h1,
-h2,
+h2 {
+  text-align: center;
+  font-weight: bold ;
+}
 h3,
 h4,
 h5,
@@ -97,14 +99,16 @@ h6 {
 
 .displayTable {
   display: table;
-  width: 100%;
-  height: 100%;
+  width: 60%;
+  height: 80%;
+  border-radius: 2rem;
   background: #12056d;
 }
 
 .displayTableCell {
   display: table-cell;
   vertical-align: middle;
+  border-radius: 2rem;
   width: 100%;
   height: 100%;
 }
@@ -116,9 +120,11 @@ h3 {
 }
 
 .authBlock {
-  margin: 0 auto;
+  margin: auto;
   max-width: 400px;
+  
   background: white;
+  border-radius: 2rem;
   padding: 30px 40px 10px;
   overflow: hidden;
   -webkit-box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.04);
@@ -133,14 +139,22 @@ label {
 }
 
 .formGroup {
+  position: relative;
   margin-bottom: 20px;
   float: left;
   width: 100%;
 }
+.formGroup.i {
+  position: relative;
+  width: 10%;
+  height: 100%;
+  border-radius: 2rem;
+  display: inline-block;
 
+}
 .formControl {
-  width: 100%;
-  display: block;
+  width: 90%;
+  display: inline-block;
   padding: 15px 15px 14px;
   border: 2px solid #e7e7e7;
   outline: none;

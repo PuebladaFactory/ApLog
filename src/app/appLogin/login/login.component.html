@@ -5,14 +5,17 @@
   <app-login-header></app-login-header>
 
   <div class="displayTable">
+    
     <div class="displayTableCell">
+      <br/><br/>
       <div class="authBlock">
-        <h2>Bienvenido</h2>
+        <h2> BIENVENIDOS</h2>
         <div class="formGroup">
-          <input type="text" class="formControl" placeholder="Username" #userName required>
+          
+          <i class="fa fa-user"></i><input  type="icon-username" type="text" class="formControl" placeholder="Username" #userName required>
         </div>
         <div class="formGroup">
-          <input type="password" class="formControl" placeholder="Password" #userPassword required>
+          <i class="fa fa-lock"></i><input type="password" class="formControl" placeholder="Password" #userPassword required>
         </div>
         <!-- Calling SignIn Api from AuthService -->
         <div class="formGroup">
@@ -40,7 +43,8 @@
         </div>
       </div>
       <div class="redirectToLogin">
-        <span>Registrese<span class="redirect" routerLink="/register-user"> Sign Up</span></span>
+        <span>Registrese<span class="redirect" style="text-decoration: none;"   routerLink="/register-user"> &nbsp; &nbsp;Sign Up</span></span>
+      <br/><br/>
       </div>
     </div>
   </div>
