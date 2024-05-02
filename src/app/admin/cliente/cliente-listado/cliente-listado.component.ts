@@ -12,6 +12,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 })
 export class ClienteListadoComponent implements OnInit {
   
+  searchText!:string;
   clientes$!: any;
   edicion:boolean = false;
   clienteEditar!: Cliente;
@@ -22,6 +23,7 @@ export class ClienteListadoComponent implements OnInit {
   contactoEditar!: Contacto;
   indice!:number;
   $clientes:any;
+  soloVista: boolean = false;
 
 
   constructor(private fb: FormBuilder, private storageService: StorageService,){
@@ -48,10 +50,10 @@ export class ClienteListadoComponent implements OnInit {
   }
   
   abrirEdicion(cliente:Cliente):void {
+    this.soloVista = false;
     this.clienteEditar = cliente;    
     //console.log("este es el cliente a editar: ", this.clienteEditar);
-    this.armarForm();
-    
+    this.armarForm();    
   }
 
   armarForm(){
@@ -64,6 +66,13 @@ export class ClienteListadoComponent implements OnInit {
     })
   }
 
+  abrirVista(cliente:Cliente):void {
+    this.soloVista = true;
+    this.clienteEditar = cliente;    
+    //console.log("este es el cliente a editar: ", this.clienteEditar);
+    this.armarForm();    
+  }
+
   onSubmit(){   
     this.clienteEditar.razonSocial = this.form.value.razonSocial;
     this.clienteEditar.direccion = this.form.value.direccion;
@@ -72,15 +81,18 @@ export class ClienteListadoComponent implements OnInit {
     /* this.clienteEditar.email = this.form.value.email;
     this.clienteEditar.telefono = this.form.value.telefono; */
     //console.log("este es el cliente editado: ", this.clienteEditar);
+    
     console.log("estos son los contactos: ", this.formContacto.value);
     console.log("estos es el clienteEditar: ", this.clienteEditar);
     
     this.update();    
+    this.edicion = false;
    }
 
    update(): void {
     this.storageService.updateItem(this.componente, this.clienteEditar);
     this.form.reset();
+    this.formContacto.reset();
     this.ngOnInit();
   }
 
@@ -89,6 +101,8 @@ export class ClienteListadoComponent implements OnInit {
   }
 
   armarContacto(contacto: Contacto, i: number){
+    console.log();
+    
     console.log(i);
     this.indice = i;
     this.contactoEditar = contacto;
@@ -103,14 +117,41 @@ export class ClienteListadoComponent implements OnInit {
 
   guardarContacto(){
     //console.log(this.formContacto.value);
+    console.log(this.clienteEditar.contactos);
+    
     this.contactoEditar = this.formContacto.value;
-    //console.log(this.contactoEditar);
-    this.clienteEditar.contactos[this.indice] = this.contactoEditar;
-    console.log(this.clienteEditar);
+    console.log(this.indice);
+    if(this.indice === undefined){
+      console.log(this.indice);
+      console.log(this.contactoEditar);
+      this.clienteEditar.contactos.push(this.contactoEditar)
+    } else{
+      console.log(this.contactoEditar);
+      console.log(this.indice);
+      
+      this.clienteEditar.contactos[this.indice] = this.contactoEditar;
+      console.log(this.clienteEditar);  
+    }
+    console.log(this.clienteEditar.contactos);
+    
+    
+  }
+
+  eliminarContacto(indice:number){
+    this.clienteEditar.contactos.splice(indice, 1);    
+  }
+
+  agregarContacto(){
+    console.log(this.clienteEditar.contactos);
     
   }
   /* toogleMostrar(){
     this.mostrar = !this.mostrar;
   } */
+  eliminarCliente(cliente: Cliente){
+    this.storageService.deleteItem(this.componente, cliente);
+    /* this.ngOnInit(); */
+    
+  }
 
 }

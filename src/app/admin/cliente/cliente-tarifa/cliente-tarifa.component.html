@@ -1,7 +1,7 @@
 <div class="container">
     <h1>Tarifas Cliente</h1>
-    <div class="d-flex justify-content-evenly">
-        <div>
+   
+        <div class="w-25">
             <h2>Seleccionar Cliente: </h2>
             <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
                 <option selected>Seleccione</option>
@@ -12,9 +12,9 @@
         </div>
        
      
-    </div>
 
-    <div>
+
+    <div class="mt-4">
       <h2>Asignar Tarifa</h2> 
       
         <div class="d-flex justify-content-evenly" *ngIf="clienteSeleccionado !== undefined else sinSeleccion" >
@@ -154,7 +154,7 @@
         </div>
      
         <div>
-            <button type="submit" class="btn btn-outline-secondary" (click)="onSubmit()">
+            <button *ngIf="clienteSeleccionado !== undefined" type="submit" class="btn btn-outline-secondary" (click)="onSubmit()">
               Guardar
             </button>
         </div>
@@ -167,7 +167,7 @@
         </ng-template>
     </div> 
 
-    <div> 
+    <div class="mt-4"> 
         <h2>Historial de Tarifas</h2>
         <div *ngIf="clienteSeleccionado !== undefined else sinSeleccion">
             <div *ngIf="$tarifasCliente.length > 0; else sinTarifas">
