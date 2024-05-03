@@ -41,7 +41,9 @@ export class LiqChoferComponent implements OnInit {
   indiceSeleccionado!:number
   ultimaTarifa!:any;
   tarifaEditForm: any;
+  swichForm:any;
   edicion:boolean = false;
+  tarifaEspecial: boolean = false;
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -60,6 +62,10 @@ export class LiqChoferComponent implements OnInit {
       distanciaIntervalo:[""],
       valorIntervalo:[""],
     })
+
+    this.swichForm = this.fb.group({
+      tarifaEspecial: [false],   
+    })
   }
 
   ngOnInit(): void {
@@ -75,6 +81,8 @@ export class LiqChoferComponent implements OnInit {
     //this.consultaMes(); 
   }
 
+  
+  
   procesarDatosParaTabla() {
     const choferesMap = new Map<number, any>();
 
@@ -267,11 +275,13 @@ export class LiqChoferComponent implements OnInit {
     console.log(factura);
     this.ultimaTarifa = this.facOpChoferService.obtenerTarifaChofer(factura.operacion.chofer)
     console.log("ULTIMA FACTURA: ", this.ultimaTarifa);
-    this.armarTarifa();
+    //this.tarifaEspecial = factura.operacion.tarifaEspecial
+    this.armarTarifa(factura);
+
     
   }
 
-  armarTarifa(){
+  armarTarifa(factura: FacturaOpChofer){
     this.tarifaEditForm.patchValue({
       valorJornada: this.ultimaTarifa.valorJornada,
       publicidad: this.ultimaTarifa.publicidad,
@@ -282,15 +292,77 @@ export class LiqChoferComponent implements OnInit {
       valorPrimerSector: this.ultimaTarifa.km.primerSector.valor,
       distanciaIntervalo: this.ultimaTarifa.km.sectoresSiguientes.intervalo,
       valorIntervalo: this.ultimaTarifa.km.sectoresSiguientes.valor,
+    });
+    this.swichForm.patchValue({
+      tarifaEspecial: factura.operacion.tarifaEspecial,
     })
+    console.log(factura.operacion.tarifaEspecial);
+    
+    console.log(this.swichForm.value.tarifaEspecial);      
+    this.facturaEditada = factura;
+    
   }
 
   modificarTarifa(){
     this.edicion = !this.edicion;
   }
 
-  onSubmitEdit(){
+  modificaTarifaEspecial(){
+  /*   this.tarifaEspecial= !this.tarifaEspecial;
+    console.log(this.tarifaEspecial); */
+    const switchValue = !this.swichForm.get('tarifaEspecial').value;
+    console.log("Estado del switch:", switchValue);
     
+  } 
+
+ 
+
+  onSubmitEdit(){
+    this.nuevaTarifa()
+    this.storageService.addItem("tarifasChofer", this.ultimaTarifa);     
+    let nuevaFacOpChofer = this.facOpChoferService.facturarOpChofer(this.facturaEditada.operacion);    
+    console.log("nueva FACOPCHOFER",nuevaFacOpChofer);
+    this.facturaEditada.operacion = nuevaFacOpChofer.operacion;
+    this.facturaEditada.valorJornada = nuevaFacOpChofer.valorJornada;
+    this.facturaEditada.adicional = nuevaFacOpChofer.adicional;
+    this.facturaEditada.total = nuevaFacOpChofer.total;
+
+    
+    this.storageService.updateItem("facturaOpChofer", this.facturaEditada);   
+    this.ngOnInit()  
   }
+
+  nuevaTarifa(){
+    this.ultimaTarifa = {
+      id:null,
+      idTarifa:new Date().getTime(),
+      valorJornada: this.tarifaEditForm.value.valorJornada,
+      km:{
+        primerSector: {
+          distancia: this.tarifaEditForm.value.distanciaPrimerSector,
+          valor: this.tarifaEditForm.value.valorPrimerSector,
+      },
+      sectoresSiguientes:{
+          intervalo: this.tarifaEditForm.value.distanciaIntervalo,
+          valor: this.tarifaEditForm.value.valorPrimerSector,
+      }
+      },
+      publicidad: this.tarifaEditForm.value.publicidad,
+      idChofer: this.ultimaTarifa.idChofer,
+      fecha: new Date().toISOString().split('T')[0],    
+      acompaniante: this.tarifaEditForm.value.acompaniante,
+      //tEspecial: boolean;
+      tarifaEspecial:{
+        concepto: this.tarifaEditForm.value.concepto,
+        valor: this.tarifaEditForm.value.valor,
+      } 
+    }    
+    console.log("NUEVA TARIFA", this.ultimaTarifa);
+    this.facturaEditada.operacion.tarifaEspecial = this.swichForm.value.tarifaEspecial;
+    console.log("NUEVA operacion con nueva TARIFA", this.facturaEditada);
+
+  }
+
+
 
 }

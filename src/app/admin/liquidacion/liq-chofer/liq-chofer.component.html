@@ -113,6 +113,7 @@
     </tbody> 
   </table>
 
+  <!-- MODAL PARA LIQUIDAR LAS OPERACIONES!!! -->
 
   <div class="modal fade" id="exampleModal2" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -162,6 +163,8 @@
     
   </div>
 
+<!-- EDITAR LA OBSERVACION DE LA FACTURA!!! -->
+
 <div class="modal fade" id="exampleModalToggle3" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -184,6 +187,8 @@
       </div>
     </div>
   </div> 
+
+<!-- EDITAR LA OPERACION!!!!!!!!!!!!!!!!!! -->
 
   <div class="modal fade" id="modalEditar" aria-hidden="true" aria-labelledby="modalEditar" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -270,11 +275,14 @@
                     <td>
                       <input formControlName="valor" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
                     </td>
-                </tr>  
-                <div class="form-check form-switch form-check-reverse ">
-                  <input class="form-check-input" type="checkbox" id="flexSwitchCheckReverse">
-                  <label class="form-check-label" for="flexSwitchCheckReverse">Aplicar Tarifa Especial</label>
-                </div>
+                </tr>
+                <form [formGroup]="swichForm">
+                    <div class="form-check form-switch form-check-reverse ">
+                      <input class="form-check-input" type="checkbox" id="flexSwitchCheckReverse" formControlName="tarifaEspecial" (click)="modificaTarifaEspecial()">
+                      <label class="form-check-label" for="flexSwitchCheckReverse">Aplicar Tarifa Especial</label>
+                    </div>
+                </form>  
+                
                 
               </form>       
             </div>
