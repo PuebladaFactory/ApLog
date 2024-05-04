@@ -14,10 +14,10 @@
           </tr>
     </thead>
     <tbody>
-        <ng-container *ngFor="let cliente of datosTablaChofer | filter: searchText; let i = index">
+        <ng-container *ngFor="let chofer of datosTablaChofer | filter: searchText; let i = index">
             <tr>
                 <td>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, cliente)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, chofer)">
                     <ng-container *ngIf="!mostrarTablaChofer[i]">
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
@@ -29,12 +29,12 @@
                     </ng-container>
                 </svg>
                 </td>
-                <td>{{ cliente.chofer }}</td>
-                <td>{{ cliente.sumaAPagar }}</td>
-                <td>{{ cliente.sumaACobrar }}</td>
-                <td>{{cliente.sumaACobrar - cliente.sumaAPagar}}</td>
-                <td>{{((cliente.sumaACobrar - cliente.sumaAPagar)*100/cliente.sumaACobrar).toFixed(2)}}%</td>
-                <td>{{ cliente.faltaPagar }}</td>               
+                <td>{{ chofer.chofer }}</td>
+                <td>{{ chofer.sumaAPagar }}</td>
+                <td>{{ chofer.sumaACobrar }}</td>
+                <td>{{ chofer.sumaACobrar - chofer.sumaAPagar}}</td>
+                <td>{{((chofer.sumaACobrar - chofer.sumaAPagar)*100/chofer.sumaACobrar).toFixed(2)}}%</td>
+                <td>{{ chofer.faltaPagar }}</td>               
             </tr>
       <!-- Aquí agregamos la tabla adicional -->
       <tr *ngIf="mostrarTablaChofer[i]" >
@@ -55,7 +55,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let factura of facturasPorChofer.get(cliente.idChofer)">
+                    <tr *ngFor="let factura of facturasPorChofer.get(chofer.idChofer)">
                         <td>{{factura.fecha}}</td>
                         <td>{{ getQuincena(factura.fecha) }}</td>
                         <td>{{factura.idFacturaChofer}}</td>

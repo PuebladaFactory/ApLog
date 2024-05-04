@@ -3,6 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
+import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -38,13 +39,33 @@ export class LiqChoferComponent implements OnInit {
   facturaEditada!: FacturaOpChofer;
   facturasPorChofer: Map<number, FacturaOpChofer[]> = new Map<number, FacturaOpChofer[]>();
   indiceSeleccionado!:number
+  ultimaTarifa!:any;
+  tarifaEditForm: any;
+  swichForm:any;
+  edicion:boolean = false;
+  tarifaEspecial: boolean = false;
+  idOperaciones: number [] = [];
   
-  
-  constructor(private storageService: StorageService, private fb: FormBuilder){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false);
     this.form = this.fb.group({      
       detalle: [""],       
+    })
+    this.tarifaEditForm = this.fb.group({
+      valorJornada: [""],            
+      publicidad: [""], 
+      acompaniante: [""],
+      concepto:[""],
+      valor:[""],
+      distanciaPrimerSector: [""],
+      valorPrimerSector:[""],
+      distanciaIntervalo:[""],
+      valorIntervalo:[""],
+    })
+
+    this.swichForm = this.fb.group({
+      tarifaEspecial: [false],   
     })
   }
 
@@ -61,6 +82,8 @@ export class LiqChoferComponent implements OnInit {
     //this.consultaMes(); 
   }
 
+  
+  
   procesarDatosParaTabla() {
     const choferesMap = new Map<number, any>();
 
@@ -81,12 +104,15 @@ export class LiqChoferComponent implements OnInit {
   
         const chofer = choferesMap.get(factura.idChofer);
         chofer.cantOp++;
-        if (factura.liquidacion) {
-          chofer.opFacturadas += factura.total;
-        } else {
-          chofer.opSinFacturar += factura.total;
+        if(typeof factura.total === "number"){
+          if (factura.liquidacion) {
+            chofer.opFacturadas += factura.total;
+          } else {
+            chofer.opSinFacturar += factura.total;
+          }
+          chofer.total += factura.total;
         }
-        chofer.total += factura.total;
+        
       });
   
       this.datosTablaChofer = Array.from(choferesMap.values());
@@ -202,22 +228,39 @@ export class LiqChoferComponent implements OnInit {
   onSubmit() {
     //console.log("factura chofer antes: ", this.facturasLiquidadasChofer);
     ////console.log(this.form.value);
+    
     if(this.facturasLiquidadasChofer.length > 0){
+      console.log(this.facturasLiquidadasChofer);
+      
+      this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
+        /* idOperaciones.push(factura.operacion.idOperacion) */
+        
+        this.idOperaciones.push(factura.operacion.idOperacion)
+      });
+ 
+      console.log("ID OPERACIONES: ", this.idOperaciones);
+      //this.facturaChofer.operaciones = idOperaciones;
+
       this.facturaChofer = {
         id: null,
         fecha: new Date().toISOString().split('T')[0],
         idFacturaChofer: new Date().getTime(),
         idChofer: this.facturasLiquidadasChofer[0].idChofer,
-        operaciones: this.facturasLiquidadasChofer,
+        apellido: this.facturasLiquidadasChofer[0].operacion.chofer.apellido,
+        nombre: this.facturasLiquidadasChofer[0].operacion.chofer.nombre,
+        operaciones: this.idOperaciones,        
         total: this.totalFacturasLiquidadasChofer,
         cobrado:false,
         montoFacturaCliente: this.totalFacturasLiquidadasCliente,
-      }
+      } 
 
-      //console.log("FACTURA CHOFER: ", this.facturaChofer);
+      console.log("FACTURA CHOFER: ", this.facturaChofer);
       
-      this.addItem(this.facturaChofer);
-
+      this.addItem(this.facturaChofer, this.componente);
+      this.form.reset();
+      //this.$tarifasChofer = null;    
+      this.eliminarFacturasOp();
+      //this.ngOnInit();
     }else{
       alert("no hay facturas")
     }
@@ -226,24 +269,120 @@ export class LiqChoferComponent implements OnInit {
 
   }
 
-  addItem(item:any): void {   
-    this.storageService.addItem(this.componente, item);     
-    this.form.reset();
-    //this.$tarifasChofer = null;
-    //this.ngOnInit();
-    this.eliminarFacturasOp();
+  addItem(item:any, componente:string): void {   
+    this.storageService.addItem(componente, item);     
+    
   } 
 
   eliminarFacturasOp(){
-    this.facturaChofer.operaciones.forEach((factura: FacturaOpChofer) => {
+    this.idOperaciones = [];
+    this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
+      this.addItem(factura, "facOpLiqChofer");
       this.removeItem(factura);
-    });
+    }); 
+    /* this.facturaChofer.operaciones.forEach((factura: FacturaOpChofer) => {
+      this.removeItem(factura);
+    });  */
     this.cerrarTabla(this.indiceSeleccionado);
-    this.ngOnInit();
+    this.ngOnInit(); 
   }
 
   removeItem(item:any){
     this.storageService.deleteItem("facturaOpChofer", item);    
   }
+
+  editarFacturaOpChofer(factura: FacturaOpChofer){
+    console.log(factura);
+    this.ultimaTarifa = this.facOpChoferService.obtenerTarifaChofer(factura.operacion.chofer)
+    console.log("ULTIMA FACTURA: ", this.ultimaTarifa);
+    //this.tarifaEspecial = factura.operacion.tarifaEspecial
+    this.armarTarifa(factura);
+
+    
+  }
+
+  armarTarifa(factura: FacturaOpChofer){
+    this.tarifaEditForm.patchValue({
+      valorJornada: this.ultimaTarifa.valorJornada,
+      publicidad: this.ultimaTarifa.publicidad,
+      acompaniante: this.ultimaTarifa.acompaniante,
+      concepto: this.ultimaTarifa.tarifaEspecial.concepto,
+      valor: this.ultimaTarifa.tarifaEspecial.valor,
+      distanciaPrimerSector: this.ultimaTarifa.km.primerSector.distancia,
+      valorPrimerSector: this.ultimaTarifa.km.primerSector.valor,
+      distanciaIntervalo: this.ultimaTarifa.km.sectoresSiguientes.intervalo,
+      valorIntervalo: this.ultimaTarifa.km.sectoresSiguientes.valor,
+    });
+    this.swichForm.patchValue({
+      tarifaEspecial: factura.operacion.tarifaEspecial,
+    })
+    console.log(factura.operacion.tarifaEspecial);
+    
+    console.log(this.swichForm.value.tarifaEspecial);      
+    this.facturaEditada = factura;
+    
+  }
+
+  modificarTarifa(){
+    this.edicion = !this.edicion;
+  }
+
+  modificaTarifaEspecial(){
+  /*   this.tarifaEspecial= !this.tarifaEspecial;
+    console.log(this.tarifaEspecial); */
+    const switchValue = !this.swichForm.get('tarifaEspecial').value;
+    console.log("Estado del switch:", switchValue);
+    
+  } 
+
+ 
+
+  onSubmitEdit(){
+    this.nuevaTarifa()
+    this.storageService.addItem("tarifasChofer", this.ultimaTarifa);     
+    let nuevaFacOpChofer = this.facOpChoferService.facturarOpChofer(this.facturaEditada.operacion);    
+    console.log("nueva FACOPCHOFER",nuevaFacOpChofer);
+    this.facturaEditada.operacion = nuevaFacOpChofer.operacion;
+    this.facturaEditada.valorJornada = nuevaFacOpChofer.valorJornada;
+    this.facturaEditada.adicional = nuevaFacOpChofer.adicional;
+    this.facturaEditada.total = nuevaFacOpChofer.total;
+
+    
+    this.storageService.updateItem("facturaOpChofer", this.facturaEditada);   
+    this.ngOnInit()  
+  }
+
+  nuevaTarifa(){
+    this.ultimaTarifa = {
+      id:null,
+      idTarifa:new Date().getTime(),
+      valorJornada: this.tarifaEditForm.value.valorJornada,
+      km:{
+        primerSector: {
+          distancia: this.tarifaEditForm.value.distanciaPrimerSector,
+          valor: this.tarifaEditForm.value.valorPrimerSector,
+      },
+      sectoresSiguientes:{
+          intervalo: this.tarifaEditForm.value.distanciaIntervalo,
+          valor: this.tarifaEditForm.value.valorPrimerSector,
+      }
+      },
+      publicidad: this.tarifaEditForm.value.publicidad,
+      idChofer: this.ultimaTarifa.idChofer,
+      fecha: new Date().toISOString().split('T')[0],    
+      acompaniante: this.tarifaEditForm.value.acompaniante,
+      //tEspecial: boolean;
+      tarifaEspecial:{
+        concepto: this.tarifaEditForm.value.concepto,
+        valor: this.tarifaEditForm.value.valor,
+      } 
+    }    
+    console.log("NUEVA TARIFA", this.ultimaTarifa);
+    this.facturaEditada.operacion.tarifaEspecial = this.swichForm.value.tarifaEspecial;
+    console.log("NUEVA operacion con nueva TARIFA", this.facturaEditada);
+
+  }
+
+
 
 }

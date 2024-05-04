@@ -14,10 +14,10 @@
           </tr>
     </thead>
     <tbody>
-        <ng-container *ngFor="let cliente of datosTablaProveedor | filter: searchText; let i = index">
+        <ng-container *ngFor="let proveedor of datosTablaProveedor | filter: searchText; let i = index">
             <tr *ngIf="datosTablaProveedor.length > 0 else sinDatos">
                 <td>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, cliente)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, proveedor)">
                     <ng-container *ngIf="!mostrarTablaProveedor[i]">
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
@@ -29,12 +29,12 @@
                     </ng-container>
                 </svg>
                 </td>
-                <td>{{ cliente.proveedor }}</td>
-                <td>{{ cliente.sumaAPagar }}</td>
-                <td>{{ cliente.sumaACobrar }}</td>
-                <td>{{cliente.sumaACobrar - cliente.sumaAPagar}}</td>
-                <td>{{((cliente.sumaACobrar - cliente.sumaAPagar)*100/cliente.sumaACobrar).toFixed(2)}}%</td>
-                <td>{{ cliente.faltaCobrar }}</td>               
+                <td>{{ proveedor.proveedor }}</td>
+                <td>{{ proveedor.sumaAPagar }}</td>
+                <td>{{ proveedor.sumaACobrar }}</td>
+                <td>{{ proveedor.sumaACobrar - proveedor.sumaAPagar}}</td>
+                <td>{{((proveedor.sumaACobrar - proveedor.sumaAPagar)*100/proveedor.sumaACobrar).toFixed(2)}}%</td>
+                <td>{{ proveedor.faltaCobrar }}</td>               
             </tr>
            
       <!-- Aquí agregamos la tabla adicional -->
@@ -46,18 +46,20 @@
                     <tr>
                         <th scope="col" class="">Fecha</th>
                         <th scope="col" class="">Quincena</th>
+                        <th scope="col" class="">Id</th>
                         <th scope="col" class="">Cant Op</th>
                         <th scope="col" class="">Suma a Pagar</th>
                         <th scope="col" class="">Suma a Cobrar</th>  
                         <th scope="col" class="">Ganacia</th>  
                         <th scope="col" class="">% Ganancia</th>                        
-                        <th scope="col" class="">Cobrado</th>                        
+                        <th scope="col" class="">Cobrado</th>       
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let factura of facturasPorChofer.get(cliente.idChofer)">
+                    <tr *ngFor="let factura of facturasPorProveedor.get(proveedor.idProveedor)">
                         <td>{{factura.fecha}}</td>
                         <td>{{ getQuincena(factura.fecha) }}</td>
+                        <td>{{factura.idFacturaProveedor}}</td>
                         <td>{{factura.operaciones.length}}</td>
                         <td>{{factura.montoFacturaCliente}}</td>
                         <td>{{factura.total}}</td>

@@ -6,7 +6,9 @@ export interface FacturaChofer {
     idFacturaChofer: number;   
     fecha: string | Date;        
     idChofer: number;    
-    operaciones: FacturaOpChofer [];
+    apellido: string;
+    nombre: string;
+    operaciones: number [];
     total: number;
     cobrado:boolean;
     montoFacturaCliente:number;

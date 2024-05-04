@@ -5,7 +5,8 @@ export interface FacturaCliente {
     idFacturaCliente: number;   
     fecha: string | Date;        
     idCliente: number;    
-    operaciones: FacturaOpCliente [];
+    razonSocial: string;
+    operaciones: number [];
     total: number;
     cobrado:boolean;
     montoFacturaChofer:number;

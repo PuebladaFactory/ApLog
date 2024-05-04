@@ -44,15 +44,15 @@ export class FacturacionChoferComponent implements OnInit {
   }
 
   procesarDatosParaTabla() {
-    const clientesMap = new Map<number, any>();
+    const choferesMap = new Map<number, any>();
     console.log(this.$facturasChofer);
     
     if(this.$facturasChofer !== null){
       this.$facturasChofer.forEach((factura: FacturaChofer) => {
-        if (!clientesMap.has(factura.idChofer)) {
-          clientesMap.set(factura.idChofer, {
+        if (!choferesMap.has(factura.idChofer)) {
+          choferesMap.set(factura.idChofer, {
             idChofer: factura.idChofer,            
-            chofer: factura.operaciones[0].operacion.chofer.apellido + " " + factura.operaciones[0].operacion.chofer.nombre,            
+            chofer: factura.apellido + " " + factura.nombre,            
             sumaAPagar: 0,
             sumaACobrar: 0,
             faltaPagar: 0,
@@ -60,19 +60,19 @@ export class FacturacionChoferComponent implements OnInit {
           });
         }
   
-        const cliente = clientesMap.get(factura.idChofer);
+        const chofer = choferesMap.get(factura.idChofer);
         //cliente.sumaACobrar++;
         if (factura.cobrado) {
-          cliente.sumaAPagar += factura.total;
+          chofer.sumaAPagar += factura.total;
         } else {
-          cliente.sumaAPagar += factura.total;
-          cliente.faltaPagar +=factura.total
+          chofer.sumaAPagar += factura.total;
+          chofer.faltaPagar +=factura.total
         }
-        cliente.total += factura.total;  
-        cliente.sumaACobrar += factura.montoFacturaCliente;      
+        chofer.total += factura.total;  
+        chofer.sumaACobrar += factura.montoFacturaCliente;      
       });
   
-      this.datosTablaChofer = Array.from(clientesMap.values());
+      this.datosTablaChofer = Array.from(choferesMap.values());
       console.log("Datos para la tabla: ", this.datosTablaChofer); 
     }
 
