@@ -36,7 +36,8 @@ export class LiqProveedorComponent implements OnInit {
   facturaProveedor!: FacturaProveedor;  
   facturaEditada!: FacturaOpProveedor;
   facturasPorProveedor: Map<number, FacturaOpProveedor[]> = new Map<number, FacturaOpProveedor[]>();
-  indiceSeleccionado!:number
+  indiceSeleccionado!:number;
+  idOperaciones: number [] = [];
   
   
   constructor(private storageService: StorageService, private fb: FormBuilder){
@@ -124,7 +125,7 @@ export class LiqProveedorComponent implements OnInit {
    });
    this.facturasPorProveedor.set(proveedorId, facturasProveedor);
 
-   //console.log("FACTURAS DEL PROVEEDOR: ", facturasProveedor);  
+   console.log("FACTURAS DEL PROVEEDOR: ", facturasProveedor);  
 
   }
 
@@ -202,12 +203,25 @@ export class LiqProveedorComponent implements OnInit {
     //console.log(this.facturasLiquidadasProveedor);
     //console.log(this.form.value);
     if(this.facturasLiquidadasProveedor.length > 0){
+
+      console.log(this.facturasLiquidadasProveedor);
+      
+      this.facturasLiquidadasProveedor.forEach((factura: FacturaOpProveedor) => {
+        /* idOperaciones.push(factura.operacion.idOperacion) */
+        
+        this.idOperaciones.push(factura.operacion.idOperacion)
+      });
+ 
+      console.log("ID OPERACIONES: ", this.idOperaciones);
+      //this.facturaChofer.operaciones = idOperaciones;
+
       this.facturaProveedor = {
         id: null,
         fecha: new Date().toISOString().split('T')[0],
         idFacturaProveedor: new Date().getTime(),
         idProveedor: this.facturasLiquidadasProveedor[0].idProveedor,
-        operaciones: this.facturasLiquidadasProveedor,
+        razonSocial: this.facturasLiquidadasProveedor[0].operacion.chofer.proveedor,
+        operaciones: this.idOperaciones,
         total: this.totalFacturasLiquidadasProveedor,
         cobrado:false,
         montoFacturaCliente: this.totalFacturasLiquidadasCliente,
@@ -215,8 +229,11 @@ export class LiqProveedorComponent implements OnInit {
 
       //console.log("FACTURA PROVEEDOR: ", this.facturaProveedor);
       
-      this.addItem(this.facturaProveedor);
-
+      this.addItem(this.facturaProveedor, this.componente);
+      this.form.reset();
+      //this.$tarifasChofer = null;
+      //this.ngOnInit();
+      this.eliminarFacturasOp();
     }else{
       alert("no hay facturas")
     }
@@ -225,18 +242,20 @@ export class LiqProveedorComponent implements OnInit {
 
   }
 
-  addItem(item:any): void {   
-    this.storageService.addItem(this.componente, item);     
-    this.form.reset();
-    //this.$tarifasChofer = null;
-    //this.ngOnInit();
-    this.eliminarFacturasOp();
+  addItem(item:any, componente:string): void {   
+    this.storageService.addItem(componente, item);     
+    
   } 
 
   eliminarFacturasOp(){
-    this.facturaProveedor.operaciones.forEach((factura: FacturaOpProveedor) => {
+    this.idOperaciones = [];
+    this.facturasLiquidadasProveedor.forEach((factura: FacturaOpProveedor) => {
+      this.addItem(factura, "facOpLiqProveedor");
       this.removeItem(factura);
-    });
+    }); 
+    /* this.facturaProveedor.operaciones.forEach((factura: FacturaOpProveedor) => {
+      this.removeItem(factura);
+    }); */
     this.cerrarTabla(this.indiceSeleccionado);
     this.ngOnInit();
   }

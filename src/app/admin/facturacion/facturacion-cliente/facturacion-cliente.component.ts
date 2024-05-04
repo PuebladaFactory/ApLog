@@ -53,7 +53,7 @@ export class FacturacionClienteComponent implements OnInit  {
         if (!clientesMap.has(factura.idCliente)) {
           clientesMap.set(factura.idCliente, {
             idCliente: factura.idCliente,
-            razonSocial: factura.operaciones[0].operacion.cliente.razonSocial,
+            razonSocial: factura.razonSocial ,
             sumaAPagar: 0,
             sumaACobrar: 0,
             faltaCobrar: 0,
@@ -97,7 +97,7 @@ export class FacturacionClienteComponent implements OnInit  {
    });
    this.facturasPorCliente.set(clienteId, facturasCliente);
 
-   //console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
+   console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
 
   }
 

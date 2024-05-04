@@ -22,7 +22,7 @@ export class FacturacionProveedorComponent implements OnInit {
   tituloFacProveedor: string = "facturaProveedor";
   facturaProveedor!: FacturaProveedor;  
   
-  facturasPorChofer: Map<number, FacturaProveedor[]> = new Map<number, FacturaProveedor[]>();
+  facturasPorProveedor: Map<number, FacturaProveedor[]> = new Map<number, FacturaProveedor[]>();
   
   
   
@@ -43,15 +43,15 @@ export class FacturacionProveedorComponent implements OnInit {
   }
 
   procesarDatosParaTabla() {
-    const clientesMap = new Map<number, any>();
+    const proveedoresMap = new Map<number, any>();
     console.log(this.$facturasProveedor);
     
     if(this.$facturasProveedor !== null){
       this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
-        if (!clientesMap.has(factura.idProveedor)) {
-          clientesMap.set(factura.idProveedor, {
+        if (!proveedoresMap.has(factura.idProveedor)) {
+          proveedoresMap.set(factura.idProveedor, {
             idProveedor: factura.idProveedor,
-            proveedor: factura.operaciones[0].operacion.chofer.proveedor ,            
+            proveedor: factura.razonSocial ,            
             sumaAPagar: 0,
             sumaACobrar: 0,
             faltaCobrar: 0,
@@ -59,19 +59,19 @@ export class FacturacionProveedorComponent implements OnInit {
           });
         }
   
-        const cliente = clientesMap.get(factura.idProveedor);
+        const proveedor = proveedoresMap.get(factura.idProveedor);
         //cliente.sumaACobrar++;
         if (factura.cobrado) {
-          cliente.sumaAPagar += factura.total;
+          proveedor.sumaAPagar += factura.total;
         } else {
-          cliente.sumaAPagar += factura.total;
-          cliente.faltaCobrar +=factura.total
+          proveedor.sumaAPagar += factura.total;
+          proveedor.faltaCobrar +=factura.total
         }
-        cliente.total += factura.total;  
-        cliente.sumaACobrar += factura.montoFacturaCliente      
+        proveedor.total += factura.total;  
+        proveedor.sumaACobrar += factura.montoFacturaCliente      
       });
   
-      this.datosTablaProveedor = Array.from(clientesMap.values());
+      this.datosTablaProveedor = Array.from(proveedoresMap.values());
       console.log("Datos para la tabla: ", this.datosTablaProveedor); 
     }
 
@@ -81,7 +81,7 @@ export class FacturacionProveedorComponent implements OnInit {
  
 
 
-  mostrarMasDatos(index: number, cliente:any) {   
+  mostrarMasDatos(index: number, proveedor:any) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
    //console.log("CLIENTE: ", cliente);
@@ -93,7 +93,7 @@ export class FacturacionProveedorComponent implements OnInit {
    let facturasProveedor = this.$facturasProveedor.filter((factura: FacturaOpProveedor) => {
        return factura.idProveedor === proveedorId;
    });
-   this.facturasPorChofer.set(proveedorId, facturasProveedor);
+   this.facturasPorProveedor.set(proveedorId, facturasProveedor);
 
    console.log("FACTURAS DEL PROVEEDOR: ", facturasProveedor);  
 

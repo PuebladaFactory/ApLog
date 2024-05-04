@@ -154,7 +154,7 @@ export class OpAbiertasComponent implements OnInit {
   }
 
   facturarOpProveedor(){
-    this.facturaProveedor = this.facOpProveedorService.facturarOpProveedor(this.opCerrada);    
+    this.facturaProveedor = this.facOpProveedorService.facturarOperacion(this.opCerrada);    
     console.log("esta es la factura-proveedor FINAL: ", this.facturaProveedor);
     
     //this.addItem("facturaOpProveedor", this.facturaProveedor)

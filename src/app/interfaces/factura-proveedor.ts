@@ -5,7 +5,8 @@ export interface FacturaProveedor {
     idFacturaProveedor: number;   
     fecha: string | Date;        
     idProveedor: number;    
-    operaciones: FacturaOpProveedor [];
+    razonSocial:string;
+    operaciones: number [];
     total: number;
     cobrado:boolean;
     montoFacturaCliente:number;

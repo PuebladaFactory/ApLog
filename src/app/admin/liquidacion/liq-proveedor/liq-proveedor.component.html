@@ -6,7 +6,7 @@
         <th scope="col" class="">Razon Social</th>
         <th scope="col" class="">Cant Op</th>
         <th scope="col" class="">Sin Facturar</th>  
-        <th scope="col" class="">A Cobrar</th>                        
+        <th scope="col" class="">A Pagar</th>                        
         <th scope="col" class="">Total</th>  
         <th scope="col" class="">Facturar</th> 
       </tr>
@@ -50,6 +50,7 @@
                         <th scope="col" class="">Quincena</th>
                         <th scope="col" class="">Id</th>
                         <th scope="col" class="">Cliente</th>
+                        <th scope="col" class="">Chofer</th>
                         <th scope="col" class="">Km</th>  
                         <th scope="col" class="">A</th>  
                         <th scope="col" class="">Total</th>                        
@@ -64,6 +65,7 @@
                         <td>{{ getQuincena(facturaProveedor.fecha) }}</td>
                         <td>{{facturaProveedor.operacion.idOperacion}}</td>
                         <td>{{facturaProveedor.operacion.cliente.razonSocial}} </td>
+                        <td>{{facturaProveedor.operacion.chofer.apellido}} {{facturaProveedor.operacion.chofer.nombre}}</td>
                         <td>{{facturaProveedor.operacion.km}}</td>
                         <td>{{facturaProveedor.adicional}}</td>
                         <td>{{facturaProveedor.total !== null || facturaProveedor.total !== "" ? facturaProveedor.total : 0}}</td>

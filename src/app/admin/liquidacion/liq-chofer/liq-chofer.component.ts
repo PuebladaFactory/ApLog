@@ -44,6 +44,7 @@ export class LiqChoferComponent implements OnInit {
   swichForm:any;
   edicion:boolean = false;
   tarifaEspecial: boolean = false;
+  idOperaciones: number [] = [];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -227,22 +228,39 @@ export class LiqChoferComponent implements OnInit {
   onSubmit() {
     //console.log("factura chofer antes: ", this.facturasLiquidadasChofer);
     ////console.log(this.form.value);
+    
     if(this.facturasLiquidadasChofer.length > 0){
+      console.log(this.facturasLiquidadasChofer);
+      
+      this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
+        /* idOperaciones.push(factura.operacion.idOperacion) */
+        
+        this.idOperaciones.push(factura.operacion.idOperacion)
+      });
+ 
+      console.log("ID OPERACIONES: ", this.idOperaciones);
+      //this.facturaChofer.operaciones = idOperaciones;
+
       this.facturaChofer = {
         id: null,
         fecha: new Date().toISOString().split('T')[0],
         idFacturaChofer: new Date().getTime(),
         idChofer: this.facturasLiquidadasChofer[0].idChofer,
-        operaciones: this.facturasLiquidadasChofer,
+        apellido: this.facturasLiquidadasChofer[0].operacion.chofer.apellido,
+        nombre: this.facturasLiquidadasChofer[0].operacion.chofer.nombre,
+        operaciones: this.idOperaciones,        
         total: this.totalFacturasLiquidadasChofer,
         cobrado:false,
         montoFacturaCliente: this.totalFacturasLiquidadasCliente,
-      }
+      } 
 
-      //console.log("FACTURA CHOFER: ", this.facturaChofer);
+      console.log("FACTURA CHOFER: ", this.facturaChofer);
       
-      this.addItem(this.facturaChofer);
-
+      this.addItem(this.facturaChofer, this.componente);
+      this.form.reset();
+      //this.$tarifasChofer = null;    
+      this.eliminarFacturasOp();
+      //this.ngOnInit();
     }else{
       alert("no hay facturas")
     }
@@ -251,20 +269,22 @@ export class LiqChoferComponent implements OnInit {
 
   }
 
-  addItem(item:any): void {   
-    this.storageService.addItem(this.componente, item);     
-    this.form.reset();
-    //this.$tarifasChofer = null;
-    //this.ngOnInit();
-    this.eliminarFacturasOp();
+  addItem(item:any, componente:string): void {   
+    this.storageService.addItem(componente, item);     
+    
   } 
 
   eliminarFacturasOp(){
-    this.facturaChofer.operaciones.forEach((factura: FacturaOpChofer) => {
+    this.idOperaciones = [];
+    this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
+      this.addItem(factura, "facOpLiqChofer");
       this.removeItem(factura);
-    });
+    }); 
+    /* this.facturaChofer.operaciones.forEach((factura: FacturaOpChofer) => {
+      this.removeItem(factura);
+    });  */
     this.cerrarTabla(this.indiceSeleccionado);
-    this.ngOnInit();
+    this.ngOnInit(); 
   }
 
   removeItem(item:any){

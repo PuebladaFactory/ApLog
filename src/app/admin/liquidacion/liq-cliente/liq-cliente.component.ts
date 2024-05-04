@@ -36,7 +36,8 @@ export class LiqClienteComponent {
   facturaCliente!: FacturaCliente;  
   facturaEditada!: FacturaOpCliente;
   facturasPorCliente: Map<number, FacturaOpCliente[]> = new Map<number, FacturaOpCliente[]>();
-  indiceSeleccionado!:number
+  indiceSeleccionado!:number;
+  idOperaciones: number [] = [];
   
   
   constructor(private storageService: StorageService, private fb: FormBuilder){
@@ -191,21 +192,37 @@ export class LiqClienteComponent {
     //console.log(this.facturasLiquidadas);
     //console.log(this.form.value);
     if(this.facturasLiquidadasCliente.length > 0){
+
+      console.log(this.facturasLiquidadasCliente);
+      
+      this.facturasLiquidadasCliente.forEach((factura: FacturaOpCliente) => {
+        /* idOperaciones.push(factura.operacion.idOperacion) */
+        
+        this.idOperaciones.push(factura.operacion.idOperacion)
+      });
+ 
+      console.log("ID OPERACIONES: ", this.idOperaciones);
+      //this.facturaChofer.operaciones = idOperaciones;
+
       this.facturaCliente = {
         id: null,
         fecha: new Date().toISOString().split('T')[0],
         idFacturaCliente: new Date().getTime(),
         idCliente: this.facturasLiquidadasCliente[0].idCliente,
-        operaciones: this.facturasLiquidadasCliente,
+        razonSocial: this.facturasLiquidadasCliente[0].operacion.cliente.razonSocial,
+        operaciones: this.idOperaciones,
         total: this.totalFacturasLiquidadasCliente,
         cobrado:false,
         montoFacturaChofer: this.totalFacturasLiquidadasChofer
       }
 
-      //console.log("FACTURA CLIENTE: ", this.facturaCliente);
+      console.log("FACTURA CLIENTE: ", this.facturaCliente);
       
-      this.addItem(this.facturaCliente);
-
+      this.addItem(this.facturaCliente, this.componente);
+      this.form.reset();
+      //this.$tarifasChofer = null;
+      //this.ngOnInit();
+      this.eliminarFacturasOp();
     }else{
       alert("no hay facturas")
     }
@@ -214,20 +231,27 @@ export class LiqClienteComponent {
 
   }
 
-  addItem(item:any): void {   
-    this.storageService.addItem(this.componente, item);     
-    this.form.reset();
-    //this.$tarifasChofer = null;
-    //this.ngOnInit();
-    this.eliminarFacturasOp();
+  addItem(item:any, componente:string): void {   
+    this.storageService.addItem(componente, item);     
+   
   } 
 
   eliminarFacturasOp(){
-    this.facturaCliente.operaciones.forEach((factura: FacturaOpCliente) => {
+    this.idOperaciones = [];
+    this.facturasLiquidadasCliente.forEach((factura: FacturaOpCliente) => {
+      this.addItem(factura, "facOpLiqCliente");
+      this.removeItem(factura);
+    }); 
+    /* this.facturaChofer.operaciones.forEach((factura: FacturaOpChofer) => {
+      this.removeItem(factura);
+    });  */
+    this.cerrarTabla(this.indiceSeleccionado);
+    this.ngOnInit(); 
+    /* this.facturaCliente.operaciones.forEach((factura: FacturaOpCliente) => {
       this.removeItem(factura);
     });
     this.cerrarTabla(this.indiceSeleccionado);
-    this.ngOnInit();
+    this.ngOnInit(); */
   }
 
   removeItem(item:any){

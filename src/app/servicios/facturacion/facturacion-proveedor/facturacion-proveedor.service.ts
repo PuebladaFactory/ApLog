@@ -19,6 +19,9 @@ export class FacturacionProveedorService {
   $proveedores!: Proveedor[];
   proveedorOp!: Proveedor;
   $tarifaProveedor!:TarifaProveedor;
+  categoriaMonto!: number;
+  acompanianteMonto!: number;
+  adicionalKmMonto!: number;
 
 
   constructor(private storageService: StorageService) { }
@@ -29,12 +32,30 @@ export class FacturacionProveedorService {
     });
   }
 
-  facturarOpProveedor(op: Operacion)  :FacturaOpProveedor{        
-    this.proveedores();
-    //this.proveedores();
-    //this.facturarOpChofer(op);
-    this.buscarProveedor(op);    
+  facturarOperacion(op: Operacion)  :FacturaOpProveedor{        
+    this.proveedores();    
+    this.facturarOpProveedor(op);    
     return this.facturaProveedor;
+  }
+
+  facturarOpProveedor(op: Operacion){            
+    this.buscarProveedor(op);    
+    if(op.tarifaEspecial){
+      this.facturarTarifaEspecial(op);
+      console.log("pasa por aca 1°");
+      
+    } else{
+      this.facturarCG(op);
+
+      if(op.acompaniante){
+        this.facturarAcompaniante(op);
+      }else{
+        this.acompanianteMonto = 0
+      }    
+      this.facturarAdicionalKm(op);
+    }
+
+    this.crearFacturaProveedor(op);
   }
 
   buscarProveedor(op:Operacion){
@@ -64,226 +85,87 @@ export class FacturacionProveedorService {
 
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
       console.log("ultima: ", this.ultimaTarifa);
-      this.calcularLiquidacion(op);
+     
     });  
   }
 
-  calcularLiquidacion(op:Operacion){    
-    this.$tarifaProveedor = this.ultimaTarifa
-    console.log("esta es la tarifa a facturar: ", this.$tarifaProveedor);
-    //console.log("este es la categoria del vehiculo: ", op.chofer.vehiculo.categoria);    
-    console.log("y este es la operacion a facturar: ", op);
-    let jornada!: any
-    let adicionales: any;
-
-
-    if(op.unidadesConFrio){
-      jornada = this.encontrarTarifaPorCategoriaUCF(op.chofer.vehiculo, this.$tarifaProveedor);
-    }else{
-      jornada = this.encontrarTarifaPorCategoriaCG(op.chofer.vehiculo, this.$tarifaProveedor);
-    }
-
-    console.log("esta es el valor de la JORNADA: ", jornada);
+  facturarCG(op: Operacion){
+    console.log("cargas generales");
     
-    adicionales = this.calcularAdicional(op, this.$tarifaProveedor)
+    switch (op.chofer.vehiculo.categoria) {
+      case "mini":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.utilitario
+        break;
 
-    this.$adicional = adicionales;
+      case "maxi":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.furgon
+      break;
 
-    this.total = jornada + adicionales;
+      case "furgon grande":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.furgonGrande
+      break;
 
-    console.log("TOTAAAAALLL: ", this.total);
+      case "camión liviano":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.chasisLiviano
+      break;
+
+      case "chasis":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.chasis
+      break;
+
+      case "balancin":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.balancin
+      break;
+
+      case "semi remolque local":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.semiRemolqueLocal
+      break;
+
+      case "portacontenedores":
+        this.categoriaMonto = this.ultimaTarifa.cargasGenerales.portacontenedores
+      break;
     
-
-   /*  if(op.unidadesConFrio){
-      const categoria = op.chofer.vehiculo.categoria //toLowerCase(); // Asegúrate de que las categorías estén en minúsculas
-
-      const tarifasPorCategoria: { [key: string]: keyof UnidadesConFrio } = {
-        utilitario: 'utilitarioJornada',
-        furgon: 'furgonJornada',
-        camionliviano: 'camionLivianoJornada',
-        chasis: 'chasisJornada',
-        balancin: 'balancinJornada',
-        semiremolquelocal: 'semiRemolqueLocalJornada',
-      };
-  
-      const tarifaKey = tarifasPorCategoria[categoria];
-      jornada = [tarifaKey];
-      console.log("JORNADAAAA: ", tarifaKey);
-      
-    } else {
-      
-    } */
-    
-    
-    //this.$adicional = this.calcularAdicional(op);
-    //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
-    
-    //this.total = this.$tarifaProveedor.valorJornada + this.$adicional;
-
-    //console.log("esta es facturaChoferService. liquidacion del chofer: ", this.total);
-
-    this.crearFacturaProveedor(op);    
+      default:
+        alert("error categoria CG")
+        break;
+    } 
   }
-
-  encontrarTarifaPorCategoriaUCF(vehiculo: Vehiculo, tarifaProveedor: TarifaProveedor): number | undefined {
-
-    //ESTO NO FUNCIONA PQ HAY Q CORREGIR LAS CATEGORIAS DE LOS VEHICULOS (mini = utilitario/maxi = furgon/ liviano = camion liviano )
-   /*  const categoria = vehiculo.categoria //toLowerCase(); // Asegúrate de que las categorías estén en minúsculas
-
-    const tarifasPorCategoria: { [key: string]: keyof CargasGenerales | keyof UnidadesConFrio } = {
-        utilitario: 'utilitarioJornada',
-        furgon: 'furgonJornada',
-        camionliviano: 'camionLivianoJornada',
-        chasis: 'chasisJornada',
-        balancin: 'balancinJornada',
-        semiremolquelocal: 'semiRemolqueLocalJornada',
-    };
-
-    const tarifaKey = tarifasPorCategoria[categoria];
-    
-    if (tarifaProveedor.cargasGenerales && tarifaProveedor.cargasGenerales.hasOwnProperty(tarifaKey)) {
-      return (tarifaProveedor.cargasGenerales as any)[tarifaKey] as number;
-  } else if (tarifaProveedor.unidadesConFrio && tarifaProveedor.unidadesConFrio.hasOwnProperty(tarifaKey)) {
-      return (tarifaProveedor.unidadesConFrio as any)[tarifaKey] as number;
-  }
-
-  return undefined;
- */
-
-  switch (vehiculo.categoria) {
-   /*  case 'mini':
-      return tarifaProveedor.unidadesConFrio.utilitarioJornada;
-    case 'maxi':
-      return tarifaProveedor.unidadesConFrio.furgonJornada;
-    case 'liviano':
-      return tarifaProveedor.unidadesConFrio.camionLivianoJornada;
-    case 'chasis':
-      return tarifaProveedor.unidadesConFrio.chasisJornada;
-    case 'balancin':
-      return tarifaProveedor.unidadesConFrio.balancinJornada;
-    case 'semiRemolqueLocal':
-      return tarifaProveedor.unidadesConFrio.semiRemolqueLocalJornada; */
-    default:
-      alert("error categoria UCF")
-      return undefined; // Manejar categorías no reconocidas según tus necesidades
-  }
-
-  }
-
-  encontrarTarifaPorCategoriaCG(vehiculo: Vehiculo, tarifaProveedor: TarifaProveedor): number | undefined {
 
  
 
-  switch (vehiculo.categoria) {
-    /* case 'mini':
-      return tarifaProveedor.cargasGenerales.utilitarioJornada;
-    case 'maxi':
-      return tarifaProveedor.cargasGenerales.furgonJornada;
-    case 'liviano':
-      return tarifaProveedor.cargasGenerales.camionLivianoJornada;
-    case 'chasis':
-      return tarifaProveedor.cargasGenerales.chasisJornada;
-    case 'balancin':
-      return tarifaProveedor.cargasGenerales.balancinJornada;
-    case 'semiRemolqueLocal':
-      return tarifaProveedor.cargasGenerales.semiRemolqueLocalJornada; */
-    default:
-      alert("error categoria CG")
-      return undefined; // Manejar categorías no reconocidas según tus necesidades
+  facturarAcompaniante(op: Operacion){
+    this.acompanianteMonto = this.ultimaTarifa.adicionales.acompaniante
+    console.log("acompañante: ", this.acompanianteMonto);
   }
 
-  }
-
-  calcularAdicional(op:Operacion, tarifa: TarifaProveedor): number | undefined {
-    let acompaniante: number;
-    let adicionalKm!: number;
-
-    if(op.acompaniante){
-      acompaniante = tarifa.adicionales.acompaniante;
-    }else{
-      acompaniante = 0;
-    }
-
+  facturarAdicionalKm(op: Operacion){
     if(op.km !== null){
-
-     switch (true){
-      case (op.km <=80):
-        adicionalKm = 0;
-        console.log("adicional km: ", 0);
-      break;
-      case (op.km >80 && op.km<=150):
-        //adicionalKm = tarifa.adicionales.adicionalKm.primerSector;
-        console.log("adicional km: ", tarifa.adicionales.adicionalKm.primerSector);
-        
-      break;
-      case (op.km >150):
+      if(op.km < this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia){
+        this.adicionalKmMonto = 0;
+      } else if (op.km < (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo)) {
+        this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor;
+      } else{
         let resto:number;
         let secciones:number;
         
-        resto = op.km - 150;
-        secciones = resto / 50
-        console.log("secciones: ", secciones);
-        secciones = Math.floor(secciones)
-        console.log("math.floor secciones: ", secciones);
-        if(((op.km - 150) % 50) === 0){
+        resto = op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo);
+        secciones = resto / this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo;
+        //console.log("secciones: ", secciones);
+        secciones = Math.floor(secciones);
+
+        if(((op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo)) % this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo) === 0){
           //alert("cuenta redonda");
-          //adicionalKm = tarifa.adicionales.adicionalKm.primerSector + tarifa.adicionales.adicionalKm.sectorSiguiente*secciones;
-          console.log("adicional KM: ", adicionalKm);           
+          this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor*secciones;
+          console.log("adicional KM: ", this.adicionalKmMonto);           
 
         } else{
           //alert("con resto");
-          //adicionalKm = tarifa.adicionales.adicionalKm.primerSector + ((tarifa.adicionales.adicionalKm.sectorSiguiente)*(secciones+1));
-          console.log("adicional KM: ", adicionalKm);
-        }
-        
-        
-
-      break;
-      
-      default:
-        adicionalKm = 0;
-          alert("error adicional km")
-          break;
-  
-      
-    } 
-  }
-  
-  console.log("adicionales + acompañante: ",(adicionalKm + acompaniante) );
-  
-
-    return acompaniante + adicionalKm;
+          this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + ((this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor)*(secciones+1));
+          console.log("adicional KM: ", this.adicionalKmMonto);
+        }         
+      }  
+    }
     
-    /* let adicional: number;
-    switch(true){
-      case (op.km !== null && op.km <= 100):{
-        adicional = 0;
-        return adicional;
-      }
-      case (op.km !== null && op.km > 100 && op.km <= 150):{
-        adicional = this.$tarifaChofer.km.adicionalKm1;
-        return adicional;
-      }
-      case (op.km !== null && op.km > 150 && op.km <= 200):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2;
-        return adicional;
-      }
-      case (op.km !== null && op.km > 200 && op.km <= 250):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2 + this.$tarifaChofer.km.adicionalKm3;
-        return adicional;
-      }
-      case (op.km !== null && op.km > 250 && op.km <= 300):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2 + this.$tarifaChofer.km.adicionalKm3 + this.$tarifaChofer.km.adicionalKm4;
-        return adicional;
-      }
-      case (op.km !== null && op.km > 300):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2 + this.$tarifaChofer.km.adicionalKm3 + this.$tarifaChofer.km.adicionalKm4 + this.$tarifaChofer.km.adicionalKm5;
-        return adicional;
-      }
-      default:{ 
-        return adicional=0;
-      }
-    } */
   }
 
   crearFacturaProveedor(op:Operacion){
@@ -295,15 +177,24 @@ export class FacturacionProveedorService {
       idProveedor: this.proveedorOp.idProveedor,
       idChofer: op.chofer.idChofer,
       fecha: op.fecha,
-      valorJornada: 1000,
-      adicional: this.$adicional,      
-      total: this.total,
+      valorJornada: this.categoriaMonto,
+      adicional: this.acompanianteMonto + this.adicionalKmMonto,    
+      total: this.categoriaMonto + (this.acompanianteMonto + this.adicionalKmMonto),
       liquidacion: false,
       montoFacturaCliente: 0,
     }
     console.log("FACTURA PROVEEDOR: ", this.facturaProveedor);
     
     //this.altaFacturaChofer()
+  }
+
+  facturarTarifaEspecial(op: Operacion){
+    
+    this.categoriaMonto = this.ultimaTarifa.tarifaEspecial.valor;
+    this.acompanianteMonto = 0;
+    this.adicionalKmMonto = 0;
+    console.log("pasa por aca 2°");
+    
   }
 
 
