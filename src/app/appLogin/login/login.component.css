@@ -271,7 +271,7 @@ input:-moz-placeholder {
 }
 
 .forgotPassword span {
-  color: #4dd5fe;
+  color: #2b454d;
   font-size: 14px;
   font-weight: 400;
   cursor: pointer;
@@ -291,7 +291,7 @@ input:-moz-placeholder {
 .redirectToLogin .redirect {
   cursor: pointer;
   color: #ffffff;
-  text-decoration: underline;
+  text-decoration: none;
 }
 .redirectToLogin .btn-primary {
   color:rgba(255, 255, 255, 0.6);
