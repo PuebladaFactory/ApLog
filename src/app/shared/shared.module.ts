@@ -7,14 +7,12 @@ import { BtnEditarComponent } from './btn-editar/btn-editar.component';
 import { BtnEliminarComponent } from './btn-eliminar/btn-eliminar.component';
 import { BtnReimpresionComponent } from './btn-reimpresion/btn-reimpresion.component';
 
-
 @NgModule({
   declarations: [
     BtnAgregarComponent,
     BtnEditarComponent,
     BtnEliminarComponent,
-    BtnReimpresionComponent
-  ],
+    BtnReimpresionComponent],
   imports: [
     CommonModule,
     SharedRoutingModule
