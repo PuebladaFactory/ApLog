@@ -10,19 +10,19 @@
             <div class="form-group">
               <label for="RazonSocial">Razon Social</label>
               <div class="input-group">
-                <input formControlName="razonSocial" class="form-control edicion" required type="text">            
+                <input formControlName="razonSocial" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': form.get('razonSocial').invalid && (form.get('razonSocial').dirty || form.get('razonSocial').touched) }">            
               </div>
             </div>    
             <div class="form-group">
               <label for="Cuit">CUIT</label>
               <div class="input-group">
-                <input formControlName="cuit" class="form-control edicion" required type="text" [placeholder]="'ej: 31456784569'">            
+                <input formControlName="cuit" class="form-control edicion" required type="text" [placeholder]="'ej: 31456784569'" [ngClass]="{ 'is-invalid': form.get('cuit').invalid && (form.get('cuit').dirty || form.get('cuit').touched) }">            
               </div>
             </div>    
             <div class="form-group">
               <label for="Direccion">Direccion</label>
               <div class="input-group">
-                <input formControlName="direccion" class="form-control" required type="text">
+                <input formControlName="direccion" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('direccion').invalid && (form.get('direccion').dirty || form.get('direccion').touched) }">
               </div>
             </div>  
             <div class="form-group">
