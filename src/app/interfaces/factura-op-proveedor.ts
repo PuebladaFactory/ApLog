@@ -8,6 +8,7 @@ export interface FacturaOpProveedor {
     operacion: Operacion;
     idProveedor: number;
     idChofer: number;
+    idTarifa: number;
     valorJornada: number;
     adicional: number;        
     total: number;

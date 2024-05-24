@@ -2,6 +2,8 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
+import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -38,13 +40,42 @@ export class LiqProveedorComponent implements OnInit {
   facturasPorProveedor: Map<number, FacturaOpProveedor[]> = new Map<number, FacturaOpProveedor[]>();
   indiceSeleccionado!:number;
   idOperaciones: number [] = [];
+  facDetallada!: FacturaOpProveedor;
+  ultimaTarifa!: TarifaProveedor|any;
+  tarifaEditForm: any;
+  swichForm:any;
+  edicion:boolean = false;
+  tarifaEspecial: boolean = false;
   
   
-  constructor(private storageService: StorageService, private fb: FormBuilder){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false);
     this.form = this.fb.group({      
       detalle: [""],       
+    });
+
+    this.tarifaEditForm = this.fb.group({
+      utilitario:[""],
+      furgon:[""],
+      furgonGrande:[""],
+      chasisLiviano:[""],
+      chasis:[""],
+      balancin:[""],
+      semiRemolqueLocal:[""],
+      portacontenedores:[""],  
+      acompaniante: [""],     
+      concepto:[""],
+      valor:[""],
+      distanciaPrimerSector: [""],
+      valorPrimerSector:[""],
+      distanciaIntervalo:[""],
+      valorIntervalo:[""],
+    })
+
+
+    this.swichForm = this.fb.group({
+      tarifaEspecial: [false],   
     })
   }
 
@@ -262,6 +293,127 @@ export class LiqProveedorComponent implements OnInit {
 
   removeItem(item:any){
     this.storageService.deleteItem("facturaOpProveedor", item);    
+  }
+
+  editarFacturaOpProveedor(factura: FacturaOpProveedor){
+    this.facDetallada = factura;
+    console.log(this.facDetallada);
+    let tarifaAplicada: any;
+    this.ultimaTarifa = this.facOpProveedorService.obtenerTarifaProveedor(factura)
+    console.log("ULTIMA tarifa: ", this.ultimaTarifa);
+    //this.tarifaEspecial = factura.operacion.tarifaEspecial
+    this.armarTarifa(factura);
+    
+  } 
+
+  eliminarFacturaOpChofer(factura:FacturaOpProveedor, indice:number){
+    this.removeItem(factura);
+    this.cerrarTabla(indice)
+    this.ngOnInit(); 
+  }
+
+  armarTarifa(factura: FacturaOpProveedor){
+    this.tarifaEditForm.patchValue({
+      utilitario: this.ultimaTarifa.cargasGenerales.utilitario,
+      furgon: this.ultimaTarifa.cargasGenerales.furgon,
+      furgonGrande: this.ultimaTarifa.cargasGenerales.furgonGrande,
+      chasisLiviano: this.ultimaTarifa.cargasGenerales.chasisLiviano,
+      chasis: this.ultimaTarifa.cargasGenerales.chasis,
+      balancin: this.ultimaTarifa.cargasGenerales.balancin,
+      semiRemolqueLocal: this.ultimaTarifa.cargasGenerales.semiRemolqueLocal,
+      portacontenedores: this.ultimaTarifa.cargasGenerales.portacontenedores,
+      acompaniante: this.ultimaTarifa.adicionales.acompaniante,
+      concepto: this.ultimaTarifa.tarifaEspecial.concepto,
+      valor: this.ultimaTarifa.tarifaEspecial.valor,
+      distanciaPrimerSector: this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia,
+      valorPrimerSector: this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor,
+      distanciaIntervalo:this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo,
+      valorIntervalo:this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor,
+    });
+    
+    this.swichForm.patchValue({
+      tarifaEspecial: factura.operacion.tarifaEspecial,
+    })
+    console.log(factura.operacion.tarifaEspecial);
+    
+    console.log(this.swichForm.value.tarifaEspecial);      
+    this.facturaEditada = factura;
+    
+  } 
+
+  modificarTarifa(){
+    this.edicion = !this.edicion;
+  } 
+
+  cerrarEdicion(){
+    this.edicion = false;
+  } 
+
+  modificaTarifaEspecial(){
+    //this.tarifaEspecial= !this.tarifaEspecial;
+    //console.log(this.tarifaEspecial); 
+    const switchValue = !this.swichForm.get('tarifaEspecial').value;
+    console.log("Estado del switch:", switchValue);
+    
+  }  
+
+  onSubmitEdit(){
+    this.nuevaTarifa()
+    this.storageService.addItem("tarifasProveedor", this.ultimaTarifa);     
+    let nuevaFacOpProveedor = this.facOpProveedorService.actualizarFacOp(this.facturaEditada, this.ultimaTarifa);    
+    console.log("nueva FACOPCLIENTE",nuevaFacOpProveedor);
+    this.facturaEditada.operacion = nuevaFacOpProveedor.operacion;
+    this.facturaEditada.valorJornada = nuevaFacOpProveedor.valorJornada;
+    this.facturaEditada.adicional = nuevaFacOpProveedor.adicional;
+    this.facturaEditada.total = nuevaFacOpProveedor.total;
+    this.edicion = false;
+    this.facturaEditada.idTarifa = this.ultimaTarifa.idTarifaProveedor;
+    
+    this.storageService.updateItem("facturaOpProveedor", this.facturaEditada);   
+    this.ngOnInit()  
+  } 
+
+  nuevaTarifa(){
+    this.ultimaTarifa = {
+      id:null,
+      idTarifaProveedor:new Date().getTime(),
+      idProveedor: this.ultimaTarifa.idProveedor,
+      fecha: new Date().toISOString().split('T')[0],    
+      cargasGenerales:{
+        utilitario: this.tarifaEditForm.value.utilitario,
+        furgon: this.tarifaEditForm.value.furgon,
+        furgonGrande: this.tarifaEditForm.value.furgonGrande,
+        chasisLiviano: this.tarifaEditForm.value.chasisLiviano,
+        chasis: this.tarifaEditForm.value.chasis,
+        balancin: this.tarifaEditForm.value.balancin,
+        semiRemolqueLocal: this.tarifaEditForm.value.semiRemolqueLocal,
+        portacontenedores: this.tarifaEditForm.value.portacontenedores,
+      },
+      adicionales:{
+        acompaniante: this.tarifaEditForm.value.acompaniante,
+        adicionalKm:{
+          primerSector: {
+            distancia: this.tarifaEditForm.value.distanciaPrimerSector,
+            valor: this.tarifaEditForm.value.valorPrimerSector,
+        },
+        sectoresSiguientes:{
+            intervalo: this.tarifaEditForm.value.distanciaIntervalo,
+            valor: this.tarifaEditForm.value.valorIntervalo,
+        }
+        }
+      },
+      tarifaEspecial:{
+        concepto: this.tarifaEditForm.value.concepto,
+        valor: this.tarifaEditForm.value.valor,
+      },
+
+      
+      
+      
+      
+    }
+    
+    
   }
 
 }
