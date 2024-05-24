@@ -307,12 +307,14 @@ export class FacturacionProveedorService {
   }
 
   editarFacOpProveedor(factura:FacturaOpProveedor){
+    console.log("FacOpProveedor antes de EDITAR: ", factura);
+    
     this.facturaProveedor = {
       id: factura.id,
       idFacturaOpProveedor: factura.idFacturaOpProveedor,
       operacion: factura.operacion,        
       fecha: factura.operacion.fecha,      
-      idProveedor: this.proveedorOp.idProveedor,
+      idProveedor: factura.idProveedor,
       idChofer: factura.operacion.chofer.idChofer,      
       idTarifa: this.ultimaTarifa.idTarifaProveedor,
       valorJornada: this.categoriaMonto,

@@ -129,10 +129,14 @@ export class LiqProveedorComponent implements OnInit {
   }
  
   liquidarFac(factura: FacturaOpProveedor){
+    if(typeof factura.total !== "number" || factura.total === 0){
+      alert("error")
+    } else{
     //console.log("esta es la FACTURA: ", factura);
     factura.liquidacion = true;
     this.storageService.updateItem(this.tituloFacOpProveedor, factura)
     this.procesarDatosParaTabla();     
+    }
   }
 
   cancelarliquidacion(factura: FacturaOpProveedor) {
@@ -368,6 +372,7 @@ export class LiqProveedorComponent implements OnInit {
     this.facturaEditada.total = nuevaFacOpProveedor.total;
     this.edicion = false;
     this.facturaEditada.idTarifa = this.ultimaTarifa.idTarifaProveedor;
+    console.log("factura op ACTUALIZADA: ", this.facturaEditada);
     
     this.storageService.updateItem("facturaOpProveedor", this.facturaEditada);   
     this.ngOnInit()  
