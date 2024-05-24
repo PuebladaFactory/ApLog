@@ -32,14 +32,21 @@ export class FacturacionProveedorService {
     });
   }
 
-  facturarOperacion(op: Operacion)  :FacturaOpProveedor{        
+ /*  facturarOperacion(op: Operacion)  :FacturaOpProveedor{        
     this.proveedores();    
     this.facturarOpProveedor(op);    
     return this.facturaProveedor;
+  } */
+
+  facturarOpProveedor(op: Operacion)  :FacturaOpProveedor{        
+    this.proveedores();   
+    this.buscarProveedor(op);         
+    this.crearFacturaProveedor(op);  
+    return this.facturaProveedor;
   }
 
-  facturarOpProveedor(op: Operacion){            
-    this.buscarProveedor(op);    
+ /*  facturarOpProveedor(op: Operacion){            
+    
     if(op.tarifaEspecial){
       this.facturarTarifaEspecial(op);
       console.log("pasa por aca 1°");
@@ -56,7 +63,7 @@ export class FacturacionProveedorService {
     }
 
     this.crearFacturaProveedor(op);
-  }
+  } */
 
   buscarProveedor(op:Operacion){
     let proveedor: any;
@@ -85,8 +92,34 @@ export class FacturacionProveedorService {
 
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
       console.log("ultima: ", this.ultimaTarifa);
-     
+      this.calcularLiquidacion(op);
     });  
+  }
+
+  calcularLiquidacion(op:Operacion){    
+    this.$tarifaProveedor = this.ultimaTarifa
+    console.log("esta es la tarifa a facturar: ", this.$tarifaProveedor);
+    
+    if(op.tarifaEspecial){
+      
+      this.facturarTarifaEspecial(op);
+
+    } else{
+
+      this.facturarCG(op);
+
+      this.calcularAdicional(op, this.ultimaTarifa);
+
+      //this.$adicional = this.calcularAdicional(op, this.ultimaTarifa);
+      //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
+      
+      //this.total = this.$tarifaCliente.valorJornada + this.$adicional;
+      this.total = this.categoriaMonto + (this.acompanianteMonto + this.adicionalKmMonto)
+  
+      console.log("esta es facturaClienteService. liquidacion del chofer: ", this.total);
+    }
+
+    //this.crearFacturaChofer(op);    
   }
 
   facturarCG(op: Operacion){
@@ -131,14 +164,16 @@ export class FacturacionProveedorService {
     } 
   }
 
- 
+  calcularAdicional(op: Operacion, tarifa: TarifaProveedor){
+    let acompaniante: any;
+    let adicional: any;
+    
+    if(op.acompaniante){
+      this.acompanianteMonto = this.ultimaTarifa.adicionales.acompaniante
+    }else{
+      this.acompanianteMonto = 0;
+    }
 
-  facturarAcompaniante(op: Operacion){
-    this.acompanianteMonto = this.ultimaTarifa.adicionales.acompaniante
-    console.log("acompañante: ", this.acompanianteMonto);
-  }
-
-  facturarAdicionalKm(op: Operacion){
     if(op.km !== null){
       if(op.km < this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia){
         this.adicionalKmMonto = 0;
@@ -168,6 +203,43 @@ export class FacturacionProveedorService {
     
   }
 
+  
+
+/*   facturarAcompaniante(op: Operacion){
+    this.acompanianteMonto = this.ultimaTarifa.adicionales.acompaniante
+    console.log("acompañante: ", this.acompanianteMonto);
+  } */
+
+/*   facturarAdicionalKm(op: Operacion){
+    if(op.km !== null){
+      if(op.km < this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia){
+        this.adicionalKmMonto = 0;
+      } else if (op.km < (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo)) {
+        this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor;
+      } else{
+        let resto:number;
+        let secciones:number;
+        
+        resto = op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo);
+        secciones = resto / this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo;
+        //console.log("secciones: ", secciones);
+        secciones = Math.floor(secciones);
+
+        if(((op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo)) % this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo) === 0){
+          //alert("cuenta redonda");
+          this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor*secciones;
+          console.log("adicional KM: ", this.adicionalKmMonto);           
+
+        } else{
+          //alert("con resto");
+          this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + ((this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor)*(secciones+1));
+          console.log("adicional KM: ", this.adicionalKmMonto);
+        }         
+      }  
+    }
+    
+  } */
+
   crearFacturaProveedor(op:Operacion){
 
     this.facturaProveedor = {
@@ -176,10 +248,11 @@ export class FacturacionProveedorService {
       operacion: op,        
       idProveedor: this.proveedorOp.idProveedor,
       idChofer: op.chofer.idChofer,
+      idTarifa: this.ultimaTarifa.idTarifaProveedor,
       fecha: op.fecha,
       valorJornada: this.categoriaMonto,
       adicional: this.acompanianteMonto + this.adicionalKmMonto,    
-      total: this.categoriaMonto + (this.acompanianteMonto + this.adicionalKmMonto),
+      total: this.total,
       liquidacion: false,
       montoFacturaCliente: 0,
     }
@@ -190,11 +263,68 @@ export class FacturacionProveedorService {
 
   facturarTarifaEspecial(op: Operacion){
     
-    this.categoriaMonto = this.ultimaTarifa.tarifaEspecial.valor;
+    this.categoriaMonto = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0,
+    this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0,
     this.acompanianteMonto = 0;
     this.adicionalKmMonto = 0;
-    console.log("pasa por aca 2°");
+    //console.log("pasa por aca 2°");
     
+  }
+
+  obtenerTarifaProveedor(factura:FacturaOpProveedor):TarifaProveedor|undefined{
+    let ultimaTarifa
+    console.log("factura: ", factura);
+    
+    this.storageService.historialTarifasProveedores$.subscribe(data => {
+      console.log("DATA: ", data);
+      
+      this.$tarifas = data.filter((tarifa: { idTarifaProveedor: number; }) => tarifa.idTarifaProveedor === factura.idTarifa);
+
+      console.log("Todas: ",this.$tarifas);
+
+      // Encontrar la tarifa con el idTarifa más elevado
+      ultimaTarifa = this.$tarifas[0]
+      /* ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
+        return tarifaActual.idTarifa > tarifaMaxima.idTarifa ? tarifaActual : tarifaMaxima;
+      }); */
+
+      // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
+      console.log("ultima: ", ultimaTarifa);
+      
+    });  
+
+    
+    
+    return ultimaTarifa;
+    
+  }
+
+  actualizarFacOp(factura:FacturaOpProveedor, tarifa: TarifaProveedor){
+    this.ultimaTarifa = tarifa;
+    this.calcularLiquidacion(factura.operacion)
+    this.editarFacOpProveedor(factura);
+    return this.facturaProveedor;
+  }
+
+  editarFacOpProveedor(factura:FacturaOpProveedor){
+    console.log("FacOpProveedor antes de EDITAR: ", factura);
+    
+    this.facturaProveedor = {
+      id: factura.id,
+      idFacturaOpProveedor: factura.idFacturaOpProveedor,
+      operacion: factura.operacion,        
+      fecha: factura.operacion.fecha,      
+      idProveedor: factura.idProveedor,
+      idChofer: factura.operacion.chofer.idChofer,      
+      idTarifa: this.ultimaTarifa.idTarifaProveedor,
+      valorJornada: this.categoriaMonto,
+      adicional: this.acompanianteMonto + this.adicionalKmMonto,
+      total: this.total,
+      liquidacion: factura.liquidacion,
+      montoFacturaCliente: factura.montoFacturaCliente,
+    }
+    
+    console.log("factura EDITADA FINAL: ", this.facturaProveedor);
   }
 
 

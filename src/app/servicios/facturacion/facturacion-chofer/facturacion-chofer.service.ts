@@ -46,6 +46,8 @@ export class FacturacionChoferService {
     //this.proveedores();
     //this.facturarOpChofer(op);
     this.buscarChofer(op);    
+    //this.buscarTarifaChofer(op);   
+    this.crearFacturaChofer(op);    
     return this.facturaChofer
   }
 /* 
@@ -61,7 +63,7 @@ export class FacturacionChoferService {
     this.buscarChofer(op);    
   } */
   
-  buscarChofer(op: Operacion){
+  buscarChofer(op: Operacion){                  ///¿¿ESTO ES NECESARIO??
     /* let choferSeleccionado: any;
     choferSeleccionado = this.$choferes.filter(function (chofer:any){
       return chofer.idChofer === op.chofer.idChofer
@@ -147,10 +149,10 @@ export class FacturacionChoferService {
       
       this.total = this.$tarifaChofer.valorJornada + this.$adicional;
   
-      //console.log("esta es facturaChoferService. liquidacion del chofer: ", this.total);
+      console.log("esta es facturaChoferService. liquidacion del chofer: ", this.total);
     }
 
-    this.crearFacturaChofer(op);    
+    //this.crearFacturaChofer(op);    
   }
 
   calcularAdicional(op:Operacion, tarifa: TarifaChofer) {
@@ -233,6 +235,7 @@ export class FacturacionChoferService {
       operacion: op,        
       fecha: op.fecha,      
       idChofer: op.chofer.idChofer,
+      idTarifa: this.ultimaTarifa.idTarifa,
       valorJornada: this.$tarifaChofer.valorJornada,
       adicional: this.$adicional,      
       total: this.total,
@@ -251,17 +254,18 @@ export class FacturacionChoferService {
     this.$tarifaChofer.valorJornada = this.$tarifaChofer.tarifaEspecial.valor;
   }
 
-  obtenerTarifaChofer(chofer:Chofer):TarifaChofer|undefined{
+  obtenerTarifaChofer(factura:FacturaOpChofer):TarifaChofer|undefined{
     let ultimaTarifa
     this.storageService.historialTarifas$.subscribe(data => {
-      this.$tarifas = data.filter((tarifa: { idChofer: number; }) => tarifa.idChofer === chofer.idChofer);
+      this.$tarifas = data.filter((tarifa: { idTarifa: number; }) => tarifa.idTarifa === factura.idTarifa);
 
       console.log("Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
-      ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
+      ultimaTarifa = this.$tarifas[0]
+      /* ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
         return tarifaActual.idTarifa > tarifaMaxima.idTarifa ? tarifaActual : tarifaMaxima;
-      });
+      }); */
 
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
       console.log("ultima: ", ultimaTarifa);
@@ -270,6 +274,31 @@ export class FacturacionChoferService {
     
     return ultimaTarifa;
     
+  }
+
+  actualizarFacOp(factura:FacturaOpChofer, tarifa: TarifaChofer){
+    this.ultimaTarifa = tarifa;
+    this.calcularLiquidacion(factura.operacion)
+    this.editarFacOpChofer(factura);
+    return this.facturaChofer;
+  }
+
+  editarFacOpChofer(factura:FacturaOpChofer){
+    this.facturaChofer = {
+      id: factura.id,
+      idFacturaOpChofer: factura.idFacturaOpChofer,
+      operacion: factura.operacion,        
+      fecha: factura.operacion.fecha,      
+      idChofer: factura.operacion.chofer.idChofer,
+      idTarifa: this.ultimaTarifa.idTarifa,
+      valorJornada: this.$tarifaChofer.valorJornada,
+      adicional: this.$adicional,      
+      total: this.total,
+      liquidacion: factura.liquidacion,
+      montoFacturaCliente: factura.montoFacturaCliente,
+    }
+    
+    console.log("factura EDITADA FINAL: ", this.facturaChofer);
   }
   
 }

@@ -3,6 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
+import { Operacion } from 'src/app/interfaces/operacion';
 import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -45,6 +46,7 @@ export class LiqChoferComponent implements OnInit {
   edicion:boolean = false;
   tarifaEspecial: boolean = false;
   idOperaciones: number [] = [];
+  facDetallada!: FacturaOpChofer
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -124,10 +126,15 @@ export class LiqChoferComponent implements OnInit {
   }
  
   liquidarFac(factura: FacturaOpChofer){
-    //console.log("esta es la FACTURA: ", factura);
-    factura.liquidacion = true;
-    this.storageService.updateItem(this.tituloFacOpChofer, factura)
-    this.procesarDatosParaTabla();     
+    if(typeof factura.total !== "number" || factura.total === 0){
+      alert("error")
+    } else{
+      console.log("esta es la FACTURA: ", factura);
+      factura.liquidacion = true;
+      this.storageService.updateItem(this.tituloFacOpChofer, factura)
+      this.procesarDatosParaTabla();     
+    }
+    
   }
 
   cancelarliquidacion(factura: FacturaOpChofer) {
@@ -292,13 +299,19 @@ export class LiqChoferComponent implements OnInit {
   }
 
   editarFacturaOpChofer(factura: FacturaOpChofer){
-    console.log(factura);
-    this.ultimaTarifa = this.facOpChoferService.obtenerTarifaChofer(factura.operacion.chofer)
-    console.log("ULTIMA FACTURA: ", this.ultimaTarifa);
+    this.facDetallada = factura;
+    console.log(this.facDetallada);
+    this.ultimaTarifa = this.facOpChoferService.obtenerTarifaChofer(factura)
+    console.log("ULTIMA tarifa: ", this.ultimaTarifa);
     //this.tarifaEspecial = factura.operacion.tarifaEspecial
     this.armarTarifa(factura);
-
     
+  }
+
+  eliminarFacturaOpChofer(factura:FacturaOpChofer, indice:number){
+    this.removeItem(factura);
+    this.cerrarTabla(indice)
+    this.ngOnInit(); 
   }
 
   armarTarifa(factura: FacturaOpChofer){
@@ -327,6 +340,10 @@ export class LiqChoferComponent implements OnInit {
     this.edicion = !this.edicion;
   }
 
+  cerrarEdicion(){
+    this.edicion = false;
+  }
+
   modificaTarifaEspecial(){
   /*   this.tarifaEspecial= !this.tarifaEspecial;
     console.log(this.tarifaEspecial); */
@@ -340,13 +357,14 @@ export class LiqChoferComponent implements OnInit {
   onSubmitEdit(){
     this.nuevaTarifa()
     this.storageService.addItem("tarifasChofer", this.ultimaTarifa);     
-    let nuevaFacOpChofer = this.facOpChoferService.facturarOpChofer(this.facturaEditada.operacion);    
+    let nuevaFacOpChofer = this.facOpChoferService.actualizarFacOp(this.facturaEditada, this.ultimaTarifa);    
     console.log("nueva FACOPCHOFER",nuevaFacOpChofer);
     this.facturaEditada.operacion = nuevaFacOpChofer.operacion;
     this.facturaEditada.valorJornada = nuevaFacOpChofer.valorJornada;
     this.facturaEditada.adicional = nuevaFacOpChofer.adicional;
     this.facturaEditada.total = nuevaFacOpChofer.total;
-
+    this.edicion = false;
+    this.facturaEditada.idTarifa = this.ultimaTarifa.idTarifa;
     
     this.storageService.updateItem("facturaOpChofer", this.facturaEditada);   
     this.ngOnInit()  
