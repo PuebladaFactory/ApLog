@@ -166,7 +166,7 @@ export class OpAbiertasComponent implements OnInit {
   }
 
   facturarOpCliente(){
-    this.facturaCliente = this.facOpClienteService.facturarOperacion(this.opCerrada);    
+    this.facturaCliente = this.facOpClienteService.facturarOpCliente(this.opCerrada);    
     console.log("esta es la factura-cliente FINAL: ", this.facturaCliente);
     
     //this.addItem("facturaOpCliente", this.facturaCliente)

@@ -7,6 +7,7 @@ export interface FacturaOpCliente {
     operacion: Operacion
     fecha: string | Date;        
     idCliente: number;
+    idTarifa:number;
     valorJornada: number;
     adicional: number;        
     total: number;

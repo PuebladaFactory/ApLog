@@ -7,6 +7,7 @@ export interface FacturaOpChofer {
         operacion: Operacion;
         fecha: string | Date;  
         idChofer: number;
+        idTarifa:number;
         valorJornada: number;
         adicional: number;        
         total: number;
