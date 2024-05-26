@@ -45,17 +45,18 @@ export class ChoferesAltaComponent implements OnInit {
   refrigeracion!:boolean;
   $proveedores!: any; 
   proveedorSeleccionado!: string;
+  editForm: any;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
     this.form = this.fb.group({                             //formulario para el perfil 
-      nombre: ["", [Validators.required, Validators.maxLength(30)]], 
-      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
-      cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],            
-      fechaNac: ["",Validators.required],
-      email: ["",[Validators.required, Validators.email]],
-      celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
-      celularEmergencia: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
-      domicilio: ["", [Validators.required, Validators.maxLength(50)]],     
+     nombre: ["", [Validators.required, Validators.maxLength(30)]], 
+     apellido: ["",[Validators.required, Validators.maxLength(30)]], 
+     cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],            
+     fechaNac: ["",Validators.required],
+     email: ["",[Validators.required, Validators.email]],
+     celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
+     celularEmergencia: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
+     domicilio: ["", [Validators.required, Validators.maxLength(50)]],     
 
   });
 
@@ -119,7 +120,7 @@ export class ChoferesAltaComponent implements OnInit {
     this.storageService.addItem(this.componente, item); 
      
   }  
-
+  
   armarVehiculo(){   
     this.vehiculo = this.vehiculoForm.value;
     this.vehiculo.categoria = this.categoriaSeleccionada;
@@ -222,5 +223,18 @@ export class ChoferesAltaComponent implements OnInit {
     console.log("este es el legajo del chofer: ", this.legajo);
     
   }
+  validarPatente() {
+    let patenteValida = this.vehiculoForm.validarPatente(
+      this.editForm.value.patente
+    );
 
+    if (patenteValida) {
+      // console.log('es una patente valida');
+      //this.validarTarifa()
+    } else {
+      console.log('no es una patente valida');
+      
+    }
+
+}
 }
