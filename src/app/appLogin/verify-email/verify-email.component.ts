@@ -7,10 +7,20 @@ import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
   styleUrls: ['./verify-email.component.scss']
 })
 export class VerifyEmailComponent implements OnInit {
+  router: any;
+  afAuth: any;
 
   constructor(public authService: AuthService) {}
 
+  // reenvio de email de verificacion, no lo hacia antes
+
   ngOnInit(): void {
   }
-
+  SendVerificationMail() {
+    return this.afAuth.currentUser
+      .then((u: any) => u.sendEmailVerification())
+      .then(() => {
+        this.router.navigate(['verify-email-address']);
+      });
+  }
 }

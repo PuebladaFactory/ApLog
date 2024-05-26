@@ -1,7 +1,6 @@
 
 @import "https://use.fontawesome.com/releases/v5.5.0/css/all.css";
 
-
 .wrapper{
     position: absolute;
     top: 0;
@@ -15,20 +14,21 @@
 }
 .circle{
     border-radius: 100%;
-    width: 200px;
-    height: 200px;
+    width: 20rem;
+    height: 20rem;
     border: 1px solid #32AAEE;
     display: block;
-    box-shadow: 0px 10px 5px #32AAEE;
-    cursor: pointer;
+    box-shadow: 0px 10px 5px #425e92;
+  cursor: pointer;
 }
 #text{
     font: Arial;
-    font-size: 170px;
+    font-size: 13rem;
     font-weight: solid;
     color: #32AAEE;   
     text-align: right;
-vertical-align: middle;
+    vertical-align: middle;
+    text-shadow: 2px 2px 2px #425e92 ;
     
     
 }
@@ -57,7 +57,13 @@ body {
 }
 
 h1,
-h2,
+h2 {
+  text-align: center;
+  font-weight: bold ;
+  margin-bottom: 2rem;
+  font-size: x-large;
+  
+}
 h3,
 h4,
 h5,
@@ -97,16 +103,19 @@ h6 {
 
 .displayTable {
   display: table;
-  width: 100%;
-  height: 100%;
+  width: 40%;
+  height: 80%;
+  border-radius: 2rem;
   background: #12056d;
 }
 
 .displayTableCell {
   display: table-cell;
   vertical-align: middle;
+  border-radius: 2rem;
   width: 100%;
   height: 100%;
+  box-shadow: 5px 5px 5px  black;
 }
 
 h3 {
@@ -116,13 +125,15 @@ h3 {
 }
 
 .authBlock {
-  margin: 0 auto;
+  margin: auto;
   max-width: 400px;
+  
   background: white;
+  border-radius: 2rem;
   padding: 30px 40px 10px;
   overflow: hidden;
   -webkit-box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.04);
-  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.04);
 }
 
 label {
@@ -133,14 +144,29 @@ label {
 }
 
 .formGroup {
+  
   margin-bottom: 20px;
-  float: left;
+  /*float: left;*/
   width: 100%;
+  display: inline-block;
 }
+.formGroup > i {
+  
+  width: 10%;
+  height: 100%;
+  display: inline-block;
+  background-color: lightgray;
+  height: 15px;
+  padding-top: 4.6%;
+  padding-left: 3.5%;
+  padding-right: 8%;
+  padding-bottom: 11.68755%;
+  margin-right: 0.5%;
 
+}
 .formControl {
-  width: 100%;
-  display: block;
+  width: 88%;
+  display: inline-block;
   padding: 15px 15px 14px;
   border: 2px solid #e7e7e7;
   outline: none;
@@ -245,7 +271,7 @@ input:-moz-placeholder {
 }
 
 .forgotPassword span {
-  color: #4dd5fe;
+  color: #2b454d;
   font-size: 14px;
   font-weight: 400;
   cursor: pointer;
@@ -265,7 +291,13 @@ input:-moz-placeholder {
 .redirectToLogin .redirect {
   cursor: pointer;
   color: #ffffff;
-  text-decoration: underline;
+  text-decoration: none;
+}
+.redirectToLogin .btn-primary {
+  color:rgba(255, 255, 255, 0.6);
+  max-width: 75px;
+  text-align: center;
+
 }
 
 /* * Sidebar */
@@ -380,6 +412,7 @@ a:not([href]):not([tabindex]):hover {
 }
 
 i {
+  position: relative;
   width: 22px;
   text-align: center;
   margin-right: 5px;

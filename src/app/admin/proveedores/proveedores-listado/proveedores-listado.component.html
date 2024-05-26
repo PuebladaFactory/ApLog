@@ -14,7 +14,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor=" let proveedor of $proveedores" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(proveedor)">
+        <tr *ngFor=" let proveedor of $proveedores" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(proveedor)">
             <th class="align-middle" scope="row">{{proveedor.idProveedor}} </th>
             <td class="align-middle">{{proveedor.razonSocial}}</td>
             <td class="align-middle">{{proveedor.direccion}}</td>
