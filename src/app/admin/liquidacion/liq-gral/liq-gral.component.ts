@@ -32,24 +32,30 @@ export class LiqGralComponent implements OnInit {
   tituloFacOpCliente: string = "facturaOpCliente";
   //facturasLiquidadas: any[] = []; // Nuevo array para almacenar las facturas liquidadas
   //totalFacturasLiquidadas: number = 0; // Variable para almacenar el total de las facturas liquidadas
-
+  titulo: string = "liquidacion"
+  btnConsulta:boolean = false;
 
   constructor(private storageService: StorageService){    
   }
   
   ngOnInit(): void { 
-    this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
+  /*   this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
     this.storageService.consultasFacOpCliente$.subscribe(data => {
       this.$facturasOpCliente = data;
       //this.procesarDatosParaTabla()
-    });   
+    });  */  
+    this.consultaMes();
   }
 
   getMsg(msg: any) {
-    //this.btnConsulta = true;
+    this.btnConsulta = true;
+    this.fechasConsulta = {
+      fechaDesde: msg.fechaDesde,
+      fechaHasta: msg.fechaHasta,
+    };
     //console.log(msg);        
     //alert("llega el msj")
-    this.consultaOperaciones(msg.fechaDesde, msg.fechaHasta);
+    //this.consultaOperaciones(msg.fechaDesde, msg.fechaHasta);
     //this.msgBack(msg);
     //this.ngOnInit()
   }
@@ -62,6 +68,15 @@ export class LiqGralComponent implements OnInit {
     //console.log("consulta facturas op clientes: ", this.$facturasOpCliente);  
     //this.agruparClientes();      
     //this.procesarDatosParaTabla();
+  }
+
+  consultaMes(){
+    if(!this.btnConsulta){   
+      console.log(this.primerDia, this.ultimoDia)         
+      this.storageService.getByDateValue("facturaOpChofer", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+      this.storageService.getByDateValue("facturaOpCliente", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+      this.storageService.getByDateValue("facturaOpProveedor", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+    }     
   }
 
 }

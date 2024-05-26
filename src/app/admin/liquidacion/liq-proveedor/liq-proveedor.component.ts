@@ -81,13 +81,15 @@ export class LiqProveedorComponent implements OnInit {
 
   ngOnInit(): void {
       
-    this.storageService.getByDateValue(this.tituloFacOpProveedor, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor");
+    //this.storageService.getByDateValue(this.tituloFacOpProveedor, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor");
     this.storageService.consultasFacOpProveedor$.subscribe(data => {
       this.$facturasOpProveedor = data;
       this.procesarDatosParaTabla()
       
       
     });
+
+    
     
     //this.consultaMes(); 
   }
