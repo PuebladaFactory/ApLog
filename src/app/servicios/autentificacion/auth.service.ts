@@ -43,8 +43,7 @@ export class AuthService {
         this.SetUserData(result.user);
         this.afAuth.authState.subscribe((user) => {
           if (user) {
-            this.router.navigate(['/clientes/alta']);
-           // this.router.navigate(['/chofer']);//
+            this.router.navigate(['/admin']);
           }
         });
       })

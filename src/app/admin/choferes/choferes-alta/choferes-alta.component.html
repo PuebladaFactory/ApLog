@@ -14,49 +14,49 @@
               <div class="form-group">
                 <label for="Nombre">Nombre</label>
                 <div class="input-group">
-                  <input formControlName="nombre" class="form-control edicion" required type="text">            
+                  <input formControlName="nombre" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': form.get('nombre').invalid && (form.get('nombre').dirty || form.get('nombre').touched) }" >            
                 </div>
               </div>    
               <div class="form-group">
                 <label for="Apellido">Apellido</label>
                 <div class="input-group">
-                  <input formControlName="apellido" class="form-control" required type="text">
+                  <input formControlName="apellido" class="form-control" required type="text"  [ngClass]="{ 'is-invalid': form.get('apellido').invalid && (form.get('apellido').dirty || form.get('apellido').touched) }" >
                 </div>
               </div>    
               <div class="form-group">
                 <label for="Cuit">CUIT</label>
                 <div class="input-group">
-                  <input formControlName="cuit" class="form-control" required type="text" [placeholder]="'ej: 20213456789'">
+                  <input formControlName="cuit" class="form-control" required type="text" [placeholder]="'ej: 20213456789'"  [ngClass]="{ 'is-invalid': form.get('cuit').invalid && (form.get('cuit').dirty || form.get('cuit').touched) }" >
                 </div>
               </div>                 
               <div class="form-group">
                   <label for="Celular de contacto">Celular de Contacto</label>
                   <div class="input-group">
-                    <input formControlName="celularContacto" class="form-control" required type="text" [placeholder]="'ej: 1154776234'">
+                    <input formControlName="celularContacto" class="form-control" required type="text" [placeholder]="'ej: 1154776234'"  [ngClass]="{ 'is-invalid': form.get('celularContacto').invalid && (form.get('celularContacto').dirty || form.get('celularContacto').touched) }">
                   </div>
               </div>   
               <div class="form-group">
                 <label for="Celular de emergencia">Celular de Emergencia</label>
                 <div class="input-group">
-                  <input formControlName="celularEmergencia" class="form-control" required type="text" [placeholder]="'ej: 1154776234'">
+                  <input formControlName="celularEmergencia" class="form-control" required type="text" [placeholder]="'ej: 1154776234'" [ngClass]="{ 'is-invalid': form.get('celularEmergencia').invalid && (form.get('celularEmergencia').dirty || form.get('celularEmergencia').touched) }">
                 </div>
               </div>   
               <div class="form-group">
                 <label for="Domicilio">Domicilio</label>
                 <div class="input-group">
-                  <input formControlName="domicilio" class="form-control" required type="text">
+                  <input formControlName="domicilio" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('domicilio').invalid && (form.get('domicilio').dirty || form.get('domicilio').touched) }">
                 </div>
               </div> 
               <div class="form-group">
                 <label for="Email">Email</label>
                 <div class="input-group">
-                  <input formControlName="email" class="form-control" required type="email"[placeholder]="'ej: ValdeMario@gmail.com'">
+                  <input formControlName="email" class="form-control" required type="email"[placeholder]="'ej: ValdeMario@gmail.com'" [ngClass]="{ 'is-invalid': form.get('email').invalid && (form.get('email').dirty || form.get('email').touched) }">
                 </div>
             </div>       
               <div class="form-group">
                 <label for="FechaNac">Fecha Nacimiento</label>
                 <div class="input-group">
-                  <input formControlName="fechaNac" class="form-control" required type="date">
+                  <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{ 'is-invalid': form.get('fechaNac').invalid && (form.get('fechaNac').dirty || form.get('fechaNac').touched) }">
                 </div>
               </div>        
               <div class="form-group">
@@ -82,19 +82,20 @@
                   <div class="form-group">
                       <label for="Dominio">Dominio</label>
                       <div class="input-group">
-                        <input formControlName="dominio" class="form-control" required type="text" [placeholder]="'ej: gbc408  ó  ab123ca'">
+                        <input formControlName="dominio" class="form-control" required type="text" [placeholder]="'ej: gbc408  ó  ab123ca'" [ngClass]="{ 'is-invalid': vehiculoForm.get('dominio').invalid && (vehiculoForm.get('dominio').dirty || vehiculoForm.get('dominio').touched) }">
+                        
                       </div>
                   </div>  
                   <div class="form-group">
                     <label for="Marca">Marca</label>
                     <div class="input-group">
-                      <input formControlName="marca" class="form-control" required type="text">
+                      <input formControlName="marca" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('marca').invalid && (vehiculoForm.get('marca').dirty || vehiculoForm.get('marca').touched) }"> 
                     </div>
                   </div> 
                   <div class="form-group">
                       <label for="Modelo">Modelo</label>
                       <div class="input-group">
-                        <input formControlName="modelo" class="form-control" required type="text">
+                        <input formControlName="modelo" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('modelo').invalid && (vehiculoForm.get('modelo').dirty || vehiculoForm.get('modelo').touched) }">
                       </div>
                   </div>     
                   <div class="form-group">
