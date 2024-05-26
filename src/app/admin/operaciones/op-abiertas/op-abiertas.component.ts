@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { Chofer } from 'src/app/interfaces/chofer';
+import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
@@ -21,7 +23,7 @@ export class OpAbiertasComponent implements OnInit {
   
   detalleOp!: Operacion;
   opCerradas$!:any;
-  componente: string = "operacionesCerradas";
+  componente: string = "operacionesActivas";
   public show: boolean = false;
   public buttonName: any = 'Consultar Operaciones';
   consultasOp$!:any;
@@ -44,6 +46,14 @@ export class OpAbiertasComponent implements OnInit {
     fechaDesde: 0,
     fechaHasta: 0,
   };
+  opEditar!: Operacion;
+  clienteSeleccionado!: Cliente;
+  choferSeleccionado!: Chofer;
+  acompaniante: boolean = false;
+  form:any;
+  $clientes: any;
+  $choferes: any;
+  tarifaEspecial!:boolean;
 
   private subscriptions: Subscription[] = [];
 
@@ -52,6 +62,10 @@ export class OpAbiertasComponent implements OnInit {
         km: [''],       
         remito: [''],       
     });
+    this.form = this.fb.group({      
+      fecha: [""],    
+      observaciones: [""],
+    })
    }
   
   ngOnInit(): void { 
@@ -59,7 +73,16 @@ export class OpAbiertasComponent implements OnInit {
     //this.consultasOp$ = this.storageService.consultasOpCerradas$; 
     /* this.storageService.consultasOpCerradas$.subscribe(data => {
       this.$opCerradas = data;}) */
-
+      this.storageService.choferes$.subscribe(data => {
+        this.$choferes = data;
+      });
+      //this.clientes$ = this.storageService.clientes$;
+      this.storageService.clientes$.subscribe(data => {
+        this.$clientes = data;
+      });    
+      //this.opActivas$ = this.storageService.opActivas$;
+      //this.consultasOp$ = this.storageService.consultasOpActivas$;
+      /*  */
     this.storageService.consultasOpActivas$.subscribe(data => {
       this.$consultasOp = data;
     });
@@ -203,5 +226,91 @@ export class OpAbiertasComponent implements OnInit {
       this.addItem("facturaOpCliente", this.facturaCliente);
       this.addItem("facturaOpProveedor", this.facturaProveedor)
     }
+  }
+  
+  eliminarOperacion(op: Operacion){
+    this.storageService.deleteItem(this.componente, op);
+    this.ngOnInit();    
+  }
+
+  abrirEdicion(op:Operacion):void {
+    this.opEditar = op;    
+    this.clienteSeleccionado = op.cliente;
+    this.choferSeleccionado = op.chofer;
+   /*  this.unidadesConFrio = op.unidadesConFrio; */
+    this.acompaniante = op.acompaniante;
+
+    //console.log("este es la op a editar: ", this.opEditar);
+    this.armarForm();
+    
+  }
+
+  armarForm(){
+    this.form.patchValue({
+      fecha: this.opEditar.fecha,
+      observaciones: this.opEditar.observaciones
+    })
+  }
+
+  onSubmitEdit(){   
+    this.opEditar.fecha = this.form.value.fecha;
+    this.opEditar.observaciones = this.form.value.observaciones;
+    this.opEditar.cliente = this.clienteSeleccionado;
+    this.opEditar.chofer  = this.choferSeleccionado;
+    /* this.opEditar.unidadesConFrio = this.unidadesConFrio; */
+    this.opEditar.acompaniante = this.acompaniante;
+    this.opEditar.tarifaEspecial = this.tarifaEspecial;
+    console.log("este es la op editada: ", this.opEditar);
+    this.update();    
+   }
+
+   update(): void {
+    this.storageService.updateItem(this.componente, this.opEditar)
+    this.ngOnInit();  
+    this.form.reset();   
+  }
+
+  selectAcompaniante(e: any) {
+    //console.log(e.target.value)    
+    if(e.target.value === "si"){
+      this.acompaniante = true;
+    }else if (e.target.value === "no"){
+      this.acompaniante = false;
+    }else{
+      this.acompaniante = this.opEditar.acompaniante;
+    }
+    //console.log("acompaniante: ", this.acompaniante);
+  }
+
+  changeCliente(e: any) {
+    //console.log(e.target.value)
+    let clienteForm;
+    clienteForm = this.$clientes.filter(function (cliente: any) { 
+      return cliente.razonSocial === e.target.value
+    });
+    this.clienteSeleccionado = clienteForm[0];               
+    //console.log(this.clienteSeleccionado);
+  }
+
+  changeChofer(e: any) {
+    //console.log(e.target.value)
+    let choferForm;
+    choferForm = this.$choferes.filter(function (chofer: any) { 
+      return chofer.apellido === e.target.value
+    });
+    this.choferSeleccionado = choferForm[0];               
+    //console.log(this.choferSeleccionado);
+  }
+
+  selectTarifaEspecial(e: any) {
+    //console.log(e.target.value)    
+    if(e.target.value === "si"){
+      this.tarifaEspecial = true;
+    }else if (e.target.value === "no"){
+      this.tarifaEspecial = false;
+    }else{
+      this.tarifaEspecial = this.opEditar.tarifaEspecial;
+    }
+    console.log("tarifa especial: ", this.tarifaEspecial);
   }
 }

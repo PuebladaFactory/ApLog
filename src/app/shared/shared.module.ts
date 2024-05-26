@@ -6,6 +6,7 @@ import { BtnAgregarComponent } from './btn-agregar/btn-agregar.component';
 import { BtnEditarComponent } from './btn-editar/btn-editar.component';
 import { BtnEliminarComponent } from './btn-eliminar/btn-eliminar.component';
 import { BtnReimpresionComponent } from './btn-reimpresion/btn-reimpresion.component';
+import { BtnLeerComponent } from './btn-leer/btn-leer.component';
 
 
 @NgModule({
@@ -13,7 +14,8 @@ import { BtnReimpresionComponent } from './btn-reimpresion/btn-reimpresion.compo
     BtnAgregarComponent,
     BtnEditarComponent,
     BtnEliminarComponent,
-    BtnReimpresionComponent
+    BtnReimpresionComponent,
+    BtnLeerComponent
   ],
   imports: [
     CommonModule,
@@ -23,7 +25,8 @@ import { BtnReimpresionComponent } from './btn-reimpresion/btn-reimpresion.compo
     BtnAgregarComponent,
     BtnEditarComponent,
     BtnEliminarComponent,
-    BtnReimpresionComponent
+    BtnReimpresionComponent,
+    BtnLeerComponent
   ]
 })
 export class SharedModule { }
