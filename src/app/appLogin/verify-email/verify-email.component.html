@@ -7,8 +7,9 @@
 
 <div class="displayTable">
     <div class="displayTableCell">
+      <br/><br/>
       <div class="authBlock">
-        <h3>Thank You for Registering</h3>
+        <h2>Thank You for Registering</h2>
   
         <div class="formGroup" *ngIf="authService.userData as user">
           <p class="text-center">
@@ -36,12 +37,11 @@
   
       <div class="redirectToLogin">
         <span
-          >Go back to?<span class="redirect" routerLink="/sign-in">
-            Sign in</span
-          ></span
-        >
+          >Go back to?
+          <span class="redirect" routerLink="/login">
+             &nbsp;Sign In</span></span>
+        <br/><br/>
       </div>
     </div>
-  </div>
-  
-</div>>
+  </div> 
+</div>
