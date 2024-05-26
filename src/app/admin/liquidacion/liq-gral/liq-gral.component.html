@@ -1,8 +1,29 @@
 <div class="container">
     <div class=" d-flex">
         <h1 class="text-center w-100 mx-auto">Liquidación</h1>
-        <app-facturacion-consulta [componenteConsulta]="componenteConsulta" (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" class="flex-shrink-1 w-25"></app-facturacion-consulta>      
+        <!-- <app-facturacion-consulta [componenteConsulta]="componenteConsulta" (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" class="flex-shrink-1 w-25"></app-facturacion-consulta>       -->
+        <!-- <app-facturacion-consulta (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-facturacion-consulta> -->
+        <button   data-bs-target="#consultaModal" data-bs-toggle="modal" id="bt" class="btn btn-outline-secondary ">
+            Consultar Operaciones
+        </button>
+        <!-- MODAL CONSULTA OPERACION -->
+        <div class="modal fade modal-sm" id="consultaModal" tabindex="-1" aria-labelledby="consultaModal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                    </div>
+                    <app-facturacion-consulta (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-facturacion-consulta>
+                        
+                </div>
+            </div>
+        </div>  
     </div>  
+
+    <h3 *ngIf="!btnConsulta" class="mt-5">Operaciones: {{primerDia}} / {{ultimoDia}} </h3>
+    <h3 *ngIf="btnConsulta" class="mt-5">Resultado de la consulta: {{fechasConsulta.fechaDesde}} / {{fechasConsulta.fechaHasta}} </h3>
+
     <div>
         <h2>Clientes:</h2>
         <app-liq-cliente class="mt-2"></app-liq-cliente>

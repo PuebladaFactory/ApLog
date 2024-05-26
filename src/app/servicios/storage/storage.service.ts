@@ -9,6 +9,9 @@ import { DbFirestoreService } from '../database/db-firestore.service';
 })
 export class StorageService {
 
+  date:any = new Date();
+  primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
+  ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
 
   // los componentes trabajan solo con el storage
   // el storage hace las operaciones crud solo cuando hagan falta 
@@ -271,7 +274,11 @@ export class StorageService {
     this.getAllSorted("tarifasChofer", 'fecha', 'asc')
     this.getAllSorted("tarifasCliente", 'fecha', 'asc')
     this.getAllSorted("tarifasProveedor", 'fecha', 'asc')
-   
+    this.getAllSorted("facturaOpChofer", 'fecha', 'desc')
+    this.getAllSorted("facturaOpProveedor", 'fecha', 'desc')
+    this.getByDateValue("facturaOpChofer","fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer")
+    this.getByDateValue("facturaOpCliente","fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente")
+    this.getByDateValue("facturaOpProveedor","fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor")
 
   }
 
