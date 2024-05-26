@@ -24,7 +24,7 @@ import { Component, Input, OnInit } from '@angular/core';
 
    {{name || "Editar"}} 
 </button>  -->
-<button *ngIf="name === 'Editar'"  class="btn btn-secondary" style="border-radius: 10%;  margin: 10px;" >
+<button *ngIf="name === 'Editar'"  class="btn btn-secondary m-0" style="border-radius: 10%;  margin: 10px;" >
     <!-- <i class="bi bi-pencil"></i> -->
 
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
