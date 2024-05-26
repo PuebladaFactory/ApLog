@@ -1,13 +1,13 @@
 <div  class="col-12 ">
     <div id="caja" class="border border-2 p-4 rounded-4">
-      <h1>Consulta de Operaciones</h1>
-      <div class="d-sm-flex col-12">
-        <div class="col-12 col-sm-6">
+      <h2>Consulta de Operaciones</h2>
+      <div class="d-sm-flex col-12 mb-5">
+        <div class="col-12 col-sm-6 mt-3">
           <h3>Desde:</h3>
-          <div class="d-flex justify-content-evenly">
+          <div class="d-flex justify-content-evenly mt-3">
             <div class="align-self-center">
               <form class="row row-cols-sm-auto">
-                <div class="col-12">
+                <div class="col-12 mx-auto">
                   <div class="input-group">
                     <input
                       class="form-control"
@@ -28,7 +28,7 @@
               </form>
   
               <button
-                class="btn btn-sm btn-outline-primary"
+                class="btn btn-sm btn-outline-primary mt-3"
                 (click)="model1 = today"
               >
                 Seleccionar Hoy
@@ -45,15 +45,15 @@
           </div>
         </div>
   
-        <div class="col-12 col-sm-6">
+        <div class="col-12 col-sm-6 mt-3">
           <h3>Hasta:</h3>
-          <div class="d-flex justify-content-evenly">
+          <div class="d-flex justify-content-evenly mt-3">
             <div class="align-self-center">
               <form class="row row-cols-sm-auto">
-                <div class="col-12">
+                <div class="col-12 mx-auto">
                   <div class="input-group">
                     <input
-                      class="form-control"
+                      class="form-control "
                       placeholder="dd/mm/yyyy"
                       name="d2"
                       #c2="ngModel"
@@ -71,7 +71,7 @@
               </form>
   
               <button
-                class="btn btn-sm btn-outline-primary"
+                class="btn btn-sm btn-outline-primary mt-3"
                 (click)="model2 = today"
               >
                 Seleccionar Hoy
@@ -89,7 +89,7 @@
       </div>
   
       <button
-        class="btn btn-lg btn-outline-primary"
+        class="btn btn-lg btn-outline-primary mt-2"  data-bs-dismiss="modal" aria-label="Close"
         (click)="buscarOperaciones()"
       >
         Buscar
