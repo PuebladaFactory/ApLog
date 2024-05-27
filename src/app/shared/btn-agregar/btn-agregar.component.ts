@@ -13,23 +13,35 @@ import { Component, Input, OnInit } from '@angular/core';
 </button> -->
 
 
-<button *ngIf="name === 'Guardar'" class="btn btn-secondary" class="btn btn-secondary mt-2" type="submit">
+<button *ngIf="name === 'Guardar'" class="btn btn-secondary mt-2" type="submit">
     Guardar 
 </button>
 
-<button *ngIf="name === 'GuardarCambios'" class="btn btn-secondary" class="btn btn-secondary mt-2" type="submit">
+<button *ngIf="name === 'GuardarClaro'" class="btn btn-outline-secondary mt-2" type="submit">
+    Guardar 
+</button>
+
+<button *ngIf="name === 'GuardarCambios'" class="btn btn-secondary mt-2" type="submit">
     Guardar los cambios
 </button>
 
-<button *ngIf="name === 'Agregar'" class="btn btn-secondary" class="btn btn-secondary mt-2" type="submit">
+<button *ngIf="name === 'GuardarCambiosClaro'" class="btn btn-outline-secondary  mt-2" type="submit">
+    Guardar los cambios
+</button>
+
+<button *ngIf="name === 'Agregar'" class="btn btn-secondary mt-2" type="submit">
     Agregar 
 </button>
 
-<button *ngIf="name === 'Agregar Contacto'" class="btn btn-secondary" class="btn btn-secondary mt-2" type="submit">
+<button *ngIf="name === 'Agregar Contacto'" class="btn btn-secondary mt-2" type="submit">
     Agregar Contacto
 </button>
 
-<button *ngIf="name === 'Facturar'" class="btn btn-secondary" class="btn btn-secondary mt-2" type="submit">
+<button *ngIf="name === 'AgregarContactoClaro'" class="btn btn-outline-secondary mt-2" type="submit">
+    Agregar Contacto
+</button>
+
+<button *ngIf="name === 'Facturar'" class="btn btn-secondary mt-2" type="submit">
     Facturar 
 </button>
 
