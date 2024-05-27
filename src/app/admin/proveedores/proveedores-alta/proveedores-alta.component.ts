@@ -41,7 +41,11 @@ export class ProveedoresAltaComponent implements OnInit {
     //console.log(new Date().getTime());    
     this.proveedor = this.form.value
     this.proveedor.idProveedor = new Date().getTime();
-    if(this.contactos.length === 0){
+    console.log(this.form.value.razonSocial);
+    
+    if(this.form.value.razonSocial === "" || this.form.value.cuit === "" || this.form.value.direccion === ""){
+      alert("validacion")
+    } else if(this.contactos.length === 0){
       let contactosVacio = confirm("¿Desea agendar el proveedor sin contactos?");
       if(contactosVacio){
         alert("no hagas esto pq se rompe")

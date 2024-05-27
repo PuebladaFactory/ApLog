@@ -16,7 +16,8 @@
           <!-- <th class="tabla" scope="col">Refrigeración</th>                     
           <th class="tabla" scope="col">Seguimiento</th>      -->                
           <th class="tabla" scope="col">Proveedor</th>
-          <th class="tabla" scope="col">Acciones</th>
+          <th class="tabla" scope="col">Satelital</th>
+          <th class="tabla" scope="col" [ngStyle]="{'width': '10%'}">Acciones</th>
         </tr>
       </thead>
       <tbody *ngFor=" let chofer of $choferes | filter: searchText">        
@@ -37,6 +38,7 @@
                 <td class="align-middle">si</td>
               </ng-template>           -->
               <td class="align-middle">{{chofer.proveedor}}</td>
+              <td class="align-middle">{{chofer.satelital === "no" ? "no" : "si"}}</td>
               <td>
                 
                 <app-btn-leer name="Detalle" (click)="abrirVista(chofer)" data-bs-toggle="modal" data-bs-target="#exampleModal"></app-btn-leer>
@@ -60,10 +62,15 @@
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header" *ngIf="choferEditar !== undefined">
-        <h3 class="modal-title" id="exampleModalLabel">Editar Chofer</h3>
-        <h5>Id: {{choferEditar.idChofer}} </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"  (click)="cerrarEdicion()"></button>
+      <div class="modal-header row" >
+        <div class="d-flex">
+            <h3 class="modal-title" id="exampleModalLabel">Editar Chofer</h3>            
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"  (click)="cerrarEdicion()"></button>
+        </div>
+        <div *ngIf="choferEditar !== undefined">
+          <h5>Id: {{choferEditar.idChofer}} </h5>
+        </div>
+        
       </div>
       <div class="modal-body">
         <div class="d-flex justify-content-between">

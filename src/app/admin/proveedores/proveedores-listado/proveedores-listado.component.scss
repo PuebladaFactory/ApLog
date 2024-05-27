@@ -1,0 +1,12 @@
+.isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+}
+  
+.isDisabled:hover {
+    cursor: not-allowed;
+}
+
+.contactoForm{
+    width: 8rem;
+}
