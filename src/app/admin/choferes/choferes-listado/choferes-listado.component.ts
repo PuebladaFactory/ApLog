@@ -39,7 +39,7 @@ export class ChoferesListadoComponent implements OnInit {
   jornadaEditar!: TarifaChofer;
   adicionalKm!: AdicionalKm;
   tipoCombustible!:string;
-  tarjetaCombustible!:string;  
+  tarjetaCombustible!:boolean;  
   vehiculo!:Vehiculo;
   seguimiento: boolean = false;
   satelital!: any;
@@ -48,6 +48,7 @@ export class ChoferesListadoComponent implements OnInit {
   proveedorSeleccionado!: any;
   soloVista:boolean = false;
   searchText!: string;
+  publicidad!: boolean;
 
   constructor(private fb: FormBuilder, private storageService: StorageService,){
     this.form = this.fb.group({                          //formulario para el perfil 
@@ -108,7 +109,7 @@ export class ChoferesListadoComponent implements OnInit {
   //este es el metodo que arma el objeto (chofer) que muestra el modal para editar
   abrirEdicion(chofer:Chofer):void {
     this.choferEditar = chofer;    
-    //console.log("este es el chofer a editar: ", this.choferEditar);
+    console.log("este es el chofer a editar: ", this.choferEditar);
     this.proveedorSeleccionado = chofer.proveedor;
     this.armarForm();    
   }
@@ -136,11 +137,12 @@ export class ChoferesListadoComponent implements OnInit {
     this.categoriaSeleccionada = this.choferEditar.vehiculo.categoria;
     this.tipoCombustible = this.choferEditar.vehiculo.tipoCombustible;
     this.tarjetaCombustible = this.choferEditar.vehiculo.tarjetaCombustible;
-    if(this.choferEditar.vehiculo.refrigeracion){
+    this.publicidad = this.choferEditar.vehiculo.publicidad;
+   /*  if(this.choferEditar.vehiculo.refrigeracion){
       this.refrigeracion = true
     } else{
       this.refrigeracion = false
-    }
+    } */
     this.armarSeguimientoSatelital();
   }
 
@@ -205,7 +207,8 @@ export class ChoferesListadoComponent implements OnInit {
     this.vehiculo.categoria = this.categoriaSeleccionada;
     this.vehiculo.tipoCombustible = this.tipoCombustible;
     this.vehiculo.tarjetaCombustible = this.tarjetaCombustible;
-    this.vehiculo.refrigeracion = this.refrigeracion;
+    this.vehiculo.publicidad = this.publicidad
+    this.vehiculo.refrigeracion = null;
     if(this.seguimiento){
       this.vehiculo.satelital = this.seguimientoForm.value;
     }else{
@@ -257,8 +260,25 @@ export class ChoferesListadoComponent implements OnInit {
     this.tipoCombustible = e.target.value   
   }
 
-  changeTarjetaombustible(e: any) {    
-    this.tarjetaCombustible = e.target.value   
+  changeTarjetaCombustible(e: any) {    
+    if(e.target.value === "si"){
+      this.tarjetaCombustible = true;   
+    } else if (e.target.value === "no") {
+      this.tarjetaCombustible = false;   
+    } else{
+      this.tarjetaCombustible = this.choferEditar.vehiculo.tarjetaCombustible;
+    }      
+  }
+
+  changePublicidad(e: any) {    
+    if(e.target.value === "si"){
+      this.publicidad = true;   
+    } else if (e.target.value === "no"){
+      this.publicidad = false;   
+    } else{
+      this.publicidad = this.choferEditar.vehiculo.publicidad;
+    }   
+    
   }
 
   seguimientoSatelital(e:any){    
@@ -311,10 +331,10 @@ export class ChoferesListadoComponent implements OnInit {
 
   eliminarChofer(chofer:Chofer){    
     
-    if(chofer.vehiculo.tarjetaCombustible === "si" || chofer.vehiculo.satelital !== "no"){
-       if (chofer.vehiculo.tarjetaCombustible === "si" && chofer.vehiculo.satelital !== "no"){
+    if(chofer.vehiculo.tarjetaCombustible  || chofer.vehiculo.satelital !== "no"){
+       if (chofer.vehiculo.tarjetaCombustible  && chofer.vehiculo.satelital !== "no"){
         alert("El chofer que desea eliminar tiene asignada una tarjeta de combustible y seguimiento satelital")
-       } else if (chofer.vehiculo.tarjetaCombustible === "si" && chofer.vehiculo.satelital === "no"){
+       } else if (chofer.vehiculo.tarjetaCombustible  && chofer.vehiculo.satelital === "no"){
             alert("El chofer que desea eliminar tiene asignada una tarjeta de combustible")
           } else {
                 alert("El chofer que desea eliminar tiene asignado seguimiento satelital")

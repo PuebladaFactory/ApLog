@@ -12,6 +12,7 @@
           <th class="tabla" scope="col">Categoria</th>
           <!-- <th class="tabla" scope="col">Tipo Combustible</th> -->
           <th class="tabla" scope="col">Tarjeta Combustible</th>
+          <th class="tabla" scope="col">Publicidad</th>
           <!-- <th class="tabla" scope="col">Refrigeración</th>                     
           <th class="tabla" scope="col">Seguimiento</th>      -->                
           <th class="tabla" scope="col">Proveedor</th>
@@ -28,7 +29,8 @@
               <td class="align-middle">{{chofer.vehiculo.dominio}}</td>
               <td class="align-middle">{{chofer.vehiculo.categoria}}</td>
               <!-- <td class="align-middle">{{chofer.vehiculo.tipoCombustible}}</td> -->
-              <td class="align-middle">{{chofer.vehiculo.tarjetaCombustible}}</td>
+              <td class="align-middle">{{chofer.vehiculo.tarjetaCombustible? "si" : "no"}}</td>
+              <td class="align-middle">{{chofer.vehiculo.publicidad? "si" : "no"}}</td>
               <!-- <td class="align-middle"> {{chofer.vehiculo.refrigeracion ? "si": "no"}}</td>
               <td *ngIf="chofer.vehiculo.satelital === 'no' else seguimiento" class="align-middle">no</td>
               <ng-template #seguimiento>
@@ -174,12 +176,20 @@
             </div> 
             <div class="form-group">
                 <label for="Categoria">Tarjeta de Combustible</label>
-                <select class="form-select form-select-md mb-3" (change)="changeTarjetaombustible($event)" required [ngClass]="{'isDisabled': !edicion}">
-                    <option>{{tarjetaCombustible}}</option>
+                <select class="form-select form-select-md mb-3" (change)="changeTarjetaCombustible($event)" required [ngClass]="{'isDisabled': !edicion}">
+                    <option>{{tarjetaCombustible ? "si" : "no"}}</option>
                     <option value="si">si</option>
                     <option value="no">no</option>                        
                 </select>
             </div> 
+            <div class="form-group">
+              <label for="Categoria">Publicidad</label>
+              <select class="form-select form-select-md mb-3" (change)="changePublicidad($event)" required [ngClass]="{'isDisabled': !edicion}">
+                  <option>{{publicidad ? "si" : "no"}}</option>
+                  <option value="si">si</option>
+                  <option value="no">no</option>                        
+              </select>
+          </div> 
           <!--   <div class="form-group">
               <label for="Categoria mt-2">Refrigeracion</label>
               <select class="form-select form-select-md mb-3" (change)="selectRefrigeracion($event)" *ngIf="refrigeracion else sinRefrigeracion"  required [ngClass]="{'isDisabled': !edicion}">
