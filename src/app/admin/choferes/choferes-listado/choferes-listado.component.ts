@@ -22,14 +22,18 @@ export class ChoferesListadoComponent implements OnInit {
   jornadaForm:any;
   adicionalForm:any;
   categorias = [
-    { id: 0, categoria: 'maxi', },
-    { id: 1, categoria: 'mini', },
-    { id: 2, categoria: 'liviano', },
-    { id: 3, categoria: 'otro', },
+    { id: 0, categoria: 'mini', },
+    { id: 1, categoria: 'maxi', },
+    { id: 2, categoria: 'furgon grande', },
+    { id: 3, categoria: 'camión liviano', },
+    { id: 4, categoria: 'chasis', },
+    { id: 5, categoria: 'balancin', },
+    { id: 6, categoria: 'semi remolque local', },
+    { id: 7, categoria: 'portacontenedores', },
     ];
   categoriaSeleccionada!:string;
   choferEditar!: Chofer;
-  componente!:string; 
+  componente:string = "choferes";
   jornadas$:any;
   jornadaChofer!: TarifaChofer;
   jornadaEditar!: TarifaChofer;
@@ -42,6 +46,8 @@ export class ChoferesListadoComponent implements OnInit {
   edicion:boolean = false;
   refrigeracion!:boolean; 
   proveedorSeleccionado!: any;
+  soloVista:boolean = false;
+  searchText!: string;
 
   constructor(private fb: FormBuilder, private storageService: StorageService,){
     this.form = this.fb.group({                          //formulario para el perfil 
@@ -301,6 +307,31 @@ export class ChoferesListadoComponent implements OnInit {
     }) */
    console.log("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
     //this.buscarTarifas();
+  }
+
+  eliminarChofer(chofer:Chofer){    
+    
+    if(chofer.vehiculo.tarjetaCombustible === "si" || chofer.vehiculo.satelital !== "no"){
+       if (chofer.vehiculo.tarjetaCombustible === "si" && chofer.vehiculo.satelital !== "no"){
+        alert("El chofer que desea eliminar tiene asignada una tarjeta de combustible y seguimiento satelital")
+       } else if (chofer.vehiculo.tarjetaCombustible === "si" && chofer.vehiculo.satelital === "no"){
+            alert("El chofer que desea eliminar tiene asignada una tarjeta de combustible")
+          } else {
+                alert("El chofer que desea eliminar tiene asignado seguimiento satelital")
+              }
+    }
+    
+    this.storageService.deleteItem(this.componente, chofer);
+    
+    /* this.ngOnInit();  */
+    
+  }
+
+  abrirVista(chofer:Chofer):void {
+    this.soloVista = true;
+    this.choferEditar = chofer;    
+    //console.log("este es el cliente a editar: ", this.clienteEditar);
+    this.armarForm();    
   }
 
 }
