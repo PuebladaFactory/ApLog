@@ -11,7 +11,7 @@
             <th scope="col">Puesto</th>
             <th scope="col">Telefono</th>
             <th scope="col">Correo</th>
-            <th scope="col">Acciones</th>              
+            <th scope="col" [ngStyle]="{'width': '12%'}">Acciones</th>              
         </tr>
     </thead>
     <tbody>
@@ -58,9 +58,14 @@
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2  *ngIf="!soloVista" class="modal-title" id="exampleModalLabel">Editar Cliente</h2>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header row" >
+          <div class="d-flex">
+              <h2 class="modal-title" id="exampleModalLabel">{{!soloVista ? "Editar Cliente" : "Cliente"}}</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="borrarForms()"></button>        
+          </div>
+          <div *ngIf="clienteEditar !== undefined">
+              <h5>Id: {{clienteEditar.idCliente}} </h5>                
+          </div>
       </div>      
       <div class="modal-body">
         <div class="d-flex justify-content-between">
@@ -79,9 +84,7 @@
           </button>  -->
           <app-btn-eliminar name="x" *ngIf="edicion" (click)="editarPerfil()" ></app-btn-eliminar> 
         </div>    
-          <div class="form-group" *ngIf="clienteEditar !== undefined">
-                <h5>Id: {{clienteEditar.idCliente}} </h5>                
-          </div>
+          
         <form [formGroup]="form" (ngSubmit)="onSubmit()">
          
             <div class="form-group">
@@ -165,7 +168,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h1 class="modal-title fs-5" id="exampleModalToggleLabel2">Contacto</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="borrarForms()"></button>
       </div>
       <div class="modal-body">
           <form [formGroup]="formContacto" (ngSubmit)="guardarContacto()">

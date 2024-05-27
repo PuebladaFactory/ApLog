@@ -86,6 +86,7 @@ export class ClienteListadoComponent implements OnInit {
     console.log("estos es el clienteEditar: ", this.clienteEditar);
     
     this.update();    
+    this.borrarForms()
     this.edicion = false;
    }
 
@@ -152,6 +153,11 @@ export class ClienteListadoComponent implements OnInit {
     this.storageService.deleteItem(this.componente, cliente);
     /* this.ngOnInit(); */
     
+  }
+
+  borrarForms(){
+    this.form.reset()
+    this.formContacto.reset()
   }
 
 }

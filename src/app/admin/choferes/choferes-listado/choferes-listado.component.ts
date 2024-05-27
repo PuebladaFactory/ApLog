@@ -168,6 +168,7 @@ export class ChoferesListadoComponent implements OnInit {
 
   cerrarEdicion(){
     this.edicion = false;
+    //this.borrarEdicion()
   }
 
   onSubmit(){ 
@@ -352,6 +353,12 @@ export class ChoferesListadoComponent implements OnInit {
     this.choferEditar = chofer;    
     //console.log("este es el cliente a editar: ", this.clienteEditar);
     this.armarForm();    
+  }
+
+  borrarForms(){
+    this.form.reset();
+    this.vehiculoForm.reset();
+    this.seguimientoForm.reset();
   }
 
 }

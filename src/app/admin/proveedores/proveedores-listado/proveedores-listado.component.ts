@@ -14,12 +14,14 @@ export class ProveedoresListadoComponent implements OnInit {
   edicion:boolean = false;
   proveedorEditar!: Proveedor;
   form:any;
-  componente:string ="clientes";
+  componente:string ="proveedores";
   //mostrar:boolean = false;
   formContacto: any;
   contactoEditar!: Contacto;
   indice!:number;
   $proveedores:any;
+  soloVista: boolean = false;
+  searchText!: string;
 
 
   constructor(private fb: FormBuilder, private storageService: StorageService,){
@@ -46,6 +48,7 @@ export class ProveedoresListadoComponent implements OnInit {
   }
   
   abrirEdicion(proveedor:Proveedor):void {
+    this.soloVista = false;    
     this.proveedorEditar = proveedor;    
     //console.log("este es el cliente a editar: ", this.clienteEditar);
     this.armarForm();
@@ -62,6 +65,13 @@ export class ProveedoresListadoComponent implements OnInit {
     })
   }
 
+  abrirVista(proveedor:Proveedor):void {
+    this.soloVista = true;
+    this.proveedorEditar = proveedor;    
+    //console.log("este es el cliente a editar: ", this.clienteEditar);
+    this.armarForm();    
+  }
+
   onSubmit(){   
     this.proveedorEditar.razonSocial = this.form.value.razonSocial;
     this.proveedorEditar.direccion = this.form.value.direccion;
@@ -73,7 +83,9 @@ export class ProveedoresListadoComponent implements OnInit {
     console.log("estos son los contactos: ", this.formContacto.value);
     console.log("estos es el clienteEditar: ", this.proveedorEditar);
     
-    this.update();    
+    this.update();        
+    this.borrarForms();
+    this.edicion = false;
    }
 
    update(): void {
@@ -101,15 +113,38 @@ export class ProveedoresListadoComponent implements OnInit {
 
   guardarContacto(){
     //console.log(this.formContacto.value);
+    
+    
     this.contactoEditar = this.formContacto.value;
-    //console.log(this.contactoEditar);
-    this.proveedorEditar.contactos[this.indice] = this.contactoEditar;
-    console.log(this.proveedorEditar);
+    console.log(this.indice);
+    if(this.indice === undefined){
+      console.log(this.indice);
+      console.log(this.contactoEditar);
+      this.proveedorEditar.contactos.push(this.contactoEditar)
+    } else{
+      console.log(this.contactoEditar);
+      console.log(this.indice);
+      
+      this.proveedorEditar.contactos[this.indice] = this.contactoEditar;
+      console.log(this.proveedorEditar);  
+    }
+    console.log(this.proveedorEditar.contactos);
     
   }
-  /* toogleMostrar(){
-    this.mostrar = !this.mostrar;
-  } */
 
+  eliminarProveedor(proveedor: Proveedor){
+    this.storageService.deleteItem(this.componente, proveedor);
+    /* this.ngOnInit(); */
+    
+  }
+
+  eliminarContacto(indice:number){
+    this.proveedorEditar.contactos.splice(indice, 1);    
+  }
+
+  borrarForms(){
+    this.form.reset()
+    this.formContacto.reset()
+  }
 
 }
