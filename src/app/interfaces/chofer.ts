@@ -24,8 +24,9 @@ export interface Vehiculo {
     tipoCombustible: string;    
     categoria: string;
     satelital: SeguimientoSatelital | string;
-    tarjetaCombustible: string;
-    refrigeracion: boolean;
+    tarjetaCombustible: boolean;
+    refrigeracion: boolean|null;
+    publicidad: boolean;
 }
 
 export interface SeguimientoSatelital {

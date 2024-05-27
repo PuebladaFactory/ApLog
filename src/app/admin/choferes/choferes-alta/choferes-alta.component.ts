@@ -37,7 +37,7 @@ export class ChoferesAltaComponent implements OnInit {
   seguimiento: boolean = false;
   categoriaSeleccionada!:string;
   tipoCombustible!:string;
-  tarjetaCombustible!:string;
+  tarjetaCombustible!:boolean;
   jornada!:TarifaChofer;
   vehiculo!:Vehiculo;
   adicionalKm!:AdicionalKm;  
@@ -46,6 +46,7 @@ export class ChoferesAltaComponent implements OnInit {
   $proveedores!: any; 
   proveedorSeleccionado!: string;
   editForm: any;
+  publicidad!: boolean;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
     this.form = this.fb.group({                             //formulario para el perfil 
@@ -126,12 +127,13 @@ export class ChoferesAltaComponent implements OnInit {
     this.vehiculo.categoria = this.categoriaSeleccionada;
     this.vehiculo.tipoCombustible = this.tipoCombustible;
     this.vehiculo.tarjetaCombustible = this.tarjetaCombustible;
+    this.vehiculo.publicidad = this.publicidad;
     if(this.seguimiento){
       this.vehiculo.satelital = this.seguimientoForm.value;
     }else{
       this.vehiculo.satelital = "no";
     }
-    this.vehiculo.refrigeracion = this.refrigeracion;
+    this.vehiculo.refrigeracion = null;
     //console.log(this.vehiculo);
     this.chofer.vehiculo = this.vehiculo;
   }
@@ -172,7 +174,21 @@ export class ChoferesAltaComponent implements OnInit {
   }
 
   changeTarjetaombustible(e: any) {    
-    this.tarjetaCombustible = e.target.value   
+    if(e.target.value === "si"){
+      this.tarjetaCombustible = true;  
+    } else {
+      this.tarjetaCombustible = false;
+    }
+    
+  }
+
+  changePublicidad(e: any) {    
+    if(e.target.value === "si"){
+      this.publicidad = true;  
+    } else {
+      this.publicidad = false;
+    }
+    
   }
 
   seguimientoSatelital(e:any){    
@@ -192,7 +208,7 @@ export class ChoferesAltaComponent implements OnInit {
     
   }
 
-  selectRefrigeracion(e:any){ 
+  /* selectRefrigeracion(e:any){ 
     switch (e.target.value) {
       case "si":{
         this.refrigeracion = true;
@@ -206,7 +222,7 @@ export class ChoferesAltaComponent implements OnInit {
         break;
       }
     }
-  }
+  } */
 
   armarLegajo(){
     console.log("chofer: ", this.chofer);
