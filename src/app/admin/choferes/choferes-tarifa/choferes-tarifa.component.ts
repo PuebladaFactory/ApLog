@@ -85,14 +85,16 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
   }
 
   changeChofer(e: any) {    
-    //console.log(e.target.value);
+    console.log(e.target.value);
     let apellido = e.target.value.split(" ")[0];
-    //console.log(apellido);
+    let nombre = e.target.value.split(" ")[1];
+    console.log(apellido);
+    console.log(nombre);
     
     
     this.choferSeleccionado = e.target.value;
     this.choferSeleccionado = this.$choferes.filter(function (chofer:any){
-      return chofer.apellido === apellido
+      return chofer.apellido === apellido && chofer.apellido === apellido
     })
    console.log("este es el chofer seleccionado: ", this.choferSeleccionado);
    if(this.choferSeleccionado[0].proveedor !== "monotributista" ){

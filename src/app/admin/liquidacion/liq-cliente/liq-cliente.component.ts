@@ -5,6 +5,10 @@ import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import * as ExcelJS from 'exceljs';
+import * as FileSaver from 'file-saver';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 
 @Component({
   selector: 'app-liq-cliente',
@@ -46,8 +50,9 @@ export class LiqClienteComponent {
   swichForm:any;
   edicion:boolean = false;
   tarifaEspecial: boolean = false;
+
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false);
     
@@ -258,6 +263,8 @@ export class LiqClienteComponent {
       //this.$tarifasChofer = null;
       //this.ngOnInit();
       this.eliminarFacturasOp();
+      this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+      //this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente)
     }else{
       alert("no hay facturas")
     }
@@ -265,6 +272,9 @@ export class LiqClienteComponent {
     
 
   }
+
+
+  
 
   addItem(item:any, componente:string): void {   
     this.storageService.addItem(componente, item);     
