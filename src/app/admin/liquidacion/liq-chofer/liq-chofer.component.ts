@@ -5,6 +5,8 @@ import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -48,7 +50,7 @@ export class LiqChoferComponent implements OnInit {
   idOperaciones: number [] = [];
   facDetallada!: FacturaOpChofer
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false);
     this.form = this.fb.group({      
@@ -268,6 +270,8 @@ export class LiqChoferComponent implements OnInit {
       //this.$tarifasChofer = null;    
       this.eliminarFacturasOp();
       //this.ngOnInit();
+      this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+      this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer);
     }else{
       alert("no hay facturas")
     }
