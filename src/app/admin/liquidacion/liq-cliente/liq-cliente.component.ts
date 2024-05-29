@@ -5,6 +5,10 @@ import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import * as ExcelJS from 'exceljs';
+import * as FileSaver from 'file-saver';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 
 @Component({
   selector: 'app-liq-cliente',
@@ -46,8 +50,9 @@ export class LiqClienteComponent {
   swichForm:any;
   edicion:boolean = false;
   tarifaEspecial: boolean = false;
+
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false);
     
@@ -71,6 +76,7 @@ export class LiqClienteComponent {
       valorPrimerSector:[""],
       distanciaIntervalo:[""],
       valorIntervalo:[""],
+      tarifaEspecial: [false],   
     })
 
 
@@ -258,6 +264,8 @@ export class LiqClienteComponent {
       //this.$tarifasChofer = null;
       //this.ngOnInit();
       this.eliminarFacturasOp();
+      this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+      this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente);
     }else{
       alert("no hay facturas")
     }
@@ -265,6 +273,9 @@ export class LiqClienteComponent {
     
 
   }
+
+
+  
 
   addItem(item:any, componente:string): void {   
     this.storageService.addItem(componente, item);     
@@ -327,6 +338,7 @@ export class LiqClienteComponent {
       valorPrimerSector: this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor,
       distanciaIntervalo:this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo,
       valorIntervalo:this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor,
+      tarifaEspecial: factura.operacion.tarifaEspecial,
     });
     
     this.swichForm.patchValue({
@@ -350,7 +362,7 @@ export class LiqClienteComponent {
   modificaTarifaEspecial(){
     //this.tarifaEspecial= !this.tarifaEspecial;
     //console.log(this.tarifaEspecial); 
-    const switchValue = !this.swichForm.get('tarifaEspecial').value;
+    const switchValue = !this.tarifaEditForm.get('tarifaEspecial').value;
     console.log("Estado del switch:", switchValue);
     
   }  
@@ -406,12 +418,11 @@ export class LiqClienteComponent {
         concepto: this.tarifaEditForm.value.concepto,
         valor: this.tarifaEditForm.value.valor,
       },
+    };
 
-      
-      
-      
-      
-    }
+    console.log("NUEVA TARIFA", this.ultimaTarifa);
+    this.facturaEditada.operacion.tarifaEspecial = this.tarifaEditForm.value.tarifaEspecial;
+    console.log("NUEVA operacion con nueva TARIFA", this.facturaEditada);
     
     
   }

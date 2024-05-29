@@ -100,6 +100,8 @@ export class ChoferesAltaComponent implements OnInit {
    // primero arma cada uno de los objetos
    // y desp guarda el objeto en la coleccion que le corresponde
    onSubmit(){    
+    console.log("llega aca?");
+    
     this.armarChofer();
     this.armarVehiculo();    
     this.addItem(this.chofer);

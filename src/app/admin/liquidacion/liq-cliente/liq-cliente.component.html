@@ -325,8 +325,14 @@
                                 <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
                             </td>
                         </tr>  
-
-                        <h5 class="parametro align-middle mt-2">Tarifa Especial:</h5>
+                        <tr class=" mt-2">
+                          <th class="parametro align-middle fs-4 fw-semibold  mt-3">Tarifa Especial:</th>
+                          <th class="form-group form-check form-switch form-check-reverse ">
+                              <input class="form-check-input  mt-3" type="checkbox" id="flexSwitchCheckReverse" formControlName="tarifaEspecial" (click)="modificaTarifaEspecial()" [ngClass]="{'isDisabled': !edicion}">
+                              <label class="form-check-label align-middle  mt-3 " for="flexSwitchCheckReverse">Aplicar Tarifa Especial</label>
+                          </th>
+                        </tr>
+                        
                             <tr>
                                 <th class="parametro">Concepto </th>
                                 <th > Valor</th>
@@ -343,12 +349,11 @@
                                 
                             </tr>   
 
-                            <form [formGroup]="swichForm">
-                                <div class="form-check form-switch form-check-reverse ">
-                                    <input class="form-check-input mt-3" type="checkbox" id="flexSwitchCheckReverse" formControlName="tarifaEspecial" (click)="modificaTarifaEspecial()" [ngClass]="{'isDisabled': !edicion}">
-                                    <label class="form-check-label mt-3 align-middle " for="flexSwitchCheckReverse">Aplicar Tarifa Especial</label>
-                                </div>
-                            </form>  
+                           <!--  <tr>
+                            
+                            </tr> -->
+                              
+                            
                       
                             </tbody>
                             </table>     

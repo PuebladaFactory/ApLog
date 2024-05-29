@@ -4,6 +4,8 @@ import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -48,7 +50,7 @@ export class LiqProveedorComponent implements OnInit {
   tarifaEspecial: boolean = false;
   
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false);
     this.form = this.fb.group({      
@@ -71,6 +73,7 @@ export class LiqProveedorComponent implements OnInit {
       valorPrimerSector:[""],
       distanciaIntervalo:[""],
       valorIntervalo:[""],
+      tarifaEspecial: [false],  
     })
 
 
@@ -271,6 +274,8 @@ export class LiqProveedorComponent implements OnInit {
       //this.$tarifasChofer = null;
       //this.ngOnInit();
       this.eliminarFacturasOp();
+      this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
+      this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
     }else{
       alert("no hay facturas")
     }
@@ -335,6 +340,7 @@ export class LiqProveedorComponent implements OnInit {
       valorPrimerSector: this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor,
       distanciaIntervalo:this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo,
       valorIntervalo:this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor,
+      tarifaEspecial: factura.operacion.tarifaEspecial,
     });
     
     this.swichForm.patchValue({
@@ -414,12 +420,11 @@ export class LiqProveedorComponent implements OnInit {
         valor: this.tarifaEditForm.value.valor,
       },
 
-      
-      
-      
-      
     }
-    
+
+    console.log("NUEVA TARIFA", this.ultimaTarifa);
+    this.facturaEditada.operacion.tarifaEspecial = this.tarifaEditForm.value.tarifaEspecial;
+    console.log("NUEVA operacion con nueva TARIFA", this.facturaEditada);
     
   }
 
