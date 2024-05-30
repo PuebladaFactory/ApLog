@@ -62,13 +62,13 @@ export class FacturacionProveedorComponent implements OnInit {
         const proveedor = proveedoresMap.get(factura.idProveedor);
         //cliente.sumaACobrar++;
         if (factura.cobrado) {
-          proveedor.sumaAPagar += factura.total;
+          proveedor.sumaAPagar += Number(factura.total);
         } else {
-          proveedor.sumaAPagar += factura.total;
-          proveedor.faltaCobrar +=factura.total
+          proveedor.sumaAPagar += Number(factura.total);
+          proveedor.faltaCobrar += Number(factura.total);
         }
         proveedor.total += factura.total;  
-        proveedor.sumaACobrar += factura.montoFacturaCliente      
+        proveedor.sumaACobrar += Number(factura.montoFacturaCliente);      
       });
   
       this.datosTablaProveedor = Array.from(proveedoresMap.values());

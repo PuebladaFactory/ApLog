@@ -12,20 +12,25 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class FacturacionGeneralComponent implements OnInit {
 
   @Output() newItemEvent = new EventEmitter<any>();
+
+  componenteConsulta: string = "Liquidacion"
+  fechasConsulta: any = {
+    fechaDesde: 0,
+    fechaHasta: 0,
+  };
   $facturasCliente: any;
   $facturasChofer: any;
   $facturasProveedor: any;
 
   constructor(private storageService: StorageService){}
 
-  componenteConsulta: string = "facturacion";
-  fechasConsulta: any = {
-    fechaDesde: 0,
-    fechaHasta: 0,
-  };
+  titulo: string = "facturacion"
+  btnConsulta:boolean = false;
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
+  primerDiaAnio: any = new Date(this.date.getFullYear(), 0 , 1).toISOString().split('T')[0];
+  ultimoDiaAnio: any = new Date(this.date.getFullYear(), 11 , 31).toISOString().split('T')[0];
   tituloFacCliente: string = "facturaCliente";
   totalIngresosOp!: number;
   totalFaltaCobrar!: number; 
@@ -50,6 +55,11 @@ export class FacturacionGeneralComponent implements OnInit {
       this.$facturasProveedor = data;
     });
 
+    
+    this.fechasConsulta = {
+      fechaDesde: this.primerDiaAnio,
+      fechaHasta: this.ultimoDiaAnio,
+    };
    
   }
 
@@ -59,9 +69,9 @@ export class FacturacionGeneralComponent implements OnInit {
 
     if(this.$facturasCliente !== null){
       this.$facturasCliente.forEach((factura: FacturaCliente) => {
-        this.totalIngresosOp += factura.total;
+        this.totalIngresosOp += Number(factura.total);
         if(!factura.cobrado){
-          this.totalFaltaCobrar += factura.total;        
+          this.totalFaltaCobrar += Number(factura.total);        
         }        
       })      
     }       
@@ -73,17 +83,17 @@ export class FacturacionGeneralComponent implements OnInit {
 
     if(this.$facturasChofer !== null){
       this.$facturasChofer.forEach((factura: FacturaChofer) => {
-        this.totalPagosOp += factura.total;
+        this.totalPagosOp += Number(factura.total);
         if(!factura.cobrado){
-          this.totalFaltaPagar += factura.total;        
+          this.totalFaltaPagar += Number(factura.total);        
         }        
       });      
     }
     if(this.$facturasProveedor !== null){
       this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
-        this.totalPagosOp += factura.total;
+        this.totalPagosOp += Number(factura.total);
         if(!factura.cobrado){
-          this.totalFaltaPagar += factura.total;        
+          this.totalFaltaPagar += Number(factura.total);        
         }        
       });      
     }    
@@ -94,17 +104,29 @@ export class FacturacionGeneralComponent implements OnInit {
     //this.btnConsulta = true;
     //console.log(msg);        
     //alert("llega el msj")
-    this.consultaOperaciones(msg.fechaDesde, msg.fechaHasta);
+    //this.consultaOperaciones(msg.fechaDesde, msg.fechaHasta);
     //this.msgBack(msg);
     //this.ngOnInit()
+    this.btnConsulta = true;
+    this.fechasConsulta = {
+      fechaDesde: msg.fechaDesde,
+      fechaHasta: msg.fechaHasta,
+    };
   }
 
-  consultaOperaciones(fechaDesde:any, fechaHasta:any){   
+  consultaOperaciones(){   
     //console.log("desde: ", fechaDesde, "hasta: ", fechaHasta);
-    this.storageService.getByDateValue(this.tituloFacCliente, "fecha", fechaDesde, fechaHasta, "consultasFacCliente");    
+    //this.storageService.getByDateValue(this.tituloFacCliente, "fecha", fechaDesde, fechaHasta, "consultasFacCliente");    
     //console.log("consulta facturas op clientes: ", this.$facturasOpCliente);  
     //this.agruparClientes();      
     //this.procesarDatosParaTabla();
+    if(!this.btnConsulta){   
+      console.log(this.primerDia, this.ultimoDia)         
+      this.storageService.getByDateValue("facturaChofer", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+      this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+      this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+    }     
+  
   }
 
 }

@@ -67,13 +67,30 @@ export class FacturacionConsultaComponent implements OnInit {
       console.log("?????????");
       
       this.storageService.getByDateValue("facturaOpChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpChofer");
-    } else if(this.titulo === "facturaOpCliente") {
+      this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
+      this.storageService.getByDateValue("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor");
+    /* } else if(this.titulo === "facturaOpCliente") {
       this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
     } else if (this.titulo === "facturaOpProveedor") {
-      this.storageService.getByDateValue("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor");
+      this.storageService.getByDateValue("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor"); */
+   /*  } else{
+      //aca deberia ir las demas consultas
+      alert("error en las consultas") */
+    }
+
+    if(this.titulo = "facturacion"){
+      console.log("?????????");
+      
+      this.storageService.getByDateValue("facturaChofer", "fecha", fechaDesde, fechaHasta, "consultasFacChofer");
+      this.storageService.getByDateValue("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
+      this.storageService.getByDateValue("facturaProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacProveedor");
+   /*  } else if(this.titulo === "facturaOpCliente") {
+      
+    } else if (this.titulo === "facturaOpProveedor") {
+      
     } else{
       //aca deberia ir las demas consultas
-      alert("error en las consultas")
+      alert("error en las consultas") */
     }
     
   }

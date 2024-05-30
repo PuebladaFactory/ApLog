@@ -64,13 +64,13 @@ export class FacturacionClienteComponent implements OnInit  {
         const cliente = clientesMap.get(factura.idCliente);
         //cliente.sumaACobrar++;
         if (factura.cobrado) {
-          cliente.sumaACobrar += factura.total;
+          cliente.sumaACobrar += Number(factura.total);
         } else {
-          cliente.sumaACobrar += factura.total;
-          cliente.faltaCobrar +=factura.total
+          cliente.sumaACobrar += Number(factura.total);
+          cliente.faltaCobrar += Number(factura.total);
         }
-        cliente.total += factura.total;  
-        cliente.sumaAPagar += factura.montoFacturaChofer      
+        cliente.total += Number(factura.total);  
+        cliente.sumaAPagar += Number(factura.montoFacturaChofer);      
       });
   
       this.datosTablaCliente = Array.from(clientesMap.values());
