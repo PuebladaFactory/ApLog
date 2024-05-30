@@ -62,13 +62,13 @@ export class LiqGralComponent implements OnInit {
 
   
 
-  consultaOperaciones(fechaDesde:any, fechaHasta:any){   
+/*   consultaOperaciones(fechaDesde:any, fechaHasta:any){   
     //console.log("desde: ", fechaDesde, "hasta: ", fechaHasta);
     this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");    
     //console.log("consulta facturas op clientes: ", this.$facturasOpCliente);  
     //this.agruparClientes();      
     //this.procesarDatosParaTabla();
-  }
+  } */
 
   consultaMes(){
     if(!this.btnConsulta){   

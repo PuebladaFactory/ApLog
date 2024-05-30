@@ -270,7 +270,7 @@ export class LiqChoferComponent implements OnInit {
       //this.$tarifasChofer = null;    
       this.eliminarFacturasOp();
       //this.ngOnInit();
-      this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+      //this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer);
       this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer);
     }else{
       alert("no hay facturas")

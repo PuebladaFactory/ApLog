@@ -274,7 +274,7 @@ export class LiqProveedorComponent implements OnInit {
       //this.$tarifasChofer = null;
       //this.ngOnInit();
       this.eliminarFacturasOp();
-      this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
+      //this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
       this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
     }else{
       alert("no hay facturas")

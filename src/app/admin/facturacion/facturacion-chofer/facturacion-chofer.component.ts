@@ -63,13 +63,13 @@ export class FacturacionChoferComponent implements OnInit {
         const chofer = choferesMap.get(factura.idChofer);
         //cliente.sumaACobrar++;
         if (factura.cobrado) {
-          chofer.sumaAPagar += factura.total;
+          chofer.sumaAPagar += Number(factura.total);
         } else {
-          chofer.sumaAPagar += factura.total;
-          chofer.faltaPagar +=factura.total
+          chofer.sumaAPagar += Number(factura.total);
+          chofer.faltaPagar += Number(factura.total);
         }
-        chofer.total += factura.total;  
-        chofer.sumaACobrar += factura.montoFacturaCliente;      
+        chofer.total += Number(factura.total);
+        chofer.sumaACobrar += (factura.montoFacturaCliente);      
       });
   
       this.datosTablaChofer = Array.from(choferesMap.values());

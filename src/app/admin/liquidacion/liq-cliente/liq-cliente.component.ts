@@ -264,7 +264,7 @@ export class LiqClienteComponent {
       //this.$tarifasChofer = null;
       //this.ngOnInit();
       this.eliminarFacturasOp();
-      this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+      //this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente);
       this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente);
     }else{
       alert("no hay facturas")
