@@ -85,6 +85,7 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
   }
 
   changeChofer(e: any) {    
+    this.tarifaProveedor = false;
     console.log(e.target.value);
     let apellido = e.target.value.split(" ")[0];
     let nombre = e.target.value.split(" ")[1];
@@ -94,7 +95,7 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
     
     this.choferSeleccionado = e.target.value;
     this.choferSeleccionado = this.$choferes.filter(function (chofer:any){
-      return chofer.apellido === apellido && chofer.apellido === apellido
+      return chofer.apellido === apellido && chofer.nombre === nombre
     })
    console.log("este es el chofer seleccionado: ", this.choferSeleccionado);
    if(this.choferSeleccionado[0].proveedor !== "monotributista" ){
@@ -139,9 +140,9 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
     this.storageService.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer);
     this.storageService.historialTarifas$.subscribe(data =>{
       this.$tarifasChofer = data;
-      console.log(this.$tarifasChofer);
+      //console.log(this.$tarifasChofer);
       this.$tarifasChofer.sort((x:TarifaChofer, y:TarifaChofer) => y.idTarifa - x.idTarifa);
-      console.log(this.$tarifasChofer);
+      //console.log(this.$tarifasChofer);
     })
     //this.storageService.getByDoubleValue(this.componente, "idChofer", "fecha", this.choferSeleccionado[0].idChofer, "desc" )
     //console.log("este es el historial de tarifas: ",this.historialTarifas$);    
@@ -201,11 +202,11 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
     }
 
     editarTarifa(tarifa:TarifaChofer){
-      console.log(tarifa);
+      //console.log(tarifa);
       
       this.tarifaEditar = tarifa;
       
-      console.log(this.tarifaEditar);
+      //console.log(this.tarifaEditar);
       this.armarTarifaEditar();      
       
     }
@@ -269,7 +270,7 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
       this.tarifaEditar.acompaniante = this.tarifaEditForm.value.acompaniante; */
 
 
-      console.log(this.tarifaEditar);
+      //console.log(this.tarifaEditar);
       
       this.updateTarifa();
       
