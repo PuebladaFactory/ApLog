@@ -17,7 +17,7 @@ export class FacturacionChoferService {
   $tarifaChofer!:TarifaChofer;
   facturaChofer!:FacturaOpChofer;
   facturaProveedor!:FacturaOpProveedor;
-  total!:number;
+  total:number = 0;
   $adicional!:number;
   $tarifas!: any;
   ultimaTarifa!: TarifaChofer;
@@ -141,7 +141,8 @@ export class FacturacionChoferService {
     if(op.tarifaEspecial){
       
       this.facturarTarifaEspecial(op);
-
+      console.log("tarfia especial");
+      
     } else{
 
       this.$adicional = this.calcularAdicional(op, this.ultimaTarifa);
@@ -251,7 +252,7 @@ export class FacturacionChoferService {
   facturarTarifaEspecial(op:Operacion){
     this.total = this.$tarifaChofer.tarifaEspecial.valor;
     this.$adicional = 0;
-    this.$tarifaChofer.valorJornada = this.$tarifaChofer.tarifaEspecial.valor;
+    //this.$tarifaChofer.valorJornada = this.$tarifaChofer.tarifaEspecial.valor;
   }
 
   obtenerTarifaChofer(factura:FacturaOpChofer):TarifaChofer|undefined{

@@ -162,23 +162,30 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[])
   worksheet.addImage(imageId, 'A1:B3'); */
 
   // Título
-  worksheet.mergeCells('A4:F4');
-  const titleCell = worksheet.getCell('A4');
+  worksheet.mergeCells('A5:F5');
+  const titleCell = worksheet.getCell('A5');
   titleCell.value =  `Liquidacion de Servicios ${factura.apellido} ${factura.nombre} `;
   titleCell.font = { size: 14, bold: true };
   //titleCell.alignment = { horizontal: 'center' };
   //titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCC' } };
 
   //subtitulo
-  worksheet.mergeCells('A5:F5');
-  const subTitleCell = worksheet.getCell('A5');
-  subTitleCell.value =  `${factura.idFacturaChofer} `;
-  subTitleCell.font = { size: 8, bold: false };
+  worksheet.mergeCells('A6:F6');
+  const subTitleCell = worksheet.getCell('A6');
+  subTitleCell.value =  `Año:${new Date(factura.fecha).getFullYear()} Mes:${new Date(factura.fecha).toLocaleString('default', { month: 'long' })} `;
+  subTitleCell.font = { size: 12, bold: true };
+
+
+  //subtitulo
+  worksheet.mergeCells('A7:F7');
+  const subTitleCell2 = worksheet.getCell('A7');
+  subTitleCell2.value =  `${factura.idFacturaChofer} `;
+  subTitleCell2.font = { size: 8, bold: false };
 
   
   // Encabezados
   //const headers = ['Fecha', 'Quincena', 'Mes', 'Año', 'Concepto Cliente', 'A cobrar'];
-  const headers = ['Fecha', 'Quincena', 'Id Operacion', 'Concepto Cliente', 'A cobrar'];
+  const headers = ['Fecha', 'Quincena', 'Id Operacion', 'Cliente', 'Jornada', 'Adicional','A Pagar'];
   worksheet.addRow(headers).eachCell(cell => {
     cell.font = { bold: true };
     cell.alignment = { horizontal: 'center' };
@@ -195,7 +202,7 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[])
   // Datos de la factura
   facturasOp.forEach((facOp:FacturaOpChofer) => {
     /* const facturaData = [facOp.fecha, quincena, `${new Date(facOp.fecha).getMonth()+1}`, `${new Date(facOp.fecha).getFullYear()}`, facOp.operacion.observaciones , facOp.total.toFixed(2)]; */
-    const facturaData = [facOp.fecha, quincena, facOp.operacion.idOperacion, facOp.operacion.observaciones , facOp.total.toFixed(2)];
+    const facturaData = [facOp.fecha, quincena, facOp.operacion.idOperacion, facOp.operacion.cliente.razonSocial ,`${facOp.operacion.tarifaEspecial? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`,`${facOp.operacion.tarifaEspecial? "": (facOp.total-facOp.valorJornada).toFixed(2) }`,facOp.total.toFixed(2)];
     worksheet.addRow(facturaData).eachCell(cell => {
       cell.alignment = { horizontal: 'center' };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
@@ -207,7 +214,7 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[])
       };
     });  
   });
-  const facturaData = ["Total", "", "", "", factura.total.toFixed(2)];
+  const facturaData = ["Total", "", "", "", "","",factura.total.toFixed(2)];
     worksheet.addRow(facturaData).eachCell(cell => {
       cell.font = { bold: true };
       cell.alignment = { horizontal: 'center' };
@@ -232,19 +239,20 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[])
 
   // Ajustar ancho de columnas
   worksheet.columns = [
-    /* { width: 15 },
-    { width: 10 },
-    { width: 10 },
-    { width: 10 },
-    { width: 40 },
-    { width: 20 }, */
-    
     { width: 12 },
+    { width: 10 },
+    { width: 15 },
+    { width: 15 },
+    { width: 15 },
+    { width: 15 },
+    { width: 18 }, 
+    
+    /* { width: 12 },
     { width: 10 },
     { width: 15 },      
     { width: 40 },
     { width: 18 },
-
+ */
   ];
 
   // Guardar el archivo

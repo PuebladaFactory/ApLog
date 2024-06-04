@@ -52,6 +52,7 @@
                         <th scope="col" class="">Ganacia</th>  
                         <th scope="col" class="">% Ganancia</th>                        
                         <th scope="col" class="">Pagado</th>                        
+                        <th scope="col" class=""></th>   
                     </tr>
                 </thead>
                 <tbody>
@@ -69,8 +70,17 @@
                                 <input *ngIf="!factura.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">                                
                                 <input *ngIf="factura.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked>                                
                             </div>                              
-                        </td>                        
-                    </tr>
+                        </td>   
+                        <td>
+                            <app-btn-leer name="Imprimir" data-bs-toggle="collapse" data-bs-target="#reimpresion" aria-expanded="false" aria-controls="collapseExample" (click)="consultarFacChofer(factura)"></app-btn-leer>
+                        </td>        
+                        <td class="collapse" id="reimpresion" style="max-width: 7.5rem;">
+                           
+                            <app-btn-leer name="excel" data-bs-toggle="collapse" data-bs-target="#reimpresion" aria-expanded="false" aria-controls="reimpresion"  (click)="reimprimirFac(factura, 'excel')" class="me-2"></app-btn-leer>   
+                            <app-btn-leer name="pdf" data-bs-toggle="collapse" data-bs-target="#reimpresion" aria-expanded="false" aria-controls="reimpresion" (click)="reimprimirFac(factura, 'pdf')"></app-btn-leer>   
+                           
+                        </td>                                    
+                    </tr>                    
                 </tbody> 
             </table>
         </td>

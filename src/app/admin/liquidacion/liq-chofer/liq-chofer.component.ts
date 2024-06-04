@@ -209,7 +209,8 @@ export class LiqChoferComponent implements OnInit {
     });
 
     this.indiceSeleccionado = index;
-    //console.log("Facturas liquidadas del cliente", apellido + ":", this.facturasLiquidadasChofer);
+    console.log("Facturas liquidadas del cliente", apellido + ":", this.facturasLiquidadasChofer);
+    console.log("Fecha", apellido + ":", this.facturasLiquidadasChofer[0].fecha);
     //console.log("Total de las facturas liquidadas chofer:", this.totalFacturasLiquidadasChofer);
     //console.log("Total de las facturas liquidadas cliente:", this.totalFacturasLiquidadasCliente);
     ////console.log("indice: ", this.indiceSeleccionado);
@@ -234,7 +235,7 @@ export class LiqChoferComponent implements OnInit {
 
   }
 
-  onSubmit() {
+  onSubmit(titulo:string) {
     //console.log("factura chofer antes: ", this.facturasLiquidadasChofer);
     ////console.log(this.form.value);
     
@@ -270,8 +271,13 @@ export class LiqChoferComponent implements OnInit {
       //this.$tarifasChofer = null;    
       this.eliminarFacturasOp();
       //this.ngOnInit();
-      //this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer);
-      this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+      if(titulo === "excel"){
+        this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+      }else if (titulo === "pdf"){
+        this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+      }
+      
+      
     }else{
       alert("no hay facturas")
     }

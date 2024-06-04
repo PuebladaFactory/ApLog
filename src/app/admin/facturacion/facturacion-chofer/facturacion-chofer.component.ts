@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
+import { LoginComponent } from 'src/app/appLogin/login/login.component';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -21,12 +24,12 @@ export class FacturacionChoferComponent implements OnInit {
   mostrarTablaChofer: boolean[] = [];  
   tituloFacChofer: string = "facturaChofer";
   facturaChofer!: FacturaChofer;  
-  
+  $facturaOpChofer: FacturaOpChofer[] = [];
   facturasPorChofer: Map<number, FacturaChofer[]> = new Map<number, FacturaChofer[]>();
+  operacionFac: FacturaOpChofer[] = []
   
   
-  
-  constructor(private storageService: StorageService){
+  constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService){
    // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
    this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false);  
   }
@@ -38,14 +41,17 @@ export class FacturacionChoferComponent implements OnInit {
       this.$facturasChofer = data;
       this.procesarDatosParaTabla()
     });
-  
-    
-    //this.consultaMes(); 
+    this.storageService.consultasFacOpLiqChofer$.subscribe(data =>{
+      //console.log(data);
+      this.$facturaOpChofer = data;     
+      console.log("consultasFacOpLiqChofer: ", this.$facturaOpChofer );
+      
+    })
   }
 
   procesarDatosParaTabla() {
     const choferesMap = new Map<number, any>();
-    console.log(this.$facturasChofer);
+    //console.log(this.$facturasChofer);
     
     if(this.$facturasChofer !== null){
       this.$facturasChofer.forEach((factura: FacturaChofer) => {
@@ -73,7 +79,7 @@ export class FacturacionChoferComponent implements OnInit {
       });
   
       this.datosTablaChofer = Array.from(choferesMap.values());
-      console.log("Datos para la tabla: ", this.datosTablaChofer); 
+      //console.log("Datos para la tabla: ", this.datosTablaChofer); 
     }
 
     
@@ -123,13 +129,49 @@ export class FacturacionChoferComponent implements OnInit {
   facturaCobrada(factura:FacturaChofer){
     //este va
     factura.cobrado = !factura.cobrado
-    console.log(factura.cobrado);
+    //console.log(factura.cobrado);
     this.updateItem(factura)
     
   }
 
   updateItem(item:any){
     this.storageService.updateItem(this.componente, item);     
+  }
+
+  //este metodo es para darle tiempo a la db a traer las facturas del chofer q se quieren reimprimi
+  consultarFacChofer(factura:FacturaChofer){
+    this.storageService.getByFieldValueTitle("facOpLiqChofer", "idChofer",factura.idChofer,"consultasFacOpLiqChofer")
+
+  }
+
+  reimprimirFac(factura:FacturaChofer, formato: string){    
+    console.log(factura);    
+    //console.log(texto);
+    this.operacionFac = []
+    
+    factura.operaciones.forEach((id:number) => {
+      if(this.$facturaOpChofer !== null){
+        this.$facturaOpChofer.forEach((facturaOp: FacturaOpChofer) => {
+        
+          if(facturaOp.operacion.idOperacion === id){
+            this.operacionFac.push(facturaOp)
+          }
+                 
+        }) 
+      }      
+    })
+    console.log("facturasOp: ", this.operacionFac);
+    if(formato === "excel"){
+      this.excelServ.exportToExcelChofer(factura, this.operacionFac); 
+    } else{
+      //aca va el pdf
+    }
+    this.storageService.clearInfo("facOpLiqChofer")
+    //console.log("ARRAY: ", this.$facturaOpChofer);
+    
+    
+     
+    
   }
 
 }
