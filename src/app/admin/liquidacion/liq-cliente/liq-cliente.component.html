@@ -51,7 +51,7 @@
                         <th scope="col" class="">Id</th>
                         <th scope="col" class="">Chofer</th>
                         <th scope="col" class="">Km</th>  
-                        <th scope="col" class="">A</th>  
+                        <th scope="col" class="">Adicionales</th>  
                         <th scope="col" class="">Total</th>                        
                         <th scope="col" class="">Tarifa Especial</th>    
                         <th scope="col" class="">Facturado</th>
@@ -149,7 +149,9 @@
             </table>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalLiqOpCliente" (click)="onSubmit()" >Guardar</button>
+          <h4>Generar Factura:</h4>
+          <app-btn-leer name="excel" data-bs-toggle="modal" data-bs-target="#modalLiqOpChofer" (click)="onSubmit('excel')"></app-btn-leer>
+          <app-btn-leer name="pdf" data-bs-toggle="modal" data-bs-target="#modalLiqOpChofer" (click)="onSubmit('pdf')"></app-btn-leer>         
         </div>
       </div>
     </div>

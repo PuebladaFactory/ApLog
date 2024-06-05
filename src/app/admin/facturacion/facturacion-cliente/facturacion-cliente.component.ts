@@ -3,6 +3,8 @@ import { FormBuilder } from '@angular/forms';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -25,10 +27,12 @@ export class FacturacionClienteComponent implements OnInit  {
   facturaCliente!: FacturaCliente;  
   facturaEditada!: FacturaOpCliente;
   facturasPorCliente: Map<number, FacturaCliente[]> = new Map<number, FacturaCliente[]>();
+  $facturaOpCliente: FacturaOpCliente[] = [];  
+  operacionFac: FacturaOpCliente[] = []
   
   
   
-  constructor(private storageService: StorageService, private fb: FormBuilder){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private excelServ: ExcelService, private pdfServ: PdfService){
    // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
    this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false);  
   }
@@ -40,6 +44,14 @@ export class FacturacionClienteComponent implements OnInit  {
       this.$facturasCliente = data;
       this.procesarDatosParaTabla()
     });
+
+    this.storageService.consultasFacOpLiqCliente$.subscribe(data =>{
+      //console.log(data);
+      this.$facturaOpCliente = data;     
+      console.log("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
+      
+    })
+
     
     //this.consultaMes(); 
   }
@@ -131,6 +143,41 @@ export class FacturacionClienteComponent implements OnInit  {
 
   updateItem(item:any){
     this.storageService.updateItem(this.componente, item);     
+  }
+
+  consultarFacCliente(factura:FacturaCliente){
+    this.storageService.getByFieldValueTitle("facOpLiqCliente", "idCliente",factura.idCliente,"consultasFacOpLiqCliente")
+
+  }
+
+  reimprimirFac(factura:FacturaCliente, formato: string){    
+    console.log(factura);    
+    //console.log(texto);
+    this.operacionFac = []
+    
+    factura.operaciones.forEach((id:number) => {
+      if(this.$facturaOpCliente !== null){
+        this.$facturaOpCliente.forEach((facturaOp: FacturaOpCliente) => {
+        
+          if(facturaOp.operacion.idOperacion === id){
+            this.operacionFac.push(facturaOp)
+          }
+                 
+        }) 
+      }      
+    })
+    console.log("facturasOp: ", this.operacionFac);
+    if(formato === "excel"){
+      //this.excelServ.exportToExcelCliente(factura, this.operacionFac); 
+    } else{
+      this.pdfServ.exportToPdfCliente(factura, this.operacionFac);
+    }
+    this.storageService.clearInfo("facOpLiqCliente")
+    //console.log("ARRAY: ", this.$facturaOpChofer);
+    
+    
+     
+    
   }
 
   
