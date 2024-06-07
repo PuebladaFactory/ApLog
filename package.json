@@ -32,7 +32,7 @@
     "ng2-search-filter": "^0.5.1",
     "pdfmake": "^0.2.10",
     "rxjs": "~7.5.0",
-    "sweetalert2": "^11.6.13",
+    "sweetalert2": "^11.11.1",
     "tslib": "^2.3.0",
     "xlsx": "^0.18.5",
     "xlsx-style": "^0.8.13",

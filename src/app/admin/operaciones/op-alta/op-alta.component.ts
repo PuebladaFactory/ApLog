@@ -6,6 +6,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2'
 
 
 @Component({
@@ -112,8 +113,27 @@ export class OpAltaComponent implements OnInit {
     this.op.facturaChofer = null;
     this.op.tarifaEspecial = this.tarifaEspecial;    
     
-    console.log("esta es la operacion: ", this.op);     
-    this.addItem();
+    console.log("esta es la operacion: ", this.op);  
+    Swal.fire({
+      title: "¿Desea agregar la operación?",
+      //text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Agregar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.addItem();
+        Swal.fire({
+          title: "Confirmado",
+          text: "La operación ha sido agregada.",
+          icon: "success"
+        });
+      }
+    });   
+   
    }
 
    addItem(): void {
