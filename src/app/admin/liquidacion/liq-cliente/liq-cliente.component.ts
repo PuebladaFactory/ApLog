@@ -205,7 +205,7 @@ export class LiqClienteComponent {
     });
 
     this.indiceSeleccionado = index;
-    //console.log("Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadas);
+    console.log("Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadasCliente);
     //console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadas);
     //console.log("indice: ", this.indiceSeleccionado);
     
@@ -229,7 +229,7 @@ export class LiqClienteComponent {
 
   }
 
-  onSubmit() {
+  onSubmit(titulo:string) {
     //console.log(this.facturasLiquidadas);
     //console.log(this.form.value);
     if(this.facturasLiquidadasCliente.length > 0){
@@ -264,8 +264,14 @@ export class LiqClienteComponent {
       //this.$tarifasChofer = null;
       //this.ngOnInit();
       this.eliminarFacturasOp();
-      //this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente);
-      this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+      
+      if(titulo === "excel"){
+        //this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+      }else if (titulo === "pdf"){
+        this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+      }
+    
+    
     }else{
       alert("no hay facturas")
     }

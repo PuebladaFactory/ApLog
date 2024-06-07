@@ -51,42 +51,49 @@ export class ExcelService {
     });
     worksheet.addImage(imageId, 'A1:B3'); */
 
-    // Título
-    worksheet.mergeCells('A4:F4');
-    const titleCell = worksheet.getCell('A4');
-    titleCell.value =  `Liquidacion de Servicios ${factura.razonSocial} `;
-    titleCell.font = { size: 14, bold: true };
-    //titleCell.alignment = { horizontal: 'center' };
-    //titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCC' } };
+  // Título
+  worksheet.mergeCells('A5:F5');
+  const titleCell = worksheet.getCell('A5');
+  titleCell.value =  `Liquidacion de Servicios ${factura.razonSocial} `;
+  titleCell.font = { size: 14, bold: true };
+  //titleCell.alignment = { horizontal: 'center' };
+  //titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCC' } };
 
-    //subtitulo
-    worksheet.mergeCells('A5:F5');
-    const subTitleCell = worksheet.getCell('A5');
-    subTitleCell.value =  `${factura.idFacturaCliente} `;
-    subTitleCell.font = { size: 8, bold: false };
+  //subtitulo
+  worksheet.mergeCells('A6:F6');
+  const subTitleCell = worksheet.getCell('A6');
+  subTitleCell.value =  `Año:${new Date(factura.fecha).getFullYear()} Mes:${new Date(factura.fecha).toLocaleString('default', { month: 'long' })} `;
+  subTitleCell.font = { size: 12, bold: true };
 
-    
-    // Encabezados
-    //const headers = ['Fecha', 'Quincena', 'Mes', 'Año', 'Concepto Cliente', 'A cobrar'];
-    const headers = ['Fecha', 'Quincena', 'Id Operacion', 'Concepto Cliente', 'A cobrar'];
-    worksheet.addRow(headers).eachCell(cell => {
-      cell.font = { bold: true };
-      cell.alignment = { horizontal: 'center' };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E90FF' } };
-      cell.border = {
-        top: { style: 'thin' },
-        bottom: { style: 'thin' },
-        left: { style: 'thin' },
-        right: { style: 'thin' }
-      };
-    });
+
+  //subtitulo2
+  worksheet.mergeCells('A7:F7');
+  const subTitleCell2 = worksheet.getCell('A7');
+  subTitleCell2.value =  `${factura.idFacturaCliente} `;
+  subTitleCell2.font = { size: 8, bold: false };
+
+   // Encabezados
+  //const headers = ['Fecha', 'Quincena', 'Mes', 'Año', 'Concepto Cliente', 'A cobrar'];
+  const headers = ['Fecha', 'Quincena', 'Chofer', 'Concepto Cliente', 'Jornada', 'Adic Km','A Cobrar'];
+  worksheet.addRow(headers).eachCell(cell => {
+    cell.font = { size: 11, bold: true };
+    cell.alignment = { horizontal: 'center' };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E90FF' } };
+    cell.border = {
+      top: { style: 'thin' },
+      bottom: { style: 'thin' },
+      left: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
 
     let quincena = this.getQuincena(factura.fecha)
     // Datos de la factura
     facturasOp.forEach((facOp:FacturaOpCliente) => {
       /* const facturaData = [facOp.fecha, quincena, `${new Date(facOp.fecha).getMonth()+1}`, `${new Date(facOp.fecha).getFullYear()}`, facOp.operacion.observaciones , facOp.total.toFixed(2)]; */
-      const facturaData = [facOp.fecha, quincena, facOp.operacion.idOperacion, facOp.operacion.observaciones , facOp.total.toFixed(2)];
+      const facturaData = [facOp.fecha, quincena, facOp.operacion.chofer.apellido, facOp.operacion.observaciones ,`${facOp.operacion.tarifaEspecial? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, `${facOp.operacion.tarifaEspecial? "": (facOp.total-facOp.valorJornada).toFixed(2) }`,  facOp.total.toFixed(2)];
       worksheet.addRow(facturaData).eachCell(cell => {
+        cell.font = { size: 10, bold: false };
         cell.alignment = { horizontal: 'center' };
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
         cell.border = {
@@ -97,9 +104,9 @@ export class ExcelService {
         };
       });  
     });
-    const facturaData = ["Total", "", "", "", factura.total.toFixed(2)];
+    const facturaData = ["Total", "", "", "", "", "", factura.total.toFixed(2)];
       worksheet.addRow(facturaData).eachCell(cell => {
-        cell.font = { bold: true };
+        cell.font = { size: 11, bold: true };
         cell.alignment = { horizontal: 'center' };
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E90FF' } };
         cell.border = {
@@ -129,11 +136,13 @@ export class ExcelService {
       { width: 40 },
       { width: 20 }, */
       
-      { width: 12 },
+      { width: 11 },
       { width: 10 },
-      { width: 15 },      
-      { width: 40 },
-      { width: 18 },
+      { width: 13 },      
+      { width: 25 },
+      { width: 12 },
+      { width: 8 },
+      { width: 15 },
 
     ];
 
@@ -176,7 +185,7 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[])
   subTitleCell.font = { size: 12, bold: true };
 
 
-  //subtitulo
+  //subtitulo2
   worksheet.mergeCells('A7:F7');
   const subTitleCell2 = worksheet.getCell('A7');
   subTitleCell2.value =  `${factura.idFacturaChofer} `;
@@ -244,8 +253,8 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[])
     { width: 15 },
     { width: 15 },
     { width: 15 },
-    { width: 15 },
-    { width: 18 }, 
+    { width: 10 },
+    { width: 15 }, 
     
     /* { width: 12 },
     { width: 10 },
@@ -260,7 +269,9 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[])
   FileSaver.saveAs(new Blob([buffer]),`Factura${factura.apellido}${factura.nombre}${factura.fecha}.xlsx` );
 }
 
-// Reportes EXCEL para los proveedores
+
+
+////////////// Reportes EXCEL para los proveedores
 async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOpProveedor[]): Promise<void> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Factura');
@@ -280,25 +291,32 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOpPro
   worksheet.addImage(imageId, 'A1:B3'); */
 
   // Título
-  worksheet.mergeCells('A4:F4');
-  const titleCell = worksheet.getCell('A4');
-  titleCell.value =  `Liquidacion de Servicios ${factura.razonSocial} `;
+  worksheet.mergeCells('A5:F5');
+  const titleCell = worksheet.getCell('A5');
+  titleCell.value =  `Liquidacion de Servicios ${factura.razonSocial}  `;
   titleCell.font = { size: 14, bold: true };
   //titleCell.alignment = { horizontal: 'center' };
   //titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCC' } };
 
   //subtitulo
-  worksheet.mergeCells('A5:F5');
-  const subTitleCell = worksheet.getCell('A5');
-  subTitleCell.value =  `${factura.idFacturaProveedor} `;
-  subTitleCell.font = { size: 8, bold: false };
+  worksheet.mergeCells('A6:F6');
+  const subTitleCell = worksheet.getCell('A6');
+  subTitleCell.value =  `Año:${new Date(factura.fecha).getFullYear()} Mes:${new Date(factura.fecha).toLocaleString('default', { month: 'long' })} `;
+  subTitleCell.font = { size: 12, bold: true };
+
+
+  //subtitulo2
+  worksheet.mergeCells('A7:F7');
+  const subTitleCell2 = worksheet.getCell('A7');
+  subTitleCell2.value =  `${factura.idFacturaProveedor} `;
+  subTitleCell2.font = { size: 8, bold: false };
 
   
   // Encabezados
   //const headers = ['Fecha', 'Quincena', 'Mes', 'Año', 'Concepto Cliente', 'A cobrar'];
-  const headers = ['Fecha', 'Quincena', 'Id Operacion', 'Concepto Cliente', 'A cobrar'];
+  const headers = ['Fecha', 'Quincena', 'Id Operacion', 'Chofer', 'Cliente', 'Jornada', 'Adicional','A Pagar'];
   worksheet.addRow(headers).eachCell(cell => {
-    cell.font = { bold: true };
+    cell.font = { size: 10, bold: true };
     cell.alignment = { horizontal: 'center' };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E90FF' } };
     cell.border = {
@@ -313,8 +331,9 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOpPro
   // Datos de la factura
   facturasOp.forEach((facOp:FacturaOpProveedor) => {
     /* const facturaData = [facOp.fecha, quincena, `${new Date(facOp.fecha).getMonth()+1}`, `${new Date(facOp.fecha).getFullYear()}`, facOp.operacion.observaciones , facOp.total.toFixed(2)]; */
-    const facturaData = [facOp.fecha, quincena, facOp.operacion.idOperacion, facOp.operacion.observaciones , facOp.total.toFixed(2)];
+    const facturaData = [facOp.fecha, quincena, facOp.operacion.idOperacion, facOp.operacion.cliente.razonSocial , facOp.operacion.chofer.apellido ,`${facOp.operacion.tarifaEspecial? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`,`${facOp.operacion.tarifaEspecial? "": (facOp.total-facOp.valorJornada).toFixed(2) }`,facOp.total.toFixed(2)];
     worksheet.addRow(facturaData).eachCell(cell => {
+      cell.font = { size: 9, bold: false };
       cell.alignment = { horizontal: 'center' };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
       cell.border = {
@@ -325,9 +344,9 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOpPro
       };
     });  
   });
-  const facturaData = ["Total", "", "", "", factura.total.toFixed(2)];
+  const facturaData = ["Total", "", "", "", "","","",factura.total.toFixed(2)];
     worksheet.addRow(facturaData).eachCell(cell => {
-      cell.font = { bold: true };
+      cell.font = { size: 10, bold: true };
       cell.alignment = { horizontal: 'center' };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E90FF' } };
       cell.border = {
@@ -350,19 +369,21 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOpPro
 
   // Ajustar ancho de columnas
   worksheet.columns = [
-    /* { width: 15 },
-    { width: 10 },
-    { width: 10 },
-    { width: 10 },
-    { width: 40 },
-    { width: 20 }, */
+    { width: 11 },
+    { width: 9 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 11 },
+    { width: 9 },
+    { width: 14 }, 
     
-    { width: 12 },
+    /* { width: 12 },
     { width: 10 },
     { width: 15 },      
     { width: 40 },
     { width: 18 },
-
+ */
   ];
 
   // Guardar el archivo

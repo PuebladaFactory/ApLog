@@ -1,5 +1,6 @@
+
 <div class="container mt-0">
-  
+    <h2>Choferes</h2>   
     <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer, cliente o número de operación">
 <table class="table table-dark table-striped">
     <thead>
@@ -72,12 +73,12 @@
                             </div>                              
                         </td>   
                         <td>
-                            <app-btn-leer name="Imprimir" data-bs-toggle="collapse" data-bs-target="#reimpresion" aria-expanded="false" aria-controls="collapseExample" (click)="consultarFacChofer(factura)"></app-btn-leer>
+                            <app-btn-leer name="Imprimir" data-bs-toggle="collapse" data-bs-target="#reimpresionChofer" aria-expanded="false" aria-controls="collapseExample" (click)="consultarFacChofer(factura)"></app-btn-leer>
                         </td>        
-                        <td class="collapse" id="reimpresion" style="max-width: 7.5rem;">
+                        <td class="collapse" id="reimpresionChofer" style="max-width: 7.5rem;">
                            
-                            <app-btn-leer name="excel" data-bs-toggle="collapse" data-bs-target="#reimpresion" aria-expanded="false" aria-controls="reimpresion"  (click)="reimprimirFac(factura, 'excel')" class="me-2"></app-btn-leer>   
-                            <app-btn-leer name="pdf" data-bs-toggle="collapse" data-bs-target="#reimpresion" aria-expanded="false" aria-controls="reimpresion" (click)="reimprimirFac(factura, 'pdf')"></app-btn-leer>   
+                            <app-btn-leer name="excel" data-bs-toggle="collapse" data-bs-target="#reimpresionChofer" aria-expanded="false" aria-controls="reimpresionChofer"  (click)="reimprimirFac(factura, 'excel')" class="me-2"></app-btn-leer>   
+                            <app-btn-leer name="pdf" data-bs-toggle="collapse" data-bs-target="#reimpresionChofer" aria-expanded="false" aria-controls="reimpresionChofer" (click)="reimprimirFac(factura, 'pdf')"></app-btn-leer>   
                            
                         </td>                                    
                     </tr>                    
