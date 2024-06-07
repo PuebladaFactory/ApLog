@@ -168,7 +168,7 @@ export class FacturacionClienteComponent implements OnInit  {
     })
     console.log("facturasOp: ", this.operacionFac);
     if(formato === "excel"){
-      //this.excelServ.exportToExcelCliente(factura, this.operacionFac); 
+      this.excelServ.exportToExcelCliente(factura, this.operacionFac); 
     } else{
       this.pdfServ.exportToPdfCliente(factura, this.operacionFac);
     }

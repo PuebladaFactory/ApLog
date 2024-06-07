@@ -239,7 +239,7 @@ export class LiqProveedorComponent implements OnInit {
 
   }
 
-  onSubmit() {
+  onSubmit(titulo: string) {
     //console.log(this.facturasLiquidadasProveedor);
     //console.log(this.form.value);
     if(this.facturasLiquidadasProveedor.length > 0){
@@ -275,7 +275,11 @@ export class LiqProveedorComponent implements OnInit {
       //this.ngOnInit();
       this.eliminarFacturasOp();
       //this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
-      this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
+      if(titulo === "excel"){
+        this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
+      }else if (titulo === "pdf"){
+        this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
+      }
     }else{
       alert("no hay facturas")
     }

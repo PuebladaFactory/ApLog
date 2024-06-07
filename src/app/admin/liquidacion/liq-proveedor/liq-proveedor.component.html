@@ -152,7 +152,9 @@
             </table>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalLiqOpProveedor" (click)="onSubmit()" >Guardar</button>
+          <h4>Generar Factura:</h4>
+          <app-btn-leer name="excel" data-bs-toggle="modal" data-bs-target="#modalLiqOpProveedor" (click)="onSubmit('excel')"></app-btn-leer>
+          <app-btn-leer name="pdf" data-bs-toggle="modal" data-bs-target="#modalLiqOpProveedor" (click)="onSubmit('pdf')"></app-btn-leer>        
         </div>
       </div>
     </div>

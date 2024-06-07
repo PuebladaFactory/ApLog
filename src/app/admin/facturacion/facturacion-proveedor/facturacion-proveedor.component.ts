@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -21,12 +23,12 @@ export class FacturacionProveedorComponent implements OnInit {
   mostrarTablaProveedor: boolean[] = [];  
   tituloFacProveedor: string = "facturaProveedor";
   facturaProveedor!: FacturaProveedor;  
-  
+  $facturaOpProveedor: FacturaOpProveedor[] = []; 
   facturasPorProveedor: Map<number, FacturaProveedor[]> = new Map<number, FacturaProveedor[]>();
+  operacionFac: FacturaOpProveedor[] = []
   
   
-  
-  constructor(private storageService: StorageService){
+  constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService){
    // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
    this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false);  
   }
@@ -38,6 +40,13 @@ export class FacturacionProveedorComponent implements OnInit {
       this.$facturasProveedor = data;
       this.procesarDatosParaTabla()
     });
+
+    this.storageService.consultasFacOpLiqProveedor$.subscribe(data =>{
+      console.log(data);
+      this.$facturaOpProveedor = data;     
+      console.log("consultasFacOpLiqProveedor: ", this.$facturaOpProveedor );
+      
+    })
     
     //this.consultaMes(); 
   }
@@ -129,5 +138,40 @@ export class FacturacionProveedorComponent implements OnInit {
 
   updateItem(item:any){
     this.storageService.updateItem(this.componente, item);     
+  }
+
+  consultarFacProveedor(factura:FacturaProveedor){
+    this.storageService.getByFieldValueTitle("facOpLiqProveedor", "idProveedor",factura.idProveedor,"consultasFacOpLiqProveedor")
+
+  }
+
+  reimprimirFac(factura:FacturaProveedor, formato: string){    
+    console.log(factura);    
+    //console.log(texto);
+    this.operacionFac = []
+    
+    factura.operaciones.forEach((id:number) => {
+      if(this.$facturaOpProveedor !== null){
+        this.$facturaOpProveedor.forEach((facturaOp: FacturaOpProveedor) => {
+        
+          if(facturaOp.operacion.idOperacion === id){
+            this.operacionFac.push(facturaOp)
+          }
+                 
+        }) 
+      }      
+    })
+    console.log("facturasOp: ", this.operacionFac);
+    if(formato === "excel"){
+      this.excelServ.exportToExcelProveedor(factura, this.operacionFac); 
+    } else{
+      this.pdfServ.exportToPdfProveedor(factura, this.operacionFac);
+    }
+    this.storageService.clearInfo("facOpLiqProveedor")
+    console.log("ARRAY: ", this.operacionFac);
+    
+    
+     
+    
   }
 }

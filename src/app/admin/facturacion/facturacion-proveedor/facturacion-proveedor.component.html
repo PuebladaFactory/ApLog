@@ -53,7 +53,8 @@
                         <th scope="col" class="">Suma a Cobrar</th>  
                         <th scope="col" class="">Ganacia</th>  
                         <th scope="col" class="">% Ganancia</th>                        
-                        <th scope="col" class="">Cobrado</th>       
+                        <th scope="col" class="">Cobrado</th>   
+                        <th></th>    
                     </tr>
                 </thead>
                 <tbody>
@@ -71,7 +72,16 @@
                                 <input *ngIf="!factura.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">                                
                                 <input *ngIf="factura.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked>                                
                             </div>                              
-                        </td>                        
+                        </td> 
+                        <td>
+                            <app-btn-leer name="Imprimir" data-bs-toggle="collapse" data-bs-target="#reimpresionProveedor" aria-expanded="false" aria-controls="collapseExample" (click)="consultarFacProveedor(factura)"></app-btn-leer>
+                        </td>        
+                        <td class="collapse" id="reimpresionProveedor" style="max-width: 7.5rem;">
+                           
+                            <app-btn-leer name="excel" data-bs-toggle="collapse" data-bs-target="#reimpresionProveedor" aria-expanded="false" aria-controls="reimpresionProveedor"  (click)="reimprimirFac(factura, 'excel')" class="me-2"></app-btn-leer>   
+                            <app-btn-leer name="pdf" data-bs-toggle="collapse" data-bs-target="#reimpresionProveedor" aria-expanded="false" aria-controls="reimpresionProveedor" (click)="reimprimirFac(factura, 'pdf')"></app-btn-leer>   
+                           
+                        </td>                                                                                 
                     </tr>
                 </tbody> 
             </table>

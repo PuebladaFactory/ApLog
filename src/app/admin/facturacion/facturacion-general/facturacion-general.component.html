@@ -1,53 +1,55 @@
-<h1 class="text-center">Facturación</h1>
-<div class="d-flex justify-content-between m-0">
-  <div class="border border-rounded rounded-4">
-    <div class="m-5">
-        <h2>Resumen</h2>
-        <div class="d-flex">
-            <div class="me-5">
-                <p>Ingreso Total por Op: ${{totalIngresosOp}}</p>
-                <p>Pago Total por Op: ${{totalPagosOp}}</p>
-            </div>
-            <div class="me-5">
-                <P>Falta Cobrar: ${{totalFaltaCobrar}}</P>  
-                <P>Falta Pagar: ${{totalFaltaPagar}}</P>                
-            </div>        
-        </div>        
-    </div>  
+<div class="container">
+  <h1 class="text-center">Facturación</h1>
+  <div class="d-flex justify-content-between m-0">
+    <div class="border border-rounded rounded-4">
+      <div class="m-5">
+          <h2>Resumen</h2>
+          <div class="d-flex">
+              <div class="me-5">
+                  <p>Ingreso Total por Op: ${{totalIngresosOp}}</p>
+                  <p>Pago Total por Op: ${{totalPagosOp}}</p>
+              </div>
+              <div class="me-5">
+                  <P>Falta Cobrar: ${{totalFaltaCobrar}}</P>  
+                  <P>Falta Pagar: ${{totalFaltaPagar}}</P>                
+              </div>        
+          </div>        
+      </div>  
+    </div>
+    <div>
+      <!-- <app-facturacion-consulta  [componenteConsulta]="componenteConsulta" (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" ></app-facturacion-consulta> -->
+      <button   data-bs-target="#consultaModal" data-bs-toggle="modal" id="bt" class="btn btn-outline-secondary ">
+        Consultar Operaciones
+      </button>
+    <!-- MODAL CONSULTA OPERACION -->
+      <div class="modal fade modal-sm" id="consultaModal" tabindex="-1" aria-labelledby="consultaModal" aria-hidden="true">
+          <div class="modal-dialog">
+              <div class="modal-content">
+                  <div class="modal-header">
+                  
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+                  </div>
+                  <app-facturacion-consulta (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-facturacion-consulta>
+                      
+              </div>
+          </div>
+      </div>     
+    </div>
   </div>
-  <div>
-    <!-- <app-facturacion-consulta  [componenteConsulta]="componenteConsulta" (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" ></app-facturacion-consulta> -->
-    <button   data-bs-target="#consultaModal" data-bs-toggle="modal" id="bt" class="btn btn-outline-secondary ">
-      Consultar Operaciones
-    </button>
-  <!-- MODAL CONSULTA OPERACION -->
-    <div class="modal fade modal-sm" id="consultaModal" tabindex="-1" aria-labelledby="consultaModal" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
-                </div>
-                <app-facturacion-consulta (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-facturacion-consulta>
-                    
-            </div>
-        </div>
-    </div>     
+  
+  <h3 class="mt-3">Periodo: {{fechasConsulta.fechaDesde}} / {{fechasConsulta.fechaHasta}}</h3> 
+  <div class="mt-4">       
+    
+    <app-facturacion-cliente></app-facturacion-cliente>
   </div>
-</div>
-
-<h3 class="mt-3">Periodo: {{fechasConsulta.fechaDesde}} / {{fechasConsulta.fechaHasta}}</h3> 
-<div class="mt-4">       
   
-  <app-facturacion-cliente></app-facturacion-cliente>
-</div>
-
-<div class="mt-4">       
+  <div class="mt-4">       
+    
+    <app-facturacion-chofer></app-facturacion-chofer>
+  </div>
   
-  <app-facturacion-chofer></app-facturacion-chofer>
-</div>
-
-<div class="mt-4">       
-  
-  <app-facturacion-proveedor></app-facturacion-proveedor>
+  <div class="mt-4">       
+    
+    <app-facturacion-proveedor></app-facturacion-proveedor>
+  </div>
 </div>

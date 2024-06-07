@@ -164,7 +164,7 @@ export class FacturacionChoferComponent implements OnInit {
     if(formato === "excel"){
       this.excelServ.exportToExcelChofer(factura, this.operacionFac); 
     } else{
-      //aca va el pdf
+      this.pdfServ.exportToPdfChofer(factura, this.operacionFac);
     }
     this.storageService.clearInfo("facOpLiqChofer")
     //console.log("ARRAY: ", this.$facturaOpChofer);
