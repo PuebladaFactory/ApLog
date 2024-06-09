@@ -4,7 +4,10 @@
     {{ buttonName }}
   </button>
 <br>
-  <button  data-bs-target="#altaModal" data-bs-toggle="modal"  id="bt" class="btn btn-outline-secondary bt">
+  <!-- <button  data-bs-target="#altaModal" data-bs-toggle="modal"  id="bt" class="btn btn-outline-secondary bt">
+    {{ buttonNameAlta }}
+  </button> -->
+  <button  class="btn btn-outline-secondary bt" (click)="openModal()">
     {{ buttonNameAlta }}
   </button>
   <br>
@@ -34,18 +37,18 @@
   </div>
 </div>      
 <!-- MODAL ALTA OPERACION -->
-<div class="modal fade modal-sm" id="altaModal" tabindex="-1" aria-labelledby="altaModal" aria-hidden="true">
+<!-- <div class="modal fade modal-sm" id="altaModal" tabindex="-1" aria-labelledby="altaModal" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
       </div>
-      <app-op-alta></app-op-alta>
+      <app-op-alta (newItemEvent)="getMsgAlta($event)"></app-op-alta>
            
     </div>
   </div>
-</div>
+</div> -->
     <!--   <ng-container *ngIf="showManual" class="col-6">
         <app-op-carga-manual></app-op-carga-manual>
       </ng-container> -->

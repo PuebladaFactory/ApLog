@@ -133,7 +133,7 @@ export class ChoferesAltaComponent implements OnInit {
     if(this.seguimiento){
       this.vehiculo.satelital = this.seguimientoForm.value;
     }else{
-      this.vehiculo.satelital = "no";
+      this.vehiculo.satelital = false;
     }
     this.vehiculo.refrigeracion = null;
     //console.log(this.vehiculo);
