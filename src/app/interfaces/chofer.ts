@@ -23,7 +23,7 @@ export interface Vehiculo {
     modelo: string;
     tipoCombustible: string;    
     categoria: string;
-    satelital: SeguimientoSatelital | string;
+    satelital: SeguimientoSatelital | boolean;
     tarjetaCombustible: boolean;
     refrigeracion: boolean|null;
     publicidad: boolean;

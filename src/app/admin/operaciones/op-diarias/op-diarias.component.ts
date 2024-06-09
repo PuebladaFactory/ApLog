@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Chofer } from 'src/app/interfaces/chofer';
@@ -6,14 +6,19 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import * as $ from 'jquery';
+import { NgbActiveModal, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { OpAltaComponent } from '../op-alta/op-alta.component';
 
 @Component({
   selector: 'app-op-diarias',
   templateUrl: './op-diarias.component.html',
-  styleUrls: ['./op-diarias.component.scss']
+  styleUrls: ['./op-diarias.component.scss'],
+  //providers: [NgbActiveModal]
 })
 export class OpDiariasComponent implements OnInit {
   
+  private modalRef!: NgbModalRef;
 
   componente:string = "operacionesActivas"
   form:any;
@@ -43,7 +48,7 @@ export class OpDiariasComponent implements OnInit {
   acompaniante: boolean = false;
   
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, ) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, private modalService: NgbModal) {
     this.form = this.fb.group({      
       fecha: [""],    
       observaciones: [""],
@@ -183,5 +188,26 @@ export class OpDiariasComponent implements OnInit {
     }
     //console.log("acompaniante: ", this.acompaniante);
   }
- 
+
+  openModal() {
+    {
+      const modalRef = this.modalService.open(OpAltaComponent, {
+        windowClass: 'myCustomModalClass',
+        //centered: true,
+        size: 'sm', 
+      });
+
+      modalRef.result.then(
+        (result) => {
+          console.log("llega?");
+          
+          this.modalRef.dismiss();
+        },
+        (reason) => {}
+      );
+    }
+  }
+
+
+  
 }

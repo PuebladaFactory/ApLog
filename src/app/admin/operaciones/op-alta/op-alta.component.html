@@ -1,66 +1,71 @@
-<div id="caja" class="border border-2 p-4 rounded-4">
-    <h1 >Alta Operacion</h1>
 
-    <div class="container d-flex justify-content-center align-self-center">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+            <h1 >Alta Operacion</h1>      
+            <button type="button" class="btn-close" (click)="activeModal.dismiss('Cross click')" ></button>
+        </div>
+        <div class="container d-flex justify-content-center align-self-center modal-body">
 
-
-
-        <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="form-group">
-                <label for="Fecha">Fecha</label>
-                <div class="input-group">
-                    <input formControlName="fecha" class="form-control edicion" required type="date">            
-                </div>
-            </div>    
-          <div class="form-group">
-              <label for="Cliente">Cliente</label>
-              <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
-                  <option value={{clienteSeleccionado}}>Elegir Cliente</option>
-                  <option *ngFor="let cliente of $clientes">
-                    {{cliente.razonSocial}}
-                  </option>
-              </select>
-          </div>                     
-          <div class="form-group">
-              <label for="Chofer">Chofer</label>                    
-              <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
-                  <option>Elegir Chofer</option>
-                  <option *ngFor="let chofer of $choferes">
-                    {{chofer.apellido}} {{chofer.nombre}}
-                  </option>
-              </select>
-          </div>
-          <div class="form-group">
-              <label for="TarifaEspecial">TarifaEspecial</label>
-              <select class="form-select" aria-label="Default select example" (change)="selectTarifaEspecial($event)">
-                  <option selected>Seleccione</option>
-                  <option value="si">Si</option>
-                  <option value="no">No</option>              
-              </select>
-          </div>                                        
-          <div *ngIf="!tarifaEspecial" class="form-group mt-2">
-              <label for="Acompaniante">Acompañante</label>
-              <select class="form-select form-select-md mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
-                  <option selected>Seleccione</option>
-                  <option value="si">Si</option>
-                  <option value="no">No</option>              
-              </select>
-          </div>       
-          <div class="form-group">
-              <label for="Observaciones">Observaciones</label>
-              <div class="input-group">
-                  <textarea  formControlName="observaciones" class="form-control edicion" required type="text"></textarea>            
+            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <div class="form-group">
+                    <label for="Fecha">Fecha</label>
+                    <div class="input-group">
+                        <input formControlName="fecha" class="form-control edicion" required type="date">            
+                    </div>
+                </div>    
+              <div class="form-group">
+                  <label for="Cliente">Cliente</label>
+                  <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
+                      <option value={{clienteSeleccionado}}>Elegir Cliente</option>
+                      <option *ngFor="let cliente of $clientes">
+                        {{cliente.razonSocial}}
+                      </option>
+                  </select>
+              </div>                     
+              <div class="form-group">
+                  <label for="Chofer">Chofer</label>                    
+                  <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
+                      <option>Elegir Chofer</option>
+                      <option *ngFor="let chofer of $choferes">
+                        {{chofer.apellido}} {{chofer.nombre}}
+                      </option>
+                  </select>
               </div>
-          </div>         
-        <!--   <button class="btn btn-secondary mt-2" type="submit">
-            Guardar 
-          </button> -->
-          <app-btn-agregar name="Guardar"  data-bs-dismiss="modal" aria-label="Close" type="submit"></app-btn-agregar>
-
-        </form>
-
+              <div class="form-group">
+                  <label for="TarifaEspecial">TarifaEspecial</label>
+                  <select class="form-select" aria-label="Default select example" (change)="selectTarifaEspecial($event)">
+                      <option selected>Seleccione</option>
+                      <option value="si">Si</option>
+                      <option value="no">No</option>              
+                  </select>
+              </div>                                        
+              <div *ngIf="!tarifaEspecial" class="form-group mt-2">
+                  <label for="Acompaniante">Acompañante</label>
+                  <select class="form-select form-select-md mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
+                      <option selected>Seleccione</option>
+                      <option value="si">Si</option>
+                      <option value="no">No</option>              
+                  </select>
+              </div>       
+              <div class="form-group">
+                  <label for="Observaciones">Observaciones</label>
+                  <div class="input-group">
+                      <textarea  formControlName="observaciones" class="form-control edicion" required type="text"></textarea>            
+                  </div>
+              </div>         
+            <!--   <button class="btn btn-secondary mt-2" type="submit">
+                Guardar 
+              </button> -->
+              <app-btn-agregar name="Guardar" ></app-btn-agregar>
+    
+            </form>
+    
+        </div>
+             
+      </div>
     </div>
-</div>
+
 
 
 

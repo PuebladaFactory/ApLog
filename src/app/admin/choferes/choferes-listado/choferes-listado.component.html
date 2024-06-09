@@ -38,7 +38,7 @@
                 <td class="align-middle">si</td>
               </ng-template>           -->
               <td class="align-middle">{{chofer.proveedor}}</td>
-              <td class="align-middle">{{chofer.satelital === "no" ? "no" : "si"}}</td>
+              <td class="align-middle">{{!chofer.satelital  ? "no" : "si"}}</td>
               <td>
                 
                 <app-btn-leer name="Detalle" (click)="abrirVista(chofer)" data-bs-toggle="modal" data-bs-target="#exampleModal"></app-btn-leer>

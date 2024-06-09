@@ -147,9 +147,9 @@ export class ChoferesListadoComponent implements OnInit {
   }
 
   armarSeguimientoSatelital(){
-    if(this.choferEditar.vehiculo.satelital === "no"){      
+    if(!this.choferEditar.vehiculo.satelital){      
       this.seguimiento = false;
-      this.satelital = "no";
+      this.satelital = false;
     }else{
       this.seguimiento = true;
       this.satelital = this.choferEditar.vehiculo.satelital;
@@ -213,7 +213,7 @@ export class ChoferesListadoComponent implements OnInit {
     if(this.seguimiento){
       this.vehiculo.satelital = this.seguimientoForm.value;
     }else{
-      this.vehiculo.satelital = this.satelital;
+      this.vehiculo.satelital = false;
     }
     this.choferEditar.vehiculo = this.vehiculo;    
   }
@@ -332,10 +332,10 @@ export class ChoferesListadoComponent implements OnInit {
 
   eliminarChofer(chofer:Chofer){    
     
-    if(chofer.vehiculo.tarjetaCombustible  || chofer.vehiculo.satelital !== "no"){
-       if (chofer.vehiculo.tarjetaCombustible  && chofer.vehiculo.satelital !== "no"){
+    if(chofer.vehiculo.tarjetaCombustible  || chofer.vehiculo.satelital !== false){
+       if (chofer.vehiculo.tarjetaCombustible  && chofer.vehiculo.satelital !== false){
         alert("El chofer que desea eliminar tiene asignada una tarjeta de combustible y seguimiento satelital")
-       } else if (chofer.vehiculo.tarjetaCombustible  && chofer.vehiculo.satelital === "no"){
+       } else if (chofer.vehiculo.tarjetaCombustible  && !chofer.vehiculo.satelital){
             alert("El chofer que desea eliminar tiene asignada una tarjeta de combustible")
           } else {
                 alert("El chofer que desea eliminar tiene asignado seguimiento satelital")
