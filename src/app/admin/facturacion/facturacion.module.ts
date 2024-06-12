@@ -14,13 +14,15 @@ import { FacturacionProveedorComponent } from './facturacion-proveedor/facturaci
 
 
 
+
 @NgModule({
   declarations: [
     FacturacionClienteComponent,
     FacturacionChoferComponent,
     FacturacionGeneralComponent,
     FacturacionConsultaComponent,
-    FacturacionProveedorComponent,    
+    FacturacionProveedorComponent,
+    
   ],
   imports: [
     CommonModule,

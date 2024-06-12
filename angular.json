@@ -31,7 +31,13 @@
             ],
             "styles": [
               "node_modules/bootstrap/scss/bootstrap.scss",
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/@swimlane/ngx-datatable/index.scss",
+              "node_modules/@swimlane/ngx-datatable/assets/icons.css", 
+              "node_modules/@swimlane/ngx-datatable/themes/material.css",
+              "node_modules/@swimlane/ngx-datatable/themes/dark.css", 
+              "node_modules/@swimlane/ngx-datatable/themes/bootstrap.css"
+              
             ],
             "scripts": [
               "node_modules/jquery/dist/jquery.min.js",
