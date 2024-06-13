@@ -6,7 +6,7 @@ import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
-import { BuscarTarifaService } from 'src/app/servicios/buscar-tarifa/buscar-tarifa.service';
+import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 
 @Component({
   selector: 'app-modal-detalle',
