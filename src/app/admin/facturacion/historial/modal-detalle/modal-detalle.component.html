@@ -6,12 +6,14 @@
     <div class="modal-body">        
         <div class="container">
             <div class="row">
+                <!-- CLIENTE -->
                 <div class="col">
                     <h3 class="text-center">Cliente</h3>
                     <h4>Razón Social: <span class="text-end">{{data.operacion.cliente.razonSocial}}</span> </h4>
-                    <h4>Id Cliente: {{data.idCliente}}</h4>
+                    <h4>Id Cliente: {{data.operacion.cliente.idCliente}}</h4>
                     <h4>Dirección: {{data.operacion.cliente.direccion}}</h4>
                 </div>
+                <!-- CHOFER -->
                 <div class="col" *ngIf="data.operacion.chofer.proveedor === 'monotributista' && tarifaChoferAplicada !== undefined">
                     <h3 class="text-center">Chofer</h3>
                     <h4>Nombre: {{data.operacion.chofer.apellido}} {{data.operacion.chofer.nombre}}</h4>
@@ -21,6 +23,7 @@
                     <h4>Km: {{data.operacion.km}}</h4>
                     <h4>Acompañante: {{data.operacion.acompaniante? "Si": "No"}}</h4>
                 </div>
+                <!-- PROVEEDOR -->
                 <div class="col"*ngIf="data.operacion.chofer.proveedor !== 'monotributista' && tarifaProveedorAplicada !== undefined">
                     <h3 class="text-center">Proveedor</h3>
                     <h4>Razon Social: {{data.operacion.chofer.proveedor}}</h4>
@@ -32,10 +35,11 @@
                 </div>
             </div>
             <div class="row">
+                <!-- TARIFA CLIENTE -->
                 <div class="col border border-dark-subtle border-opacity-50 border-2 rounded-4 me-1 fondo">
                     <h3 class="border-bottom border-dark-subtle border-opacity-50 border-2">Tarifa Aplicada</h3>
-                    <h4>Id Tarifa: {{data.idTarifa}}</h4>
-                    <h4>Jornada: {{data.valorJornada}}</h4>
+                    <h4>Id Tarifa: {{tarifaClienteAplicada.idTarifaCliente}}</h4>
+                    <h4>Jornada: {{montoCategoriaCliente}}</h4>
                     <h4>Acompañante: {{tarifaClienteAplicada.adicionales.acompaniante}} </h4>
                     <h4>Adicional Km</h4>                    
                     <h4> 
@@ -50,9 +54,10 @@
                         </svg>
                         Intervalos: {{tarifaClienteAplicada.adicionales.adicionalKm.sectoresSiguientes.valor}} 
                     </h4>                    
-                    <h4>Tarifa Especial: {{tarifaClienteAplicada.tarifaEspecial.valor}} </h4>
-                    <h4 class="border-top border-dark-subtle border-opacity-50 border-2">Total Factura: {{data.total}}</h4>
+                    <h4>Tarifa Especial: {{comprobarNumber(tarifaClienteAplicada.tarifaEspecial.valor) ? tarifaClienteAplicada.tarifaEspecial.valor : 0 }} </h4>
+                    <h4 class="border-top border-dark-subtle border-opacity-50 border-2">Total Factura: {{totalFacturaCliente}}</h4>
                 </div>
+                <!-- TARIFA CHOFER -->
                 <div *ngIf="data.operacion.chofer.proveedor === 'monotributista' && tarifaChoferAplicada !== undefined" class="col border border-dark-subtle border-opacity-50 border-2 rounded-4 ms-1 fondo">
                     <h3 class="border-bottom border-dark-subtle border-opacity-50 border-2">Tarifa Aplicada</h3>
                     <h4>Id Tarifa: {{tarifaChoferAplicada.idTarifa}}</h4>
@@ -70,12 +75,13 @@
                         </svg>
                         Km Intervalos: {{tarifaChoferAplicada.km.sectoresSiguientes.valor}} </h4>
                     <h4>Tarifa Especial: {{tarifaChoferAplicada.tarifaEspecial.valor}}  </h4>
-                    <h4 class="border-top border-dark-subtle border-opacity-50 border-2">Total Factura: {{data.montoFacturaChofer}} </h4>
+                    <h4 class="border-top border-dark-subtle border-opacity-50 border-2">Total Factura: {{totalFacturaChofer}} </h4>
                 </div>
+                <!-- TARIFA PROVEEDOR -->
                 <div *ngIf="data.operacion.chofer.proveedor !== 'monotributista' && tarifaProveedorAplicada !== undefined" class="col border border-dark-subtle border-opacity-50 border-2 rounded-4 ms-1 fondo">
                     <h3 class="border-bottom border-dark-subtle border-opacity-50 border-2">Tarifa Aplicada</h3>
                     <h4>Id Tarifa: {{tarifaProveedorAplicada.idTarifaProveedor}}</h4>
-                    <h4>Jornada:</h4>
+                    <h4>Jornada: {{this.montoCategoriaProveedor}}</h4>
                     <h4>Acompañante:{{tarifaProveedorAplicada.adicionales.acompaniante}} </h4>
                     <h4>Adicional Km</h4>
                     <h4>
@@ -88,8 +94,8 @@
                             <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
                         </svg>
                         Km Intervalos: {{tarifaProveedorAplicada.adicionales.adicionalKm.sectoresSiguientes.valor}} </h4>
-                    <h4>Tarifa Especial: {{tarifaProveedorAplicada.tarifaEspecial.valor}}  </h4>
-                    <h4 class="border-top border-dark-subtle border-opacity-50 border-2">Total Factura: {{data.montoFacturaChofer}} </h4>
+                    <h4>Tarifa Especial: {{comprobarNumber(tarifaProveedorAplicada.tarifaEspecial.valor) ? tarifaClienteAplicada.tarifaEspecial.valor : 0 }}  </h4>
+                    <h4 class="border-top border-dark-subtle border-opacity-50 border-2">Total Factura: {{totalFacturaProveedor}} </h4>
                 </div>
             </div>            
         </div>

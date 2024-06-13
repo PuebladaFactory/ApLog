@@ -1,154 +1,3 @@
-
-    <!-- <table class="table table-dark table-striped">
-        <thead>
-          <tr>
-            <th scope="col" class="">Id Cliente</th>
-            <th scope="col" class="">Razon Social</th>
-            <th scope="col" class="">Id Op</th>
-            <th scope="col" class="">Fecha</th>  
-            <th scope="col" class="">Chofer</th>
-            <th scope="col" class="">Categoria</th>
-            <th scope="col" class="">Acompañante</th>
-            <th scope="col" class="">Proveedor</th>  
-            <th scope="col" class="">Destino</th> 
-            <th scope="col" class="">Km</th>            
-            <th scope="col" class="">Total Chofer</th>
-            <th scope="col" class="">Jornada Cliente</th>
-            <th scope="col" class="">Adicional Cliente</th>
-            <th scope="col" class="">Total Cliente</th>
-            <th scope="col" class="">Ganancia</th>
-          </tr>
-        </thead>    
-        <tbody  *ngFor="let cliente of $facturaOpCliente">      
-              <tr>
-                  <td>{{cliente.idCliente}}</td>
-                  <td>{{cliente.operacion.cliente.razonSocial}}</td>
-                  <td>{{cliente.operacion.idOperacion}}</td>
-                  <td>{{cliente.operacion.fecha}}</td>
-                  <td>{{cliente.operacion.chofer.apellido}} {{cliente.operacion.chofer.nombre}}</td>
-                  <td>{{cliente.operacion.chofer.vehiculo.categoria}}</td>
-                  <td>{{cliente.operacion.acompaniante}}</td>
-                  <td>{{cliente.operacion.chofer.proveedor}}</td>
-                  <td>{{cliente.operacion.cliente.direccion}}</td>
-                  <td>{{cliente.operacion.km}}</td>
-                  <td>{{cliente.montoFacturaChofer}}</td>
-                  <td>{{cliente.valorJornada}}</td>
-                  <td>{{cliente.total - cliente.valorJornada}}</td>
-                  <td>{{cliente.total}}</td>                  
-                  <td>{{((cliente.total - cliente.montoFacturaChofer)*100/cliente.total).toFixed(2)}}%</td>
-                  
-              </tr>        
-      </tbody> 
-    </table> -->
-    
-<!--     <div class="custom-datatable">
-      <input type="text" placeholder="Buscar..." (input)="updateFilter($event)" />
-      <ngx-datatable
-        class="dark"
-        [rows]="filteredRows"
-        [columns]="columns"
-        [columnMode]="ColumnMode.flex"
-        [headerHeight]="50"
-        [footerHeight]="50"
-        [rowHeight]="'auto'"
-        [sortType]="sortType"
-        [selectionType]="selectionType"
-        [selected]="selected"
-        [externalPaging]="true"
-        [count]="count"
-        [limit]="limit"
-        [offset]="offset"
-        (sort)="onSort($event)"
-        (activate)="onActivate($event)"
-        (select)="onSelect($event)"
-        (page)="setPage($event)">
-    
-        
-        <ngx-datatable-column name="" prop="" [flexGrow]="1">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(row)" (click)="openModal(row)">
-              <ng-container *ngIf="!mostrarDetallesOp[row.indice]">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-              </ng-container>
-              <ng-container *ngIf="mostrarDetallesOp[row.indice]">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
-              </ng-container>
-            </svg>
-          </ng-template>
-        </ngx-datatable-column>
-    
-        <ngx-datatable-column name="Razon Social" prop="razonSocial" [flexGrow]="2">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            {{ row.razonSocial }}
-          </ng-template>
-        </ngx-datatable-column>
-    
-        <ngx-datatable-column name="Id Op" prop="idOperacion" [flexGrow]="2">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            {{ row.idOperacion }}
-          </ng-template>
-        </ngx-datatable-column>
-    
-        <ngx-datatable-column name="Fecha" prop="fecha" [flexGrow]="2">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            {{ row.fecha }}
-          </ng-template>
-        </ngx-datatable-column>
-    
-        <ngx-datatable-column name="Chofer" prop="chofer" [flexGrow]="2">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            {{ row.chofer }}
-          </ng-template>
-        </ngx-datatable-column>
-    
-        <ngx-datatable-column name="Direccion" prop="direccion" [flexGrow]="2">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            {{ row.direccion }}
-          </ng-template>
-        </ngx-datatable-column>
-    
-        <ngx-datatable-column name="Km" prop="km" [flexGrow]="1">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            {{ row.km }}
-          </ng-template>
-        </ngx-datatable-column>
-    
-        <ngx-datatable-column name="Jorn" prop="valorJornada" [flexGrow]="1">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            {{ row.valorJornada }}
-          </ng-template>
-        </ngx-datatable-column>
-    
-        <ngx-datatable-column name="Adi" prop="adicionalCliente" [flexGrow]="1">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            {{ row.adicionalCliente }}
-          </ng-template>
-        </ngx-datatable-column>
-    
-        <ngx-datatable-column name="Total" prop="totalCliente" [flexGrow]="1">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            {{ row.totalCliente }}
-          </ng-template>
-        </ngx-datatable-column>
-    
-        <ngx-datatable-column name="Ganancia" prop="ganancia" [flexGrow]="2">
-          <ng-template ngx-datatable-cell-template let-row="row">
-            {{ row.ganancia }}
-          </ng-template>
-        </ngx-datatable-column>
-    
-      </ngx-datatable>
-    </div> -->
-
-<!--     <div class="column-selection">
-      <label *ngFor="let column of allColumns">
-        <input type="checkbox" [checked]="column.selected" (change)="toggleColumn(column)" />
-        {{ column.name }}
-      </label>
-    </div> -->
-    
     <div class="custom-datatable">
       <div class="container mb-2">
           <div class="row">
@@ -175,24 +24,23 @@
           </div>
       </div>
       <ngx-datatable
-        class="dark"
-        [rows]="filteredRows"
-        [columns]="visibleColumns"
-        [columnMode]="ColumnMode.flex"
-        [headerHeight]="50"
-        [footerHeight]="50"
-        [rowHeight]="'auto'"
-        [sortType]="sortType"
-        [selectionType]="selectionType"
-        [selected]="selected"
-        [externalPaging]="true"
-        [count]="count"
-        [limit]="limit"
-        [offset]="offset"
-        (sort)="onSort($event)"
-        (activate)="onActivate($event)"
-        (select)="onSelect($event)"
-        (page)="setPage($event)">
+      class="dark"
+      [rows]="paginatedRows"
+      [columns]="visibleColumns"
+      [columnMode]="ColumnMode.flex"
+      [headerHeight]="50"
+      [footerHeight]="50"
+      [rowHeight]="'auto'"
+      [sortType]="sortType"
+      
+      [externalPaging]="true"
+      [count]="count"
+      [limit]="limit"
+      [offset]="offset"
+      (sort)="onSort($event)"
+      (activate)="onActivate($event)"
+      (select)="onSelect($event)"
+      (page)="setPage($event)">
         
         <ngx-datatable-column name="" prop="" [flexGrow]="1">          
           <ng-template ngx-datatable-cell-template let-row="row">

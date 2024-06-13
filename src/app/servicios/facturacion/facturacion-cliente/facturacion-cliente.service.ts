@@ -52,9 +52,9 @@ export class FacturacionClienteService {
     opCliente = this.$clientes.filter(function (cliente:any){
       return cliente.idCliente === op.cliente.idCliente;
     })
-    //console.log("choferSeleccionado: ", choferSeleccionado);
+    ////console.log("choferSeleccionado: ", choferSeleccionado);
     this.clienteOp = opCliente[0];
-    console.log("clienteOp: ", this.clienteOp); */
+    //console.log("clienteOp: ", this.clienteOp); */
     this.clienteOp = op.cliente
     this.buscarTarifa(op);
   }
@@ -63,7 +63,7 @@ export class FacturacionClienteService {
     this.storageService.historialTarifasClientes$.subscribe(data => {
       this.$tarifas = data.filter((tarifa: { idCliente: number; }) => tarifa.idCliente === this.clienteOp.idCliente);
 
-      console.log("data Todas: ",this.$tarifas);
+      //console.log("data Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
       this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: TarifaCliente, tarifaActual: TarifaCliente) => {
@@ -71,7 +71,7 @@ export class FacturacionClienteService {
       }); 
 
       // Ahora, tarifaMasElevada contiene la tarifa con el idTarifa más elevado
-      console.log("ultima: ", this.ultimaTarifa);
+      //console.log("ultima: ", this.ultimaTarifa);
       //this.calcularLiquidacion(op);
       this.calcularLiquidacion(op);
     });  
@@ -79,7 +79,7 @@ export class FacturacionClienteService {
 
   calcularLiquidacion(op:Operacion){    
     this.$tarifaCliente = this.ultimaTarifa
-    console.log("esta es la tarifa a facturar: ", this.$tarifaCliente);
+    //console.log("esta es la tarifa a facturar: ", this.$tarifaCliente);
     
     if(op.tarifaEspecial){
       
@@ -92,19 +92,19 @@ export class FacturacionClienteService {
       this.calcularAdicional(op, this.ultimaTarifa);
 
       //this.$adicional = this.calcularAdicional(op, this.ultimaTarifa);
-      //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
+      ////console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
       
       //this.total = this.$tarifaCliente.valorJornada + this.$adicional;
       this.total = this.categoriaMonto + (this.acompanianteMonto + this.adicionalKmMonto)
   
-      console.log("esta es facturaClienteService. liquidacion del chofer: ", this.total);
+      //console.log("esta es facturaClienteService. liquidacion del chofer: ", this.total);
     }
 
     //this.crearFacturaChofer(op);    
   }
 
   facturarCG(op: Operacion){
-    console.log("cargas generales");
+    //console.log("cargas generales");
     
     switch (op.chofer.vehiculo.categoria) {
       case "mini":
@@ -168,18 +168,18 @@ export class FacturacionClienteService {
         
         resto = op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo);
         secciones = resto / this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo;
-        //console.log("secciones: ", secciones);
+        ////console.log("secciones: ", secciones);
         secciones = Math.floor(secciones);
 
         if(((op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo)) % this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo) === 0){
           //alert("cuenta redonda");
           this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor*secciones;
-          console.log("adicional KM: ", this.adicionalKmMonto);           
+          //console.log("adicional KM: ", this.adicionalKmMonto);           
 
         } else{
           //alert("con resto");
           this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + ((this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor)*(secciones+1));
-          console.log("adicional KM: ", this.adicionalKmMonto);
+          //console.log("adicional KM: ", this.adicionalKmMonto);
         }         
       }  
     }
@@ -198,18 +198,18 @@ export class FacturacionClienteService {
         
         resto = op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo);
         secciones = resto / this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo;
-        //console.log("secciones: ", secciones);
+        ////console.log("secciones: ", secciones);
         secciones = Math.floor(secciones);
 
         if(((op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo)) % this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo) === 0){
           //alert("cuenta redonda");
           this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor*secciones;
-          console.log("adicional KM: ", this.adicionalKmMonto);           
+          //console.log("adicional KM: ", this.adicionalKmMonto);           
 
         } else{
           //alert("con resto");
           this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + ((this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor)*(secciones+1));
-          console.log("adicional KM: ", this.adicionalKmMonto);
+          //console.log("adicional KM: ", this.adicionalKmMonto);
         }         
       }  
     }
@@ -231,7 +231,7 @@ export class FacturacionClienteService {
       liquidacion: false,
       montoFacturaChofer: 0,
     }
-    console.log(this.facturaCliente);
+    //console.log(this.facturaCliente);
     
     //this.altaFacturaChofer()
   }
@@ -242,18 +242,18 @@ export class FacturacionClienteService {
     this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0,
     this.acompanianteMonto = 0;
     this.adicionalKmMonto = 0;
-    //console.log("pasa por aca 2°");
+    ////console.log("pasa por aca 2°");
     
   }
 
   obtenerTarifaCliente(factura:FacturaOpCliente):TarifaCliente|undefined{
     let ultimaTarifa
     this.storageService.historialTarifasClientes$.subscribe(data => {
-      console.log(data);
+      //console.log(data);
       
       this.$tarifas = data.filter((tarifa: { idTarifaCliente: number; }) => tarifa.idTarifaCliente === factura.idTarifa);
 
-      console.log("Todas: ",this.$tarifas);
+      //console.log("Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
       ultimaTarifa = this.$tarifas[0]
@@ -262,7 +262,7 @@ export class FacturacionClienteService {
       }); */
 
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
-      console.log("ultima: ", ultimaTarifa);
+      //console.log("ultima: ", ultimaTarifa);
       
     });  
 
@@ -294,7 +294,7 @@ export class FacturacionClienteService {
       montoFacturaChofer: factura.montoFacturaChofer,
     }
     
-    console.log("factura EDITADA FINAL: ", this.facturaCliente);
+    //console.log("factura EDITADA FINAL: ", this.facturaCliente);
   }
 
 }

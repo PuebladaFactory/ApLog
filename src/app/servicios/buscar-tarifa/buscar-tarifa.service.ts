@@ -3,7 +3,7 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { StorageService } from '../storage/storage.service';
 import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
-import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
+import { CargasGenerales, TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
@@ -108,19 +108,19 @@ export class BuscarTarifaService {
     
     
     this.storageService.consultasFacOpLiqChofer$.subscribe(data =>{
-      console.log("1) data op choferes: ",data);
+      //console.log("1) data op choferes: ",data);
       facOpChoferes = data;
       //console.log("facuras op choferes: ",facOpChoferes);
       
       facuraChofer = facOpChoferes.filter((factura : FacturaOpChofer)=>{
-        console.log("2)", factura.operacion.idOperacion, operacion.idOperacion);        
+        //console.log("2)", factura.operacion.idOperacion, operacion.idOperacion);        
         return factura.operacion.idOperacion === operacion.idOperacion
       });
-      console.log("3) ", facuraChofer);      
+      //console.log("3) ", facuraChofer);      
       
       this.storageService.historialTarifas$.subscribe(data =>{
         this.$tarifasChoferes = data;
-        console.log("4) tarifas choferes: ",this.$tarifasChoferes);
+        //console.log("4) tarifas choferes: ",this.$tarifasChoferes);
         tarifaAplicada = this.$tarifasChoferes.filter((tarifa:TarifaChofer) =>{
           return tarifa.idTarifa === facuraChofer[0].idTarifa;
         })
@@ -130,7 +130,7 @@ export class BuscarTarifaService {
      
     })
     
-    console.log("5) tarifas chofer: ",tarifaAplicada[0]);    
+    //console.log("5) tarifas chofer: ",tarifaAplicada[0]);    
     return tarifaAplicada[0];
   }
 
@@ -141,29 +141,92 @@ export class BuscarTarifaService {
     
     
     this.storageService.consultasFacOpLiqProveedor$.subscribe(data =>{
-      console.log("1) data op proveedores: ",data);
+      //console.log("1) data op proveedores: ",data);
       facOpProveedores = data;
       //console.log("facuras op choferes: ",facOpChoferes);
       
       facuraProveedor = facOpProveedores.filter((factura : FacturaOpProveedor)=>{
-        console.log(factura.operacion.idOperacion, operacion.idOperacion);        
+        //console.log(factura.operacion.idOperacion, operacion.idOperacion);        
         return factura.operacion.idOperacion === operacion.idOperacion
       });
-      console.log("2) factura proveedor: ", facuraProveedor);      
+      //console.log("2) factura proveedor: ", facuraProveedor);      
       
       this.storageService.historialTarifasProveedores$.subscribe(data =>{
         this.$tarifasProveedores = data;
-        console.log("3) tarifas proveedores: ",this.$tarifasChoferes);
+        //console.log("3) tarifas proveedores: ",this.$tarifasChoferes);
         tarifaAplicada = this.$tarifasProveedores.filter((tarifa:TarifaProveedor) =>{
           return tarifa.idTarifaProveedor === facuraProveedor[0].idTarifa;
         })        
     })          
     })    
-    console.log("4) tarifas proveedor: ",tarifaAplicada[0]);    
+    //console.log("4) tarifas proveedor: ",tarifaAplicada[0]);    
     return tarifaAplicada[0];
   }
 
-  buscarTarifaCliente(idTarifa:number):TarifaCliente{
+  buscarCategoriaProveedor(tarifa: TarifaProveedor, categoria: string):number{
+    switch (categoria) {
+      case "mini":
+        return tarifa.cargasGenerales.utilitario;        
+
+      case "maxi":
+        return tarifa.cargasGenerales.furgon;
+      
+      case "furgon grande":
+        return tarifa.cargasGenerales.furgonGrande;
+
+      case "camión liviano":
+        return tarifa.cargasGenerales.chasisLiviano;
+
+      case "chasis":
+        return tarifa.cargasGenerales.chasis;
+
+      case "balancin":
+        return tarifa.cargasGenerales.balancin;
+        
+      case "semi remolque local":
+        return tarifa.cargasGenerales.semiRemolqueLocal;
+
+      case "portacontenedores":
+        return tarifa.cargasGenerales.portacontenedores;
+    
+      default:
+        return 0;
+  }
+}
+
+
+buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
+  switch (categoria) {
+    case "mini":
+      return tarifa.cargasGenerales.utilitario;        
+
+    case "maxi":
+      return tarifa.cargasGenerales.furgon;
+    
+    case "furgon grande":
+      return tarifa.cargasGenerales.furgonGrande;
+
+    case "camión liviano":
+      return tarifa.cargasGenerales.chasisLiviano;
+
+    case "chasis":
+      return tarifa.cargasGenerales.chasis;
+
+    case "balancin":
+      return tarifa.cargasGenerales.balancin;
+      
+    case "semi remolque local":
+      return tarifa.cargasGenerales.semiRemolqueLocal;
+
+    case "portacontenedores":
+      return tarifa.cargasGenerales.portacontenedores;
+  
+    default:
+      return 0;
+}
+}
+
+  buscarTarifaClienteId(idTarifa:number):TarifaCliente{
     let tarifaAplicada : TarifaCliente [] = [];
     this.storageService.historialTarifasClientes$.subscribe(data =>{
       this.$tarifasClientes = data;
@@ -179,7 +242,72 @@ export class BuscarTarifaService {
     return tarifaAplicada[0];
   }
 
-  /* buscarTarifaProveedor(proveedor: Proveedor):TarifaProveedor{
+  buscarTarifaChoferId(idTarifa:number):TarifaChofer{
+    let tarifaAplicada : TarifaChofer [] = [];
+    this.storageService.historialTarifas$.subscribe(data =>{
+      this.$tarifasChoferes = data;
+      //console.log("1) tarifas choferes: ",this.$tarifasChoferes);
+      tarifaAplicada = this.$tarifasChoferes.filter((tarifa:TarifaChofer)=>{
+        //console.log("2)", tarifa.idTarifa, idTarifa);        
+        return tarifa.idTarifa === idTarifa  
+      })      
+      //console.log("tarifas clientes: ",tarifaAplicada);    
+    })
     
-  } */
+    //console.log("3) tarifa chofere: ",tarifaAplicada[0]);    
+    return tarifaAplicada[0];
+  }
+
+  buscarTarifaCliente(operacion:Operacion) :TarifaCliente{
+    let facuraCliente: FacturaOpCliente [] = []
+    let tarifaAplicada : TarifaCliente [] = [];
+    let facOpClientes : FacturaOpCliente [] = [];
+    //console.log("0)", operacion);
+    
+    
+    this.storageService.consultasFacOpLiqCliente$.subscribe(data =>{
+      //console.log("1) data op clientes: ",data);
+      facOpClientes = data;
+      //console.log("facuras op clientes: ",facOpClientes);
+      
+      facuraCliente = facOpClientes.filter((factura : FacturaOpCliente)=>{
+        //console.log("2)", factura.operacion.idOperacion, operacion.idOperacion);        
+        return factura.operacion.idOperacion === operacion.idOperacion
+      });
+      //console.log("3) ", facuraCliente);      
+      
+      this.storageService.historialTarifasClientes$.subscribe(data =>{
+        this.$tarifasClientes = data;
+        //console.log("4) tarifas clientes: ",this.$tarifasClientes);
+        tarifaAplicada = this.$tarifasClientes.filter((tarifa:TarifaCliente) =>{
+          //console.log("5): ",tarifa.idTarifaCliente, facuraCliente[0].idTarifa);  
+          return tarifa.idTarifaCliente === facuraCliente[0].idTarifa;
+        })
+        
+    })
+      
+     
+    })
+    
+    //console.log("6) tarifa cliente: ",tarifaAplicada[0]);    
+    return tarifaAplicada[0];
+  }
+
+  buscarTarifaProveedorId(idTarifa:number):TarifaProveedor{
+    let tarifaAplicada : TarifaProveedor [] = [];
+    this.storageService.historialTarifasProveedores$.subscribe(data =>{
+      this.$tarifasProveedores = data;
+      //console.log("1) tarifas proveedores: ",this.$tarifasProveedores);
+      tarifaAplicada = this.$tarifasProveedores.filter((tarifa:TarifaProveedor)=>{
+        //console.log("2)", tarifa.idTarifaProveedor, idTarifa);        
+        return tarifa.idTarifaProveedor === idTarifa  
+      })      
+      //console.log("3) tarifas proveedores: ",tarifaAplicada[0]);      
+    })
+    
+    //console.log("4) tarifas proveedores: ",tarifaAplicada[0]);    
+    return tarifaAplicada[0];
+  }
+    
+   
 }

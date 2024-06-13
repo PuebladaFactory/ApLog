@@ -15,26 +15,9 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 export class HistorialClienteComponent implements OnInit {
   @ViewChild('tablaClientes') table: any;
   $facturaOpCliente!: FacturaOpCliente [];
-  rows: ClienteData[] = [];
+  rows: any[] = [];
   filteredRows: any[] = [];
- /*  columns = [
-    //{ prop: 'idCliente', name: 'Id Cliente', width: 110 },
-    { prop: '', name: ''},
-    { prop: 'razonSocial', name: 'Razon Social'},
-    { prop: 'idOperacion', name: 'Id Op'},
-    { prop: 'fecha', name: 'Fecha'},
-    { prop: 'chofer', name: 'Chofer'},
-    //{ prop: 'categoria', name: 'Categoria', width: 85 },
-    //{ prop: 'acompaniate', name: 'Acompompañante', width: 70 },
-    //{ prop: 'proveedor', name: 'Proveedor', width: 105 },
-    { prop: 'direccion', name: 'Direccion'},
-    { prop: 'km', name: 'Km'},
-    //{ prop: 'montoFacturaChofer', name: 'Total Chofer', width: 100 },
-    { prop: 'valorJornada', name: 'Jornada'},
-    { prop: 'adicionalCliente', name: 'Adi'},
-    { prop: 'totalCliente', name: 'Total'},
-    { prop: 'ganancia', name: 'Ganancia'}
-  ]; */
+  paginatedRows: any[] = [];
   allColumns = [
 //    { prop: '', name: '', selected: true, flexGrow:1  },
     { prop: 'razonSocial', name: 'Razon Social', selected: true, flexGrow:2 },
@@ -51,9 +34,9 @@ export class HistorialClienteComponent implements OnInit {
   ];
   visibleColumns = this.allColumns.filter(column => column.selected);
   selected = [];
-  count = 10;
-  limit = 100;
-  offset = 100;
+  count = 0;
+  limit = 10;
+  offset = 0;
   sortType = SortType.multi; // Aquí usamos la enumeración SortType
   selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
   ColumnMode = ColumnMode;
@@ -101,12 +84,18 @@ export class HistorialClienteComponent implements OnInit {
       ganancia: `${((cliente.total - cliente.montoFacturaChofer) * 100 / cliente.total).toFixed(2)}%`
     }));
     console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
-    this.filteredRows = [...this.rows]; // Inicialmente muestra todas las filas
+    this.applyFilters(); // Aplica filtros y actualiza filteredRows
   }
 
   setPage(pageInfo: any) {
     this.offset = pageInfo.offset;
-    // Aquí deberías cargar los datos de la página actual desde tu backend si es necesario
+    this.updatePaginatedRows();
+  }
+
+  updatePaginatedRows() {
+    const start = this.offset * this.limit;
+    const end = start + this.limit;
+    this.paginatedRows = this.filteredRows.slice(start, end);
   }
   
   onSort(event:any) {
@@ -183,6 +172,9 @@ export class HistorialClienteComponent implements OnInit {
 
       return firstCondition && secondCondition;
     });
+
+    this.count = this.filteredRows.length; // Actualiza el conteo de filas
+    this.setPage({ offset: this.offset }); // Actualiza los datos para la página actual
   }
 
   toggleColumn(column: any) {
