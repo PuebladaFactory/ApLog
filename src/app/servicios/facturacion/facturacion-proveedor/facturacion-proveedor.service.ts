@@ -49,7 +49,7 @@ export class FacturacionProveedorService {
     
     if(op.tarifaEspecial){
       this.facturarTarifaEspecial(op);
-      console.log("pasa por aca 1°");
+      //console.log("pasa por aca 1°");
       
     } else{
       this.facturarCG(op);
@@ -70,20 +70,20 @@ export class FacturacionProveedorService {
     proveedor = this.$proveedores.filter(function (proveedor:any){
       return proveedor.razonSocial === op.chofer.proveedor
     })
-    //console.log("choferSeleccionado: ", choferSeleccionado);
+    ////console.log("choferSeleccionado: ", choferSeleccionado);
     this.proveedorOp = proveedor[0];
-    console.log("proveedorOp: ", this.proveedorOp);
+    //console.log("proveedorOp: ", this.proveedorOp);
     this.buscarTarifaProveedor(op);
   }
 
   buscarTarifaProveedor(op: Operacion){    
     this.storageService.historialTarifasProveedores$.subscribe(data => {
-      //console.log("esto pasa por aca?");
-      //console.log("data: ", data);
+      ////console.log("esto pasa por aca?");
+      ////console.log("data: ", data);
       
       this.$tarifas = data.filter((tarifa: { idProveedor: number; }) => tarifa.idProveedor === this.proveedorOp.idProveedor);
 
-      //console.log("Todas: ",this.$tarifas);
+      ////console.log("Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
       this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
@@ -91,14 +91,14 @@ export class FacturacionProveedorService {
       });
 
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
-      console.log("ultima: ", this.ultimaTarifa);
+      //console.log("ultima: ", this.ultimaTarifa);
       this.calcularLiquidacion(op);
     });  
   }
 
   calcularLiquidacion(op:Operacion){    
     this.$tarifaProveedor = this.ultimaTarifa
-    console.log("esta es la tarifa a facturar: ", this.$tarifaProveedor);
+    //console.log("esta es la tarifa a facturar: ", this.$tarifaProveedor);
     
     if(op.tarifaEspecial){
       
@@ -111,19 +111,19 @@ export class FacturacionProveedorService {
       this.calcularAdicional(op, this.ultimaTarifa);
 
       //this.$adicional = this.calcularAdicional(op, this.ultimaTarifa);
-      //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
+      ////console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
       
       //this.total = this.$tarifaCliente.valorJornada + this.$adicional;
       this.total = this.categoriaMonto + (this.acompanianteMonto + this.adicionalKmMonto)
   
-      console.log("esta es facturaClienteService. liquidacion del chofer: ", this.total);
+      //console.log("esta es facturaClienteService. liquidacion del chofer: ", this.total);
     }
 
     //this.crearFacturaChofer(op);    
   }
 
   facturarCG(op: Operacion){
-    console.log("cargas generales");
+    //console.log("cargas generales");
     
     switch (op.chofer.vehiculo.categoria) {
       case "mini":
@@ -185,18 +185,18 @@ export class FacturacionProveedorService {
         
         resto = op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo);
         secciones = resto / this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo;
-        //console.log("secciones: ", secciones);
+        ////console.log("secciones: ", secciones);
         secciones = Math.floor(secciones);
 
         if(((op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo)) % this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo) === 0){
           //alert("cuenta redonda");
           this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor*secciones;
-          console.log("adicional KM: ", this.adicionalKmMonto);           
+          //console.log("adicional KM: ", this.adicionalKmMonto);           
 
         } else{
           //alert("con resto");
           this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + ((this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor)*(secciones+1));
-          console.log("adicional KM: ", this.adicionalKmMonto);
+          //console.log("adicional KM: ", this.adicionalKmMonto);
         }         
       }  
     }
@@ -207,7 +207,7 @@ export class FacturacionProveedorService {
 
 /*   facturarAcompaniante(op: Operacion){
     this.acompanianteMonto = this.ultimaTarifa.adicionales.acompaniante
-    console.log("acompañante: ", this.acompanianteMonto);
+    //console.log("acompañante: ", this.acompanianteMonto);
   } */
 
 /*   facturarAdicionalKm(op: Operacion){
@@ -222,18 +222,18 @@ export class FacturacionProveedorService {
         
         resto = op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo);
         secciones = resto / this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo;
-        //console.log("secciones: ", secciones);
+        ////console.log("secciones: ", secciones);
         secciones = Math.floor(secciones);
 
         if(((op.km - (this.ultimaTarifa.adicionales.adicionalKm.primerSector.distancia + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo)) % this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo) === 0){
           //alert("cuenta redonda");
           this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor*secciones;
-          console.log("adicional KM: ", this.adicionalKmMonto);           
+          //console.log("adicional KM: ", this.adicionalKmMonto);           
 
         } else{
           //alert("con resto");
           this.adicionalKmMonto = this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor + ((this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor)*(secciones+1));
-          console.log("adicional KM: ", this.adicionalKmMonto);
+          //console.log("adicional KM: ", this.adicionalKmMonto);
         }         
       }  
     }
@@ -256,7 +256,7 @@ export class FacturacionProveedorService {
       liquidacion: false,
       montoFacturaCliente: 0,
     }
-    console.log("FACTURA PROVEEDOR: ", this.facturaProveedor);
+    //console.log("FACTURA PROVEEDOR: ", this.facturaProveedor);
     
     //this.altaFacturaChofer()
   }
@@ -267,20 +267,20 @@ export class FacturacionProveedorService {
     this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0,
     this.acompanianteMonto = 0;
     this.adicionalKmMonto = 0;
-    //console.log("pasa por aca 2°");
+    ////console.log("pasa por aca 2°");
     
   }
 
   obtenerTarifaProveedor(factura:FacturaOpProveedor):TarifaProveedor|undefined{
     let ultimaTarifa
-    console.log("factura: ", factura);
+    //console.log("factura: ", factura);
     
     this.storageService.historialTarifasProveedores$.subscribe(data => {
-      console.log("DATA: ", data);
+      //console.log("DATA: ", data);
       
       this.$tarifas = data.filter((tarifa: { idTarifaProveedor: number; }) => tarifa.idTarifaProveedor === factura.idTarifa);
 
-      console.log("Todas: ",this.$tarifas);
+      //console.log("Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
       ultimaTarifa = this.$tarifas[0]
@@ -289,7 +289,7 @@ export class FacturacionProveedorService {
       }); */
 
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
-      console.log("ultima: ", ultimaTarifa);
+      //console.log("ultima: ", ultimaTarifa);
       
     });  
 
@@ -307,7 +307,7 @@ export class FacturacionProveedorService {
   }
 
   editarFacOpProveedor(factura:FacturaOpProveedor){
-    console.log("FacOpProveedor antes de EDITAR: ", factura);
+    //console.log("FacOpProveedor antes de EDITAR: ", factura);
     
     this.facturaProveedor = {
       id: factura.id,
@@ -324,7 +324,7 @@ export class FacturacionProveedorService {
       montoFacturaCliente: factura.montoFacturaCliente,
     }
     
-    console.log("factura EDITADA FINAL: ", this.facturaProveedor);
+    //console.log("factura EDITADA FINAL: ", this.facturaProveedor);
   }
 
 

@@ -53,7 +53,8 @@ export class FacturacionConsultaComponent implements OnInit {
     console.log(this.fechasConsulta.fechaHasta);
 
     this.consultaOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta);
-
+    console.log("titulo: ", this.titulo, " desde: ", this.fechasConsulta.fechaDesde, " hasta: ",this.fechasConsulta.fechaHasta);
+    
     this.msgBack();
 
   }
@@ -69,13 +70,7 @@ export class FacturacionConsultaComponent implements OnInit {
       this.storageService.getByDateValue("facturaOpChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpChofer");
       this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
       this.storageService.getByDateValue("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor");
-    /* } else if(this.titulo === "facturaOpCliente") {
-      this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
-    } else if (this.titulo === "facturaOpProveedor") {
-      this.storageService.getByDateValue("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor"); */
-   /*  } else{
-      //aca deberia ir las demas consultas
-      alert("error en las consultas") */
+ 
     }
 
     if(this.titulo = "facturacion"){
@@ -84,13 +79,16 @@ export class FacturacionConsultaComponent implements OnInit {
       this.storageService.getByDateValue("facturaChofer", "fecha", fechaDesde, fechaHasta, "consultasFacChofer");
       this.storageService.getByDateValue("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
       this.storageService.getByDateValue("facturaProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacProveedor");
-   /*  } else if(this.titulo === "facturaOpCliente") {
+ 
+    }
+
+    if(this.titulo = "historial"){
+      console.log("?????????");
       
-    } else if (this.titulo === "facturaOpProveedor") {
-      
-    } else{
-      //aca deberia ir las demas consultas
-      alert("error en las consultas") */
+      this.storageService.getByDateValue("facOpLiqChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqChofer");
+      this.storageService.getByDateValue("facOpLiqCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqCliente");
+      this.storageService.getByDateValue("facOpLiqProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqProveedor");
+ 
     }
     
   }
