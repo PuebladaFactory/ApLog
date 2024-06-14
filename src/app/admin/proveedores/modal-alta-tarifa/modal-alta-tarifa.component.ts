@@ -1,8 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+import { Proveedor } from 'src/app/interfaces/proveedor';
+import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -10,14 +10,14 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
   templateUrl: './modal-alta-tarifa.component.html',
   styleUrls: ['./modal-alta-tarifa.component.scss']
 })
-export class ModalAltaTarifaComponent implements OnInit {
+export class ModalAltaTarifaComponent implements OnInit{
   @Input() fromParent: any;
-  data!:any;
-  form:any;  
-  clienteSeleccionado!: Cliente;
-  tarifa!:TarifaCliente;  
-  componente: string = "tarifasCliente";
-
+  form: any;
+  proveedorSeleccionado!: Proveedor;
+  tarifa!:TarifaProveedor;  
+  componente: string = "tarifasProveedor";
+  
+  
   constructor(private fb: FormBuilder, public activeModal: NgbActiveModal,  private storageService: StorageService){
     this.form = this.fb.group({                    //formulario para la carga general      
       utilitario:[""],
@@ -44,10 +44,9 @@ export class ModalAltaTarifaComponent implements OnInit {
   }
   
   ngOnInit(): void {
-    this.data = this.fromParent
-    this.clienteSeleccionado = this.fromParent
-    console.log(this.data);
-    
+    //this.data = this.fromParent
+    this.proveedorSeleccionado = this.fromParent
+    console.log(this.proveedorSeleccionado);
   }
 
   onSubmit() {
@@ -57,8 +56,8 @@ export class ModalAltaTarifaComponent implements OnInit {
   armarTarifa(){
     this.tarifa = {
       id : null,
-      idTarifaCliente:new Date().getTime(),
-      idCliente: this.clienteSeleccionado.idCliente,
+      idTarifaProveedor:new Date().getTime(),
+      idProveedor: this.proveedorSeleccionado.idProveedor,
       fecha: new Date().toISOString().split('T')[0],    
       cargasGenerales:  {
         utilitario: this.form.value.acompaniante,   //mini

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 
@@ -7,6 +8,7 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { AdicionalKm, AdicionalTarifa, CargasGenerales, TarifaEspecial, TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ModalAltaTarifaComponent } from '../modal-alta-tarifa/modal-alta-tarifa.component';
 
 @Component({
   selector: 'app-proveedores-tarifa',
@@ -35,9 +37,10 @@ export class ProveedoresTarifaComponent implements OnInit {
   adicionalKm: AdicionalKm [] = [];
   tarifasEspeciales!: TarifaEspecial;  
   tarifaEditar!: TarifaProveedor;
+  asignarTarifa: boolean = false; 
 
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
+  constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService, private modalService: NgbModal){
     this.cargasGeneralesForm = this.fb.group({                    //formulario para la carga general      
         utilitario:[""],
         furgon:[""],
@@ -102,13 +105,16 @@ this.acompanianteEditForm = this.fb.group({
 
    changeCliente(e: any) {    
     console.log(e.target.value);
-    //let razonSocial = e.target.value.split(" ")[0];
-    //console.log(apellido);
-    this.proveedorSeleccionado = e.target.value;
-    this.proveedorSeleccionado = this.$proveedores.filter(function (cliente:any){
-      return cliente.razonSocial === e.target.value
+    let id = Number(e.target.value);
+    console.log("1)",id);
+    
+    this.proveedorSeleccionado = this.$proveedores.filter((proveedor:Proveedor)=>{
+      console.log("2", proveedor.idProveedor, id);
+      return proveedor.idProveedor === id
     })
-   console.log("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
+   
+    this.asignarTarifa = true
+    console.log("este es el cliente seleccionado: ", this.proveedorSeleccionado);
     this.buscarTarifas();
   }
  
@@ -262,6 +268,31 @@ this.acompanianteEditForm = this.fb.group({
 
   updateTarifa(){
     this.storageService.updateItem(this.componente,this.tarifaEditar);
+  }
+
+  openModal(): void {   
+    if(this.proveedorSeleccionado.length > 0){
+        {
+          const modalRef = this.modalService.open(ModalAltaTarifaComponent, {
+            windowClass: 'myCustomModalClass',
+            centered: true,
+            size: 'lg', 
+            //backdrop:"static" 
+          });
+          
+          modalRef.componentInstance.fromParent = this.proveedorSeleccionado[0];
+          modalRef.result.then(
+            (result) => {
+              //console.log("ROOWW:" ,row);
+              
+    //        this.selectCrudOp(result.op, result.item);
+            //this.mostrarMasDatos(row);
+            },
+            (reason) => {}
+          );
+        }
+    } 
+    
   }
 
 }

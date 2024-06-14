@@ -9,6 +9,7 @@ import { ProveedoresTarifaComponent } from './proveedores-tarifa/proveedores-tar
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
+import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.component';
 
 
 @NgModule({
@@ -16,7 +17,8 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
     ProveedoresAltaComponent,
     /* ProveedoresBajaComponent, */
     ProveedoresListadoComponent,
-    ProveedoresTarifaComponent
+    ProveedoresTarifaComponent,
+    ModalAltaTarifaComponent
   ],
   imports: [
     CommonModule,

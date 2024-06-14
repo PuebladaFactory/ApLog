@@ -76,22 +76,17 @@ this.acompanianteEditForm = this.fb.group({
    }
 
    changeCliente(e: any) {    
-    console.log(e.target.value);
+    //console.log(e.target.value);
     let id = Number(e.target.value);
-    console.log("1)",id);
+    //console.log("1)",id);
     
     this.clienteSeleccionado = this.$clientes.filter((cliente:Cliente)=>{
-      console.log("2", cliente.idCliente, id);
+      //console.log("2", cliente.idCliente, id);
       return cliente.idCliente === id
     })
-    //let razonSocial = e.target.value.split(" ")[0];
-    //console.log(apellido);
-    //this.clienteSeleccionado = e.target.value;
-    /* this.clienteSeleccionado = this.$clientes.filter(function (cliente:any){
-      return cliente.razonSocial === e.target.value
-    }) */
+   
     this.asignarTarifa = true
-   console.log("este es el cliente seleccionado: ", this.clienteSeleccionado);
+    //console.log("este es el cliente seleccionado: ", this.clienteSeleccionado);
     this.buscarTarifas();
   }
   
