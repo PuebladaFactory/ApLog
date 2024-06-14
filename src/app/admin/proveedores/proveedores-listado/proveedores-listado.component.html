@@ -1,4 +1,8 @@
-<h1>Proveedores</h1>
+<div class="d-flex justify-content-between mt-3">
+    <h1>Proveedores</h1>
+    <app-btn-leer name="proveedor" (click)="openModal()"></app-btn-leer>
+</div>
+
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por Razón Social, direccion o número de cliente">
 <table class="table table-dark table-striped">
     <thead>
@@ -30,10 +34,10 @@
                     </div>                         
                 </tr>     
             </td>             -->
-            <td class="fila-contacto align-middle"> {{proveedor.contactos[0].puesto}} </td>  
-            <td class="fila-contacto align-middle"> {{proveedor.contactos[0].apellido}} </td>                       
-            <td class="fila-contacto align-middle"> {{proveedor.contactos[0].telefono}} </td>
-            <td class="fila-contacto align-middle"> {{proveedor.contactos[0].email}} </td> 
+            <td class="fila-contacto align-middle"> {{proveedor.contactos.length > 0?  proveedor.contactos[0].puesto : "Sin Datos"}} </td>  
+            <td class="fila-contacto align-middle"> {{proveedor.contactos.length > 0? proveedor.contactos[0].apellido : "Sin Datos"}} </td>                       
+            <td class="fila-contacto align-middle"> {{proveedor.contactos.length > 0? proveedor.contactos[0].telefono : "Sin Datos"}} </td>
+            <td class="fila-contacto align-middle"> {{proveedor.contactos.length > 0? proveedor.contactos[0].email : "Sin Datos"}} </td> 
             <td>             
                 <app-btn-leer name="Detalle" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirVista(proveedor)"></app-btn-leer>
               
