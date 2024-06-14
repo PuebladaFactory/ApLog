@@ -1,4 +1,7 @@
-<h1>Choferes</h1>
+<div class="d-flex justify-content-between mt-3">
+  <h1>Choferes</h1>
+  <app-btn-leer name="chofer" (click)="openModal()"></app-btn-leer>
+</div>
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por Razón Social, direccion o número de cliente">
 <table class="table table-dark table-striped">
     <thead>

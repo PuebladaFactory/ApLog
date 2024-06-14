@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Legajo, Documentacion } from 'src/app/interfaces/legajo';
 import { Proveedor } from 'src/app/interfaces/proveedor';
@@ -48,7 +49,7 @@ export class ChoferesAltaComponent implements OnInit {
   editForm: any;
   publicidad!: boolean;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal) {
     this.form = this.fb.group({                             //formulario para el perfil 
      nombre: ["", [Validators.required, Validators.maxLength(30)]], 
      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
@@ -99,14 +100,20 @@ export class ChoferesAltaComponent implements OnInit {
    // es el mismo metodo para guardar el chofer y la jornada
    // primero arma cada uno de los objetos
    // y desp guarda el objeto en la coleccion que le corresponde
-   onSubmit(){    
-    console.log("llega aca?");
+   onSubmit(){ 
+    if (this.form.valid && this.vehiculoForm.valid){
+
+      this.armarChofer();
+      this.armarVehiculo();    
+      this.addItem(this.chofer);
+      //this.armarLegajo();
+      this.activeModal.close();    
+    } else{
+      alert("error en el formulario")
+    } 
+      
     
-    this.armarChofer();
-    this.armarVehiculo();    
-    this.addItem(this.chofer);
-    this.armarLegajo() 
-    this.router.navigate(['/choferes/listado']);    
+    
    }
 
    armarChofer(){
