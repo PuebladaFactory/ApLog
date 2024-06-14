@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente, Contacto } from 'src/app/interfaces/cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -20,7 +21,7 @@ export class ClienteAltaComponent implements OnInit {
   contactos: Contacto[] = [];
   mostrarFormulario: boolean = false;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, public activeModal: NgbActiveModal) {
     this.form = this.fb.group({      
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
       cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
@@ -39,12 +40,19 @@ export class ClienteAltaComponent implements OnInit {
    ngOnInit(): void {}
 
    onSubmit(){
-    //console.log(new Date().getTime());    
-    this.cliente = this.form.value
-    this.cliente.idCliente = new Date().getTime();
-    this.cliente.contactos = this.contactos;
-    console.log(this.cliente);     
-    this.addItem();    
+    //console.log(new Date().getTime());   
+    if (this.form.valid) {
+      this.cliente = this.form.value
+      this.cliente.idCliente = new Date().getTime();
+      this.cliente.contactos = this.contactos;
+      console.log(this.cliente);     
+      
+      this.addItem();        
+      this.activeModal.close();    
+    } else{
+      alert("error en el formulario")
+    }
+    
    }
 
    addItem(): void {
