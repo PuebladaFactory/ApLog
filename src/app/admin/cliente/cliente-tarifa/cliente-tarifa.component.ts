@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente } from 'src/app/interfaces/cliente';
 
 import { AdicionalKm, AdicionalTarifa, CargasGenerales, TarifaCliente, TarifaEspecial } from 'src/app/interfaces/tarifa-cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ModalAltaTarifaComponent } from '../modal-alta-tarifa/modal-alta-tarifa.component';
 
 @Component({
   selector: 'app-cliente-tarifa',
@@ -33,37 +35,11 @@ export class ClienteTarifaComponent implements OnInit {
   adicionalKm: AdicionalKm [] = [];
   tarifasEspeciales!: TarifaEspecial;  
   tarifaEditar!: TarifaCliente;
-  
+  asignarTarifa: boolean = false
 
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
-    this.cargasGeneralesForm = this.fb.group({                    //formulario para la carga general      
-        utilitario:[""],
-        furgon:[""],
-        furgonGrande:[""],
-        chasisLiviano:[""],
-        chasis:[""],
-        balancin:[""],
-        semiRemolqueLocal:[""],
-        portacontenedores:[""],        
-   });
- 
-    this.tarifaEspecialForm = this.fb.group({                    //formulario para los extras de la carga general
-        concepto:[""],
-        valor:[""],
-    });
-  
-    this.acompanianteForm = this.fb.group({
-      acompaniante: [""],
-    })
+  constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService, private modalService: NgbModal){
     
-     this.adicionalKmForm = this.fb.group({                  //formulario para los adicionales de la jornada
-      distanciaPrimerSector: [""],
-      valorPrimerSector:[""],
-      distanciaIntervalo:[""],
-      valorIntervalo:[""],
-   });
-
    this.cargasGeneralesEditForm = this.fb.group({                    //formulario para la carga general      
     utilitario:[""],
     furgon:[""],
@@ -107,6 +83,7 @@ this.acompanianteEditForm = this.fb.group({
     this.clienteSeleccionado = this.$clientes.filter(function (cliente:any){
       return cliente.razonSocial === e.target.value
     })
+    this.asignarTarifa = true
    console.log("este es el cliente seleccionado: ", this.clienteSeleccionado);
     this.buscarTarifas();
   }
@@ -123,66 +100,7 @@ this.acompanianteEditForm = this.fb.group({
     })   
   }
 
-  onSubmit() {
-    //this.armarTarifa();
-    //console.log("tarifa cliente");
-    //console.log(this.cargasGeneralesForm.value, this.unidadesConFrioForm.value, this.acompanianteForm.value);
-    this.armarTarifa();
-    this.addItem(this.tarifa);
-  }
-
-  armarTarifa(){        
-    this.armarCargasGenerales();
-    //this.armarUnidadesConFrio();
-    this.armarAdicionales();       
-
-    this.tarifa = {
-      id:null,
-      idTarifaCliente:new Date().getTime(),
-      idCliente: this.clienteSeleccionado[0].idCliente,
-      fecha: new Date().toISOString().split('T')[0],
-      cargasGenerales: this.cargasGenerales,
-      //unidadesConFrio: this.unidadesConFrio,
-      adicionales: this.adicionales,
-      tarifaEspecial: this.tarifasEspeciales,
-      
-    };  
-    console.log("tarifa: ", this.tarifa);
-  } 
-
-  armarCargasGenerales(){
-    this.cargasGenerales = this.cargasGeneralesForm.value; 
-    console.log("cargas generales: ", this.cargasGenerales);
-  }
-
-  armarAdicionales(){
-    this.adicionales = {
-      acompaniante: this.acompanianteForm.value.acompaniante,
-      adicionalKm:{
-        primerSector: {
-          distancia: this.adicionalKmForm.value.distanciaPrimerSector,
-          valor: this.adicionalKmForm.value.valorPrimerSector,
-      },
-      sectoresSiguientes:{
-          intervalo: this.adicionalKmForm.value.distanciaIntervalo,
-          valor: this.adicionalKmForm.value.valorIntervalo,
-      }
-      }
-    }
-    console.log("adicionales: ", this.adicionales);
-    this.guardarTarifaEspecial();
-  }
-
-
-   guardarTarifaEspecial(){
-
-    this.tarifasEspeciales = {
-      concepto : this.tarifaEspecialForm.value.concepto,
-      valor : this.tarifaEspecialForm.value.valor,
-    }      
-     console.log(this.tarifasEspeciales);     
-    }
-
+  
   addItem(item:any): void {   
     this.storageService.addItem(this.componente, item); 
     //this.adicionalKmForm.reset();
@@ -261,5 +179,30 @@ this.acompanianteEditForm = this.fb.group({
 
   updateTarifa(){
     this.storageService.updateItem(this.componente,this.tarifaEditar);
+  }
+
+  openModal(): void {   
+    if(this.clienteSeleccionado.length > 0){
+      {
+        const modalRef = this.modalService.open(ModalAltaTarifaComponent, {
+          windowClass: 'myCustomModalClass',
+          centered: true,
+          size: 'lg', 
+          //backdrop:"static" 
+        });
+        
+        modalRef.componentInstance.fromParent = this.clienteSeleccionado[0];
+        modalRef.result.then(
+          (result) => {
+            //console.log("ROOWW:" ,row);
+            
+  //        this.selectCrudOp(result.op, result.item);
+          //this.mostrarMasDatos(row);
+          },
+          (reason) => {}
+        );
+      }
+    }
+    
   }
 }

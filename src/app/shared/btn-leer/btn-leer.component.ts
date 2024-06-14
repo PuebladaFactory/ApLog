@@ -22,6 +22,10 @@ import { Component, Input, OnInit } from '@angular/core';
       Alta Proveedor
   </button>
  
+  <button *ngIf="name === 'tarifa'" class="btn btn-outline-secondary">
+      Tarifa Nueva
+  </button>
+
  <button *ngIf="name === 'Detalle'"  class="btn btn-secondary m-0" style="border-radius: 10%;  margin: 10px;" >
     <!-- <i class="bi bi-pencil"></i> -->
 

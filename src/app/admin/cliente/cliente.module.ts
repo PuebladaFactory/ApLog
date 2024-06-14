@@ -10,6 +10,11 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ClienteTarifaComponent } from './cliente-tarifa/cliente-tarifa.component';
+import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.component';
+
+
+
+
 
 
 
@@ -17,9 +22,10 @@ import { ClienteTarifaComponent } from './cliente-tarifa/cliente-tarifa.componen
   declarations: [
     ClienteControlComponent,
     ClienteListadoComponent,
-    ClienteAltaComponent,
+    ClienteAltaComponent,    
+    ClienteTarifaComponent, ModalAltaTarifaComponent, 
     
-    ClienteTarifaComponent
+
   ],
   imports: [
     CommonModule,
