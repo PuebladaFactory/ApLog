@@ -1,165 +1,24 @@
 <div class="container">
     <h1>Tarifas Cliente</h1>
-   
-        <div class="w-25">
-            <h2>Seleccionar Cliente: </h2>
-            <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
-                <option selected>Seleccione</option>
-                <option *ngFor="let cliente of $clientes">
-                  {{cliente.razonSocial}} 
-                </option>
-              </select>
+        <div class="row">
+            <div class="col">
+                <h2>Seleccionar Cliente: </h2>
+                <select class="form-select form-select-md mb-3 w-50" (change)="changeCliente($event)">
+                    <option selected>Seleccione</option>
+                    <option *ngFor="let cliente of $clientes">
+                      {{cliente.razonSocial}} 
+                    </option>
+                  </select>
+            </div>     
+         
+            <div class="col text-end" [ngClass]="{'isDisabled': !asignarTarifa}">
+                <h2>Asignar Tarifa</h2> 
+                <app-btn-leer name="tarifa" (click)="openModal()"></app-btn-leer>
+            </div>  
         </div>
-       
-     
+        
 
-
-    <div class="mt-4">
-      <h2>Asignar Tarifa</h2> 
-      
-        <div class="d-flex justify-content-evenly" *ngIf="clienteSeleccionado !== undefined else sinSeleccion" >
-            <div> <!-- cargas generasles -->
-                <h3>Cargas Generales: </h3>  
-                <form [formGroup]="cargasGeneralesForm"  (ngSubmit)="onSubmit()">             
-                    <div class="form-group">       
-                        <table>
-                            <tbody>
-                                <tr class="form-group">
-                                  <td class="parametro">Utilitario: </td>
-                                  <td>
-                                    <input formControlName="utilitario" class="form-control edicion" required type="number">   
-                                  </td>
-                                </tr>                               
-                                <tr class="form-group">
-                                    <td class="parametro">Furgon: </td>
-                                    <td>
-                                      <input formControlName="furgon" class="form-control" required type="number">
-                                    </td>
-                                </tr>
-                                <tr class="form-group">
-                                    <td class="parametro">Furgon Grande: </td>
-                                    <td>
-                                      <input formControlName="furgonGrande" class="form-control" required type="number">
-                                    </td>
-                                </tr>
-                                <tr class="form-group">
-                                    <td class="parametro">Chasis Liviano: </td>
-                                    <td>
-                                      <input formControlName="chasisLiviano" class="form-control edicion" required type="number">   
-                                    </td>
-                                </tr>                               
-                                <tr class="form-group">
-                                    <td class="parametro">Chasis: </td>
-                                    <td>
-                                      <input formControlName="chasis" class="form-control" required type="number">
-                                    </td>
-                                </tr>
-                                <tr class="form-group">
-                                    <td class="parametro">Balancin: </td>
-                                    <td>
-                                      <input formControlName="balancin" class="form-control edicion" required type="number">   
-                                    </td>
-                                </tr>                               
-                                <tr class="form-group">
-                                    <td class="parametro">Semi Remolque Local: </td>
-                                    <td>
-                                      <input formControlName="semiRemolqueLocal" class="form-control" required type="number">
-                                    </td>
-                                </tr>                        
-                                <tr class="form-group">
-                                    <td class="parametro">Portacontenedores: </td>
-                                    <td>
-                                      <input formControlName="portacontenedores" class="form-control" required type="number">
-                                    </td>
-                                </tr>                        
-                            </tbody>
-                        </table>                                                 
-                            <form [formGroup]="tarifaEspecialForm" (ngSubmit)="onSubmit()">                         
-                                <h5 class="parametro align-middle mt-2">Tarifa Especial:</h5>
-                                <tr>
-                                    <th class="parametro">Concepto </th>
-                                    <th > Valor</th>
-                                </tr>
-                              
-                                <tr class="form-group" >                          
-                                  
-                                    <td class="parametro" >
-                                        <input formControlName="concepto" class="form-control" required type="text">
-                                    </td>
-                                    <td>
-                                        <input formControlName="valor" class="form-control" required type="number">                              
-                                    </td>
-                                  
-                                </tr>                         
-                          
-                            </form>  
-
-                    </div>
-                </form>      
-            </div>
-
-            <div>   
-                  <h3>Adicionales</h3>
-                  <form [formGroup]="acompanianteForm"  (ngSubmit)="onSubmit()">                  
-                      <tr class="form-group">
-                          <td class="parametro align-middle">Acompañante: </td>
-                          <td>
-                            <input formControlName="acompaniante" class="form-control edicion" required type="number">   
-                          </td>
-                      </tr> 
-                    <!--   <table *ngIf="adicionalKm.length > 0" >
-                          <tr *ngFor="let adicional of adicionalKm, let i = index">
-                            <td class="parametro">
-                              {{adicional.primerSector}}
-                            </td>
-                            <td>
-                              {{adicional.sectorSiguiente}}
-                            </td>
-                            <td>
-                              <svg type="button" (click)="eliminarAdicionalKm(i)" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
-                              </svg>
-                            </td>
-                          </tr>                          
-                      </table> -->
-                  </form>    
-                  <h3>Adicional Km</h3>
-                  <form [formGroup]="adicionalKmForm" (ngSubmit)="onSubmit()">
-                      <tr >
-                          <td class="parametro align-middle">Primer sector desde: </td>
-
-                          <td class="input-group ">
-                              
-                              <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number">
-                              <span class="input-group-text"> km </span>
-                         
-                              <span class="input-group-text ms-2"> $ </span>
-                              <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number">                                
-                          </td>
-                      </tr>
-                      <tr >
-                          <td>Intervalos cada: </td>   
-                          <td class="input-group ">
-                              <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number">
-                              <span class="input-group-text"> km </span>
-                          
-                              <span class="input-group-text ms-2"> $ </span>
-                              <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number">
-                          </td>
-                      </tr>  
-                   
-                  </form>
-            </div>
-        </div>
-     
-        <div>
-          <!--   <button *ngIf="clienteSeleccionado !== undefined" type="submit" class="btn btn-outline-secondary" (click)="onSubmit()">
-              Guardar
-            </button> -->
-            <app-btn-agregar name="Guardar" *ngIf="clienteSeleccionado !== undefined" type="submit" (click)="onSubmit()"></app-btn-agregar>
-        </div>
-      
+    <div>
         <ng-template #sinSeleccion>
             <h4>Seleccione cliente</h4>
         </ng-template>
