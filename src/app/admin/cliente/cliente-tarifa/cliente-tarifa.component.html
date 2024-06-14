@@ -5,7 +5,7 @@
                 <h2>Seleccionar Cliente: </h2>
                 <select class="form-select form-select-md mb-3 w-50" (change)="changeCliente($event)">
                     <option selected>Seleccione</option>
-                    <option *ngFor="let cliente of $clientes">
+                    <option *ngFor="let cliente of $clientes" [value]="cliente.idCliente">
                       {{cliente.razonSocial}} 
                     </option>
                   </select>
