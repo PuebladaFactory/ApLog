@@ -9,6 +9,10 @@ import { Component, Input, OnInit } from '@angular/core';
   <button *ngIf="name === 'pdf'" class="btn btn-outline-primary">
       Pdf
   </button>
+
+  <button *ngIf="name === 'cliente'" class="btn btn-outline-secondary">
+      Alta Cliente
+  </button>
  
  <button *ngIf="name === 'Detalle'"  class="btn btn-secondary m-0" style="border-radius: 10%;  margin: 10px;" >
     <!-- <i class="bi bi-pencil"></i> -->
