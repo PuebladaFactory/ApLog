@@ -10,7 +10,7 @@
               </option>
           </select>
         </div>
-        <div class="col text-end" [ngClass]="{'isDisabled': !asignarTarifa}">
+        <div class="col text-end" [ngClass]="{'altaIsDisabled': !asignarTarifa}">
             <h2 *ngIf="!tarifaProveedor">Asignar Tarifa</h2> 
             <app-btn-leer *ngIf="!tarifaProveedor" name="tarifa" (click)="openModal()"></app-btn-leer>
         </div>  
