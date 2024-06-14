@@ -11,6 +11,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ChoferesTarifaComponent } from './choferes-tarifa/choferes-tarifa.component';
 import { ChoferesLegajoComponent } from './choferes-legajo/choferes-legajo.component';
+import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.component';
 
 
 
@@ -23,6 +24,7 @@ import { ChoferesLegajoComponent } from './choferes-legajo/choferes-legajo.compo
     /* ChoferesBajaComponent, */
     ChoferesTarifaComponent,
     ChoferesLegajoComponent,
+    ModalAltaTarifaComponent,
     
   ],
   imports: [
