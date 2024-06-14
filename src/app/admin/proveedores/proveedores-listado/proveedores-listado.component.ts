@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ProveedoresAltaComponent } from '../proveedores-alta/proveedores-alta.component';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -24,7 +26,7 @@ export class ProveedoresListadoComponent implements OnInit {
   searchText!: string;
 
 
-  constructor(private fb: FormBuilder, private storageService: StorageService,){
+  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal){
     this.form = this.fb.group({      
       razonSocial: [""], 
       direccion: [""],
@@ -145,6 +147,35 @@ export class ProveedoresListadoComponent implements OnInit {
   borrarForms(){
     this.form.reset()
     this.formContacto.reset()
+  }
+
+  openModal(): void {   
+   
+    {
+      const modalRef = this.modalService.open(ProveedoresAltaComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg', 
+        //backdrop:"static" 
+      });
+
+    /*  let info = {
+        modo: "clientes",
+        item: facturaOp[0],
+      }; 
+      console.log(info); */
+      
+      //modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+          //console.log("ROOWW:" ,row);
+          
+//        this.selectCrudOp(result.op, result.item);
+        //this.mostrarMasDatos(row);
+        },
+        (reason) => {}
+      );
+    }
   }
 
 }

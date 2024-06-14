@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -19,7 +20,7 @@ export class ProveedoresAltaComponent implements OnInit {
   contactos: Contacto[] = [];
   mostrarFormulario: boolean = false;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, public activeModal: NgbActiveModal) {
     this.form = this.fb.group({      
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
       cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
@@ -38,8 +39,18 @@ export class ProveedoresAltaComponent implements OnInit {
    ngOnInit(): void {}
 
    onSubmit(){
+    if (this.form.valid) {
+      this.proveedor = this.form.value
+      this.proveedor.idProveedor = new Date().getTime();
+      this.proveedor.contactos = this.contactos;
+      console.log(this.proveedor);     
+      this.addItem();    
+      this.activeModal.close();    
+    } else{
+      alert("error en el formulario")
+    }
     //console.log(new Date().getTime());    
-    this.proveedor = this.form.value
+    /* this.proveedor = this.form.value
     this.proveedor.idProveedor = new Date().getTime();
     console.log(this.form.value.razonSocial);
     
@@ -57,7 +68,7 @@ export class ProveedoresAltaComponent implements OnInit {
       this.proveedor.contactos = this.contactos;
       console.log(this.proveedor);     
       this.addItem();    
-    }    
+    }     */
    }
 
    addItem(): void {
