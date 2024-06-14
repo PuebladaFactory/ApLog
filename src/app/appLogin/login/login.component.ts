@@ -54,6 +54,12 @@ export class LoginComponent implements OnInit {
       });
   } */
 
+      onKeydown(event: KeyboardEvent, username: string, password: string) {
+        if (event.key === 'Enter') {
+          this.authService.SignIn(username, password);
+        }
+      }
+
 
 
 }
