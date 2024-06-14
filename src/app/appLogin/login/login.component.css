@@ -1,6 +1,10 @@
 
 @import "https://use.fontawesome.com/releases/v5.5.0/css/all.css";
 
+
+.caja{
+  width: 500px;
+}
 .wrapper{
     position: absolute;
     top: 0;
@@ -104,7 +108,7 @@ h6 {
 .displayTable {
   display: table;
   width: 40%;
-  height: 80%;
+  height: 40%;
   border-radius: 2rem;
   background: #12056d;
 }
@@ -727,6 +731,8 @@ body .table thead th {
   .px-logo {
     display: none;
   }
+
+ 
 }
 
 
