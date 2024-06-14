@@ -11,7 +11,7 @@
         <br/><br/>
         <div class="authBlock">
           <h2> Iniciar Sesión</h2>
-          <div class="formGroup">
+          <!-- <div class="formGroup">
             
             <i class="fa fa-user"></i>
             <input  type="icon-username" type="text" class="formControl" placeholder="Username" #userName required>
@@ -20,6 +20,14 @@
           <div class="formGroup">
             <i class="fa fa-lock"></i>
             <input type="password" class="formControl" placeholder="Password" #userPassword required>
+          </div> -->
+          <div class="formGroup">
+            <i class="fa fa-user"></i>
+            <input type="text" class="formControl" placeholder="Username" #userName required>
+          </div>
+          <div class="formGroup">
+            <i class="fa fa-lock"></i>
+            <input type="password" class="formControl" placeholder="Password" #userPassword (keydown)="onKeydown($event, userName.value, userPassword.value)" required>
           </div>
   
           <!-- Calling SignIn Api from AuthService -->
@@ -27,6 +35,7 @@
             <input type="button" class="btn btnPrimary" value="Log in"
               (click)="authService.SignIn(userName.value, userPassword.value)">
           </div>
+          
   <!--
           <div class="formGroup">
             <span class="or"><span class="orInner">O</span></span>
