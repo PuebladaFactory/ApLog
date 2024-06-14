@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer, SeguimientoSatelital, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ChoferesAltaComponent } from '../choferes-alta/choferes-alta.component';
 
 
 @Component({
@@ -50,7 +52,7 @@ export class ChoferesListadoComponent implements OnInit {
   searchText!: string;
   publicidad!: boolean;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService,){
+  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal){
     this.form = this.fb.group({                          //formulario para el perfil 
       nombre: [""], 
       apellido: [""], 
@@ -73,19 +75,7 @@ export class ChoferesListadoComponent implements OnInit {
       marcaGps: [""],
     })
 
-    /* this.jornadaForm = this.fb.group({                     //formulario para la jornada
-      base: [""],      
-      carga: [""],
-      publicidad: [""],  
-     });
-
-    this.adicionalForm = this.fb.group({                   //formulario para los adicionales de la jornada
-      adicionalKm1: [""], 
-      adicionalKm2: [""],
-      adicionalKm3: [""],
-      adicionalKm4: [""],
-      adicionalKm5: [""],
-  }); */
+  
   }
   
   ngOnInit(): void { 
@@ -138,11 +128,7 @@ export class ChoferesListadoComponent implements OnInit {
     this.tipoCombustible = this.choferEditar.vehiculo.tipoCombustible;
     this.tarjetaCombustible = this.choferEditar.vehiculo.tarjetaCombustible;
     this.publicidad = this.choferEditar.vehiculo.publicidad;
-   /*  if(this.choferEditar.vehiculo.refrigeracion){
-      this.refrigeracion = true
-    } else{
-      this.refrigeracion = false
-    } */
+  
     this.armarSeguimientoSatelital();
   }
 
@@ -218,45 +204,7 @@ export class ChoferesListadoComponent implements OnInit {
     this.choferEditar.vehiculo = this.vehiculo;    
   }
 
-  //este es el metodo que arma el objeto (jornada) que muestra el modal para editar
-/*   jornada(idChofer: number){    
-    let jornadaFormulario
-    jornadaFormulario = this.jornadas$.source._value.filter(function (jornada: Jornada) { 
-      return jornada.idChofer === idChofer
-    });
-    this.jornadaEditar = jornadaFormulario[0];
-    //console.log("jornadaEditar: ",this.jornadaEditar);       
-    this.armarJornada();   
-  }
-
-  armarJornada(){
-    this.jornadaForm.patchValue({
-      base: this.jornadaEditar.base,      
-      carga: this.jornadaEditar.carga,
-      publicidad: this.jornadaEditar.carga 
-    });
-
-    this.adicionalForm.patchValue({
-      adicionalKm1: this.jornadaEditar.km.adicionalKm1, 
-      adicionalKm2: this.jornadaEditar.km.adicionalKm2,
-      adicionalKm3: this.jornadaEditar.km.adicionalKm3,
-      adicionalKm4: this.jornadaEditar.km.adicionalKm4,
-      adicionalKm5: this.jornadaEditar.km.adicionalKm5,
-    })
-  }
-
-  onSubmitJornada(){
-    this.componente = "jornadas"
-    this.adicionalKm = this.adicionalForm.value
-    //console.log("esto es adicionalKm: ", this.adicionalKm);
-    this.jornadaChofer = this.jornadaForm.value;
-    this.jornadaChofer.id = this.jornadaEditar.id
-    this.jornadaChofer.km = this.adicionalKm;  
-    this.jornadaChofer.idChofer = this.jornadaEditar.idChofer;
-    //console.log("esta es la jornada: ", this.jornadaChofer);
-    this.update(this.jornadaChofer)
-  }
- */
+ 
   changeTipoCombustible(e: any) {    
     this.tipoCombustible = e.target.value   
   }
@@ -359,6 +307,35 @@ export class ChoferesListadoComponent implements OnInit {
     this.form.reset();
     this.vehiculoForm.reset();
     this.seguimientoForm.reset();
+  }
+
+  openModal(): void {   
+   
+    {
+      const modalRef = this.modalService.open(ChoferesAltaComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'md', 
+        //backdrop:"static" 
+      });
+
+    /*  let info = {
+        modo: "clientes",
+        item: facturaOp[0],
+      }; 
+      console.log(info); */
+      
+      //modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+          //console.log("ROOWW:" ,row);
+          
+//        this.selectCrudOp(result.op, result.item);
+        //this.mostrarMasDatos(row);
+        },
+        (reason) => {}
+      );
+    }
   }
 
 }
