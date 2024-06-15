@@ -6,6 +6,7 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ChoferesAltaComponent } from '../choferes-alta/choferes-alta.component';
+import Swal from 'sweetalert2';
 
 
 @Component({
@@ -98,6 +99,7 @@ export class ChoferesListadoComponent implements OnInit {
 
   //este es el metodo que arma el objeto (chofer) que muestra el modal para editar
   abrirEdicion(chofer:Chofer):void {
+    this.soloVista = false;
     this.choferEditar = chofer;    
     console.log("este es el chofer a editar: ", this.choferEditar);
     this.proveedorSeleccionado = chofer.proveedor;
@@ -158,22 +160,40 @@ export class ChoferesListadoComponent implements OnInit {
   }
 
   onSubmit(){ 
-    this.datosPersonales();
-    this.datosVehiculo();
-    /* this.choferEditar.celular = this.form.value.celular;
-    this.choferEditar.dominio = this.form.value.dominio
-    this.choferEditar.categoria = this.categoriaSeleccionada; */
-    console.log("este es el chofer editado: ", this.choferEditar);
-    this.update(this.choferEditar);    
+    Swal.fire({
+      title: "¿Guardar los cambios?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.update(this.choferEditar);    
+        Swal.fire({
+          title: "Confirmado",
+          text: "Los cambios se han guardado",
+          icon: "success"
+        });
+      }
+    });   
+    
+    
    }
 
    update(item:any): void {
+      this.datosPersonales();
+      this.datosVehiculo();
+      
+      //console.log("este es el chofer editado: ", this.choferEditar);
       this.storageService.updateItem(this.componente, item);
       this.form.reset();
       this.vehiculoForm.reset();
       this.seguimientoForm.reset();
       this.edicion = false;
-      this.ngOnInit();
+      //this.ngOnInit();
   }
 
   datosPersonales(){
@@ -279,22 +299,145 @@ export class ChoferesListadoComponent implements OnInit {
   }
 
   eliminarChofer(chofer:Chofer){    
+
     
     if(chofer.vehiculo.tarjetaCombustible  || chofer.vehiculo.satelital !== false){
        if (chofer.vehiculo.tarjetaCombustible  && chofer.vehiculo.satelital !== false){
-        alert("El chofer que desea eliminar tiene asignada una tarjeta de combustible y seguimiento satelital")
-       } else if (chofer.vehiculo.tarjetaCombustible  && !chofer.vehiculo.satelital){
-            alert("El chofer que desea eliminar tiene asignada una tarjeta de combustible")
+        Swal.fire({
+          title: "¿Eliminar el Chofer?",
+          text: "No se podrá revertir esta acción",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Confirmar",
+          cancelButtonText: "Cancelar"
+        }).then((result) => {
+          if (result.isConfirmed) {
+        /////
+            Swal.fire({
+              title: "El chofer que desea eliminar tiene asignada una tarjeta de combustible y seguimiento satelital",
+              text: "¿Desea continuar?",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Confirmar",
+              cancelButtonText: "Cancelar"
+              }).then((result) => {
+              if (result.isConfirmed) {                
+                this.storageService.deleteItem(this.componente, chofer);
+                Swal.fire({
+                  title: "Confirmado",
+                  text: "El Cliente ha sido borrado",
+                  icon: "success"
+                });
+              }                   /////
+              })
+            };   
+        
+       })} else if (chofer.vehiculo.tarjetaCombustible  && chofer.vehiculo.satelital === false){
+        Swal.fire({
+          title: "¿Eliminar el Chofer?",
+          text: "No se podrá revertir esta acción",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Confirmar",
+          cancelButtonText: "Cancelar"
+        }).then((result) => {
+          if (result.isConfirmed) {
+        /////
+            Swal.fire({
+              title: "El chofer que desea eliminar tiene asignada una tarjeta de combustible",
+              text: "¿Desea continuar?",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Confirmar",
+              cancelButtonText: "Cancelar"
+              }).then((result) => {
+              if (result.isConfirmed) {                
+                this.storageService.deleteItem(this.componente, chofer);
+                Swal.fire({
+                  title: "Confirmado",
+                  text: "El Cliente ha sido borrado",
+                  icon: "success"
+                });
+              }                   /////
+              })
+            };   
+        
+       })
+            
           } else {
-                alert("El chofer que desea eliminar tiene asignado seguimiento satelital")
+            if (!chofer.vehiculo.tarjetaCombustible  && chofer.vehiculo.satelital !== false){
+              Swal.fire({
+                title: "¿Eliminar el Chofer?",
+                text: "No se podrá revertir esta acción",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Confirmar",
+                cancelButtonText: "Cancelar"
+              }).then((result) => {
+                if (result.isConfirmed) {
+              /////
+                  Swal.fire({
+                    title: "El chofer que desea eliminar tiene asignado seguimiento satelital",
+                    text: "¿Desea continuar?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Confirmar",
+                    cancelButtonText: "Cancelar"
+                    }).then((result) => {
+                    if (result.isConfirmed) {                
+                      this.storageService.deleteItem(this.componente, chofer);
+                      Swal.fire({
+                        title: "Confirmado",
+                        text: "El Cliente ha sido borrado",
+                        icon: "success"
+                      });
+                    }                   /////
+                    })
+                  };   
+              
+             })
+                
               }
     }
     
-    this.storageService.deleteItem(this.componente, chofer);
+    
     
     /* this.ngOnInit();  */
     
+  } else {
+    Swal.fire({
+      title: "¿Eliminar el Chofer?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.storageService.deleteItem(this.componente, chofer);
+        Swal.fire({
+          title: "Confirmado",
+          text: "El Chofer ha sido borrado",
+          icon: "success"
+        });
+      }
+    });   
   }
+}
 
   abrirVista(chofer:Chofer):void {
     this.soloVista = true;

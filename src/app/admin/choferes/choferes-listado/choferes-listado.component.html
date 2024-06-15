@@ -41,7 +41,7 @@
                 <td class="align-middle">si</td>
               </ng-template>           -->
               <td class="align-middle">{{chofer.proveedor}}</td>
-              <td class="align-middle">{{!chofer.satelital  ? "no" : "si"}}</td>
+              <td class="align-middle">{{!chofer.vehiculo.satelital  ? "no" : "si"}}</td>
               <td>
                 
                 <app-btn-leer name="Detalle" (click)="abrirVista(chofer)" data-bs-toggle="modal" data-bs-target="#exampleModal"></app-btn-leer>
@@ -76,276 +76,185 @@
         
       </div>
       <div class="modal-body">
-        <div class="d-flex justify-content-between">
-          <h3>Datos Personales</h3>
-          <!-- <button *ngIf="!edicion && !soloVista"  class="btn btn-outline-secondary" (click)="editarPerfil()">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
-              </svg>
-          </button>    -->
-          <app-btn-editar name="EditarClaro" *ngIf="!edicion && !soloVista" (click)="editarPerfil()"></app-btn-editar>
-          <app-btn-eliminar name="x" *ngIf="edicion" (click)="cerrarEdicion()"></app-btn-eliminar>
-        </div>        
-        <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="form-group">
-                <label for="Apellido">Apellido</label>
-                <div class="input-group">
-                    <input formControlName="apellido" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-                </div>
-            </div>    
-            <div class="form-group">
-                <label for="Nombre">Nombre</label>
-                <div class="input-group">
-                    <input formControlName="nombre" class="form-control edicion" required type="text" [ngClass]="{'isDisabled': !edicion}">            
-                </div>
-            </div>     
-            <div class="form-group">
-              <label for="Cuit">CUIT</label>
-              <div class="input-group">
-                  <input formControlName="cuit" class="form-control" required type="email" [ngClass]="{'isDisabled': !edicion}">
-              </div>
-          </div>              
-            <div class="form-group">
-                <label for="Email">Email</label>
-                <div class="input-group">
-                    <input formControlName="email" class="form-control" required type="email" [ngClass]="{'isDisabled': !edicion}">
-                </div>
-            </div>       
-            <div class="form-group">
-                <label for="Celular">Celular de Contacto</label>
-                <div class="input-group">
-                    <input formControlName="celularContacto" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-                </div>
-            </div>   
-            <div class="form-group">
-                <label for="Celular">Celular de Emergencia</label>
-                <div class="input-group">
-                    <input formControlName="celularEmergencia" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-                </div>
-            </div>   
-            <div class="form-group">
-                <label for="Domicilio">Domicilio</label>
-                <div class="input-group">
-                    <input formControlName="domicilio" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-                </div>
-            </div>   
-            <div class="form-group">
-                <label for="FechaNac">Fecha Nacimiento</label>
-                <div class="input-group">
-                    <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{'isDisabled': !edicion}">
-                </div>
-            </div>              
-            <div class="form-group">
-              <label for="Proveedor">Proveedor</label>
-              <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)" required [ngClass]="{'isDisabled': !edicion}">
-                <option>{{proveedorSeleccionado}}</option>
-                <option value="monotributista">monotributista</option>
-                <option *ngFor="let proveedor of $proveedores">
-                  {{proveedor.razonSocial}}
-                </option>
-              </select>
-            </div>
-        </form>
-
-        <h3>Datos del Vehiculo</h3>
-        <form [formGroup]="vehiculoForm">
-            <div class="form-group">
-                <label for="Dominio">Dominio</label>
-                <div class="input-group">
-                    <input formControlName="dominio" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-                </div>
-            </div>      
-            <div class="form-group">
-              <label for="Marca">Marca</label>
-              <div class="input-group">
-                  <input formControlName="marca" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-              </div>
-            </div> 
-            <div class="form-group">
-                <label for="Modelo">Modelo</label>
-                <div class="input-group">
-                    <input formControlName="modelo" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-                </div>
-            </div>     
-            <div class="form-group">
-                <label for="Categoria">Categoria Vehiculo</label>
-                <select class="form-select form-select-md mb-3" (change)="changeCategoria($event)" required [ngClass]="{'isDisabled': !edicion}">
-                    <option value={{categoriaSeleccionada}} required>{{categoriaSeleccionada}}</option>
-                    <option *ngFor="let categoria of categorias" required>
-                      {{categoria.categoria}}
+        <div class="row">
+          <div class="col">
+              <h3>Datos Personales</h3>
+              <!-- <button *ngIf="!edicion && !soloVista"  class="btn btn-outline-secondary" (click)="editarPerfil()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                  </svg>
+              </button>    -->
+              <!-- <app-btn-editar name="EditarClaro" *ngIf="!edicion && !soloVista" (click)="editarPerfil()"></app-btn-editar>
+              <app-btn-eliminar name="x" *ngIf="edicion" (click)="cerrarEdicion()"></app-btn-eliminar> -->
+              <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <div class="form-group">
+                    <label for="Apellido">Apellido</label>
+                    <div class="input-group">
+                        <input formControlName="apellido" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+                    </div>
+                </div>    
+                <div class="form-group">
+                    <label for="Nombre">Nombre</label>
+                    <div class="input-group">
+                        <input formControlName="nombre" class="form-control edicion" required type="text" [ngClass]="{'isDisabled': soloVista}">            
+                    </div>
+                </div>     
+                <div class="form-group">
+                  <label for="Cuit">CUIT</label>
+                  <div class="input-group">
+                      <input formControlName="cuit" class="form-control" required type="email" [ngClass]="{'isDisabled': soloVista}">
+                  </div>
+              </div>              
+                <div class="form-group">
+                    <label for="Email">Email</label>
+                    <div class="input-group">
+                        <input formControlName="email" class="form-control" required type="email" [ngClass]="{'isDisabled': soloVista}">
+                    </div>
+                </div>       
+                <div class="form-group">
+                    <label for="Celular">Celular de Contacto</label>
+                    <div class="input-group">
+                        <input formControlName="celularContacto" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+                    </div>
+                </div>   
+                <div class="form-group">
+                    <label for="Celular">Celular de Emergencia</label>
+                    <div class="input-group">
+                        <input formControlName="celularEmergencia" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+                    </div>
+                </div>   
+                <div class="form-group">
+                    <label for="Domicilio">Domicilio</label>
+                    <div class="input-group">
+                        <input formControlName="domicilio" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+                    </div>
+                </div>   
+                <div class="form-group">
+                    <label for="FechaNac">Fecha Nacimiento</label>
+                    <div class="input-group">
+                        <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{'isDisabled': soloVista}">
+                    </div>
+                </div>              
+                <div class="form-group">
+                  <label for="Proveedor">Proveedor</label>
+                  <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)" required [ngClass]="{'isDisabled': soloVista}">
+                    <option>{{proveedorSeleccionado}}</option>
+                    <option value="monotributista">monotributista</option>
+                    <option *ngFor="let proveedor of $proveedores">
+                      {{proveedor.razonSocial}}
                     </option>
-                </select>
-            </div> 
-            <div class="form-group">
-                <label for="Categoria">Tipo de Combustible</label>
-                <select class="form-select form-select-md mb-3" (change)="changeTipoCombustible($event)" required [ngClass]="{'isDisabled': !edicion}">
-                    <option>{{tipoCombustible}}</option>
-                    <option value="gas">Gas</option>
-                    <option value="nafta">Nafta</option>                        
-                </select>
-            </div> 
-            <div class="form-group">
-                <label for="Categoria">Tarjeta de Combustible</label>
-                <select class="form-select form-select-md mb-3" (change)="changeTarjetaCombustible($event)" required [ngClass]="{'isDisabled': !edicion}">
-                    <option>{{tarjetaCombustible ? "si" : "no"}}</option>
-                    <option value="si">si</option>
-                    <option value="no">no</option>                        
-                </select>
-            </div> 
-            <div class="form-group">
-              <label for="Categoria">Publicidad</label>
-              <select class="form-select form-select-md mb-3" (change)="changePublicidad($event)" required [ngClass]="{'isDisabled': !edicion}">
-                  <option>{{publicidad ? "si" : "no"}}</option>
-                  <option value="si">si</option>
-                  <option value="no">no</option>                        
-              </select>
-          </div> 
-          <!--   <div class="form-group">
-              <label for="Categoria mt-2">Refrigeracion</label>
-              <select class="form-select form-select-md mb-3" (change)="selectRefrigeracion($event)" *ngIf="refrigeracion else sinRefrigeracion"  required [ngClass]="{'isDisabled': !edicion}">
-                <option>si</option>
-                <option value="si">si</option>   
-                <option value="no">no</option>                        
-              </select>
-              <ng-template #sinRefrigeracion>
-                <select class="form-select form-select-md mb-3" (change)="selectRefrigeracion($event)" required [ngClass]="{'isDisabled': !edicion}">
-                  <option>no</option>
-                  <option value="si">si</option>   
-                  <option value="no">no</option>                        
-                </select>
-              </ng-template>
-          </div>  -->
-            <div class="form-group">
-                <label for="Categoria">Seguimiento Satelital</label>                
-                  <select class="form-select form-select-md mb-3" (change)="seguimientoSatelital($event)" required *ngIf="seguimiento else sinSeguimiento" [ngClass]="{'isDisabled': !edicion}">
-                      <option selected>si </option>
-                      <option value="si">si</option>   
-                      <option value="no">no</option>                        
                   </select>
-                <ng-template #sinSeguimiento>
-                    <select class="form-select form-select-md mb-3" (change)="seguimientoSatelital($event)" required  [ngClass]="{'isDisabled': !edicion}">
-                        <option selected>no</option>
-                        <option value="si">si</option>   
+                </div>
+              </form>
+          </div>
+          <div class="col">
+            <h3>Datos del Vehiculo</h3>
+            <form [formGroup]="vehiculoForm">
+                <div class="form-group">
+                    <label for="Dominio">Dominio</label>
+                    <div class="input-group">
+                        <input formControlName="dominio" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+                    </div>
+                </div>      
+                <div class="form-group">
+                  <label for="Marca">Marca</label>
+                  <div class="input-group">
+                      <input formControlName="marca" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+                  </div>
+                </div> 
+                <div class="form-group">
+                    <label for="Modelo">Modelo</label>
+                    <div class="input-group">
+                        <input formControlName="modelo" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+                    </div>
+                </div>     
+                <div class="form-group">
+                    <label for="Categoria">Categoria Vehiculo</label>
+                    <select class="form-select form-select-md mb-3" (change)="changeCategoria($event)" required [ngClass]="{'isDisabled': soloVista}">
+                        <option value={{categoriaSeleccionada}} required>{{categoriaSeleccionada}}</option>
+                        <option *ngFor="let categoria of categorias" required>
+                          {{categoria.categoria}}
+                        </option>
+                    </select>
+                </div> 
+                <div class="form-group">
+                    <label for="Categoria">Tipo de Combustible</label>
+                    <select class="form-select form-select-md mb-3" (change)="changeTipoCombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
+                        <option>{{tipoCombustible}}</option>
+                        <option value="gas">Gas</option>
+                        <option value="nafta">Nafta</option>                        
+                    </select>
+                </div> 
+                <div class="form-group">
+                    <label for="Categoria">Tarjeta de Combustible</label>
+                    <select class="form-select form-select-md mb-3" (change)="changeTarjetaCombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
+                        <option>{{tarjetaCombustible ? "si" : "no"}}</option>
+                        <option value="si">si</option>
                         <option value="no">no</option>                        
                     </select>
-                </ng-template>
-            </div> 
-            <div *ngIf="seguimiento">
-                <form [formGroup]="seguimientoForm">
-                    <h4 for="Categoria">Detalle Seguimiento Satelital</h4>
-                    <label for="proveedor">Proveedor</label>
-                    <div class="input-group">
-                      <input formControlName="proveedor" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-                    </div>
-                    <label for="Marca">Marca</label>
-                    <div class="input-group">
-                      <input formControlName="marcaGps" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-                    </div>
-                </form>                      
-            </div> 
-          
-        </form>
-        <div >        
-            <!-- <button *ngIf="edicion" (click)="onSubmit()" class="btn btn-outline-secondary" data-bs-dismiss="modal">Guardar los cambios</button> -->
-            <app-btn-agregar name="GuardarCambiosClaro" *ngIf="edicion" (click)="onSubmit()" data-bs-dismiss="modal"></app-btn-agregar>
-        </div>   
-
-      </div>      
-    </div>
-  </div>
-</div>
-
-<!-- <div class="modal fade" id="jornadaModal" tabindex="-1" aria-labelledby="jornadaModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="jornadaModalLabel">Editar Jornada</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <h2>Jornada</h2>
-        
-        <form [formGroup]="jornadaForm" (ngSubmit)="onSubmitJornada()">         
-          <div class="form-group">       
-            <table>
-              <tbody>
-                <tr class="form-group">
-                  <td>Base: </td>
-                  <td>
-                    <input formControlName="base" class="form-control edicion" required type="number">   
-                  </td>
-                </tr>         
-                <tr class="form-group">
-                  <td>Carga: </td>
-                  <td>
-                    <input formControlName="carga" class="form-control" required type="number">
-                  </td>
-                </tr>
-                <tr class="form-group">
-                  <td>Publicidad: </td>
-                  <td>
-                    <input formControlName="publicidad" class="form-control" required type="number">
-                  </td>
-                </tr>
-              </tbody>
+                </div> 
+                <div class="form-group">
+                  <label for="Categoria">Publicidad</label>
+                  <select class="form-select form-select-md mb-3" (change)="changePublicidad($event)" required [ngClass]="{'isDisabled': soloVista}">
+                      <option>{{publicidad ? "si" : "no"}}</option>
+                      <option value="si">si</option>
+                      <option value="no">no</option>                        
+                  </select>
+              </div> 
+              <!--   <div class="form-group">
+                  <label for="Categoria mt-2">Refrigeracion</label>
+                  <select class="form-select form-select-md mb-3" (change)="selectRefrigeracion($event)" *ngIf="refrigeracion else sinRefrigeracion"  required [ngClass]="{'isDisabled': !edicion}">
+                    <option>si</option>
+                    <option value="si">si</option>   
+                    <option value="no">no</option>                        
+                  </select>
+                  <ng-template #sinRefrigeracion>
+                    <select class="form-select form-select-md mb-3" (change)="selectRefrigeracion($event)" required [ngClass]="{'isDisabled': !edicion}">
+                      <option>no</option>
+                      <option value="si">si</option>   
+                      <option value="no">no</option>                        
+                    </select>
+                  </ng-template>
+              </div>  -->
+                <div class="form-group">
+                    <label for="Categoria">Seguimiento Satelital</label>                
+                      <select class="form-select form-select-md mb-3" (change)="seguimientoSatelital($event)" required *ngIf="seguimiento else sinSeguimiento" [ngClass]="{'isDisabled': soloVista}">
+                          <option selected>si </option>
+                          <option value="si">si</option>   
+                          <option value="no">no</option>                        
+                      </select>
+                    <ng-template #sinSeguimiento>
+                        <select class="form-select form-select-md mb-3" (change)="seguimientoSatelital($event)" required  [ngClass]="{'isDisabled': soloVista}">
+                            <option selected>no</option>
+                            <option value="si">si</option>   
+                            <option value="no">no</option>                        
+                        </select>
+                    </ng-template>
+                </div> 
+                <div *ngIf="seguimiento">
+                    <form [formGroup]="seguimientoForm">
+                        <h4 for="Categoria">Detalle Seguimiento Satelital</h4>
+                        <label for="proveedor">Proveedor</label>
+                        <div class="input-group">
+                          <input formControlName="proveedor" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+                        </div>
+                        <label for="Marca">Marca</label>
+                        <div class="input-group">
+                          <input formControlName="marcaGps" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+                        </div>
+                    </form>                      
+                </div> 
               
-            </table>
-            
-          </div>    
-         
-          <form [formGroup]="adicionalForm"  >
-              <label for="Km">Adicional por Km: </label>
-              <thead>
-                <tr>
-                  <th>Distancia</th>
-                  <th>Valor</th>
-                </tr>          
-              </thead>
-              <tbody>            
-                <tr>
-                  <td>0-100 km</td>
-                  <td>
-                    <input class="form-control edicion" required type="text" disabled value="0">            
-                  </td>
-                </tr>
-                <tr>
-                  <td>101-150 km</td>
-                  <td>
-                    <input formControlName="adicionalKm1" class="form-control edicion" required type="number">            
-                  </td>
-                </tr>
-                <tr>
-                  <td>151-200 km</td>
-                  <td>
-                    <input formControlName="adicionalKm2" class="form-control edicion" required type="number">            
-                  </td>
-                </tr>
-                <tr>
-                  <td>201-250 km</td>
-                  <td>
-                    <input formControlName="adicionalKm3" class="form-control edicion" required type="number">            
-                  </td>
-                </tr>
-                <tr>
-                  <td>251-300 km</td>
-                  <td>
-                    <input formControlName="adicionalKm4" class="form-control edicion" required type="number">            
-                  </td>
-                </tr>
-                <tr>
-                  <td>301-350 km</td>
-                  <td>
-                    <input formControlName="adicionalKm5" class="form-control edicion" required type="number">            
-                  </td>
-                </tr>
-              </tbody>
-          </form>
+            </form>
+          </div>          
+        </div>  
+      </div>
+      <div class="modal-footer">
           <div >        
-            <button  type="submit" class="btn btn-secondary" data-bs-dismiss="modal">Guardar</button>
-          </div>        
-        </form>
-      </div>      
+            <!-- <button *ngIf="edicion" (click)="onSubmit()" class="btn btn-outline-secondary" data-bs-dismiss="modal">Guardar los cambios</button> -->
+            <app-btn-agregar name="GuardarCambiosClaro" *ngIf="!soloVista" (click)="onSubmit()" data-bs-dismiss="modal"></app-btn-agregar>
+          </div>   
+      </div>
     </div>
   </div>
 </div>
- -->
