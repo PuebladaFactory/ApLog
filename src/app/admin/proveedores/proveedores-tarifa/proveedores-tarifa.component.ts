@@ -9,6 +9,7 @@ import { AdicionalKm, AdicionalTarifa, CargasGenerales, TarifaEspecial, TarifaPr
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalAltaTarifaComponent } from '../modal-alta-tarifa/modal-alta-tarifa.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-proveedores-tarifa',
@@ -210,8 +211,27 @@ this.acompanianteEditForm = this.fb.group({
     this.armarTarifaEditar();
   }
 
-  eliminarTarifa(tarifa:TarifaProveedor){    
-    this.storageService.deleteItem(this.componente, tarifa);
+  eliminarTarifa(tarifa:TarifaProveedor){ 
+    Swal.fire({
+      title: "¿Eliminar la tarifa?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.storageService.deleteItem(this.componente, tarifa);
+        Swal.fire({
+          title: "Confirmado",
+          text: "La tarifa ha sido borrada",
+          icon: "success"
+        });
+      }
+    });   
+    
   }
 
   armarTarifaEditar(){
@@ -241,7 +261,26 @@ this.acompanianteEditForm = this.fb.group({
   }
 
   onSubmitEdit(){
-    this.armarTarifaModificada();
+    Swal.fire({
+      title: "¿Guardar los cambios?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.armarTarifaModificada();    
+        Swal.fire({
+          title: "Confirmado",
+          text: "Los cambios se han guardado",
+          icon: "success"
+        });
+      }
+    }); 
+    
   }
 
   armarTarifaModificada(){
@@ -266,7 +305,7 @@ this.acompanianteEditForm = this.fb.group({
     this.updateTarifa();
   }
 
-  updateTarifa(){
+  updateTarifa(){  
     this.storageService.updateItem(this.componente,this.tarifaEditar);
   }
 

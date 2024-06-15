@@ -1,7 +1,7 @@
 <div class="container">
     <h1>Tarifas Cliente</h1>
-        <div class="row">
-            <div class="col">
+        <div class="row mt-4">
+            <div class="col ">
                 <h2>Seleccionar Cliente: </h2>
                 <select class="form-select form-select-md mb-3 w-50" (change)="changeCliente($event)">
                     <option selected>Seleccione</option>
@@ -27,7 +27,7 @@
         </ng-template>
     </div> 
 
-    <div class="mt-4"> 
+    <div class="mt-3"> 
         <h2>Historial de Tarifas</h2>
         <div *ngIf="clienteSeleccionado !== undefined else sinSeleccion">
             <div *ngIf="$tarifasCliente.length > 0; else sinTarifas">

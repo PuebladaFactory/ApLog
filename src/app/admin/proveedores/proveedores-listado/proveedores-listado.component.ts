@@ -4,6 +4,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ProveedoresAltaComponent } from '../proveedores-alta/proveedores-alta.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -75,24 +76,40 @@ export class ProveedoresListadoComponent implements OnInit {
   }
 
   onSubmit(){   
-    this.proveedorEditar.razonSocial = this.form.value.razonSocial;
-    this.proveedorEditar.direccion = this.form.value.direccion;
-    this.proveedorEditar.cuit = this.form.value.cuit;
-    //this.clienteEditar.contactos = this.formContacto.value;
-    /* this.clienteEditar.email = this.form.value.email;
-    this.clienteEditar.telefono = this.form.value.telefono; */
-    //console.log("este es el cliente editado: ", this.clienteEditar);
-    console.log("estos son los contactos: ", this.formContacto.value);
-    console.log("estos es el clienteEditar: ", this.proveedorEditar);
+    Swal.fire({
+      title: "¿Guardar los cambios?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.update();            
+        Swal.fire({
+          title: "Confirmado",
+          text: "Los cambios se han guardado",
+          icon: "success"
+        });
+      }
+    });   
     
-    this.update();        
-    this.borrarForms();
-    this.edicion = false;
+    
+    
    }
 
    update(): void {
+    this.proveedorEditar.razonSocial = this.form.value.razonSocial;
+    this.proveedorEditar.direccion = this.form.value.direccion;
+    this.proveedorEditar.cuit = this.form.value.cuit;
+    
+    //console.log("estos son los contactos: ", this.formContacto.value);
+    //console.log("estos es el clienteEditar: ", this.proveedorEditar);
     this.storageService.updateItem(this.componente, this.proveedorEditar);
-    this.form.reset();
+    this.borrarForms();
+    this.edicion = false;    
     this.ngOnInit();
   }
 
@@ -135,7 +152,26 @@ export class ProveedoresListadoComponent implements OnInit {
   }
 
   eliminarProveedor(proveedor: Proveedor){
-    this.storageService.deleteItem(this.componente, proveedor);
+    Swal.fire({
+      title: "¿Eliminar el Proveedor?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.storageService.deleteItem(this.componente, proveedor);
+        Swal.fire({
+          title: "Confirmado",
+          text: "El Proveedor ha sido borrado",
+          icon: "success"
+        });
+      }
+    });   
+    
     /* this.ngOnInit(); */
     
   }
