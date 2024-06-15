@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente, Contacto } from 'src/app/interfaces/cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-cliente-alta',
@@ -56,10 +57,35 @@ export class ClienteAltaComponent implements OnInit {
    }
 
    addItem(): void {
-    this.storageService.addItem(this.componente, this.cliente)
+    Swal.fire({
+      title: "¿Confirmar el alta del Cliente?",
+      //text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.storageService.addItem(this.componente, this.cliente)
+        Swal.fire({
+          title: "Confirmado",
+          text: "Alta exitosa",
+          icon: "success"
+        }).then((result)=>{
+          if (result.isConfirmed) {
+            this.activeModal.close();
+          }
+        });   
+        
+      }
+    });   
+
+    
     /* this.form.reset() 
     this.ngOnInit() */
-    this.router.navigate(['/clientes/listado'])   
+    //this.router.navigate(['/clientes/listado'])   
   }
 
   toggle() {

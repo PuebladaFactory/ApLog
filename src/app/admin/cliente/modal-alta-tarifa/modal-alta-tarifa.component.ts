@@ -4,6 +4,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-modal-alta-tarifa',
@@ -94,9 +95,33 @@ export class ModalAltaTarifaComponent implements OnInit {
    this.addItem(this.tarifa) 
   }
 
-  addItem(item:any): void {   
-    this.storageService.addItem(this.componente, item); 
-    this.closeModal();
+  addItem(item:any): void {  
+    Swal.fire({
+      title: "¿Agregar la tarifa?",
+      //text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Agregar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.storageService.addItem(this.componente, item); 
+        Swal.fire({
+          title: "Confirmado",
+          text: "La tarifa ha sido agregada.",
+          icon: "success"
+        }).then((result)=>{
+          if (result.isConfirmed) {
+            this.activeModal.close();
+          }
+        });   
+        
+      }
+    });   
+    
+    //this.closeModal();
   }  
 
   closeModal() {
