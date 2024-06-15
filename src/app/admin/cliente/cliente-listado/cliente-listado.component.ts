@@ -6,6 +6,7 @@ import { Cliente, Contacto } from 'src/app/interfaces/cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { OpAltaComponent } from '../../operaciones/op-alta/op-alta.component';
 import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
+import Swal from 'sweetalert2';
 
 
 @Component({
@@ -77,27 +78,38 @@ export class ClienteListadoComponent implements OnInit {
   }
 
   onSubmit(){   
-    this.clienteEditar.razonSocial = this.form.value.razonSocial;
-    this.clienteEditar.direccion = this.form.value.direccion;
-    this.clienteEditar.cuit = this.form.value.cuit;
-    //this.clienteEditar.contactos = this.formContacto.value;
-    /* this.clienteEditar.email = this.form.value.email;
-    this.clienteEditar.telefono = this.form.value.telefono; */
-    //console.log("este es el cliente editado: ", this.clienteEditar);
+    Swal.fire({
+      title: "¿Guardar los cambios?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.update();            
+        Swal.fire({
+          title: "Confirmado",
+          text: "Los cambios se han guardado",
+          icon: "success"
+        });
+      }
+    });   
     
-    console.log("estos son los contactos: ", this.formContacto.value);
-    console.log("estos es el clienteEditar: ", this.clienteEditar);
-    
-    this.update();    
-    this.borrarForms()
-    this.edicion = false;
    }
 
    update(): void {
+    this.clienteEditar.razonSocial = this.form.value.razonSocial;
+    this.clienteEditar.direccion = this.form.value.direccion;
+    this.clienteEditar.cuit = this.form.value.cuit;
+    //console.log("estos son los contactos: ", this.formContacto.value);
+    //console.log("estos es el clienteEditar: ", this.clienteEditar);    
     this.storageService.updateItem(this.componente, this.clienteEditar);
-    this.form.reset();
-    this.formContacto.reset();
-    this.ngOnInit();
+    this.borrarForms()
+    this.edicion = false;
+    //this.ngOnInit();
   }
 
   editarPerfil(){
@@ -153,7 +165,26 @@ export class ClienteListadoComponent implements OnInit {
     this.mostrar = !this.mostrar;
   } */
   eliminarCliente(cliente: Cliente){
-    this.storageService.deleteItem(this.componente, cliente);
+    Swal.fire({
+      title: "¿Eliminar el Cliente?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.storageService.deleteItem(this.componente, cliente);
+        Swal.fire({
+          title: "Confirmado",
+          text: "El Cliente ha sido borrado",
+          icon: "success"
+        });
+      }
+    });   
+    
     /* this.ngOnInit(); */
     
   }

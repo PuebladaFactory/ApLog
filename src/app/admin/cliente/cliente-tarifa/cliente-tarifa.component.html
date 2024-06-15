@@ -103,7 +103,7 @@
         </div>    
     </div>
 <!-- MODAL -->
-    <div class="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+    <div class="modal fade modal-lg" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -111,113 +111,147 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form [formGroup]="cargasGeneralesEditForm"  (ngSubmit)="onSubmitEdit()">             
-                        <h5>Cargas Generales</h5>
-                        <div class="form-group">       
-                            <table>
-                                <tbody>
-                                    <tr class="form-group">
-                                        <td class="parametro">Utilitario: </td>
-                                        <td>
-                                          <input formControlName="utilitario" class="form-control edicion" required type="number">   
-                                        </td>
-                                    </tr>                               
-                                    <tr class="form-group">
-                                        <td class="parametro">Furgon: </td>
-                                        <td>
-                                            <input formControlName="furgon" class="form-control" required type="number">
-                                        </td>
-                                    </tr>
-                                    <tr class="form-group">
-                                        <td class="parametro">Furgon Grande: </td>
-                                        <td>
-                                            <input formControlName="furgonGrande" class="form-control" required type="number">
-                                        </td>
-                                    </tr>
-                                    <tr class="form-group">
-                                        <td class="parametro">Chasis Liviano: </td>
-                                        <td>
-                                            <input formControlName="chasisLiviano" class="form-control edicion" required type="number">   
-                                        </td>
-                                    </tr>                               
-                                    <tr class="form-group">
-                                        <td class="parametro">Chasis: </td>
-                                        <td>
-                                            <input formControlName="chasis" class="form-control" required type="number">
-                                        </td>
-                                    </tr>
-                                    <tr class="form-group">
-                                        <td class="parametro">Balancin: </td>
-                                        <td>
-                                          <input formControlName="balancin" class="form-control edicion" required type="number">   
-                                        </td>
-                                    </tr>                               
-                                    <tr class="form-group">
-                                        <td class="parametro">Semi Remolque Local: </td>
-                                        <td>
-                                          <input formControlName="semiRemolqueLocal" class="form-control" required type="number">
-                                        </td>
-                                    </tr>
-                                    <tr class="form-group">
-                                        <td class="parametro">Portacontenedores: </td>
-                                        <td>
-                                          <input formControlName="portacontenedores" class="form-control" required type="number">
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>       
-                            <form [formGroup]="tarifaEspecialEditForm" (ngSubmit)="onSubmitEdit()" >                         
-                                  <h5 class="parametro align-middle">Tarifa Especial:</h5>
-                                  <tr class="form-group">
-                                      <td class="parametro">Concepto: </td>
-                                      <td>
-                                        <input formControlName="concepto" class="form-control" required type="text">
-                                      </td>
-                                  </tr>
-                                  
-                                  <tr class="form-group">
-                                      <td class="parametro">Valor: </td>
-                                      <td>
-                                        <input formControlName="valor" class="form-control" required type="number">
-                                      </td>
-                                  </tr>
-                        
-                              </form>       
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="">
+                                <form [formGroup]="cargasGeneralesEditForm"  (ngSubmit)="onSubmitEdit()">             
+                                    <h5>Cargas Generales</h5>
+                                    <div class="form-group">       
+                                        <table>
+                                            <tbody>
+                                                <tr class="form-group">
+                                                    <td class="parametro">Utilitario: </td>
+                                                    <td class="input-group ">
+                                                        <span class="input-group-text ms-2"> $ </span>
+                                                        <input formControlName="utilitario" class="form-control edicion" required type="number">   
+                                                    </td>
+                                                </tr>                               
+                                                <tr class="form-group">
+                                                    <td class="parametro">Furgon: </td>
+                                                    <td class="input-group ">
+                                                        <span class="input-group-text ms-2"> $ </span>
+                                                        <input formControlName="furgon" class="form-control" required type="number">
+                                                    </td>
+                                                </tr>
+                                                <tr class="form-group">
+                                                    <td class="parametro">Furgon Grande: </td>
+                                                    <td class="input-group ">
+                                                        <span class="input-group-text ms-2"> $ </span>
+                                                        <input formControlName="furgonGrande" class="form-control" required type="number">
+                                                    </td>
+                                                </tr>
+                                                <tr class="form-group">
+                                                    <td class="parametro">Chasis Liviano: </td>
+                                                    <td class="input-group ">
+                                                        <span class="input-group-text ms-2"> $ </span>
+                                                        <input formControlName="chasisLiviano" class="form-control edicion" required type="number">   
+                                                    </td>
+                                                </tr>                               
+                                                <tr class="form-group">
+                                                    <td class="parametro">Chasis: </td>
+                                                    <td class="input-group ">
+                                                        <span class="input-group-text ms-2"> $ </span>
+                                                        <input formControlName="chasis" class="form-control" required type="number">
+                                                    </td>
+                                                </tr>
+                                                <tr class="form-group">
+                                                    <td class="parametro">Balancin: </td>
+                                                    <td class="input-group ">
+                                                        <span class="input-group-text ms-2"> $ </span>
+                                                        <input formControlName="balancin" class="form-control edicion" required type="number">   
+                                                    </td>
+                                                </tr>                               
+                                                <tr class="form-group">
+                                                    <td class="parametro">Semi Remolque Local: </td>
+                                                    <td class="input-group ">
+                                                        <span class="input-group-text ms-2"> $ </span>
+                                                        <input formControlName="semiRemolqueLocal" class="form-control" required type="number">
+                                                    </td>
+                                                </tr>
+                                                <tr class="form-group">
+                                                    <td class="parametro">Portacontenedores: </td>
+                                                    <td class="input-group ">
+                                                        <span class="input-group-text ms-2"> $ </span>
+                                                        <input formControlName="portacontenedores" class="form-control" required type="number">
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>       
+                                            
+                                    </div>
+                                </form> 
+                            </div>                            
                         </div>
-                    </form> 
-                    <form [formGroup]="acompanianteEditForm" (ngSubmit)="onSubmitEdit()">            
-                        <h5 class="mt-2">Adicionales</h5>
-                        <tr class="form-group">
-                            <td class="parametro">Acompañante: </td>
-                            <td>
-                                <input formControlName="acompaniante" class="form-control" required type="number">
-                            </td>
-                        </tr>
-                    </form>
-                    <form [formGroup]="adicionalKmEditForm" (ngSubmit)="onSubmitEdit()">            
-                        <tr >
-                            <td class="parametro align-middle">Primer sector desde: </td>
-
-                            <td class="input-group ">
-                                
-                                <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number">
-                                <span class="input-group-text"> km </span>
-                          
-                                <span class="input-group-text ms-2"> $ </span>
-                                <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number">                                
-                            </td>
-                        </tr>
-                        <tr >
-                            <td>Intervalos cada: </td>   
-                            <td class="input-group ">
-                                <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number">
-                                <span class="input-group-text"> km </span>
-                            
-                                <span class="input-group-text ms-2"> $ </span>
-                                <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number">
-                            </td>
-                        </tr>                
-                  </form>     
+                        <div class="col-4">
+                            <div class="">
+                                <form [formGroup]="acompanianteEditForm" (ngSubmit)="onSubmitEdit()">            
+                                    <h5 class="mt-2">Adicionales</h5>
+                                    <tr class="form-group">
+                                        <td class="parametro">Acompañante: </td>
+                                        <td class="input-group ">
+                                            <span class="input-group-text ms-2"> $ </span>
+                                            <input formControlName="acompaniante" class="form-control" required type="number">
+                                        </td>
+                                    </tr>
+                                </form>
+                                <form [formGroup]="adicionalKmEditForm" (ngSubmit)="onSubmitEdit()">            
+                                    <h4 class="mt-2">Adicionales Km</h4>
+                                    <tr >
+                                        <td class="parametro align-middle">Primer sector desde: </td>
+            
+                                        <td class="input-group ">                                        
+                                            <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number">
+                                            <span class="input-group-text"> km </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="parametro align-middle">Primer sector valor: </td>
+                                        <td class="input-group ">
+                                            <span class="input-group-text ms-2"> $ </span>
+                                            <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number">                                
+                                        </td>     
+                                    </tr>
+                                    <tr >
+                                        <td>Intervalos cada: </td>   
+                                        <td class="input-group ">
+                                            <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number">
+                                            <span class="input-group-text"> km </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Intervalos valor: </td>   
+                                        <td class="input-group ">
+                                            <span class="input-group-text ms-2"> $ </span>
+                                            <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number">
+                                        </td>
+                                    </tr>                
+                                </form>  
+                            </div>                            
+                        </div>
+                        <div class="col-4">
+                            <div class="">
+                                <form [formGroup]="tarifaEspecialEditForm" (ngSubmit)="onSubmitEdit()" >                         
+                                    <h5 class="parametro align-middle">Tarifa Especial:</h5>
+                                    <tr class="form-group">
+                                        <td class="parametro">Concepto: </td>
+                                        <td>
+                                          <input formControlName="concepto" class="form-control" required type="text">
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr class="form-group">
+                                        <td class="parametro">Valor: </td>
+                                        <td class="input-group ">
+                                            <span class="input-group-text ms-2"> $ </span>
+                                            <input formControlName="valor" class="form-control" required type="number">
+                                        </td>
+                                    </tr>                      
+                                </form>  
+                            </div>                            
+                        </div>
+                    </div>    
+                  
+                       
                 </div>  
                 <div class="modal-footer">
                     <!-- <button class="btn btn-primary" (click)="onSubmitEdit()" data-bs-dismiss="modal" aria-label="Close">

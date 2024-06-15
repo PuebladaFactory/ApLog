@@ -84,19 +84,19 @@
             <div class="form-group">
                 <label for="RazonSocial">Razon Social</label>
                 <div class="input-group">
-                  <input formControlName="razonSocial" class="form-control" required type="text">            
+                  <input formControlName="razonSocial" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">            
                 </div>
             </div>    
             <div class="form-group">
                 <label for="Direccion">Direccion</label>
                 <div class="input-group">
-                  <input formControlName="direccion" class="form-control" required type="text">
+                  <input formControlName="direccion" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
                 </div>
             </div>    
             <div class="form-group">
                 <label for="Cuit">CUIT</label>
                 <div class="input-group">
-                  <input formControlName="cuit" class="form-control" required type="text">
+                  <input formControlName="cuit" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
                 </div>
             </div>             
         </form>    
