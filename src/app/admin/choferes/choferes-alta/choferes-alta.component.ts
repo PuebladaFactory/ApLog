@@ -7,6 +7,7 @@ import { Legajo, Documentacion } from 'src/app/interfaces/legajo';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-choferes-alta',
@@ -127,7 +128,32 @@ export class ChoferesAltaComponent implements OnInit {
    }
 
    addItem(item:any): void {   
-    this.storageService.addItem(this.componente, item); 
+    Swal.fire({
+      title: "¿Confirmar el alta del Chofer?",
+      //text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.storageService.addItem(this.componente, item); 
+        Swal.fire({
+          title: "Confirmado",
+          text: "Alta exitosa",
+          icon: "success"
+        }).then((result)=>{
+          if (result.isConfirmed) {
+            this.activeModal.close();
+          }
+        });   
+        
+      }
+    });   
+
+    
      
   }  
   

@@ -5,6 +5,7 @@ import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { AdicionalKm, TarifaChofer, TarifaEspecial } from 'src/app/interfaces/tarifa-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalAltaTarifaComponent } from '../modal-alta-tarifa/modal-alta-tarifa.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-choferes-tarifa',
@@ -132,7 +133,26 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
     }
   
     eliminarTarifa(tarifa:TarifaChofer){
-      this.storageService.deleteItem(this.componente, tarifa);
+      Swal.fire({
+        title: "¿Eliminar la tarifa?",
+        text: "No se podrá revertir esta acción",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.storageService.deleteItem(this.componente, tarifa);
+          Swal.fire({
+            title: "Confirmado",
+            text: "La tarifa ha sido borrada",
+            icon: "success"
+          });
+        }
+      });   
+      
     }
 
     armarTarifaEditar(){
@@ -154,7 +174,25 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
     }
 
     onSubmitEdit(){
-      this.armarTarifaModificada();
+      Swal.fire({
+        title: "¿Guardar los cambios?",
+        text: "No se podrá revertir esta acción",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.armarTarifaModificada();
+          Swal.fire({
+            title: "Confirmado",
+            text: "Los cambios se han guardado",
+            icon: "success"
+          });
+        }
+      });       
     }
 
     armarTarifaModificada(){

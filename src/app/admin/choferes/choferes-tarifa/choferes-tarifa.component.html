@@ -98,7 +98,7 @@
         </div>  
     </div>
     <!-- MODAL -->
-<div class="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+<div class="modal fade modal-sm" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
@@ -106,68 +106,85 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-          <form [formGroup]="tarifaEditForm"  (ngSubmit)="onSubmitEdit()">             
-            <tr class="form-group">
-              <td class="parametro">Valor Jornada: </td>
-              <td>
-                <input formControlName="valorJornada" class="form-control edicion" required type="number">   
-              </td>
-            </tr>                               
-            <tr class="form-group">
-              <td class="parametro">Publicidad: </td>
-              <td>
-                <input formControlName="publicidad" class="form-control" required type="number">
-              </td>
-            </tr>
-            <tr class="form-group">
-              <td class="parametro">Acompañante: </td>
-              <td>
-                <input formControlName="acompaniante" class="form-control" required type="number">
-              </td>
-            </tr>
-          </form>           
-          <form [formGroup]="tarifaEspecialEditForm" (ngSubmit)="onSubmitEdit()" >                         
-            <h5 class="mt-2">Tarifa Especial</h5>
-            <tr class="form-group">
-                <td class="parametro">Concepto: </td>
-                <td>
-                  <input formControlName="concepto" class="form-control" required type="text">
-                </td>
-            </tr>
-            
-            <tr class="form-group">
-                <td class="parametro">Valor: </td>
-                <td>
-                  <input formControlName="valor" class="form-control" required type="number">
-                </td>
-            </tr>
-      
-            </form>   
-            <form [formGroup]="adicionalEditForm" (ngSubmit)="onSubmitEdit()">            
-              <tr >
-                  <td class="parametro align-middle">Primer sector desde: </td>
-
-                  <td class="input-group ">
-                      
-                      <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number">
-                      <span class="input-group-text"> km </span>
-                
-                      <span class="input-group-text ms-2"> $ </span>
-                      <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number">                                
-                  </td>
-              </tr>
-              <tr >
-                  <td>Intervalos cada: </td>   
-                  <td class="input-group ">
-                      <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number">
-                      <span class="input-group-text"> km </span>
+        
+              <div class="">
+                  <form [formGroup]="tarifaEditForm"  (ngSubmit)="onSubmitEdit()">             
+                  <table>
+                      <tbody>
+                          <h4>Base</h4>
+                          
+                              <tr class="form-group">
+                                  <td class="parametro">Valor Jornada: </td>
+                                  <td class="input-group ">
+                                    <span class="input-group-text ms-2"> $ </span>
+                                    <input formControlName="valorJornada" class="form-control edicion" required type="number">   
+                                  </td>
+                              </tr>                               
+                              <tr class="form-group">
+                                  <td class="parametro">Publicidad: </td>
+                                  <td class="input-group ">
+                                    <span class="input-group-text ms-2"> $ </span>
+                                    <input formControlName="publicidad" class="form-control" required type="number">
+                                  </td>
+                              </tr>
+                              <tr class="form-group">
+                                  <td class="parametro">Acompañante: </td>
+                                  <td class="input-group ">
+                                    <span class="input-group-text ms-2"> $ </span>
+                                    <input formControlName="acompaniante" class="form-control" required type="number">
+                                  </td>
+                              </tr>
+                          
+                      </tbody>
+                  </table>
+                  </form> 
+              </div>  
                   
-                      <span class="input-group-text ms-2"> $ </span>
-                      <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number">
-                  </td>
-              </tr>  
-          
-          </form>     
+              <div class="">                 
+                  <form [formGroup]="adicionalEditForm" (ngSubmit)="onSubmitEdit()">            
+                      <tr >
+                          <h4>Adicional por Km: </h4>
+                          <td class="parametro align-middle">Primer sector desde: </td>
+        
+                          <td class="input-group ">
+                              
+                              <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number">
+                              <span class="input-group-text"> km </span>
+                        
+                              <span class="input-group-text ms-2"> $ </span>
+                              <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number">                                
+                          </td>
+                      </tr>
+                      <tr >
+                          <td>Intervalos cada: </td>   
+                          <td class="input-group ">
+                              <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number">
+                              <span class="input-group-text"> km </span>
+                          
+                              <span class="input-group-text ms-2"> $ </span>
+                              <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number">
+                          </td>
+                      </tr>  
+                  
+                  </form>   
+                  <form [formGroup]="tarifaEspecialEditForm" (ngSubmit)="onSubmitEdit()" >                         
+                    <h5 class="mt-2">Tarifa Especial</h5>
+                    <tr>
+                        <th class="">Concepto </th>
+                        <th > Valor</th>
+                    </tr>
+                    <tr class="form-group">                        
+                        <td>
+                            <input formControlName="concepto" class="form-control" required type="text">
+                        </td>                        
+                        <td class="input-group ">                                
+                          <span class="input-group-text ms-2"> $ </span>
+                          <input formControlName="valor" class="form-control" required type="number">
+                        </td>
+                    </tr>              
+                  </form>   
+              </div>
+           
           </div>  
           <div class="modal-footer">
             <!-- <button class="btn btn-primary" (click)="onSubmitEdit()" data-bs-dismiss="modal" aria-label="Close">
