@@ -13,6 +13,7 @@ import { FacturacionClienteService } from 'src/app/servicios/facturacion/factura
 import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
 import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-op-abiertas',
@@ -134,19 +135,44 @@ export class OpAbiertasComponent implements OnInit {
   }
 
   onSubmit(){
+    Swal.fire({
+      title: "¿Desea cerrar la operación?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.facturarOperacion();
+        Swal.fire({
+          title: "Confirmado",
+          text: "La operación se ha cerrado",
+          icon: "success"
+        });
+      }
+    });       
+   
+  }
+
+  facturarOperacion(){
     ////console.log(this.opForm.value);
     this.opCerrada.km = this.opForm.value.km;    
     //this.opCerrada.documentacion = this.opForm.remito;
     this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
     ////console.log("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
     //this.altaOperacionesCerradas();
+    console.log("1): ", this.detalleOp );
+    
     this.bajaOperacionesActivas();
     if(this.detalleOp.chofer.proveedor === "monotributista"){
       this.facturarOpChofer();
     } else{
       this.facturarOpProveedor();
     }
-    
+ 
   }
 
  /*  altaOperacionesCerradas(){
@@ -232,8 +258,26 @@ export class OpAbiertasComponent implements OnInit {
   }
   
   eliminarOperacion(op: Operacion){
-    this.storageService.deleteItem(this.componente, op);
-    this.ngOnInit();    
+    Swal.fire({
+      title: "¿Cancelar la operación?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.storageService.deleteItem(this.componente, op);
+        Swal.fire({
+          title: "Confirmado",
+          text: "La operación ha sido cancelada",
+          icon: "success"
+        });
+      }
+    });       
+    
   }
 
   abrirEdicion(op:Operacion):void {
@@ -242,7 +286,7 @@ export class OpAbiertasComponent implements OnInit {
     this.choferSeleccionado = op.chofer;
    /*  this.unidadesConFrio = op.unidadesConFrio; */
     this.acompaniante = op.acompaniante;
-
+    this.tarifaEspecial = op.tarifaEspecial;
     ////console.log("este es la op a editar: ", this.opEditar);
     this.armarForm();
     
@@ -255,7 +299,29 @@ export class OpAbiertasComponent implements OnInit {
     })
   }
 
-  onSubmitEdit(){   
+  onSubmitEdit(){  
+    Swal.fire({
+      title: "¿Guardar los cambios?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.update();    
+        Swal.fire({
+          title: "Confirmado",
+          text: "Los cambios se han guardado",
+          icon: "success"
+        });
+      }
+    });   
+   }
+
+   update(): void {
     this.opEditar.fecha = this.form.value.fecha;
     this.opEditar.observaciones = this.form.value.observaciones;
     this.opEditar.cliente = this.clienteSeleccionado;
@@ -264,13 +330,9 @@ export class OpAbiertasComponent implements OnInit {
     this.opEditar.acompaniante = this.acompaniante;
     this.opEditar.tarifaEspecial = this.tarifaEspecial;
     //console.log("este es la op editada: ", this.opEditar);
-    this.update();    
-   }
-
-   update(): void {
     this.storageService.updateItem(this.componente, this.opEditar)
-    this.ngOnInit();  
-    this.form.reset();   
+    //this.ngOnInit();  
+    //this.form.reset();   
   }
 
   selectAcompaniante(e: any) {
@@ -309,6 +371,7 @@ export class OpAbiertasComponent implements OnInit {
     ////console.log(e.target.value)    
     if(e.target.value === "si"){
       this.tarifaEspecial = true;
+      this.acompaniante = false;
     }else if (e.target.value === "no"){
       this.tarifaEspecial = false;
     }else{
