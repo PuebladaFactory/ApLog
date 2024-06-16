@@ -27,7 +27,7 @@ export class OpAltaComponent implements OnInit {
   $choferes!: Chofer[];
   $clientes!: Cliente[];
   clienteSeleccionado!: Cliente ;
-  choferSeleccionado!: Chofer[] ;  
+  choferSeleccionado!: Chofer ;  
   acompaniante: boolean |  any = false ;
   tarifaEspecial: boolean = false ;
   $tarifasChoferes!:any;
@@ -35,10 +35,14 @@ export class OpAltaComponent implements OnInit {
   $proveedores!:any;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, public activeModal: NgbActiveModal,) {
-    this.form = this.fb.group({      
-      fecha: ["", Validators.required],            
-      observaciones: [""],
-    })
+    this.form = this.fb.group({
+      fecha: ['', Validators.required],
+      cliente: ['', Validators.required],
+      chofer: ['', Validators.required],
+      tarifaEspecial: ['', Validators.required],
+      acompaniante: ['', Validators.required],
+      observaciones: ['',]
+    });
    }
 
   ngOnInit(): void {    
@@ -61,39 +65,39 @@ export class OpAltaComponent implements OnInit {
   }
 
   changeCliente(e: any) {
-    console.log(e.target.value)
-    let clienteForm = this.$clientes;
-    clienteForm = clienteForm.filter(function (cliente: any) { 
-        return cliente.razonSocial === e.target.value
+    //console.log(e.target.value)
+    
+    let clienteForm = this.$clientes.filter(function (cliente: Cliente) { 
+        return cliente.idCliente === Number(e.target.value)
     });
+    //console.log(clienteForm);
+    
     this.clienteSeleccionado = clienteForm[0];               
-    console.log(this.clienteSeleccionado);
-
+    //console.log(this.clienteSeleccionado);
+    this.form.patchValue({ cliente: e.target.value });
   }
 
-  selectAcompaniante(e: any) {    
-    console.log(e.target.value)
+ /*  selectAcompaniante(e: any) {    
+    //console.log(e.target.value)
     if(e.target.value === "si"){
       this.acompaniante = true;
     }else{
       this.acompaniante = false;
     }  
-  }
+  } */
 
    changeChofer(e: any) {
-    console.log(e.target.value)
-    console.log(this.$choferes);
-    
-    let apellido = e.target.value.split(" ")[0];
-    
-    this.choferSeleccionado = this.$choferes.filter(function (chofer: any) { 
-       return chofer.apellido === apellido
+    //console.log(e.target.value)    
+    let chofer = this.$choferes.filter(function (chofer: Chofer) { 
+       return chofer.idChofer === Number(e.target.value)
     });
-    //this.choferSeleccionado = choferForm;               
-    console.log(this.choferSeleccionado); 
+    //console.log(chofer);    
+    this.choferSeleccionado = chofer[0];               
+    //console.log(this.choferSeleccionado); 
+    //this.form.patchValue({ chofer: e.target.value });
   } 
 
-  selectTarifaEspecial(e: any) {    
+  /* selectTarifaEspecial(e: any) {    
     console.log(e.target.value)
     if(e.target.value === "si"){
       this.tarifaEspecial = true;
@@ -101,86 +105,84 @@ export class OpAltaComponent implements OnInit {
     }else{
       this.tarifaEspecial = false;
     }  
-  }
+  } */
+
+    selectTarifaEspecial(event: any) {
+      let value = event.target.value;
+      this.tarifaEspecial = value === 'si';
+      this.form.patchValue({ tarifaEspecial: value });
+  
+      if (this.tarifaEspecial) {
+        this.form.get('acompaniante').clearValidators();
+      } else {
+        this.form.get('acompaniante').setValidators(Validators.required);
+      }
+      this.form.get('acompaniante').updateValueAndValidity();
+    }
+  
+    selectAcompaniante(event: any) {
+      this.form.patchValue({ acompaniante: event.target.value });
+    }
 
   onSubmit(){
-
-    this.buscarErrores()
-
-    /* if (this.form.get('fecha').value) {
-      // La fecha está presente, guardar el formulario
-      let respuesta = this.buscarTarifaServ.buscarTarifa(this.choferSeleccionado[0], this.clienteSeleccionado)
-      
-      console.log("RESPUESTA: ", respuesta);
-      
-      this.armarOp();
-    } else {
-      // Muestra un mensaje de error o realiza otra acción
-      alert("falta la fecha")
-    }  */
-
-    this.form.reset(); 
+    //console.log(this.form.value);
+    //console.log("1)chofer: ", this.choferSeleccionado);
+    //console.log("2)cliente: ", this.clienteSeleccionado);
+    //console.log("3)tarifa especial: ", this.tarifaEspecial);
+    //console.log("4)acompañante: ", this.acompaniante);    
+    if (this.form.valid) {
+      this.buscarErrores();
+    }    
+    
    }
 
    buscarErrores(){
-    if (this.form.get('fecha').value) {
-      // La fecha está presente, avanza con la busqueda de errores
-      let respuesta = this.buscarTarifaServ.buscarTarifa(this.choferSeleccionado[0], this.clienteSeleccionado)
-      console.log("RESPUESTA: ", respuesta);
-      
+      let respuesta = this.buscarTarifaServ.buscarTarifa(this.choferSeleccionado, this.clienteSeleccionado)
+      //console.log("RESPUESTA: ", respuesta);
       switch (respuesta) {
-        case "cliente":
+          case "cliente":
+            Swal.fire({
+              icon: "error",
+              //title: "Oops...",
+              text: "El cliente seleccionado no tiene tarifas asignadas",
+      //        footer: '<a href="#">Why do I have this issue?</a>'
+            });
+            break;
+          case "chofer": 
+            Swal.fire({
+              icon: "error",
+              //title: "Oops...",
+              text: "El chofer seleccionado no tiene tarifas asignadas",
+      //        footer: '<a href="#">Why do I have this issue?</a>'
+            });
+              break;  
+          case "proveedor": 
           Swal.fire({
             icon: "error",
             //title: "Oops...",
-            text: "El cliente seleccionado no tiene tarifas asignadas",
+            text: "El chofer seleccionado trabaja con un proveedor que no tiene tarifas asignadas",
     //        footer: '<a href="#">Why do I have this issue?</a>'
           });
-          break;
-        case "chofer": 
-          Swal.fire({
-            icon: "error",
-            //title: "Oops...",
-            text: "El chofer seleccionado no tiene tarifas asignadas",
-    //        footer: '<a href="#">Why do I have this issue?</a>'
-          });
+            break;     
+          case "nada": 
+            this.armarOp();          
+            break;    
+          default:
+            Swal.fire({
+              icon: "error",
+              //title: "Oops...",
+              text: "Error",
+      //        footer: '<a href="#">Why do I have this issue?</a>'
+            });
             break;  
-        case "proveedor": 
-        Swal.fire({
-          icon: "error",
-          //title: "Oops...",
-          text: "El chofer seleccionado trabaja con un proveedor que no tiene tarifas asignadas",
-  //        footer: '<a href="#">Why do I have this issue?</a>'
-        });
-          break;     
-        case "nada": 
-          this.armarOp();          
-          break;    
-        default:
-          Swal.fire({
-            icon: "error",
-            //title: "Oops...",
-            text: "Error",
-    //        footer: '<a href="#">Why do I have this issue?</a>'
-          });
-          break;  
-      }     
-    } else {
-      // Muestra un mensaje de error o realiza otra acción
-      Swal.fire({
-        icon: "error",
-        //title: "Oops...",
-        text: "Necesita ingresar una fecha valida",
-//        footer: '<a href="#">Why do I have this issue?</a>'
-      });
-    } 
+        }    
    }
 
    armarOp(){
-    console.log("armarOp. chofer: ", this.choferSeleccionado);
+    //console.log("armarOp. chofer: ", this.choferSeleccionado);
     
     this.op = this.form.value;
-    this.op.chofer = this.choferSeleccionado[0];
+    this.op.chofer = this.choferSeleccionado;
     this.op.cliente = this.clienteSeleccionado;
     this.op.idOperacion = new Date().getTime();    
     this.op.acompaniante = this.acompaniante;
@@ -189,7 +191,7 @@ export class OpAltaComponent implements OnInit {
     this.op.facturaChofer = null;
     this.op.tarifaEspecial = this.tarifaEspecial;    
     
-    console.log("esta es la operacion: ", this.op);  
+    //console.log("esta es la operacion: ", this.op);  
     Swal.fire({
       title: "¿Desea agregar la operación?",
       //text: "You won't be able to revert this!",
@@ -218,10 +220,8 @@ export class OpAltaComponent implements OnInit {
    }
 
    addItem(): void {
-    this.storageService.addItem(this.componente, this.op); 
-   
-    this.form.reset(); 
-
+    this.storageService.addItem(this.componente, this.op);    
+    this.form.reset();     
   }  
 
  get Fecha() {

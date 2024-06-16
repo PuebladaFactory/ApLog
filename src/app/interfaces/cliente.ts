@@ -1,4 +1,5 @@
 export interface Cliente {
+    clear(): unknown;
     id:any | null;
     idCliente: number;
     razonSocial: string;
