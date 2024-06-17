@@ -52,7 +52,7 @@
                       <div class="form-group">
                         <label for="Email">Email</label>
                         <div class="input-group">
-                          <input formControlName="email" class="form-control" required type="email"[placeholder]="'ej: ValdeMario@gmail.com'" [ngClass]="{ 'is-invalid': form.get('email').invalid && (form.get('email').dirty || form.get('email').touched) }">
+                          <input formControlName="email" class="form-control" required type="email"[placeholder]="'ej: davidcortes@gmail.com'" [ngClass]="{ 'is-invalid': form.get('email').invalid && (form.get('email').dirty || form.get('email').touched) }">
                         </div>
                     </div>       
                       <div class="form-group">
@@ -62,9 +62,9 @@
                         </div>
                       </div>        
                       <div class="form-group">
-                        <label for="Proveedor">Proveedor</label>
+                        <label for="Proveedor">Cond. Fiscal</label>
                         <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)" required>
-                          <option>Elegir Proveedor</option>
+                          <option>Elegir Cond. Fiscal</option>
                           <option value="monotributista">monotributista</option>
                           <option *ngFor="let proveedor of $proveedores">
                             {{proveedor.razonSocial}}
