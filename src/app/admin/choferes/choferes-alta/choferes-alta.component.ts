@@ -123,7 +123,7 @@ export class ChoferesAltaComponent implements OnInit {
    /*  this.chofer.categoria = this.categoriaSeleccionada; */
     this.chofer.idChofer = new Date().getTime(); 
     this.chofer.proveedor = this.proveedorSeleccionado;
-    console.log("este es el chofer: ",this.chofer);     
+    //console.log()("este es el chofer: ",this.chofer);     
     
    }
 
@@ -169,37 +169,37 @@ export class ChoferesAltaComponent implements OnInit {
       this.vehiculo.satelital = false;
     }
     this.vehiculo.refrigeracion = null;
-    //console.log(this.vehiculo);
+    ////console.log()(this.vehiculo);
     this.chofer.vehiculo = this.vehiculo;
   }
 
   /* armarJornada(){     
     this.componente = "jornadas"
     this.adicionalKm = this.adicionalForm.value
-    //console.log("esto es adicionalKm: ", this.adicionalKm);
+    ////console.log()("esto es adicionalKm: ", this.adicionalKm);
     this.jornada = this.jornadaForm.value;
     this.jornada.km = this.adicionalKm;
     this.jornada.idChofer = this.chofer.idChofer;    
-    //console.log("esta es la jornada: ", this.jornada);
+    ////console.log()("esta es la jornada: ", this.jornada);
     this.addItem(this.jornada)
   } */
 
   changeProveedor(e:any){
-    console.log(e.target.value);
+    //console.log()(e.target.value);
     //let razonSocial = e.target.value.split(" ")[0];
-    //console.log(apellido);
+    ////console.log()(apellido);
     
     
     this.proveedorSeleccionado = e.target.value;
     /* this.clienteSeleccionado = this.clientes$.source._value.filter(function (cliente:any){
       return cliente.razonSocial === e.target.value
     }) */
-   console.log("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
+   //console.log()("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
     //this.buscarTarifas();
   }
   
   changeCategoria(e: any) {    
-    console.log(e.target.value);
+    //console.log()(e.target.value);
     
     this.categoriaSeleccionada = e.target.value   
   }
@@ -260,18 +260,18 @@ export class ChoferesAltaComponent implements OnInit {
   } */
 
   armarLegajo(){
-    console.log("chofer: ", this.chofer);
+    //console.log()("chofer: ", this.chofer);
     let legajo: any = {
       idChofer : this.chofer.idChofer,
       idLegajo : new Date().getTime(),
     }
     this.componente = "legajos";    
-    //console.log("este es el legajo trucho: ", legajo);
+    ////console.log()("este es el legajo trucho: ", legajo);
     
     this.legajo = legajo
     this.addItem(this.legajo)
 
-    console.log("este es el legajo del chofer: ", this.legajo);
+    //console.log()("este es el legajo del chofer: ", this.legajo);
     
   }
   validarPatente() {
@@ -280,10 +280,10 @@ export class ChoferesAltaComponent implements OnInit {
     );
 
     if (patenteValida) {
-      // console.log('es una patente valida');
+      // //console.log()('es una patente valida');
       //this.validarTarifa()
     } else {
-      console.log('no es una patente valida');
+      //console.log()('no es una patente valida');
       
     }
 

@@ -46,7 +46,7 @@ export class OpCerradasComponent implements OnInit {
 
   consultaMes(){
     if(!this.btnConsulta){   
-      console.log(this.primerDia, this.ultimoDia)         
+      //console.log()(this.primerDia, this.ultimoDia)         
       this.storageService.getByDateValue("operacionesActivas", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
     }     
   }

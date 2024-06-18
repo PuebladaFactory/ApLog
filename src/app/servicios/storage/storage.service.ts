@@ -322,7 +322,7 @@ export class StorageService {
   // METODOS CRUD
 
   getAllSorted(componente: any, campo: any, orden: any) {
-
+    console.log(" storage getAllSorted ", componente, campo, orden)
     // pasar campo y orden (asc o desc)
     this.dbFirebase
       .getAllSorted(componente, campo, orden)
@@ -336,6 +336,7 @@ export class StorageService {
   }
 
   getByFieldValue(componente: any, campo:any, value:any){
+    console.log(" storage getByFieldValue ", componente, campo, value)
     this.dbFirebase
       .getByFieldValue(componente, campo, value)
       .subscribe(data => {
@@ -344,6 +345,7 @@ export class StorageService {
   }
 
   getByDateValue(componente:string, campo:string, value1:any, value2:any, titulo:string){
+    console.log(" storage getByDateValue ", componente, titulo)
     this.dbFirebase
     .getByDateValue(componente, campo, value1, value2)
     .subscribe(data => {
@@ -352,7 +354,8 @@ export class StorageService {
     }
 
     getByDateValueAndFieldValue(componente:string, campo:string, value1:any, value2:any, titulo:string, campo2:string, value3:any){
-    this.dbFirebase
+      console.log(" storage getByDateValueAndFieldValue ", componente, titulo)
+      this.dbFirebase
     .getByDateValueAndFieldValue(componente, campo, value1, value2, campo2, value3)
     .subscribe(data => {
       this.setInfo(titulo , data)
@@ -362,6 +365,7 @@ export class StorageService {
     }
     
     getByFieldValueTitle(componente:string, campo:string, value:any, titulo:string, ){
+      console.log(" storage getByFieldValueTitle ", componente, value, titulo)
       this.dbFirebase
       .getByFieldValue(componente, campo, value)
       .subscribe(data => {
@@ -386,7 +390,7 @@ export class StorageService {
 
   deleteItem(componente: string, item: any): void {
 
-    //console.log(" storage delete item ", componente, item,)
+    console.log(" storage delete item ", componente, item,)
 
     this.dbFirebase.delete(componente, item.id)
       // .then((data) => console.log(data))
@@ -397,7 +401,7 @@ export class StorageService {
   }
 
   updateItem(componente: string, item: any): void {
-    //console.log(" storage update item ", componente, item,)
+    console.log(" storage update item ", componente, item,)
 
     this.dbFirebase.update(componente, item)
       // .then((data) => console.log(data))

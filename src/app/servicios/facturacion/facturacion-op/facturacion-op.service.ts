@@ -22,12 +22,12 @@ export class FacturacionOpService {
   constructor( private facturacionCliente: FacturacionClienteService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
 
 /*   facturacionOp(op:Operacion){
-    //console.log("facturacionOp");    
+    ////console.log()("facturacionOp");    
     this.facturaChofer.liquidacionOperacion(op);
-    console.log("ya hizo la liquidacion del Chofer");
+    //console.log()("ya hizo la liquidacion del Chofer");
     
    // this.facturacionCliente.liquidacionOperacion(op);
-   // console.log("ya hizo la liquidacion del Cliente");   
+   // //console.log()("ya hizo la liquidacion del Cliente");   
     
   } */
 
@@ -47,7 +47,7 @@ export class FacturacionOpService {
     /* this.storageService.historialTarifas$.subscribe(data => {
       this.$tarifas = data.filter((tarifa: { idChofer: number; }) => tarifa.idChofer === idChofer);
 
-      console.log("Todas: ",this.$tarifas);
+      //console.log()("Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
       this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
@@ -55,7 +55,7 @@ export class FacturacionOpService {
       });
 
       // Ahora, tarifaMasElevada contiene la tarifa con el idTarifa más elevado
-      console.log("ultima: ", this.ultimaTarifa);
+      //console.log()("ultima: ", this.ultimaTarifa);
       this.calcularLiquidacion(op);
     });   */
   }
@@ -68,21 +68,21 @@ export class FacturacionOpService {
       todasLasTarifas = data;
       //todasLasTarifas.sort((x:TarifaChofer, y:TarifaChofer) => y.idTarifa - x.idTarifa);
       this.$tarifaChofer = todasLasTarifas[0]
-      console.log("esta es facturaChoferService. tarifa del chofer: ", this.$tarifaChofer);      
+      //console.log()("esta es facturaChoferService. tarifa del chofer: ", this.$tarifaChofer);      
       this.calcularLiquidacion(op);
     }) */
   //}
 
   calcularLiquidacion(op:Operacion){    
   /*   this.$tarifaChofer = this.ultimaTarifa
-    console.log("esta es la tarifa a facturar: ", this.$tarifaChofer);
+    //console.log()("esta es la tarifa a facturar: ", this.$tarifaChofer);
     
     this.$adicional = this.calcularAdicional(op);
-    //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
+    ////console.log()("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
     
     this.total = this.$tarifaChofer.valorJornada + this.$adicional;
 
-    //console.log("esta es facturaChoferService. liquidacion del chofer: ", this.total);
+    ////console.log()("esta es facturaChoferService. liquidacion del chofer: ", this.total);
 
     this.crearFactura(op);     */
   }
@@ -132,13 +132,13 @@ export class FacturacionOpService {
       adicional: this.$adicional,      
       total: this.total,
     } */
-    //console.log(this.facturaChofer);
+    ////console.log()(this.facturaChofer);
     
     //this.altaFacturaChofer()
   }
 
   altaFacturaChofer() {
-    //console.log("liquidacion-chofer. facturaChofer: ", this.facturaChofer);    
+    ////console.log()("liquidacion-chofer. facturaChofer: ", this.facturaChofer);    
      //this.storageService.addItem("facturaOpChofer", this.facturaChofer);     
     //this.addItem("facturaOpChofer", this.facturaChofer)
     //this.traerFacturas();
@@ -148,19 +148,19 @@ export class FacturacionOpService {
   //METODO CREADO PARA COMPROBAR COMO TRAE LAS FACTURAS
   /*  traerFacturas(){
     this.dbFirebase.getAll("facturaOpChofer").subscribe(data =>{
-      console.log("estas son las facturas: ", data);
+      //console.log()("estas son las facturas: ", data);
       
     })
   }  */
   addItem(componente: string, item: any): void {
 
     /* //item.fechaOp = new Date()
-    console.log(" storage add item ", componente, item,)
+    //console.log()(" storage add item ", componente, item,)
 
 
     this.dbFirebase.create(componente, item)
-      // .then((data) => console.log(data))
+      // .then((data) => //console.log()(data))
       // .then(() => this.ngOnInit())
-      .catch((e) => console.log(e.message)); */
+      .catch((e) => //console.log()(e.message)); */
   }
 }

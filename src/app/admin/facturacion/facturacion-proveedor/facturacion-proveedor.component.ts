@@ -42,9 +42,9 @@ export class FacturacionProveedorComponent implements OnInit {
     });
 
     this.storageService.consultasFacOpLiqProveedor$.subscribe(data =>{
-      console.log(data);
+      //console.log()(data);
       this.$facturaOpProveedor = data;     
-      console.log("consultasFacOpLiqProveedor: ", this.$facturaOpProveedor );
+      //console.log()("consultasFacOpLiqProveedor: ", this.$facturaOpProveedor );
       
     })
     
@@ -53,7 +53,7 @@ export class FacturacionProveedorComponent implements OnInit {
 
   procesarDatosParaTabla() {
     const proveedoresMap = new Map<number, any>();
-    console.log(this.$facturasProveedor);
+    //console.log()(this.$facturasProveedor);
     
     if(this.$facturasProveedor !== null){
       this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
@@ -81,7 +81,7 @@ export class FacturacionProveedorComponent implements OnInit {
       });
   
       this.datosTablaProveedor = Array.from(proveedoresMap.values());
-      console.log("Datos para la tabla: ", this.datosTablaProveedor); 
+      //console.log()("Datos para la tabla: ", this.datosTablaProveedor); 
     }
 
     
@@ -93,7 +93,7 @@ export class FacturacionProveedorComponent implements OnInit {
   mostrarMasDatos(index: number, proveedor:any) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
-   //console.log("CLIENTE: ", cliente);
+   ////console.log()("CLIENTE: ", cliente);
 
    // Obtener el id del cliente utilizando el índice proporcionado
    let proveedorId = this.datosTablaProveedor[index].idProveedor;
@@ -104,7 +104,7 @@ export class FacturacionProveedorComponent implements OnInit {
    });
    this.facturasPorProveedor.set(proveedorId, facturasProveedor);
 
-   console.log("FACTURAS DEL PROVEEDOR: ", facturasProveedor);  
+   //console.log()("FACTURAS DEL PROVEEDOR: ", facturasProveedor);  
 
   }
 
@@ -131,7 +131,7 @@ export class FacturacionProveedorComponent implements OnInit {
   facturaCobrada(factura:FacturaProveedor){
     //este va
     factura.cobrado = !factura.cobrado
-    console.log(factura.cobrado);
+    //console.log()(factura.cobrado);
     this.updateItem(factura)
     
   }
@@ -146,8 +146,8 @@ export class FacturacionProveedorComponent implements OnInit {
   }
 
   reimprimirFac(factura:FacturaProveedor, formato: string){    
-    console.log(factura);    
-    //console.log(texto);
+    //console.log()(factura);    
+    ////console.log()(texto);
     this.operacionFac = []
     
     factura.operaciones.forEach((id:number) => {
@@ -161,14 +161,14 @@ export class FacturacionProveedorComponent implements OnInit {
         }) 
       }      
     })
-    console.log("facturasOp: ", this.operacionFac);
+    //console.log()("facturasOp: ", this.operacionFac);
     if(formato === "excel"){
       this.excelServ.exportToExcelProveedor(factura, this.operacionFac); 
     } else{
       this.pdfServ.exportToPdfProveedor(factura, this.operacionFac);
     }
     this.storageService.clearInfo("facOpLiqProveedor")
-    console.log("ARRAY: ", this.operacionFac);
+    //console.log()("ARRAY: ", this.operacionFac);
     
     
      

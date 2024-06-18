@@ -91,9 +91,9 @@ export class ChoferesListadoComponent implements OnInit {
   }
 
   changeCategoria(e: any) {
-    //console.log(e.target.value)  ;     
+    ////console.log()(e.target.value)  ;     
     this.categoriaSeleccionada = e.target.value
-    //console.log(this.categoriaSeleccionada);    
+    ////console.log()(this.categoriaSeleccionada);    
   }
 
 
@@ -101,7 +101,7 @@ export class ChoferesListadoComponent implements OnInit {
   abrirEdicion(chofer:Chofer):void {
     this.soloVista = false;
     this.choferEditar = chofer;    
-    console.log("este es el chofer a editar: ", this.choferEditar);
+    //console.log()("este es el chofer a editar: ", this.choferEditar);
     this.proveedorSeleccionado = chofer.proveedor;
     this.armarForm();    
   }
@@ -141,7 +141,7 @@ export class ChoferesListadoComponent implements OnInit {
     }else{
       this.seguimiento = true;
       this.satelital = this.choferEditar.vehiculo.satelital;
-      console.log(this.satelital);
+      //console.log()(this.satelital);
       this.seguimientoForm.patchValue({
         proveedor: this.satelital.proveedor,
         marcaGps: this.satelital.marcaGps
@@ -187,7 +187,7 @@ export class ChoferesListadoComponent implements OnInit {
       this.datosPersonales();
       this.datosVehiculo();
       
-      //console.log("este es el chofer editado: ", this.choferEditar);
+      ////console.log()("este es el chofer editado: ", this.choferEditar);
       this.storageService.updateItem(this.componente, item);
       this.form.reset();
       this.vehiculoForm.reset();
@@ -285,16 +285,16 @@ export class ChoferesListadoComponent implements OnInit {
   }
 
   changeProveedor(e:any){
-    console.log(e.target.value);
+    //console.log()(e.target.value);
     //let razonSocial = e.target.value.split(" ")[0];
-    //console.log(apellido);
+    ////console.log()(apellido);
     
     
     this.proveedorSeleccionado = e.target.value;
     /* this.clienteSeleccionado = this.clientes$.source._value.filter(function (cliente:any){
       return cliente.razonSocial === e.target.value
     }) */
-   console.log("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
+   //console.log()("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
     //this.buscarTarifas();
   }
 
@@ -442,7 +442,7 @@ export class ChoferesListadoComponent implements OnInit {
   abrirVista(chofer:Chofer):void {
     this.soloVista = true;
     this.choferEditar = chofer;    
-    //console.log("este es el cliente a editar: ", this.clienteEditar);
+    ////console.log()("este es el cliente a editar: ", this.clienteEditar);
     this.armarForm();    
   }
 
@@ -466,12 +466,12 @@ export class ChoferesListadoComponent implements OnInit {
         modo: "clientes",
         item: facturaOp[0],
       }; 
-      console.log(info); */
+      //console.log()(info); */
       
       //modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          //console.log("ROOWW:" ,row);
+          ////console.log()("ROOWW:" ,row);
           
 //        this.selectCrudOp(result.op, result.item);
         //this.mostrarMasDatos(row);

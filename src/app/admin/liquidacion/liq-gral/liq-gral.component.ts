@@ -53,7 +53,7 @@ export class LiqGralComponent implements OnInit {
       fechaDesde: msg.fechaDesde,
       fechaHasta: msg.fechaHasta,
     };
-    //console.log(msg);        
+    ////console.log()(msg);        
     //alert("llega el msj")
     //this.consultaOperaciones(msg.fechaDesde, msg.fechaHasta);
     //this.msgBack(msg);
@@ -63,18 +63,21 @@ export class LiqGralComponent implements OnInit {
   
 
 /*   consultaOperaciones(fechaDesde:any, fechaHasta:any){   
-    //console.log("desde: ", fechaDesde, "hasta: ", fechaHasta);
+    ////console.log()("desde: ", fechaDesde, "hasta: ", fechaHasta);
     this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");    
-    //console.log("consulta facturas op clientes: ", this.$facturasOpCliente);  
+    ////console.log()("consulta facturas op clientes: ", this.$facturasOpCliente);  
     //this.agruparClientes();      
     //this.procesarDatosParaTabla();
   } */
 
   consultaMes(){
     if(!this.btnConsulta){   
-      console.log(this.primerDia, this.ultimoDia)         
+      //console.log()(this.primerDia, this.ultimoDia) 
+      console.log("llamada al storage desde liq-gral, getByDateValue");        
       this.storageService.getByDateValue("facturaOpChofer", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+      console.log("llamada al storage desde liq-gral, getByDateValue");       
       this.storageService.getByDateValue("facturaOpCliente", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+      console.log("llamada al storage desde liq-gral, getByDateValue");       
       this.storageService.getByDateValue("facturaOpProveedor", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
     }     
   }

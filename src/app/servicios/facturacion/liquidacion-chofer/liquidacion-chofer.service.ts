@@ -28,7 +28,7 @@ export class LiquidacionChoferService {
     /* this.storageService.historialTarifas$.subscribe(data => {
       this.$tarifas = data.filter((tarifa: { idChofer: number; }) => tarifa.idChofer === idChofer);
 
-      console.log("Todas: ",this.$tarifas);
+      //console.log()("Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
       this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
@@ -36,7 +36,7 @@ export class LiquidacionChoferService {
       });
 
       // Ahora, tarifaMasElevada contiene la tarifa con el idTarifa más elevado
-      console.log("ultima: ", this.ultimaTarifa);
+      //console.log()("ultima: ", this.ultimaTarifa);
       this.calcularLiquidacion(op);
     });   */
   }
@@ -49,21 +49,21 @@ export class LiquidacionChoferService {
       todasLasTarifas = data;
       //todasLasTarifas.sort((x:TarifaChofer, y:TarifaChofer) => y.idTarifa - x.idTarifa);
       this.$tarifaChofer = todasLasTarifas[0]
-      console.log("esta es liquidacionChoferService. tarifa del chofer: ", this.$tarifaChofer);      
+      //console.log()("esta es liquidacionChoferService. tarifa del chofer: ", this.$tarifaChofer);      
       this.calcularLiquidacion(op);
     }) */
   //}
 
   calcularLiquidacion(op:Operacion){    
     /* this.$tarifaChofer = this.ultimaTarifa
-    console.log("esta es la tarifa a facturar: ", this.$tarifaChofer);
+    //console.log()("esta es la tarifa a facturar: ", this.$tarifaChofer);
     
     this.$adicional = this.calcularAdicional(op);
-    //console.log("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
+    ////console.log()("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
     
     this.total = this.$tarifaChofer.valorJornada + this.$adicional;
 
-    //console.log("esta es liquidacionChoferService. liquidacion del chofer: ", this.total);
+    ////console.log()("esta es liquidacionChoferService. liquidacion del chofer: ", this.total);
 
     this.crearFactura(op);     */
   }
@@ -112,13 +112,13 @@ export class LiquidacionChoferService {
       adicional: this.$adicional,      
       total: this.total,
     }
-    //console.log(this.liquidacionChofer);
+    ////console.log()(this.liquidacionChofer);
 
     this.altaFacturaChofer() */
   }
 
   altaFacturaChofer(){
-    /* console.log("liquidacion-chofer. facturaChofer: ", this.liquidacionChofer);    
+    /* //console.log()("liquidacion-chofer. facturaChofer: ", this.liquidacionChofer);    
     this.storageService.addItem("facturaOpChofer", this.liquidacionChofer);     */
     //this.traerFacturas();
   }
@@ -126,7 +126,7 @@ export class LiquidacionChoferService {
   //METODO CREADO PARA COMPROBAR COMO TRAE LAS FACTURAS
   /*  traerFacturas(){
     this.dbFirebase.getAll("facturaOpChofer").subscribe(data =>{
-      console.log("estas son las facturas: ", data);
+      //console.log()("estas son las facturas: ", data);
       
     })
   }  */

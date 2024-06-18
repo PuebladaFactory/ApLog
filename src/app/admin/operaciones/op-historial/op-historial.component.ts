@@ -77,7 +77,7 @@ export class OpHistorialComponent implements OnInit {
 
   consultaMes(){
     if(!this.btnConsulta){   
-      console.log(this.primerDia, this.ultimoDia)         
+      //console.log()(this.primerDia, this.ultimoDia)         
       this.storageService.getByDateValue("operacionesActivas", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
     }     
   }
@@ -99,11 +99,11 @@ export class OpHistorialComponent implements OnInit {
   }
 
   onSubmit(){
-    //console.log(this.opForm.value);
+    ////console.log()(this.opForm.value);
     this.opCerrada.km = this.opForm.value.km;    
     //this.opCerrada.documentacion = this.opForm.remito;
     this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
-    //console.log("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
+    ////console.log()("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
     this.altaOperacionesCerradas();
     this.bajaOperacionesActivas()
     this.facturarOp();
@@ -126,7 +126,7 @@ export class OpHistorialComponent implements OnInit {
 
   facturarOp(){
     this.facturaHDP = this.facturacionServ.facturarOperacion(this.opCerrada);    
-    console.log("esta es la factura FINAL: ", this.facturaHDP);
+    //console.log()("esta es la factura FINAL: ", this.facturaHDP);
     
     this.addItem("facturaOpChofer", this.facturaHDP)
     this.opForm.reset();
@@ -139,13 +139,13 @@ export class OpHistorialComponent implements OnInit {
 
     this.storageService.addItem("facturaOpChofer", this.facturaHDP);     
   /*   //item.fechaOp = new Date()
-    console.log(" storage add item ", componente, item,)
+    //console.log()(" storage add item ", componente, item,)
 
 
     this.dbFirebase.create(componente, item)
-      // .then((data) => console.log(data))
+      // .then((data) => //console.log()(data))
       // .then(() => this.ngOnInit())
-      .catch((e) => console.log(e.message)); */
+      .catch((e) => //console.log()(e.message)); */
   }
 
 

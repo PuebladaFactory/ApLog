@@ -43,7 +43,7 @@ export class AuthService {
         this.SetUserData(result.user);
         this.afAuth.authState.subscribe((user) => {
           if (user) {
-            this.router.navigate(['/admin']);
+            this.router.navigate(['/carga']);
           }
         });
       })
@@ -117,7 +117,7 @@ export class AuthService {
   // PORQUE NO ANDA???  USAR LOGOUT MIENTRAS
   // // Sign out
   SignOut() {
-    console.log("saliendo signout")
+    //console.log("saliendo signout")
     return this.afAuth.signOut().then(() => {
       this.storage.clearInfo('usuario');
       this.storage.clearAllLocalStorage()

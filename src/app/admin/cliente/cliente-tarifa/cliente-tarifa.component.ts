@@ -77,29 +77,29 @@ this.acompanianteEditForm = this.fb.group({
    }
 
    changeCliente(e: any) {    
-    //console.log(e.target.value);
+    ////console.log()(e.target.value);
     let id = Number(e.target.value);
-    //console.log("1)",id);
+    ////console.log()("1)",id);
     
     this.clienteSeleccionado = this.$clientes.filter((cliente:Cliente)=>{
-      //console.log("2", cliente.idCliente, id);
+      ////console.log()("2", cliente.idCliente, id);
       return cliente.idCliente === id
     })
    
     this.asignarTarifa = true
-    //console.log("este es el cliente seleccionado: ", this.clienteSeleccionado);
+    ////console.log()("este es el cliente seleccionado: ", this.clienteSeleccionado);
     this.buscarTarifas();
   }
   
   buscarTarifas(){
-    //console.log(this.choferSeleccionado[0].idChofer);    
+    ////console.log()(this.choferSeleccionado[0].idChofer);    
     this.storageService.getByFieldValue(this.componente, "idCliente", this.clienteSeleccionado[0].idCliente);
     this.storageService.historialTarifasClientes$.subscribe(data =>{
-      console.log(data);
+      //console.log()(data);
       this.$tarifasCliente = data;
-      console.log(this.$tarifasCliente);
+      //console.log()(this.$tarifasCliente);
       this.$tarifasCliente.sort((x:TarifaCliente, y:TarifaCliente) => y.idTarifaCliente - x.idTarifaCliente);
-      console.log(this.$tarifasCliente);
+      //console.log()(this.$tarifasCliente);
     })   
   }
 
@@ -120,7 +120,7 @@ this.acompanianteEditForm = this.fb.group({
 
   editarTarifa(tarifa:TarifaCliente){
     this.tarifaEditar = tarifa;  
-    console.log(this.tarifaEditar);
+    //console.log()(this.tarifaEditar);
     this.armarTarifaEditar();
   }
 
@@ -214,7 +214,7 @@ this.acompanianteEditForm = this.fb.group({
       valor: this.tarifaEspecialEditForm.value.valor
     }
     
-    console.log(this.tarifaEditar);
+    //console.log()(this.tarifaEditar);
     this.updateTarifa();
   }
 
@@ -235,7 +235,7 @@ this.acompanianteEditForm = this.fb.group({
         modalRef.componentInstance.fromParent = this.clienteSeleccionado[0];
         modalRef.result.then(
           (result) => {
-            //console.log("ROOWW:" ,row);
+            ////console.log()("ROOWW:" ,row);
             
   //        this.selectCrudOp(result.op, result.item);
           //this.mostrarMasDatos(row);

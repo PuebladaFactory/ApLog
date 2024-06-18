@@ -47,7 +47,7 @@ export class ModalAltaTarifaComponent implements OnInit {
   ngOnInit(): void {
     this.data = this.fromParent
     this.clienteSeleccionado = this.fromParent
-    console.log(this.data);
+    //console.log()(this.data);
     
   }
 
@@ -91,7 +91,7 @@ export class ModalAltaTarifaComponent implements OnInit {
         
     }
   }  
-   //console.log(this.tarifa);    
+   ////console.log()(this.tarifa);    
    this.addItem(this.tarifa) 
   }
 

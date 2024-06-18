@@ -53,16 +53,16 @@ export class HistorialClienteComponent implements OnInit {
   ngOnInit(): void {
     
     this.storageService.consultasFacOpLiqCliente$.subscribe(data =>{
-      //console.log(data);
+      ////console.log()(data);
       this.$facturaOpCliente = data;     
-      //console.log("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
+      ////console.log()("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
       this.armarTabla()  
     })
     
   }
 
   armarTabla() {
-    console.log("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
+    //console.log()("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
     let indice = 0
     this.rows = this.$facturaOpCliente.map(cliente => ({
       indice: indice ++,
@@ -83,7 +83,7 @@ export class HistorialClienteComponent implements OnInit {
       totalCliente: cliente.total,
       ganancia: `${((cliente.total - cliente.montoFacturaChofer) * 100 / cliente.total).toFixed(2)}%`
     }));
-    console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+    //console.log()("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
     this.applyFilters(); // Aplica filtros y actualiza filteredRows
   }
 
@@ -117,10 +117,10 @@ export class HistorialClienteComponent implements OnInit {
 
   openModal(row: any): void {   
     let facturaOp = this.$facturaOpCliente.filter((factura:FacturaOpCliente)=>{
-      //console.log(factura.idFacturaOpCliente, row.idFacturaOpCliente);      
+      ////console.log()(factura.idFacturaOpCliente, row.idFacturaOpCliente);      
       return factura.idFacturaOpCliente === row.idFacturaOpCliente
     })
-    console.log("facturaOp: ",facturaOp);
+    //console.log()("facturaOp: ",facturaOp);
      
     {
       const modalRef = this.modalService.open(ModalDetalleComponent, {
@@ -134,12 +134,12 @@ export class HistorialClienteComponent implements OnInit {
         modo: "clientes",
         item: facturaOp[0],
       }; 
-      console.log(info);
+      //console.log()(info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          //console.log("ROOWW:" ,row);
+          ////console.log()("ROOWW:" ,row);
           
 //        this.selectCrudOp(result.op, result.item);
         this.mostrarMasDatos(row);

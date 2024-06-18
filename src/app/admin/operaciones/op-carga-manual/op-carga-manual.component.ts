@@ -44,34 +44,34 @@ export class OpCargaManualComponent implements OnInit {
   }
 
   changeCliente(e: any) {
-    console.log(e.target.value)
+    //console.log()(e.target.value)
     let clienteForm = this.$clientes;
     clienteForm = clienteForm.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     });
     this.clienteSeleccionado = clienteForm[0];               
-    console.log(this.clienteSeleccionado);
+    //console.log()(this.clienteSeleccionado);
 
   }
 
   changeChofer(e: any) {
-    //console.log(e.target.value)
+    ////console.log()(e.target.value)
     let choferForm = this.$choferes;
     choferForm = choferForm.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     });
     this.choferSeleccionado = choferForm[0];               
-    console.log(this.choferSeleccionado);
+    //console.log()(this.choferSeleccionado);
   }
 
   changeProveedor(e: any) {
-    //console.log(e.target.value)
+    ////console.log()(e.target.value)
     let choferForm = this.$choferes;
     choferForm = choferForm.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     });
     this.choferSeleccionado = choferForm[0];               
-    console.log(this.choferSeleccionado);
+    //console.log()(this.choferSeleccionado);
   }
 
   selectRefrigeracion(e:any){ 
@@ -114,7 +114,7 @@ export class OpCargaManualComponent implements OnInit {
     this.op.idOperacion = new Date().getTime();
     
     //this.op.estado = 1;
-    //console.log(this.op);     
+    ////console.log()(this.op);     
     this.addItem();
     
    }

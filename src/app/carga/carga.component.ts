@@ -1,0 +1,27 @@
+import { Component, OnInit } from '@angular/core';
+import { StorageService } from '../servicios/storage/storage.service';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-carga',
+  templateUrl: './carga.component.html',
+  styleUrls: ['./carga.component.scss']
+})
+export class CargaComponent implements OnInit {
+  
+  usuario!: any;
+
+  constructor(private storageService: StorageService, private router: Router){
+
+  }
+  ngOnInit(): void {
+    this.usuario = this.storageService.loadInfo("usuario");
+    if(this.usuario.roles.admin){
+      console.log("llamada al storage desde carga, initializerAdmin");      
+      this.storageService.initializerAdmin();
+      this.router.navigate(['admin'])
+    }    
+  }  
+ 
+
+}

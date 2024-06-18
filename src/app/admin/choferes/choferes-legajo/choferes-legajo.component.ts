@@ -27,16 +27,16 @@ export class ChoferesLegajoComponent implements OnInit {
   }
 
   changeChofer(e: any) {    
-    //console.log(e.target.value);
+    ////console.log()(e.target.value);
     let apellido = e.target.value.split(" ")[0];
-    //console.log(apellido);
+    ////console.log()(apellido);
     
     
     this.choferSeleccionado = e.target.value;
     this.choferSeleccionado = this.choferes$.source._value.filter(function (chofer:any){
       return chofer.apellido === apellido
     })
-    console.log("este es el chofer seleccionado: ", this.choferSeleccionado);
+    //console.log()("este es el chofer seleccionado: ", this.choferSeleccionado);
     this.obtenerLegajo();
   }
 

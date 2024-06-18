@@ -70,20 +70,15 @@ export class OpAbiertasComponent implements OnInit {
    }
   
   ngOnInit(): void { 
-    //this.opCerradas$ = this.storageService.opCerradas$ 
-    //this.consultasOp$ = this.storageService.consultasOpCerradas$; 
-    /* this.storageService.consultasOpCerradas$.subscribe(data => {
-      this.$opCerradas = data;}) */
+    
       this.storageService.choferes$.subscribe(data => {
         this.$choferes = data;
       });
-      //this.clientes$ = this.storageService.clientes$;
+    
       this.storageService.clientes$.subscribe(data => {
         this.$clientes = data;
       });    
-      //this.opActivas$ = this.storageService.opActivas$;
-      //this.consultasOp$ = this.storageService.consultasOpActivas$;
-      /*  */
+     
     this.storageService.consultasOpActivas$.subscribe(data => {
       this.$consultasOp = data;
     });
@@ -91,9 +86,7 @@ export class OpAbiertasComponent implements OnInit {
    
   }
 
-/*   ngOnDestroy(): void {
-    this.subscriptions.forEach(subscription => subscription.unsubscribe());
-  } */
+
   
 
   seleccionarOp(op:Operacion){
@@ -109,16 +102,17 @@ export class OpAbiertasComponent implements OnInit {
 
   consultaMes(){
     if(!this.btnConsulta){   
-      //console.log(this.primerDia, this.ultimoDia)         
+      
+      console.log("llamada al storage desde op-abiertas, getByDateValue");
       this.storageService.getByDateValue("operacionesActivas", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
     }     
   }
 
   getMsg(msg: any) {
     this.btnConsulta = true;
-    ////console.log("mensajeeee: ", msg);
+    //////console.log()("mensajeeee: ", msg);
     this.fechasConsulta = msg;
-    //console.log("mensajeeee: ", this.fechasConsulta);
+    ////console.log()("mensajeeee: ", this.fechasConsulta);
     
   }
 
@@ -158,13 +152,13 @@ export class OpAbiertasComponent implements OnInit {
   }
 
   facturarOperacion(){
-    ////console.log(this.opForm.value);
+    //////console.log()(this.opForm.value);
     this.opCerrada.km = this.opForm.value.km;    
     //this.opCerrada.documentacion = this.opForm.remito;
     this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
-    ////console.log("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
+    //////console.log()("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
     //this.altaOperacionesCerradas();
-    console.log("1): ", this.detalleOp );
+    //console.log()("1): ", this.detalleOp );
     
     this.bajaOperacionesActivas();
     if(this.detalleOp.chofer.proveedor === "monotributista"){
@@ -182,6 +176,7 @@ export class OpAbiertasComponent implements OnInit {
   } */
 
   bajaOperacionesActivas(){
+    console.log("llamada al storage desde op-abiertas, deleteItem");
     this.storageService.deleteItem("operacionesActivas", this.opCerrada);
     
   }
@@ -192,7 +187,7 @@ export class OpAbiertasComponent implements OnInit {
 
   facturarOpChofer(){
     this.facturaChofer = this.facOpChoferService.facturarOpChofer(this.opCerrada);    
-    //console.log("esta es la factura-chofer FINAL: ", this.facturaChofer);
+    ////console.log()("esta es la factura-chofer FINAL: ", this.facturaChofer);
     
     //this.addItem("facturaOpChofer", this.facturaChofer)
     this.opForm.reset();
@@ -204,7 +199,7 @@ export class OpAbiertasComponent implements OnInit {
 
   facturarOpProveedor(){
     this.facturaProveedor = this.facOpProveedorService.facturarOpProveedor(this.opCerrada);    
-    console.log("1) esta es la factura-proveedor FINAL: ", this.facturaProveedor);
+    //console.log()("1) esta es la factura-proveedor FINAL: ", this.facturaProveedor);
     
     //this.addItem("facturaOpProveedor", this.facturaProveedor)
     this.opForm.reset();
@@ -216,7 +211,7 @@ export class OpAbiertasComponent implements OnInit {
 
   facturarOpCliente(){
     this.facturaCliente = this.facOpClienteService.facturarOpCliente(this.opCerrada);    
-    console.log("2) esta es la factura-cliente FINAL: ", this.facturaCliente);
+    //console.log()("2) esta es la factura-cliente FINAL: ", this.facturaCliente);
     
     //this.addItem("facturaOpCliente", this.facturaCliente)
     this.opForm.reset();
@@ -227,16 +222,16 @@ export class OpAbiertasComponent implements OnInit {
   }
 
   addItem(componente: string, item: any): void {
-
+    console.log("llamada al storage desde op-abiertas, addItem");
     this.storageService.addItem(componente, item);     
   /*   //item.fechaOp = new Date()
-    //console.log(" storage add item ", componente, item,)
+    ////console.log()(" storage add item ", componente, item,)
 
 
     this.dbFirebase.create(componente, item)
-      // .then((data) => //console.log(data))
+      // .then((data) => ////console.log()(data))
       // .then(() => this.ngOnInit())
-      .catch((e) => //console.log(e.message)); */
+      .catch((e) => ////console.log()(e.message)); */
   }
 
   armarFacturas(){
@@ -249,8 +244,8 @@ export class OpAbiertasComponent implements OnInit {
     } else{
       this.facturaCliente.montoFacturaChofer = this.facturaProveedor.total.valueOf();    
       this.facturaProveedor.montoFacturaCliente = this.facturaCliente.total.valueOf();
-      console.log("3) clientes: ",this.facturaCliente );
-      console.log("4) proveedores: ",this.facturaProveedor );
+      //console.log()("3) clientes: ",this.facturaCliente );
+      //console.log()("4) proveedores: ",this.facturaProveedor );
       
       this.addItem("facturaOpCliente", this.facturaCliente);
       this.addItem("facturaOpProveedor", this.facturaProveedor)
@@ -269,6 +264,7 @@ export class OpAbiertasComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
+        console.log("llamada al storage desde op-abiertas, deleteItem");
         this.storageService.deleteItem(this.componente, op);
         Swal.fire({
           title: "Confirmado",
@@ -287,7 +283,7 @@ export class OpAbiertasComponent implements OnInit {
    /*  this.unidadesConFrio = op.unidadesConFrio; */
     this.acompaniante = op.acompaniante;
     this.tarifaEspecial = op.tarifaEspecial;
-    ////console.log("este es la op a editar: ", this.opEditar);
+    //////console.log()("este es la op a editar: ", this.opEditar);
     this.armarForm();
     
   }
@@ -329,14 +325,15 @@ export class OpAbiertasComponent implements OnInit {
     /* this.opEditar.unidadesConFrio = this.unidadesConFrio; */
     this.opEditar.acompaniante = this.acompaniante;
     this.opEditar.tarifaEspecial = this.tarifaEspecial;
-    //console.log("este es la op editada: ", this.opEditar);
+    ////console.log()("este es la op editada: ", this.opEditar);
+    console.log("llamada al storage desde op-abiertas, updateItem");
     this.storageService.updateItem(this.componente, this.opEditar)
     //this.ngOnInit();  
     //this.form.reset();   
   }
 
   selectAcompaniante(e: any) {
-    ////console.log(e.target.value)    
+    //////console.log()(e.target.value)    
     if(e.target.value === "si"){
       this.acompaniante = true;
     }else if (e.target.value === "no"){
@@ -344,31 +341,31 @@ export class OpAbiertasComponent implements OnInit {
     }else{
       this.acompaniante = this.opEditar.acompaniante;
     }
-    ////console.log("acompaniante: ", this.acompaniante);
+    //////console.log()("acompaniante: ", this.acompaniante);
   }
 
   changeCliente(e: any) {
-    ////console.log(e.target.value)
+    //////console.log()(e.target.value)
     let clienteForm;
     clienteForm = this.$clientes.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     });
     this.clienteSeleccionado = clienteForm[0];               
-    ////console.log(this.clienteSeleccionado);
+    //////console.log()(this.clienteSeleccionado);
   }
 
   changeChofer(e: any) {
-    ////console.log(e.target.value)
+    //////console.log()(e.target.value)
     let choferForm;
     choferForm = this.$choferes.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     });
     this.choferSeleccionado = choferForm[0];               
-    ////console.log(this.choferSeleccionado);
+    //////console.log()(this.choferSeleccionado);
   }
 
   selectTarifaEspecial(e: any) {
-    ////console.log(e.target.value)    
+    //////console.log()(e.target.value)    
     if(e.target.value === "si"){
       this.tarifaEspecial = true;
       this.acompaniante = false;
@@ -377,6 +374,6 @@ export class OpAbiertasComponent implements OnInit {
     }else{
       this.tarifaEspecial = this.opEditar.tarifaEspecial;
     }
-    //console.log("tarifa especial: ", this.tarifaEspecial);
+    ////console.log()("tarifa especial: ", this.tarifaEspecial);
   }
 }

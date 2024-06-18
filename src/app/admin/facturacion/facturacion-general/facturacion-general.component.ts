@@ -102,7 +102,7 @@ export class FacturacionGeneralComponent implements OnInit {
 
   getMsg(msg: any) {
     //this.btnConsulta = true;
-    //console.log(msg);        
+    ////console.log()(msg);        
     //alert("llega el msj")
     //this.consultaOperaciones(msg.fechaDesde, msg.fechaHasta);
     //this.msgBack(msg);
@@ -115,13 +115,13 @@ export class FacturacionGeneralComponent implements OnInit {
   }
 
   consultaOperaciones(){   
-    //console.log("desde: ", fechaDesde, "hasta: ", fechaHasta);
+    ////console.log()("desde: ", fechaDesde, "hasta: ", fechaHasta);
     //this.storageService.getByDateValue(this.tituloFacCliente, "fecha", fechaDesde, fechaHasta, "consultasFacCliente");    
-    //console.log("consulta facturas op clientes: ", this.$facturasOpCliente);  
+    ////console.log()("consulta facturas op clientes: ", this.$facturasOpCliente);  
     //this.agruparClientes();      
     //this.procesarDatosParaTabla();
     if(!this.btnConsulta){   
-      console.log(this.primerDia, this.ultimoDia)         
+      //console.log()(this.primerDia, this.ultimoDia)         
       this.storageService.getByDateValue("facturaChofer", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
       this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
       this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDia, this.ultimoDia, this.titulo);    

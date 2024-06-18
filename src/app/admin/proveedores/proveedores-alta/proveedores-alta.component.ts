@@ -44,16 +44,16 @@ export class ProveedoresAltaComponent implements OnInit {
       this.proveedor = this.form.value
       this.proveedor.idProveedor = new Date().getTime();
       this.proveedor.contactos = this.contactos;
-      console.log(this.proveedor);     
+      //console.log()(this.proveedor);     
       this.addItem();    
       this.activeModal.close();    
     } else{
       alert("error en el formulario")
     }
-    //console.log(new Date().getTime());    
+    ////console.log()(new Date().getTime());    
     /* this.proveedor = this.form.value
     this.proveedor.idProveedor = new Date().getTime();
-    console.log(this.form.value.razonSocial);
+    //console.log()(this.form.value.razonSocial);
     
     if(this.form.value.razonSocial === "" || this.form.value.cuit === "" || this.form.value.direccion === ""){
       alert("validacion")
@@ -67,7 +67,7 @@ export class ProveedoresAltaComponent implements OnInit {
       }
     } else{
       this.proveedor.contactos = this.contactos;
-      console.log(this.proveedor);     
+      //console.log()(this.proveedor);     
       this.addItem();    
     }     */
    }
@@ -105,7 +105,7 @@ export class ProveedoresAltaComponent implements OnInit {
 
   toggle() {
     this.mostrarFormulario = !this.mostrarFormulario;
-    //console.log(this.form);
+    ////console.log()(this.form);
   }
 
   guardarContacto(){

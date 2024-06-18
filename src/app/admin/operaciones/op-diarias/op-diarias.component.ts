@@ -68,7 +68,7 @@ export class OpDiariasComponent implements OnInit {
     this.storageService.consultasOpActivas$.subscribe(data => {
       this.$consultasOp = data;
     });
-    //console.log("esto es op-diarias. consultasOp: ", this.consultasOp$);
+    ////console.log()("esto es op-diarias. consultasOp: ", this.consultasOp$);
     this.consultaOpDelDia();
     //this.toggleAltaOp();    
   }
@@ -81,7 +81,7 @@ export class OpDiariasComponent implements OnInit {
     this.unidadesConFrio = op.unidadesConFrio;
     this.acompaniante = op.acompaniante;
 
-    //console.log("este es la op a editar: ", this.opEditar);
+    ////console.log()("este es la op a editar: ", this.opEditar);
     this.armarForm();
     
   }
@@ -100,40 +100,42 @@ export class OpDiariasComponent implements OnInit {
     this.opEditar.chofer  = this.choferSeleccionado;
     this.opEditar.unidadesConFrio = this.unidadesConFrio;
     this.opEditar.acompaniante = this.acompaniante;
-    console.log("este es la op editada: ", this.opEditar);
+    //console.log()("este es la op editada: ", this.opEditar);
     this.update();    
    }
 
    update(): void {
-    this.storageService.updateItem(this.componente, this.opEditar)
+    console.log("llamada al storage desde op-diarias, updateItem");    
+    this.storageService.updateItem(this.componente, this.opEditar);
     this.ngOnInit();  
     this.form.reset();   
 
   }
 
   eliminarOperacion(op: Operacion){
+    console.log("llamada al storage desde op-diarias, deleteItem");   
     this.storageService.deleteItem(this.componente, op);
     this.ngOnInit();    
   }
 
   changeCliente(e: any) {
-    //console.log(e.target.value)
+    ////console.log()(e.target.value)
     let clienteForm;
     clienteForm = this.$clientes.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     });
     this.clienteSeleccionado = clienteForm[0];               
-    //console.log(this.clienteSeleccionado);
+    ////console.log()(this.clienteSeleccionado);
   }
 
   changeChofer(e: any) {
-    //console.log(e.target.value)
+    ////console.log()(e.target.value)
     let choferForm;
     choferForm = this.$choferes.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     });
     this.choferSeleccionado = choferForm[0];               
-    //console.log(this.choferSeleccionado);
+    ////console.log()(this.choferSeleccionado);
   }
  
 
@@ -159,7 +161,8 @@ export class OpDiariasComponent implements OnInit {
   }
 
   consultaOpDelDia(){
-     if(!this.btnConsulta){            
+     if(!this.btnConsulta){    
+      console.log("llamada al storage desde op-diarias, getByDateValue");        
       this.storageService.getByDateValue("operacionesActivas", "fecha", this.hoy, this.hoy, this.titulo);    
     }     
   }
@@ -169,7 +172,7 @@ export class OpDiariasComponent implements OnInit {
   }
 
   selectUCF(e: any) {
-    console.log(e.target.value)
+    //console.log()(e.target.value)
     if(e.target.value === "si"){
       this.unidadesConFrio = true;
     }else{
@@ -179,17 +182,17 @@ export class OpDiariasComponent implements OnInit {
   }
 
   selectAcompaniante(e: any) {
-    console.log(e.target.value)
-    console.log(e.target.value)
+    //console.log()(e.target.value)
+    //console.log()(e.target.value)
     if(e.target.value === "si"){
       this.acompaniante = true;
     }else{
       this.acompaniante = false;
     }
-    //console.log("acompaniante: ", this.acompaniante);
+    ////console.log()("acompaniante: ", this.acompaniante);
   }
 
-  openModal() {
+/*   openModal() {
     {
       const modalRef = this.modalService.open(OpAltaComponent, {
         windowClass: 'myCustomModalClass',
@@ -199,14 +202,14 @@ export class OpDiariasComponent implements OnInit {
 
       modalRef.result.then(
         (result) => {
-          console.log("llega?");
+          //console.log()("llega?");
           
           this.modalRef.dismiss();
         },
         (reason) => {}
       );
     }
-  }
+  } */
 
 
   

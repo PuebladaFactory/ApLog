@@ -35,7 +35,7 @@ export class HistorialGeneralComponent implements OnInit {
     this.storageService.getByDateValue("facOpLiqCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacOpLiqCliente");
     this.storageService.consultasFacOpLiqCliente$.subscribe(data => {
       this.$facturasOpLiqCliente = data;       
-      console.log(this.$facturasOpLiqCliente)
+      //console.log()(this.$facturasOpLiqCliente)
     });
 
     this.storageService.getByDateValue("facOpLiqChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacOpLiqChofer");
@@ -62,7 +62,7 @@ export class HistorialGeneralComponent implements OnInit {
   }
 
   changeConsulta(e: any) {    
-    console.log(e.target.value);    
+    //console.log()(e.target.value);    
     this.consulta = e.target.value;
   }
 }

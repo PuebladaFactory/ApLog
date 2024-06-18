@@ -11,6 +11,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FacturacionModule } from '../facturacion/facturacion.module';
+import { ModalInformesClienteComponent } from './modal-informes-cliente/modal-informes-cliente.component';
 
 
 @NgModule({
@@ -18,7 +19,8 @@ import { FacturacionModule } from '../facturacion/facturacion.module';
     LiqProveedorComponent,
     LiqChoferComponent,
     LiqGralComponent,
-    LiqClienteComponent
+    LiqClienteComponent,
+    ModalInformesClienteComponent
   ],
   imports: [
     CommonModule,

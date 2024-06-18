@@ -50,7 +50,7 @@ export class ModalFacturaComponent  implements OnInit {
 
   ngOnInit(): void {
     
-    console.log('on init form', this.fromParent);
+    //console.log()('on init form', this.fromParent);
       this.titulo = this.fromParent.modo;
       this.item = this.fromParent.item;
       switch (this.titulo) {
@@ -123,25 +123,26 @@ export class ModalFacturaComponent  implements OnInit {
   }
 
   guardarDetalle(){    
-    ////console.log(this.facturaEditada);
+    //////console.log()(this.facturaEditada);
     this.facturaEditada.operacion.observaciones = this.form.value.detalle;
-    ////console.log(this.facturaEditada.operacion.observaciones);
+    //////console.log()(this.facturaEditada.operacion.observaciones);
+    console.log("llamada al storage desde liq modal-factura, updateItem");      
     this.storageService.updateItem("facturaOpChofer", this.facturaEditada);
 
 
   }
 
   onSubmit() {
-    //console.log("factura chofer antes: ", this.facturasLiquidadasChofer);
-    ////console.log(this.form.value);
+    ////console.log()("factura chofer antes: ", this.facturasLiquidadasChofer);
+    //////console.log()(this.form.value);
     
     if(this.facturasLiquidadasChofer.length > 0){
-    /*   //console.log(this.facturasLiquidadasChofer);      
+    /*   ////console.log()(this.facturasLiquidadasChofer);      
       this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
         this.idOperaciones.push(factura.operacion.idOperacion)
       });
  
-      console.log("ID OPERACIONES: ", this.idOperaciones);
+      //console.log()("ID OPERACIONES: ", this.idOperaciones);
       this.facturaChofer = {
         id: null,
         fecha: new Date().toISOString().split('T')[0],
@@ -154,7 +155,7 @@ export class ModalFacturaComponent  implements OnInit {
         cobrado:false,
         montoFacturaCliente: this.totalFacturasLiquidadasCliente,
       } 
-      console.log("FACTURA CHOFER: ", this.facturaChofer);      
+      //console.log()("FACTURA CHOFER: ", this.facturaChofer);      
       this.addItem(this.facturaChofer, this.componente);
       this.form.reset();
       //this.$tarifasChofer = null;    
@@ -177,7 +178,7 @@ export class ModalFacturaComponent  implements OnInit {
 
   toggle() {
     this.mostrarFormulario = !this.mostrarFormulario;
-    //console.log(this.form);
+    ////console.log()(this.form);
   }
 
 /*   guardarOtros(){

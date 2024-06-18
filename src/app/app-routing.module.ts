@@ -5,6 +5,7 @@ import { ForgotPasswordComponent } from './appLogin/forgot-password/forgot-passw
 import { LoginComponent } from './appLogin/login/login.component';
 import { VerifyEmailComponent } from './appLogin/verify-email/verify-email.component';
 import { SignUpComponent } from './appLogin/sign-up/sign-up.component';
+import { CargaComponent } from './carga/carga.component';
 
 // const routes: Routes = [];
 
@@ -17,7 +18,7 @@ const appRoutes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   
   {path: 'admin', loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule)},
-  
+  { path: 'carga', component: CargaComponent }, // la ruta al login
   { path: 'login', component: LoginComponent }, // la ruta al login
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'verify-email-address', component: VerifyEmailComponent },

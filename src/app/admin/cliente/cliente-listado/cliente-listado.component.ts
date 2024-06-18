@@ -56,7 +56,7 @@ export class ClienteListadoComponent implements OnInit {
   abrirEdicion(cliente:Cliente):void {
     this.soloVista = false;
     this.clienteEditar = cliente;    
-    //console.log("este es el cliente a editar: ", this.clienteEditar);
+    ////console.log()("este es el cliente a editar: ", this.clienteEditar);
     this.armarForm();    
   }
 
@@ -73,7 +73,7 @@ export class ClienteListadoComponent implements OnInit {
   abrirVista(cliente:Cliente):void {
     this.soloVista = true;
     this.clienteEditar = cliente;    
-    //console.log("este es el cliente a editar: ", this.clienteEditar);
+    ////console.log()("este es el cliente a editar: ", this.clienteEditar);
     this.armarForm();    
   }
 
@@ -104,8 +104,8 @@ export class ClienteListadoComponent implements OnInit {
     this.clienteEditar.razonSocial = this.form.value.razonSocial;
     this.clienteEditar.direccion = this.form.value.direccion;
     this.clienteEditar.cuit = this.form.value.cuit;
-    //console.log("estos son los contactos: ", this.formContacto.value);
-    //console.log("estos es el clienteEditar: ", this.clienteEditar);    
+    ////console.log()("estos son los contactos: ", this.formContacto.value);
+    ////console.log()("estos es el clienteEditar: ", this.clienteEditar);    
     this.storageService.updateItem(this.componente, this.clienteEditar);
     this.borrarForms()
     this.edicion = false;
@@ -117,9 +117,9 @@ export class ClienteListadoComponent implements OnInit {
   }
 
   armarContacto(contacto: Contacto, i: number){
-    console.log();
+    //console.log()();
     
-    console.log(i);
+    //console.log()(i);
     this.indice = i;
     this.contactoEditar = contacto;
     this.formContacto.patchValue({
@@ -132,23 +132,23 @@ export class ClienteListadoComponent implements OnInit {
   }
 
   guardarContacto(){
-    //console.log(this.formContacto.value);
-    console.log(this.clienteEditar.contactos);
+    ////console.log()(this.formContacto.value);
+    //console.log()(this.clienteEditar.contactos);
     
     this.contactoEditar = this.formContacto.value;
-    console.log(this.indice);
+    //console.log()(this.indice);
     if(this.indice === undefined){
-      console.log(this.indice);
-      console.log(this.contactoEditar);
+      //console.log()(this.indice);
+      //console.log()(this.contactoEditar);
       this.clienteEditar.contactos.push(this.contactoEditar)
     } else{
-      console.log(this.contactoEditar);
-      console.log(this.indice);
+      //console.log()(this.contactoEditar);
+      //console.log()(this.indice);
       
       this.clienteEditar.contactos[this.indice] = this.contactoEditar;
-      console.log(this.clienteEditar);  
+      //console.log()(this.clienteEditar);  
     }
-    console.log(this.clienteEditar.contactos);
+    //console.log()(this.clienteEditar.contactos);
     
     
   }
@@ -158,7 +158,7 @@ export class ClienteListadoComponent implements OnInit {
   }
 
   agregarContacto(){
-    console.log(this.clienteEditar.contactos);
+    //console.log()(this.clienteEditar.contactos);
     
   }
   /* toogleMostrar(){
@@ -208,12 +208,12 @@ export class ClienteListadoComponent implements OnInit {
         modo: "clientes",
         item: facturaOp[0],
       }; 
-      console.log(info); */
+      //console.log()(info); */
       
       //modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          //console.log("ROOWW:" ,row);
+          ////console.log()("ROOWW:" ,row);
           
 //        this.selectCrudOp(result.op, result.item);
         //this.mostrarMasDatos(row);
