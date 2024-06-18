@@ -39,11 +39,11 @@ export class ModalInformesClienteComponent implements OnInit {
     ////console.log()("0) ", this.fromParent);
     
     this.facturasLiquidadasCliente = this.fromParent.facturas;
-    //console.log()("1): ", this.facturasLiquidadasCliente);    
+    console.log("1): ", this.facturasLiquidadasCliente);    
     this.totalFacturasLiquidadasCliente = this.fromParent.totalCliente;
-    //console.log()("2): ", this.totalFacturasLiquidadasCliente);
+    console.log("2): ", this.totalFacturasLiquidadasCliente);
     this.totalFacturasLiquidadasChofer = this.fromParent.totalChofer;
-    //console.log()("3): ", this.totalFacturasLiquidadasChofer);
+    console.log("3): ", this.totalFacturasLiquidadasChofer);
   }
 
    // Modifica la función getQuincena para que acepte una fecha como parámetro
@@ -76,10 +76,11 @@ export class ModalInformesClienteComponent implements OnInit {
   }
 
   editarDetalle(factura:FacturaOpCliente, i:number){
-
+    console.log("editar: ",factura, i);
+    
     this.edicion[i] = true;
     this.facturaEditada = factura;
-    ////console.log()(this.facturaEditada);
+    console.log(this.facturaEditada);
     this.form.patchValue({
       detalle: factura.operacion.observaciones,      
     });    
