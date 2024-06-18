@@ -105,36 +105,36 @@ this.acompanianteEditForm = this.fb.group({
    }
 
    changeCliente(e: any) {    
-    console.log(e.target.value);
+    //console.log()(e.target.value);
     let id = Number(e.target.value);
-    console.log("1)",id);
+    //console.log()("1)",id);
     
     this.proveedorSeleccionado = this.$proveedores.filter((proveedor:Proveedor)=>{
-      console.log("2", proveedor.idProveedor, id);
+      //console.log()("2", proveedor.idProveedor, id);
       return proveedor.idProveedor === id
     })
    
     this.asignarTarifa = true
-    console.log("este es el cliente seleccionado: ", this.proveedorSeleccionado);
+    //console.log()("este es el cliente seleccionado: ", this.proveedorSeleccionado);
     this.buscarTarifas();
   }
  
   buscarTarifas(){
-    //console.log(this.choferSeleccionado[0].idChofer);    
+    ////console.log()(this.choferSeleccionado[0].idChofer);    
     this.storageService.getByFieldValue(this.componente, "idProveedor", this.proveedorSeleccionado[0].idProveedor);
     this.storageService.historialTarifasProveedores$.subscribe(data =>{
-      console.log(data);
+      //console.log()(data);
       this.$tarifasProveedor = data;
-      console.log(this.$tarifasProveedor);
+      //console.log()(this.$tarifasProveedor);
       this.$tarifasProveedor.sort((x:TarifaProveedor, y:TarifaProveedor) => y.idTarifaProveedor - x.idTarifaProveedor);
-      console.log(this.$tarifasProveedor);
+      //console.log()(this.$tarifasProveedor);
     })   
   }
 
   onSubmit() {
     //this.armarTarifa();
-    //console.log("tarifa cliente");
-    //console.log(this.cargasGeneralesForm.value, this.unidadesConFrioForm.value, this.acompanianteForm.value);
+    ////console.log()("tarifa cliente");
+    ////console.log()(this.cargasGeneralesForm.value, this.unidadesConFrioForm.value, this.acompanianteForm.value);
     this.armarTarifa();
     this.addItem(this.tarifa);
   }
@@ -155,12 +155,12 @@ this.acompanianteEditForm = this.fb.group({
       adicionales: this.adicionales,
       tarifaEspecial: this.tarifasEspeciales,      
     };  
-    console.log("tarifa: ", this.tarifa);
+    //console.log()("tarifa: ", this.tarifa);
   } 
 
   armarCargasGenerales(){
     this.cargasGenerales = this.cargasGeneralesForm.value; 
-    console.log("cargas generales: ", this.cargasGenerales);
+    //console.log()("cargas generales: ", this.cargasGenerales);
   }
 
   armarAdicionales(){
@@ -177,7 +177,7 @@ this.acompanianteEditForm = this.fb.group({
       }
       }
     }
-    console.log("adicionales: ", this.adicionales);
+    //console.log()("adicionales: ", this.adicionales);
     this.guardarTarifaEspecial();
   }
 
@@ -189,7 +189,7 @@ this.acompanianteEditForm = this.fb.group({
     }          
      /* this.tEspecial = !this.tEspecial; */
     
-     console.log(this.tarifasEspeciales);     
+     //console.log()(this.tarifasEspeciales);     
     }
 
   addItem(item:any): void {   
@@ -301,7 +301,7 @@ this.acompanianteEditForm = this.fb.group({
       valor: this.tarifaEspecialEditForm.value.valor
     }
     this.tarifaEditar.tarifaEspecial = tarEsp;
-    console.log(this.tarifaEditar);
+    //console.log()(this.tarifaEditar);
     this.updateTarifa();
   }
 
@@ -322,7 +322,7 @@ this.acompanianteEditForm = this.fb.group({
           modalRef.componentInstance.fromParent = this.proveedorSeleccionado[0];
           modalRef.result.then(
             (result) => {
-              //console.log("ROOWW:" ,row);
+              ////console.log()("ROOWW:" ,row);
               
     //        this.selectCrudOp(result.op, result.item);
             //this.mostrarMasDatos(row);

@@ -62,6 +62,7 @@ import { ChoferesModule } from './admin/choferes/choferes.module';
 import { OperacionesModule } from './admin/operaciones/operaciones.module';
 import { ProveedoresModule } from './admin/proveedores/proveedores.module';
 import { FacturacionModule } from './admin/facturacion/facturacion.module';
+import { CargaComponent } from './carga/carga.component';
 
 
 
@@ -89,6 +90,7 @@ import { FacturacionModule } from './admin/facturacion/facturacion.module';
     VerifyEmailComponent,
     SignUpComponent,
     LoginHeaderComponent,
+    CargaComponent,
 
    
    

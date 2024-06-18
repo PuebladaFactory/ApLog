@@ -92,7 +92,7 @@ export class LiqChoferComponent implements OnInit {
     const choferesMap = new Map<number, any>();
 
     if(this.$facturasOpChofer !== null){
-      //console.log("Facturas OP Chofer: ", this.$facturasOpChofer);
+      ////console.log()("Facturas OP Chofer: ", this.$facturasOpChofer);
       
       this.$facturasOpChofer.forEach((factura: FacturaOpChofer) => {
         if (!choferesMap.has(factura.idChofer)) {
@@ -120,7 +120,7 @@ export class LiqChoferComponent implements OnInit {
       });
   
       this.datosTablaChofer = Array.from(choferesMap.values());
-      //console.log("Datos para la tabla: ", this.datosTablaChofer); 
+      ////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
     }
 
     
@@ -131,8 +131,9 @@ export class LiqChoferComponent implements OnInit {
     if(typeof factura.total !== "number" || factura.total === 0){
       alert("error")
     } else{
-      console.log("esta es la FACTURA: ", factura);
+      //console.log()("esta es la FACTURA: ", factura);
       factura.liquidacion = true;
+      console.log("llamada al storage desde liq-chofer, updateItem");      
       this.storageService.updateItem(this.tituloFacOpChofer, factura)
       this.procesarDatosParaTabla();     
     }
@@ -141,6 +142,7 @@ export class LiqChoferComponent implements OnInit {
 
   cancelarliquidacion(factura: FacturaOpChofer) {
     factura.liquidacion = false;
+    console.log("llamada al storage desde liq-chofer, updateItem");
     this.storageService.updateItem(this.tituloFacOpChofer, factura)
     this.procesarDatosParaTabla();     
   }
@@ -148,7 +150,7 @@ export class LiqChoferComponent implements OnInit {
   mostrarMasDatos(index: number, chofer:any) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
-   ////console.log("Chofer: ", chofer);
+   //////console.log()("Chofer: ", chofer);
 
    // Obtener el id del cliente utilizando el índice proporcionado
    let choferId = this.datosTablaChofer[index].idChofer;
@@ -159,7 +161,7 @@ export class LiqChoferComponent implements OnInit {
    });
    this.facturasPorChofer.set(choferId, facturasChofer);
 
-   //console.log("FACTURAS DEL CHOFER: ", facturasChofer);  
+   ////console.log()("FACTURAS DEL CHOFER: ", facturasChofer);  
 
   }
 
@@ -183,14 +185,14 @@ export class LiqChoferComponent implements OnInit {
 
   liquidarFacChofer(idChofer: any, apellido: string, index: number){
     // Obtener las facturas del cliente
-    ////console.log("IDCHOFER: ", idChofer);
+    //////console.log()("IDCHOFER: ", idChofer);
     
     let facturasIdChofer:any = this.facturasPorChofer.get(idChofer);    
-    //////console.log("FACTURAS POR CHOFER: ", facturasIdChofer );
+    ////////console.log()("FACTURAS POR CHOFER: ", facturasIdChofer );
     
 
     this.apellido = apellido;
-    ////console.log("APELLIDO: ", this.apellido);
+    //////console.log()("APELLIDO: ", this.apellido);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasChofer = facturasIdChofer.filter((factura: FacturaOpChofer) => {
@@ -209,38 +211,39 @@ export class LiqChoferComponent implements OnInit {
     });
 
     this.indiceSeleccionado = index;
-    console.log("Facturas liquidadas del cliente", apellido + ":", this.facturasLiquidadasChofer);
-    console.log("Fecha", apellido + ":", this.facturasLiquidadasChofer[0].fecha);
-    //console.log("Total de las facturas liquidadas chofer:", this.totalFacturasLiquidadasChofer);
-    //console.log("Total de las facturas liquidadas cliente:", this.totalFacturasLiquidadasCliente);
-    ////console.log("indice: ", this.indiceSeleccionado);
+    //console.log()("Facturas liquidadas del cliente", apellido + ":", this.facturasLiquidadasChofer);
+    //console.log()("Fecha", apellido + ":", this.facturasLiquidadasChofer[0].fecha);
+    ////console.log()("Total de las facturas liquidadas chofer:", this.totalFacturasLiquidadasChofer);
+    ////console.log()("Total de las facturas liquidadas cliente:", this.totalFacturasLiquidadasCliente);
+    //////console.log()("indice: ", this.indiceSeleccionado);
     
   }
   
 
   editarDetalle(factura:FacturaOpChofer){
     this.facturaEditada = factura;
-    ////console.log(this.facturaEditada);
+    //////console.log()(this.facturaEditada);
     this.form.patchValue({
       detalle: factura.operacion.observaciones,      
     });    
   }
 
   guardarDetalle(){    
-    ////console.log(this.facturaEditada);
+    //////console.log()(this.facturaEditada);
     this.facturaEditada.operacion.observaciones = this.form.value.detalle;
-    ////console.log(this.facturaEditada.operacion.observaciones);
+    //////console.log()(this.facturaEditada.operacion.observaciones);
+    console.log("llamada al storage desde liq-chofer, updateItem");
     this.storageService.updateItem("facturaOpChofer", this.facturaEditada);
 
 
   }
 
   onSubmit(titulo:string) {
-    //console.log("factura chofer antes: ", this.facturasLiquidadasChofer);
-    ////console.log(this.form.value);
+    ////console.log()("factura chofer antes: ", this.facturasLiquidadasChofer);
+    //////console.log()(this.form.value);
     
     if(this.facturasLiquidadasChofer.length > 0){
-      console.log(this.facturasLiquidadasChofer);
+      //console.log()(this.facturasLiquidadasChofer);
       
       this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
         /* idOperaciones.push(factura.operacion.idOperacion) */
@@ -248,7 +251,7 @@ export class LiqChoferComponent implements OnInit {
         this.idOperaciones.push(factura.operacion.idOperacion)
       });
  
-      console.log("ID OPERACIONES: ", this.idOperaciones);
+      //console.log()("ID OPERACIONES: ", this.idOperaciones);
       //this.facturaChofer.operaciones = idOperaciones;
 
       this.facturaChofer = {
@@ -264,7 +267,7 @@ export class LiqChoferComponent implements OnInit {
         montoFacturaCliente: this.totalFacturasLiquidadasCliente,
       } 
 
-      console.log("FACTURA CHOFER: ", this.facturaChofer);
+      //console.log()("FACTURA CHOFER: ", this.facturaChofer);
       
       this.addItem(this.facturaChofer, this.componente);
       this.form.reset();
@@ -286,7 +289,8 @@ export class LiqChoferComponent implements OnInit {
 
   }
 
-  addItem(item:any, componente:string): void {   
+  addItem(item:any, componente:string): void {  
+    console.log("llamada al storage desde liq-chofer, addItem"); 
     this.storageService.addItem(componente, item);     
     
   } 
@@ -294,6 +298,7 @@ export class LiqChoferComponent implements OnInit {
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
+      console.log("llamada al storage desde liq-chofer, addItem");
       this.addItem(factura, "facOpLiqChofer");
       this.removeItem(factura);
     }); 
@@ -305,14 +310,15 @@ export class LiqChoferComponent implements OnInit {
   }
 
   removeItem(item:any){
+    console.log("llamada al storage desde liq-chofer, deleteItem");
     this.storageService.deleteItem("facturaOpChofer", item);    
   }
 
   editarFacturaOpChofer(factura: FacturaOpChofer){
     this.facDetallada = factura;
-    console.log(this.facDetallada);
+    //console.log()(this.facDetallada);
     this.ultimaTarifa = this.facOpChoferService.obtenerTarifaChofer(factura)
-    console.log("ULTIMA tarifa: ", this.ultimaTarifa);
+    //console.log()("ULTIMA tarifa: ", this.ultimaTarifa);
     //this.tarifaEspecial = factura.operacion.tarifaEspecial
     this.armarTarifa(factura);
     
@@ -339,9 +345,9 @@ export class LiqChoferComponent implements OnInit {
     this.swichForm.patchValue({
       tarifaEspecial: factura.operacion.tarifaEspecial,
     })
-    console.log(factura.operacion.tarifaEspecial);
+    //console.log()(factura.operacion.tarifaEspecial);
     
-    console.log(this.swichForm.value.tarifaEspecial);      
+    //console.log()(this.swichForm.value.tarifaEspecial);      
     this.facturaEditada = factura;
     
   }
@@ -356,9 +362,9 @@ export class LiqChoferComponent implements OnInit {
 
   modificaTarifaEspecial(){
   /*   this.tarifaEspecial= !this.tarifaEspecial;
-    console.log(this.tarifaEspecial); */
+    //console.log()(this.tarifaEspecial); */
     const switchValue = !this.swichForm.get('tarifaEspecial').value;
-    console.log("Estado del switch:", switchValue);
+    //console.log()("Estado del switch:", switchValue);
     
   } 
 
@@ -366,16 +372,17 @@ export class LiqChoferComponent implements OnInit {
 
   onSubmitEdit(){
     this.nuevaTarifa()
+    console.log("llamada al storage desde liq-chofer, ademItem");
     this.storageService.addItem("tarifasChofer", this.ultimaTarifa);     
     let nuevaFacOpChofer = this.facOpChoferService.actualizarFacOp(this.facturaEditada, this.ultimaTarifa);    
-    console.log("nueva FACOPCHOFER",nuevaFacOpChofer);
+    //console.log()("nueva FACOPCHOFER",nuevaFacOpChofer);
     this.facturaEditada.operacion = nuevaFacOpChofer.operacion;
     this.facturaEditada.valorJornada = nuevaFacOpChofer.valorJornada;
     this.facturaEditada.adicional = nuevaFacOpChofer.adicional;
     this.facturaEditada.total = nuevaFacOpChofer.total;
     this.edicion = false;
     this.facturaEditada.idTarifa = this.ultimaTarifa.idTarifa;
-    
+    console.log("llamada al storage desde liq-chofer, updateItem");
     this.storageService.updateItem("facturaOpChofer", this.facturaEditada);   
     this.ngOnInit()  
   }
@@ -405,9 +412,9 @@ export class LiqChoferComponent implements OnInit {
         valor: this.tarifaEditForm.value.valor,
       } 
     }    
-    console.log("NUEVA TARIFA", this.ultimaTarifa);
+    //console.log()("NUEVA TARIFA", this.ultimaTarifa);
     this.facturaEditada.operacion.tarifaEspecial = this.swichForm.value.tarifaEspecial;
-    console.log("NUEVA operacion con nueva TARIFA", this.facturaEditada);
+    //console.log()("NUEVA operacion con nueva TARIFA", this.facturaEditada);
 
   }
 

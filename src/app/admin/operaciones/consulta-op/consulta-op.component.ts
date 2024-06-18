@@ -13,7 +13,7 @@ export class ConsultaOpComponent implements OnInit {
   @Input() titulo!: string;
 
   ngOnInit(): void {
-    console.log(this.titulo);      
+    //console.log()(this.titulo);      
   }
 
   
@@ -37,21 +37,21 @@ export class ConsultaOpComponent implements OnInit {
   }
 
   buscarOperaciones() {
-    //console.log(this.model1); 
-    //console.log(this.model2);
+    ////console.log()(this.model1); 
+    ////console.log()(this.model2);
     this.fechasConsulta.fechaDesde = new Date(
       this.model1.year,
       this.model1.month - 1,
       this.model1.day,      
     ).toISOString().split('T')[0];
-    console.log(this.fechasConsulta.fechaDesde);
+    //console.log()(this.fechasConsulta.fechaDesde);
 
     this.fechasConsulta.fechaHasta = new Date(
       this.model2.year,
       this.model2.month - 1,
       this.model2.day,      
     ).toISOString().split('T')[0];
-    console.log(this.fechasConsulta.fechaHasta);
+    //console.log()(this.fechasConsulta.fechaHasta);
 
     this.consultaOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta);
 
@@ -65,8 +65,10 @@ export class ConsultaOpComponent implements OnInit {
 
   consultaOperaciones(fechaDesde:any, fechaHasta:any){
     if(this.titulo === "consultasOpActivas"){
+      console.log("llamada al storage desde consulta-op, getByDateValue");   
       this.storageService.getByDateValue("operacionesActivas", "fecha", fechaDesde, fechaHasta, this.titulo);
     } else {
+      console.log("llamada al storage desde consulta-op, getByDateValue");   
       this.storageService.getByDateValue("operacionesCerradas", "fecha", fechaDesde, fechaHasta, this.titulo);
     }
     

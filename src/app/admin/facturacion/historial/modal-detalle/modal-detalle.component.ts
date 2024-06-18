@@ -29,7 +29,7 @@ export class ModalDetalleComponent implements OnInit {
 
   ngOnInit(): void {
     this.data = this.fromParent.item;
-    console.log(this.data);
+    //console.log()(this.data);
     switch(this.fromParent.modo){
       case "clientes":
         this.buscarTarifaClienteId();
@@ -75,7 +75,7 @@ export class ModalDetalleComponent implements OnInit {
   ////METODOS CUANDO SE LLAMA DE HiSTORIAL CLIENTES
   buscarTarifaClienteId(){
     this.tarifaClienteAplicada = this.buscarTarifaServ.buscarTarifaClienteId(this.data.idTarifa)
-   // console.log("historial clientes/modal/tarifa CLIENTE aplicada: ", this.tarifaClienteAplicada);
+   // //console.log()("historial clientes/modal/tarifa CLIENTE aplicada: ", this.tarifaClienteAplicada);
     this.montoCategoriaCliente = this.data.valorJornada
     this.totalFacturaCliente = this.data.total
   }
@@ -83,13 +83,13 @@ export class ModalDetalleComponent implements OnInit {
   buscarTarifaChoferOp(){
     if(this.data.operacion.chofer.proveedor === "monotributista"){
       this.tarifaChoferAplicada = this.buscarTarifaServ.buscarTarifaChofer(this.data.operacion)
-      //console.log("historial clientes/modal/tarifa CHOFER aplicada: ", this.tarifaChoferAplicada);
+      ////console.log()("historial clientes/modal/tarifa CHOFER aplicada: ", this.tarifaChoferAplicada);
       this.totalFacturaChofer = this.data.montoFacturaChofer
     } else if (this.data.operacion.chofer.proveedor !== "monotributista"){
       this.tarifaProveedorAplicada = this.buscarTarifaServ.buscarTarifaProveedor(this.data.operacion)
-     // console.log("historial clientes/modal/tarifa PROVEEDOR aplicada: ", this.tarifaProveedorAplicada);
+     // //console.log()("historial clientes/modal/tarifa PROVEEDOR aplicada: ", this.tarifaProveedorAplicada);
       this.montoCategoriaProveedor = this.buscarTarifaServ.buscarCategoriaProveedor(this.tarifaProveedorAplicada, this.data.operacion.chofer.vehiculo.categoria);
-      //console.log(this.montoCategoriaProveedor);
+      ////console.log()(this.montoCategoriaProveedor);
       
     }    
   }
@@ -98,26 +98,26 @@ export class ModalDetalleComponent implements OnInit {
   ////METODOS CUANDO SE LLAMA DE HiSTORIAL CHOFERES
   buscarTarifaChoferId(){
     this.tarifaChoferAplicada = this.buscarTarifaServ.buscarTarifaChoferId(this.data.idTarifa)
-   // console.log("historial choferes/modal/tarifa chofer: ", this.tarifaChoferAplicada);
+   // //console.log()("historial choferes/modal/tarifa chofer: ", this.tarifaChoferAplicada);
     this.totalFacturaChofer = this.data.total
      
-     //console.log("categoria cliente: ", this.montoCategoriaCliente);
+     ////console.log()("categoria cliente: ", this.montoCategoriaCliente);
     this.totalFacturaCliente = this.data.montoFacturaCliente;
-    //console.log("total: ", this.totalFacturaCliente);
+    ////console.log()("total: ", this.totalFacturaCliente);
   }
 
   buscarTarifaClienteOp(){
     this.tarifaClienteAplicada = this.buscarTarifaServ.buscarTarifaCliente(this.data.operacion)
-    console.log("historial choferes/modal/tarifa cliente: ", this.tarifaClienteAplicada);
+    //console.log()("historial choferes/modal/tarifa cliente: ", this.tarifaClienteAplicada);
     this.montoCategoriaCliente = this.buscarTarifaServ.buscarCategoriaCliente(this.tarifaClienteAplicada, this.data.operacion.chofer.vehiculo.categoria);;
-    console.log("monto categoria cliente: ", this.montoCategoriaCliente);
+    //console.log()("monto categoria cliente: ", this.montoCategoriaCliente);
     this.totalFacturaCliente = this.data.montoFacturaCliente;
   }
 
     ////METODOS CUANDO SE LLAMA DE HiSTORIAL PROVEEDORES
     buscarTarifaProveedorId(){
       this.tarifaProveedorAplicada = this.buscarTarifaServ.buscarTarifaProveedorId(this.data.idTarifa)
-      console.log("historial proveedores/modal/tarifa PROVEEDOR aplicada: ", this.tarifaProveedorAplicada);
+      //console.log()("historial proveedores/modal/tarifa PROVEEDOR aplicada: ", this.tarifaProveedorAplicada);
       this.montoCategoriaProveedor = this.data.valorJornada
       this.totalFacturaProveedor = this.data.total
     }

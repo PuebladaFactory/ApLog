@@ -41,12 +41,12 @@ export class ClienteAltaComponent implements OnInit {
    ngOnInit(): void {}
 
    onSubmit(){
-    //console.log(new Date().getTime());   
+    ////console.log()(new Date().getTime());   
     if (this.form.valid) {
       this.cliente = this.form.value
       this.cliente.idCliente = new Date().getTime();
       this.cliente.contactos = this.contactos;
-      console.log(this.cliente);     
+      //console.log()(this.cliente);     
       
       this.addItem();        
       this.activeModal.close();    
@@ -90,7 +90,7 @@ export class ClienteAltaComponent implements OnInit {
 
   toggle() {
     this.mostrarFormulario = !this.mostrarFormulario;
-    //console.log(this.form);
+    ////console.log()(this.form);
   }
 
   guardarContacto(){

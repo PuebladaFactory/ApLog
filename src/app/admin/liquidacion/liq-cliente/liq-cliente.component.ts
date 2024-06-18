@@ -9,6 +9,8 @@ import * as ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ModalInformesClienteComponent } from '../modal-informes-cliente/modal-informes-cliente.component';
 
 @Component({
   selector: 'app-liq-cliente',
@@ -52,7 +54,7 @@ export class LiqClienteComponent {
   tarifaEspecial: boolean = false;
 
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false);
     
@@ -90,6 +92,8 @@ export class LiqClienteComponent {
     //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
     this.storageService.consultasFacOpCliente$.subscribe(data => {
       this.$facturasOpCliente = data;
+      //console.log("1)", this.$facturasOpCliente );
+      
       this.procesarDatosParaTabla()
     });
     
@@ -100,7 +104,7 @@ export class LiqClienteComponent {
     const clientesMap = new Map<number, any>();
 
     if(this.$facturasOpCliente !== null){
-      console.log("Facturas OP CLiente: ", this.$facturasOpCliente);
+      ////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
       this.$facturasOpCliente.forEach((factura: FacturaOpCliente) => {
         if (!clientesMap.has(factura.idCliente)) {
           clientesMap.set(factura.idCliente, {
@@ -124,7 +128,7 @@ export class LiqClienteComponent {
       });
   
       this.datosTablaCliente = Array.from(clientesMap.values());
-      console.log("Datos para la tabla: ", this.datosTablaCliente); 
+      ////console.log()("Datos para la tabla: ", this.datosTablaCliente); 
     }
 
     
@@ -135,8 +139,9 @@ export class LiqClienteComponent {
     if(typeof factura.total !== "number" || factura.total === 0){
       alert("error")
     } else{
-      console.log("esta es la FACTURA: ", factura);
+      ////console.log()("esta es la FACTURA: ", factura);
       factura.liquidacion = true;
+      console.log("llamada al storage desde liq-cliente, updateItem");
       this.storageService.updateItem(this.tituloFacOpCliente, factura)
       this.procesarDatosParaTabla();     
     }
@@ -144,6 +149,7 @@ export class LiqClienteComponent {
 
   cancelarliquidacion(factura: FacturaOpCliente) {
     factura.liquidacion = false;
+    console.log("llamada al storage desde liq-cliente, updateItem");
     this.storageService.updateItem(this.tituloFacOpCliente, factura)
     this.procesarDatosParaTabla();     
   }
@@ -151,7 +157,7 @@ export class LiqClienteComponent {
   mostrarMasDatos(index: number, cliente:any) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaCliente[index] = !this.mostrarTablaCliente[index];
-   //console.log("CLIENTE: ", cliente);
+   ////console.log()("CLIENTE: ", cliente);
 
    // Obtener el id del cliente utilizando el índice proporcionado
    let clienteId = this.datosTablaCliente[index].idCliente;
@@ -162,7 +168,7 @@ export class LiqClienteComponent {
    });
    this.facturasPorCliente.set(clienteId, facturasCliente);
 
-   console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
+   ////console.log()("FACTURAS DEL CLIENTE: ", facturasCliente);  
 
   }
 
@@ -186,13 +192,15 @@ export class LiqClienteComponent {
 
   liquidarFacCliente(idCliente: any, razonSocial: string, index: number){
     // Obtener las facturas del cliente
+    ////console.log()("1: ",this.facturasLiquidadasCliente.length);
+    
     let facturasIdCliente:any = this.facturasPorCliente.get(idCliente);
     this.razonSocFac = razonSocial;
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasCliente = facturasIdCliente.filter((factura: FacturaOpCliente) => {
         return factura.liquidacion === true;
     });
-
+    ////console.log()("2: ",this.facturasLiquidadasCliente);
     // Calcular el total sumando los montos de las facturas liquidadas
     this.totalFacturasLiquidadasCliente = 0;
     this.facturasLiquidadasCliente.forEach((factura: FacturaOpCliente) => {
@@ -205,36 +213,37 @@ export class LiqClienteComponent {
     });
 
     this.indiceSeleccionado = index;
-    console.log("Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadasCliente);
-    //console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadas);
-    //console.log("indice: ", this.indiceSeleccionado);
-    
+    ////console.log()("3) Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadasCliente);
+    ////console.log()("Total de las facturas liquidadas:", this.totalFacturasLiquidadas);
+    ////console.log()("indice: ", this.indiceSeleccionado);
+    this.openModal();
   }
   
 
   editarDetalle(factura:FacturaOpCliente){
     this.facturaEditada = factura;
-    //console.log(this.facturaEditada);
+    ////console.log()(this.facturaEditada);
     this.form.patchValue({
       detalle: factura.operacion.observaciones,      
     });    
   }
 
   guardarDetalle(){    
-    //console.log(this.facturaEditada);
+    ////console.log()(this.facturaEditada);
     this.facturaEditada.operacion.observaciones = this.form.value.detalle;
-    //console.log(this.facturaEditada.operacion.observaciones);
+    ////console.log()(this.facturaEditada.operacion.observaciones);
+    console.log("llamada al storage desde liq-cliente, updateItem");
     this.storageService.updateItem("facturaOpCliente", this.facturaEditada);
 
 
   }
 
   onSubmit(titulo:string) {
-    //console.log(this.facturasLiquidadas);
-    //console.log(this.form.value);
+    ////console.log()(this.facturasLiquidadas);
+    ////console.log()(this.form.value);
     if(this.facturasLiquidadasCliente.length > 0){
 
-      console.log(this.facturasLiquidadasCliente);
+      ////console.log()(this.facturasLiquidadasCliente);
       
       this.facturasLiquidadasCliente.forEach((factura: FacturaOpCliente) => {
         /* idOperaciones.push(factura.operacion.idOperacion) */
@@ -242,7 +251,7 @@ export class LiqClienteComponent {
         this.idOperaciones.push(factura.operacion.idOperacion)
       });
  
-      console.log("ID OPERACIONES: ", this.idOperaciones);
+      ////console.log()("ID OPERACIONES: ", this.idOperaciones);
       //this.facturaChofer.operaciones = idOperaciones;
 
       this.facturaCliente = {
@@ -257,7 +266,7 @@ export class LiqClienteComponent {
         montoFacturaChofer: this.totalFacturasLiquidadasChofer
       }
 
-      console.log("FACTURA CLIENTE: ", this.facturaCliente);
+      ////console.log()("FACTURA CLIENTE: ", this.facturaCliente);
       
       this.addItem(this.facturaCliente, this.componente);
       this.form.reset();
@@ -284,6 +293,7 @@ export class LiqClienteComponent {
   
 
   addItem(item:any, componente:string): void {   
+    console.log("llamada al storage desde liq-cliente, addItem");
     this.storageService.addItem(componente, item);     
    
   } 
@@ -291,6 +301,7 @@ export class LiqClienteComponent {
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasCliente.forEach((factura: FacturaOpCliente) => {
+      console.log("llamada al storage desde liq-cliente, addItem");
       this.addItem(factura, "facOpLiqCliente");
       this.removeItem(factura);
     }); 
@@ -307,15 +318,16 @@ export class LiqClienteComponent {
   }
 
   removeItem(item:any){
+    console.log("llamada al storage desde liq-cliente, deleteItem");
     this.storageService.deleteItem("facturaOpCliente", item);    
   }
 
   editarFacturaOpChofer(factura: FacturaOpCliente){
     this.facDetallada = factura;
-    console.log(this.facDetallada);
+    ////console.log()(this.facDetallada);
     let tarifaAplicada: any;
     this.ultimaTarifa = this.facOpClienteService.obtenerTarifaCliente(factura)
-    console.log("ULTIMA tarifa: ", this.ultimaTarifa);
+    ////console.log()("ULTIMA tarifa: ", this.ultimaTarifa);
     //this.tarifaEspecial = factura.operacion.tarifaEspecial
     this.armarTarifa(factura);
     
@@ -350,9 +362,9 @@ export class LiqClienteComponent {
     this.swichForm.patchValue({
       tarifaEspecial: factura.operacion.tarifaEspecial,
     })
-    console.log(factura.operacion.tarifaEspecial);
+    ////console.log()(factura.operacion.tarifaEspecial);
     
-    console.log(this.swichForm.value.tarifaEspecial);      
+    ////console.log()(this.swichForm.value.tarifaEspecial);      
     this.facturaEditada = factura;
     
   } 
@@ -367,9 +379,9 @@ export class LiqClienteComponent {
 
   modificaTarifaEspecial(){
     //this.tarifaEspecial= !this.tarifaEspecial;
-    //console.log(this.tarifaEspecial); 
+    ////console.log()(this.tarifaEspecial); 
     const switchValue = !this.tarifaEditForm.get('tarifaEspecial').value;
-    console.log("Estado del switch:", switchValue);
+    ////console.log()("Estado del switch:", switchValue);
     
   }  
 
@@ -377,16 +389,17 @@ export class LiqClienteComponent {
 
  onSubmitEdit(){
     this.nuevaTarifa()
+    console.log("llamada al storage desde liq-cliente, addItem");
     this.storageService.addItem("tarifasCliente", this.ultimaTarifa);     
     let nuevaFacOpChofer = this.facOpClienteService.actualizarFacOp(this.facturaEditada, this.ultimaTarifa);    
-    console.log("nueva FACOPCLIENTE",nuevaFacOpChofer);
+    ////console.log()("nueva FACOPCLIENTE",nuevaFacOpChofer);
     this.facturaEditada.operacion = nuevaFacOpChofer.operacion;
     this.facturaEditada.valorJornada = nuevaFacOpChofer.valorJornada;
     this.facturaEditada.adicional = nuevaFacOpChofer.adicional;
     this.facturaEditada.total = nuevaFacOpChofer.total;
     this.edicion = false;
     this.facturaEditada.idTarifa = this.ultimaTarifa.idTarifaCliente;
-    
+    console.log("llamada al storage desde liq-cliente, updateItem");
     this.storageService.updateItem("facturaOpCliente", this.facturaEditada);   
     this.ngOnInit()  
   } 
@@ -426,11 +439,57 @@ export class LiqClienteComponent {
       },
     };
 
-    console.log("NUEVA TARIFA", this.ultimaTarifa);
+    ////console.log()("NUEVA TARIFA", this.ultimaTarifa);
     this.facturaEditada.operacion.tarifaEspecial = this.tarifaEditForm.value.tarifaEspecial;
-    console.log("NUEVA operacion con nueva TARIFA", this.facturaEditada);
+    ////console.log()("NUEVA operacion con nueva TARIFA", this.facturaEditada);
     
     
+  }
+
+  openModal(): void {   
+    //this.facturasLiquidadasCliente
+    //this.totalFacturasLiquidadasChofer
+    //this.totalFacturasLiquidadasCliente
+
+    this.indiceSeleccionado
+    {
+      const modalRef = this.modalService.open(ModalInformesClienteComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg', 
+        //backdrop:"static" 
+      });
+
+    let info = {
+        facturas: this.facturasLiquidadasCliente,
+        totalCliente: this.totalFacturasLiquidadasCliente,
+        totalChofer: this.totalFacturasLiquidadasChofer,
+      }; 
+      //console.log()(info);
+      
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+          
+          this.facturaCliente = result.factura;
+//        this.selectCrudOp(result.op, result.item);
+        //this.mostrarMasDatos(row);
+         //console.log()("resultado:" ,this.facturaCliente);
+         this.addItem(this.facturaCliente, this.componente);
+         //this.form.reset();
+        //this.$tarifasChofer = null;
+        //this.ngOnInit();
+        this.eliminarFacturasOp();
+      
+        if(result.titulo === "excel"){
+        this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+        }else if (result.titulo === "pdf"){
+        this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+        }
+        },
+        (reason) => {}
+      );
+    }
   }
 
 }

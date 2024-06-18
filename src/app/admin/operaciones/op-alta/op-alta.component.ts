@@ -34,7 +34,7 @@ export class OpAltaComponent implements OnInit {
   $tarifasProveedores!:any;
   $proveedores!:any;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, public activeModal: NgbActiveModal,) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, ) {
     this.form = this.fb.group({
       fecha: ['', Validators.required],
       cliente: ['', Validators.required],
@@ -65,20 +65,20 @@ export class OpAltaComponent implements OnInit {
   }
 
   changeCliente(e: any) {
-    //console.log(e.target.value)
+    ////console.log()(e.target.value)
     
     let clienteForm = this.$clientes.filter(function (cliente: Cliente) { 
         return cliente.idCliente === Number(e.target.value)
     });
-    //console.log(clienteForm);
+    ////console.log()(clienteForm);
     
     this.clienteSeleccionado = clienteForm[0];               
-    //console.log(this.clienteSeleccionado);
+    ////console.log()(this.clienteSeleccionado);
     this.form.patchValue({ cliente: e.target.value });
   }
 
  /*  selectAcompaniante(e: any) {    
-    //console.log(e.target.value)
+    ////console.log()(e.target.value)
     if(e.target.value === "si"){
       this.acompaniante = true;
     }else{
@@ -87,18 +87,18 @@ export class OpAltaComponent implements OnInit {
   } */
 
    changeChofer(e: any) {
-    //console.log(e.target.value)    
+    ////console.log()(e.target.value)    
     let chofer = this.$choferes.filter(function (chofer: Chofer) { 
        return chofer.idChofer === Number(e.target.value)
     });
-    //console.log(chofer);    
+    ////console.log()(chofer);    
     this.choferSeleccionado = chofer[0];               
-    //console.log(this.choferSeleccionado); 
+    ////console.log()(this.choferSeleccionado); 
     //this.form.patchValue({ chofer: e.target.value });
   } 
 
   /* selectTarifaEspecial(e: any) {    
-    console.log(e.target.value)
+    //console.log()(e.target.value)
     if(e.target.value === "si"){
       this.tarifaEspecial = true;
       this.acompaniante = false;
@@ -125,11 +125,11 @@ export class OpAltaComponent implements OnInit {
     }
 
   onSubmit(){
-    //console.log(this.form.value);
-    //console.log("1)chofer: ", this.choferSeleccionado);
-    //console.log("2)cliente: ", this.clienteSeleccionado);
-    //console.log("3)tarifa especial: ", this.tarifaEspecial);
-    //console.log("4)acompañante: ", this.acompaniante);    
+    ////console.log()(this.form.value);
+    ////console.log()("1)chofer: ", this.choferSeleccionado);
+    ////console.log()("2)cliente: ", this.clienteSeleccionado);
+    ////console.log()("3)tarifa especial: ", this.tarifaEspecial);
+    ////console.log()("4)acompañante: ", this.acompaniante);    
     if (this.form.valid) {
       this.buscarErrores();
     }    
@@ -138,7 +138,7 @@ export class OpAltaComponent implements OnInit {
 
    buscarErrores(){
       let respuesta = this.buscarTarifaServ.buscarTarifa(this.choferSeleccionado, this.clienteSeleccionado)
-      //console.log("RESPUESTA: ", respuesta);
+      ////console.log()("RESPUESTA: ", respuesta);
       switch (respuesta) {
           case "cliente":
             Swal.fire({
@@ -179,7 +179,7 @@ export class OpAltaComponent implements OnInit {
    }
 
    armarOp(){
-    //console.log("armarOp. chofer: ", this.choferSeleccionado);
+    ////console.log()("armarOp. chofer: ", this.choferSeleccionado);
     
     this.op = this.form.value;
     this.op.chofer = this.choferSeleccionado;
@@ -191,7 +191,7 @@ export class OpAltaComponent implements OnInit {
     this.op.facturaChofer = null;
     this.op.tarifaEspecial = this.tarifaEspecial;    
     
-    //console.log("esta es la operacion: ", this.op);  
+    ////console.log()("esta es la operacion: ", this.op);  
     Swal.fire({
       title: "¿Desea agregar la operación?",
       //text: "You won't be able to revert this!",
@@ -210,7 +210,7 @@ export class OpAltaComponent implements OnInit {
           icon: "success"
         }).then((result)=>{
           if (result.isConfirmed) {
-            this.activeModal.close();
+            //this.activeModal.close();
           }
         });   
         
@@ -220,6 +220,7 @@ export class OpAltaComponent implements OnInit {
    }
 
    addItem(): void {
+    console.log("llamada al storage desde op-alta, addItem");
     this.storageService.addItem(this.componente, this.op);    
     this.form.reset();     
   }  

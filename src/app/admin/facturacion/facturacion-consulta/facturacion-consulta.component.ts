@@ -36,24 +36,24 @@ export class FacturacionConsultaComponent implements OnInit {
   }
 
   buscarOperaciones() {
-    //console.log(this.model1); 
-    //console.log(this.model2);
+    ////console.log()(this.model1); 
+    ////console.log()(this.model2);
     this.fechasConsulta.fechaDesde = new Date(
       this.model1.year,
       this.model1.month - 1,
       this.model1.day,      
     ).toISOString().split('T')[0];
-    console.log(this.fechasConsulta.fechaDesde);
+    //console.log()(this.fechasConsulta.fechaDesde);
 
     this.fechasConsulta.fechaHasta = new Date(
       this.model2.year,
       this.model2.month - 1,
       this.model2.day,      
     ).toISOString().split('T')[0];
-    console.log(this.fechasConsulta.fechaHasta);
+    //console.log()(this.fechasConsulta.fechaHasta);
 
     this.consultaOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta);
-    console.log("titulo: ", this.titulo, " desde: ", this.fechasConsulta.fechaDesde, " hasta: ",this.fechasConsulta.fechaHasta);
+    //console.log()("titulo: ", this.titulo, " desde: ", this.fechasConsulta.fechaDesde, " hasta: ",this.fechasConsulta.fechaHasta);
     
     this.msgBack();
 
@@ -65,7 +65,7 @@ export class FacturacionConsultaComponent implements OnInit {
 
   consultaOperaciones(fechaDesde:any, fechaHasta:any){
     if(this.titulo = "liquidacion"){
-      console.log("?????????");
+      //console.log()("?????????");
       
       this.storageService.getByDateValue("facturaOpChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpChofer");
       this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
@@ -74,7 +74,7 @@ export class FacturacionConsultaComponent implements OnInit {
     }
 
     if(this.titulo = "facturacion"){
-      console.log("?????????");
+      //console.log()("?????????");
       
       this.storageService.getByDateValue("facturaChofer", "fecha", fechaDesde, fechaHasta, "consultasFacChofer");
       this.storageService.getByDateValue("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
@@ -83,7 +83,7 @@ export class FacturacionConsultaComponent implements OnInit {
     }
 
     if(this.titulo = "historial"){
-      console.log("?????????");
+      //console.log()("?????????");
       
       this.storageService.getByDateValue("facOpLiqChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqChofer");
       this.storageService.getByDateValue("facOpLiqCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqCliente");
