@@ -290,7 +290,7 @@ export class StorageService {
     this.getAllSorted("clientes", 'idCliente', 'asc')
     this.getAllSorted("choferes", 'idChofer', 'asc')
     this.getAllSorted("operacionesActivas", 'fecha', 'desc')
-    this.getAllSorted("facturaOpCliente", 'fecha', 'desc')
+    //this.getAllSorted("facturaOpCliente", 'fecha', 'desc')
 //    this.getAllSorted("operacionesCerradas", 'fecha', 'desc')
     //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
     //this.getAllSorted("jornadas", 'idChofer', 'asc')
@@ -298,11 +298,11 @@ export class StorageService {
     this.getAllSorted("tarifasChofer", 'fecha', 'asc')
     this.getAllSorted("tarifasCliente", 'fecha', 'asc')
     this.getAllSorted("tarifasProveedor", 'fecha', 'asc')
-    this.getAllSorted("facturaOpChofer", 'fecha', 'desc')
-    this.getAllSorted("facturaOpProveedor", 'fecha', 'desc')
-    this.getByDateValue("facturaOpChofer","fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer")
-    this.getByDateValue("facturaOpCliente","fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente")
-    this.getByDateValue("facturaOpProveedor","fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor")
+    //this.getAllSorted("facturaOpChofer", 'fecha', 'desc')
+    //this.getAllSorted("facturaOpProveedor", 'fecha', 'desc')
+    //this.getByDateValue("facturaOpChofer","fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer")
+    //this.getByDateValue("facturaOpCliente","fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente")
+    //this.getByDateValue("facturaOpProveedor","fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor")
 
   }
 

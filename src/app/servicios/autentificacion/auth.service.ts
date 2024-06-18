@@ -41,11 +41,11 @@ export class AuthService {
       .signInWithEmailAndPassword(email, password)
       .then((result) => {
         this.SetUserData(result.user);
-        this.afAuth.authState.subscribe((user) => {
+        /* this.afAuth.authState.subscribe((user) => {
           if (user) {
             this.router.navigate(['/carga']);
           }
-        });
+        }); */
       })
       .catch((error) => {
         window.alert(error.message);
@@ -182,7 +182,7 @@ export class AuthService {
      if(this.usuario.roles.user){
       this.router.navigate(['/chofer']);
     } else if(this.usuario.roles.admin){
-      this.router.navigate(['/admin']);
+      this.router.navigate(['/carga']);
     } else{
       this.router.navigate(['/home']);
     }

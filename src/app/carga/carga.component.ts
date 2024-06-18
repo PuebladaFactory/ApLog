@@ -18,8 +18,11 @@ export class CargaComponent implements OnInit {
     this.usuario = this.storageService.loadInfo("usuario");
     if(this.usuario.roles.admin){
       console.log("llamada al storage desde carga, initializerAdmin");      
-      this.storageService.initializerAdmin();
-      this.router.navigate(['admin'])
+      this.storageService.initializerAdmin()
+      this.router.navigate(['admin']);
+      /* setTimeout(() => {
+        this.router.navigate(['admin']);
+      }, 10000); // 5000 milisegundos = 5 segundos */
     }    
   }  
  

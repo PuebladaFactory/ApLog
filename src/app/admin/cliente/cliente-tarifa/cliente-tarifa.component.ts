@@ -115,7 +115,7 @@ this.acompanianteEditForm = this.fb.group({
     //this.tarifasEspeciales = null;
     //this.adicionalesUnidadesConFrio = [];
     this.adicionalKm = [];
-    this.ngOnInit();
+    //this.ngOnInit();
   }  
 
   editarTarifa(tarifa:TarifaCliente){

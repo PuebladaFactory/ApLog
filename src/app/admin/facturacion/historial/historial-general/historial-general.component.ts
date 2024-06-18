@@ -13,8 +13,8 @@ export class HistorialGeneralComponent implements OnInit {
   
   titulo: string = "historial"
   date:any = new Date();
-  primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
-  ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
+  primerDiaMesAnterior: any = new Date(this.date.getFullYear(), this.date.getMonth()-1).toISOString().split('T')[0];
+  ultimoDiaMesAnterior:any = new Date(this.date.getFullYear(), this.date.getMonth() , 0).toISOString().split('T')[0];  
   primerDiaAnio: any = new Date(this.date.getFullYear(), 0 , 1).toISOString().split('T')[0];
   ultimoDiaAnio: any = new Date(this.date.getFullYear(), 11 , 31).toISOString().split('T')[0];
   fechasConsulta: any = {
@@ -32,25 +32,27 @@ export class HistorialGeneralComponent implements OnInit {
   
   
   ngOnInit(): void {
-    this.storageService.getByDateValue("facOpLiqCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacOpLiqCliente");
-    this.storageService.consultasFacOpLiqCliente$.subscribe(data => {
+    console.log(this.primerDiaMesAnterior, this.ultimoDiaMesAnterior);
+    
+    this.storageService.getByDateValue("facOpLiqCliente", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqCliente");
+    /* this.storageService.consultasFacOpLiqCliente$.subscribe(data => {
       this.$facturasOpLiqCliente = data;       
       //console.log()(this.$facturasOpLiqCliente)
-    });
+    }); */
 
-    this.storageService.getByDateValue("facOpLiqChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacOpLiqChofer");
-    this.storageService.consultasFacOpLiqChofer$.subscribe(data => {
+    this.storageService.getByDateValue("facOpLiqChofer", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqChofer");
+   /*  this.storageService.consultasFacOpLiqChofer$.subscribe(data => {
       this.$facturasOpLiqChofer = data;      
-    });
+    }); */
 
-    this.storageService.getByDateValue("facOpLiqProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacOpLiqProveedor");
-    this.storageService.consultasFacOpLiqProveedor$.subscribe(data => {
+    this.storageService.getByDateValue("facOpLiqProveedor", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqProveedor");
+   /*  this.storageService.consultasFacOpLiqProveedor$.subscribe(data => {
       this.$facturasOpLiqProveedor = data;
-    });
+    }); */
 
     this.fechasConsulta = {
-      fechaDesde: this.primerDiaAnio,
-      fechaHasta: this.ultimoDiaAnio,
+      fechaDesde: this.primerDiaMesAnterior,
+      fechaHasta: this.ultimoDiaMesAnterior,
     };
   }
 

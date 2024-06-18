@@ -74,11 +74,11 @@ export class LiqGralComponent implements OnInit {
     if(!this.btnConsulta){   
       //console.log()(this.primerDia, this.ultimoDia) 
       console.log("llamada al storage desde liq-gral, getByDateValue");        
-      this.storageService.getByDateValue("facturaOpChofer", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+      this.storageService.getByDateValue("facturaOpChofer", "fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer");    
       console.log("llamada al storage desde liq-gral, getByDateValue");       
-      this.storageService.getByDateValue("facturaOpCliente", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+      this.storageService.getByDateValue("facturaOpCliente", "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");    
       console.log("llamada al storage desde liq-gral, getByDateValue");       
-      this.storageService.getByDateValue("facturaOpProveedor", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
+      this.storageService.getByDateValue("facturaOpProveedor", "fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor");    
     }     
   }
 

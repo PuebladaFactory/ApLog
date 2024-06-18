@@ -39,7 +39,7 @@ export class FacturacionClienteComponent implements OnInit  {
 
   ngOnInit(): void {
       
-    this.storageService.getByDateValue(this.tituloFacCliente, "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
+    //this.storageService.getByDateValue(this.tituloFacCliente, "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
     this.storageService.consultasFacCliente$.subscribe(data => {
       this.$facturasCliente = data;
       this.procesarDatosParaTabla()

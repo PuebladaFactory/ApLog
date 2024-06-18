@@ -82,7 +82,7 @@ export class OpAbiertasComponent implements OnInit {
     this.storageService.consultasOpActivas$.subscribe(data => {
       this.$consultasOp = data;
     });
-    this.consultaMes();
+    //this.consultaMes();
    
   }
 
@@ -193,7 +193,7 @@ export class OpAbiertasComponent implements OnInit {
     this.opForm.reset();
     this.facturar = false;
     //this.ngOnDestroy();
-    this.ngOnInit();
+    //this.ngOnInit();
     this.facturarOpCliente();
   }
 
@@ -205,7 +205,7 @@ export class OpAbiertasComponent implements OnInit {
     this.opForm.reset();
     this.facturar = false;
     //this.ngOnDestroy();
-    this.ngOnInit(); 
+    //this.ngOnInit(); 
     this.facturarOpCliente();
   }
 
@@ -218,7 +218,7 @@ export class OpAbiertasComponent implements OnInit {
     this.facturar = false;
     this.armarFacturas()
     //this.ngOnDestroy();
-    this.ngOnInit();
+    //this.ngOnInit();
   }
 
   addItem(componente: string, item: any): void {

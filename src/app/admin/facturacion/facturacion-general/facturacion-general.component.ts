@@ -27,7 +27,7 @@ export class FacturacionGeneralComponent implements OnInit {
   titulo: string = "facturacion"
   btnConsulta:boolean = false;
   date:any = new Date();
-  primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
+  primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() -3, ).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
   primerDiaAnio: any = new Date(this.date.getFullYear(), 0 , 1).toISOString().split('T')[0];
   ultimoDiaAnio: any = new Date(this.date.getFullYear(), 11 , 31).toISOString().split('T')[0];
@@ -38,27 +38,27 @@ export class FacturacionGeneralComponent implements OnInit {
   totalFaltaPagar!: number;
 
   ngOnInit(): void {
-    this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDia, this.ultimoDia, "consultasFacCliente");
+    this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
     this.storageService.consultasFacCliente$.subscribe(data => {
       this.$facturasCliente = data; 
       this.calcularIngresos();     
     });
 
-    this.storageService.getByDateValue("facturaChofer", "fecha", this.primerDia, this.ultimoDia, "consultasFacChofer");
+    this.storageService.getByDateValue("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacChofer");
     this.storageService.consultasFacChofer$.subscribe(data => {
       this.$facturasChofer = data;
       this.calcularPagos();
     });
 
-    this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDia, this.ultimoDia, "consultasFacProveedor");
+    this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacProveedor");
     this.storageService.consultasFacProveedor$.subscribe(data => {
       this.$facturasProveedor = data;
     });
 
     
     this.fechasConsulta = {
-      fechaDesde: this.primerDiaAnio,
-      fechaHasta: this.ultimoDiaAnio,
+      fechaDesde: this.primerDia,
+      fechaHasta: this.ultimoDia,
     };
    
   }

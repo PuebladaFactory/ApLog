@@ -92,6 +92,8 @@ export class LiqClienteComponent {
     //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
     this.storageService.consultasFacOpCliente$.subscribe(data => {
       this.$facturasOpCliente = data;
+      //console.log("1)", this.$facturasOpCliente );
+      
       this.procesarDatosParaTabla()
     });
     
