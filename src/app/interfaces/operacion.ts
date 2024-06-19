@@ -16,4 +16,17 @@ export interface Operacion {
     facturaCliente: number | null;
     facturaChofer: number | null;
     tarifaEspecial: boolean;
+    tEspecial: TarifaEspecial | null;
+}
+
+export interface TarifaEspecial {    
+    chofer:{
+        concepto: string;
+        valor: number;    
+    },
+    cliente:{
+        concepto: string;
+        valor: number;    
+    },
+    
 }

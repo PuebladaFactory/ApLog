@@ -18,15 +18,11 @@
     {{ buttonNameManual }}
   </button> -->
 </div>
-<div class="offcanvas offcanvas-end border border-2 rounded-end rounded-5" data-bs-scroll="true" tabindex="-1" id="offcanvasAlta" aria-labelledby="offcanvasRightLabel">
-  <!-- <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="offcanvasRightLabel">Offcanvas right</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div> -->
-  <div class="offcanvas-body">
-    <button type="button" class="btn-close float-end" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    <app-op-alta ></app-op-alta>>
-  </div>
+<div [ngClass]="{'offcanvas-normal': !tarifaEspecial, 'offcanvas-alta': tarifaEspecial}" class="offcanvas offcanvas-end border border-2 rounded-end rounded-5" data-bs-scroll="true" tabindex="-1" id="offcanvasAlta" aria-labelledby="offcanvasRightLabel">
+    <div class="offcanvas-body">
+        <button type="button" class="btn-close float-end" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <app-op-alta (newItemEvent)="getMsgAlta($event)" ></app-op-alta>>
+    </div>
 </div>
 <div class="d-flex justify-content-evenly align-items-center">
       <!-- <ng-container *ngIf="show" class="col-6">

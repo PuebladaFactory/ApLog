@@ -168,7 +168,7 @@ export class LiqClienteComponent {
    });
    this.facturasPorCliente.set(clienteId, facturasCliente);
 
-   ////console.log()("FACTURAS DEL CLIENTE: ", facturasCliente);  
+   console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
 
   }
 

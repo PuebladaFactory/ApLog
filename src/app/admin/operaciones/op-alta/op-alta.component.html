@@ -47,13 +47,43 @@
                   <option value="no">No</option>
                 </select>
               </div>
+              <!-- //////////////////////////////////////////////////////       -->
+              <div *ngIf="tarifaEspecial" class="border-top border-bottom my-2">
+                  <h6 class="mt-2">Chofer:</h6>
+                  <div class="form-group">
+                      <label for="Fecha">Tarifa Especial Concepto</label>
+                      <div class="input-group">
+                        <input formControlName="choferConcepto" class="form-control edicion" required type="text">
+                      </div>
+                  </div>
+                  <div class="form-group">
+                      <label for="Fecha">Tarifa Especial Valor</label>
+                      <div class="input-group">
+                        <input formControlName="choferValor" class="form-control edicion" required type="number">
+                      </div>
+                  </div>
+                  <h6 class="my-2">Cliente:</h6>
+                  <div class="form-group">
+                      <label for="Fecha">Tarifa Especial Concepto</label>
+                      <div class="input-group">
+                        <input formControlName="clienteConcepto" class="form-control edicion" required type="text">
+                      </div>
+                  </div>
+                  <div class="form-group mb-2">
+                      <label for="Fecha">Tarifa Especial Valor</label>
+                      <div class="input-group">
+                        <input formControlName="clienteValor" class="form-control edicion" required type="number">
+                      </div>
+                  </div>
+              </div>              
+              <!-- ///////////////////////////////////////// -->
               <div class="form-group">
                 <label for="Observaciones">Observaciones</label>
                 <div class="input-group">
                   <textarea formControlName="observaciones" class="form-control edicion"></textarea>
                 </div>
               </div>
-              <button class="btn btn-secondary mt-2" type="submit" [disabled]="!form.valid">
+              <button class="btn btn-secondary mt-3" type="submit" [disabled]="!form.valid">
                 Guardar
               </button>
             </form>
