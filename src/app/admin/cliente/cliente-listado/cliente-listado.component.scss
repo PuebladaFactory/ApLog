@@ -19,11 +19,11 @@ select{
     background-color: red;
     justify-content: space-between;
     width: 25%;
-} */
+}
 .fila-contacto{
     //background-color: red;    
     //width: 12rem;
-}
+}*/
 
 .isDisabled {
     pointer-events: none;
@@ -37,3 +37,6 @@ select{
 .contactoForm{
     width: 8rem;
 }
+.is-invalid {
+    border-color: #dc3545 !important; /* Cambia el color del borde a rojo */
+  }
