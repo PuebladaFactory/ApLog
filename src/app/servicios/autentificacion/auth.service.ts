@@ -156,7 +156,7 @@ export class AuthService {
     this.dbFirebase.getUsuarioUid(id).subscribe((data) => {
       this.usuario = data;
       console.log("auth.service. el usuario logueado: ", data);      
-      this.storage.setInfo(`usuario`, data);
+      this.storage.setInfo(`usuario`, this.usuario);
       this.setearColeccion();
       this.filtrarRoles()
     });

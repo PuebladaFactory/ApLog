@@ -472,7 +472,7 @@ export class ChoferesListadoComponent implements OnInit {
       modalRef.result.then(
         (result) => {
           ////console.log()("ROOWW:" ,row);
-          
+          this.storageService.getAllSorted("choferes", 'idChofer', 'asc')
 //        this.selectCrudOp(result.op, result.item);
         //this.mostrarMasDatos(row);
         },
