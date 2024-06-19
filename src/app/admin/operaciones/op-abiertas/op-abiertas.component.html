@@ -96,6 +96,23 @@
               <div>
                 <h3>Tarifa Especial: {{ detalleOp.tarifaEspecial  ? 'Si' : "No" }} </h3>                
               </div>
+              <div *ngIf="detalleOp.tarifaEspecial && detalleOp.tEspecial !== null" class="ms-3">
+                  <h3>Chofer:</h3>
+                  <div class="ms-3">
+                      <h3>Tarifa Especial Concepto: {{detalleOp.tEspecial.chofer.concepto}} </h3>                
+                  </div>
+                  <div class="ms-3">
+                      <h3>Tarifa Especial Valor: {{detalleOp.tEspecial.chofer.valor}} </h3>                
+                  </div>
+                  <h3>Cliente:</h3>
+                  <div class="ms-3">
+                      <h3>Tarifa Especial Concepto: {{detalleOp.tEspecial.cliente.concepto}} </h3>                
+                  </div>
+                  <div class="ms-3">
+                      <h3>Tarifa Especial Valor: {{detalleOp.tEspecial.cliente.valor}} </h3>                
+                  </div>
+
+              </div>
               <div>
                 <h3>Observaciones: </h3>                 
                 <textarea name="" class="w-100 fs-4" id="">{{detalleOp.observaciones}}</textarea>

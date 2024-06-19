@@ -25,7 +25,7 @@ export class FacturacionChoferService {
   $choferes!: Chofer[];
   $proveedores!: Proveedor[];
   proveedorOp!: Proveedor;
-
+  montoValorJornada!: number;
   constructor(private storageService: StorageService) { }
 
   choferes(){
@@ -149,7 +149,7 @@ export class FacturacionChoferService {
       ////console.log()("tarifa base: ", this.$tarifaChofer.valorJornada, " adicional: ", this.$adicional ); ;
       
       this.total = this.$tarifaChofer.valorJornada + this.$adicional;
-  
+      this.montoValorJornada = this.$tarifaChofer.valorJornada;
       //console.log()("esta es facturaChoferService. liquidacion del chofer: ", this.total);
     }
 
@@ -237,7 +237,7 @@ export class FacturacionChoferService {
       fecha: op.fecha,      
       idChofer: op.chofer.idChofer,
       idTarifa: this.ultimaTarifa.idTarifa,
-      valorJornada: this.$tarifaChofer.valorJornada,
+      valorJornada: this.montoValorJornada,
       adicional: this.$adicional,      
       total: this.total,
       liquidacion: false,
@@ -250,6 +250,16 @@ export class FacturacionChoferService {
   }
 
   facturarTarifaEspecial(op:Operacion){
+    if(op.tarifaEspecial && op.tEspecial !== null){
+      this.montoValorJornada = typeof op.tEspecial.chofer.valor === 'number'? op.tEspecial.chofer.valor : 0;
+      this.total = typeof op.tEspecial.chofer.valor === 'number'? op.tEspecial.chofer.valor : 0;
+      this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.chofer.valor;
+      this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.chofer.concepto;
+      this.storageService.updateItem("tarifasChofer", this.ultimaTarifa)
+      } else{
+        this.montoValorJornada = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
+        this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
+      }
     this.total = this.$tarifaChofer.tarifaEspecial.valor;
     this.$adicional = 0;
     //this.$tarifaChofer.valorJornada = this.$tarifaChofer.tarifaEspecial.valor;

@@ -237,9 +237,17 @@ export class FacturacionClienteService {
   }
 
   facturarTarifaEspecial(op: Operacion){
+    if(op.tarifaEspecial && op.tEspecial !== null){
+      this.categoriaMonto = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
+      this.total = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
+      this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.cliente.valor;
+      this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.cliente.concepto;
+      this.storageService.updateItem("tarifasCliente", this.ultimaTarifa)
+      } else{
+        this.categoriaMonto = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
+        this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
+      }
     
-    this.categoriaMonto = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0,
-    this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0,
     this.acompanianteMonto = 0;
     this.adicionalKmMonto = 0;
     //////console.log()("pasa por aca 2°");

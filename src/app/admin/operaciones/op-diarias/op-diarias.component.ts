@@ -46,7 +46,7 @@ export class OpDiariasComponent implements OnInit {
   searchText: string = "";
   unidadesConFrio: boolean = false;
   acompaniante: boolean = false;
-  
+  tarifaEspecial: boolean = false;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, private modalService: NgbModal) {
     this.form = this.fb.group({      
@@ -169,6 +169,11 @@ export class OpDiariasComponent implements OnInit {
 
   getMsg(msg: any) {
     this.btnConsulta = true;
+  }
+
+  getMsgAlta(msg: any) {
+    //console.log(msg);    
+    this.tarifaEspecial = msg;
   }
 
   selectUCF(e: any) {

@@ -18,7 +18,7 @@ import Swal from 'sweetalert2'
   //providers: [NgbActiveModal]
 })
 export class OpAltaComponent implements OnInit {
-
+  @Output() newItemEvent = new EventEmitter<any>();
   componente:string = "operacionesActivas"
   form:any;
   op!: Operacion;
@@ -41,7 +41,11 @@ export class OpAltaComponent implements OnInit {
       chofer: ['', Validators.required],
       tarifaEspecial: ['', Validators.required],
       acompaniante: ['', Validators.required],
-      observaciones: ['',]
+      observaciones: ['',],
+      choferConcepto: [''],
+      choferValor: [''],
+      clienteConcepto: [''],
+      clienteValor: [''],
     });
    }
 
@@ -77,14 +81,6 @@ export class OpAltaComponent implements OnInit {
     this.form.patchValue({ cliente: e.target.value });
   }
 
- /*  selectAcompaniante(e: any) {    
-    ////console.log()(e.target.value)
-    if(e.target.value === "si"){
-      this.acompaniante = true;
-    }else{
-      this.acompaniante = false;
-    }  
-  } */
 
    changeChofer(e: any) {
     ////console.log()(e.target.value)    
@@ -97,31 +93,47 @@ export class OpAltaComponent implements OnInit {
     //this.form.patchValue({ chofer: e.target.value });
   } 
 
-  /* selectTarifaEspecial(e: any) {    
-    //console.log()(e.target.value)
-    if(e.target.value === "si"){
-      this.tarifaEspecial = true;
-      this.acompaniante = false;
-    }else{
-      this.tarifaEspecial = false;
-    }  
-  } */
 
-    selectTarifaEspecial(event: any) {
-      let value = event.target.value;
-      this.tarifaEspecial = value === 'si';
-      this.form.patchValue({ tarifaEspecial: value });
-  
-      if (this.tarifaEspecial) {
-        this.form.get('acompaniante').clearValidators();
-      } else {
-        this.form.get('acompaniante').setValidators(Validators.required);
-      }
-      this.form.get('acompaniante').updateValueAndValidity();
-    }
+selectTarifaEspecial(event: any) {
+  let value = event.target.value;
+  this.tarifaEspecial = value === 'si';
+  this.form.patchValue({ tarifaEspecial: value });
+
+  if (this.tarifaEspecial) {
+    this.form.get('acompaniante').clearValidators();
+
+    // Añadir validadores requeridos para los campos adicionales
+    this.form.get('choferConcepto').setValidators(Validators.required);
+    this.form.get('choferValor').setValidators(Validators.required);
+    this.form.get('clienteConcepto').setValidators(Validators.required);
+    this.form.get('clienteValor').setValidators(Validators.required);
+  } else {
+    this.form.get('acompaniante').setValidators(Validators.required);
+
+    // Eliminar validadores requeridos para los campos adicionales
+    this.form.get('choferConcepto').clearValidators();
+    this.form.get('choferValor').clearValidators();
+    this.form.get('clienteConcepto').clearValidators();
+    this.form.get('clienteValor').clearValidators();
+  }
+
+  // Actualizar la validación de todos los campos
+  this.form.get('acompaniante').updateValueAndValidity();
+  this.form.get('choferConcepto').updateValueAndValidity();
+  this.form.get('choferValor').updateValueAndValidity();
+  this.form.get('clienteConcepto').updateValueAndValidity();
+  this.form.get('clienteValor').updateValueAndValidity();
+
+  this.msgBack();
+}
   
     selectAcompaniante(event: any) {
       this.form.patchValue({ acompaniante: event.target.value });
+    }
+
+    msgBack() {
+      //console.log(this.tarifaEspecial);      
+      this.newItemEvent.emit(this.tarifaEspecial);    
     }
 
   onSubmit(){
@@ -181,15 +193,41 @@ export class OpAltaComponent implements OnInit {
    armarOp(){
     ////console.log()("armarOp. chofer: ", this.choferSeleccionado);
     
-    this.op = this.form.value;
-    this.op.chofer = this.choferSeleccionado;
-    this.op.cliente = this.clienteSeleccionado;
-    this.op.idOperacion = new Date().getTime();    
-    this.op.acompaniante = this.acompaniante;
-    this.op.facturada = false,
-    this.op.facturaCliente = null;
-    this.op.facturaChofer = null;
-    this.op.tarifaEspecial = this.tarifaEspecial;    
+    // Extraer valores del formulario y otros datos
+    const formValues = this.form.value;
+
+    // Construir la operación básica
+    this.op = {
+        id:null,
+        idOperacion: new Date().getTime(),
+        fecha: formValues.fecha,
+        km: null,
+        documentacion: null,
+        cliente: this.clienteSeleccionado,
+        chofer: this.choferSeleccionado,
+        observaciones: formValues.observaciones,
+        unidadesConFrio: false,
+        acompaniante: this.acompaniante,
+        facturada: false,
+        facturaCliente: null,
+        facturaChofer: null,
+        tarifaEspecial: this.tarifaEspecial,
+        tEspecial: null // Asignar null por defecto
+    }; 
+
+        // Si tarifaEspecial es true, agregar los detalles de tarifa especial
+        if (this.tarifaEspecial) {
+          this.op.tEspecial = {
+              chofer: {
+                  concepto: formValues.choferConcepto,
+                  valor: formValues.choferValor
+              },
+              cliente: {
+                  concepto: formValues.clienteConcepto,
+                  valor: formValues.clienteValor
+              }
+          };
+      }
     
     ////console.log()("esta es la operacion: ", this.op);  
     Swal.fire({
@@ -203,6 +241,7 @@ export class OpAltaComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
+        //console.log("op: ", this.op);
         this.addItem();
         Swal.fire({
           title: "Confirmado",
@@ -220,7 +259,7 @@ export class OpAltaComponent implements OnInit {
    }
 
    addItem(): void {
-    console.log("llamada al storage desde op-alta, addItem");
+    //console.log("llamada al storage desde op-alta, addItem");
     this.storageService.addItem(this.componente, this.op);    
     this.form.reset();     
   }  
