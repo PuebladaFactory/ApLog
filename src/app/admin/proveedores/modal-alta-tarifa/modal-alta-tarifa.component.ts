@@ -61,7 +61,7 @@ export class ModalAltaTarifaComponent implements OnInit{
       idProveedor: this.proveedorSeleccionado.idProveedor,
       fecha: new Date().toISOString().split('T')[0],    
       cargasGenerales:  {
-        utilitario: this.form.value.acompaniante,   //mini
+        utilitario: this.form.value.utilitario,   //mini
         furgon:this.form.value.furgon,       //maxi
         furgonGrande:this.form.value.furgonGrande,
         chasisLiviano:this.form.value.chasisLiviano,   //camion

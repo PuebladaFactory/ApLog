@@ -228,7 +228,35 @@
               <option value="si">Si</option>
               <option value="no">No</option>              
           </select>
-      </div>  
+        </div>
+        <div *ngIf="opEditar.tarifaEspecial" class="border-top border-bottom my-2">
+          <h6 class="mt-2">Chofer:</h6>
+          <div class="form-group">
+              <label for="Fecha">Tarifa Especial Concepto</label>
+              <div class="input-group">
+                <input formControlName="choferConcepto" class="form-control edicion" required type="text">
+              </div>
+          </div>
+          <div class="form-group">
+              <label for="Fecha">Tarifa Especial Valor</label>
+              <div class="input-group">
+                <input formControlName="choferValor" class="form-control edicion" required type="number">
+              </div>
+          </div>
+          <h6 class="my-2">Cliente:</h6>
+          <div class="form-group">
+              <label for="Fecha">Tarifa Especial Concepto</label>
+              <div class="input-group">
+                <input formControlName="clienteConcepto" class="form-control edicion" required type="text">
+              </div>
+          </div>
+          <div class="form-group mb-2">
+              <label for="Fecha">Tarifa Especial Valor</label>
+              <div class="input-group">
+                <input formControlName="clienteValor" class="form-control edicion" required type="number">
+              </div>
+          </div>
+      </div>                
         <div class="form-group">
           <label for="Observaciones">Observaciones</label>
           <div class="input-group">
