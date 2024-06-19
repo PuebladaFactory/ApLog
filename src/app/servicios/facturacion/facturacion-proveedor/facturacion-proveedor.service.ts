@@ -262,9 +262,18 @@ export class FacturacionProveedorService {
   }
 
   facturarTarifaEspecial(op: Operacion){
-    
-    this.categoriaMonto = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0,
-    this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0,
+
+    if(op.tarifaEspecial && op.tEspecial !== null){
+      this.categoriaMonto = typeof op.tEspecial.chofer.valor === 'number'? op.tEspecial.chofer.valor : 0;
+      this.total = typeof op.tEspecial.chofer.valor === 'number'? op.tEspecial.chofer.valor : 0;
+      this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.chofer.valor;
+      this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.chofer.concepto;
+      this.storageService.updateItem("tarifasProveedor", this.ultimaTarifa)
+      } else{
+        this.categoriaMonto = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
+        this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
+      }
+        
     this.acompanianteMonto = 0;
     this.adicionalKmMonto = 0;
     //////console.log()("pasa por aca 2°");

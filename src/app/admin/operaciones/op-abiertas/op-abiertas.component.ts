@@ -65,7 +65,11 @@ export class OpAbiertasComponent implements OnInit {
     });
     this.form = this.fb.group({      
       fecha: [""],    
-      observaciones: [""],
+      observaciones: [""],      
+      choferConcepto: [''],
+      choferValor: [''],
+      clienteConcepto: [''],
+      clienteValor: [''],
     })
    }
   
@@ -291,8 +295,20 @@ export class OpAbiertasComponent implements OnInit {
   armarForm(){
     this.form.patchValue({
       fecha: this.opEditar.fecha,
-      observaciones: this.opEditar.observaciones
+      observaciones: this.opEditar.observaciones,
+      choferConcepto: [''],
+      choferValor: [''],
+      clienteConcepto: [''],
+      clienteValor: [''],
     })
+    if(this.opEditar.tarifaEspecial && this.opEditar.tEspecial !== null ){
+      this.form.patchValue({
+      choferConcepto: this.opEditar.tEspecial.chofer.concepto,
+      choferValor: this.opEditar.tEspecial.chofer.valor,
+      clienteConcepto: this.opEditar.tEspecial.cliente.concepto,
+      clienteValor: this.opEditar.tEspecial.cliente.valor,
+      })
+    }
   }
 
   onSubmitEdit(){  
@@ -326,6 +342,15 @@ export class OpAbiertasComponent implements OnInit {
     this.opEditar.acompaniante = this.acompaniante;
     this.opEditar.tarifaEspecial = this.tarifaEspecial;
     ////console.log()("este es la op editada: ", this.opEditar);
+    if(this.opEditar.tarifaEspecial && this.opEditar.tEspecial !== null ) {
+      this.opEditar.tEspecial.chofer.concepto = this.form.value.choferConcepto;
+      this.opEditar.tEspecial.chofer.valor = this.form.value.choferValor;
+      this.opEditar.tEspecial.cliente.concepto = this.form.value.clienteConcepto;
+      this.opEditar.tEspecial.cliente.valor = this.form.value.clienteValor;
+    } else{
+      this.opEditar.tEspecial = null;
+    }
+
     console.log("llamada al storage desde op-abiertas, updateItem");
     this.storageService.updateItem(this.componente, this.opEditar)
     //this.ngOnInit();  
