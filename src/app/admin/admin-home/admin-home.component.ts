@@ -22,13 +22,13 @@ export class AdminHomeComponent implements OnInit {
   constructor(private dbFirebase: DbFirestoreService, private storageService: StorageService,) { }
 
   ngOnInit(): void {
-    this.usuario = this.storageService.loadInfo("usuario");
+    //this.usuario = this.storageService.loadInfo("usuario");
     //si el rol es "admin", llama al initializer;
     //esto se hace para q no llame al servico cuando se inicia la app y hubiera otro rol
-    if(this.usuario.roles.admin){
+   /*  if(this.usuario.roles.admin){
       console.log("llamada al storage desde admin-home, initializerAdmin");      
       this.storageService.initializerAdmin();
-    }    
+    }     */
     //this.storageService.initializer();
   }
 

@@ -205,7 +205,7 @@ export class ProveedoresListadoComponent implements OnInit {
       modalRef.result.then(
         (result) => {
           ////console.log()("ROOWW:" ,row);
-          
+          this.storageService.getAllSorted("proveedores", 'idProveedor', 'asc')
 //        this.selectCrudOp(result.op, result.item);
         //this.mostrarMasDatos(row);
         },

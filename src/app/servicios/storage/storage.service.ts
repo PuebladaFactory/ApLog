@@ -28,19 +28,22 @@ export class StorageService {
 
   // Observables //
 
-  private _clientes$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public clientes$ = this._clientes$.asObservable()
+  private _clientes$ = new BehaviorSubject<any[]>(this.loadInfo('clientes') || []);
+  public clientes$ = this._clientes$.asObservable();
 
-  private _choferes$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  private _choferes$ = new BehaviorSubject<any>(this.loadInfo('choferes') || []);
   public choferes$ = this._choferes$.asObservable()
+  
+  private _proveedores$ = new BehaviorSubject<any>(this.loadInfo('proveedores') || []);
+  public proveedores$ = this._proveedores$.asObservable();
 
-  private _usuario$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  private _usuario$ = new BehaviorSubject<any>(this.loadInfo('usuario') || []);
   public usuario$ = this._usuario$.asObservable()
 
   private _operaciones$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public operaciones$ = this._operaciones$.asObservable()
 
-  private _opActivas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  private _opActivas$ = new BehaviorSubject<any>(this.loadInfo('operacionesActivas') || []);
   public opActivas$ = this._opActivas$.asObservable()
 
   private _opCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
@@ -55,52 +58,49 @@ export class StorageService {
   private _consultasOpCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public consultasOpCerradas$ = this._consultasOpCerradas$.asObservable()
 
-  private _historialTarifas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  private _historialTarifas$ = new BehaviorSubject<any>(this.loadInfo('tarifasChofer') || []);
   public historialTarifas$ = this._historialTarifas$.asObservable()
 
-  private _historialTarifasClientes$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  private _historialTarifasClientes$ = new BehaviorSubject<any>(this.loadInfo('tarifasCliente') || []);
   public historialTarifasClientes$ = this._historialTarifasClientes$.asObservable()
 
-  private _legajos$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public legajos$ = this._legajos$.asObservable()
-
-  private _perfilChofer$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public perfilChofer$ = this._perfilChofer$.asObservable();
-
-  private _proveedores$ = new BehaviorSubject<any>(null) //aca va interface my data
-  public proveedores$ = this._proveedores$.asObservable();
-
-  private _historialTarifasProveedores$ = new BehaviorSubject<any>(null)
+  private _historialTarifasProveedores$ = new BehaviorSubject<any>(this.loadInfo('tarifasProveedor') || []);
   public historialTarifasProveedores$ = this._historialTarifasProveedores$.asObservable();
 
-  private _facturaOpCliente$ = new BehaviorSubject<any>(null) //aca va interface my data
+  private _legajos$ = new BehaviorSubject(this.loadInfo('legajos') || []);
+  public legajos$ = this._legajos$.asObservable()
+
+  private _perfilChofer$ = new BehaviorSubject<any>(this.loadInfo('perfilChofer') || []);
+  public perfilChofer$ = this._perfilChofer$.asObservable();
+
+  private _facturaOpCliente$ = new BehaviorSubject<any>(this.loadInfo('facturaOpCliente') || []);
   public facturaOpCliente$ = this._facturaOpCliente$.asObservable();
 
-  private _consultasFacOpCliente$ = new BehaviorSubject<any>(null) //aca va interface my data
+  private _consultasFacOpCliente$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpCliente') || []);
   public consultasFacOpCliente$ = this._consultasFacOpCliente$.asObservable();
 
-  private _consultasFacOpChofer$ = new BehaviorSubject<any>(null) //aca va interface my data
+  private _consultasFacOpChofer$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpChofer') || []);
   public consultasFacOpChofer$ = this._consultasFacOpChofer$.asObservable();
 
-  private _consultasFacOpProveedor$ = new BehaviorSubject<any>(null) //aca va interface my data
+  private _consultasFacOpProveedor$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpProveedor') || []);
   public consultasFacOpProveedor$ = this._consultasFacOpProveedor$.asObservable();
 
-  private _consultasFacCliente$ = new BehaviorSubject<any>(null) //aca va interface my data
+  private _consultasFacCliente$ = new BehaviorSubject<any>(this.loadInfo('consultasFacCliente') || []);
   public consultasFacCliente$ = this._consultasFacCliente$.asObservable();
 
-  private _consultasFacChofer$ = new BehaviorSubject<any>(null) //aca va interface my data
+  private _consultasFacChofer$ = new BehaviorSubject<any>(this.loadInfo('consultasFacChofer') || []);
   public consultasFacChofer$ = this._consultasFacChofer$.asObservable();
 
-  private _consultasFacProveedor$ = new BehaviorSubject<any>(null) //aca va interface my data
+  private _consultasFacProveedor$ = new BehaviorSubject<any>(this.loadInfo('consultasFacProveedor') || []);
   public consultasFacProveedor$ = this._consultasFacProveedor$.asObservable();
   
-  private _consultasFacOpLiqChofer$ = new BehaviorSubject<any>(null) //aca va interface my data
+  private _consultasFacOpLiqChofer$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpLiqChofer') || []);
   public consultasFacOpLiqChofer$ = this._consultasFacOpLiqChofer$.asObservable();
   
-  private _consultasFacOpLiqCliente$ = new BehaviorSubject<any>(null) //aca va interface my data
+  private _consultasFacOpLiqCliente$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpLiqCliente') || []);
   public consultasFacOpLiqCliente$ = this._consultasFacOpLiqCliente$.asObservable();
 
-  private _consultasFacOpLiqProveedor$ = new BehaviorSubject<any>(null) //aca va interface my data
+  private _consultasFacOpLiqProveedor$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpLiqProveedor') || []);
   public consultasFacOpLiqProveedor$ = this._consultasFacOpLiqProveedor$.asObservable();
 
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
@@ -254,27 +254,35 @@ export class StorageService {
 
   // metodos del storage
 
-  setInfo(componente: any, data: any) {    // interface mydata en vez de any
-    const jsonData = JSON.stringify(data)
-    localStorage.setItem(`${componente}`, JSON.stringify(data)) //local storage trabaja solo con strings
-    this.updateObservable(componente, data)
-
+  public setInfo(componente: string, data: any[]) {
+    const jsonData = JSON.stringify(data);
+    localStorage.setItem(componente, jsonData);
+    this.updateObservable(componente, data);
   }
 
-  loadInfo(componente: any) {
-    const data = JSON.parse(localStorage.getItem(componente) || "")
-    this.updateObservable(componente, data)
-    return data;
+  public loadInfo(componente: string): any[] {
+    const jsonData = localStorage.getItem(componente);
+    if (jsonData) {
+      try {
+        return JSON.parse(jsonData);
+      } catch (e) {
+        console.error("Error parsing JSON from localStorage for componente", componente, e);
+        return [];
+      }
+    }
+    return [];
   }
 
-  clearInfo(componente: any) {
-    localStorage.removeItem('myData')
-    this.updateObservable(componente, null)
+  public clearInfo(componente: string) {
+    localStorage.removeItem(componente);
+    this.updateObservable(componente, []);
   }
 
-  clearAllLocalStorage() {
-    localStorage.clear()
-    //this._playa$.next(null)
+  public clearAllLocalStorage() {
+    localStorage.clear();
+    this.updateObservable('choferes', []);
+    this.updateObservable('clientes', []);
+    this.updateObservable('proveedores', []);
   }
 
 
@@ -374,41 +382,62 @@ export class StorageService {
       }
 
 
-  addItem(componente: string, item: any): void {
-
-    //item.fechaOp = new Date()
-    console.log(" storage add item ", componente, item,)
-
-
-    this.dbFirebase.create(componente, item)
-      // .then((data) => console.log(data))
-      // .then(() => this.ngOnInit())
-      .catch((e) => console.log(e.message));
-  }
-
-
-
-  deleteItem(componente: string, item: any): void {
-
-    console.log(" storage delete item ", componente, item,)
-
-    this.dbFirebase.delete(componente, item.id)
-      // .then((data) => console.log(data))
-      // .then(() => this.ngOnInit())
-      // .then(() => console.log("pasa por delete metodo?"))
-      .catch((e) => console.log(e.message));
-
-  }
-
-  updateItem(componente: string, item: any): void {
-    console.log(" storage update item ", componente, item,)
-
-    this.dbFirebase.update(componente, item)
-      // .then((data) => console.log(data))
-      // .then(() => this.ngOnInit())
-      .catch((e) => console.log(e.message));
-
-  }
-
-
-}
+      public addItem(componente: string, item: any): void {
+        console.log("storage add item", componente, item);
+        this.dbFirebase.create(componente, item).then(() => {
+          //this.refreshData(componente);
+        }).catch((e) => console.log(e.message));
+      }
+    
+      public deleteItem(componente: string, item: any): void {
+        console.log("storage delete item", componente, item);
+        this.dbFirebase.delete(componente, item.id).then(() => {
+          //this.refreshData(componente);
+        }).catch((e) => console.log(e.message));
+      }
+    
+      public updateItem(componente: string, item: any): void {
+        console.log("storage update item", componente, item);
+        this.dbFirebase.update(componente, item).then(() => {
+          //this.refreshData(componente);
+        }).catch((e) => console.log(e.message));
+      }
+    
+      private refreshData(componente: string) {
+        switch(componente){
+          case "clientes":
+            this.getAllSorted("clientes", 'idCliente', 'asc');
+            break;
+          case "choferes":
+            this.getAllSorted("choferes", 'idChofer', 'asc');
+            break;
+          case "proveedores":
+            this.getAllSorted("proveedores", 'idProveedor', 'asc');
+            break;
+          case "operacionesActivas":
+            this.getAllSorted("operacionesActivas", 'fecha', 'desc');
+            break;
+          case "tarifasChofer":
+            this.getAllSorted("tarifasChofer", 'fecha', 'asc');
+            break;
+          case "tarifasCliente":
+            this.getAllSorted("tarifasCliente", 'fecha', 'asc');
+            break
+          case "tarifasProveedor":
+            this.getAllSorted("tarifasProveedor", 'fecha', 'asc');
+            break
+        }
+        
+      }
+      
+      
+      
+      //this.getAllSorted("facturaOpCliente", 'fecha', 'desc')
+  //    this.getAllSorted("operacionesCerradas", 'fecha', 'desc')
+      //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
+      //this.getAllSorted("jornadas", 'idChofer', 'asc')
+      
+      
+      
+     
+    }

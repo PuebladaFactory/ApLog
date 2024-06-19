@@ -140,10 +140,10 @@
                   </form> 
               </div>  
                   
-              <div class="">                 
+              <div class="mt-2">                 
                   <form [formGroup]="adicionalEditForm" (ngSubmit)="onSubmitEdit()">            
-                      <tr >
-                          <h4>Adicional por Km: </h4>
+                    <h4>Adicional por Km: </h4>  
+                      <tr>                          
                           <td class="parametro align-middle">Primer sector desde: </td>
         
                           <td class="input-group ">
@@ -168,12 +168,12 @@
                   
                   </form>   
                   <form [formGroup]="tarifaEspecialEditForm" (ngSubmit)="onSubmitEdit()" >                         
-                    <h5 class="mt-2">Tarifa Especial</h5>
+                    <h4 class="mt-2">Tarifa Especial</h4>
                     <tr>
                         <th class="">Concepto </th>
                         <th > Valor</th>
                     </tr>
-                    <tr class="form-group">                        
+                    <tr class="form-group align-middle ">                        
                         <td>
                             <input formControlName="concepto" class="form-control" required type="text">
                         </td>                        

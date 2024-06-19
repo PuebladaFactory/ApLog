@@ -47,7 +47,7 @@ export class ClienteListadoComponent implements OnInit {
   }
   
   ngOnInit(): void { 
-    this.clientes$ = this.storageService.clientes$; 
+    //this.clientes$ = this.storageService.clientes$; 
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
     })
@@ -214,7 +214,7 @@ export class ClienteListadoComponent implements OnInit {
       modalRef.result.then(
         (result) => {
           ////console.log()("ROOWW:" ,row);
-          
+          this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
 //        this.selectCrudOp(result.op, result.item);
         //this.mostrarMasDatos(row);
         },
