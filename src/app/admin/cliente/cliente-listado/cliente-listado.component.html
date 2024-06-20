@@ -1,7 +1,7 @@
 
 <div class="d-flex justify-content-between mt-3">
   <h1>Clientes</h1>
-  <app-btn-leer class="btn btn-secondary mt-2" name="cliente" (click)="openModal()"></app-btn-leer>
+  <app-btn-leer  name="cliente" (click)="openModal()"></app-btn-leer>
 </div>
 
 <input class="form-control mt-3" type="text" [(ngModel)]="searchText" placeholder="Buscar por Razón Social, direccion o número de cliente">
@@ -215,8 +215,9 @@
           </form>
       </div>
       <div class="modal-footer">
-        <!-- <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="guardarContacto()">Guardar</button> -->
-        <app-btn-agregar name="GuardarClaro" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="guardarContacto()"></app-btn-agregar>
+        <!-- <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" [disabled]="form.invalid || formContacto.invalid "(click)="guardarContacto()">Guardar</button> -->
+        <app-btn-agregar name="GuardarClaro" type="submit" data-bs-toggle="modal" data-bs-target="#exampleModal" [disabled]="form.invalid " (click)="guardarContacto()"></app-btn-agregar>
+      
       </div>
     </div>
   </div>

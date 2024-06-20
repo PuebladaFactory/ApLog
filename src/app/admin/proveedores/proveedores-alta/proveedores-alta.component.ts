@@ -48,7 +48,15 @@ export class ProveedoresAltaComponent implements OnInit {
       this.addItem();    
       this.activeModal.close();    
     } else{
-      alert("error en el formulario")
+      //alert("error en el formulario")
+      Swal.fire({
+        icon: "error",
+        
+        text: "El formulario contiene errores ",
+//        
+      });
+
+
     }
     //console.log(new Date().getTime());    
     /* this.proveedor = this.form.value
