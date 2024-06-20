@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -35,12 +35,17 @@ export class ProveedoresListadoComponent implements OnInit {
     })
 
     this.formContacto = this.fb.group({
-      puesto:[""],
+      puesto: ["", [Validators.required, Validators.maxLength(30)]],
+      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
+      nombre: ["", [Validators.required, Validators.maxLength(30)]],
+      telefono: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]], 
+      email: ["",[Validators.required, Validators.email]],
+      /* puesto:[""],
       apellido:[""],
       nombre: [""],
       telefono: [""],
-      email:[""],
-    })
+      email:[""],*/
+    });
   }
   
   ngOnInit(): void { 
