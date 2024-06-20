@@ -101,7 +101,7 @@ export class ClienteListadoComponent implements OnInit {
           icon: "success"
         });
       }
-    });   
+    });    
     
    }
 
