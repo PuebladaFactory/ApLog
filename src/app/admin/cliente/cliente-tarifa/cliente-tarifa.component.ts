@@ -219,6 +219,8 @@ this.acompanianteEditForm = this.fb.group({
   }
 
   updateTarifa(){
+    console.log("tarifa cliente editada");
+    
     this.storageService.updateItem(this.componente,this.tarifaEditar);
   }
 

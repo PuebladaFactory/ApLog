@@ -52,7 +52,7 @@ export class StorageService {
   private _jornadas$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public jornadas$ = this._jornadas$.asObservable()
 
-  private _consultasOpActivas$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  private _consultasOpActivas$ = new BehaviorSubject<any>(this.loadInfo('consultasOpActivas') || []);
   public consultasOpActivas$ = this._consultasOpActivas$.asObservable()
 
   private _consultasOpCerradas$ = new BehaviorSubject<any>(null)   //aca va interface my data
@@ -330,7 +330,7 @@ export class StorageService {
   // METODOS CRUD
 
   getAllSorted(componente: any, campo: any, orden: any) {
-    console.log(" storage getAllSorted ", componente, campo, orden)
+    console.log(` storage getAllSorted ${componente}`, componente, campo, orden)
     // pasar campo y orden (asc o desc)
     this.dbFirebase
       .getAllSorted(componente, campo, orden)
@@ -385,21 +385,21 @@ export class StorageService {
       public addItem(componente: string, item: any): void {
         console.log("storage add item", componente, item);
         this.dbFirebase.create(componente, item).then(() => {
-          //this.refreshData(componente);
+          this.refreshData(componente);
         }).catch((e) => console.log(e.message));
       }
     
       public deleteItem(componente: string, item: any): void {
         console.log("storage delete item", componente, item);
         this.dbFirebase.delete(componente, item.id).then(() => {
-          //this.refreshData(componente);
+          this.refreshData(componente);
         }).catch((e) => console.log(e.message));
       }
     
       public updateItem(componente: string, item: any): void {
         console.log("storage update item", componente, item);
         this.dbFirebase.update(componente, item).then(() => {
-          //this.refreshData(componente);
+          this.refreshData(componente);
         }).catch((e) => console.log(e.message));
       }
     
@@ -417,15 +417,15 @@ export class StorageService {
           case "operacionesActivas":
             this.getAllSorted("operacionesActivas", 'fecha', 'desc');
             break;
-          case "tarifasChofer":
-            this.getAllSorted("tarifasChofer", 'fecha', 'asc');
+          /* case "tarifasChofer":
+            this.getByFieldValue("tarifasChofer", 'fecha', 'asc');
             break;
           case "tarifasCliente":
-            this.getAllSorted("tarifasCliente", 'fecha', 'asc');
+            this.getByFieldValue("tarifasCliente", 'fecha', 'asc');
             break
           case "tarifasProveedor":
-            this.getAllSorted("tarifasProveedor", 'fecha', 'asc');
-            break
+            this.getByFieldValue("tarifasProveedor", 'fecha', 'asc');
+            break */
         }
         
       }

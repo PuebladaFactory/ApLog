@@ -5,7 +5,7 @@ import { OperacionesRoutingModule } from './operaciones-routing.module';
 import { OpControlComponent } from './op-control/op-control.component';
 import { OpAltaComponent } from './op-alta/op-alta.component';
 import { OpDiariasComponent } from './op-diarias/op-diarias.component';
-
+import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
@@ -29,7 +29,8 @@ import { OpAbiertasComponent } from './op-abiertas/op-abiertas.component';
     ReactiveFormsModule,
     SharedModule,
     Ng2SearchPipeModule,
-    NgbModule
+    NgbModule,
+    NgxDatatableModule
   ]
 })
 export class OperacionesModule { }

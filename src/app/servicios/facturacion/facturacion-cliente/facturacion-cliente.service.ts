@@ -63,7 +63,7 @@ export class FacturacionClienteService {
     this.storageService.historialTarifasClientes$.subscribe(data => {
       this.$tarifas = data.filter((tarifa: { idCliente: number; }) => tarifa.idCliente === this.clienteOp.idCliente);
 
-      ////console.log()("data Todas: ",this.$tarifas);
+      console.log("1) data Todas CLIENTES: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
       this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: TarifaCliente, tarifaActual: TarifaCliente) => {
@@ -71,7 +71,7 @@ export class FacturacionClienteService {
       }); 
 
       // Ahora, tarifaMasElevada contiene la tarifa con el idTarifa más elevado
-      ////console.log()("ultima: ", this.ultimaTarifa);
+      console.log("2) ultima CLIENTE: ", this.ultimaTarifa);
       //this.calcularLiquidacion(op);
       this.calcularLiquidacion(op);
     });  
@@ -82,6 +82,7 @@ export class FacturacionClienteService {
     ////console.log()("esta es la tarifa a facturar: ", this.$tarifaCliente);
     
     if(op.tarifaEspecial){
+      console.log("3) tarifa especial");
       
       this.facturarTarifaEspecial(op);
 
@@ -242,6 +243,7 @@ export class FacturacionClienteService {
       this.total = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
       this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.cliente.valor;
       this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.cliente.concepto;
+      console.log("4) tarifa CLIENTE editada", this.ultimaTarifa);
       this.storageService.updateItem("tarifasCliente", this.ultimaTarifa)
       } else{
         this.categoriaMonto = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;

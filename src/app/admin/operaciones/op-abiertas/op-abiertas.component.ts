@@ -1,16 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
-import { Operacion } from 'src/app/interfaces/operacion';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { Operacion, TarifaEspecial } from 'src/app/interfaces/operacion';
 import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
 import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
-import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
 import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
@@ -21,32 +19,25 @@ import Swal from 'sweetalert2';
   styleUrls: ['./op-abiertas.component.scss']
 })
 export class OpAbiertasComponent implements OnInit {
-  
+  @Input() fechasConsulta: any = {
+    fechaDesde: 0,
+    fechaHasta: 0,
+  };
+  @Input() btnConsulta:boolean = false;
   detalleOp!: Operacion;
-  opCerradas$!:any;
-  componente: string = "operacionesActivas";
-  public show: boolean = false;
-  public buttonName: any = 'Consultar Operaciones';
-  consultasOp$!:any;
-  titulo: string = "consultasOpActivas";
-  btnConsulta:boolean = false;
+  componente: string = "operacionesActivas";      
+  titulo: string = "consultasOpActivas";  
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];
-  searchText: string = "";
-  $opCerradas: any;
-  
-  $consultasOp: any;
+  $opActivas!: Operacion[];
+  $consultasOp!: Operacion [];
   facturar: boolean = false;
   opForm: any;
   opCerrada!: Operacion;
   facturaChofer!: FacturaOpChofer;
   facturaProveedor!: FacturaOpProveedor; 
-  facturaCliente!: FacturaOpCliente;
-  fechasConsulta: any = {
-    fechaDesde: 0,
-    fechaHasta: 0,
-  };
+  facturaCliente!: FacturaOpCliente;  
   opEditar!: Operacion;
   clienteSeleccionado!: Cliente;
   choferSeleccionado!: Chofer;
@@ -55,10 +46,40 @@ export class OpAbiertasComponent implements OnInit {
   $clientes: any;
   $choferes: any;
   tarifaEspecial!:boolean;
+  tEspecial!: TarifaEspecial | null;
+  //////////////////////////////////////////////////////////////////////////////////////
+  @ViewChild('tablaClientes') table: any;  
+  rows: any[] = [];
+  filteredRows: any[] = [];
+  paginatedRows: any[] = [];
+  allColumns = [
+//    { prop: '', name: '', selected: true, flexGrow:1  },
+    { prop: 'fecha', name: 'Fecha', selected: true, flexGrow:2  },          
+    { prop: 'idOperacion', name: 'Id Op', selected: true, flexGrow:2  },
+    { prop: 'cliente', name: 'Cliente', selected: true, flexGrow:2 },
+    { prop: 'chofer', name: 'Chofer', selected: true, flexGrow:2  },
+    { prop: 'categoria', name: 'Categoria', selected: true, flexGrow:2  },    
+    { prop: 'acompaniante', name: 'Acompañante', selected: true, flexGrow:2  },    
+    { prop: 'tarifaEspecial', name: 'Tarifa Especial', selected: true, flexGrow:2  },    
+    { prop: 'observaciones', name: 'Observaciones', selected: true, flexGrow:3  },  
+    
+  ];
+  visibleColumns = this.allColumns.filter(column => column.selected);
+  selected = [];
+  count = 0;
+  limit = 20;
+  offset = 0;
+  sortType = SortType.multi; // Aquí usamos la enumeración SortType
+  selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
+  ColumnMode = ColumnMode;  
+  encapsulation!: ViewEncapsulation.None;
+  ajustes: boolean = false;
+  firstFilter = '';
+  secondFilter = '';
 
-  private subscriptions: Subscription[] = [];
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService, private facOpProveedorService: FacturacionProveedorService ) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService, private facOpProveedorService: FacturacionProveedorService) {
     this.opForm = this.fb.group({
         km: [''],       
         remito: [''],       
@@ -73,8 +94,7 @@ export class OpAbiertasComponent implements OnInit {
     })
    }
   
-  ngOnInit(): void { 
-    
+  ngOnInit(): void {     
       this.storageService.choferes$.subscribe(data => {
         this.$choferes = data;
       });
@@ -83,53 +103,129 @@ export class OpAbiertasComponent implements OnInit {
         this.$clientes = data;
       });    
      
-    this.storageService.consultasOpActivas$.subscribe(data => {
-      this.$consultasOp = data;
-    });
-    //this.consultaMes();
-   
+      this.storageService.opActivas$.subscribe(data => {
+        this.$opActivas = data;
+        this.armarTabla();
+      });  
+
+      this.storageService.consultasOpActivas$.subscribe(data => {
+        this.$consultasOp = data;
+        this.armarTabla();
+      });      
   }
-
-
-  
-
-  seleccionarOp(op:Operacion){
-    this.detalleOp = op;
-  }
-
-  toggle() {
-    this.show = !this.show;
-    // Change the name of the button.
-    if (this.show) this.buttonName = 'Cerrar';
-    else this.buttonName = 'Consultar Operaciones';
-  }
-
-  consultaMes(){
-    if(!this.btnConsulta){   
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+armarTabla() {
+  //console.log("consultasOp: ", this.$consultasOp );
+  let indice = 0
+  if(!this.btnConsulta){
+    this.rows = this.$opActivas.map((op) => ({
+      indice: indice ++,
+      fecha: op.fecha,
+      idOperacion: op.idOperacion,
+      cliente: op.cliente.razonSocial,
+      chofer: `${op.chofer.apellido} ${op.chofer.nombre}`,
+      categoria: op.chofer.vehiculo.categoria,
+      acompaniante: `${op.acompaniante ? "Si" : "No"}` ,
+      tarifaEspecial: `${op.tarifaEspecial ? "Si" : "No"}` ,
+      observaciones: op.observaciones,
       
-      console.log("llamada al storage desde op-abiertas, getByDateValue");
-      this.storageService.getByDateValue("operacionesActivas", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
-    }     
+    }));
+  } else {
+    this.rows = this.$consultasOp.map((op) => ({
+      indice: indice ++,
+      fecha: op.fecha,
+      idOperacion: op.idOperacion,
+      cliente: op.cliente.razonSocial,
+      chofer: `${op.chofer.apellido} ${op.chofer.nombre}`,
+      categoria: op.chofer.vehiculo.categoria,
+      acompaniante: `${op.acompaniante ? "Si" : "No"}` ,
+      tarifaEspecial: `${op.tarifaEspecial ? "Si" : "No"}` ,
+      observaciones: op.observaciones,
+      
+    }));
+  }  
+  //console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+  this.applyFilters(); // Aplica filtros y actualiza filteredRows
+}
+
+setPage(pageInfo: any) {
+  this.offset = pageInfo.offset;
+  this.updatePaginatedRows();
+}
+
+updatePaginatedRows() {
+  const start = this.offset * this.limit;
+  const end = start + this.limit;
+  this.paginatedRows = this.filteredRows.slice(start, end);
+}
+
+onSort(event:any) {
+  // Implementa la lógica de ordenamiento
+}
+
+onActivate(event: any) {
+  // Implementa la lógica de activación de filas
+}
+
+onSelect(event: any) {
+  // Implementa la lógica de selección de filas
+}
+
+updateFilter(event: any, filterType: string) {
+  const val = event.target.value.toLowerCase();
+  if (filterType === 'first') {
+    this.firstFilter = val;
+  } else if (filterType === 'second') {
+    this.secondFilter = val;
+  }
+  this.applyFilters();
+}
+
+applyFilters() {
+  this.filteredRows = this.rows.filter(row => {
+    const firstCondition = Object.values(row).some(value => 
+      String(value).toLowerCase().includes(this.firstFilter)
+    );
+    const secondCondition = Object.values(row).some(value => 
+      String(value).toLowerCase().includes(this.secondFilter)
+    );
+
+    return firstCondition && secondCondition;
+  });
+
+  this.count = this.filteredRows.length; // Actualiza el conteo de filas
+  this.setPage({ offset: this.offset }); // Actualiza los datos para la página actual
+}
+
+toggleColumn(column: any) {
+  if (column.prop !== '') { // Siempre muestra la columna del botón
+    column.selected = !column.selected;
+  }
+  this.visibleColumns = this.allColumns.filter(col => col.selected);
+}
+
+toogleAjustes(){
+  this.ajustes = !this.ajustes;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  seleccionarOp(op:any){    
+    let seleccion = this.$opActivas.filter((operacion:Operacion)=>{
+      return operacion.idOperacion === op.idOperacion
+    })
+    this.detalleOp = seleccion[0];    
   }
 
   getMsg(msg: any) {
     this.btnConsulta = true;
-    //////console.log()("mensajeeee: ", msg);
+    ////////console.log()("mensajeeee: ", msg);
     this.fechasConsulta = msg;
-    ////console.log()("mensajeeee: ", this.fechasConsulta);
-    
+    //console.log("mensajeeee: ", this.fechasConsulta);    
   }
 
-  mostrarRemito(documentacion:string){ 
-    //aca leeria de la db para buscar el remito
-    alert("aca iria la imagen")
-  }
-
-  crearFacturaOp(op:Operacion){
+  crearFacturaOp(op:any){
+    this.seleccionarOp(op)
     this.facturar = true;
-    this.opCerrada = op
-    this.seleccionarOp(op);
-
+    this.opCerrada = this.detalleOp;
   }
 
   onSubmit(){
@@ -145,6 +241,7 @@ export class OpAbiertasComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.facturarOperacion();
+        //console.log("1) ", this.$consultasOp);
         Swal.fire({
           title: "Confirmado",
           text: "La operación se ha cerrado",
@@ -156,33 +253,25 @@ export class OpAbiertasComponent implements OnInit {
   }
 
   facturarOperacion(){
-    //////console.log()(this.opForm.value);
+    ////////console.log()(this.opForm.value);
     this.opCerrada.km = this.opForm.value.km;    
     //this.opCerrada.documentacion = this.opForm.remito;
     this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
-    //////console.log()("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
-    //this.altaOperacionesCerradas();
-    //console.log()("1): ", this.detalleOp );
+    
     
     this.bajaOperacionesActivas();
+    //console.log("consultas Op: " , this.$consultasOp);
     if(this.detalleOp.chofer.proveedor === "monotributista"){
       this.facturarOpChofer();
     } else{
       this.facturarOpProveedor();
     }
- 
+    this.btnConsulta = false
   }
 
- /*  altaOperacionesCerradas(){
-    this.storageService.addItem("operacionesCerradas", this.opCerrada);    
-    
-    //this.router.navigate(['/op/op-diarias'])
-  } */
-
   bajaOperacionesActivas(){
-    console.log("llamada al storage desde op-abiertas, deleteItem");
+    //console.log("llamada al storage desde op-abiertas, deleteItem");
     this.storageService.deleteItem("operacionesActivas", this.opCerrada);
-    
   }
 
   facturarFalso(){
@@ -191,72 +280,57 @@ export class OpAbiertasComponent implements OnInit {
 
   facturarOpChofer(){
     this.facturaChofer = this.facOpChoferService.facturarOpChofer(this.opCerrada);    
-    ////console.log()("esta es la factura-chofer FINAL: ", this.facturaChofer);
-    
+    //console.log("5) esta es la factura-chofer FINAL: ", this.facturaChofer);    
     //this.addItem("facturaOpChofer", this.facturaChofer)
     this.opForm.reset();
-    this.facturar = false;
-    //this.ngOnDestroy();
-    //this.ngOnInit();
+    this.facturar = false; 
     this.facturarOpCliente();
   }
 
   facturarOpProveedor(){
     this.facturaProveedor = this.facOpProveedorService.facturarOpProveedor(this.opCerrada);    
-    //console.log()("1) esta es la factura-proveedor FINAL: ", this.facturaProveedor);
-    
+    ////console.log()("1) esta es la factura-proveedor FINAL: ", this.facturaProveedor);    
     //this.addItem("facturaOpProveedor", this.facturaProveedor)
     this.opForm.reset();
     this.facturar = false;
-    //this.ngOnDestroy();
-    //this.ngOnInit(); 
     this.facturarOpCliente();
   }
 
   facturarOpCliente(){
     this.facturaCliente = this.facOpClienteService.facturarOpCliente(this.opCerrada);    
-    //console.log()("2) esta es la factura-cliente FINAL: ", this.facturaCliente);
-    
+    console.log("6) esta es la factura-cliente FINAL: ", this.facturaCliente);    
     //this.addItem("facturaOpCliente", this.facturaCliente)
     this.opForm.reset();
     this.facturar = false;
-    this.armarFacturas()
-    //this.ngOnDestroy();
-    //this.ngOnInit();
+    this.armarFacturas();
   }
 
   addItem(componente: string, item: any): void {
-    console.log("llamada al storage desde op-abiertas, addItem");
+    //console.log("llamada al storage desde op-abiertas, addItem");
     this.storageService.addItem(componente, item);     
-  /*   //item.fechaOp = new Date()
-    ////console.log()(" storage add item ", componente, item,)
-
-
-    this.dbFirebase.create(componente, item)
-      // .then((data) => ////console.log()(data))
-      // .then(() => this.ngOnInit())
-      .catch((e) => ////console.log()(e.message)); */
   }
 
   armarFacturas(){
     
-    if(this.detalleOp.chofer.proveedor === "monotributista"){
+    if(this.detalleOp.chofer.proveedor === "monotributista"){      
       this.facturaCliente.montoFacturaChofer = this.facturaChofer.total.valueOf();      
       this.facturaChofer.montoFacturaCliente = this.facturaCliente.total.valueOf();
       this.addItem("facturaOpCliente", this.facturaCliente);
       this.addItem("facturaOpChofer", this.facturaChofer);
+      
     } else{
       this.facturaCliente.montoFacturaChofer = this.facturaProveedor.total.valueOf();    
       this.facturaProveedor.montoFacturaCliente = this.facturaCliente.total.valueOf();
-      //console.log()("3) clientes: ",this.facturaCliente );
-      //console.log()("4) proveedores: ",this.facturaProveedor );
+      ////console.log()("3) clientes: ",this.facturaCliente );
+      ////console.log()("4) proveedores: ",this.facturaProveedor );
       
       this.addItem("facturaOpCliente", this.facturaCliente);
       this.addItem("facturaOpProveedor", this.facturaProveedor)
     }
   }
   
-  eliminarOperacion(op: Operacion){
+  eliminarOperacion(op: any){
+    this.seleccionarOp(op)
     Swal.fire({
       title: "¿Cancelar la operación?",
       text: "No se podrá revertir esta acción",
@@ -268,8 +342,9 @@ export class OpAbiertasComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        console.log("llamada al storage desde op-abiertas, deleteItem");
-        this.storageService.deleteItem(this.componente, op);
+        //console.log("llamada al storage desde op-abiertas, deleteItem");
+        this.storageService.deleteItem(this.componente, this.detalleOp);
+        //console.log("consultas Op: " , this.$consultasOp);
         Swal.fire({
           title: "Confirmado",
           text: "La operación ha sido cancelada",
@@ -280,14 +355,16 @@ export class OpAbiertasComponent implements OnInit {
     
   }
 
-  abrirEdicion(op:Operacion):void {
-    this.opEditar = op;    
-    this.clienteSeleccionado = op.cliente;
-    this.choferSeleccionado = op.chofer;
+  abrirEdicion(op:any):void {
+    this.seleccionarOp(op)
+    this.opEditar = this.detalleOp
+    this.clienteSeleccionado = this.detalleOp.cliente;
+    this.choferSeleccionado = this.detalleOp.chofer;
    /*  this.unidadesConFrio = op.unidadesConFrio; */
-    this.acompaniante = op.acompaniante;
-    this.tarifaEspecial = op.tarifaEspecial;
-    //////console.log()("este es la op a editar: ", this.opEditar);
+    this.acompaniante = this.detalleOp.acompaniante;
+    this.tarifaEspecial = this.detalleOp.tarifaEspecial;
+    this.tEspecial = this.detalleOp.tEspecial;
+    //console.log("este es la op a editar: ", this.opEditar);
     this.armarForm();
     
   }
@@ -341,7 +418,7 @@ export class OpAbiertasComponent implements OnInit {
     /* this.opEditar.unidadesConFrio = this.unidadesConFrio; */
     this.opEditar.acompaniante = this.acompaniante;
     this.opEditar.tarifaEspecial = this.tarifaEspecial;
-    ////console.log()("este es la op editada: ", this.opEditar);
+    //////console.log()("este es la op editada: ", this.opEditar);
     if(this.opEditar.tarifaEspecial && this.opEditar.tEspecial !== null ) {
       this.opEditar.tEspecial.chofer.concepto = this.form.value.choferConcepto;
       this.opEditar.tEspecial.chofer.valor = this.form.value.choferValor;
@@ -350,7 +427,8 @@ export class OpAbiertasComponent implements OnInit {
     } else{
       this.opEditar.tEspecial = null;
     }
-
+    //console.log("operacion editada: ",this.opEditar );
+    
     console.log("llamada al storage desde op-abiertas, updateItem");
     this.storageService.updateItem(this.componente, this.opEditar)
     //this.ngOnInit();  
@@ -358,7 +436,7 @@ export class OpAbiertasComponent implements OnInit {
   }
 
   selectAcompaniante(e: any) {
-    //////console.log()(e.target.value)    
+    ////////console.log()(e.target.value)    
     if(e.target.value === "si"){
       this.acompaniante = true;
     }else if (e.target.value === "no"){
@@ -366,31 +444,31 @@ export class OpAbiertasComponent implements OnInit {
     }else{
       this.acompaniante = this.opEditar.acompaniante;
     }
-    //////console.log()("acompaniante: ", this.acompaniante);
+    ////////console.log()("acompaniante: ", this.acompaniante);
   }
 
   changeCliente(e: any) {
-    //////console.log()(e.target.value)
+    ////////console.log()(e.target.value)
     let clienteForm;
     clienteForm = this.$clientes.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     });
     this.clienteSeleccionado = clienteForm[0];               
-    //////console.log()(this.clienteSeleccionado);
+    ////////console.log()(this.clienteSeleccionado);
   }
 
   changeChofer(e: any) {
-    //////console.log()(e.target.value)
+    ////////console.log()(e.target.value)
     let choferForm;
     choferForm = this.$choferes.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     });
     this.choferSeleccionado = choferForm[0];               
-    //////console.log()(this.choferSeleccionado);
+    ////////console.log()(this.choferSeleccionado);
   }
 
   selectTarifaEspecial(e: any) {
-    //////console.log()(e.target.value)    
+    ////////console.log()(e.target.value)    
     if(e.target.value === "si"){
       this.tarifaEspecial = true;
       this.acompaniante = false;
@@ -399,6 +477,6 @@ export class OpAbiertasComponent implements OnInit {
     }else{
       this.tarifaEspecial = this.opEditar.tarifaEspecial;
     }
-    ////console.log()("tarifa especial: ", this.tarifaEspecial);
+    //////console.log()("tarifa especial: ", this.tarifaEspecial);
   }
 }
