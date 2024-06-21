@@ -1,18 +1,14 @@
 import { Component, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Router } from '@angular/router';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
-import { Subscription } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { Operacion, TarifaEspecial } from 'src/app/interfaces/operacion';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
 import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
-import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
 import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
@@ -30,13 +26,10 @@ export class OpAbiertasComponent implements OnInit {
   @Input() btnConsulta:boolean = false;
   detalleOp!: Operacion;
   componente: string = "operacionesActivas";      
-  titulo: string = "consultasOpActivas";
-  
+  titulo: string = "consultasOpActivas";  
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];
-  searchText: string = "";
-  
   $opActivas!: Operacion[];
   $consultasOp!: Operacion [];
   facturar: boolean = false;
@@ -55,8 +48,7 @@ export class OpAbiertasComponent implements OnInit {
   tarifaEspecial!:boolean;
   tEspecial!: TarifaEspecial | null;
   //////////////////////////////////////////////////////////////////////////////////////
-  @ViewChild('tablaClientes') table: any;
-  $facturaOpCliente!: FacturaOpCliente [];
+  @ViewChild('tablaClientes') table: any;  
   rows: any[] = [];
   filteredRows: any[] = [];
   paginatedRows: any[] = [];
@@ -79,8 +71,7 @@ export class OpAbiertasComponent implements OnInit {
   offset = 0;
   sortType = SortType.multi; // Aquí usamos la enumeración SortType
   selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
-  ColumnMode = ColumnMode;
-  mostrarDetallesOp: boolean [] = [];
+  ColumnMode = ColumnMode;  
   encapsulation!: ViewEncapsulation.None;
   ajustes: boolean = false;
   firstFilter = '';
@@ -88,9 +79,7 @@ export class OpAbiertasComponent implements OnInit {
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  private subscriptions: Subscription[] = [];
-
-  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService, private facOpProveedorService: FacturacionProveedorService, private router: Router) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService, private facOpProveedorService: FacturacionProveedorService) {
     this.opForm = this.fb.group({
         km: [''],       
         remito: [''],       
@@ -105,8 +94,7 @@ export class OpAbiertasComponent implements OnInit {
     })
    }
   
-  ngOnInit(): void { 
-    
+  ngOnInit(): void {     
       this.storageService.choferes$.subscribe(data => {
         this.$choferes = data;
       });
@@ -123,8 +111,7 @@ export class OpAbiertasComponent implements OnInit {
       this.storageService.consultasOpActivas$.subscribe(data => {
         this.$consultasOp = data;
         this.armarTabla();
-      });  
-    
+      });      
   }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 armarTabla() {
@@ -156,8 +143,7 @@ armarTabla() {
       observaciones: op.observaciones,
       
     }));
-  }
-  
+  }  
   //console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
   this.applyFilters(); // Aplica filtros y actualiza filteredRows
 }
@@ -185,21 +171,13 @@ onSelect(event: any) {
   // Implementa la lógica de selección de filas
 }
 
-mostrarMasDatos(row:any) {     
-  this.mostrarDetallesOp[row.indice] = !this.mostrarDetallesOp[row.indice];      
-  
-}
-
-
 updateFilter(event: any, filterType: string) {
   const val = event.target.value.toLowerCase();
-
   if (filterType === 'first') {
     this.firstFilter = val;
   } else if (filterType === 'second') {
     this.secondFilter = val;
   }
-
   this.applyFilters();
 }
 
@@ -229,57 +207,25 @@ toggleColumn(column: any) {
 toogleAjustes(){
   this.ajustes = !this.ajustes;
 }
-
-  
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   seleccionarOp(op:any){    
-/*     if(!this.btnConsulta){
-      let seleccion = this.$opActivas.filter((operacion:Operacion)=>{
-        return operacion.idOperacion === op.idOperacion
-      })
-      this.detalleOp = seleccion[0];
-    }else{
-      let seleccion = this.$consultasOp.filter((operacion:Operacion)=>{
-        return operacion.idOperacion === op.idOperacion
-      })
-      this.detalleOp = seleccion[0];
-    } */
     let seleccion = this.$opActivas.filter((operacion:Operacion)=>{
       return operacion.idOperacion === op.idOperacion
     })
-    this.detalleOp = seleccion[0];
-    
-    //console.log(this.detalleOp);
-    
+    this.detalleOp = seleccion[0];    
   }
-
-  /* consultaMes(){
-    if(!this.btnConsulta){   
-      
-      //console.log("llamada al storage desde op-abiertas, getByDateValue");
-      this.storageService.getByDateValue("operacionesActivas", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
-    }     
-  } */
 
   getMsg(msg: any) {
     this.btnConsulta = true;
     ////////console.log()("mensajeeee: ", msg);
     this.fechasConsulta = msg;
-    console.log("mensajeeee: ", this.fechasConsulta);
-    
-  }
-
-  mostrarRemito(documentacion:string){ 
-    //aca leeria de la db para buscar el remito
-    alert("aca iria la imagen")
+    //console.log("mensajeeee: ", this.fechasConsulta);    
   }
 
   crearFacturaOp(op:any){
     this.seleccionarOp(op)
     this.facturar = true;
-    this.opCerrada = this.detalleOp
-    
-
+    this.opCerrada = this.detalleOp;
   }
 
   onSubmit(){
@@ -301,8 +247,6 @@ toogleAjustes(){
           text: "La operación se ha cerrado",
           icon: "success"
         });
-        
-        
       }
     });       
    
@@ -313,9 +257,7 @@ toogleAjustes(){
     this.opCerrada.km = this.opForm.value.km;    
     //this.opCerrada.documentacion = this.opForm.remito;
     this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
-    ////////console.log()("chofer-op. esta es la operacion que se va a cerrar: ", this.opCerrada);    
-    //this.altaOperacionesCerradas();
-    ////console.log()("1): ", this.detalleOp );
+    
     
     this.bajaOperacionesActivas();
     //console.log("consultas Op: " , this.$consultasOp);
@@ -327,17 +269,9 @@ toogleAjustes(){
     this.btnConsulta = false
   }
 
- /*  altaOperacionesCerradas(){
-    this.storageService.addItem("operacionesCerradas", this.opCerrada);    
-    
-    //this.router.navigate(['/op/op-diarias'])
-  } */
-
   bajaOperacionesActivas(){
     //console.log("llamada al storage desde op-abiertas, deleteItem");
     this.storageService.deleteItem("operacionesActivas", this.opCerrada);
-    
-    
   }
 
   facturarFalso(){
@@ -346,51 +280,34 @@ toogleAjustes(){
 
   facturarOpChofer(){
     this.facturaChofer = this.facOpChoferService.facturarOpChofer(this.opCerrada);    
-    console.log("5) esta es la factura-chofer FINAL: ", this.facturaChofer);
-    
+    //console.log("5) esta es la factura-chofer FINAL: ", this.facturaChofer);    
     //this.addItem("facturaOpChofer", this.facturaChofer)
     this.opForm.reset();
-    this.facturar = false;
-    //this.ngOnDestroy();
-    //this.ngOnInit();
+    this.facturar = false; 
     this.facturarOpCliente();
   }
 
   facturarOpProveedor(){
     this.facturaProveedor = this.facOpProveedorService.facturarOpProveedor(this.opCerrada);    
-    ////console.log()("1) esta es la factura-proveedor FINAL: ", this.facturaProveedor);
-    
+    ////console.log()("1) esta es la factura-proveedor FINAL: ", this.facturaProveedor);    
     //this.addItem("facturaOpProveedor", this.facturaProveedor)
     this.opForm.reset();
     this.facturar = false;
-    //this.ngOnDestroy();
-    //this.ngOnInit(); 
     this.facturarOpCliente();
   }
 
   facturarOpCliente(){
     this.facturaCliente = this.facOpClienteService.facturarOpCliente(this.opCerrada);    
-    console.log("6) esta es la factura-cliente FINAL: ", this.facturaCliente);
-    
+    console.log("6) esta es la factura-cliente FINAL: ", this.facturaCliente);    
     //this.addItem("facturaOpCliente", this.facturaCliente)
     this.opForm.reset();
     this.facturar = false;
-    this.armarFacturas()
-    //this.ngOnDestroy();
-    //this.ngOnInit();
+    this.armarFacturas();
   }
 
   addItem(componente: string, item: any): void {
-    console.log("llamada al storage desde op-abiertas, addItem");
+    //console.log("llamada al storage desde op-abiertas, addItem");
     this.storageService.addItem(componente, item);     
-  /*   //item.fechaOp = new Date()
-    //////console.log()(" storage add item ", componente, item,)
-
-
-    this.dbFirebase.create(componente, item)
-      // .then((data) => //////console.log()(data))
-      // .then(() => this.ngOnInit())
-      .catch((e) => //////console.log()(e.message)); */
   }
 
   armarFacturas(){

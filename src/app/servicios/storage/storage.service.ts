@@ -417,15 +417,15 @@ export class StorageService {
           case "operacionesActivas":
             this.getAllSorted("operacionesActivas", 'fecha', 'desc');
             break;
-          case "tarifasChofer":
-            this.getAllSorted("tarifasChofer", 'fecha', 'asc');
+          /* case "tarifasChofer":
+            this.getByFieldValue("tarifasChofer", 'fecha', 'asc');
             break;
           case "tarifasCliente":
-            this.getAllSorted("tarifasCliente", 'fecha', 'asc');
+            this.getByFieldValue("tarifasCliente", 'fecha', 'asc');
             break
           case "tarifasProveedor":
-            this.getAllSorted("tarifasProveedor", 'fecha', 'asc');
-            break
+            this.getByFieldValue("tarifasProveedor", 'fecha', 'asc');
+            break */
         }
         
       }

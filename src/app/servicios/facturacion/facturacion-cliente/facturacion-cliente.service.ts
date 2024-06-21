@@ -244,7 +244,7 @@ export class FacturacionClienteService {
       this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.cliente.valor;
       this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.cliente.concepto;
       console.log("4) tarifa CLIENTE editada", this.ultimaTarifa);
-      //this.storageService.updateItem("tarifasCliente", this.ultimaTarifa)
+      this.storageService.updateItem("tarifasCliente", this.ultimaTarifa)
       } else{
         this.categoriaMonto = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
         this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
