@@ -64,15 +64,18 @@ export class ConsultaOpComponent implements OnInit {
   }
 
   consultaOperaciones(fechaDesde:any, fechaHasta:any){
-    if(this.titulo === "consultasOpActivas"){
+   /*  if(this.titulo === "consultasOpActivas"){
       console.log("llamada al storage desde consulta-op, getByDateValue");   
       this.storageService.getByDateValue("operacionesActivas", "fecha", fechaDesde, fechaHasta, this.titulo);
     } else {
       console.log("llamada al storage desde consulta-op, getByDateValue");   
       this.storageService.getByDateValue("operacionesCerradas", "fecha", fechaDesde, fechaHasta, this.titulo);
+    } */
+   console.log();
+   
+    if(this.titulo === "operacionesActivas"){
+    this.storageService.getByDateValue(this.titulo, "fecha", fechaDesde, fechaHasta, "consultasOpActivas");
     }
-    
   }
-
 
 }

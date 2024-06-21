@@ -90,7 +90,7 @@ export class FacturacionChoferService {
     this.storageService.historialTarifas$.subscribe(data => {
       this.$tarifas = data.filter((tarifa: { idChofer: number; }) => tarifa.idChofer === this.choferOp.idChofer);
 
-      //console.log()("Todas: ",this.$tarifas);
+      console.log("1) Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
       this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
@@ -98,7 +98,7 @@ export class FacturacionChoferService {
       });
 
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
-      //console.log()("ultima: ", this.ultimaTarifa);
+      console.log("2) ultima: ", this.ultimaTarifa);
       this.calcularLiquidacion(op);
     });  
   }
@@ -139,9 +139,9 @@ export class FacturacionChoferService {
     //console.log()("esta es la tarifa a facturar: ", this.$tarifaChofer);
     
     if(op.tarifaEspecial){
-      
+      console.log("3)tarfia especial");
       this.facturarTarifaEspecial(op);
-      //console.log()("tarfia especial");
+      
       
     } else{
 
@@ -255,6 +255,7 @@ export class FacturacionChoferService {
       this.total = typeof op.tEspecial.chofer.valor === 'number'? op.tEspecial.chofer.valor : 0;
       this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.chofer.valor;
       this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.chofer.concepto;
+      console.log("4) tarifa editada", this.ultimaTarifa);      
       this.storageService.updateItem("tarifasChofer", this.ultimaTarifa)
       } else{
         this.montoValorJornada = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
