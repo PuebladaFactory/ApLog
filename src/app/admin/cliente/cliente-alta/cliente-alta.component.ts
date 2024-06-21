@@ -51,7 +51,14 @@ export class ClienteAltaComponent implements OnInit {
       this.addItem();        
       this.activeModal.close();    
     } else{
-      alert("error en el formulario")
+      //alert("error en el formulario")
+      Swal.fire({
+        icon: "error",
+        
+        text: "El formulario contiene errores ",
+//        
+      });
+
     }
     
    }

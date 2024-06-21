@@ -151,23 +151,38 @@
           <form [formGroup]="formContacto" (ngSubmit)="guardarContacto()">
               <div class="input-group">
                   <span class="input-group-text contactoForm" id="basic-addon3">Puesto: </span>
-                  <input type="text" formControlName="puesto" class="form-control" required>
+                  <input type="text" formControlName="puesto" class="form-control" required
+                  type="text" [placeholder]="'ej:  director de logistica'" 
+                          [ngClass]="{ 'is-invalid': formContacto.get('puesto').invalid && 
+                          (formContacto.get('puesto').dirty || formContacto.get('puesto').touched) }">
               </div>   
               <div class="input-group">
                   <span class="input-group-text contactoForm" id="basic-addon3">Apellido: </span>
-                  <input type="text" formControlName="apellido" class="form-control" required>
+                  <input type="text" formControlName="apellido" class="form-control" required
+                  type="text" [placeholder]="'ej:  Pautasso'" 
+                          [ngClass]="{ 'is-invalid': formContacto.get('apellido').invalid && 
+                          (formContacto.get('apellido').dirty || formContacto.get('apellido').touched) }">
               </div>    
               <div class="input-group">
                   <span class="input-group-text contactoForm" id="basic-addon3">Nombre: </span>
-                  <input type="text" formControlName="nombre" class="form-control" required>
+                  <input type="text" formControlName="nombre" class="form-control" required
+                  type="text" [placeholder]="'ej:  Rocio'" 
+                          [ngClass]="{ 'is-invalid': formContacto.get('nombre').invalid && 
+                          (formContacto.get('nombre').dirty || formContacto.get('nombre').touched) }">
               </div>       
               <div class="input-group">
                   <span class="input-group-text contactoForm" id="basic-addon3">Telefono: </span>
-                  <input type="text" formControlName="telefono" class="form-control" required>
+                  <input type="text" formControlName="telefono" class="form-control" required
+                  type="text" [placeholder]="'ej:  351345166'" 
+                          [ngClass]="{ 'is-invalid': formContacto.get('telefono').invalid && 
+                          (formContacto.get('telefono').dirty || formContacto.get('telefono').touched) }">
               </div>  
               <div class="input-group">
                   <span class="input-group-text contactoForm" id="basic-addon3">Email: </span>
-                  <input type="text" formControlName="email" class="form-control" required>
+                  <input type="text" formControlName="email" class="form-control" required
+                  type="text" [placeholder]="'ej:  davidcortes@gmail.com'" 
+                          [ngClass]="{ 'is-invalid': formContacto.get('email').invalid && 
+                          (formContacto.get('email').dirty || formContacto.get('email').touched) }">
               </div>  
           </form>
       </div>

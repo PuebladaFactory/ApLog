@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { LoginComponent } from 'src/app/appLogin/login/login.component';
 import { Cliente, Contacto } from 'src/app/interfaces/cliente';
@@ -38,12 +38,17 @@ export class ClienteListadoComponent implements OnInit {
     })
 
     this.formContacto = this.fb.group({
-      puesto:[""],
+      puesto: ["", [Validators.required, Validators.maxLength(30)]],
+      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
+      nombre: ["", [Validators.required, Validators.maxLength(30)]],
+      telefono: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]], 
+      email: ["",[Validators.required, Validators.email]],
+      /*puesto:[""],
       apellido:[""],
       nombre: [""],
       telefono: [""],
-      email:[""],
-    })
+      email:[""],*/
+    });
   }
   
   ngOnInit(): void { 
@@ -96,7 +101,7 @@ export class ClienteListadoComponent implements OnInit {
           icon: "success"
         });
       }
-    });   
+    });    
     
    }
 
