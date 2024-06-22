@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente } from 'src/app/interfaces/cliente';
@@ -8,6 +8,7 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalAltaTarifaComponent } from '../modal-alta-tarifa/modal-alta-tarifa.component';
 import Swal from 'sweetalert2';
+import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 
 @Component({
   selector: 'app-cliente-tarifa',
@@ -28,7 +29,7 @@ export class ClienteTarifaComponent implements OnInit {
   adicionales!: AdicionalTarifa;
   historialTarifas$!: any;
   $ultimaTarifaAplicada!:any;
-  $tarifasCliente:any;
+  $tarifasCliente!:TarifaCliente[];
   tarifaEspecialForm:any;
   tarifaEspecialEditForm:any;  
   acompanianteForm:any;
@@ -38,6 +39,46 @@ export class ClienteTarifaComponent implements OnInit {
   tarifaEditar!: TarifaCliente;
   asignarTarifa: boolean = false
 
+  ////////////////////////////////////////////////////////////////////////////////////////
+columns: any[] = [];
+rows: any[] = [];
+filteredRows: any[] = [];
+paginatedRows: any[] = [];
+allColumns = [
+//    { prop: '', name: '', selected: true, flexGrow:1  },
+  { prop: 'fecha', name: 'Fecha', selected: false,  },  
+  { prop: 'idTarifa', name: 'Id Tarifa', selected: false },  
+  { prop: 'utilitario', name: 'Utilitario', selected: true  },          
+  { prop: 'furgon', name: 'furgon', selected: true  },
+  { prop: 'furgonGrande', name: 'Furgon Grande', selected: true },
+  { prop: 'chasisLiviano', name: 'Chasis Liviano', selected: true },
+  { prop: 'chasis', name: 'Chasis', selected: true  },    
+  { prop: 'balancin', name: 'Balancin', selected: true  },    
+  { prop: 'semiRemolqueLocal', name: 'Semi Remolque Local', selected: true },    
+  { prop: 'portacontenedores', name: 'Portacontenedores', selected: true  },    
+  { prop: 'acompaniante', name: 'Acompañante', selected: true  },  
+  { prop: 'primerSectorKm', name: 'Km 1er Sector Distancia', selected: false  },  
+  { prop: 'primerSectorValor', name: 'Km 1er Sector Valor', selected: true  },  
+  { prop: 'intervalosKm', name: 'Km Intervalos Distancia', selected: false },     
+  { prop: 'intervalosValor', name: 'Km Intervalos Valor', selected: true },  
+  { prop: 'tEspecialConcepto', name: 'T.E. Concepto', selected: true  },  
+  { prop: 'tEspecialValor', name: 'T.E. Valor', selected: true },  
+  
+];
+visibleColumns = this.allColumns.filter(column => column.selected);
+selected = [];
+count = 0;
+limit = 20;
+offset = 0;
+sortType = SortType.multi; // Aquí usamos la enumeración SortType
+selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
+ColumnMode = ColumnMode;  
+encapsulation!: ViewEncapsulation.None;
+ajustes: boolean = false;
+firstFilter = '';
+secondFilter = '';
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService, private modalService: NgbModal){
     
@@ -99,7 +140,8 @@ this.acompanianteEditForm = this.fb.group({
       this.$tarifasCliente = data;
       //console.log()(this.$tarifasCliente);
       this.$tarifasCliente.sort((x:TarifaCliente, y:TarifaCliente) => y.idTarifaCliente - x.idTarifaCliente);
-      //console.log()(this.$tarifasCliente);
+      console.log("1) tarifas del Cliente", this.$tarifasCliente);
+      this.armarTabla()
     })   
   }
 
@@ -118,13 +160,24 @@ this.acompanianteEditForm = this.fb.group({
     //this.ngOnInit();
   }  
 
-  editarTarifa(tarifa:TarifaCliente){
-    this.tarifaEditar = tarifa;  
+  seleccionarTarifa(row:any){
+    let seleccion = this.$tarifasCliente.filter((tarifa:TarifaCliente)=>{
+      return tarifa.idTarifaCliente === row.idTarifa
+    })
+    this.tarifaEditar = seleccion[0];   
+  }
+
+  editarTarifa(row:any){
+    console.log(row);
+    
+    this.seleccionarTarifa(row);
+    //this.tarifaEditar = tarifa;  
     //console.log()(this.tarifaEditar);
     this.armarTarifaEditar();
   }
 
-  eliminarTarifa(tarifa:TarifaCliente){    
+  eliminarTarifa(row:any){    
+    this.seleccionarTarifa(row);
     Swal.fire({
       title: "¿Eliminar la tarifa?",
       text: "No se podrá revertir esta acción",
@@ -136,7 +189,7 @@ this.acompanianteEditForm = this.fb.group({
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        this.storageService.deleteItem(this.componente, tarifa);
+        this.storageService.deleteItem(this.componente, this.tarifaEditar);
         Swal.fire({
           title: "Confirmado",
           text: "La tarifa ha sido borrada",
@@ -248,4 +301,130 @@ this.acompanianteEditForm = this.fb.group({
     }
     
   }
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    armarTabla() {
+      const headers = [
+        'fecha', 'idTarifa', 'utilitario', 'furgon', 'furgonGrande', 'chasisLiviano', 'chasis', 
+        'balancin', 'semiRemolqueLocal', 'portacontenedores','acompaniante', 'primerSectorKm', 'primerSectorValor', 
+        'intervalosKm', 'intervalosValor','tEspecialConcepto', 'tEspecialValor'
+      ];
+  
+      const transformedData = headers.map(header => {
+        const row: any = { header };
+        this.$tarifasCliente.forEach((tarifa: TarifaCliente, index: number) => {
+          row[`tarifa${index}`] = this.getValueByHeader(tarifa, header);
+        });
+        return row;
+      });
+  
+      this.rows = transformedData;
+      this.columns = [
+        { prop: 'header', name: 'Header', width: 100 },
+        ...this.$tarifasCliente.map((_, index) => ({ prop: `tarifa${index}`, name: `Tarifa ${index + 1}`, width: 50 }))
+      ];
+  
+      this.applyFilters();
+    }
+  
+    getValueByHeader(tarifa: TarifaCliente, header: string): any {
+      switch (header) {
+        case 'fecha':
+          return tarifa.fecha;
+        case 'idTarifa':
+          return tarifa.idTarifaCliente;
+        case 'utilitario':
+          return tarifa.cargasGenerales.utilitario;
+        case 'furgon':
+          return tarifa.cargasGenerales.furgon;
+        case 'furgonGrande':
+          return tarifa.cargasGenerales.furgonGrande;
+        case 'chasisLiviano':
+          return tarifa.cargasGenerales.chasisLiviano;
+        case 'chasis':
+          return tarifa.cargasGenerales.chasis;
+        case 'balancin':
+          return tarifa.cargasGenerales.balancin;
+        case 'semiRemolqueLocal':
+          return tarifa.cargasGenerales.semiRemolqueLocal;
+        case 'portacontenedores':
+          return tarifa.cargasGenerales.portacontenedores;
+        case 'tEspecialConcepto':
+          return tarifa.tarifaEspecial.concepto;
+        case 'tEspecialValor':
+          return tarifa.tarifaEspecial.valor;
+        case 'acompaniante':
+          return tarifa.adicionales.acompaniante;
+        case 'primerSectorKm':
+          return tarifa.adicionales.adicionalKm.primerSector.distancia;
+        case 'primerSectorValor':
+          return tarifa.adicionales.adicionalKm.primerSector.valor;
+        case 'intervalosKm':
+          return tarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo;
+        case 'intervalosValor':
+          return tarifa.adicionales.adicionalKm.sectoresSiguientes.valor;
+        default:
+          return null;
+      }
+    }
+    
+    setPage(pageInfo: any) {
+      this.offset = pageInfo.offset;
+      this.updatePaginatedRows();
+    }
+    
+    updatePaginatedRows() {
+      const start = this.offset * this.limit;
+      const end = start + this.limit;
+      this.paginatedRows = this.filteredRows.slice(start, end);
+    }
+    
+    onSort(event:any) {
+      // Implementa la lógica de ordenamiento
+    }
+    
+    onActivate(event: any) {
+      // Implementa la lógica de activación de filas
+    }
+    
+    onSelect(event: any) {
+      // Implementa la lógica de selección de filas
+    }
+    
+    updateFilter(event: any, filterType: string) {
+      const val = event.target.value.toLowerCase();
+      if (filterType === 'first') {
+        this.firstFilter = val;
+      } else if (filterType === 'second') {
+        this.secondFilter = val;
+      }
+      this.applyFilters();
+    }
+    
+    applyFilters() {
+      this.filteredRows = this.rows.filter(row => {
+        const firstCondition = Object.values(row).some(value => 
+          String(value).toLowerCase().includes(this.firstFilter)
+        );
+        const secondCondition = Object.values(row).some(value => 
+          String(value).toLowerCase().includes(this.secondFilter)
+        );
+    
+        return firstCondition && secondCondition;
+      });
+    
+      this.count = this.filteredRows.length; // Actualiza el conteo de filas
+      this.setPage({ offset: this.offset }); // Actualiza los datos para la página actual
+    }
+    
+    toggleColumn(column: any) {
+      if (column.prop !== '') { // Siempre muestra la columna del botón
+        column.selected = !column.selected;
+      }
+      this.visibleColumns = this.allColumns.filter(col => col.selected);
+    }
+    
+    toogleAjustes(){
+      this.ajustes = !this.ajustes;
+    }
 }
