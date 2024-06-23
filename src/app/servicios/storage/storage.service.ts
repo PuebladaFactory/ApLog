@@ -342,11 +342,20 @@ export class StorageService {
       });
 
   }
-
+  
   getByFieldValue(componente: any, campo:any, value:any){
     console.log(" storage getByFieldValue ", componente, campo, value)
     this.dbFirebase
       .getByFieldValue(componente, campo, value)
+      .subscribe(data => {
+        this.setInfo(componente, data)
+      })
+  }
+
+  getByFieldValueLimit(componente: any, campo:any, value:any, limit:number){
+    console.log(" storage getByFieldValue ", componente, campo, value)
+    this.dbFirebase
+      .getByFieldValueLimit(componente, campo, value, limit)
       .subscribe(data => {
         this.setInfo(componente, data)
       })
