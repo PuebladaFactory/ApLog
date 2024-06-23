@@ -327,7 +327,7 @@ this.acompanianteEditForm = this.fb.group({
         intervalosKm: tarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo,
         intervalosValor: tarifa.adicionales.adicionalKm.sectoresSiguientes.valor,
         tEspecialConcepto: tarifa.tarifaEspecial.concepto === "" ? "Sin datos" : tarifa.tarifaEspecial.concepto , 
-        tEspecialValor: tarifa.tarifaEspecial.valor,
+        tEspecialValor: typeof tarifa.tarifaEspecial.valor === 'number'? tarifa.tarifaEspecial.valor : 0,
       }));
 /*       const headers = [
         'fecha', 'idTarifa', 'utilitario', 'furgon', 'furgonGrande', 'chasisLiviano', 'chasis', 

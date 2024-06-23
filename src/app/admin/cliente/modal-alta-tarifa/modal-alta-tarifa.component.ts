@@ -14,7 +14,7 @@ import Swal from 'sweetalert2';
 export class ModalAltaTarifaComponent implements OnInit {
   @Input() fromParent: any;
   
-  form:any;  
+  /* form:any;   */
   clienteSeleccionado!: Cliente;
   tarifa!:TarifaCliente;  
   componente: string = "tarifasCliente";
@@ -44,39 +44,12 @@ export class ModalAltaTarifaComponent implements OnInit {
   ];
   nuevaTarifaCliente!: TarifaCliente;
 
-  constructor(private fb: FormBuilder, public activeModal: NgbActiveModal,  private storageService: StorageService){
-    this.form = this.fb.group({                    //formulario para la carga general      
-      utilitario:[""],
-      furgon:[""],
-      furgonGrande:[""],
-      chasisLiviano:[""],
-      chasis:[""],
-      balancin:[""],
-      semiRemolqueLocal:[""],
-      portacontenedores:[""],        
-                               //formulario para los extras de la carga general
-      concepto:[""],
-      valor:[""],
-                                //acompañante
-      acompaniante: [""],
-                              //formulario para los adicionales de la jornada
-      distanciaPrimerSector: [""],
-      valorPrimerSector:[""],
-      distanciaIntervalo:[""],
-      valorIntervalo:[""],
- });
-
-
-  }
+  constructor(public activeModal: NgbActiveModal,  private storageService: StorageService){}
   
-  ngOnInit(): void {
-    console.log(this.fromParent);
+  ngOnInit(): void {    
     this.clienteSeleccionado = this.fromParent.cliente
-    this.tarifasCliente = this.fromParent.tarifas
-    console.log(this.clienteSeleccionado);
-    console.log("tarifa: ",this.tarifasCliente);
-    this.buscarUltTarifa();
-    
+    this.tarifasCliente = this.fromParent.tarifas    
+    this.buscarUltTarifa();    
   }
 
   buscarUltTarifa(){
@@ -89,55 +62,14 @@ export class ModalAltaTarifaComponent implements OnInit {
       this.ultimaTarifa = null
     }
     // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
-    console.log("1) ultima: ", this.ultimaTarifa);
-    
+    //console.log("1) ultima: ", this.ultimaTarifa);    
   }
 
   onSubmit() {
-    this.armarTarifa();    
+    this.addItem() 
   }
 
-  armarTarifa(){
-    this.tarifa = {
-      id : null,
-      idTarifaCliente:new Date().getTime(),
-      idCliente: this.clienteSeleccionado.idCliente,
-      fecha: new Date().toISOString().split('T')[0],    
-      cargasGenerales:  {
-        utilitario: this.form.value.acompaniante,   //mini
-        furgon:this.form.value.furgon,       //maxi
-        furgonGrande:this.form.value.furgonGrande,
-        chasisLiviano:this.form.value.chasisLiviano,   //camion
-        chasis:this.form.value.chasis,
-        balancin:this.form.value.balancin,
-        semiRemolqueLocal:this.form.value.semiRemolqueLocal,
-        portacontenedores: this.form.value.portacontenedores,
-    },      
-      adicionales: {    
-        acompaniante: this.form.value.acompaniante,
-        adicionalKm: {    
-          primerSector: {                     
-              distancia: this.form.value.distanciaPrimerSector,
-              valor: this.form.value.valorPrimerSector,
-          },
-          sectoresSiguientes:{
-              intervalo: this.form.value.distanciaIntervalo,
-              valor: this.form.value.valorIntervalo,
-          }
-      },
-    },
-      //tEspecial: boolean;
-      tarifaEspecial: {    
-        concepto: this.form.value.concepto,
-        valor: this.form.value.valor,
-        
-    }
-  }  
-   ////console.log()(this.tarifa);    
-   this.addItem(this.tarifa) 
-  }
-
-  addItem(item:any): void {  
+  addItem(): void {  
     Swal.fire({
       title: "¿Agregar la tarifa?",
       //text: "You won't be able to revert this!",
@@ -163,24 +95,12 @@ export class ModalAltaTarifaComponent implements OnInit {
         });   
         
       }
-    });   
-    
+    });      
     //this.closeModal();
   }  
 
   closeModal() {
     this.activeModal.close();    
-  }
-
-  tipoAumento(e:any){
-    console.log(e.target.id);
-    if(e.target.id === "porcentaje"){
-      this.porcentaje= true;
-      this.valor= false;
-    } else if (e.target.id === "valor"){
-      this.porcentaje= false;
-      this.valor= true;
-    }
   }
 
   getUltimaTarifa(categoria: string): number | string {
@@ -332,12 +252,6 @@ export class ModalAltaTarifaComponent implements OnInit {
 
   guardarTarifa() {
     this.nuevaTarifaCliente = this.guardarNuevaTarifaCliente();
-    
-    
-    // Aquí puedes llamar a tu servicio para guardar el nuevo objeto en la base de datos
-    /* this.tarifaService.guardarTarifaCliente(nuevaTarifaCliente).subscribe(response => {
-      // Maneja la respuesta del servicio
-    }); */
   }
 
 }
