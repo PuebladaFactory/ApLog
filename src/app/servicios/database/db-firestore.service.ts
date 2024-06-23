@@ -52,6 +52,19 @@ getByFieldValue(componente:string, campo:string, value:any){
     .valueChanges(({  idField: 'id' })); 
   }
 
+  getByFieldValueLimit(componente: string, campo: string, value: any, limite: number) {
+    // Devuelve los docs de la colección que tengan un campo con un valor determinado
+    // Campo debe existir en la colección, si está anidado pasar ruta separada por puntos (field.subfield)
+    // Orden solo asc o desc
+  
+    let dataCollection = `/Vantruck/datos/${componente}`;
+    return this.firestore2.collection(dataCollection, ref => ref
+      .where(campo, '==', value)
+      .orderBy('fecha', 'desc')
+      .limit(limite))
+      .valueChanges({ idField: 'id' });
+  }
+
   getByDateValue(componente:string, campo:string, value1:any, value2:any){
     // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
     // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)

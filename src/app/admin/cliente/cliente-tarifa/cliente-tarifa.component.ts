@@ -46,23 +46,23 @@ filteredRows: any[] = [];
 paginatedRows: any[] = [];
 allColumns = [
 //    { prop: '', name: '', selected: true, flexGrow:1  },
-  { prop: 'fecha', name: 'Fecha', selected: false,  },  
-  { prop: 'idTarifa', name: 'Id Tarifa', selected: false },  
-  { prop: 'utilitario', name: 'Utilitario', selected: true  },          
-  { prop: 'furgon', name: 'furgon', selected: true  },
-  { prop: 'furgonGrande', name: 'Furgon Grande', selected: true },
-  { prop: 'chasisLiviano', name: 'Chasis Liviano', selected: true },
-  { prop: 'chasis', name: 'Chasis', selected: true  },    
-  { prop: 'balancin', name: 'Balancin', selected: true  },    
-  { prop: 'semiRemolqueLocal', name: 'Semi Remolque Local', selected: true },    
-  { prop: 'portacontenedores', name: 'Portacontenedores', selected: true  },    
-  { prop: 'acompaniante', name: 'Acompañante', selected: true  },  
-  { prop: 'primerSectorKm', name: 'Km 1er Sector Distancia', selected: false  },  
-  { prop: 'primerSectorValor', name: 'Km 1er Sector Valor', selected: true  },  
-  { prop: 'intervalosKm', name: 'Km Intervalos Distancia', selected: false },     
-  { prop: 'intervalosValor', name: 'Km Intervalos Valor', selected: true },  
-  { prop: 'tEspecialConcepto', name: 'T.E. Concepto', selected: true  },  
-  { prop: 'tEspecialValor', name: 'T.E. Valor', selected: true },  
+  { prop: 'fecha', name: 'Fecha', selected: true, flexGrow:4 },  
+  { prop: 'idTarifa', name: 'Id Tarifa', selected: false, flexGrow:2 },  
+  { prop: 'utilitario', name: 'Utilitario', selected: true, flexGrow:2  },          
+  { prop: 'furgon', name: 'furgon', selected: true, flexGrow:2  },
+  { prop: 'furgonGrande', name: 'Furgon Grande', selected: true, flexGrow:2 },
+  { prop: 'chasisLiviano', name: 'Chasis Liviano', selected: true, flexGrow:2 },
+  { prop: 'chasis', name: 'Chasis', selected: true, flexGrow:2  },    
+  { prop: 'balancin', name: 'Balancin', selected: true, flexGrow:2  },    
+  { prop: 'semiRemolqueLocal', name: 'Semi Remolque Local', selected: true, flexGrow:2 },    
+  { prop: 'portacontenedores', name: 'Portacontenedores', selected: true, flexGrow:2  },    
+  { prop: 'acompaniante', name: 'Acompañante', selected: true, flexGrow:2  },  
+  { prop: 'primerSectorKm', name: 'Km 1er Sector Distancia', selected: false, flexGrow:2  },  
+  { prop: 'primerSectorValor', name: 'Km 1er Sector Valor', selected: true, flexGrow:2  },  
+  { prop: 'intervalosKm', name: 'Km Intervalos Distancia', selected: false, flexGrow:2 },     
+  { prop: 'intervalosValor', name: 'Km Intervalos Valor', selected: true, flexGrow:2 },  
+  { prop: 'tEspecialConcepto', name: 'T.E. Concepto', selected: true, flexGrow:4  },  
+  { prop: 'tEspecialValor', name: 'T.E. Valor', selected: true, flexGrow:2 },  
   
 ];
 visibleColumns = this.allColumns.filter(column => column.selected);
@@ -133,14 +133,14 @@ this.acompanianteEditForm = this.fb.group({
   }
   
   buscarTarifas(){
-    ////console.log()(this.choferSeleccionado[0].idChofer);    
-    this.storageService.getByFieldValue(this.componente, "idCliente", this.clienteSeleccionado[0].idCliente);
+    console.log(this.clienteSeleccionado[0].idCliente);    
+    this.storageService.getByFieldValueLimit(this.componente, "idCliente", this.clienteSeleccionado[0].idCliente,5);
     this.storageService.historialTarifasClientes$.subscribe(data =>{
-      //console.log()(data);
+      console.log("1) data:",data);
       this.$tarifasCliente = data;
       //console.log()(this.$tarifasCliente);
       this.$tarifasCliente.sort((x:TarifaCliente, y:TarifaCliente) => y.idTarifaCliente - x.idTarifaCliente);
-      console.log("1) tarifas del Cliente", this.$tarifasCliente);
+      console.log("2) tarifas del Cliente", this.$tarifasCliente);
       this.armarTabla()
     })   
   }
@@ -197,7 +197,7 @@ this.acompanianteEditForm = this.fb.group({
         });
       }
     });   
-    
+    this.armarTabla()
   }
 
   armarTarifaEditar(){
@@ -283,11 +283,15 @@ this.acompanianteEditForm = this.fb.group({
         const modalRef = this.modalService.open(ModalAltaTarifaComponent, {
           windowClass: 'myCustomModalClass',
           centered: true,
-          size: 'lg', 
+          size: 'md', 
           //backdrop:"static" 
         });
+        let info={
+          cliente: this.clienteSeleccionado[0],
+          tarifas: this.$tarifasCliente,
+        }
         
-        modalRef.componentInstance.fromParent = this.clienteSeleccionado[0];
+        modalRef.componentInstance.fromParent = info,
         modalRef.result.then(
           (result) => {
             ////console.log()("ROOWW:" ,row);
@@ -304,7 +308,28 @@ this.acompanianteEditForm = this.fb.group({
 
     ////////////////////////////////////////////////////////////////////////////////////
     armarTabla() {
-      const headers = [
+      let indice = 0
+      this.rows = this.$tarifasCliente.map((tarifa: TarifaCliente) => ({
+        indice: indice ++,
+        fecha: tarifa.fecha,
+        idTarifa: tarifa.idTarifaCliente,
+        utilitario: tarifa.cargasGenerales.utilitario,
+        furgon: tarifa.cargasGenerales.furgon,
+        furgonGrande: tarifa.cargasGenerales.furgonGrande,
+        chasisLiviano: tarifa.cargasGenerales.chasisLiviano,
+        chasis: tarifa.cargasGenerales.chasis,
+        balancin: tarifa.cargasGenerales.balancin,
+        semiRemolqueLocal: tarifa.cargasGenerales.semiRemolqueLocal,
+        portacontenedores: tarifa.cargasGenerales.portacontenedores,
+        acompaniante: tarifa.adicionales.acompaniante,
+        primerSectorKm: tarifa.adicionales.adicionalKm.primerSector.distancia,
+        primerSectorValor: tarifa.adicionales.adicionalKm.primerSector.valor,
+        intervalosKm: tarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo,
+        intervalosValor: tarifa.adicionales.adicionalKm.sectoresSiguientes.valor,
+        tEspecialConcepto: tarifa.tarifaEspecial.concepto === "" ? "Sin datos" : tarifa.tarifaEspecial.concepto , 
+        tEspecialValor: tarifa.tarifaEspecial.valor,
+      }));
+/*       const headers = [
         'fecha', 'idTarifa', 'utilitario', 'furgon', 'furgonGrande', 'chasisLiviano', 'chasis', 
         'balancin', 'semiRemolqueLocal', 'portacontenedores','acompaniante', 'primerSectorKm', 'primerSectorValor', 
         'intervalosKm', 'intervalosValor','tEspecialConcepto', 'tEspecialValor'
@@ -322,12 +347,13 @@ this.acompanianteEditForm = this.fb.group({
       this.columns = [
         { prop: 'header', name: 'Header', width: 100 },
         ...this.$tarifasCliente.map((_, index) => ({ prop: `tarifa${index}`, name: `Tarifa ${index + 1}`, width: 50 }))
-      ];
+      ];*/
   
       this.applyFilters();
+
     }
   
-    getValueByHeader(tarifa: TarifaCliente, header: string): any {
+  /*   getValueByHeader(tarifa: TarifaCliente, header: string): any {
       switch (header) {
         case 'fecha':
           return tarifa.fecha;
@@ -366,7 +392,7 @@ this.acompanianteEditForm = this.fb.group({
         default:
           return null;
       }
-    }
+    } */
     
     setPage(pageInfo: any) {
       this.offset = pageInfo.offset;

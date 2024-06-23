@@ -1,183 +1,72 @@
 <div class="modal-content">
     <div class="modal-header">
-        <h2>Asignar Tarifa</h2>
+        <div >
+            <h2>Asignar Tarifa</h2>
+            <h4 *ngIf="tarifasCliente.length === 0" class="mt-2">El cliente no tiene tarifas asignadas</h4>
+        </div>        
         <button type="button" class="btn-close btn btn-outline-secondary" (click)="activeModal.close()"></button>
     </div>
     <div class="modal-body">
-      <form [formGroup]="form"  (ngSubmit)="onSubmit()">      
-          <div class="row">
-            <div class="col-4"> <!-- cargas generasles -->
-                <div class="w-75">        
-                    <h3>Cargas Generales: </h3>                                 
-                        <div class="form-group">       
-                            <table>
-                                <tbody>
-                                    <tr class="form-group">
-                                      <td class="parametro">Utilitario: </td>
-                                      <td class="input-group ">                                
-                                        <span class="input-group-text ms-2"> $ </span>
-                                        <input formControlName="utilitario" class="form-control edicion" required type="number">   
-                                      </td>
-                                    </tr>                               
-                                    <tr class="form-group">
-                                        <td class="parametro">Furgon: </td>
-                                        <td class="input-group ">                                
-                                          <span class="input-group-text ms-2"> $ </span>
-                                          <input formControlName="furgon" class="form-control" required type="number">
-                                        </td>
-                                    </tr>
-                                    <tr class="form-group">
-                                        <td class="parametro">Furgon Grande: </td>
-                                        <td class="input-group ">                                
-                                          <span class="input-group-text ms-2"> $ </span>
-                                          <input formControlName="furgonGrande" class="form-control" required type="number">
-                                        </td>
-                                    </tr>
-                                    <tr class="form-group">
-                                        <td class="parametro">Chasis Liviano: </td>
-                                        <td class="input-group ">                                
-                                          <span class="input-group-text ms-2"> $ </span>
-                                          <input formControlName="chasisLiviano" class="form-control edicion" required type="number">   
-                                        </td>
-                                    </tr>                               
-                                    <tr class="form-group">
-                                        <td class="parametro">Chasis: </td>
-                                        <td class="input-group ">                                
-                                          <span class="input-group-text ms-2"> $ </span>
-                                          <input formControlName="chasis" class="form-control" required type="number">
-                                        </td>
-                                    </tr>
-                                    <tr class="form-group">
-                                        <td class="parametro">Balancin: </td>
-                                        <td class="input-group ">                                
-                                          <span class="input-group-text ms-2"> $ </span>
-                                          <input formControlName="balancin" class="form-control edicion" required type="number">   
-                                        </td>
-                                    </tr>                               
-                                    <tr class="form-group">
-                                        <td class="parametro">Semi Remolque Local: </td>
-                                        <td class="input-group ">                                
-                                          <span class="input-group-text ms-2"> $ </span>
-                                          <input formControlName="semiRemolqueLocal" class="form-control" required type="number">
-                                        </td>
-                                    </tr>                        
-                                    <tr class="form-group">
-                                        <td class="parametro">Portacontenedores: </td>
-                                        <td class="input-group ">                                
-                                          <span class="input-group-text ms-2"> $ </span>
-                                          <input formControlName="portacontenedores" class="form-control" required type="number">
-                                        </td>
-                                    </tr>                        
-                                </tbody>
-                            </table>                                                 
-
-                        </div>                
-                </div>        
-            </div>
-        
-            <div class="col-4">   
-                  <div class="w-75">
-                      <h3>Adicionales</h3>                  
-                          <tr class="form-group">
-                              <td class="parametro align-middle">Acompañante: </td>
-                              <td class="input-group ">                                
-                                <span class="input-group-text ms-2"> $ </span>
-                                <input formControlName="acompaniante" class="form-control edicion" required type="number">   
-                              </td>
-                          </tr> 
-                        <!--   <table *ngIf="adicionalKm.length > 0" >
-                              <tr *ngFor="let adicional of adicionalKm, let i = index">
-                                <td class="parametro">
-                                  {{adicional.primerSector}}
-                                </td>
-                                <td>
-                                  {{adicional.sectorSiguiente}}
-                                </td>
-                                <td>
-                                  <svg type="button" (click)="eliminarAdicionalKm(i)" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
-                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                    <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
-                                  </svg>
-                                </td>
-                              </tr>                          
-                          </table> -->
-                      
-                      <h3 class="mt-2">Adicional Km</h3>                  
-                          <tr >
-                              <td class="parametro align-middle">Primer sector desde: </td>
-            
-                              <td class="input-group ">
-                                  
-                                  <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number">
-                                  <span class="input-group-text"> km </span>                            
-                                  
-                              </td>
-                          </tr>
-                          <tr >
-                              <td class="parametro align-middle">Primer sector valor: </td>
-            
-                              <td class="input-group ">                                
-                                  <span class="input-group-text ms-2"> $ </span>
-                                  <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number">                                
-                              </td>
-                          </tr>
-                          <tr >
-                              <td>Intervalos cada: </td>   
-                              <td class="input-group ">
-                                  <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number">
-                                  <span class="input-group-text"> km </span>
-                              </td>
-                          </tr>  
-                          <tr >
-                            <td>Intervalos valor: </td>   
-                            <td class="input-group ">                                
-                                <span class="input-group-text ms-2"> $ </span>
-                                <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number">
-                            </td>
-                          </tr>  
-                  </div>         
-            </div>
-            <div class="col-4">          
-                <h3 class="parametro align-middle mt-2">Tarifa Especial:</h3>
-                <tr class="form-group">
-                    <td class="parametro align-middle">Concepto: </td>
-                    <td>
-                      <input formControlName="concepto" class="form-control edicion" required type="text">   
-                    </td>
-                </tr> 
-                <tr class="form-group">
-                    <td class="parametro align-middle">Valor: </td>
-                    <td class="input-group ">                                
-                      <span class="input-group-text ms-2"> $ </span>
-                      <input formControlName="valor" class="form-control edicion" required type="number">   
-                    </td>
-                </tr> 
-                <!-- <tr>
-                    <th class="parametro">Concepto </th>
-                    <th > Valor</th>
-                </tr> -->
-              
-                <!-- <tr class="form-group" >                          
-                  
-                    <td class="parametro" >
-                        <input formControlName="concepto" class="form-control" required type="text">
-                    </td>
-                    <td>
-                        <input formControlName="valor" class="form-control" required type="number">                              
-                    </td>
-                  
-                </tr>                          -->
-            </div>
-          </div>
-      </form>
-    </div>  
+        <div class="container mt-0 pt-0">
+            <h2>Tabla de Tarifas</h2>
+            <div class="row">
+                <div class="form-group col-5">
+                    <label for="manualOAutomatica">Forma de ingresar la nueva tarifa:</label>
+                    <select id="manualOAutomatica" class="form-control" [(ngModel)]="formaIngreso" (change)="cambiarFormaIngreso()">
+                        <option value="manual">Manual</option>
+                        <option value="porcentaje">Porcentaje</option>
+                    </select>
+                </div>
+                <div class="form-group col-3">
+                    <label for="incrementoPorcentual">Aumento porcentual:</label>
+                    <div class="input-group">
+                        <input type="number" id="incrementoPorcentual" class="form-control" [(ngModel)]="incrementoPorcentual" (input)="aplicarAumento()">
+                        <span class="input-group-text">%</span>
+                    </div>                    
+                </div>
+            </div>            
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>
+                    <input type="checkbox" (change)="toggleSelectAll($event)" [checked]="selectAll">
+                  </th>
+                  <th>Categoria</th>
+                  <th>Ultima Tarifa</th>
+                  <th>Diferencia</th>
+                  <th>Nueva Tarifa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let categoria of categorias; let i = index">
+                  <td>
+                    <input type="checkbox" [(ngModel)]="categoria.seleccionado" [disabled]="categoria.disabled">
+                  </td>
+                  <td>{{ categoria.nombre }}</td>
+                  <td *ngIf="categoria.nombre !== 'Tarifa Especial Concepto' && categoria.nombre !== 'Km 1er Sector distancia' && categoria.nombre !== 'Km Intervalos distancia'"> ${{getUltimaTarifa(categoria.nombre) }}</td>
+                  <td *ngIf="categoria.nombre === 'Tarifa Especial Concepto' || categoria.nombre === 'Km 1er Sector distancia' || categoria.nombre === 'Km Intervalos distancia'"> {{getUltimaTarifa(categoria.nombre) }}</td>
+                  <td>{{ calcularDiferencia(categoria.nombre, i) }}</td>
+                  <!-- nueva -->
+                  <td>
+                    <input *ngIf="categoria.nombre === 'Tarifa Especial Concepto'" type="text" class="form-control" [(ngModel)]="categoria.nuevaTarifa">
+                    <div *ngIf="categoria.nombre === 'Km 1er Sector distancia' || categoria.nombre === 'Km Intervalos distancia' "  class="input-group" >                        
+                        <input type="number" class="form-control" [(ngModel)]="categoria.nuevaTarifa">
+                        <span class="input-group-text">Km</span>
+                    </div>                    
+                    <div *ngIf="categoria.nombre !== 'Tarifa Especial Concepto' && categoria.nombre !== 'Km 1er Sector distancia' && categoria.nombre !== 'Km Intervalos distancia'" class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control" [(ngModel)]="categoria.nuevaTarifa" [disabled]="!categoria.manual && categoria.nombre !== 'Tarifa Especial Valor'">
+                    </div>                    
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+        </div>       
+    </div>   
 </div>
 
 
-<div>
-  <!--   <button *ngIf="clienteSeleccionado !== undefined" type="submit" class="btn btn-outline-secondary" (click)="onSubmit()">
-      Guardar
-    </button> -->
+<div>  
     <app-btn-agregar class="mb-2 ms-2" name="Guardar" *ngIf="clienteSeleccionado !== undefined" type="submit" (click)="onSubmit()"></app-btn-agregar>
 </div>
 
