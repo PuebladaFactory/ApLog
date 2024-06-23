@@ -30,7 +30,7 @@ export class ClienteListadoComponent implements OnInit {
   $clientes:any;
   soloVista: boolean = false;
 ////////////////////////////////////////////////////////////////////////////////////////
-@ViewChild('tablaClientes') table: any;  
+//@ViewChild('tablaClientes') table: any;  
 rows: any[] = [];
 filteredRows: any[] = [];
 paginatedRows: any[] = [];
