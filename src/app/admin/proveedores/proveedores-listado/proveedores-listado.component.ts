@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ProveedoresAltaComponent } from '../proveedores-alta/proveedores-alta.component';
 import Swal from 'sweetalert2';
+import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -13,7 +14,8 @@ import Swal from 'sweetalert2';
 })
 export class ProveedoresListadoComponent implements OnInit {
   
-  proveedores$!: any;
+  searchText!: string;
+  proveedores$!: Proveedor[];
   edicion:boolean = false;
   proveedorEditar!: Proveedor;
   form:any;
@@ -24,7 +26,39 @@ export class ProveedoresListadoComponent implements OnInit {
   indice!:number;
   $proveedores:any;
   soloVista: boolean = false;
-  searchText!: string;
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+//@ViewChild('tablaClientes') table: any;  
+rows: any[] = [];
+filteredRows: any[] = [];
+paginatedRows: any[] = [];
+allColumns = [
+//    { prop: '', name: '', selected: true, flexGrow:1  },
+  { prop: 'idProveedor', name: 'Id Proveedor', selected: false, flexGrow:2  },  
+  { prop: 'razonSocial', name: 'Razon Social', selected: true, flexGrow:2  },          
+  { prop: 'cuit', name: 'CUIT', selected: true, flexGrow:2  },
+  { prop: 'direccion', name: 'Direccion', selected: true, flexGrow:2 },
+  
+  { prop: 'contacto', name: 'Contacto', selected: true, flexGrow:2  },    
+  { prop: 'puesto', name: 'Puesto', selected: true, flexGrow:2  },    
+  { prop: 'telefono', name: 'N° Contacto', selected: true, flexGrow:2  },    
+  { prop: 'correo', name: 'Correo', selected: true, flexGrow:2  },  
+  
+];
+visibleColumns = this.allColumns.filter(column => column.selected);
+selected = [];
+count = 0;
+limit = 20;
+offset = 0;
+sortType = SortType.multi; // Aquí usamos la enumeración SortType
+selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
+ColumnMode = ColumnMode;  
+encapsulation!: ViewEncapsulation.None;
+ajustes: boolean = false;
+firstFilter = '';
+secondFilter = '';
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal){
@@ -52,12 +86,14 @@ export class ProveedoresListadoComponent implements OnInit {
     //this.proveedores$ = this.storageService.proveedores$; 
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
+      this.armarTabla();
     })
   }
   
-  abrirEdicion(proveedor:Proveedor):void {
+  abrirEdicion(row:any):void {
+    this.seleccionarProveedor(row);
     this.soloVista = false;    
-    this.proveedorEditar = proveedor;    
+    //this.proveedorEditar = proveedor;    
     ////console.log()("este es el cliente a editar: ", this.clienteEditar);
     this.armarForm();
     
@@ -73,9 +109,17 @@ export class ProveedoresListadoComponent implements OnInit {
     })
   }
 
-  abrirVista(proveedor:Proveedor):void {
+  seleccionarProveedor(row:any){ 
+    let seleccion = this.$proveedores.filter((proveedor:Proveedor)=>{
+      return proveedor.idProveedor === row.idProveedor;
+    })
+    this.proveedorEditar = seleccion[0];    
+  }
+
+  abrirVista(row:any):void {
+    this.seleccionarProveedor(row)
     this.soloVista = true;
-    this.proveedorEditar = proveedor;    
+    //this.proveedorEditar = proveedor;    
     ////console.log()("este es el cliente a editar: ", this.clienteEditar);
     this.armarForm();    
   }
@@ -156,7 +200,8 @@ export class ProveedoresListadoComponent implements OnInit {
     
   }
 
-  eliminarProveedor(proveedor: Proveedor){
+  eliminarProveedor(row: any){
+    this.seleccionarProveedor(row)
     Swal.fire({
       title: "¿Eliminar el Proveedor?",
       text: "No se podrá revertir esta acción",
@@ -168,7 +213,7 @@ export class ProveedoresListadoComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        this.storageService.deleteItem(this.componente, proveedor);
+        this.storageService.deleteItem(this.componente, this.proveedorEditar);
         Swal.fire({
           title: "Confirmado",
           text: "El Proveedor ha sido borrado",
@@ -217,6 +262,87 @@ export class ProveedoresListadoComponent implements OnInit {
         (reason) => {}
       );
     }
+  }
+
+   ////////////////////////////////////////////////////////////////////////////////////
+   armarTabla() {
+    //console.log("consultasOp: ", this.$consultasOp );
+    let indice = 0
+    this.rows = this.$proveedores.map((proveedor: Proveedor) => ({
+        indice: indice ++,
+        idProveedor: proveedor.idProveedor,
+        razonSocial: proveedor.razonSocial,
+        direccion: proveedor.direccion,
+        cuit: proveedor.cuit,
+        contacto: proveedor.contactos.length > 0 ? proveedor.contactos[0].apellido : "Sin Datos",
+        puesto: proveedor.contactos.length > 0 ? proveedor.contactos[0].puesto : "Sin Datos" ,
+        telefono: proveedor.contactos.length > 0 ? proveedor.contactos[0].telefono : "Sin Datos"  ,
+        correo: proveedor.contactos.length > 0 ? proveedor.contactos[0].email : "Sin Datos",
+        
+      }));
+    
+    //console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+    this.applyFilters(); // Aplica filtros y actualiza filteredRows
+  }
+  
+  setPage(pageInfo: any) {
+    this.offset = pageInfo.offset;
+    this.updatePaginatedRows();
+  }
+  
+  updatePaginatedRows() {
+    const start = this.offset * this.limit;
+    const end = start + this.limit;
+    this.paginatedRows = this.filteredRows.slice(start, end);
+  }
+  
+  onSort(event:any) {
+    // Implementa la lógica de ordenamiento
+  }
+  
+  onActivate(event: any) {
+    // Implementa la lógica de activación de filas
+  }
+  
+  onSelect(event: any) {
+    // Implementa la lógica de selección de filas
+  }
+  
+  updateFilter(event: any, filterType: string) {
+    const val = event.target.value.toLowerCase();
+    if (filterType === 'first') {
+      this.firstFilter = val;
+    } else if (filterType === 'second') {
+      this.secondFilter = val;
+    }
+    this.applyFilters();
+  }
+  
+  applyFilters() {
+    this.filteredRows = this.rows.filter(row => {
+      const firstCondition = Object.values(row).some(value => 
+        String(value).toLowerCase().includes(this.firstFilter)
+      );
+      const secondCondition = Object.values(row).some(value => 
+        String(value).toLowerCase().includes(this.secondFilter)
+      );
+  
+      return firstCondition && secondCondition;
+    });
+  
+    this.count = this.filteredRows.length; // Actualiza el conteo de filas
+    this.setPage({ offset: this.offset }); // Actualiza los datos para la página actual
+  }
+  
+  toggleColumn(column: any) {
+    if (column.prop !== '') { // Siempre muestra la columna del botón
+      column.selected = !column.selected;
+    }
+    this.visibleColumns = this.allColumns.filter(col => col.selected);
+  }
+  
+  toogleAjustes(){
+    this.ajustes = !this.ajustes;
   }
 
 }

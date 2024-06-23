@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { ProveedoresRoutingModule } from './proveedores-routing.module';
 import { ProveedoresAltaComponent } from './proveedores-alta/proveedores-alta.component';
-/* import { ProveedoresBajaComponent } from './proveedores-baja/proveedores-baja.component'; */
+import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { ProveedoresListadoComponent } from './proveedores-listado/proveedores-listado.component';
 import { ProveedoresTarifaComponent } from './proveedores-tarifa/proveedores-tarifa.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -26,7 +26,8 @@ import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.
     ReactiveFormsModule,
     ProveedoresRoutingModule,
     SharedModule,
-    Ng2SearchPipeModule
+    Ng2SearchPipeModule,
+    NgxDatatableModule
   ]
 })
 export class ProveedoresModule { }
