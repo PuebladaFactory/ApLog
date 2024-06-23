@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente } from 'src/app/interfaces/cliente';
@@ -10,6 +10,7 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalAltaTarifaComponent } from '../modal-alta-tarifa/modal-alta-tarifa.component';
 import Swal from 'sweetalert2';
+import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 
 @Component({
   selector: 'app-proveedores-tarifa',
@@ -39,6 +40,47 @@ export class ProveedoresTarifaComponent implements OnInit {
   tarifasEspeciales!: TarifaEspecial;  
   tarifaEditar!: TarifaProveedor;
   asignarTarifa: boolean = false; 
+
+   ////////////////////////////////////////////////////////////////////////////////////////
+columns: any[] = [];
+rows: any[] = [];
+filteredRows: any[] = [];
+paginatedRows: any[] = [];
+allColumns = [
+//    { prop: '', name: '', selected: true, flexGrow:1  },
+  { prop: 'fecha', name: 'Fecha', selected: true, flexGrow:4 },  
+  { prop: 'idTarifa', name: 'Id Tarifa', selected: false, flexGrow:2 },  
+  { prop: 'utilitario', name: 'Utilitario', selected: true, flexGrow:2  },          
+  { prop: 'furgon', name: 'furgon', selected: true, flexGrow:2  },
+  { prop: 'furgonGrande', name: 'Furgon Grande', selected: true, flexGrow:2 },
+  { prop: 'chasisLiviano', name: 'Chasis Liviano', selected: true, flexGrow:2 },
+  { prop: 'chasis', name: 'Chasis', selected: true, flexGrow:2  },    
+  { prop: 'balancin', name: 'Balancin', selected: true, flexGrow:2  },    
+  { prop: 'semiRemolqueLocal', name: 'Semi Remolque Local', selected: true, flexGrow:2 },    
+  { prop: 'portacontenedores', name: 'Portacontenedores', selected: true, flexGrow:2  },    
+  { prop: 'acompaniante', name: 'Acompañante', selected: true, flexGrow:2  },  
+  { prop: 'primerSectorKm', name: 'Km 1er Sector Distancia', selected: false, flexGrow:2  },  
+  { prop: 'primerSectorValor', name: 'Km 1er Sector Valor', selected: true, flexGrow:2  },  
+  { prop: 'intervalosKm', name: 'Km Intervalos Distancia', selected: false, flexGrow:2 },     
+  { prop: 'intervalosValor', name: 'Km Intervalos Valor', selected: true, flexGrow:2 },  
+  { prop: 'tEspecialConcepto', name: 'T.E. Concepto', selected: true, flexGrow:4  },  
+  { prop: 'tEspecialValor', name: 'T.E. Valor', selected: true, flexGrow:2 },  
+  
+];
+visibleColumns = this.allColumns.filter(column => column.selected);
+selected = [];
+count = 0;
+limit = 20;
+offset = 0;
+sortType = SortType.multi; // Aquí usamos la enumeración SortType
+selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
+ColumnMode = ColumnMode;  
+encapsulation!: ViewEncapsulation.None;
+ajustes: boolean = false;
+firstFilter = '';
+secondFilter = '';
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService, private modalService: NgbModal){
@@ -121,76 +163,16 @@ this.acompanianteEditForm = this.fb.group({
  
   buscarTarifas(){
     ////console.log()(this.choferSeleccionado[0].idChofer);    
-    this.storageService.getByFieldValue(this.componente, "idProveedor", this.proveedorSeleccionado[0].idProveedor);
+    this.storageService.getByFieldValueLimit(this.componente, "idProveedor", this.proveedorSeleccionado[0].idProveedor,5);
     this.storageService.historialTarifasProveedores$.subscribe(data =>{
       //console.log()(data);
       this.$tarifasProveedor = data;
       //console.log()(this.$tarifasProveedor);
       this.$tarifasProveedor.sort((x:TarifaProveedor, y:TarifaProveedor) => y.idTarifaProveedor - x.idTarifaProveedor);
       //console.log()(this.$tarifasProveedor);
+      this.armarTabla()
     })   
   }
-
-  onSubmit() {
-    //this.armarTarifa();
-    ////console.log()("tarifa cliente");
-    ////console.log()(this.cargasGeneralesForm.value, this.unidadesConFrioForm.value, this.acompanianteForm.value);
-    this.armarTarifa();
-    this.addItem(this.tarifa);
-  }
-
-  armarTarifa(){        
-    this.armarCargasGenerales();
-    //this.armarUnidadesConFrio();
-    this.armarAdicionales();   
-    
-
-    this.tarifa = {
-      id:null,
-      idTarifaProveedor:new Date().getTime(),
-      idProveedor: this.proveedorSeleccionado[0].idProveedor,
-      fecha: new Date().toISOString().split('T')[0],
-      cargasGenerales: this.cargasGenerales,
-      //unidadesConFrio: this.unidadesConFrio,
-      adicionales: this.adicionales,
-      tarifaEspecial: this.tarifasEspeciales,      
-    };  
-    //console.log()("tarifa: ", this.tarifa);
-  } 
-
-  armarCargasGenerales(){
-    this.cargasGenerales = this.cargasGeneralesForm.value; 
-    //console.log()("cargas generales: ", this.cargasGenerales);
-  }
-
-  armarAdicionales(){
-    this.adicionales = {
-      acompaniante: this.acompanianteForm.value.acompaniante,
-      adicionalKm:{
-        primerSector: {
-          distancia: this.adicionalKmForm.value.distanciaPrimerSector,
-          valor: this.adicionalKmForm.value.valorPrimerSector,
-      },
-      sectoresSiguientes:{
-          intervalo: this.adicionalKmForm.value.distanciaIntervalo,
-          valor: this.adicionalKmForm.value.valorIntervalo,
-      }
-      }
-    }
-    //console.log()("adicionales: ", this.adicionales);
-    this.guardarTarifaEspecial();
-  }
-
-
-   guardarTarifaEspecial(){
-    this.tarifasEspeciales = {
-      concepto : this.tarifaEspecialForm.value.concepto,
-      valor : this.tarifaEspecialForm.value.valor,
-    }          
-     /* this.tEspecial = !this.tEspecial; */
-    
-     //console.log()(this.tarifasEspeciales);     
-    }
 
   addItem(item:any): void {   
     this.storageService.addItem(this.componente, item); 
@@ -206,12 +188,21 @@ this.acompanianteEditForm = this.fb.group({
     this.ngOnInit();
   }  
 
-  editarTarifa(tarifa:TarifaProveedor){
-    this.tarifaEditar = tarifa;
+  seleccionarTarifa(row:any){
+    let seleccion = this.$tarifasProveedor.filter((tarifa:TarifaProveedor)=>{
+      return tarifa.idTarifaProveedor === row.idTarifa
+    })
+    this.tarifaEditar = seleccion[0];   
+  }
+
+  editarTarifa(row:any){
+    this.seleccionarTarifa(row);
+    //this.tarifaEditar = tarifa;
     this.armarTarifaEditar();
   }
 
-  eliminarTarifa(tarifa:TarifaProveedor){ 
+  eliminarTarifa(row:any){ 
+    this.seleccionarTarifa(row);
     Swal.fire({
       title: "¿Eliminar la tarifa?",
       text: "No se podrá revertir esta acción",
@@ -223,7 +214,7 @@ this.acompanianteEditForm = this.fb.group({
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        this.storageService.deleteItem(this.componente, tarifa);
+        this.storageService.deleteItem(this.componente, this.tarifaEditar);
         Swal.fire({
           title: "Confirmado",
           text: "La tarifa ha sido borrada",
@@ -315,23 +306,114 @@ this.acompanianteEditForm = this.fb.group({
           const modalRef = this.modalService.open(ModalAltaTarifaComponent, {
             windowClass: 'myCustomModalClass',
             centered: true,
-            size: 'lg', 
+            size: 'md', 
             //backdrop:"static" 
           });
+
+          let info={
+            proveedor: this.proveedorSeleccionado[0],
+            tarifas: this.$tarifasProveedor,
+          }
           
-          modalRef.componentInstance.fromParent = this.proveedorSeleccionado[0];
+          modalRef.componentInstance.fromParent = info;
           modalRef.result.then(
             (result) => {
-              ////console.log()("ROOWW:" ,row);
-              
+              ////console.log()("ROOWW:" ,row);              
     //        this.selectCrudOp(result.op, result.item);
             //this.mostrarMasDatos(row);
             },
             (reason) => {}
           );
         }
-    } 
-    
+    }     
+  }
+
+   ////////////////////////////////////////////////////////////////////////////////////
+   armarTabla() {
+    let indice = 0
+    this.rows = this.$tarifasProveedor.map((tarifa: TarifaProveedor) => ({
+      indice: indice ++,
+      fecha: tarifa.fecha,
+      idTarifa: tarifa.idTarifaProveedor,
+      utilitario: tarifa.cargasGenerales.utilitario,
+      furgon: tarifa.cargasGenerales.furgon,
+      furgonGrande: tarifa.cargasGenerales.furgonGrande,
+      chasisLiviano: tarifa.cargasGenerales.chasisLiviano,
+      chasis: tarifa.cargasGenerales.chasis,
+      balancin: tarifa.cargasGenerales.balancin,
+      semiRemolqueLocal: tarifa.cargasGenerales.semiRemolqueLocal,
+      portacontenedores: tarifa.cargasGenerales.portacontenedores,
+      acompaniante: tarifa.adicionales.acompaniante,
+      primerSectorKm: tarifa.adicionales.adicionalKm.primerSector.distancia,
+      primerSectorValor: tarifa.adicionales.adicionalKm.primerSector.valor,
+      intervalosKm: tarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo,
+      intervalosValor: tarifa.adicionales.adicionalKm.sectoresSiguientes.valor,
+      tEspecialConcepto: tarifa.tarifaEspecial.concepto === "" ? "Sin datos" : tarifa.tarifaEspecial.concepto , 
+      tEspecialValor: typeof tarifa.tarifaEspecial.valor === 'number'? tarifa.tarifaEspecial.valor : 0,
+    }));
+
+    this.applyFilters();
+
+  }
+ 
+  setPage(pageInfo: any) {
+    this.offset = pageInfo.offset;
+    this.updatePaginatedRows();
+  }
+  
+  updatePaginatedRows() {
+    const start = this.offset * this.limit;
+    const end = start + this.limit;
+    this.paginatedRows = this.filteredRows.slice(start, end);
+  }
+  
+  onSort(event:any) {
+    // Implementa la lógica de ordenamiento
+  }
+  
+  onActivate(event: any) {
+    // Implementa la lógica de activación de filas
+  }
+  
+  onSelect(event: any) {
+    // Implementa la lógica de selección de filas
+  }
+  
+  updateFilter(event: any, filterType: string) {
+    const val = event.target.value.toLowerCase();
+    if (filterType === 'first') {
+      this.firstFilter = val;
+    } else if (filterType === 'second') {
+      this.secondFilter = val;
+    }
+    this.applyFilters();
+  }
+  
+  applyFilters() {
+    this.filteredRows = this.rows.filter(row => {
+      const firstCondition = Object.values(row).some(value => 
+        String(value).toLowerCase().includes(this.firstFilter)
+      );
+      const secondCondition = Object.values(row).some(value => 
+        String(value).toLowerCase().includes(this.secondFilter)
+      );
+  
+      return firstCondition && secondCondition;
+    });
+  
+    this.count = this.filteredRows.length; // Actualiza el conteo de filas
+    this.setPage({ offset: this.offset }); // Actualiza los datos para la página actual
+  }
+  
+  toggleColumn(column: any) {
+    if (column.prop !== '') { // Siempre muestra la columna del botón
+      column.selected = !column.selected;
+    }
+    this.visibleColumns = this.allColumns.filter(col => col.selected);
+  }
+  
+  toogleAjustes(){
+    this.ajustes = !this.ajustes;
   }
 
 }

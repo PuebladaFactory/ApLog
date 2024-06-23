@@ -133,14 +133,14 @@ this.acompanianteEditForm = this.fb.group({
   }
   
   buscarTarifas(){
-    console.log(this.clienteSeleccionado[0].idCliente);    
+    //console.log(this.clienteSeleccionado[0].idCliente);    
     this.storageService.getByFieldValueLimit(this.componente, "idCliente", this.clienteSeleccionado[0].idCliente,5);
     this.storageService.historialTarifasClientes$.subscribe(data =>{
-      console.log("1) data:",data);
+      //console.log("1) data:",data);
       this.$tarifasCliente = data;
       //console.log()(this.$tarifasCliente);
       this.$tarifasCliente.sort((x:TarifaCliente, y:TarifaCliente) => y.idTarifaCliente - x.idTarifaCliente);
-      console.log("2) tarifas del Cliente", this.$tarifasCliente);
+      //console.log("2) tarifas del Cliente", this.$tarifasCliente);
       this.armarTabla()
     })   
   }
@@ -168,7 +168,7 @@ this.acompanianteEditForm = this.fb.group({
   }
 
   editarTarifa(row:any){
-    console.log(row);
+    //console.log(row);
     
     this.seleccionarTarifa(row);
     //this.tarifaEditar = tarifa;  
@@ -329,71 +329,11 @@ this.acompanianteEditForm = this.fb.group({
         tEspecialConcepto: tarifa.tarifaEspecial.concepto === "" ? "Sin datos" : tarifa.tarifaEspecial.concepto , 
         tEspecialValor: typeof tarifa.tarifaEspecial.valor === 'number'? tarifa.tarifaEspecial.valor : 0,
       }));
-/*       const headers = [
-        'fecha', 'idTarifa', 'utilitario', 'furgon', 'furgonGrande', 'chasisLiviano', 'chasis', 
-        'balancin', 'semiRemolqueLocal', 'portacontenedores','acompaniante', 'primerSectorKm', 'primerSectorValor', 
-        'intervalosKm', 'intervalosValor','tEspecialConcepto', 'tEspecialValor'
-      ];
-  
-      const transformedData = headers.map(header => {
-        const row: any = { header };
-        this.$tarifasCliente.forEach((tarifa: TarifaCliente, index: number) => {
-          row[`tarifa${index}`] = this.getValueByHeader(tarifa, header);
-        });
-        return row;
-      });
-  
-      this.rows = transformedData;
-      this.columns = [
-        { prop: 'header', name: 'Header', width: 100 },
-        ...this.$tarifasCliente.map((_, index) => ({ prop: `tarifa${index}`, name: `Tarifa ${index + 1}`, width: 50 }))
-      ];*/
   
       this.applyFilters();
-
     }
   
-  /*   getValueByHeader(tarifa: TarifaCliente, header: string): any {
-      switch (header) {
-        case 'fecha':
-          return tarifa.fecha;
-        case 'idTarifa':
-          return tarifa.idTarifaCliente;
-        case 'utilitario':
-          return tarifa.cargasGenerales.utilitario;
-        case 'furgon':
-          return tarifa.cargasGenerales.furgon;
-        case 'furgonGrande':
-          return tarifa.cargasGenerales.furgonGrande;
-        case 'chasisLiviano':
-          return tarifa.cargasGenerales.chasisLiviano;
-        case 'chasis':
-          return tarifa.cargasGenerales.chasis;
-        case 'balancin':
-          return tarifa.cargasGenerales.balancin;
-        case 'semiRemolqueLocal':
-          return tarifa.cargasGenerales.semiRemolqueLocal;
-        case 'portacontenedores':
-          return tarifa.cargasGenerales.portacontenedores;
-        case 'tEspecialConcepto':
-          return tarifa.tarifaEspecial.concepto;
-        case 'tEspecialValor':
-          return tarifa.tarifaEspecial.valor;
-        case 'acompaniante':
-          return tarifa.adicionales.acompaniante;
-        case 'primerSectorKm':
-          return tarifa.adicionales.adicionalKm.primerSector.distancia;
-        case 'primerSectorValor':
-          return tarifa.adicionales.adicionalKm.primerSector.valor;
-        case 'intervalosKm':
-          return tarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo;
-        case 'intervalosValor':
-          return tarifa.adicionales.adicionalKm.sectoresSiguientes.valor;
-        default:
-          return null;
-      }
-    } */
-    
+ 
     setPage(pageInfo: any) {
       this.offset = pageInfo.offset;
       this.updatePaginatedRows();

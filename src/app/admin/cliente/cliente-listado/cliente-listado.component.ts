@@ -202,11 +202,11 @@ secondFilter = '';
   eliminarContacto(indice:number){
     this.clienteEditar.contactos.splice(indice, 1);    
   }
-
+/* 
   agregarContacto(){
     //console.log()(this.clienteEditar.contactos);
     
-  }
+  } */
   /* toogleMostrar(){
     this.mostrar = !this.mostrar;
   } */
