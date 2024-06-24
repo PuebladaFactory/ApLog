@@ -21,6 +21,8 @@ export class BuscarTarifaService {
   $proveedor!: any  ;
   $choferes!: any;
   $clientes!: any;
+  choferBoolean!: boolean;
+  clienteBoolean!: boolean;
 
   ngOnInit(): void {   
     this.storageService.historialTarifas$.subscribe(data => {
@@ -37,69 +39,77 @@ export class BuscarTarifaService {
 
   constructor(private storageService:StorageService) { }
 
-  buscarTarifa(chofer:Chofer, cliente: Cliente): string{
-    
+  buscarTarifaChoferCliente(chofer:Chofer, cliente: Cliente){
+    this.storageService.getByFieldValueLimit("tarifasCliente", "idCliente", cliente.idCliente, 1);
+    this.storageService.getByFieldValueLimit("tarifasChofer", "idChofer", chofer.idChofer, 1); 
+    this.storageService.historialTarifas$.subscribe(data =>{
+      this.$tarifasChoferes = data;
+      this.tieneTarifaChofer(cliente)    
+    });    
     this.storageService.historialTarifasClientes$.subscribe(data =>{
-      this.$tarifasClientes = data;
-      //console.log("tarifas choferes: ",this.$tarifasChoferes);
-      let tarifasCliFiltradas = this.$tarifasClientes.filter((tarifa:TarifaCliente) =>{
-        return tarifa.idCliente === cliente.idCliente;
-      })
-      this.$tarifasClientes = tarifasCliFiltradas;
-    })
-    //console.log("array de tarifas cliente filtrado: ", this.$tarifasClientes);     
-    if(this.$tarifasClientes.length === 0 ){
-      return "cliente"
-    }
-    if(chofer.proveedor !== "monotributista"){      
-      this.storageService.proveedores$.subscribe(data =>{
-        this.$proveedor = data;
-        //console.log("razonSocial chofer: ",chofer.proveedor);        
-        //console.log("proveedores todos: ",this.$proveedor);        
-        
-        let proveedorFiltrado = this.$proveedor.filter((proveedor:Proveedor)=>{
-          return proveedor.razonSocial === chofer.proveedor
-        })
-        //console.log("proveedor filtrado: ", proveedorFiltrado);
-              
-        this.storageService.historialTarifasProveedores$.subscribe(data =>{
-        this.$tarifasProveedores = data;
-        //console.log("tarifas: ",this.$tarifasProveedores);
-        let tarifasFiltradas = this.$tarifasProveedores.filter((tarifa:TarifaProveedor) =>{
-          return tarifa.idProveedor === proveedorFiltrado[0].idProveedor;
-        })
-        //console.log("array de tarifas filtrado: ", tarifasFiltradas);
-        this.$tarifasProveedores = tarifasFiltradas
-      })
-      })
-      //console.log("array de tarifas filtrado2: ", this.$tarifasProveedores);
-      if(this.$tarifasProveedores.length === 0 ){
-        return "proveedor"
-      }
-      //console.log("array de tarifas filtrado2: ", this.$tarifasProveedores);
-      if(this.$tarifasProveedores.length === 0 ){
-        return "proveedor"
-      }
-    }
-    if(chofer.proveedor ==="monotributista"){
-      this.storageService.historialTarifas$.subscribe(data =>{
-        this.$tarifasChoferes = data;
-        //console.log("tarifas choferes: ",this.$tarifasChoferes);
-        let tarifasChoFiltradas = this.$tarifasChoferes.filter((tarifa:TarifaChofer) =>{
-          return tarifa.idChofer === chofer.idChofer;
-        })
-        this.$tarifasChoferes = tarifasChoFiltradas 
-    })
-        //console.log("array de tarifas filtrado: ", this.$tarifasChoferes);
-       
-        if(this.$tarifasChoferes.length === 0 ){
-          return "chofer"
-        }
+      this.$tarifasClientes = data;      
+    });    
     
-    }    
-    return "nada"
+    
+    
+  }
+  buscarTarifaProveedorCliente(proveedor: Proveedor, cliente:Cliente){
+    this.storageService.getByFieldValueLimit("tarifasCliente", "idCliente", cliente.idCliente, 1);
+    this.storageService.getByFieldValueLimit("tarifasProveedor", "idProveedor", proveedor.idProveedor, 1); 
+    this.storageService.historialTarifasProveedores$.subscribe(data => {
+      this.$tarifasProveedores = data;
+      this.tieneTarifaProveedor(cliente);
+    });    
+    this.storageService.historialTarifasClientes$.subscribe(data =>{
+      this.$tarifasClientes = data;      
+    });        
   }
 
+  tieneTarifaChofer(cliente: Cliente) {    
+      if(this.$tarifasChoferes.length > 0){
+        this.choferBoolean = true;
+        this.tieneTarifaCliente(cliente);
+      }else{
+        this.choferBoolean = false
+        this.tieneTarifaCliente(cliente);
+      };    
+  }
+
+  tieneTarifaProveedor(cliente:Cliente) {       
+      
+    if(this.$tarifasProveedores.length > 0 ){
+      this.choferBoolean = true;
+      this.tieneTarifaCliente(cliente);
+    }else{
+      this.choferBoolean = false;
+      this.tieneTarifaCliente(cliente);
+    }
+   
+  }
+
+  tieneTarifaCliente(cliente:Cliente) {
+    if(this.$tarifasClientes.length > 0){
+      this.clienteBoolean = true;
+      this.guardarObservable()
+    } else {
+      this.clienteBoolean = false;
+      this.guardarObservable()
+    }
+  }
+
+  guardarObservable(){
+    console.log("4)", this.choferBoolean,this.clienteBoolean,);
+    let array: any[] = [];	
+    let respuesta = {
+      chofer: this.choferBoolean,
+      cliente: this.clienteBoolean,
+    }
+    array.push(respuesta);
+    console.log("5)", array);  
+    this.storageService.setInfo("erroresTarifas", array);  
+    
+  }
+  
   buscarTarifaChofer(operacion:Operacion) :TarifaChofer{
     let facuraChofer: FacturaOpChofer [] = []
     let tarifaAplicada : TarifaChofer [] = [];

@@ -5,6 +5,10 @@ import { NgbModule, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { Proveedor } from 'src/app/interfaces/proveedor';
+import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -30,9 +34,11 @@ export class OpAltaComponent implements OnInit {
   choferSeleccionado!: Chofer ;  
   acompaniante: boolean |  any = false ;
   tarifaEspecial: boolean = false ;
-  $tarifasChoferes!:any;
-  $tarifasProveedores!:any;
+  $tarifasChoferes!:TarifaChofer [];
+  $tarifasProveedores!: TarifaProveedor [];
+  $tarifasClientes!: TarifaCliente [];
   $proveedores!:any;
+  arrayRespuesta!: any[];
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, ) {
     this.form = this.fb.group({
@@ -56,15 +62,22 @@ export class OpAltaComponent implements OnInit {
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
     }); 
-    this.storageService.historialTarifas$.subscribe(data => {
+    this.storageService.proveedores$.subscribe(data => {
+      this.$proveedores = data;
+    }) 
+  /*   this.storageService.historialTarifas$.subscribe(data => {
       this.$tarifasChoferes = data;
+    });
+    this.storageService.historialTarifasClientes$.subscribe(data => {
+      this.$tarifasClientes = data;
     });
     this.storageService.historialTarifasProveedores$.subscribe(data => {
       this.$tarifasProveedores = data;
-    });
-    this.storageService.proveedores$.subscribe(data => {
-      this.$proveedores = data;
-    })       
+    }); */
+    this.storageService.erroresTarifas$.subscribe(data => {
+      this.arrayRespuesta = data  
+    })
+          
     
   }
 
@@ -142,53 +155,56 @@ selectTarifaEspecial(event: any) {
     ////console.log()("2)cliente: ", this.clienteSeleccionado);
     ////console.log()("3)tarifa especial: ", this.tarifaEspecial);
     ////console.log()("4)acompañante: ", this.acompaniante);    
-    if (this.form.valid) {
-      this.buscarErrores();
+    if (this.form.valid) {      
+      this.buscarErroresTarifas();
     }    
     
    }
 
-   buscarErrores(){
-      let respuesta = this.buscarTarifaServ.buscarTarifa(this.choferSeleccionado, this.clienteSeleccionado)
-      ////console.log()("RESPUESTA: ", respuesta);
-      switch (respuesta) {
-          case "cliente":
-            Swal.fire({
-              icon: "error",
-              //title: "Oops...",
-              text: "El cliente seleccionado no tiene tarifas asignadas",
-      //        footer: '<a href="#">Why do I have this issue?</a>'
-            });
-            break;
-          case "chofer": 
-            Swal.fire({
-              icon: "error",
-              //title: "Oops...",
-              text: "El chofer seleccionado no tiene tarifas asignadas",
-      //        footer: '<a href="#">Why do I have this issue?</a>'
-            });
-              break;  
-          case "proveedor": 
-          Swal.fire({
-            icon: "error",
-            //title: "Oops...",
-            text: "El chofer seleccionado trabaja con un proveedor que no tiene tarifas asignadas",
-    //        footer: '<a href="#">Why do I have this issue?</a>'
-          });
-            break;     
-          case "nada": 
-            this.armarOp();          
-            break;    
-          default:
-            Swal.fire({
-              icon: "error",
-              //title: "Oops...",
-              text: "Error",
-      //        footer: '<a href="#">Why do I have this issue?</a>'
-            });
-            break;  
-        }    
-   }
+   buscarErroresTarifas() {
+    if(this.choferSeleccionado.proveedor === "monotributista"){
+      this.storageService.clearInfo("tarifasChofer");
+      this.storageService.clearInfo("tarifasCliente");
+      this.buscarTarifaServ.buscarTarifaChoferCliente(this.choferSeleccionado, this.clienteSeleccionado);
+      setTimeout(() => {
+        if(this.arrayRespuesta[0].cliente && this.arrayRespuesta[0].chofer){
+          this.armarOp();
+        } else if(!this.arrayRespuesta[0].chofer){
+          this.mensajesError("el chofer selccionado no tiene tarifas asignadas");                    
+        } else if (!this.arrayRespuesta[0].cliente){
+          this.mensajesError("el cliente selccionado no tiene tarifas asignadas");                   
+        }
+      }, 1000); // 5000 milisegundos = 5 segundos 
+    } else if (this.choferSeleccionado.proveedor !== "monotributista"){      
+      this.storageService.clearInfo("tarifasProveedor");
+      this.storageService.clearInfo("tarifasCliente");
+      let proveedorFiltrado = this.$proveedores.filter((proveedor:Proveedor)=>{
+        return proveedor.razonSocial === this.choferSeleccionado.proveedor;
+      });
+      this.buscarTarifaServ.buscarTarifaProveedorCliente(proveedorFiltrado[0], this.clienteSeleccionado);
+      setTimeout(() => {
+        if(this.arrayRespuesta[0].cliente && this.arrayRespuesta[0].chofer){
+          this.armarOp();
+        } else if(!this.arrayRespuesta[0].chofer){
+          this.mensajesError("el chofer selccionado trabaja con un proveedor que no tiene tarifas asignadas");          
+        } else if (!this.arrayRespuesta[0].cliente){
+          this.mensajesError("el cliente selccionado no tiene tarifas asignadas");          
+        }
+      }, 1000); // 5000 milisegundos = 5 segundos 
+    }
+
+    console.log("array respuesta: ", this.arrayRespuesta);
+
+  }
+
+    mensajesError(msj:string){
+      Swal.fire({
+        icon: "error",
+        //title: "Oops...",
+        text: `${msj}`
+        //footer: `${msj}`
+      });
+    }
 
    armarOp(){
     ////console.log()("armarOp. chofer: ", this.choferSeleccionado);
