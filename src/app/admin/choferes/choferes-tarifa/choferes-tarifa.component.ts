@@ -129,14 +129,15 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
 
   buscarTarifas(){
     //console.log(this.choferSeleccionado[0].idChofer);    
-    this.storageService.getByFieldValue(this.componente, "idChofer", this.choferSeleccionado[0].idChofer);
+    this.storageService.getByFieldValueLimit(this.componente, "idChofer", this.choferSeleccionado[0].idChofer, 5);
     this.storageService.historialTarifas$.subscribe(data =>{
       this.$tarifasChofer = data;
-      //console.log(this.$tarifasChofer);
+      console.log("1)",this.$tarifasChofer);
       this.$tarifasChofer.sort((x:TarifaChofer, y:TarifaChofer) => y.idTarifa - x.idTarifa);
       //console.log(this.$tarifasChofer);
+      this.armarTabla()
     })
-    this.armarTabla()
+    
   }
     armarAdicionalKm(){
       this.adicionalKm = {
@@ -279,7 +280,7 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
           const modalRef = this.modalService.open(ModalAltaTarifaComponent, {
             windowClass: 'myCustomModalClass',
             centered: true,
-            size: 'sm', 
+            size: 'md', 
             //backdrop:"static" 
           });
           //console.log("choferSeleccionado: ",this.choferSeleccionado[0]);
@@ -288,7 +289,7 @@ this.tarifaEspecialEditForm = this.fb.group({                    //formulario pa
             tarifas: this.$tarifasChofer,
           }
           
-          modalRef.componentInstance.fromParent = this.choferSeleccionado[0];
+          modalRef.componentInstance.fromParent = info;
           modalRef.result.then(
             (result) => {
               //console.log("ROOWW:" ,row);
