@@ -5,7 +5,7 @@ import { ChoferesRoutingModule } from './choferes-routing.module';
 import { ChoferesControlComponent } from './choferes-control/choferes-control.component';
 import { ChoferesListadoComponent } from './choferes-listado/choferes-listado.component';
 import { ChoferesAltaComponent } from './choferes-alta/choferes-alta.component';
-/* import { ChoferesBajaComponent } from './choferes-baja/choferes-baja.component'; */
+import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
@@ -33,7 +33,8 @@ import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    Ng2SearchPipeModule
+    Ng2SearchPipeModule,
+    NgxDatatableModule
   ]
 })
 export class ChoferesModule { }
