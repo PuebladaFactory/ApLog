@@ -103,6 +103,8 @@ export class StorageService {
   private _consultasFacOpLiqProveedor$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpLiqProveedor') || []);
   public consultasFacOpLiqProveedor$ = this._consultasFacOpLiqProveedor$.asObservable();
 
+  private _erroresTarifas$ = new BehaviorSubject<any>(this.loadInfo('erroresTarifas') || []);
+  public erroresTarifas$ = this._erroresTarifas$.asObservable();
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -234,6 +236,11 @@ export class StorageService {
         break;
       }
 
+      case "erroresTarifas": {
+        this._erroresTarifas$.next(data)
+        break;
+      }
+
 
       /*case "logger": {
         this._logger$.next(data)
@@ -303,9 +310,9 @@ export class StorageService {
     //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
     //this.getAllSorted("jornadas", 'idChofer', 'asc')
     this.getAllSorted("proveedores", 'idProveedor', 'asc')
-    this.getAllSorted("tarifasChofer", 'fecha', 'asc')
-    this.getAllSorted("tarifasCliente", 'fecha', 'asc')
-    this.getAllSorted("tarifasProveedor", 'fecha', 'asc')
+    //this.getAllSorted("tarifasChofer", 'fecha', 'asc')
+   // this.getAllSorted("tarifasCliente", 'fecha', 'asc')
+   // this.getAllSorted("tarifasProveedor", 'fecha', 'asc')
     //this.getAllSorted("facturaOpChofer", 'fecha', 'desc')
     //this.getAllSorted("facturaOpProveedor", 'fecha', 'desc')
     //this.getByDateValue("facturaOpChofer","fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer")
