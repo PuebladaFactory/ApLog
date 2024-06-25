@@ -7,7 +7,7 @@ import { HistorialClienteComponent } from './historial-cliente/historial-cliente
 import { HistorialChoferComponent } from './historial-chofer/historial-chofer.component';
 import { HistorialProveedorComponent } from './historial-proveedor/historial-proveedor.component';
 
-import { FacturacionModule } from '../facturacion.module';
+import { FacturacionModule } from '../facturacion/facturacion.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
