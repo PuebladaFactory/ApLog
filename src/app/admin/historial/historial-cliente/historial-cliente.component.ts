@@ -45,17 +45,20 @@ export class HistorialClienteComponent implements OnInit {
   ajustes: boolean = false;
   firstFilter = '';
   secondFilter = '';
+  date:any = new Date();
+  primerDiaMesAnterior: any = new Date(this.date.getFullYear(), this.date.getMonth()-1).toISOString().split('T')[0];
+  ultimoDiaMesAnterior:any = new Date(this.date.getFullYear(), this.date.getMonth() , 0).toISOString().split('T')[0];  
   
   constructor(private storageService: StorageService, private modalService: NgbModal){
 
   }
   
   ngOnInit(): void {
-    
+    this.storageService.getByDateValue("facOpLiqCliente", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqCliente");
     this.storageService.consultasFacOpLiqCliente$.subscribe(data =>{
-      ////console.log()(data);
+      console.log(data);
       this.$facturaOpCliente = data;     
-      ////console.log()("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
+      console.log("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
       this.armarTabla()  
     })
     
@@ -120,6 +123,7 @@ export class HistorialClienteComponent implements OnInit {
       ////console.log()(factura.idFacturaOpCliente, row.idFacturaOpCliente);      
       return factura.idFacturaOpCliente === row.idFacturaOpCliente
     })
+    
     //console.log()("facturaOp: ",facturaOp);
      
     {

@@ -105,6 +105,15 @@ export class StorageService {
 
   private _erroresTarifas$ = new BehaviorSubject<any>(this.loadInfo('erroresTarifas') || []);
   public erroresTarifas$ = this._erroresTarifas$.asObservable();
+
+  private _facOpLiqChofer$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqChofer') || []);
+  public facOpLiqChofer$ = this._facOpLiqChofer$.asObservable();
+
+  private _facOpLiqCliente$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqCliente') || []);
+  public facOpLiqCliente$ = this._facOpLiqCliente$.asObservable();
+
+  private _facOpLiqProveedor$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqProveedor') || []);
+  public facOpLiqProveedor$ = this._facOpLiqCliente$.asObservable();
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -241,6 +250,20 @@ export class StorageService {
         break;
       }
 
+      case "facOpLiqChofer":{
+        this._facOpLiqChofer$.next(data)
+        break;
+      }
+
+      case "facOpLiqCliente":{
+        this._facOpLiqCliente$.next(data)
+        break;
+      }
+
+      case "facOpLiqProveedor":{
+        this._facOpLiqProveedor$.next(data)
+        break;
+      }
 
       /*case "logger": {
         this._logger$.next(data)

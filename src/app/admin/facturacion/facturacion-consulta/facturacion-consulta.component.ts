@@ -11,7 +11,7 @@ export class FacturacionConsultaComponent implements OnInit {
 
   @Output() newItemEvent = new EventEmitter<any>();
   @Input() titulo!: string;
-  
+  @Input() consulta!: string;
   
   model1!: any;
   model2!: any;
@@ -65,30 +65,66 @@ export class FacturacionConsultaComponent implements OnInit {
 
   consultaOperaciones(fechaDesde:any, fechaHasta:any){
     if(this.titulo = "liquidacion"){
-      //console.log()("?????????");
       
-      this.storageService.getByDateValue("facturaOpChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpChofer");
-      this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
-      this.storageService.getByDateValue("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor");
- 
+      switch(this.consulta){
+        case "cliente":
+          this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
+          break;
+        
+        case "chofer":
+          this.storageService.getByDateValue("facturaOpChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpChofer");
+          break;
+        
+        case "proveedor":
+          this.storageService.getByDateValue("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor");
+          break;
+
+        default:
+          alert("error");
+          break
+      }
     }
 
     if(this.titulo = "facturacion"){
-      //console.log()("?????????");
       
-      this.storageService.getByDateValue("facturaChofer", "fecha", fechaDesde, fechaHasta, "consultasFacChofer");
-      this.storageService.getByDateValue("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
-      this.storageService.getByDateValue("facturaProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacProveedor");
- 
+      switch(this.consulta){
+        case "cliente":          
+          this.storageService.getByDateValue("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
+          break;
+        
+        case "chofer":
+          this.storageService.getByDateValue("facturaChofer", "fecha", fechaDesde, fechaHasta, "consultasFacChofer");
+          break;
+        
+        case "proveedor":
+          this.storageService.getByDateValue("facturaProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacProveedor");
+          break;
+
+        default:
+          alert("error");
+          break
+      }
     }
 
     if(this.titulo = "historial"){
-      //console.log()("?????????");
       
-      this.storageService.getByDateValue("facOpLiqChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqChofer");
-      this.storageService.getByDateValue("facOpLiqCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqCliente");
-      this.storageService.getByDateValue("facOpLiqProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqProveedor");
- 
+      switch(this.consulta){
+        case "cliente":
+          this.storageService.getByDateValue("facOpLiqCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqCliente");
+          break;
+        
+        case "chofer":
+          this.storageService.getByDateValue("facOpLiqChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqChofer");
+          break;
+        
+        case "proveedor":
+          this.storageService.getByDateValue("facOpLiqProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqProveedor");
+          break;
+
+        default:
+          alert("error");
+          break
+      }
     }
     
   }

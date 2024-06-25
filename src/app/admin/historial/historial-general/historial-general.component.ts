@@ -25,6 +25,7 @@ export class HistorialGeneralComponent implements OnInit {
   $facturasOpLiqChofer!: FacturaOpChofer [];
   $facturasOpLiqProveedor!: FacturaOpProveedor [];
   consulta: string = "";
+  btnConsulta: boolean = false;
   
   constructor(private storageService: StorageService){
 
@@ -34,18 +35,18 @@ export class HistorialGeneralComponent implements OnInit {
   ngOnInit(): void {
     console.log(this.primerDiaMesAnterior, this.ultimoDiaMesAnterior);
     
-    this.storageService.getByDateValue("facOpLiqCliente", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqCliente");
+    //this.storageService.getByDateValue("facOpLiqCliente", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqCliente");
     /* this.storageService.consultasFacOpLiqCliente$.subscribe(data => {
       this.$facturasOpLiqCliente = data;       
       //console.log()(this.$facturasOpLiqCliente)
     }); */
 
-    this.storageService.getByDateValue("facOpLiqChofer", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqChofer");
+    //this.storageService.getByDateValue("facOpLiqChofer", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqChofer");
    /*  this.storageService.consultasFacOpLiqChofer$.subscribe(data => {
       this.$facturasOpLiqChofer = data;      
     }); */
 
-    this.storageService.getByDateValue("facOpLiqProveedor", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqProveedor");
+    //this.storageService.getByDateValue("facOpLiqProveedor", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqProveedor");
    /*  this.storageService.consultasFacOpLiqProveedor$.subscribe(data => {
       this.$facturasOpLiqProveedor = data;
     }); */
@@ -64,7 +65,8 @@ export class HistorialGeneralComponent implements OnInit {
   }
 
   changeConsulta(e: any) {    
-    //console.log()(e.target.value);    
+    console.log(e.target.value);
+    this.btnConsulta = true;    
     this.consulta = e.target.value;
   }
 }
