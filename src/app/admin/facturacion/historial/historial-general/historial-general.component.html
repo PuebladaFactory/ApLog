@@ -12,7 +12,7 @@
         </div>
         <div>
             <!-- <app-facturacion-consulta  [componenteConsulta]="componenteConsulta" (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" ></app-facturacion-consulta> -->
-            <button   data-bs-target="#consultaModalHist" data-bs-toggle="modal" id="bt" class="btn btn-outline-secondary ">
+            <button *ngIf="btnConsulta"  data-bs-target="#consultaModalHist" data-bs-toggle="modal" id="bt" class="btn btn-outline-secondary ">
               Consultar Operaciones
             </button>
           <!-- MODAL CONSULTA OPERACION -->
@@ -23,7 +23,7 @@
                         
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
                         </div>
-                        <app-facturacion-consulta (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-facturacion-consulta>
+                        <app-facturacion-consulta (newItemEvent)="getMsg($event)" [consulta]="consulta" [titulo]="titulo"></app-facturacion-consulta>
                             
                     </div>
                 </div>
