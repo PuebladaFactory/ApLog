@@ -15,7 +15,7 @@
               </div>
               <div class="form-group">
                 <label for="Cliente">Cliente</label>
-                <select formControlName="cliente" class="form-select form-select-md mb-3" (change)="changeCliente($event)">
+                <select formControlName="cliente" class="form-select mb-3" (change)="changeCliente($event)">
                   <option value="">Elegir Cliente</option>
                   <option *ngFor="let cliente of $clientes" [value]="cliente.idCliente">
                     {{cliente.razonSocial}}
@@ -24,7 +24,7 @@
               </div>
               <div class="form-group">
                 <label for="Chofer">Chofer</label>
-                <select formControlName="chofer" class="form-select form-select-md mb-3" (change)="changeChofer($event)">
+                <select formControlName="chofer" class="form-select mb-3" (change)="changeChofer($event)">
                   <option value="">Elegir Chofer</option>
                   <option *ngFor="let chofer of $choferes" [value]="chofer.idChofer">
                     {{chofer.apellido}} {{chofer.nombre}}
@@ -33,7 +33,7 @@
               </div>
               <div class="form-group">
                 <label for="TarifaEspecial">TarifaEspecial</label>
-                <select formControlName="tarifaEspecial" class="form-select" aria-label="Default select example" (change)="selectTarifaEspecial($event)">
+                <select formControlName="tarifaEspecial" class="form-select mb-3" aria-label="Default select example" (change)="selectTarifaEspecial($event)">
                   <option value="">Seleccione</option>
                   <option value="si">Si</option>
                   <option value="no">No</option>
@@ -41,7 +41,7 @@
               </div>
               <div *ngIf="!tarifaEspecial" class="form-group mt-2">
                 <label for="Acompaniante">Acompañante</label>
-                <select formControlName="acompaniante" class="form-select form-select-md mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
+                <select formControlName="acompaniante" class="form-select mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
                   <option value="">Seleccione</option>
                   <option value="si">Si</option>
                   <option value="no">No</option>

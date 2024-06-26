@@ -12,30 +12,23 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 })
 export class AdminHomeComponent implements OnInit {
 
-  data:any;
-  activo:boolean = false;
-  clientes!: Cliente[];
-  choferes!: Chofer[];
-  operaciones!: Operacion[];
-  usuario!: any;
+  
+  activo!:boolean
+  
 
-  constructor(private dbFirebase: DbFirestoreService, private storageService: StorageService,) { }
+  constructor() { }
 
   ngOnInit(): void {
-    //this.usuario = this.storageService.loadInfo("usuario");
-    //si el rol es "admin", llama al initializer;
-    //esto se hace para q no llame al servico cuando se inicia la app y hubiera otro rol
-   /*  if(this.usuario.roles.admin){
-      console.log("llamada al storage desde admin-home, initializerAdmin");      
-      this.storageService.initializerAdmin();
-    }     */
-    //this.storageService.initializer();
+    this.setInitialSidebarState();
   }
 
-  // muestra y oculta la barra lateral
-  toogleSidebar(){
-    this.activo = !this.activo;
-    //console.log()(this.activo);
+  setInitialSidebarState(): void {
+    const screenWidth = window.innerWidth;
+    this.activo = screenWidth >= 1200; // Por ejemplo, 768px como breakpoint para resoluciones altas
+  }
+
+  toogleSidebar(): void {
+    this.activo = !this.activo;   
   }
 
 }
