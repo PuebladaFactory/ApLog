@@ -4,9 +4,9 @@
         <button type="button" class="btn-close btn btn-outline-secondary" (click)="activeModal.close()"></button>
     </div>
     <div class="modal-body">
-      <div class="container d-flex justify-content-evenly">
+      <div class="row">
 
-        <div>
+        <div class="col-6">
             <div class="d-flex justify-content-between mx-4 my-2">
                 <h2>Datos del cliente:</h2>
             </div>
@@ -40,8 +40,8 @@
                             <th class="tabla align-baseline" scope="col">Puesto</th>                    
                             <th class="tabla align-baseline" scope="col">Apellido</th>
                             <th class="tabla align-baseline" scope="col">Nombre</th>
-                            <th class="tabla align-baseline" scope="col">Telefono</th>
-                            <th class="tabla align-baseline" scope="col">Email</th>
+                            <!-- <th class="tabla align-baseline" scope="col">Telefono</th> -->
+                            <!-- <th class="tabla align-baseline" scope="col">Email</th> -->
                             <th></th>
                           </tr>
                       </thead>
@@ -50,8 +50,8 @@
                               <th class="tabla align-baseline" scope="col">{{contacto.puesto}}</th>                    
                               <th class="tabla align-baseline" scope="col">{{contacto.apellido}}</th>
                               <th class="tabla align-baseline" scope="col">{{contacto.nombre}}</th>
-                              <th class="tabla align-baseline" scope="col">{{contacto.telefono}}</th>
-                              <th class="tabla align-baseline" scope="col">{{contacto.email}}</th>
+                              <!-- <th class="tabla align-baseline" scope="col">{{contacto.telefono}}</th> -->
+                              <!-- <th class="tabla align-baseline" scope="col">{{contacto.email}}</th> -->
                               <th class="tabla align-baseline" scope="col">                                  
                                   <app-btn-eliminar name="Eliminar" (click)="eliminarContacto(i)"></app-btn-eliminar>
                               </th>
@@ -66,7 +66,7 @@
                 </form>
             </div>
         </div>
-        <div>        
+        <div class="col-6">        
             <div class="d-flex justify-content-between mx-4 mt-2" >
               <h2>Agregar contactos &nbsp;</h2>
               <button class="btn btn-outline-secondary" (click)="toggle()">          
