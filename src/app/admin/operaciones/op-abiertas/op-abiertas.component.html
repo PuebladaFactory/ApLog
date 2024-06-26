@@ -54,7 +54,7 @@
             {{ row[column.prop] }}
         </ng-template>
     </ngx-datatable-column>
-    <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="2">          
+    <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="3">          
         <ng-template ngx-datatable-cell-template let-row="row">
             <app-btn-leer name="Detalle" data-bs-target="#exampleModal" data-bs-toggle="modal" (click)="seleccionarOp(row)" class=""></app-btn-leer>
             <app-btn-editar name="Editar" data-bs-target="#edicionModal" data-bs-toggle="modal" (click)="abrirEdicion(row)" class="mx-2"></app-btn-editar>
@@ -80,55 +80,56 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="facturarFalso()"></button>
             </div>
           <div class="modal-body" *ngIf="detalleOp !== undefined">          
-                <div>
-                    <h3>N° Operacion: {{detalleOp.idOperacion}} </h3>                
+                <div>                                   
+                    <p class="mb-1"><span class="fw-bold">N° Operacion:</span> {{detalleOp.idOperacion}}</p>
                 </div>    
-                <div>
-                    <h3> Fecha: {{detalleOp.fecha}} </h3>                
+                <div>                    
+                    <p class="mb-1"><span class="fw-bold">Fecha:</span> {{detalleOp.fecha}}</p>
                 </div> 
-                <div>
-                   <h3>Cliente: {{detalleOp.cliente.razonSocial}} </h3>                
+                <div>                   
+                   <p class="mb-1"><span class="fw-bold">Cliente:</span> {{detalleOp.cliente.razonSocial}}</p>
                 </div>
-                <div>
-                    <h3>Destino: {{detalleOp.cliente.direccion}} </h3>                
+                <div>                    
+                    <p class="mb-1"><span class="fw-bold">Destino:</span> {{detalleOp.cliente.direccion}}</p>
                 </div>                
-                <div>
-                    <h3>Chofer: {{detalleOp.chofer.apellido}}  {{detalleOp.chofer.nombre}} </h3>                
+                <div>                    
+                    <p class="mb-1"><span class="fw-bold">Chofer:</span> {{detalleOp.chofer.nombre}}</p>
                 </div> 
-                <div>
-                    <h3>Contacto: {{detalleOp.chofer.celularContacto}} </h3>                
+                <div>                    
+                    <p class="mb-1"><span class="fw-bold">Contacto:</span> {{detalleOp.chofer.celularContacto}}</p>
                 </div> 
-                <div>
-                    <h3>Categoria: {{detalleOp.chofer.vehiculo.categoria}} </h3>                
+                <div>                    
+                    <p class="mb-1"><span class="fw-bold">Categoria:</span> {{detalleOp.chofer.vehiculo.categoria}}</p>
                 </div> 
-                <div>
-                    <h3>Proveedor: {{ detalleOp.chofer.proveedor === 'monotributista' ? 'No' : detalleOp.chofer.proveedor }} </h3>                
+                <div>                    
+                    <p class="mb-1"><span class="fw-bold">Proveedor:</span> {{ detalleOp.chofer.proveedor === 'monotributista' ? 'No' : detalleOp.chofer.proveedor }}</p>
                 </div> 
-                <div>
-                    <h3>Acompañante: {{ detalleOp.acompaniante  ? 'Si' : "No" }} </h3>                
+                <div>                    
+                    <p class="mb-1"><span class="fw-bold">Acompañante:</span> {{ detalleOp.acompaniante  ? 'Si' : "No" }}</p>
                 </div> 
-                <div>
-                    <h3>Tarifa Especial: {{ detalleOp.tarifaEspecial  ? 'Si' : "No" }} </h3>                
+                <div>                    
+                    <p class="mb-1"><span class="fw-bold">Tarifa Especial:</span> {{ detalleOp.tarifaEspecial  ? 'Si' : "No" }}</p>
                 </div>
                 <div *ngIf="detalleOp.tarifaEspecial && detalleOp.tEspecial !== null" class="ms-3">
-                    <h3>Chofer:</h3>
-                    <div class="ms-3">
-                        <h3>Tarifa Especial Concepto: {{detalleOp.tEspecial.chofer.concepto}} </h3>                
+                    <p class="mb-1"><span class="fw-bold">Chofer:</span></p>
+                    <div class="ms-3">                        
+                        <p class="mb-1"><span class="fw-bold">Tarifa Especial Concepto:</span> {{detalleOp.tEspecial.chofer.concepto}}</p>
                     </div>
-                    <div class="ms-3">
-                        <h3>Tarifa Especial Valor: {{detalleOp.tEspecial.chofer.valor}} </h3>                
+                    <div class="ms-3">                        
+                        <p class="mb-1"><span class="fw-bold">Tarifa Especial Valor:</span> {{detalleOp.tEspecial.chofer.valor}}</p>          
                     </div>
-                    <h3>Cliente:</h3>
-                    <div class="ms-3">
-                        <h3>Tarifa Especial Concepto: {{detalleOp.tEspecial.cliente.concepto}} </h3>                
+                    <p class="mb-1"><span class="fw-bold">Cliente:</span></p>          
+                    <div class="ms-3">                        
+                        <p class="mb-1"><span class="fw-bold">Tarifa Especial Concepto:</span> {{detalleOp.tEspecial.cliente.concepto}}</p>
                     </div>
-                    <div class="ms-3">
-                        <h3>Tarifa Especial Valor: {{detalleOp.tEspecial.cliente.valor}} </h3>                
+                    <div class="ms-3">                        
+                        <p class="mb-1"><span class="fw-bold">Tarifa Especial Valor:</span> {{detalleOp.tEspecial.cliente.valor}}</p>
                     </div>
                 </div>
                 <div>
-                    <h3>Observaciones: </h3>                 
-                    <textarea name="" class="w-100 fs-4" id="">{{detalleOp.observaciones}}</textarea>
+                    <p class="mb-1"><span class="fw-bold">Observaciones:</span></p>
+                    
+                    <textarea name="" class="w-100" id="obs-vista">{{detalleOp.observaciones}}</textarea>
                 </div>
                 
                 <app-btn-eliminar name="Cerrar" data-bs-dismiss="modal" class="mt-2" ></app-btn-eliminar>

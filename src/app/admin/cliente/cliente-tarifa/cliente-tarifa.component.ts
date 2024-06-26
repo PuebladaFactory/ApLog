@@ -46,7 +46,7 @@ filteredRows: any[] = [];
 paginatedRows: any[] = [];
 allColumns = [
 //    { prop: '', name: '', selected: true, flexGrow:1  },
-  { prop: 'fecha', name: 'Fecha', selected: true, flexGrow:4 },  
+  { prop: 'fecha', name: 'Fecha', selected: true, flexGrow:3, },  
   { prop: 'idTarifa', name: 'Id Tarifa', selected: false, flexGrow:2 },  
   { prop: 'utilitario', name: 'Utilitario', selected: true, flexGrow:2  },          
   { prop: 'furgon', name: 'furgon', selected: true, flexGrow:2  },
@@ -60,7 +60,7 @@ allColumns = [
   { prop: 'primerSectorKm', name: 'Km 1er Sector Distancia', selected: false, flexGrow:2  },  
   { prop: 'primerSectorValor', name: 'Km 1er Sector Valor', selected: true, flexGrow:2  },  
   { prop: 'intervalosKm', name: 'Km Intervalos Distancia', selected: false, flexGrow:2 },     
-  { prop: 'intervalosValor', name: 'Km Intervalos Valor', selected: true, flexGrow:2 },  
+  { prop: 'intervalosValor', name: 'Km Intervalos Valor', selected: false, flexGrow:2 },  
   { prop: 'tEspecialConcepto', name: 'T.E. Concepto', selected: true, flexGrow:4  },  
   { prop: 'tEspecialValor', name: 'T.E. Valor', selected: true, flexGrow:2 },  
   

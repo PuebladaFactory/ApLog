@@ -1,3 +1,4 @@
+
 .parametro{
     width: 10rem;
 }
@@ -18,18 +19,18 @@
     cursor: not-allowed;
 }
 
-//.adicional{
-    //width: 100rem;
-//}
-
-/* .adicionalKm{
-    width: 7.3rem;
-} */
-
 .altaIsDisabled{
     visibility: hidden;
 }
 
 .isDisabledAjustes{
     visibility: hidden;
+}
+
+.ngx-datatable.dark[_ngcontent-sax-c149] {
+    font-size: 10px;
+  }
+
+  td, input{
+    font-size: 1.15rem;
 }
