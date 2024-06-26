@@ -241,7 +241,7 @@ secondFilter = '';
       const modalRef = this.modalService.open(ProveedoresAltaComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
-        size: 'lg', 
+        size: 'md', 
         //backdrop:"static" 
       });
 
