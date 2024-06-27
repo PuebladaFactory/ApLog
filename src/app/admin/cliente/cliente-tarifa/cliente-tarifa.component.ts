@@ -178,6 +178,7 @@ this.acompanianteEditForm = this.fb.group({
 
   eliminarTarifa(row:any){    
     this.seleccionarTarifa(row);
+    
     Swal.fire({
       title: "¿Eliminar la tarifa?",
       text: "No se podrá revertir esta acción",

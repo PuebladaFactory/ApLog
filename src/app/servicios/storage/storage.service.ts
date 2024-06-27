@@ -113,7 +113,7 @@ export class StorageService {
   public facOpLiqCliente$ = this._facOpLiqCliente$.asObservable();
 
   private _facOpLiqProveedor$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqProveedor') || []);
-  public facOpLiqProveedor$ = this._facOpLiqCliente$.asObservable();
+  public facOpLiqProveedor$ = this._facOpLiqProveedor$.asObservable();
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 

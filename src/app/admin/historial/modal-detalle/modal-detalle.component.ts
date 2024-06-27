@@ -33,12 +33,16 @@ export class ModalDetalleComponent implements OnInit {
 
   ngOnInit(): void {
     this.data = this.fromParent.item;
-    //console.log(this.data);
+    console.log(this.data);
     //console.log("modo: ", this.fromParent.modo)
     switch(this.fromParent.modo){
       case "clientes":
         this.storageService.getByFieldValue("tarifasCliente","idTarifaCliente",this.data.idTarifa);
-        this.storageService.getByFieldValue("facOpLiqChofer","operacion.idOperacion",this.data.operacion.idOperacion);    
+        if(this.data.operacion.chofer.proveedor === "monotributista"){
+          this.storageService.getByFieldValue("facOpLiqChofer","operacion.idOperacion",this.data.operacion.idOperacion);    
+        } else if (this.data.operacion.chofer.proveedor !== "monotributista"){
+          this.storageService.getByFieldValue("facOpLiqProveedor","operacion.idOperacion",this.data.operacion.idOperacion);    
+        }        
         this.buscarTarifaClienteId();
         this.buscarTarifaChoferOp(); 
         break
@@ -122,20 +126,24 @@ export class ModalDetalleComponent implements OnInit {
             console.log("6) historial clientes/modal/total factura chofer: ", this.totalFacturaChofer);
           }); 
       })
-      /* let idTarifa = this.buscarTarifaServ.buscarIdTarifa();
-      console.log("1)", idTarifa); */
-      
-      //this.storageService.getByFieldValue("tarifasChofer", "idTarifa", idTarifa)
-      //this.tarifaChoferAplicada = this.buscarTarifaServ.buscarTarifaChofer();
-      //this.storageService.clearInfo("tarifasChofer")
-      //console.log("historial clientes/modal/tarifa CHOFER aplicada: ", this.tarifaChoferAplicada);
-      //this.totalFacturaChofer = this.data.montoFacturaChofer
-      //console.log("historial clientes/modal/total factura chofer: ", this.totalFacturaChofer);
+     
     } else if (this.data.operacion.chofer.proveedor !== "monotributista"){
-      this.tarifaProveedorAplicada = this.buscarTarifaServ.buscarTarifaProveedor(this.data.operacion)
-     // ////console.log()("historial clientes/modal/tarifa PROVEEDOR aplicada: ", this.tarifaProveedorAplicada);
-      this.montoCategoriaProveedor = this.buscarTarifaServ.buscarCategoriaProveedor(this.tarifaProveedorAplicada, this.data.operacion.chofer.vehiculo.categoria);
+      this.storageService.facOpLiqProveedor$.subscribe(data => {
+        let facOpLiqProveedor = data;
+        let idTarifa = facOpLiqProveedor[0].idTarifa
+        console.log("4)", idTarifa);
+        this.storageService.getByFieldValue("tarifasProveedor", "idTarifaProveedor", idTarifa);
+        this.storageService.historialTarifasProveedores$.subscribe(data => {
+          this.$tarifasProveedores = data;
+          console.log("4.5) todas tarifas proveedor: ", this.$tarifasProveedores)
+          this.tarifaProveedorAplicada = this.$tarifasProveedores[0];  
+          console.log("5) historial clientes/modal/tarifa PROVEEDOR aplicada: ", this.tarifaProveedorAplicada);
+          this.totalFacturaProveedor = this.data.montoFacturaChofer;
+          console.log("6) historial clientes/modal/total factura PROVEEDOR: ", this.totalFacturaChofer);
+          this.montoCategoriaProveedor = this.buscarTarifaServ.buscarCategoriaProveedor(this.tarifaProveedorAplicada, this.data.operacion.chofer.vehiculo.categoria);
       //////console.log()(this.montoCategoriaProveedor);
+        }); 
+      })
       
     }    
   }
