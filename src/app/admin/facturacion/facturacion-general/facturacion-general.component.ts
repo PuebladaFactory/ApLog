@@ -36,6 +36,7 @@ export class FacturacionGeneralComponent implements OnInit {
   totalFaltaCobrar!: number; 
   totalPagosOp!: number;
   totalFaltaPagar!: number;
+  resumenVisible: boolean = false;
 
   ngOnInit(): void {
     //this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
@@ -127,6 +128,10 @@ export class FacturacionGeneralComponent implements OnInit {
       this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
     }     
   
+  }
+
+  toogleResumen(){
+    this.resumenVisible = !this.resumenVisible;
   }
 
 }
