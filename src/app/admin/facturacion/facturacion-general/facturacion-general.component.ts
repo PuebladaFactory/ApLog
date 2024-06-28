@@ -39,19 +39,19 @@ export class FacturacionGeneralComponent implements OnInit {
   resumenVisible: boolean = false;
 
   ngOnInit(): void {
-    //this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
+    this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
     this.storageService.consultasFacCliente$.subscribe(data => {
       this.$facturasCliente = data; 
       this.calcularIngresos();     
     });
 
-    //this.storageService.getByDateValue("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacChofer");
+    this.storageService.getByDateValue("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacChofer");
     this.storageService.consultasFacChofer$.subscribe(data => {
       this.$facturasChofer = data;
       this.calcularPagos();
     });
 
-    //this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacProveedor");
+    this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacProveedor");
     this.storageService.consultasFacProveedor$.subscribe(data => {
       this.$facturasProveedor = data;
     });
