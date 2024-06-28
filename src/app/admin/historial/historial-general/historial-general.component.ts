@@ -68,5 +68,9 @@ export class HistorialGeneralComponent implements OnInit {
     console.log(e.target.value);
     this.btnConsulta = true;    
     this.consulta = e.target.value;
+    this.fechasConsulta = {
+      fechaDesde: this.primerDiaMesAnterior,
+      fechaHasta: this.ultimoDiaMesAnterior,
+    };
   }
 }

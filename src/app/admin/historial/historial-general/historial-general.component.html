@@ -1,16 +1,16 @@
-<div class="container">
-    <h1 class="text-center">Historial</h1>
-    <div class="d-flex justify-content-between m-0 mb-4">
-        <div class="d-flex">
-          <div  style="width: 20rem;"><h4 class="align-middle">Consultar por: </h4></div>
-          <select class="form-select form-select-md mb-3" (change)="changeConsulta($event)">
+
+    <h1 class="mt-3">Historial</h1>
+    <div class="row m-0 mb-4 mt-3">
+        <div class="col-3 d-flex">
+          <div class="d-flex align-items-center "><h4 class="me-3">Consultar por: </h4></div>
+          <select class="d-flex align-items-center form-select mb-3 w-50" (change)="changeConsulta($event)">
             <option selected>Seleccione</option>
             <option value="cliente">Cliente</option>
             <option value="chofer">Chofer</option>
             <option value="proveedor">Proveedor</option>
           </select>
         </div>
-        <div>
+        <div class="col text-end">
             <!-- <app-facturacion-consulta  [componenteConsulta]="componenteConsulta" (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" ></app-facturacion-consulta> -->
             <button *ngIf="btnConsulta"  data-bs-target="#consultaModalHist" data-bs-toggle="modal" id="bt" class="btn btn-outline-secondary ">
               Consultar Operaciones
@@ -28,7 +28,7 @@
                     </div>
                 </div>
             </div>     
-          </div>
+        </div>
     </div>
 
     <h4>Periodo: {{fechasConsulta.fechaDesde}} / {{fechasConsulta.fechaHasta}}</h4> 
@@ -47,4 +47,4 @@
     </div>
     
  
-</div>
+

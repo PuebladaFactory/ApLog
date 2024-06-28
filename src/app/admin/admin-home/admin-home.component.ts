@@ -28,7 +28,7 @@ export class AdminHomeComponent implements OnInit {
   }
 
   setInitialSidebarState(): void {
-    this.activo = window.innerWidth >= 992;
+    this.activo = window.innerWidth >= 1400;
   }
 
   @HostListener('window:resize', ['$event'])
