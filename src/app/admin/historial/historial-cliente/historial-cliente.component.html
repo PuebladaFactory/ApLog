@@ -1,10 +1,10 @@
     <div class="custom-datatable">
-      <div class="container mb-2">
+      <div class="mb-2">
           <div class="row">
-              <div class="col-4 d-flex align-items-end">
+              <div class="col-4 d-flex">
                   <!-- <input type="text" placeholder="Buscar..." (input)="updateFilter($event)" />             -->
                   <input class="w-75" type="text" placeholder="Buscar por primer criterio..." (input)="updateFilter($event, 'first')" />
-                  <span class="mx-2"> y </span>
+                  <span class="mx-2" style="font-size:1.15rem;"> y </span>
                   <input class="w-75" type="text" placeholder="Buscar por segundo criterio..." (input)="updateFilter($event, 'second')" />
               </div>
               <div class="col-8 d-flex justify-content-between">                 
