@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
@@ -20,11 +20,20 @@ export class AdminHomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.setInitialSidebarState();
+    window.addEventListener('resize', this.onResize);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('resize', this.onResize);
   }
 
   setInitialSidebarState(): void {
-    const screenWidth = window.innerWidth;
-    this.activo = screenWidth >= 1200; // Por ejemplo, 768px como breakpoint para resoluciones altas
+    this.activo = window.innerWidth >= 1400;
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event:any): void {
+    this.setInitialSidebarState();
   }
 
   toogleSidebar(): void {
