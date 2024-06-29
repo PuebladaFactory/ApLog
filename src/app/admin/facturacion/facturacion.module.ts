@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { FacturacionRoutingModule } from './facturacion-routing.module';
 import { FacturacionClienteComponent } from './facturacion-cliente/facturacion-cliente.component';
 import { FacturacionChoferComponent } from './facturacion-chofer/facturacion-chofer.component';
@@ -11,6 +11,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FacturacionProveedorComponent } from './facturacion-proveedor/facturacion-proveedor.component';
+import { ModalDetalleComponent } from './modal-detalle/modal-detalle.component';
 
 
 
@@ -22,6 +23,7 @@ import { FacturacionProveedorComponent } from './facturacion-proveedor/facturaci
     FacturacionGeneralComponent,
     FacturacionConsultaComponent,
     FacturacionProveedorComponent,
+    ModalDetalleComponent,
     
   ],
   imports: [
@@ -32,7 +34,7 @@ import { FacturacionProveedorComponent } from './facturacion-proveedor/facturaci
     ReactiveFormsModule,
     SharedModule,
     Ng2SearchPipeModule, 
-    
+    NgxDatatableModule,
 
   ],
   exports:[

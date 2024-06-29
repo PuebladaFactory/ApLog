@@ -1,0 +1,49 @@
+<div class="modal-content">
+    <div class="modal-header">
+        <!-- <h3>Detalles de la operación N° {{data.operacion.idOperacion}}</h3> -->
+        <button type="button" class="btn-close btn btn-outline-secondary" (click)="activeModal.close()"></button>
+    </div>
+    <div class="modal-body">
+      <ngx-datatable
+      class="dark"
+      [rows]="paginatedRows"
+      [columns]="visibleColumns"
+      [columnMode]="ColumnMode.flex"
+      [headerHeight]="50"
+      [footerHeight]="50"
+      [rowHeight]="'auto'"
+      [sortType]="sortType"
+      
+      [externalPaging]="true"
+      [count]="count"
+      [limit]="limit"
+      [offset]="offset"
+      (sort)="onSort($event)"
+      (activate)="onActivate($event)"
+      (select)="onSelect($event)"
+      (page)="setPage($event)">
+      
+      <ngx-datatable-column *ngFor="let column of visibleColumns" [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow">
+          <ng-template ngx-datatable-cell-template let-row="row">
+              {{ row[column.prop] }}
+          </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Cobrado" prop="cobrado" [flexGrow]="2">          
+        <ng-template ngx-datatable-cell-template let-row="row">
+          <div class="form-check form-switch" (click)="facturaCobrada(row)">
+            <input *ngIf="!row.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">                                
+            <input *ngIf="row.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked>                                
+          </div>
+        </ng-template>
+     </ngx-datatable-column>
+     <ngx-datatable-column name="Imprimir" prop="imprimir" [flexGrow]="2">
+      <ng-template ngx-datatable-cell-template let-row="row">
+        <td >
+          <app-btn-leer name="excel" data-bs-toggle="collapse" data-bs-target="#reimpresionCliente" aria-expanded="false" aria-controls="reimpresionCliente" (click)="reimprimirFac(row, 'excel')" class="me-2"></app-btn-leer>   
+          <app-btn-leer name="pdf" data-bs-toggle="collapse" data-bs-target="#reimpresionCliente" aria-expanded="false" aria-controls="reimpresionCliente" (click)="reimprimirFac(row, 'pdf')"></app-btn-leer>   
+        </td> 
+      </ng-template>
+     </ngx-datatable-column>   
+      </ngx-datatable>
+    </div>
+</div>     

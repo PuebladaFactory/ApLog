@@ -280,7 +280,7 @@ toogleAjustes(){
 
   facturarOpChofer(){
     this.facturaChofer = this.facOpChoferService.facturarOpChofer(this.opCerrada);    
-    //console.log("5) esta es la factura-chofer FINAL: ", this.facturaChofer);    
+    console.log("1) esta es la factura-chofer FINAL: ", this.facturaChofer);    
     //this.addItem("facturaOpChofer", this.facturaChofer)
     this.opForm.reset();
     this.facturar = false; 

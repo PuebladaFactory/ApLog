@@ -40,6 +40,7 @@ export class FacturacionClienteService {
   } */
 
   facturarOpCliente(op:Operacion): FacturaOpCliente{
+    this.storageService.getByFieldValueLimit("tarifasCliente", "idCliente", op.cliente.idCliente,1)
     this.buscarCliente(op);   
     this.crearFacturaCliente(op);    
     return this.facturaCliente
@@ -61,15 +62,15 @@ export class FacturacionClienteService {
 
   buscarTarifa(op: Operacion){    
     this.storageService.historialTarifasClientes$.subscribe(data => {
-      this.$tarifas = data.filter((tarifa: { idCliente: number; }) => tarifa.idCliente === this.clienteOp.idCliente);
-
+      //this.$tarifas = data.filter((tarifa: { idCliente: number; }) => tarifa.idCliente === this.clienteOp.idCliente);
+      this.$tarifas = data
       console.log("1) data Todas CLIENTES: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
-      this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: TarifaCliente, tarifaActual: TarifaCliente) => {
+      /* this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: TarifaCliente, tarifaActual: TarifaCliente) => {
         return tarifaActual.idTarifaCliente > tarifaMaxima.idTarifaCliente ? tarifaActual : tarifaMaxima;
-      }); 
-
+      });  */
+      this.ultimaTarifa = this.$tarifas[0];
       // Ahora, tarifaMasElevada contiene la tarifa con el idTarifa más elevado
       console.log("2) ultima CLIENTE: ", this.ultimaTarifa);
       //this.calcularLiquidacion(op);
