@@ -75,7 +75,7 @@ export class LiqChoferComponent implements OnInit {
 
   ngOnInit(): void {
       
-    this.storageService.getByDateValue(this.tituloFacOpChofer, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer");
+    //this.storageService.getByDateValue(this.tituloFacOpChofer, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer");
     this.storageService.consultasFacOpChofer$.subscribe(data => {
       this.$facturasOpChofer = data;
       this.procesarDatosParaTabla()

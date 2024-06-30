@@ -6,6 +6,7 @@
   [rows]="datosTablaCliente | filter: searchText"
   [columns]="[
     { prop: 'razonSocial', name: 'Razon Social' },
+    { prop: 'cant', name: 'Cant Op' },
     { prop: 'sumaAPagar', name: 'Suma a Pagar' },
     { prop: 'sumaACobrar', name: 'Suma a Cobrar' },
     { name: 'Ganancia', cellTemplate: gananciaTpl },
@@ -28,66 +29,8 @@
 </ng-template>
 
 <ng-template #accionesTpl let-row="row" let-rowIndex="rowIndex">  
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(rowIndex, row)">
-        <ng-container *ngIf="!mostrarTablaCliente[rowIndex]">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(rowIndex, row)">   
         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-        </ng-container>
-        <ng-container *ngIf="mostrarTablaCliente[rowIndex]">
-            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-            <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
-        
-        </ng-container>
+        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>   
     </svg>
-</ng-template>
-
-<div *ngFor="let cliente of datosTablaCliente; let i = index">
-  <ngx-datatable
-    *ngIf="mostrarTablaCliente[i]"
-    class="dark"
-    [rows]="facturasPorCliente.get(cliente.idCliente)"
-    [columns]="[
-      { prop: 'fecha', name: 'Fecha' },
-      { name: 'Quincena', cellTemplate: quincenaTpl },
-      { prop: 'idFacturaCliente', name: 'Id' },
-      { prop: 'operaciones.length', name: 'Cant Op' },
-      { prop: 'montoFacturaChofer', name: 'Suma a Pagar' },
-      { prop: 'total', name: 'Suma a Cobrar' },
-      { name: 'Ganancia', cellTemplate: gananciaFacturaTpl },
-      { name: '% Ganancia', cellTemplate: porcentajeGananciaFacturaTpl },
-      { name: 'Cobrado', cellTemplate: cobradoTpl },
-      
-      { name: 'Imprimir', cellTemplate: imprimirTpl }
-    ]"
-    [columnMode]="'force'"
-    [headerHeight]="50"
-    [footerHeight]="50"
-    [rowHeight]="'auto'">
-  </ngx-datatable>
-</div>
-
-<ng-template #quincenaTpl let-row="row">
-  {{ getQuincena(row.fecha) }}
-</ng-template>
-
-<ng-template #gananciaFacturaTpl let-row="row">
-  {{ row.total - row.montoFacturaChofer }}
-</ng-template>
-
-<ng-template #porcentajeGananciaFacturaTpl let-row="row">
-  {{ ((row.total - row.montoFacturaChofer) * 100 / row.total).toFixed(2) }}%
-</ng-template>
-
-<ng-template #cobradoTpl let-row="row">
-  <div class="form-check form-switch" (click)="facturaCobrada(row)">
-    <input *ngIf="!row.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">                                
-    <input *ngIf="row.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked>                                
-  </div>
-</ng-template>
-
-<ng-template #imprimirTpl let-row="row">
-  <td >
-    <app-btn-leer name="excel" data-bs-toggle="collapse" data-bs-target="#reimpresionCliente" aria-expanded="false" aria-controls="reimpresionCliente" (click)="reimprimirFac(row, 'excel')" class="me-2"></app-btn-leer>   
-    <app-btn-leer name="pdf" data-bs-toggle="collapse" data-bs-target="#reimpresionCliente" aria-expanded="false" aria-controls="reimpresionCliente" (click)="reimprimirFac(row, 'pdf')"></app-btn-leer>   
-  </td>
 </ng-template>

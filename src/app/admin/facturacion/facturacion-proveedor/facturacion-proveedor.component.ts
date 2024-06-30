@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 
 @Component({
   selector: 'app-facturacion-proveedor',
@@ -28,27 +30,21 @@ export class FacturacionProveedorComponent implements OnInit {
   operacionFac: FacturaOpProveedor[] = []
   
   
-  constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService){
-   // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
-   this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false);  
-  }
+  constructor(
+    private storageService: StorageService,
+    private modalService: NgbModal
+  ) {}
 
   ngOnInit(): void {
-      
-    //this.storageService.getByDateValue(this.tituloFacProveedor, "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacProveedor");
     this.storageService.consultasFacProveedor$.subscribe(data => {
       this.$facturasProveedor = data;
-      this.procesarDatosParaTabla()
+      this.procesarDatosParaTabla();
+      this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false); // Mueve esta línea aquí
     });
-
-    this.storageService.consultasFacOpLiqProveedor$.subscribe(data =>{
-      //console.log()(data);
-      this.$facturaOpProveedor = data;     
-      //console.log()("consultasFacOpLiqProveedor: ", this.$facturaOpProveedor );
-      
-    })
-    
-    //this.consultaMes(); 
+  
+    this.storageService.consultasFacOpLiqProveedor$.subscribe(data => {
+      this.$facturaOpProveedor = data;
+    });
   }
 
   procesarDatosParaTabla() {
@@ -64,7 +60,8 @@ export class FacturacionProveedorComponent implements OnInit {
             sumaAPagar: 0,
             sumaACobrar: 0,
             faltaCobrar: 0,
-            total: 0
+            total: 0,
+            cant: 0,
           });
         }
   
@@ -78,6 +75,7 @@ export class FacturacionProveedorComponent implements OnInit {
         }
         proveedor.total += factura.total;  
         proveedor.sumaACobrar += Number(factura.montoFacturaCliente);      
+        proveedor.cant += Number(factura.operaciones.length);      
       });
   
       this.datosTablaProveedor = Array.from(proveedoresMap.values());
@@ -91,7 +89,7 @@ export class FacturacionProveedorComponent implements OnInit {
 
 
   mostrarMasDatos(index: number, proveedor:any) {   
-   // Cambiar el estado del botón en la posición indicada
+  /*  // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
    ////console.log()("CLIENTE: ", cliente);
 
@@ -104,8 +102,19 @@ export class FacturacionProveedorComponent implements OnInit {
    });
    this.facturasPorProveedor.set(proveedorId, facturasProveedor);
 
-   //console.log()("FACTURAS DEL PROVEEDOR: ", facturasProveedor);  
-
+   //console.log()("FACTURAS DEL PROVEEDOR: ", facturasProveedor);   */
+   if (this.datosTablaProveedor && this.datosTablaProveedor[index]) {
+    this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
+    const proveedorId = this.datosTablaProveedor[index].idProveedor;
+    const facturasProveedor = this.$facturasProveedor.filter((factura: any) => factura.idProveedor === proveedorId);
+    this.facturasPorProveedor.set(proveedorId, facturasProveedor);        
+    //console.log("1) facturasCliente: ", facturasCliente);
+    //console.log("2) facturas por cliente: ", this.facturasPorCliente);
+    this.openModal(facturasProveedor, index)  
+    
+  } else {
+    console.error('Elemento en datosTablaCliente no encontrado en el índice:', index);
+  }
   }
 
   cerrarTabla(index: number){
@@ -113,65 +122,38 @@ export class FacturacionProveedorComponent implements OnInit {
   }
 
  // Modifica la función getQuincena para que acepte una fecha como parámetro
-  getQuincena(fecha: string | Date): string {
-    // Convierte la fecha a objeto Date
-    const fechaObj = new Date(fecha);
-    // Obtiene el día del mes
-    const dia = fechaObj.getDate();
-    // Determina si la fecha está en la primera o segunda quincena
-    if (dia <= 15) {
-      return '1° quincena';
-    } else {
-      return '2° quincena';
-    }
-  }
+ getQuincena(fecha: string | Date): string {
+  const fechaObj = new Date(fecha);
+  const dia = fechaObj.getDate();
+  return dia <= 15 ? '1° quincena' : '2° quincena';
+}
 
+openModal(factura: any, index: number): void {          
+  {
+    const modalRef = this.modalService.open(ModalDetalleComponent, {
+      windowClass: 'myCustomModalClass',
+      centered: true,
+      size: 'xl', 
+      backdrop:"static" 
+    });
 
-
-  facturaCobrada(factura:FacturaProveedor){
-    //este va
-    factura.cobrado = !factura.cobrado
-    //console.log()(factura.cobrado);
-    this.updateItem(factura)
+   let info = {
+      modo: "proveedores",
+      item: factura,
+    }; 
+    //console.log()(info);
     
-  }
-
-  updateItem(item:any){
-    this.storageService.updateItem(this.componente, item);     
-  }
-
-  consultarFacProveedor(factura:FacturaProveedor){
-    this.storageService.getByFieldValueTitle("facOpLiqProveedor", "idProveedor",factura.idProveedor,"consultasFacOpLiqProveedor")
-
-  }
-
-  reimprimirFac(factura:FacturaProveedor, formato: string){    
-    //console.log()(factura);    
-    ////console.log()(texto);
-    this.operacionFac = []
-    
-    factura.operaciones.forEach((id:number) => {
-      if(this.$facturaOpProveedor !== null){
-        this.$facturaOpProveedor.forEach((facturaOp: FacturaOpProveedor) => {
+    modalRef.componentInstance.fromParent = info;
+    modalRef.result.then(
+      (result) => {
+        ////console.log()("ROOWW:" ,row);
         
-          if(facturaOp.operacion.idOperacion === id){
-            this.operacionFac.push(facturaOp)
-          }
-                 
-        }) 
-      }      
-    })
-    //console.log()("facturasOp: ", this.operacionFac);
-    if(formato === "excel"){
-      this.excelServ.exportToExcelProveedor(factura, this.operacionFac); 
-    } else{
-      this.pdfServ.exportToPdfProveedor(factura, this.operacionFac);
-    }
-    this.storageService.clearInfo("facOpLiqProveedor")
-    //console.log()("ARRAY: ", this.operacionFac);
-    
-    
+//        this.selectCrudOp(result.op, result.item);
      
-    
+      },
+      (reason) => {}
+    );
   }
+}
+
 }

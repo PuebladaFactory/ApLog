@@ -103,16 +103,19 @@ export class FacturacionGeneralComponent implements OnInit {
 
   getMsg(msg: any) {
     //this.btnConsulta = true;
-    ////console.log()(msg);        
+    console.log(msg);        
     //alert("llega el msj")
     //this.consultaOperaciones(msg.fechaDesde, msg.fechaHasta);
     //this.msgBack(msg);
     //this.ngOnInit()
-    this.btnConsulta = true;
-    this.fechasConsulta = {
-      fechaDesde: msg.fechaDesde,
-      fechaHasta: msg.fechaHasta,
-    };
+    if(msg.titulo === "facturacion"){
+      this.btnConsulta = true;
+      this.fechasConsulta = {
+        fechaDesde: msg.fecha.fechaDesde,
+        fechaHasta: msg.fecha.fechaHasta,
+      };
+    }
+    
   }
 
   consultaOperaciones(){   

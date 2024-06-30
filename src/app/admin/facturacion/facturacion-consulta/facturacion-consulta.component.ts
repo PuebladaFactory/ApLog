@@ -28,6 +28,7 @@ export class FacturacionConsultaComponent implements OnInit {
 
   }
   ngOnInit(): void {
+    console.log("ngOnInit consulta, titulo", this.titulo);
     
   }
 
@@ -60,13 +61,23 @@ export class FacturacionConsultaComponent implements OnInit {
   }
 
   msgBack() {
-    this.newItemEvent.emit(this.fechasConsulta);    
+    let respuesta = {
+    fecha: this.fechasConsulta,
+    titulo: this.titulo,  
+    }
+    console.log("consulta: respuesta", respuesta);
+    
+    this.newItemEvent.emit(respuesta);    
   }
 
   consultaOperaciones(fechaDesde:any, fechaHasta:any){
+    console.log("consultaOperaciones, titulo", this.titulo);
+    
     if(this.titulo = "liquidacion"){
-      
-      switch(this.consulta){
+      this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
+      this.storageService.getByDateValue("facturaOpChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpChofer");
+      this.storageService.getByDateValue("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor");
+      /* switch(this.consulta){
         case "cliente":
           this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
           break;
@@ -82,12 +93,14 @@ export class FacturacionConsultaComponent implements OnInit {
         default:
           alert("error");
           break
-      }
+      } */
     }
 
     if(this.titulo = "facturacion"){
-      
-      switch(this.consulta){
+      this.storageService.getByDateValue("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
+      this.storageService.getByDateValue("facturaChofer", "fecha", fechaDesde, fechaHasta, "consultasFacChofer");
+      this.storageService.getByDateValue("facturaProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacProveedor");
+      /* switch(this.consulta){
         case "cliente":          
           this.storageService.getByDateValue("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
           break;
@@ -103,7 +116,7 @@ export class FacturacionConsultaComponent implements OnInit {
         default:
           alert("error");
           break
-      }
+      } */
     }
 
     if(this.titulo = "historial"){
@@ -122,7 +135,7 @@ export class FacturacionConsultaComponent implements OnInit {
           break;
 
         default:
-          alert("error");
+          alert("error?????????");
           break
       }
     }

@@ -1,8 +1,12 @@
 import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
+import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
+import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
@@ -30,43 +34,77 @@ export class ModalDetalleComponent implements OnInit {
   { prop: 'cobrado', name: 'Cobrado', selected: false, flexGrow:2 },
   { prop: 'sumaPagar', name: 'Suma a Pagar', selected: true, flexGrow:2  },    
   { prop: 'sumaCobrar', name: 'Suma a Cobrar', selected: true, flexGrow:2  },    
-  { prop: 'neta', name: 'N° Ganancia Neta', selected: true, flexGrow:2  },    
+  { prop: 'neta', name: 'Ganancia Neta', selected: true, flexGrow:2  },    
   { prop: 'porcentaje', name: 'Porcentaje', selected: true, flexGrow:2  },  
   /* { prop: 'cobrado', name: 'Cobrado', selected: true, flexGrow:2  },  
-  { prop: 'imprinmir', name: 'Imprimir', selected: true, flexGrow:2  },   */
-  
-];
-visibleColumns = this.allColumns.filter(column => column.selected);
-selected = [];
-count = 0;
-limit = 20;
-offset = 0;
-sortType = SortType.multi; // Aquí usamos la enumeración SortType
-selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
-ColumnMode = ColumnMode;  
-encapsulation!: ViewEncapsulation.None;
-ajustes: boolean = false;
-firstFilter = '';
-secondFilter = '';
-$facturasOpCliente: FacturaOpCliente[] = [];
-  
+  { prop: 'imprinmir', name: 'Imprimir', selected: true, flexGrow:2  },   */  
+  ];
+  visibleColumns = this.allColumns.filter(column => column.selected);
+  selected = [];
+  count = 0;
+  limit = 20;
+  offset = 0;
+  sortType = SortType.multi; // Aquí usamos la enumeración SortType
+  selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
+  ColumnMode = ColumnMode;  
+  encapsulation!: ViewEncapsulation.None;
+  ajustes: boolean = false;
+  firstFilter = '';
+  secondFilter = '';
+  $facturasOpCliente: FacturaOpCliente[] = [];
+  $facturasOpChofer: FacturaOpChofer[] = [];
+  $facturasOpProveedor: FacturaOpProveedor[] = [];
+  titulo:string = ""
+  idFactura!: number;
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private excelServ: ExcelService, 
     private pdfServ: PdfService, private dbFirebase: DbFirestoreService){
 
   }
   
   ngOnInit(): void {
-    this.data = this.fromParent.item    
-    this.storageService.getByFieldValue("facOpLiqCliente", "idCliente", this.data[0].idCliente);
-    this.storageService.facOpLiqCliente$.subscribe(data=>{
-      this.$facturasOpCliente = data;
-      console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);
-      
-    });
-    
-    console.log("data: ", this.data);
-    this.armarTabla()
-    
+    this.data = this.fromParent.item;
+    //console.log("data: ", this.data); 
+    switch (this.fromParent.modo){
+      //////////////CLIENTES///////////////////////
+      case "clientes":
+          this.storageService.getByFieldValue("facOpLiqCliente", "idCliente", this.data[0].idCliente);
+          this.storageService.facOpLiqCliente$.subscribe(data=>{
+            this.$facturasOpCliente = data;
+            ////console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);      
+          });
+          //console.log("data: ", this.data);
+          this.titulo = this.data[0].razonSocial
+          this.idFactura = this.data[0].idFacturaCliente;
+          this.armarTabla()
+          break;
+      //////////////CHOFERES///////////////////////
+      case "choferes":
+          this.storageService.getByFieldValue("facOpLiqChofer", "idChofer", this.data[0].idChofer);
+          this.storageService.facOpLiqChofer$.subscribe(data=>{
+            this.$facturasOpChofer = data;
+            ////console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);      
+          });
+          //console.log("data: ", this.data);
+          this.titulo = `${this.data[0].apellido} ${this.data[0].nombre}`
+          this.idFactura = this.data[0].idFacturaChofer;
+          this.armarTabla()
+          break;
+      //////////////PROVEEDORES///////////////////////
+      case "proveedores":
+          this.storageService.getByFieldValue("facOpLiqProveedor", "idProveedor", this.data[0].idProveedor);
+          this.storageService.facOpLiqProveedor$.subscribe(data=>{
+            this.$facturasOpProveedor = data;
+            ////console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);      
+          });
+          //console.log("data: ", this.data);
+          this.titulo = this.data[0].razonSocial
+          this.idFactura = this.data[0].idFacturaProveedor;
+          this.armarTabla()
+          break;
+      default:
+        alert("error update")
+      break;
+    }       
   }
 
   getQuincena(fecha: string | Date): string {
@@ -76,79 +114,201 @@ $facturasOpCliente: FacturaOpCliente[] = [];
   }
 
   facturaCobrada(row: any) {
-    console.log(row);
-    let factura = this.data.filter((factura:FacturaCliente) => {
-      return factura.idFacturaCliente === row.idFactura
-    })
-    console.log(factura);
-    
-    factura[0].cobrado = !factura[0].cobrado;
-    this.updateItem(factura[0]);
+    //////////////CLIENTES///////////////////////
+    if(this.fromParent.modo === "clientes"){
+      //console.log(row);
+      let factura = this.data.filter((factura:FacturaCliente) => {
+        return factura.idFacturaCliente === row.idFactura
+      })
+      //console.log(factura);
+      
+      factura[0].cobrado = !factura[0].cobrado;
+      this.updateItem(factura[0]);
+    }
+    //////////////CHOFERES///////////////////////
+    if(this.fromParent.modo === "choferes"){
+      //console.log(row);
+      let factura = this.data.filter((factura:FacturaChofer) => {
+        return factura.idFacturaChofer === row.idFactura
+      })
+      //console.log(factura);
+      
+      factura[0].cobrado = !factura[0].cobrado;
+      this.updateItem(factura[0]);
+    }
+    //////////////PROVEEDORES///////////////////////
+    if(this.fromParent.modo === "proveedores"){
+      //console.log(row);
+      let factura = this.data.filter((factura:FacturaProveedor) => {
+        return factura.idFacturaProveedor === row.idFactura
+      })
+      //console.log(factura);
+      
+      factura[0].cobrado = !factura[0].cobrado;
+      this.updateItem(factura[0]);
+    }
   }
 
   updateItem(item: any) {
-    console.log(item);
-    
-    this.storageService.updateItem('facturaCliente', item);
+    switch (this.fromParent.modo){
+      //////////////CLIENTES///////////////////////
+      case "clientes":
+          this.storageService.updateItem('facturaCliente', item);
+          break;
+      //////////////CHOFERES///////////////////////
+      case "choferes":
+          this.storageService.updateItem('facturaChofer', item);
+          break;
+      //////////////PROVEEDORES///////////////////////
+      case "proveedores":
+          this.storageService.updateItem('facturaProveedor', item);
+      break;
+      default:
+        alert("error update")
+      break;
+    }    
   }
 
   reimprimirFac(row: any, formato: string) {    
-    //console.log("1) row: ",row);
-    let facOp: any
-    let factura = this.data.filter((factura:FacturaCliente) => {
-      return factura.idFacturaCliente === row.idFactura
-    })
-    console.log(factura);
-    
+    let factura:any;
     this.operacionFac = [];
-    factura[0].operaciones.forEach((id: number) => {
-      if (this.$facturasOpCliente !== null) {
-        this.$facturasOpCliente.forEach((facturaOp: any) => {
-          if (facturaOp.operacion.idOperacion === id) {
-            this.operacionFac.push(facturaOp);
-          }
-        });
-      }
-    });
-    console.log("3) operacionFac: ", this.operacionFac);
+    switch (this.fromParent.modo){
+      //////////////CLIENTES///////////////////////
+      case "clientes":
+            ////console.log("1) row: ",row);    
+          factura = this.data.filter((factura:FacturaCliente) => {
+            return factura.idFacturaCliente === row.idFactura
+          })
+          ////console.log(factura);
+          factura[0].operaciones.forEach((id: number) => {
+            if (this.$facturasOpCliente !== null) {
+              this.$facturasOpCliente.forEach((facturaOp: any) => {
+                if (facturaOp.operacion.idOperacion === id) {
+                  this.operacionFac.push(facturaOp);
+                }
+              });
+            }
+          });
+          ////console.log("3) operacionFac: ", this.operacionFac);
+          if (formato === 'excel') {
+            ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelCliente(factura[0], this.operacionFac);
+          } else if(formato === 'pdf') {
+            //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac);
+          }   
+          break;
+      //////////////CHOFERES///////////////////////
+      case "choferes":
+              ////console.log("1) row: ",row);    
+          factura = this.data.filter((factura:FacturaChofer) => {
+            return factura.idFacturaChofer === row.idFactura
+          })
+          ////console.log(factura);
+          factura[0].operaciones.forEach((id: number) => {
+            if (this.$facturasOpChofer !== null) {
+              this.$facturasOpChofer.forEach((facturaOp: any) => {
+                if (facturaOp.operacion.idOperacion === id) {
+                  this.operacionFac.push(facturaOp);
+                }
+              });
+            }
+          });
+          ////console.log("3) operacionFac: ", this.operacionFac);
+          if (formato === 'excel') {
+            ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelChofer(factura[0], this.operacionFac);
+          } else if(formato === 'pdf') {
+            ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac);
+          } 
+          break;
+      //////////////PROVEEDORES///////////////////////
+      case "proveedores":
+              ////console.log("1) row: ",row);    
+          factura = this.data.filter((factura:FacturaProveedor) => {
+            return factura.idFacturaProveedor === row.idFactura
+          })
+          ////console.log(factura);
+          factura[0].operaciones.forEach((id: number) => {
+            if (this.$facturasOpProveedor !== null) {
+              this.$facturasOpProveedor.forEach((facturaOp: any) => {
+                if (facturaOp.operacion.idOperacion === id) {
+                  this.operacionFac.push(facturaOp);
+                }
+              });
+            }
+          });
+          ////console.log("3) operacionFac: ", this.operacionFac);
+          if (formato === 'excel') {
+            ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelProveedor(factura[0], this.operacionFac);
+          } else if(formato === 'pdf') {
+            ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac);
+          }   
+      break;
+      default:
+        alert("error de reimpresion")
+      break;
+    }
     
-    /* this.operacionFac = [];
-    factura.operaciones.forEach((id: number) => {
-      if (this.$facturaOpCliente !== null) {
-        this.$facturaOpCliente.forEach((facturaOp: any) => {
-          if (facturaOp.operacion.idOperacion === id) {
-            this.operacionFac.push(facturaOp);
-          }
-        });
-      }
-    });*/
-    if (formato === 'excel') {
-      console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-      
-      this.excelServ.exportToExcelCliente(factura[0], this.operacionFac);
-    } else {
-      console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-      this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac);
-    }   
   }
 
   armarTabla() {
-    //console.log("consultasOp: ", this.$consultasOp );
     let indice = 0
-    this.rows = this.data.map((factura: FacturaCliente) => ({
-        indice: indice ++,
-        fecha: factura.fecha,
-        quincena: this.getQuincena(factura.fecha),
-        idFactura: factura.idFacturaCliente,
-        cant: factura.operaciones.length,
-        sumaPagar: factura.montoFacturaChofer,
-        sumaCobrar: factura.total,
-        neta: factura.total - factura.montoFacturaChofer,
-        porcentaje: ((factura.total - factura.montoFacturaChofer)*100/factura.total).toFixed(2),
-        cobrado: factura.cobrado,
-      }));
-    
-    //console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+    ////console.log("consultasOp: ", this.$consultasOp );
+    switch (this.fromParent.modo){
+      //////////////CLIENTES///////////////////////
+      case "clientes":
+          this.rows = this.data.map((factura: FacturaCliente) => ({
+              indice: indice ++,
+              fecha: factura.fecha,
+              quincena: this.getQuincena(factura.fecha),
+              idFactura: factura.idFacturaCliente,
+              cant: factura.operaciones.length,
+              sumaPagar: factura.montoFacturaChofer,
+              sumaCobrar: factura.total,
+              neta: factura.total - factura.montoFacturaChofer,
+              porcentaje: ((factura.total - factura.montoFacturaChofer)*100/factura.total).toFixed(2),
+              cobrado: factura.cobrado,
+          }));
+          break;
+      //////////////CHOFERES///////////////////////
+      case "choferes":
+          this.rows = this.data.map((factura: FacturaChofer) => ({
+              indice: indice ++,
+              fecha: factura.fecha,
+              quincena: this.getQuincena(factura.fecha),
+              idFactura: factura.idFacturaChofer,
+              cant: factura.operaciones.length,
+              sumaPagar: factura.total,
+              sumaCobrar: factura.montoFacturaCliente,
+              neta: factura.montoFacturaCliente - factura.total,
+              porcentaje: ((factura.montoFacturaCliente - factura.total)*100/factura.montoFacturaCliente).toFixed(2),
+              cobrado: factura.cobrado,
+          }));
+          break;
+      //////////////PROVEEDORES///////////////////////
+      case "proveedores":
+          this.rows = this.data.map((factura: FacturaProveedor) => ({
+              indice: indice ++,
+              fecha: factura.fecha,
+              quincena: this.getQuincena(factura.fecha),
+              idFactura: factura.idFacturaProveedor,
+              cant: factura.operaciones.length,
+              sumaPagar: factura.total,
+              sumaCobrar: factura.montoFacturaCliente,
+              neta: factura.montoFacturaCliente - factura.total,
+              porcentaje: ((factura.montoFacturaCliente - factura.total)*100/factura.montoFacturaCliente).toFixed(2),
+              cobrado: factura.cobrado,
+          }));
+          break;
+      default:
+        alert("error armardo de tabla")
+      break;
+    }    
+    ////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
     this.applyFilters(); // Aplica filtros y actualiza filteredRows
   }
   
