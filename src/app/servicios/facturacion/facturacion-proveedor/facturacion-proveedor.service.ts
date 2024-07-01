@@ -72,6 +72,7 @@ export class FacturacionProveedorService {
     })
     //////console.log()("choferSeleccionado: ", choferSeleccionado);
     this.proveedorOp = proveedor[0];
+    this.storageService.getByFieldValueLimit("tarifasProveedor", "idProveedor", this.proveedorOp.idProveedor, 1);
     ////console.log()("proveedorOp: ", this.proveedorOp);
     this.buscarTarifaProveedor(op);
   }
@@ -81,15 +82,15 @@ export class FacturacionProveedorService {
       //////console.log()("esto pasa por aca?");
       //////console.log()("data: ", data);
       
-      this.$tarifas = data.filter((tarifa: { idProveedor: number; }) => tarifa.idProveedor === this.proveedorOp.idProveedor);
-
+      //this.$tarifas = data.filter((tarifa: { idProveedor: number; }) => tarifa.idProveedor === this.proveedorOp.idProveedor);
+      this.$tarifas = data
       //////console.log()("Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
-      this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
+      /* this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
         return tarifaActual.idTarifa > tarifaMaxima.idTarifa ? tarifaActual : tarifaMaxima;
-      });
-
+      }); */
+      this.ultimaTarifa = this.$tarifas[0];
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
       ////console.log()("ultima: ", this.ultimaTarifa);
       this.calcularLiquidacion(op);

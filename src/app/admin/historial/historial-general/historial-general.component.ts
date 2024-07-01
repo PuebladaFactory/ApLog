@@ -33,23 +33,8 @@ export class HistorialGeneralComponent implements OnInit {
   
   
   ngOnInit(): void {
-    console.log(this.primerDiaMesAnterior, this.ultimoDiaMesAnterior);
+    //console.log(this.primerDiaMesAnterior, this.ultimoDiaMesAnterior);    
     
-    //this.storageService.getByDateValue("facOpLiqCliente", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqCliente");
-    /* this.storageService.consultasFacOpLiqCliente$.subscribe(data => {
-      this.$facturasOpLiqCliente = data;       
-      //console.log()(this.$facturasOpLiqCliente)
-    }); */
-
-    //this.storageService.getByDateValue("facOpLiqChofer", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqChofer");
-   /*  this.storageService.consultasFacOpLiqChofer$.subscribe(data => {
-      this.$facturasOpLiqChofer = data;      
-    }); */
-
-    //this.storageService.getByDateValue("facOpLiqProveedor", "fecha", this.primerDiaMesAnterior, this.ultimoDiaMesAnterior, "consultasFacOpLiqProveedor");
-   /*  this.storageService.consultasFacOpLiqProveedor$.subscribe(data => {
-      this.$facturasOpLiqProveedor = data;
-    }); */
 
     this.fechasConsulta = {
       fechaDesde: this.primerDiaMesAnterior,
@@ -58,9 +43,10 @@ export class HistorialGeneralComponent implements OnInit {
   }
 
   getMsg(msg: any) {  
+    console.log("mensaje:", msg)
     this.fechasConsulta = {
-      fechaDesde: msg.fechaDesde,
-      fechaHasta: msg.fechaHasta,
+      fechaDesde: msg.fecha.fechaDesde,
+      fechaHasta: msg.fecha.fechaHasta,
     };
   }
 
