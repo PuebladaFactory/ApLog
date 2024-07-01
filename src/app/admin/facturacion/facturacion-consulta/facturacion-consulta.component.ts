@@ -18,11 +18,13 @@ export class FacturacionConsultaComponent implements OnInit {
   fechasConsulta: any = {
     fechaDesde: 0,
     fechaHasta: 0,
-  };
-  facturacion!: any;
+  };  
   //consultaFacturacion!:consultaFacturacion
   consultaFacturacion!: any;
   respuesta: boolean = true;
+  liquidacion:boolean = false;
+  historial:boolean = false;
+  facturacion: boolean = false;
 
   constructor(private ngbCalendar: NgbCalendar, private dateAdapter: NgbDateAdapter<string>, private storageService: StorageService){
 
@@ -73,7 +75,7 @@ export class FacturacionConsultaComponent implements OnInit {
   consultaOperaciones(fechaDesde:any, fechaHasta:any){
     console.log("consultaOperaciones, titulo", this.titulo);
     
-    if(this.titulo = "liquidacion"){
+    if(this.titulo === "liquidacion" ){
       this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
       this.storageService.getByDateValue("facturaOpChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpChofer");
       this.storageService.getByDateValue("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor");
@@ -96,7 +98,7 @@ export class FacturacionConsultaComponent implements OnInit {
       } */
     }
 
-    if(this.titulo = "facturacion"){
+    if(this.titulo === "facturacion"){
       this.storageService.getByDateValue("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
       this.storageService.getByDateValue("facturaChofer", "fecha", fechaDesde, fechaHasta, "consultasFacChofer");
       this.storageService.getByDateValue("facturaProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacProveedor");
@@ -119,7 +121,7 @@ export class FacturacionConsultaComponent implements OnInit {
       } */
     }
 
-    if(this.titulo = "historial"){
+    if(this.titulo === "historial"){
       
       switch(this.consulta){
         case "cliente":
