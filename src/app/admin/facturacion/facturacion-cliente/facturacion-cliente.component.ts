@@ -28,6 +28,13 @@ export class FacturacionClienteComponent implements OnInit  {
   $facturasCliente: any;
   $facturaOpCliente: any;
   operacionFac: any[] = [];
+
+  totalCant: number = 0;
+  totalSumaAPagar: number = 0;
+  totalSumaACobrar: number = 0;
+  totalGanancia: number = 0;
+  totalPorcentajeGanancia: number = 0;
+  totalFaltaCobrar: number = 0;
   
 
     constructor(
@@ -49,7 +56,17 @@ export class FacturacionClienteComponent implements OnInit  {
   
     procesarDatosParaTabla() {
       const clientesMap = new Map<number, any>();
+    
       if (this.$facturasCliente !== null) {
+        // Inicializar los totales a cero
+        this.totalCant = 0;
+        this.totalSumaAPagar = 0;
+        this.totalSumaACobrar = 0;
+        this.totalGanancia = 0;
+        this.totalPorcentajeGanancia = 0;
+        this.totalFaltaCobrar = 0;
+    
+        // Procesar cada factura y actualizar los datos del cliente
         this.$facturasCliente.forEach((factura: any) => {
           if (!clientesMap.has(factura.idCliente)) {
             clientesMap.set(factura.idCliente, {
@@ -63,17 +80,37 @@ export class FacturacionClienteComponent implements OnInit  {
             });
           }
           const cliente = clientesMap.get(factura.idCliente);
+          const totalFactura = Number(factura.total);
+          const montoFacturaChofer = Number(factura.montoFacturaChofer);
+    
           if (factura.cobrado) {
-            cliente.sumaACobrar += Number(factura.total);
+            cliente.sumaACobrar += totalFactura;
           } else {
-            cliente.sumaACobrar += Number(factura.total);
-            cliente.faltaCobrar += Number(factura.total);
+            cliente.sumaACobrar += totalFactura;
+            cliente.faltaCobrar += totalFactura;
           }
-          cliente.total += Number(factura.total);
-          cliente.sumaAPagar += Number(factura.montoFacturaChofer);
-          cliente.cant += Number(factura.operaciones.length)
+          cliente.total += totalFactura;
+          cliente.sumaAPagar += montoFacturaChofer;
+          cliente.cant += Number(factura.operaciones.length);
         });
+    
+        // Convertir los datos del cliente a una lista y calcular los totales globales
         this.datosTablaCliente = Array.from(clientesMap.values());
+    
+        this.datosTablaCliente.forEach(cliente => {
+          this.totalCant += cliente.cant;
+          this.totalSumaAPagar += cliente.sumaAPagar;
+          this.totalSumaACobrar += cliente.sumaACobrar;
+          this.totalFaltaCobrar += cliente.faltaCobrar;
+        });
+    
+        // Calcular totales de ganancia y porcentaje de ganancia
+        this.totalGanancia = this.totalSumaACobrar - this.totalSumaAPagar;
+        if (this.totalSumaACobrar > 0) {
+          this.totalPorcentajeGanancia = (this.totalGanancia * 100) / this.totalSumaACobrar;
+        } else {
+          this.totalPorcentajeGanancia = 0;
+        }
       }
     }
   

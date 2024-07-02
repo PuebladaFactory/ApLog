@@ -11,8 +11,6 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 })
 export class FacturacionGeneralComponent implements OnInit {
 
-  @Output() newItemEvent = new EventEmitter<any>();
-
   componenteConsulta: string = "Liquidacion"
   fechasConsulta: any = {
     fechaDesde: 0,
@@ -54,6 +52,7 @@ export class FacturacionGeneralComponent implements OnInit {
     this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacProveedor");
     this.storageService.consultasFacProveedor$.subscribe(data => {
       this.$facturasProveedor = data;
+      this.calcularPagos();
     });
 
     
@@ -136,5 +135,6 @@ export class FacturacionGeneralComponent implements OnInit {
   toogleResumen(){
     this.resumenVisible = !this.resumenVisible;
   }
+
 
 }

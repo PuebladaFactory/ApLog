@@ -27,7 +27,14 @@ export class FacturacionProveedorComponent implements OnInit {
   facturaProveedor!: FacturaProveedor;  
   $facturaOpProveedor: FacturaOpProveedor[] = []; 
   facturasPorProveedor: Map<number, FacturaProveedor[]> = new Map<number, FacturaProveedor[]>();
-  operacionFac: FacturaOpProveedor[] = []
+  operacionFac: FacturaOpProveedor[] = [];
+
+  totalCant: number = 0;
+  totalSumaAPagar: number = 0;
+  totalSumaACobrar: number = 0;
+  totalGanancia: number = 0;
+  totalPorcentajeGanancia: number = 0;
+  totalFaltaPagar: number = 0;
   
   
   constructor(
@@ -53,13 +60,22 @@ export class FacturacionProveedorComponent implements OnInit {
     
     if(this.$facturasProveedor !== null){
       this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
+          // Inicializar los totales a cero
+        this.totalCant = 0;
+        this.totalSumaAPagar = 0;
+        this.totalSumaACobrar = 0;
+        this.totalGanancia = 0;
+        this.totalPorcentajeGanancia = 0;
+        this.totalFaltaPagar = 0;
+    
+        // Procesar cada factura y actualizar los datos del cliente
         if (!proveedoresMap.has(factura.idProveedor)) {
           proveedoresMap.set(factura.idProveedor, {
             idProveedor: factura.idProveedor,
             proveedor: factura.razonSocial ,            
             sumaAPagar: 0,
             sumaACobrar: 0,
-            faltaCobrar: 0,
+            faltaPagar: 0,
             total: 0,
             cant: 0,
           });
@@ -71,7 +87,7 @@ export class FacturacionProveedorComponent implements OnInit {
           proveedor.sumaAPagar += Number(factura.total);
         } else {
           proveedor.sumaAPagar += Number(factura.total);
-          proveedor.faltaCobrar += Number(factura.total);
+          proveedor.faltaPagar += Number(factura.total);
         }
         proveedor.total += factura.total;  
         proveedor.sumaACobrar += Number(factura.montoFacturaCliente);      
@@ -80,29 +96,25 @@ export class FacturacionProveedorComponent implements OnInit {
   
       this.datosTablaProveedor = Array.from(proveedoresMap.values());
       //console.log()("Datos para la tabla: ", this.datosTablaProveedor); 
+      this.datosTablaProveedor.forEach(proveedor => {
+        this.totalCant += proveedor.cant;
+        this.totalSumaAPagar += proveedor.sumaAPagar;
+        this.totalSumaACobrar += proveedor.sumaACobrar;
+        this.totalFaltaPagar += proveedor.faltaPagar;
+      });
+  
+      // Calcular totales de ganancia y porcentaje de ganancia
+      this.totalGanancia = this.totalSumaACobrar - this.totalSumaAPagar;
+      if (this.totalSumaACobrar > 0) {
+        this.totalPorcentajeGanancia = (this.totalGanancia * 100) / this.totalSumaACobrar;
+      } else {
+        this.totalPorcentajeGanancia = 0;
+      }
     }
-
-    
-    
   }
- 
-
 
   mostrarMasDatos(index: number, proveedor:any) {   
-  /*  // Cambiar el estado del botón en la posición indicada
-   this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
-   ////console.log()("CLIENTE: ", cliente);
 
-   // Obtener el id del cliente utilizando el índice proporcionado
-   let proveedorId = this.datosTablaProveedor[index].idProveedor;
-
-   // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
-   let facturasProveedor = this.$facturasProveedor.filter((factura: FacturaOpProveedor) => {
-       return factura.idProveedor === proveedorId;
-   });
-   this.facturasPorProveedor.set(proveedorId, facturasProveedor);
-
-   //console.log()("FACTURAS DEL PROVEEDOR: ", facturasProveedor);   */
    if (this.datosTablaProveedor && this.datosTablaProveedor[index]) {
     this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
     const proveedorId = this.datosTablaProveedor[index].idProveedor;
