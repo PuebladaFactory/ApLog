@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { LoginComponent } from 'src/app/appLogin/login/login.component';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
@@ -13,7 +13,7 @@ import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component'
   templateUrl: './facturacion-chofer.component.html',
   styleUrls: ['./facturacion-chofer.component.scss']
 })
-export class FacturacionChoferComponent implements OnInit {
+export class FacturacionChoferComponent implements OnInit, AfterViewInit {
   
   searchText!:string;
   componente: string = "facturaChofer";
@@ -51,6 +51,15 @@ export class FacturacionChoferComponent implements OnInit {
       this.storageService.consultasFacOpLiqChofer$.subscribe(data => {
         this.$facturaOpChofer = data;
       });
+    }
+
+    ngAfterViewInit() {
+      this.syncColumnWidths();
+      window.addEventListener('resize', this.syncColumnWidths);
+    }
+  
+    ngOnDestroy() {
+      window.removeEventListener('resize', this.syncColumnWidths);
     }
 
   procesarDatosParaTabla() {
@@ -112,7 +121,33 @@ export class FacturacionChoferComponent implements OnInit {
       }
     }    
     
+    setTimeout(() => {
+      this.syncColumnWidths();
+    });
   }
+
+  syncColumnWidths = () => {
+    const headerCells = document.querySelectorAll('.datatable-header-cell');
+    const totalCells = [
+      document.getElementById('total-razon-social'),
+      document.getElementById('total-cant'),
+      document.getElementById('total-suma-a-pagar'),
+      document.getElementById('total-suma-a-cobrar'),
+      document.getElementById('total-ganancia'),
+      document.getElementById('total-porcentaje-ganancia'),
+      document.getElementById('total-falta-cobrar'),
+      document.getElementById('total-acciones')
+    ];
+
+    if (headerCells.length === totalCells.length) {
+      headerCells.forEach((headerCell, index) => {
+        const headerWidth = (headerCell as HTMLElement).offsetWidth;
+        if (totalCells[index]) {
+          (totalCells[index] as HTMLElement).style.width = `${headerWidth}px`;
+        }
+      });
+    }
+  };
 
   mostrarMasDatos(index: number, cliente:any) {   
  

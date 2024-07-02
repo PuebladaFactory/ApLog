@@ -23,14 +23,14 @@
 </ngx-datatable>
 
 <div class="totales-row">
-  <td class="totales-cell text-start" style="width: 140px;">Totales</td>
-  <td class="totales-cell text-start" style="width: 140px;">{{ totalCant }}</td>
-  <td class="totales-cell text-start" style="width: 140px;">{{ totalSumaAPagar }}</td>
-  <td class="totales-cell text-start" style="width: 140px;">{{ totalSumaACobrar }}</td>
-  <td class="totales-cell text-start" style="width: 140px;">{{ totalGanancia }}</td>
-  <td class="totales-cell text-start" style="width: 140px;">{{ (totalPorcentajeGanancia).toFixed(2) }}%</td>
-  <td class="totales-cell text-start" style="width: 140px;">{{ totalFaltaPagar }}</td>
-  <td class="totales-cell text-start" style="width: 140px;"></td>
+    <div class="totales-cell" id="total-razon-social">Totales</div>
+    <div class="totales-cell" id="total-cant">{{ totalCant }}</div>
+    <div class="totales-cell" id="total-suma-a-pagar">{{ totalSumaAPagar }}</div>
+    <div class="totales-cell" id="total-suma-a-cobrar">{{ totalSumaACobrar }}</div>
+    <div class="totales-cell" id="total-ganancia">{{ totalGanancia }}</div>
+    <div class="totales-cell" id="total-porcentaje-ganancia">{{ (totalPorcentajeGanancia).toFixed(2) }}%</div>
+    <div class="totales-cell" id="total-falta-cobrar">{{totalFaltaPagar}}</div>
+  <div class="totales-cell" id="total-acciones"></div>
 </div>
 
 <ng-template #gananciaTpl let-row="row">
