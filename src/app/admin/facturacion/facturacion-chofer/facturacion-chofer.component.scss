@@ -1,0 +1,23 @@
+
+.isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.5; /* o cualquier otro estilo para indicar que está deshabilitado */
+}
+
+.totales-row {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  font-weight: bold;
+  color: #dee2e6;
+  background-color:#051429;
+}
+
+.totales-cell {
+  display: table-cell;
+  text-align: left;
+  padding: 11px;
+  /* border: 1px solid #ddd; */
+  font-size: 13px;
+}

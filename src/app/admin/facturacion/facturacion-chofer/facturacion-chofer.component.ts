@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { LoginComponent } from 'src/app/appLogin/login/login.component';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
@@ -13,7 +13,7 @@ import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component'
   templateUrl: './facturacion-chofer.component.html',
   styleUrls: ['./facturacion-chofer.component.scss']
 })
-export class FacturacionChoferComponent implements OnInit {
+export class FacturacionChoferComponent implements OnInit, AfterViewInit {
   
   searchText!:string;
   componente: string = "facturaChofer";
@@ -28,6 +28,13 @@ export class FacturacionChoferComponent implements OnInit {
   $facturaOpChofer: FacturaOpChofer[] = [];
   facturasPorChofer: Map<number, FacturaChofer[]> = new Map<number, FacturaChofer[]>();
   operacionFac: FacturaOpChofer[] = [];
+
+  totalCant: number = 0;
+  totalSumaAPagar: number = 0;
+  totalSumaACobrar: number = 0;
+  totalGanancia: number = 0;
+  totalPorcentajeGanancia: number = 0;
+  totalFaltaCobrar: number = 0;
 
     constructor(
       private storageService: StorageService,
@@ -46,11 +53,29 @@ export class FacturacionChoferComponent implements OnInit {
       });
     }
 
+    ngAfterViewInit() {
+      this.syncColumnWidths();
+      window.addEventListener('resize', this.syncColumnWidths);
+    }
+  
+    ngOnDestroy() {
+      window.removeEventListener('resize', this.syncColumnWidths);
+    }
+
   procesarDatosParaTabla() {
     const choferesMap = new Map<number, any>();
     ////console.log()(this.$facturasChofer);
     
     if(this.$facturasChofer !== null){
+       // Inicializar los totales a cero
+       this.totalCant = 0;
+       this.totalSumaAPagar = 0;
+       this.totalSumaACobrar = 0;
+       this.totalGanancia = 0;
+       this.totalPorcentajeGanancia = 0;
+       this.totalFaltaCobrar = 0;
+   
+       // Procesar cada factura y actualizar los datos del cliente
       this.$facturasChofer.forEach((factura: FacturaChofer) => {
         if (!choferesMap.has(factura.idChofer)) {
           choferesMap.set(factura.idChofer, {
@@ -79,25 +104,53 @@ export class FacturacionChoferComponent implements OnInit {
   
       this.datosTablaChofer = Array.from(choferesMap.values());
       ////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
+      
+      this.datosTablaChofer.forEach(chofer => {
+        this.totalCant += chofer.cant;
+        this.totalSumaAPagar += chofer.sumaAPagar;
+        this.totalSumaACobrar += chofer.sumaACobrar;
+        this.totalFaltaCobrar += chofer.faltaPagar;
+      });
+  
+      // Calcular totales de ganancia y porcentaje de ganancia
+      this.totalGanancia = this.totalSumaACobrar - this.totalSumaAPagar;
+      if (this.totalSumaACobrar > 0) {
+        this.totalPorcentajeGanancia = (this.totalGanancia * 100) / this.totalSumaACobrar;
+      } else {
+        this.totalPorcentajeGanancia = 0;
+      }
     }    
     
+    setTimeout(() => {
+      this.syncColumnWidths();
+    });
   }
 
+  syncColumnWidths = () => {
+    const headerCells = document.querySelectorAll('.datatable-header-cell');
+    const totalCells = [
+      document.getElementById('total-razon-social'),
+      document.getElementById('total-cant'),
+      document.getElementById('total-suma-a-pagar'),
+      document.getElementById('total-suma-a-cobrar'),
+      document.getElementById('total-ganancia'),
+      document.getElementById('total-porcentaje-ganancia'),
+      document.getElementById('total-falta-cobrar'),
+      document.getElementById('total-acciones')
+    ];
+
+    if (headerCells.length === totalCells.length) {
+      headerCells.forEach((headerCell, index) => {
+        const headerWidth = (headerCell as HTMLElement).offsetWidth;
+        if (totalCells[index]) {
+          (totalCells[index] as HTMLElement).style.width = `${headerWidth}px`;
+        }
+      });
+    }
+  };
+
   mostrarMasDatos(index: number, cliente:any) {   
-  /*  // Cambiar el estado del botón en la posición indicada
-   this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
-   ////console.log()("CLIENTE: ", cliente);
-
-   // Obtener el id del cliente utilizando el índice proporcionado
-   let choferId = this.datosTablaChofer[index].idChofer;
-
-   // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
-   let facturasChofer = this.$facturasChofer.filter((factura: FacturaOpChofer) => {
-       return factura.idChofer === choferId;
-   });
-   this.facturasPorChofer.set(choferId, facturasChofer);
-
-   //console.log()("FACTURAS DEL CHOFER: ", facturasChofer);   */
+ 
    if (this.datosTablaChofer && this.datosTablaChofer[index]) {
     this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
     const choferId = this.datosTablaChofer[index].idChofer;

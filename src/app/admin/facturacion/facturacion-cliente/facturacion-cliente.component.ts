@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
@@ -11,7 +11,7 @@ import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component'
   templateUrl: './facturacion-cliente.component.html',
   styleUrls: ['./facturacion-cliente.component.scss']
 })
-export class FacturacionClienteComponent implements OnInit  {
+export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
 
   
   //searchText!:string;
@@ -28,6 +28,13 @@ export class FacturacionClienteComponent implements OnInit  {
   $facturasCliente: any;
   $facturaOpCliente: any;
   operacionFac: any[] = [];
+
+  totalCant: number = 0;
+  totalSumaAPagar: number = 0;
+  totalSumaACobrar: number = 0;
+  totalGanancia: number = 0;
+  totalPorcentajeGanancia: number = 0;
+  totalFaltaCobrar: number = 0;
   
 
     constructor(
@@ -46,10 +53,29 @@ export class FacturacionClienteComponent implements OnInit  {
         this.$facturaOpCliente = data;
       });
     }
+
+    ngAfterViewInit() {
+      this.syncColumnWidths();
+      window.addEventListener('resize', this.syncColumnWidths);
+    }
+  
+    ngOnDestroy() {
+      window.removeEventListener('resize', this.syncColumnWidths);
+    }
   
     procesarDatosParaTabla() {
       const clientesMap = new Map<number, any>();
+    
       if (this.$facturasCliente !== null) {
+        // Inicializar los totales a cero
+        this.totalCant = 0;
+        this.totalSumaAPagar = 0;
+        this.totalSumaACobrar = 0;
+        this.totalGanancia = 0;
+        this.totalPorcentajeGanancia = 0;
+        this.totalFaltaCobrar = 0;
+    
+        // Procesar cada factura y actualizar los datos del cliente
         this.$facturasCliente.forEach((factura: any) => {
           if (!clientesMap.has(factura.idCliente)) {
             clientesMap.set(factura.idCliente, {
@@ -63,19 +89,66 @@ export class FacturacionClienteComponent implements OnInit  {
             });
           }
           const cliente = clientesMap.get(factura.idCliente);
+          const totalFactura = Number(factura.total);
+          const montoFacturaChofer = Number(factura.montoFacturaChofer);
+    
           if (factura.cobrado) {
-            cliente.sumaACobrar += Number(factura.total);
+            cliente.sumaACobrar += totalFactura;
           } else {
-            cliente.sumaACobrar += Number(factura.total);
-            cliente.faltaCobrar += Number(factura.total);
+            cliente.sumaACobrar += totalFactura;
+            cliente.faltaCobrar += totalFactura;
           }
-          cliente.total += Number(factura.total);
-          cliente.sumaAPagar += Number(factura.montoFacturaChofer);
-          cliente.cant += Number(factura.operaciones.length)
+          cliente.total += totalFactura;
+          cliente.sumaAPagar += montoFacturaChofer;
+          cliente.cant += Number(factura.operaciones.length);
         });
+    
+        // Convertir los datos del cliente a una lista y calcular los totales globales
         this.datosTablaCliente = Array.from(clientesMap.values());
+    
+        this.datosTablaCliente.forEach(cliente => {
+          this.totalCant += cliente.cant;
+          this.totalSumaAPagar += cliente.sumaAPagar;
+          this.totalSumaACobrar += cliente.sumaACobrar;
+          this.totalFaltaCobrar += cliente.faltaCobrar;
+        });
+    
+        // Calcular totales de ganancia y porcentaje de ganancia
+        this.totalGanancia = this.totalSumaACobrar - this.totalSumaAPagar;
+        if (this.totalSumaACobrar > 0) {
+          this.totalPorcentajeGanancia = (this.totalGanancia * 100) / this.totalSumaACobrar;
+        } else {
+          this.totalPorcentajeGanancia = 0;
+        }
       }
+
+      setTimeout(() => {
+        this.syncColumnWidths();
+      });
     }
+
+    syncColumnWidths = () => {
+      const headerCells = document.querySelectorAll('.datatable-header-cell');
+      const totalCells = [
+        document.getElementById('total-razon-social'),
+        document.getElementById('total-cant'),
+        document.getElementById('total-suma-a-pagar'),
+        document.getElementById('total-suma-a-cobrar'),
+        document.getElementById('total-ganancia'),
+        document.getElementById('total-porcentaje-ganancia'),
+        document.getElementById('total-falta-cobrar'),
+        document.getElementById('total-acciones')
+      ];
+  
+      if (headerCells.length === totalCells.length) {
+        headerCells.forEach((headerCell, index) => {
+          const headerWidth = (headerCell as HTMLElement).offsetWidth;
+          if (totalCells[index]) {
+            (totalCells[index] as HTMLElement).style.width = `${headerWidth}px`;
+          }
+        });
+      }
+    };
   
     mostrarMasDatos(index: number, cliente: any) {
       if (this.datosTablaCliente && this.datosTablaCliente[index]) {

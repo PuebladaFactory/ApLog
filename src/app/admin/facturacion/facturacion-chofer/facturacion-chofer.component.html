@@ -17,10 +17,21 @@
     { name: 'Acciones', cellTemplate: accionesTpl }
   ]"
   [columnMode]="'force'"
-  [headerHeight]="50"
-  [footerHeight]="50"
+  [headerHeight]="40"
+  
   [rowHeight]="'auto'">
 </ngx-datatable>
+
+<div class="totales-row">
+    <div class="totales-cell" id="total-razon-social">Totales</div>
+    <div class="totales-cell" id="total-cant">{{ totalCant }}</div>
+    <div class="totales-cell" id="total-suma-a-pagar">{{ totalSumaAPagar }}</div>
+    <div class="totales-cell" id="total-suma-a-cobrar">{{ totalSumaACobrar }}</div>
+    <div class="totales-cell" id="total-ganancia">{{ totalGanancia }}</div>
+    <div class="totales-cell" id="total-porcentaje-ganancia">{{ (totalPorcentajeGanancia).toFixed(2) }}%</div>
+    <div class="totales-cell" id="total-falta-cobrar">{{totalFaltaCobrar}}</div>
+    <div class="totales-cell" id="total-acciones"></div>
+</div>
 
 <ng-template #gananciaTpl let-row="row">
   {{ row.sumaACobrar - row.sumaAPagar }}
