@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
@@ -8,6 +9,7 @@ import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturac
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { EditarTarifaChoferComponent } from '../modales/chofer/editar-tarifa-chofer/editar-tarifa-chofer.component';
 
 @Component({
   selector: 'app-liq-chofer',
@@ -50,7 +52,7 @@ export class LiqChoferComponent implements OnInit {
   idOperaciones: number [] = [];
   facDetallada!: FacturaOpChofer
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false);
     this.form = this.fb.group({      
@@ -315,12 +317,14 @@ export class LiqChoferComponent implements OnInit {
   }
 
   editarFacturaOpChofer(factura: FacturaOpChofer){
+    this.ultimaTarifa = this.facOpChoferService.obtenerTarifaChofer(factura);
     this.facDetallada = factura;
     //console.log()(this.facDetallada);
-    this.ultimaTarifa = this.facOpChoferService.obtenerTarifaChofer(factura)
+    
     //console.log()("ULTIMA tarifa: ", this.ultimaTarifa);
     //this.tarifaEspecial = factura.operacion.tarifaEspecial
-    this.armarTarifa(factura);
+    //this.armarTarifa(factura);
+    this.openModalTarifa();
     
   }
 
@@ -416,6 +420,38 @@ export class LiqChoferComponent implements OnInit {
     this.facturaEditada.operacion.tarifaEspecial = this.swichForm.value.tarifaEspecial;
     //console.log()("NUEVA operacion con nueva TARIFA", this.facturaEditada);
 
+  }
+
+  openModalTarifa(): void {   
+    //this.facturasLiquidadasCliente
+    //this.totalFacturasLiquidadasChofer
+    //this.totalFacturasLiquidadasCliente
+
+    this.indiceSeleccionado
+    {
+      const modalRef = this.modalService.open(EditarTarifaChoferComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'md', 
+        //backdrop:"static" 
+      });
+      
+
+    /* let info = {
+        factura: this.facDetallada,
+        tarifaAplicada: this.ultimaTarifa,        
+      };  */
+      //console.log()(info);
+      
+      modalRef.componentInstance.fromParent = this.facDetallada;
+      modalRef.result.then(
+        (result) => {
+          
+
+        },
+        (reason) => {}
+      );
+    }
   }
 
 

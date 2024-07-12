@@ -1,0 +1,154 @@
+    
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-2">Detalle</h1>
+                <button type="button" class="btn-close btn-outline-secondary" (click)="cerrarEdicion()" (click)="activeModal.close()"></button>   
+            </div>   
+            <div class="row">
+                <div class="col-5">
+                    <div class="modal-body">
+                        <h2 class="modal-title fs-2">Operacion</h2>
+                        <div *ngIf="facDetallada !== undefined">
+    
+                            <div class="">
+                            <h3>Fecha: {{facDetallada.fecha}} </h3>                
+                            </div>    
+                            <div class="mt-2">
+                            <h3>Chofer: {{facDetallada.operacion.chofer.apellido}} {{facDetallada.operacion.chofer.nombre}} </h3>                
+                            </div>    
+                            <div class="mt-2">
+                            <h3>Cliente: {{facDetallada.operacion.cliente.razonSocial}} </h3>                
+                            </div>                       
+                            
+                            <h2 class="mt-3"> Factura:</h2>
+                            <div class="mt-2">
+                            <h3>Tarifa Especial: {{facDetallada.operacion.tarifaEspecial? "Si" : "No"}} </h3>                
+                            </div> 
+                            <div class="mt-2">
+                            <h3>Jornada: {{facDetallada.valorJornada}} </h3>                
+                            </div> 
+                            <div class="mt-2">
+                            <h3>Km: {{facDetallada.operacion.km}} </h3>                
+                            </div>   
+                            <div class="mt-2">
+                            <h3>Acompaniante: {{ facDetallada.operacion.acompaniante  ? ultimaTarifa.acompaniante : 0 }} </h3>                
+                            </div>   
+                            <div class="mt-2">
+                            <h3>Total Adicionales: {{facDetallada.total - facDetallada.valorJornada}} </h3>                
+                            </div>    
+                            <div class="mt-2">
+                            <h3>Total: {{facDetallada.total}} </h3>                
+                            </div>    
+                        
+                        </div>                    
+                    </div>
+                </div>
+                <div class="col-7">
+
+                    <h2 class="modal-title fs-2">Tarifa Aplicada</h2>                          
+                    <form [formGroup]="tarifaEditForm"  (ngSubmit)="onSubmitEdit()">             
+                        <div class="modal-body">                  
+                            <div>      
+                                <tr class="form-group">
+                                    <td class="align-middle parametro">Valor Jornada: </td>
+                                    <td>
+                                    <input formControlName="valorJornada" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': !edicion}">   
+                                    </td>
+                                </tr>                               
+                                <tr class="form-group">
+                                    <td class="align-middle parametro">Publicidad: </td>
+                                    <td>
+                                    <input formControlName="publicidad" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
+                                    </td>
+                                </tr>
+                                <tr class="form-group">
+                                    <td class="align-middle parametro">Acompañante: </td>
+                                    <td>
+                                    <input formControlName="acompaniante" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
+                                    </td>
+                                </tr>                
+                                <h3>Adicional Km</h3>
+                                <tr >                    
+                                    <td class="align-middle parametro align-middle">Primer sector desde: </td>
+                
+                                    <td class="input-group ">
+                                        
+                                        <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
+                                        <span class="input-group-text align-middle "> km </span>
+                                    
+                                        <span class="input-group-text ms-2 align-middle "> $ </span>
+                                        <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">                                
+                                    </td>
+                                </tr>
+                                <tr >
+                                    <td>Intervalos cada: </td>   
+                                    <td class="input-group ">
+                                        <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
+                                        <span class="input-group-text align-middle "> km </span>
+                                    
+                                        <span class="input-group-text ms-2 align-middle "> $ </span>
+                                        <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
+                                    </td>
+                                </tr>
+                                <tr class=" mt-2">
+                                    <th class="parametro align-middle fs-4 fw-semibold  mt-3">Tarifa Especial:</th>
+                                    <th class="form-group form-check form-switch form-check-reverse ">
+                                        <input class="form-check-input  mt-3" type="checkbox" id="flexSwitchCheckReverse" formControlName="tarifaEspecial" (click)="modificaTarifaEspecial()" [ngClass]="{'isDisabled': !edicion}">
+                                        <label class="form-check-label align-middle  mt-2  mb-1" for="flexSwitchCheckReverse">Aplicar Tarifa Especial</label>
+                                    </th>
+                                </tr>                                          
+                                <tr class="form-group">
+                                    <td class="align-middle parametro">Concepto: </td>
+                                    <td>
+                                        <input formControlName="concepto" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
+                                    </td>
+                                </tr>
+                                
+                                <tr class="form-group">
+                                    <td class="align-middle parametro">Valor: </td>
+                                    <td>
+                                        <input formControlName="valor" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
+                                    </td>
+                                </tr>
+                                <!-- <form [formGroup]="swichForm" [ngClass]="{'isDisabled': !edicion}">
+                                    <div class="form-check form-switch form-check-reverse ">
+                                        <input class="form-check-input mt-3" type="checkbox" id="flexSwitchCheckReverse" formControlName="tarifaEspecial" (click)="modificaTarifaEspecial()">
+                                        <label class="form-check-label mt-3 align-middle " for="flexSwitchCheckReverse">Aplicar Tarifa Especial</label>
+                                    </div>
+                                </form>   -->
+                                
+                                
+                            
+                            </div>
+                            
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between">
+                            
+                            <div>
+                                <button *ngIf="!edicion"  class="btn btn-outline-secondary mb-2" (click)="modificarTarifa()">
+                                Modificar
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                </svg>
+                                </button>   
+                                <button *ngIf="edicion" class="btn btn-outline-secondary" (click)="modificarTarifa()">
+                                
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                                </svg>
+                            </button>  
+                            </div>
+                            
+                            <div>
+                                <button class="btn btn-primary"  data-bs-toggle="modal" (click)="onSubmitEdit()" >Guardar</button>  
+                            </div>                
+                        </div>
+                    </form>       
+                   
+                </div>
+            </div>            
+        </div>
+    </div>
+  

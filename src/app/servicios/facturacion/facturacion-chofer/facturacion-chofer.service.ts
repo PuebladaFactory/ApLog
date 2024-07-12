@@ -268,25 +268,23 @@ export class FacturacionChoferService {
     //this.$tarifaChofer.valorJornada = this.$tarifaChofer.tarifaEspecial.valor;
   }
 
-  obtenerTarifaChofer(factura:FacturaOpChofer):TarifaChofer|undefined{
-    let ultimaTarifa
-    this.storageService.historialTarifas$.subscribe(data => {
-      this.$tarifas = data.filter((tarifa: { idTarifa: number; }) => tarifa.idTarifa === factura.idTarifa);
-
+  obtenerTarifaChofer(factura:FacturaOpChofer){
+    //let ultimaTarifa;
+    this.storageService.getByFieldValueTitle("tarifasChofer", "idTarifa", factura.idTarifa, "tarifasChofer");
+    /* this.storageService.historialTarifas$.subscribe(data => {
+      //this.$tarifas = data.filter((tarifa: { idTarifa: number; }) => tarifa.idTarifa === factura.idTarifa);
+      this.$tarifas = data
       //console.log()("Todas: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
-      ultimaTarifa = this.$tarifas[0]
-      /* ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
-        return tarifaActual.idTarifa > tarifaMaxima.idTarifa ? tarifaActual : tarifaMaxima;
-      }); */
+  
 
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
-      //console.log()("ultima: ", ultimaTarifa);
+      console.log("ultima: ", ultimaTarifa);
       
-    });  
+    });   */
     
-    return ultimaTarifa;
+    //return ultimaTarifa;
     
   }
 
