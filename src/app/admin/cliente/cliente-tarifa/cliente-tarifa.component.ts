@@ -139,7 +139,7 @@ this.acompanianteEditForm = this.fb.group({
       //console.log("1) data:",data);
       this.$tarifasCliente = data;
       //console.log()(this.$tarifasCliente);
-      this.$tarifasCliente.sort((x:TarifaCliente, y:TarifaCliente) => y.idTarifaCliente - x.idTarifaCliente);
+      this.$tarifasCliente.sort((x:TarifaCliente, y:TarifaCliente) => y.idTarifa - x.idTarifa);
       //console.log("2) tarifas del Cliente", this.$tarifasCliente);
       this.armarTabla()
     })   
@@ -162,7 +162,7 @@ this.acompanianteEditForm = this.fb.group({
 
   seleccionarTarifa(row:any){
     let seleccion = this.$tarifasCliente.filter((tarifa:TarifaCliente)=>{
-      return tarifa.idTarifaCliente === row.idTarifa
+      return tarifa.idTarifa === row.idTarifa
     })
     this.tarifaEditar = seleccion[0];   
   }
@@ -313,7 +313,7 @@ this.acompanianteEditForm = this.fb.group({
       this.rows = this.$tarifasCliente.map((tarifa: TarifaCliente) => ({
         indice: indice ++,
         fecha: tarifa.fecha,
-        idTarifa: tarifa.idTarifaCliente,
+        idTarifa: tarifa.idTarifa,
         utilitario: tarifa.cargasGenerales.utilitario,
         furgon: tarifa.cargasGenerales.furgon,
         furgonGrande: tarifa.cargasGenerales.furgonGrande,

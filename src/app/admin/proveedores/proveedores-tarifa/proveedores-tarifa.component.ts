@@ -168,7 +168,7 @@ this.acompanianteEditForm = this.fb.group({
       //console.log()(data);
       this.$tarifasProveedor = data;
       //console.log()(this.$tarifasProveedor);
-      this.$tarifasProveedor.sort((x:TarifaProveedor, y:TarifaProveedor) => y.idTarifaProveedor - x.idTarifaProveedor);
+      this.$tarifasProveedor.sort((x:TarifaProveedor, y:TarifaProveedor) => y.idTarifa - x.idTarifa);
       //console.log()(this.$tarifasProveedor);
       this.armarTabla()
     })   
@@ -190,7 +190,7 @@ this.acompanianteEditForm = this.fb.group({
 
   seleccionarTarifa(row:any){
     let seleccion = this.$tarifasProveedor.filter((tarifa:TarifaProveedor)=>{
-      return tarifa.idTarifaProveedor === row.idTarifa
+      return tarifa.idTarifa === row.idTarifa
     })
     this.tarifaEditar = seleccion[0];   
   }
@@ -334,7 +334,7 @@ this.acompanianteEditForm = this.fb.group({
     this.rows = this.$tarifasProveedor.map((tarifa: TarifaProveedor) => ({
       indice: indice ++,
       fecha: tarifa.fecha,
-      idTarifa: tarifa.idTarifaProveedor,
+      idTarifa: tarifa.idTarifa,
       utilitario: tarifa.cargasGenerales.utilitario,
       furgon: tarifa.cargasGenerales.furgon,
       furgonGrande: tarifa.cargasGenerales.furgonGrande,

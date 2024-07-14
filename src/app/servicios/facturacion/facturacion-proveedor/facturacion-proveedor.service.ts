@@ -38,9 +38,11 @@ export class FacturacionProveedorService {
     return this.facturaProveedor;
   } */
 
-  facturarOpProveedor(op: Operacion)  :FacturaOpProveedor{        
-    this.proveedores();   
-    this.buscarProveedor(op);         
+  facturarOpProveedor(op: Operacion, tarifa:TarifaProveedor, proveedor:Proveedor)  :FacturaOpProveedor{        
+    //this.proveedores();   
+    this.ultimaTarifa = tarifa;
+    this.proveedorOp = proveedor;
+    this.calcularLiquidacion(op);
     this.crearFacturaProveedor(op);  
     return this.facturaProveedor;
   }
@@ -72,7 +74,7 @@ export class FacturacionProveedorService {
     })
     //////console.log()("choferSeleccionado: ", choferSeleccionado);
     this.proveedorOp = proveedor[0];
-    this.storageService.getByFieldValueLimit("tarifasProveedor", "idProveedor", this.proveedorOp.idProveedor, 1);
+    this.storageService.getByFieldValueLimitBuscarTarifa("tarifasProveedor", "idProveedor", this.proveedorOp.idProveedor, 1);
     ////console.log()("proveedorOp: ", this.proveedorOp);
     this.buscarTarifaProveedor(op);
   }
@@ -249,7 +251,7 @@ export class FacturacionProveedorService {
       operacion: op,        
       idProveedor: this.proveedorOp.idProveedor,
       idChofer: op.chofer.idChofer,
-      idTarifa: this.ultimaTarifa.idTarifaProveedor,
+      idTarifa: this.ultimaTarifa.idTarifa,
       fecha: op.fecha,
       valorJornada: this.categoriaMonto,
       adicional: this.acompanianteMonto + this.adicionalKmMonto,    
@@ -264,16 +266,12 @@ export class FacturacionProveedorService {
 
   facturarTarifaEspecial(op: Operacion){
 
-    if(op.tarifaEspecial && op.tEspecial !== null){
-      this.categoriaMonto = typeof op.tEspecial.chofer.valor === 'number'? op.tEspecial.chofer.valor : 0;
-      this.total = typeof op.tEspecial.chofer.valor === 'number'? op.tEspecial.chofer.valor : 0;
+  
+      this.categoriaMonto = op.tEspecial.chofer.valor;
+      this.total = op.tEspecial.chofer.valor;
       this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.chofer.valor;
       this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.chofer.concepto;
       this.storageService.updateItem("tarifasProveedor", this.ultimaTarifa)
-      } else{
-        this.categoriaMonto = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
-        this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
-      }
         
     this.acompanianteMonto = 0;
     this.adicionalKmMonto = 0;
@@ -326,7 +324,7 @@ export class FacturacionProveedorService {
       fecha: factura.operacion.fecha,      
       idProveedor: factura.idProveedor,
       idChofer: factura.operacion.chofer.idChofer,      
-      idTarifa: this.ultimaTarifa.idTarifaProveedor,
+      idTarifa: this.ultimaTarifa.idTarifa,
       valorJornada: this.categoriaMonto,
       adicional: this.acompanianteMonto + this.adicionalKmMonto,
       total: this.total,

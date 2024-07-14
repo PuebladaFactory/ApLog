@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
@@ -8,6 +9,10 @@ import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturac
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { EditarTarifaChoferComponent } from '../modales/chofer/editar-tarifa-chofer/editar-tarifa-chofer.component';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { take } from 'rxjs';
+import { LiquidacionOpChoferComponent } from '../modales/chofer/liquidacion-op-chofer/liquidacion-op-chofer.component';
 
 @Component({
   selector: 'app-liq-chofer',
@@ -50,7 +55,7 @@ export class LiqChoferComponent implements OnInit {
   idOperaciones: number [] = [];
   facDetallada!: FacturaOpChofer
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false);
     this.form = this.fb.group({      
@@ -98,7 +103,7 @@ export class LiqChoferComponent implements OnInit {
         if (!choferesMap.has(factura.idChofer)) {
           choferesMap.set(factura.idChofer, {
             idChofer: factura.idChofer,
-            apellido: factura.operacion.chofer.apellido ,
+            apellido: `${factura.operacion.chofer.apellido} ${factura.operacion.chofer.nombre}`,
             cantOp: 0,
             opSinFacturar: 0,
             opFacturadas: 0,
@@ -216,7 +221,7 @@ export class LiqChoferComponent implements OnInit {
     ////console.log()("Total de las facturas liquidadas chofer:", this.totalFacturasLiquidadasChofer);
     ////console.log()("Total de las facturas liquidadas cliente:", this.totalFacturasLiquidadasCliente);
     //////console.log()("indice: ", this.indiceSeleccionado);
-    
+    this.openModalLiquidacion();
   }
   
 
@@ -315,12 +320,15 @@ export class LiqChoferComponent implements OnInit {
   }
 
   editarFacturaOpChofer(factura: FacturaOpChofer){
+    this.ultimaTarifa = this.facOpChoferService.obtenerTarifaChofer(factura);
     this.facDetallada = factura;
     //console.log()(this.facDetallada);
-    this.ultimaTarifa = this.facOpChoferService.obtenerTarifaChofer(factura)
+    
     //console.log()("ULTIMA tarifa: ", this.ultimaTarifa);
     //this.tarifaEspecial = factura.operacion.tarifaEspecial
-    this.armarTarifa(factura);
+    //this.armarTarifa(factura);
+    this.buscarTarifa();
+    //this.openModalTarifa();
     
   }
 
@@ -416,6 +424,95 @@ export class LiqChoferComponent implements OnInit {
     this.facturaEditada.operacion.tarifaEspecial = this.swichForm.value.tarifaEspecial;
     //console.log()("NUEVA operacion con nueva TARIFA", this.facturaEditada);
 
+  }
+
+  openModalLiquidacion(): void {   
+    //this.facturasLiquidadasCliente
+    //this.totalFacturasLiquidadasChofer
+    //this.totalFacturasLiquidadasCliente
+
+    this.indiceSeleccionado
+    {
+      const modalRef = this.modalService.open(LiquidacionOpChoferComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg', 
+        //backdrop:"static" 
+      });
+      
+    let info = {      
+        facturas: this.facturasLiquidadasChofer,
+        totalCliente: this.totalFacturasLiquidadasCliente,
+        totalChofer: this.totalFacturasLiquidadasChofer,
+      }; 
+      //console.log()(info);
+      
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+          
+          this.facturaChofer = result.factura;
+//        this.selectCrudOp(result.op, result.item);
+        //this.mostrarMasDatos(row);
+         //console.log()("resultado:" ,this.facturaCliente);
+         this.addItem(this.facturaChofer, this.componente);
+         //this.form.reset();
+        //this.$tarifasChofer = null;
+        //this.ngOnInit();
+        this.eliminarFacturasOp();
+      
+        if(result.titulo === "excel"){
+        this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+        }else if (result.titulo === "pdf"){
+        this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+        }
+        },
+        (reason) => {}
+      );
+    }
+  }
+
+  buscarTarifa() {
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("tarifasChofer",this.facDetallada.idTarifa, "idTarifa")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.ultimaTarifa = data;
+        console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+        this.openModalTarifa()
+    });
+  }
+
+  openModalTarifa(): void {   
+    //this.facturasLiquidadasCliente
+    //this.totalFacturasLiquidadasChofer
+    //this.totalFacturasLiquidadasCliente
+
+    this.indiceSeleccionado
+    {
+      const modalRef = this.modalService.open(EditarTarifaChoferComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'md', 
+        //backdrop:"static" 
+      });
+      
+
+      let info = {
+        factura: this.facDetallada,
+        tarifaAplicada: this.ultimaTarifa,        
+      };
+      //console.log()(info);
+      
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+          
+
+        },
+        (reason) => {}
+      );
+    }
   }
 
 

@@ -234,7 +234,7 @@ export class ModalAltaTarifaComponent implements OnInit{
 
     const nuevaTarifaProveedor: TarifaProveedor = {
       id: null,
-      idTarifaProveedor: new Date().getTime(),
+      idTarifa: new Date().getTime(),
       idProveedor: this.proveedorSeleccionado.idProveedor,
       fecha: new Date().toISOString().split('T')[0],
       cargasGenerales: cargasGenerales,

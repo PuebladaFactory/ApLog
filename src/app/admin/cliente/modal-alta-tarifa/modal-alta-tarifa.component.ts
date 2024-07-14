@@ -234,7 +234,7 @@ export class ModalAltaTarifaComponent implements OnInit {
 
     const nuevaTarifaCliente: TarifaCliente = {
       id: null,
-      idTarifaCliente: new Date().getTime(),
+      idTarifa: new Date().getTime(),
       idCliente: this.clienteSeleccionado.idCliente,
       fecha: new Date().toISOString().split('T')[0],
       cargasGenerales: cargasGenerales,

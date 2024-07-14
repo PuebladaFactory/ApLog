@@ -38,7 +38,7 @@
                 <!-- TARIFA CLIENTE -->
                 <div class="col border border-dark-subtle border-opacity-50 border-2 rounded-4 me-1 fondo">
                     <h3 class="border-bottom border-dark-subtle border-opacity-50 border-2">Tarifa Aplicada</h3>
-                    <h4>Id Tarifa: {{tarifaClienteAplicada.idTarifaCliente}}</h4>
+                    <h4>Id Tarifa: {{tarifaClienteAplicada.idTarifa}}</h4>
                     <h4>Jornada: {{montoCategoriaCliente}}</h4>
                     <h4>Acompañante: {{tarifaClienteAplicada.adicionales.acompaniante}} </h4>
                     <h4>Adicional Km</h4>                    
@@ -80,7 +80,7 @@
                 <!-- TARIFA PROVEEDOR -->
                 <div *ngIf="data.operacion.chofer.proveedor !== 'monotributista' && tarifaProveedorAplicada !== undefined" class="col border border-dark-subtle border-opacity-50 border-2 rounded-4 ms-1 fondo">
                     <h3 class="border-bottom border-dark-subtle border-opacity-50 border-2">Tarifa Aplicada</h3>
-                    <h4>Id Tarifa: {{tarifaProveedorAplicada.idTarifaProveedor}}</h4>
+                    <h4>Id Tarifa: {{tarifaProveedorAplicada.idTarifa}}</h4>
                     <h4>Jornada: {{this.montoCategoriaProveedor}}</h4>
                     <h4>Acompañante:{{tarifaProveedorAplicada.adicionales.acompaniante}} </h4>
                     <h4>Adicional Km</h4>

@@ -1,4 +1,4 @@
-<div class="container">
+
     <div class=" d-flex">
         <h1 class="text-center w-100 mx-auto">Liquidación</h1>
         <!-- <app-facturacion-consulta [componenteConsulta]="componenteConsulta" (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" class="flex-shrink-1 w-25"></app-facturacion-consulta>       -->
@@ -24,16 +24,15 @@
     <h3 *ngIf="!btnConsulta" class="mt-5">Operaciones: {{primerDia}} / {{ultimoDia}} </h3>
     <h3 *ngIf="btnConsulta" class="mt-5">Resultado de la consulta: {{fechasConsulta.fechaDesde}} / {{fechasConsulta.fechaHasta}} </h3>
 
-    <div>
+    <div class="mt-4">
         <h2>Clientes:</h2>
         <app-liq-cliente class="mt-2"></app-liq-cliente>
     </div>
-    <div class="mt-3">
+    <div class="mt-4">
         <h2>Choferes:</h2>
         <app-liq-chofer class="mt-2"></app-liq-chofer>
     </div>
-    <div class="mt-3">
+    <div class="mt-4">
         <h2>Proveedores:</h2>
         <app-liq-proveedor class="mt-2"></app-liq-proveedor>
     </div>
-</div>

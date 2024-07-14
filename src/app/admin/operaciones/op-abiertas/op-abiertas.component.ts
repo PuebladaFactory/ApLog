@@ -1,12 +1,18 @@
 import { Component, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import { take } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { Operacion, TarifaEspecial } from 'src/app/interfaces/operacion';
+import { Proveedor } from 'src/app/interfaces/proveedor';
+import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
 import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
 import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
@@ -32,6 +38,7 @@ export class OpAbiertasComponent implements OnInit {
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];
   $opActivas!: Operacion[];
   $consultasOp!: Operacion [];
+  $proveedores!: Proveedor[];
   facturar: boolean = false;
   opForm: any;
   opCerrada!: Operacion;
@@ -47,6 +54,10 @@ export class OpAbiertasComponent implements OnInit {
   $choferes: any;
   tarifaEspecial!:boolean;
   tEspecial!: TarifaEspecial | null;
+  ultimaTarifaChofer!:TarifaChofer;
+  ultimaTarifaCliente!:TarifaCliente;
+  ultimaTarifaProveedor!:TarifaProveedor;
+  proveedorOp!: Proveedor;
   //////////////////////////////////////////////////////////////////////////////////////
   @ViewChild('tablaClientes') table: any;  
   rows: any[] = [];
@@ -79,7 +90,7 @@ export class OpAbiertasComponent implements OnInit {
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService, private facOpProveedorService: FacturacionProveedorService) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService, private facOpProveedorService: FacturacionProveedorService, private dbFirebase: DbFirestoreService) {
     this.opForm = this.fb.group({
         km: [''],       
         remito: [''],       
@@ -111,7 +122,11 @@ export class OpAbiertasComponent implements OnInit {
       this.storageService.consultasOpActivas$.subscribe(data => {
         this.$consultasOp = data;
         this.armarTabla();
-      });      
+      });   
+      
+      this.storageService.proveedores$.subscribe(data => {
+        this.$proveedores = data;
+      });
   }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 armarTabla() {
@@ -254,6 +269,7 @@ toogleAjustes(){
 
   facturarOperacion(){
     ////////console.log()(this.opForm.value);
+    this.detalleOp.km = this.opForm.value.km,
     this.opCerrada.km = this.opForm.value.km;    
     //this.opCerrada.documentacion = this.opForm.remito;
     this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
@@ -264,7 +280,7 @@ toogleAjustes(){
     if(this.detalleOp.chofer.proveedor === "monotributista"){
       this.facturarOpChofer();
     } else{
-      this.facturarOpProveedor();
+      this.buscarProveedor();
     }
     this.btnConsulta = false
   }
@@ -278,31 +294,77 @@ toogleAjustes(){
     this.facturar = false;
   }
 
-  facturarOpChofer(){
-    this.facturaChofer = this.facOpChoferService.facturarOpChofer(this.opCerrada);    
-    console.log("1) esta es la factura-chofer FINAL: ", this.facturaChofer);    
-    //this.addItem("facturaOpChofer", this.facturaChofer)
+  facturarOpChofer(){  
+    this.obtenerUltTarifaChofer("tarifasChofer", "idChofer", this.opCerrada.chofer.idChofer, "idTarifa", )  
+  }
+
+  obtenerUltTarifaChofer(componente:string, campo:string, id:number, orden:string){
+    this.dbFirebase
+    .obtenerTarifaMasReciente(componente,id,campo, orden)
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.ultimaTarifaChofer = data;
+        this.generarFacturaChofer();
+    });
+  }
+
+  generarFacturaChofer(){
+    this.facturaChofer = this.facOpChoferService.facturarOpChofer(this.opCerrada, this.ultimaTarifaChofer); 
     this.opForm.reset();
     this.facturar = false; 
-    this.facturarOpCliente();
+    this.facturarOpCliente();       
   }
 
-  facturarOpProveedor(){
-    this.facturaProveedor = this.facOpProveedorService.facturarOpProveedor(this.opCerrada);    
-    ////console.log()("1) esta es la factura-proveedor FINAL: ", this.facturaProveedor);    
-    //this.addItem("facturaOpProveedor", this.facturaProveedor)
-    this.opForm.reset();
-    this.facturar = false;
-    this.facturarOpCliente();
+  facturarOpProveedor(){  
+    this.obtenerUltTarifaProveedor("tarifasProveedor", "idProveedor", this.proveedorOp.idProveedor, "idTarifa", )  
   }
 
-  facturarOpCliente(){
-    this.facturaCliente = this.facOpClienteService.facturarOpCliente(this.opCerrada);    
-    console.log("6) esta es la factura-cliente FINAL: ", this.facturaCliente);    
-    //this.addItem("facturaOpCliente", this.facturaCliente)
+  buscarProveedor(){ 
+    let proveedor: any;
+    let razonSocial = this.opCerrada.chofer.proveedor
+    proveedor = this.$proveedores.filter(function (proveedor:any){
+      return proveedor.razonSocial === razonSocial
+    })
+    this.proveedorOp = proveedor[0];
+    this.facturarOpProveedor();
+  }
+
+  obtenerUltTarifaProveedor(componente:string, campo:string, id:number, orden:string){
+    this.dbFirebase
+    .obtenerTarifaMasReciente(componente,id,campo, orden)
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.ultimaTarifaProveedor = data;
+        this.generarFacturaProveedor();
+    });
+  }
+
+  generarFacturaProveedor(){
+    this.facturaProveedor = this.facOpProveedorService.facturarOpProveedor(this.opCerrada, this.ultimaTarifaProveedor, this.proveedorOp ); 
     this.opForm.reset();
-    this.facturar = false;
-    this.armarFacturas();
+    this.facturar = false; 
+    this.facturarOpCliente();       
+  }
+
+  facturarOpCliente(){  
+    this.obtenerUltTarifaCliente("tarifasCliente", "idCliente", this.opCerrada.cliente.idCliente, "idTarifa", )  
+  }
+
+  obtenerUltTarifaCliente(componente:string, campo:string, id:number, orden:string){
+    this.dbFirebase
+    .obtenerTarifaMasReciente(componente,id,campo, orden)
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.ultimaTarifaCliente = data;
+        this.generarFacturaCliente();
+    });
+  }
+
+  generarFacturaCliente(){
+    this.facturaCliente = this.facOpClienteService.facturarOpCliente(this.opCerrada, this.ultimaTarifaCliente); 
+    this.opForm.reset();
+    this.facturar = false; 
+    this.armarFacturas();     
   }
 
   addItem(componente: string, item: any): void {
@@ -378,7 +440,7 @@ toogleAjustes(){
       clienteConcepto: [''],
       clienteValor: [''],
     })
-    if(this.opEditar.tarifaEspecial && this.opEditar.tEspecial !== null ){
+    if(this.opEditar.tarifaEspecial){
       this.form.patchValue({
       choferConcepto: this.opEditar.tEspecial.chofer.concepto,
       choferValor: this.opEditar.tEspecial.chofer.valor,
@@ -419,14 +481,15 @@ toogleAjustes(){
     this.opEditar.acompaniante = this.acompaniante;
     this.opEditar.tarifaEspecial = this.tarifaEspecial;
     //////console.log()("este es la op editada: ", this.opEditar);
-    if(this.opEditar.tarifaEspecial && this.opEditar.tEspecial !== null ) {
+    if(this.opEditar.tarifaEspecial) {
       this.opEditar.tEspecial.chofer.concepto = this.form.value.choferConcepto;
       this.opEditar.tEspecial.chofer.valor = this.form.value.choferValor;
       this.opEditar.tEspecial.cliente.concepto = this.form.value.clienteConcepto;
       this.opEditar.tEspecial.cliente.valor = this.form.value.clienteValor;
-    } else{
+    } 
+    /* else{
       this.opEditar.tEspecial = null;
-    }
+    } */
     //console.log("operacion editada: ",this.opEditar );
     
     console.log("llamada al storage desde op-abiertas, updateItem");

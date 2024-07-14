@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, updateDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 
 
 @Injectable({
@@ -65,6 +67,19 @@ getByFieldValue(componente:string, campo:string, value:any){
       .valueChanges({ idField: 'id' });
   }
 
+  getByFieldValueLimitBuscarTarifa(componente: string, campo: string, value: any, limite: number) {
+    // Devuelve los docs de la colección que tengan un campo con un valor determinado
+    // Campo debe existir en la colección, si está anidado pasar ruta separada por puntos (field.subfield)
+    // Orden solo asc o desc
+  
+    let dataCollection = `/Vantruck/datos/${componente}`;
+    return this.firestore2.collection(dataCollection, ref => ref
+      .where(campo, '==', value)
+      .orderBy('idTarifa', 'desc')
+      .limit(limite))
+      .valueChanges({ idField: 'id' });
+  }
+
   getByDateValue(componente:string, campo:string, value1:any, value2:any){
     // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
     // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
@@ -97,8 +112,56 @@ getByFieldValue(componente:string, campo:string, value:any){
         .where(campo1, "==", value1).orderBy(campo2, orden))
         .valueChanges(({  idField: 'id' })); 
       }
-    
+     // Método para verificar si existen tarifas para un idChofer específico
+      existeTarifa(componente:string, id: number, campo:string): Observable<boolean> {
+        let dataCollection = `/Vantruck/datos/${componente}`;
+        return this.firestore2.collection(dataCollection, ref => ref.where(campo, '==', id))
+          .snapshotChanges()
+          .pipe(
+            map(actions => {
+              return actions.length > 0;
+            })
+          );
+      }
 
+      // Método para obtener una tarifa específica
+      obtenerTarifaIdTarifa(componente:string, id: number, campo:string): Observable<any | null> {
+        let dataCollection = `/Vantruck/datos/${componente}`;
+        return this.firestore2.collection(dataCollection, ref => ref
+          .where(campo, '==', id))
+          .snapshotChanges()
+          .pipe(
+            map(actions => {
+              if (actions.length === 0) {
+                return null;
+              } else {
+                const data = actions[0].payload.doc.data() as any;
+                data.id = actions[0].payload.doc.id;
+                return data;
+              }
+            })
+          );
+      }
+
+      obtenerTarifaMasReciente(componente:string, id: number, campo:string, orden:string): Observable<any | null> {
+        let dataCollection = `/Vantruck/datos/${componente}`;
+        return this.firestore2.collection(dataCollection, ref => ref
+          .where(campo, '==', id)
+          .orderBy(orden, 'desc')
+          .limit(1))
+          .snapshotChanges()
+          .pipe(
+            map(actions => {
+              if (actions.length === 0) {
+                return null;
+              } else {
+                const data = actions[0].payload.doc.data() as any;
+                data.id = actions[0].payload.doc.id;
+                return data;
+              }
+            })
+          );
+      }
       
   
 

@@ -40,7 +40,7 @@ export class OpAltaComponent implements OnInit {
   $proveedores!:any;
   arrayRespuesta!: any[];
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, ) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, private dbFirebase: DbFirestoreService ) {
     this.form = this.fb.group({
       fecha: ['', Validators.required],
       cliente: ['', Validators.required],
@@ -163,8 +163,8 @@ selectTarifaEspecial(event: any) {
 
    buscarErroresTarifas() {
     if(this.choferSeleccionado.proveedor === "monotributista"){
-      this.storageService.clearInfo("tarifasChofer");
-      this.storageService.clearInfo("tarifasCliente");
+      //this.storageService.clearInfo("tarifasChofer");
+      //this.storageService.clearInfo("tarifasCliente");      
       this.buscarTarifaServ.buscarTarifaChoferCliente(this.choferSeleccionado, this.clienteSeleccionado);
       setTimeout(() => {
         if(this.arrayRespuesta[0].cliente && this.arrayRespuesta[0].chofer){
@@ -174,10 +174,10 @@ selectTarifaEspecial(event: any) {
         } else if (!this.arrayRespuesta[0].cliente){
           this.mensajesError("el cliente selccionado no tiene tarifas asignadas");                   
         }
-      }, 1000); // 5000 milisegundos = 5 segundos 
+      }, 1250); // 5000 milisegundos = 5 segundos 
     } else if (this.choferSeleccionado.proveedor !== "monotributista"){      
-      this.storageService.clearInfo("tarifasProveedor");
-      this.storageService.clearInfo("tarifasCliente");
+      //this.storageService.clearInfo("tarifasProveedor");
+      //this.storageService.clearInfo("tarifasCliente");
       let proveedorFiltrado = this.$proveedores.filter((proveedor:Proveedor)=>{
         return proveedor.razonSocial === this.choferSeleccionado.proveedor;
       });
@@ -190,12 +190,14 @@ selectTarifaEspecial(event: any) {
         } else if (!this.arrayRespuesta[0].cliente){
           this.mensajesError("el cliente selccionado no tiene tarifas asignadas");          
         }
-      }, 1000); // 5000 milisegundos = 5 segundos 
+      }, 1250); // 5000 milisegundos = 5 segundos 
     }
 
     console.log("array respuesta: ", this.arrayRespuesta);
 
   }
+
+  
 
     mensajesError(msj:string){
       Swal.fire({
@@ -228,7 +230,16 @@ selectTarifaEspecial(event: any) {
         facturaCliente: null,
         facturaChofer: null,
         tarifaEspecial: this.tarifaEspecial,
-        tEspecial: null // Asignar null por defecto
+        tEspecial:{ 
+        chofer:{
+          concepto: "",
+          valor: 0,    
+        },
+        cliente:{
+          concepto: "",
+          valor: 0,    
+        }
+        },
     }; 
 
         // Si tarifaEspecial es true, agregar los detalles de tarifa especial

@@ -1,15 +1,15 @@
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer, cliente o número de operación">
 <table class="table table-dark table-striped">
     <thead>
-      <tr>
-        <th scope="col" class=""></th>
-        <th scope="col" class="">Razon Social</th>
-        <th scope="col" class="">Cant Op</th>
-        <th scope="col" class="">Sin Facturar</th>  
-        <th scope="col" class="">A Cobrar</th>                        
-        <th scope="col" class="">Total</th>  
-        <th scope="col" class="">Facturar</th> 
-      </tr>
+        <tr>
+            <th scope="col" style="width:5%" class=""></th>
+            <th scope="col" style="width:20%" class="">Razon Social</th>
+            <th scope="col" style="width:10%" class="">Cant Op</th>
+            <th scope="col" style="width:15%" class="">Sin Facturar</th>  
+            <th scope="col" style="width:15%" class="">A Cobrar</th>                        
+            <th scope="col" style="width:20%" class="">Total</th>  
+            <th scope="col" style="width:10%" class="">Facturar</th> 
+        </tr>
     </thead>
     <tbody>
         <ng-container *ngFor="let cliente of datosTablaCliente | filter: searchText; let i = index">
@@ -41,360 +41,76 @@
                     </button>                    
                 </td>
             </tr>
-      <!-- Aquí agregamos la tabla adicional -->
-      <tr *ngIf="mostrarTablaCliente[i]" >
-        <td  [attr.colspan]="datosTablaCliente.length + 6">
-            <!-- Aquí irían los datos adicionales del cliente -->
-            <table class="table table-dark table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th scope="col" class="">Fecha</th>
-                        <th scope="col" class="">Quincena</th>
-                        <th scope="col" class="">Id</th>
-                        <th scope="col" class="">Chofer</th>
-                        <th scope="col" class="">Km</th>  
-                        <th scope="col" class="">Adicionales</th>  
-                        <th scope="col" class="">Total</th>                        
-                        <th scope="col" class="">Tarifa Especial</th>    
-                        <th scope="col" class="">Facturado</th>
-                        <th scope="col" colspan="3" class="">Acciones</th>                   
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let factura of facturasPorCliente.get(cliente.idCliente)">
-                        <td>{{factura.fecha}}</td>
-                        <td>{{ getQuincena(factura.fecha) }}</td>
-                        <td>{{factura.operacion.idOperacion}}</td>
-                        <td>{{factura.operacion.chofer.apellido}} {{factura.operacion.chofer.nombre}}</td>
-                        <td>{{factura.operacion.km}}</td>
-                        <td>{{factura.adicional}}</td>
-                        <td>{{factura.total !== null || factura.total !== "" ? factura.total : 0}}</td>
-                        <td>
-                            <svg *ngIf="factura.operacion.tarifaEspecial" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle bg-danger" viewBox="0 0 16 16">
-                                <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
-                                <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
-                            </svg>                            
-                            <svg *ngIf="!factura.operacion.tarifaEspecial" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
-                            </svg>
-                        </td>
-                        <td>{{factura.liquidacion}}</td>
-                        <td>
-                            <svg *ngIf="!factura.liquidacion" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16" type="button" (click)="liquidarFac(factura)">
-                                <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z"/>
-                            </svg>
-                            <svg *ngIf="factura.liquidacion" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-ban" viewBox="0 0 16 16" type="button" (click)="cancelarliquidacion(factura)">
-                                <path d="M15 8a6.97 6.97 0 0 0-1.71-4.584l-9.874 9.875A7 7 0 0 0 15 8M2.71 12.584l9.874-9.875a7 7 0 0 0-9.874 9.874ZM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0"/>
-                            </svg>
-                        </td>
-                        <td>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" type="button" (click)="editarFacturaOpChofer(factura)" data-bs-target="#modalEditarCliente" data-bs-toggle="modal">
-                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
-                              </svg>
-                        </td>
-                        <td>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16" type="button" (click)="eliminarFacturaOpChofer(factura, i)">
-                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                              </svg>
-                        </td>
-                    </tr>
-                </tbody> 
-            </table>
-        </td>
-    </tr>
+            <!-- Aquí agregamos la tabla adicional -->
+            <tr *ngIf="mostrarTablaCliente[i]" >
+                <td  [attr.colspan]="datosTablaCliente.length + 6">
+                    <!-- Aquí irían los datos adicionales del cliente -->
+                    <table class="table table-dark table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="">Fecha</th>
+                                <th scope="col" class="">Quincena</th>
+                                <th scope="col" class="">Id</th>
+                                <th scope="col" class="">Chofer</th>
+                                <th scope="col" class="">Km</th>  
+                                <th scope="col" class="">Adicionales</th>  
+                                <th scope="col" class="">Total</th>                        
+                                <th scope="col" class="">Tarifa Especial</th>    
+                                <th scope="col" class="">Facturado</th>
+                                <th scope="col" colspan="3" class="">Acciones</th>                   
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let factura of facturasPorCliente.get(cliente.idCliente)">
+                                <td>{{factura.fecha}}</td>
+                                <td>{{ getQuincena(factura.fecha) }}</td>
+                                <td>{{factura.operacion.idOperacion}}</td>
+                                <td>{{factura.operacion.chofer.apellido}} {{factura.operacion.chofer.nombre}}</td>
+                                <td>{{factura.operacion.km}}</td>
+                                <td>{{factura.adicional}}</td>
+                                <td>{{factura.total !== null || factura.total !== "" ? factura.total : 0}}</td>
+                                <td>
+                                    <svg *ngIf="factura.operacion.tarifaEspecial" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle bg-danger" viewBox="0 0 16 16">
+                                        <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
+                                        <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+                                    </svg>                            
+                                    <svg *ngIf="!factura.operacion.tarifaEspecial" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                        <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
+                                    </svg>
+                                </td>
+                                <td>{{factura.liquidacion}}</td>
+                                <td>
+                                    <svg *ngIf="!factura.liquidacion" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16" type="button" (click)="liquidarFac(factura)">
+                                        <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z"/>
+                                    </svg>
+                                    <svg *ngIf="factura.liquidacion" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-ban" viewBox="0 0 16 16" type="button" (click)="cancelarliquidacion(factura)">
+                                        <path d="M15 8a6.97 6.97 0 0 0-1.71-4.584l-9.874 9.875A7 7 0 0 0 15 8M2.71 12.584l9.874-9.875a7 7 0 0 0-9.874 9.874ZM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0"/>
+                                    </svg>
+                                </td>
+                                <td>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" type="button" (click)="editarFacturaOpChofer(factura)">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                                    </svg>
+                                </td>
+                                <td>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16" type="button" (click)="eliminarFacturaOpChofer(factura, i)">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                    </svg>
+                                </td>
+                            </tr>
+                        </tbody> 
+                    </table>
+                </td>
+            </tr>
         </ng-container>
     </tbody> 
   </table>
 
- <!-- MODAL PARA LIQUIDAR LAS OPERACIONES!!! -->
+ 
 
-  <div class="modal fade" id="modalLiqOpCliente" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-2" id="exampleModalToggleLabel2">Liquidación de Servicios</h1>
-                    
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>        
-        <div class="modal-body">
-            <h3>{{razonSocFac}}</h3>
-            <table class="table table-success table-striped table-bordered w-100">
-                <thead>
-                    <tr>
-                        <th scope="col" class="">Fecha</th>
-                        <th scope="col" class="">Quincena</th>
-                        <th scope="col" class="">Concepto Cliente</th>
-                        <th scope="col" class="">A cobrar</th>                              
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let facturaCliente of facturasLiquidadasCliente">
-                        <td>{{facturaCliente.fecha}}</td>
-                        <td>{{ getQuincena(facturaCliente.fecha) }}</td>
-                        <td>
-                            <div class="d-flex justify-content-between">
-                                {{facturaCliente.operacion.observaciones}}
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" (click)="editarDetalle(facturaCliente)"  data-bs-target="#modalObsCliente" data-bs-toggle="modal">
-                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
-                                </svg>
-                            </div>
-                        </td>                    
-                        <td class="">{{facturaCliente.total}}</td>                                        
-                    </tr>
-                </tbody> 
-                <tfoot>
-                    <td colspan="3" class="table-active">Total</td>
-                    <td>{{totalFacturasLiquidadasCliente}}</td>
-                </tfoot>
-            </table>
-        </div>
-        <div class="modal-footer">
-          <h4>Generar Factura:</h4>
-          <app-btn-leer name="excel" data-bs-toggle="modal" data-bs-target="#modalLiqOpCliente" (click)="onSubmit('excel')"></app-btn-leer>
-          <app-btn-leer name="pdf" data-bs-toggle="modal" data-bs-target="#modalLiqOpCliente" (click)="onSubmit('pdf')"></app-btn-leer>         
-        </div>
-      </div>
-    </div>
-    
-  </div>
 
-<!-- EDITAR LA OBSERVACION DE LA FACTURA!!! -->
 
-<div class="modal fade" id="modalObsCliente" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-2" id="exampleModalToggleLabel2">Editar Detalle</h1>
-                    
-          <button type="button" class="btn-close" data-bs-target="#modalLiqOpCliente" data-bs-toggle="modal" aria-label="Close"></button>
-        </div>        
-        <div class="modal-body">
-            <form [formGroup]="form">
-                <div class="input-group">
-                    <span class="input-group-text" id="basic-addon3">Detalle: </span>
-                    <input type="text" formControlName="detalle" class="form-control" required>
-                </div>                   
-            </form>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-primary"  data-bs-target="#modalLiqOpCliente" data-bs-toggle="modal" (click)="guardarDetalle()" >Guardar</button>
-        </div>
-      </div>
-    </div>
-</div> 
 
-<!-- EDITAR TARIFA!!!!!!!!!!!!!!!!!! -->
-
-<div class="modal fade modal-lg" id="modalEditarCliente" aria-hidden="true" aria-labelledby="modalEditarCliente" tabindex="-1">
-    
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-          <div class="d-flex justify-content-evenly">
-            <div>
-              <div class="modal-header">
-                <h1 class="modal-title fs-2" id="exampleModalToggleLabel2">Operacion</h1>
-                          
-                <!-- <button type="button" class="btn-close" data-bs-toggle="modal" aria-label="Close"></button> -->
-              </div>        
-              <div class="modal-body">
-                  
-                  <div *ngIf="facDetallada !== undefined">
-
-                    <div class="mt-3">
-                      <h3>Fecha: {{facDetallada.fecha}} </h3>                
-                    </div>    
-                    <div class="mt-3">
-                      <h3>Chofer: {{facDetallada.operacion.chofer.apellido}} {{facDetallada.operacion.chofer.nombre}} </h3>                
-                    </div>    
-                    <div class="mt-3">
-                      <h3>Cliente: {{facDetallada.operacion.cliente.razonSocial}} </h3>                
-                    </div>                       
-                    
-                    <h2 class="mt-3"> Factura:</h2>
-                    <div class="mt-3">
-                      <h3>Tarifa Especial: {{facDetallada.operacion.tarifaEspecial? 'Si' : 'No'}} </h3>                
-                    </div> 
-                    <div class="mt-3">
-                      <h3>Jornada: {{facDetallada.valorJornada}} </h3>                
-                    </div> 
-                    <div class="mt-3">
-                      <h3>Km: {{facDetallada.operacion.km}} </h3>                
-                    </div>   
-                    <div class="mt-3">
-                      <h3>Acompaniante: {{ facDetallada.operacion.acompaniante  ? this.ultimaTarifa.adicionales.acompaniante : 0 }} </h3>                
-                    </div>   
-                    <div class="mt-3">
-                      <h3>Total Adicionales: {{facDetallada.total - facDetallada.valorJornada}} </h3>                
-                    </div>    
-                    <div class="mt-3">
-                      <h3>Total: {{facDetallada.total}} </h3>                
-                    </div>    
-                  
-                  </div>
-                 
-              </div>
-              <div class="modal-footer">
-              <!--   <button class="btn btn-primary"  data-bs-toggle="modal" (click)="onSubmitEdit()" >Guardar</button> -->
-              </div> 
-            </div>
-            <div>
-              <div class="modal-header">
-                <h1 class="modal-title fs-2" id="exampleModalToggleLabel2">Tarifa Aplicada</h1>
-                          
-                <button type="button" class="btn-close" data-bs-toggle="modal" aria-label="Close"  (click)="cerrarEdicion()"></button>
-              </div>        
-              <div class="modal-body">                  
-                  <div>         
-                    <h3>Cargas Generales: </h3>  
-                    <form [formGroup]="tarifaEditForm"  (ngSubmit)="onSubmitEdit()">             
-                        <div class="form-group">       
-                            <table>
-                                <tbody>
-                                    <tr class="form-group">
-                                      <td class="parametro">Utilitario: </td>
-                                      <td>
-                                        <input formControlName="utilitario" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': !edicion}">   
-                                      </td>
-                                    </tr>                               
-                                    <tr class="form-group">
-                                        <td class="parametro">Furgon: </td>
-                                        <td>
-                                          <input formControlName="furgon" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                        </td>
-                                    </tr>
-                                    <tr class="form-group">
-                                        <td class="parametro">Furgon Grande: </td>
-                                        <td>
-                                          <input formControlName="furgonGrande" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                        </td>
-                                    </tr>
-                                    <tr class="form-group">
-                                        <td class="parametro">Chasis Liviano: </td>
-                                        <td>
-                                          <input formControlName="chasisLiviano" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': !edicion}">   
-                                        </td>
-                                    </tr>                               
-                                    <tr class="form-group">
-                                        <td class="parametro">Chasis: </td>
-                                        <td>
-                                          <input formControlName="chasis" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                        </td>
-                                    </tr>
-                                    <tr class="form-group">
-                                        <td class="parametro">Balancin: </td>
-                                        <td>
-                                          <input formControlName="balancin" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': !edicion}">   
-                                        </td>
-                                    </tr>                               
-                                    <tr class="form-group">
-                                        <td class="parametro">Semi Remolque Local: </td>
-                                        <td>
-                                          <input formControlName="semiRemolqueLocal" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                        </td>
-                                    </tr>                        
-                                    <tr class="form-group">
-                                        <td class="parametro">Portacontenedores: </td>
-                                        <td>
-                                          <input formControlName="portacontenedores" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                        </td>
-                                    </tr>                        
-                                                                    
-                      
-                        <h3>Adicionales</h3>
-                        <tr class="form-group">
-                            <td class="parametro align-middle">Acompañante: </td>
-                            <td>
-                              <input formControlName="acompaniante" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': !edicion}">   
-                            </td>
-                        </tr> 
-                        <h3>Adicional Km</h3>
-                        <tr >
-                            <td class="parametro align-middle">Primer sector desde: </td>
-  
-                            <td class="input-group ">
-                                
-                                <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                <span class="input-group-text"> km </span>
-                           
-                                <span class="input-group-text ms-2"> $ </span>
-                                <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">                                
-                            </td>
-                        </tr>
-                        <tr >
-                            <td>Intervalos cada: </td>   
-                            <td class="input-group ">
-                                <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                <span class="input-group-text"> km </span>
-                            
-                                <span class="input-group-text ms-2"> $ </span>
-                                <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                            </td>
-                        </tr>  
-                        <tr class=" mt-2">
-                          <th class="parametro align-middle fs-4 fw-semibold  mt-3">Tarifa Especial:</th>
-                          <th class="form-group form-check form-switch form-check-reverse ">
-                              <input class="form-check-input  mt-3" type="checkbox" id="flexSwitchCheckReverse" formControlName="tarifaEspecial" (click)="modificaTarifaEspecial()" [ngClass]="{'isDisabled': !edicion}">
-                              <label class="form-check-label align-middle  mt-3 " for="flexSwitchCheckReverse">Aplicar Tarifa Especial</label>
-                          </th>
-                        </tr>
-                        
-                            <tr>
-                                <th class="parametro">Concepto </th>
-                                <th > Valor</th>
-                            </tr>
-                            
-                            <tr class="form-group" >                          
-                                
-                                <td class="parametro" >
-                                    <input formControlName="concepto" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-                                </td>
-                                <td>
-                                    <input formControlName="valor" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">                              
-                                </td>
-                                
-                            </tr>   
-
-                           <!--  <tr>
-                            
-                            </tr> -->
-                              
-                            
-                      
-                            </tbody>
-                            </table>     
-                        </div>      
-                    </form>      
-                     
-                  </div>
-                 
-              </div>
-              <div class="modal-footer d-flex justify-content-between">
-                <div>
-                  <div>
-                    <button *ngIf="!edicion"  class="btn btn-outline-secondary mb-2" (click)="modificarTarifa()">
-                      Modificar
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
-                      </svg>
-                    </button>   
-                  <button *ngIf="edicion" class="btn btn-outline-secondary" (click)="modificarTarifa()">
-                    
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                      </svg>
-                  </button>  
-                  </div>
-                </div>
-                <div>
-                  <button class="btn btn-outline-secondary"  data-bs-toggle="modal" (click)="onSubmitEdit()" >Guardar</button>  
-                </div>                
-              </div>
-            </div>
-          </div>        
-      </div>
-    </div>
-  </div> 
  
