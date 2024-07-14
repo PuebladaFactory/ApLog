@@ -1,32 +1,31 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
-import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-liquidacion-op',
-  templateUrl: './liquidacion-op.component.html',
-  styleUrls: ['./liquidacion-op.component.scss']
+  selector: 'app-liquidacion-op-proveedor',
+  templateUrl: './liquidacion-op-proveedor.component.html',
+  styleUrls: ['./liquidacion-op-proveedor.component.scss']
 })
-export class LiquidacionOpComponent implements OnInit{
+export class LiquidacionOpProveedorComponent implements OnInit {
+
   @Input() fromParent: any;
   form:any;
-  facturasLiquidadasCliente: any[] = []; // Nuevo array para almacenar las facturas liquidadas
-  totalFacturasLiquidadasChofer: number = 0 ; // Variable para almacenar el total de las facturas liquidadas
+  facturasLiquidadasProveedor: any[] = []; // Nuevo array para almacenar las facturas liquidadas
+  totalFacturasLiquidadasProveedor: number = 0 ; // Variable para almacenar el total de las facturas liquidadas
   totalFacturasLiquidadasCliente: number = 0 ; // Variable para almacenar el total de las facturas liquidadas
-  facturaEditada!: FacturaOpCliente;
-  facturaCliente!: FacturaCliente;  
+  facturaEditada!: FacturaOpProveedor;
+  facturaProveedor!: FacturaProveedor;  
   idOperaciones: number [] = [];
-  componente: string = "facturaCliente";
+  componente: string = "facturaProveedor";
   mostrarTablaCliente: boolean[] = [];
   indiceSeleccionado!:number;
   edicion: boolean[] = [];
 
-  constructor(private storageService: StorageService, private fb: FormBuilder, private excelServ: ExcelService, private pdfServ: PdfService, public activeModal: NgbActiveModal){
+  constructor(private storageService: StorageService, private fb: FormBuilder, public activeModal: NgbActiveModal){
     
     
     this.form = this.fb.group({      
@@ -38,12 +37,12 @@ export class LiquidacionOpComponent implements OnInit{
   ngOnInit(): void {
     console.log("0) ", this.fromParent);
     
-    this.facturasLiquidadasCliente = this.fromParent.facturas;
-    console.log("1): ", this.facturasLiquidadasCliente);    
+    this.facturasLiquidadasProveedor = this.fromParent.facturas;
+    console.log("1): ", this.facturasLiquidadasProveedor);    
     this.totalFacturasLiquidadasCliente = this.fromParent.totalCliente;
     console.log("2): ", this.totalFacturasLiquidadasCliente);
-    this.totalFacturasLiquidadasChofer = this.fromParent.totalChofer;
-    console.log("3): ", this.totalFacturasLiquidadasChofer);
+    this.totalFacturasLiquidadasProveedor = this.fromParent.totalProveedor;
+    console.log("3): ", this.totalFacturasLiquidadasProveedor);
   }
 
    // Modifica la función getQuincena para que acepte una fecha como parámetro
@@ -75,7 +74,7 @@ export class LiquidacionOpComponent implements OnInit{
 
   }
 
-  editarDetalle(factura:FacturaOpCliente, i:number){
+  editarDetalle(factura:FacturaOpProveedor, i:number){
     console.log("editar: ",factura, i);
     
     this.edicion[i] = true;
@@ -89,11 +88,11 @@ export class LiquidacionOpComponent implements OnInit{
   onSubmit(titulo:string) {
     ////console.log()(this.facturasLiquidadas);
     ////console.log()(this.form.value);
-    if(this.facturasLiquidadasCliente.length > 0){
+    if(this.facturasLiquidadasProveedor.length > 0){
 
       ////console.log()(this.facturasLiquidadasCliente);
       
-      this.facturasLiquidadasCliente.forEach((factura: FacturaOpCliente) => {
+      this.facturasLiquidadasProveedor.forEach((factura: FacturaOpProveedor) => {
         /* idOperaciones.push(factura.operacion.idOperacion) */
         
         this.idOperaciones.push(factura.operacion.idOperacion)
@@ -102,21 +101,21 @@ export class LiquidacionOpComponent implements OnInit{
       ////console.log()("ID OPERACIONES: ", this.idOperaciones);
       //this.facturaChofer.operaciones = idOperaciones;
 
-      this.facturaCliente = {
+      this.facturaProveedor = {
         id: null,
         fecha: new Date().toISOString().split('T')[0],
-        idFacturaCliente: new Date().getTime(),
-        idCliente: this.facturasLiquidadasCliente[0].idCliente,
-        razonSocial: this.facturasLiquidadasCliente[0].operacion.cliente.razonSocial,
+        idFacturaProveedor: new Date().getTime(),
+        idProveedor: this.facturasLiquidadasProveedor[0].idProveedor,
+        razonSocial: this.facturasLiquidadasProveedor[0].operacion.cliente.razonSocial,
         operaciones: this.idOperaciones,
-        total: this.totalFacturasLiquidadasCliente,
+        total: this.totalFacturasLiquidadasProveedor,
         cobrado:false,
-        montoFacturaChofer: this.totalFacturasLiquidadasChofer
+        montoFacturaCliente: this.totalFacturasLiquidadasCliente
       }
 
       //console.log()("FACTURA CLIENTE: ", this.facturaCliente);
       let respuesta = {
-        factura: this.facturaCliente,
+        factura: this.facturaProveedor,
         titulo: titulo,
       }
 

@@ -16,7 +16,7 @@ export interface Operacion {
     facturaCliente: number | null;
     facturaChofer: number | null;
     tarifaEspecial: boolean;
-    tEspecial: TarifaEspecial | null;
+    tEspecial: TarifaEspecial;
 }
 
 export interface TarifaEspecial {    

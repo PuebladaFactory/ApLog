@@ -1,6 +1,6 @@
 export interface TarifaCliente {
     id:any;
-    idTarifaCliente:number;
+    idTarifa:number;
     idCliente: number;
     fecha: string;    
     cargasGenerales: CargasGenerales;

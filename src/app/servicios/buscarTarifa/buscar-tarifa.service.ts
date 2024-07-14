@@ -10,6 +10,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+import { DbFirestoreService } from '../database/db-firestore.service';
 @Injectable({
   providedIn: 'root'
 })
@@ -37,9 +38,9 @@ export class BuscarTarifaService {
     
   }
 
-  constructor(private storageService:StorageService) { }
+  constructor(private storageService:StorageService, private dbFirebase: DbFirestoreService) { }
 
-  buscarTarifaChoferCliente(chofer:Chofer, cliente: Cliente){
+/*   buscarTarifaChoferCliente(chofer:Chofer, cliente: Cliente){
     this.storageService.getByFieldValueLimit("tarifasCliente", "idCliente", cliente.idCliente, 1);
     this.storageService.getByFieldValueLimit("tarifasChofer", "idChofer", chofer.idChofer, 1); 
     this.storageService.historialTarifas$.subscribe(data =>{
@@ -50,10 +51,65 @@ export class BuscarTarifaService {
       this.$tarifasClientes = data;      
     });    
     
-    
-    
+  } */
+
+    buscarTarifaChoferCliente(chofer:Chofer, cliente: Cliente) {
+    this.choferBoolean = false;
+    this.clienteBoolean = false;
+  
+    this.verificarChofer(chofer, cliente);
   }
-  buscarTarifaProveedorCliente(proveedor: Proveedor, cliente:Cliente){
+
+  verificarChofer(chofer:Chofer, cliente: Cliente){
+    this.dbFirebase.existeTarifa("tarifasChofer", chofer.idChofer, "idChofer").subscribe(existe => {
+      if (existe) {
+        this.choferBoolean = true; 
+        console.log('El chofer tiene tarifas guardadas.');  
+        this.verificarCliente(cliente);     
+      } else {
+        this.choferBoolean = false;
+        console.log('El chofer no tiene tarifas guardadas.');
+        this.verificarCliente(cliente);
+      }
+    });
+  }
+
+  verificarCliente(cliente: Cliente){
+    this.dbFirebase.existeTarifa("tarifasCliente", cliente.idCliente, "idCliente").subscribe(existe => {
+      if (existe) {
+        this.clienteBoolean = true;     
+        console.log('El cliente tiene tarifas guardadas.');   
+        this.guardarObservable()
+      } else {
+        this.clienteBoolean = false;
+        console.log('El chofer no tiene tarifas guardadas.');
+        this.guardarObservable()
+      }
+    });
+  }
+
+  buscarTarifaProveedorCliente(proveedor:Proveedor, cliente: Cliente) {
+    this.choferBoolean = false;
+    this.clienteBoolean = false;
+    this.verificarProveedor(proveedor, cliente);
+  }
+
+  verificarProveedor(proveedor:Proveedor, cliente: Cliente){
+    this.dbFirebase.existeTarifa("tarifasProveedor", proveedor.idProveedor, "idProveedor").subscribe(existe => {
+      if (existe) {
+        this.choferBoolean = true; 
+        console.log('El proveedor tiene tarifas guardadas.');  
+        this.verificarCliente(cliente);     
+      } else {
+        this.choferBoolean = false;
+        console.log('El proveedor no tiene tarifas guardadas.');
+        this.verificarCliente(cliente);
+      }
+    });
+  }
+  
+
+  /* buscarTarifaProveedorCliente(proveedor: Proveedor, cliente:Cliente){
     this.storageService.getByFieldValueLimit("tarifasCliente", "idCliente", cliente.idCliente, 1);
     this.storageService.getByFieldValueLimit("tarifasProveedor", "idProveedor", proveedor.idProveedor, 1); 
     this.storageService.historialTarifasProveedores$.subscribe(data => {
@@ -95,7 +151,7 @@ export class BuscarTarifaService {
       this.clienteBoolean = false;
       this.guardarObservable()
     }
-  }
+  }  */
 
   guardarObservable(){
     //console.log("4)", this.choferBoolean,this.clienteBoolean,);
@@ -183,7 +239,7 @@ export class BuscarTarifaService {
         this.$tarifasProveedores = data;
         ////console.log("3) tarifas proveedores: ",this.$tarifasChoferes);
         tarifaAplicada = this.$tarifasProveedores.filter((tarifa:TarifaProveedor) =>{
-          return tarifa.idTarifaProveedor === facuraProveedor[0].idTarifa;
+          return tarifa.idTarifa === facuraProveedor[0].idTarifa;
         })        
     })          
     })    
@@ -321,7 +377,7 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
         ////console.log("4) tarifas clientes: ",this.$tarifasClientes);
         tarifaAplicada = this.$tarifasClientes.filter((tarifa:TarifaCliente) =>{
           ////console.log("5): ",tarifa.idTarifaCliente, facuraCliente[0].idTarifa);  
-          return tarifa.idTarifaCliente === facuraCliente[0].idTarifa;
+          return tarifa.idTarifa === facuraCliente[0].idTarifa;
         })
         
     })
@@ -340,7 +396,7 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
       ////console.log("1) tarifas proveedores: ",this.$tarifasProveedores);
       tarifaAplicada = this.$tarifasProveedores.filter((tarifa:TarifaProveedor)=>{
         ////console.log("2)", tarifa.idTarifaProveedor, idTarifa);        
-        return tarifa.idTarifaProveedor === idTarifa  
+        return tarifa.idTarifa === idTarifa  
       })      
       ////console.log("3) tarifas proveedores: ",tarifaAplicada[0]);      
     })

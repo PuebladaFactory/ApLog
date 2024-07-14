@@ -1,31 +1,32 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
-import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
+import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-editar-tarifa',
-  templateUrl: './editar-tarifa.component.html',
-  styleUrls: ['./editar-tarifa.component.scss']
+  selector: 'app-editar-tarifa-proveedor',
+  templateUrl: './editar-tarifa-proveedor.component.html',
+  styleUrls: ['./editar-tarifa-proveedor.component.scss']
 })
-export class EditarTarifaComponent implements OnInit {
+export class EditarTarifaProveedorComponent implements OnInit {
+
   @Input() fromParent: any;
-  facDetallada!: FacturaOpCliente;
-  ultimaTarifa!: TarifaCliente;
+  facDetallada!: FacturaOpProveedor;
+  ultimaTarifa!: TarifaProveedor;
   edicion:boolean = false;
   tarifaEditForm: any;
   swichForm:any;
-  facturaCliente!: FacturaCliente;  
-  facturaEditada!: FacturaOpCliente;
+  facturaCliente!: FacturaProveedor;  
+  facturaEditada!: FacturaOpProveedor;
   swich!: boolean;
 
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, public activeModal: NgbActiveModal){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private modalService: NgbModal, public activeModal: NgbActiveModal){    
     this.tarifaEditForm = this.fb.group({
       utilitario:[""],
       furgon:[""],
@@ -103,7 +104,7 @@ export class EditarTarifaComponent implements OnInit {
     this.nuevaTarifa()
     console.log("llamada al storage desde liq-cliente, addItem");
     this.storageService.addItem("tarifasCliente", this.ultimaTarifa);     
-    let nuevaFacOpChofer = this.facOpClienteService.actualizarFacOp(this.facturaEditada, this.ultimaTarifa);    
+    let nuevaFacOpChofer = this.facOpProveedorService.actualizarFacOp(this.facturaEditada, this.ultimaTarifa);    
     ////console.log()("nueva FACOPCLIENTE",nuevaFacOpChofer);
     //this.facturaEditada.operacion = nuevaFacOpChofer.operacion;
     this.facturaEditada.valorJornada = nuevaFacOpChofer.valorJornada;
@@ -123,7 +124,7 @@ export class EditarTarifaComponent implements OnInit {
     this.ultimaTarifa = {
       id:null,
       idTarifa:new Date().getTime(),
-      idCliente: this.ultimaTarifa.idCliente,
+      idProveedor: this.ultimaTarifa.idProveedor,
       fecha: new Date().toISOString().split('T')[0],    
       cargasGenerales:{
         utilitario: this.tarifaEditForm.value.utilitario,

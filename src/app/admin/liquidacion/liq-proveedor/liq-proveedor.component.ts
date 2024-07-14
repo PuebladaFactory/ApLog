@@ -1,12 +1,17 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { take } from 'rxjs';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { EditarTarifaProveedorComponent } from '../modales/proveedor/editar-tarifa-proveedor/editar-tarifa-proveedor.component';
+import { LiquidacionOpProveedorComponent } from '../modales/proveedor/liquidacion-op-proveedor/liquidacion-op-proveedor.component';
 
 @Component({
   selector: 'app-liq-proveedor',
@@ -50,7 +55,7 @@ export class LiqProveedorComponent implements OnInit {
   tarifaEspecial: boolean = false;
   
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false);
     this.form = this.fb.group({      
@@ -220,7 +225,8 @@ export class LiqProveedorComponent implements OnInit {
     ////console.log()("Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadasProveedor);
     ////console.log()("Total de las facturas liquidadas:", this.totalFacturasLiquidadasProveedor);
     ////console.log()("indice: ", this.indiceSeleccionado);
-    
+    this.openModalLiquidacion();
+
   }
   
 
@@ -318,12 +324,12 @@ export class LiqProveedorComponent implements OnInit {
   editarFacturaOpProveedor(factura: FacturaOpProveedor){
     this.facDetallada = factura;
     //console.log()(this.facDetallada);
-    let tarifaAplicada: any;
-    this.ultimaTarifa = this.facOpProveedorService.obtenerTarifaProveedor(factura)
+    //let tarifaAplicada: any;
+    //this.ultimaTarifa = this.facOpProveedorService.obtenerTarifaProveedor(factura)
     //console.log()("ULTIMA tarifa: ", this.ultimaTarifa);
     //this.tarifaEspecial = factura.operacion.tarifaEspecial
-    this.armarTarifa(factura);
-    
+    //this.armarTarifa(factura);
+    this.buscarTarifa();
   } 
 
   eliminarFacturaOpChofer(factura:FacturaOpProveedor, indice:number){
@@ -436,6 +442,99 @@ export class LiqProveedorComponent implements OnInit {
     this.facturaEditada.operacion.tarifaEspecial = this.tarifaEditForm.value.tarifaEspecial;
     //console.log()("NUEVA operacion con nueva TARIFA", this.facturaEditada);
     
+  }
+
+  buscarTarifa() {
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("tarifasProveedor",this.facDetallada.idTarifa, "idTarifa")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.ultimaTarifa = data;
+        console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+        this.openModalTarifa()
+    });
+  }
+
+  openModalTarifa(): void {   
+    //this.facturasLiquidadasCliente
+    //this.totalFacturasLiquidadasChofer
+    //this.totalFacturasLiquidadasCliente
+/*     this.storageService.historialTarifasClientes$.subscribe(data => {      
+      this.ultimaTarifa = data;
+      //this.openModalTarifa();
+    }) */
+    //this.facOpProveedorService.obtenerTarifaProveedor(this.facDetallada)
+    this.indiceSeleccionado
+    {
+      const modalRef = this.modalService.open(EditarTarifaProveedorComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg', 
+        //backdrop:"static" 
+      });
+      
+
+     let info = {
+        factura: this.facDetallada,
+        tarifaAplicada: this.ultimaTarifa,        
+      }; 
+      console.log(info); 
+      
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+          
+
+        },
+        (reason) => {}
+      );
+    }
+  }
+
+  openModalLiquidacion(): void {   
+    //this.facturasLiquidadasCliente
+    //this.totalFacturasLiquidadasChofer
+    //this.totalFacturasLiquidadasCliente
+
+    this.indiceSeleccionado
+    {
+      const modalRef = this.modalService.open(LiquidacionOpProveedorComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg', 
+        //backdrop:"static" 
+      });
+      
+    let info = {      
+        facturas: this.facturasLiquidadasProveedor,
+        totalCliente: this.totalFacturasLiquidadasCliente,
+        totalProveedor: this.totalFacturasLiquidadasProveedor,
+      }; 
+      //console.log()(info);
+      
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+          
+          this.facturaProveedor = result.factura;
+//        this.selectCrudOp(result.op, result.item);
+        //this.mostrarMasDatos(row);
+         //console.log()("resultado:" ,this.facturaCliente);
+         this.addItem(this.facturaProveedor, this.componente);
+         //this.form.reset();
+        //this.$tarifasChofer = null;
+        //this.ngOnInit();
+        this.eliminarFacturasOp();
+      
+        if(result.titulo === "excel"){
+        this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
+        }else if (result.titulo === "pdf"){
+        this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
+        }
+        },
+        (reason) => {}
+      );
+    }
   }
 
 }

@@ -39,10 +39,19 @@ export class FacturacionClienteService {
     return this.facturaCliente
   } */
 
-  facturarOpCliente(op:Operacion): FacturaOpCliente{
-    this.storageService.getByFieldValueLimit("tarifasCliente", "idCliente", op.cliente.idCliente,1)
+  facturarOpCliente(op:Operacion, tarifa:TarifaCliente): FacturaOpCliente{
+    console.log("cliente service. op recibida: ", op);
+    console.log("cliente service. tarifa recibida: ", tarifa);
+   //console.log("esto tarifa recibe: ",this.ultimaTarifa);    
+   this.ultimaTarifa = tarifa;
+   this.buscarCliente(op);    
+   this.calcularLiquidacion(op);
+   //this.buscarTarifaChofer(op);   
+   this.crearFacturaCliente(op);     
+
+/*     this.storageService.getByFieldValueLimitBuscarTarifa("tarifasCliente", "idCliente", op.cliente.idCliente,1)
     this.buscarCliente(op);   
-    this.crearFacturaCliente(op);    
+    this.crearFacturaCliente(op);     */
     return this.facturaCliente
     
 
@@ -57,7 +66,7 @@ export class FacturacionClienteService {
     this.clienteOp = opCliente[0];
     ////console.log()("clienteOp: ", this.clienteOp); */
     this.clienteOp = op.cliente
-    this.buscarTarifa(op);
+    //this.buscarTarifa(op);
   }
 
   buscarTarifa(op: Operacion){    
@@ -83,7 +92,7 @@ export class FacturacionClienteService {
     ////console.log()("esta es la tarifa a facturar: ", this.$tarifaCliente);
     
     if(op.tarifaEspecial){
-      console.log("3) tarifa especial");
+      //console.log("3) tarifa especial");
       
       this.facturarTarifaEspecial(op);
 
@@ -225,7 +234,7 @@ export class FacturacionClienteService {
       idFacturaOpCliente: new Date().getTime(),
       operacion: op,
       idCliente: op.cliente.idCliente,
-      idTarifa: this.ultimaTarifa.idTarifaCliente,
+      idTarifa: this.ultimaTarifa.idTarifa,
       fecha: op.fecha,      
       valorJornada: this.categoriaMonto,
       adicional: this.acompanianteMonto + this.adicionalKmMonto,    
@@ -239,17 +248,16 @@ export class FacturacionClienteService {
   }
 
   facturarTarifaEspecial(op: Operacion){
-    if(op.tarifaEspecial && op.tEspecial !== null){
-      this.categoriaMonto = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
-      this.total = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
+    
+      //this.categoriaMonto = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
+      //this.total = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
+      this.categoriaMonto = this.ultimaTarifa.tarifaEspecial.valor;
+      this.total = this.ultimaTarifa.tarifaEspecial.valor;
       this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.cliente.valor;
       this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.cliente.concepto;
       console.log("4) tarifa CLIENTE editada", this.ultimaTarifa);
-      this.storageService.updateItem("tarifasCliente", this.ultimaTarifa)
-      } else{
-        this.categoriaMonto = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
-        this.total = typeof this.ultimaTarifa.tarifaEspecial.valor === 'number'? this.ultimaTarifa.tarifaEspecial.valor : 0;
-      }
+      this.storageService.updateItem("tarifasCliente", this.ultimaTarifa) 
+      
     
     this.acompanianteMonto = 0;
     this.adicionalKmMonto = 0;
@@ -261,7 +269,7 @@ export class FacturacionClienteService {
     //console.log("FACTURAAA: ", factura);
     
     let ultimaTarifa;
-    this.storageService.getByFieldValueTitle("tarifasCliente", "idTarifaCliente", factura.idTarifa, "tarifasCliente");
+    this.storageService.getByFieldValueTitle("tarifasCliente", "idTarifa", factura.idTarifa, "tarifasCliente");
     /* this.storageService.historialTarifasClientes$.subscribe(data => {
       ////console.log()(data);
       
@@ -287,6 +295,8 @@ export class FacturacionClienteService {
   }
 
   actualizarFacOp(factura:FacturaOpCliente, tarifa: TarifaCliente){
+    console.log("cliente service. factura recibida: ", factura);
+    console.log("cliente service. tarifa recibida: ", tarifa);
     this.ultimaTarifa = tarifa;
     this.calcularLiquidacion(factura.operacion)
     this.editarFacOpCliente(factura);
@@ -300,7 +310,7 @@ export class FacturacionClienteService {
       operacion: factura.operacion,        
       fecha: factura.operacion.fecha,      
       idCliente: factura.operacion.cliente.idCliente,
-      idTarifa: this.ultimaTarifa.idTarifaCliente,
+      idTarifa: this.ultimaTarifa.idTarifa,
       valorJornada: this.categoriaMonto,
       adicional: this.acompanianteMonto + this.adicionalKmMonto,
       total: this.total,

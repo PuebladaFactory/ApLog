@@ -91,13 +91,15 @@
                                         <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
                                     </td>
                                 </tr>
-                                <tr class=" mt-2">
-                                    <th class="parametro align-middle fs-4 fw-semibold  mt-3">Tarifa Especial:</th>
-                                    <th class="form-group form-check form-switch form-check-reverse ">
-                                        <input class="form-check-input  mt-3" type="checkbox" id="flexSwitchCheckReverse" formControlName="tarifaEspecial" (click)="modificaTarifaEspecial()" [ngClass]="{'isDisabled': !edicion}">
-                                        <label class="form-check-label align-middle  mt-2  mb-1" for="flexSwitchCheckReverse">Aplicar Tarifa Especial</label>
-                                    </th>
-                                </tr>                                          
+                                <form [formGroup]="swichForm" [ngClass]="{'isDisabled': !edicion}">
+                                    <tr class=" mt-2">
+                                        <th class="parametro align-middle fs-4 fw-semibold  mt-3">Tarifa Especial:</th>
+                                        <th class="form-group form-check form-switch form-check-reverse ">
+                                            <input class="form-check-input  mt-3" type="checkbox" id="flexSwitchCheckReverse" formControlName="tarifaEspecial" (click)="modificaTarifaEspecial()" [ngClass]="{'isDisabled': !edicion}">
+                                            <label class="form-check-label align-middle  mt-2  mb-1" for="flexSwitchCheckReverse">Aplicar Tarifa Especial</label>
+                                        </th>
+                                    </tr>                                          
+                                </form>
                                 <tr class="form-group">
                                     <td class="align-middle parametro">Concepto: </td>
                                     <td>
@@ -142,7 +144,7 @@
                             </div>
                             
                             <div>
-                                <button class="btn btn-primary"  data-bs-toggle="modal" (click)="onSubmitEdit()" >Guardar</button>  
+                                <button class="btn btn-primary">Guardar</button>  
                             </div>                
                         </div>
                     </form>       

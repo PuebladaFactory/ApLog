@@ -114,6 +114,15 @@ export class StorageService {
 
   private _facOpLiqProveedor$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqProveedor') || []);
   public facOpLiqProveedor$ = this._facOpLiqProveedor$.asObservable();
+
+  private _ultimaTarifaChofer$ = new BehaviorSubject<any>(this.loadInfo('ultimaTarifaChofer') || []);
+  public ultimaTarifaChofer$ = this._ultimaTarifaChofer$.asObservable();
+
+  private _ultimaTarifaCliente$ = new BehaviorSubject<any>(this.loadInfo('ultimaTarifaCliente') || []);
+  public ultimaTarifaCliente$ = this._ultimaTarifaCliente$.asObservable();
+
+  private _ultimaTarifaProveedor$ = new BehaviorSubject<any>(this.loadInfo('ultimaTarifaProveedor') || []);
+  public ultimaTarifaProveedor$ = this._ultimaTarifaProveedor$.asObservable();
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -391,6 +400,15 @@ export class StorageService {
       })
   }
 
+  getByFieldValueLimitBuscarTarifa(componente: any, campo:any, value:any, limit:number){
+    console.log(" storage getByFieldValueLimitBuscarTarifa ", componente, campo, value)
+    this.dbFirebase
+      .getByFieldValueLimitBuscarTarifa(componente, campo, value, limit)
+      .subscribe(data => {
+        this.setInfo(componente, data)
+      })
+  }
+
   getByDateValue(componente:string, campo:string, value1:any, value2:any, titulo:string){
     console.log(" storage getByDateValue ", componente, titulo)
     this.dbFirebase
@@ -418,6 +436,18 @@ export class StorageService {
       .subscribe(data => {
         this.setInfo(titulo , data)
       })
+      }
+
+      ///buscar el ultimo elemento de la coleccion q corresponda a un id
+      getElemntByIdLimit(componente:string, campo:string, orden:string, id:number, titulo:string){
+        console.log(" storage getElemntByIdLimit ", componente, campo, orden, id, titulo)
+        this.dbFirebase
+        .obtenerTarifaMasReciente(componente,id,campo, orden)
+        .subscribe(data => {
+          console.log("!!!! ESTA ES LA RESPUESTA DE LA BASE DE DATOS DE LA ULT TARIFA: ", data);
+          
+          this.setInfo(titulo , data)
+        })
       }
 
 

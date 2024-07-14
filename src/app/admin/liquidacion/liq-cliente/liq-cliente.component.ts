@@ -13,6 +13,8 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalInformesClienteComponent } from '../modal-informes-cliente/modal-informes-cliente.component';
 import { LiquidacionOpComponent } from '../modales/cliente/liquidacion-op/liquidacion-op.component';
 import { EditarTarifaComponent } from '../modales/cliente/editar-tarifa/editar-tarifa.component';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-liq-cliente',
@@ -56,7 +58,7 @@ export class LiqClienteComponent {
   tarifaEspecial: boolean = false;
 
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false);
     
@@ -118,7 +120,17 @@ export class LiqClienteComponent {
             total: 0
           });
         }
-  
+        
+      /*   if(factura.operacion.tarifaEspecial){
+          const cliente = clientesMap.get(factura.idCliente);
+          cliente.cantOp++;
+          if (factura.liquidacion) {
+            cliente.opFacturadas += factura.total;
+          } else {
+            cliente.opSinFacturar += factura.total;
+          }
+          cliente.total += factura.total;  
+        } */
         const cliente = clientesMap.get(factura.idCliente);
         cliente.cantOp++;
         if (factura.liquidacion) {
@@ -169,7 +181,7 @@ export class LiqClienteComponent {
        return factura.idCliente === clienteId;
    });
    this.facturasPorCliente.set(clienteId, facturasCliente);
-   //console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
+   console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
   }
 
   cerrarTabla(index: number){
@@ -256,7 +268,7 @@ export class LiqClienteComponent {
       this.ultimaTarifa = data;
       //this.openModalTarifa();
     }) */
-    this.facOpClienteService.obtenerTarifaCliente(factura)
+    
     
     this.facDetallada = factura;
     ////console.log()(this.facDetallada);
@@ -267,7 +279,8 @@ export class LiqClienteComponent {
     ////console.log()("ULTIMA tarifa: ", this.ultimaTarifa);
     //this.tarifaEspecial = factura.operacion.tarifaEspecial
     //this.armarTarifa(factura);
-    this.openModalTarifa();
+    this.buscarTarifa();
+    //this.openModalTarifa();
   } 
 
   eliminarFacturaOpChofer(factura:FacturaOpCliente, indice:number){
@@ -323,6 +336,17 @@ export class LiqClienteComponent {
     }
   }
 
+  buscarTarifa() {
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("tarifasCliente",this.facDetallada.idTarifa, "idTarifa")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.ultimaTarifa = data;
+        console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+        this.openModalTarifa()
+    });
+  }
+
   openModalTarifa(): void {   
     //this.facturasLiquidadasCliente
     //this.totalFacturasLiquidadasChofer
@@ -331,6 +355,7 @@ export class LiqClienteComponent {
       this.ultimaTarifa = data;
       //this.openModalTarifa();
     }) */
+    //this.facOpClienteService.obtenerTarifaCliente(this.facDetallada)
     this.indiceSeleccionado
     {
       const modalRef = this.modalService.open(EditarTarifaComponent, {
@@ -341,13 +366,13 @@ export class LiqClienteComponent {
       });
       
 
-/*     let info = {
+     let info = {
         factura: this.facDetallada,
-        tarifaAplicada: this.ultimaTarifa[0],        
+        tarifaAplicada: this.ultimaTarifa,        
       }; 
-      console.log(info); */
+      console.log(info); 
       
-      modalRef.componentInstance.fromParent = this.facDetallada;
+      modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
           
