@@ -36,7 +36,7 @@
             </div>
             <div class="row">
                 <!-- TARIFA CLIENTE -->
-                <div class="col border border-dark-subtle border-opacity-50 border-2 rounded-4 me-1 fondo">
+                <div class="col border border-dark-subtle border-opacity-50 border-2 rounded-4 me-1 fondo" *ngIf="tarifaClienteAplicada !== undefined">
                     <h3 class="border-bottom border-dark-subtle border-opacity-50 border-2">Tarifa Aplicada</h3>
                     <h4>Id Tarifa: {{tarifaClienteAplicada.idTarifa}}</h4>
                     <h4>Jornada: {{montoCategoriaCliente}}</h4>

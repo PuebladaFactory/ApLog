@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { take } from 'rxjs';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
@@ -7,6 +8,7 @@ import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -29,22 +31,43 @@ export class ModalDetalleComponent implements OnInit {
   $tarifasChoferes!: TarifaChofer[];
   $tarifasProveedores!: TarifaProveedor[];
 
-  constructor(public activeModal: NgbActiveModal, private buscarTarifaServ: BuscarTarifaService, private storageService:StorageService){}
+  constructor(public activeModal: NgbActiveModal, private buscarTarifaServ: BuscarTarifaService, private storageService:StorageService, private dbFirebase: DbFirestoreService){}
 
   ngOnInit(): void {
-    this.data = this.fromParent.item;
-    console.log(this.data);
+    this.data = this.fromParent.factura;
+    /* console.log(this.data); */
+    console.log("0)", this.fromParent);
     //console.log("modo: ", this.fromParent.modo)
     switch(this.fromParent.modo){
       case "clientes":
-        this.storageService.getByFieldValue("tarifasCliente","idTarifaCliente",this.data.idTarifa);
+        this.tarifaClienteAplicada = this.data.tarifaCliente;
+        this.tarifaChoferAplicada = this.data.tarifaChofer;
+        this.montoCategoriaCliente = this.data.valorJornada;          
+        this.totalFacturaCliente = this.data.total;
+        this.totalFacturaChofer = this.data.montoFacturaChofer;
+        console.log("alcanza?");
+        
+       /*  this.storageService.getByFieldValue("tarifasCliente","idTarifaCliente",this.data.idTarifa);
         if(this.data.operacion.chofer.proveedor === "monotributista"){
           this.storageService.getByFieldValue("facOpLiqChofer","operacion.idOperacion",this.data.operacion.idOperacion);    
         } else if (this.data.operacion.chofer.proveedor !== "monotributista"){
           this.storageService.getByFieldValue("facOpLiqProveedor","operacion.idOperacion",this.data.operacion.idOperacion);    
         }        
         this.buscarTarifaClienteId();
-        this.buscarTarifaChoferOp(); 
+        this.buscarTarifaChoferOp();  */
+     /*    this.dbFirebase
+          .obtenerTarifaIdTarifa("tarifasCliente",this.data.idTarifa, "idTarifa")
+          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+          .subscribe(data => {      
+              this.tarifaChoferAplicada = data;
+              if(this.data.operacion.chofer.proveedor === "monotributista"){
+                console.log("1)");
+                  
+                this.buscarFacturaOpChofer();
+              } else if (this.data.operacion.chofer.proveedor !== "monotributista"){
+                this.storageService.getByFieldValue("facOpLiqProveedor","operacion.idOperacion",this.data.operacion.idOperacion);    
+              }        
+          }); */
         break
       case "choferes":
         this.storageService.getByFieldValue("tarifasChofer","idTarifa",this.data.idTarifa);
@@ -147,6 +170,44 @@ export class ModalDetalleComponent implements OnInit {
       
     }    
   }
+
+    buscarFacturaOpChofer(){
+      let facOpChofer!: FacturaOpChofer;
+      console.log("2)idoperacion: ", this.data.operacion.idOperacion);
+      this.dbFirebase
+          .obtenerTarifaIdTarifa("facOpLiqChofer",this.data.operacion.idOperacion, "operacion.idOperacion")
+          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+          .subscribe(data => {      
+              facOpChofer = data;  
+              console.log("3)facOpChofer: ", facOpChofer);
+                            
+              this.buscarTarifaChofer(facOpChofer.idTarifa);
+          });
+    }
+
+    buscarTarifaChofer(id:number){
+      console.log("3.5)idTarifa: ", id);
+      
+      this.dbFirebase
+      .obtenerTarifaIdTarifa("tarifasChofer",id, "idTarifa")
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data => {      
+          this.tarifaChoferAplicada = data;              
+          console.log("4) TARIFA CHOFER APLICADA: ", this.tarifaChoferAplicada);
+          
+          this.calculosCliente()
+      });
+        
+    }
+
+    calculosCliente(){  
+      this.tarifaClienteAplicada = this.data.tarifaCliente;
+      this.tarifaChoferAplicada = this.data.tarifaChofer;
+      this.montoCategoriaCliente = this.data.valorJornada;          
+      this.totalFacturaCliente = this.data.total;
+      this.totalFacturaChofer = this.data.montoFacturaChofer;
+    }
+    
 
 
   ////METODOS CUANDO SE LLAMA DE HiSTORIAL CHOFERES

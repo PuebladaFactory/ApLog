@@ -6,6 +6,12 @@ import { SortType, SelectionType, ClickType, ColumnMode  } from '@swimlane/ngx-d
 import { style } from '@angular/animations';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+import { take } from 'rxjs';
+import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 
 @Component({
   selector: 'app-historial-cliente',
@@ -48,8 +54,12 @@ export class HistorialClienteComponent implements OnInit {
   date:any = new Date();
   primerDiaMesAnterior: any = new Date(this.date.getFullYear(), this.date.getMonth()-1).toISOString().split('T')[0];
   ultimoDiaMesAnterior:any = new Date(this.date.getFullYear(), this.date.getMonth() , 0).toISOString().split('T')[0];  
+  facturaOp!:FacturaOpCliente[];
+  tarifaClienteAplicada!: TarifaCliente;
+  tarifaChoferAplicada!: TarifaChofer;
+  tarifaProveedorAplicada!: TarifaProveedor;
   
-  constructor(private storageService: StorageService, private modalService: NgbModal){
+  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
 
   }
   
@@ -114,15 +124,61 @@ export class HistorialClienteComponent implements OnInit {
   }
 
   mostrarMasDatos(row:any) {     
-    this.mostrarDetallesOp[row.indice] = !this.mostrarDetallesOp[row.indice];      
-    
+    this.mostrarDetallesOp[row.indice] = !this.mostrarDetallesOp[row.indice];   
+  
   }
 
-  openModal(row: any): void {   
-    let facturaOp = this.$facturaOpCliente.filter((factura:FacturaOpCliente)=>{
+  abrirModal(row:any){
+    this.facturaOp = this.$facturaOpCliente.filter((factura:FacturaOpCliente)=>{
       ////console.log()(factura.idFacturaOpCliente, row.idFacturaOpCliente);      
       return factura.idFacturaOpCliente === row.idFacturaOpCliente
-    })
+    })   
+    this.buscarTarifaCliente(row);    
+  }
+
+  buscarTarifaCliente(row:any){
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("tarifasCliente",this.facturaOp[0].idTarifa, "idTarifa")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.tarifaClienteAplicada = data;              
+        console.log("4) TARIFA CHOFER APLICADA: ", this.tarifaClienteAplicada);
+        
+        this.buscarFacturaOpChofer(row);
+    });
+  }
+
+  buscarFacturaOpChofer(row:any){
+    let facOpChofer!: FacturaOpChofer;
+    console.log("2)idoperacion: ", this.facturaOp[0].operacion.idOperacion);
+    this.dbFirebase
+        .obtenerTarifaIdTarifa("facOpLiqChofer",this.facturaOp[0].operacion.idOperacion, "operacion.idOperacion")
+        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+        .subscribe(data => {      
+            facOpChofer = data;  
+            console.log("3)facOpChofer: ", facOpChofer);
+                          
+            this.buscarTarifaChofer(facOpChofer.idTarifa, row);
+        });
+  }
+
+  buscarTarifaChofer(id:number, row:any){
+    console.log("3.5)idTarifa: ", id);
+    
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("tarifasChofer",id, "idTarifa")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.tarifaChoferAplicada = data;              
+        console.log("4) TARIFA CHOFER APLICADA: ", this.tarifaChoferAplicada);
+        
+        this.openModal(row)
+    });
+      
+  }
+
+  openModal(row:any): void {   
+  
     
     //console.log()("facturaOp: ",facturaOp);
      
@@ -136,7 +192,9 @@ export class HistorialClienteComponent implements OnInit {
 
      let info = {
         modo: "clientes",
-        item: facturaOp[0],
+        factura: this.facturaOp[0],
+        tarifaChofer: this.tarifaChoferAplicada,
+        tarifaCliente: this.tarifaClienteAplicada,
       }; 
       //console.log()(info);
       
