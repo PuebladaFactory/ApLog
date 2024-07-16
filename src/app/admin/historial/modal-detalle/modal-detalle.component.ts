@@ -37,11 +37,18 @@ export class ModalDetalleComponent implements OnInit {
     this.data = this.fromParent.factura;
     /* console.log(this.data); */
     console.log("0)", this.fromParent);
-    //console.log("modo: ", this.fromParent.modo)
+    //console.log("modo: ", this.fromParent.modo);
+    this.storageService.tarifaClienteHistorial$.subscribe(data => {
+      this.tarifaClienteAplicada = data[0]
+    });
+    this.storageService.tarifaChoferHistorial$.subscribe(data => {
+      this.tarifaChoferAplicada = data[0]
+    });
+
     switch(this.fromParent.modo){
       case "clientes":
-        this.tarifaClienteAplicada = this.data.tarifaCliente;
-        this.tarifaChoferAplicada = this.data.tarifaChofer;
+        /* this.tarifaClienteAplicada = this.data.tarifaCliente;
+        this.tarifaChoferAplicada = this.data.tarifaChofer; */
         this.montoCategoriaCliente = this.data.valorJornada;          
         this.totalFacturaCliente = this.data.total;
         this.totalFacturaChofer = this.data.montoFacturaChofer;

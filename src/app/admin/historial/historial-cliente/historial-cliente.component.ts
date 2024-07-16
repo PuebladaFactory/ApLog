@@ -178,7 +178,15 @@ export class HistorialClienteComponent implements OnInit {
   }
 
   openModal(row:any): void {   
-  
+    
+    let tarifaAplicadaClienteArray: TarifaCliente[] = [];
+    tarifaAplicadaClienteArray.push(this.tarifaClienteAplicada)
+
+    let tarifaAplicadaChoferArray: TarifaChofer[] = [];
+    tarifaAplicadaChoferArray.push(this.tarifaChoferAplicada);
+
+    this.storageService.setInfo("tarifaClienteHistorial", tarifaAplicadaClienteArray);
+    this.storageService.setInfo("tarifaChoferHistorial", tarifaAplicadaChoferArray);
     
     //console.log()("facturaOp: ",facturaOp);
      
