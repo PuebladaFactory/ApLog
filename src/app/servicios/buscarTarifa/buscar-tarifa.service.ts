@@ -40,18 +40,6 @@ export class BuscarTarifaService {
 
   constructor(private storageService:StorageService, private dbFirebase: DbFirestoreService) { }
 
-/*   buscarTarifaChoferCliente(chofer:Chofer, cliente: Cliente){
-    this.storageService.getByFieldValueLimit("tarifasCliente", "idCliente", cliente.idCliente, 1);
-    this.storageService.getByFieldValueLimit("tarifasChofer", "idChofer", chofer.idChofer, 1); 
-    this.storageService.historialTarifas$.subscribe(data =>{
-      this.$tarifasChoferes = data;
-      this.tieneTarifaChofer(cliente)    
-    });    
-    this.storageService.historialTarifasClientes$.subscribe(data =>{
-      this.$tarifasClientes = data;      
-    });    
-    
-  } */
 
     buscarTarifaChoferCliente(chofer:Chofer, cliente: Cliente) {
     this.choferBoolean = false;
@@ -109,49 +97,6 @@ export class BuscarTarifaService {
   }
   
 
-  /* buscarTarifaProveedorCliente(proveedor: Proveedor, cliente:Cliente){
-    this.storageService.getByFieldValueLimit("tarifasCliente", "idCliente", cliente.idCliente, 1);
-    this.storageService.getByFieldValueLimit("tarifasProveedor", "idProveedor", proveedor.idProveedor, 1); 
-    this.storageService.historialTarifasProveedores$.subscribe(data => {
-      this.$tarifasProveedores = data;
-      this.tieneTarifaProveedor(cliente);
-    });    
-    this.storageService.historialTarifasClientes$.subscribe(data =>{
-      this.$tarifasClientes = data;      
-    });        
-  }
-
-  tieneTarifaChofer(cliente: Cliente) {    
-      if(this.$tarifasChoferes.length > 0){
-        this.choferBoolean = true;
-        this.tieneTarifaCliente(cliente);
-      }else{
-        this.choferBoolean = false
-        this.tieneTarifaCliente(cliente);
-      };    
-  }
-
-  tieneTarifaProveedor(cliente:Cliente) {       
-      
-    if(this.$tarifasProveedores.length > 0 ){
-      this.choferBoolean = true;
-      this.tieneTarifaCliente(cliente);
-    }else{
-      this.choferBoolean = false;
-      this.tieneTarifaCliente(cliente);
-    }
-   
-  }
-
-  tieneTarifaCliente(cliente:Cliente) {
-    if(this.$tarifasClientes.length > 0){
-      this.clienteBoolean = true;
-      this.guardarObservable()
-    } else {
-      this.clienteBoolean = false;
-      this.guardarObservable()
-    }
-  }  */
 
   guardarObservable(){
     //console.log("4)", this.choferBoolean,this.clienteBoolean,);

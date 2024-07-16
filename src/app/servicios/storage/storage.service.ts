@@ -115,14 +115,14 @@ export class StorageService {
   private _facOpLiqProveedor$ = new BehaviorSubject<any>(this.loadInfo('facOpLiqProveedor') || []);
   public facOpLiqProveedor$ = this._facOpLiqProveedor$.asObservable();
 
-  private _ultimaTarifaChofer$ = new BehaviorSubject<any>(this.loadInfo('ultimaTarifaChofer') || []);
-  public ultimaTarifaChofer$ = this._ultimaTarifaChofer$.asObservable();
+  private _tarifaChoferHistorial$ = new BehaviorSubject<any>(this.loadInfo('tarifaChoferHistorial') || []);
+  public tarifaChoferHistorial$ = this._tarifaChoferHistorial$.asObservable();
 
-  private _ultimaTarifaCliente$ = new BehaviorSubject<any>(this.loadInfo('ultimaTarifaCliente') || []);
-  public ultimaTarifaCliente$ = this._ultimaTarifaCliente$.asObservable();
+  private _tarifaClienteHistorial$ = new BehaviorSubject<any>(this.loadInfo('tarifaClienteHistorial') || []);
+  public tarifaClienteHistorial$ = this._tarifaClienteHistorial$.asObservable();
 
-  private _ultimaTarifaProveedor$ = new BehaviorSubject<any>(this.loadInfo('ultimaTarifaProveedor') || []);
-  public ultimaTarifaProveedor$ = this._ultimaTarifaProveedor$.asObservable();
+  private _tarifaProveedorHistorial$ = new BehaviorSubject<any>(this.loadInfo('tarifaProveedorHistorial') || []);
+  public tarifaProveedorHistorial$ = this._tarifaProveedorHistorial$.asObservable();
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -271,6 +271,21 @@ export class StorageService {
 
       case "facOpLiqProveedor":{
         this._facOpLiqProveedor$.next(data)
+        break;
+      }
+
+      case "tarifaChoferHistorial":{
+        this._tarifaChoferHistorial$.next(data)
+        break;
+      }
+
+      case "tarifaClienteHistorial":{
+        this._tarifaClienteHistorial$.next(data)
+        break;
+      }
+
+      case "tarifaProveedorHistorial":{
+        this._tarifaProveedorHistorial$.next(data)
         break;
       }
 

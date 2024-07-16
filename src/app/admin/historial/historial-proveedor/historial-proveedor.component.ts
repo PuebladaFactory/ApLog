@@ -7,6 +7,12 @@ import { style } from '@angular/animations';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-historial-proveedor',
@@ -47,24 +53,28 @@ export class HistorialProveedorComponent implements OnInit {
   ajustes: boolean = false;
   firstFilter = '';
   secondFilter = '';
+  facturaOp!:FacturaOpProveedor[];
+  tarifaClienteAplicada!: TarifaCliente;
+  tarifaChoferAplicada!: TarifaChofer;
+  tarifaProveedorAplicada!: TarifaProveedor;
 
-  constructor(private storageService: StorageService, private modalService: NgbModal){
+  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
 
   }
   
   ngOnInit(): void {
     
     this.storageService.consultasFacOpLiqProveedor$.subscribe(data =>{
-      ////console.log()(data);
+      //////console.log()(data);
       this.$facturaOpProveedor = data;     
-      ////console.log()("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
+      //////console.log()("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
       this.armarTabla()  
     })
     
   }
 
   armarTabla() {
-    //console.log()("consultasFacOpLiqCliente: ", this.$facturaOpProveedor );
+    ////console.log()("consultasFacOpLiqCliente: ", this.$facturaOpProveedor );
     let indice = 0
     this.rows = this.$facturaOpProveedor.map(proveedor => ({
       indice: indice ++,
@@ -85,7 +95,7 @@ export class HistorialProveedorComponent implements OnInit {
       totalProveedor: proveedor.total,
       ganancia: `${((proveedor.montoFacturaCliente - proveedor.total) * 100 / proveedor.montoFacturaCliente).toFixed(2)}%`
     }));
-    //console.log()("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+    ////console.log()("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
     
     this.applyFilters(); // Aplica filtros y actualiza filteredRows
   }
@@ -118,12 +128,67 @@ export class HistorialProveedorComponent implements OnInit {
     
   }
 
-  openModal(row: any): void {   
-    let facturaOp = this.$facturaOpProveedor.filter((factura:FacturaOpProveedor)=>{
-      ////console.log()(factura.idFacturaOpCliente, row.idFacturaOpCliente);      
+  abrirModal(row:any){
+    //console.log("1) row: ", row);
+    
+    this.facturaOp = this.$facturaOpProveedor.filter((factura:FacturaOpProveedor)=>{
+      //////console.log()(factura.idFacturaOpCliente, row.idFacturaOpCliente);      
       return factura.idFacturaOpProveedor === row.idFacturaOpProveedor
-    })
-    //console.log()("facturaOp: ",facturaOp);
+    })   
+    //console.log("2) facturaoP: ", this.facturaOp);
+    this.buscarTarifaProveedor(row);    
+  }
+
+  buscarTarifaProveedor(row:any){
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("tarifasProveedor",this.facturaOp[0].idTarifa, "idTarifa")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.tarifaProveedorAplicada = data;              
+        //console.log("4) TARIFA PROVEEDOR APLICADA: ", this.tarifaProveedorAplicada);
+        
+        this.buscarFacturaOpCliente(row);
+    });
+  }
+
+  buscarFacturaOpCliente(row:any){
+    let facOpCliente!: FacturaOpCliente;
+    
+    //console.log("2)idoperacion: ", this.facturaOp[0].operacion.idOperacion);
+    this.dbFirebase
+      .obtenerTarifaIdTarifa("facOpLiqCliente",this.facturaOp[0].operacion.idOperacion, "operacion.idOperacion")
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data => {      
+          facOpCliente = data;  
+          //console.log("3)facOpCliente: ", facOpCliente);
+                        
+          this.buscarTarifaCliente(facOpCliente.idTarifa, row);
+      });    
+    
+  }
+
+  buscarTarifaCliente(id:number, row:any){
+    //console.log("3.5)idTarifa: ", id);
+    
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("tarifasCliente",id, "idTarifa")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.tarifaClienteAplicada = data;              
+        //console.log("4) TARIFA CLIENTE APLICADA: ", this.tarifaClienteAplicada);
+        
+        this.openModal(row)
+    });
+      
+  }
+
+  openModal(row: any): void {   
+    let tarifaAplicadaProveedorArray: TarifaProveedor[] = [];    
+    let tarifaAplicadaClienteArray: TarifaCliente[] = [];
+    tarifaAplicadaClienteArray.push(this.tarifaClienteAplicada);
+    this.storageService.setInfo("tarifaClienteHistorial", tarifaAplicadaClienteArray);
+    tarifaAplicadaProveedorArray.push(this.tarifaProveedorAplicada);
+    this.storageService.setInfo("tarifaChoferHistorial", tarifaAplicadaProveedorArray);
      
     {
       const modalRef = this.modalService.open(ModalDetalleComponent, {
@@ -135,14 +200,16 @@ export class HistorialProveedorComponent implements OnInit {
 
      let info = {
         modo: "proveedores",
-        item: facturaOp[0],
+        factura: this.facturaOp[0],
+        tarifaChofer: this.tarifaProveedorAplicada,
+        tarifaCliente: this.tarifaClienteAplicada,
       }; 
-      //console.log()(info);
+      ////console.log()(info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          ////console.log()("ROOWW:" ,row);
+          //////console.log()("ROOWW:" ,row);
           
 //        this.selectCrudOp(result.op, result.item);
         this.mostrarMasDatos(row);
