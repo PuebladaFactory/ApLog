@@ -7,6 +7,11 @@ import { style } from '@angular/animations';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { take } from 'rxjs';
+import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 
 @Component({
   selector: 'app-historial-chofer',
@@ -46,25 +51,29 @@ export class HistorialChoferComponent implements OnInit {
   ajustes: boolean = false;
   firstFilter = '';
   secondFilter = '';
+  facturaOp!:FacturaOpChofer[];
+  tarifaClienteAplicada!: TarifaCliente;
+  tarifaChoferAplicada!: TarifaChofer;
+  tarifaProveedorAplicada!: TarifaProveedor;
 
-  constructor(private storageService: StorageService, private modalService: NgbModal){
+  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
 
   }
   ngOnInit(): void {
     this.storageService.consultasFacOpLiqChofer$.subscribe(data =>{
-      ////console.log()(data);
+      //////console.log()(data);
       this.$facturaOpChoferes = data;     
-      ////console.log()("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
+      //////console.log()("consultasFacOpLiqCliente: ", this.$facturaOpCliente );
       this.armarTabla()  
     })
   }
 
   armarTabla() {
-    //console.log()("consultasFacOpLiqCliente: ", this.$facturaOpChoferes );
+    ////console.log()("consultasFacOpLiqCliente: ", this.$facturaOpChoferes );
     let indice = 0
     this.rows = this.$facturaOpChoferes.map(chofer => ({
       indice: indice ++,
-      idFacturaOpCliente: chofer.idFacturaOpChofer,
+      idFacturaOpChofer: chofer.idFacturaOpChofer,
       idCliente: chofer.idChofer,
       razonSocial: chofer.operacion.cliente.razonSocial,
       idOperacion: chofer.operacion.idOperacion,
@@ -81,7 +90,7 @@ export class HistorialChoferComponent implements OnInit {
       totalChofer: chofer.total,
       ganancia: `${((chofer.montoFacturaCliente - chofer.total) * 100 / chofer.montoFacturaCliente).toFixed(2)}%`
     }));
-    ////console.log()("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+    //////console.log()("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
     this.applyFilters(); // Aplica filtros y actualiza filteredRows
   }
 
@@ -113,13 +122,69 @@ export class HistorialChoferComponent implements OnInit {
     
   }
 
+  abrirModal(row:any){
+    //console.log("1) row: ", row);
+    
+    this.facturaOp = this.$facturaOpChoferes.filter((factura:FacturaOpChofer)=>{
+      //////console.log()(factura.idFacturaOpCliente, row.idFacturaOpCliente);      
+      return factura.idFacturaOpChofer === row.idFacturaOpChofer
+    })   
+    //console.log("2) facturaoP: ", this.facturaOp);
+    this.buscarTarifaChofer(row);    
+  }
+
+  buscarTarifaChofer(row:any){
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("tarifasChofer",this.facturaOp[0].idTarifa, "idTarifa")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.tarifaChoferAplicada = data;              
+        //console.log("4) TARIFA CHOFER APLICADA: ", this.tarifaChoferAplicada);
+        
+        this.buscarFacturaOpCliente(row);
+    });
+  }
+
+  buscarFacturaOpCliente(row:any){
+    let facOpCliente!: FacturaOpChofer;
+    
+    //console.log("2)idoperacion: ", this.facturaOp[0].operacion.idOperacion);
+    this.dbFirebase
+      .obtenerTarifaIdTarifa("facOpLiqCliente",this.facturaOp[0].operacion.idOperacion, "operacion.idOperacion")
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data => {      
+          facOpCliente = data;  
+          //console.log("3)facOpChofer: ", facOpCliente);
+                        
+          this.buscarTarifaCliente(facOpCliente.idTarifa, row);
+      });    
+    
+  }
+
+  buscarTarifaCliente(id:number, row:any){
+    //console.log("3.5)idTarifa: ", id);
+    
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("tarifasCliente",id, "idTarifa")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.tarifaClienteAplicada = data;              
+        //console.log("4) TARIFA CLIENTE APLICADA: ", this.tarifaClienteAplicada);
+        
+        this.openModal(row)
+    });
+      
+  }
+
+
   openModal(row: any): void {   
-    let facturaOp = this.$facturaOpChoferes.filter((factura:FacturaOpChofer)=>{
-      ////console.log()(factura.idFacturaOpCliente, row.idFacturaOpCliente);      
-      return factura.idFacturaOpChofer === row.idFacturaOpCliente
-    })
-    //console.log()("facturaOp: ",facturaOp);
-     
+    let tarifaAplicadaChoferArray: TarifaChofer[] = [];    
+    let tarifaAplicadaClienteArray: TarifaCliente[] = [];
+    tarifaAplicadaClienteArray.push(this.tarifaClienteAplicada);
+    this.storageService.setInfo("tarifaClienteHistorial", tarifaAplicadaClienteArray);
+    tarifaAplicadaChoferArray.push(this.tarifaChoferAplicada);
+    this.storageService.setInfo("tarifaChoferHistorial", tarifaAplicadaChoferArray);
+    
     {
       const modalRef = this.modalService.open(ModalDetalleComponent, {
         windowClass: 'myCustomModalClass',
@@ -128,16 +193,18 @@ export class HistorialChoferComponent implements OnInit {
         backdrop:"static" 
       });
 
-     let info = {
+      let info = {
         modo: "choferes",
-        item: facturaOp[0],
+        factura: this.facturaOp[0],
+        tarifaChofer: this.tarifaChoferAplicada,
+        tarifaCliente: this.tarifaClienteAplicada,
       }; 
-      //console.log()(info);
+      ////console.log()(info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          ////console.log()("ROOWW:" ,row);
+          //////console.log()("ROOWW:" ,row);
           
 //        this.selectCrudOp(result.op, result.item);
         this.mostrarMasDatos(row);
