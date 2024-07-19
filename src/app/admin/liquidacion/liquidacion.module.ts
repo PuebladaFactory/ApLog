@@ -5,7 +5,7 @@ import { LiquidacionRoutingModule } from './liquidacion-routing.module';
 import { LiqProveedorComponent } from './liq-proveedor/liq-proveedor.component';
 import { LiqChoferComponent } from './liq-chofer/liq-chofer.component';
 import { LiqGralComponent } from './liq-gral/liq-gral.component';
-import { LiqClienteComponent } from './liq-cliente/liq-cliente.component';
+import { LiqClienteComponent, QuincenaPipe } from './liq-cliente/liq-cliente.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
@@ -18,6 +18,7 @@ import { EditarTarifaChoferComponent } from './modales/chofer/editar-tarifa-chof
 import { LiquidacionOpChoferComponent } from './modales/chofer/liquidacion-op-chofer/liquidacion-op-chofer.component';
 import { EditarTarifaProveedorComponent } from './modales/proveedor/editar-tarifa-proveedor/editar-tarifa-proveedor.component';
 import { LiquidacionOpProveedorComponent } from './modales/proveedor/liquidacion-op-proveedor/liquidacion-op-proveedor.component';
+import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 
 
 @NgModule({
@@ -32,7 +33,8 @@ import { LiquidacionOpProveedorComponent } from './modales/proveedor/liquidacion
     EditarTarifaChoferComponent,
     LiquidacionOpChoferComponent,
     EditarTarifaProveedorComponent,
-    LiquidacionOpProveedorComponent
+    LiquidacionOpProveedorComponent,
+    QuincenaPipe   
   ],
   imports: [
     CommonModule,
@@ -42,7 +44,8 @@ import { LiquidacionOpProveedorComponent } from './modales/proveedor/liquidacion
     ReactiveFormsModule,
     SharedModule,
     Ng2SearchPipeModule, 
-    FacturacionModule
+    FacturacionModule,
+    NgxDatatableModule,
   ]
 })
 export class LiquidacionModule { }

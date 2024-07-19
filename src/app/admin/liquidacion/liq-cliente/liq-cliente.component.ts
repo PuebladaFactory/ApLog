@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Pipe, PipeTransform, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
@@ -15,12 +15,30 @@ import { LiquidacionOpComponent } from '../modales/cliente/liquidacion-op/liquid
 import { EditarTarifaComponent } from '../modales/cliente/editar-tarifa/editar-tarifa.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { take } from 'rxjs';
+import { ColumnMode } from '@swimlane/ngx-datatable';
+
+@Pipe({name: 'quincenaPipe'})
+export class QuincenaPipe implements PipeTransform {
+  transform(fecha: string | Date): string {
+    // Convierte la fecha a objeto Date
+    const fechaObj = new Date(fecha);
+    // Obtiene el día del mes
+    const dia = fechaObj.getDate();
+    // Determina si la fecha está en la primera o segunda quincena
+    if (dia <= 15) {
+      return '1° quincena';
+    } else {
+      return '2° quincena';
+    }
+  }
+}
 
 @Component({
   selector: 'app-liq-cliente',
   templateUrl: './liq-cliente.component.html',
   styleUrls: ['./liq-cliente.component.scss']
 })
+
 export class LiqClienteComponent {
 
   @Input() fechasConsulta?: any = {
@@ -28,6 +46,7 @@ export class LiqClienteComponent {
     fechaHasta: 0,
   };
 
+  @ViewChild('tarifaEspecialTemplate', { static: true }) tarifaEspecialTemplate: TemplateRef<any> | undefined;
   btnConsulta:boolean = false;
   searchText!:string;
   searchText2!:string;
@@ -37,6 +56,7 @@ export class LiqClienteComponent {
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
   datosTablaCliente: any[] = [];
+  datosTablaFacturas: any[] = [];
   mostrarTablaCliente: boolean[] = [];
   tablaDetalle: any[] = [];
   tituloFacOpCliente: string = "facturaOpCliente";
@@ -47,7 +67,8 @@ export class LiqClienteComponent {
   form!: any;
   facturaCliente!: FacturaCliente;  
   facturaEditada!: FacturaOpCliente;
-  facturasPorCliente: Map<number, FacturaOpCliente[]> = new Map<number, FacturaOpCliente[]>();
+  //facturasPorCliente: Map<number, FacturaOpCliente[]> = new Map<number, FacturaOpCliente[]>();
+  facturasPorCliente: Map<number, any[]> = new Map();
   indiceSeleccionado!:number;
   idOperaciones: number [] = [];
   facDetallada!: FacturaOpCliente;
@@ -56,7 +77,30 @@ export class LiqClienteComponent {
   swichForm:any;
   edicion:boolean = false;
   tarifaEspecial: boolean = false;
-
+  columnMode = ColumnMode.force;
+  quincenaPipe = new QuincenaPipe();
+  index!:number;
+  columns1 = [ { prop:"", name: ''}, 
+    { prop: 'razonSocial', name: 'Razon Social' },
+    { prop: 'cantOp', name: 'Cant Op' },
+    { prop: 'opSinFacturar', name: 'Sin Facturar' },
+    { prop: 'opFacturadas', name: 'A Cobrar' },
+    { prop: 'total', name: 'Total' },
+    { prop: 'acciones', name: 'Acciones'} 
+  ];
+  columns2 = [
+    { prop: 'fecha', name: 'Fecha' },
+    { prop: 'quincena', name: 'Quincena'},
+    { prop: 'operacion.idOperacion', name: 'Id' },
+    { prop: 'operacion.chofer.nombre', name: 'Chofer' },
+    { prop: 'operacion.km', name: 'Km' },
+    { prop: 'adicional', name: 'Adicionales' },
+    { prop: 'total', name: 'Total' },
+    { prop: 'operacion.tarifaEspecial', name: 'Tarifa Especial'},
+    { prop: 'liquidacion', name: 'Facturado' }
+  ];
+  row1:any = [];
+  row2:any = [];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -142,10 +186,40 @@ export class LiqClienteComponent {
       });
   
       this.datosTablaCliente = Array.from(clientesMap.values());
-      ////console.log()("Datos para la tabla: ", this.datosTablaCliente); 
+      console.log("Datos para la tabla: ", this.datosTablaCliente); 
     }
 
+    this.armarTabla1();
     
+  }
+
+  armarTabla1(){
+    let indice = 0
+    this.row1 = this.datosTablaCliente.map(factura => ({
+      indice: indice ++,
+      idCliente: factura.idCliente,
+      razonSocial: factura.razonSocial,
+      cantOp: factura.cantOp,
+      opSinFacturar: factura.opSinFacturar,
+      opFacturadas: factura.opFacturadas,
+      total: factura.total,
+    }));
+    this.armarTabla2();
+  }
+
+  armarTabla2(){
+    let indice = 0
+    this.row2 = this.$facturasOpCliente.map((factura: { fecha: any; operacion: { idOperacion: any; chofer: { apellido: any; }; km: any; tarifaEspecial: any; }; adicional: any; total: any; liquidacion: any; }) => ({
+      fecha: factura.fecha,
+      quincena: "primera",
+      idOperacion: factura.operacion.idOperacion,
+      chofer: factura.operacion.chofer.apellido,
+      km: factura.operacion.km,
+      adicional: factura.adicional,
+      total: factura.total,
+      tarifaEspecial: factura.operacion.tarifaEspecial,
+      liquidacion: factura.liquidacion,
+    }));
     
   }
  
@@ -169,19 +243,73 @@ export class LiqClienteComponent {
   }
 
   mostrarMasDatos(index: number, cliente:any) {   
+    console.log("llega aca?");
+    console.log("index: ", index);
+    console.log("cliente: ", cliente); 
+    
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaCliente[index] = !this.mostrarTablaCliente[index];
    ////console.log()("CLIENTE: ", cliente);
 
+ /*   if (this.mostrarTablaCliente[index] && !this.facturasPorCliente.has(cliente.idCliente)) {
+    this.cargarFacturas(cliente.idCliente); // Método para cargar las facturas del cliente
+  } */
+
    // Obtener el id del cliente utilizando el índice proporcionado
-   let clienteId = this.datosTablaCliente[index].idCliente;
+   //let clienteId = this.datosTablaCliente[index].idCliente;
+   let clienteId = cliente.idCliente
 
    // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
    let facturasCliente = this.$facturasOpCliente.filter((factura: FacturaOpCliente) => {
        return factura.idCliente === clienteId;
    });
    this.facturasPorCliente.set(clienteId, facturasCliente);
-   console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
+   //console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
+   //console.log("FACTURAS DEL CLIENTE2: ", this.facturasPorCliente);  
+   this.cargarFacturas()
+  }
+
+  cargarFacturas() {
+    const clientesMap = new Map<number, any>();
+
+    if(this.$facturasOpCliente !== null){
+      ////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
+      this.$facturasOpCliente.forEach((factura: FacturaOpCliente) => {
+       
+          clientesMap.set(factura.idCliente, {
+            fecha: factura.fecha,
+            idOperacion: factura.operacion.idOperacion,
+            chofer: factura.operacion.chofer.apellido + factura.operacion.chofer.nombre,
+            km: factura.operacion.km,
+            adicional: factura.adicional,
+            total: factura.total,            
+            liquidacion:factura.liquidacion
+          });
+        
+        
+      /*   if(factura.operacion.tarifaEspecial){
+          const cliente = clientesMap.get(factura.idCliente);
+          cliente.cantOp++;
+          if (factura.liquidacion) {
+            cliente.opFacturadas += factura.total;
+          } else {
+            cliente.opSinFacturar += factura.total;
+          }
+          cliente.total += factura.total;  
+        } */
+        const cliente = clientesMap.get(factura.idCliente);
+        /* cliente.cantOp++;
+        if (factura.liquidacion) {
+          cliente.opFacturadas += factura.total;
+        } else {
+          cliente.opSinFacturar += factura.total;
+        }
+        cliente.total += factura.total; */
+      });
+  
+      this.datosTablaFacturas = Array.from(clientesMap.values());
+      console.log("Datos para la tabla: ", this.datosTablaFacturas); 
+    }
   }
 
   cerrarTabla(index: number){
@@ -202,11 +330,13 @@ export class LiqClienteComponent {
     }
   } 
 
-  liquidarFacCliente(idCliente: any, razonSocial: string, index: number){
+  //liquidarFacCliente(idCliente: any, razonSocial: string, index: number){
+    liquidarFacCliente(row:any, i:any){
     // Obtener las facturas del cliente
     ////console.log()("1: ",this.facturasLiquidadasCliente.length);
-    
-    let facturasIdCliente:any = this.facturasPorCliente.get(idCliente);
+    console.log("fila: ", row);
+    console.log("indice: ", i);
+    /* let facturasIdCliente:any = this.facturasPorCliente.get(idCliente);
     this.razonSocFac = razonSocial;
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasCliente = facturasIdCliente.filter((factura: FacturaOpCliente) => {
@@ -228,7 +358,7 @@ export class LiqClienteComponent {
     ////console.log()("3) Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadasCliente);
     ////console.log()("Total de las facturas liquidadas:", this.totalFacturasLiquidadas);
     ////console.log()("indice: ", this.indiceSeleccionado);
-    this.openModalLiquidacion();
+    this.openModalLiquidacion(); */
   }
   
 
@@ -381,6 +511,15 @@ export class LiqClienteComponent {
         (reason) => {}
       );
     }
+  }
+
+  onActivate(event: any) {
+    // Maneja los eventos de la tabla
+  }
+
+  getRowHeight(row: any): number {
+    // Retorna la altura que consideres adecuada para la fila
+    return 50; // Por ejemplo, 50px
   }
 
 }

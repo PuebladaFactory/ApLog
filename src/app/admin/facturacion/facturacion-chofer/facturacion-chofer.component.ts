@@ -150,7 +150,8 @@ export class FacturacionChoferComponent implements OnInit, AfterViewInit {
   };
 
   mostrarMasDatos(index: number, cliente:any) {   
- 
+   
+    
    if (this.datosTablaChofer && this.datosTablaChofer[index]) {
     this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
     const choferId = this.datosTablaChofer[index].idChofer;
