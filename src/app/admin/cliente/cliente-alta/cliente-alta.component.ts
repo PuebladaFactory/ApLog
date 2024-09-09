@@ -26,7 +26,12 @@ export class ClienteAltaComponent implements OnInit {
     this.form = this.fb.group({      
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
       cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
-      direccion: ["",[Validators.required, Validators.maxLength(50)]],      
+      direccion: ["",[Validators.required, Validators.maxLength(50)]],  
+      tarifaTipo: this.fb.group({
+        general: [true],  // Seleccionado por defecto
+        especial: [false],
+        eventual: [false]
+      })    
     });
 
     this.formContacto = this.fb.group({      
@@ -47,7 +52,7 @@ export class ClienteAltaComponent implements OnInit {
       this.cliente.idCliente = new Date().getTime();
       this.cliente.contactos = this.contactos;
       //console.log()(this.cliente);     
-      
+      this.cliente.tarifaTipo = this.form.get('tarifaTipo')?.value; // Asigna el tipo de tarifa
       this.addItem();        
       this.activeModal.close();    
     } else{
@@ -63,6 +68,17 @@ export class ClienteAltaComponent implements OnInit {
     
    }
 
+   onTarifaTipoChange(tipo: string) {
+    const tarifaTipoControl = this.form.get('tarifaTipo');
+    if (tarifaTipoControl) {
+      tarifaTipoControl.patchValue({
+        general: tipo === 'general',
+        especial: tipo === 'especial',
+        eventual: tipo === 'eventual'
+      });
+    }
+  }
+
    addItem(): void {
     Swal.fire({
       title: "¿Confirmar el alta del Cliente?",
@@ -74,7 +90,7 @@ export class ClienteAltaComponent implements OnInit {
       confirmButtonText: "Confirmar",
       cancelButtonText: "Cancelar"
     }).then((result) => {
-      if (result.isConfirmed) {
+      if (result.isConfirmed) {        
         this.storageService.addItem(this.componente, this.cliente)
         Swal.fire({
           title: "Confirmado",
@@ -88,11 +104,6 @@ export class ClienteAltaComponent implements OnInit {
         
       }
     });   
-
-    
-    /* this.form.reset() 
-    this.ngOnInit() */
-    //this.router.navigate(['/clientes/listado'])   
   }
 
   toggle() {

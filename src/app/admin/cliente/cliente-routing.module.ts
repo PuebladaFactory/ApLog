@@ -5,6 +5,7 @@ import { ClienteAltaComponent } from './cliente-alta/cliente-alta.component';
 import { ClienteControlComponent } from './cliente-control/cliente-control.component';
 import { ClienteListadoComponent } from './cliente-listado/cliente-listado.component';
 import { ClienteTarifaComponent } from './cliente-tarifa/cliente-tarifa.component';
+import { ClienteTarifaPersonalizadaComponent } from './cliente-tarifa-personalizada/cliente-tarifa-personalizada.component';
 
 const routes: Routes = [
   {path: '', component:ClienteControlComponent,
@@ -13,6 +14,7 @@ const routes: Routes = [
     
     {path: 'listado', component:ClienteListadoComponent},
     {path: 'tarifa', component:ClienteTarifaComponent},
+    {path: 'personalizada', component:ClienteTarifaPersonalizadaComponent},
 ]  },
   
 ];

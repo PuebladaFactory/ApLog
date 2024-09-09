@@ -163,6 +163,24 @@ getByFieldValue(componente:string, campo:string, value:any){
           );
       }
       
+      obtenerElementoMasReciente(componente:string, orden:string, limite:number): Observable<any | null> {
+        let dataCollection = `/Vantruck/datos/${componente}`;
+        return this.firestore2.collection(dataCollection, ref => ref          
+          .orderBy(orden, 'desc')
+          .limit(limite))
+          .snapshotChanges()
+          .pipe(
+            map(actions => {
+              if (actions.length === 0) {
+                return null;
+              } else {
+                const data = actions[0].payload.doc.data() as any;
+                data.id = actions[0].payload.doc.id;
+                return data;
+              }
+            })
+          );
+      }
   
 
 

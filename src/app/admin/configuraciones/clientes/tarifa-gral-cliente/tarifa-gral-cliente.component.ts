@@ -1,20 +1,17 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { AdicionalKm, AdicionalTarifa, TarifaCliente, TarifaEspecial } from 'src/app/interfaces/tarifa-cliente';
-import { CargasGenerales, CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
+import { AdicionalTarifa, CargasGenerales, CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-modal-alta-tarifa',
-  templateUrl: './modal-alta-tarifa.component.html',
-  styleUrls: ['./modal-alta-tarifa.component.scss']
+  selector: 'app-tarifa-gral-cliente',
+  templateUrl: './tarifa-gral-cliente.component.html',
+  styleUrls: ['./tarifa-gral-cliente.component.scss']
 })
-export class ModalAltaTarifaComponent implements OnInit {
- tarifaForm: FormGroup;
+export class TarifaGralClienteComponent implements OnInit {
+
+  tarifaForm: FormGroup;
   tarifasGralCliente!: TarifaGralCliente []; // Este es el objeto que obtienes de Firebase
   ultTarifa!: TarifaGralCliente;
   porcentajeAumento: FormControl = new FormControl(0); // Para el aumento porcentual

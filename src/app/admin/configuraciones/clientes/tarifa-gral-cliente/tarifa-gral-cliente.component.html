@@ -1,0 +1,37 @@
+<h2>Tarifa General Cliente</h2>
+<div>
+  <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th><input type="checkbox" (change)="onSeleccionarTodosChange($event)" formControlName="seleccionarTodos"></th>
+          <th>Categoria</th>
+          <th>Nombre</th>
+          <th>Ultima Tarifa</th>
+          <th>Diferencia</th>
+          <th>Nueva Tarifa</th>
+        </tr>
+      </thead>
+      <tbody formArrayName="filas">
+        <tr *ngFor="let fila of filas.controls; let i = index" [formGroupName]="i">
+          <td><input type="checkbox" formControlName="seleccionado"></td>
+          <td>{{ fila.get('categoria')?.value }}</td>
+          <td><input type="text" formControlName="nombre"></td>
+          <td><input type="text" formControlName="ultimaTarifa" ></td>
+          <td><input type="text" formControlName="diferencia" ></td>
+          <td><input type="text" formControlName="nuevaTarifa"></td>
+        </tr>
+      </tbody>
+    </table>
+  
+    <div class="form-group">
+      <label>Generar Nueva Tarifa:</label><br>
+      <button type="button" (click)="onGenerarNuevaTarifaManual()">Manual</button>
+      <button type="button" (click)="onGenerarNuevaTarifaAutomatica()">Automática</button>
+      <input type="number" [formControl]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento">
+      <button type="button" (click)="calcularNuevaTarifaPorcentaje()">Aplicar Porcentaje</button>
+    </div>
+  
+    <button type="submit" class="btn btn-primary">Guardar Tarifa</button>
+  </form>
+</div>

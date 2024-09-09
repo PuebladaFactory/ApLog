@@ -1,6 +1,6 @@
 
 <div class="d-flex justify-content-between mt-3">
-    <h1>Clientes</h1>
+    <!-- <h1>Clientes</h1> -->
     <app-btn-leer  name="cliente" (click)="openModal()"></app-btn-leer>
 </div>
 <!-- ////////////////////////////////////////////////////////////// -->
@@ -103,7 +103,24 @@ class="dark"
                         <div class="input-group">
                           <input formControlName="cuit" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
                         </div>
-                    </div>             
+                    </div> 
+                    <div formGroupName="tarifaTipo">
+                        <div class="form-check form-switch">
+                          <input formControlName="general" class="form-check-input" type="checkbox" 
+                                (change)="onTarifaTipoChange('general')" id="tarifaGeneral" [ngClass]="{'isDisabled': soloVista}">
+                          <label class="form-check-label" for="tarifaGeneral" [ngClass]="{'isDisabled': soloVista}" >General</label>
+                        </div>
+                        <div class="form-check form-switch">
+                          <input formControlName="especial" class="form-check-input" type="checkbox" 
+                                (change)="onTarifaTipoChange('especial')" id="tarifaEspecial" [ngClass]="{'isDisabled': soloVista}">
+                          <label class="form-check-label" for="tarifaEspecial" [ngClass]="{'isDisabled': soloVista}">Especial</label>
+                        </div>
+                        <div class="form-check form-switch">
+                          <input formControlName="eventual" class="form-check-input" type="checkbox" 
+                                (change)="onTarifaTipoChange('eventual')" id="tarifaEventual" [ngClass]="{'isDisabled': soloVista}">
+                          <label class="form-check-label" for="tarifaEventual" [ngClass]="{'isDisabled': soloVista}">Eventual</label>
+                        </div>
+                      </div>          
                 </form>    
                 <div class="d-flex justify-content-between">
                     <h3 class="mt-3">Contactos: </h3>                       

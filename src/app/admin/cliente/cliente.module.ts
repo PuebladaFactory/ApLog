@@ -11,6 +11,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ClienteTarifaComponent } from './cliente-tarifa/cliente-tarifa.component';
 import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.component';
+import { ClienteTarifaPersonalizadaComponent } from './cliente-tarifa-personalizada/cliente-tarifa-personalizada.component';
 
 
 
@@ -23,7 +24,7 @@ import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.
     ClienteControlComponent,
     ClienteListadoComponent,
     ClienteAltaComponent,    
-    ClienteTarifaComponent, ModalAltaTarifaComponent, 
+    ClienteTarifaComponent, ModalAltaTarifaComponent, ClienteTarifaPersonalizadaComponent, 
     
 
   ],

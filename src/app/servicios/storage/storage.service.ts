@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, take } from 'rxjs';
 import { DbFirestoreService } from '../database/db-firestore.service';
 
 
@@ -123,6 +123,9 @@ export class StorageService {
 
   private _tarifaProveedorHistorial$ = new BehaviorSubject<any>(this.loadInfo('tarifaProveedorHistorial') || []);
   public tarifaProveedorHistorial$ = this._tarifaProveedorHistorial$.asObservable();
+  
+  private _ultTarifaGralCliente$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaGralCliente') || []);
+  public ultTarifaGralCliente$ = this._ultTarifaGralCliente$.asObservable();
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -289,6 +292,10 @@ export class StorageService {
         break;
       }
 
+      case "ultTarifaGralCliente":{
+        this._ultTarifaGralCliente$.next(data)
+        break;
+      }
       /*case "logger": {
         this._logger$.next(data)
         break;
@@ -365,7 +372,7 @@ export class StorageService {
     //this.getByDateValue("facturaOpChofer","fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer")
     //this.getByDateValue("facturaOpCliente","fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente")
     //this.getByDateValue("facturaOpProveedor","fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor")
-
+    this.getUltElemColeccion("tarifasGralCliente", "idTarifa", "desc", 1,"ultTarifaGralCliente")
   }
 
   // metodo initializer si el rol es user
@@ -465,6 +472,17 @@ export class StorageService {
         })
       }
 
+      getUltElemColeccion(componente:string, campo:string, orden:string, id:number, titulo:string){
+        console.log(" storage getUltElemColeccion ", componente, campo, orden, id)
+        this.dbFirebase
+        .obtenerElementoMasReciente(componente,campo, id )
+        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+        .subscribe(data => {      
+            //this.tarifasGralCliente = data;              
+            this.setInfo(titulo , data)
+        });            
+      }
+
 
       public addItem(componente: string, item: any): void {
         console.log("storage add item", componente, item);
@@ -500,6 +518,9 @@ export class StorageService {
             break;
           case "operacionesActivas":
             this.getAllSorted("operacionesActivas", 'fecha', 'desc');
+            break;
+          case "tarifasGralCliente":
+            this.getUltElemColeccion("tarifasGralCliente", "idTarifa", "desc", 1,"ultTarifaGralCliente")
             break;
           /* case "tarifasChofer":
             this.getByFieldValue("tarifasChofer", 'fecha', 'asc');

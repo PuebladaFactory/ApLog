@@ -40,7 +40,7 @@ allColumns = [
   { prop: 'razonSocial', name: 'Razon Social', selected: true, flexGrow:2  },          
   { prop: 'cuit', name: 'CUIT', selected: true, flexGrow:2  },
   { prop: 'direccion', name: 'Direccion', selected: true, flexGrow:2 },
-  
+  { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow: 2 },
   { prop: 'contacto', name: 'Contacto', selected: true, flexGrow:2  },    
   { prop: 'puesto', name: 'Puesto', selected: true, flexGrow:2  },    
   { prop: 'telefono', name: 'N° Contacto', selected: true, flexGrow:2  },    
@@ -66,7 +66,12 @@ secondFilter = '';
     this.form = this.fb.group({      
       razonSocial: [""], 
       direccion: [""],
-      cuit: [""],      
+      cuit: [""],    
+      tarifaTipo: this.fb.group({
+        general: [false], 
+        especial: [false],
+        eventual: [false]
+      })      
     })
 
     this.formContacto = this.fb.group({
@@ -103,10 +108,13 @@ secondFilter = '';
     this.form.patchValue({
       razonSocial: this.clienteEditar.razonSocial,
       direccion: this.clienteEditar.direccion,
-      cuit: this.clienteEditar.cuit
-      /* email: this.clienteEditar.email,
-      telefono: this.clienteEditar.telefono, */
-    })
+      cuit: this.clienteEditar.cuit,
+      tarifaTipo: {
+        general: this.clienteEditar.tarifaTipo.general, 
+        especial: this.clienteEditar.tarifaTipo.especial,
+        eventual: this.clienteEditar.tarifaTipo.eventual,
+      }
+    });
   }
 
   seleccionarCliente(row:any){ 
@@ -150,6 +158,7 @@ secondFilter = '';
     this.clienteEditar.razonSocial = this.form.value.razonSocial;
     this.clienteEditar.direccion = this.form.value.direccion;
     this.clienteEditar.cuit = this.form.value.cuit;
+    this.clienteEditar.tarifaTipo = this.form.get('tarifaTipo')?.value; // Asigna el tipo de tarifa
     ////console.log()("estos son los contactos: ", this.formContacto.value);
     ////console.log()("estos es el clienteEditar: ", this.clienteEditar);    
     this.storageService.updateItem(this.componente, this.clienteEditar);
@@ -280,6 +289,7 @@ secondFilter = '';
         razonSocial: cliente.razonSocial,
         direccion: cliente.direccion,
         cuit: cliente.cuit,
+        tarifa: cliente.tarifaTipo.general ? "General" : cliente.tarifaTipo.especial ? "Especial" : "Eventual",
         contacto: cliente.contactos.length > 0 ? cliente.contactos[0].apellido : "Sin Datos",
         puesto: cliente.contactos.length > 0 ? cliente.contactos[0].puesto : "Sin Datos" ,
         telefono: cliente.contactos.length > 0 ? cliente.contactos[0].telefono : "Sin Datos"  ,
@@ -349,6 +359,17 @@ secondFilter = '';
   
   toogleAjustes(){
     this.ajustes = !this.ajustes;
+  }
+
+  onTarifaTipoChange(tipo: string) {
+    const tarifaTipoControl = this.form.get('tarifaTipo');
+    if (tarifaTipoControl) {
+      tarifaTipoControl.patchValue({
+        general: tipo === 'general',
+        especial: tipo === 'especial',
+        eventual: tipo === 'eventual'
+      });
+    }
   }
 
 }

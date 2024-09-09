@@ -1,0 +1,8 @@
+
+  <div class="tab-container">
+      <div class="tab" [class.active]="mostrarTarifa" (click)="mostrarTarifaGral()">Tarifa General</div>
+      <div class="tab" [class.active]="mostrarHistorial" (click)="mostrarHistorialTarifas()">Historial</div>      
+  </div>
+
+  <app-tarifa-gral-cliente *ngIf="mostrarTarifa"></app-tarifa-gral-cliente>
+  <app-tarifa-gral-cliente-hist *ngIf="mostrarHistorial"></app-tarifa-gral-cliente-hist>

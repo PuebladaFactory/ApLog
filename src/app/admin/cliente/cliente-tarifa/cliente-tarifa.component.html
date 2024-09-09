@@ -1,11 +1,11 @@
 
-    <h1 class="mt-3">Tarifas Cliente</h1>
+    <!-- <h1 class="mt-3">Tarifas Cliente</h1> -->
         <div class="row mt-4">
             <div class="col-3 ">
                 <h2>Seleccionar Cliente: </h2>
                 <select class="form-select form-select-md mb-3 w-50" (change)="changeCliente($event)">
                     <option selected>Seleccione</option>
-                    <option *ngFor="let cliente of $clientes" [value]="cliente.idCliente">
+                    <option *ngFor="let cliente of $clientesEsp" [value]="cliente.idCliente">
                       {{cliente.razonSocial}} 
                     </option>
                   </select>

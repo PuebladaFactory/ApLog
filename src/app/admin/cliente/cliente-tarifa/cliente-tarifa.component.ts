@@ -77,6 +77,7 @@ encapsulation!: ViewEncapsulation.None;
 ajustes: boolean = false;
 firstFilter = '';
 secondFilter = '';
+$clientesEsp! : Cliente [];
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -114,7 +115,12 @@ this.acompanianteEditForm = this.fb.group({
      this.historialTarifas$ = this.storageService.historialTarifasClientes$;   
      this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
-    })          
+      this.$clientesEsp = this.$clientes.filter((cliente:Cliente)=>{
+        return cliente.tarifaTipo.especial === true 
+      })
+      console.log(this.$clientesEsp);
+      
+    })             
    }
 
    changeCliente(e: any) {    
@@ -122,7 +128,7 @@ this.acompanianteEditForm = this.fb.group({
     let id = Number(e.target.value);
     ////console.log()("1)",id);
     
-    this.clienteSeleccionado = this.$clientes.filter((cliente:Cliente)=>{
+    this.clienteSeleccionado = this.$clientesEsp.filter((cliente:Cliente)=>{
       ////console.log()("2", cliente.idCliente, id);
       return cliente.idCliente === id
     })
@@ -136,11 +142,11 @@ this.acompanianteEditForm = this.fb.group({
     //console.log(this.clienteSeleccionado[0].idCliente);    
     this.storageService.getByFieldValueLimit(this.componente, "idCliente", this.clienteSeleccionado[0].idCliente,5);
     this.storageService.historialTarifasClientes$.subscribe(data =>{
-      //console.log("1) data:",data);
+      console.log("1) data:",data);
       this.$tarifasCliente = data;
       //console.log()(this.$tarifasCliente);
       this.$tarifasCliente.sort((x:TarifaCliente, y:TarifaCliente) => y.idTarifa - x.idTarifa);
-      //console.log("2) tarifas del Cliente", this.$tarifasCliente);
+      console.log("2) tarifas del Cliente", this.$tarifasCliente);
       this.armarTabla()
     })   
   }
