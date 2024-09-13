@@ -108,22 +108,22 @@
                     <p class="mb-1"><span class="fw-bold">Acompañante:</span> {{ detalleOp.acompaniante  ? 'Si' : "No" }}</p>
                 </div> 
                 <div>                    
-                    <p class="mb-1"><span class="fw-bold">Tarifa Especial:</span> {{ detalleOp.tarifaEspecial  ? 'Si' : "No" }}</p>
+                    <p class="mb-1"><span class="fw-bold">Tarifa Eventual:</span> {{ detalleOp.tarifaEventual  ? 'Si' : "No" }}</p>
                 </div>
-                <div *ngIf="detalleOp.tarifaEspecial && detalleOp.tEspecial !== null" class="ms-3">
+                <div *ngIf="detalleOp.tarifaEventual && detalleOp.tEventual !== null" class="ms-3">
                     <p class="mb-1"><span class="fw-bold">Chofer:</span></p>
                     <div class="ms-3">                        
-                        <p class="mb-1"><span class="fw-bold">Tarifa Especial Concepto:</span> {{detalleOp.tEspecial.chofer.concepto}}</p>
+                        <p class="mb-1"><span class="fw-bold">Tarifa Eventual Concepto:</span> {{detalleOp.tEventual.chofer.concepto}}</p>
                     </div>
                     <div class="ms-3">                        
-                        <p class="mb-1"><span class="fw-bold">Tarifa Especial Valor:</span> {{detalleOp.tEspecial.chofer.valor}}</p>          
+                        <p class="mb-1"><span class="fw-bold">Tarifa Eventual Valor:</span> {{detalleOp.tEventual.chofer.valor}}</p>          
                     </div>
                     <p class="mb-1"><span class="fw-bold">Cliente:</span></p>          
                     <div class="ms-3">                        
-                        <p class="mb-1"><span class="fw-bold">Tarifa Especial Concepto:</span> {{detalleOp.tEspecial.cliente.concepto}}</p>
+                        <p class="mb-1"><span class="fw-bold">Tarifa Eventual Concepto:</span> {{detalleOp.tEventual.cliente.concepto}}</p>
                     </div>
                     <div class="ms-3">                        
-                        <p class="mb-1"><span class="fw-bold">Tarifa Especial Valor:</span> {{detalleOp.tEspecial.cliente.valor}}</p>
+                        <p class="mb-1"><span class="fw-bold">Tarifa Eventual Valor:</span> {{detalleOp.tEventual.cliente.valor}}</p>
                     </div>
                 </div>
                 <div>
@@ -206,7 +206,7 @@
                             </option>
                       </select>
                     </div>              
-                    <div class="form-group" *ngIf="!opEditar.tarifaEspecial">
+                    <div class="form-group" *ngIf="!opEditar.tarifaEventual">
                     <label for="Acompaniante">Acompañante</label>
                     <select class="form-select mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
                         <option value="auto">{{opEditar.acompaniante? "Si" : "No"}}</option>
@@ -215,36 +215,36 @@
                     </select>
                     </div>   
                     <div class="form-group">
-                        <label for="tarifaEspecial">Tarifa Especial</label>
+                        <label for="tarifaEspecial">Tarifa Eventual</label>
                         <select class="form-select mb-3" aria-label="Default select example" (change)="selectTarifaEspecial($event)">
-                            <option value="auto">{{opEditar.tarifaEspecial? "Si" : "No"}}</option>
+                            <option value="auto">{{opEditar.tarifaEventual? "Si" : "No"}}</option>
                             <option value="si">Si</option>
                             <option value="no">No</option>              
                         </select>
                     </div>
-                    <div *ngIf="opEditar.tarifaEspecial || tarifaEspecial" class="border-top border-bottom my-2">
+                    <div *ngIf="opEditar.tarifaEventual || tarifaEspecial" class="border-top border-bottom my-2">
                         <h6 class="mt-2">Chofer:</h6>
                         <div class="form-group">
-                            <label for="Fecha">Tarifa Especial Concepto</label>
+                            <label for="Fecha">Tarifa Eventual Concepto</label>
                             <div class="input-group">
                                 <input formControlName="choferConcepto" class="form-control edicion" required type="text">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="Fecha">Tarifa Especial Valor</label>
+                            <label for="Fecha">Tarifa Eventual Valor</label>
                             <div class="input-group">
                               <input formControlName="choferValor" class="form-control edicion" required type="number">
                             </div>
                         </div>
                         <h6 class="my-2">Cliente:</h6>
                         <div class="form-group">
-                            <label for="Fecha">Tarifa Especial Concepto</label>
+                            <label for="Fecha">Tarifa Eventual Concepto</label>
                             <div class="input-group">
                                 <input formControlName="clienteConcepto" class="form-control edicion" required type="text">
                             </div>
                         </div>
                         <div class="form-group mb-2">
-                            <label for="Fecha">Tarifa Especial Valor</label>
+                            <label for="Fecha">Tarifa Eventual Valor</label>
                             <div class="input-group">
                                 <input formControlName="clienteValor" class="form-control edicion" required type="number">
                             </div>

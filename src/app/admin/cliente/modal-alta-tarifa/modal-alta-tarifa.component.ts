@@ -213,7 +213,8 @@ export class ModalAltaTarifaComponent implements OnInit {
     const tipo: TarifaTipo = {
       general: true, // Este tipo de tarifa es general
       especial: false,
-      eventual: false
+      eventual: false,
+      personalizada: false,
     };
 
     // Construcción del objeto `TarifaGralCliente`
@@ -223,7 +224,8 @@ export class ModalAltaTarifaComponent implements OnInit {
       fecha: new Date().toISOString().split('T')[0],
       cargasGenerales: cargasGenerales,
       adicionales: adicionales,
-      tipo: tipo
+      tipo: tipo,
+      idCliente: null,
     };
 
     console.log(this.nuevaTarifaGral);

@@ -32,14 +32,14 @@
                 </select>
               </div>
               <div class="form-group">
-                <label for="TarifaEspecial">TarifaEspecial</label>
-                <select formControlName="tarifaEspecial" class="form-select mb-3" aria-label="Default select example" (change)="selectTarifaEspecial($event)">
+                <label for="TarifaEventual">Tarifa Eventual</label>
+                <select formControlName="tarifaEventual" class="form-select mb-3" aria-label="Default select example" (change)="selectTarifaEventual($event)">
                   <option value="">Seleccione</option>
                   <option value="si">Si</option>
                   <option value="no">No</option>
                 </select>
               </div>
-              <div *ngIf="!tarifaEspecial" class="form-group mt-2">
+              <div *ngIf="!tarifaEventual" class="form-group mt-2">
                 <label for="Acompaniante">Acompañante</label>
                 <select formControlName="acompaniante" class="form-select mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
                   <option value="">Seleccione</option>
@@ -48,29 +48,29 @@
                 </select>
               </div>
               <!-- //////////////////////////////////////////////////////       -->
-              <div *ngIf="tarifaEspecial" class="border-top border-bottom my-2">
+              <div *ngIf="tarifaEventual" class="border-top border-bottom my-2">
                   <h6 class="mt-2">Chofer:</h6>
                   <div class="form-group">
-                      <label for="Fecha">Tarifa Especial Concepto</label>
+                      <label for="Fecha">Tarifa Eventual Concepto</label>
                       <div class="input-group">
                         <input formControlName="choferConcepto" class="form-control edicion" required type="text">
                       </div>
                   </div>
                   <div class="form-group">
-                      <label for="Fecha">Tarifa Especial Valor</label>
+                      <label for="Fecha">Tarifa Eventual Valor</label>
                       <div class="input-group">
                         <input formControlName="choferValor" class="form-control edicion" required type="number">
                       </div>
                   </div>
                   <h6 class="my-2">Cliente:</h6>
                   <div class="form-group">
-                      <label for="Fecha">Tarifa Especial Concepto</label>
+                      <label for="Fecha">Tarifa Eventual Concepto</label>
                       <div class="input-group">
                         <input formControlName="clienteConcepto" class="form-control edicion" required type="text">
                       </div>
                   </div>
                   <div class="form-group mb-2">
-                      <label for="Fecha">Tarifa Especial Valor</label>
+                      <label for="Fecha">Tarifa Eventual Valor</label>
                       <div class="input-group">
                         <input formControlName="clienteValor" class="form-control edicion" required type="number">
                       </div>

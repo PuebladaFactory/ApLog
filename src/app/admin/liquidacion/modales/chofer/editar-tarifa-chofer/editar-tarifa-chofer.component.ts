@@ -47,7 +47,7 @@ export class EditarTarifaChoferComponent implements OnInit {
   ngOnInit(): void {
    console.log(this.fromParent);    
    this.facDetallada = this.fromParent.factura;
-   this.swich = this.facDetallada.operacion.tarifaEspecial;
+   this.swich = this.facDetallada.operacion.tarifaEventual;
    this.ultimaTarifa = this.fromParent.tarifaAplicada;
    /* this.storageService.historialTarifas$.subscribe(data => {
     //this.$tarifas = data.filter((tarifa: { idTarifa: number; }) => tarifa.idTarifa === factura.idTarifa);
@@ -70,10 +70,10 @@ export class EditarTarifaChoferComponent implements OnInit {
       valorPrimerSector: this.ultimaTarifa.km.primerSector.valor,
       distanciaIntervalo: this.ultimaTarifa.km.sectoresSiguientes.intervalo,
       valorIntervalo: this.ultimaTarifa.km.sectoresSiguientes.valor,
-      tarifaEspecial: this.facDetallada.operacion.tarifaEspecial,
+      tarifaEspecial: this.facDetallada.operacion.tarifaEventual,
     });
     this.swichForm.patchValue({
-      tarifaEspecial: this.facDetallada.operacion.tarifaEspecial,
+      tarifaEspecial: this.facDetallada.operacion.tarifaEventual,
     }) 
     //console.log()(factura.operacion.tarifaEspecial);
     
@@ -152,14 +152,14 @@ export class EditarTarifaChoferComponent implements OnInit {
       this.armarTarifaEspecial();
     }     
     //console.log("NUEVA TARIFA", this.ultimaTarifa);    
-    this.facturaEditada.operacion.tarifaEspecial = this.swich;
+    this.facturaEditada.operacion.tarifaEventual = this.swich;
     this.facturaEditada.idTarifa = this.ultimaTarifa.idTarifa
     //console.log("NUEVA operacion con nueva TARIFA", this.facturaEditada);    
   }
 
   armarTarifaEspecial(){
-    this.facturaEditada.operacion.tEspecial.chofer.concepto = this.tarifaEditForm.value.concepto;
-    this.facturaEditada.operacion.tEspecial.chofer.valor = this.tarifaEditForm.value.valor;
+    this.facturaEditada.operacion.tEventual.chofer.concepto = this.tarifaEditForm.value.concepto;
+    this.facturaEditada.operacion.tEventual.chofer.valor = this.tarifaEditForm.value.valor;
   }
 
 }

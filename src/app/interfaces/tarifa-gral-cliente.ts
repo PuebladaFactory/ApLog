@@ -5,6 +5,7 @@ export interface TarifaGralCliente {
     cargasGenerales: CargasGenerales;
     adicionales: AdicionalTarifa;
     tipo: TarifaTipo;
+    idCliente: number|null;
 }
 
 export interface CargasGenerales {
@@ -42,6 +43,7 @@ export interface AdicionalKm {
 export interface TarifaTipo {
     general: boolean;
     especial: boolean;
-    eventual: boolean;    
+    eventual: boolean;   
+    personalizada: boolean; 
 }
 

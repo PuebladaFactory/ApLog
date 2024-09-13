@@ -171,7 +171,7 @@ secondFilter = '';
       marca:this.choferEditar.vehiculo.marca,
       modelo: this.choferEditar.vehiculo.modelo,
     });
-    this.categoriaSeleccionada = this.choferEditar.vehiculo.categoria;
+    //this.categoriaSeleccionada = this.choferEditar.vehiculo.categoria; ///////////////////////////////////////////
     this.tipoCombustible = this.choferEditar.vehiculo.tipoCombustible;
     this.tarjetaCombustible = this.choferEditar.vehiculo.tarjetaCombustible;
     this.publicidad = this.choferEditar.vehiculo.publicidad;
@@ -263,7 +263,8 @@ secondFilter = '';
 
   datosVehiculo() {
     this.vehiculo = this.vehiculoForm.value;
-    this.vehiculo.categoria = this.categoriaSeleccionada;
+    //this.vehiculo.categoria = this.categoriaSeleccionada;
+    this.vehiculo.categoria = [];
     this.vehiculo.tipoCombustible = this.tipoCombustible;
     this.vehiculo.tarjetaCombustible = this.tarjetaCombustible;
     this.vehiculo.publicidad = this.publicidad

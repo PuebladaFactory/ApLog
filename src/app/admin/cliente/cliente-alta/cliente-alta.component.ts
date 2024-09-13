@@ -3,6 +3,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente, Contacto } from 'src/app/interfaces/cliente';
+import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -18,6 +19,7 @@ export class ClienteAltaComponent implements OnInit {
   componente:string = "clientes"
   form:any;
   formContacto:any;
+  formTipoTarifa:any;
   cliente!: Cliente;
   contactos: Contacto[] = [];
   mostrarFormulario: boolean = false;
@@ -26,13 +28,15 @@ export class ClienteAltaComponent implements OnInit {
     this.form = this.fb.group({      
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
       cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
-      direccion: ["",[Validators.required, Validators.maxLength(50)]],  
-      tarifaTipo: this.fb.group({
-        general: [true],  // Seleccionado por defecto
-        especial: [false],
-        eventual: [false]
-      })    
+      direccion: ["",[Validators.required, Validators.maxLength(50)]],        
     });
+
+    this.formTipoTarifa = this.fb.group({
+      general: [true],  // Seleccionado por defecto
+      especial: [false],
+      eventual: [false],
+      personalizada: [false],
+    })    
 
     this.formContacto = this.fb.group({      
       puesto: [""], 
@@ -47,12 +51,14 @@ export class ClienteAltaComponent implements OnInit {
 
    onSubmit(){
     ////console.log()(new Date().getTime());   
+    const tarifaSeleccionada = this.getTarifaTipo();    
     if (this.form.valid) {
       this.cliente = this.form.value
       this.cliente.idCliente = new Date().getTime();
       this.cliente.contactos = this.contactos;
       //console.log()(this.cliente);     
-      this.cliente.tarifaTipo = this.form.get('tarifaTipo')?.value; // Asigna el tipo de tarifa
+      this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
+      //console.log(this.cliente);      
       this.addItem();        
       this.activeModal.close();    
     } else{
@@ -64,20 +70,31 @@ export class ClienteAltaComponent implements OnInit {
 //        
       });
 
-    }
+    } 
     
    }
 
-   onTarifaTipoChange(tipo: string) {
-    const tarifaTipoControl = this.form.get('tarifaTipo');
-    if (tarifaTipoControl) {
-      tarifaTipoControl.patchValue({
-        general: tipo === 'general',
-        especial: tipo === 'especial',
-        eventual: tipo === 'eventual'
-      });
-    }
+   onTarifaTipoChange(tipoSeleccionado: string) {
+    // Resetea los demás switches a false, excepto el seleccionado
+    this.formTipoTarifa.patchValue({
+      general: tipoSeleccionado === 'general',
+      especial: tipoSeleccionado === 'especial',
+      eventual: tipoSeleccionado === 'eventual',
+      personalizada: tipoSeleccionado === 'personalizada'
+    });
   }
+
+    // Método para obtener la selección actual del formulario
+    getTarifaTipo(): TarifaTipo {
+      const formValue = this.formTipoTarifa.value;
+      const tarifaTipo: TarifaTipo = {
+        general: formValue.general,
+        especial: formValue.especial,
+        eventual: formValue.eventual,
+        personalizada: formValue.personalizada
+      };
+      return tarifaTipo;
+    }
 
    addItem(): void {
     Swal.fire({

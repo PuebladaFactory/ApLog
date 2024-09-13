@@ -126,6 +126,9 @@ export class StorageService {
   
   private _ultTarifaGralCliente$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaGralCliente') || []);
   public ultTarifaGralCliente$ = this._ultTarifaGralCliente$.asObservable();
+
+  private _ultTarifaEspCliente$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaEspCliente') || []);
+  public ultTarifaEspCliente$ = this._ultTarifaEspCliente$.asObservable();
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -296,6 +299,12 @@ export class StorageService {
         this._ultTarifaGralCliente$.next(data)
         break;
       }
+
+      case "ultTarifaEspCliente":{
+        this._ultTarifaEspCliente$.next(data)
+        break;
+      }
+
       /*case "logger": {
         this._logger$.next(data)
         break;
@@ -478,7 +487,7 @@ export class StorageService {
         .obtenerElementoMasReciente(componente,campo, id )
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
-            //this.tarifasGralCliente = data;              
+            console.log(data);            
             this.setInfo(titulo , data)
         });            
       }
@@ -521,6 +530,9 @@ export class StorageService {
             break;
           case "tarifasGralCliente":
             this.getUltElemColeccion("tarifasGralCliente", "idTarifa", "desc", 1,"ultTarifaGralCliente")
+            break;
+          case "tarifasEspCliente":
+            this.getUltElemColeccion("tarifasEspCliente", "idTarifa", "desc", 1,"ultTarifaEspCliente")
             break;
           /* case "tarifasChofer":
             this.getByFieldValue("tarifasChofer", 'fecha', 'asc');

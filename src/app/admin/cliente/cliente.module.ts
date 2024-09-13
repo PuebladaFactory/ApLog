@@ -12,6 +12,8 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ClienteTarifaComponent } from './cliente-tarifa/cliente-tarifa.component';
 import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.component';
 import { ClienteTarifaPersonalizadaComponent } from './cliente-tarifa-personalizada/cliente-tarifa-personalizada.component';
+import { ClienteTarifaGralComponent } from './cliente-tarifa-gral/cliente-tarifa-gral.component';
+import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/cliente-tarifa-especial.component';
 
 
 
@@ -24,7 +26,7 @@ import { ClienteTarifaPersonalizadaComponent } from './cliente-tarifa-personaliz
     ClienteControlComponent,
     ClienteListadoComponent,
     ClienteAltaComponent,    
-    ClienteTarifaComponent, ModalAltaTarifaComponent, ClienteTarifaPersonalizadaComponent, 
+    ClienteTarifaComponent, ModalAltaTarifaComponent, ClienteTarifaPersonalizadaComponent, ClienteTarifaGralComponent, ClienteTarifaEspecialComponent, 
     
 
   ],

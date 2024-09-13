@@ -12,6 +12,9 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ChoferesTarifaComponent } from './choferes-tarifa/choferes-tarifa.component';
 import { ChoferesLegajoComponent } from './choferes-legajo/choferes-legajo.component';
 import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.component';
+import { ChoferesTarifaGralComponent } from './choferes-tarifa-gral/choferes-tarifa-gral.component';
+import { ChoferesTarifaEspecialComponent } from './choferes-tarifa-especial/choferes-tarifa-especial.component';
+import { ChoferesTarifaPersonalizadaComponent } from './choferes-tarifa-personalizada/choferes-tarifa-personalizada.component';
 
 
 
@@ -25,6 +28,9 @@ import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.
     ChoferesTarifaComponent,
     ChoferesLegajoComponent,
     ModalAltaTarifaComponent,
+    ChoferesTarifaGralComponent,
+    ChoferesTarifaEspecialComponent,
+    ChoferesTarifaPersonalizadaComponent,
     
   ],
   imports: [

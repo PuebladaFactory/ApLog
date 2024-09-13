@@ -351,7 +351,7 @@ export class LiqChoferComponent implements OnInit {
       valorIntervalo: this.ultimaTarifa.km.sectoresSiguientes.valor,
     });
     this.swichForm.patchValue({
-      tarifaEspecial: factura.operacion.tarifaEspecial,
+      tarifaEspecial: factura.operacion.tarifaEventual,
     })
     //console.log()(factura.operacion.tarifaEspecial);
     
@@ -421,7 +421,7 @@ export class LiqChoferComponent implements OnInit {
       } 
     }    
     //console.log()("NUEVA TARIFA", this.ultimaTarifa);
-    this.facturaEditada.operacion.tarifaEspecial = this.swichForm.value.tarifaEspecial;
+    this.facturaEditada.operacion.tarifaEventual = this.swichForm.value.tarifaEspecial;
     //console.log()("NUEVA operacion con nueva TARIFA", this.facturaEditada);
 
   }

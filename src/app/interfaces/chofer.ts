@@ -22,7 +22,7 @@ export interface Vehiculo {
     marca:string;
     modelo: string;
     tipoCombustible: string;    
-    categoria: string;
+    categoria: Categoria[];
     satelital: SeguimientoSatelital | boolean;
     tarjetaCombustible: boolean;
     refrigeracion: boolean|null;
@@ -32,5 +32,10 @@ export interface Vehiculo {
 export interface SeguimientoSatelital {
     proveedor: string;
     marcaGps: string;
+}
+
+export interface Categoria {
+    cat:string;
+    nombre: string;    
 }
 

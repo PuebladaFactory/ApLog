@@ -4,6 +4,7 @@ export interface TarifaPersonalizadaCliente {
     fecha: string;
     secciones: Seccion [];
     tipo: TarifaTipo;
+    idCliente: number;
 }
 
 export interface Seccion {    

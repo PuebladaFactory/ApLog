@@ -10,8 +10,10 @@ import { Router } from '@angular/router';
   </div>   
   <div class="tab-container">
       <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab1')">Alta / Listado</div>
-      <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Tarifas Especiales</div>    
-      <div class="tab" [class.active]="selectedTab === 'tab3'" (click)="selectTab('tab3')">Tarifas Especiales</div>    
+      <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Tarifa General</div>
+      <div class="tab" [class.active]="selectedTab === 'tab3'" (click)="selectTab('tab3')">Tarifa Especial</div>    
+      <div class="tab" [class.active]="selectedTab === 'tab4'" (click)="selectTab('tab4')">Tarifa Personalizada</div>    
+      
   </div>
   <router-outlet></router-outlet>
     `,
@@ -32,8 +34,10 @@ export class ClienteControlComponent implements OnInit {
     if (tab === 'tab1') {
       this.router.navigate(['clientes/listado']);
     } else if (tab === 'tab2') {
-      this.router.navigate(['clientes/tarifa']);
+      this.router.navigate(['clientes/general']);
     } else if (tab === 'tab3') {
+      this.router.navigate(['clientes/especial']);
+    } else if (tab === 'tab4') {
       this.router.navigate(['clientes/personalizada']);
     } 
   }

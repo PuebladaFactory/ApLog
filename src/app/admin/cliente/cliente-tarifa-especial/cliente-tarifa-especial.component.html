@@ -1,0 +1,30 @@
+
+<div class="row mt-4">
+    <div class="col-3 ">
+        <h2>Seleccionar Cliente: </h2>
+        <select class="form-select form-select-md mb-3 w-50" (change)="changeCliente($event)">
+            <option selected>Seleccione</option>
+            <option *ngFor="let cliente of $clientesEsp" [value]="cliente.idCliente">
+              {{cliente.razonSocial}} 
+            </option>
+          </select>
+    </div>     
+ 
+    <!-- <div class="col text-end" [ngClass]="{'altaIsDisabled': !asignarTarifa}">
+        <h2>Asignar Tarifa</h2> 
+        <app-btn-leer name="tarifa" (click)="openModal()"></app-btn-leer>
+    </div>   -->
+</div>
+
+<div>
+<ng-template #sinSeleccion>
+    <h4>Seleccione cliente</h4>
+</ng-template>
+<ng-template #sinTarifas>
+  <h4>El cliente aun no tiene tarifas asignadas</h4>
+</ng-template>
+</div> 
+
+<div *ngIf="clienteSeleccionado !== undefined">
+    <app-cliente-tarifa-gral [idClienteEsp]="idClienteEsp" [tEspecial]="tEspecial"></app-cliente-tarifa-gral>
+</div>

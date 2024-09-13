@@ -2,10 +2,11 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { Categoria, Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Legajo, Documentacion } from 'src/app/interfaces/legajo';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -25,8 +26,9 @@ export class ChoferesAltaComponent implements OnInit {
   vehiculoForm: any;
   seguimientoForm: any;
   adicionalForm:any;
+  categoriasForm:any;
   chofer!: Chofer;  
-  categorias = [
+  /* categorias = [
   { id: 0, categoria: 'mini', },
   { id: 1, categoria: 'maxi', },
   { id: 2, categoria: 'furgon grande', },
@@ -35,9 +37,9 @@ export class ChoferesAltaComponent implements OnInit {
   { id: 5, categoria: 'balancin', },
   { id: 6, categoria: 'semi remolque local', },
   { id: 7, categoria: 'portacontenedores', },
-  ];
+  ]; */
   seguimiento: boolean = false;
-  categoriaSeleccionada!:string;
+  //categoriaSeleccionada!:string;
   tipoCombustible!:string;
   tarjetaCombustible!:boolean;
   jornada!:TarifaChofer;
@@ -49,6 +51,10 @@ export class ChoferesAltaComponent implements OnInit {
   proveedorSeleccionado!: string;
   editForm: any;
   publicidad!: boolean;
+  categorias: CategoriaTarifa[] = [];
+  tarifaGralCliente!: TarifaGralCliente;
+  categoriaSeleccionada: CategoriaTarifa | null = null;
+
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal) {
     this.form = this.fb.group({                             //formulario para el perfil 
@@ -73,6 +79,10 @@ export class ChoferesAltaComponent implements OnInit {
       proveedor: ["",[Validators.required, Validators.maxLength(30)]],
       marcaGps: ["",[Validators.required, Validators.maxLength(30)]],
     })
+
+    this.categoriasForm = this.fb.group({
+      categoria: [""],
+    })
     
    /*  this.jornadaForm = this.fb.group({                    //formulario para la jornada
       base: [""],      
@@ -94,6 +104,9 @@ export class ChoferesAltaComponent implements OnInit {
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
     });
+    this.storageService.ultTarifaGralCliente$.subscribe(data =>{      
+      this.tarifaGralCliente = data;
+    })              
    }
 
 
@@ -102,6 +115,8 @@ export class ChoferesAltaComponent implements OnInit {
    // primero arma cada uno de los objetos
    // y desp guarda el objeto en la coleccion que le corresponde
    onSubmit(){ 
+    console.log(this.categoriasForm.value);
+    
     if (this.form.valid && this.vehiculoForm.valid){
 
       this.armarChofer();
@@ -159,7 +174,8 @@ export class ChoferesAltaComponent implements OnInit {
   
   armarVehiculo(){   
     this.vehiculo = this.vehiculoForm.value;
-    this.vehiculo.categoria = this.categoriaSeleccionada;
+    //this.vehiculo.categoria = this.categoriaSeleccionada;
+    this.vehiculo.categoria = []
     this.vehiculo.tipoCombustible = this.tipoCombustible;
     this.vehiculo.tarjetaCombustible = this.tarjetaCombustible;
     this.vehiculo.publicidad = this.publicidad;
@@ -199,9 +215,19 @@ export class ChoferesAltaComponent implements OnInit {
   }
   
   changeCategoria(e: any) {    
-    //console.log()(e.target.value);
+    console.log(e.target.value);    
+    //this.categoriaSeleccionada = e.target.value   
+    const nombreCategoria = e.target.value;
+    if (this.tarifaGralCliente) {
+      // Busca la categoría seleccionada en cargasGenerales
+      const categoriaSeleccionada = Object.values(this.tarifaGralCliente.cargasGenerales)
+        .find(categoria => categoria.nombre === nombreCategoria);
+      if (categoriaSeleccionada) {
+        this.categorias.push(categoriaSeleccionada);
+      }
+    }
+    console.log(this.categorias);
     
-    this.categoriaSeleccionada = e.target.value   
   }
 
   changeTipoCombustible(e: any) {    

@@ -289,7 +289,7 @@ secondFilter = '';
         razonSocial: cliente.razonSocial,
         direccion: cliente.direccion,
         cuit: cliente.cuit,
-        tarifa: cliente.tarifaTipo.general ? "General" : cliente.tarifaTipo.especial ? "Especial" : "Eventual",
+        tarifa: cliente.tarifaTipo.general ? "General" : cliente.tarifaTipo.especial ? "Especial" : cliente.tarifaTipo.personalizada ? "Personalizada" : "Eventual",
         contacto: cliente.contactos.length > 0 ? cliente.contactos[0].apellido : "Sin Datos",
         puesto: cliente.contactos.length > 0 ? cliente.contactos[0].puesto : "Sin Datos" ,
         telefono: cliente.contactos.length > 0 ? cliente.contactos[0].telefono : "Sin Datos"  ,

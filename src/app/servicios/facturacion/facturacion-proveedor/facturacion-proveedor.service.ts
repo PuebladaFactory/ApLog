@@ -103,7 +103,7 @@ export class FacturacionProveedorService {
     this.$tarifaProveedor = this.ultimaTarifa
     ////console.log()("esta es la tarifa a facturar: ", this.$tarifaProveedor);
     
-    if(op.tarifaEspecial){
+    if(op.tarifaEventual){
       
       this.facturarTarifaEspecial(op);
 
@@ -128,7 +128,7 @@ export class FacturacionProveedorService {
   facturarCG(op: Operacion){
     ////console.log()("cargas generales");
     
-    switch (op.chofer.vehiculo.categoria) {
+    /* switch (op.chofer.vehiculo.categoria) {
       case "mini":
         this.categoriaMonto = this.ultimaTarifa.cargasGenerales.utilitario
         break;
@@ -164,7 +164,7 @@ export class FacturacionProveedorService {
       default:
         alert("error categoria CG")
         break;
-    } 
+    }  */
   }
 
   calcularAdicional(op: Operacion, tarifa: TarifaProveedor){
@@ -267,10 +267,10 @@ export class FacturacionProveedorService {
   facturarTarifaEspecial(op: Operacion){
 
   
-      this.categoriaMonto = op.tEspecial.chofer.valor;
-      this.total = op.tEspecial.chofer.valor;
-      this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.chofer.valor;
-      this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.chofer.concepto;
+      this.categoriaMonto = op.tEventual.chofer.valor;
+      this.total = op.tEventual.chofer.valor;
+      this.ultimaTarifa.tarifaEspecial.valor = op.tEventual.chofer.valor;
+      this.ultimaTarifa.tarifaEspecial.concepto = op.tEventual.chofer.concepto;
       this.storageService.updateItem("tarifasProveedor", this.ultimaTarifa)
         
     this.acompanianteMonto = 0;

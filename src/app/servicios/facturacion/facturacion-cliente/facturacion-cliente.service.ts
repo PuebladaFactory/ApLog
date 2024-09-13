@@ -91,7 +91,7 @@ export class FacturacionClienteService {
     this.$tarifaCliente = this.ultimaTarifa
     ////console.log()("esta es la tarifa a facturar: ", this.$tarifaCliente);
     
-    if(op.tarifaEspecial){
+    if(op.tarifaEventual){
       //console.log("3) tarifa especial");
       
       this.facturarTarifaEspecial(op);
@@ -117,7 +117,7 @@ export class FacturacionClienteService {
   facturarCG(op: Operacion){
     ////console.log()("cargas generales");
     
-    switch (op.chofer.vehiculo.categoria) {
+   /*  switch (op.chofer.vehiculo.categoria) {
       case "mini":
         this.categoriaMonto = this.ultimaTarifa.cargasGenerales.utilitario
         break;
@@ -153,7 +153,7 @@ export class FacturacionClienteService {
       default:
         alert("error categoria CG")
         break;
-    } 
+    }  */
   }
 
  
@@ -253,8 +253,8 @@ export class FacturacionClienteService {
       //this.total = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
       this.categoriaMonto = this.ultimaTarifa.tarifaEspecial.valor;
       this.total = this.ultimaTarifa.tarifaEspecial.valor;
-      this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.cliente.valor;
-      this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.cliente.concepto;
+      this.ultimaTarifa.tarifaEspecial.valor = op.tEventual.cliente.valor;
+      this.ultimaTarifa.tarifaEspecial.concepto = op.tEventual.cliente.concepto;
       console.log("4) tarifa CLIENTE editada", this.ultimaTarifa);
       this.storageService.updateItem("tarifasCliente", this.ultimaTarifa) 
       

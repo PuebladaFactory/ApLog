@@ -33,7 +33,7 @@ export class OpAltaComponent implements OnInit {
   clienteSeleccionado!: Cliente ;
   choferSeleccionado!: Chofer ;  
   acompaniante: boolean |  any = false ;
-  tarifaEspecial: boolean = false ;
+  tarifaEventual: boolean = false ;
   $tarifasChoferes!:TarifaChofer [];
   $tarifasProveedores!: TarifaProveedor [];
   $tarifasClientes!: TarifaCliente [];
@@ -45,7 +45,7 @@ export class OpAltaComponent implements OnInit {
       fecha: ['', Validators.required],
       cliente: ['', Validators.required],
       chofer: ['', Validators.required],
-      tarifaEspecial: ['', Validators.required],
+      tarifaEventual: ['', Validators.required],
       acompaniante: ['', Validators.required],
       observaciones: ['',],
       choferConcepto: [''],
@@ -107,38 +107,38 @@ export class OpAltaComponent implements OnInit {
   } 
 
 
-selectTarifaEspecial(event: any) {
-  let value = event.target.value;
-  this.tarifaEspecial = value === 'si';
-  this.form.patchValue({ tarifaEspecial: value });
+  selectTarifaEventual(event: any) {
+      let value = event.target.value;
+      this.tarifaEventual = value === 'si';
+      this.form.patchValue({ tarifaEspecial: value });
 
-  if (this.tarifaEspecial) {
-    this.form.get('acompaniante').clearValidators();
+      if (this.tarifaEventual) {
+        this.form.get('acompaniante').clearValidators();
 
-    // Añadir validadores requeridos para los campos adicionales
-    this.form.get('choferConcepto').setValidators(Validators.required);
-    this.form.get('choferValor').setValidators(Validators.required);
-    this.form.get('clienteConcepto').setValidators(Validators.required);
-    this.form.get('clienteValor').setValidators(Validators.required);
-  } else {
-    this.form.get('acompaniante').setValidators(Validators.required);
+        // Añadir validadores requeridos para los campos adicionales
+        this.form.get('choferConcepto').setValidators(Validators.required);
+        this.form.get('choferValor').setValidators(Validators.required);
+        this.form.get('clienteConcepto').setValidators(Validators.required);
+        this.form.get('clienteValor').setValidators(Validators.required);
+      } else {
+        this.form.get('acompaniante').setValidators(Validators.required);
 
-    // Eliminar validadores requeridos para los campos adicionales
-    this.form.get('choferConcepto').clearValidators();
-    this.form.get('choferValor').clearValidators();
-    this.form.get('clienteConcepto').clearValidators();
-    this.form.get('clienteValor').clearValidators();
+        // Eliminar validadores requeridos para los campos adicionales
+        this.form.get('choferConcepto').clearValidators();
+        this.form.get('choferValor').clearValidators();
+        this.form.get('clienteConcepto').clearValidators();
+        this.form.get('clienteValor').clearValidators();
+      }
+
+      // Actualizar la validación de todos los campos
+      this.form.get('acompaniante').updateValueAndValidity();
+      this.form.get('choferConcepto').updateValueAndValidity();
+      this.form.get('choferValor').updateValueAndValidity();
+      this.form.get('clienteConcepto').updateValueAndValidity();
+      this.form.get('clienteValor').updateValueAndValidity();
+
+      this.msgBack();
   }
-
-  // Actualizar la validación de todos los campos
-  this.form.get('acompaniante').updateValueAndValidity();
-  this.form.get('choferConcepto').updateValueAndValidity();
-  this.form.get('choferValor').updateValueAndValidity();
-  this.form.get('clienteConcepto').updateValueAndValidity();
-  this.form.get('clienteValor').updateValueAndValidity();
-
-  this.msgBack();
-}
   
     selectAcompaniante(event: any) {
       this.form.patchValue({ acompaniante: event.target.value });
@@ -146,7 +146,7 @@ selectTarifaEspecial(event: any) {
 
     msgBack() {
       //console.log(this.tarifaEspecial);      
-      this.newItemEvent.emit(this.tarifaEspecial);    
+      this.newItemEvent.emit(this.tarifaEventual);    
     }
 
   onSubmit(){
@@ -229,8 +229,8 @@ selectTarifaEspecial(event: any) {
         facturada: false,
         facturaCliente: null,
         facturaChofer: null,
-        tarifaEspecial: this.tarifaEspecial,
-        tEspecial:{ 
+        tarifaEventual: this.tarifaEventual,
+        tEventual:{ 
         chofer:{
           concepto: "",
           valor: 0,    
@@ -243,8 +243,8 @@ selectTarifaEspecial(event: any) {
     }; 
 
         // Si tarifaEspecial es true, agregar los detalles de tarifa especial
-        if (this.tarifaEspecial) {
-          this.op.tEspecial = {
+        if (this.tarifaEventual) {
+          this.op.tEventual = {
               chofer: {
                   concepto: formValues.choferConcepto,
                   valor: formValues.choferValor

@@ -15,11 +15,11 @@ export interface Operacion {
     facturada: boolean;
     facturaCliente: number | null;
     facturaChofer: number | null;
-    tarifaEspecial: boolean;
-    tEspecial: TarifaEspecial;
+    tarifaEventual: boolean;
+    tEventual: TarifaEventual;
 }
 
-export interface TarifaEspecial {    
+export interface TarifaEventual {    
     chofer:{
         concepto: string;
         valor: number;    

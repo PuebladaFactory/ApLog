@@ -44,26 +44,26 @@ export class TarifaGralClienteComponent implements OnInit {
 
   inicializarTabla() {
     const categorias = [
-      { categoria: 'Categoria 1', valorAnterior: this.ultTarifa?.cargasGenerales.categoria1.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales.categoria1.nombre || '' },
-      { categoria: 'Categoria 2', valorAnterior: this.ultTarifa?.cargasGenerales.categoria2.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales.categoria2.nombre || '' },
-      { categoria: 'Categoria 3', valorAnterior: this.ultTarifa?.cargasGenerales.categoria3.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales.categoria3.nombre || '' },
-      { categoria: 'Categoria 4', valorAnterior: this.ultTarifa?.cargasGenerales.categoria4.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales.categoria4.nombre || '' },
-      { categoria: 'Categoria 5', valorAnterior: this.ultTarifa?.cargasGenerales.categoria5.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales.categoria5.nombre || '' },
-      { categoria: 'Categoria 6', valorAnterior: this.ultTarifa?.cargasGenerales.categoria6.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales.categoria6.nombre || '' },
-      { categoria: 'Categoria 7', valorAnterior: this.ultTarifa?.cargasGenerales.categoria7.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales.categoria7.nombre || '' },
-      { categoria: 'Categoria 8', valorAnterior: this.ultTarifa?.cargasGenerales.categoria8.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales.categoria8.nombre || '' },
-      { categoria: 'Acompañante', valorAnterior: this.ultTarifa?.adicionales.acompaniante || 0, nombreAnterior: '' },
-      { categoria: 'Km 1er Sector distancia', valorAnterior: this.ultTarifa?.adicionales.adicionalKm.primerSector.distancia || 0, nombreAnterior: '' },
-      { categoria: 'Km 1er Sector valor', valorAnterior: this.ultTarifa?.adicionales.adicionalKm.primerSector.valor || 0, nombreAnterior: '' },
-      { categoria: 'Km Intervalos distancia', valorAnterior: this.ultTarifa?.adicionales.adicionalKm.sectoresSiguientes.intervalo || 0, nombreAnterior: '' },
-      { categoria: 'Km Intervalos valor', valorAnterior: this.ultTarifa?.adicionales.adicionalKm.sectoresSiguientes.valor || 0, nombreAnterior: '' },
+      { categoria: 'Categoria 1', valorAnterior: this.ultTarifa?.cargasGenerales?.categoria1?.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales?.categoria1?.nombre || '' },
+      { categoria: 'Categoria 2', valorAnterior: this.ultTarifa?.cargasGenerales?.categoria2?.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales?.categoria2?.nombre || '' },
+      { categoria: 'Categoria 3', valorAnterior: this.ultTarifa?.cargasGenerales?.categoria3?.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales?.categoria3?.nombre || '' },
+      { categoria: 'Categoria 4', valorAnterior: this.ultTarifa?.cargasGenerales?.categoria4?.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales?.categoria4?.nombre || '' },
+      { categoria: 'Categoria 5', valorAnterior: this.ultTarifa?.cargasGenerales?.categoria5?.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales?.categoria5?.nombre || '' },
+      { categoria: 'Categoria 6', valorAnterior: this.ultTarifa?.cargasGenerales?.categoria6?.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales?.categoria6?.nombre || '' },
+      { categoria: 'Categoria 7', valorAnterior: this.ultTarifa?.cargasGenerales?.categoria7?.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales?.categoria7?.nombre || '' },
+      { categoria: 'Categoria 8', valorAnterior: this.ultTarifa?.cargasGenerales?.categoria8?.valor || 0, nombreAnterior: this.ultTarifa?.cargasGenerales?.categoria8?.nombre || '' },
+      { categoria: 'Acompañante', valorAnterior: this.ultTarifa?.adicionales?.acompaniante || 0, nombreAnterior: '' },
+      { categoria: 'Km 1er Sector distancia', valorAnterior: this.ultTarifa?.adicionales?.adicionalKm?.primerSector?.distancia || 0, nombreAnterior: '' },
+      { categoria: 'Km 1er Sector valor', valorAnterior: this.ultTarifa?.adicionales?.adicionalKm?.primerSector?.valor || 0, nombreAnterior: '' },
+      { categoria: 'Km Intervalos distancia', valorAnterior: this.ultTarifa?.adicionales?.adicionalKm?.sectoresSiguientes?.intervalo || 0, nombreAnterior: '' },
+      { categoria: 'Km Intervalos valor', valorAnterior: this.ultTarifa?.adicionales?.adicionalKm?.sectoresSiguientes?.valor || 0, nombreAnterior: '' },
     ];
   
     categorias.forEach((cat, index) => {
       const isManualEnabled = this.isManualMethodSelected;
       const isNombreInputEnabled = index < 8 && isManualEnabled;
       this.filas.push(this.fb.group({
-        seleccionado: [(index < 8 || index === 8 || index === 10 || index === 12) ? true : false], // Selecciona todos menos los indicados
+        seleccionado: [(index < 8 || index === 8 || index === 10 || index === 12) ? true : false], 
         categoria: [cat.categoria],
         nombre: [{ value: cat.nombreAnterior, disabled: !isNombreInputEnabled }],
         ultimaTarifa: [{ value: cat.valorAnterior, disabled: true }],
@@ -210,7 +210,8 @@ export class TarifaGralClienteComponent implements OnInit {
     const tipo: TarifaTipo = {
       general: true, // Este tipo de tarifa es general
       especial: false,
-      eventual: false
+      eventual: false,
+      personalizada: false,
     };
 
     // Construcción del objeto `TarifaGralCliente`
@@ -220,7 +221,8 @@ export class TarifaGralClienteComponent implements OnInit {
       fecha: new Date().toISOString().split('T')[0],
       cargasGenerales: cargasGenerales,
       adicionales: adicionales,
-      tipo: tipo
+      tipo: tipo,
+      idCliente : null,
     };
 
     console.log(this.nuevaTarifaGral);

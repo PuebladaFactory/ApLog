@@ -6,14 +6,16 @@ import { ClienteControlComponent } from './cliente-control/cliente-control.compo
 import { ClienteListadoComponent } from './cliente-listado/cliente-listado.component';
 import { ClienteTarifaComponent } from './cliente-tarifa/cliente-tarifa.component';
 import { ClienteTarifaPersonalizadaComponent } from './cliente-tarifa-personalizada/cliente-tarifa-personalizada.component';
+import { ClienteTarifaGralComponent } from './cliente-tarifa-gral/cliente-tarifa-gral.component';
+import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/cliente-tarifa-especial.component';
 
 const routes: Routes = [
   {path: '', component:ClienteControlComponent,
   children: [        
-    {path: 'alta', component:ClienteAltaComponent},
-    
+    {path: 'alta', component:ClienteAltaComponent},    
     {path: 'listado', component:ClienteListadoComponent},
-    {path: 'tarifa', component:ClienteTarifaComponent},
+    {path: 'general', component:ClienteTarifaGralComponent},
+    {path: 'especial', component:ClienteTarifaEspecialComponent},
     {path: 'personalizada', component:ClienteTarifaPersonalizadaComponent},
 ]  },
   

@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Cliente } from 'src/app/interfaces/cliente';
 import { CategoriaTarifa, Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -10,61 +12,7 @@ import Swal from 'sweetalert2';
 })
 export class ClienteTarifaPersonalizadaComponent implements OnInit {
 
-  /* tarifaForm!: FormGroup;
-
-  constructor(private fb: FormBuilder) {}
-
-  ngOnInit(): void {
-    this.tarifaForm = this.fb.group({
-      secciones: this.fb.array([]),
-      tipo: this.fb.group({
-        general: [false],
-        especial: [false],
-        eventual: [false],
-      })
-    });
-  }
-
-  get secciones(): FormArray {
-    return this.tarifaForm.get('secciones') as FormArray;
-  }
-  
-  getCategorias(i: number): FormArray {
-    return this.secciones.at(i).get('categorias') as FormArray;
-  }
-
-  nuevaSeccion(): void {
-    const seccionForm = this.fb.group({
-      nombreSeccion: [`Seccion ${this.secciones.length + 1}`],
-      categorias: this.fb.array([])
-    });
-    this.secciones.push(seccionForm);
-    console.log(this.secciones);
-    
-    
-  }
-
-  nuevaCategoria(index: number): void {
-    const categorias = (this.secciones.at(index).get('categorias') as FormArray);
-    const categoriaForm = this.fb.group({
-      nombreCategoria: [`Categoria ${categorias.length + 1}`],
-      valor: ['', Validators.required]
-    });
-    categorias.push(categoriaForm);
-  }
-
-  guardarTarifa(): void {
-    const nuevaTarifa: TarifaPersonalizadaCliente = {
-      id: null,
-      idTarifa: new Date().getTime(),
-      fecha: new Date().toISOString().split('T')[0],
-      secciones: this.tarifaForm.value.secciones,
-      tipo: this.tarifaForm.value.tipo
-    };
-    console.log('Tarifa Personalizada Guardada:', nuevaTarifa);
-    // Aquí puedes hacer la lógica de guardado en Firebase o donde necesites.
-  } */
-
+    componente: string = "tarifasPersCliente"
     secciones: Seccion [] = [];
     seccion! : Seccion;
     categorias : CategoriaTarifa[] = [];
@@ -74,8 +22,11 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     categoriaForm: any;
     descripcionForm: any;
     tarifaPersonalizadaCliente!: TarifaPersonalizadaCliente;
-
-  constructor(private fb: FormBuilder) {
+    $clientes!: any;
+    clienteSeleccionado!: Cliente[];
+    $clientesPers! : Cliente [];
+    
+  constructor(private fb: FormBuilder, private storageService: StorageService) {
     this.inputSecciones = this.fb.group({
       cantSecciones : [""],
           })
@@ -93,6 +44,29 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+      this.$clientesPers = this.$clientes.filter((cliente:Cliente)=>{
+        return cliente.tarifaTipo.personalizada === true 
+      })
+      console.log(this.$clientesPers);
+      
+    })             
+  }
+
+  changeCliente(e: any) {    
+    ////console.log()(e.target.value);
+    let id = Number(e.target.value);
+    ////console.log()("1)",id);
+    
+    this.clienteSeleccionado = this.$clientesPers.filter((cliente:Cliente)=>{
+      ////console.log()("2", cliente.idCliente, id);
+      return cliente.idCliente === id
+    })
+   
+    //this.asignarTarifa = true
+    ////console.log()("este es el cliente seleccionado: ", this.clienteSeleccionado);
+    //this.buscarTarifas();
   }
 
   agregarSeccion() {        
@@ -129,7 +103,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     console.log("3)Secciones:" , this.secciones);    
   }
 
-  eliminarcategoria(index: number, orden:number) {
+  eliminarCategoria(index: number, orden:number) {
     this.secciones[index].categorias.splice(orden, 1);
   }
 
@@ -140,40 +114,48 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     this.descripcionForm.reset();
   }
 
-  /* agregarCategorias(index: number) {    
-    console.log("1.05) index: ", index); // esto es la posicion de la seccion dentro del array secciones
-    console.log("1.10) numCategorias: ", this.seccionesForm.value[index].numCategorias); //cuantas categorias va a tener la seccion
-    //const numCategorias = this.secciones.at(index).get('numCategorias')?.value;
-    const numCategorias = this.seccionesForm.value[index].numCategorias;
-    const categoriasArray = this.seccionesForm.at(index).get('categorias') as FormArray;
-    console.log("1.25) categoriasArray: ", categoriasArray.value);
-    console.log("1.50) numCategorias: ", numCategorias);
-    // Limpiar las categorías existentes antes de agregar las nuevas
-    categoriasArray.clear();
-
-    for (let i = 0; i < numCategorias; i++) {
-      categoriasArray.push(this.fb.group({
-        numeroCategoria: [`Categoria ${categoriasArray.length + 1}`],
-        nombreCategoria: [''],
-        valor: [0]
-      }));
-    }
-    console.log("2)categorias: ",categoriasArray.value);
-    console.log("3)secciones: ", this.seccionesForm.value);
-    
-  } */
+  eliminarDescripcion(index:number) {    
+    this.secciones[index].descripcion = "";
+    this.descripcionForm.reset();
+  }
 
   crearTarifa() {
+    console.log(this.clienteSeleccionado);
+    
     this.tarifaPersonalizadaCliente = {
       id: null,
       idTarifa: new Date().getTime(),
       fecha: new Date().toISOString().split('T')[0],
       secciones: this.secciones,
-      tipo: { general: false, especial: false, eventual: false, personalizada:true }  // Ajusta según sea necesario
+      tipo: { general: false, especial: false, eventual: false, personalizada:true },  // Ajusta según sea necesario
+      idCliente: this.clienteSeleccionado[0].idCliente,
     };
     
     console.log('Tarifa guardada:', this.tarifaPersonalizadaCliente);
-    // Aquí puedes llamar a un servicio para guardar la tarifa en la base de datos
+    this.addItem();
+  }
+
+  addItem(): void {
+    Swal.fire({
+      title: "¿Confirmar el alta de la tarifa?",
+      //text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {        
+        this.storageService.addItem(this.componente, this.tarifaPersonalizadaCliente)
+        Swal.fire({
+          title: "Confirmado",
+          text: "Alta exitosa",
+          icon: "success"
+        })   
+        this.secciones = [];
+      }
+    });   
   }
 
   mostrarInfo(){

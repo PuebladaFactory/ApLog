@@ -7,7 +7,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
-import { Operacion, TarifaEspecial } from 'src/app/interfaces/operacion';
+import { Operacion, TarifaEventual } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
@@ -53,7 +53,7 @@ export class OpAbiertasComponent implements OnInit {
   $clientes: any;
   $choferes: any;
   tarifaEspecial!:boolean;
-  tEspecial!: TarifaEspecial | null;
+  tEspecial!: TarifaEventual | null;
   ultimaTarifaChofer!:TarifaChofer;
   ultimaTarifaCliente!:TarifaCliente;
   ultimaTarifaProveedor!:TarifaProveedor;
@@ -141,7 +141,7 @@ armarTabla() {
       chofer: `${op.chofer.apellido} ${op.chofer.nombre}`,
       categoria: op.chofer.vehiculo.categoria,
       acompaniante: `${op.acompaniante ? "Si" : "No"}` ,
-      tarifaEspecial: `${op.tarifaEspecial ? "Si" : "No"}` ,
+      tarifaEspecial: `${op.tarifaEventual ? "Si" : "No"}` ,
       observaciones: op.observaciones,
       
     }));
@@ -154,7 +154,7 @@ armarTabla() {
       chofer: `${op.chofer.apellido} ${op.chofer.nombre}`,
       categoria: op.chofer.vehiculo.categoria,
       acompaniante: `${op.acompaniante ? "Si" : "No"}` ,
-      tarifaEspecial: `${op.tarifaEspecial ? "Si" : "No"}` ,
+      tarifaEspecial: `${op.tarifaEventual ? "Si" : "No"}` ,
       observaciones: op.observaciones,
       
     }));
@@ -424,8 +424,8 @@ toogleAjustes(){
     this.choferSeleccionado = this.detalleOp.chofer;
    /*  this.unidadesConFrio = op.unidadesConFrio; */
     this.acompaniante = this.detalleOp.acompaniante;
-    this.tarifaEspecial = this.detalleOp.tarifaEspecial;
-    this.tEspecial = this.detalleOp.tEspecial;
+    this.tarifaEspecial = this.detalleOp.tarifaEventual;
+    this.tEspecial = this.detalleOp.tEventual;
     //console.log("este es la op a editar: ", this.opEditar);
     this.armarForm();
     
@@ -440,12 +440,12 @@ toogleAjustes(){
       clienteConcepto: [''],
       clienteValor: [''],
     })
-    if(this.opEditar.tarifaEspecial){
+    if(this.opEditar.tarifaEventual){
       this.form.patchValue({
-      choferConcepto: this.opEditar.tEspecial.chofer.concepto,
-      choferValor: this.opEditar.tEspecial.chofer.valor,
-      clienteConcepto: this.opEditar.tEspecial.cliente.concepto,
-      clienteValor: this.opEditar.tEspecial.cliente.valor,
+      choferConcepto: this.opEditar.tEventual.chofer.concepto,
+      choferValor: this.opEditar.tEventual.chofer.valor,
+      clienteConcepto: this.opEditar.tEventual.cliente.concepto,
+      clienteValor: this.opEditar.tEventual.cliente.valor,
       })
     }
   }
@@ -479,13 +479,13 @@ toogleAjustes(){
     this.opEditar.chofer  = this.choferSeleccionado;
     /* this.opEditar.unidadesConFrio = this.unidadesConFrio; */
     this.opEditar.acompaniante = this.acompaniante;
-    this.opEditar.tarifaEspecial = this.tarifaEspecial;
+    this.opEditar.tarifaEventual = this.tarifaEspecial;
     //////console.log()("este es la op editada: ", this.opEditar);
-    if(this.opEditar.tarifaEspecial) {
-      this.opEditar.tEspecial.chofer.concepto = this.form.value.choferConcepto;
-      this.opEditar.tEspecial.chofer.valor = this.form.value.choferValor;
-      this.opEditar.tEspecial.cliente.concepto = this.form.value.clienteConcepto;
-      this.opEditar.tEspecial.cliente.valor = this.form.value.clienteValor;
+    if(this.opEditar.tarifaEventual) {
+      this.opEditar.tEventual.chofer.concepto = this.form.value.choferConcepto;
+      this.opEditar.tEventual.chofer.valor = this.form.value.choferValor;
+      this.opEditar.tEventual.cliente.concepto = this.form.value.clienteConcepto;
+      this.opEditar.tEventual.cliente.valor = this.form.value.clienteValor;
     } 
     /* else{
       this.opEditar.tEspecial = null;
@@ -538,7 +538,7 @@ toogleAjustes(){
     }else if (e.target.value === "no"){
       this.tarifaEspecial = false;
     }else{
-      this.tarifaEspecial = this.opEditar.tarifaEspecial;
+      this.tarifaEspecial = this.opEditar.tarifaEventual;
     }
     //////console.log()("tarifa especial: ", this.tarifaEspecial);
   }
