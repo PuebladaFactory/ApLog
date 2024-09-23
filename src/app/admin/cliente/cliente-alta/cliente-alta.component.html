@@ -5,176 +5,107 @@
     </div>
     <div class="modal-body">
       <div class="row">
-
-        <div class="col-6">
-            <div class="d-flex justify-content-between my-2">
-                <h2>Datos del cliente:</h2>
-            </div>
-            <div>
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                  <div class="form-group mt-3">
-                    <label for="RazonSocial">Razon Social</label>
-                    <div class="input-group">
-                      <input formControlName="razonSocial" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': form.get('razonSocial').invalid && (form.get('razonSocial').dirty || form.get('razonSocial').touched) }">                        
-                    </div>
-                  </div>    
-                  <div class="form-group mt-2">
-                    <label for="Cuit">CUIT</label>
-                    <div class="input-group">
-                      <input formControlName="cuit" class="form-control edicion" required type="text" [placeholder]="'ej: 31456784569'" [ngClass]="{ 'is-invalid': form.get('cuit').invalid && (form.get('cuit').dirty || form.get('cuit').touched) }">
-                    </div>
-                  </div>    
-                  <div class="form-group mt-2">
-                    <label for="Direccion">Direccion</label>
-                    <div class="input-group">
-                      <input formControlName="direccion" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('direccion').invalid && (form.get('direccion').dirty || form.get('direccion').touched) }">
-                    </div>
-                  </div>  
-                  <div class="form-group mt-2">
-                    <label>Contactos: </label>
-                  <h3 *ngIf="contactos.length === 0 ">Sin contactos agendados</h3>
-                  <div *ngIf="contactos.length > 0 ">
-                    <table class="table table-dark table-striped">
-                      <thead>
-                          <tr>
-                            <th class="tabla align-baseline" scope="col">Puesto</th>                    
-                            <th class="tabla align-baseline" scope="col">Apellido</th>
-                            <th class="tabla align-baseline" scope="col">Nombre</th>
-                            <!-- <th class="tabla align-baseline" scope="col">Telefono</th> -->
-                            <!-- <th class="tabla align-baseline" scope="col">Email</th> -->
-                            <th></th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr *ngFor="let contacto of contactos, let i = index">
-                              <th class="tabla align-baseline" scope="col">{{contacto.puesto}}</th>                    
-                              <th class="tabla align-baseline" scope="col">{{contacto.apellido}}</th>
-                              <th class="tabla align-baseline" scope="col">{{contacto.nombre}}</th>
-                              <!-- <th class="tabla align-baseline" scope="col">{{contacto.telefono}}</th> -->
-                              <!-- <th class="tabla align-baseline" scope="col">{{contacto.email}}</th> -->
-                              <th class="tabla align-baseline" scope="col">                                  
-                                  <app-btn-eliminar name="Eliminar" (click)="eliminarContacto(i)"></app-btn-eliminar>
-                              </th>
-                          </tr> 
-                      </tbody>
-                    
-                  </table>
-          
-                </div>
-                </div>     
-              
-                </form>
-            </div>
-        </div>
-        <div class="col-6">        
-            <div class="form-group mt-2">
-              <h2 class="ms-3">Tipo de Tarifa</h2>
-              <form [formGroup]="formTipoTarifa" (ngSubmit)="onSubmit()">
-                <div class="form-check form-switch">
-                  <input formControlName="general" class="form-check-input" type="checkbox" 
-                         (change)="onTarifaTipoChange('general')" id="tarifaGeneral" checked>
-                  <label class="form-check-label" for="tarifaGeneral">General</label>
-                </div>
-                <div class="form-check form-switch">
-                  <input formControlName="especial" class="form-check-input" type="checkbox" 
-                         (change)="onTarifaTipoChange('especial')" id="tarifaEspecial">
-                  <label class="form-check-label" for="tarifaEspecial">Especial</label>
-                </div>
-                <div class="form-check form-switch">
-                  <input formControlName="eventual" class="form-check-input" type="checkbox" 
-                         (change)="onTarifaTipoChange('eventual')" id="tarifaEventual">
-                  <label class="form-check-label" for="tarifaEventual">Eventual</label>
-                </div>
-                <div class="form-check form-switch">
-                  <input formControlName="personalizada" class="form-check-input" type="checkbox" 
-                         (change)="onTarifaTipoChange('personalizada')" id="tarifaPersonalizada">
-                  <label class="form-check-label" for="tarifaPersonalizada">Personalizada</label>
-                </div>
-              </form>
-            </div>
-            <div class="d-flex justify-content-between mt-2" >
-
-         
-    
-              <h2 class="ms-3">Agregar contactos</h2>
-              <button class="btn btn-outline-secondary" (click)="toggle()">          
-                <svg *ngIf="!mostrarFormulario" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
-                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                </svg>
-                <svg *ngIf="mostrarFormulario"  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
-                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                  <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
-                </svg>          
-              </button>
-            </div>
-            <ng-container *ngIf="mostrarFormulario">
-                <div class="modal-body">
-                  <form [formGroup]="formContacto">
-                    <div class="form-group ">
-                      <label for="Puesto">Puesto</label>
-                      <div class="input-group">
-                        <input
-                          formControlName="puesto"
-                          class="form-control" required 
-                          type="text" [placeholder]="'ej:  director de logistica'" 
-                          [ngClass]="{ 'is-invalid': formContacto.get('puesto').invalid && 
-                          (formContacto.get('puesto').dirty || formContacto.get('puesto').touched) }">
+          <div class="col-12">
+              <div class="d-flex justify-content-between my-2">
+                  <h2>Datos del cliente:</h2>
+              </div>
+              <div>
+                  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                      <div class="form-group mt-3">
+                        <label for="RazonSocial">Razon Social</label>
+                        <div class="input-group">
+                          <input formControlName="razonSocial" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': form.get('razonSocial').invalid && (form.get('razonSocial').dirty || form.get('razonSocial').touched) }" [ngClass]="{'isDisabled': soloVista}">                        
+                        </div>
+                      </div>    
+                      <div class="form-group mt-2">
+                        <label for="Cuit">CUIT</label>
+                        <div class="input-group">
+                          <input formControlName="cuit" class="form-control edicion" required type="text" [placeholder]="'ej: 31456784569'" [ngClass]="{ 'is-invalid': form.get('cuit').invalid && (form.get('cuit').dirty || form.get('cuit').touched) }" [ngClass]="{'isDisabled': soloVista}">
+                        </div>
+                      </div>    
+                      <div class="form-group mt-2">
+                        <label for="Direccion">Direccion</label>
+                        <div class="input-group">
+                          <input formControlName="direccion" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('direccion').invalid && (form.get('direccion').dirty || form.get('direccion').touched) }" [ngClass]="{'isDisabled': soloVista}">
+                        </div>
+                      </div>  
+                      <div class="form-group mt-3">
+                          <h3 class="">Tipo de Tarifa</h3>
+                          <form [formGroup]="formTipoTarifa" (ngSubmit)="onSubmit()" class="d-flex mt-2">
+                            <div class="form-check form-switch form-check-reverse ms-2 me-4">
+                              <input formControlName="general" class="form-check-input" type="checkbox" 
+                                    (change)="onTarifaTipoChange('general')" id="tarifaGeneral" checked [ngClass]="{'isDisabled': soloVista}">
+                              <label class="form-check-label" for="tarifaGeneral">General</label>
+                            </div>
+                            <div class="form-check form-switch form-check-reverse me-4">
+                              <input formControlName="especial" class="form-check-input" type="checkbox" 
+                                    (change)="onTarifaTipoChange('especial')" id="tarifaEspecial" [ngClass]="{'isDisabled': soloVista}">
+                              <label class="form-check-label" for="tarifaEspecial">Especial</label>
+                            </div>
+                            <div class="form-check form-switch form-check-reverse me-4">
+                              <input formControlName="eventual" class="form-check-input" type="checkbox" 
+                                    (change)="onTarifaTipoChange('eventual')" id="tarifaEventual" [ngClass]="{'isDisabled': soloVista}">
+                              <label class="form-check-label" for="tarifaEventual">Eventual</label>
+                            </div>
+                            <div class="form-check form-switch form-check-reverse me-4">
+                              <input formControlName="personalizada" class="form-check-input" type="checkbox" 
+                                    (change)="onTarifaTipoChange('personalizada')" id="tarifaPersonalizada" [ngClass]="{'isDisabled': soloVista}">
+                              <label class="form-check-label" for="tarifaPersonalizada">Personalizada</label>
+                            </div>
+                          </form>
                       </div>
-                    </div>
-                    <div class="form-group mt-2">
-                      <label for="Apellido">Apellido</label>
-                      <div class="input-group">
-                        <input
-                          formControlName="apellido"
-                          class="form-control" required
-                          type="text"  [ngClass]="{ 'is-invalid': formContacto.get('apellido').invalid &&
-                          (formContacto.get('apellido').dirty || formContacto.get('apellido').touched) }">
+                      <div class="d-flex justify-content-between mt-3">
+                        <h3>Contactos: </h3>                                                      
+                        <button type="button" class="btn btn-outline-secondary" (click)="abrirModalContactos()" *ngIf="!soloVista">Agregar contactos          
+                            <svg *ngIf="!mostrarFormulario" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                            </svg>
+                            <svg *ngIf="mostrarFormulario"  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
+                              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                              <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
+                            </svg>          
+                        </button>                         
                       </div>
-                    </div>
-                    <div class="form-group mt-2">
-                      <label for="Nombre">Nombre</label>
-                      <div class="input-group">
-                        <input
-                          formControlName="nombre"
-                          class="form-control" required
-                          type="text"  [ngClass]="{ 'is-invalid': formContacto.get('nombre').invalid && 
-                          (formContacto.get('nombre').dirty || formContacto.get('nombre').touched) }">
-                      </div>
-                    </div>
-                    <div class="form-group mt-2">
-                      <label for="Telefono">Telefono</label>
-                      <div class="input-group">
-                        <input
-                          formControlName="telefono"
-                          class="form-control" required
-                          type="text" [placeholder]="'ej: 1134567890'"
-                          [ngClass]="{ 'is-invalid': formContacto.get('telefono').invalid && 
-                          (formContacto.get('telefono').dirty || formContacto.get('telefono').touched) }">
-                      </div>
-                    </div>
-                    <div class="form-group mt-2">
-                      <label for="Email">Email</label>
-                      <div class="input-group">
-                        <input type="text"
-                          formControlName="email"
-                          class="form-control" required
-                          type="text" [placeholder]="'ej:  davidcortes@gmail.com'" 
-                          [ngClass]="{ 'is-invalid': formContacto.get('email').invalid && 
-                          (formContacto.get('email').dirty || formContacto.get('email').touched) }">
-                      </div>
-                    </div>           
+                      <div class="form-group mt-2">   
+                          <h4 *ngIf="contactos.length === 0 ">Sin contactos agendados</h4>
+                          <div *ngIf="contactos.length > 0 ">
+                              <table class="table table-striped">
+                                  <thead>
+                                      <tr>
+                                        <th class="tabla align-baseline" scope="col">Puesto</th>                    
+                                        <th class="tabla align-baseline" scope="col">Apellido</th>
+                                        <th class="tabla align-baseline" scope="col">Nombre</th>
+                                        <th class="tabla align-baseline" scope="col">Telefono</th> 
+                                        <th class="tabla align-baseline" scope="col">Email</th>
+                                        <th *ngIf="!soloVista"></th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <tr *ngFor="let contacto of contactos, let i = index" [ngClass]="{'isDisabled': soloVista}">
+                                          <th class="tabla align-baseline" scope="col">{{contacto.puesto}}</th>                    
+                                          <th class="tabla align-baseline" scope="col">{{contacto.apellido}}</th>
+                                          <th class="tabla align-baseline" scope="col">{{contacto.nombre}}</th>
+                                          <th class="tabla align-baseline" scope="col">{{contacto.telefono}}</th>
+                                          <th class="tabla align-baseline" scope="col">{{contacto.email}}</th>
+                                          <th class="tabla align-baseline" scope="col" *ngIf="!soloVista">                                  
+                                              <app-btn-eliminar name="Eliminar" (click)="eliminarContacto(i)"></app-btn-eliminar>
+                                          </th>
+                                      </tr> 
+                                  </tbody>                    
+                              </table>          
+                          </div>
+                      </div>                          
+                      
                   </form>
-                </div>
-                <div class="modal-footer mt-2">
-                  <app-btn-agregar name="Agregar"  type="submit" [disabled]="form.invalid || formContacto.invalid"  (click)="guardarContacto()"></app-btn-agregar>
-                </div>
-            </ng-container>
-        </div>    
+              </div>
+          </div>        
       </div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" *ngIf="!soloVista">
       <app-btn-agregar name="Guardar"  type="button" (click)="onSubmit()"></app-btn-agregar>
     </div>        
 </div>  
+
+
 

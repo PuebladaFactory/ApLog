@@ -3,207 +3,150 @@
         <h1 >Alta Chofer</h1>
         <button type="button" class="btn-close btn btn-outline-secondary" (click)="activeModal.close()"></button>
     </div>
-    <div class="modal-body">
-        <div class="container d-flex justify-content-center align-self-center">
-
-          <form action="" class="w-100"  (ngSubmit)="onSubmit()">
-              <div class="d-flex justify-content-evenly w-100">
-                  <div>
-        
-                    <h2>Datos Personales</h2>
-                
-                    <form [formGroup]="form" >
-                      <div class="form-group">
+    <div class="modal-body">          
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" >        
+            <div class="row">                  
+                <h2>Datos Personales</h2>
+                <div class="col-6">                        
+                    <div class="form-group">
                         <label for="Nombre">Nombre</label>
                         <div class="input-group">
-                          <input formControlName="nombre" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': form.get('nombre').invalid && (form.get('nombre').dirty || form.get('nombre').touched) }" >            
+                            <input formControlName="nombre" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': form.get('nombre').invalid && (form.get('nombre').dirty || form.get('nombre').touched) }" [ngClass]="{'isDisabled': soloVista}" >            
                         </div>
-                      </div>    
-                      <div class="form-group">
+                    </div>    
+                    <div class="form-group">
                         <label for="Apellido">Apellido</label>
                         <div class="input-group">
-                          <input formControlName="apellido" class="form-control" required type="text"  [ngClass]="{ 'is-invalid': form.get('apellido').invalid && (form.get('apellido').dirty || form.get('apellido').touched) }" >
+                            <input formControlName="apellido" class="form-control" required type="text"  [ngClass]="{ 'is-invalid': form.get('apellido').invalid && (form.get('apellido').dirty || form.get('apellido').touched) }" [ngClass]="{'isDisabled': soloVista}">
                         </div>
-                      </div>    
-                      <div class="form-group">
+                    </div>    
+                    <div class="form-group">
                         <label for="Cuit">CUIT</label>
                         <div class="input-group">
-                          <input formControlName="cuit" class="form-control" required type="text" [placeholder]="'ej: 20213456789'"  [ngClass]="{ 'is-invalid': form.get('cuit').invalid && (form.get('cuit').dirty || form.get('cuit').touched) }" >
+                            <input formControlName="cuit" class="form-control" required type="text" [placeholder]="'ej: 20213456789'"  [ngClass]="{ 'is-invalid': form.get('cuit').invalid && (form.get('cuit').dirty || form.get('cuit').touched) }" [ngClass]="{'isDisabled': soloVista}">
                         </div>
-                      </div>                 
-                      <div class="form-group">
-                          <label for="Celular de contacto">Celular de Contacto</label>
-                          <div class="input-group">
-                            <input formControlName="celularContacto" class="form-control" required type="text" [placeholder]="'ej: 1154776234'"  [ngClass]="{ 'is-invalid': form.get('celularContacto').invalid && (form.get('celularContacto').dirty || form.get('celularContacto').touched) }">
-                          </div>
-                      </div>   
-                      <div class="form-group">
-                        <label for="Celular de emergencia">Celular de Emergencia</label>
-                        <div class="input-group">
-                          <input formControlName="celularEmergencia" class="form-control" required type="text" [placeholder]="'ej: 1154776234'" [ngClass]="{ 'is-invalid': form.get('celularEmergencia').invalid && (form.get('celularEmergencia').dirty || form.get('celularEmergencia').touched) }">
-                        </div>
-                      </div>   
-                      <div class="form-group">
+                    </div>                 
+                    <div class="form-group">
                         <label for="Domicilio">Domicilio</label>
                         <div class="input-group">
-                          <input formControlName="domicilio" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('domicilio').invalid && (form.get('domicilio').dirty || form.get('domicilio').touched) }">
+                            <input formControlName="domicilio" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('domicilio').invalid && (form.get('domicilio').dirty || form.get('domicilio').touched) }" [ngClass]="{'isDisabled': soloVista}">
                         </div>
-                      </div> 
-                      <div class="form-group">
-                        <label for="Email">Email</label>
-                        <div class="input-group">
-                          <input formControlName="email" class="form-control" required type="email"[placeholder]="'ej: davidcortes@gmail.com'" [ngClass]="{ 'is-invalid': form.get('email').invalid && (form.get('email').dirty || form.get('email').touched) }">
-                        </div>
-                    </div>       
-                      <div class="form-group">
+                    </div> 
+                    <div class="form-group">
                         <label for="FechaNac">Fecha Nacimiento</label>
                         <div class="input-group">
-                          <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{ 'is-invalid': form.get('fechaNac').invalid && (form.get('fechaNac').dirty || form.get('fechaNac').touched) }">
+                            <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{ 'is-invalid': form.get('fechaNac').invalid && (form.get('fechaNac').dirty || form.get('fechaNac').touched) }" [ngClass]="{'isDisabled': soloVista}">
                         </div>
-                      </div>        
-                      <div class="form-group">
+                    </div>        
+                </div>      
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="Celular de contacto">Celular de Contacto</label>
+                        <div class="input-group">
+                            <input formControlName="celularContacto" class="form-control" required type="text" [placeholder]="'ej: 1154776234'"  [ngClass]="{ 'is-invalid': form.get('celularContacto').invalid && (form.get('celularContacto').dirty || form.get('celularContacto').touched) }" [ngClass]="{'isDisabled': soloVista}">
+                        </div>
+                    </div>   
+                    <div class="form-group">
+                        <label for="Celular de emergencia">Celular de Emergencia</label>
+                        <div class="input-group">
+                            <input formControlName="celularEmergencia" class="form-control" required type="text" [placeholder]="'ej: 1154776234'" [ngClass]="{ 'is-invalid': form.get('celularEmergencia').invalid && (form.get('celularEmergencia').dirty || form.get('celularEmergencia').touched) }" [ngClass]="{'isDisabled': soloVista}">
+                        </div>
+                    </div>                       
+                    <div class="form-group">
+                        <label for="Email">Email</label>
+                        <div class="input-group">
+                            <input formControlName="email" class="form-control" required type="email"[placeholder]="'ej: davidcortes@gmail.com'" [ngClass]="{ 'is-invalid': form.get('email').invalid && (form.get('email').dirty || form.get('email').touched) }" [ngClass]="{'isDisabled': soloVista}">
+                        </div>
+                    </div>                           
+                    <div class="form-group">
                         <label for="Proveedor">Proveedor</label>
-                        <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)" required>
-                          <option>Elegir Cond. Fiscal</option>
-                          <option value="monotributista">monotributista</option>
-                          <option *ngFor="let proveedor of $proveedores">
-                            {{proveedor.razonSocial}}
-                          </option>
+                        <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)" required [ngClass]="{'isDisabled': soloVista}">                            
+                            <option>{{chofer !== undefined ? chofer.proveedor : "Elegir Cond. Fiscal"}}</option>
+                            <option value="monotributista">monotributista</option>
+                            <option *ngFor="let proveedor of $proveedores">
+                                {{proveedor.razonSocial}}
+                            </option>
                         </select>
-                    </div> 
-                
-                  
-                
-                    </form>
-                
-                  </div>
-                
-                  <div>
-                      <h2>Datos Vehiculo</h2>
-                      <form [formGroup]="vehiculoForm">
-                          <div class="form-group">
-                              <label for="Dominio">Dominio</label>
-                              <div class="input-group">
-                                <input formControlName="dominio" class="form-control" required type="text" [placeholder]="'ej: gbc408  ó  ab123ca'" [ngClass]="{ 'is-invalid': vehiculoForm.get('dominio').invalid && (vehiculoForm.get('dominio').dirty || vehiculoForm.get('dominio').touched) }">
-                                
-                              </div>
-                          </div>  
-                          <div class="form-group">
-                            <label for="Marca">Marca</label>
-                            <div class="input-group">
-                              <input formControlName="marca" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('marca').invalid && (vehiculoForm.get('marca').dirty || vehiculoForm.get('marca').touched) }"> 
-                            </div>
-                          </div> 
-                          <div class="form-group">
-                              <label for="Modelo">Modelo</label>
-                              <div class="input-group">
-                                <input formControlName="modelo" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('modelo').invalid && (vehiculoForm.get('modelo').dirty || vehiculoForm.get('modelo').touched) }">
-                              </div>
-                          </div>     
-                          <div class="form-group">
-                              <label for="Categoria">Categoria Vehiculo</label>
-                              <select class="form-select" (change)="changeCategoria($event)" required>
-                                <option value="">Elegir Categoría</option>
-                                <option *ngFor="let categoria of tarifaGralCliente?.cargasGenerales | keyvalue" [value]="categoria.key">
-                                  {{ categoria.key }}: {{ categoria.value.nombre }}
-                                </option>
-                              </select>
-                          </div> 
-                          <div>
-                              <form [formGroup]="categoriasForm" (ngSubmit)="onSubmit()">
-                                  <table class="table">
-                                      <thead>
-                                          <th></th>
-                                          <th>Cat Tarifa Gral</th>
-                                          <th>Nombre</th>
-                                      </thead>
-                                      <tbody>
-                                          <tr *ngFor="let categoria of tarifaGralCliente?.cargasGenerales | keyvalue">
-                                            <td>
-                                                <input class="form-check-input" type="checkbox" [value]="categoria.key" id="flexCheckDefault">
-                                            </td>
-                                            <td>
-                                                <label class="form-check-label" for="flexCheckDefault">
-                                                  {{ categoria.key }}: {{ categoria.value.nombre }}
-                                                </label>                                            
-                                            </td>
-                                            <td>                                              
-                                                <input formControlName="categoria" class="form-control" required type="text">                                              
-                                            </td>
-                                          </tr>                                          
-                                      </tbody>
-                                  </table>
-                              </form>                              
+                    </div>
+                    <div class="form-group mt-3">
+                        <h3 class="">Tipo de Tarifa</h3>
+                        <form [formGroup]="formTipoTarifa" (ngSubmit)="onSubmit()" class="d-flex mt-2">
+                          <div class="form-check form-switch form-check-reverse ms-2 me-4">
+                            <input formControlName="general" class="form-check-input" type="checkbox" 
+                                  (change)="onTarifaTipoChange('general')" id="tarifaGeneral" checked [ngClass]="{'isDisabled': soloVista}">
+                            <label class="form-check-label" for="tarifaGeneral">General</label>
                           </div>
-                          <!-- <div class="form-group mt-1">
-                              <label for="Categoria">Tipo de Combustible</label>
-                              <select class="form-select" (change)="changeTipoCombustible($event)" required>
-                                <option >Elegir Categoria</option>
-                                <option value="gas">Gas</option>
-                                <option value="nafta">Nafta</option>                        
-                              </select>
-                          </div> 
-                          <div class="form-group mt-1">
-                              <label for="Categoria">Tarjeta de Combustible</label>
-                              <select class="form-select" (change)="changeTarjetaombustible($event)" required>
-                                <option >Seleccione</option>
-                                <option value="si">si</option>
-                                <option value="no">no</option>                        
-                              </select>
-                          </div> 
-                          <div class="form-group mt-1">
-                            <label for="Categoria">Publicidad</label>
-                            <select class="form-select" (change)="changePublicidad($event)" required>
-                              <option >Seleccione</option>
-                              <option value="si">si</option>
-                              <option value="no">no</option>                        
-                            </select>
-                        </div>  -->
-                        <!-- <div class="form-group">
-                            <label for="Categoria mt-2">Refrigeracion</label>
-                            <select class="form-select form-select-md mb-3" (change)="selectRefrigeracion($event)" required>
-                              <option >Seleccionar</option>
-                              <option value="si">si</option>   
-                              <option value="no">no</option>                        
-                            </select>
-                        </div>  -->
-                         <!--  <div class="form-group mt-1">
-                              <label for="Categoria">Seguimiento Satelital</label>
-                              <select class="form-select" (change)="seguimientoSatelital($event)" required>
-                                <option >Seleccionar</option>
-                                <option value="si">si</option>   
-                                <option value="no">no</option>                        
-                              </select>
-                          </div>         -->          
-                          <!-- <div *ngIf="seguimiento" class="mt-2">
-                              <form [formGroup]="seguimientoForm">
-                                  <h5 for="Categoria">Detalle Seguimiento Satelital</h5>
-                                  <label for="proveedor">Proveedor</label>
-                                  <div class="input-group">
-                                    <input formControlName="proveedor" class="form-control" required type="text">
-                                  </div>
-                                  <label for="Marca">Marca</label>
-                                  <div class="input-group">
-                                    <input formControlName="marcaGps" class="form-control" required type="text">
-                                  </div>
-                              </form>                      
-                          </div>  -->
-                        
-                      </form>
-                  </div>
-                
-              </div>
-          
-          </form>  
-        
-        
-        </div>
+                          <div class="form-check form-switch form-check-reverse me-4">
+                            <input formControlName="especial" class="form-check-input" type="checkbox" 
+                                  (change)="onTarifaTipoChange('especial')" id="tarifaEspecial" [ngClass]="{'isDisabled': soloVista}">
+                            <label class="form-check-label" for="tarifaEspecial">Especial</label>
+                          </div>
+                          <div class="form-check form-switch form-check-reverse me-4">
+                            <input formControlName="eventual" class="form-check-input" type="checkbox" 
+                                  (change)="onTarifaTipoChange('eventual')" id="tarifaEventual" [ngClass]="{'isDisabled': soloVista}">
+                            <label class="form-check-label" for="tarifaEventual">Eventual</label>
+                          </div>
+                          <div class="form-check form-switch form-check-reverse me-4">
+                            <input formControlName="personalizada" class="form-check-input" type="checkbox" 
+                                  (change)="onTarifaTipoChange('personalizada')" id="tarifaPersonalizada" [ngClass]="{'isDisabled': soloVista}">
+                            <label class="form-check-label" for="tarifaPersonalizada">Personalizada</label>
+                          </div>
+                        </form>
+                    </div>                   
+                </div>                   
+            </div>      
+        </form>      
+        <div class="row mt-3">
+            <div class="d-flex justify-content-between">
+              <h2 class="w-25">Vehiculos</h2>
+              <button class="btn btn-outline-primary" (click)="openModal()" *ngIf="!soloVista"> Agregar Vehiculo
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                  </svg>
+              </button>
+            </div>  
+            <div class="mt-3">
+                <table class="table table-bordered border-primary table-hover">
+                    <thead>
+                        <th>Categoria</th>
+                        <th>Dominio</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Tipo Comb</th>
+                        <th>Tarj Comb</th>
+                        <th>Publicidad</th>
+                        <th>Satelital</th>
+                        <th style="width: 80px;" *ngIf="!soloVista" >Acciones</th>
+                    </thead>
+                    <tbody *ngIf="vehiculos.length > 0 else SinVehiculos">
+                        <tr *ngFor="let vehiculo of vehiculos, let i = index" [ngClass]="{'isDisabled': soloVista}">
+                            <td class="align-middle">{{vehiculo.categoria.nombre}}</td>
+                            <td class="align-middle">{{vehiculo.dominio}}</td>
+                            <td class="align-middle">{{vehiculo.marca}}</td>
+                            <td class="align-middle">{{vehiculo.modelo}}</td>
+                            <td class="align-middle">{{vehiculo.tipoCombustible}}</td>
+                            <td class="align-middle">{{vehiculo.tarjetaCombustible ? "Si" : "No"}}</td>
+                            <td class="align-middle">{{vehiculo.publicidad ? "Si" : "No"}}</td>                            
+                            <td class="align-middle">{{!vehiculo.segSat ? "No" : vehiculo.satelital?.proveedor + ': ' + vehiculo.satelital?.marcaGps}}</td>
+                            <td class="align-middle" *ngIf="!soloVista">
+                                <app-btn-editar name="EditarClaro" (click)="editarVehiculo(i)"></app-btn-editar>
+                                <app-btn-eliminar name="EliminarClaro" (click)="eliminarVehiculo(i)"></app-btn-eliminar>
+                            </td>  
+                        </tr>
+                    </tbody>
+                    <ng-template #SinVehiculos>
+                        <tbody>
+                            <tr>Sin Datos</tr>
+                        </tbody>                        
+                    </ng-template>
+                </table>
+            </div>
+        </div>  
     </div>  
-    <div class="modal-footer">
-
-      <button class="btn btn-secondary mt-2" type="submit" [disabled]="form.invalid || vehiculoForm.invalid " (click)="onSubmit()">
-        Guardar 
-      </button>
-
+    <div class="modal-footer" *ngIf="!soloVista">
+        <button class="btn btn-secondary mt-2" type="submit" [disabled]="form.invalid" (click)="onSubmit()">
+          Guardar 
+        </button>
     </div>
 </div>

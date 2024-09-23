@@ -129,6 +129,24 @@ export class StorageService {
 
   private _ultTarifaEspCliente$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaEspCliente') || []);
   public ultTarifaEspCliente$ = this._ultTarifaEspCliente$.asObservable();
+
+  private _ultTarifaPersCliente$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaPersCliente') || []);
+  public ultTarifaPersCliente$ = this._ultTarifaPersCliente$.asObservable();
+
+  private _ultTarifaGralChofer$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaGralChofer') || []);
+  public ultTarifaGralChofer$ = this._ultTarifaGralChofer$.asObservable();
+
+  private _ultTarifaEspChofer$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaEspChofer') || []);
+  public ultTarifaEspChofer$ = this._ultTarifaEspChofer$.asObservable();
+
+  private _ultTarifaPersChofer$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaPersChofer') || []);
+  public ultTarifaPersChofer$ = this._ultTarifaPersChofer$.asObservable();
+
+  private _clienteSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('clienteSeleccionado') || []);
+  public clienteSeleccionado$ = this._clienteSeleccionado$.asObservable();
+
+  private _choferSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('choferSeleccionado') || []);
+  public choferSeleccionado$ = this._choferSeleccionado$.asObservable();
   /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public logger$ = this._logger$.asObservable() */
 
@@ -305,6 +323,35 @@ export class StorageService {
         break;
       }
 
+      case "ultTarifaGralChofer":{
+        this._ultTarifaGralChofer$.next(data)
+        break;
+      }
+
+      case "ultTarifaEspChofer":{
+        this._ultTarifaEspChofer$.next(data)
+        break;
+      }
+
+      case "ultTarifaPersCliente":{
+        this._ultTarifaPersCliente$.next(data)
+        break;
+      }
+
+      case "ultTarifaPersChofer":{
+        this._ultTarifaPersChofer$.next(data)
+        break;
+      }
+      
+      case "clienteSeleccionado":{
+        this._clienteSeleccionado$.next(data)
+        break;
+      }
+
+      case "choferSeleccionado":{
+        this._choferSeleccionado$.next(data)
+        break;
+      }
       /*case "logger": {
         this._logger$.next(data)
         break;
@@ -496,25 +543,25 @@ export class StorageService {
       public addItem(componente: string, item: any): void {
         console.log("storage add item", componente, item);
         this.dbFirebase.create(componente, item).then(() => {
-          this.refreshData(componente);
+          this.refreshData(componente, item);
         }).catch((e) => console.log(e.message));
       }
     
       public deleteItem(componente: string, item: any): void {
         console.log("storage delete item", componente, item);
         this.dbFirebase.delete(componente, item.id).then(() => {
-          this.refreshData(componente);
+          this.refreshData(componente,item);
         }).catch((e) => console.log(e.message));
       }
     
       public updateItem(componente: string, item: any): void {
         console.log("storage update item", componente, item);
         this.dbFirebase.update(componente, item).then(() => {
-          this.refreshData(componente);
+          this.refreshData(componente, item);
         }).catch((e) => console.log(e.message));
       }
     
-      private refreshData(componente: string) {
+      private refreshData(componente: string, item:any) {
         switch(componente){
           case "clientes":
             this.getAllSorted("clientes", 'idCliente', 'asc');
@@ -529,10 +576,22 @@ export class StorageService {
             this.getAllSorted("operacionesActivas", 'fecha', 'desc');
             break;
           case "tarifasGralCliente":
-            this.getUltElemColeccion("tarifasGralCliente", "idTarifa", "desc", 1,"ultTarifaGralCliente")
+            this.setInfo("ultTarifaGralCliente", item);                        
             break;
           case "tarifasEspCliente":
-            this.getUltElemColeccion("tarifasEspCliente", "idTarifa", "desc", 1,"ultTarifaEspCliente")
+            this.setInfo("ultTarifaEspCliente", item);            
+            break;
+          case "tarifasPersCliente":
+            this.setInfo("ultTarifaPersCliente", item);            
+            break;
+          case "tarifasGralChofer":
+            this.setInfo("ultTarifaGralChofer", item);                        
+            break;
+          case "tarifasEspChofer":
+            this.setInfo("ultTarifaEspChofer", item);            
+            break;
+          case "tarifasPersChofer":
+            this.setInfo("ultTarifaPersChofer", item);            
             break;
           /* case "tarifasChofer":
             this.getByFieldValue("tarifasChofer", 'fecha', 'asc');

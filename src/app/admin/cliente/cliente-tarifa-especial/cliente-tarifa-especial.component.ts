@@ -16,17 +16,22 @@ export class ClienteTarifaEspecialComponent implements OnInit {
   clienteSeleccionado!: Cliente[];
   tEspecial: boolean = false;
   idClienteEsp!: number;
-  constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService){
+  consultaCliente: any [] = [];
+
+  constructor(private storageService: StorageService){
 
   }
 
   ngOnInit() {
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    
+    .subscribe(data => {
       this.$clientes = data;
       this.$clientesEsp = this.$clientes.filter((cliente:Cliente)=>{
         return cliente.tarifaTipo.especial === true 
       })
       console.log(this.$clientesEsp);      
+      this.tEspecial = false;
     })             
 
   }
@@ -41,7 +46,10 @@ export class ClienteTarifaEspecialComponent implements OnInit {
       return cliente.idCliente === id
     })
     this.tEspecial = true;
-    this.idClienteEsp = id
+    this.idClienteEsp = id;
+    this.consultaCliente.push(this.idClienteEsp)
+    this.storageService.setInfo("clienteSeleccionado", this.consultaCliente);
+    this.consultaCliente = [];   
     //this.asignarTarifa = true
     ////console.log()("este es el cliente seleccionado: ", this.clienteSeleccionado);
     //this.buscarTarifas();

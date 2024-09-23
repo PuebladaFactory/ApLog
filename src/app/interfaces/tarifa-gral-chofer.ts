@@ -1,12 +1,20 @@
-export interface TarifaGralCliente {
-    id: any;
-    idTarifa: number;
-    fecha: string;    
-    cargasGenerales: CategoriaTarifa [];
+export interface TarifaGralChofer {
+    id:any;
+    idTarifa:number;    
+    fecha: string;
+    cargasGenerales: CategoriaTarifa [];    
     adicionales: AdicionalTarifa;
     tipo: TarifaTipo;
-    idCliente: number|null;
+    idChofer: number | null;        
+    idCliente: number | null
+    //publicidad: number;    
+    //acompaniante: number;
+    //tEspecial: boolean;
+    //tarifaEspecial: TarifaEspecial;  
+    
+
 }
+
 export interface CategoriaTarifa {
     orden: number;
     nombre: string;
@@ -15,6 +23,7 @@ export interface CategoriaTarifa {
 
 export interface AdicionalTarifa {
     acompaniante: number;
+    publicidad: number;
     adicionalKm: AdicionalKm;
 }
 
@@ -35,4 +44,3 @@ export interface TarifaTipo {
     eventual: boolean;   
     personalizada: boolean; 
 }
-

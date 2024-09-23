@@ -14,6 +14,8 @@ import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.
 import { ClienteTarifaPersonalizadaComponent } from './cliente-tarifa-personalizada/cliente-tarifa-personalizada.component';
 import { ClienteTarifaGralComponent } from './cliente-tarifa-gral/cliente-tarifa-gral.component';
 import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/cliente-tarifa-especial.component';
+import { ModalContactoComponent } from './modal-contacto/modal-contacto.component';
+import { ModalTarifaPersonalizadaComponent } from './modal-tarifa-personalizada/modal-tarifa-personalizada.component';
 
 
 
@@ -26,7 +28,13 @@ import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/client
     ClienteControlComponent,
     ClienteListadoComponent,
     ClienteAltaComponent,    
-    ClienteTarifaComponent, ModalAltaTarifaComponent, ClienteTarifaPersonalizadaComponent, ClienteTarifaGralComponent, ClienteTarifaEspecialComponent, 
+    ClienteTarifaComponent,
+    ModalAltaTarifaComponent, 
+    ClienteTarifaPersonalizadaComponent, 
+    ClienteTarifaGralComponent, 
+    ClienteTarifaEspecialComponent, 
+    ModalContactoComponent, 
+    ModalTarifaPersonalizadaComponent, 
     
 
   ],
@@ -37,7 +45,7 @@ import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/client
     ReactiveFormsModule,
     SharedModule,
     Ng2SearchPipeModule,
-    NgxDatatableModule
+    NgxDatatableModule,    
   ]
 })
 export class ClienteModule { }

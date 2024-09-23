@@ -8,7 +8,7 @@
           <th><input type="checkbox" (change)="onSeleccionarTodosChange($event)" formControlName="seleccionarTodos"></th>
           <th>Categoria</th>
           <th>Nombre</th>
-          <th>Ultima Tarifa</th>
+          <th>Ultima Tarifa {{tEspecial? ultTarifaEspecial.fecha: ultTarifa? ultTarifa.fecha : ""}}</th>
           <th>Diferencia</th>
           <th>Nueva Tarifa</th>
         </tr>

@@ -5,4 +5,17 @@
   input{
     font-size: 1.15rem;
 }
+
+.isDisabled {
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.isDisabled:hover {
+  cursor: not-allowed;
+}
+
+.isDisabledAjustes{
+  visibility: hidden;
+}
   

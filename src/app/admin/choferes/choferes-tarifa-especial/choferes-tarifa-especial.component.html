@@ -1,1 +1,35 @@
-<p>choferes-tarifa-especial works!</p>
+
+<div class="row mt-4">
+    <div class="col-3 ">
+        <h2>Seleccionar Chofer: </h2>
+        <select class="form-select form-select-md mb-3 w-50" (change)="changeChofer($event)">
+            <option selected>Seleccione</option>
+            <option *ngFor="let chofer of $choferesEsp" [value]="chofer.idChofer">
+              {{chofer.apellido}} {{chofer.nombre}} 
+            </option>
+          </select>
+    </div>     
+    <div class="col-4" *ngIf="choferSeleccionado !== undefined" >
+        <h2>Clientes a los que aplicar la tarifa especial </h2>
+        <select class="form-select form-select-md mb-3 w-50" (change)="changeCliente($event)">
+            <option selected>Seleccione</option>
+            <option [value]="'todos'">Todos</option>
+            <option *ngFor="let cliente of $clientes" [value]="cliente.idCliente">
+              {{cliente.razonSocial}} 
+            </option>
+          </select>
+    </div>     
+</div>
+
+<div>
+<ng-template #sinSeleccion>
+    <h4>Seleccione Chofer</h4>
+</ng-template>
+<ng-template #sinTarifas>
+  <h4>El Chofer aun no tiene tarifas asignadas</h4>
+</ng-template>
+</div> 
+
+<div *ngIf="choferSeleccionado !== undefined && idClienteEsp !== undefined">
+    <app-choferes-tarifa-gral [tEspecial]="tEspecial"></app-choferes-tarifa-gral>
+</div>

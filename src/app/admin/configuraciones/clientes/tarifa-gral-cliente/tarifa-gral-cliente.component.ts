@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
-import { AdicionalTarifa, CargasGenerales, CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
+import { AdicionalTarifa, CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -27,16 +27,16 @@ export class TarifaGralClienteComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.storageService.ultTarifaGralCliente$.subscribe(data =>{
+ /*    this.storageService.ultTarifaGralCliente$.subscribe(data =>{
       //console.log("data: ", data);                
       this.ultTarifa = data;
       //console.log("1) ult tarifa: ",this.ultTarifa);        
       this.resetTable();  // Limpia los datos existentes de la tabla
       this.inicializarTabla();
       this.onGenerarNuevaTarifaAutomatica();   
-    })              
+    })               */
   }
-
+/* 
   // Método para resetear la tabla
   resetTable() {
     this.filas.clear(); // Limpia el FormArray
@@ -118,15 +118,7 @@ export class TarifaGralClienteComponent implements OnInit {
       }
     });
   }
-  
-  /* onGenerarNuevaTarifaManual() {
-    this.filas.controls.forEach(fila => {
-      if (fila.get('categoria')?.value.includes('Categoria')) {
-        fila.get('nombre')?.enable();
-      }
-      fila.get('nuevaTarifa')?.enable();
-    });
-  } */
+
   onGenerarNuevaTarifaManual() {
     this.filas.controls.forEach((fila, index) => {
       if (fila.get('categoria')?.value.includes('Categoria')) {
@@ -239,5 +231,5 @@ export class TarifaGralClienteComponent implements OnInit {
     this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
    
   }
-
+ */
 }

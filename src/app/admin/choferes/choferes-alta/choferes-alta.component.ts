@@ -1,14 +1,15 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Categoria, Chofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Categoria, Chofer, SeguimientoSatelital, Vehiculo } from 'src/app/interfaces/chofer';
 import { Legajo, Documentacion } from 'src/app/interfaces/legajo';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
-import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
+import { ModalVehiculoComponent } from '../modal-vehiculo/modal-vehiculo.component';
 
 @Component({
   selector: 'app-choferes-alta',
@@ -18,7 +19,7 @@ import Swal from 'sweetalert2';
 
 export class ChoferesAltaComponent implements OnInit {
 
-  @Input() data:any
+  @Input() fromParent: any;
 
   componente!:string; 
   form:any;
@@ -28,18 +29,9 @@ export class ChoferesAltaComponent implements OnInit {
   adicionalForm:any;
   categoriasForm:any;
   chofer!: Chofer;  
-  /* categorias = [
-  { id: 0, categoria: 'mini', },
-  { id: 1, categoria: 'maxi', },
-  { id: 2, categoria: 'furgon grande', },
-  { id: 3, categoria: 'camión liviano', },
-  { id: 4, categoria: 'chasis', },
-  { id: 5, categoria: 'balancin', },
-  { id: 6, categoria: 'semi remolque local', },
-  { id: 7, categoria: 'portacontenedores', },
-  ]; */
-  seguimiento: boolean = false;
-  //categoriaSeleccionada!:string;
+  soloVista:boolean = false;
+  edicion: boolean = false;
+  seguimiento: boolean = false;  
   tipoCombustible!:string;
   tarjetaCombustible!:boolean;
   jornada!:TarifaChofer;
@@ -47,16 +39,18 @@ export class ChoferesAltaComponent implements OnInit {
   adicionalKm!:AdicionalKm;  
   legajo!: any;
   refrigeracion!:boolean;
-  $proveedores!: any; 
+  $proveedores!: Proveedor[]; 
   proveedorSeleccionado!: string;
   editForm: any;
   publicidad!: boolean;
-  categorias: CategoriaTarifa[] = [];
+  categorias: Categoria [] = [];
   tarifaGralCliente!: TarifaGralCliente;
   categoriaSeleccionada: CategoriaTarifa | null = null;
+  vehiculos: Vehiculo[] = [];
+  satelital!: SeguimientoSatelital | boolean;
+  formTipoTarifa!:any;
 
-
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal) {
     this.form = this.fb.group({                             //formulario para el perfil 
      nombre: ["", [Validators.required, Validators.maxLength(30)]], 
      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
@@ -64,7 +58,7 @@ export class ChoferesAltaComponent implements OnInit {
      fechaNac: ["",Validators.required],
      email: ["",[Validators.required, Validators.email]],
      celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
-     celularEmergencia: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
+     celularEmergencia: ["",[Validators.minLength(10), Validators.maxLength(10)]],
      domicilio: ["", [Validators.required, Validators.maxLength(50)]],     
 
   });
@@ -81,113 +75,236 @@ export class ChoferesAltaComponent implements OnInit {
     })
 
     this.categoriasForm = this.fb.group({
-      categoria: [""],
-    })
-    
-   /*  this.jornadaForm = this.fb.group({                    //formulario para la jornada
-      base: [""],      
-      carga: [""],
-      publicidad: [""],  
-  });
-
-    this.adicionalForm = this.fb.group({                  //formulario para los adicionales de la jornada
-      adicionalKm1: [""], 
-      adicionalKm2: [""],
-      adicionalKm3: [""],
-      adicionalKm4: [""],
-      adicionalKm5: [""],
-  }); */
+      categorias: this.fb.array([]),
+    });
+    this.formTipoTarifa = this.fb.group({
+      general: [true],  // Seleccionado por defecto
+      especial: [false],
+      eventual: [false],
+      personalizada: [false],
+    })    
+      
    }
 
    ngOnInit(): void {
-    //this.proveedores$ = this.storageService.proveedores$;
+    console.log("1)", this.fromParent);
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
     });
-    this.storageService.ultTarifaGralCliente$.subscribe(data =>{      
-      this.tarifaGralCliente = data;
-    })              
+    if(this.fromParent.modo === "vista"){
+      this.chofer = this.fromParent?.item;
+      this.soloVista = true;
+      this.armarForm()
+
+    }else if (this.fromParent.modo === "edicion"){
+      this.chofer = this.fromParent?.item;
+      this.soloVista = false;
+      this.armarForm()
+    }else{
+      this.soloVista = false;
+    }
+
    }
 
+   onTarifaTipoChange(tipoSeleccionado: string) {
+    // Resetea los demás switches a false, excepto el seleccionado
+    this.formTipoTarifa.patchValue({
+      general: tipoSeleccionado === 'general',
+      especial: tipoSeleccionado === 'especial',
+      eventual: tipoSeleccionado === 'eventual',
+      personalizada: tipoSeleccionado === 'personalizada'
+    });
+  }
 
+   armarForm(){
+    if(this.chofer.proveedor !== null){
+      this.proveedorSeleccionado = this.chofer.proveedor;
+    }
+        
+    this.form.patchValue({
+      nombre: this.chofer.nombre, 
+      apellido: this.chofer.apellido, 
+      cuit: this.chofer.cuit,            
+      fechaNac: this.chofer.fechaNac,
+      email: this.chofer.email,
+      celularContacto: this.chofer.celularContacto,
+      celularEmergencia: this.chofer.celularEmergencia,
+      domicilio: this.chofer.domicilio,           
+    });    
+    this.formTipoTarifa.patchValue({
+      general: this.chofer.tarifaTipo.general, 
+      especial: this.chofer.tarifaTipo.especial,
+      eventual: this.chofer.tarifaTipo.eventual,
+      personalizada: this.chofer.tarifaTipo.personalizada,      
+  });
+    this.armarVehiculoForm();   
+  }
+
+  armarVehiculoForm(){
+    /* this.vehiculoForm.patchValue({
+      dominio: this.chofer.vehiculo[0].dominio,
+      marca:this.chofer.vehiculo[0].marca,
+      modelo: this.chofer.vehiculo[0].modelo,
+    });
+    //this.categoriaSeleccionada = this.choferEditar.vehiculo.categoria; ///////////////////////////////////////////
+    this.tipoCombustible = this.chofer.vehiculo[0].tipoCombustible;
+    this.tarjetaCombustible = this.chofer.vehiculo[0].tarjetaCombustible;
+    this.publicidad = this.chofer.vehiculo[0].publicidad; */
+    this.vehiculos = this.chofer.vehiculo
+  
+    //this.armarSeguimientoSatelital();
+  }
+
+  /* armarSeguimientoSatelital(){
+    if(!this.chofer.vehiculo[0].satelital){      
+      this.seguimiento = false;
+      this.satelital = false;
+    }else{
+      this.seguimiento = true;
+      this.satelital = this.chofer.vehiculo[0].satelital;
+      //console.log()(this.satelital);
+      this.seguimientoForm.patchValue({
+        proveedor: "",
+        marcaGps: "",
+      })
+  
+    }
+  } */
 
    // es el mismo metodo para guardar el chofer y la jornada
    // primero arma cada uno de los objetos
    // y desp guarda el objeto en la coleccion que le corresponde
    onSubmit(){ 
-    console.log(this.categoriasForm.value);
     
-    if (this.form.valid && this.vehiculoForm.valid){
-
+    if (this.form.valid){
+      let id = this.chofer?.id;
       this.armarChofer();
-      this.armarVehiculo();    
-      this.addItem(this.chofer);
-      //this.armarLegajo();
-      this.activeModal.close();    
+      //this.armarVehiculo();        
+      this.addItem();
+      //this.(armarLegajo();      
+      
     } else{
       alert("error en el formulario")
-    } 
+    }  
       
     
     
    }
 
+   
    armarChofer(){
-    this.componente = "choferes"
-    this.chofer = this.form.value;
-   /*  this.chofer.categoria = this.categoriaSeleccionada; */
-    this.chofer.idChofer = new Date().getTime(); 
-    this.chofer.proveedor = this.proveedorSeleccionado;
-    //console.log()("este es el chofer: ",this.chofer);     
-    
+    this.componente = "choferes";  
+    const tarifaSeleccionada = this.getTarifaTipo();      
+    if(this.fromParent.modo === "edicion"){
+        let id = this.chofer.id;
+        let idChofer = this.chofer.idChofer
+        this.chofer = this.form.value;
+        /*  this.chofer.categoria = this.categoriaSeleccionada; */
+        this.chofer.idChofer = idChofer; 
+        this.chofer.id = id;    
+        this.chofer.proveedor = this.proveedorSeleccionado;
+        this.chofer.vehiculo = this.vehiculos;
+        this.chofer.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
+        console.log("este es el chofer EDITADO: ",this.chofer);     
+    } else {
+        this.chofer = this.form.value;
+      /*  this.chofer.categoria = this.categoriaSeleccionada; */
+        this.chofer.idChofer = new Date().getTime();   
+        this.chofer.id = null;  
+        this.chofer.proveedor = this.proveedorSeleccionado;
+        this.chofer.vehiculo = this.vehiculos;
+        this.chofer.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
+        console.log("este es el chofer NUEVO: ",this.chofer);     
+    }
    }
 
-   addItem(item:any): void {   
-    Swal.fire({
-      title: "¿Confirmar el alta del Chofer?",
-      //text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.storageService.addItem(this.componente, item); 
-        Swal.fire({
-          title: "Confirmado",
-          text: "Alta exitosa",
-          icon: "success"
-        }).then((result)=>{
-          if (result.isConfirmed) {
-            this.activeModal.close();
-          }
-        });   
-        
-      }
-    });   
+   // Método para obtener la selección actual del formulario
+   getTarifaTipo(): TarifaTipo {
+    const formValue = this.formTipoTarifa.value;
+    const tarifaTipo: TarifaTipo = {
+      general: formValue.general,
+      especial: formValue.especial,
+      eventual: formValue.eventual,
+      personalizada: formValue.personalizada
+    };
+    return tarifaTipo;
+  }
 
+   addItem(): void {  
+    console.log("CHOFER: ", this.chofer );
+    if(this.fromParent.modo === "edicion") {
+      Swal.fire({
+        title: "¿Confirmar los cambios del Chofer?",
+        //text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.storageService.updateItem(this.componente, this.chofer); 
+          Swal.fire({
+            title: "Confirmado",
+            text: "Cambios guardados",
+            icon: "success"
+          }).then((result)=>{
+            if (result.isConfirmed) {
+              this.activeModal.close();
+            }
+          });   
+          
+        }
+      });   
+    }else {
+      Swal.fire({
+        title: "¿Confirmar el alta del Chofer?",
+        //text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.storageService.addItem(this.componente, this.chofer); 
+          Swal.fire({
+            title: "Confirmado",
+            text: "Alta exitosa",
+            icon: "success"
+          }).then((result)=>{
+            if (result.isConfirmed) {
+              this.activeModal.close();
+            }
+          });   
+          
+        }
+      });     
+    }
     
      
   }  
   
-  armarVehiculo(){   
+  /* armarVehiculo(){   
     this.vehiculo = this.vehiculoForm.value;
     //this.vehiculo.categoria = this.categoriaSeleccionada;
-    this.vehiculo.categoria = []
+    this.vehiculo.categoria
     this.vehiculo.tipoCombustible = this.tipoCombustible;
     this.vehiculo.tarjetaCombustible = this.tarjetaCombustible;
     this.vehiculo.publicidad = this.publicidad;
     if(this.seguimiento){
+      this.vehiculo.segSat = true;
       this.vehiculo.satelital = this.seguimientoForm.value;
     }else{
-      this.vehiculo.satelital = false;
+      this.vehiculo.segSat = false;
+      this.vehiculo.satelital = null;
     }
     this.vehiculo.refrigeracion = null;
     ////console.log()(this.vehiculo);
-    this.chofer.vehiculo = this.vehiculo;
-  }
+    this.chofer.vehiculo[0] = this.vehiculo;
+  } */
 
   /* armarJornada(){     
     this.componente = "jornadas"
@@ -212,23 +329,7 @@ export class ChoferesAltaComponent implements OnInit {
     }) */
    //console.log()("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
     //this.buscarTarifas();
-  }
-  
-  changeCategoria(e: any) {    
-    console.log(e.target.value);    
-    //this.categoriaSeleccionada = e.target.value   
-    const nombreCategoria = e.target.value;
-    if (this.tarifaGralCliente) {
-      // Busca la categoría seleccionada en cargasGenerales
-      const categoriaSeleccionada = Object.values(this.tarifaGralCliente.cargasGenerales)
-        .find(categoria => categoria.nombre === nombreCategoria);
-      if (categoriaSeleccionada) {
-        this.categorias.push(categoriaSeleccionada);
-      }
-    }
-    console.log(this.categorias);
-    
-  }
+  }  
 
   changeTipoCombustible(e: any) {    
     this.tipoCombustible = e.target.value   
@@ -285,21 +386,7 @@ export class ChoferesAltaComponent implements OnInit {
     }
   } */
 
-  armarLegajo(){
-    //console.log()("chofer: ", this.chofer);
-    let legajo: any = {
-      idChofer : this.chofer.idChofer,
-      idLegajo : new Date().getTime(),
-    }
-    this.componente = "legajos";    
-    ////console.log()("este es el legajo trucho: ", legajo);
-    
-    this.legajo = legajo
-    this.addItem(this.legajo)
 
-    //console.log()("este es el legajo del chofer: ", this.legajo);
-    
-  }
   validarPatente() {
     let patenteValida = this.vehiculoForm.validarPatente(
       this.editForm.value.patente
@@ -314,4 +401,62 @@ export class ChoferesAltaComponent implements OnInit {
     }
 
 }
+
+  openModal(): void {   
+    
+    {
+      const modalRef = this.modalService.open(ModalVehiculoComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'sm', 
+        //backdrop:"static" 
+      });
+
+      modalRef.result.then(
+        (result) => {
+          //console.log("Vehiculo:" ,result);
+          this.vehiculos.push(result);
+          console.log("Vehiculos Array: ", this.vehiculos);
+        },
+        (reason) => {}
+      );
+    }
+  }
+
+  eliminarVehiculo(indice: number){
+      this.vehiculos.splice(indice,1)
+      console.log(this.vehiculos);      
+  }
+
+  editarVehiculo(i:number){ 
+    let vehiculo = this.vehiculos[i];
+    this.abrirModalEdicion(vehiculo,i);
+  }
+
+  abrirModalEdicion(vehiculo:Vehiculo, indice :number){
+    {
+      const modalRef = this.modalService.open(ModalVehiculoComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'sm', 
+        //backdrop:"static" 
+      });
+
+ /*      let info = {
+        modo:"edicion",        
+        item: vehiculo,
+      };  */
+      modalRef.componentInstance.fromParent = vehiculo;
+
+      modalRef.result.then(
+        (result) => {
+          //console.log("Vehiculo:" ,result);
+          this.vehiculos[indice]= result;
+          console.log("Vehiculos Array: ", this.vehiculos);
+        },
+        (reason) => {}
+      );
+    }
+  }
+
 }

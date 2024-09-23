@@ -1,7 +1,7 @@
 
 <div class="d-flex justify-content-between mt-3">
     <!-- <h1>Clientes</h1> -->
-    <app-btn-leer  name="cliente" (click)="openModal()"></app-btn-leer>
+    <app-btn-leer  name="cliente" (click)="openModal('alta')"></app-btn-leer>
 </div>
 <!-- ////////////////////////////////////////////////////////////// -->
 <div class="custom-datatable mt-2">
@@ -55,9 +55,9 @@ class="dark"
 </ngx-datatable-column>
 <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="2">          
     <ng-template ngx-datatable-cell-template let-row="row">
-      <app-btn-leer name="Detalle" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirVista(row)"></app-btn-leer>
+      <app-btn-leer name="Detalle" (click)="abrirVista(row)"></app-btn-leer>
             
-      <app-btn-editar class="mx-1" name="Editar" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(row)"></app-btn-editar>
+      <app-btn-editar class="mx-1" name="Editar" (click)="abrirEdicion(row)"></app-btn-editar>
     
       <app-btn-eliminar name="Eliminar" (click)="eliminarCliente(row)"></app-btn-eliminar>
     </ng-template>
@@ -66,152 +66,5 @@ class="dark"
 </ngx-datatable>
 </div>
 
-<!-- /////////////////////////////////////////////////////////////////// -->
-<!-- MODAL DETALLE Y EDICION -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header row" >
-                <div class="d-flex">
-                    <h2 class="modal-title" id="exampleModalLabel">{{!soloVista ? "Editar Cliente" : "Cliente"}}</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="borrarForms()"></button>        
-                </div>
-                <div *ngIf="clienteEditar !== undefined">
-                    <h5>Id: {{clienteEditar.idCliente}} </h5>                
-                </div>
-            </div>      
-            <div class="modal-body">
-                <div class="d-flex justify-content-between">
-                    <h3>Datos del Cliente:</h3>                  
-                </div>    
-                  
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">                
-                    <div class="form-group">
-                        <label for="RazonSocial">Razon Social</label>
-                        <div class="input-group">
-                          <input formControlName="razonSocial" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">            
-                        </div>
-                    </div>    
-                    <div class="form-group">
-                        <label for="Direccion">Direccion</label>
-                        <div class="input-group">
-                          <input formControlName="direccion" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                        </div>
-                    </div>    
-                    <div class="form-group">
-                        <label for="Cuit">CUIT</label>
-                        <div class="input-group">
-                          <input formControlName="cuit" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                        </div>
-                    </div> 
-                    <div formGroupName="tarifaTipo">
-                        <div class="form-check form-switch">
-                          <input formControlName="general" class="form-check-input" type="checkbox" 
-                                (change)="onTarifaTipoChange('general')" id="tarifaGeneral" [ngClass]="{'isDisabled': soloVista}">
-                          <label class="form-check-label" for="tarifaGeneral" [ngClass]="{'isDisabled': soloVista}" >General</label>
-                        </div>
-                        <div class="form-check form-switch">
-                          <input formControlName="especial" class="form-check-input" type="checkbox" 
-                                (change)="onTarifaTipoChange('especial')" id="tarifaEspecial" [ngClass]="{'isDisabled': soloVista}">
-                          <label class="form-check-label" for="tarifaEspecial" [ngClass]="{'isDisabled': soloVista}">Especial</label>
-                        </div>
-                        <div class="form-check form-switch">
-                          <input formControlName="eventual" class="form-check-input" type="checkbox" 
-                                (change)="onTarifaTipoChange('eventual')" id="tarifaEventual" [ngClass]="{'isDisabled': soloVista}">
-                          <label class="form-check-label" for="tarifaEventual" [ngClass]="{'isDisabled': soloVista}">Eventual</label>
-                        </div>
-                      </div>          
-                </form>    
-                <div class="d-flex justify-content-between">
-                    <h3 class="mt-3">Contactos: </h3>                       
-                    <app-btn-agregar name="AgregarContactoClaro" *ngIf="!soloVista" class="mt-2" type="submit" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal"></app-btn-agregar>
-                </div>                
-                <table class="table table-striped">
-                    <thead>
-                        <tr>                                            
-                            <th>Puesto</th>
-                            <th>Apellido</th>
-                            <th>Nombre</th>
-                            <th>Telefono</th>
-                            <th>Correo</th>
-                            <th colspan="2" id="botones"></th>                                                 
-                        </tr>
-                    </thead>
-                    <tbody *ngIf="clienteEditar !== undefined">
-                        <tr *ngFor=" let contacto of clienteEditar.contactos; let i = index">  
-                            <td class="fila-contacto align-middle"> {{contacto.puesto}} </td>  
-                            <td class="fila-contacto align-middle"> {{contacto.apellido}} </td>
-                            <td class="fila-contacto align-middle"> {{contacto.nombre}} </td>
-                            <td class="fila-contacto align-middle"> {{contacto.telefono}} </td>
-                            <td class="fila-contacto align-middle"> {{contacto.email}} </td>     
-                            <td>                      
-                                <app-btn-editar name="EditarClaro" *ngIf="!soloVista" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal" (click)="armarContacto(contacto, i)"></app-btn-editar>                         
-                            </td>        
-                            <td>                              
-                              <app-btn-eliminar name="EliminarClaro" *ngIf="!soloVista" (click)="eliminarContacto(i)"></app-btn-eliminar>                        
-                            </td>                                             
-                        </tr>     
-                    </tbody>
-                </table>    
-                <div>              
-                    <app-btn-agregar name="GuardarCambiosClaro" *ngIf="!soloVista" class="mt-2" (click)="onSubmit()" data-bs-dismiss="modal"></app-btn-agregar>
-                </div>      
-            </div>     
-        </div>
-    </div>
-</div>
-<!-- MODAL CONTACTOS -->
-<div class="modal fade" id="exampleModalToggle2" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalToggleLabel2">Contacto</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="borrarForms()"></button>
-            </div>
-            <div class="modal-body">
-                <form [formGroup]="formContacto" (ngSubmit)="guardarContacto()">
-                    <div class="input-group">
-                        <span class="input-group-text contactoForm" id="basic-addon3">Puesto: </span>
-                        <input type="text" formControlName="puesto" class="form-control " required
-                        type="text" [placeholder]="'ej:  director de logistica'" 
-                                [ngClass]="{ 'is-invalid': formContacto.get('puesto').invalid && 
-                                (formContacto.get('puesto').dirty || formContacto.get('puesto').touched) }">
-                    </div>   
-                    <div class="input-group">
-                        <span class="input-group-text contactoForm" id="basic-addon3">Apellido: </span>
-                        <input type="text" formControlName="apellido" class="form-control " required
-                        type="text" [placeholder]="'ej:  Pautasso'" 
-                                [ngClass]="{ 'is-invalid': formContacto.get('apellido').invalid && 
-                                (formContacto.get('apellido').dirty || formContacto.get('apellido').touched) }">
-                    </div>    
-                    <div class="input-group">
-                        <span class="input-group-text contactoForm" id="basic-addon3">Nombre: </span>
-                        <input type="text" formControlName="nombre" class="form-control " required
-                        type="text" [placeholder]="'ej:  Rocio'" 
-                                [ngClass]="{ 'is-invalid': formContacto.get('nombre').invalid && 
-                                (formContacto.get('nombre').dirty || formContacto.get('nombre').touched) }">
-                    </div>       
-                    <div class="input-group">
-                        <span class="input-group-text contactoForm" id="basic-addon3">Telefono: </span>
-                        <input type="text" formControlName="telefono" class="form-control " required
-                        type="text" [placeholder]="'ej:  351345166'" 
-                                [ngClass]="{ 'is-invalid': formContacto.get('telefono').invalid && 
-                                (formContacto.get('telefono').dirty || formContacto.get('telefono').touched) }">
-                    </div>  
-                    <div class="input-group">
-                        <span class="input-group-text contactoForm" id="basic-addon3">Email: </span>
-                        <input type="text" formControlName="email" class="form-control " required
-                        type="text" [placeholder]="'ej:  davidcortes@gmail.com'" 
-                                [ngClass]="{ 'is-invalid': formContacto.get('email').invalid && 
-                                (formContacto.get('email').dirty || formContacto.get('email').touched) }">
-                    </div>  
-                </form>
-            </div>
-            <div class="modal-footer">              
-                <app-btn-agregar name="GuardarClaro" type="submit" data-bs-toggle="modal" data-bs-target="#exampleModal" [disabled]="form.invalid " (click)="guardarContacto()"></app-btn-agregar>            
-            </div>
-        </div>
-    </div>
-</div>
 
 

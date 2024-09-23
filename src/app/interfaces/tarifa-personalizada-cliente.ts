@@ -18,6 +18,8 @@ export interface CategoriaTarifa {
     nombre: string;
     aCobrar: number;
     aPagar: number;
+    nuevoACobrar?: number;  // nuevo valor calculado
+    nuevoAPagar?: number;   // nuevo valor calculado
 }
 
 export interface TarifaTipo {

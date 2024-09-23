@@ -3,7 +3,7 @@ import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup } from 
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { AdicionalKm, AdicionalTarifa, TarifaCliente, TarifaEspecial } from 'src/app/interfaces/tarifa-cliente';
-import { CargasGenerales, CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
+import { CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
@@ -30,17 +30,17 @@ export class ModalAltaTarifaComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.storageService.ultTarifaGralCliente$.subscribe(data =>{
+   /*  this.storageService.ultTarifaGralCliente$.subscribe(data =>{
       //console.log("data: ", data);                
       this.ultTarifa = data;
       //console.log("1) ult tarifa: ",this.ultTarifa);        
       this.resetTable();  // Limpia los datos existentes de la tabla
       this.inicializarTabla();
       this.onGenerarNuevaTarifaAutomatica();   
-    })              
+    })       */        
   }
 
-  // Método para resetear la tabla
+/*   // Método para resetear la tabla
   resetTable() {
     this.filas.clear(); // Limpia el FormArray
   }
@@ -122,14 +122,7 @@ export class ModalAltaTarifaComponent implements OnInit {
     });
   }
   
-  /* onGenerarNuevaTarifaManual() {
-    this.filas.controls.forEach(fila => {
-      if (fila.get('categoria')?.value.includes('Categoria')) {
-        fila.get('nombre')?.enable();
-      }
-      fila.get('nuevaTarifa')?.enable();
-    });
-  } */
+  
   onGenerarNuevaTarifaManual() {
     this.filas.controls.forEach((fila, index) => {
       if (fila.get('categoria')?.value.includes('Categoria')) {
@@ -242,5 +235,5 @@ export class ModalAltaTarifaComponent implements OnInit {
     this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
    
   }
-
+ */
 }

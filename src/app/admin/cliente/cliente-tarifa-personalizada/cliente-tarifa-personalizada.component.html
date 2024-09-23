@@ -31,93 +31,135 @@
   
 </div>
   <div *ngIf="clienteSeleccionado !== undefined" class="">
-    
-    <div class="d-flex mb-3">
-      <p class="fs-4 mb-0 me-3 align-middle" *ngIf="secciones.length === 0">Crear seccion</p>    
-      <p class="fs-4 mb-0 me-3 align-middle" *ngIf="secciones.length > 0">Agregar seccion</p>          
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" type="button" (click)="agregarSeccion()" style="color: rgb(0, 110, 255);">
-          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-      </svg>
-      
-    </div>    
+    <h3>Crear Tarifario Nuevo</h3>
+    <div class="border border-dark border-2 rounded-4 p-3">
+        
+        <div class="d-flex mb-3">
+          <p class="fs-4 mb-0 me-3 align-middle" *ngIf="secciones.length === 0">Crear seccion</p>    
+          <p class="fs-4 mb-0 me-3 align-middle" *ngIf="secciones.length > 0">Agregar seccion</p>          
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" type="button" (click)="agregarSeccion()" style="color: rgb(0, 110, 255);">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+          </svg>
           
-    <div *ngFor="let seccion of secciones; let i = index" class="border rounded-4 border-secondary border-1 p-3 mb-3">
-        <div class="d-flex justify-content-between">
-          <h4>Sección {{ i + 1 }}</h4>    
-          <app-btn-eliminar name="EliminarClaro" (click)="eliminarSeccion(i)"></app-btn-eliminar>
+        </div>    
+              
+        <div *ngFor="let seccion of secciones; let i = index" class="border rounded-4 border-secondary border-1 p-3 mb-3">
+            <div class="d-flex justify-content-between">
+              <h4>Sección {{ i + 1 }}</h4>    
+              <app-btn-eliminar name="EliminarClaro" (click)="eliminarSeccion(i)"></app-btn-eliminar>
+            </div>
+            
+            <form [formGroup]="descripcionForm" (ngSubmit)="agregarDescripcion(i)">
+                <div class="input-group input-group-sm w-50">        
+                    <div class="w-25">
+                        <label for="descripcion" class="form-label">Descripcion de la Sección (opcional):</label>
+                        <div class="input-group mb-3">
+                            <input type="text" formControlName="descripcion" class="form-control">
+                            <button class="btn btn-outline-secondary" type="submit" id="descripcion">Agregar</button>
+                        </div>                                
+                    </div>          
+                </div>
+            </form>        
+            <div *ngIf="seccion.descripcion !== ''" class="d-flex mt-2">
+                <p class="mb-1 p-2">Descripcion: {{seccion.descripcion}}</p>
+                <app-btn-eliminar name="EliminarClaro" (click)="eliminarDescripcion(i)"></app-btn-eliminar>
+            </div>
+            <form [formGroup]="categoriaForm" (ngSubmit)="agregarCategoria(i)">
+                <div class="input-group input-group-sm mt-2 mb-3">        
+                    <td *ngIf="seccion.categorias.length !== undefined" class="align-middle me-2 pt-4"><p>Categoria {{seccion.categorias.length + 1}}</p></td>
+                    <td class="align-middle me-2">
+                        <label>Nombre: </label>    
+                        <input
+                        formControlName="nombre"
+                        class="form-control" required
+                        type="text">
+                    </td>
+                    <td class="align-middle me-2">
+                        <label>A Cobrar: </label>    
+                        <input
+                        formControlName="aCobrar"
+                        class="form-control" required
+                        type="number">
+                    </td>    
+                    <td class="align-middle me-2">
+                        <label>A Pagar: </label>    
+                        <input
+                        formControlName="aPagar"
+                        class="form-control" required
+                        type="number">
+                    </td>
+                    <td class="pt-4">
+                        <button class="btn btn-primary" type="submit">Agregar Categoria</button>
+                    </td>                          
+                </div>
+            </form>
+            <table *ngIf="seccion.categorias.length > 0" class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                      <th>Categoria</th>
+                      <th>Nombre</th>
+                      <th>A Cobrar</th>            
+                      <th>A Pagar</th>    
+                      <th>Ganancia %</th>   
+                      <th></th>       
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let categoria of seccion.categorias; let j = index">
+                      <td>Categoria {{categoria.orden}}</td>
+                      <td>{{categoria.nombre}}</td>
+                      <td>{{categoria.aCobrar}}</td>
+                      <td>{{categoria.aPagar}}</td>
+                      <td>{{(100-((categoria.aPagar*100)/categoria.aCobrar)).toFixed(2)}}%</td>
+                      <td><app-btn-eliminar name="EliminarClaro" (click)="eliminarCategoria(i,j)"></app-btn-eliminar></td>
+                    </tr>
+                </tbody>
+            </table>      
         </div>
         
-        <form [formGroup]="descripcionForm" (ngSubmit)="agregarDescripcion(i)">
-            <div class="input-group input-group-sm w-50">        
-                <div class="w-25">
-                    <label for="descripcion" class="form-label">Descripcion de la Sección (opcional):</label>
-                    <div class="input-group mb-3">
-                        <input type="text" formControlName="descripcion" class="form-control">
-                        <button class="btn btn-outline-secondary" type="submit" id="descripcion">Agregar</button>
-                    </div>                                
-                </div>          
-            </div>
-        </form>        
-        <div *ngIf="seccion.descripcion !== ''" class="d-flex mt-2">
-            <p class="mb-1 p-2">Descripcion: {{seccion.descripcion}}</p>
-            <app-btn-eliminar name="EliminarClaro" (click)="eliminarDescripcion(i)"></app-btn-eliminar>
+        <div class="mb-3" *ngIf="secciones.length > 0">
+            <p>Guardar Tarifario</p>
+            <button type="button" class="btn btn-primary" (click)="crearTarifa()">Crear Tarifa</button>
         </div>
-        <form [formGroup]="categoriaForm" (ngSubmit)="agregarCategoria(i)">
-            <div class="input-group input-group-sm mt-2 mb-3">        
-                <td *ngIf="seccion.categorias.length !== undefined" class="align-middle me-2 pt-4"><p>Categoria {{seccion.categorias.length + 1}}</p></td>
-                <td class="align-middle me-2">
-                    <label>Nombre: </label>    
-                    <input
-                    formControlName="nombre"
-                    class="form-control" required
-                    type="text">
-                </td>
-                <td class="align-middle me-2">
-                    <label>A Cobrar: </label>    
-                    <input
-                    formControlName="aCobrar"
-                    class="form-control" required
-                    type="number">
-                </td>    
-                <td class="align-middle me-2">
-                    <label>A Pagar: </label>    
-                    <input
-                    formControlName="aPagar"
-                    class="form-control" required
-                    type="number">
-                </td>
-                <td class="pt-4">
-                    <button class="btn btn-primary" type="submit">Agregar Categoria</button>
-                </td>                          
-            </div>
-        </form>
-        <table *ngIf="seccion.categorias.length > 0" class="table table-striped table-hover">
-            <thead>
-                <tr>
-                  <th>Categoria</th>
-                  <th>Nombre</th>
-                  <th>A Cobrar</th>            
-                  <th>A Pagar</th>    
-                  <th>Ganancia %</th>   
-                  <th></th>       
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let categoria of seccion.categorias; let j = index">
-                  <td>Categoria {{categoria.orden}}</td>
-                  <td>{{categoria.nombre}}</td>
-                  <td>{{categoria.aCobrar}}</td>
-                  <td>{{categoria.aPagar}}</td>
-                  <td>{{(100-((categoria.aPagar*100)/categoria.aCobrar)).toFixed(2)}}%</td>
-                  <td><app-btn-eliminar name="EliminarClaro" (click)="eliminarCategoria(i,j)"></app-btn-eliminar></td>
-                </tr>
-            </tbody>
-        </table>      
     </div>
     
-    <div class="mb-3" *ngIf="secciones.length > 0">
-        <p>Crear tarifa</p>
-        <button type="button" class="btn btn-primary" (click)="crearTarifa()">Crear Tarifa</button>
+
+    <div *ngIf="$ultTarifaCliente !== null else sinTarifas" class="mt-3">
+        <div class="d-flex justify-content-between">
+            <h2>Última Tarifa {{$ultTarifaCliente.fecha}}</h2>
+            <button class="btn btn-outline-secondary" (click)="openModal()">
+                Modificar Tarifa
+            </button>
+        </div>
+        
+        <div class="border border-dark border-2 rounded-4 p-3">
+            <ng-container *ngFor="let seccion of $ultTarifaCliente.secciones">
+                
+                    <h4>Seccion {{seccion.orden}}: {{seccion.descripcion? seccion.descripcion : ""}}</h4>        
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Categoria</th>
+                                <th>Nombre</th>
+                                <th>A Cobrar</th>
+                                <th>A pagar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let categoria of seccion.categorias">
+                                <td>Categoria {{categoria.orden}}</td>
+                                <td>{{categoria.nombre}}</td>
+                                <td>{{categoria.aCobrar}}</td>
+                                <td>{{categoria.aPagar}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                
+            </ng-container>          
+        </div>                
     </div>
+    <ng-template id="sinTarifas">
+        <h2>El cliente no tiene tartifas asignadas</h2>
+    </ng-template>
   </div> 

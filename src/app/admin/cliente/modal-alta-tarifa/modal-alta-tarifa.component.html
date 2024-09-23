@@ -9,23 +9,8 @@
     <div class="modal-body">
         <div class="container mt-0 pt-0">
             <h2>Tabla de Tarifas</h2>
-<!--             <div class="row">
-                <div class="form-group col-5">
-                    <label for="manualOAutomatica">Ingresar la nueva tarifa:</label>
-                    <select id="manualOAutomatica" class="form-control" [(ngModel)]="formaIngreso" (change)="cambiarFormaIngreso()">
-                        <option value="manual">Manual</option>
-                        <option value="porcentaje">Porcentaje</option>
-                    </select>
-                </div>
-                <div class="form-group col-3">
-                    <label for="incrementoPorcentual">Aumento porcentual:</label>
-                    <div class="input-group">
-                        <input type="number" id="incrementoPorcentual" class="form-control" [(ngModel)]="incrementoPorcentual" (input)="aplicarAumento()">
-                        <span class="input-group-text">%</span>
-                    </div>                    
-                </div>
-            </div>    -->         
-            <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
+
+            <!-- <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
               <table class="table table-bordered">
                 <thead>
                   <tr>
@@ -58,13 +43,10 @@
               </div>
             
               <button type="submit" class="btn btn-primary">Guardar Tarifa</button>
-            </form>
+            </form> -->
         </div>       
     </div>   
 </div>
 
-<!-- 
-<div class="mb-2 ms-2">  
-    <app-btn-agregar name="Guardar" *ngIf="clienteSeleccionado !== undefined" type="submit" (click)="onSubmit()"></app-btn-agregar>
-</div> -->
+
 

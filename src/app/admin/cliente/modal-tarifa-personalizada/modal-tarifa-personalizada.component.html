@@ -1,0 +1,58 @@
+<div class="modal-content">
+  <div class="modal-header">
+    <h1>Tarifa Personalizada</h1>
+    <button type="button" class="btn-close btn btn-outline-secondary" (click)="activeModal.close()"></button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label>Generar Nueva Tarifa:</label><br>
+      <button type="button" class="btn" [class.btn-primary]="!modoAutomatico" (click)="cambiarModo('manual')">Manual</button>
+      <button type="button" class="btn" [class.btn-primary]="modoAutomatico" (click)="cambiarModo('automatico')">Automática</button>
+      
+      <div *ngIf="modoAutomatico">
+        <input type="number" [(ngModel)]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento">
+        <button type="button" class="btn btn-primary" (click)="aplicarPorcentaje()">Aplicar Porcentaje</button>
+      </div>
+    </div>
+    
+    <ng-container *ngFor="let seccion of $ultimaTarifa.secciones">
+      <h4>Seccion {{seccion.orden}}: {{seccion.descripcion ? seccion.descripcion : ""}}</h4>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th colspan="4">Detalles</th>
+            <th colspan="2">Nueva tarifa</th>
+          </tr>
+          <tr>
+            <th>Categoria</th>
+            <th>Nombre</th>
+            <th>A Cobrar</th>
+            <th>A Pagar</th>
+            <th style="border-left: black 2px solid">A Cobrar</th>
+            <th>A Pagar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let categoria of seccion.categorias">
+            <td>Categoria {{categoria.orden}}</td>
+            <td>{{categoria.nombre}}</td>
+            <!-- Columna "A Cobrar" muestra el valor original -->
+            <td>{{categoria.aCobrar}}</td>
+            <!-- Columna "A Pagar" muestra el valor original -->
+            <td>{{categoria.aPagar}}</td>
+            <!-- Inputs para los nuevos valores calculados -->
+            <td style="border-left: black 2px solid">
+              <input type="text" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoACobrar">
+            </td>
+            <td>
+              <input type="text" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoAPagar">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-container>
+  </div>
+  <div class="modal-footer">
+    <app-btn-agregar name="Guardar" type="button" (click)="onSubmit()"></app-btn-agregar>
+  </div>
+</div>

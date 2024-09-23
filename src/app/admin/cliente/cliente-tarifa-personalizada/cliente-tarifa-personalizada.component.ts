@@ -1,9 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+
 import { Cliente } from 'src/app/interfaces/cliente';
 import { CategoriaTarifa, Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
+import { ModalTarifaPersonalizadaComponent } from '../modal-tarifa-personalizada/modal-tarifa-personalizada.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-cliente-tarifa-personalizada',
@@ -25,8 +28,9 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     $clientes!: any;
     clienteSeleccionado!: Cliente[];
     $clientesPers! : Cliente [];
+    $ultTarifaCliente!: TarifaPersonalizadaCliente;
     
-  constructor(private fb: FormBuilder, private storageService: StorageService) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal) {
     this.inputSecciones = this.fb.group({
       cantSecciones : [""],
           })
@@ -49,6 +53,11 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       this.$clientesPers = this.$clientes.filter((cliente:Cliente)=>{
         return cliente.tarifaTipo.personalizada === true 
       })
+      this.storageService.ultTarifaPersCliente$.subscribe(data => {
+        this.$ultTarifaCliente = data;
+        console.log("1)",this.$ultTarifaCliente);
+        
+      })
       console.log(this.$clientesPers);
       
     })             
@@ -63,9 +72,10 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       ////console.log()("2", cliente.idCliente, id);
       return cliente.idCliente === id
     })
-   
+    
     //this.asignarTarifa = true
-    ////console.log()("este es el cliente seleccionado: ", this.clienteSeleccionado);
+    //console.log("este es el cliente seleccionado: ", this.clienteSeleccionado);
+    this.storageService.getElemntByIdLimit("tarifasPersCliente","idCliente","idTarifa",this.clienteSeleccionado[0].idCliente,"ultTarifaPersCliente");
     //this.buscarTarifas();
   }
 
@@ -167,6 +177,34 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       showConfirmButton: false,
       timer: 10000
     });
+  }
+
+  openModal(): void {      
+    {
+      const modalRef = this.modalService.open(ModalTarifaPersonalizadaComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg', 
+        //backdrop:"static" 
+      });      
+
+/*     let info = {
+        modo: modo,
+        item: this.clienteEditar,
+      }  */
+      //console.log()(info); */
+      
+      modalRef.componentInstance.fromParent = this.$ultTarifaCliente;
+      modalRef.result.then(
+        (result) => {
+          ////console.log()("ROOWW:" ,row);
+          //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
+//        this.selectCrudOp(result.op, result.item);
+        //this.mostrarMasDatos(row);
+        },
+        (reason) => {}
+      );
+    }
   }
 
 }

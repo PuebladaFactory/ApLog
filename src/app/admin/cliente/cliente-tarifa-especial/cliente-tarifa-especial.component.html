@@ -9,11 +9,6 @@
             </option>
           </select>
     </div>     
- 
-    <!-- <div class="col text-end" [ngClass]="{'altaIsDisabled': !asignarTarifa}">
-        <h2>Asignar Tarifa</h2> 
-        <app-btn-leer name="tarifa" (click)="openModal()"></app-btn-leer>
-    </div>   -->
 </div>
 
 <div>
@@ -26,5 +21,5 @@
 </div> 
 
 <div *ngIf="clienteSeleccionado !== undefined">
-    <app-cliente-tarifa-gral [idClienteEsp]="idClienteEsp" [tEspecial]="tEspecial"></app-cliente-tarifa-gral>
+    <app-cliente-tarifa-gral [tEspecial]="tEspecial"></app-cliente-tarifa-gral>
 </div>
