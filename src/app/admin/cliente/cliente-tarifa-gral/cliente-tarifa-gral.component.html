@@ -1,5 +1,36 @@
-<h2 *ngIf="!tEspecial" class="mt-2">Tarifa General</h2>
-<h2 *ngIf="tEspecial" class="mt-2">Tarifa Especial</h2>
+<div class="row mt-3" >
+    <div class="col-4">
+        <h1 *ngIf="!tEspecial" class="mt-2">Tarifa General</h1>
+        <h1 *ngIf="tEspecial" class="mt-2">Tarifa Especial</h1>
+    </div>
+    
+    <div class="col-4 mt-3" [ngClass]="{'invisible': !tEspecial}">
+        <h2>Seleccionar Cliente: </h2>        
+        <div class="w-50">                
+            <select class="form-select form-select-md" (change)="changeCliente($event)">
+                <option selected>{{clienteSeleccionado !== undefined ? clienteSeleccionado[0].razonSocial: "Seleccione"}}</option>
+                <option *ngFor="let cliente of $clientesEsp" [value]="cliente.idCliente">
+                  {{cliente.razonSocial}} 
+                </option>
+            </select>
+        </div>            
+        
+    </div>       
+    
+    <div class="col-4 border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
+        <h3>Generar Nueva Tarifa:</h3>
+        <div class="form-group d-flex">            
+            <div class="me-3">                
+                <button type="button" class="btn" [class.btn-primary]="!modoAutomatico" (click)="cambiarModo('manual')"(click)="onGenerarNuevaTarifaManual()">Manual</button>
+                <button type="button" class="btn" [class.btn-primary]="modoAutomatico" (click)="cambiarModo('automatico')" (click)="onGenerarNuevaTarifaAutomatica()">Automática</button>
+            </div>
+            <div *ngIf="modoAutomatico">
+                <input type="number" [formControl]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento" (keydown.enter)="calcularNuevaTarifaPorcentaje()">
+                <button type="button" class="btn btn-outline-primary ms-2" (click)="calcularNuevaTarifaPorcentaje()">Aplicar Porcentaje</button>
+            </div>
+        </div>      
+    </div>
+</div>
 <div>
   <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
     <table class="table table-bordered">
@@ -25,14 +56,14 @@
       </tbody>
     </table>
   
-    <div class="form-group">
+    <!-- <div class="form-group">
       <label>Generar Nueva Tarifa:</label><br>
       <button type="button" (click)="onGenerarNuevaTarifaManual()">Manual</button>
       <button type="button" (click)="onGenerarNuevaTarifaAutomatica()">Automática</button>
       <input type="number" [formControl]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento"
              (keydown.enter)="calcularNuevaTarifaPorcentaje()">
       <button type="button" class="btn btn-primary" (click)="calcularNuevaTarifaPorcentaje()">Aplicar Porcentaje</button>
-    </div>
+    </div> -->
   
     <button type="button" class="btn btn-primary" (click)="guardarTarifa()">Guardar Tarifa</button>
   </form>

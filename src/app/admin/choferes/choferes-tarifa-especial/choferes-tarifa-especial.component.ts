@@ -69,7 +69,7 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
         return cliente.idCliente === id;
       })      
       this.idClienteEsp = id; 
-      //console.log("id cliente eso: ", this.idClienteEsp);
+      console.log("id cliente eso: ", this.idClienteEsp);
       
     }
     this.tEspecial = true;

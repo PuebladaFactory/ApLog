@@ -147,8 +147,9 @@ export class StorageService {
 
   private _choferSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('choferSeleccionado') || []);
   public choferSeleccionado$ = this._choferSeleccionado$.asObservable();
-  /*private _logger$ = new BehaviorSubject<any>(null)   //aca va interface my data
-  public logger$ = this._logger$.asObservable() */
+  
+  private _tEspecialCliente$ = new BehaviorSubject<any>(this.loadInfo('tEspecialCliente') || []);
+  public tEspecialCliente$ = this._tEspecialCliente$.asObservable();
 
   
 
@@ -352,10 +353,10 @@ export class StorageService {
         this._choferSeleccionado$.next(data)
         break;
       }
-      /*case "logger": {
-        this._logger$.next(data)
+     case "tEspecialCliente": {
+        this._tEspecialCliente$.next(data)
         break;
-      } */
+      }
 
       default: {
         //statements; 
@@ -429,6 +430,7 @@ export class StorageService {
     //this.getByDateValue("facturaOpCliente","fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente")
     //this.getByDateValue("facturaOpProveedor","fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor")
     this.getUltElemColeccion("tarifasGralCliente", "idTarifa", "desc", 1,"ultTarifaGralCliente")
+    this.getUltElemColeccion("tarifasGralChofer", "idTarifa", "desc", 1,"ultTarifaGralChofer")
   }
 
   // metodo initializer si el rol es user

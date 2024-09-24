@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { take } from 'rxjs';
+import { Cliente } from 'src/app/interfaces/cliente';
 import { AdicionalTarifa, CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -27,6 +28,10 @@ export class ClienteTarifaGralComponent implements OnInit {
   categorias: CategoriaTarifa[] = []
   ultTarifaGeneral!: TarifaGralCliente;
   ultTarifaEspecial!: TarifaGralCliente;
+  modoAutomatico = true;  // por defecto en modo automático
+  $clientes!: Cliente[];
+  $clientesEsp! : Cliente [];
+  clienteSeleccionado!: Cliente[];
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService) {
     this.tarifaForm = this.fb.group({
@@ -37,42 +42,58 @@ export class ClienteTarifaGralComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log("0)",this.tEspecial);    
+    //console.log("0)",this.tEspecial);    
+    /////esto es para la tarifa especial
     this.storageService.clienteSeleccionado$.subscribe(data => {      
       this.idClienteEsp = data
-      console.log("0B) idCliente: ",this.idClienteEsp);
+      //console.log("0B) idCliente: ",this.idClienteEsp);
       if(this.tEspecial){
         this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",this.idClienteEsp[0],"ultTarifaEspCliente");
+        this.storageService.clientes$    
+        .subscribe(data => {
+          this.$clientes = data;
+          this.$clientesEsp = this.$clientes.filter((cliente:Cliente)=>{
+            return cliente.tarifaTipo.especial === true 
+          })
+          //console.log(this.$clientesEsp);            
+          this.clienteSeleccionado = this.$clientesEsp.filter((cliente:Cliente)=>{
+            return cliente.idCliente === this.idClienteEsp[0]; 
+          });
+          //console.log("0C) cliente selecciondo: ", this.clienteSeleccionado);
+          
+        });      
       }
     })
+    
+    //////esto es la tarifa general
     this.storageService.ultTarifaGralCliente$.subscribe(data =>{
-      //console.log("data: ", data);                
+      ////console.log("data: ", data);                
       this.ultTarifa = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
       this.ultTarifa.cargasGenerales = this.ultTarifa.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      //console.log("1) ult tarifa GRAL: ",this.ultTarifa);        
+      ////console.log("1) ult tarifa GRAL: ",this.ultTarifa);        
       this.configurarTabla();
-    })                  
+    })            
+    
   }
 
   configurarTabla(){
     if(this.tEspecial){
-      //console.log("2a) tarifa especial: ", this.tEspecial);      
-      //console.log("2b) tarifa general: ", this.ultTarifa);      
+      ////console.log("2a) tarifa especial: ", this.tEspecial);      
+      ////console.log("2b) tarifa general: ", this.ultTarifa);      
       this.storageService.ultTarifaEspCliente$
-      //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe(data =>{
-      //console.log("2c) data: ", data);                
+      //.pipe(take(3)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data =>{            
       this.ultTarifaEspecial = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
       this.ultTarifaEspecial.cargasGenerales = this.ultTarifaEspecial.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      console.log("2d) ult tarifa ESP: ",this.ultTarifaEspecial);        
+      //console.log("2d) ult tarifa ESP: ",this.ultTarifaEspecial);        
       this.resetTable();  // Limpia los datos existentes de la tabla;
       this.crearCategorias()
       this.inicializarTabla();
       this.onGenerarNuevaTarifaAutomatica();   
     })
     }else{
-      //console.log("1a) tarifa especial: ", this.tEspecial);      
-      //console.log("1b) tarifa general: ", this.ultTarifa);      
+      ////console.log("1a) tarifa especial: ", this.tEspecial);      
+      ////console.log("1b) tarifa general: ", this.ultTarifa);      
       this.resetTable();  // Limpia los datos existentes de la tabla
       this.crearCategorias()
       this.inicializarTabla();
@@ -90,7 +111,7 @@ export class ClienteTarifaGralComponent implements OnInit {
       }
       this.categorias.push(this.categoria);
     }
-    //console.log(this.categorias);      
+    ////console.log(this.categorias);      
   }
 
   // Método para resetear la tabla
@@ -177,15 +198,12 @@ export class ClienteTarifaGralComponent implements OnInit {
   
   onGenerarNuevaTarifaManual() {
     if(this.tEspecial){
-      this.filas.controls.forEach((fila, index) => {
-              
+      this.filas.controls.forEach((fila, index) => {              
         const nuevaTarifaControl = fila.get('nuevaTarifa');
         const diferenciaControl = fila.get('diferencia');
-        const ultimaTarifaControl = fila.get('ultimaTarifa');
-        
+        const ultimaTarifaControl = fila.get('ultimaTarifa');        
         // Habilitar el input para la nueva tarifa
-        nuevaTarifaControl?.enable();
-    
+        nuevaTarifaControl?.enable();    
         // Agregar un listener para calcular la diferencia
         nuevaTarifaControl?.valueChanges.subscribe((nuevoValor) => {
           const ultimaTarifa = ultimaTarifaControl?.value || 0;
@@ -200,11 +218,9 @@ export class ClienteTarifaGralComponent implements OnInit {
         }
         const nuevaTarifaControl = fila.get('nuevaTarifa');
         const diferenciaControl = fila.get('diferencia');
-        const ultimaTarifaControl = fila.get('ultimaTarifa');
-        
+        const ultimaTarifaControl = fila.get('ultimaTarifa');        
         // Habilitar el input para la nueva tarifa
-        nuevaTarifaControl?.enable();
-    
+        nuevaTarifaControl?.enable();    
         // Agregar un listener para calcular la diferencia
         nuevaTarifaControl?.valueChanges.subscribe((nuevoValor) => {
           const ultimaTarifa = ultimaTarifaControl?.value || 0;
@@ -212,8 +228,7 @@ export class ClienteTarifaGralComponent implements OnInit {
           diferenciaControl?.setValue(diferencia);
         });
       });
-    }
-    
+    }    
   }
   
   onGenerarNuevaTarifaAutomatica() {
@@ -223,6 +238,10 @@ export class ClienteTarifaGralComponent implements OnInit {
       }
       fila.get('nuevaTarifa')?.disable();
     });
+  }
+
+  cambiarModo(modo: 'manual' | 'automatico'): void {
+    this.modoAutomatico = modo === 'automatico';
   }
 
   guardarTarifa() {
@@ -259,19 +278,13 @@ export class ClienteTarifaGralComponent implements OnInit {
                   }
               });
           }
-        });   
-        
+        });           
       }
     });   
-    
-    
-    
-    
   }
 
   configurarNuevaTarifa() {
     const filas = this.tarifaForm.get('filas') as FormArray;
-
     // Construcción del objeto `CargasGenerales` basado en los datos del formulario
     const cargasGenerales: any = {
       categoria1: this.crearCategoriaTarifa(filas.at(0)),
@@ -326,14 +339,10 @@ export class ClienteTarifaGralComponent implements OnInit {
       idCliente: null,
     };
 
-    console.log("esta es la NUEVA TARIFA: ",this.nuevaTarifaGral);
+    //console.log("esta es la NUEVA TARIFA: ",this.nuevaTarifaGral);
   }
 
   crearCategoriaTarifa(control: AbstractControl): CategoriaTarifa {
-/*     return {
-      nombre: control.get('nombre')?.value || '',
-      valor: control.get('nuevaTarifa')?.value || 0
-    }; */
     return {
       orden:0,
       nombre: control.get('nombre')?.value || '',
@@ -351,17 +360,32 @@ export class ClienteTarifaGralComponent implements OnInit {
   }
 
   addItem(){    
-    //console.log("1)",this.tEspecial);
+    ////console.log("1)",this.tEspecial);
     if(!this.tEspecial){
       this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
     }else if(this.tEspecial){
-      this.nuevaTarifaGral.idCliente = this.idClienteEsp;
+      this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
       this.nuevaTarifaGral.tipo.especial = true;
       this.storageService.addItem("tarifasEspCliente", this.nuevaTarifaGral);         
     }
-    //
-   
+    //   
+  }
+
+  changeCliente(e: any) {    
+    //console.log(e.target.value);    
+    let id = Number(e.target.value);
+    //////console.log()("1)",id);    
+    this.clienteSeleccionado = this.$clientesEsp.filter((cliente:Cliente)=>{
+      //////console.log()("2", cliente.idCliente, id);
+      return cliente.idCliente === id
+    })
+    this.tEspecial = true;
+    this.idClienteEsp = id;
+    let consultaCliente = []
+    consultaCliente.push(this.idClienteEsp)
+    this.storageService.setInfo("clienteSeleccionado", consultaCliente);
+    consultaCliente = [];       
   }
 
 

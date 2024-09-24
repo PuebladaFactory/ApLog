@@ -1,15 +1,24 @@
+  
+  <div [ngClass]="{'invisible': tEspecial}">
+      <div class="row mt-3">
+          <div class="col-4" >      
+              <h1 class="mt-2">Tarifa Especial</h1>
+          </div>  
+          <div class="col-4 mt-3">
+              <h2>Seleccionar Cliente: </h2>              
+              <div class="w-50">
+                  <select class="form-select form-select-md" (change)="changeCliente($event)">
+                    <option selected>Seleccione</option>
+                    <option *ngFor="let cliente of $clientesEsp" [value]="cliente.idCliente">
+                      {{cliente.razonSocial}} 
+                    </option>
+                  </select>
+              </div>                          
+          </div>     
+      </div>      
+  </div>
+  
 
-<div class="row mt-4">
-    <div class="col-3 ">
-        <h2>Seleccionar Cliente: </h2>
-        <select class="form-select form-select-md mb-3 w-50" (change)="changeCliente($event)">
-            <option selected>Seleccione</option>
-            <option *ngFor="let cliente of $clientesEsp" [value]="cliente.idCliente">
-              {{cliente.razonSocial}} 
-            </option>
-          </select>
-    </div>     
-</div>
 
 <div>
 <ng-template #sinSeleccion>

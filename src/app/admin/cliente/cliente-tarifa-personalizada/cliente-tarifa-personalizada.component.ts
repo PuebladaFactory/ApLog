@@ -55,26 +55,26 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       })
       this.storageService.ultTarifaPersCliente$.subscribe(data => {
         this.$ultTarifaCliente = data;
-        console.log("1)",this.$ultTarifaCliente);
+        //console.log("1)",this.$ultTarifaCliente);
         
       })
-      console.log(this.$clientesPers);
+      //console.log(this.$clientesPers);
       
     })             
   }
 
   changeCliente(e: any) {    
-    ////console.log()(e.target.value);
+    //////console.log()(e.target.value);
     let id = Number(e.target.value);
-    ////console.log()("1)",id);
+    //////console.log()("1)",id);
     
     this.clienteSeleccionado = this.$clientesPers.filter((cliente:Cliente)=>{
-      ////console.log()("2", cliente.idCliente, id);
+      //////console.log()("2", cliente.idCliente, id);
       return cliente.idCliente === id
     })
     
     //this.asignarTarifa = true
-    //console.log("este es el cliente seleccionado: ", this.clienteSeleccionado);
+    ////console.log("este es el cliente seleccionado: ", this.clienteSeleccionado);
     this.storageService.getElemntByIdLimit("tarifasPersCliente","idCliente","idTarifa",this.clienteSeleccionado[0].idCliente,"ultTarifaPersCliente");
     //this.buscarTarifas();
   }
@@ -87,30 +87,32 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       categorias: [],
     }
     this.secciones.push(this.seccion);
-    console.log("1) secciones: ", this.secciones);    
+    //console.log("1) secciones: ", this.secciones);    
   }
 
   eliminarSeccion(index:number){
-    console.log(index);    
+    //console.log(index);    
     this.secciones.splice(index, 1);
-    console.log("1.b) secciones: ", this.secciones);    
+    //console.log("1.b) secciones: ", this.secciones);    
   }
 
   agregarCategoria(index: number) {       
     
-    console.log("1)seccion", this.secciones[index]);
+    //console.log("1)seccion", this.secciones[index]);
     this.categoria = {
       orden: this.secciones[index].categorias.length + 1,
       nombre: this.categoriaForm.value.nombre,
       aCobrar: this.categoriaForm.value.aCobrar,
       aPagar: this.categoriaForm.value.aPagar,
+      nuevoACobrar: 0,
+      nuevoAPagar: 0,
     }
-    console.log("2)", this.categoria);
+    //console.log("2)", this.categoria);
     //this.categorias.push(this.categoria)
-    //console.log("3)", this.categorias);
+    ////console.log("3)", this.categorias);
     this.secciones[index].categorias.push(this.categoria)
     this.categoriaForm.reset()
-    console.log("3)Secciones:" , this.secciones);    
+    //console.log("3)Secciones:" , this.secciones);    
   }
 
   eliminarCategoria(index: number, orden:number) {
@@ -118,8 +120,8 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   agregarDescripcion(index:number) {
-    console.log(this.descripcionForm.value.descripcion);
-    console.log(this.secciones);
+    //console.log(this.descripcionForm.value.descripcion);
+    //console.log(this.secciones);
     this.secciones[index].descripcion = this.descripcionForm.value.descripcion;
     this.descripcionForm.reset();
   }
@@ -130,7 +132,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   crearTarifa() {
-    console.log(this.clienteSeleccionado);
+    //console.log(this.clienteSeleccionado);
     
     this.tarifaPersonalizadaCliente = {
       id: null,
@@ -141,7 +143,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       idCliente: this.clienteSeleccionado[0].idCliente,
     };
     
-    console.log('Tarifa guardada:', this.tarifaPersonalizadaCliente);
+    //console.log('Tarifa guardada:', this.tarifaPersonalizadaCliente);
     this.addItem();
   }
 
@@ -192,12 +194,12 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
         modo: modo,
         item: this.clienteEditar,
       }  */
-      //console.log()(info); */
+      ////console.log()(info); */
       
       modalRef.componentInstance.fromParent = this.$ultTarifaCliente;
       modalRef.result.then(
         (result) => {
-          ////console.log()("ROOWW:" ,row);
+          //////console.log()("ROOWW:" ,row);
           //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
 //        this.selectCrudOp(result.op, result.item);
         //this.mostrarMasDatos(row);

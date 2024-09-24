@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -16,9 +17,9 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   modoAutomatico = true;  // por defecto en modo automático
   porcentajeAumento: number = 0; // variable para almacenar el porcentaje
   nuevaTarifa!: TarifaPersonalizadaCliente;  // suponiendo que ya tienes los datos cargados
-
+  componente: string = "tarifasPersCliente"
   
-  constructor(public activeModal: NgbActiveModal, private fb: FormBuilder){}
+  constructor(public activeModal: NgbActiveModal, private storageService: StorageService){}
 
   ngOnInit(): void {    
     console.log("0) ", this.fromParent);
@@ -31,12 +32,20 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
     if (this.modoAutomatico) {
       this.$ultimaTarifa.secciones.forEach(seccion => {
         seccion.categorias.forEach(categoria => {
-          // Calcula nuevos valores y los guarda en los campos nuevos
-          categoria.nuevoACobrar = categoria.aCobrar + (categoria.aCobrar * (this.porcentajeAumento / 100));
-          categoria.nuevoAPagar = categoria.aPagar + (categoria.aPagar * (this.porcentajeAumento / 100));
+          // Calcula nuevos valores y limita a dos decimales, luego convierte a número
+          categoria.nuevoACobrar = parseFloat((categoria.aCobrar + (categoria.aCobrar * (this.porcentajeAumento / 100))).toFixed(2));
+          categoria.nuevoAPagar = parseFloat((categoria.aPagar + (categoria.aPagar * (this.porcentajeAumento / 100))).toFixed(2));
         });
       });
     }
+  }
+  
+  // Método para calcular la diferencia
+  calcularDiferencia(valorOriginal: number, nuevoValor: number | null | undefined): number {
+    if (nuevoValor === null || nuevoValor === undefined || nuevoValor === 0) {
+      return 0;  // Devuelve 0 si no hay nuevo valor calculado
+    }
+    return nuevoValor - valorOriginal;
   }
 
   // Cambia entre modos automático y manual
@@ -46,126 +55,56 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
 
   // Método para generar el objeto final
   onSubmit(): void {
-    // Guardar los valores de la nueva tarifa
+    Swal.fire({
+      title: "¿Confirmar el alta de la tarifa?",
+      //text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {        
+        this.crearTarifa();
+        Swal.fire({
+          title: "Confirmado",
+          text: "Alta exitosa",
+          icon: "success"
+        })           
+      }
+    });   
+  }
+    // Clonamos la tarifa original y actualizamos los valores
+   
+    crearTarifa(): void {
     const tarifaNueva: TarifaPersonalizadaCliente = {
       ...this.nuevaTarifa,
-      idTarifa: new Date().getTime(),  // asignar nuevo idTarifa
-      secciones: this.$ultimaTarifa.secciones // los nuevos valores ya se habrán calculado o ingresado manualmente
+      idTarifa: new Date().getTime(),  // Asignar nuevo idTarifa
+      id: null,
+      fecha: new Date().toISOString().split('T')[0],
+      secciones: this.$ultimaTarifa.secciones.map(seccion => ({
+        ...seccion,
+        categorias: seccion.categorias.map(categoria => ({
+          ...categoria,
+          // Asignamos los valores de nuevoACobrar a aCobrar, y de nuevoAPagar a aPagar
+          aCobrar: categoria.nuevoACobrar,
+          aPagar: categoria.nuevoAPagar,
+          // Reseteamos los valores de nuevoACobrar y nuevoAPagar a 0
+          nuevoACobrar: 0,
+          nuevoAPagar: 0
+        }))
+      }))
     };
-    console.log("Tarifa Nueva: ",tarifaNueva); // Guardar o enviar el objeto nuevaTarifa
-  }
-
-
-   /*  if(this.tEspecial){
-      this.filas.controls.forEach((fila, index) => {
-              
-        const nuevaTarifaControl = fila.get('nuevaTarifa');
-        const diferenciaControl = fila.get('diferencia');
-        const ultimaTarifaControl = fila.get('ultimaTarifa');
-        
-        // Habilitar el input para la nueva tarifa
-        nuevaTarifaControl?.enable();
-    
-        // Agregar un listener para calcular la diferencia
-        nuevaTarifaControl?.valueChanges.subscribe((nuevoValor) => {
-          const ultimaTarifa = ultimaTarifaControl?.value || 0;
-          const diferencia = nuevoValor - ultimaTarifa;
-          diferenciaControl?.setValue(diferencia);
-        });
-      });  
-    } else{
-      this.filas.controls.forEach((fila, index) => {
-        if (fila.get('categoria')?.value.includes('Categoria')) {
-          fila.get('nombre')?.enable();
-        }
-        const nuevaTarifaControl = fila.get('nuevaTarifa');
-        const diferenciaControl = fila.get('diferencia');
-        const ultimaTarifaControl = fila.get('ultimaTarifa');
-        
-        // Habilitar el input para la nueva tarifa
-        nuevaTarifaControl?.enable();
-    
-        // Agregar un listener para calcular la diferencia
-        nuevaTarifaControl?.valueChanges.subscribe((nuevoValor) => {
-          const ultimaTarifa = ultimaTarifaControl?.value || 0;
-          const diferencia = nuevoValor - ultimaTarifa;
-          diferenciaControl?.setValue(diferencia);
-        });
-      });
-    } */
-    
   
-  
-  onGenerarNuevaTarifaAutomatica() {
-  /*   this.filas.controls.forEach(fila => {
-      if (fila.get('categoria')?.value.includes('Categoria')) {
-        fila.get('nombre')?.disable();
-      }
-      fila.get('nuevaTarifa')?.disable();
-    }); */
+    // Aquí puedes guardar o enviar el objeto tarifaNueva
+    console.log("Tarifa Nueva Guardada: ", tarifaNueva);
+    this.addItem(tarifaNueva)
   }
 
-  calcularNuevaTarifaPorcentaje() {
-   /*  const porcentaje = this.porcentajeAumento.value / 100;
-
-    this.filas.controls.forEach(fila => {
-      const seleccionadoControl = fila.get('seleccionado');
-      const ultimaTarifaControl = fila.get('ultimaTarifa');
-      const nuevaTarifaControl = fila.get('nuevaTarifa');
-      const diferenciaControl = fila.get('diferencia');
-
-      if (seleccionadoControl?.value) {
-        const ultimaTarifa = ultimaTarifaControl?.value || 0;
-        const nuevaTarifa = ultimaTarifa * (1 + porcentaje);
-        
-        nuevaTarifaControl?.setValue(nuevaTarifa.toFixed(2));
-        diferenciaControl?.setValue((nuevaTarifa - ultimaTarifa).toFixed(2));
-      }
-    }); */
+  addItem(item:TarifaPersonalizadaCliente){
+    this.storageService.addItem(this.componente, item);    
+    this.activeModal.close()
   }
 
-/*   onSubmit(){
-    if (this.modoAjuste === 'manual') {
-      // Tomar los valores manuales ingresados
-      this.nuevaTarifa = JSON.parse(JSON.stringify(this.$ultimaTarifa));
-    }
-    // Guardar la nuevaTarifa en Firebase o donde sea necesario
-
-    // Lógica para guardar nuevaTarifa en Firebase
-  } */
-  /*   ////console.log()(new Date().getTime());   
-    const tarifaSeleccionada = this.getTarifaTipo();    
-    if (this.form.valid) {
-      if(this.fromParent.modo === "edicion"){
-        this.cliente = this.form.value
-        this.cliente.idCliente = this.clienteEditar.idCliente;
-        this.cliente.id = this.clienteEditar.id;
-        this.cliente.contactos = this.contactos;
-        //console.log()(this.cliente);     
-        this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        //console.log(this.cliente);      
-        this.addItem("Edicion");        
-        this.activeModal.close();    
-      }else{
-        this.cliente = this.form.value
-        this.cliente.idCliente = new Date().getTime();
-        this.cliente.contactos = this.contactos;
-        //console.log()(this.cliente);     
-        this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        //console.log(this.cliente);      
-        this.addItem("Alta");        
-        this.activeModal.close();    
-      }      
-    } else{
-      //alert("error en el formulario")
-      Swal.fire({
-        icon: "error",
-        
-        text: "El formulario contiene errores ",
-//        
-      });
-
-    } 
-     */
-   
 }

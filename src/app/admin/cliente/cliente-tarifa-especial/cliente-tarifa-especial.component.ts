@@ -23,26 +23,30 @@ export class ClienteTarifaEspecialComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.storageService.clientes$
-    
+    this.storageService.clientes$    
     .subscribe(data => {
       this.$clientes = data;
       this.$clientesEsp = this.$clientes.filter((cliente:Cliente)=>{
         return cliente.tarifaTipo.especial === true 
       })
-      console.log(this.$clientesEsp);      
+      //console.log(this.$clientesEsp);      
       this.tEspecial = false;
-    })             
-
+    });
+   /*  this.storageService.tEspecialCliente$
+    .subscribe(data => {
+      this.tEspecial = data;
+      this.tEspecial = false
+    });
+ */
   }
 
   changeCliente(e: any) {    
-    console.log(e.target.value);    
+    //console.log(e.target.value);    
     let id = Number(e.target.value);
-    ////console.log()("1)",id);
+    //////console.log()("1)",id);
     
     this.clienteSeleccionado = this.$clientesEsp.filter((cliente:Cliente)=>{
-      ////console.log()("2", cliente.idCliente, id);
+      //////console.log()("2", cliente.idCliente, id);
       return cliente.idCliente === id
     })
     this.tEspecial = true;
@@ -50,8 +54,12 @@ export class ClienteTarifaEspecialComponent implements OnInit {
     this.consultaCliente.push(this.idClienteEsp)
     this.storageService.setInfo("clienteSeleccionado", this.consultaCliente);
     this.consultaCliente = [];   
+    let tarfEsp = [];
+    tarfEsp.push(this.tEspecial);
+    this.storageService.setInfo("tEspecialCliente", tarfEsp);    
+    tarfEsp = [];   
     //this.asignarTarifa = true
-    ////console.log()("este es el cliente seleccionado: ", this.clienteSeleccionado);
+    //////console.log()("este es el cliente seleccionado: ", this.clienteSeleccionado);
     //this.buscarTarifas();
   }
 

@@ -40,25 +40,25 @@ export class ChoferesTarifaGralComponent implements OnInit {
     //console.log("0)",this.idClienteEsp);
     this.storageService.choferSeleccionado$.subscribe(data => {      ///
       this.idChoferEsp = data
-      //console.log("0A)",this.idChoferEsp);
+      console.log("0A)",this.idChoferEsp);
       if(this.tEspecial){
         this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",this.idChoferEsp[0],"ultTarifaEspChofer");
       }
     });
     this.storageService.clienteSeleccionado$.subscribe(data => {      
       this.idClienteEsp = data
-      //console.log("0B)",this.idClienteEsp);
+      console.log("0B)",this.idClienteEsp);
     })
     
     this.storageService.ultTarifaGralCliente$.subscribe(data =>{
       ////console.log("data: ", data);                
       this.ultTarifaCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-      this.ultTarifaCliente.cargasGenerales = this.ultTarifaCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      ////console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);        
+      console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);        
       this.storageService.ultTarifaGralChofer$.subscribe(data =>{
+        console.log("data", data);        
         this.ultTarifaGralChofer = data || {};
         this.ultTarifaGralChofer.cargasGenerales = this.ultTarifaGralChofer.cargasGenerales || [];
-        ////console.log("2) ult tarifa GRAL CHOFER: ", this.ultTarifaGralChofer);
+        console.log("2) ult tarifa GRAL CHOFER: ", this.ultTarifaGralChofer);
         this.configurarTabla();
       })
     });                  
