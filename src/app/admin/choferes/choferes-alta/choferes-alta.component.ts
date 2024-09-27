@@ -132,10 +132,10 @@ export class ChoferesAltaComponent implements OnInit {
       domicilio: this.chofer.domicilio,           
     });    
     this.formTipoTarifa.patchValue({
-      general: this.chofer.tarifaTipo.general, 
-      especial: this.chofer.tarifaTipo.especial,
-      eventual: this.chofer.tarifaTipo.eventual,
-      personalizada: this.chofer.tarifaTipo.personalizada,      
+      general: this.chofer.tarifaTipo?.general, 
+      especial: this.chofer.tarifaTipo?.especial,
+      eventual: this.chofer.tarifaTipo?.eventual,
+      personalizada: this.chofer.tarifaTipo?.personalizada,      
   });
     this.armarVehiculoForm();   
   }
@@ -204,7 +204,7 @@ export class ChoferesAltaComponent implements OnInit {
         this.chofer.id = id;    
         this.chofer.proveedor = this.proveedorSeleccionado;
         this.chofer.vehiculo = this.vehiculos;
-        this.chofer.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
+        this.chofer.tarifaTipo = this.proveedorSeleccionado === "monotributista" ? tarifaSeleccionada : null; // Asigna el tipo de tarifa
         console.log("este es el chofer EDITADO: ",this.chofer);     
     } else {
         this.chofer = this.form.value;
@@ -213,7 +213,7 @@ export class ChoferesAltaComponent implements OnInit {
         this.chofer.id = null;  
         this.chofer.proveedor = this.proveedorSeleccionado;
         this.chofer.vehiculo = this.vehiculos;
-        this.chofer.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
+        this.chofer.tarifaTipo = this.proveedorSeleccionado === "monotributista" ? tarifaSeleccionada : null; // Asigna el tipo de tarifa
         console.log("este es el chofer NUEVO: ",this.chofer);     
     }
    }
@@ -287,48 +287,9 @@ export class ChoferesAltaComponent implements OnInit {
      
   }  
   
-  /* armarVehiculo(){   
-    this.vehiculo = this.vehiculoForm.value;
-    //this.vehiculo.categoria = this.categoriaSeleccionada;
-    this.vehiculo.categoria
-    this.vehiculo.tipoCombustible = this.tipoCombustible;
-    this.vehiculo.tarjetaCombustible = this.tarjetaCombustible;
-    this.vehiculo.publicidad = this.publicidad;
-    if(this.seguimiento){
-      this.vehiculo.segSat = true;
-      this.vehiculo.satelital = this.seguimientoForm.value;
-    }else{
-      this.vehiculo.segSat = false;
-      this.vehiculo.satelital = null;
-    }
-    this.vehiculo.refrigeracion = null;
-    ////console.log()(this.vehiculo);
-    this.chofer.vehiculo[0] = this.vehiculo;
-  } */
 
-  /* armarJornada(){     
-    this.componente = "jornadas"
-    this.adicionalKm = this.adicionalForm.value
-    ////console.log()("esto es adicionalKm: ", this.adicionalKm);
-    this.jornada = this.jornadaForm.value;
-    this.jornada.km = this.adicionalKm;
-    this.jornada.idChofer = this.chofer.idChofer;    
-    ////console.log()("esta es la jornada: ", this.jornada);
-    this.addItem(this.jornada)
-  } */
-
-  changeProveedor(e:any){
-    //console.log()(e.target.value);
-    //let razonSocial = e.target.value.split(" ")[0];
-    ////console.log()(apellido);
-    
-    
+  changeProveedor(e:any){      
     this.proveedorSeleccionado = e.target.value;
-    /* this.clienteSeleccionado = this.clientes$.source._value.filter(function (cliente:any){
-      return cliente.razonSocial === e.target.value
-    }) */
-   //console.log()("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
-    //this.buscarTarifas();
   }  
 
   changeTipoCombustible(e: any) {    
@@ -370,21 +331,6 @@ export class ChoferesAltaComponent implements OnInit {
     
   }
 
-  /* selectRefrigeracion(e:any){ 
-    switch (e.target.value) {
-      case "si":{
-        this.refrigeracion = true;
-        break;
-      }
-      case "no":{
-        this.refrigeracion = false;
-        break;
-      }
-      default:{
-        break;
-      }
-    }
-  } */
 
 
   validarPatente() {

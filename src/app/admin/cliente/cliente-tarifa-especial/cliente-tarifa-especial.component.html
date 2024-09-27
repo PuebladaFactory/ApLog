@@ -1,5 +1,5 @@
   
-  <div [ngClass]="{'invisible': tEspecial}">
+  <div >
       <div class="row mt-3">
           <div class="col-4" >      
               <h1 class="mt-2">Tarifa Especial</h1>
@@ -14,7 +14,8 @@
                     </option>
                   </select>
               </div>                          
-          </div>     
+          </div>   
+          <app-consola-tarifa class="col-4 " *ngIf="tEspecial"></app-consola-tarifa>  
       </div>      
   </div>
   

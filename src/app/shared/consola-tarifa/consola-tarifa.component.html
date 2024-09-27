@@ -1,0 +1,13 @@
+<div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
+        <h3>Generar Nueva Tarifa:</h3>
+        <div class="form-group d-flex">            
+            <div class="me-3">                
+                <button type="button" class="btn" [class.btn-primary]="!modoAutomatico" (click)="cambiarModo('manual')">Manual</button>
+                <button type="button" class="btn" [class.btn-primary]="modoAutomatico" (click)="cambiarModo('automatico')">Automática</button>
+            </div>
+            <div *ngIf="modoAutomatico">
+                <input type="number" [formControl]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento" (keydown.enter)="enviarValores()">
+                <button type="button" class="btn btn-outline-primary ms-2" (click)="enviarValores()">Aplicar Porcentaje</button>
+            </div>
+        </div>      
+    </div>

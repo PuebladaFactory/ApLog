@@ -1,3 +1,5 @@
+import { TarifaTipo } from "./tarifa-gral-cliente";
+
 export interface Proveedor {
    
         id:any | null;
@@ -6,15 +8,16 @@ export interface Proveedor {
         cuit: number;
         direccion: string;
         contactos: Contacto [];
+        tarifaTipo: TarifaTipo;
 }
-    
+
 export interface Contacto {    
     puesto:string;
     apellido: string;
     nombre:string;
     telefono:number;
     email:string;
-        
-        
+    
+    
 }
 

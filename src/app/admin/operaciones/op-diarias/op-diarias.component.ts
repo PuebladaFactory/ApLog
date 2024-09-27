@@ -21,15 +21,34 @@ export class OpDiariasComponent implements OnInit {
   public buttonNameManual: any = 'Carga Manual';  
   titulo: string = "operacionesActivas"
   btnConsulta:boolean = false;  
-  tarifaEspecial: boolean = false;
+  tarifaEventual: boolean = false;
+  tarifaPersonalizada: boolean = false;
+  vehiculosChofer:boolean = false;
   fechasConsulta: any = {
     fechaDesde: 0,
     fechaHasta: 0,
   };
 
-  constructor() {}
+  constructor(private storageService: StorageService) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.storageService.opTarEve$.subscribe(data=>{
+      let datos = data
+      this.tarifaEventual = datos[0];
+      console.log("tarifa eventual: ", this.tarifaEventual);
+      
+    });
+    this.storageService.opTarPers$.subscribe(data=>{
+      let datos = data
+      this.tarifaPersonalizada = datos[0];
+      console.log("tarifa personalizada: ", this.tarifaPersonalizada);
+    });
+    this.storageService.vehiculosChofer$.subscribe(data=>{
+      let datos = data
+      this.vehiculosChofer = datos[0];
+      console.log("vehiculos chofer: ", this.vehiculosChofer);
+    })
+  }
 
   getMsg(msg: any) {
     this.btnConsulta = true;
@@ -41,9 +60,5 @@ export class OpDiariasComponent implements OnInit {
 
   }
 
-  getMsgAlta(msg: any) {
-
-    this.tarifaEspecial = msg;
-  }
   
 }

@@ -10,6 +10,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.component';
+import { ProveedoresControlComponent } from './proveedores-control/proveedores-control.component';
+import { ProveedoresTarifaGralComponent } from './proveedores-tarifa-gral/proveedores-tarifa-gral.component';
+import { ProveedoresTarifaEspecialComponent } from './proveedores-tarifa-especial/proveedores-tarifa-especial.component';
+import { ModalContactoProveedoresComponent } from './modal-contacto-proveedores/modal-contacto-proveedores.component';
 
 
 @NgModule({
@@ -18,7 +22,11 @@ import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.
     /* ProveedoresBajaComponent, */
     ProveedoresListadoComponent,
     ProveedoresTarifaComponent,
-    ModalAltaTarifaComponent
+    ModalAltaTarifaComponent,
+    ProveedoresControlComponent,
+    ProveedoresTarifaGralComponent,
+    ProveedoresTarifaEspecialComponent,
+    ModalContactoProveedoresComponent
   ],
   imports: [
     CommonModule,

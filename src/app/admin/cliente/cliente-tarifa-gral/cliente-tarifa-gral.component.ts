@@ -31,7 +31,12 @@ export class ClienteTarifaGralComponent implements OnInit {
   modoAutomatico = true;  // por defecto en modo automático
   $clientes!: Cliente[];
   $clientesEsp! : Cliente [];
-  clienteSeleccionado!: Cliente[];
+  clienteSeleccionado!: Cliente[]
+  consolaTarifa: any = 0;
+  modoTarifa: any = { 
+    manual: false,
+    automatico: true,
+  }
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private dbFirebase: DbFirestoreService) {
     this.tarifaForm = this.fb.group({
@@ -59,7 +64,7 @@ export class ClienteTarifaGralComponent implements OnInit {
           this.clienteSeleccionado = this.$clientesEsp.filter((cliente:Cliente)=>{
             return cliente.idCliente === this.idClienteEsp[0]; 
           });
-          //console.log("0C) cliente selecciondo: ", this.clienteSeleccionado);
+          
           
         });      
       }
@@ -72,7 +77,20 @@ export class ClienteTarifaGralComponent implements OnInit {
       this.ultTarifa.cargasGenerales = this.ultTarifa.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
       ////console.log("1) ult tarifa GRAL: ",this.ultTarifa);        
       this.configurarTabla();
-    })            
+    })      
+    /// esto es la consola de tarifa
+    this.storageService.consolaTarifa$.subscribe(data =>{
+      this.consolaTarifa = data;
+      console.log("consola tarifa: ", this.consolaTarifa);   
+      if(this.consolaTarifa > 0)  {
+        this.calcularNuevaTarifaPorcentaje();
+      } ;      
+    });
+    this.storageService.modoTarifa$.subscribe(data =>{
+      this.modoTarifa = data;
+      console.log("1) modoTarifa: ", this.modoTarifa);      
+      this.manejoConsola();
+    });
     
   }
 
@@ -164,9 +182,17 @@ export class ClienteTarifaGralComponent implements OnInit {
     ].includes(categoria);
   }
 
-  calcularNuevaTarifaPorcentaje() {
-    const porcentaje = this.porcentajeAumento.value / 100;
+  manejoConsola(){
+    if(this.modoTarifa.manual){
+      this.onGenerarNuevaTarifaManual()
+    } else {
+      this.onGenerarNuevaTarifaAutomatica()
+    }
+  }
 
+  calcularNuevaTarifaPorcentaje() {
+    //const porcentaje = this.porcentajeAumento.value / 100;
+    const porcentaje = this.consolaTarifa
     this.filas.controls.forEach(fila => {
       const seleccionadoControl = fila.get('seleccionado');
       const ultimaTarifaControl = fila.get('ultimaTarifa');
@@ -248,7 +274,7 @@ export class ClienteTarifaGralComponent implements OnInit {
     // Aquí podrías implementar la lógica para guardar la nueva tarifa en Firebase
     this.configurarNuevaTarifa();
     Swal.fire({
-      title: "¿Confirmar el alta del Cliente?",
+      title: "¿Confirmar el alta de la Tarifa?",
       //text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
@@ -363,30 +389,19 @@ export class ClienteTarifaGralComponent implements OnInit {
     ////console.log("1)",this.tEspecial);
     if(!this.tEspecial){
       this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
+      this.consolaTarifa = 0;
+      this.storageService.setInfo("consolaTarifa", this.consolaTarifa)
     }else if(this.tEspecial){
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
       this.nuevaTarifaGral.tipo.especial = true;
-      this.storageService.addItem("tarifasEspCliente", this.nuevaTarifaGral);         
+      this.storageService.addItem("tarifasEspCliente", this.nuevaTarifaGral);      
+      this.consolaTarifa = 0;
+      this.storageService.setInfo("consolaTarifa", this.consolaTarifa)   
     }
     //   
   }
 
-  changeCliente(e: any) {    
-    //console.log(e.target.value);    
-    let id = Number(e.target.value);
-    //////console.log()("1)",id);    
-    this.clienteSeleccionado = this.$clientesEsp.filter((cliente:Cliente)=>{
-      //////console.log()("2", cliente.idCliente, id);
-      return cliente.idCliente === id
-    })
-    this.tEspecial = true;
-    this.idClienteEsp = id;
-    let consultaCliente = []
-    consultaCliente.push(this.idClienteEsp)
-    this.storageService.setInfo("clienteSeleccionado", consultaCliente);
-    consultaCliente = [];       
-  }
 
 
 }

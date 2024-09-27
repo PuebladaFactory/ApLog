@@ -1,5 +1,6 @@
 import { Chofer } from "./chofer";
 import { Cliente } from "./cliente";
+import { TarifaTipo } from "./tarifa-gral-cliente";
 
 export interface Operacion {
     id: any;
@@ -17,6 +18,9 @@ export interface Operacion {
     facturaChofer: number | null;
     tarifaEventual: boolean;
     tEventual: TarifaEventual;
+    tarifaPersonalizada: boolean;
+    tPersonalizada: TarifaPersonalizada;
+    //tarifaTipo :TarifaTipo;
 }
 
 export interface TarifaEventual {    
@@ -29,4 +33,12 @@ export interface TarifaEventual {
         valor: number;    
     },
     
+}
+
+export interface TarifaPersonalizada {    
+    seccion: number;
+    categoria:number;
+    nombre: string;
+    aCobrar: number;
+    aPagar: number;
 }

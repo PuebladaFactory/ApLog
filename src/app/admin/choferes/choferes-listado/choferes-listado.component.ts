@@ -323,7 +323,7 @@ export class ChoferesListadoComponent implements OnInit {
         direccion: chofer.domicilio,
         cuit: chofer.cuit,
         proveedor: chofer.proveedor,
-        tarifa: chofer.tarifaTipo.general ? "General" : chofer.tarifaTipo.especial ? "Especial" : chofer.tarifaTipo.personalizada ? "Personalizada" : "Eventual",
+        tarifa: chofer.tarifaTipo?.general ? "General" : chofer.tarifaTipo?.especial ? "Especial" : chofer.tarifaTipo?.personalizada ? "Personalizada" : chofer.tarifaTipo?.eventual ? "Eventual" : "Tarifa Proveedor",
         /* dominio: chofer.vehiculo[0]?.dominio,
         categoria: chofer.vehiculo?.map(vehiculo => {vehiculo.categoria.nombre}),
         marca: chofer.vehiculo[0]?.marca,

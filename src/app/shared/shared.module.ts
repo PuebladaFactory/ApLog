@@ -7,6 +7,8 @@ import { BtnEditarComponent } from './btn-editar/btn-editar.component';
 import { BtnEliminarComponent } from './btn-eliminar/btn-eliminar.component';
 import { BtnReimpresionComponent } from './btn-reimpresion/btn-reimpresion.component';
 import { BtnLeerComponent } from './btn-leer/btn-leer.component';
+import { ConsolaTarifaComponent } from './consola-tarifa/consola-tarifa.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 
 @NgModule({
@@ -15,18 +17,22 @@ import { BtnLeerComponent } from './btn-leer/btn-leer.component';
     BtnEditarComponent,
     BtnEliminarComponent,
     BtnReimpresionComponent,
-    BtnLeerComponent
+    BtnLeerComponent,
+    ConsolaTarifaComponent
   ],
   imports: [
     CommonModule,
-    SharedRoutingModule
+    SharedRoutingModule,
+    FormsModule,
+    ReactiveFormsModule,
   ],
   exports:[
     BtnAgregarComponent,
     BtnEditarComponent,
     BtnEliminarComponent,
     BtnReimpresionComponent,
-    BtnLeerComponent
+    BtnLeerComponent,
+    ConsolaTarifaComponent
   ]
 })
 export class SharedModule { }

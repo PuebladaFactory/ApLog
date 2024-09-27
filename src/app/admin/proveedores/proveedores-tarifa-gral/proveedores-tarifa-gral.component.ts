@@ -1,31 +1,31 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder, FormControl } from '@angular/forms';
-import { AdicionalTarifa, CategoriaTarifa, TarifaGralChofer } from 'src/app/interfaces/tarifa-gral-chofer';
-import { TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { AdicionalTarifa, CategoriaTarifa, TarifaGralProveedor, TarifaTipo } from 'src/app/interfaces/tarifa-gral-proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-choferes-tarifa-gral',
-  templateUrl: './choferes-tarifa-gral.component.html',
-  styleUrls: ['./choferes-tarifa-gral.component.scss']
+  selector: 'app-proveedores-tarifa-gral',
+  templateUrl: './proveedores-tarifa-gral.component.html',
+  styleUrls: ['./proveedores-tarifa-gral.component.scss']
 })
-export class ChoferesTarifaGralComponent implements OnInit {
+export class ProveedoresTarifaGralComponent implements OnInit {
 
   @Input() tEspecial!: boolean;
-  @Input() idChoferEsp!:any;
+  @Input() idProveedorEsp!:any;
   @Input() idClienteEsp!:any;
 
   tarifaForm!:any; 
-  ultTarifaCliente!: TarifaGralCliente; 
-  ultTarifaEspecial!: TarifaGralChofer;
-  ultTarifaGralChofer!: TarifaGralChofer;
+  ultTarifaGralCliente!: TarifaGralCliente; 
+  ultTarifaEspecial!: TarifaGralProveedor;
+  ultTarifaGralProveedor!: TarifaGralProveedor;
   porcentajeAumento: FormControl = new FormControl(0); // Para el aumento porcentual
   categoria!: CategoriaTarifa;
   categorias: CategoriaTarifa[] = [];
-  nuevaTarifaGral!: TarifaGralChofer;
-  componente: string ="tarifasGralChofer";
+  nuevaTarifaGral!: TarifaGralProveedor;
+  componente: string ="tarifasGralProveedor";
   consolaTarifa: any = 0;
   modoTarifa: any = { 
     manual: false,
@@ -40,34 +40,37 @@ export class ChoferesTarifaGralComponent implements OnInit {
     this.tEspecial = false
   }
   ngOnInit(): void { 
-    console.log("0)",this.tEspecial);
+    //console.log("0)",this.tEspecial);
     //console.log("0)",this.idChoferEsp);
     //console.log("0)",this.idClienteEsp);
-    this.storageService.choferSeleccionado$.subscribe(data => {      ///
-      this.idChoferEsp = data
-      console.log("0A)",this.idChoferEsp);
+    //////tarifa especial: proveedor seleccionado
+    this.storageService.proveedorSeleccionado$.subscribe(data => {      ///
+      this.idProveedorEsp = data
+      //console.log("0A)",this.idProveedorEsp);
       if(this.tEspecial){
-        this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",this.idChoferEsp[0],"ultTarifaEspChofer");
+        this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",this.idProveedorEsp[0],"ultTarifaEspProveedor");
       }
     });
+    //////tarifa especial: cliente seleccionado seleccionado
     this.storageService.clienteSeleccionado$.subscribe(data => {      
       this.idClienteEsp = data
-      console.log("0B)",this.idClienteEsp);
+      //console.log("0B)",this.idClienteEsp);
     })
-    
+    ///tarifa general para obtener las categorias
     this.storageService.ultTarifaGralCliente$.subscribe(data =>{
       ////console.log("data: ", data);                
-      this.ultTarifaCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-      console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);        
-      this.storageService.ultTarifaGralChofer$.subscribe(data =>{
+      this.ultTarifaGralCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+      //console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);        
+      /// ultima tarifa gral de proveedores
+      this.storageService.ultTarifaGralProveedor$.subscribe(data =>{
         console.log("data", data);        
-        this.ultTarifaGralChofer = data || {};
-        this.ultTarifaGralChofer.cargasGenerales = this.ultTarifaGralChofer.cargasGenerales || [];
-        console.log("2) ult tarifa GRAL CHOFER: ", this.ultTarifaGralChofer);
+        this.ultTarifaGralProveedor = data || {};
+        this.ultTarifaGralProveedor.cargasGenerales = this.ultTarifaGralProveedor.cargasGenerales || [];
+        //console.log("2) ult tarifa GRAL Proveedor: ", this.ultTarifaGralProveedor);
         this.configurarTabla();
       })
-    });       
-    
+    });                  
+    //consola de tarifas
     this.storageService.consolaTarifa$.subscribe(data =>{
       this.consolaTarifa = data;
       console.log("consola tarifa: ", this.consolaTarifa);   
@@ -75,6 +78,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
         this.calcularNuevaTarifaPorcentaje();
       } ;      
     });
+    //modo de tarifa
     this.storageService.modoTarifa$.subscribe(data =>{
       this.modoTarifa = data;
       console.log("1) modoTarifa: ", this.modoTarifa);      
@@ -87,7 +91,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
     if(this.tEspecial){
       ////console.log("3a) tarifa especial: ", this.tEspecial);      
       ////console.log("3b) tarifa general: ", this.ultTarifaCliente);      
-      this.storageService.ultTarifaEspChofer$
+      this.storageService.ultTarifaEspProveedor$
       //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data =>{
       ////console.log("2c) data: ", data);                
@@ -129,19 +133,19 @@ export class ChoferesTarifaGralComponent implements OnInit {
 
   inicializarTabla() {
     const categorias = [
-      { categoria: 'Categoria 1', valorAnterior: this.tEspecial? this.ultTarifaEspecial?.cargasGenerales[0]?.valor : this.ultTarifaGralChofer?.cargasGenerales[0]?.valor || 0, nombreAnterior: this.ultTarifaCliente?.cargasGenerales[0]?.nombre || '' },
-      { categoria: 'Categoria 2', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[1]?.valor : this.ultTarifaGralChofer?.cargasGenerales[1]?.valor || 0, nombreAnterior: this.ultTarifaCliente.cargasGenerales[1]?.nombre || '' },
-      { categoria: 'Categoria 3', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[2]?.valor : this.ultTarifaGralChofer?.cargasGenerales[2]?.valor || 0, nombreAnterior: this.ultTarifaCliente.cargasGenerales[2]?.nombre || '' },
-      { categoria: 'Categoria 4', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[3]?.valor : this.ultTarifaGralChofer?.cargasGenerales[3]?.valor || 0, nombreAnterior: this.ultTarifaCliente.cargasGenerales[3]?.nombre || '' },
-      { categoria: 'Categoria 5', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[4]?.valor : this.ultTarifaGralChofer?.cargasGenerales[4]?.valor || 0, nombreAnterior: this.ultTarifaCliente.cargasGenerales[4]?.nombre || '' },
-      { categoria: 'Categoria 6', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[5]?.valor : this.ultTarifaGralChofer?.cargasGenerales[5]?.valor || 0, nombreAnterior: this.ultTarifaCliente.cargasGenerales[5]?.nombre || '' },
-      { categoria: 'Categoria 7', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[6]?.valor : this.ultTarifaGralChofer?.cargasGenerales[6]?.valor || 0, nombreAnterior: this.ultTarifaCliente.cargasGenerales[6]?.nombre || '' },
-      { categoria: 'Categoria 8', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[7]?.valor : this.ultTarifaGralChofer?.cargasGenerales[7]?.valor || 0, nombreAnterior: this.ultTarifaCliente.cargasGenerales[7]?.nombre || '' },
-      { categoria: 'Acompañante', valorAnterior: this.tEspecial? this.ultTarifaEspecial.adicionales?.acompaniante : this.ultTarifaGralChofer?.adicionales?.acompaniante || 0, nombreAnterior: '' },
-      { categoria: 'Km 1er Sector distancia', valorAnterior: this.tEspecial? this.ultTarifaEspecial?.adicionales?.adicionalKm?.primerSector?.distancia : this.ultTarifaGralChofer?.adicionales?.adicionalKm?.primerSector?.distancia || 0, nombreAnterior: '' },
-      { categoria: 'Km 1er Sector valor', valorAnterior: this.tEspecial? this.ultTarifaEspecial.adicionales?.adicionalKm?.primerSector?.valor : this.ultTarifaGralChofer?.adicionales?.adicionalKm?.primerSector?.valor || 0, nombreAnterior: '' },
-      { categoria: 'Km Intervalos distancia', valorAnterior: this.tEspecial? this.ultTarifaEspecial?.adicionales?.adicionalKm?.sectoresSiguientes?.intervalo : this.ultTarifaGralChofer?.adicionales?.adicionalKm?.sectoresSiguientes?.intervalo || 0, nombreAnterior: '' },
-      { categoria: 'Km Intervalos valor', valorAnterior: this.tEspecial? this.ultTarifaEspecial.adicionales?.adicionalKm?.sectoresSiguientes?.valor : this.ultTarifaGralChofer?.adicionales?.adicionalKm?.sectoresSiguientes?.valor || 0, nombreAnterior: '' },
+      { categoria: 'Categoria 1', valorAnterior: this.tEspecial? this.ultTarifaEspecial?.cargasGenerales[0]?.valor : this.ultTarifaGralProveedor?.cargasGenerales[0]?.valor || 0, nombreAnterior: this.ultTarifaGralCliente?.cargasGenerales[0]?.nombre || '' },
+      { categoria: 'Categoria 2', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[1]?.valor : this.ultTarifaGralProveedor?.cargasGenerales[1]?.valor || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[1]?.nombre || '' },
+      { categoria: 'Categoria 3', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[2]?.valor : this.ultTarifaGralProveedor?.cargasGenerales[2]?.valor || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[2]?.nombre || '' },
+      { categoria: 'Categoria 4', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[3]?.valor : this.ultTarifaGralProveedor?.cargasGenerales[3]?.valor || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[3]?.nombre || '' },
+      { categoria: 'Categoria 5', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[4]?.valor : this.ultTarifaGralProveedor?.cargasGenerales[4]?.valor || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[4]?.nombre || '' },
+      { categoria: 'Categoria 6', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[5]?.valor : this.ultTarifaGralProveedor?.cargasGenerales[5]?.valor || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[5]?.nombre || '' },
+      { categoria: 'Categoria 7', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[6]?.valor : this.ultTarifaGralProveedor?.cargasGenerales[6]?.valor || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[6]?.nombre || '' },
+      { categoria: 'Categoria 8', valorAnterior: this.tEspecial? this.ultTarifaEspecial.cargasGenerales[7]?.valor : this.ultTarifaGralProveedor?.cargasGenerales[7]?.valor || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[7]?.nombre || '' },
+      { categoria: 'Acompañante', valorAnterior: this.tEspecial? this.ultTarifaEspecial.adicionales?.acompaniante : this.ultTarifaGralProveedor?.adicionales?.acompaniante || 0, nombreAnterior: '' },
+      { categoria: 'Km 1er Sector distancia', valorAnterior: this.tEspecial? this.ultTarifaEspecial?.adicionales?.adicionalKm?.primerSector?.distancia : this.ultTarifaGralProveedor?.adicionales?.adicionalKm?.primerSector?.distancia || 0, nombreAnterior: '' },
+      { categoria: 'Km 1er Sector valor', valorAnterior: this.tEspecial? this.ultTarifaEspecial.adicionales?.adicionalKm?.primerSector?.valor : this.ultTarifaGralProveedor?.adicionales?.adicionalKm?.primerSector?.valor || 0, nombreAnterior: '' },
+      { categoria: 'Km Intervalos distancia', valorAnterior: this.tEspecial? this.ultTarifaEspecial?.adicionales?.adicionalKm?.sectoresSiguientes?.intervalo : this.ultTarifaGralProveedor?.adicionales?.adicionalKm?.sectoresSiguientes?.intervalo || 0, nombreAnterior: '' },
+      { categoria: 'Km Intervalos valor', valorAnterior: this.tEspecial? this.ultTarifaEspecial.adicionales?.adicionalKm?.sectoresSiguientes?.valor : this.ultTarifaGralProveedor?.adicionales?.adicionalKm?.sectoresSiguientes?.valor || 0, nombreAnterior: '' },
     ];
   
     categorias.forEach((cat, index) => {
@@ -363,6 +367,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
       tipo: tipo,
       idCliente: null,
       idChofer: null,
+      idProveedor: null,
     };
 
     //console.log("esta es la NUEVA TARIFA: ",this.nuevaTarifaGral);
@@ -394,11 +399,11 @@ export class ChoferesTarifaGralComponent implements OnInit {
     if(!this.tEspecial){
       this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
     }else if(this.tEspecial){
-      this.nuevaTarifaGral.idChofer = this.idChoferEsp[0];
+      this.nuevaTarifaGral.idProveedor = this.idProveedorEsp[0];
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
       this.nuevaTarifaGral.tipo.especial = true;
-      this.storageService.addItem("tarifasEspChofer", this.nuevaTarifaGral);         
+      this.storageService.addItem("tarifasEspProveedor", this.nuevaTarifaGral);         
     }
     //   
   }
@@ -413,7 +418,5 @@ export class ChoferesTarifaGralComponent implements OnInit {
       timer: 10000
     });
   }
-
-
 
 }

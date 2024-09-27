@@ -1,10 +1,7 @@
 import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { LoginComponent } from 'src/app/appLogin/login/login.component';
 import { Cliente, Contacto } from 'src/app/interfaces/cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { OpAltaComponent } from '../../operaciones/op-alta/op-alta.component';
 import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
 import Swal from 'sweetalert2';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
@@ -19,8 +16,7 @@ export class ClienteListadoComponent implements OnInit {
   
   searchText!:string;  
   clienteEditar!: Cliente;  
-  componente:string ="clientes";
-  //mostrar:boolean = false;
+  componente:string ="clientes";  
   $clientes!: Cliente[];  
 //////////////////////////////TABLA/////////////////////////////////////////////////////////
   rows: any[] = [];

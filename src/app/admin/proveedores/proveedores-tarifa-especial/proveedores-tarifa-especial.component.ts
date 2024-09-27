@@ -1,48 +1,60 @@
 import { Component, OnInit } from '@angular/core';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-choferes-tarifa-especial',
-  templateUrl: './choferes-tarifa-especial.component.html',
-  styleUrls: ['./choferes-tarifa-especial.component.scss']
+  selector: 'app-proveedores-tarifa-especial',
+  templateUrl: './proveedores-tarifa-especial.component.html',
+  styleUrls: ['./proveedores-tarifa-especial.component.scss']
 })
-export class ChoferesTarifaEspecialComponent implements OnInit {
+export class ProveedoresTarifaEspecialComponent implements OnInit {
 
   $choferes!: Chofer[];
   $choferesEsp! : Chofer [];
   choferSeleccionado!: Chofer[];
+  proveedorSeleccionado!: Proveedor[];
   tEspecial: boolean = false;
   idChoferEsp!: number;
   $clientes!: Cliente[];
   clienteSeleccionado!: Cliente[];
+  $proveedores!: Proveedor[];
+  $proveedoresEsp!: Proveedor[];
+  idProveedorEsp!: any;
   idClienteEsp!: any;
-  consultaChofer: any [] = [];
+  consultaProveedor: any [] = [];
   consultaCliente: any [] = [];
   constructor(private storageService: StorageService){
 
   }
 
   ngOnInit() {
+    //choferes todos
     this.storageService.choferes$.subscribe(data => {
       this.$choferes = data;
-      this.$choferesEsp = this.$choferes.filter((chofer:Chofer)=>{
-        return chofer.tarifaTipo?.especial === true 
-      })
       console.log("1)choferes especiales: ", this.$choferesEsp);      
       this.tEspecial = false;
-    })             
+    })  
+    //clientes todos
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;      
       console.log("2)clientes: ", this.$clientes);      
       
-    })             
+    })          
+    //proveedores todos y especiales
+    this.storageService.proveedores$.subscribe(data => {
+      this.$proveedores = data;      
+      console.log("2)proveedores: ", this.$proveedores);      
+      this.$proveedoresEsp = this.$proveedores.filter((proveedor:Proveedor)=>{
+        return proveedor.tarifaTipo?.especial === true 
+      })
+    })   
 
   }
 
-  changeChofer(e: any) {    
+/*   changeChofer(e: any) {    
     console.log(e.target.value);    
     let id = Number(e.target.value);
     ////console.log()("1)",id);    
@@ -55,6 +67,21 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
     this.consultaChofer.push(this.idChoferEsp);    
     this.storageService.setInfo("choferSeleccionado", this.consultaChofer);   
     this.consultaChofer = [];
+  } */
+
+  changeProveedor(e: any) {    
+    console.log(e.target.value);    
+    let id = Number(e.target.value);
+    ////console.log()("1)",id);    
+    this.proveedorSeleccionado = this.$proveedoresEsp.filter((proveedor:Proveedor)=>{
+      ////console.log()("2", cliente.idCliente, id);
+      return proveedor.idProveedor === id;
+    })
+    //this.tEspecial = true;
+    this.idProveedorEsp = id 
+    this.consultaProveedor.push(this.idProveedorEsp);    
+    this.storageService.setInfo("proveedorSeleccionado", this.consultaProveedor);   
+    this.consultaProveedor = [];
   }
 
   changeCliente(e: any) {    

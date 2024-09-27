@@ -130,7 +130,7 @@ export class OpAbiertasComponent implements OnInit {
   }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 armarTabla() {
-  //console.log("consultasOp: ", this.$consultasOp );
+  ////console.log("consultasOp: ", this.$consultasOp );
   let indice = 0
   if(!this.btnConsulta){
     this.rows = this.$opActivas.map((op) => ({
@@ -161,7 +161,7 @@ armarTabla() {
       
     }));
   }  
-  //console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+  ////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
   this.applyFilters(); // Aplica filtros y actualiza filteredRows
 }
 
@@ -234,9 +234,9 @@ toogleAjustes(){
 
   getMsg(msg: any) {
     this.btnConsulta = true;
-    ////////console.log()("mensajeeee: ", msg);
+    //////////console.log()("mensajeeee: ", msg);
     this.fechasConsulta = msg;
-    //console.log("mensajeeee: ", this.fechasConsulta);    
+    ////console.log("mensajeeee: ", this.fechasConsulta);    
   }
 
   crearFacturaOp(op:any){
@@ -258,7 +258,7 @@ toogleAjustes(){
     }).then((result) => {
       if (result.isConfirmed) {
         this.facturarOperacion();
-        //console.log("1) ", this.$consultasOp);
+        ////console.log("1) ", this.$consultasOp);
         Swal.fire({
           title: "Confirmado",
           text: "La operación se ha cerrado",
@@ -270,7 +270,7 @@ toogleAjustes(){
   }
 
   facturarOperacion(){
-    ////////console.log()(this.opForm.value);
+    //////////console.log()(this.opForm.value);
     this.detalleOp.km = this.opForm.value.km,
     this.opCerrada.km = this.opForm.value.km;    
     //this.opCerrada.documentacion = this.opForm.remito;
@@ -278,7 +278,7 @@ toogleAjustes(){
     
     
     this.bajaOperacionesActivas();
-    //console.log("consultas Op: " , this.$consultasOp);
+    ////console.log("consultas Op: " , this.$consultasOp);
     if(this.detalleOp.chofer.proveedor === "monotributista"){
       this.facturarOpChofer();
     } else{
@@ -288,7 +288,7 @@ toogleAjustes(){
   }
 
   bajaOperacionesActivas(){
-    //console.log("llamada al storage desde op-abiertas, deleteItem");
+    ////console.log("llamada al storage desde op-abiertas, deleteItem");
     this.storageService.deleteItem("operacionesActivas", this.opCerrada);
   }
 
@@ -370,7 +370,7 @@ toogleAjustes(){
   }
 
   addItem(componente: string, item: any): void {
-    //console.log("llamada al storage desde op-abiertas, addItem");
+    ////console.log("llamada al storage desde op-abiertas, addItem");
     this.storageService.addItem(componente, item);     
   }
 
@@ -385,8 +385,8 @@ toogleAjustes(){
     } else{
       this.facturaCliente.montoFacturaChofer = this.facturaProveedor.total.valueOf();    
       this.facturaProveedor.montoFacturaCliente = this.facturaCliente.total.valueOf();
-      ////console.log()("3) clientes: ",this.facturaCliente );
-      ////console.log()("4) proveedores: ",this.facturaProveedor );
+      //////console.log()("3) clientes: ",this.facturaCliente );
+      //////console.log()("4) proveedores: ",this.facturaProveedor );
       
       this.addItem("facturaOpCliente", this.facturaCliente);
       this.addItem("facturaOpProveedor", this.facturaProveedor)
@@ -406,9 +406,9 @@ toogleAjustes(){
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        //console.log("llamada al storage desde op-abiertas, deleteItem");
+        ////console.log("llamada al storage desde op-abiertas, deleteItem");
         this.storageService.deleteItem(this.componente, this.detalleOp);
-        //console.log("consultas Op: " , this.$consultasOp);
+        ////console.log("consultas Op: " , this.$consultasOp);
         Swal.fire({
           title: "Confirmado",
           text: "La operación ha sido cancelada",
@@ -428,7 +428,7 @@ toogleAjustes(){
     this.acompaniante = this.detalleOp.acompaniante;
     this.tarifaEspecial = this.detalleOp.tarifaEventual;
     this.tEspecial = this.detalleOp.tEventual;
-    //console.log("este es la op a editar: ", this.opEditar);
+    ////console.log("este es la op a editar: ", this.opEditar);
     this.armarForm();
     
   }
@@ -482,7 +482,7 @@ toogleAjustes(){
     /* this.opEditar.unidadesConFrio = this.unidadesConFrio; */
     this.opEditar.acompaniante = this.acompaniante;
     this.opEditar.tarifaEventual = this.tarifaEspecial;
-    //////console.log()("este es la op editada: ", this.opEditar);
+    ////////console.log()("este es la op editada: ", this.opEditar);
     if(this.opEditar.tarifaEventual) {
       this.opEditar.tEventual.chofer.concepto = this.form.value.choferConcepto;
       this.opEditar.tEventual.chofer.valor = this.form.value.choferValor;
@@ -492,16 +492,16 @@ toogleAjustes(){
     /* else{
       this.opEditar.tEspecial = null;
     } */
-    //console.log("operacion editada: ",this.opEditar );
+    ////console.log("operacion editada: ",this.opEditar );
     
-    console.log("llamada al storage desde op-abiertas, updateItem");
+    //console.log("llamada al storage desde op-abiertas, updateItem");
     this.storageService.updateItem(this.componente, this.opEditar)
     //this.ngOnInit();  
     //this.form.reset();   
   }
 
   selectAcompaniante(e: any) {
-    ////////console.log()(e.target.value)    
+    //////////console.log()(e.target.value)    
     if(e.target.value === "si"){
       this.acompaniante = true;
     }else if (e.target.value === "no"){
@@ -509,31 +509,31 @@ toogleAjustes(){
     }else{
       this.acompaniante = this.opEditar.acompaniante;
     }
-    ////////console.log()("acompaniante: ", this.acompaniante);
+    //////////console.log()("acompaniante: ", this.acompaniante);
   }
 
   changeCliente(e: any) {
-    ////////console.log()(e.target.value)
+    //////////console.log()(e.target.value)
     let clienteForm;
     clienteForm = this.$clientes.filter(function (cliente: any) { 
       return cliente.razonSocial === e.target.value
     });
     this.clienteSeleccionado = clienteForm[0];               
-    ////////console.log()(this.clienteSeleccionado);
+    //////////console.log()(this.clienteSeleccionado);
   }
 
   changeChofer(e: any) {
-    ////////console.log()(e.target.value)
+    //////////console.log()(e.target.value)
     let choferForm;
     choferForm = this.$choferes.filter(function (chofer: any) { 
       return chofer.apellido === e.target.value
     });
     this.choferSeleccionado = choferForm[0];               
-    ////////console.log()(this.choferSeleccionado);
+    //////////console.log()(this.choferSeleccionado);
   }
 
   selectTarifaEspecial(e: any) {
-    ////////console.log()(e.target.value)    
+    //////////console.log()(e.target.value)    
     if(e.target.value === "si"){
       this.tarifaEspecial = true;
       this.acompaniante = false;
@@ -542,6 +542,6 @@ toogleAjustes(){
     }else{
       this.tarifaEspecial = this.opEditar.tarifaEventual;
     }
-    //////console.log()("tarifa especial: ", this.tarifaEspecial);
+    ////////console.log()("tarifa especial: ", this.tarifaEspecial);
   }
 }

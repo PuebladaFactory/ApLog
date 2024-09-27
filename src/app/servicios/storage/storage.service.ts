@@ -142,16 +142,38 @@ export class StorageService {
   private _ultTarifaPersChofer$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaPersChofer') || []);
   public ultTarifaPersChofer$ = this._ultTarifaPersChofer$.asObservable();
 
+  private _ultTarifaGralProveedor$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaGralProveedor') || []);
+  public ultTarifaGralProveedor$ = this._ultTarifaGralProveedor$.asObservable();
+
+  private _ultTarifaEspProveedor$ = new BehaviorSubject<any>(this.loadInfo('ultTarifaEspProveedor') || []);
+  public ultTarifaEspProveedor$ = this._ultTarifaEspProveedor$.asObservable();
+
   private _clienteSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('clienteSeleccionado') || []);
   public clienteSeleccionado$ = this._clienteSeleccionado$.asObservable();
 
   private _choferSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('choferSeleccionado') || []);
   public choferSeleccionado$ = this._choferSeleccionado$.asObservable();
+
+  private _proveedorSeleccionado$ = new BehaviorSubject<any>(this.loadInfo('proveedorSeleccionado') || []);
+  public proveedorSeleccionado$ = this._proveedorSeleccionado$.asObservable();
   
   private _tEspecialCliente$ = new BehaviorSubject<any>(this.loadInfo('tEspecialCliente') || []);
   public tEspecialCliente$ = this._tEspecialCliente$.asObservable();
 
+  private _consolaTarifa$ = new BehaviorSubject<any>(this.loadInfo('consolaTarifa') || []);
+  public consolaTarifa$ = this._consolaTarifa$.asObservable();
+
+  private _modoTarifa$ = new BehaviorSubject<any>(this.loadInfo('modoTarifa') || []);
+  public modoTarifa$ = this._modoTarifa$.asObservable();
+
+  private _opTarEve$ = new BehaviorSubject<any>(this.loadInfo('opTarifaEventual') || []);
+  public opTarEve$ = this._opTarEve$.asObservable();
+
+  private _opTarPers$ = new BehaviorSubject<any>(this.loadInfo('opTarifaPersonalizada') || []);
+  public opTarPers$ = this._opTarPers$.asObservable();
   
+  private _vehiculosChofer$ = new BehaviorSubject<any>(this.loadInfo('vehiculosChofer') || []);
+  public vehiculosChofer$ = this._vehiculosChofer$.asObservable();
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
@@ -343,6 +365,16 @@ export class StorageService {
         this._ultTarifaPersChofer$.next(data)
         break;
       }
+
+      case "ultTarifaGralProveedor":{
+        this._ultTarifaGralProveedor$.next(data)
+        break;
+      }
+
+      case "ultTarifaEspProveedor":{
+        this._ultTarifaEspProveedor$.next(data)
+        break;
+      }
       
       case "clienteSeleccionado":{
         this._clienteSeleccionado$.next(data)
@@ -353,9 +385,40 @@ export class StorageService {
         this._choferSeleccionado$.next(data)
         break;
       }
-     case "tEspecialCliente": {
+
+      case "proveedorSeleccionado":{
+        this._proveedorSeleccionado$.next(data)
+        break;
+      }
+
+      case "tEspecialCliente": {
         this._tEspecialCliente$.next(data)
         break;
+      }
+
+      case "consolaTarifa": {
+        this._consolaTarifa$.next(data)
+        break;
+      }
+
+      case "modoTarifa": {
+        this._modoTarifa$.next(data)
+        break;
+      }
+
+      case "opTarifaEventual": {
+        this._opTarEve$.next(data);
+        break
+      }
+
+      case "opTarifaPersonalizada": {
+        this._opTarPers$.next(data);
+        break
+      }
+
+      case "vehiculosChofer":{
+        this._vehiculosChofer$.next(data);
+        break
       }
 
       default: {
@@ -431,6 +494,7 @@ export class StorageService {
     //this.getByDateValue("facturaOpProveedor","fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor")
     this.getUltElemColeccion("tarifasGralCliente", "idTarifa", "desc", 1,"ultTarifaGralCliente")
     this.getUltElemColeccion("tarifasGralChofer", "idTarifa", "desc", 1,"ultTarifaGralChofer")
+    this.getUltElemColeccion("tarifasGralProveedor", "idTarifa", "desc", 1,"ultTarifaGralProveedor")
   }
 
   // metodo initializer si el rol es user
@@ -594,6 +658,9 @@ export class StorageService {
             break;
           case "tarifasPersChofer":
             this.setInfo("ultTarifaPersChofer", item);            
+            break;
+          case "tarifasGralProveedor":
+            this.setInfo("ultTarifaGralProveedor", item);            
             break;
           /* case "tarifasChofer":
             this.getByFieldValue("tarifasChofer", 'fecha', 'asc');
