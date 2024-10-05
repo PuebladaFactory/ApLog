@@ -1,0 +1,22 @@
+.isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  
+  .isDisabled:hover {
+    cursor: not-allowed;
+  }
+
+  input, option, textarea, select {
+    font-size: 1.15rem;
+  }
+
+  button{
+    border-color: #0d6efd;    
+  }
+
+  button:hover{
+    background-color: #0d6efd;
+    color: white;
+  }
+  

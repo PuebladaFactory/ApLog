@@ -1,0 +1,138 @@
+<div class="modal-content">
+    <div class="modal-header">
+        <h1>Detalle de Operación</h1>
+        <button type="button" class="btn-close btn " (click)="activeModal.close()"></button>
+    </div>
+    <div class="modal-body">
+        <div class="row">
+            <div class="col-4">
+                <div class="container">
+                    <form [formGroup]="form">
+                        <div class="form-group">
+                            <label for="Fecha" class="fs-5">Fecha</label>
+                            <div class="input-group">
+                                <input formControlName="fecha" class="form-control edicion" required type="text" [ngClass]="{'isDisabled': soloVista  || !soloVista}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="Fecha" class="fs-5">Cliente</label>
+                            <div class="input-group">
+                                <input formControlName="cliente" class="form-control edicion" required type="text" [ngClass]="{'isDisabled': soloVista  || !soloVista}">
+                            </div>
+                        </div>                        
+                        <div class="form-group">                                    
+                            <label for="Fecha" class="fs-5">Chofer</label>
+                            <select class="form-select mb-3" (change)="changeChofer($event)" [ngClass]="{'isDisabled': soloVista}">                                        
+                                <option [value]="choferSeleccionado.idChofer" selected>{{choferSeleccionado.apellido + " " + choferSeleccionado.nombre}}</option>
+                                <option *ngFor="let chofer of $choferes" [value]="chofer.idChofer">
+                                    {{chofer.apellido}}: {{chofer.nombre}}
+                                </option>
+                            </select>
+                        </div>    
+                        <form [formGroup]="formVehiculosChofer">                                
+                            <div class="form-group">       
+                                <label for="Patente" class="fs-5">Patente: </label>                             
+                                <select class="form-select mb-3" formControlName="patente" (change)="changeVehiculo($event)" [ngClass]="{'isDisabled': soloVista}">                                        
+                                    <option [value]="opEditar.patenteChofer" selected>{{opEditar.patenteChofer === "" ? "Seleccione un vehiculo" : opEditar.patenteChofer}}</option>
+                                    <option *ngFor="let vehiculo of choferSeleccionado?.vehiculo" [value]="vehiculo.dominio">
+                                        {{vehiculo.categoria.nombre}}: {{vehiculo.dominio}}
+                                    </option>
+                                </select>
+                            </div>
+                        </form>
+                        <div class="form-group">   
+                            <label for="Acompaniante" class="fs-5">Acompañante</label>                                 
+                            <select class="form-select mb-3" (change)="changeAcompaniante($event)" [ngClass]="{'isDisabled': soloVista}">                                        
+                                <option [value]="acompaniante" selected>{{acompaniante ? "Si" : "No"}}</option>
+                                <option [value]="true">Si</option>
+                                <option [value]="false">No</option>
+                            </select>
+                        </div>  
+                        <div class="form-group">
+                            <label for="Observaciones" class="fs-5">Observaciones</label>
+                            <div class="input-group">
+                                <textarea formControlName="observaciones"  class="form-control edicion" [ngClass]="{'isDisabled': soloVista}"></textarea>
+                            </div>
+                        </div>                                    
+                    </form>   
+                </div>                
+            </div>
+            <div class="col-4">
+                <div class="container">
+                    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                        <div class="form-group">
+                            <label for="TarifaEventual" class="fs-4">Tarifa Eventual</label>
+                            <select class="form-select mb-3" (change)="selectTarifaEventual($event)" [ngClass]="{'isDisabled': soloVista}">
+                                <option [value]="tarifaEventual" selected> {{tarifaEventual ? "Si" : "No"}}</option>
+                                <option [value]="true">Si</option>
+                                <option [value]="false">No</option>
+                            </select>
+                        </div>                
+                    </form>                                
+                    <form [formGroup]="formTarifaEventual" (ngSubmit)="onSubmit()">
+                        <div class="my-2">
+                            <h5 class="my-2 mt-2">Cliente:</h5>
+                            <div class="form-group">
+                                <label for="Fecha" class="fs-5">Tarifa Eventual Concepto</label>
+                                <div class="input-group">
+                                <input formControlName="clienteConcepto" class="form-control edicion" required type="text" [ngClass]="{'isDisabled': soloVista  || !tarifaEventual}">
+                                </div>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
+                                <div class="input-group">
+                                <input formControlName="clienteValor" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': soloVista || !tarifaEventual}">
+                                </div>
+                            </div>
+                            <h5 class="mt-2">Chofer:</h5>
+                            <div class="form-group">
+                                <label for="Fecha" class="fs-5">Tarifa Eventual Concepto</label>
+                                <div class="input-group">
+                                    <input formControlName="choferConcepto" class="form-control edicion" required type="text" [ngClass]="{'isDisabled': soloVista  || !tarifaEventual}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
+                                <div class="input-group">
+                                    <input formControlName="choferValor" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': soloVista  || !tarifaEventual}">
+                                </div>
+                            </div>                        
+                        </div>              
+                    </form>
+                </div>
+                
+            </div>
+            <div class="col-4">
+                <div class="container">
+                    <label for="TarifaPersonalizada" class="fs-4">Tarifa Personalizada</label>
+                    <p *ngIf="tarifaPersonalizada" class="m-2 border-top border-bottom fs-5">El cliente tiene una tarifa Personalizada. </p>                        
+                    <p *ngIf="tarifaPersonalizada && !soloVista" class="fs-5"> Seleccione la sección y la categoria correspondiente a la operación.</p>
+                    <p *ngIf="!tarifaPersonalizada" class="m-2 border-top border-bottom fs-5">El cliente no tiene una tarifa Personalizada.</p>                        
+                    <form [formGroup]="formTarifaPersonalizada">
+                        <div class="form-group">
+                            <label for="Cliente">Secciion</label>
+                            <select class="form-select mb-3" (change)="changeSecion($event)" [ngClass]="{'isDisabled': soloVista || !tarifaPersonalizada}">
+                                <option [value]="opEditar.tPersonalizada.seccion" selected >{{opEditar.tarifaPersonalizada ? 'Secciona ' + opEditar.tPersonalizada.seccion + " : " + tarifaClienteSel.secciones[opEditar.tPersonalizada.seccion - 1].descripcion : 'Sin datos'}}</option>                              
+                                <option *ngFor="let seccion of tarifaClienteSel?.secciones" [value]="seccion.orden">
+                                    Seccion {{seccion.orden}}: {{seccion.descripcion? seccion.descripcion : ""}} 
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="Categoria">Categoria</label>
+                            <select class="form-select mb-3" (change)="changeCategoria($event)" [ngClass]="{'isDisabled': soloVista || !tarifaPersonalizada}">
+                                <option selected>{{opEditar.tarifaPersonalizada ? 'Categoria ' + opEditar.tPersonalizada.categoria + " : " + opEditar.tPersonalizada.nombre : 'Sin datos'}}</option>                                                                      
+                                <option *ngFor="let categoria of seccionElegida?.categorias" [value]="categoria.orden">
+                                    Categoria {{categoria.orden}}: {{categoria.nombre}} 
+                                </option>
+                            </select>
+                        </div>
+                    </form>  
+                </div>                    
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <app-btn-agregar *ngIf="!soloVista" name="GuardarCambiosClaro" (click)="onSubmit()"></app-btn-agregar>
+    </div>
+</div>

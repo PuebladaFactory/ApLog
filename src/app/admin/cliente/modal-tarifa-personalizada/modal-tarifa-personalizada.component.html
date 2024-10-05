@@ -6,31 +6,38 @@
     </div>
     <div class="modal-body">
         <h2>Generar Nueva Tarifa:</h2>
-        <div class="form-group d-flex">            
-            <div class="me-3">                
-                <button type="button" class="btn" [class.btn-primary]="!modoAutomatico" (click)="cambiarModo('manual')">Manual</button>
-                <button type="button" class="btn" [class.btn-primary]="modoAutomatico" (click)="cambiarModo('automatico')">Automática</button>
+        <div class="row mt-3">
+            <div class="col-2 me-3">                
+                <button type="button" class="btn border border-1" [class.btn-primary]="!modoAutomatico" (click)="cambiarModo('manual')">Manual</button>
+                <button type="button" class="btn border border-1" [class.btn-primary]="modoAutomatico" (click)="cambiarModo('automatico')">Automática</button>
             </div>
-            <div *ngIf="modoAutomatico">
-                <input type="number" [(ngModel)]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento" (keydown.enter)="aplicarPorcentaje()">
+            <div *ngIf="modoAutomatico" class="col-5 d-flex justify-content-start">
+                <div class="input-group flex-shrink-1" style="width: 30%">
+                    <span class="input-group-text" id="basic-addon1">%</span>
+                    <input type="number" class="w-75" [(ngModel)]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento" (keydown.enter)="aplicarPorcentaje()">
+                </div>                
                 <button type="button" class="btn btn-outline-primary ms-2" (click)="aplicarPorcentaje()">Aplicar Porcentaje</button>
             </div>
-        </div>      
+        </div>
+      <!--  <div class="form-group d-flex align-items-center">            
+           
+            
+        </div>       -->
         <ng-container *ngFor="let seccion of $ultimaTarifa.secciones">
-            <h4>Seccion {{seccion.orden}}: {{seccion.descripcion ? seccion.descripcion : ""}}</h4>
+            <h4 class="mt-3">Seccion {{seccion.orden}}: {{seccion.descripcion ? seccion.descripcion : ""}}</h4>
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th colspan="4">Tarifa Actual</th>
-                        <th colspan="2">Diferencia</th>
-                        <th colspan="2">Nueva tarifa</th>
+                        <th class="encabezado" colspan="4">Tarifa Actual</th>
+                        <th class="encabezado" colspan="2">Diferencia</th>
+                        <th class="encabezado" colspan="2">Nueva tarifa</th>
                     </tr>
                     <tr>
                         <th>Categoria</th>
                         <th>Nombre</th>
                         <th>A Cobrar</th>
                         <th>A Pagar</th>
-                        <th style="border-left: black 2px solid">A Cobrar</th>
+                        <th sty le="border-left: black 2px solid">A Cobrar</th>
                         <th>A Pagar</th>
                         <th style="border-left: black 2px solid">A Cobrar</th>
                         <th>A Pagar</th>
@@ -41,17 +48,17 @@
                         <td>Categoria {{categoria.orden}}</td>
                         <td>{{categoria.nombre}}</td>
                         <!-- Valores originales -->
-                        <td>{{categoria.aCobrar}}</td>
-                        <td>{{categoria.aPagar}}</td>
+                        <td>${{categoria.aCobrar | number:'2.2-2'}}</td>
+                        <td>${{categoria.aPagar | number:'2.2-2'}}</td>
                         <!-- Diferencias calculadas (mostrando 0 inicialmente) -->
-                        <td style="border-left: black 2px solid">{{ calcularDiferencia(categoria.aCobrar, categoria.nuevoACobrar) | number:'1.2-2' }}</td>
-                        <td>{{ calcularDiferencia(categoria.aPagar, categoria.nuevoAPagar) | number:'1.2-2' }}</td>
+                        <td style="border-left: black 2px solid">${{ calcularDiferencia(categoria.aCobrar, categoria.nuevoACobrar) | number:'2.2-2' }}</td>
+                        <td>${{ calcularDiferencia(categoria.aPagar, categoria.nuevoAPagar) | number:'2.2-2' }}</td>
                         <!-- Nuevos valores calculados -->
                         <td style="border-left: black 2px solid">
-                          <input type="text" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoACobrar">
+                          <input type="number" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoACobrar">
                         </td>
                         <td>
-                          <input type="text" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoAPagar">
+                          <input type="number" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoAPagar">
                         </td>
                     </tr>
                 </tbody>

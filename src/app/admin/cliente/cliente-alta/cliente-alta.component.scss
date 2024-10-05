@@ -1,3 +1,16 @@
+#cerrar{
+  /* border-color: #0d6efd;  */
+  /* background-color: red;     */
+  /* color: red;  */ 
+  background-color: transparent;
+  border-color: black;
+}
+
+#cerrar:hover{
+  background-color: #0d6efd;
+  color: white;
+}
+
 .is-invalid {
     border-color: #dc3545 !important; /* Cambia el color del borde a rojo */
   }
@@ -14,3 +27,18 @@ input{
 .isDisabled:hover {
   cursor: not-allowed;
 }
+
+button{
+  background-color: #3d8bfd;
+  color: white;
+}  
+button:hover{
+  background-color: #0d6efd;
+  color: white;
+} 
+
+.form-check-label{
+  font-size: 1.2rem;
+}
+
+

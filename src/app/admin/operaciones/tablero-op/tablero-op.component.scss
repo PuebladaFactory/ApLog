@@ -1,0 +1,55 @@
+.bt{
+   
+}
+
+th{
+    width: 20%;
+}
+
+.offcanvas-end {
+    width: 300px;
+}
+.offcanvas-normal {
+    height: 400px;
+}
+
+.offcanvas-personalizada {
+    width: 500px;
+    height: 400px;
+}
+
+.offcanvas-alta {
+    height: 500px;
+    width: 500px;
+} 
+
+
+.botones{
+    width: 1rem;
+}
+
+.isDisabled{
+    visibility: hidden;
+}
+
+
+p, #obs-vista{
+font-size: 1.7rem;
+}
+
+input, option, textarea {
+font-size: 1.15rem;
+} 
+
+.boton-alta{
+    width: 15rem;
+    background: #002b5c;
+    color: white;
+    opacity: 0.8;
+    font-size: 1.25rem;
+  }
+
+.boton-alta:hover{
+    background: #0d6efd;
+    
+}

@@ -102,8 +102,8 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     this.categoria = {
       orden: this.secciones[index].categorias.length + 1,
       nombre: this.categoriaForm.value.nombre,
-      aCobrar: this.categoriaForm.value.aCobrar,
-      aPagar: this.categoriaForm.value.aPagar,
+      aCobrar: parseFloat(this.categoriaForm.value.aCobrar.toFixed(2)),
+      aPagar: parseFloat(this.categoriaForm.value.aPagar.toFixed(2)),
       nuevoACobrar: 0,
       nuevoAPagar: 0,
     }
@@ -143,7 +143,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       idCliente: this.clienteSeleccionado[0].idCliente,
     };
     
-    //console.log('Tarifa guardada:', this.tarifaPersonalizadaCliente);
+    console.log('Tarifa guardada:', this.tarifaPersonalizadaCliente);
     this.addItem();
   }
 

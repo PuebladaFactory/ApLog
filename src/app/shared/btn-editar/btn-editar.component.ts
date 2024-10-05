@@ -24,7 +24,7 @@ import { Component, Input, OnInit } from '@angular/core';
 
    {{name || "Editar"}} 
 </button>  -->
-<button *ngIf="name === 'Editar'"  class="btn btn-secondary m-0" style="border-radius: 10%;  margin: 10px;" >
+<button *ngIf="name === 'Editar'"  class="btn btn-light m-0 celeste" style="border-radius: 10%;  margin: 10px;" >
     <!-- <i class="bi bi-pencil"></i> -->
 
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
@@ -34,7 +34,7 @@ import { Component, Input, OnInit } from '@angular/core';
     <!-- {{name || "Editar"}} -->
 </button> 
 
-<button *ngIf="name === 'EditarClaro'"  class="btn btn-outline-secondary m-0" style="border-radius: 10%;  margin: 10px;" >
+<button *ngIf="name === 'EditarClaro'"  class="btn btn-outline-secondary m-0 celeste" style="border-radius: 10%;  margin: 10px;" >
     <!-- <i class="bi bi-pencil"></i> -->
 
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
@@ -43,10 +43,28 @@ import { Component, Input, OnInit } from '@angular/core';
 
     <!-- {{name || "Editar"}} -->
 </button> 
+
+  <button *ngIf="name === 'modificarTarifa'"  class="btn azul">
+    Modificar Tarifa
+  </button>
 
   `,
   styles: [
     `
+     .celeste:hover{
+        background-color: lightblue;
+        color: black;
+        border-color: black;
+      }
+
+    .azul{
+        background-color: #3d8bfd;
+        color: white;
+    }  
+    .azul:hover{
+        background-color: #0d6efd;
+        color: white;
+    }      
 
     `
   ]

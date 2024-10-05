@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { take } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
@@ -18,6 +19,7 @@ import { FacturacionClienteService } from 'src/app/servicios/facturacion/factura
 import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
+import { ModalOpAbiertaComponent } from '../modal-op-abierta/modal-op-abierta.component';
 
 @Component({
   selector: 'app-op-abiertas',
@@ -90,7 +92,7 @@ export class OpAbiertasComponent implements OnInit {
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService, private facOpProveedorService: FacturacionProveedorService, private dbFirebase: DbFirestoreService) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private facOpChoferService: FacturacionChoferService, private facOpClienteService: FacturacionClienteService, private facOpProveedorService: FacturacionProveedorService, private dbFirebase: DbFirestoreService, private modalService: NgbModal) {
     this.opForm = this.fb.group({
         km: [''],       
         remito: [''],       
@@ -229,7 +231,7 @@ toogleAjustes(){
     let seleccion = this.$opActivas.filter((operacion:Operacion)=>{
       return operacion.idOperacion === op.idOperacion
     })
-    this.detalleOp = seleccion[0];    
+    this.opEditar = seleccion[0];    
   }
 
   getMsg(msg: any) {
@@ -274,7 +276,7 @@ toogleAjustes(){
     this.detalleOp.km = this.opForm.value.km,
     this.opCerrada.km = this.opForm.value.km;    
     //this.opCerrada.documentacion = this.opForm.remito;
-    this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
+    //this.opCerrada.documentacion = "";                      //le asigno un string vacio pq sino tira error al cargar en firestore
     
     
     this.bajaOperacionesActivas();
@@ -385,16 +387,14 @@ toogleAjustes(){
     } else{
       this.facturaCliente.montoFacturaChofer = this.facturaProveedor.total.valueOf();    
       this.facturaProveedor.montoFacturaCliente = this.facturaCliente.total.valueOf();
-      //////console.log()("3) clientes: ",this.facturaCliente );
-      //////console.log()("4) proveedores: ",this.facturaProveedor );
       
       this.addItem("facturaOpCliente", this.facturaCliente);
       this.addItem("facturaOpProveedor", this.facturaProveedor)
     }
   }
   
-  eliminarOperacion(op: any){
-    this.seleccionarOp(op)
+  eliminarOperacion(row: any){
+    this.seleccionarOp(row)
     Swal.fire({
       title: "¿Cancelar la operación?",
       text: "No se podrá revertir esta acción",
@@ -407,7 +407,7 @@ toogleAjustes(){
     }).then((result) => {
       if (result.isConfirmed) {
         ////console.log("llamada al storage desde op-abiertas, deleteItem");
-        this.storageService.deleteItem(this.componente, this.detalleOp);
+        this.storageService.deleteItem(this.componente, this.opEditar);
         ////console.log("consultas Op: " , this.$consultasOp);
         Swal.fire({
           title: "Confirmado",
@@ -419,129 +419,43 @@ toogleAjustes(){
     
   }
 
-  abrirEdicion(op:any):void {
-    this.seleccionarOp(op)
-    this.opEditar = this.detalleOp
-    this.clienteSeleccionado = this.detalleOp.cliente;
-    this.choferSeleccionado = this.detalleOp.chofer;
-   /*  this.unidadesConFrio = op.unidadesConFrio; */
-    this.acompaniante = this.detalleOp.acompaniante;
-    this.tarifaEspecial = this.detalleOp.tarifaEventual;
-    this.tEspecial = this.detalleOp.tEventual;
-    ////console.log("este es la op a editar: ", this.opEditar);
-    this.armarForm();
-    
+  abrirVista(row:any) {
+    this.seleccionarOp(row);   
+    this.openModal(this.opEditar, "vista")
   }
 
-  armarForm(){
-    this.form.patchValue({
-      fecha: this.opEditar.fecha,
-      observaciones: this.opEditar.observaciones,
-      choferConcepto: [''],
-      choferValor: [''],
-      clienteConcepto: [''],
-      clienteValor: [''],
-    })
-    if(this.opEditar.tarifaEventual){
-      this.form.patchValue({
-      choferConcepto: this.opEditar.tEventual.chofer.concepto,
-      choferValor: this.opEditar.tEventual.chofer.valor,
-      clienteConcepto: this.opEditar.tEventual.cliente.concepto,
-      clienteValor: this.opEditar.tEventual.cliente.valor,
-      })
+  abrirEdicion(row:any):void {        
+    this.seleccionarOp(row);   
+    this.openModal(this.opEditar, "edicion");      
+  }
+
+  
+
+  openModal(op:Operacion, modo:string){
+    {
+      const modalRef = this.modalService.open(ModalOpAbiertaComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg', 
+        //backdrop:"static" 
+      });      
+
+    let info = {
+        modo: modo,
+        item: op,
+      } 
+      //console.log()(info); */
+      
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+          ////console.log()("ROOWW:" ,row);
+          //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
+//        this.selectCrudOp(result.op, result.item);
+        //this.mostrarMasDatos(row);
+        },
+        (reason) => {}
+      );
     }
-  }
-
-  onSubmitEdit(){  
-    Swal.fire({
-      title: "¿Guardar los cambios?",
-      text: "No se podrá revertir esta acción",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.update();    
-        Swal.fire({
-          title: "Confirmado",
-          text: "Los cambios se han guardado",
-          icon: "success"
-        });
-      }
-    });   
-   }
-
-   update(): void {
-    this.opEditar.fecha = this.form.value.fecha;
-    this.opEditar.observaciones = this.form.value.observaciones;
-    this.opEditar.cliente = this.clienteSeleccionado;
-    this.opEditar.chofer  = this.choferSeleccionado;
-    /* this.opEditar.unidadesConFrio = this.unidadesConFrio; */
-    this.opEditar.acompaniante = this.acompaniante;
-    this.opEditar.tarifaEventual = this.tarifaEspecial;
-    ////////console.log()("este es la op editada: ", this.opEditar);
-    if(this.opEditar.tarifaEventual) {
-      this.opEditar.tEventual.chofer.concepto = this.form.value.choferConcepto;
-      this.opEditar.tEventual.chofer.valor = this.form.value.choferValor;
-      this.opEditar.tEventual.cliente.concepto = this.form.value.clienteConcepto;
-      this.opEditar.tEventual.cliente.valor = this.form.value.clienteValor;
-    } 
-    /* else{
-      this.opEditar.tEspecial = null;
-    } */
-    ////console.log("operacion editada: ",this.opEditar );
-    
-    //console.log("llamada al storage desde op-abiertas, updateItem");
-    this.storageService.updateItem(this.componente, this.opEditar)
-    //this.ngOnInit();  
-    //this.form.reset();   
-  }
-
-  selectAcompaniante(e: any) {
-    //////////console.log()(e.target.value)    
-    if(e.target.value === "si"){
-      this.acompaniante = true;
-    }else if (e.target.value === "no"){
-      this.acompaniante = false;
-    }else{
-      this.acompaniante = this.opEditar.acompaniante;
-    }
-    //////////console.log()("acompaniante: ", this.acompaniante);
-  }
-
-  changeCliente(e: any) {
-    //////////console.log()(e.target.value)
-    let clienteForm;
-    clienteForm = this.$clientes.filter(function (cliente: any) { 
-      return cliente.razonSocial === e.target.value
-    });
-    this.clienteSeleccionado = clienteForm[0];               
-    //////////console.log()(this.clienteSeleccionado);
-  }
-
-  changeChofer(e: any) {
-    //////////console.log()(e.target.value)
-    let choferForm;
-    choferForm = this.$choferes.filter(function (chofer: any) { 
-      return chofer.apellido === e.target.value
-    });
-    this.choferSeleccionado = choferForm[0];               
-    //////////console.log()(this.choferSeleccionado);
-  }
-
-  selectTarifaEspecial(e: any) {
-    //////////console.log()(e.target.value)    
-    if(e.target.value === "si"){
-      this.tarifaEspecial = true;
-      this.acompaniante = false;
-    }else if (e.target.value === "no"){
-      this.tarifaEspecial = false;
-    }else{
-      this.tarifaEspecial = this.opEditar.tarifaEventual;
-    }
-    ////////console.log()("tarifa especial: ", this.tarifaEspecial);
   }
 }

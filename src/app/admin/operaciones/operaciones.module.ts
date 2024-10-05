@@ -12,6 +12,9 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ConsultaOpComponent } from './consulta-op/consulta-op.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { OpAbiertasComponent } from './op-abiertas/op-abiertas.component';
+import { ModalOpAbiertaComponent } from './modal-op-abierta/modal-op-abierta.component';
+import { TableroOpComponent } from './tablero-op/tablero-op.component';
+import { ModalOpCierreComponent } from './modal-op-cierre/modal-op-cierre.component';
 
 
 @NgModule({
@@ -20,7 +23,7 @@ import { OpAbiertasComponent } from './op-abiertas/op-abiertas.component';
     OpAltaComponent,
     OpDiariasComponent,
     ConsultaOpComponent,   
-    OpAbiertasComponent,
+    OpAbiertasComponent, ModalOpAbiertaComponent, TableroOpComponent, ModalOpCierreComponent,
   ],
   imports: [
     CommonModule,

@@ -34,7 +34,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
         seccion.categorias.forEach(categoria => {
           // Calcula nuevos valores y limita a dos decimales, luego convierte a número
           categoria.nuevoACobrar = parseFloat((categoria.aCobrar + (categoria.aCobrar * (this.porcentajeAumento / 100))).toFixed(2));
-          categoria.nuevoAPagar = parseFloat((categoria.aPagar + (categoria.aPagar * (this.porcentajeAumento / 100))).toFixed(2));
+          categoria.nuevoAPagar = categoria.aPagar + (categoria.aPagar * (this.porcentajeAumento / 100));
         });
       });
     }

@@ -16,7 +16,7 @@ import { ConfiguracionesModule } from './configuraciones/configuraciones.module'
 @NgModule({
   declarations: [
     AdminHomeComponent,
-    AdminSidebarComponent
+    AdminSidebarComponent,    
   ],
   imports: [
     CommonModule,

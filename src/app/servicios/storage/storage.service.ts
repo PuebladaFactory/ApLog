@@ -40,7 +40,7 @@ export class StorageService {
   private _usuario$ = new BehaviorSubject<any>(this.loadInfo('usuario') || []);
   public usuario$ = this._usuario$.asObservable()
 
-  private _operaciones$ = new BehaviorSubject<any>(null)   //aca va interface my data
+  private _operaciones$ = new BehaviorSubject<any>(this.loadInfo('operaciones') || []);
   public operaciones$ = this._operaciones$.asObservable()
 
   private _opActivas$ = new BehaviorSubject<any>(this.loadInfo('operacionesActivas') || []);
@@ -51,6 +51,9 @@ export class StorageService {
 
   private _jornadas$ = new BehaviorSubject<any>(null)   //aca va interface my data
   public jornadas$ = this._jornadas$.asObservable()
+
+  private _consultasOp$ = new BehaviorSubject<any>(this.loadInfo('consultasOp') || []);
+  public consultasOp$ = this._consultasOp$.asObservable()
 
   private _consultasOpActivas$ = new BehaviorSubject<any>(this.loadInfo('consultasOpActivas') || []);
   public consultasOpActivas$ = this._consultasOpActivas$.asObservable()
@@ -174,6 +177,9 @@ export class StorageService {
   
   private _vehiculosChofer$ = new BehaviorSubject<any>(this.loadInfo('vehiculosChofer') || []);
   public vehiculosChofer$ = this._vehiculosChofer$.asObservable();
+  
+  private _fechasConsulta$ = new BehaviorSubject<any>(this.loadInfo('fechasConsulta') || []);
+  public fechasConsulta$ = this._fechasConsulta$.asObservable();
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
@@ -208,6 +214,11 @@ export class StorageService {
 
       case "jornadas": {
         this._jornadas$.next(data)
+        break;
+      }
+
+      case "consultasOp": {
+        this._consultasOp$.next(data)
         break;
       }
 
@@ -421,6 +432,11 @@ export class StorageService {
         break
       }
 
+      case "fechasConsulta":{
+        this._fechasConsulta$.next(data);
+        break
+      }
+      
       default: {
         //statements; 
         break;
@@ -478,7 +494,7 @@ export class StorageService {
 
     this.getAllSorted("clientes", 'idCliente', 'asc')
     this.getAllSorted("choferes", 'idChofer', 'asc')
-    this.getAllSorted("operacionesActivas", 'fecha', 'desc')
+    this.getAllSorted("operaciones", 'fecha', 'desc')
     //this.getAllSorted("facturaOpCliente", 'fecha', 'desc')
 //    this.getAllSorted("operacionesCerradas", 'fecha', 'desc')
     //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
@@ -638,8 +654,8 @@ export class StorageService {
           case "proveedores":
             this.getAllSorted("proveedores", 'idProveedor', 'asc');
             break;
-          case "operacionesActivas":
-            this.getAllSorted("operacionesActivas", 'fecha', 'desc');
+          case "operaciones":
+            this.getAllSorted("operaciones", 'fecha', 'desc');
             break;
           case "tarifasGralCliente":
             this.setInfo("ultTarifaGralCliente", item);                        

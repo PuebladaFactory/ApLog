@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Chofer } from 'src/app/interfaces/chofer';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { StorageService } from '../storage/storage.service';
 import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
@@ -11,6 +11,10 @@ import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { DbFirestoreService } from '../database/db-firestore.service';
+import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaGralChofer } from 'src/app/interfaces/tarifa-gral-chofer';
+import { TarifaEspCliente } from 'src/app/interfaces/tarifa-esp-cliente';
+import { TarifaGralProveedor } from 'src/app/interfaces/tarifa-gral-proveedor';
 @Injectable({
   providedIn: 'root'
 })
@@ -19,11 +23,13 @@ export class BuscarTarifaService {
   $tarifasChoferes: TarifaChofer [] = [];
   $tarifasClientes: TarifaCliente [] = []; 
   $tarifasProveedores: TarifaProveedor [] = [];
-  $proveedor!: any  ;
+  $proveedores!: Proveedor[]  ;
   $choferes!: any;
   $clientes!: any;
   choferBoolean!: boolean;
   clienteBoolean!: boolean;
+  ultTarifaEspProveedor!: TarifaGralProveedor;
+  
 
   ngOnInit(): void {   
     this.storageService.historialTarifas$.subscribe(data => {
@@ -34,7 +40,8 @@ export class BuscarTarifaService {
     });
     this.storageService.historialTarifasClientes$.subscribe(data => {
       this.$tarifasClientes = data;
-    });    
+    });   
+   
     
   }
 
@@ -349,4 +356,121 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
     ////console.log("4) tarifas proveedores: ",tarifaAplicada[0]);    
     return tarifaAplicada[0];
   }
+
+  getACobrar(op:Operacion, ultTarifaGralCliente: TarifaGralCliente, ultTarifaEspCliente: TarifaGralCliente){
+    let vehiculo
+    vehiculo  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
+        return vehiculo.dominio === op.patenteChofer;
+    });
+    let categoria = vehiculo[0].categoria.catOrden
+    let catCG = ultTarifaGralCliente?.cargasGenerales?.filter((cat: CategoriaTarifa)=>{
+      return cat.orden === categoria
+    });      
+      
+    if(op.tarifaTipo.personalizada){
+      return op.tPersonalizada.aCobrar
+    } else if(op.tarifaTipo.especial){
+        if(op.cliente.tarifaTipo.especial){   
+          this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",op.cliente.idCliente,"ultTarifaEspCliente");         
+            let vehiculoEsp
+            vehiculoEsp  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
+                return vehiculo.dominio === op.patenteChofer;
+            });
+            let categoriaEsp = vehiculo[0].categoria.catOrden
+            let catEsp = ultTarifaEspCliente.cargasGenerales.filter((cat: CategoriaTarifa)=>{
+              return cat.orden === categoria
+            });  
+            return catEsp[0].valor
+        }else{
+          return catCG[0].valor;
+        }
+    } else if (op.tarifaTipo.eventual){
+      return op.tEventual.cliente.valor
+    } else {
+      return catCG[0].valor;
+    }       
+  } 
+
+  getAPagar(op:Operacion, ultTarifaGralChofer:TarifaGralChofer, ultTarifaEspChofer: TarifaGralChofer, ultTarifaGralProveedor: TarifaGralProveedor, proveedor:Proveedor[]){
+    let vehiculo
+    vehiculo  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
+        return vehiculo.dominio === op.patenteChofer;
+    });
+    let categoria = vehiculo[0].categoria.catOrden
+    let catCG = ultTarifaGralChofer.cargasGenerales.filter((cat: CategoriaTarifa)=>{
+      return cat.orden === categoria
+    });      
+      
+    if(op.chofer.proveedor === "monotributista"){
+        if(op.tarifaTipo.personalizada){
+          return op.tPersonalizada.aPagar
+        } else if(op.tarifaTipo.especial){
+            if(op.chofer.tarifaTipo?.especial){
+                this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",op.chofer.idChofer,"ultTarifaEspChofer");
+                let vehiculoEsp
+                vehiculoEsp  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
+                    return vehiculo.dominio === op.patenteChofer;
+                });
+                let categoriaEsp = vehiculo[0].categoria.catOrden
+                let catEsp = ultTarifaEspChofer.cargasGenerales.filter((cat: CategoriaTarifa)=>{
+                  return cat.orden === categoria
+                });  
+                return catEsp[0].valor
+            }else{
+              return catCG[0].valor;
+            }
+        } else if (op.tarifaTipo.eventual){
+          return op.tEventual.chofer.valor
+        } else {
+          return catCG[0].valor;
+        }       
+    } else {
+      return this.getACobrarProveedor(op, ultTarifaGralProveedor, proveedor);
+    }
+  } 
+  getACobrarProveedor(op:Operacion, ultTarifaGralProveedor: TarifaGralProveedor, proveedor: Proveedor[]){
+    
+   /*  proveedor = $proveedores.filter((proveedor:Proveedor)=>{
+      return proveedor.razonSocial === op.chofer.proveedor
+    }); */
+    let vehiculo
+    vehiculo  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
+        return vehiculo.dominio === op.patenteChofer;
+    });
+    let categoria = vehiculo[0].categoria.catOrden
+    let catCG = ultTarifaGralProveedor.cargasGenerales.filter((cat: CategoriaTarifa)=>{
+      return cat.orden === categoria
+    });      
+      
+    if(op.tarifaTipo.personalizada){
+      return op.tPersonalizada.aPagar;
+    } else if(op.tarifaTipo.especial){
+          this.storageService.ultTarifaEspProveedor$
+          //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
+          .subscribe(data =>{
+          ////console.log("2c) data: ", data);                
+          this.ultTarifaEspProveedor = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+          this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+          console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
+          });
+        if(proveedor[0].tarifaTipo.especial){
+            this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",proveedor[0].idProveedor,"ultTarifaEspProveedor");
+            let vehiculoEsp
+            vehiculoEsp  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
+                return vehiculo.dominio === op.patenteChofer;
+            });
+            let categoriaEsp = vehiculo[0].categoria.catOrden
+            let catEsp = this.ultTarifaEspProveedor.cargasGenerales.filter((cat: CategoriaTarifa)=>{
+              return cat.orden === categoria
+            });  
+            return catEsp[0].valor
+        }else{
+          return catCG[0].valor;
+        }
+    } else if (op.tarifaTipo.eventual){
+      return op.tEventual.chofer.valor
+    } else {
+      return catCG[0].valor;
+    }       
+  } 
 }

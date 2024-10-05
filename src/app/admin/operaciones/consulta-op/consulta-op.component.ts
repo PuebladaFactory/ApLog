@@ -73,8 +73,8 @@ export class ConsultaOpComponent implements OnInit {
     } */
    console.log();
    
-    if(this.titulo === "operacionesActivas"){
-    this.storageService.getByDateValue(this.titulo, "fecha", fechaDesde, fechaHasta, "consultasOpActivas");
+    if(this.titulo === "operaciones"){
+    this.storageService.getByDateValue(this.titulo, "fecha", fechaDesde, fechaHasta, "consultasOp");
     }
   }
 

@@ -108,7 +108,7 @@ export class ClienteTarifaGralComponent implements OnInit {
       this.crearCategorias()
       this.inicializarTabla();
       this.onGenerarNuevaTarifaAutomatica();   
-    })
+    });
     }else{
       ////console.log("1a) tarifa especial: ", this.tEspecial);      
       ////console.log("1b) tarifa general: ", this.ultTarifa);      
@@ -311,6 +311,7 @@ export class ClienteTarifaGralComponent implements OnInit {
 
   configurarNuevaTarifa() {
     const filas = this.tarifaForm.get('filas') as FormArray;
+  
     // Construcción del objeto `CargasGenerales` basado en los datos del formulario
     const cargasGenerales: any = {
       categoria1: this.crearCategoriaTarifa(filas.at(0)),
@@ -322,30 +323,31 @@ export class ClienteTarifaGralComponent implements OnInit {
       categoria7: this.crearCategoriaTarifa(filas.at(6)),
       categoria8: this.crearCategoriaTarifa(filas.at(7)),
     };
-    for(let i=0; i<8; i++ ){
-      this.categorias[i] ={
+  
+    for (let i = 0; i < 8; i++) {
+      // Aquí aplicamos el formato a dos decimales antes de asignar el valor
+      this.categorias[i] = {
         orden: this.categorias[i].orden,
         nombre: this.obtenerNombreCat(filas.at(i)),
-        valor: this.obtenerValorCat(filas.at(i)),
-      }
-      
+        valor: this.formatearValor(this.obtenerValorCat(filas.at(i))), // Formatear valor a 2 decimales
+      };
     }
-
+  
     // Construcción del objeto `AdicionalTarifa` basado en los datos del formulario
     const adicionales: AdicionalTarifa = {
-      acompaniante: filas.at(8).get('nuevaTarifa')?.value || 0,
+      acompaniante: this.formatearValor(filas.at(8).get('nuevaTarifa')?.value || 0),
       adicionalKm: {
         primerSector: {
-          distancia: filas.at(9).get('nuevaTarifa')?.value || 0,
-          valor: filas.at(10).get('nuevaTarifa')?.value || 0,
+          distancia: this.formatearValor(filas.at(9).get('nuevaTarifa')?.value || 0),
+          valor: this.formatearValor(filas.at(10).get('nuevaTarifa')?.value || 0),
         },
         sectoresSiguientes: {
-          intervalo: filas.at(11).get('nuevaTarifa')?.value || 0,
-          valor: filas.at(12).get('nuevaTarifa')?.value || 0,
-        }
-      }
+          intervalo: this.formatearValor(filas.at(11).get('nuevaTarifa')?.value || 0),
+          valor: this.formatearValor(filas.at(12).get('nuevaTarifa')?.value || 0),
+        },
+      },
     };
-
+  
     // Configuración del tipo de tarifa
     const tipo: TarifaTipo = {
       general: true, // Este tipo de tarifa es general
@@ -353,7 +355,7 @@ export class ClienteTarifaGralComponent implements OnInit {
       eventual: false,
       personalizada: false,
     };
-
+  
     // Construcción del objeto `TarifaGralCliente`
     this.nuevaTarifaGral = {
       id: null,
@@ -364,17 +366,29 @@ export class ClienteTarifaGralComponent implements OnInit {
       tipo: tipo,
       idCliente: null,
     };
+  
+    //console.log("esta es la NUEVA TARIFA: ", this.nuevaTarifaGral);
+  }
 
-    //console.log("esta es la NUEVA TARIFA: ",this.nuevaTarifaGral);
+  formatearValor(valor: any): number {
+    // Convertimos el valor a número primero y luego aplicamos toFixed
+    const numero = parseFloat(valor);
+  
+    // Si el valor no es un número, devuelve 0 o un valor por defecto
+    if (isNaN(numero)) {
+      return 0;
+    }
+  
+    // Devolver el número con dos decimales
+    return parseFloat(numero.toFixed(2));
   }
 
   crearCategoriaTarifa(control: AbstractControl): CategoriaTarifa {
     return {
-      orden:0,
+      orden: 0, // Asumiendo que el orden será asignado en otro lugar
       nombre: control.get('nombre')?.value || '',
-      valor: control.get('nuevaTarifa')?.value || 0
+      valor: this.formatearValor(control.get('nuevaTarifa')?.value || 0)  // Aplica formatearValor aquí
     };
-
   }
 
   obtenerNombreCat(control: AbstractControl): string {
@@ -382,11 +396,11 @@ export class ClienteTarifaGralComponent implements OnInit {
   }
 
   obtenerValorCat(control: AbstractControl): number {
-    return control.get('nuevaTarifa')?.value || ''
+    return this.formatearValor(control.get('nuevaTarifa')?.value || 0);
   }
 
   addItem(){    
-    ////console.log("1)",this.tEspecial);
+    console.log("1)",this.nuevaTarifaGral);
     if(!this.tEspecial){
       this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
       this.consolaTarifa = 0;

@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, JsonPipe } from '@angular/common';
 
 import { SharedRoutingModule } from './shared-routing.module';
 import { BtnAgregarComponent } from './btn-agregar/btn-agregar.component';
@@ -9,7 +9,9 @@ import { BtnReimpresionComponent } from './btn-reimpresion/btn-reimpresion.compo
 import { BtnLeerComponent } from './btn-leer/btn-leer.component';
 import { ConsolaTarifaComponent } from './consola-tarifa/consola-tarifa.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
+import { TableroCalendarioComponent } from './tablero-calendario/tablero-calendario.component';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   declarations: [
@@ -18,13 +20,17 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     BtnEliminarComponent,
     BtnReimpresionComponent,
     BtnLeerComponent,
-    ConsolaTarifaComponent
+    ConsolaTarifaComponent,
+    TableroCalendarioComponent
   ],
   imports: [
     CommonModule,
     SharedRoutingModule,
     FormsModule,
     ReactiveFormsModule,
+    NgbDropdownModule,
+    JsonPipe,
+    NgbDatepickerModule
   ],
   exports:[
     BtnAgregarComponent,
@@ -32,7 +38,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     BtnEliminarComponent,
     BtnReimpresionComponent,
     BtnLeerComponent,
-    ConsolaTarifaComponent
+    ConsolaTarifaComponent,
+    TableroCalendarioComponent
   ]
 })
 export class SharedModule { }

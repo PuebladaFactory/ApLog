@@ -10,8 +10,8 @@ import { Component, Input, OnInit } from '@angular/core';
       Pdf
   </button>
 
-  <button *ngIf="name === 'cliente'" class="btn btn-outline-secondary">
-      Alta Cliente
+  <button *ngIf="name === 'Cliente' || name === 'Chofer'|| name === 'Proveedor' " class="btn boton-alta">
+      Alta {{name}}
   </button>
 
   <button *ngIf="name === 'chofer'" class="btn btn-outline-secondary">
@@ -26,7 +26,7 @@ import { Component, Input, OnInit } from '@angular/core';
       Tarifa Nueva
   </button>
 
- <button *ngIf="name === 'Detalle'"  class="btn btn-secondary m-0" style="border-radius: 10%;  margin: 10px;" >
+ <button *ngIf="name === 'Detalle'"  class="btn btn-light m-0" style="border-radius: 10%;  margin: 10px;" >
     <!-- <i class="bi bi-pencil"></i> -->
 
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
@@ -47,7 +47,25 @@ import { Component, Input, OnInit } from '@angular/core';
    <!--  {{name || "Editar"}} -->
 </button> 
 `,
-  styles: [``]
+  styles: [`
+    button:hover{
+        background-color: lightblue;
+        color: black;
+        border-color: black;
+      }
+
+    .boton-alta{
+        width: 15rem;
+        background: #002b5c;
+        color: white;
+        opacity: 0.8;
+        font-size: 1.25rem;
+    }
+
+    .boton-alta:hover{
+        background: #0d6efd;        
+    }
+    `]
 })
 export class BtnLeerComponent implements OnInit {
   @Input() name?: string;

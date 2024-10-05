@@ -10,40 +10,55 @@
 
 </div>
 <div>
-  <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th><input type="checkbox" (change)="onSeleccionarTodosChange($event)" formControlName="seleccionarTodos"></th>
-          <th>Categoria</th>
-          <th>Nombre</th>
-          <th>Ultima Tarifa {{tEspecial? ultTarifaEspecial.fecha: ultTarifa? ultTarifa.fecha : ""}}</th>
-          <th>Diferencia</th>
-          <th>Nueva Tarifa</th>
-        </tr>
-      </thead>
-      <tbody formArrayName="filas">
-        <tr *ngFor="let fila of filas.controls; let i = index" [formGroupName]="i">
-          <td><input type="checkbox" formControlName="seleccionado"></td>
-          <td>{{ fila.get('categoria')?.value }}</td>
-          <td><input type="text" formControlName="nombre"></td>
-          <td><input type="text" formControlName="ultimaTarifa"></td>
-          <td><input type="text" formControlName="diferencia"></td>
-          <td><input type="text" formControlName="nuevaTarifa"></td>
-        </tr>
-      </tbody>
-    </table>
-  
-    <!-- <div class="form-group">
-      <label>Generar Nueva Tarifa:</label><br>
-      <button type="button" (click)="onGenerarNuevaTarifaManual()">Manual</button>
-      <button type="button" (click)="onGenerarNuevaTarifaAutomatica()">Automática</button>
-      <input type="number" [formControl]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento"
-             (keydown.enter)="calcularNuevaTarifaPorcentaje()">
-      <button type="button" class="btn btn-primary" (click)="calcularNuevaTarifaPorcentaje()">Aplicar Porcentaje</button>
-    </div> -->
-  
-    <button type="button" class="btn btn-primary" (click)="guardarTarifa()">Guardar Tarifa</button>
-  </form>
-</div>
+    <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" (change)="onSeleccionarTodosChange($event)" formControlName="seleccionarTodos"></th>
+                    <th>Categoria</th>
+                    <th>Nombre</th>
+                    <th>Ultima Tarifa {{tEspecial? ultTarifaEspecial.fecha: ultTarifa? ultTarifa.fecha : ""}}</th>
+                    <th>Diferencia</th>
+                    <th>Nueva Tarifa</th>
+                </tr>
+            </thead>
+            <tbody formArrayName="filas">
+                <tr *ngFor="let fila of filas.controls; let i = index" [formGroupName]="i">
+                    <td><input type="checkbox" formControlName="seleccionado"></td>
+                    <td>{{ fila.get('categoria')?.value }}</td>
+                    <td><input type="text" formControlName="nombre"></td>
+                    <td>
+                        <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1" style="width:30px">
+                                    {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                                </span>
+                                <input type="number" formControlName="ultimaTarifa" >
+                        </div>
+                    </td>
+                    <td>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">
+                              {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                            </span>
+                            <!-- Aplica el pipe `number` con dos decimales al valor del input -->
+                            <input type="number" formControlName="diferencia">
+                          </div>
+                    </td>
+                    <!-- <td><input type="text" formControlName="diferencia"></td> -->
+                    <td>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" style="width:30px" id="basic-addon1">
+                              {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                            </span>
+                            <!-- Aplica el pipe `number` con dos decimales al valor del input -->
+                            <input type="number" formControlName="nuevaTarifa">
+                          </div>
+                    </td>
+                    <!-- <td><input type="text" formControlName="nuevaTarifa"></td> -->
+                </tr>
+            </tbody>
+        </table>
 
+        <button type="button" class="btn btn-primary" (click)="guardarTarifa()">Guardar Tarifa</button>
+    </form>
+</div>

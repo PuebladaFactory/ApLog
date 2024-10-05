@@ -56,8 +56,8 @@
     </ngx-datatable-column>
     <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="3">          
         <ng-template ngx-datatable-cell-template let-row="row">
-            <app-btn-leer name="Detalle" data-bs-target="#exampleModal" data-bs-toggle="modal" (click)="seleccionarOp(row)" class=""></app-btn-leer>
-            <app-btn-editar name="Editar" data-bs-target="#edicionModal" data-bs-toggle="modal" (click)="abrirEdicion(row)" class="mx-2"></app-btn-editar>
+            <app-btn-leer name="Detalle" (click)="abrirVista(row)" class=""></app-btn-leer>
+            <app-btn-editar name="Editar" (click)="abrirEdicion(row)" class="mx-2"></app-btn-editar>
             <app-btn-eliminar name="Eliminar" (click)="eliminarOperacion(row)" class="me-2" ></app-btn-eliminar>
             <app-btn-agregar name="Factura" data-bs-target="#facturarModal" data-bs-toggle="modal" (click)="crearFacturaOp(row)" class=""></app-btn-agregar>
         </ng-template>
@@ -66,78 +66,6 @@
   </ngx-datatable>
 </div>
 
-
-
-<!-- ////////////////////////////////////////////////////////////////////////////////// -->
-
-
-<!-- MODAL VISTA -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="exampleModalLabel">Detalle Operación</h3>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="facturarFalso()"></button>
-            </div>
-          <div class="modal-body" *ngIf="detalleOp !== undefined">          
-                <div>                                   
-                    <p class="mb-1"><span class="fw-bold">N° Operacion:</span> {{detalleOp.idOperacion}}</p>
-                </div>    
-                <div>                    
-                    <p class="mb-1"><span class="fw-bold">Fecha:</span> {{detalleOp.fecha}}</p>
-                </div> 
-                <div>                   
-                   <p class="mb-1"><span class="fw-bold">Cliente:</span> {{detalleOp.cliente.razonSocial}}</p>
-                </div>
-                <div>                    
-                    <p class="mb-1"><span class="fw-bold">Destino:</span> {{detalleOp.cliente.direccion}}</p>
-                </div>                
-                <div>                    
-                    <p class="mb-1"><span class="fw-bold">Chofer:</span> {{detalleOp.chofer.nombre}}</p>
-                </div> 
-                <div>                    
-                    <p class="mb-1"><span class="fw-bold">Contacto:</span> {{detalleOp.chofer.celularContacto}}</p>
-                </div> 
-                <div>                    
-                    <p class="mb-1"><span class="fw-bold">Categoria:</span> {{detalleOp.chofer.vehiculo[0].categoria}}</p>
-                </div> 
-                <div>                    
-                    <p class="mb-1"><span class="fw-bold">Proveedor:</span> {{ detalleOp.chofer.proveedor === 'monotributista' ? 'No' : detalleOp.chofer.proveedor }}</p>
-                </div> 
-                <div>                    
-                    <p class="mb-1"><span class="fw-bold">Acompañante:</span> {{ detalleOp.acompaniante  ? 'Si' : "No" }}</p>
-                </div> 
-                <div>                    
-                    <p class="mb-1"><span class="fw-bold">Tarifa Eventual:</span> {{ detalleOp.tarifaEventual  ? 'Si' : "No" }}</p>
-                </div>
-                <div *ngIf="detalleOp.tarifaEventual && detalleOp.tEventual !== null" class="ms-3">
-                    <p class="mb-1"><span class="fw-bold">Chofer:</span></p>
-                    <div class="ms-3">                        
-                        <p class="mb-1"><span class="fw-bold">Tarifa Eventual Concepto:</span> {{detalleOp.tEventual.chofer.concepto}}</p>
-                    </div>
-                    <div class="ms-3">                        
-                        <p class="mb-1"><span class="fw-bold">Tarifa Eventual Valor:</span> {{detalleOp.tEventual.chofer.valor}}</p>          
-                    </div>
-                    <p class="mb-1"><span class="fw-bold">Cliente:</span></p>          
-                    <div class="ms-3">                        
-                        <p class="mb-1"><span class="fw-bold">Tarifa Eventual Concepto:</span> {{detalleOp.tEventual.cliente.concepto}}</p>
-                    </div>
-                    <div class="ms-3">                        
-                        <p class="mb-1"><span class="fw-bold">Tarifa Eventual Valor:</span> {{detalleOp.tEventual.cliente.valor}}</p>
-                    </div>
-                </div>
-                <div>
-                    <p class="mb-1"><span class="fw-bold">Observaciones:</span></p>
-                    
-                    <textarea name="" class="w-100" id="obs-vista">{{detalleOp.observaciones}}</textarea>
-                </div>
-                
-                <app-btn-eliminar name="Cerrar" data-bs-dismiss="modal" class="mt-2" ></app-btn-eliminar>
-               
-          </div>      
-        </div>
-    </div>
-</div> 
 
 <!-- MODAL FACTURAR -->
 <div class="modal fade modal-sm" id="facturarModal" tabindex="-1" aria-labelledby="facturarModal" aria-hidden="true">
@@ -155,115 +83,9 @@
                           <input formControlName="km" class="form-control" required type="number">
                       </div>
                   </div>    
-                  <!-- <div class="form-group">              
-                      <div class="mb-3">
-                        <label for="formFile" class="form-label">Cargar remito de operacion</label>
-                        <input class="form-control" formControlName="remito" type="file" id="formFile">
-                      </div>                    
-                  </div>   -->  
-              
-                <!--  <button class="btn btn-secondary" type="submit" data-bs-dismiss="modal" aria-label="Close">
-                    Facturar 
-                  </button> -->
                   <app-btn-agregar name="Facturar" type="submit" data-bs-dismiss="modal" aria-label="Close"></app-btn-agregar> 
                 </form>    
             </div>      
         </div>
     </div>
 </div>
-
-<!-- MODAL EDICION -->
-<div class="modal fade" id="edicionModal" tabindex="-1" aria-labelledby="edicionModal" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title " id="exampleModalLabel">Editar Operaciones</h3>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body"  *ngIf="opEditar !== undefined" >
-                <form [formGroup]="form" (ngSubmit)="onSubmitEdit()">
-                    <div class="form-group">
-                        <label for="Fecha">Fecha</label>
-                        <div class="input-group">
-                            <input formControlName="fecha" class="form-control edicion" required type="date">            
-                        </div>
-                    </div>    
-                    <div class="form-group">
-                        <label for="Cliente">Cliente</label>
-                        <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
-                            <option>{{opEditar.cliente.razonSocial}}</option>
-                            <option *ngFor="let cliente of $clientes">
-                                {{cliente.razonSocial}}
-                            </option>
-                        </select>
-                    </div>    
-                    <div class="form-group">
-                        <label for="Chofer">Chofer</label>
-                        <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
-                            <option>{{opEditar.chofer.apellido}}</option>
-                            <option *ngFor="let chofer of $choferes">
-                                {{chofer.apellido}}
-                            </option>
-                      </select>
-                    </div>              
-                    <div class="form-group" *ngIf="!opEditar.tarifaEventual">
-                    <label for="Acompaniante">Acompañante</label>
-                    <select class="form-select mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
-                        <option value="auto">{{opEditar.acompaniante? "Si" : "No"}}</option>
-                        <option value="si">Si</option>
-                        <option value="no">No</option>              
-                    </select>
-                    </div>   
-                    <div class="form-group">
-                        <label for="tarifaEspecial">Tarifa Eventual</label>
-                        <select class="form-select mb-3" aria-label="Default select example" (change)="selectTarifaEspecial($event)">
-                            <option value="auto">{{opEditar.tarifaEventual? "Si" : "No"}}</option>
-                            <option value="si">Si</option>
-                            <option value="no">No</option>              
-                        </select>
-                    </div>
-                    <div *ngIf="opEditar.tarifaEventual || tarifaEspecial" class="border-top border-bottom my-2">
-                        <h6 class="mt-2">Chofer:</h6>
-                        <div class="form-group">
-                            <label for="Fecha">Tarifa Eventual Concepto</label>
-                            <div class="input-group">
-                                <input formControlName="choferConcepto" class="form-control edicion" required type="text">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="Fecha">Tarifa Eventual Valor</label>
-                            <div class="input-group">
-                              <input formControlName="choferValor" class="form-control edicion" required type="number">
-                            </div>
-                        </div>
-                        <h6 class="my-2">Cliente:</h6>
-                        <div class="form-group">
-                            <label for="Fecha">Tarifa Eventual Concepto</label>
-                            <div class="input-group">
-                                <input formControlName="clienteConcepto" class="form-control edicion" required type="text">
-                            </div>
-                        </div>
-                        <div class="form-group mb-2">
-                            <label for="Fecha">Tarifa Eventual Valor</label>
-                            <div class="input-group">
-                                <input formControlName="clienteValor" class="form-control edicion" required type="number">
-                            </div>
-                        </div>
-                    </div>                
-                    <div class="form-group">
-                      <label for="Observaciones">Observaciones</label>
-                      <div class="input-group">
-                          <textarea  formControlName="observaciones" class="form-control edicion" required type="text"></textarea>            
-                      </div>
-                    </div>                   
-              <!--    <button class="btn btn-secondary mt-2" type="submit" data-bs-dismiss="modal">
-                    Guardar 
-                  </button> -->
-                    <app-btn-agregar name="Guardar" class="mt-2" type="submit" data-bs-dismiss="modal"></app-btn-agregar>
-              
-                </form>
-            </div>      
-        </div>
-    </div>
-</div> 
-

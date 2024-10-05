@@ -6,7 +6,7 @@ import { ClienteAltaComponent } from './cliente/cliente-alta/cliente-alta.compon
 const routes: Routes = [
   {path: '', component: AdminHomeComponent,
    children: [
-    { path: '', redirectTo: '/op/op-alta', pathMatch: 'full' },    
+    { path: '', redirectTo: '/op', pathMatch: 'full' },    
     {
       path: 'clientes',
       loadChildren: () => import('./cliente/cliente.module').then(m => m.ClienteModule)
