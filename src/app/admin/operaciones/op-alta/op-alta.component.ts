@@ -430,47 +430,48 @@ export class OpAltaComponent implements OnInit {
           especial: false,
           eventual: false,   
           personalizada: false, 
-        }
+        },
+        documentacion: null,
     }; 
-
-        // Si tarifaEspecial es true, agregar los detalles de tarifa especial
-        if (this.tarifaEventual) {
-          this.op.tEventual = {
-              chofer: {
-                  concepto: this.formTarifaEventual.value.choferConcepto,
-                  valor: this.formTarifaEventual.value.choferValor
-              },
-              cliente: {
-                  concepto: this.formTarifaEventual.value.clienteConcepto,
-                  valor: this.formTarifaEventual.value.clienteValor
-              }
-          };
-          this.op.tarifaTipo = {
-            general: false,
-            especial: false,
-            eventual: true,   
-            personalizada: false, 
-          }
+     // Si tarifaEspecial es true, agregar los detalles de tarifa especial
+    if(this.op.cliente.tarifaTipo.especial || this.op.chofer.tarifaTipo?.especial){
+      this.op.tarifaTipo = {
+        general: false,
+        especial: true,
+        eventual: false,   
+        personalizada: false, 
       }
-        // Si tarifaPersonalizada es true, agregar los detalles de tarifa especial
-        if (this.tarifaPersonalizada) {
-          this.op.tPersonalizada = this.tPersonalizada
-          this.op.tarifaTipo = {
-            general: false,
-            especial: false,
-            eventual: false,   
-            personalizada: true, 
+    }
+    // Si tarifaPersonalizada es true, agregar los detalles de tarifa especial
+    if (this.tarifaPersonalizada) {
+      this.op.tPersonalizada = this.tPersonalizada
+      this.op.tarifaTipo = {
+        general: false,
+        especial: false,
+        eventual: false,   
+        personalizada: true, 
+      }      
+    }
+       
+    if (this.tarifaEventual) {
+      this.op.tEventual = {
+          chofer: {
+              concepto: this.formTarifaEventual.value.choferConcepto,
+              valor: this.formTarifaEventual.value.choferValor
+          },
+          cliente: {
+              concepto: this.formTarifaEventual.value.clienteConcepto,
+              valor: this.formTarifaEventual.value.clienteValor
           }
-
-        if(this.op.cliente.tarifaTipo.especial){
-          this.op.tarifaTipo = {
-            general: false,
-            especial: true,
-            eventual: false,   
-            personalizada: false, 
-          }
-        }
+      };
+      this.op.tarifaTipo = {
+        general: false,
+        especial: false,
+        eventual: true,   
+        personalizada: false, 
       }
+    }
+
       if(this.op.cliente.tarifaTipo.especial){   
         this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",this.op.cliente.idCliente,"ultTarifaEspCliente");
       }
@@ -486,7 +487,7 @@ export class OpAltaComponent implements OnInit {
       }
       this.op.aCobrar = this.buscarTarifaServ.getACobrar(this.op, this.ultTarifaGralCliente, this.ultTarifaEspCliente)
       this.op.aPagar = this.buscarTarifaServ.getAPagar(this.op, this.ultTarifaGralChofer, this.ultTarifaEspChofer, this.ultTarifaGralProveedor, proveedor )
-    //////console.log()("esta es la operacion: ", this.op);  
+    console.log("esta es la operacion: ", this.op);  
     Swal.fire({
       title: "¿Desea agregar la operación?",
       //text: "You won't be able to revert this!",

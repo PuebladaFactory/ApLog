@@ -2,6 +2,19 @@
     border-color: #dc3545 !important; /* Cambia el color del borde a rojo */
   }
 
-  input{
-    font-size: 1.15rem;
+  input, select{
+    font-size: 1.3rem;
+}
+label{
+  font-size: 1.15rem;
+}
+
+#cerrar{
+  background-color: transparent;
+  border-color: black;
+}
+
+#cerrar:hover{
+  background-color: #0d6efd;
+  color: white;
 }

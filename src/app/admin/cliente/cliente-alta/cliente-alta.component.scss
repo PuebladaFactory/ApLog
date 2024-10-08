@@ -1,7 +1,4 @@
-#cerrar{
-  /* border-color: #0d6efd;  */
-  /* background-color: red;     */
-  /* color: red;  */ 
+#cerrar{ 
   background-color: transparent;
   border-color: black;
 }
@@ -15,7 +12,7 @@
     border-color: #dc3545 !important; /* Cambia el color del borde a rojo */
   }
 
-input{
+input, td, th{
   font-size: 1.3rem;
 }
 
@@ -31,14 +28,17 @@ input{
 button{
   background-color: #3d8bfd;
   color: white;
+  font-size: 1.2rem;
 }  
 button:hover{
   background-color: #0d6efd;
   color: white;
+  font-size: 1.2rem;
 } 
 
 .form-check-label{
   font-size: 1.2rem;
 }
+
 
 

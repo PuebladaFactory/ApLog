@@ -22,3 +22,13 @@ input, option, textarea {
 .invisible{
     display:none;   
 }
+
+#cerrar{   
+    background-color: transparent;
+    border-color: black;
+  }
+  
+  #cerrar:hover{
+    background-color: #0d6efd;
+    color: white;
+  }

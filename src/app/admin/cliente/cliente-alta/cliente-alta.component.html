@@ -55,7 +55,7 @@
                           </form>
                       </div>
                       <div class="d-flex justify-content-between mt-3">
-                        <h3>Contactos: </h3>                                                      
+                        <h3 class="align-self-center mb-0">Contactos: </h3>                                                      
                         <button type="button" class="btn " (click)="abrirModalContactos()" *ngIf="!soloVista">Agregar contactos          
                             <svg *ngIf="!mostrarFormulario" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
                               <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
@@ -83,14 +83,14 @@
                                   </thead>
                                   <tbody>
                                       <tr *ngFor="let contacto of contactos, let i = index" [ngClass]="{'isDisabled': soloVista}">
-                                          <th class="tabla align-baseline" scope="col">{{contacto.puesto}}</th>                    
-                                          <th class="tabla align-baseline" scope="col">{{contacto.apellido}}</th>
-                                          <th class="tabla align-baseline" scope="col">{{contacto.nombre}}</th>
-                                          <th class="tabla align-baseline" scope="col">{{contacto.telefono}}</th>
-                                          <th class="tabla align-baseline" scope="col">{{contacto.email}}</th>
-                                          <th class="tabla align-baseline" scope="col" *ngIf="!soloVista">                                  
+                                          <td class="tabla align-baseline" scope="col">{{contacto.puesto}}</td>                    
+                                          <td class="tabla align-baseline" scope="col">{{contacto.apellido}}</td>
+                                          <td class="tabla align-baseline" scope="col">{{contacto.nombre}}</td>
+                                          <td class="tabla align-baseline" scope="col">{{contacto.telefono}}</td>
+                                          <td class="tabla align-baseline" scope="col">{{contacto.email}}</td>
+                                          <td class="tabla align-baseline" scope="col" *ngIf="!soloVista">                                  
                                               <app-btn-eliminar name="Eliminar" (click)="eliminarContacto(i)"></app-btn-eliminar>
-                                          </th>
+                                          </td>
                                       </tr> 
                                   </tbody>                    
                               </table>          

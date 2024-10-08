@@ -15,6 +15,7 @@ import { OpAbiertasComponent } from './op-abiertas/op-abiertas.component';
 import { ModalOpAbiertaComponent } from './modal-op-abierta/modal-op-abierta.component';
 import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { ModalOpCierreComponent } from './modal-op-cierre/modal-op-cierre.component';
+import { ModalFacturacionComponent } from './modal-facturacion/modal-facturacion.component';
 
 
 @NgModule({
@@ -23,7 +24,7 @@ import { ModalOpCierreComponent } from './modal-op-cierre/modal-op-cierre.compon
     OpAltaComponent,
     OpDiariasComponent,
     ConsultaOpComponent,   
-    OpAbiertasComponent, ModalOpAbiertaComponent, TableroOpComponent, ModalOpCierreComponent,
+    OpAbiertasComponent, ModalOpAbiertaComponent, TableroOpComponent, ModalOpCierreComponent, ModalFacturacionComponent,
   ],
   imports: [
     CommonModule,

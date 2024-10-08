@@ -32,7 +32,7 @@
                                 <span class="input-group-text" id="basic-addon1" style="width:30px">
                                     {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
                                 </span>
-                                <input type="number" formControlName="ultimaTarifa" >
+                                <input type="text" formControlName="ultimaTarifa" >
                         </div>
                     </td>
                     <td>
@@ -41,7 +41,7 @@
                               {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
                             </span>
                             <!-- Aplica el pipe `number` con dos decimales al valor del input -->
-                            <input type="number" formControlName="diferencia">
+                            <input type="text" formControlName="diferencia">
                           </div>
                     </td>
                     <!-- <td><input type="text" formControlName="diferencia"></td> -->
@@ -51,14 +51,17 @@
                               {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
                             </span>
                             <!-- Aplica el pipe `number` con dos decimales al valor del input -->
-                            <input type="number" formControlName="nuevaTarifa">
+                            <input type="text" formControlName="nuevaTarifa">
                           </div>
                     </td>
                     <!-- <td><input type="text" formControlName="nuevaTarifa"></td> -->
                 </tr>
             </tbody>
         </table>
+        <app-btn-editar name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
+        
+        <app-btn-agregar name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
 
-        <button type="button" class="btn btn-primary" (click)="guardarTarifa()">Guardar Tarifa</button>
+        <!-- <button type="button" class="btn btn-primary" (click)="guardarTarifa()">Guardar Tarifa</button> -->
     </form>
 </div>

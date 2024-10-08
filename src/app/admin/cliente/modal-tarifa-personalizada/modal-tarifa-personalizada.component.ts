@@ -33,7 +33,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
       this.$ultimaTarifa.secciones.forEach(seccion => {
         seccion.categorias.forEach(categoria => {
           // Calcula nuevos valores y limita a dos decimales, luego convierte a número
-          categoria.nuevoACobrar = parseFloat((categoria.aCobrar + (categoria.aCobrar * (this.porcentajeAumento / 100))).toFixed(2));
+          categoria.nuevoACobrar = categoria.aCobrar + (categoria.aCobrar * (this.porcentajeAumento / 100));
           categoria.nuevoAPagar = categoria.aPagar + (categoria.aPagar * (this.porcentajeAumento / 100));
         });
       });
@@ -106,5 +106,14 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
     this.storageService.addItem(this.componente, item);    
     this.activeModal.close()
   }
+
+  formatearValor(valor: number) : any{
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+     minimumFractionDigits: 2, 
+     maximumFractionDigits: 2 
+   }).format(valor);
+   //////console.log(nuevoValor);    
+   return nuevoValor
+ }
 
 }

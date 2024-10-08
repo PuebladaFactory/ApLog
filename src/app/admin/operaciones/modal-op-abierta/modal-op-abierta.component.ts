@@ -183,8 +183,6 @@ changeSecion(e:any){
 }
   ////console.log(this.seccionElegida);
   ////console.log(this.tPersonalizada);
-  
-  
 }
 
 changeCategoria(e:any){
@@ -277,6 +275,7 @@ changeCategoria(e:any){
         aCobrar:this.opEditar.aCobrar,
         aPagar:this.opEditar.aPagar,
         tarifaTipo: this.tarifaTipo,
+        documentacion: null,
     }; 
 
         // Si tarifaEspecial es true, agregar los detalles de tarifa especial

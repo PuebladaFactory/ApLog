@@ -1,10 +1,5 @@
 <div class="mt-2">
-    <!-- <button   data-bs-target="#consultaModal" data-bs-toggle="modal" id="bt" class="btn btn-outline-secondary bt">
-      {{ buttonName }}
-    </button>
-    <br> -->
-
-    <button  class="btn btn-primary boton-alta" type="button" id="" data-bs-toggle="offcanvas" data-bs-target="#offcanvasAlta" aria-controls="offcanvasAlta">
+     <button  class="btn btn-primary boton-alta" type="button" id="" data-bs-toggle="offcanvas" data-bs-target="#offcanvasAlta" aria-controls="offcanvasAlta">
       {{ buttonNameAlta }}
     </button>
     <br>
@@ -12,12 +7,11 @@
 </div>
 <div [ngClass]="{'offcanvas-normal': !tarifaEventual && !tarifaPersonalizada, 'offcanvas-personalizada': tarifaPersonalizada || tarifaEventual || vehiculosChofer, 'offcanvas-alta': tarifaEventual && vehiculosChofer}" class="offcanvas offcanvas-end border border-2 rounded-end rounded-5" data-bs-scroll="true" tabindex="-1" id="offcanvasAlta" aria-labelledby="offcanvasRightLabel">
     <div class="offcanvas-body">
-        <button type="button" class="btn-close float-end" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <button type="button" class="btn-close float-end"  id="cerrar" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         <app-op-alta></app-op-alta>
     </div>
 </div>
 <div class="d-flex justify-content-evenly align-items-center">
- 
     <!-- MODAL CONSULTA OPERACION -->
     <!-- <div class="modal fade modal-sm" id="consultaModal" tabindex="-1" aria-labelledby="consultaModal" aria-hidden="true">
         <div class="modal-dialog">
@@ -29,18 +23,10 @@
             </div>
         </div>
     </div>       -->
-
 </div>
-
-<div>
-  <!-- <app-op-abiertas [fechasConsulta]="fechasConsulta" [btnConsulta]="btnConsulta"></app-op-abiertas> -->
-  <!-- <h3 *ngIf="!btnConsulta" class="mt-5">Operaciones: {{primerDia}} / {{ultimoDia}} </h3> -->
-
-  <!-- <h3 *ngIf="btnConsulta" class="mt-5">Resultado de la consulta: {{fechasConsulta.fechaDesde}} / {{fechasConsulta.fechaHasta}} </h3> -->
-  <!-- ///////////////////////////////////////////////////////////////////////////////////////// -->
-  
-  <div class="custom-datatable">
-    
+<div>  
+  <!-- ///////////////////////////////////////////////////////////////////////////////////////// -->  
+    <div class="custom-datatable">    
         <div class="row w-100">
             <div class="col-4 d-flex align-items-end">
                 <!-- <input type="text" placeholder="Buscar..." (input)="updateFilter($event)" />             -->
@@ -52,8 +38,8 @@
                 <app-tablero-calendario></app-tablero-calendario>
             </div>
             <div class="col-4 d-flex justify-content-between  align-items-end">                 
-                <div [ngClass]="{'isDisabled': !ajustes}" class="w-100" >
-                    <label *ngFor="let column of allColumns" class="me-2">
+                <div [ngClass]="{'isInvisible': !ajustes}" class="w-100" >
+                    <label *ngFor="let column of allColumns" class="me-2" [ngClass]="{'invicible':column.prop === 'estado'}">
                       <input type="checkbox" [checked]="column.selected" (change)="toggleColumn(column)"  />
                       {{ column.name }}
                     </label>
@@ -67,63 +53,53 @@
             </div>        
         </div>
     
-    <ngx-datatable
-    class="dark"
-    [rows]="paginatedRows"
-    [columns]="visibleColumns"
-    [columnMode]="ColumnMode.flex"
-    [headerHeight]="50"
-    [footerHeight]="50"
-    [rowHeight]="'auto'"
-    [sortType]="sortType"
-    
-    [externalPaging]="true"
-    [count]="count"
-    [limit]="limit"
-    [offset]="offset"
-    (sort)="onSort($event)"
-    (activate)="onActivate($event)"
-    (select)="onSelect($event)"
-    (page)="setPage($event)">
-      
-      <ngx-datatable-column *ngFor="let column of visibleColumns" [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow">
-          <ng-template ngx-datatable-cell-template let-row="row">
-              {{ row[column.prop] }}
-          </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="3">          
-          <ng-template ngx-datatable-cell-template let-row="row">
-              <app-btn-leer name="Detalle" (click)="abrirVista(row)" class=""></app-btn-leer>
-              <app-btn-editar name="Editar" (click)="abrirEdicion(row)" class="mx-2"></app-btn-editar>
-              <app-btn-eliminar name="Eliminar" (click)="eliminarOperacion(row)" class="me-2" ></app-btn-eliminar>
-              <app-btn-agregar name="Factura" data-bs-target="#facturarModal" data-bs-toggle="modal" (click)="crearFacturaOp(row)" class=""></app-btn-agregar>
-          </ng-template>
-      </ngx-datatable-column>
-      
-    </ngx-datatable>
-  </div>
-  
-  
-  <!-- MODAL FACTURAR -->
-  <!-- <div class="modal fade modal-sm" id="facturarModal" tabindex="-1" aria-labelledby="facturarModal" aria-hidden="true">
-      <div class="modal-dialog">
-          <div class="modal-content">
-              <div class="modal-header">
-                  <h3 class="modal-title" id="exampleModalLabel">Facurar Operación</h3>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="facturarFalso()"></button>
-              </div>
-              <div class="modal-body">          
-                  <form [formGroup]="opForm" (ngSubmit)="onSubmit()" >                            
-                    <div class="form-group">
-                        <label for="Km">Km recorridos</label>
-                        <div class="input-group ">
-                            <input formControlName="km" class="form-control" required type="number">
-                        </div>
-                    </div>    
-                    <app-btn-agregar name="Facturar" type="submit" data-bs-dismiss="modal" aria-label="Close"></app-btn-agregar> 
-                  </form>    
-              </div>      
-          </div>
-      </div>
-  </div> -->
+        <ngx-datatable
+        class="dark"
+        [rows]="paginatedRows"
+        [columns]="visibleColumns"
+        [columnMode]="ColumnMode.flex"
+        [headerHeight]="50"
+        [footerHeight]="50"
+        [rowHeight]="'auto'"
+        [sortType]="sortType"
+        
+        [externalPaging]="true"
+        [count]="count"
+        [limit]="limit"
+        [offset]="offset"
+        (sort)="onSort($event)"
+        (activate)="onActivate($event)"
+        (select)="onSelect($event)"
+        (page)="setPage($event)">
+        
+        <ngx-datatable-column name="Estado" prop="estado" [flexGrow]="2">
+            <ng-template ngx-datatable-cell-template let-row="row">
+              <span [ngClass]="{
+                  'estado-abierta': row.estado === 'Abierta',
+                  'estado-cerrada': row.estado === 'Cerrada',
+                  'estado-facturada': row.estado === 'Facturada'
+                }">
+                {{ row.estado }}
+              </span>
+            </ng-template>
+        </ngx-datatable-column>
+        <!-- Generar todas las columnas excepto 'Estado' -->
+        <ng-container *ngFor="let column of visibleColumns">
+            <ngx-datatable-column [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow" *ngIf="column.prop !== 'estado'">
+                <ng-template ngx-datatable-cell-template let-row="row">
+                {{ row[column.prop] }}
+                </ng-template>
+            </ngx-datatable-column>
+        </ng-container>
+        <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="3">          
+            <ng-template ngx-datatable-cell-template let-row="row">
+                <app-btn-leer name="Detalle" (click)="abrirVista(row)" class=""></app-btn-leer>
+                <app-btn-editar name="Editar" (click)="abrirEdicion(row)" class="mx-2"></app-btn-editar>
+                <app-btn-eliminar name="Eliminar" (click)="eliminarOperacion(row)" class="me-2" ></app-btn-eliminar>
+                <app-btn-agregar name="Factura" (click)="crearFacturaOp(row)" class="" [ngClass]="{'isDisabled': row.estado !== 'Abierta'}"></app-btn-agregar>
+            </ng-template>
+        </ngx-datatable-column>
+        
+        </ngx-datatable>
+    </div> 
 </div>

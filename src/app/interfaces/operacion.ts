@@ -7,7 +7,7 @@ export interface Operacion {
     idOperacion: number;
     fecha: Date;
     km: number | null;    
-    //documentacion: string | null;
+    documentacion: string | null;
     cliente: Cliente;
     chofer: Chofer;
     observaciones: string;    

@@ -55,9 +55,10 @@
                                     <textarea formControlName="observaciones" class="form-control edicion"></textarea>
                                 </div>
                             </div>                          
-                            <button class="btn btn-secondary mt-3" type="submit" [disabled]="!form.valid">
+                            <!-- <button class="btn btn-secondary mt-3" type="submit" [disabled]="!form.valid">
                               Guardar
-                            </button>
+                            </button> -->
+                            <app-btn-agregar name="Guardar" type="button" (click)="onSubmit()" [disabled]="!form.valid" ></app-btn-agregar>
                         </form>
                     </div>
                     <div class="container" [ngClass]="{'invisible': !tarifaPersonalizada && !tarifaEventual &&!vehiculosChofer}">

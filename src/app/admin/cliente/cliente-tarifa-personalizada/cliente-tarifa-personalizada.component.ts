@@ -102,8 +102,8 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     this.categoria = {
       orden: this.secciones[index].categorias.length + 1,
       nombre: this.categoriaForm.value.nombre,
-      aCobrar: parseFloat(this.categoriaForm.value.aCobrar.toFixed(2)),
-      aPagar: parseFloat(this.categoriaForm.value.aPagar.toFixed(2)),
+      aCobrar: this.categoriaForm.value.aCobrar,
+      aPagar: this.categoriaForm.value.aPagar,
       nuevoACobrar: 0,
       nuevoAPagar: 0,
     }
@@ -208,5 +208,14 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       );
     }
   }
+
+  formatearValor(valor: number) : any{
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+     minimumFractionDigits: 2, 
+     maximumFractionDigits: 2 
+   }).format(valor);
+   //////console.log(nuevoValor);    
+   return nuevoValor
+ }
 
 }

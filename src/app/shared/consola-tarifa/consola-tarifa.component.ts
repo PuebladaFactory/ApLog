@@ -11,6 +11,7 @@ export class ConsolaTarifaComponent implements OnInit {
   
   modoAutomatico = true;  // por defecto en modo automático
   porcentajeAumento: FormControl = new FormControl(0); // Para el aumento porcentual
+  prueba: FormControl = new FormControl(0); // Para el aumento porcentual
   consolaTarifa: any = 0;
   modo: any = {
     manual: false,
@@ -54,6 +55,12 @@ export class ConsolaTarifaComponent implements OnInit {
        
     } */
     this.consolaTarifa = this.porcentajeAumento.value / 100,
+    console.log("A) ",this.prueba.value);
+    /* let numero = parseFloat(new Intl.NumberFormat("de-DE").format(this.prueba.value))
+    numero = parseFloat (numero.toFixed(2))
+    console.log("B) ", numero) */
+    console.log("B) ", new Intl.NumberFormat("de-DE").format(this.prueba.value));
+    
     //console.log(this.consolaTarifa);    
     this.storageService.setInfo("consolaTarifa", this.consolaTarifa)
   }

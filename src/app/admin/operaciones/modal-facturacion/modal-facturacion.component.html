@@ -1,0 +1,181 @@
+<div class="modal-content">
+    <div class="modal-header">
+        <h1>Operación</h1>
+        <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
+    </div>
+    <div class="modal-body">
+        <div class="row border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded mx-1 px-0 isDisabled">
+            <div class="col-4">                
+                <div class="form-group">
+                    <label for="Fecha" class="fs-5">Fecha</label>
+                    <div class="input-group">
+                        <input class="form-control edicion" type="date" [value]="op.fecha">
+                    </div>
+                </div>                
+            </div>
+            <div class="col-4 ">                
+                <div class="form-group">
+                    <label for="Cliente" class="fs-5">Cliente</label>
+                    <div class="input-group">
+                        <input class="form-control edicion" type="text" [value]="op.cliente.razonSocial">
+                    </div>
+                </div>          
+                <div class="form-group">
+                    <label for="Cliente" class="fs-5">Tarifa Cliente</label>
+                    <div class="input-group ">
+                        <input class="form-control edicion" type="text" [ngModel]="op.cliente.tarifaTipo.especial? 'Especial' : op.cliente.tarifaTipo.eventual? 'Eventual' : op.cliente.tarifaTipo.personalizada? 'Personalizada' : 'General' ">
+                    </div>
+                </div>                               
+            </div>
+            <div class="col-4">
+                <div class="form-group">                                    
+                    <label for="Chofer" class="fs-5">Chofer</label>
+                    <div class="input-group">
+                        <input class="form-control edicion" type="text" [value]="op.chofer.apellido + ' ' + op.chofer.nombre">
+                    </div>                    
+                </div> 
+                <div class="form-group isDisabled">
+                    <label for="Cliente" class="fs-5">Tarifa Chofer</label>
+                    <div class="input-group ">
+                        <input class="form-control edicion" type="text" [ngModel]="op.chofer.tarifaTipo?.especial? 'Especial' : op.chofer.tarifaTipo?.eventual? 'Eventual' : 'General' ">
+                    </div>
+                </div>                                  
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4">
+                <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded" [ngClass]="{'altura': !cerrar}">                    
+                    <div class="form-group isDisabled" [ngClass]="{'isDisabled': vista}">       
+                        <label for="Patente" class="fs-5">Patente: </label>                                   
+                        <div class="input-group" [ngClass]="{'isDisabled': vista}">
+                            <input class="form-control edicion" [value]="op.patenteChofer">
+                        </div>                                                          
+                    </div>                    
+                    <div class="form-group" [ngClass]="{'isDisabled': vista || cerrar}">   
+                        <label for="Acompaniante" class="fs-5">Acompañante</label>                                 
+                        <select class="form-select mb-3" (change)="changeAcompaniante($event)">                                        
+                            <option [value]="acompaniante" selected>{{acompaniante ? "Si" : "No"}}</option>
+                            <option [value]="true">Si</option>
+                            <option [value]="false">No</option>
+                        </select>
+                    </div>  
+                    <form [formGroup]="form" >    
+                        <div class="form-group" [ngClass]="{'invisible': cerrar}">
+                            <label for="Observaciones" class="fs-5">Observaciones</label>
+                            <div class="input-group" [ngClass]="{'isDisabled': vista}">
+                                <textarea formControlName="observaciones"  class="form-control edicion"></textarea>
+                            </div>
+                        </div> 
+                    </form>                                                                                   
+                    <div class="form-group" >                                    
+                        <label for="A Cobrar" class="fs-5">A Cobrar</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aCobrar">
+                        </div>                        
+                    </div>                                        
+                    <div class="form-group" >                                    
+                        <label for="A Pagar" class="fs-5">A Pagar</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aPagar">
+                        </div>                        
+                    </div>              
+                </div>               
+                 
+                <h3 class="mt-4 mb-3" [ngClass]="{'invisible': !cerrar}">Cerrar Operación:</h3> 
+                <form [formGroup]="form" class="border border-dark border-1 rounded-4 shadow p-3 mb-1 bg-body-tertiary rounded pb-5" [ngClass]="{'invisible': !cerrar}">         
+                    <div class="form-group">                                    
+                        <label for="Km" class="fs-5">Km Recorridos</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
+                            <input formControlName="km" class="form-control edicion" required type="number">
+                        </div>                        
+                    </div>                        
+                    <div class="form-group mt-3">                                    
+                        <label for="Documentacion" class="fs-5">Documentacion</label>
+                        <input formControlName="documentacion" class="form-control edicion" type="file" id="formFile">
+                    </div>               
+                </form>   
+            </div>
+            <div class="col-4 " [ngClass]="{'isDisabled': vista || cerrar}">
+                <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100">
+                    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                        <div class="form-group">
+                            <label for="TarifaEventual" class="fs-4">Tarifa Eventual</label>
+                            <select class="form-select mb-3" (change)="selectTarifaEventual($event)">
+                                <option [value]="tarifaEventual" selected> {{tarifaEventual ? "Si" : "No"}}</option>
+                                <option [value]="true">Si</option>
+                                <option [value]="false">No</option>
+                            </select>
+                        </div>                
+                    </form>                                
+                    
+                        <div class="my-2">
+                            <h5 class="my-2 mt-2">Cliente:</h5>
+                            <div class="form-group" [ngClass]="{'isDisabled': !tarifaEventual}">
+                                <label for="Fecha" class="fs-5">Tarifa Eventual Concepto</label>
+                                <div class="input-group">
+                                <input class="form-control edicion" required type="text" [(ngModel)]="tEventual.cliente.concepto" >
+                                </div>
+                            </div>
+                            <div class="form-group mb-2" [ngClass]="{'isDisabled': !tarifaEventual}">
+                                <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                    <input  class="form-control edicion" required type="text" [(ngModel)]="tEventual.cliente.valor">
+                                </div>                                                        
+                            </div>
+                            <h5 class="mt-2">Chofer:</h5>
+                            <div class="form-group" [ngClass]="{'isDisabled': !tarifaEventual}">
+                                <label for="Fecha" class="fs-5">Tarifa Eventual Concepto</label>
+                                <div class="input-group">
+                                    <input class="form-control edicion" required type="text" [(ngModel)]="tEventual.chofer.concepto">
+                                </div>
+                            </div>
+                            <div class="form-group" [ngClass]="{'isDisabled': !tarifaEventual}">
+                                <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                    <input class="form-control edicion" required type="text" [(ngModel)]="tEventual.chofer.valor">
+                                </div>                                                                                        
+                            </div>                        
+                        </div>              
+                    
+                </div>                
+            </div>
+            <div class="col-4"  [ngClass]="{'isDisabled': vista || cerrar}">
+                <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100">
+                    <label for="TarifaPersonalizada" class="fs-4">Tarifa Personalizada</label>
+                    <p *ngIf="tarifaPersonalizada" class="m-2 border-top border-bottom fs-5">El cliente tiene una tarifa Personalizada. </p>
+                    <p *ngIf="tarifaEventual" class="m-2 border-top border-bottom fs-5">Hay una Tarifa Eventual aplicada.</p>  
+                    <p *ngIf="!tarifaPersonalizada" class="m-2 border-top border-bottom fs-5">El cliente no tiene una tarifa Personalizada.</p>                        
+                    <form [formGroup]="formTarifaPersonalizada">
+                        <div class="form-group">
+                            <label for="Cliente">Secciion</label>
+                            <select class="form-select mb-3" (change)="changeSecion($event)" [ngClass]="{'isDisabled': !tarifaPersonalizada}">
+                                <option [value]="op.tPersonalizada.seccion" selected >{{tarifaPersonalizada ? 'Seccion ' + op.tPersonalizada.seccion + " : " + tarifaClienteSel.secciones[op.tPersonalizada.seccion - 1].descripcion : 'Sin datos'}}</option>                              
+                                <option *ngFor="let seccion of tarifaClienteSel?.secciones" [value]="seccion.orden">
+                                    Seccion {{seccion.orden}}: {{seccion.descripcion? seccion.descripcion : ""}} 
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="Categoria">Categoria</label>
+                            <select class="form-select mb-3" (change)="changeCategoria($event)" [ngClass]="{'isDisabled': !tarifaPersonalizada}">
+                                <option selected>{{tarifaPersonalizada ? 'Categoria ' + op.tPersonalizada.categoria + " : " + op.tPersonalizada.nombre : 'Sin datos'}}</option>                                                                      
+                                <option *ngFor="let categoria of seccionElegida?.categorias" [value]="categoria.orden">
+                                    Categoria {{categoria.orden}}: {{categoria.nombre}} 
+                                </option>
+                            </select>
+                        </div>
+                    </form>  
+                </div>                
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">        
+        <app-btn-agregar *ngIf="!cerrar" name="Guardar" (click)="onSubmit()"></app-btn-agregar>        
+        <app-btn-agregar *ngIf="cerrar" name="Cerrar" (click)="onSubmit()"></app-btn-agregar>        
+    </div>
+</div>

@@ -16,6 +16,7 @@ import { ChoferesTarifaGralComponent } from './choferes-tarifa-gral/choferes-tar
 import { ChoferesTarifaEspecialComponent } from './choferes-tarifa-especial/choferes-tarifa-especial.component';
 import { ChoferesTarifaPersonalizadaComponent } from './choferes-tarifa-personalizada/choferes-tarifa-personalizada.component';
 import { ModalVehiculoComponent } from './modal-vehiculo/modal-vehiculo.component';
+import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/modal-tarifa-gral-edicion.component';
 
 
 
@@ -33,6 +34,7 @@ import { ModalVehiculoComponent } from './modal-vehiculo/modal-vehiculo.componen
     ChoferesTarifaEspecialComponent,
     ChoferesTarifaPersonalizadaComponent,
     ModalVehiculoComponent,
+    ModalTarifaGralEdicionComponent,
     
   ],
   imports: [

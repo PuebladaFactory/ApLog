@@ -210,8 +210,11 @@ export class ProveedoresAltaComponent implements OnInit {
       modalRef.result.then(
         (result) => {
           //console.log("contacto:" ,result);
-          this.contactos.push(result);
-          console.log(this.contactos);
+          if(result !== undefined){
+            this.contactos.push(result);
+            console.log(this.contactos);
+          }
+          
           
           //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
 //        this.selectCrudOp(result.op, result.item);

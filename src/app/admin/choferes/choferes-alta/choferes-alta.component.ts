@@ -360,9 +360,11 @@ export class ChoferesAltaComponent implements OnInit {
 
       modalRef.result.then(
         (result) => {
-          //console.log("Vehiculo:" ,result);
-          this.vehiculos.push(result);
-          console.log("Vehiculos Array: ", this.vehiculos);
+          console.log("Vehiculo:" ,result);
+          if(result !== undefined) {
+            this.vehiculos.push(result);
+            console.log("Vehiculos Array: ", this.vehiculos);
+          };          
         },
         (reason) => {}
       );
@@ -396,9 +398,11 @@ export class ChoferesAltaComponent implements OnInit {
 
       modalRef.result.then(
         (result) => {
-          //console.log("Vehiculo:" ,result);
-          this.vehiculos[indice]= result;
-          console.log("Vehiculos Array: ", this.vehiculos);
+          console.log("Vehiculo:" ,result);
+          if(result !== undefined) {
+            this.vehiculos[indice]= result;
+            console.log("Vehiculos Array: ", this.vehiculos);  
+          };          
         },
         (reason) => {}
       );

@@ -10,6 +10,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaGralChofer } from 'src/app/interfaces/tarifa-gral-chofer';
+import { ModalFacturacionComponent } from '../modal-facturacion/modal-facturacion.component';
 
 @Component({
   selector: 'app-tablero-op',
@@ -17,11 +18,7 @@ import { TarifaGralChofer } from 'src/app/interfaces/tarifa-gral-chofer';
   styleUrls: ['./tablero-op.component.scss']
 })
 export class TableroOpComponent implements OnInit {
-  
-  /* @Input() fechasConsulta: any = {
-    fechaDesde: 0,
-    fechaHasta: 0,
-  }; */
+
   @Input() btnConsulta:boolean = false;
   componente:string = "operaciones"  
   public buttonName: any = 'Consultar Operaciones';  
@@ -165,14 +162,24 @@ export class TableroOpComponent implements OnInit {
       patente: op.patenteChofer,
       acompaniante: `${op.acompaniante ? "Si" : "No"}` ,
       tarifa: op.tarifaTipo.especial ? "Especial" : op.tarifaTipo.eventual ? "Eventual" : op.tarifaTipo.personalizada ? "Personalizada" : "General",
-      aCobrar: op.aCobrar,
-      aPagar: op.aPagar,        
+      aCobrar: this.formatearValor(op.aCobrar),
+      aPagar: this.formatearValor(op.aPagar),        
       observaciones: op.observaciones,
       
     }));   
     ////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
     this.applyFilters(); // Aplica filtros y actualiza filteredRows
   }
+
+  formatearValor(valor: number) : any{
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+     minimumFractionDigits: 2, 
+     maximumFractionDigits: 2 
+   }).format(valor);
+   //////console.log(nuevoValor);    
+//   `$${nuevoValor}`
+   return `$${nuevoValor}`
+ }
   
   setPage(pageInfo: any) {
     this.offset = pageInfo.offset;
@@ -244,42 +251,12 @@ export class TableroOpComponent implements OnInit {
 
   abrirVista(row:any) {
     this.seleccionarOp(row);   
-    this.openModal(this.opEditar, "vista")
+    this.openModal("vista")
   }
 
   abrirEdicion(row:any):void {        
     this.seleccionarOp(row);   
-    this.openModal(this.opEditar, "edicion");      
-  }
-
-  
-
-  openModal(op:Operacion, modo:string){
-    {
-      const modalRef = this.modalService.open(ModalOpAbiertaComponent, {
-        windowClass: 'myCustomModalClass',
-        centered: true,
-        size: 'lg', 
-        //backdrop:"static" 
-      });      
-
-    let info = {
-        modo: modo,
-        item: op,
-      } 
-      //console.log()(info); */
-      
-      modalRef.componentInstance.fromParent = info;
-      modalRef.result.then(
-        (result) => {
-          ////console.log()("ROOWW:" ,row);
-          //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
-//        this.selectCrudOp(result.op, result.item);
-        //this.mostrarMasDatos(row);
-        },
-        (reason) => {}
-      );
-    }
+    this.openModal("edicion");      
   }
 
   eliminarOperacion(row: any){
@@ -311,6 +288,7 @@ export class TableroOpComponent implements OnInit {
   crearFacturaOp(op:any){
     this.seleccionarOp(op)
     this.facturar = true;
+    this.openModal("cerrar")
     //this.opCerrada = this.detalleOp;
   }
 
@@ -319,8 +297,33 @@ export class TableroOpComponent implements OnInit {
     vehiculo  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === op.patenteChofer;
     });
-    console.log(vehiculo[0].categoria.nombre);
+    //console.log(vehiculo[0].categoria.nombre);
     return vehiculo[0].categoria.nombre
 
+  }
+
+  openModal(modo: string){
+    {
+      const modalRef = this.modalService.open(ModalFacturacionComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg', 
+        //backdrop:"static" 
+      });      
+
+     let info = {
+        modo: modo,
+        item: this.opEditar,
+      } 
+      //console.log()(info); */
+      
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+         
+        },
+        (reason) => {}
+      );
+    }
   }
 }

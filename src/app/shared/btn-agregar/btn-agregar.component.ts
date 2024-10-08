@@ -13,6 +13,10 @@ import { Component, Input, OnInit } from '@angular/core';
 </button> -->
 
 
+<button *ngIf="name === 'Cerrar'" class="btn azul mt-2" type="submit">
+    Cerrar Operación 
+</button>
+
 <button *ngIf="name === 'Guardar'" class="btn azul mt-2" type="submit">
     Guardar 
 </button>
@@ -27,6 +31,14 @@ import { Component, Input, OnInit } from '@angular/core';
 
 <button *ngIf="name === 'GuardarCambiosClaro'" class="btn azul  mt-2" type="submit">
     Guardar los cambios
+</button>
+
+<button *ngIf="name === 'guardarTarifa'" class="btn azul  mt-2" type="submit">
+    Guardar Nueva Tarifa
+</button>
+
+<button *ngIf="name === 'editarTarifa'" class="btn azul  mt-2" type="submit">
+    Editar última Tarifa
 </button>
 
 <button *ngIf="name === 'Agregar'" class="btn azul mt-2" type="submit">
@@ -59,20 +71,20 @@ import { Component, Input, OnInit } from '@angular/core';
         background-color: lightgreen;
         color: black;
         border-color: black;
+        font-size: 1.25rem;
       }
 
     .azul{
         background-color: #3d8bfd;
         color: white;
+        font-size: 1.25rem;
     }  
     .azul:hover{
         background-color: #0d6efd;
         color: white;
+        font-size: 1.25rem;
     }      
 
-      .info{
-
-      }
 
   `
   ]

@@ -28,28 +28,55 @@
                     <th>Nueva Tarifa</th>
                 </tr>
             </thead>
-            <tbody formArrayName="filas">
+            <tbody *ngIf="ultTarifaCliente.cargasGenerales !== undefined else sinTarifaGral" formArrayName="filas" >
                 <tr *ngFor="let fila of filas.controls; let i = index" [formGroupName]="i">
                     <td><input type="checkbox" formControlName="seleccionado"></td>
                     <td>{{ fila.get('categoria')?.value }}</td>
                     <td><input type="text" formControlName="nombre"></td>
-                    <td><input type="text" formControlName="ultimaTarifa"></td>
-                    <td><input type="text" formControlName="diferencia"></td>
-                    <td><input type="text" formControlName="nuevaTarifa"></td>
+                    <td>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">
+                                {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                            </span>
+                            <input type="text" formControlName="ultimaTarifa">
+                        </div>                        
+                    </td>
+                    <td>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">
+                                {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                            </span>
+                            <input type="text" formControlName="diferencia">
+                        </div>                                                
+                    </td>
+                    <td>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">
+                                {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                            </span>
+                            <input type="text" formControlName="nuevaTarifa">
+                        </div>                                                
+                    </td>
                 </tr>
             </tbody>
-        </table>
-    
-      <!-- <div class="form-group">
-        <label>Generar Nueva Tarifa:</label><br>
-        <button type="button" (click)="onGenerarNuevaTarifaManual()">Manual</button>
-        <button type="button" (click)="onGenerarNuevaTarifaAutomatica()">Automática</button>
-        <input type="number" [formControl]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento"
-              (keydown.enter)="calcularNuevaTarifaPorcentaje()">
-        <button type="button" class="btn btn-primary" (click)="calcularNuevaTarifaPorcentaje()">Aplicar Porcentaje</button>
-      </div> -->
-    
-        <button type="button" class="btn btn-primary" (click)="guardarTarifa()">Guardar Tarifa</button>
+            <ng-template #sinTarifaGral>
+                <tr>
+                    <td colspan="6"  class="align-middle">                        
+                        <h2 class="mb-0">
+                            Primero debe generar la Tarifa General de los Clientes.
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle mb-2" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                            </svg>
+                        </h2>
+                    </td>
+                </tr>
+            </ng-template>
+        </table>         
+        <app-btn-editar name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
+        
+        <app-btn-agregar name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
+        <!-- <button type="button" class="btn btn-primary" (click)="guardarTarifa()">Guardar Tarifa</button> -->
     </form>
 </div>
 
