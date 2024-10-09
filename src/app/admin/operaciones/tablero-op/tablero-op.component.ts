@@ -43,7 +43,8 @@ export class TableroOpComponent implements OnInit {
   };
   ultTarifaGralCliente!: TarifaGralCliente;
   ultTarifaGralChofer!: TarifaGralChofer;
-
+  estadoFiltrado: string ="Todo"
+  operacionesFiltrado!: Operacion[];
   ///////////////////////  TABLA  ////////////////////////////////////////////////////
   rows: any[] = [];
   filteredRows: any[] = [];
@@ -114,8 +115,6 @@ export class TableroOpComponent implements OnInit {
 
     this.storageService.consultasOp$.subscribe(data => {
       this.$consultasOp = data;
-      console.log("TABLERO OP: consultas Op: ", this.$consultasOp);
-      
       this.armarTabla();
     });   
     
@@ -325,6 +324,80 @@ export class TableroOpComponent implements OnInit {
         },
         (reason) => {}
       );
+    }
+  }
+
+  filtrarEstado(modo: string){   
+    if(!this.btnConsulta){
+      switch(modo){
+        case "Todo":{
+          this.storageService.consultasOp$.subscribe(data => {
+            this.$consultasOp = data;
+            this.armarTabla();
+          });   
+          break;
+        };
+        case "Abierta":{          
+          this.$opActivas = this.$opActivas.filter((op:Operacion)=>{
+            return op.estado.abierta === true; 
+          });          
+          this.armarTabla();
+          break;
+        };
+        case "Cerrada":{
+          this.$opActivas = this.$opActivas.filter((op:Operacion)=>{
+            return op.estado.cerrada === true; 
+          });          
+          this.armarTabla();
+          break;
+        };
+        case "Facturada":{
+          this.$opActivas = this.$opActivas.filter((op:Operacion)=>{
+            return op.estado.facturada === true; 
+          });          
+          this.armarTabla();
+          break;
+        }
+        default:{
+          alert("error filtrado");
+          break
+        }
+      }
+    } else {      
+      switch(modo){
+        case "Todo":{
+          this.storageService.consultasOp$.subscribe(data => {
+            this.$consultasOp = data;
+            this.armarTabla();
+          });   
+          break;
+        };
+        case "Abierta":{         
+          this.$consultasOp = this.$opActivas.filter((op:Operacion)=>{
+            return op.estado.abierta === true; 
+          });          
+          this.armarTabla();
+          break;
+        };
+        case "Cerrada":{
+          this.$consultasOp = this.$opActivas.filter((op:Operacion)=>{
+            return op.estado.cerrada === true; 
+          });          
+          this.armarTabla();
+          break;
+        };
+        case "Facturada":{
+          this.$consultasOp = this.$opActivas.filter((op:Operacion)=>{
+            return op.estado.facturada === true; 
+          });          
+          this.armarTabla();
+          break;
+        }
+        default:{
+            alert("error filtrado");
+          break
+        }
+      }
     }
   }
 }

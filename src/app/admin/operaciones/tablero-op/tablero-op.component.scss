@@ -47,8 +47,8 @@ p, #obs-vista{
 font-size: 1.7rem;
 }
 
-input, option, textarea {
-font-size: 1.15rem;
+input, option, textarea, li {
+font-size: 1.3rem;
 } 
 
 .boton-alta{
@@ -56,13 +56,23 @@ font-size: 1.15rem;
     background: #002b5c;
     color: white;
     opacity: 0.8;
-    font-size: 1.25rem;
+    font-size: 1.3rem;
   }
 
 .boton-alta:hover{
-    background: #0d6efd;
-    
+    background: #0d6efd;    
 }
+
+.boton{
+  background: #002b5c;
+  color: white;
+  opacity: 0.8;
+  font-size: 1.3rem;
+}
+.boton:hover{
+  background: #0d6efd;    
+}
+
 
 .estado-abierta {
     color: green;
