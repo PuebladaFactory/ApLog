@@ -6,6 +6,7 @@ import { TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cl
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalTarifaGralEdicionComponent } from '../modal-tarifa-gral-edicion/modal-tarifa-gral-edicion.component';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 
 @Component({
   selector: 'app-choferes-tarifa-gral',
@@ -31,7 +32,10 @@ export class ChoferesTarifaGralComponent implements OnInit {
   modoTarifa: any = { 
     manual: false,
     automatico: true,
-  }
+  };
+  $choferes!: Chofer[];
+  chofer!: Chofer[];
+  vehiculos!: Vehiculo [];
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal) {
     this.tarifaForm = this.fb.group({
@@ -41,44 +45,55 @@ export class ChoferesTarifaGralComponent implements OnInit {
     this.tEspecial = false
   }
   ngOnInit(): void { 
-    console.log("0)",this.tEspecial);
-    //console.log("0)",this.idChoferEsp);
-    //console.log("0)",this.idClienteEsp);
+    //console.log("0)",this.tEspecial);
+    ////console.log("0)",this.idChoferEsp);
+    ////console.log("0)",this.idClienteEsp);
+    //// CHOFER SELECCIONADO PARA LA TARIFA ESPECIAL ///////////////
     this.storageService.choferSeleccionado$.subscribe(data => {      ///
       this.idChoferEsp = data
-      console.log("0A)",this.idChoferEsp);
+      //console.log("0A)",this.idChoferEsp);
       if(this.tEspecial){
         this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",this.idChoferEsp[0],"ultTarifaEspChofer");
+        this.storageService.choferes$.subscribe(data => {
+          this.$choferes = data;
+          this.chofer = this.$choferes.filter((chofer:Chofer) => {
+            return chofer.idChofer === this.idChoferEsp[0];
+          });
+          //console.log("chofer seleccionado: ", this.chofer);
+          this.vehiculos = this.chofer[0].vehiculo
+        });
       }
     });
+    //// CHOFER SELECCIONADO PARA LA TARIFA ESPECIAL ///////////////
     this.storageService.clienteSeleccionado$.subscribe(data => {      
       this.idClienteEsp = data
-      console.log("0B)",this.idClienteEsp);
+      //console.log("0B)",this.idClienteEsp);
     })
     
     this.storageService.ultTarifaGralCliente$.subscribe(data =>{
-      ////console.log("data: ", data);                
+      //////console.log("data: ", data);                
       this.ultTarifaCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-      console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);        
+      //console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);        
       this.storageService.ultTarifaGralChofer$.subscribe(data =>{
-        console.log("data", data);        
+        //console.log("data", data);        
         this.ultTarifaGralChofer = data || {};
         this.ultTarifaGralChofer.cargasGenerales = this.ultTarifaGralChofer.cargasGenerales || [];
-        console.log("2) ult tarifa GRAL CHOFER: ", this.ultTarifaGralChofer);
+        //console.log("2) ult tarifa GRAL CHOFER: ", this.ultTarifaGralChofer);
         this.configurarTabla();
       })
     });       
     
+    //////// CONSOLA DE TARIFA ////////////////////////////
     this.storageService.consolaTarifa$.subscribe(data =>{
       this.consolaTarifa = data;
-      console.log("consola tarifa: ", this.consolaTarifa);   
+      //console.log("consola tarifa: ", this.consolaTarifa);   
       if(this.consolaTarifa > 0)  {
         this.calcularNuevaTarifaPorcentaje();
       } ;      
     });
     this.storageService.modoTarifa$.subscribe(data =>{
       this.modoTarifa = data;
-      console.log("1) modoTarifa: ", this.modoTarifa);      
+      //console.log("1) modoTarifa: ", this.modoTarifa);      
       this.manejoConsola();
     });
     
@@ -86,23 +101,23 @@ export class ChoferesTarifaGralComponent implements OnInit {
 
   configurarTabla(){
     if(this.tEspecial){
-      ////console.log("3a) tarifa especial: ", this.tEspecial);      
-      ////console.log("3b) tarifa general: ", this.ultTarifaCliente);      
+      //////console.log("3a) tarifa especial: ", this.tEspecial);      
+      //////console.log("3b) tarifa general: ", this.ultTarifaCliente);      
       this.storageService.ultTarifaEspChofer$
       //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data =>{
-      ////console.log("2c) data: ", data);                
+      //////console.log("2c) data: ", data);                
       this.ultTarifaEspecial = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
       this.ultTarifaEspecial.cargasGenerales = this.ultTarifaEspecial.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      //console.log("2d) ult tarifa ESP: ",this.ultTarifaEspecial);        
+      ////console.log("2d) ult tarifa ESP: ",this.ultTarifaEspecial);        
       this.resetTable();  // Limpia los datos existentes de la tabla;
       this.crearCategorias()
       this.inicializarTabla();
       this.onGenerarNuevaTarifaAutomatica();   
     })
     }else{
-      ////console.log("1a) tarifa especial: ", this.tEspecial);      
-      ////console.log("1b) tarifa general: ", this.ultTarifaCliente);      
+      //////console.log("1a) tarifa especial: ", this.tEspecial);      
+      //////console.log("1b) tarifa general: ", this.ultTarifaCliente);      
       this.resetTable();  // Limpia los datos existentes de la tabla
       this.crearCategorias()
       this.inicializarTabla();
@@ -120,7 +135,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
       }
       this.categorias.push(this.categoria);
     }
-    ////console.log(this.categorias);      
+    //////console.log(this.categorias);      
   }
 
   // Método para resetear la tabla
@@ -145,18 +160,33 @@ export class ChoferesTarifaGralComponent implements OnInit {
       { categoria: 'Km Intervalos valor', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial.adicionales?.adicionalKm?.sectoresSiguientes?.valor) : this.formatearValor(this.ultTarifaGralChofer?.adicionales?.adicionalKm?.sectoresSiguientes?.valor) || 0, nombreAnterior: '' },
     ];
   
+    if(this.tEspecial){      
     categorias.forEach((cat, index) => {
-      const isManualEnabled = this.isManualMethodSelected;
-      const isNombreInputEnabled = index < 8 && isManualEnabled;
+      const vehiculoTieneCategoria = this.vehiculos.some(vehiculo => vehiculo.categoria.catOrden === (index + 1)); // Verificar si la categoría del vehículo corresponde a la categoría de la tarifa  
       this.filas.push(this.fb.group({
-        seleccionado: [(index < 8 || index === 8 || index === 10 || index === 12) ? true : false], 
+        seleccionado: [vehiculoTieneCategoria || (index === 8 || index === 10 || index === 12) ], // Seleccionado si el vehículo tiene esa categoría        
         categoria: [cat.categoria],
-        nombre: [{ value: cat.nombreAnterior, disabled: !isNombreInputEnabled }],
+        nombre: [{ value: cat.nombreAnterior, disabled: !vehiculoTieneCategoria }], // Habilitar el input si el vehículo tiene esa categoría
         ultimaTarifa: [{ value: cat.valorAnterior, disabled: true }],
         diferencia: [{ value: 0, disabled: true }],
-        nuevaTarifa: [{ value: (cat.categoria === 'Km 1er Sector distancia' || cat.categoria === 'Km Intervalos distancia') ? cat.valorAnterior : 0, disabled: false }]
+        nuevaTarifa: [{ value: (cat.categoria === 'Km 1er Sector distancia' || cat.categoria === 'Km Intervalos distancia') ? cat.valorAnterior : 0, disabled: !vehiculoTieneCategoria }]
       }));
     });
+    } else {
+      categorias.forEach((cat, index) => {
+        const isManualEnabled = this.isManualMethodSelected;
+        const isNombreInputEnabled = index < 8 && isManualEnabled;
+        this.filas.push(this.fb.group({
+          seleccionado: [(index < 8 || index === 8 || index === 10 || index === 12) ? true : false], 
+          categoria: [cat.categoria],
+          nombre: [{ value: cat.nombreAnterior, disabled: !isNombreInputEnabled }],
+          ultimaTarifa: [{ value: cat.valorAnterior, disabled: true }],
+          diferencia: [{ value: 0, disabled: true }],
+          nuevaTarifa: [{ value: (cat.categoria === 'Km 1er Sector distancia' || cat.categoria === 'Km Intervalos distancia') ? cat.valorAnterior : 0, disabled: false }]
+        }));
+      });
+    }
+
   }
 
   formatearValor(valor: number) : any{
@@ -164,7 +194,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
      minimumFractionDigits: 2, 
      maximumFractionDigits: 2 
    }).format(valor);
-   //////console.log(nuevoValor);    
+   ////////console.log(nuevoValor);    
    return nuevoValor
  }
 
@@ -190,7 +220,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
     }
   }
 
-  calcularNuevaTarifaPorcentaje() {
+  /* calcularNuevaTarifaPorcentaje() {
     //const porcentaje = this.porcentajeAumento.value / 100;
     const porcentaje = this.consolaTarifa;
     this.filas.controls.forEach(fila => {
@@ -207,13 +237,43 @@ export class ChoferesTarifaGralComponent implements OnInit {
         diferenciaControl?.setValue(this.formatearValor(nuevaTarifa - ultimaTarifa));
       }
     });
-  }
+  } */
+    calcularNuevaTarifaPorcentaje() {
+      const porcentaje = this.consolaTarifa;
+    
+      this.filas.controls.forEach(fila => {
+        const categoria = fila.get('categoria')?.value;
+        const seleccionadoControl = fila.get('seleccionado');
+        const ultimaTarifaControl = fila.get('ultimaTarifa');
+        const nuevaTarifaControl = fila.get('nuevaTarifa');
+        const diferenciaControl = fila.get('diferencia');
+    
+        // Verificar si es una categoría de vehículo o un campo adicional (Acompañante, Km 1er Sector valor, Km Intervalos valor)
+        const esCampoAdicional = ['Acompañante', 'Km 1er Sector valor', 'Km Intervalos valor'].includes(categoria);
+    
+        if (seleccionadoControl?.value || esCampoAdicional) {
+          const ultimaTarifa = this.limpiarValorFormateado(ultimaTarifaControl?.value || 0);
+          const nuevaTarifa = ultimaTarifa * (1 + porcentaje);
+    
+          nuevaTarifaControl?.setValue(this.formatearValor(nuevaTarifa));
+          diferenciaControl?.setValue(this.formatearValor(nuevaTarifa - ultimaTarifa));
+        }
+      });
+    }
 
     // Función que convierte un string formateado en un número correcto para cálculos
-    limpiarValorFormateado(valorFormateado: string): number {
-      // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
+    limpiarValorFormateado(valorFormateado: any): number {
+      if (typeof valorFormateado === 'string') {
+        // Si es un string, eliminar puntos de miles y reemplazar coma por punto
         return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+      } else if (typeof valorFormateado === 'number') {
+        // Si ya es un número, simplemente devuélvelo
+        return valorFormateado;
+      } else {
+        // Si es null o undefined, devolver 0 como fallback
+        return 0;
       }
+    }
 
   onSeleccionarTodosChange(event: any) {
     const checked = event.target.checked;
@@ -229,32 +289,35 @@ export class ChoferesTarifaGralComponent implements OnInit {
   }
 
   onGenerarNuevaTarifaManual() {
-    if(this.tEspecial){
+    if (this.tEspecial) {
+      // Si es una tarifa especial, habilitar los inputs de las categorías de los vehículos y los campos adicionales
       this.filas.controls.forEach((fila, index) => {
-              
-        const nuevaTarifaControl = fila.get('nuevaTarifa');
-        const diferenciaControl = fila.get('diferencia');
-        const ultimaTarifaControl = fila.get('ultimaTarifa');
+        const vehiculoTieneCategoria = this.vehiculos.some(vehiculo => vehiculo.categoria.catOrden === (index + 1)); // Verificar si el vehículo tiene la categoría correspondiente
         
-        // Habilitar el input para la nueva tarifa
-        nuevaTarifaControl?.enable();
-    
-        // Agregar un listener para calcular la diferencia
-        nuevaTarifaControl?.valueChanges.subscribe((nuevoValor) => {
-          const ultimaTarifa = this.limpiarValorFormateado(ultimaTarifaControl?.value || 0);
-          //const diferencia = nuevoValor - ultimaTarifa;
-          //diferenciaControl?.setValue(diferencia);
-          if(typeof(nuevoValor) === "number") {
-            const diferencia = nuevoValor - ultimaTarifa;
-            //console.log("diferencia : ", diferencia ); 
-            diferenciaControl?.setValue(this.formatearValor(diferencia));
-          } else {
-            const diferencia = this.limpiarValorFormateado(nuevoValor) - ultimaTarifa;
-            //console.log("diferencia : ", diferencia ); 
-            diferenciaControl?.setValue(this.formatearValor(diferencia));
-          }
-        });
-      });  
+        // Definir qué inputs habilitar
+        const esCampoAdicional = ['Acompañante', 'Km 1er Sector distancia', 'Km 1er Sector valor', 'Km Intervalos distancia', 'Km Intervalos valor'].includes(fila.get('categoria')?.value);
+        
+        if (vehiculoTieneCategoria || esCampoAdicional) {
+          const nuevaTarifaControl = fila.get('nuevaTarifa');
+          const diferenciaControl = fila.get('diferencia');
+          const ultimaTarifaControl = fila.get('ultimaTarifa');
+          
+          // Habilitar el input para la nueva tarifa
+          nuevaTarifaControl?.enable();
+      
+          // Listener para calcular la diferencia cuando el valor de la nueva tarifa cambie
+          nuevaTarifaControl?.valueChanges.subscribe((nuevoValor) => {
+            const ultimaTarifa = this.limpiarValorFormateado(ultimaTarifaControl?.value || 0);
+            if (typeof(nuevoValor) === "number") {
+              const diferencia = nuevoValor - ultimaTarifa;
+              diferenciaControl?.setValue(this.formatearValor(diferencia));
+            } else {
+              const diferencia = this.limpiarValorFormateado(nuevoValor) - ultimaTarifa;
+              diferenciaControl?.setValue(this.formatearValor(diferencia));
+            }
+          });
+        }
+      });
     } else{
       this.filas.controls.forEach((fila, index) => {
         if (fila.get('categoria')?.value.includes('Categoria')) {
@@ -274,11 +337,11 @@ export class ChoferesTarifaGralComponent implements OnInit {
           //diferenciaControl?.setValue(diferencia);
           if(typeof(nuevoValor) === "number") {
             const diferencia = nuevoValor - ultimaTarifa;
-            //console.log("diferencia : ", diferencia ); 
+            ////console.log("diferencia : ", diferencia ); 
             diferenciaControl?.setValue(this.formatearValor(diferencia));
           } else {
             const diferencia = this.limpiarValorFormateado(nuevoValor) - ultimaTarifa;
-            //console.log("diferencia : ", diferencia ); 
+            ////console.log("diferencia : ", diferencia ); 
             diferenciaControl?.setValue(this.formatearValor(diferencia));
           }
         });
@@ -395,7 +458,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
       idChofer: null,
     };
 
-    //console.log("esta es la NUEVA TARIFA: ",this.nuevaTarifaGral);
+    ////console.log("esta es la NUEVA TARIFA: ",this.nuevaTarifaGral);
   }
 
   crearCategoriaTarifa(control: AbstractControl): CategoriaTarifa {
@@ -420,7 +483,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
   }
 
   addItem(){    
-    ////console.log("1)",this.tEspecial);
+    //////console.log("1)",this.tEspecial);
     if(!this.tEspecial){
       this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
     }else if(this.tEspecial){
@@ -469,7 +532,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
         modo: modo,
         item: tarifa,
       } 
-      //console.log()(info); */
+      ////console.log()(info); */
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
@@ -479,6 +542,23 @@ export class ChoferesTarifaGralComponent implements OnInit {
         (reason) => {}
       );
     }
+  }
+
+  comprobarCategoria(categoria: string): boolean {
+    // Extraer el número de la categoría de la cadena de texto
+    const catNumero = parseInt(categoria.split(" ")[1], 10); // Asumiendo que el formato es "Categoria X"
+  
+    // Crear una lista de categorías que siempre deben resaltar
+    const categoriasAdicionales = ['Acompañante', 'Km 1er Sector distancia', 'Km 1er Sector valor', 'Km Intervalos distancia', 'Km Intervalos valor'];
+  
+    // Verificar si la categoría extraída corresponde a alguno de los vehículos del chofer
+    const esCategoriaVehiculo = this.vehiculos.some((vehiculo: Vehiculo) => vehiculo.categoria.catOrden === catNumero);
+    
+    // Verificar si la categoría actual es una de las adicionales
+    const esCategoriaAdicional = categoriasAdicionales.includes(categoria);
+  
+    // Devuelve true si es una categoría de vehículo o una categoría adicional
+    return esCategoriaVehiculo || esCategoriaAdicional;
   }
 
 

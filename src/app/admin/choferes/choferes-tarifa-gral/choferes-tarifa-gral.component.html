@@ -50,11 +50,11 @@
                         </div>                                                
                     </td>
                     <td>
-                        <div class="input-group mb-3">
+                        <div class="input-group mb-3" [ngClass]="{'rojo': tEspecial && comprobarCategoria(fila.get('categoria')?.value)}">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">
                                 {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
                             </span>
-                            <input type="text" formControlName="nuevaTarifa">
+                            <input type="text" formControlName="nuevaTarifa" [ngClass]="{'input-resaltado': tEspecial && comprobarCategoria(fila.get('categoria')?.value)}">
                         </div>                                                
                     </td>
                 </tr>
