@@ -1,15 +1,13 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormControl, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { NgbModule, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { FormBuilder, Validators } from '@angular/forms';
+import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion, TarifaPersonalizada } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { TarifaGralChofer } from 'src/app/interfaces/tarifa-gral-chofer';
-import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaGralProveedor } from 'src/app/interfaces/tarifa-gral-proveedor';
 import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
@@ -23,7 +21,7 @@ import Swal from 'sweetalert2'
   selector: 'app-op-alta',
   templateUrl: './op-alta.component.html',
   styleUrls: ['./op-alta.component.scss'],
-  //providers: [NgbActiveModal]
+  
 })
 export class OpAltaComponent implements OnInit {
   @Output() newItemEvent = new EventEmitter<any>();
@@ -96,16 +94,7 @@ export class OpAltaComponent implements OnInit {
     }); 
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
-    }) 
-  /*   this.storageService.historialTarifas$.subscribe(data => {
-      this.$tarifasChoferes = data;
-    });
-    this.storageService.historialTarifasClientes$.subscribe(data => {
-      this.$tarifasClientes = data;
-    });
-    this.storageService.historialTarifasProveedores$.subscribe(data => {
-      this.$tarifasProveedores = data;
-    }); */
+    })  
     this.storageService.erroresTarifas$.subscribe(data => {
       this.arrayRespuesta = data  
     })
@@ -122,17 +111,17 @@ export class OpAltaComponent implements OnInit {
     });
     /////////TARIFA GENERAL CLIENTE /////////////////////////
     this.storageService.ultTarifaGralCliente$.subscribe(data =>{
-      ////console.log("data: ", data);                
+      //////console.log("data: ", data);                
       this.ultTarifaGralCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
       this.ultTarifaGralCliente.cargasGenerales = this.ultTarifaGralCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);              
+      //console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);              
     });
     /////////TARIFA GENERAL CHOFER /////////////////////////
     this.storageService.ultTarifaGralChofer$.subscribe(data =>{
-      ////console.log("data: ", data);                
+      //////console.log("data: ", data);                
       this.ultTarifaGralChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
       this.ultTarifaGralChofer.cargasGenerales = this.ultTarifaGralChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      console.log("2) ult tarifa GRAL CHOFER: ",this.ultTarifaGralChofer);              
+      //console.log("2) ult tarifa GRAL CHOFER: ",this.ultTarifaGralChofer);              
     });
     /////////TARIFA ESPECIAL CLIENTE /////////////////////////
     this.storageService.ultTarifaEspCliente$
@@ -140,49 +129,49 @@ export class OpAltaComponent implements OnInit {
       .subscribe(data =>{            
       this.ultTarifaEspCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
       this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      console.log("3) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
+      //console.log("3) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
     })
     /////////TARIFA ESPECIAL CHOFER /////////////////////////
     this.storageService.ultTarifaEspChofer$
       //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data =>{
-      ////console.log("2c) data: ", data);                
+      //////console.log("2c) data: ", data);                
       this.ultTarifaEspChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
       this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      console.log("4) ult tarifa ESP CHOFER: ",this.ultTarifaEspChofer);           
+      //console.log("4) ult tarifa ESP CHOFER: ",this.ultTarifaEspChofer);           
     })
     //////////////// TARIFA GENERAL PROVEEDORES ///////////////////
     this.storageService.ultTarifaGralProveedor$.subscribe(data =>{
-      console.log("data", data);        
+      //console.log("data", data);        
       this.ultTarifaGralProveedor = data || {};
       this.ultTarifaGralProveedor.cargasGenerales = this.ultTarifaGralProveedor.cargasGenerales || [];
-      console.log("5) ult tarifa GRAL PROVEEDOR: ", this.ultTarifaGralProveedor);      
+      //console.log("5) ult tarifa GRAL PROVEEDOR: ", this.ultTarifaGralProveedor);      
     })
     ////////////////TARIFA ESPECIAL PROVEEDORES//////////////////
     this.storageService.ultTarifaEspProveedor$
     //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data =>{
-    ////console.log("2c) data: ", data);                
+    //////console.log("2c) data: ", data);                
     this.ultTarifaEspProveedor = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
     this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-    console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
+    //console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
     });
   }
 
   changeCliente(e: any) {
-    //////console.log()(e.target.value)
+    ////////console.log()(e.target.value)
     
     let clienteForm = this.$clientes.filter(function (cliente: Cliente) { 
         return cliente.idCliente === Number(e.target.value)
     });
-    //////console.log()(clienteForm);
+    ////////console.log()(clienteForm);
     
     this.clienteSeleccionado = clienteForm[0];               
-    //////console.log()(this.clienteSeleccionado);
+    ////////console.log()(this.clienteSeleccionado);
     this.form.patchValue({ cliente: e.target.value });
 
     if(this.clienteSeleccionado.tarifaTipo.personalizada){
-      //console.log("El cliente tiene tarifa personalizada");
+      ////console.log("El cliente tiene tarifa personalizada");
       this.buscarTarifaPersonalizada();
     } else {
       this.tarifaPersonalizada = false;
@@ -194,7 +183,7 @@ export class OpAltaComponent implements OnInit {
   }
 
   changeSecion(e:any){
-    //console.log("seccion: ", e.target.value);
+    ////console.log("seccion: ", e.target.value);
     this.mostrarCategoria = true;
     this.seccionElegida = this.tarifaClienteSel.secciones[e.target.value - 1];
     this.tPersonalizada = {
@@ -204,14 +193,11 @@ export class OpAltaComponent implements OnInit {
       aCobrar: 0,
       aPagar: 0
     }
-    ////console.log(this.seccionElegida);
-    ////console.log(this.tPersonalizada);
-    
-    
+   
   }
 
   changeCategoria(e:any){
-    //console.log("categoria: ", e.target.value);
+    ////console.log("categoria: ", e.target.value);
     this.tPersonalizada = {
       seccion : this.tPersonalizada.seccion,
       categoria: this.tarifaClienteSel.secciones[this.tPersonalizada.seccion - 1].categorias[e.target.value-1].orden,
@@ -219,7 +205,7 @@ export class OpAltaComponent implements OnInit {
       aCobrar: this.tarifaClienteSel.secciones[this.tPersonalizada.seccion - 1].categorias[e.target.value-1].aCobrar,
       aPagar: this.tarifaClienteSel.secciones[this.tPersonalizada.seccion - 1].categorias[e.target.value-1].aPagar,
     }
-    //console.log("tarifa personalizada: ", this.tPersonalizada);
+    ////console.log("tarifa personalizada: ", this.tPersonalizada);
   }
 
   buscarTarifaPersonalizada(){
@@ -233,15 +219,15 @@ export class OpAltaComponent implements OnInit {
 
 
    changeChofer(e: any) {
-    //////console.log()(e.target.value)    
+    ////////console.log()(e.target.value)    
     let chofer = this.$choferes.filter(function (chofer: Chofer) { 
        return chofer.idChofer === Number(e.target.value)
     });
-    //////console.log()(chofer);    
+    ////////console.log()(chofer);    
     this.choferSeleccionado = chofer[0];     
-    console.log("Vehiculos: ", this.choferSeleccionado.vehiculo);
+    //console.log("Vehiculos: ", this.choferSeleccionado.vehiculo);
                   
-    //////console.log()(this.choferSeleccionado); 
+    ////////console.log()(this.choferSeleccionado); 
     //this.form.patchValue({ chofer: e.target.value });
     if(this.choferSeleccionado.vehiculo.length > 1){
       let array:any = [];
@@ -251,7 +237,7 @@ export class OpAltaComponent implements OnInit {
       array = [];
     } else {
       this.patenteChofer = this.choferSeleccionado.vehiculo[0].dominio;
-      console.log("1)patente chofer: ", this.patenteChofer);   
+      //console.log("1)patente chofer: ", this.patenteChofer);   
       let array:any = [];
       this.vehiculosChofer = false;
       array.push(this.vehiculosChofer);
@@ -261,9 +247,9 @@ export class OpAltaComponent implements OnInit {
   } 
 
   changeVehiculo(e: any) {
-    //console.log(e.target.value)    
+    ////console.log(e.target.value)    
     this.patenteChofer = e.target.value;
-    console.log("2)patente chofer: ", this.patenteChofer);    
+    //console.log("2)patente chofer: ", this.patenteChofer);    
   } 
 
 
@@ -321,42 +307,42 @@ export class OpAltaComponent implements OnInit {
 
   onSubmit(){
   
-    console.log("personalizada: ",this.tarifaPersonalizada, "eventual: ", this.tarifaEventual, "vehiculos: ", this.vehiculosChofer );
+    //console.log("personalizada: ",this.tarifaPersonalizada, "eventual: ", this.tarifaEventual, "vehiculos: ", this.vehiculosChofer );
     
     if (this.form.valid) {    
         if (!this.tarifaPersonalizada && !this.tarifaEventual && !this.vehiculosChofer){
-          console.log("operacin basica");
+          //console.log("operacin basica");
           this.armarOp();
         } else if(this.tarifaPersonalizada && !this.tarifaEventual && !this.vehiculosChofer){
-            console.log("solo personalizada");
+            //console.log("solo personalizada");
             if(this.formTarifaPersonalizada.valid){
                 this.armarOp();
             } else {
               this.mensajesError("error en el formulario de la tarifa personalizada")
             }         
         } else if (!this.tarifaPersonalizada && this.tarifaEventual && !this.vehiculosChofer){
-            console.log("solo eventual");
+            //console.log("solo eventual");
             if(this.formTarifaEventual.valid){
               this.armarOp();
             } else {
             this.mensajesError("error en el formulario de la tarifa eventual")
             }                   
         } else if (!this.tarifaPersonalizada && !this.tarifaEventual && this.vehiculosChofer) {
-            console.log("solo vehiculos chofer");
+            //console.log("solo vehiculos chofer");
             if(this.formVehiculosChofer.valid){
               this.armarOp()
             } else{
               this.mensajesError("error en el formulario del vehiculo del chofer")
             }          
         } else if(this.tarifaPersonalizada && !this.tarifaEventual && this.vehiculosChofer){
-            console.log("tarifa personalizada y vehiculos chofer ");
+            //console.log("tarifa personalizada y vehiculos chofer ");
             if(this.formTarifaPersonalizada.valid && this.formVehiculosChofer.valid){
               this.armarOp()    
             } else {
               this.mensajesError("error en los formularios de tarifa personalizada y vehiculos del chofer")
             }            
         } else if (!this.tarifaPersonalizada && this.tarifaEventual && this.vehiculosChofer){
-            console.log("tarifa eventual y vehiculos chofer ");
+            //console.log("tarifa eventual y vehiculos chofer ");
             if (this.formTarifaEventual.valid && this.formVehiculosChofer.valid){
               this.armarOp()
             } else {
@@ -378,7 +364,7 @@ export class OpAltaComponent implements OnInit {
     }
 
    armarOp(){
-    //////console.log()("armarOp. chofer: ", this.choferSeleccionado);
+    ////////console.log()("armarOp. chofer: ", this.choferSeleccionado);
     
     // Extraer valores del formulario y otros datos
     const formValues = this.form.value;
@@ -487,7 +473,7 @@ export class OpAltaComponent implements OnInit {
       }
       this.op.aCobrar = this.buscarTarifaServ.getACobrar(this.op, this.ultTarifaGralCliente, this.ultTarifaEspCliente)
       this.op.aPagar = this.buscarTarifaServ.getAPagar(this.op, this.ultTarifaGralChofer, this.ultTarifaEspChofer, this.ultTarifaGralProveedor, proveedor )
-    console.log("esta es la operacion: ", this.op);  
+    //console.log("esta es la operacion: ", this.op);  
     Swal.fire({
       title: "¿Desea agregar la operación?",
       //text: "You won't be able to revert this!",
@@ -499,7 +485,7 @@ export class OpAltaComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        ////console.log("op: ", this.op);  
+        //////console.log("op: ", this.op);  
         this.addItem();
         Swal.fire({
           title: "Confirmado",
@@ -517,7 +503,7 @@ export class OpAltaComponent implements OnInit {
    }
 
    addItem(): void {
-    ////console.log("llamada al storage desde op-alta, addItem");
+    //////console.log("llamada al storage desde op-alta, addItem");
     this.storageService.addItem(this.componente, this.op);    
     this.form.reset();     
     this.mostrarCategoria = false;

@@ -1,9 +1,6 @@
 import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Chofer, SeguimientoSatelital, Vehiculo } from 'src/app/interfaces/chofer';
-import { Proveedor } from 'src/app/interfaces/proveedor';
-import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ChoferesAltaComponent } from '../choferes-alta/choferes-alta.component';
 import Swal from 'sweetalert2';
@@ -112,137 +109,7 @@ export class ChoferesListadoComponent implements OnInit {
         });
       }
     });   
-    /* if(chofer.vehiculo[0].tarjetaCombustible  || chofer.vehiculo[0].segSat !== false){
-       if (chofer.vehiculo[0].tarjetaCombustible  && chofer.vehiculo[0].segSat !== false){
-        Swal.fire({
-          title: "¿Eliminar el Chofer?",
-          text: "No se podrá revertir esta acción",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Confirmar",
-          cancelButtonText: "Cancelar"
-        }).then((result) => {
-          if (result.isConfirmed) {
-        /////
-            Swal.fire({
-              title: "El chofer que desea eliminar tiene asignada una tarjeta de combustible y seguimiento satelital",
-              text: "¿Desea continuar?",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonColor: "#3085d6",
-              cancelButtonColor: "#d33",
-              confirmButtonText: "Confirmar",
-              cancelButtonText: "Cancelar"
-              }).then((result) => {
-              if (result.isConfirmed) {                
-                this.storageService.deleteItem(this.componente, chofer);
-                Swal.fire({
-                  title: "Confirmado",
-                  text: "El Cliente ha sido borrado",
-                  icon: "success"
-                });
-              }                   /////
-              })
-            };   
-        
-       })} else if (chofer.vehiculo[0].tarjetaCombustible  && chofer.vehiculo[0].segSat === false){
-        Swal.fire({
-          title: "¿Eliminar el Chofer?",
-          text: "No se podrá revertir esta acción",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Confirmar",
-          cancelButtonText: "Cancelar"
-        }).then((result) => {
-          if (result.isConfirmed) {
-        /////
-            Swal.fire({
-              title: "El chofer que desea eliminar tiene asignada una tarjeta de combustible",
-              text: "¿Desea continuar?",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonColor: "#3085d6",
-              cancelButtonColor: "#d33",
-              confirmButtonText: "Confirmar",
-              cancelButtonText: "Cancelar"
-              }).then((result) => {
-              if (result.isConfirmed) {                
-                this.storageService.deleteItem(this.componente, this.choferEditar);
-                Swal.fire({
-                  title: "Confirmado",
-                  text: "El Cliente ha sido borrado",
-                  icon: "success"
-                });
-              }                   /////
-              })
-            };   
-        
-       })
-            
-          } else {
-            if (!chofer.vehiculo[0].tarjetaCombustible  && chofer.vehiculo[0].segSat !== false){
-              Swal.fire({
-                title: "¿Eliminar el Chofer?",
-                text: "No se podrá revertir esta acción",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Confirmar",
-                cancelButtonText: "Cancelar"
-              }).then((result) => {
-                if (result.isConfirmed) {
-              /////
-                  Swal.fire({
-                    title: "El chofer que desea eliminar tiene asignado seguimiento satelital",
-                    text: "¿Desea continuar?",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Confirmar",
-                    cancelButtonText: "Cancelar"
-                    }).then((result) => {
-                    if (result.isConfirmed) {                
-                      this.storageService.deleteItem(this.componente, this.choferEditar);
-                      Swal.fire({
-                        title: "Confirmado",
-                        text: "El Cliente ha sido borrado",
-                        icon: "success"
-                      });
-                    }                   /////
-                    })
-                  };   
-              
-             })                
-        }
-    }
-    
-  } else {
-    Swal.fire({
-      title: "¿Eliminar el Chofer?",
-      text: "No se podrá revertir esta acción",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.storageService.deleteItem(this.componente, this.choferEditar);
-        Swal.fire({
-          title: "Confirmado",
-          text: "El Chofer ha sido borrado",
-          icon: "success"
-        });
-      }
-    });   
-  } */
+   
 }
 
   abrirEdicion(row:any, modo:string):void {
@@ -275,40 +142,6 @@ export class ChoferesListadoComponent implements OnInit {
     }
   }
 
-  openModalEdicion(idChofer:number, vista: boolean): void {  
-    //console.log(idChofer);        
-    let chofer = this.$choferes.filter((chofer:Chofer) => {
-      return chofer.idChofer === idChofer;
-    });
-    console.log("este es el chofer: ", chofer);    
-    {
-      const modalRef = this.modalService.open(ChoferesAltaComponent, {
-        windowClass: 'myCustomModalClass',
-        centered: true,
-        size: 'lg', 
-        //backdrop:"static" 
-      });
-
-      this.soloVista = vista;
-
-    let info = {
-        modo:"vistaEdicion",
-        soloVista: this.soloVista,
-        item: chofer[0],
-      }; 
-      //console.log()(info); */
-      
-      modalRef.componentInstance.fromParent = info;
-      modalRef.result.then(
-        (result) => {
-          ////console.log()("ROOWW:" ,row);
-          this.storageService.getAllSorted("choferes", 'idChofer', 'asc');
-        },
-        (reason) => {}
-      );
-    }
-  }
-
   /////////////////////////////TABLA///////////////////////////////////////////////////////
   armarTabla() {
     //console.log("consultasOp: ", this.$consultasOp );
@@ -323,15 +156,7 @@ export class ChoferesListadoComponent implements OnInit {
         direccion: chofer.domicilio,
         cuit: chofer.cuit,
         proveedor: chofer.proveedor,
-        tarifa: chofer.tarifaTipo?.general ? "General" : chofer.tarifaTipo?.especial ? "Especial" : chofer.tarifaTipo?.personalizada ? "Personalizada" : chofer.tarifaTipo?.eventual ? "Eventual" : "Tarifa Proveedor",
-        /* dominio: chofer.vehiculo[0]?.dominio,
-        categoria: chofer.vehiculo?.map(vehiculo => {vehiculo.categoria.nombre}),
-        marca: chofer.vehiculo[0]?.marca,
-        modelo: chofer.vehiculo[0]?.modelo,
-        tarjCombustible: chofer.vehiculo[0]?.tarjetaCombustible ? "Si" : "No",
-        tipoCombustible: chofer.vehiculo[0]?.tipoCombustible,
-        publicidad: chofer.vehiculo[0]?.publicidad ? "Si" : "No",
-        satelital: !chofer.vehiculo[0]?.satelital ? "No" : "Si", */
+        tarifa: chofer.tarifaTipo?.general ? "General" : chofer.tarifaTipo?.especial ? "Especial" : chofer.tarifaTipo?.personalizada ? "Personalizada" : chofer.tarifaTipo?.eventual ? "Eventual" : "Tarifa Proveedor",      
         correo: chofer.email,
         fechaNac: chofer.fechaNac,
         

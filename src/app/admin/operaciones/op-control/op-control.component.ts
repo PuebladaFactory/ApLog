@@ -8,11 +8,7 @@ import { Router } from '@angular/router';
     <h1 class="text-center w-100">Operaciones</h1>    
   </div>   
   <div class="tab-container">
-      <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab1')">Tablero de Operaciones</div>
-      <!-- <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Tarifa General</div> -->
-      <!-- <div class="tab" [class.active]="selectedTab === 'tab3'" (click)="selectTab('tab3')">Tarifa Especial</div>     -->
-      <!-- <div class="tab" [class.active]="selectedTab === 'tab4'" (click)="selectTab('tab4')">Tarifa Personalizada</div>     -->
-      
+      <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab1')">Tablero de Operaciones</div>         
   </div>
   <router-outlet></router-outlet>    
     `,

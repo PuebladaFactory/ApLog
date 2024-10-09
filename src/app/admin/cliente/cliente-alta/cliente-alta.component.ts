@@ -1,6 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente, Contacto } from 'src/app/interfaces/cliente';
 import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';

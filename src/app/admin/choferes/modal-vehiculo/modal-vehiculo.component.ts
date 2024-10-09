@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Categoria, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 
@@ -70,12 +70,6 @@ export class ModalVehiculoComponent implements OnInit {
   }
 
   guardarVehiculo(){ 
-    ////console.log("Datos personales: ",this.form.value);
-    ////console.log("Vehiculo: ",this.vehiculoForm.value);
-    ////console.log("Seguimiento: ",this.seguimientoForm.value);
-    ////console.log("Categorias: ",this.categoriasForm.value);    
-    ////console.log("categorias: ",this.categorias); // Aquí puedes ver las categorías seleccionadas con sus valores
-  
     
     if (this.vehiculoForm.valid){
 
@@ -90,17 +84,7 @@ export class ModalVehiculoComponent implements OnInit {
    }
 
    changeProveedor(e:any){
-    ////console.log()(e.target.value);
-    //let razonSocial = e.target.value.split(" ")[0];
-    //////console.log()(apellido);
-    
-    
-    this.proveedorSeleccionado = e.target.value;
-    /* this.clienteSeleccionado = this.clientes$.source._value.filter(function (cliente:any){
-      return cliente.razonSocial === e.target.value
-    }) */
-   ////console.log()("este es el proveedor seleccionado: ", this.proveedorSeleccionado);
-    //this.buscarTarifas();
+        this.proveedorSeleccionado = e.target.value;   
   }  
 
   changeTipoCombustible(e: any) {    
@@ -145,10 +129,7 @@ export class ModalVehiculoComponent implements OnInit {
   changeCategoria(e: any) {
     ////console.log(e.target.value);
     this.ordCat = Number(e.target.value);
-    //console.log(this.ordCat);
-    
-    //this.categoriaSeleccionada = e.target.value
-    //////console.log()(this.categoriaSeleccionada);    
+ 
   }
 
   armarVehiculo(){ 

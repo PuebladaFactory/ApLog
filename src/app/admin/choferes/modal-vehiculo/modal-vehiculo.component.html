@@ -63,27 +63,7 @@
             <option value="no">no</option>                        
           </select>
         </div>                         
-<!--         <div class="form-group mt-1">
-              <label for="Categoria">Seguimiento Satelital</label>
-              <select class="form-select" (change)="seguimientoSatelital($event)" required>
-                <option >Seleccionar</option>
-                <option value="si">si</option>   
-                <option value="no">no</option>                        
-              </select>
-        </div> 
-        <div *ngIf="seguimiento" class="mt-2">
-            <form [formGroup]="seguimientoForm">
-                <h5 for="Categoria">Detalle Seguimiento Satelital</h5>
-                <label for="proveedor">Proveedor</label>
-                <div class="input-group">
-                  <input formControlName="proveedor" class="form-control" required type="text">
-                </div>
-                <label for="Marca">Marca</label>
-                <div class="input-group">
-                  <input formControlName="marcaGps" class="form-control" required type="text">
-                </div>
-            </form>                      
-        </div>  -->       
+
         <div class="form-group mt-1">
           <label for="Categoria">Seguimiento Satelital</label>                
             <select class="form-select" (change)="seguimientoSatelital($event)" required [ngClass]="{'isDisabled': soloVista}">              
@@ -91,13 +71,7 @@
                 <option value="si">si</option>   
                 <option value="no">no</option>                        
             </select>
-<!--           <ng-template #sinSeguimiento>
-              <select class="form-select" (change)="seguimientoSatelital($event)" required  [ngClass]="{'isDisabled': soloVista}">
-                  <option selected>no</option>
-                  <option value="si">si</option>   
-                  <option value="no">no</option>                        
-              </select>
-          </ng-template> -->
+
       </div> 
       <div *ngIf="seguimiento" class="mt-2">
           <form [formGroup]="seguimientoForm">

@@ -169,10 +169,6 @@ export class ProveedoresAltaComponent implements OnInit {
         
       }
     });   
-    
-    /* this.form.reset() 
-    this.ngOnInit() */
-    //this.router.navigate(['/proveedores/listado'])   
   }
 
   toggle() {
@@ -214,11 +210,7 @@ export class ProveedoresAltaComponent implements OnInit {
             this.contactos.push(result);
             console.log(this.contactos);
           }
-          
-          
-          //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
-//        this.selectCrudOp(result.op, result.item);
-        //this.mostrarMasDatos(row);
+       
         },
         (reason) => {}
       );

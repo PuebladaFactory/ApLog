@@ -47,8 +47,7 @@ export class ModalTarifaGralEdicionComponent implements OnInit {
 
     ////// ACTUALIZAR OBJETO /////////
  updateItem(): void {
-  //////console.log("llamada al storage desde op-alta, addItem");
-  ////////console.log()("esta es la operacion: ", this.op);  
+ 
   Swal.fire({
     title: "¿Desea guardar los cambios en la tarifa?",
     //text: "You won't be able to revert this!",
@@ -74,7 +73,7 @@ export class ModalTarifaGralEdicionComponent implements OnInit {
       
     }
   });   
-  //console.log("op editada: ", this.op);  
+ 
  
 } 
 

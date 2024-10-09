@@ -1,6 +1,6 @@
-import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Cliente, Contacto } from 'src/app/interfaces/cliente';
+import { Cliente } from 'src/app/interfaces/cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
 import Swal from 'sweetalert2';
@@ -120,10 +120,7 @@ export class ClienteListadoComponent implements OnInit {
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          ////console.log()("ROOWW:" ,row);
-          //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
-//        this.selectCrudOp(result.op, result.item);
-        //this.mostrarMasDatos(row);
+        
         },
         (reason) => {}
       );

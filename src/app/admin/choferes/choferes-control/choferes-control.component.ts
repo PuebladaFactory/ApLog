@@ -68,8 +68,6 @@ export class ChoferesControlComponent implements OnInit {
       this.router.navigate(['choferes/general']);
     } else if (tab === 'tab3') {
       this.router.navigate(['choferes/especial']);
-    } else if (tab === 'tab4') {
-      this.router.navigate(['choferes/personalizada']);
     } 
   }
 }

@@ -1,9 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Categoria, Chofer, SeguimientoSatelital, Vehiculo } from 'src/app/interfaces/chofer';
-import { Legajo, Documentacion } from 'src/app/interfaces/legajo';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
@@ -141,39 +140,9 @@ export class ChoferesAltaComponent implements OnInit {
   }
 
   armarVehiculoForm(){
-    /* this.vehiculoForm.patchValue({
-      dominio: this.chofer.vehiculo[0].dominio,
-      marca:this.chofer.vehiculo[0].marca,
-      modelo: this.chofer.vehiculo[0].modelo,
-    });
-    //this.categoriaSeleccionada = this.choferEditar.vehiculo.categoria; ///////////////////////////////////////////
-    this.tipoCombustible = this.chofer.vehiculo[0].tipoCombustible;
-    this.tarjetaCombustible = this.chofer.vehiculo[0].tarjetaCombustible;
-    this.publicidad = this.chofer.vehiculo[0].publicidad; */
-    this.vehiculos = this.chofer.vehiculo
-  
-    //this.armarSeguimientoSatelital();
+    this.vehiculos = this.chofer.vehiculo;
   }
 
-  /* armarSeguimientoSatelital(){
-    if(!this.chofer.vehiculo[0].satelital){      
-      this.seguimiento = false;
-      this.satelital = false;
-    }else{
-      this.seguimiento = true;
-      this.satelital = this.chofer.vehiculo[0].satelital;
-      //console.log()(this.satelital);
-      this.seguimientoForm.patchValue({
-        proveedor: "",
-        marcaGps: "",
-      })
-  
-    }
-  } */
-
-   // es el mismo metodo para guardar el chofer y la jornada
-   // primero arma cada uno de los objetos
-   // y desp guarda el objeto en la coleccion que le corresponde
    onSubmit(){ 
     
     if (this.form.valid){

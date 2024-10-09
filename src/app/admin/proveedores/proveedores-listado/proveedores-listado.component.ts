@@ -19,29 +19,25 @@ export class ProveedoresListadoComponent implements OnInit {
   proveedorEditar!: Proveedor;  
   componente:string ="proveedores";
   $choferes!: Chofer [];
-  
-  
-  
-
   ////////////////////////////////////////////////////////////////////////////////////////
-//@ViewChild('tablaClientes') table: any;  
-rows: any[] = [];
-filteredRows: any[] = [];
-paginatedRows: any[] = [];
-choferesProveedor!: Chofer[];
-allColumns = [
-//    { prop: '', name: '', selected: true, flexGrow:1  },
-  { prop: 'idProveedor', name: 'Id Proveedor', selected: false, flexGrow:2  },  
-  { prop: 'razonSocial', name: 'Razon Social', selected: true, flexGrow:2  },          
-  { prop: 'cuit', name: 'CUIT', selected: true, flexGrow:2  },
-  { prop: 'direccion', name: 'Direccion', selected: true, flexGrow:2 },
-  { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow: 2 },
-  { prop: 'contacto', name: 'Contacto', selected: true, flexGrow:2  },    
-  { prop: 'puesto', name: 'Puesto', selected: true, flexGrow:2  },    
-  { prop: 'telefono', name: 'N° Contacto', selected: true, flexGrow:2  },    
-  { prop: 'correo', name: 'Correo', selected: true, flexGrow:2  },  
-  
-];
+  //@ViewChild('tablaClientes') table: any;  
+  rows: any[] = [];
+  filteredRows: any[] = [];
+  paginatedRows: any[] = [];
+  choferesProveedor!: Chofer[];
+  allColumns = [
+  //    { prop: '', name: '', selected: true, flexGrow:1  },
+    { prop: 'idProveedor', name: 'Id Proveedor', selected: false, flexGrow:2  },  
+    { prop: 'razonSocial', name: 'Razon Social', selected: true, flexGrow:2  },          
+    { prop: 'cuit', name: 'CUIT', selected: true, flexGrow:2  },
+    { prop: 'direccion', name: 'Direccion', selected: true, flexGrow:2 },
+    { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow: 2 },
+    { prop: 'contacto', name: 'Contacto', selected: true, flexGrow:2  },    
+    { prop: 'puesto', name: 'Puesto', selected: true, flexGrow:2  },    
+    { prop: 'telefono', name: 'N° Contacto', selected: true, flexGrow:2  },    
+    { prop: 'correo', name: 'Correo', selected: true, flexGrow:2  },  
+    
+  ];
 visibleColumns = this.allColumns.filter(column => column.selected);
 selected = [];
 count = 0;
@@ -135,10 +131,7 @@ secondFilter = '';
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          ////console.log()("ROOWW:" ,row);
-          //this.storageService.getAllSorted("proveedores", 'idProveedor', 'asc')
-//        this.selectCrudOp(result.op, result.item);
-        //this.mostrarMasDatos(row);
+         
         },
         (reason) => {}
       );
@@ -232,11 +225,7 @@ secondFilter = '';
     this.choferesProveedor = this.$choferes.filter((chofer:Chofer)=>{
       return chofer.proveedor === this.proveedorEditar.razonSocial
     })
-    console.log("choferes: ",this.choferesProveedor );
-    
-    //this.proveedorVehiculos = proveedor[0];
-    //this.vehiculos = chofer[0].vehiculo
-    
+  
   }
 
 }

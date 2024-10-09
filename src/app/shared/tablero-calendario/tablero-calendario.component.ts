@@ -55,14 +55,23 @@ export class TableroCalendarioComponent implements OnInit {
 
   calcularSemanaActual() {
     const now = new Date();
+    console.log("now: ", now);    
     const dayOfWeek = now.getDay();
+    console.log("dayOfWeek: ", dayOfWeek);    
     const monday = new Date(now);
+    console.log("monday 1", monday);    
     monday.setDate(now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)); // Lunes de la semana actual
+    console.log("monday 2", monday);    
     const sunday = new Date(monday);
+    console.log("sunday 1",sunday);        
     sunday.setDate(monday.getDate() + 6); // Domingo de la semana actual
-    this.fechasConsulta.fechaDesde = monday.toISOString().split('T')[0];
-    this.fechasConsulta.fechaHasta = sunday.toISOString().split('T')[0];
-    //console.log("fecha consulta: ", this.fechasConsulta);
+    console.log("sunday 2",sunday);
+  
+    // Construye la fecha manualmente en formato YYYY-MM-DD sin usar toISOString()
+    this.fechasConsulta.fechaDesde = `${monday.getFullYear()}-${(monday.getMonth() + 1).toString().padStart(2, '0')}-${monday.getDate().toString().padStart(2, '0')}`;
+    this.fechasConsulta.fechaHasta = `${sunday.getFullYear()}-${(sunday.getMonth() + 1).toString().padStart(2, '0')}-${sunday.getDate().toString().padStart(2, '0')}`;
+  
+    console.log("fecha consulta: ", this.fechasConsulta);
     
     this.formatoSeleccionado = 'Semana';
     this.actualizarFechasString();

@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AdminHomeComponent } from './admin-home/admin-home.component';
-import { ClienteAltaComponent } from './cliente/cliente-alta/cliente-alta.component';
+
 
 const routes: Routes = [
   {path: '', component: AdminHomeComponent,
@@ -34,11 +34,7 @@ const routes: Routes = [
     {
       path: 'historial',
       loadChildren: () => import('./historial/historial.module').then(m => m.HistorialModule)
-    },  
-    {
-      path: 'ajustes',
-      loadChildren: () => import('./configuraciones/configuraciones.module').then(m => m.ConfiguracionesModule)
-    },  
+    },        
     
 ]  },  
 /* {

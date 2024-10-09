@@ -98,22 +98,17 @@ export class ClienteTarifaGralComponent implements OnInit {
 
   configurarTabla(){
     if(this.tEspecial){
-      ////////////console.log("2a) tarifa especial: ", this.tEspecial);      
-      ////////////console.log("2b) tarifa general: ", this.ultTarifa);      
-      this.storageService.ultTarifaEspCliente$
-      //.pipe(take(3)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      this.storageService.ultTarifaEspCliente$   
       .subscribe(data =>{            
       this.ultTarifaEspecial = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
       this.ultTarifaEspecial.cargasGenerales = this.ultTarifaEspecial.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      //////////console.log("2d) ult tarifa ESP: ",this.ultTarifaEspecial);        
+      
       this.resetTable();  // Limpia los datos existentes de la tabla;
       this.crearCategorias()
       this.inicializarTabla();
       this.onGenerarNuevaTarifaAutomatica();   
     });
-    }else{
-      ////////////console.log("1a) tarifa especial: ", this.tEspecial);      
-      ////////////console.log("1b) tarifa general: ", this.ultTarifa);      
+    }else{      
       this.resetTable();  // Limpia los datos existentes de la tabla
       this.crearCategorias()
       this.inicializarTabla();
@@ -472,10 +467,7 @@ export class ClienteTarifaGralComponent implements OnInit {
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          ////console.log()("ROOWW:" ,row);
-          //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
-//        this.selectCrudOp(result.op, result.item);
-        //this.mostrarMasDatos(row);
+         
         },
         (reason) => {}
       );

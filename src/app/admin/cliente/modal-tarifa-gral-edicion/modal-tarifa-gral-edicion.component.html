@@ -20,8 +20,7 @@
                     <th style="width: 40%;">Valor</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Modificación para cargasGenerales -->
+            <tbody>           
                 <tr *ngFor="let categoria of tarifa.cargasGenerales">
                     <td>Categoria {{categoria.orden}}</td>
                     <td> 
@@ -36,8 +35,6 @@
                         </div>
                     </td>
                 </tr>
-                
-                <!-- Modificación para acompañante -->
                 <tr>
                     <td colspan="2">Acompañante: </td>
                     <td>

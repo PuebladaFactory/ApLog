@@ -9,8 +9,6 @@ import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
-import { ClienteTarifaComponent } from './cliente-tarifa/cliente-tarifa.component';
-import { ModalAltaTarifaComponent } from './modal-alta-tarifa/modal-alta-tarifa.component';
 import { ClienteTarifaPersonalizadaComponent } from './cliente-tarifa-personalizada/cliente-tarifa-personalizada.component';
 import { ClienteTarifaGralComponent } from './cliente-tarifa-gral/cliente-tarifa-gral.component';
 import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/cliente-tarifa-especial.component';
@@ -28,9 +26,7 @@ import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/mod
   declarations: [
     ClienteControlComponent,
     ClienteListadoComponent,
-    ClienteAltaComponent,    
-    ClienteTarifaComponent,
-    ModalAltaTarifaComponent, 
+    ClienteAltaComponent,            
     ClienteTarifaPersonalizadaComponent, 
     ClienteTarifaGralComponent, 
     ClienteTarifaEspecialComponent, 

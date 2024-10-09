@@ -31,13 +31,7 @@ export class ClienteTarifaEspecialComponent implements OnInit {
       })
       //console.log(this.$clientesEsp);      
       this.tEspecial = false;
-    });
-   /*  this.storageService.tEspecialCliente$
-    .subscribe(data => {
-      this.tEspecial = data;
-      this.tEspecial = false
-    });
- */
+    });   
   }
 
   changeCliente(e: any) {    
@@ -58,9 +52,7 @@ export class ClienteTarifaEspecialComponent implements OnInit {
     tarfEsp.push(this.tEspecial);
     this.storageService.setInfo("tEspecialCliente", tarfEsp);    
     tarfEsp = [];   
-    //this.asignarTarifa = true
-    //////console.log()("este es el cliente seleccionado: ", this.clienteSeleccionado);
-    //this.buscarTarifas();
+  
   }
 
 

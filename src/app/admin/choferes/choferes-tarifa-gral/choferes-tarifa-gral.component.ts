@@ -3,7 +3,6 @@ import { AbstractControl, FormArray, FormBuilder, FormControl } from '@angular/f
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AdicionalTarifa, CategoriaTarifa, TarifaGralChofer } from 'src/app/interfaces/tarifa-gral-chofer';
 import { TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalTarifaGralEdicionComponent } from '../modal-tarifa-gral-edicion/modal-tarifa-gral-edicion.component';
@@ -335,10 +334,6 @@ export class ChoferesTarifaGralComponent implements OnInit {
         
       }
     });   
-    
-    
-    
-    
   }
 
   configurarNuevaTarifa() {
@@ -479,10 +474,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          ////console.log()("ROOWW:" ,row);
-          //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
-//        this.selectCrudOp(result.op, result.item);
-        //this.mostrarMasDatos(row);
+         
         },
         (reason) => {}
       );
