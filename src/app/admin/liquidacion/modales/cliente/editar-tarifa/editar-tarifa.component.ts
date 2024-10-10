@@ -54,7 +54,7 @@ export class EditarTarifaComponent implements OnInit {
   ngOnInit(): void {   
     console.log("fromParent: ",this.fromParent);    
     this.facDetallada = this.fromParent.factura;
-    this.swich = this.facDetallada.operacion.tarifaEspecial;
+    this.swich = this.facDetallada.operacion.tarifaEventual;
     this.ultimaTarifa = this.fromParent.tarifaAplicada;
     //this.ultimaTarifa = this.fromParent.tarifaAplicada;
     /* this.storageService.historialTarifasClientes$.subscribe(data => {      
@@ -82,11 +82,11 @@ export class EditarTarifaComponent implements OnInit {
       valorPrimerSector: this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor,
       distanciaIntervalo:this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo,
       valorIntervalo:this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor,
-      tarifaEspecial: this.facDetallada.operacion.tarifaEspecial,
+      tarifaEspecial: this.facDetallada.operacion.tarifaEventual,
     });
     
     this.swichForm.patchValue({
-      tarifaEspecial: this.facDetallada.operacion.tarifaEspecial,
+      tarifaEspecial: this.facDetallada.operacion.tarifaEventual,
     })
     ////console.log()(factura.operacion.tarifaEspecial);
     
@@ -161,7 +161,7 @@ export class EditarTarifaComponent implements OnInit {
     ////console.log()("NUEVA operacion con nueva TARIFA", this.facturaEditada);
     console.log("swich: ", this.swichForm.get('tarifaEspecial').value);
     
-    this.facturaEditada.operacion.tarifaEspecial = this.swich;
+    this.facturaEditada.operacion.tarifaEventual = this.swich;
     this.facturaEditada.idTarifa = this.ultimaTarifa.idTarifa
     
   }
@@ -179,8 +179,8 @@ export class EditarTarifaComponent implements OnInit {
   } 
 
   armarTarifaEspecial(){
-    this.facturaEditada.operacion.tEspecial.chofer.concepto = this.tarifaEditForm.value.concepto;
-    this.facturaEditada.operacion.tEspecial.chofer.valor = this.tarifaEditForm.value.valor;
+    this.facturaEditada.operacion.tEventual.chofer.concepto = this.tarifaEditForm.value.concepto;
+    this.facturaEditada.operacion.tEventual.chofer.valor = this.tarifaEditForm.value.valor;
   }
 
   

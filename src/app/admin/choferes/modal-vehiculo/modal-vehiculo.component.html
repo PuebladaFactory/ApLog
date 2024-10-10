@@ -1,0 +1,93 @@
+<div class="container">
+    <div class="modal-header">
+        <h2>Datos Vehiculo</h2>
+        <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
+    </div>    
+    
+    <form [formGroup]="vehiculoForm">
+        <div class="form-group">
+            <label for="Dominio">Dominio</label>
+            <div class="input-group">
+              <input formControlName="dominio" class="form-control" required type="text" [placeholder]="'ej: gbc408  ó  ab123ca'" [ngClass]="{ 'is-invalid': vehiculoForm.get('dominio').invalid && (vehiculoForm.get('dominio').dirty || vehiculoForm.get('dominio').touched) }" [ngClass]="{'isDisabled': soloVista}">
+              
+            </div>
+        </div>  
+        <div class="form-group">
+          <label for="Marca">Marca</label>
+          <div class="input-group">
+            <input formControlName="marca" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('marca').invalid && (vehiculoForm.get('marca').dirty || vehiculoForm.get('marca').touched) }" [ngClass]="{'isDisabled': soloVista}"> 
+          </div>
+        </div> 
+        <div class="form-group">
+            <label for="Modelo">Modelo</label>
+            <div class="input-group">
+              <input formControlName="modelo" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('modelo').invalid && (vehiculoForm.get('modelo').dirty || vehiculoForm.get('modelo').touched) }" [ngClass]="{'isDisabled': soloVista}">
+            </div>
+        </div>   
+        <div class="form-group">
+            <label for="Modelo">Categoria Nombre</label>
+            <div class="input-group">
+                <input formControlName="categoria" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('modelo').invalid && (vehiculoForm.get('modelo').dirty || vehiculoForm.get('modelo').touched) }" [ngClass]="{'isDisabled': soloVista}">
+            </div>
+        </div>                
+        <div class="form-group mt-1">
+          <label for="Categoria">Tipo Vehiculo</label>
+          <select class="form-select" (change)="changeCategoria($event)" required [ngClass]="{'isDisabled': soloVista}">
+              <option>{{edicion? tarifaGralCliente.cargasGenerales[vehiculo.categoria.catOrden - 1].nombre : "Seleccione"}}</option>
+              <option *ngFor="let categoria of tarifaGralCliente.cargasGenerales" required [value]="categoria.orden">
+                {{categoria.nombre}}
+              </option>
+          </select>
+        </div> 
+        <div class="form-group mt-1">
+            <label for="Categoria">Tipo de Combustible</label>
+            <select class="form-select" (change)="changeTipoCombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
+              <option>{{edicion? tipoCombustible : "Seleccione"}}</option>
+              <option value="gas">Gas</option>
+              <option value="nafta">Nafta</option>                        
+            </select>
+        </div> 
+        <div class="form-group mt-1">
+            <label for="Categoria">Tarjeta de Combustible</label>
+            <select class="form-select" (change)="changeTarjetaombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
+              <option>{{edicion? tarjetaCombustible? "Si" : "No" : "Seleccione"}}</option>
+              <option value="si">si</option>
+              <option value="no">no</option>                        
+            </select>
+        </div> 
+        <div class="form-group mt-1">
+          <label for="Categoria">Publicidad</label>
+          <select class="form-select" (change)="changePublicidad($event)" required [ngClass]="{'isDisabled': soloVista}">
+            <option>{{edicion? publicidad? "Si" : "No" : "Seleccione"}}</option>
+            <option value="si">si</option>
+            <option value="no">no</option>                        
+          </select>
+        </div>                         
+
+        <div class="form-group mt-1">
+          <label for="Categoria">Seguimiento Satelital</label>                
+            <select class="form-select" (change)="seguimientoSatelital($event)" required [ngClass]="{'isDisabled': soloVista}">              
+                <option>{{edicion? seguimiento? "Si" : "No" : "Seleccione"}}</option>              
+                <option value="si">si</option>   
+                <option value="no">no</option>                        
+            </select>
+
+      </div> 
+      <div *ngIf="seguimiento" class="mt-2">
+          <form [formGroup]="seguimientoForm">
+              <h5 for="Categoria">Detalle Seguimiento Satelital</h5>
+              <label for="proveedor">Proveedor</label>
+              <div class="input-group">
+                <input formControlName="proveedor" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+              </div>
+              <label for="Marca">Marca</label>
+              <div class="input-group">
+                <input formControlName="marcaGps" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
+              </div>
+          </form>  
+      </div>                    
+    </form>
+    <div class="mb-3">
+      <app-btn-agregar name="Agregar" type="submit" (click)="guardarVehiculo()"></app-btn-agregar>
+    </div>
+</div>

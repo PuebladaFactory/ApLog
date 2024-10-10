@@ -355,11 +355,11 @@ export class LiqProveedorComponent implements OnInit {
       valorPrimerSector: this.ultimaTarifa.adicionales.adicionalKm.primerSector.valor,
       distanciaIntervalo:this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo,
       valorIntervalo:this.ultimaTarifa.adicionales.adicionalKm.sectoresSiguientes.valor,
-      tarifaEspecial: factura.operacion.tarifaEspecial,
+      tarifaEspecial: factura.operacion.tarifaEventual,
     });
     
     this.swichForm.patchValue({
-      tarifaEspecial: factura.operacion.tarifaEspecial,
+      tarifaEspecial: factura.operacion.tarifaEventual,
     })
     //console.log()(factura.operacion.tarifaEspecial);
     
@@ -439,7 +439,7 @@ export class LiqProveedorComponent implements OnInit {
     }
 
     //console.log()("NUEVA TARIFA", this.ultimaTarifa);
-    this.facturaEditada.operacion.tarifaEspecial = this.tarifaEditForm.value.tarifaEspecial;
+    this.facturaEditada.operacion.tarifaEventual = this.tarifaEditForm.value.tarifaEspecial;
     //console.log()("NUEVA operacion con nueva TARIFA", this.facturaEditada);
     
   }

@@ -1,0 +1,35 @@
+  
+  
+      <div class="row mt-3">
+          <div class="col-4" >      
+              <h1 class="mt-2">Tarifa Especial</h1>
+          </div>  
+          <div class="col-4 mt-3">
+              <h2>Seleccionar Cliente: </h2>              
+              <div class="w-50">
+                  <select class="form-select form-select-md" (change)="changeCliente($event)">
+                    <option selected>Seleccione</option>
+                    <option *ngFor="let cliente of $clientesEsp" [value]="cliente.idCliente">
+                      {{cliente.razonSocial}} 
+                    </option>
+                  </select>
+              </div>                          
+          </div>   
+          <app-consola-tarifa class="col-4 " *ngIf="tEspecial"></app-consola-tarifa>  
+      </div>      
+  
+  
+
+
+<div>
+<ng-template #sinSeleccion>
+    <h4>Seleccione cliente</h4>
+</ng-template>
+<ng-template #sinTarifas>
+  <h4>El cliente aun no tiene tarifas asignadas</h4>
+</ng-template>
+</div> 
+
+<div *ngIf="clienteSeleccionado !== undefined">
+    <app-cliente-tarifa-gral [tEspecial]="tEspecial"></app-cliente-tarifa-gral>
+</div>

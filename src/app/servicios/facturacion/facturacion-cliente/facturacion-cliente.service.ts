@@ -8,6 +8,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { parseActionCodeURL } from 'firebase/auth';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
+import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,7 @@ export class FacturacionClienteService {
   adicionalKmMonto!: number;
   $tarifaCliente!: TarifaCliente;
   total!:number;
+  tarifaGralCliente! : TarifaGralCliente;
 
   constructor(private storageService: StorageService ) { }
 
@@ -31,6 +33,15 @@ export class FacturacionClienteService {
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
     });
+  }
+
+  tarifaGral(){
+    this.storageService.ultTarifaGralCliente$.subscribe(data =>{
+      ////console.log("data: ", data);                
+      this.tarifaGralCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+      this.tarifaGralCliente.cargasGenerales = this.tarifaGralCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+      ////console.log("1) ult tarifa GRAL: ",this.ultTarifa);              
+    })      
   }
 
  /*  facturarOperacion(op: Operacion)  :FacturaOpCliente{        
@@ -91,7 +102,7 @@ export class FacturacionClienteService {
     this.$tarifaCliente = this.ultimaTarifa
     ////console.log()("esta es la tarifa a facturar: ", this.$tarifaCliente);
     
-    if(op.tarifaEspecial){
+    if(op.tarifaEventual){
       //console.log("3) tarifa especial");
       
       this.facturarTarifaEspecial(op);
@@ -117,7 +128,7 @@ export class FacturacionClienteService {
   facturarCG(op: Operacion){
     ////console.log()("cargas generales");
     
-    switch (op.chofer.vehiculo.categoria) {
+   /*  switch (op.chofer.vehiculo.categoria) {
       case "mini":
         this.categoriaMonto = this.ultimaTarifa.cargasGenerales.utilitario
         break;
@@ -153,7 +164,7 @@ export class FacturacionClienteService {
       default:
         alert("error categoria CG")
         break;
-    } 
+    }  */
   }
 
  
@@ -253,8 +264,8 @@ export class FacturacionClienteService {
       //this.total = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
       this.categoriaMonto = this.ultimaTarifa.tarifaEspecial.valor;
       this.total = this.ultimaTarifa.tarifaEspecial.valor;
-      this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.cliente.valor;
-      this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.cliente.concepto;
+      this.ultimaTarifa.tarifaEspecial.valor = op.tEventual.cliente.valor;
+      this.ultimaTarifa.tarifaEspecial.concepto = op.tEventual.cliente.concepto;
       console.log("4) tarifa CLIENTE editada", this.ultimaTarifa);
       this.storageService.updateItem("tarifasCliente", this.ultimaTarifa) 
       
@@ -319,6 +330,29 @@ export class FacturacionClienteService {
     }
     
     ////console.log()("factura EDITADA FINAL: ", this.facturaCliente);
+  }
+
+
+  ////prueba.......
+  generarOp(op:Operacion){
+    this.tarifaGral()
+    if(op.tarifaEventual){
+        op.aCobrar = op.tEventual.cliente.valor;
+        op.aPagar = op.tEventual.chofer.valor;
+    } else if(op.tarifaPersonalizada){
+        op.aCobrar = op.tPersonalizada.aCobrar
+        op.aPagar = op.tPersonalizada.aPagar;
+    } else {
+      if(op.chofer.vehiculo.length > 1){
+
+      } else {
+        let categoriaValor
+        categoriaValor = this.tarifaGralCliente.cargasGenerales.forEach((categoria:CategoriaTarifa)=>{
+          categoria.orden === op.chofer.vehiculo[0].categoria.catOrden
+          return categoria.valor
+        })
+      }
+    }
   }
 
 }

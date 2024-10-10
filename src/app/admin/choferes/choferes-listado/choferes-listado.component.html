@@ -1,13 +1,12 @@
 <div class="d-flex justify-content-between mt-3">
-  <h1>Choferes</h1>
-  <app-btn-leer name="chofer" (click)="openModal()"></app-btn-leer>
+  <!-- <h1>Choferes</h1> -->
+  <app-btn-leer name="Chofer" (click)="openModal('alta')"></app-btn-leer>
 </div>
 
-<div class="custom-datatable">
+<div class="custom-datatable mt-3">
   
   <div class="row w-100">
-      <div class="col-4 d-flex align-items-end">
-          <!-- <input type="text" placeholder="Buscar..." (input)="updateFilter($event)" />             -->
+      <div class="col-4 d-flex align-items-end">          
           <input class="w-75" type="text" placeholder="Buscar por primer criterio..." (input)="updateFilter($event, 'first')" />
           <span class="mx-2"> y </span>
           <input class="w-75" type="text" placeholder="Buscar por segundo criterio..." (input)="updateFilter($event, 'second')" />
@@ -54,190 +53,65 @@ class="dark"
 </ngx-datatable-column>
 <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="3">          
     <ng-template ngx-datatable-cell-template let-row="row">
-      <app-btn-leer name="Detalle" (click)="abrirVista(row)" data-bs-toggle="modal" data-bs-target="#exampleModal"></app-btn-leer>
-            
-      <app-btn-editar class="mx-1" name="Editar" (click)="abrirEdicion(row)" data-bs-toggle="modal" data-bs-target="#exampleModal"></app-btn-editar>
-    
-      <app-btn-eliminar name="Eliminar" (click)="eliminarChofer(row)"></app-btn-eliminar>
+        
+        <app-btn-leer name="Vehiculos" class="me-2" (click)="mostrarVehiculos(row.idChofer)" data-bs-toggle="modal" data-bs-target="#modalVehiculos"></app-btn-leer>  
+
+        <app-btn-leer name="Detalle" class="me-2" (click)="abrirEdicion(row.idChofer, 'vista')" ></app-btn-leer>
+                
+        <app-btn-editar class="me-2" name="Editar" (click)="abrirEdicion(row.idChofer, 'edicion')"></app-btn-editar>
+        
+        <app-btn-eliminar name="Eliminar" (click)="eliminarChofer(row.idChofer)"></app-btn-eliminar>
+
     </ng-template>
 </ngx-datatable-column>
 
 </ngx-datatable>
 </div>
 
-<!-- MODAL VISTA Y EDICION -->
-
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header row" >
-        <div class="d-flex">
-            <h3 class="modal-title" id="exampleModalLabel">Editar Chofer</h3>            
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"  (click)="cerrarEdicion()"></button>
-        </div>
-        <div *ngIf="choferEditar !== undefined">
-          <h5>Id: {{choferEditar.idChofer}} </h5>
-        </div>
-        
-      </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col">
-              <h3>Datos Personales</h3>              
-              <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                <div class="form-group">
-                    <label for="Apellido">Apellido</label>
-                    <div class="input-group">
-                        <input formControlName="apellido" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                    </div>
-                </div>    
-                <div class="form-group">
-                    <label for="Nombre">Nombre</label>
-                    <div class="input-group">
-                        <input formControlName="nombre" class="form-control edicion" required type="text" [ngClass]="{'isDisabled': soloVista}">            
-                    </div>
-                </div>     
-                <div class="form-group">
-                  <label for="Cuit">CUIT</label>
-                  <div class="input-group">
-                      <input formControlName="cuit" class="form-control" required type="email" [ngClass]="{'isDisabled': soloVista}">
-                  </div>
-              </div>              
-                <div class="form-group">
-                    <label for="Email">Email</label>
-                    <div class="input-group">
-                        <input formControlName="email" class="form-control" required type="email" [ngClass]="{'isDisabled': soloVista}">
-                    </div>
-                </div>       
-                <div class="form-group">
-                    <label for="Celular">Celular de Contacto</label>
-                    <div class="input-group">
-                        <input formControlName="celularContacto" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                    </div>
-                </div>   
-                <div class="form-group">
-                    <label for="Celular">Celular de Emergencia</label>
-                    <div class="input-group">
-                        <input formControlName="celularEmergencia" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                    </div>
-                </div>   
-                <div class="form-group">
-                    <label for="Domicilio">Domicilio</label>
-                    <div class="input-group">
-                        <input formControlName="domicilio" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                    </div>
-                </div>   
-                <div class="form-group">
-                    <label for="FechaNac">Fecha Nacimiento</label>
-                    <div class="input-group">
-                        <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{'isDisabled': soloVista}">
-                    </div>
-                </div>              
-                <div class="form-group">
-                  <label for="Proveedor">Proveedor</label>
-                  <select class="form-select" (change)="changeProveedor($event)" required [ngClass]="{'isDisabled': soloVista}">
-                    <option>{{proveedorSeleccionado}}</option>
-                    <option value="monotributista">monotributista</option>
-                    <option *ngFor="let proveedor of $proveedores">
-                      {{proveedor.razonSocial}}
-                    </option>
-                  </select>
-                </div>
-              </form>
-          </div>
-          <div class="col">
-            <h3>Datos del Vehiculo</h3>
-            <form [formGroup]="vehiculoForm">
-                <div class="form-group">
-                    <label for="Dominio">Dominio</label>
-                    <div class="input-group">
-                        <input formControlName="dominio" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                    </div>
-                </div>      
-                <div class="form-group">
-                  <label for="Marca">Marca</label>
-                  <div class="input-group">
-                      <input formControlName="marca" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                  </div>
-                </div> 
-                <div class="form-group">
-                    <label for="Modelo">Modelo</label>
-                    <div class="input-group">
-                        <input formControlName="modelo" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                    </div>
-                </div>     
-                <div class="form-group mt-1">
-                    <label for="Categoria">Categoria Vehiculo</label>
-                    <select class="form-select" (change)="changeCategoria($event)" required [ngClass]="{'isDisabled': soloVista}">
-                        <option value={{categoriaSeleccionada}} required>{{categoriaSeleccionada}}</option>
-                        <option *ngFor="let categoria of categorias" required>
-                          {{categoria.categoria}}
-                        </option>
-                    </select>
-                </div> 
-                <div class="form-group mt-1">
-                    <label for="Categoria">Tipo de Combustible</label>
-                    <select class="form-select" (change)="changeTipoCombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
-                        <option>{{tipoCombustible}}</option>
-                        <option value="gas">Gas</option>
-                        <option value="nafta">Nafta</option>                        
-                    </select>
-                </div> 
-                <div class="form-group mt-2">
-                    <label for="Categoria">Tarjeta de Combustible</label>
-                    <select class="form-select" (change)="changeTarjetaCombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
-                        <option>{{tarjetaCombustible ? "si" : "no"}}</option>
-                        <option value="si">si</option>
-                        <option value="no">no</option>                        
-                    </select>
-                </div> 
-                <div class="form-group mt-2">
-                  <label for="Categoria">Publicidad</label>
-                  <select class="form-select" (change)="changePublicidad($event)" required [ngClass]="{'isDisabled': soloVista}">
-                      <option>{{publicidad ? "si" : "no"}}</option>
-                      <option value="si">si</option>
-                      <option value="no">no</option>                        
-                  </select>
-              </div>               
-                <div class="form-group mt-1">
-                    <label for="Categoria">Seguimiento Satelital</label>                
-                      <select class="form-select" (change)="seguimientoSatelital($event)" required *ngIf="seguimiento else sinSeguimiento" [ngClass]="{'isDisabled': soloVista}">
-                          <option selected>si </option>
-                          <option value="si">si</option>   
-                          <option value="no">no</option>                        
-                      </select>
-                    <ng-template #sinSeguimiento>
-                        <select class="form-select" (change)="seguimientoSatelital($event)" required  [ngClass]="{'isDisabled': soloVista}">
-                            <option selected>no</option>
-                            <option value="si">si</option>   
-                            <option value="no">no</option>                        
-                        </select>
+<div class="modal fade modal-lg" id="modalVehiculos" tabindex="-1" aria-labelledby="modalVehiculos" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content m-2">
+            <div class="modal-header">
+                <h3>Vehiculos de: <strong>{{choferVehiculos? choferVehiculos.apellido + " " + choferVehiculos.nombre :  ""}}</strong></h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr class="table table-light table-group-divider">
+                            <th>Dominio</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Tipo Comb.</th>
+                            <th>Categoria</th>
+                            <th>Seguimiento</th>
+                            <th>Tarj. Comb.</th>
+                            <th>Publicidad</th>                   
+                        </tr>
+                    </thead>
+                    <tbody *ngIf="vehiculos.length > 0 else SinVehiculos">
+                        <tr *ngFor="let vehiculo of vehiculos" class="table-light w-100">
+                            <td>{{vehiculo.dominio}}</td>   
+                            <td>{{vehiculo.marca}}</td>   
+                            <td>{{vehiculo.modelo}}</td>   
+                            <td>{{vehiculo.tipoCombustible}}</td>   
+                            <td>{{vehiculo.categoria.nombre}}</td>   
+                            <td>{{!vehiculo.segSat ? "No" : vehiculo.satelital?.proveedor + ': ' + vehiculo.satelital?.marcaGps}}</td>   
+                            <td>{{vehiculo.tarjetaCombustible ? "Si" : "No"}}</td>   
+                            <td>{{vehiculo.publicidad ? "Si" : "No"}}</td>   
+                        </tr>       
+                    </tbody>
+                    <ng-template #SinVehiculos>
+                        <tbody>
+                            <tr>
+                                <td colspan="8">
+                                    Sin vehiculos cargados
+                                </td>
+                            </tr>
+                        </tbody>
                     </ng-template>
-                </div> 
-                <div *ngIf="seguimiento" class="mt-2">
-                    <form [formGroup]="seguimientoForm">
-                        <h5 for="Categoria">Detalle Seguimiento Satelital</h5>
-                        <label for="proveedor">Proveedor</label>
-                        <div class="input-group">
-                          <input formControlName="proveedor" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                        </div>
-                        <label for="Marca">Marca</label>
-                        <div class="input-group">
-                          <input formControlName="marcaGps" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                        </div>
-                    </form>                      
-                </div> 
-              
-            </form>
-          </div>          
-        </div>  
-      </div>
-      <div class="modal-footer">
-          <div >        
-            <!-- <button *ngIf="edicion" (click)="onSubmit()" class="btn btn-outline-secondary" data-bs-dismiss="modal">Guardar los cambios</button> -->
-            <app-btn-agregar name="GuardarCambiosClaro" *ngIf="!soloVista" (click)="onSubmit()" data-bs-dismiss="modal"></app-btn-agregar>
-          </div>   
-      </div>
+                </table>
+            </div>
+        </div>
     </div>
-  </div>
 </div>

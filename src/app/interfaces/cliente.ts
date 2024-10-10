@@ -1,3 +1,5 @@
+import { TarifaTipo } from "./tarifa-gral-cliente";
+
 export interface Cliente {
     clear(): unknown;
     id:any | null;
@@ -6,6 +8,7 @@ export interface Cliente {
     cuit: number;
     direccion: string;
     contactos: Contacto [];
+    tarifaTipo: TarifaTipo
 }
 
 export interface Contacto {    

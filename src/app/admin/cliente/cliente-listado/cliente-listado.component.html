@@ -1,200 +1,69 @@
 
 <div class="d-flex justify-content-between mt-3">
-    <h1>Clientes</h1>
-    <app-btn-leer  name="cliente" (click)="openModal()"></app-btn-leer>
+    <!-- <h1>Clientes</h1> -->
+    <app-btn-leer  name="Cliente" (click)="openModal('alta')"></app-btn-leer>
 </div>
 <!-- ////////////////////////////////////////////////////////////// -->
-<div class="custom-datatable mt-2">
+<div class="custom-datatable mt-3">
   
-  <div class="row w-100">
-      <div class="col-4 d-flex align-items-end">
-          <!-- <input type="text" placeholder="Buscar..." (input)="updateFilter($event)" />             -->
-          <input class="w-75" type="text" placeholder="Buscar por primer criterio..." (input)="updateFilter($event, 'first')" />
-          <span class="mx-2"> y </span>
-          <input class="w-75" type="text" placeholder="Buscar por segundo criterio..." (input)="updateFilter($event, 'second')" />
-      </div>
-      <div class="col-8 d-flex justify-content-between">                 
-          <div [ngClass]="{'isDisabledAjustes': !ajustes}" class="w-100" >
-              <label *ngFor="let column of allColumns" class="me-2">
-                <input type="checkbox" [checked]="column.selected" (change)="toggleColumn(column)"  />
-                {{ column.name }}
-              </label>
-          </div>       
-          <div class="text-end flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16"  type="button" (click)="toogleAjustes()">
-              <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/>
-              <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/>
-            </svg>  
+    <div class="row w-100">
+        <div class="col-4 d-flex align-items-end">
+            <!-- <input type="text" placeholder="Buscar..." (input)="updateFilter($event)" />             -->
+            <input class="w-75" type="text" placeholder="Buscar por primer criterio..." (input)="updateFilter($event, 'first')" />
+            <span class="mx-2"> y </span>
+            <input class="w-75" type="text" placeholder="Buscar por segundo criterio..." (input)="updateFilter($event, 'second')" />
         </div>
-      </div>        
-  </div>
+        <div class="col-8 d-flex justify-content-between">                 
+            <div [ngClass]="{'isDisabledAjustes': !ajustes}" class="w-100" >
+                <label *ngFor="let column of allColumns" class="me-2">
+                  <input type="checkbox" [checked]="column.selected" (change)="toggleColumn(column)"  />
+                  {{ column.name }}
+                </label>
+            </div>       
+            <div class="text-end flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16"  type="button" (click)="toogleAjustes()">
+                <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/>
+                <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/>
+              </svg>  
+          </div>
+        </div>        
+    </div>
 
-<ngx-datatable
-class="dark"
-[rows]="paginatedRows"
-[columns]="visibleColumns"
-[columnMode]="ColumnMode.flex"
-[headerHeight]="50"
-[footerHeight]="50"
-[rowHeight]="'auto'"
-[sortType]="sortType"
+    <ngx-datatable
+    class="dark"
+    [rows]="paginatedRows"
+    [columns]="visibleColumns"
+    [columnMode]="ColumnMode.flex"
+    [headerHeight]="50"
+    [footerHeight]="50"
+    [rowHeight]="'auto'"
+    [sortType]="sortType"
 
-[externalPaging]="true"
-[count]="count"
-[limit]="limit"
-[offset]="offset"
-(sort)="onSort($event)"
-(activate)="onActivate($event)"
-(select)="onSelect($event)"
-(page)="setPage($event)">
+    [externalPaging]="true"
+    [count]="count"
+    [limit]="limit"
+    [offset]="offset"
+    (sort)="onSort($event)"
+    (activate)="onActivate($event)"
+    (select)="onSelect($event)"
+    (page)="setPage($event)">
 
-<ngx-datatable-column *ngFor="let column of visibleColumns" [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow">
-    <ng-template ngx-datatable-cell-template let-row="row">
-        {{ row[column.prop] }}
-    </ng-template>
-</ngx-datatable-column>
-<ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="2">          
-    <ng-template ngx-datatable-cell-template let-row="row">
-      <app-btn-leer name="Detalle" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirVista(row)"></app-btn-leer>
+        <ngx-datatable-column *ngFor="let column of visibleColumns" [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow">
+            <ng-template ngx-datatable-cell-template let-row="row">
+                {{ row[column.prop] }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="2">          
+            <ng-template ngx-datatable-cell-template let-row="row">
+              <app-btn-leer name="Detalle" (click)="abrirVista(row)"></app-btn-leer>
+                    
+              <app-btn-editar class="mx-2" name="Editar" (click)="abrirEdicion(row)"></app-btn-editar>
             
-      <app-btn-editar class="mx-1" name="Editar" data-bs-toggle="modal" data-bs-target="#exampleModal" (click)="abrirEdicion(row)"></app-btn-editar>
-    
-      <app-btn-eliminar name="Eliminar" (click)="eliminarCliente(row)"></app-btn-eliminar>
-    </ng-template>
-</ngx-datatable-column>
-
-</ngx-datatable>
+              <app-btn-eliminar name="Eliminar" (click)="eliminarCliente(row)"></app-btn-eliminar>
+            </ng-template>
+        </ngx-datatable-column>
+    </ngx-datatable>
 </div>
 
-<!-- /////////////////////////////////////////////////////////////////// -->
-<!-- MODAL DETALLE Y EDICION -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header row" >
-                <div class="d-flex">
-                    <h2 class="modal-title" id="exampleModalLabel">{{!soloVista ? "Editar Cliente" : "Cliente"}}</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="borrarForms()"></button>        
-                </div>
-                <div *ngIf="clienteEditar !== undefined">
-                    <h5>Id: {{clienteEditar.idCliente}} </h5>                
-                </div>
-            </div>      
-            <div class="modal-body">
-                <div class="d-flex justify-content-between">
-                    <h3>Datos del Cliente:</h3>                  
-                </div>    
-                  
-                <form [formGroup]="form" (ngSubmit)="onSubmit()">                
-                    <div class="form-group">
-                        <label for="RazonSocial">Razon Social</label>
-                        <div class="input-group">
-                          <input formControlName="razonSocial" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">            
-                        </div>
-                    </div>    
-                    <div class="form-group">
-                        <label for="Direccion">Direccion</label>
-                        <div class="input-group">
-                          <input formControlName="direccion" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                        </div>
-                    </div>    
-                    <div class="form-group">
-                        <label for="Cuit">CUIT</label>
-                        <div class="input-group">
-                          <input formControlName="cuit" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                        </div>
-                    </div>             
-                </form>    
-                <div class="d-flex justify-content-between">
-                    <h3 class="mt-3">Contactos: </h3>                       
-                    <app-btn-agregar name="AgregarContactoClaro" *ngIf="!soloVista" class="mt-2" type="submit" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal"></app-btn-agregar>
-                </div>                
-                <table class="table table-striped">
-                    <thead>
-                        <tr>                                            
-                            <th>Puesto</th>
-                            <th>Apellido</th>
-                            <th>Nombre</th>
-                            <th>Telefono</th>
-                            <th>Correo</th>
-                            <th colspan="2" id="botones"></th>                                                 
-                        </tr>
-                    </thead>
-                    <tbody *ngIf="clienteEditar !== undefined">
-                        <tr *ngFor=" let contacto of clienteEditar.contactos; let i = index">  
-                            <td class="fila-contacto align-middle"> {{contacto.puesto}} </td>  
-                            <td class="fila-contacto align-middle"> {{contacto.apellido}} </td>
-                            <td class="fila-contacto align-middle"> {{contacto.nombre}} </td>
-                            <td class="fila-contacto align-middle"> {{contacto.telefono}} </td>
-                            <td class="fila-contacto align-middle"> {{contacto.email}} </td>     
-                            <td>                      
-                                <app-btn-editar name="EditarClaro" *ngIf="!soloVista" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal" (click)="armarContacto(contacto, i)"></app-btn-editar>                         
-                            </td>        
-                            <td>                              
-                              <app-btn-eliminar name="EliminarClaro" *ngIf="!soloVista" (click)="eliminarContacto(i)"></app-btn-eliminar>                        
-                            </td>                                             
-                        </tr>     
-                    </tbody>
-                </table>    
-                <div>              
-                    <app-btn-agregar name="GuardarCambiosClaro" *ngIf="!soloVista" class="mt-2" (click)="onSubmit()" data-bs-dismiss="modal"></app-btn-agregar>
-                </div>      
-            </div>     
-        </div>
-    </div>
-</div>
-<!-- MODAL CONTACTOS -->
-<div class="modal fade" id="exampleModalToggle2" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalToggleLabel2">Contacto</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="borrarForms()"></button>
-            </div>
-            <div class="modal-body">
-                <form [formGroup]="formContacto" (ngSubmit)="guardarContacto()">
-                    <div class="input-group">
-                        <span class="input-group-text contactoForm" id="basic-addon3">Puesto: </span>
-                        <input type="text" formControlName="puesto" class="form-control " required
-                        type="text" [placeholder]="'ej:  director de logistica'" 
-                                [ngClass]="{ 'is-invalid': formContacto.get('puesto').invalid && 
-                                (formContacto.get('puesto').dirty || formContacto.get('puesto').touched) }">
-                    </div>   
-                    <div class="input-group">
-                        <span class="input-group-text contactoForm" id="basic-addon3">Apellido: </span>
-                        <input type="text" formControlName="apellido" class="form-control " required
-                        type="text" [placeholder]="'ej:  Pautasso'" 
-                                [ngClass]="{ 'is-invalid': formContacto.get('apellido').invalid && 
-                                (formContacto.get('apellido').dirty || formContacto.get('apellido').touched) }">
-                    </div>    
-                    <div class="input-group">
-                        <span class="input-group-text contactoForm" id="basic-addon3">Nombre: </span>
-                        <input type="text" formControlName="nombre" class="form-control " required
-                        type="text" [placeholder]="'ej:  Rocio'" 
-                                [ngClass]="{ 'is-invalid': formContacto.get('nombre').invalid && 
-                                (formContacto.get('nombre').dirty || formContacto.get('nombre').touched) }">
-                    </div>       
-                    <div class="input-group">
-                        <span class="input-group-text contactoForm" id="basic-addon3">Telefono: </span>
-                        <input type="text" formControlName="telefono" class="form-control " required
-                        type="text" [placeholder]="'ej:  351345166'" 
-                                [ngClass]="{ 'is-invalid': formContacto.get('telefono').invalid && 
-                                (formContacto.get('telefono').dirty || formContacto.get('telefono').touched) }">
-                    </div>  
-                    <div class="input-group">
-                        <span class="input-group-text contactoForm" id="basic-addon3">Email: </span>
-                        <input type="text" formControlName="email" class="form-control " required
-                        type="text" [placeholder]="'ej:  davidcortes@gmail.com'" 
-                                [ngClass]="{ 'is-invalid': formContacto.get('email').invalid && 
-                                (formContacto.get('email').dirty || formContacto.get('email').touched) }">
-                    </div>  
-                </form>
-            </div>
-            <div class="modal-footer">              
-                <app-btn-agregar name="GuardarClaro" type="submit" data-bs-toggle="modal" data-bs-target="#exampleModal" [disabled]="form.invalid " (click)="guardarContacto()"></app-btn-agregar>            
-            </div>
-        </div>
-    </div>
-</div>
 
 

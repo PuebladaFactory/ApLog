@@ -1,12 +1,12 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AdminHomeComponent } from './admin-home/admin-home.component';
-import { ClienteAltaComponent } from './cliente/cliente-alta/cliente-alta.component';
+
 
 const routes: Routes = [
   {path: '', component: AdminHomeComponent,
    children: [
-    { path: '', redirectTo: '/op/op-alta', pathMatch: 'full' },    
+    { path: '', redirectTo: '/op', pathMatch: 'full' },    
     {
       path: 'clientes',
       loadChildren: () => import('./cliente/cliente.module').then(m => m.ClienteModule)
@@ -34,7 +34,7 @@ const routes: Routes = [
     {
       path: 'historial',
       loadChildren: () => import('./historial/historial.module').then(m => m.HistorialModule)
-    },  
+    },        
     
 ]  },  
 /* {

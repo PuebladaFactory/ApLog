@@ -91,7 +91,7 @@ export class ExcelService {
     // Datos de la factura
     facturasOp.forEach((facOp:FacturaOpCliente) => {
       /* const facturaData = [facOp.fecha, quincena, `${new Date(facOp.fecha).getMonth()+1}`, `${new Date(facOp.fecha).getFullYear()}`, facOp.operacion.observaciones , facOp.total.toFixed(2)]; */
-      const facturaData = [facOp.fecha, quincena, facOp.operacion.chofer.apellido, facOp.operacion.observaciones ,`${facOp.operacion.tarifaEspecial? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, `${facOp.operacion.tarifaEspecial? "": (facOp.total-facOp.valorJornada).toFixed(2) }`,  facOp.total.toFixed(2)];
+      const facturaData = [facOp.fecha, quincena, facOp.operacion.chofer.apellido, facOp.operacion.observaciones ,`${facOp.operacion.tarifaEventual? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, `${facOp.operacion.tarifaEventual? "": (facOp.total-facOp.valorJornada).toFixed(2) }`,  facOp.total.toFixed(2)];
       worksheet.addRow(facturaData).eachCell(cell => {
         cell.font = { size: 10, bold: false };
         cell.alignment = { horizontal: 'center' };
@@ -211,7 +211,7 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[])
   // Datos de la factura
   facturasOp.forEach((facOp:FacturaOpChofer) => {
     /* const facturaData = [facOp.fecha, quincena, `${new Date(facOp.fecha).getMonth()+1}`, `${new Date(facOp.fecha).getFullYear()}`, facOp.operacion.observaciones , facOp.total.toFixed(2)]; */
-    const facturaData = [facOp.fecha, quincena, facOp.operacion.idOperacion, facOp.operacion.cliente.razonSocial ,`${facOp.operacion.tarifaEspecial? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`,`${facOp.operacion.tarifaEspecial? "": (facOp.total-facOp.valorJornada).toFixed(2) }`,facOp.total.toFixed(2)];
+    const facturaData = [facOp.fecha, quincena, facOp.operacion.idOperacion, facOp.operacion.cliente.razonSocial ,`${facOp.operacion.tarifaEventual? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`,`${facOp.operacion.tarifaEventual? "": (facOp.total-facOp.valorJornada).toFixed(2) }`,facOp.total.toFixed(2)];
     worksheet.addRow(facturaData).eachCell(cell => {
       cell.alignment = { horizontal: 'center' };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
@@ -331,7 +331,7 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOpPro
   // Datos de la factura
   facturasOp.forEach((facOp:FacturaOpProveedor) => {
     /* const facturaData = [facOp.fecha, quincena, `${new Date(facOp.fecha).getMonth()+1}`, `${new Date(facOp.fecha).getFullYear()}`, facOp.operacion.observaciones , facOp.total.toFixed(2)]; */
-    const facturaData = [facOp.fecha, quincena, facOp.operacion.idOperacion, facOp.operacion.cliente.razonSocial , facOp.operacion.chofer.apellido ,`${facOp.operacion.tarifaEspecial? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`,`${facOp.operacion.tarifaEspecial? "": (facOp.total-facOp.valorJornada).toFixed(2) }`,facOp.total.toFixed(2)];
+    const facturaData = [facOp.fecha, quincena, facOp.operacion.idOperacion, facOp.operacion.cliente.razonSocial , facOp.operacion.chofer.apellido ,`${facOp.operacion.tarifaEventual? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`,`${facOp.operacion.tarifaEventual? "": (facOp.total-facOp.valorJornada).toFixed(2) }`,facOp.total.toFixed(2)];
     worksheet.addRow(facturaData).eachCell(cell => {
       cell.font = { size: 9, bold: false };
       cell.alignment = { horizontal: 'center' };

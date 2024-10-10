@@ -1,4 +1,5 @@
 import { Proveedor } from "./proveedor";
+import { TarifaTipo } from "./tarifa-gral-cliente";
 
 export interface Chofer {
     id:any;
@@ -11,9 +12,9 @@ export interface Chofer {
     domicilio: string;
     email: string;
     fechaNac: Date;
-    vehiculo: Vehiculo;
+    vehiculo: Vehiculo[];
     proveedor: Proveedor["razonSocial"]|string|null;   
-    
+    tarifaTipo: TarifaTipo | null;
     
 }
 
@@ -22,8 +23,9 @@ export interface Vehiculo {
     marca:string;
     modelo: string;
     tipoCombustible: string;    
-    categoria: string;
-    satelital: SeguimientoSatelital | boolean;
+    categoria: Categoria;
+    segSat: boolean;
+    satelital: SeguimientoSatelital | null;
     tarjetaCombustible: boolean;
     refrigeracion: boolean|null;
     publicidad: boolean;
@@ -32,5 +34,10 @@ export interface Vehiculo {
 export interface SeguimientoSatelital {
     proveedor: string;
     marcaGps: string;
+}
+
+export interface Categoria {
+    catOrden:number;
+    nombre: string;    
 }
 

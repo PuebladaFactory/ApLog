@@ -5,7 +5,22 @@
 @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
 body {
     font-family: 'Poppins', sans-serif;
-    background-color: #a3a3a3;
+    /* background-color: #a3a3a3; */
+    background-color: #eaf4f8f6;
+}
+
+button{
+    background-color: transparent;    
+    border-color: #007bff;    
+}
+
+button:hover{
+    background-color: #002b5c;    
+    
+}
+
+svg{
+    color: #007bff
 }
 
 /* p {
@@ -54,7 +69,8 @@ a:focus {
     display: flex;
     width: 100%;
     /* align-items: stretch; */
-    background-color: #a3a3a3;
+    /* background-color: #a3a3a3; */
+    background-color: #eaf4f8f6;
 }
 
 #sidebar {

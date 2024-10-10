@@ -15,7 +15,7 @@ import { HistorialModule } from './historial/historial.module';
 @NgModule({
   declarations: [
     AdminHomeComponent,
-    AdminSidebarComponent
+    AdminSidebarComponent,    
   ],
   imports: [
     CommonModule,
@@ -26,7 +26,7 @@ import { HistorialModule } from './historial/historial.module';
     ProveedoresModule,
     FacturacionModule,
     LiquidacionModule,
-    HistorialModule
+    HistorialModule,    
   ]
 })
 export class AdminModule { }

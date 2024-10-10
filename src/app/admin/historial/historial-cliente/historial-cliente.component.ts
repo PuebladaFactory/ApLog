@@ -86,7 +86,7 @@ export class HistorialClienteComponent implements OnInit {
       idOperacion: cliente.operacion.idOperacion,
       fecha: cliente.operacion.fecha,
       chofer: `${cliente.operacion.chofer.apellido} ${cliente.operacion.chofer.nombre}`,
-      categoria: cliente.operacion.chofer.vehiculo.categoria,
+      categoria: cliente.operacion.chofer.vehiculo[0].categoria,
       acompaniate: cliente.operacion.acompaniante,
       proveedor: cliente.operacion.chofer.proveedor,
       direccion: cliente.operacion.cliente.direccion,

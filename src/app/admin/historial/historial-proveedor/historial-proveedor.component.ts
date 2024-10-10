@@ -84,7 +84,7 @@ export class HistorialProveedorComponent implements OnInit {
       idOperacion: proveedor.operacion.idOperacion,
       fecha: proveedor.operacion.fecha,
       chofer: `${proveedor.operacion.chofer.apellido} ${proveedor.operacion.chofer.nombre}`,
-      categoria: proveedor.operacion.chofer.vehiculo.categoria,
+      categoria: proveedor.operacion.chofer.vehiculo[0].categoria,
       acompaniate: proveedor.operacion.acompaniante,
       proveedor: proveedor.operacion.chofer.proveedor,
       direccion: proveedor.operacion.cliente.direccion,

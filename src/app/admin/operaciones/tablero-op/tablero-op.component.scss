@@ -1,0 +1,98 @@
+#cerrar{   
+  background-color: transparent;
+  border-color: black;
+}
+
+#cerrar:hover{
+  background-color: #0d6efd;
+  color: white;
+}
+
+th{
+    width: 20%;
+}
+
+.offcanvas-end {
+    width: 300px;
+}
+.offcanvas-normal {
+    height: 400px;
+}
+
+.offcanvas-personalizada {
+    width: 500px;
+    height: 400px;
+}
+
+.offcanvas-alta {
+    height: 500px;
+    width: 500px;
+} 
+
+
+.botones{
+    width: 1rem;
+}
+
+.isInvisible{
+    visibility: hidden;
+}
+
+.invicible{
+  display:none;
+}
+
+
+p, #obs-vista{
+font-size: 1.7rem;
+}
+
+input, option, textarea, li {
+font-size: 1.3rem;
+} 
+
+.boton-alta{
+    width: 15rem;
+    background: #002b5c;
+    color: white;
+    opacity: 0.8;
+    font-size: 1.3rem;
+  }
+
+.boton-alta:hover{
+    background: #0d6efd;    
+}
+
+.boton{
+  background: #002b5c;
+  color: white;
+  opacity: 0.8;
+  font-size: 1.3rem;
+}
+.boton:hover{
+  background: #0d6efd;    
+}
+
+
+.estado-abierta {
+    color: green;
+    font-weight: bold;
+  }
+  
+  .estado-cerrada {
+    color: red;
+    font-weight: bold;
+  }
+  
+  .estado-facturada {
+    color: rgb(0, 238, 255);
+    font-weight: bold;
+  }
+  .isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  
+  .isDisabled:hover {
+    cursor: not-allowed;
+  }

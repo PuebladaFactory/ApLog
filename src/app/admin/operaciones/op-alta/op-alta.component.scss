@@ -18,3 +18,17 @@
 input, option, textarea {
     font-size: 1.15rem;
   }
+
+.invisible{
+    display:none;   
+}
+
+#cerrar{   
+    background-color: transparent;
+    border-color: black;
+  }
+  
+  #cerrar:hover{
+    background-color: #0d6efd;
+    color: white;
+  }

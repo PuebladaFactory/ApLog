@@ -68,8 +68,8 @@ export class PdfService {
                 //{ text: facOp.operacion.idOperacion, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
                 { text: facOp.operacion.chofer.apellido, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
                 { text: facOp.operacion.observaciones, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-                { text: `${facOp.operacion.tarifaEspecial? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
-                { text: `${facOp.operacion.tarifaEspecial? "": (facOp.total-facOp.valorJornada).toFixed(2) }`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+                { text: `${facOp.operacion.tarifaEventual? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+                { text: `${facOp.operacion.tarifaEventual? "": (facOp.total-facOp.valorJornada).toFixed(2) }`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
                 { text: facOp.total.toFixed(2), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }
               ]),
               // Fila estática con el total
@@ -161,8 +161,8 @@ async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[]): 
               { text: `${new Date(facOp.fecha).getFullYear()}`, fillColor: dynamicRowFillColor, alignment: 'center' },  */
               { text: facOp.operacion.idOperacion, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
               { text: facOp.operacion.cliente.razonSocial, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-              { text: `${facOp.operacion.tarifaEspecial? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
-                { text: `${facOp.operacion.tarifaEspecial? "": (facOp.total-facOp.valorJornada).toFixed(2) }`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+              { text: `${facOp.operacion.tarifaEventual? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+                { text: `${facOp.operacion.tarifaEventual? "": (facOp.total-facOp.valorJornada).toFixed(2) }`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
               { text: facOp.total.toFixed(2), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }
             ]),
             // Fila estática con el total
@@ -244,8 +244,8 @@ async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOpProve
               { text: facOp.operacion.idOperacion, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
               { text: facOp.operacion.chofer.apellido, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
               { text: facOp.operacion.cliente.razonSocial, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-              { text: `${facOp.operacion.tarifaEspecial? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
-                { text: `${facOp.operacion.tarifaEspecial? "": (facOp.total-facOp.valorJornada).toFixed(2) }`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+              { text: `${facOp.operacion.tarifaEventual? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+                { text: `${facOp.operacion.tarifaEventual? "": (facOp.total-facOp.valorJornada).toFixed(2) }`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
               { text: facOp.total.toFixed(2), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }
             ]),
             // Fila estática con el total

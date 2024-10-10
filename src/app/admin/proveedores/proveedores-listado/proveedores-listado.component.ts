@@ -1,11 +1,11 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ProveedoresAltaComponent } from '../proveedores-alta/proveedores-alta.component';
 import Swal from 'sweetalert2';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import { Chofer } from 'src/app/interfaces/chofer';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -15,36 +15,29 @@ import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 export class ProveedoresListadoComponent implements OnInit {
   
   searchText!: string;
-  proveedores$!: Proveedor[];
-  edicion:boolean = false;
-  proveedorEditar!: Proveedor;
-  form:any;
+  $proveedores!: Proveedor[];  
+  proveedorEditar!: Proveedor;  
   componente:string ="proveedores";
-  //mostrar:boolean = false;
-  formContacto: any;
-  contactoEditar!: Contacto;
-  indice!:number;
-  $proveedores:any;
-  soloVista: boolean = false;
-
+  $choferes!: Chofer [];
   ////////////////////////////////////////////////////////////////////////////////////////
-//@ViewChild('tablaClientes') table: any;  
-rows: any[] = [];
-filteredRows: any[] = [];
-paginatedRows: any[] = [];
-allColumns = [
-//    { prop: '', name: '', selected: true, flexGrow:1  },
-  { prop: 'idProveedor', name: 'Id Proveedor', selected: false, flexGrow:2  },  
-  { prop: 'razonSocial', name: 'Razon Social', selected: true, flexGrow:2  },          
-  { prop: 'cuit', name: 'CUIT', selected: true, flexGrow:2  },
-  { prop: 'direccion', name: 'Direccion', selected: true, flexGrow:2 },
-  
-  { prop: 'contacto', name: 'Contacto', selected: true, flexGrow:2  },    
-  { prop: 'puesto', name: 'Puesto', selected: true, flexGrow:2  },    
-  { prop: 'telefono', name: 'N° Contacto', selected: true, flexGrow:2  },    
-  { prop: 'correo', name: 'Correo', selected: true, flexGrow:2  },  
-  
-];
+  //@ViewChild('tablaClientes') table: any;  
+  rows: any[] = [];
+  filteredRows: any[] = [];
+  paginatedRows: any[] = [];
+  choferesProveedor!: Chofer[];
+  allColumns = [
+  //    { prop: '', name: '', selected: true, flexGrow:1  },
+    { prop: 'idProveedor', name: 'Id Proveedor', selected: false, flexGrow:2  },  
+    { prop: 'razonSocial', name: 'Razon Social', selected: true, flexGrow:2  },          
+    { prop: 'cuit', name: 'CUIT', selected: true, flexGrow:2  },
+    { prop: 'direccion', name: 'Direccion', selected: true, flexGrow:2 },
+    { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow: 2 },
+    { prop: 'contacto', name: 'Contacto', selected: true, flexGrow:2  },    
+    { prop: 'puesto', name: 'Puesto', selected: true, flexGrow:2  },    
+    { prop: 'telefono', name: 'N° Contacto', selected: true, flexGrow:2  },    
+    { prop: 'correo', name: 'Correo', selected: true, flexGrow:2  },  
+    
+  ];
 visibleColumns = this.allColumns.filter(column => column.selected);
 selected = [];
 count = 0;
@@ -61,26 +54,7 @@ secondFilter = '';
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal){
-    this.form = this.fb.group({      
-      razonSocial: [""], 
-      direccion: [""],
-      cuit: [""],      
-    })
-
-    this.formContacto = this.fb.group({
-      puesto: ["", [Validators.required, Validators.maxLength(30)]],
-      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
-      nombre: ["", [Validators.required, Validators.maxLength(30)]],
-      telefono: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]], 
-      email: ["",[Validators.required, Validators.email]],
-      /* puesto:[""],
-      apellido:[""],
-      nombre: [""],
-      telefono: [""],
-      email:[""],*/
-    });
-  }
+  constructor(private storageService: StorageService, private modalService: NgbModal){}
   
   ngOnInit(): void { 
     //this.proveedores$ = this.storageService.proveedores$; 
@@ -88,26 +62,17 @@ secondFilter = '';
       this.$proveedores = data;
       this.armarTabla();
     })
+
+    this.storageService.choferes$.subscribe(data => {
+      this.$choferes = data;            
+    });
   }
   
   abrirEdicion(row:any):void {
     this.seleccionarProveedor(row);
-    this.soloVista = false;    
-    //this.proveedorEditar = proveedor;    
-    ////console.log()("este es el cliente a editar: ", this.clienteEditar);
-    this.armarForm();
-    
+    this.openModal("edicion");    
   }
 
-  armarForm(){
-    this.form.patchValue({
-      razonSocial: this.proveedorEditar.razonSocial,
-      direccion: this.proveedorEditar.direccion,
-      cuit: this.proveedorEditar.cuit
-      /* email: this.clienteEditar.email,
-      telefono: this.clienteEditar.telefono, */
-    })
-  }
 
   seleccionarProveedor(row:any){ 
     let seleccion = this.$proveedores.filter((proveedor:Proveedor)=>{
@@ -118,86 +83,7 @@ secondFilter = '';
 
   abrirVista(row:any):void {
     this.seleccionarProveedor(row)
-    this.soloVista = true;
-    //this.proveedorEditar = proveedor;    
-    ////console.log()("este es el cliente a editar: ", this.clienteEditar);
-    this.armarForm();    
-  }
-
-  onSubmit(){   
-    Swal.fire({
-      title: "¿Guardar los cambios?",
-      text: "No se podrá revertir esta acción",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.update();            
-        Swal.fire({
-          title: "Confirmado",
-          text: "Los cambios se han guardado",
-          icon: "success"
-        });
-      }
-    });   
-    
-    
-    
-   }
-
-   update(): void {
-    this.proveedorEditar.razonSocial = this.form.value.razonSocial;
-    this.proveedorEditar.direccion = this.form.value.direccion;
-    this.proveedorEditar.cuit = this.form.value.cuit;
-    
-    ////console.log()("estos son los contactos: ", this.formContacto.value);
-    ////console.log()("estos es el clienteEditar: ", this.proveedorEditar);
-    this.storageService.updateItem(this.componente, this.proveedorEditar);
-    this.borrarForms();
-    this.edicion = false;    
-    this.ngOnInit();
-  }
-
-  editarPerfil(){
-    this.edicion = !this.edicion;
-  }
-
-  armarContacto(contacto: Contacto, i: number){
-    //console.log()(i);
-    this.indice = i;
-    this.contactoEditar = contacto;
-    this.formContacto.patchValue({
-      puesto: contacto.puesto,
-      apellido: contacto.apellido,
-      nombre: contacto.nombre,
-      telefono: contacto.telefono,
-      email: contacto.email,
-    })
-  }
-
-  guardarContacto(){
-    ////console.log()(this.formContacto.value);
-    
-    
-    this.contactoEditar = this.formContacto.value;
-    //console.log()(this.indice);
-    if(this.indice === undefined){
-      //console.log()(this.indice);
-      //console.log()(this.contactoEditar);
-      this.proveedorEditar.contactos.push(this.contactoEditar)
-    } else{
-      //console.log()(this.contactoEditar);
-      //console.log()(this.indice);
-      
-      this.proveedorEditar.contactos[this.indice] = this.contactoEditar;
-      //console.log()(this.proveedorEditar);  
-    }
-    //console.log()(this.proveedorEditar.contactos);
-    
+    this.openModal("vista")   
   }
 
   eliminarProveedor(row: any){
@@ -222,20 +108,11 @@ secondFilter = '';
       }
     });   
     
-    /* this.ngOnInit(); */
-    
+    /* this.ngOnInit(); */    
   }
 
-  eliminarContacto(indice:number){
-    this.proveedorEditar.contactos.splice(indice, 1);    
-  }
-
-  borrarForms(){
-    this.form.reset()
-    this.formContacto.reset()
-  }
-
-  openModal(): void {   
+  
+  openModal(modo:string): void {   
    
     {
       const modalRef = this.modalService.open(ProveedoresAltaComponent, {
@@ -245,19 +122,16 @@ secondFilter = '';
         //backdrop:"static" 
       });
 
-    /*  let info = {
-        modo: "clientes",
-        item: facturaOp[0],
+    let info = {
+        modo: modo,
+        item: this.proveedorEditar,
       }; 
       //console.log()(info); */
       
-      //modalRef.componentInstance.fromParent = info;
+      modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          ////console.log()("ROOWW:" ,row);
-          this.storageService.getAllSorted("proveedores", 'idProveedor', 'asc')
-//        this.selectCrudOp(result.op, result.item);
-        //this.mostrarMasDatos(row);
+         
         },
         (reason) => {}
       );
@@ -274,6 +148,7 @@ secondFilter = '';
         razonSocial: proveedor.razonSocial,
         direccion: proveedor.direccion,
         cuit: proveedor.cuit,
+        tarifa: proveedor.tarifaTipo.general ? "General" : proveedor.tarifaTipo.especial ? "Especial" : proveedor.tarifaTipo.personalizada ? "Personalizada" : "Eventual",
         contacto: proveedor.contactos.length > 0 ? proveedor.contactos[0].apellido : "Sin Datos",
         puesto: proveedor.contactos.length > 0 ? proveedor.contactos[0].puesto : "Sin Datos" ,
         telefono: proveedor.contactos.length > 0 ? proveedor.contactos[0].telefono : "Sin Datos"  ,
@@ -343,6 +218,14 @@ secondFilter = '';
   
   toogleAjustes(){
     this.ajustes = !this.ajustes;
+  }
+
+  mostrarVehiculos(row: any){
+    this.seleccionarProveedor(row)    
+    this.choferesProveedor = this.$choferes.filter((chofer:Chofer)=>{
+      return chofer.proveedor === this.proveedorEditar.razonSocial
+    })
+  
   }
 
 }

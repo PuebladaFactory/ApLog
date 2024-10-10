@@ -130,7 +130,7 @@ export class FacturacionChoferService {
     this.$tarifaChofer = this.ultimaTarifa
     console.log("1) esta es la tarifa a facturar: ", this.$tarifaChofer);
     
-    if(op.tarifaEspecial){
+    if(op.tarifaEventual){
       //console.log("3)tarfia especial");
       this.facturarTarifaEspecial(op);
       
@@ -249,8 +249,8 @@ export class FacturacionChoferService {
       //this.total = typeof op.tEspecial.chofer.valor === 'number'? op.tEspecial.chofer.valor : 0;
     this.montoValorJornada = this.ultimaTarifa.tarifaEspecial.valor;
     this.total = this.ultimaTarifa.tarifaEspecial.valor;
-      this.ultimaTarifa.tarifaEspecial.valor = op.tEspecial.chofer.valor;
-      this.ultimaTarifa.tarifaEspecial.concepto = op.tEspecial.chofer.concepto;
+      this.ultimaTarifa.tarifaEspecial.valor = op.tEventual.chofer.valor;
+      this.ultimaTarifa.tarifaEspecial.concepto = op.tEventual.chofer.concepto;
       //console.log("4) tarifa editada", this.ultimaTarifa);      
       this.storageService.updateItem("tarifasChofer", this.ultimaTarifa)
       //} else{
