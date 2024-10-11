@@ -54,7 +54,7 @@ export class ModalFacturacionComponent implements OnInit {
   }
   
   ngOnInit(): void {   
-    //console.log(this.fromParent);        
+    console.log(this.fromParent);        
     this.op = this.fromParent.item;
     switch (this.fromParent.modo) {
       case "vista":

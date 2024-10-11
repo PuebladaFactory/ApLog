@@ -31,7 +31,7 @@ export class ClienteAltaComponent implements OnInit {
     this.form = this.fb.group({      
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
       cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
-      direccion: ["",[Validators.required, Validators.maxLength(50)]],        
+      direccion: [""],        
     });
 
     this.formTipoTarifa = this.fb.group({
