@@ -133,13 +133,13 @@ export class ClienteTarifaGralComponent implements OnInit {
         ? this.ultTarifa.cargasGenerales.map((cat, index) => ({
             categoria: `Categoria ${index + 1}`,
             valorAnterior: this.formatearValor(cat.valor),
-            nombreAnterior: this.tEspecial? this.tarifaGeneral.cargasGenerales[index].nombre : cat.nombre || '',
+            nombreAnterior: this.tEspecial? this.ultTarifa.cargasGenerales[index]?.nombre : cat.nombre || '',
             adicionalKm: {
                 primerSectorValor: cat.adicionalKm?.primerSector || 0,
                 sectoresSiguientesValor: cat.adicionalKm?.sectoresSiguientes || 0,
             }
         }))
-        : Array(this.tarifaGeneral.cargasGenerales.length).fill(0).map((_, index) => ({
+        : Array(8).fill(0).map((_, index) => ({
             categoria: `Categoria ${index + 1}`,
             valorAnterior: this.formatearValor(0),
             nombreAnterior: this.tEspecial? this.tarifaGeneral?.cargasGenerales[index]?.nombre : "",
