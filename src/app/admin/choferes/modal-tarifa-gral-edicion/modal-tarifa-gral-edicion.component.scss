@@ -11,3 +11,16 @@
   input, th, td, span {
     font-size: 1.3rem;
   }
+
+  .input-resaltado {
+    border: 2px solid blue; /* Color verde claro */
+  }
+
+  .isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  
+  .isDisabled:hover {
+    cursor: not-allowed;
+  }

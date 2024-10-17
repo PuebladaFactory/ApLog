@@ -4,29 +4,29 @@ export interface TarifaGralCliente {
     fecha: string;    
     cargasGenerales: CategoriaTarifa [];
     adicionales: AdicionalTarifa;
-    tipo: TarifaTipo;
+    tipo: TarifaTipo;    
     idCliente: number|null;
+    idChofer: number|null;
+    idProveedor: number|null;
 }
 export interface CategoriaTarifa {
     orden: number;
     nombre: string;
     valor: number;
+    adicionalKm: AdicionalKm;
 }
 
 export interface AdicionalTarifa {
     acompaniante: number;
-    adicionalKm: AdicionalKm;
+    KmDistancia:{    
+        primerSector: number;    
+        sectoresSiguientes: number;
+    };
 }
 
 export interface AdicionalKm {
-    primerSector: {
-        distancia: number;
-        valor: number;
-    };
-    sectoresSiguientes: {
-        intervalo: number;
-        valor: number;
-    };
+    primerSector: number;    
+    sectoresSiguientes: number;    
 }
 
 export interface TarifaTipo {

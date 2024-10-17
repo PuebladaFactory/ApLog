@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaGralChofer } from 'src/app/interfaces/tarifa-gral-chofer';
 import { ModalFacturacionComponent } from '../modal-facturacion/modal-facturacion.component';
+import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 
 @Component({
   selector: 'app-tablero-op',
@@ -398,6 +399,31 @@ export class TableroOpComponent implements OnInit {
           break
         }
       }
+    }
+  }
+
+  modalCargaMultiple(){
+    {
+      const modalRef = this.modalService.open(CargaMultipleComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'xl', 
+        //backdrop:"static" 
+      });      
+
+     /* let info = {
+        modo: modo,
+        item: this.opEditar,
+      }  */
+      ////console.log()(info); */
+      
+      //modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+         
+        },
+        (reason) => {}
+      );
     }
   }
 }

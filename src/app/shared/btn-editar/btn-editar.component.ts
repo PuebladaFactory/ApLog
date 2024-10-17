@@ -28,6 +28,13 @@ import { Component, Input, OnInit } from '@angular/core';
   Editar última Tarifa
 </button>
 
+<button *ngIf="name === 'agregarCategoria'" type="button" class="btn celeste-fijo mt-2">
+  Agregar Categoria
+</button>
+
+<button *ngIf="name === 'cargaMultiple'" type="button" class="btn celeste-fijo mt-2">
+  Carga Múltiple
+</button>
 
 <button *ngIf="name === 'Editar'"  class="btn btn-light m-0 celeste" style="border-radius: 10%;  margin: 10px;" >    <!-- <i class="bi bi-pencil"></i> -->
 
@@ -48,8 +55,8 @@ import { Component, Input, OnInit } from '@angular/core';
     <!-- {{name || "Editar"}} -->
 </button> 
 
-  <button *ngIf="name === 'modificarTarifa'"  class="btn azul">
-    Modificar Tarifa
+  <button *ngIf="name === 'modificarTarifa'"  class="btn azul mt-2">
+    Aumentar Tarifa
   </button>
 
   `,

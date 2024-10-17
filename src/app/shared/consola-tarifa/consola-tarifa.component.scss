@@ -1,3 +1,15 @@
 input, span, button{
-    font-size:1.3rem;
+    font-size:1.2rem;
 }
+
+@media screen and (max-width: 1249px) and (min-width: 1200px)   {
+    input, span, button{
+        font-size:1.10rem;
+    }
+} 
+
+@media screen and (max-width: 1299px) and (min-width: 1250px)   {
+    input, span, button{
+        font-size:1.10rem;
+    }
+} 

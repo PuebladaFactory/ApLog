@@ -1,0 +1,14 @@
+input, th, td, select, option, textarea{
+  font-size: 1.25rem;
+}
+label{
+  font-size:1.15rem;
+}
+.isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  
+  .isDisabled:hover {
+    cursor: not-allowed;
+  }

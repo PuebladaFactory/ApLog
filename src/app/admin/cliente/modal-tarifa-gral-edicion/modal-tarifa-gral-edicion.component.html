@@ -15,38 +15,76 @@
         <table class="table">
             <thead>
                 <tr>
+                    <th style="width: 5%;"></th>
                     <th style="width: 25%;">Categoria</th>
                     <th style="width: 35%;">Nombre</th>
-                    <th style="width: 40%;">Valor</th>
+                    <th style="width: 35%;">Valor</th>
                 </tr>
             </thead>
-            <tbody>           
-                <tr *ngFor="let categoria of tarifa.cargasGenerales">
-                    <td>Categoria {{categoria.orden}}</td>
-                    <td> 
-                        <div class="input-group mb-3">                            
-                            <input type="text" [(ngModel)]="categoria.nombre">
-                        </div>                        
-                    </td>
+            <tbody>
+                <ng-container *ngFor="let categoria of tarifa.cargasGenerales">
+                    <tr>
+                        <td><app-btn-eliminar name="Eliminar" (click)="eliminarCategoria(categoria.orden)"></app-btn-eliminar></td>
+                        <td>Categoria {{categoria.orden}}</td>
+                        <td> 
+                            <div class="input-group mb-3" [ngClass]="{'isDisabled': fromParent.modo === 'especial'}">                            
+                                <input type="text" [(ngModel)]="categoria.nombre">
+                            </div>                        
+                        </td>
+                        <td>
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                <input type="text" class="w-75" [(ngModel)]="categoria.valor">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"></td>                        
+                        <td>Km 1er Sector valor</td>                        
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input type="text" class="w-75" [(ngModel)]="categoria.adicionalKm.primerSector">
+                        </div>
+                    </tr>
+                    <tr>
+                        <td colspan="2"></td>
+                        <td>Km Intervalos valor</td>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input type="text" class="w-75" [(ngModel)]="categoria.adicionalKm.sectoresSiguientes">
+                        </div>
+                    </tr>
+                </ng-container>                           
+                <tr>
+                    <td colspan="3">Acompañante: </td>
                     <td>
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" [(ngModel)]="categoria.valor">
-                        </div>
+                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.acompaniante">
+                        </div>                        
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="2">Acompañante: </td>
+                    <td colspan="3">Km 1er Sector distancia:</td>
                     <td>
                         <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" [(ngModel)]="tarifa.adicionales.acompaniante">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
+                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.KmDistancia.primerSector">
+                        </div>                        
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3">Km Intervalos distancia:</td>
+                    <td>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
+                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.KmDistancia.sectoresSiguientes">
                         </div>                        
                     </td>
                 </tr>
                 
                 <!-- Modificación para adicionalKm -->
-                <tr>
+                <!-- <tr>
                     <td colspan="2">Km 1er Sector distancia: </td>
                     <td>
                         <div class="input-group mb-3">
@@ -81,7 +119,7 @@
                             <input type="text" [(ngModel)]="tarifa.adicionales.adicionalKm.sectoresSiguientes.valor">
                         </div> 
                     </td>
-                </tr>
+                </tr> -->
             </tbody>
         </table>
     </div>

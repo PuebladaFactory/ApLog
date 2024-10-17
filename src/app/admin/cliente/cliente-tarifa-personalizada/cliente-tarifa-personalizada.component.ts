@@ -161,7 +161,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     });
   }
 
-  openModal(): void {      
+  openModal(modo:string): void {      
     {
       const modalRef = this.modalService.open(ModalTarifaPersonalizadaComponent, {
         windowClass: 'myCustomModalClass',
@@ -169,13 +169,13 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
         size: 'lg', 
         //backdrop:"static" 
       });      
-/*     let info = {
+     let info = {
         modo: modo,
-        item: this.clienteEditar,
-      }  */
+        item: this.$ultTarifaCliente,
+      }  
       ////console.log()(info); */
       
-      modalRef.componentInstance.fromParent = this.$ultTarifaCliente;
+      modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {    
         },
