@@ -1,8 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder, FormControl } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
-import { AdicionalTarifa, CategoriaTarifa, TarifaGralProveedor, TarifaTipo } from 'src/app/interfaces/tarifa-gral-proveedor';
+import { AdicionalTarifa, CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaGralProveedor } from 'src/app/interfaces/tarifa-gral-proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
@@ -20,13 +20,14 @@ export class ProveedoresTarifaGralComponent implements OnInit {
   @Input() idClienteEsp!:any;
 
   tarifaForm!:any; 
-  ultTarifaGralCliente!: TarifaGralCliente; 
-  ultTarifaEspecial!: TarifaGralProveedor;
-  ultTarifaGralProveedor!: TarifaGralProveedor;
+  ultTarifaCliente!: TarifaGralCliente; 
+  ultTarifaEspecial!: TarifaGralCliente;
+  ultTarifaGralProveedor!: TarifaGralCliente;
+  ultTarifa!: TarifaGralCliente;
   porcentajeAumento: FormControl = new FormControl(0); // Para el aumento porcentual
   categoria!: CategoriaTarifa;
   categorias: CategoriaTarifa[] = [];
-  nuevaTarifaGral!: TarifaGralProveedor;
+  nuevaTarifaGral!: TarifaGralCliente;
   componente: string ="tarifasGralProveedor";
   consolaTarifa: any = 0;
   modoTarifa: any = { 
@@ -61,7 +62,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     ///tarifa general para obtener las categorias
     this.storageService.ultTarifaGralCliente$.subscribe(data =>{
       ////console.log("data: ", data);                
-      this.ultTarifaGralCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+      this.ultTarifaCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
       //console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);        
       /// ultima tarifa gral de proveedores
       this.storageService.ultTarifaGralProveedor$.subscribe(data =>{
@@ -101,7 +102,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       this.ultTarifaEspecial.cargasGenerales = this.ultTarifaEspecial.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
       //console.log("2d) ult tarifa ESP: ",this.ultTarifaEspecial);        
       this.resetTable();  // Limpia los datos existentes de la tabla;
-      this.crearCategorias()
+      //this.crearCategorias()
       this.inicializarTabla();
       this.onGenerarNuevaTarifaAutomatica();   
     })
@@ -109,23 +110,10 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       ////console.log("1a) tarifa especial: ", this.tEspecial);      
       ////console.log("1b) tarifa general: ", this.ultTarifaCliente);      
       this.resetTable();  // Limpia los datos existentes de la tabla
-      this.crearCategorias()
+      //.crearCategorias()
       this.inicializarTabla();
       this.onGenerarNuevaTarifaAutomatica();   
     }
-  }
-
-  crearCategorias(){
-    this.categorias = []
-    for(let i=0; i<8; i++ ){
-      this.categoria ={
-        orden: i+1,
-        nombre: "",
-        valor: 0,
-      }
-      this.categorias.push(this.categoria);
-    }
-    ////console.log(this.categorias);      
   }
 
   // Método para resetear la tabla
@@ -133,36 +121,99 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     this.filas.clear(); // Limpia el FormArray
   }
 
-  inicializarTabla() {
-    const categorias = [
-      { categoria: 'Categoria 1', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial?.cargasGenerales[0]?.valor) : this.formatearValor(this.ultTarifaGralProveedor?.cargasGenerales[0]?.valor) || 0, nombreAnterior: this.ultTarifaGralCliente?.cargasGenerales[0]?.nombre || '' },
-      { categoria: 'Categoria 2', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial?.cargasGenerales[1]?.valor) : this.formatearValor(this.ultTarifaGralProveedor?.cargasGenerales[1]?.valor) || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[1]?.nombre || '' },
-      { categoria: 'Categoria 3', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial?.cargasGenerales[2]?.valor) : this.formatearValor(this.ultTarifaGralProveedor?.cargasGenerales[2]?.valor) || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[2]?.nombre || '' },
-      { categoria: 'Categoria 4', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial?.cargasGenerales[3]?.valor) : this.formatearValor(this.ultTarifaGralProveedor?.cargasGenerales[3]?.valor) || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[3]?.nombre || '' },
-      { categoria: 'Categoria 5', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial?.cargasGenerales[4]?.valor) : this.formatearValor(this.ultTarifaGralProveedor?.cargasGenerales[4]?.valor) || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[4]?.nombre || '' },
-      { categoria: 'Categoria 6', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial?.cargasGenerales[5]?.valor) : this.formatearValor(this.ultTarifaGralProveedor?.cargasGenerales[5]?.valor) || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[5]?.nombre || '' },
-      { categoria: 'Categoria 7', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial?.cargasGenerales[6]?.valor) : this.formatearValor(this.ultTarifaGralProveedor?.cargasGenerales[6]?.valor) || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[6]?.nombre || '' },
-      { categoria: 'Categoria 8', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial?.cargasGenerales[7]?.valor) : this.formatearValor(this.ultTarifaGralProveedor?.cargasGenerales[7]?.valor) || 0, nombreAnterior: this.ultTarifaGralCliente.cargasGenerales[7]?.nombre || '' },
-      { categoria: 'Acompañante', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial.adicionales?.acompaniante) : this.formatearValor(this.ultTarifaGralProveedor?.adicionales?.acompaniante) || 0, nombreAnterior: '' },
-      { categoria: 'Km 1er Sector distancia', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial?.adicionales?.adicionalKm?.primerSector?.distancia) : this.formatearValor(this.ultTarifaGralProveedor?.adicionales?.adicionalKm?.primerSector?.distancia) || 0, nombreAnterior: '' },
-      { categoria: 'Km 1er Sector valor', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial.adicionales?.adicionalKm?.primerSector?.valor) : this.formatearValor(this.ultTarifaGralProveedor?.adicionales?.adicionalKm?.primerSector?.valor) || 0, nombreAnterior: '' },
-      { categoria: 'Km Intervalos distancia', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial?.adicionales?.adicionalKm?.sectoresSiguientes?.intervalo) : this.formatearValor(this.ultTarifaGralProveedor?.adicionales?.adicionalKm?.sectoresSiguientes?.intervalo) || 0, nombreAnterior: '' },
-      { categoria: 'Km Intervalos valor', valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifaEspecial.adicionales?.adicionalKm?.sectoresSiguientes?.valor) : this.formatearValor(this.ultTarifaGralProveedor?.adicionales?.adicionalKm?.sectoresSiguientes?.valor) || 0, nombreAnterior: '' },
-    ];
-  
+  inicializarTabla() {    
+    if(this.tEspecial){
+      this.ultTarifa = this.ultTarifaEspecial;
+    }else {
+      this.ultTarifa = this.ultTarifaGralProveedor;
+    }
+    const categorias = this.ultTarifa?.cargasGenerales?.length > 0 
+     ? this.ultTarifa.cargasGenerales.map((cat, index) => ({
+        categoria: `Categoria ${index + 1}`,
+        valorAnterior: this.formatearValor(cat.valor),
+        nombreAnterior: this.ultTarifaCliente?.cargasGenerales[index]?.nombre || '',
+        adicionalKm: {
+            primerSectorValor: cat.adicionalKm.primerSector,
+            sectoresSiguientesValor: cat.adicionalKm.sectoresSiguientes
+        },
+        orden: cat.orden
+    }))
+    : Array(this.ultTarifaCliente?.cargasGenerales.length).fill(0).map((_, index) => ({
+      categoria: `Categoria ${index + 1}`,
+      valorAnterior: this.formatearValor(0),
+      nombreAnterior: this.ultTarifaCliente?.cargasGenerales[index]?.nombre || "",
+      adicionalKm: {
+          primerSectorValor: 0,
+          sectoresSiguientesValor: 0
+      },
+      orden: index + 1
+    }));
+    ;
+
     categorias.forEach((cat, index) => {
-      const isManualEnabled = this.isManualMethodSelected;
-      const isNombreInputEnabled = index < 8 && isManualEnabled;
-      this.filas.push(this.fb.group({
-        seleccionado: [(index < 8 || index === 8 || index === 10 || index === 12) ? true : false], 
-        categoria: [cat.categoria],
-        nombre: [{ value: cat.nombreAnterior, disabled: !isNombreInputEnabled }],
-        ultimaTarifa: [{ value: cat.valorAnterior, disabled: true }],
-        diferencia: [{ value: 0, disabled: true }],
-        nuevaTarifa: [{ value: (cat.categoria === 'Km 1er Sector distancia' || cat.categoria === 'Km Intervalos distancia') ? cat.valorAnterior : 0, disabled: false }]
-      }));
+        const isManualEnabled = this.isManualMethodSelected;
+        const isNombreInputEnabled = index < 8 && isManualEnabled;
+
+        // Fila principal para la categoría
+        this.filas.push(this.fb.group({
+            seleccionado: [true], 
+            categoria: [cat.categoria],
+            nombre: [{ value: cat.nombreAnterior, disabled: !isNombreInputEnabled }],
+            ultimaTarifa: [{ value: cat.valorAnterior, disabled: true }],
+            diferencia: [{ value: 0, disabled: true }],
+            nuevaTarifa: [{ value: 0, disabled: false }]
+        }));
+
+        // Fila para Km 1er Sector valor
+        this.filas.push(this.fb.group({
+            seleccionado: [false],
+            categoria: [''],
+            nombre: [{ value: 'Km 1er Sector valor', disabled: true }],
+            ultimaTarifa: [{ value: this.formatearValor(cat.adicionalKm.primerSectorValor), disabled: true }],
+            diferencia: [{ value: 0, disabled: true }],
+            nuevaTarifa: [{ value: 0, disabled: false }]
+        }));
+
+        // Fila para Km Intervalos valor
+        this.filas.push(this.fb.group({
+            seleccionado: [false],
+            categoria: [''],
+            nombre: [{ value: 'Km Intervalos valor', disabled: true }],
+            ultimaTarifa: [{ value: this.formatearValor(cat.adicionalKm.sectoresSiguientesValor), disabled: true }],
+            diferencia: [{ value: 0, disabled: true }],
+            nuevaTarifa: [{ value: 0, disabled: false }]
+        }));
     });
-  }
+
+     // Fila para Acompañante
+     this.filas.push(this.fb.group({
+      seleccionado: [true],
+      categoria: ['Acompañante'],
+      nombre: [{ value: '', disabled: true }],
+      ultimaTarifa: [{ value: this.ultTarifa?.adicionales?.acompaniante !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.acompaniante) : this.formatearValor(0), disabled: true }],        
+      diferencia: [{ value: this.formatearValor(0), disabled: true }],
+      nuevaTarifa: [{ value: this.formatearValor(0), disabled: false }]
+  }));
+  // Fila para Km 1er Sector distancia
+  this.filas.push(this.fb.group({
+      seleccionado: [false],
+      categoria: ['Km 1er Sector distancia'],
+      nombre: [{ value: '', disabled: true }],
+      ultimaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.primerSector !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.primerSector) : this.formatearValor(0), disabled: true }],
+      diferencia: [{ value: this.formatearValor(0), disabled: true }],
+      nuevaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.primerSector) : 0, disabled: false }]
+  }));
+
+  // Fila para Km Intervalos distancia
+  this.filas.push(this.fb.group({
+      seleccionado: [false],
+      categoria: ['Km Intervalos distancia'],
+      nombre: [{ value: '', disabled: true }],
+      ultimaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ?  this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes) : this.formatearValor(0), disabled: true }],
+      diferencia: [{ value: this.formatearValor(0), disabled: true }],
+      nuevaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes) : 0, disabled: false }]
+  }));
+}
 
   formatearValor(valor: number) : any{
     let nuevoValor =  new Intl.NumberFormat('es-ES', { 
@@ -196,29 +247,46 @@ export class ProveedoresTarifaGralComponent implements OnInit {
   }
 
   calcularNuevaTarifaPorcentaje() {
-    //const porcentaje = this.porcentajeAumento.value / 100;
-    const porcentaje = this.consolaTarifa;
-    this.filas.controls.forEach(fila => {
-      const seleccionadoControl = fila.get('seleccionado');
-      const ultimaTarifaControl = fila.get('ultimaTarifa');
-      const nuevaTarifaControl = fila.get('nuevaTarifa');
-      const diferenciaControl = fila.get('diferencia');
-
-      if (seleccionadoControl?.value) {
-        const ultimaTarifa = this.limpiarValorFormateado(ultimaTarifaControl?.value || 0);
-        const nuevaTarifa = ultimaTarifa * (1 + porcentaje);
+    const porcentaje = this.consolaTarifa;  // Porcentaje a aplicar
+    this.filas.controls.forEach((fila, index) => {
+        const seleccionadoControl = fila.get('seleccionado'); 
+        const nombre = fila.get('nombre'); 
+        const ultimaTarifaControl = fila.get('ultimaTarifa');
+        const nuevaTarifaControl = fila.get('nuevaTarifa');
+        const diferenciaControl = fila.get('diferencia');
+        ////console.log("seleccionadoControl:", seleccionadoControl?.value);
         
-        nuevaTarifaControl?.setValue(this.formatearValor(nuevaTarifa));
-        diferenciaControl?.setValue(this.formatearValor(nuevaTarifa - ultimaTarifa));
-      }
+        if (seleccionadoControl?.value) {
+            const ultimaTarifa = this.limpiarValorFormateado(ultimaTarifaControl?.value) || 0;
+            const nuevaTarifa = ultimaTarifa * (1 + porcentaje);
+
+            nuevaTarifaControl?.setValue(this.formatearValor(nuevaTarifa));
+            diferenciaControl?.setValue(this.formatearValor(nuevaTarifa - ultimaTarifa));
+        }       
+        if (nombre?.value === "Km 1er Sector valor" || nombre?.value === "Km Intervalos valor") {
+          const ultimaTarifa = this.limpiarValorFormateado(ultimaTarifaControl?.value) || 0;
+          const nuevaTarifa = ultimaTarifa * (1 + porcentaje);
+
+          nuevaTarifaControl?.setValue(this.formatearValor(nuevaTarifa));
+          diferenciaControl?.setValue(this.formatearValor(nuevaTarifa - ultimaTarifa));
+      }  
+     
     });
-  }
+}
 
       // Función que convierte un string formateado en un número correcto para cálculos
-  limpiarValorFormateado(valorFormateado: string): number {
-    // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
-      return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
-    }
+      limpiarValorFormateado(valorFormateado: any): number {
+        if (typeof valorFormateado === 'string') {
+          // Si es un string, eliminar puntos de miles y reemplazar coma por punto
+          return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+        } else if (typeof valorFormateado === 'number') {
+          // Si ya es un número, simplemente devuélvelo
+          return valorFormateado;
+        } else {
+          // Si es null o undefined, devolver 0 como fallback
+          return 0;
+        }
+      }
 
   onSeleccionarTodosChange(event: any) {
     const checked = event.target.checked;
@@ -234,72 +302,49 @@ export class ProveedoresTarifaGralComponent implements OnInit {
   }
 
   onGenerarNuevaTarifaManual() {
-    if(this.tEspecial){
-      this.filas.controls.forEach((fila, index) => {
-              
-        const nuevaTarifaControl = fila.get('nuevaTarifa');
-        const diferenciaControl = fila.get('diferencia');
-        const ultimaTarifaControl = fila.get('ultimaTarifa');
-        
-        // Habilitar el input para la nueva tarifa
-        nuevaTarifaControl?.enable();
-    
-        // Agregar un listener para calcular la diferencia
-        nuevaTarifaControl?.valueChanges.subscribe((nuevoValor) => {
-          const ultimaTarifa = this.limpiarValorFormateado(ultimaTarifaControl?.value || 0);
-          //const diferencia = nuevoValor - ultimaTarifa;
-          //diferenciaControl?.setValue(diferencia);
-          if(typeof(nuevoValor) === "number") {
-            const diferencia = nuevoValor - ultimaTarifa;
-            //console.log("diferencia : ", diferencia ); 
-            diferenciaControl?.setValue(this.formatearValor(diferencia));
-          } else {
-            const diferencia = this.limpiarValorFormateado(nuevoValor) - ultimaTarifa;
-            //console.log("diferencia : ", diferencia ); 
-            diferenciaControl?.setValue(this.formatearValor(diferencia));
-          }
-        });
-      });  
-    } else{
-      this.filas.controls.forEach((fila, index) => {
+    this.filas.controls.forEach((fila, index) => {
+      /* if(!this.tEspecial){
         if (fila.get('categoria')?.value.includes('Categoria')) {
-          //fila.get('nombre')?.enable();
+            fila.get('nombre')?.enable();
         }
+      }  */
+        
+
         const nuevaTarifaControl = fila.get('nuevaTarifa');
         const diferenciaControl = fila.get('diferencia');
         const ultimaTarifaControl = fila.get('ultimaTarifa');
-        
+                
         // Habilitar el input para la nueva tarifa
         nuevaTarifaControl?.enable();
-    
-        // Agregar un listener para calcular la diferencia
+
+        // Agregar un listener para calcular la diferencia en las filas de categorías y adicionales
         nuevaTarifaControl?.valueChanges.subscribe((nuevoValor) => {
+          
           const ultimaTarifa = this.limpiarValorFormateado(ultimaTarifaControl?.value || 0);
-          //const diferencia = nuevoValor - ultimaTarifa;
-          //diferenciaControl?.setValue(diferencia);
+          //console.log("A)",nuevoValor);
+          
           if(typeof(nuevoValor) === "number") {
             const diferencia = nuevoValor - ultimaTarifa;
-            //console.log("diferencia : ", diferencia ); 
+            ////console.log("diferencia : ", diferencia ); 
             diferenciaControl?.setValue(this.formatearValor(diferencia));
           } else {
             const diferencia = this.limpiarValorFormateado(nuevoValor) - ultimaTarifa;
-            //console.log("diferencia : ", diferencia ); 
+            ////console.log("diferencia : ", diferencia ); 
             diferenciaControl?.setValue(this.formatearValor(diferencia));
           }
+           
         });
-      });
-    }
-    
-  }
-  
-  onGenerarNuevaTarifaAutomatica() {
-    this.filas.controls.forEach(fila => {
-      if (fila.get('categoria')?.value.includes('Categoria')) {
-        fila.get('nombre')?.disable();
-      }
-      fila.get('nuevaTarifa')?.disable();
     });
-  }
+}
+  
+onGenerarNuevaTarifaAutomatica() {
+  this.filas.controls.forEach(fila => {
+    if (fila.get('categoria')?.value.includes('Categoria')) {
+      fila.get('nombre')?.disable();
+    }
+    fila.get('nuevaTarifa')?.disable();
+  });
+}
 
   guardarTarifa() {
     // Aquí podrías implementar la lógica para guardar la nueva tarifa en Firebase
@@ -347,79 +392,62 @@ export class ProveedoresTarifaGralComponent implements OnInit {
 
   configurarNuevaTarifa() {
     const filas = this.tarifaForm.get('filas') as FormArray;
-
-    // Construcción del objeto `CargasGenerales` basado en los datos del formulario
-    const cargasGenerales: any = {
-      categoria1: this.crearCategoriaTarifa(filas.at(0)),
-      categoria2: this.crearCategoriaTarifa(filas.at(1)),
-      categoria3: this.crearCategoriaTarifa(filas.at(2)),
-      categoria4: this.crearCategoriaTarifa(filas.at(3)),
-      categoria5: this.crearCategoriaTarifa(filas.at(4)),
-      categoria6: this.crearCategoriaTarifa(filas.at(5)),
-      categoria7: this.crearCategoriaTarifa(filas.at(6)),
-      categoria8: this.crearCategoriaTarifa(filas.at(7)),
-    };
-    for(let i=0; i<8; i++ ){
-      this.categorias[i] ={
-        orden: this.categorias[i].orden,
-        nombre: this.obtenerNombreCat(filas.at(i)),
-        valor: this.obtenerValorCat(filas.at(i)),
-      }
-      
-    }
-
-    // Construcción del objeto `AdicionalTarifa` basado en los datos del formulario
-    const adicionales: AdicionalTarifa = {
-      acompaniante: this.limpiarValorFormateado(filas.at(8).get('nuevaTarifa')?.value || 0),
-      adicionalKm: {
-        primerSector: {
-          distancia: this.limpiarValorFormateado(filas.at(9).get('nuevaTarifa')?.value || 0),
-          valor: this.limpiarValorFormateado(filas.at(10).get('nuevaTarifa')?.value || 0),
-        },
-        sectoresSiguientes: {
-          intervalo: this.limpiarValorFormateado(filas.at(11).get('nuevaTarifa')?.value || 0),
-          valor: this.limpiarValorFormateado(filas.at(12).get('nuevaTarifa')?.value || 0),
+  
+    // Construcción del array `cargasGenerales` basado en los datos del formulario
+    const cargasGenerales: CategoriaTarifa[] = [];
+  
+    for (let i = 0; i < filas.length - 3; i += 3) { // Se itera en pasos de 3 filas (categoría + 2 adicionales)
+        const categoriaFila = filas.at(i);
+        const kmPrimerSectorFila = filas.at(i + 1);
+        const kmIntervalosFila = filas.at(i + 2);
+        
+        //console.log("nombre de la categoria: ", categoriaFila.get('nombre')?.value);
+        if(categoriaFila.get('nombre')?.value !== ""){
+        cargasGenerales.push({
+            orden: i / 3 + 1,
+            nombre: categoriaFila.get('nombre')?.value || '',
+            valor: this.limpiarValorFormateado(categoriaFila.get('nuevaTarifa')?.value || 0),
+            adicionalKm: {
+                primerSector: this.limpiarValorFormateado(kmPrimerSectorFila.get('nuevaTarifa')?.value || 0),
+                sectoresSiguientes: this.limpiarValorFormateado(kmIntervalosFila.get('nuevaTarifa')?.value || 0)
+            }
+        });
         }
-      },
-      publicidad:0,
+        
+    }
+  
+    // Construcción del objeto `AdicionalTarifa`
+    const adicionales: AdicionalTarifa = {
+        acompaniante: this.limpiarValorFormateado(filas.at(filas.length - 3).get('nuevaTarifa')?.value || 0),
+        KmDistancia: {
+            primerSector: this.limpiarValorFormateado(filas.at(filas.length - 2).get('nuevaTarifa')?.value || 0),
+            sectoresSiguientes: this.limpiarValorFormateado(filas.at(filas.length - 1).get('nuevaTarifa')?.value || 0)
+        }
     };
-
+  
     // Configuración del tipo de tarifa
     const tipo: TarifaTipo = {
-      general: true, // Este tipo de tarifa es general
-      especial: false,
-      eventual: false,
-      personalizada: false,
+        general: true,
+        especial: false,
+        eventual: false,
+        personalizada: false
     };
-
-    // Construcción del objeto `TarifaGralCliente`
+  
+    // Construcción final del objeto `TarifaGralCliente`
     this.nuevaTarifaGral = {
-      id: null,
-      idTarifa: new Date().getTime(),
-      fecha: new Date().toISOString().split('T')[0],
-      cargasGenerales: this.categorias,
-      adicionales: adicionales,
-      tipo: tipo,
-      idCliente: null,
-      idChofer: null,
-      idProveedor: null,
+        id: null,
+        idTarifa: new Date().getTime(),
+        fecha: new Date().toISOString().split('T')[0],
+        cargasGenerales: cargasGenerales,
+        adicionales: adicionales,
+        tipo: tipo,
+        idCliente: null,
+        idChofer: null,
+        idProveedor: null, 
     };
+}
 
-    //console.log("esta es la NUEVA TARIFA: ",this.nuevaTarifaGral);
-  }
 
-  crearCategoriaTarifa(control: AbstractControl): CategoriaTarifa {
-/*     return {
-      nombre: control.get('nombre')?.value || '',
-      valor: control.get('nuevaTarifa')?.value || 0
-    }; */
-    return {
-      orden:0,
-      nombre: control.get('nombre')?.value || '',
-      valor: control.get('nuevaTarifa')?.value || 0
-    };
-
-  }
 
   obtenerNombreCat(control: AbstractControl): string {
     return control.get('nombre')?.value || ''

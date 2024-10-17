@@ -13,6 +13,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { ModalFacturacionComponent } from './modal-facturacion/modal-facturacion.component';
+import { CargaMultipleComponent } from './carga-multiple/carga-multiple.component';
 
 
 @NgModule({
@@ -21,7 +22,7 @@ import { ModalFacturacionComponent } from './modal-facturacion/modal-facturacion
     OpAltaComponent,    
     ConsultaOpComponent,           
     TableroOpComponent,     
-    ModalFacturacionComponent,
+    ModalFacturacionComponent, CargaMultipleComponent,
   ],
   imports: [
     CommonModule,

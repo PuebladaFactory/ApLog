@@ -1,0 +1,103 @@
+<form [formGroup]="operacionesForm" (ngSubmit)="onSubmit()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1>Operación</h1>
+        <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mx-2">
+          <div class="col-3">
+            <div class="form-group">
+              <label for="Fecha">Fecha</label>
+              <div class="input-group mb-3">
+                <input type="date" formControlName="fecha" class="form-control">
+              </div>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="form-group">
+              <label for="Cliente">Cliente</label>
+              <select class="form-select mb-3" formControlName="cliente" (change)="changeCliente($event)">
+                <option [ngValue]="null">Seleccionar Cliente</option>
+                <option *ngFor="let cliente of $clientes" [value]="cliente.idCliente">
+                  {{cliente.razonSocial}}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="col-6">
+            <p *ngIf="tPersonalizada" class="fs-4 mb-0">El cliente tiene una tarifa personalizada.</p>
+            <p *ngIf="tPersonalizada" class="fs-4">Deberá seleccionar una sección y una categoría para cada Operación.</p>
+          </div>
+        </div>
+        <div class="row mx-2">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="align-middle" style="width: 2%;">
+                  <input type="checkbox" (change)="onSeleccionarTodosChange($event)">
+                </th>
+                <th class="align-middle" style="width: 10%;">Chofer</th>
+                <th class="align-middle" style="width: 15%;">Vehiculo</th>
+                <th class="align-middle" style="width: 8%;">Tarifa Chofer</th>
+                <th class="align-middle" style="width: 10%;">Acompañante</th>
+                <th class="align-middle" style="width: 20%;">Sección</th>
+                <th class="align-middle" style="width: 20%;">Categoria</th>
+                <th class="align-middle" style="width: 20%;">Observaciones</th>
+              </tr>                    
+            </thead>
+            <tbody formArrayName="choferes">
+                <tr *ngFor="let choferForm of choferesFormArray.controls; let i = index" [formGroupName]="i">
+                    <td class="align-middle">
+                      <input type="checkbox" formControlName="seleccionado">
+                    </td>
+                    <td class="align-middle isDisabled">
+                      <input type="text" formControlName="nombre">                        
+                    </td>
+                    <td class="align-middle">
+                      <select class="form-select" (change)="changeVehiculo(i,$event)" >
+                        <option value="">{{choferForm.get('vehiculoSeleccionado')?.value.length === 1 ? choferForm.get('vehiculoSeleccionado')?.value[0].dominio : "Elegir Vehiculo" }}  </option>
+                        <option *ngFor="let vehiculo of choferForm.get('vehiculoSeleccionado')?.value" [value]="vehiculo.dominio">
+                          {{vehiculo.categoria.nombre}}: {{vehiculo.dominio}}
+                        </option>
+                      </select>
+                    </td>                    
+                    <td class="align-middle">
+                      {{choferForm.get('tarifa')?.value}}
+                    </td>
+                    <td class="align-middle">
+                        <select formControlName="acompaniante" class="form-select" aria-label="Default select example" (change)="selectAcompaniante(i, $event)">
+                            <!-- <option value="">Seleccione</option> -->
+                            <option value="true">Si</option>
+                            <option value="false">No</option>
+                        </select>
+                    </td>
+                    <td class="align-middle" [ngClass]="{'isDisabled': !tPersonalizada}">                        
+                        <select class="form-select" (change)="changeSeccion(i, $event)">
+                            <option value="">{{tPersonalizada ? "Elija la sección" : "Sin datos"}} </option>
+                            <option *ngFor="let seccion of tarifaPersonalizada?.secciones" [value]="seccion.orden">
+                              Seccion {{seccion.orden}}: {{seccion.descripcion || ''}} 
+                            </option>
+                        </select>
+                    </td>
+                    <td class="align-middle" [ngClass]="{'isDisabled': !tPersonalizada}">
+                        <select formControlName="categoria" class="form-select " (change)="changeCategoria(i,$event)">
+                            <option selected>{{tPersonalizada ? "Elija la sección" : "Sin datos"}}</option>                              
+                            <option *ngFor="let categoria of seccionElegida?.categorias" [value]="categoria.orden">
+                              Categoria {{categoria.orden}}: {{categoria.nombre}} 
+                            </option>
+                        </select>
+                    </td>
+                    <td class="align-middle">
+                      <textarea class="form-control" formControlName="observaciones" rows="2"></textarea>
+                    </td>
+                  </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </div>
+  </form>

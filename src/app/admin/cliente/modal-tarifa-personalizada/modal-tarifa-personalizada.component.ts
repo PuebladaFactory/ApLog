@@ -23,8 +23,8 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
 
   ngOnInit(): void {    
     console.log("0) ", this.fromParent);
-    this.$ultimaTarifa = this.fromParent;
-    this.nuevaTarifa = this.fromParent;
+    this.$ultimaTarifa = this.fromParent.item;
+    this.nuevaTarifa = this.fromParent.item;
   }
 
   // Método para calcular automáticamente el aumento en las tarifas
@@ -55,25 +55,57 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
 
   // Método para generar el objeto final
   onSubmit(): void {
-    Swal.fire({
-      title: "¿Confirmar el alta de la tarifa?",
-      //text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar"
-    }).then((result) => {
-      if (result.isConfirmed) {        
-        this.crearTarifa();
-        Swal.fire({
-          title: "Confirmado",
-          text: "Alta exitosa",
-          icon: "success"
-        })           
-      }
-    });   
+    if(this.fromParent.modo === 'aumentar'){
+      Swal.fire({
+        title: "¿Confirmar el alta de la tarifa?",
+        //text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {        
+          this.crearTarifa();
+          Swal.fire({
+            title: "Confirmado",
+            text: "Alta exitosa",
+            icon: "success"
+          }).then((result)=>{
+            if (result.isConfirmed) {
+              this.activeModal.close();
+            }
+          });                   
+        }
+      });     
+    } else {
+      Swal.fire({
+        title: "¿Confirmar los cambios en la tarifa?",
+        //text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {        
+          this.updateItem();
+          Swal.fire({
+            title: "Confirmado",
+            text: "Alta exitosa",
+            icon: "success"
+          }).then((result)=>{
+            if (result.isConfirmed) {
+              this.activeModal.close();
+            }
+          });                   
+        }
+      }); 
+    }
+      
+      
   }
     // Clonamos la tarifa original y actualizamos los valores
    
@@ -103,8 +135,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   }
 
   addItem(item:TarifaPersonalizadaCliente){
-    this.storageService.addItem(this.componente, item);    
-    this.activeModal.close()
+    this.storageService.addItem(this.componente, item);        
   }
 
   formatearValor(valor: number) : any{
@@ -115,5 +146,10 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
    //////console.log(nuevoValor);    
    return nuevoValor
  }
+
+updateItem(){
+  //console.log("TARIFA EDITADA", this.$ultimaTarifa);
+  this.storageService.updateItem(this.componente, this.$ultimaTarifa);   
+}
 
 }

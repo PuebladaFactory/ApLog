@@ -144,7 +144,11 @@
     <div *ngIf="$ultTarifaCliente !== null else sinTarifas" class="mt-4">
         <div class="d-flex justify-content-between">
             <h2>Última Tarifa {{$ultTarifaCliente.fecha}}</h2>
-            <app-btn-editar name="modificarTarifa" (click)="openModal()"></app-btn-editar>           
+            <div>
+                <app-btn-editar name="editarTarifa" class="me-3" (click)="openModal('editar')" ></app-btn-editar>
+                <app-btn-editar name="modificarTarifa" (click)="openModal('aumentar')"></app-btn-editar>           
+            </div>
+            
         </div>
         
         <div class="border border-dark border-2 rounded-4 p-3 mt-2">

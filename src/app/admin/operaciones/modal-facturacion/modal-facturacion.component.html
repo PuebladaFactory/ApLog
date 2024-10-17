@@ -11,7 +11,13 @@
                     <div class="input-group">
                         <input class="form-control edicion" type="date" [value]="op.fecha">
                     </div>
-                </div>                
+                </div>     
+                <div *ngIf="op.estado.cerrada || op.estado.facturada" class="form-group isDisabled">       
+                    <label for="Patente" class="fs-5">Patente: </label>                                   
+                    <div class="input-group" [ngClass]="{'isDisabled': vista}">
+                        <input class="form-control edicion" [value]="op.patenteChofer">
+                    </div>                                                          
+                </div>                               
             </div>
             <div class="col-4 ">                
                 <div class="form-group">
@@ -44,13 +50,13 @@
         </div>
         <div class="row">
             <div class="col-4">
-                <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded" [ngClass]="{'altura': !cerrar}">                    
-                    <div class="form-group isDisabled" [ngClass]="{'isDisabled': vista}">       
+                <div *ngIf="op.estado.abierta" class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded" [ngClass]="{'altura': !cerrar}">                    
+                    <div class="form-group isDisabled">       
                         <label for="Patente" class="fs-5">Patente: </label>                                   
                         <div class="input-group" [ngClass]="{'isDisabled': vista}">
                             <input class="form-control edicion" [value]="op.patenteChofer">
                         </div>                                                          
-                    </div>                    
+                    </div>              
                     <div class="form-group" [ngClass]="{'isDisabled': vista || cerrar}">   
                         <label for="Acompaniante" class="fs-5">Acompañante</label>                                 
                         <select class="form-select mb-3" (change)="changeAcompaniante($event)">                                        
@@ -80,25 +86,69 @@
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
                             <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aPagar">
                         </div>                        
-                    </div>              
-                </div>               
-                 
-                <h3 class="mt-4 mb-3" [ngClass]="{'invisible': !cerrar}">Cerrar Operación:</h3> 
-                <form [formGroup]="form" class="border border-dark border-1 rounded-4 shadow p-3 mb-1 bg-body-tertiary rounded pb-5" [ngClass]="{'invisible': !cerrar}">         
-                    <div class="form-group">                                    
-                        <label for="Km" class="fs-5">Km Recorridos</label>
+                    </div>     
+                    <h3 class="mt-4 mb-3" [ngClass]="{'invisible': !cerrar}">Cerrar Operación:</h3> 
+                    <form [formGroup]="form" class="border border-dark border-1 rounded-4 shadow p-3 mb-1 bg-body-tertiary rounded pb-5" [ngClass]="{'invisible': !cerrar}">         
+                        <div class="form-group">                                    
+                            <label for="Km" class="fs-5">Km Recorridos</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
+                                <input formControlName="km" class="form-control edicion" required type="number">
+                            </div>                        
+                        </div>                        
+                        <div class="form-group mt-3">                                    
+                            <label for="Documentacion" class="fs-5">Documentacion</label>
+                            <input formControlName="documentacion" class="form-control edicion" type="file" id="formFile">
+                        </div>               
+                    </form>            
+                </div>         
+                <div *ngIf="!op.estado.abierta" class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded isDisabled" [ngClass]="{'altura': !cerrar}">     
+                    <div class="form-group">       
+                        <label for="Patente" class="fs-5">Patente: </label>                                   
+                        <div class="input-group" [ngClass]="{'isDisabled': vista}">
+                            <input class="form-control edicion" [value]="op.patenteChofer">
+                        </div>                                                          
+                    </div>   
+                    <h3 class="mt-2">Adicionales</h3>                 
+                    <div class="form-group" >                                    
+                        <label for="A Cobrar" class="fs-5">Acompañante</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="op.acompaniante">
+                        </div>                        
+                    </div>       
+                    <div class="form-group" >                                    
+                        <label for="A Cobrar" class="fs-5">Km Recorridos</label>
                         <div class="input-group">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
-                            <input formControlName="km" class="form-control edicion" required type="number">
+                            <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="op.km">
                         </div>                        
-                    </div>                        
-                    <div class="form-group mt-3">                                    
-                        <label for="Documentacion" class="fs-5">Documentacion</label>
-                        <input formControlName="documentacion" class="form-control edicion" type="file" id="formFile">
-                    </div>               
-                </form>   
+                    </div>                                                             
+                    <div class="form-group" >                                    
+                        <label for="A Cobrar" class="fs-5">Total Adicionales</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="op.km">
+                        </div>                        
+                    </div>   
+                    <h3 class="mt-2">Totales Op</h3>  
+                    <div class="form-group" >                                    
+                        <label for="A Pagar" class="fs-5">A Cobrar</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aCobrar">
+                        </div>                        
+                    </div>                                     
+                    <div class="form-group" >                                    
+                        <label for="A Pagar" class="fs-5">A Pagar</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aPagar">
+                        </div>                        
+                    </div>                         
+                </div>   
             </div>
-            <div class="col-4 " [ngClass]="{'isDisabled': vista || cerrar}">
+            <div class="col-4 " [ngClass]="{'isDisabled': vista || cerrar || op.estado.cerrada || op.estado.facturada}">
                 <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100">
                     <form [formGroup]="form" (ngSubmit)="onSubmit()">
                         <div class="form-group">
@@ -144,7 +194,7 @@
                     
                 </div>                
             </div>
-            <div class="col-4"  [ngClass]="{'isDisabled': vista || cerrar}">
+            <div class="col-4"  [ngClass]="{'isDisabled': vista || cerrar || op.estado.cerrada || op.estado.facturada}">
                 <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100">
                     <label for="TarifaPersonalizada" class="fs-4">Tarifa Personalizada</label>
                     <p *ngIf="tarifaPersonalizada" class="m-2 border-top border-bottom fs-5">El cliente tiene una tarifa Personalizada. </p>

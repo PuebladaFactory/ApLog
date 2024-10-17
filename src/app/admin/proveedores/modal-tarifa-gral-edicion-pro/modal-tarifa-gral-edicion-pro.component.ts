@@ -1,7 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { TarifaGralProveedor } from 'src/app/interfaces/tarifa-gral-proveedor';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -13,7 +14,7 @@ import Swal from 'sweetalert2';
 export class ModalTarifaGralEdicionProComponent implements OnInit {
 
   @Input() fromParent:any;
-  tarifa!:TarifaGralProveedor;
+  tarifa!:TarifaGralCliente;
   componente:string = ''
 
   constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService){

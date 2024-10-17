@@ -21,21 +21,38 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Modificación para cargasGenerales -->
-                <tr *ngFor="let categoria of tarifa.cargasGenerales">
-                    <td>Categoria {{categoria.orden}}</td>
-                    <td> 
-                        {{categoria.nombre}}                        
-                    </td>
-                    <td>
+                <ng-container *ngFor="let categoria of tarifa.cargasGenerales">
+                    <tr>
+                        <td>Categoria {{categoria.orden}}</td>
+                        <td> 
+                            <div class="input-group mb-3 isDisabled" >                            
+                                <input type="text" [(ngModel)]="categoria.nombre">
+                            </div>                        
+                        </td>
+                        <td>
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                <input type="text" [(ngModel)]="categoria.valor">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>Km 1er Sector valor</td>
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" [(ngModel)]="categoria.valor">
+                            <input type="text" [(ngModel)]="categoria.adicionalKm.primerSector">
                         </div>
-                    </td>
-                </tr>
-                
-                <!-- Modificación para acompañante -->
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>Km Intervalos valor</td>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input type="text" [(ngModel)]="categoria.adicionalKm.sectoresSiguientes">
+                        </div>
+                    </tr>
+                </ng-container>                           
                 <tr>
                     <td colspan="2">Acompañante: </td>
                     <td>
@@ -45,9 +62,27 @@
                         </div>                        
                     </td>
                 </tr>
+                <tr>
+                    <td colspan="2">Km 1er Sector distancia:</td>
+                    <td>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
+                            <input type="text" [(ngModel)]="tarifa.adicionales.KmDistancia.primerSector">
+                        </div>                        
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">Km Intervalos distancia:</td>
+                    <td>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
+                            <input type="text" [(ngModel)]="tarifa.adicionales.KmDistancia.sectoresSiguientes">
+                        </div>                        
+                    </td>
+                </tr>
                 
                 <!-- Modificación para adicionalKm -->
-                <tr>
+                <!-- <tr>
                     <td colspan="2">Km 1er Sector distancia: </td>
                     <td>
                         <div class="input-group mb-3">
@@ -82,7 +117,7 @@
                             <input type="text" [(ngModel)]="tarifa.adicionales.adicionalKm.sectoresSiguientes.valor">
                         </div> 
                     </td>
-                </tr>
+                </tr> -->
             </tbody>
         </table>
     </div>

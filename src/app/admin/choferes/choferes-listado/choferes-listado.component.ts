@@ -48,7 +48,7 @@ export class ChoferesListadoComponent implements OnInit {
   { prop: 'publicidad', name: 'Publicidad', selected: true, flexGrow:2  },    
   { prop: 'satelital', name: 'Satelital', selected: false, flexGrow:2  },     */
   { prop: 'correo', name: 'Correo', selected: true, flexGrow:2  },  
-  { prop: 'fechaNac', name: 'Fech Nac', selected: true, flexGrow:2  },  
+  { prop: 'fechaNac', name: 'Fech Nac', selected: false, flexGrow:2  },  
   
   ];
   visibleColumns = this.allColumns.filter(column => column.selected);

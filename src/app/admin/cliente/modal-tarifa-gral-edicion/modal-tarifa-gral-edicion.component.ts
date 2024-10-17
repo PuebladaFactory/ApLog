@@ -20,8 +20,9 @@ export class ModalTarifaGralEdicionComponent implements OnInit {
   }
   
   ngOnInit(): void {
-    console.log(this.fromParent);
+    //console.log(this.fromParent);
     this.tarifa = this.fromParent.item;
+    console.log("tarifa: ", this.tarifa);
     if(this.fromParent.modo === "general"){
       this.componente = "tarifasGralCliente"
     } else{
@@ -76,5 +77,37 @@ export class ModalTarifaGralEdicionComponent implements OnInit {
  
  
 } 
+
+eliminarCategoria(orden:number){  
+    Swal.fire({
+      title: "¿Desea borrar la categoria?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        //////console.log("llamada al storage desde op-abiertas, deleteItem");
+        this.tarifa.cargasGenerales.splice(orden-1,1)
+        console.log("tarifa: ", this.tarifa);
+        
+        this.storageService.updateItem(this.componente, this.tarifa);    
+        //////console.log("consultas Op: " , this.$consultasOp);
+        Swal.fire({
+          title: "Confirmado",
+          text: "La ha sido eliminada",
+          icon: "success"
+        }).then((result)=>{
+          if (result.isConfirmed) {
+            this.activeModal.close();
+          }
+        });   
+      }
+    });       
+    
+  }
 
 }

@@ -32,9 +32,9 @@ export class ProveedoresListadoComponent implements OnInit {
     { prop: 'cuit', name: 'CUIT', selected: true, flexGrow:2  },
     { prop: 'direccion', name: 'Direccion', selected: true, flexGrow:2 },
     { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow: 2 },
-    { prop: 'contacto', name: 'Contacto', selected: true, flexGrow:2  },    
-    { prop: 'puesto', name: 'Puesto', selected: true, flexGrow:2  },    
-    { prop: 'telefono', name: 'N° Contacto', selected: true, flexGrow:2  },    
+    { prop: 'contacto', name: 'Contacto', selected: false, flexGrow:2  },    
+    { prop: 'puesto', name: 'Puesto', selected: false, flexGrow:2  },    
+    { prop: 'telefono', name: 'N° Contacto', selected: false, flexGrow:2  },    
     { prop: 'correo', name: 'Correo', selected: true, flexGrow:2  },  
     
   ];

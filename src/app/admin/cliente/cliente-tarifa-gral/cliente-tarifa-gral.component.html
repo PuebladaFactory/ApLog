@@ -1,12 +1,13 @@
 <div class="row mt-3" [ngClass]="{'invisible': tEspecial}" >
     <div class="col-4">
-        <h1 class="mt-2">Tarifa General</h1>        
+        <h1 class="mt-2">Tarifa General</h1>  
+        <app-btn-editar *ngIf="!tEspecial" name="agregarCategoria" class="me-3" (click)="agregarCategoria()"></app-btn-editar>
     </div>
     <div class="col-4">
 
     </div>
  
-    <app-consola-tarifa class="col-4 "></app-consola-tarifa>
+    <app-consola-tarifa class="col-4 p-0"></app-consola-tarifa>
 
 </div>
 <div>
@@ -24,39 +25,40 @@
             </thead>
             <tbody formArrayName="filas">
                 <tr *ngFor="let fila of filas.controls; let i = index" [formGroupName]="i">
-                    <td><input type="checkbox" formControlName="seleccionado"></td>
+                    <td *ngIf="i % 3 === 0">
+                        <input type="checkbox" formControlName="seleccionado">
+                    </td>
+                    <td *ngIf="i % 3 !== 0"></td>
                     <td>{{ fila.get('categoria')?.value }}</td>
-                    <td><input type="text" formControlName="nombre"></td>
+                    <td>
+                        <input type="text" formControlName="nombre">
+                    </td>
                     <td>
                         <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1" style="width:30px">
-                                    {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
-                                </span>
-                                <input type="text" formControlName="ultimaTarifa" >
+                            <span class="input-group-text" style="width:30px">
+                                {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                            </span>
+                            <input type="text" formControlName="ultimaTarifa">
                         </div>
                     </td>
                     <td>
                         <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1" style="width:30px">
-                              {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                            <span class="input-group-text" style="width:30px">
+                                {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
                             </span>
-                            <!-- Aplica el pipe `number` con dos decimales al valor del input -->
                             <input type="text" formControlName="diferencia">
-                          </div>
+                        </div>
                     </td>
-                    <!-- <td><input type="text" formControlName="diferencia"></td> -->
                     <td>
                         <div class="input-group mb-3">
-                            <span class="input-group-text" style="width:30px" id="basic-addon1">
-                              {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                            <span class="input-group-text" style="width:30px">
+                                {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
                             </span>
-                            <!-- Aplica el pipe `number` con dos decimales al valor del input -->
                             <input type="text" formControlName="nuevaTarifa">
-                          </div>
+                        </div>
                     </td>
-                    <!-- <td><input type="text" formControlName="nuevaTarifa"></td> -->
                 </tr>
-            </tbody>
+            </tbody>            
         </table>
         <app-btn-editar name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
         

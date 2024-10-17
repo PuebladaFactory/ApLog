@@ -1,7 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { TarifaGralChofer } from 'src/app/interfaces/tarifa-gral-chofer';
+import { Vehiculo } from 'src/app/interfaces/chofer';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -13,7 +14,7 @@ import Swal from 'sweetalert2';
 export class ModalTarifaGralEdicionComponent implements OnInit {
 
   @Input() fromParent:any;
-  tarifa!:TarifaGralChofer;
+  tarifa!:TarifaGralCliente;
   componente:string = ''
 
   constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService){
@@ -77,5 +78,44 @@ export class ModalTarifaGralEdicionComponent implements OnInit {
   //console.log("op editada: ", this.op);  
  
 } 
+
+comprobarCategoria(categoria: number): boolean {
+  // Extraer el número de la categoría de la cadena de texto (asumiendo el formato "Categoria X")
+  //console.log("1)",categoria);
+  
+
+  //const catNumero = parseInt(categoria.split(" ")[1], 10);
+
+  // Lista de campos adicionales que siempre deben habilitarse/resaltarse
+  
+
+  // Verificar si la categoría extraída corresponde a alguno de los vehículos del chofer
+  const esCategoriaVehiculo = this.fromParent.vehiculos?.some((vehiculo: Vehiculo) => vehiculo.categoria.catOrden === categoria);
+  //console.log("2)",esCategoriaVehiculo);
+  // Verificar si la categoría actual es una de las adicionales
+  let esCategoriaAdicional 
+  switch(categoria){
+    case (this.tarifa?.cargasGenerales.length + 1):{
+      esCategoriaAdicional = true;
+      break;
+    }
+    case (this.tarifa?.cargasGenerales.length + 2):{
+      esCategoriaAdicional = true;
+      break;
+    }
+    case (this.tarifa?.cargasGenerales.length + 3):{
+      esCategoriaAdicional = true;
+      break;
+    }
+    default:{
+      esCategoriaAdicional = false;
+      break
+    }
+    
+  }
+
+  // Devolver true si es una categoría de vehículo o una categoría adicional
+  return esCategoriaVehiculo || esCategoriaAdicional  ;
+}
 
 }
