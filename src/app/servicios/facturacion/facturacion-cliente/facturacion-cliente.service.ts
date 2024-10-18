@@ -9,6 +9,8 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { parseActionCodeURL } from 'firebase/auth';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
 import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { Vehiculo } from 'src/app/interfaces/chofer';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
 
 @Injectable({
   providedIn: 'root'
@@ -26,6 +28,10 @@ export class FacturacionClienteService {
   $tarifaCliente!: TarifaCliente;
   total!:number;
   tarifaGralCliente! : TarifaGralCliente;
+  facturaOpCliente!: FacturaOp;
+  tarifaBase!: number;
+  acompaniante!: number;
+  kmValor!: number;
 
   constructor(private storageService: StorageService ) { }
 
@@ -49,6 +55,21 @@ export class FacturacionClienteService {
     this.facturarOpCliente(op);
     return this.facturaCliente
   } */
+
+  $facturarOpCliente(op: Operacion, tarifa: TarifaGralCliente){
+    console.log("1b) op: ", op, " tarifa: ", tarifa);
+    let vehiculo = op.chofer.vehiculo.filter(vehiculo => vehiculo.dominio === op.patenteChofer)
+    console.log("1c) vehiculo: ", vehiculo);
+    
+    this.tarifaBase = this.$calcularCG(tarifa, vehiculo[0]);
+    console.log("tarifa base: " ,this.tarifaBase);
+    this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0 ;
+    console.log("acompañante valor: ", this.acompaniante);
+    this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
+    console.log("km valor: ", this.kmValor);
+    
+    
+  }
 
   facturarOpCliente(op:Operacion, tarifa:TarifaCliente): FacturaOpCliente{
     console.log("cliente service. op recibida: ", op);
@@ -96,6 +117,44 @@ export class FacturacionClienteService {
       //this.calcularLiquidacion(op);
       this.calcularLiquidacion(op);
     });  
+  }
+
+  $calcularCG(tarifa: TarifaGralCliente, vehiculo: Vehiculo){
+
+      let catCg = tarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
+        return cat.orden === vehiculo.categoria.catOrden;
+      });
+      return catCg[0].valor
+  }
+
+  $calcularKm(op: Operacion, tarifa: TarifaGralCliente, vehiculo:Vehiculo){
+    let catCg = tarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
+      return cat.orden === vehiculo.categoria.catOrden;
+    });
+    console.log("catCg: ", catCg);
+    
+    let montoTotal = 0;
+
+    
+    // Verifica si los kilómetros recorridos son menores o iguales al primer sector
+    if (op.km < tarifa.adicionales.KmDistancia.primerSector) {
+      return montoTotal; // No se cobra adicional
+    }
+  
+    // Si supera el primer sector, se calcula el valor del primer sector
+    montoTotal = catCg[0].adicionalKm.primerSector;
+  
+    // Calcula cuántos kilómetros adicionales quedan luego del primer sector
+    let kmRestantes = op.km - tarifa.adicionales.KmDistancia.primerSector;
+  
+    // Calcula cuántos sectores adicionales se deben considerar
+    let sectoresAdicionales = Math.ceil(kmRestantes / tarifa.adicionales.KmDistancia.sectoresSiguientes);
+  
+    // Suma el costo de los sectores adicionales
+    montoTotal += sectoresAdicionales * catCg[0].adicionalKm.sectoresSiguientes;
+  
+    return montoTotal;
+    
   }
 
   calcularLiquidacion(op:Operacion){    

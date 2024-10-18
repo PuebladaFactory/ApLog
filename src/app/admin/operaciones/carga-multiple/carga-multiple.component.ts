@@ -294,7 +294,7 @@ onSubmit() {
             id: null, // Será asignado por la base de datos
             idOperacion: new Date().getTime(), // Debes definir cómo asignar este valor
             fecha: fecha,
-            km: null,    
+            km: 0,    
             documentacion: null,
             cliente: cliente,
             chofer: chofer,

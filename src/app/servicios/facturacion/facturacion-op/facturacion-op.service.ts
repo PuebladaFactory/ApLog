@@ -6,18 +6,28 @@ import { FacturacionClienteService } from '../facturacion-cliente/facturacion-cl
 import { StorageService } from '../../storage/storage.service';
 import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { DbFirestoreService } from '../../database/db-firestore.service';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FacturacionOpService {  
 
-  $tarifaChofer!:TarifaChofer;
-  facturaChofer!:FacturaOpChofer;
-  total!:number;
-  $adicional!:number;
-  $tarifas!: any;
-  ultimaTarifa!: TarifaChofer;
+  
+  //facturaChofer!:FacturaOpChofer;
+      
+  $ultTarifaGralCliente!: TarifaGralCliente;
+  $ultTarifaEspCliente!: TarifaGralCliente;
+  $ultTarifaPersCliente!: TarifaGralCliente;
+  $ultTarifaGralChofer!: TarifaGralCliente;
+  $ultTarifaEspChofer!: TarifaGralCliente;
+  $ultTarifaGralProveedor!: TarifaGralCliente;
+  $ultTarifaEspProveedor!: TarifaGralCliente;
+  tarifaOpCliente!: TarifaGralCliente;
+  facturaOpCliente!: FacturaOp;
+  facturaOpChofer!: FacturaOp;
+  facturaOpProveedor!: FacturaOp;
 
   constructor( private facturacionCliente: FacturacionClienteService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
 
@@ -31,12 +41,103 @@ export class FacturacionOpService {
     
   } */
 
-  facturarOperacion(op: Operacion)  :FacturaOpChofer{        
-    this.facturarOpChofer(op);
-    return this.facturaChofer
+  facturarOperacion(op: Operacion){        
+    console.log("op: ", op);
+    /////////TARIFA GENERAL CLIENTE /////////////////////////
+    this.storageService.ultTarifaGralCliente$.subscribe(data =>{
+      //////console.log("data: ", data);                
+      this.$ultTarifaGralCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+      this.$ultTarifaGralCliente.cargasGenerales = this.$ultTarifaGralCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+      //console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);              
+    });
+
+     /////////TARIFA ESPECIAL CLIENTE /////////////////////////
+    this.storageService.ultTarifaEspCliente$   
+      .subscribe(data =>{            
+      this.$ultTarifaEspCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+      this.$ultTarifaEspCliente.cargasGenerales = this.$ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío     
+    });
+
+    /////////TARIFA PERSONALIZADA CLIENTE /////////////////////////
+    this.storageService.ultTarifaPersCliente$.subscribe(data => {
+      this.$ultTarifaPersCliente = data;
+      this.$ultTarifaPersCliente.cargasGenerales = this.$ultTarifaPersCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+      //console.log("1)",this.$ultTarifaCliente);        
+    });
+
+    /////////TARIFA GENERAL CHOFER /////////////////////////
+    this.storageService.ultTarifaGralChofer$.subscribe(data =>{
+      //////console.log("data: ", data);                
+      this.$ultTarifaGralChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+      this.$ultTarifaGralChofer.cargasGenerales = this.$ultTarifaGralChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+      //console.log("2) ult tarifa GRAL CHOFER: ",this.ultTarifaGralChofer);              
+    });
+   
+    /////////TARIFA ESPECIAL CHOFER /////////////////////////
+    this.storageService.ultTarifaEspChofer$
+      //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data =>{
+      //////console.log("2c) data: ", data);                
+      this.$ultTarifaEspChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+      this.$ultTarifaEspChofer.cargasGenerales = this.$ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+      //console.log("4) ult tarifa ESP CHOFER: ",this.ultTarifaEspChofer);           
+    })
+    //////////////// TARIFA GENERAL PROVEEDORES ///////////////////
+    this.storageService.ultTarifaGralProveedor$.subscribe(data =>{
+      //console.log("data", data);        
+      this.$ultTarifaGralProveedor = data || {};
+      this.$ultTarifaGralProveedor.cargasGenerales = this.$ultTarifaGralProveedor.cargasGenerales || [];
+      //console.log("5) ult tarifa GRAL PROVEEDOR: ", this.ultTarifaGralProveedor);      
+    })
+    ////////////////TARIFA ESPECIAL PROVEEDORES//////////////////
+    this.storageService.ultTarifaEspProveedor$
+    //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data =>{
+    //////console.log("2c) data: ", data);                
+    this.$ultTarifaEspProveedor = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+    this.$ultTarifaEspProveedor.cargasGenerales = this.$ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+    //console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
+    });
+    this.facturarCliente(op)
+    
+    
     
     
     //this.storageService.addItem("facturaOpChofer", op);    
+  }
+
+  facturarCliente(op: Operacion){
+
+    if(op.tarifaTipo.general){
+      //console.log("1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);
+      this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaGralCliente)
+    }
+    if(op.tarifaTipo.especial){
+      if(op.cliente.tarifaTipo.especial){
+        console.log("2) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);
+      } else {
+        console.log("1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);
+      }
+    }
+    if(op.tarifaTipo.personalizada){
+      console.log("3) tarifa PERSONALIZADA CLIENTE: ", this.$ultTarifaPersCliente);
+    }
+    if(op.tarifaTipo.eventual){
+      console.log("op eventual");
+      
+    }
+    
+      
+      
+      
+      //console.log("4) tarifa GENERAL CHOFER: ", this.$ultTarifaGralChofer);
+      //console.log("5) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);
+      //console.log("6) tarifa GENERAL PROVEEDOR: ", this.$ultTarifaGralProveedor);
+      //console.log("7) tarifa ESPECIAL PROVEEDOR: ", this.$ultTarifaEspProveedor);
+
+      
+    
+
   }
 
   facturarOpChofer(op:Operacion){

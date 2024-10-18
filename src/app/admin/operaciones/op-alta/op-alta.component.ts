@@ -380,7 +380,7 @@ export class OpAltaComponent implements OnInit {
         id:null,
         idOperacion: new Date().getTime(),
         fecha: formValues.fecha,
-        km: null,
+        km: 0,
         //documentacion: null,
         cliente: this.clienteSeleccionado,
         chofer: this.choferSeleccionado,
