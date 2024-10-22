@@ -1,3 +1,5 @@
+import { TarifaTipo } from "./tarifa-gral-cliente";
+
 export interface FacturaOp {
 
     id: any|null;
@@ -12,6 +14,7 @@ export interface FacturaOp {
     km: number;    
     liquidacion: boolean;
     contraParteMonto: number;
+    tarifaTipo: TarifaTipo;
 
 }
 

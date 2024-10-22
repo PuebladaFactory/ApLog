@@ -158,9 +158,12 @@ export class CargaMultipleComponent implements OnInit {
 
     if(this.clienteSeleccionado.tarifaTipo.personalizada){
       this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", this.clienteSeleccionado?.idCliente, "ultTarifaPersCliente" )
-      this.tPersonalizada = true;      
+      this.tPersonalizada = true;  
+      //console.log("tarifa personalizada: SI");
+          
     } else {
       this.tPersonalizada = false;  
+      //console.log("tarifa personalizada: NO");
     }
   }
 
@@ -252,17 +255,23 @@ onSubmit() {
         return;
       }
     }
+
+    let baseTime = new Date().getTime(); // Obtén el timestamp base
+    let increment = 0;
     
 
-    if(cliente.tarifaTipo.especial){
+/*     if(cliente.tarifaTipo.especial && !this.tPersonalizada){
       this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",this.clienteSeleccionado.idCliente,"ultTarifaEspCliente");  
-    }
+    } */
 
     choferesSeleccionados.forEach((choferForm:any) => {      
+     
     
       // Crear operaciones para cada chofer seleccionado
       //let operaciones: Operacion[] = choferesSeleccionados.map((choferForm: any) => {      
       this.operaciones = choferesSeleccionados.map((choferForm: any) => {      
+        let idOperacionUnico = baseTime + increment; // Agrega un incremento al timestamp
+        increment++; // Aumenta el incremento para la siguiente operación
         let chofer: Chofer = choferForm.chofer;
         let vehiculoSeleccionado: Vehiculo [] = choferForm.vehiculoSeleccionado;      
         let observaciones: string = choferForm.observaciones || '';
@@ -274,25 +283,16 @@ onSubmit() {
        /*  if (patenteChofer === "") {
             this.mensajesError('Uno de los choferes seleccionados no tiene definido el vehiculo.');
             return;
-        } */
-        if(chofer.tarifaTipo?.especial){
-            this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",chofer.idChofer,"ultTarifaEspChofer");
-        }  
-        if(chofer.tarifaTipo === null){      
-            proveedor = this.$proveedores.filter((proveedor:Proveedor) =>{
-            return proveedor.razonSocial = chofer.proveedor
-            })
-            if(proveedor[0].tarifaTipo.especial){
-            this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",proveedor[0].idProveedor,"ultTarifaEspProveedor");
-            } 
-        }
+        } */       
         // Obtener el vehículo seleccionado
         //const vehiculo = chofer.vehiculo.find(v => v.dominio === vehiculoDominio);
   
         // Crear la operación
+        console.log("antes de crear las op, tPersonalizada: ",this.tPersonalizada);
+        
         const operacion: Operacion = {
             id: null, // Será asignado por la base de datos
-            idOperacion: new Date().getTime(), // Debes definir cómo asignar este valor
+            idOperacion: idOperacionUnico,
             fecha: fecha,
             km: 0,    
             documentacion: null,
@@ -329,46 +329,73 @@ onSubmit() {
             },
             aCobrar: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aCobrar : 0, // Ajustar según tu lógica
             aPagar: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aPagar : 0, // Ajustar según tu lógica
-            tarifaTipo: cliente.tarifaTipo
+            tarifaTipo: this.tPersonalizada ? {
+              general: false,
+              especial: false,
+              eventual: false,   
+              personalizada: true, 
+            } : cliente.tarifaTipo.especial || chofer.tarifaTipo.especial ? {
+              general: false,
+              especial: true,
+              eventual: false,   
+              personalizada: false, 
+            } : {
+              general: true,
+              especial: false,
+              eventual: false,   
+              personalizada: false, 
+            } ,
         };
-  
-        if(!this.tPersonalizada){
-          if(this.clienteSeleccionado.tarifaTipo.especial){ ///si el cliente tiene una tarifa especial la buscar y llama al servicio
-              /////////TARIFA ESPECIAL CLIENTE /////////////////////////
-              this.storageService.ultTarifaEspCliente$
-              //.pipe(take(3)) // Asegúrate de que la suscripción se complete después de la primera emisión
-              .subscribe(data =>{            
-              this.ultTarifaEspCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-              //this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-              //////console.log("3) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
-              operacion.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer)
-              })
-          } else {
-            operacion.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer) ///sino quiere decir q el cliente tiene una tarifa general
-          }
-          if(chofer.tarifaTipo?.especial){ ///si el chofer tiene una tarifa especial la buscar y llama al servicio
-            this.storageService.ultTarifaEspChofer$          
-            .subscribe(data =>{          
-            this.ultTarifaEspChofer = data || {};           
-            operacion.aPagar = this.aPagarOp(chofer, patenteChofer);
-          })
-          } else if (chofer.tarifaTipo === null){ ///si es null quiere decir q tiene un proveedor
-            this.storageService.ultTarifaEspProveedor$          
-            .subscribe(data =>{          
-            this.ultTarifaEspProveedor = data || {};           
-            operacion.aPagar = this.aPagarOp(chofer, patenteChofer);
-            });
-          } else {
-            //////console.log("pasa por aca?");
-            /////////TARIFA GENERAL CHOFER /////////////////////////
-              this.storageService.ultTarifaGralChofer$.subscribe(data =>{
-                
-                this.ultTarifaGralChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-                operacion.aPagar = this.aPagarOp(chofer, patenteChofer);    
-              });
-            
-          }                
-      }  
+        if(operacion.tarifaTipo.especial){
+            if(cliente.tarifaTipo.especial){///si el cliente tiene una tarifa especial la buscar y llama al servicio
+                /////////TARIFA ESPECIAL CLIENTE /////////////////////////
+                this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",this.clienteSeleccionado.idCliente,"ultTarifaEspCliente");  
+                this.storageService.ultTarifaEspCliente$                
+                .subscribe(data =>{            
+                this.ultTarifaEspCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+                this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+                //////console.log("3) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
+                if(this.ultTarifaEspCliente.cargasGenerales.length > 0){
+                  operacion.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer)
+                };                
+                })
+              } else {
+              operacion.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer) ///sino quiere decir q el cliente tiene una tarifa general              
+            }
+            if(chofer.tarifaTipo.especial){ ///si el chofer/proveedor tiene una tarifa especial la buscar y llama al servicio
+              if(chofer.proveedor === "monotributista"){
+                this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",chofer.idChofer,"ultTarifaEspChofer");
+                this.storageService.ultTarifaEspChofer$          
+                  .subscribe(data =>{          
+                  this.ultTarifaEspChofer = data || {};     
+                  this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío      
+                  if(this.ultTarifaEspChofer.cargasGenerales.length > 0){
+                    operacion.aPagar = this.aPagarOp(chofer, patenteChofer);
+                  }                
+                })
+              }else{
+                  proveedor = this.$proveedores.filter((proveedor:Proveedor) =>{
+                    return proveedor.razonSocial = chofer.proveedor
+                  })                  
+                  this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",proveedor[0].idProveedor,"ultTarifaEspProveedor");
+                  this.storageService.ultTarifaEspProveedor$          
+                    .subscribe(data =>{          
+                    this.ultTarifaEspProveedor = data || {};           
+                    this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío      
+                    if(this.ultTarifaEspProveedor.cargasGenerales.length > 0){
+                      operacion.aPagar = this.aPagarOp(chofer, patenteChofer);
+                    };                    
+                    });                  
+              }
+            } else {
+              operacion.aPagar = this.aPagarOp(chofer, patenteChofer); ///sino quiere decir q el cliente tiene una tarifa general
+            }
+        } else if(operacion.tarifaTipo.general){
+          operacion.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer) ///sino quiere decir q el cliente tiene una tarifa general
+          operacion.aPagar = this.aPagarOp(chofer, patenteChofer); ///sino quiere decir q el cliente tiene una tarifa general
+        }
+                          
+        
       return operacion
               
         
@@ -377,7 +404,6 @@ onSubmit() {
       console.log("1) operaciones: ",this.operaciones );   
       
       this.addItem()
-
    
   })
 
@@ -389,41 +415,36 @@ aCobrarOp(cliente: Cliente, chofer: Chofer, patente:string ){
   let tarifa
   if(cliente.tarifaTipo.especial){
     tarifa = this.ultTarifaEspCliente;
-    //////console.log("1A) tarifa esp cobrar: ", tarifa);    
+    console.log("1A) tarifa esp cobrar: ", tarifa);    
   } else {
     tarifa = this.ultTarifaGralCliente;
-    ////console.log("1B) tarifa gral cobrar: ", tarifa);    
+    console.log("1B) tarifa gral cobrar: ", tarifa);    
   }
-  return this.buscarTarifaServ.getACobrar(tarifa, chofer, patente);  
+  return this.buscarTarifaServ.$getACobrar(tarifa, chofer, patente);  
 }
 
 aPagarOp(chofer: Chofer, patente: string){
 
-  let tarifa;
-  let proveedor;
-  if(chofer.proveedor === "monotributista"){
-    if(chofer.tarifaTipo?.especial){
-      tarifa = this.ultTarifaEspChofer;
-      //////console.log("2A) tarifa esp a pagar: ", tarifa);    
+  let tarifa;  
+  if(chofer.tarifaTipo.especial){
+    if(chofer.proveedor === "monotributista"){
+      tarifa = this.ultTarifaEspChofer; 
+      console.log("2A) tarifa esp chofer a pagar: ", tarifa);        
     } else {
-      tarifa = this.ultTarifaGralChofer;
-      ////console.log("2B) tarifa gral a pagar: ", tarifa);    
-    }
-    return this.buscarTarifaServ.getAPagar(tarifa, chofer, patente);  
-  } else {
-     proveedor = this.$proveedores.filter((proveedor:Proveedor) =>{
-      return proveedor.razonSocial = chofer.proveedor
-     })
-     if(proveedor[0].tarifaTipo.especial){
       tarifa = this.ultTarifaEspProveedor;
-      //////console.log("2C) tarifa PRO esp a pagar: ", tarifa);    
-     } else {
+      console.log("2B) tarifa esp proveedor a pagar: ", tarifa);       
+    }
+
+  }else{
+    if(chofer.proveedor === "monotributista"){
+      tarifa = this.ultTarifaGralChofer;
+      console.log("2B) tarifa gral chofer a pagar: ", tarifa);   
+    } else {
       tarifa = this.ultTarifaGralProveedor;
-      //////console.log("2D) tarifa PRO gral a pagar: ", tarifa);    
-     }
-     return this.buscarTarifaServ.getAPagarProveedor(tarifa, chofer, patente);
+      console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
+    }    
   }
-  
+  return this.buscarTarifaServ.$getAPagar(tarifa, chofer, patente);  
   
 
 }

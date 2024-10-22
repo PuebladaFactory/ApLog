@@ -29,7 +29,7 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
     this.storageService.choferes$.subscribe(data => {
       this.$choferes = data;
       this.$choferesEsp = this.$choferes.filter((chofer:Chofer)=>{
-        return chofer.tarifaTipo?.especial === true 
+        return chofer.tarifaTipo.especial === true && chofer.proveedor === "monotributista"
       })
       console.log("1)choferes especiales: ", this.$choferesEsp);      
       this.tEspecial = false;

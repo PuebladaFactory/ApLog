@@ -14,7 +14,7 @@ export interface Chofer {
     fechaNac: Date;
     vehiculo: Vehiculo[];
     proveedor: Proveedor["razonSocial"]|string;   
-    tarifaTipo: TarifaTipo | null;
+    tarifaTipo: TarifaTipo;
     
 }
 

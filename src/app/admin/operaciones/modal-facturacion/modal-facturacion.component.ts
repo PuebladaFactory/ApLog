@@ -55,7 +55,11 @@ export class ModalFacturacionComponent implements OnInit {
   }
   
   ngOnInit(): void {   
-    //console.log(this.fromParent);        
+    console.log(this.fromParent);    
+    //console.log("vista: ",this.vista);
+    //console.log("editar: ",this.editar);
+    //console.log("cerrar: ",this.cerrar);
+        
     this.op = this.fromParent.item;
     switch (this.fromParent.modo) {
       case "vista":
@@ -110,7 +114,7 @@ export class ModalFacturacionComponent implements OnInit {
     }).format(valor);
    ////////console.log(nuevoValor);    
     //   `$${nuevoValor}`   
-    return `${nuevoValor}`
+    return nuevoValor
  }
 
  limpiarValorFormateado(valorFormateado: string): number {
@@ -245,7 +249,8 @@ cerrarOp(){
       facturada: false,    
   } */
   //this.updateItem();
-  this.facturacionOpServ.facturarOperacion(this.op)
+  this.facturacionOpServ.facturarOperacion(this.op);
+  this.activeModal.close();
 }
 
 armarOp(){
@@ -258,18 +263,24 @@ armarOp(){
   this.op.acompaniante = this.acompaniante;  
   this.op.observaciones = this.form.value.observaciones;
   this.op.tarifaEventual = this.tarifaEventual;
+  this.op.tarifaPersonalizada = this.tarifaPersonalizada;
+  this.op.tPersonalizada = this.tPersonalizada;
+  this.op.tarifaTipo = this.tarifaTipo;
+  this.op.tPersonalizada = this.tPersonalizada;
   if(this.tarifaEventual){
     this.op.tEventual = this.tEventual
+    this.op.tarifaTipo = {
+      general: false,
+      especial : false,
+      eventual : true,
+      personalizada: false
+    };
     this.op.aCobrar = this.tEventual.cliente.valor;
     this.op.aPagar = this.tEventual.chofer.valor;
   } else {
     this.op.aCobrar = this.limpiarValorFormateado(this.aCobrar);
     this.op.aPagar = this.limpiarValorFormateado(this.aPagar);  
   }
-  this.op.tarifaPersonalizada = this.tarifaPersonalizada;
-  this.op.tPersonalizada = this.tPersonalizada;
-  this.op.tarifaTipo = this.tarifaTipo;
-  this.op.tPersonalizada = this.tPersonalizada;
 
   
   this.updateItem(); 

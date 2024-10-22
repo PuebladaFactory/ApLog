@@ -39,7 +39,8 @@ export class ChoferesAltaComponent implements OnInit {
   legajo!: any;
   refrigeracion!:boolean;
   $proveedores!: Proveedor[]; 
-  proveedorSeleccionado!: string;
+  proveedorSeleccionado!: Proveedor[];
+  proveedorRazonSocial!: string;
   editForm: any;
   publicidad!: boolean;
   categorias: Categoria [] = [];
@@ -116,8 +117,11 @@ export class ChoferesAltaComponent implements OnInit {
   }
 
    armarForm(){
-    if(this.chofer.proveedor !== null){
-      this.proveedorSeleccionado = this.chofer.proveedor;
+    this.proveedorRazonSocial = this.chofer.proveedor;
+    if(this.chofer.proveedor !== "monotributista"){      
+      this.proveedorSeleccionado = this.$proveedores.filter((proveedor:Proveedor)=>{
+        return proveedor.razonSocial === this.proveedorRazonSocial;
+      })
     }
         
     this.form.patchValue({
@@ -131,10 +135,10 @@ export class ChoferesAltaComponent implements OnInit {
       domicilio: this.chofer.domicilio,           
     });    
     this.formTipoTarifa.patchValue({
-      general: this.chofer.tarifaTipo?.general, 
-      especial: this.chofer.tarifaTipo?.especial,
-      eventual: this.chofer.tarifaTipo?.eventual,
-      personalizada: this.chofer.tarifaTipo?.personalizada,      
+      general: this.chofer.tarifaTipo.general, 
+      especial: this.chofer.tarifaTipo.especial,
+      eventual: this.chofer.tarifaTipo.eventual,
+      personalizada: this.chofer.tarifaTipo.personalizada,      
   });
     this.armarVehiculoForm();   
   }
@@ -171,18 +175,18 @@ export class ChoferesAltaComponent implements OnInit {
         /*  this.chofer.categoria = this.categoriaSeleccionada; */
         this.chofer.idChofer = idChofer; 
         this.chofer.id = id;    
-        this.chofer.proveedor = this.proveedorSeleccionado;
+        this.chofer.proveedor = this.proveedorRazonSocial;
         this.chofer.vehiculo = this.vehiculos;
-        this.chofer.tarifaTipo = this.proveedorSeleccionado === "monotributista" ? tarifaSeleccionada : null; // Asigna el tipo de tarifa
+        this.chofer.tarifaTipo = this.proveedorRazonSocial === "monotributista" ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa
         console.log("este es el chofer EDITADO: ",this.chofer);     
     } else {
         this.chofer = this.form.value;
       /*  this.chofer.categoria = this.categoriaSeleccionada; */
         this.chofer.idChofer = new Date().getTime();   
         this.chofer.id = null;  
-        this.chofer.proveedor = this.proveedorSeleccionado;
+        this.chofer.proveedor = this.proveedorRazonSocial;
         this.chofer.vehiculo = this.vehiculos;
-        this.chofer.tarifaTipo = this.proveedorSeleccionado === "monotributista" ? tarifaSeleccionada : null; // Asigna el tipo de tarifa
+        this.chofer.tarifaTipo = this.proveedorRazonSocial === "monotributista" ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa
         console.log("este es el chofer NUEVO: ",this.chofer);     
     }
    }
@@ -257,8 +261,19 @@ export class ChoferesAltaComponent implements OnInit {
   }  
   
 
-  changeProveedor(e:any){      
-    this.proveedorSeleccionado = e.target.value;
+  changeProveedor(e:any){          
+    let id = Number(e.target.value);
+    console.log(id);
+    if(id === 1){
+      this.proveedorRazonSocial = "monotributista"
+    } else {
+      this.proveedorSeleccionado = this.$proveedores.filter((proveedor:Proveedor) =>{
+        return proveedor.idProveedor === id;
+      });
+      this.proveedorRazonSocial = this.proveedorSeleccionado[0].razonSocial
+    }
+    
+
   }  
 
   changeTipoCombustible(e: any) {    

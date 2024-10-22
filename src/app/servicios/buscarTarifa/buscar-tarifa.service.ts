@@ -359,7 +359,7 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
 
 //// METODOS PARA OBTENER ELPRIMER VALOR A COBRAR Y A PAGAR CUANDO SE DA DE ALTA LA OP ////
 
-  getACobrar(tarifa: TarifaGralCliente, chofer: Chofer, patente: string){
+  $getACobrar(tarifa: TarifaGralCliente, chofer: Chofer, patente: string){
     let vehiculo
     vehiculo  = chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === patente;
@@ -371,7 +371,7 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
     return catCG[0].valor      
   } 
 
-  getAPagar(tarifa:TarifaGralCliente, chofer: Chofer, patente:string){
+  $getAPagar(tarifa:TarifaGralCliente, chofer: Chofer, patente:string){
     let vehiculo
     vehiculo  = chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === patente;
@@ -381,18 +381,5 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
       return cat.orden === categoria
     });
     return catCG[0].valor;      
-  } 
-  getAPagarProveedor(tarifa: TarifaGralCliente, chofer:Chofer, patente:string){
-   
-    let vehiculo
-    vehiculo  = chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
-        return vehiculo.dominio === patente;
-    });
-    let categoria = vehiculo[0].categoria.catOrden
-    let catCG = tarifa.cargasGenerales.filter((cat: CategoriaTarifa)=>{
-      return cat.orden === categoria
-    });      
-    return catCG[0].valor;         
-    
-  } 
+  }   
 }

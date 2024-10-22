@@ -62,13 +62,13 @@
                         <label for="Proveedor">Proveedor</label>
                         <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)" required [ngClass]="{'isDisabled': soloVista}">                            
                             <option>{{chofer !== undefined ? chofer.proveedor : "Elegir Cond. Fiscal"}}</option>
-                            <option value="monotributista">monotributista</option>
-                            <option *ngFor="let proveedor of $proveedores">
+                            <option value="1">monotributista</option>
+                            <option *ngFor="let proveedor of $proveedores" [value]="proveedor.idProveedor">
                                 {{proveedor.razonSocial}}
                             </option>
                         </select>
                     </div>
-                    <div class="form-group mt-3" *ngIf="proveedorSeleccionado === 'monotributista' || proveedorSeleccionado === undefined ">
+                    <div class="form-group mt-3" *ngIf="(proveedorRazonSocial === 'monotributista' || proveedorRazonSocial === undefined ) else conProveedor">
                         <h3 class="">Tipo de Tarifa</h3>
                         <form [formGroup]="formTipoTarifa" (ngSubmit)="onSubmit()" class="d-flex mt-2">
                           <div class="form-check form-switch form-check-reverse ms-2 me-4">
@@ -91,8 +91,13 @@
                                   (change)="onTarifaTipoChange('personalizada')" id="tarifaPersonalizada" [ngClass]="{'isDisabled': soloVista}">
                             <label class="form-check-label" for="tarifaPersonalizada">Personalizada</label>
                           </div> -->
-                        </form>
-                    </div>                   
+                        </form>                       
+                    </div>     
+                    <ng-template #conProveedor>
+                        <div>
+                            <h4>Se aplica la tarifa del proveedor</h4>
+                        </div>                           
+                    </ng-template>                               
                 </div>                   
             </div>      
         </form>      
