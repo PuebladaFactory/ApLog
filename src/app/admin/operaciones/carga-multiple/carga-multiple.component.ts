@@ -300,15 +300,13 @@ onSubmit() {
             chofer: chofer,
             observaciones: observaciones,   
             acompaniante: acompaniante, 
-            facturaCliente: null,
-            facturaChofer: null,
-            tarifaEventual: false,
-            tEventual: {
+            facturaCliente: 0,
+            facturaChofer: 0,            
+            tarifaEventual: {
               chofer: { concepto: '', valor: 0 },
               cliente: { concepto: '', valor: 0 }
-            },
-            tarifaPersonalizada: this.tPersonalizada,
-            tPersonalizada: this.tPersonalizada ? {
+            },            
+            tarifaPersonalizada: this.tPersonalizada ? {
               seccion: seccion,
               categoria: categoria,
               nombre: this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].nombre, // Puedes definir cómo obtener este valor
@@ -326,9 +324,7 @@ onSubmit() {
               abierta: true,
               cerrada: false,
               facturada: false
-            },
-            aCobrar: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aCobrar : 0, // Ajustar según tu lógica
-            aPagar: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aPagar : 0, // Ajustar según tu lógica
+            },            
             tarifaTipo: this.tPersonalizada ? {
               general: false,
               especial: false,
@@ -345,6 +341,18 @@ onSubmit() {
               eventual: false,   
               personalizada: false, 
             } ,
+            valores:{
+              acompValor: 0,
+              kmAdicional: 0,
+              cliente:{
+                tarifaBase: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aCobrar : 0, // Ajustar según tu lógica
+                aCobrar: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aCobrar : 0, // Ajustar según tu lógica
+              },
+              chofer:{
+                tarifaBase: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aPagar : 0, // Ajustar según tu lógica
+                aPagar: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aPagar : 0, // Ajustar según tu lógica
+              }
+            }
         };
         if(operacion.tarifaTipo.especial){
             if(cliente.tarifaTipo.especial){///si el cliente tiene una tarifa especial la buscar y llama al servicio
@@ -356,11 +364,13 @@ onSubmit() {
                 this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
                 //////console.log("3) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
                 if(this.ultTarifaEspCliente.cargasGenerales.length > 0){
-                  operacion.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer)
+                  operacion.valores.cliente.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer);
+                  operacion.valores.cliente.tarifaBase = operacion.valores.cliente.aCobrar;
                 };                
                 })
               } else {
-              operacion.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer) ///sino quiere decir q el cliente tiene una tarifa general              
+              operacion.valores.cliente.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer); ///sino quiere decir q el cliente tiene una tarifa general              
+              operacion.valores.cliente.tarifaBase = operacion.valores.cliente.aCobrar;
             }
             if(chofer.tarifaTipo.especial){ ///si el chofer/proveedor tiene una tarifa especial la buscar y llama al servicio
               if(chofer.proveedor === "monotributista"){
@@ -370,7 +380,8 @@ onSubmit() {
                   this.ultTarifaEspChofer = data || {};     
                   this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío      
                   if(this.ultTarifaEspChofer.cargasGenerales.length > 0){
-                    operacion.aPagar = this.aPagarOp(chofer, patenteChofer);
+                    operacion.valores.chofer.aPagar = this.aPagarOp(chofer, patenteChofer);
+                    operacion.valores.chofer.tarifaBase = operacion.valores.chofer.aPagar
                   }                
                 })
               }else{
@@ -383,16 +394,20 @@ onSubmit() {
                     this.ultTarifaEspProveedor = data || {};           
                     this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío      
                     if(this.ultTarifaEspProveedor.cargasGenerales.length > 0){
-                      operacion.aPagar = this.aPagarOp(chofer, patenteChofer);
+                      operacion.valores.chofer.aPagar = this.aPagarOp(chofer, patenteChofer);                      
+                      operacion.valores.chofer.tarifaBase = operacion.valores.chofer.aPagar;
                     };                    
                     });                  
               }
             } else {
-              operacion.aPagar = this.aPagarOp(chofer, patenteChofer); ///sino quiere decir q el cliente tiene una tarifa general
+              operacion.valores.chofer.aPagar = this.aPagarOp(chofer, patenteChofer); ///sino quiere decir q el cliente tiene una tarifa general
+              operacion.valores.chofer.tarifaBase = operacion.valores.chofer.aPagar;
             }
         } else if(operacion.tarifaTipo.general){
-          operacion.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer) ///sino quiere decir q el cliente tiene una tarifa general
-          operacion.aPagar = this.aPagarOp(chofer, patenteChofer); ///sino quiere decir q el cliente tiene una tarifa general
+          operacion.valores.cliente.aCobrar = this.aCobrarOp(cliente, chofer, patenteChofer) ///sino quiere decir q el cliente tiene una tarifa general
+          operacion.valores.cliente.tarifaBase = operacion.valores.cliente.aCobrar;
+          operacion.valores.chofer.aPagar = this.aPagarOp(chofer, patenteChofer); ///sino quiere decir q el cliente tiene una tarifa general
+          operacion.valores.chofer.tarifaBase = operacion.valores.chofer.aPagar;
         }
                           
         

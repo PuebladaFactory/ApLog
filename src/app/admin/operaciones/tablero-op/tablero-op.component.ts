@@ -163,8 +163,8 @@ export class TableroOpComponent implements OnInit {
       patente: op.patenteChofer,
       acompaniante: `${op.acompaniante ? "Si" : "No"}` ,
       tarifa: op.tarifaTipo.especial ? "Especial" : op.tarifaTipo.eventual ? "Eventual" : op.tarifaTipo.personalizada ? "Personalizada" : "General",
-      aCobrar: this.formatearValor(op.aCobrar),
-      aPagar: this.formatearValor(op.aPagar),        
+      aCobrar: this.formatearValor(op.valores.cliente.aCobrar),
+      aPagar: this.formatearValor(op.valores.chofer.aPagar),        
       observaciones: op.observaciones,
       
     }));   

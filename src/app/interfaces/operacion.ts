@@ -13,18 +13,17 @@ export interface Operacion {
     observaciones: string;    
     //unidadesConFrio: boolean;
     acompaniante: boolean;    
-    facturaCliente: number | null;
-    facturaChofer: number | null;
-    tarifaEventual: boolean;
-    tEventual: TarifaEventual;
-    tarifaPersonalizada: boolean;
-    tPersonalizada: TarifaPersonalizada;
+    facturaCliente: number;
+    facturaChofer: number;
+    
+    tarifaEventual: TarifaEventual;
+    
+    tarifaPersonalizada: TarifaPersonalizada;
     patenteChofer: string;
     //facturada: boolean;
-    estado: EstadoOp;
-    aCobrar: number;
-    aPagar: number;
+    estado: EstadoOp;   
     tarifaTipo :TarifaTipo;
+    valores: Valores;
 }
 
 export interface TarifaEventual {    
@@ -51,4 +50,18 @@ export interface EstadoOp {
     abierta: boolean;
     cerrada: boolean;
     facturada: boolean;
+}
+
+export interface Valores{
+    acompValor: number;
+    kmAdicional: number;
+    cliente:{
+        tarifaBase: number,
+        aCobrar: number;    
+    }
+    chofer: {
+        tarifaBase: number;
+        aPagar: number;
+    }
+
 }

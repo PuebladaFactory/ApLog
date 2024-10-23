@@ -43,10 +43,15 @@
                             </div>
                             <div *ngIf="!tarifaEventual" class="form-group mt-2">
                                 <label for="Acompaniante">Acompañante</label>
-                                <select formControlName="acompaniante" class="form-select mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
+                                <!-- <select formControlName="acompaniante" class="form-select mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
                                     <option value="">Seleccione</option>
                                     <option value="si">Si</option>
                                     <option value="no">No</option>
+                                </select> -->
+                                <select formControlName="acompaniante" class="form-select" aria-label="Default select example" (change)="selectAcompaniante($event)">
+                                    <option value="">Seleccione</option>
+                                    <option value="true">Si</option>
+                                    <option value="false">No</option>
                                 </select>
                             </div>                          
                             <div class="form-group">
@@ -61,8 +66,8 @@
                             <app-btn-agregar name="Guardar" type="button" (click)="onSubmit()" [disabled]="!form.valid" ></app-btn-agregar>
                         </form>
                     </div>
-                    <div class="container" [ngClass]="{'invisible': !tarifaPersonalizada && !tarifaEventual &&!vehiculosChofer}">
-                        <div *ngIf="tarifaPersonalizada">
+                    <div class="container" [ngClass]="{'invisible': !tPersonalizada && !tEventual &&!vehiculosChofer}">
+                        <div *ngIf="tPersonalizada">
                             <label for="TarifaEventual">Tarifa Personalizada</label>
                             <p class="m-2 border-top border-bottom">El cliente tiene una tarifa Personalizada. Seleccione la sección y la categoria correspondiente a la operación.</p>                        
                             <form [formGroup]="formTarifaPersonalizada">
@@ -103,7 +108,7 @@
                               </ng-container>
                             </form>
                         </div>
-                        <div *ngIf="tarifaEventual">                            
+                        <div *ngIf="tEventual">                            
                             <label for="TarifaEventual">Tarifa Eventual</label>
                             <p class="m-2 border-top border-bottom">La tarifa eventual se aplica una unica vez a esta operación especifica.</p>                        
                             <form [formGroup]="formTarifaEventual" (ngSubmit)="onSubmit()">

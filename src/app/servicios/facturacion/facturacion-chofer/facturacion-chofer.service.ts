@@ -76,7 +76,7 @@ export class FacturacionChoferService {
   }
 
   $facturarOpEveChofer(op: Operacion){
-    this.tarifaBase = op.tEventual.chofer.valor;
+    this.tarifaBase = op.tarifaEventual.chofer.valor;
     this.acompaniante = 0;
     this.kmValor = 0;
     this.$crearFacturaOpChofer(op, 0);
@@ -95,10 +95,10 @@ export class FacturacionChoferService {
 $calcularCGPersonalizada(tarifa: TarifaPersonalizadaCliente, op: Operacion){
   
   let seccionPers: Seccion [] = tarifa.secciones.filter((seccion: Seccion)=>{
-    return seccion.orden === Number(op.tPersonalizada.seccion);
+    return seccion.orden === Number(op.tarifaPersonalizada.seccion);
   });
   let categoria: any [] = seccionPers[0].categorias.filter((cat:any) => {
-    return cat.orden === Number(op.tPersonalizada.categoria);
+    return cat.orden === Number(op.tarifaPersonalizada.categoria);
   })
   return categoria[0].aPagar;
 }
@@ -393,8 +393,8 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente){
       //this.total = typeof op.tEspecial.chofer.valor === 'number'? op.tEspecial.chofer.valor : 0;
     this.montoValorJornada = this.ultimaTarifa.tarifaEspecial.valor;
     this.total = this.ultimaTarifa.tarifaEspecial.valor;
-      this.ultimaTarifa.tarifaEspecial.valor = op.tEventual.chofer.valor;
-      this.ultimaTarifa.tarifaEspecial.concepto = op.tEventual.chofer.concepto;
+      this.ultimaTarifa.tarifaEspecial.valor = op.tarifaEventual.chofer.valor;
+      this.ultimaTarifa.tarifaEspecial.concepto = op.tarifaEventual.chofer.concepto;
       //console.log("4) tarifa editada", this.ultimaTarifa);      
       this.storageService.updateItem("tarifasChofer", this.ultimaTarifa)
       //} else{

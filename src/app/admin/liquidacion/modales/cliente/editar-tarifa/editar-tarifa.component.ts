@@ -54,7 +54,7 @@ export class EditarTarifaComponent implements OnInit {
   ngOnInit(): void {   
     console.log("fromParent: ",this.fromParent);    
     this.facDetallada = this.fromParent.factura;
-    this.swich = this.facDetallada.operacion.tarifaEventual;
+    //this.swich = this.facDetallada.operacion.tarifaEventual;
     this.ultimaTarifa = this.fromParent.tarifaAplicada;
     //this.ultimaTarifa = this.fromParent.tarifaAplicada;
     /* this.storageService.historialTarifasClientes$.subscribe(data => {      
@@ -161,7 +161,7 @@ export class EditarTarifaComponent implements OnInit {
     ////console.log()("NUEVA operacion con nueva TARIFA", this.facturaEditada);
     console.log("swich: ", this.swichForm.get('tarifaEspecial').value);
     
-    this.facturaEditada.operacion.tarifaEventual = this.swich;
+    //this.facturaEditada.operacion.tarifaEventual = this.swich;
     this.facturaEditada.idTarifa = this.ultimaTarifa.idTarifa
     
   }
@@ -179,8 +179,8 @@ export class EditarTarifaComponent implements OnInit {
   } 
 
   armarTarifaEspecial(){
-    this.facturaEditada.operacion.tEventual.chofer.concepto = this.tarifaEditForm.value.concepto;
-    this.facturaEditada.operacion.tEventual.chofer.valor = this.tarifaEditForm.value.valor;
+    //this.facturaEditada.operacion.tEventual.chofer.concepto = this.tarifaEditForm.value.concepto;
+    //this.facturaEditada.operacion.tEventual.chofer.valor = this.tarifaEditForm.value.valor;
   }
 
   

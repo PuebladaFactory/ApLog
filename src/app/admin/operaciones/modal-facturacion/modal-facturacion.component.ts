@@ -24,21 +24,19 @@ export class ModalFacturacionComponent implements OnInit {
   formTarifaEventual!:any;    
   $choferes!: Chofer[];
   acompaniante: boolean = false;
-  tarifaPersonalizada: boolean = false;
-  tarifaEventual: boolean = false;
   vehiculosChofer: boolean = false;
   tarifaClienteSel!: TarifaPersonalizadaCliente;
   mostrarCategoria: boolean = false;
   seccionElegida!: Seccion;
   categoriaElegida: number = 0;
-  tPersonalizada!: TarifaPersonalizada;
+  tarifaPersonalizada!: TarifaPersonalizada;
   tarifaTipo!: TarifaTipo;
   vista: boolean = false;
   editar: boolean = false;
   cerrar: boolean = false;
   aCobrar: any;
   aPagar: any;
-  tEventual!: TarifaEventual;
+  tarifaEventual!: TarifaEventual;
 
   constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private facturacionOpServ: FacturacionOpService){
     this.form = this.fb.group({      
@@ -72,9 +70,8 @@ export class ModalFacturacionComponent implements OnInit {
         this.cerrar = true;
         break;
     }
-    if(this.op.tarifaPersonalizada){
-      this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", this.op.cliente.idCliente, "ultTarifaPersCliente" )
-      this.tarifaPersonalizada = true;      
+    if(this.op.tarifaTipo.personalizada){
+      this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", this.op.cliente.idCliente, "ultTarifaPersCliente" )      
       this.storageService.ultTarifaPersCliente$.subscribe(data=>{        
         this.tarifaClienteSel = data || {};
         ////console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
@@ -93,13 +90,13 @@ export class ModalFacturacionComponent implements OnInit {
     this.tarifaEventual = this.op.tarifaEventual;
     this.tarifaPersonalizada = this.op.tarifaPersonalizada;
     this.tarifaTipo = this.op.tarifaTipo;
-    this.tEventual = this.op.tEventual;
-    this.aCobrar = this.formatearValor(this.op.aCobrar);
-    this.aPagar = this.formatearValor(this.op.aPagar);
-    this.tPersonalizada = this.op.tPersonalizada;
+    /* this.tEventual = this.op.tEventual; */
+    this.aCobrar = this.formatearValor(this.op.valores.cliente.aCobrar);
+    this.aPagar = this.formatearValor(this.op.valores.chofer.aPagar);
+    this.tarifaPersonalizada = this.op.tarifaPersonalizada;
     //////console.log("1)", this.tarifaPersonalizada);
-    if(this.op.tarifaPersonalizada){
-      this.seccionElegida = this.tarifaClienteSel.secciones[this.op.tPersonalizada.seccion - 1];
+    if(this.op.tarifaTipo.personalizada){
+      this.seccionElegida = this.tarifaClienteSel.secciones[this.op.tarifaPersonalizada.seccion - 1];
       //this.tPersonalizada = this.op.tPersonalizada;
     }
     this.form.patchValue({      
@@ -131,7 +128,7 @@ changeAcompaniante(event: any) {
 }
 
 ////////// TARIFA EVENTUAL //////////////////
-  selectTarifaEventual(event: any) {
+  /* selectTarifaEventual(event: any) {
     //////console.log(event.target.value);    
     this.tarifaEventual = event.target.value.toLowerCase() == 'true';
     //////console.log(this.tarifaEventual);
@@ -144,8 +141,8 @@ changeAcompaniante(event: any) {
         seccion: this.tarifaPersonalizada ? this.op.tPersonalizada.seccion : "Sin datos",
         categoria: this.tarifaPersonalizada ? this.op.tPersonalizada.categoria : "Sin datos",
       });
-      this.aCobrar = this.formatearValor(this.op.aCobrar);
-      this.aPagar = this.formatearValor(this.op.aPagar);  
+      this.aCobrar = this.formatearValor(this.op.valores.cliente.aCobrar);
+      this.aPagar = this.formatearValor(this.op.valores.chofer.aPagar);  
     }    
     ////console.log(this.aCobrar);    
     if(this.tarifaEventual){
@@ -170,7 +167,7 @@ changeAcompaniante(event: any) {
       
     }    
 
-}
+} */
 
 
 
@@ -185,37 +182,37 @@ changeSecion(e:any){
       });
   }
   this.seccionElegida = this.tarifaClienteSel.secciones[e.target.value - 1];
-  this.tPersonalizada = {
+  this.tarifaPersonalizada = {
     seccion : e.target.value,
-    categoria: this.tPersonalizada.categoria,
-    nombre: this.tPersonalizada.nombre,
-    aCobrar: this.tPersonalizada.aCobrar,
-    aPagar: this.tPersonalizada.aPagar
+    categoria: this.tarifaPersonalizada.categoria,
+    nombre: this.tarifaPersonalizada.nombre,
+    aCobrar: this.tarifaPersonalizada.aCobrar,
+    aPagar: this.tarifaPersonalizada.aPagar
   }
 
-  this.tarifaTipo = {
+/*   this.tarifaTipo = {
     general: false,
     especial: false,
     eventual: false,   
     personalizada: true, 
-}
+} */
   ////////console.log(this.seccionElegida);
   ////////console.log(this.tPersonalizada);
 }
 
 changeCategoria(e:any){
   //////console.log("categoria: ", e.target.value);
-  this.tPersonalizada = {
-    seccion : this.tPersonalizada.seccion,
-    categoria: this.tarifaClienteSel.secciones[this.tPersonalizada.seccion - 1].categorias[e.target.value-1].orden,
-    nombre: this.tarifaClienteSel.secciones[this.tPersonalizada.seccion - 1].categorias[e.target.value-1].nombre,
-    aCobrar: this.tarifaClienteSel.secciones[this.tPersonalizada.seccion - 1].categorias[e.target.value-1].aCobrar,
-    aPagar: this.tarifaClienteSel.secciones[this.tPersonalizada.seccion - 1].categorias[e.target.value-1].aPagar,
+  this.tarifaPersonalizada = {
+    seccion : this.tarifaPersonalizada.seccion,
+    categoria: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].orden,
+    nombre: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].nombre,
+    aCobrar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aCobrar,
+    aPagar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aPagar,
   }
   //console.log("tarifa personalizada: ", this.tPersonalizada);
-  this.op.tPersonalizada = this.tPersonalizada;
-  this.aCobrar = this.formatearValor(this.tPersonalizada.aCobrar);
-  this.aPagar = this.formatearValor(this.tPersonalizada.aPagar);  
+  this.op.tarifaPersonalizada = this.tarifaPersonalizada;
+  this.aCobrar = this.formatearValor(this.tarifaPersonalizada.aCobrar);
+  this.aPagar = this.formatearValor(this.tarifaPersonalizada.aPagar);  
 }
 
 onSubmit(){
@@ -258,30 +255,40 @@ armarOp(){
   ////console.log("2)", this.tarifaPersonalizada);
   // Extraer valores del formulario y otros datos
   const formValues = this.form.value;
-
+  console.log("tarifa eventual: ", this.tarifaEventual);
+  
   // editar la operación básica  
   this.op.acompaniante = this.acompaniante;  
   this.op.observaciones = this.form.value.observaciones;
-  this.op.tarifaEventual = this.tarifaEventual;
+  //this.op.tarifaEventual = this.tarifaEventual;
+  //this.op.tarifaPersonalizada = this.tarifaPersonalizada;
   this.op.tarifaPersonalizada = this.tarifaPersonalizada;
-  this.op.tPersonalizada = this.tPersonalizada;
   this.op.tarifaTipo = this.tarifaTipo;
-  this.op.tPersonalizada = this.tPersonalizada;
-  if(this.tarifaEventual){
-    this.op.tEventual = this.tEventual
-    this.op.tarifaTipo = {
+  //this.op.tPersonalizada = this.tPersonalizada;
+  if(this.op.tarifaTipo.eventual){
+    this.op.tarifaEventual = this.tarifaEventual
+    /* this.op.tarifaTipo = {
       general: false,
       especial : false,
       eventual : true,
       personalizada: false
-    };
-    this.op.aCobrar = this.tEventual.cliente.valor;
-    this.op.aPagar = this.tEventual.chofer.valor;
-  } else {
-    this.op.aCobrar = this.limpiarValorFormateado(this.aCobrar);
-    this.op.aPagar = this.limpiarValorFormateado(this.aPagar);  
-  }
-
+    }; */
+    this.op.valores.cliente.aCobrar = this.tarifaEventual.cliente.valor;
+    this.op.valores.cliente.tarifaBase = this.tarifaEventual.cliente.valor;
+    this.op.valores.chofer.aPagar = this.tarifaEventual.chofer.valor;
+    this.op.valores.chofer.tarifaBase = this.tarifaEventual.chofer.valor;
+  } /* else {
+    this.op.valores.cliente.aCobrar = this.limpiarValorFormateado(this.aCobrar);
+    this.op.valores.chofer.aPagar = this.limpiarValorFormateado(this.aPagar);  
+  } */
+ if(this.op.tarifaTipo.personalizada){
+    this.op.valores.cliente.aCobrar = this.tarifaPersonalizada.aCobrar;
+    this.op.valores.cliente.tarifaBase = this.tarifaPersonalizada.aCobrar;
+    this.op.valores.chofer.aPagar = this.tarifaPersonalizada.aPagar;
+    this.op.valores.chofer.tarifaBase = this.tarifaPersonalizada.aPagar;
+ }
+  console.log("op: ", this.op);
+  
   
   this.updateItem(); 
  

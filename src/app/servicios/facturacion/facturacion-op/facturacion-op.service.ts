@@ -316,8 +316,8 @@ export class FacturacionOpService {
                     console.log("2)$armarFacturasOp: CHOFER: ",this.facturaOpChofer);              
                     if(this.facturaOpChofer !== undefined){
                        //console.log("3)Aca se haria el proceso ");
-                        op.aCobrar = this.facturaOpCliente.valores.total;
-                        op.aPagar = this.facturaOpChofer.valores.total;
+                        op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
+                        op.valores.chofer.aPagar = this.facturaOpChofer.valores.total;
                         op.estado = {
                           abierta : false,
                           cerrada : true,
@@ -338,8 +338,8 @@ export class FacturacionOpService {
                 console.log("2)$armarFacturasOp: CHOFER: ",this.facturaOpChofer);              
                 if(this.facturaOpProveedor !== undefined){
                    console.log("3)Aca se haria el proceso ");
-                    op.aCobrar = this.facturaOpCliente.valores.total;
-                    op.aPagar = this.facturaOpProveedor.valores.total;
+                    op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
+                    op.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
                     op.estado = {
                       abierta : false,
                       cerrada : true,

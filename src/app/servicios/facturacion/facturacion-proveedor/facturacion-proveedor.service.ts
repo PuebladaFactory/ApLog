@@ -267,10 +267,10 @@ export class FacturacionProveedorService {
   facturarTarifaEspecial(op: Operacion){
 
   
-      this.categoriaMonto = op.tEventual.chofer.valor;
-      this.total = op.tEventual.chofer.valor;
-      this.ultimaTarifa.tarifaEspecial.valor = op.tEventual.chofer.valor;
-      this.ultimaTarifa.tarifaEspecial.concepto = op.tEventual.chofer.concepto;
+      this.categoriaMonto = op.tarifaEventual.chofer.valor;
+      this.total = op.tarifaEventual.chofer.valor;
+      this.ultimaTarifa.tarifaEspecial.valor = op.tarifaEventual.chofer.valor;
+      this.ultimaTarifa.tarifaEspecial.concepto = op.tarifaEventual.chofer.concepto;
       this.storageService.updateItem("tarifasProveedor", this.ultimaTarifa)
         
     this.acompanianteMonto = 0;

@@ -86,7 +86,7 @@ export class FacturacionClienteService {
   }
 
   $facturarOpEveCliente(op: Operacion){
-    this.tarifaBase = op.tEventual.cliente.valor;
+    this.tarifaBase = op.tarifaEventual.cliente.valor;
     this.acompaniante = 0;
     this.kmValor = 0;
     this.$crearFacturaOpCliente(op, 0);
@@ -106,12 +106,12 @@ $calcularCGPersonalizada(tarifa: TarifaPersonalizadaCliente, op: Operacion){
   console.log("tarifa: ", tarifa);
   
   let seccionPers: Seccion [] = tarifa.secciones.filter((seccion: Seccion)=>{
-    return seccion.orden === Number(op.tPersonalizada.seccion);
+    return seccion.orden === Number(op.tarifaPersonalizada.seccion);
   });
   console.log("seccionPers", seccionPers);
   
   let categoria: any [] = seccionPers[0].categorias.filter((cat:any) => {
-    return cat.orden === Number(op.tPersonalizada.categoria)
+    return cat.orden === Number(op.tarifaPersonalizada.categoria)
   })
   console.log("categoria", categoria);
   return categoria[0].aCobrar
@@ -392,8 +392,8 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
       //this.total = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
       this.categoriaMonto = this.ultimaTarifa.tarifaEspecial.valor;
       this.total = this.ultimaTarifa.tarifaEspecial.valor;
-      this.ultimaTarifa.tarifaEspecial.valor = op.tEventual.cliente.valor;
-      this.ultimaTarifa.tarifaEspecial.concepto = op.tEventual.cliente.concepto;
+      this.ultimaTarifa.tarifaEspecial.valor = op.tarifaEventual.cliente.valor;
+      this.ultimaTarifa.tarifaEspecial.concepto = op.tarifaEventual.cliente.concepto;
       console.log("4) tarifa CLIENTE editada", this.ultimaTarifa);
       this.storageService.updateItem("tarifasCliente", this.ultimaTarifa) 
       
@@ -464,12 +464,12 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
   ////prueba.......
   generarOp(op:Operacion){
     this.tarifaGral()
-    if(op.tarifaEventual){
-        op.aCobrar = op.tEventual.cliente.valor;
-        op.aPagar = op.tEventual.chofer.valor;
-    } else if(op.tarifaPersonalizada){
-        op.aCobrar = op.tPersonalizada.aCobrar
-        op.aPagar = op.tPersonalizada.aPagar;
+    if(op.tarifaTipo.eventual){
+        op.valores.cliente.aCobrar = op.tarifaEventual.cliente.valor;
+        op.valores.chofer.aPagar = op.tarifaEventual.chofer.valor;
+    } else if(op.tarifaTipo.personalizada){
+        op.valores.cliente.aCobrar = op.tarifaPersonalizada.aCobrar
+        op.valores.chofer.aPagar = op.tarifaPersonalizada.aPagar;
     } else {
       if(op.chofer.vehiculo.length > 1){
 

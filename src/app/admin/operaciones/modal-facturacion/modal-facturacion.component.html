@@ -73,7 +73,8 @@
                                 <textarea formControlName="observaciones"  class="form-control edicion"></textarea>
                             </div>
                         </div> 
-                    </form>                                                                                   
+                    </form>           
+                    <h3 class="mt-2">Totales Op</h3>                                                                          
                     <div class="form-group" >                                    
                         <label for="A Cobrar" class="fs-5">A Cobrar</label>
                         <div class="input-group">
@@ -150,78 +151,164 @@
                     </div>                         
                 </div>   
             </div>
-            <div class="col-4 " [ngClass]="{'isDisabled': vista || cerrar || op.estado.cerrada || op.estado.facturada}">
+            <div class="col-8 " [ngClass]="{'isDisabled': vista || cerrar || op.estado.cerrada || op.estado.facturada}">
                 <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100">
-                    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                        <div class="form-group">
-                            <label for="TarifaEventual" class="fs-4">Tarifa Eventual</label>
-                            <select class="form-select mb-3" (change)="selectTarifaEventual($event)">
-                                <option [value]="tarifaEventual" selected> {{tarifaEventual ? "Si" : "No"}}</option>
-                                <option [value]="true">Si</option>
-                                <option [value]="false">No</option>
-                            </select>
-                        </div>                
-                    </form>                                
-                    
-                        <div class="my-2">
-                            <h5 class="my-2 mt-2">Cliente:</h5>
-                            <div class="form-group" [ngClass]="{'isDisabled': !tarifaEventual}">
-                                <label for="Fecha" class="fs-5">Tarifa Eventual Concepto</label>
-                                <div class="input-group">
-                                <input class="form-control edicion" required type="text" [(ngModel)]="tEventual.cliente.concepto" >
+                    <div class="row">
+                        <h3>Tarifa Aplicada: {{op.tarifaTipo.eventual ? "Eventual" : op.tarifaTipo.personalizada ? "Personalizada" : "" }} </h3> 
+                        <!-- OPERACIONES EVENTUALES-->
+                        <ng-container *ngIf="op.tarifaTipo.eventual">
+                            <div class="row">                            
+                                <div class="col border-end">
+                                    <h4 class="my-2 mt-2">Cliente</h4>                         
+                                    <div class="col">
+                                        <div class="form-group mt-3">
+                                            <label for="Fecha" class="fs-5">Tarifa Eventual Concepto</label>
+                                            <div class="input-group">
+                                            <input class="form-control edicion" required type="text" [(ngModel)]="tarifaEventual.cliente.concepto" >
+                                            </div>
+                                        </div>
+                                        <div class="form-group mt-3">
+                                            <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                                <input  class="form-control edicion" required type="number" [(ngModel)]="tarifaEventual.cliente.valor">
+                                            </div>                                                        
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <h4 class="mt-2">Chofer:</h4>
+                                    <div class="form-group mt-3">
+                                        <label for="Fecha" class="fs-5">Tarifa Eventual Concepto</label>
+                                        <div class="input-group">
+                                            <input class="form-control edicion" required type="text" [(ngModel)]="tarifaEventual.chofer.concepto">
+                                        </div>
+                                    </div>
+                                    <div class="form-group mt-3">
+                                        <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                            <input class="form-control edicion" required type="number" [(ngModel)]="tarifaEventual.chofer.valor">
+                                        </div>                                                                                        
+                                    </div>                               
                                 </div>
                             </div>
-                            <div class="form-group mb-2" [ngClass]="{'isDisabled': !tarifaEventual}">
-                                <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
-                                <div class="input-group">
-                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                    <input  class="form-control edicion" required type="number" [(ngModel)]="tEventual.cliente.valor">
-                                </div>                                                        
+                        </ng-container>
+                        <!-- OPERACIONES PERSONALIZADAS -->
+                        <ng-container *ngIf="op.tarifaTipo.personalizada">
+                            <div class="row">                                                            
+                                <div class="col">
+                                    <form [formGroup]="formTarifaPersonalizada">
+                                        <div class="form-group">
+                                            <label for="Cliente">Secciion</label>
+                                            <select class="form-select mb-3" (change)="changeSecion($event)">
+                                                <option [value]="op.tarifaPersonalizada.seccion" selected >{{op.tarifaTipo.personalizada ? 'Seccion ' + op.tarifaPersonalizada.seccion + " : " + tarifaClienteSel.secciones[op.tarifaPersonalizada.seccion - 1].descripcion : 'Sin datos'}}</option>                              
+                                                <option *ngFor="let seccion of tarifaClienteSel?.secciones" [value]="seccion?.orden">
+                                                    Seccion {{seccion?.orden}}: {{seccion?.descripcion? seccion.descripcion : ""}} 
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col">
+                                    <form [formGroup]="formTarifaPersonalizada">
+                                        <div class="form-group">
+                                            <label for="Categoria">Categoria</label>
+                                            <select class="form-select mb-3" (change)="changeCategoria($event)" >
+                                                <option selected>{{op.tarifaTipo.personalizada ? 'Categoria ' + op.tarifaPersonalizada.categoria + " : " + op.tarifaPersonalizada.nombre : 'Sin datos'}}</option>                                                                      
+                                                <option *ngFor="let categoria of seccionElegida?.categorias" [value]="categoria.orden">
+                                                    Categoria {{categoria.orden}}: {{categoria.nombre}} 
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </form>
+                                </div>                                 
                             </div>
-                            <h5 class="mt-2">Chofer:</h5>
-                            <div class="form-group" [ngClass]="{'isDisabled': !tarifaEventual}">
-                                <label for="Fecha" class="fs-5">Tarifa Eventual Concepto</label>
-                                <div class="input-group">
-                                    <input class="form-control edicion" required type="text" [(ngModel)]="tEventual.chofer.concepto">
+                            <div class="row">
+                                <div class="col border-end">
+                                    <h4 class="my-2 mt-2">Cliente:</h4>                         
+                                    <div class="form-group mb-2">
+                                        <label for="Fecha" class="fs-5">Tarifa Personalizada Valor</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                            <input  class="form-control edicion isDisabled" required type="number" [(ngModel)]="op.tarifaPersonalizada.aCobrar">
+                                        </div>                                                        
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <h4 class="my-2 mt-2">Chofer</h4>                         
+                                    <div class="form-group mb-2">
+                                        <label for="Fecha" class="fs-5">Tarifa Personalizada Valor</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                            <input  class="form-control edicion isDisabled" required type="number" [(ngModel)]="op.tarifaPersonalizada.aPagar">
+                                        </div>                                                        
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-group" [ngClass]="{'isDisabled': !tarifaEventual}">
-                                <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
-                                <div class="input-group">
-                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                    <input class="form-control edicion" required type="number" [(ngModel)]="tEventual.chofer.valor">
-                                </div>                                                                                        
-                            </div>                        
-                        </div>              
-                    
-                </div>                
-            </div>
-            <div class="col-4"  [ngClass]="{'isDisabled': vista || cerrar || op.estado.cerrada || op.estado.facturada}">
-                <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100">
-                    <label for="TarifaPersonalizada" class="fs-4">Tarifa Personalizada</label>
-                    <p *ngIf="tarifaPersonalizada" class="m-2 border-top border-bottom fs-5">El cliente tiene una tarifa Personalizada. </p>
-                    <p *ngIf="tarifaEventual" class="m-2 border-top border-bottom fs-5">Hay una Tarifa Eventual aplicada.</p>  
-                    <p *ngIf="!tarifaPersonalizada" class="m-2 border-top border-bottom fs-5">El cliente no tiene una tarifa Personalizada.</p>                        
-                    <form [formGroup]="formTarifaPersonalizada">
-                        <div class="form-group">
-                            <label for="Cliente">Secciion</label>
-                            <select class="form-select mb-3" (change)="changeSecion($event)" [ngClass]="{'isDisabled': !tarifaPersonalizada}">
-                                <option [value]="op.tPersonalizada.seccion" selected >{{tarifaPersonalizada ? 'Seccion ' + op.tPersonalizada.seccion + " : " + tarifaClienteSel.secciones[op.tPersonalizada.seccion - 1].descripcion : 'Sin datos'}}</option>                              
-                                <option *ngFor="let seccion of tarifaClienteSel?.secciones" [value]="seccion?.orden">
-                                    Seccion {{seccion?.orden}}: {{seccion?.descripcion? seccion.descripcion : ""}} 
-                                </option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="Categoria">Categoria</label>
-                            <select class="form-select mb-3" (change)="changeCategoria($event)" [ngClass]="{'isDisabled': !tarifaPersonalizada}">
-                                <option selected>{{tarifaPersonalizada ? 'Categoria ' + op.tPersonalizada.categoria + " : " + op.tPersonalizada.nombre : 'Sin datos'}}</option>                                                                      
-                                <option *ngFor="let categoria of seccionElegida?.categorias" [value]="categoria.orden">
-                                    Categoria {{categoria.orden}}: {{categoria.nombre}} 
-                                </option>
-                            </select>
-                        </div>
-                    </form>  
+                        </ng-container>
+                        <!-- OPERACIONES GENERALES Y ESPECIALES -->
+                        <ng-container *ngIf="!op.tarifaTipo.personalizada && !op.tarifaTipo.eventual">  
+                            <div class="row isDisabled">
+                                <div class="col border-end">
+                                    <h4 class="my-2 mt-2">Cliente: {{op.cliente.tarifaTipo.general ? "General" : "Especial"}}</h4>                         
+                                    <div class="form-group mb-2">
+                                        <label for="Fecha" class="fs-5">Tarifa Base Valor</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                            <input  class="form-control edicion" required type="number" [(ngModel)]="op.valores.cliente.tarifaBase">
+                                        </div>                                                        
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <h4 class="my-2 mt-2">Chofer: {{op.chofer.tarifaTipo.general ? "General" : "Especial"}}</h4>                         
+                                    <div class="form-group mb-2">
+                                        <label for="Fecha" class="fs-5">Tarifa Base Valor</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                            <input  class="form-control edicion" required type="number" [(ngModel)]="op.valores.chofer.tarifaBase">
+                                        </div>                                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </ng-container>                        
+                        <h3 class="mt-3">Adicionales: </h3>
+                        <div class="row isDisabled">
+                            <div class="col border-end">
+                                <div class="form-group">
+                                    <label for="Fecha" class="fs-5">Acompañante valor</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? 0 : op.valores.acompValor">
+                                    </div>                                                        
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label for="Fecha" class="fs-5">Km adicionales valor</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? 0 : op.valores.kmAdicional">
+                                    </div>                                                        
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="Fecha" class="fs-5">Acompañante valor</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? 0 : op.valores.acompValor">
+                                    </div>                                                        
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label for="Fecha" class="fs-5">Km adicionales valor</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? 0 : op.valores.kmAdicional">
+                                    </div>                                                        
+                                </div>                       
+                            </div>
+
+                        </div>                      
+                    </div>                   
                 </div>                
             </div>
         </div>
@@ -231,3 +318,79 @@
         <app-btn-agregar *ngIf="cerrar" name="Cerrar" (click)="onSubmit()"></app-btn-agregar>        
     </div>
 </div>
+
+
+<!-- <div class="col-4 " [ngClass]="{'isDisabled': vista || cerrar || op.estado.cerrada || op.estado.facturada}">
+    <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+                <label for="TarifaEventual" class="fs-4">Tarifa Eventual</label>
+                <select class="form-select mb-3" (change)="selectTarifaEventual($event)">
+                    <option [value]="tarifaEventual" selected> {{tarifaEventual ? "Si" : "No"}}</option>
+                    <option [value]="true">Si</option>
+                    <option [value]="false">No</option>
+                </select>
+            </div>                
+        </form>                                
+        
+            <div class="my-2">
+                <h5 class="my-2 mt-2">Cliente:</h5>
+                <div class="form-group" [ngClass]="{'isDisabled': !tarifaEventual}">
+                    <label for="Fecha" class="fs-5">Tarifa Eventual Concepto</label>
+                    <div class="input-group">
+                    <input class="form-control edicion" required type="text" [(ngModel)]="tEventual.cliente.concepto" >
+                    </div>
+                </div>
+                <div class="form-group mb-2" [ngClass]="{'isDisabled': !tarifaEventual}">
+                    <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                        <input  class="form-control edicion" required type="number" [(ngModel)]="tEventual.cliente.valor">
+                    </div>                                                        
+                </div>
+                <h5 class="mt-2">Chofer:</h5>
+                <div class="form-group" [ngClass]="{'isDisabled': !tarifaEventual}">
+                    <label for="Fecha" class="fs-5">Tarifa Eventual Concepto</label>
+                    <div class="input-group">
+                        <input class="form-control edicion" required type="text" [(ngModel)]="tEventual.chofer.concepto">
+                    </div>
+                </div>
+                <div class="form-group" [ngClass]="{'isDisabled': !tarifaEventual}">
+                    <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                        <input class="form-control edicion" required type="number" [(ngModel)]="tEventual.chofer.valor">
+                    </div>                                                                                        
+                </div>                        
+            </div>              
+        
+    </div>                
+</div>
+<div class="col-4"  [ngClass]="{'isDisabled': vista || cerrar || op.estado.cerrada || op.estado.facturada}">
+    <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100">
+        <label for="TarifaPersonalizada" class="fs-4">Tarifa Personalizada</label>
+        <p *ngIf="tarifaPersonalizada" class="m-2 border-top border-bottom fs-5">El cliente tiene una tarifa Personalizada. </p>
+        <p *ngIf="tarifaEventual" class="m-2 border-top border-bottom fs-5">Hay una Tarifa Eventual aplicada.</p>  
+        <p *ngIf="!tarifaPersonalizada" class="m-2 border-top border-bottom fs-5">El cliente no tiene una tarifa Personalizada.</p>                        
+        <form [formGroup]="formTarifaPersonalizada">
+            <div class="form-group">
+                <label for="Cliente">Secciion</label>
+                <select class="form-select mb-3" (change)="changeSecion($event)" [ngClass]="{'isDisabled': !tarifaPersonalizada}">
+                    <option [value]="op.tPersonalizada.seccion" selected >{{tarifaPersonalizada ? 'Seccion ' + op.tPersonalizada.seccion + " : " + tarifaClienteSel.secciones[op.tPersonalizada.seccion - 1].descripcion : 'Sin datos'}}</option>                              
+                    <option *ngFor="let seccion of tarifaClienteSel?.secciones" [value]="seccion?.orden">
+                        Seccion {{seccion?.orden}}: {{seccion?.descripcion? seccion.descripcion : ""}} 
+                    </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="Categoria">Categoria</label>
+                <select class="form-select mb-3" (change)="changeCategoria($event)" [ngClass]="{'isDisabled': !tarifaPersonalizada}">
+                    <option selected>{{tarifaPersonalizada ? 'Categoria ' + op.tPersonalizada.categoria + " : " + op.tPersonalizada.nombre : 'Sin datos'}}</option>                                                                      
+                    <option *ngFor="let categoria of seccionElegida?.categorias" [value]="categoria.orden">
+                        Categoria {{categoria.orden}}: {{categoria.nombre}} 
+                    </option>
+                </select>
+            </div>
+        </form>  
+    </div>                
+</div> -->
