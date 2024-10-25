@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit } from '@angular/core';
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -10,6 +10,8 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 })
 export class TableroCalendarioComponent implements OnInit {
    // Objeto de consulta de fechas
+   @Input() modo:any
+   @Input() fromParent:any
    fechasConsulta: any = {
     fechaDesde: '',
     fechaHasta: ''
@@ -41,7 +43,14 @@ export class TableroCalendarioComponent implements OnInit {
 
   ngOnInit(): void {
     // Al iniciar, calcular la semana actual como rango por defecto
-    this.calcularSemanaActual();
+    console.log("modo: ", this.modo);
+    if(this.modo === "operaciones"){
+      this.calcularSemanaActual();
+    }
+    if(this.modo === "liquidaciones"){
+      this.calcularMesActual();
+    }
+    
   }
 
   // Métodos para calcular los distintos formatos de consulta

@@ -1,4 +1,5 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Router } from '@angular/router';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -10,6 +11,8 @@ export class LiqGralComponent implements OnInit {
   
   @Output() newItemEvent = new EventEmitter<any>();
 
+  modo: string = 'liquidaciones'
+  selectedTab: string = 'tab1';
   componenteConsulta: string = "Liquidacion"
   fechasConsulta: any = {
     fechaDesde: 0,
@@ -35,7 +38,7 @@ export class LiqGralComponent implements OnInit {
   titulo: string = "liquidacion"
   btnConsulta:boolean = false;
 
-  constructor(private storageService: StorageService){    
+  constructor(private storageService: StorageService, private router: Router){    
   }
   
   ngOnInit(): void { 
@@ -43,8 +46,21 @@ export class LiqGralComponent implements OnInit {
     this.storageService.consultasFacOpCliente$.subscribe(data => {
       this.$facturasOpCliente = data;
       //this.procesarDatosParaTabla()
-    });  */  
-    this.consultaMes();
+    });  */      
+    this.selectTab("tab1");
+    //this.consultaMes();
+   
+  }
+
+  selectTab(tab: string) {
+    this.selectedTab = tab;
+    if (tab === 'tab1') {
+      this.router.navigate(['liquidacion/clientes']);
+    } else if (tab === 'tab2') {
+      this.router.navigate(['liquidacion/choferes']);
+    } else if (tab === 'tab3') {
+      this.router.navigate(['liquidacion/proveedores']);
+    } 
   }
 
   getMsg(msg: any) {

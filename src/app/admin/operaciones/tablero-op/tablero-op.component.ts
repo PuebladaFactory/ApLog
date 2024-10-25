@@ -20,6 +20,7 @@ import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.compone
 export class TableroOpComponent implements OnInit {
 
   @Input() btnConsulta:boolean = false;
+  modo : string = "operaciones"
   componente:string = "operaciones"  
   public buttonName: any = 'Consultar Operaciones';  
   public buttonNameAlta: any = 'Alta de Operación';  

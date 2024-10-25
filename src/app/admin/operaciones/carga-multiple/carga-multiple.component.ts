@@ -342,13 +342,16 @@ onSubmit() {
               personalizada: false, 
             } ,
             valores:{
-              acompValor: 0,
-              kmAdicional: 0,
+             
               cliente:{
+                acompValor: 0,
+                kmAdicional: 0,
                 tarifaBase: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aCobrar : 0, // Ajustar según tu lógica
                 aCobrar: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aCobrar : 0, // Ajustar según tu lógica
               },
               chofer:{
+                acompValor: 0,
+                kmAdicional: 0,
                 tarifaBase: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aPagar : 0, // Ajustar según tu lógica
                 aPagar: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aPagar : 0, // Ajustar según tu lógica
               }

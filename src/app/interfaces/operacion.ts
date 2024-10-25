@@ -52,16 +52,17 @@ export interface EstadoOp {
     facturada: boolean;
 }
 
-export interface Valores{
-    acompValor: number;
-    kmAdicional: number;
+export interface Valores{    
     cliente:{
+        acompValor: number;
+        kmAdicional: number;
         tarifaBase: number,
         aCobrar: number;    
     }
     chofer: {
+        acompValor: number;
+        kmAdicional: number;
         tarifaBase: number;
         aPagar: number;
     }
-
 }

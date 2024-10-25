@@ -247,6 +247,7 @@ cerrarOp(){
   } */
   //this.updateItem();
   this.facturacionOpServ.facturarOperacion(this.op);
+  
   this.activeModal.close();
 }
 

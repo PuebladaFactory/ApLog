@@ -2,169 +2,253 @@
     <div class="modal-dialog modal-dialog-centered">      
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-2">Detalle</h1>                        
-                <button type="button" class="btn-close btn-outline-secondary" (click)="cerrarEdicion()" (click)="activeModal.close()"></button>
-            </div>    
-            <div class="row">
-                <div class="col-4">  
-                  <h2 class="modal-title ms-2">Operación</h2>            
-                  <div class="modal-body">                      
-                      <div *ngIf="facDetallada !== undefined">
-                          <div class="">
-                              <h3>Fecha: {{facDetallada.fecha}} </h3>                
-                          </div>    
-                          <div class="mt-3">
-                              <h3>Chofer: {{facDetallada.operacion.chofer.apellido}} {{facDetallada.operacion.chofer.nombre}} </h3>                
-                          </div>    
-                          <div class="mt-3">
-                              <h3>Cliente: {{facDetallada.operacion.cliente.razonSocial}} </h3>                
-                          </div>                                                 
-                          <h2 class="mt-3"> Factura:</h2>
-                          <div class="mt-3">
-                              <h3>Tarifa Especial: {{facDetallada.operacion.tarifaEventual? 'Si' : 'No'}} </h3>                
-                          </div> 
-                          <div class="mt-3">
-                              <h3>Jornada: {{facDetallada.valorJornada}} </h3>                
-                          </div> 
-                          <div class="mt-3">
-                              <h3>Km: {{facDetallada.operacion.km}} </h3>                
-                          </div>   
-                          <div class="mt-3">
-                              <h3>Acompaniante: {{ facDetallada.operacion.acompaniante  ? ultimaTarifa.adicionales.acompaniante : 0 }} </h3>                
-                          </div>   
-                          <div class="mt-3">
-                              <h3>Total Adicionales: {{facDetallada.total - facDetallada.valorJornada}} </h3>                
-                          </div>    
-                          <div class="mt-3">
-                              <h3>Total: {{facDetallada.total}} </h3>                
-                          </div>                          
-                      </div>
-                  </div>           
-                </div>
-                <div class="col-8">
-                  
-                    <h2 class="modal-title fs-2" id="exampleModalToggleLabel2">Tarifa Aplicada</h2>                          
-                    
-                    <form [formGroup]="tarifaEditForm" >               
-                        <div class="modal-body row">                    
-                            <div class="col-5">
-                                <h3 class="w-100">Cargas Generales</h3>
-                                <table>
-                                    <tbody>                                        
-                                        <tr class="form-group">
-                                          <td class="parametro">Utilitario: </td>
-                                          <td>
-                                            <input formControlName="utilitario" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': !edicion}">   
-                                          </td>
-                                        </tr>                               
-                                        <tr class="form-group">
-                                            <td class="parametro">Furgon: </td>
-                                            <td>
-                                              <input formControlName="furgon" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                            </td>
-                                        </tr>
-                                        <tr class="form-group">
-                                            <td class="parametro">Furgon Grande: </td>
-                                            <td>
-                                              <input formControlName="furgonGrande" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                            </td>
-                                        </tr>
-                                        <tr class="form-group">
-                                            <td class="parametro">Chasis Liviano: </td>
-                                            <td>
-                                              <input formControlName="chasisLiviano" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': !edicion}">   
-                                            </td>
-                                        </tr>                               
-                                        <tr class="form-group">
-                                            <td class="parametro">Chasis: </td>
-                                            <td>
-                                              <input formControlName="chasis" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                            </td>
-                                        </tr>
-                                        <tr class="form-group">
-                                            <td class="parametro">Balancin: </td>
-                                            <td>
-                                              <input formControlName="balancin" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': !edicion}">   
-                                            </td>
-                                        </tr>                               
-                                        <tr class="form-group">
-                                            <td class="parametro">Semi Remolque Local: </td>
-                                            <td>
-                                              <input formControlName="semiRemolqueLocal" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                            </td>
-                                        </tr>                        
-                                        <tr class="form-group">
-                                            <td class="parametro">Portacontenedores: </td>
-                                            <td>
-                                              <input formControlName="portacontenedores" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                            </td>
-                                        </tr>    
-                            
-                                    </tbody>
-                                </table>    
+                <h1 class="modal-title fs-2">Editar</h1>                        
+                <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
+            </div>
+            <div class="modal-body">                          
+                <div class="row h-100">
+                <div class="col-4 isDisabled h-100">
+                    <h3>Tarifa Aplicada: {{facDetallada.tarifaTipo.personalizada ? "Personalizada" : facDetallada.tarifaTipo.eventual ? "Eventual" : facDetallada.tarifaTipo.especial ? "Especial" : "General"}}</h3>
+                    <!-- GENERAL/ESPECIAL --> 
+                    <ng-container *ngIf="operacion.tarifaTipo.general || operacion.tarifaTipo.especial">
+                        <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
+                            <div class="form-group mb-2">
+                                <label for="Categoria" class="fs-5">Categoria</label>
+                                <div class="input-group">                                
+                                    <input class="w-100" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].nombre">
+                                </div>                                                        
                             </div>
-                            <div class="col-7">
-                                <table>
-                                    <tbody>
-                                        <h3>Adicionales</h3>
-                                        <tr class="form-group">
-                                            <td class="parametro align-middle">Acompañante: </td>
-                                            <td>
-                                              <input formControlName="acompaniante" class="form-control edicion" required type="number" [ngClass]="{'isDisabled': !edicion}">   
-                                            </td>
-                                        </tr> 
-                                        <h4 class="mt-2">Adicional Km</h4>
-                                        <tr >
-                                            <td class="parametro align-middle">Primer sector desde: </td>
-
-                                            <td class="input-group ">
-                                                
-                                                <input formControlName="distanciaPrimerSector" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                                <span class="input-group-text"> km </span>
-                                          
-                                                <span class="input-group-text ms-2"> $ </span>
-                                                <input formControlName="valorPrimerSector" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">                                
-                                            </td>
-                                        </tr>
-                                        <tr >
-                                            <td>Intervalos cada: </td>   
-                                            <td class="input-group ">
-                                                <input formControlName="distanciaIntervalo" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                                <span class="input-group-text"> km </span>
-                                            
-                                                <span class="input-group-text ms-2"> $ </span>
-                                                <input formControlName="valorIntervalo" class="form-control adicionalKm" required type="number" [ngClass]="{'isDisabled': !edicion}">
-                                            </td>
-                                        </tr>  
-                                        <tr class=" mt-2">
-                                          <th class="parametro align-middle fs-4 fw-semibold  mt-3">Tarifa Especial:</th>
-                                          <th class="form-group form-check form-switch form-check-reverse ">
-                                              <input class="form-check-input  mt-3" type="checkbox" id="flexSwitchCheckReverse" formControlName="tarifaEspecial" (click)="modificaTarifaEspecial()" [ngClass]="{'isDisabled': !edicion}">
-                                              <label class="form-check-label align-middle  mt-2  mb-1" for="flexSwitchCheckReverse">Aplicar Tarifa Especial</label>
-                                          </th>
-                                        </tr>                              
-                                        <tr>
-                                            <th class="parametro">Concepto </th>
-                                            <th > Valor</th>
-                                        </tr>
-                                        
-                                        <tr class="form-group" >                          
-                                            
-                                            <td class="parametro" >
-                                                <input formControlName="concepto" class="form-control" required type="text" [ngClass]="{'isDisabled': !edicion}">
-                                            </td>
-                                            <td>
-                                                <input formControlName="valor" class="form-control" required type="number" [ngClass]="{'isDisabled': !edicion}">                              
-                                            </td>
-                                            
-                                        </tr> 
-                                    </tbody>                          
-                                </table>
-                            </div>                    
+                            <div class="form-group mb-2">
+                                <label for="km" class="fs-5">Valor</label>
+                                <div class="input-group">   
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                             
+                                    <input class="form-control" type="text" [value]="formatearValor(ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].valor)">
+                                </div>                                                        
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="km" class="fs-5">Km 1er Sector valor</label>
+                                <div class="input-group">   
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                             
+                                    <input class="form-control" type="text" [value]="formatearValor(ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].adicionalKm.primerSector)">
+                                </div>                                                        
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="km" class="fs-5">Km Intervalos valor</label>
+                                <div class="input-group">  
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
+                                    <input class="form-control" type="text" [value]="formatearValor(ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].adicionalKm.sectoresSiguientes)" >
+                                </div>                                                        
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="km" class="fs-5">Acompañante</label>
+                                <div class="input-group"> 
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
+                                    <input class="form-control" type="text" [value]="formatearValor(ultimaTarifa.adicionales.acompaniante)">
+                                </div>                                                        
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="km" class="fs-5">Km 1er Sector distancia</label>
+                                <div class="input-group">  
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>                              
+                                    <input class="form-control" type="text" [value]="formatearValor(ultimaTarifa.adicionales.KmDistancia.primerSector)">
+                                </div>                                                        
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="km" class="fs-5">Km Intervalos distancia</label>
+                                <div class="input-group">  
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>                              
+                                    <input class="form-control" type="text" [value]="formatearValor(ultimaTarifa.adicionales.KmDistancia.sectoresSiguientes)">
+                                </div>                                                        
+                            </div>
+                        </div>                    
+                    </ng-container>  
+                    <!-- EVENTUAL -->
+                    <ng-container *ngIf="facDetallada.tarifaTipo.eventual">
+                        <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
+                            <h4>Cliente: </h4>
+                            <div class="form-group mb-2">
+                                <label for="Categoria" class="fs-5">Concepto</label>
+                                <div class="input-group">                                
+                                    <input class="w-100" type="text" [value]="operacion.tarifaEventual.cliente.concepto">
+                                </div>                                                        
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="km" class="fs-5">Valor</label>
+                                <div class="input-group">   
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                             
+                                    <input class="form-control" type="text" [value]="formatearValor(operacion.tarifaEventual.cliente.valor)">
+                                </div>                                                        
+                            </div>
+                            <h4 class="mt-4">Chofer: </h4>
+                            <div class="form-group mb-2">
+                                <label for="km" class="fs-5">Concepto</label>
+                                <div class="input-group">                                       
+                                    <input class="w-100" type="text" [value]="operacion.tarifaEventual.chofer.concepto">
+                                </div>                                                        
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="km" class="fs-5">Valor</label>
+                                <div class="input-group">  
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
+                                    <input class="form-control" type="text" [value]="formatearValor(operacion.tarifaEventual.chofer.valor)">
+                                </div>                                                        
+                            </div>                            
+                        </div>                    
+                    </ng-container>  
+                    <!-- PERSONALIZADA -->
+                    <ng-container *ngIf="facDetallada.tarifaTipo.personalizada">
+                        <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
+                            <div class="form-group mb-2">
+                                <label for="Seccion" class="fs-5">Sección: {{tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].descripcion}}</label>
+                                <div class="input-group">                                
+                                    <input class="w-100" type="text" [value]="'Seccion ' +  tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].orden">
+                                </div>                                                        
+                                <div class="form-group mb-2">
+                                    <label for="Categoria" class="fs-5">Categoria : {{tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].orden}}</label>
+                                    <div class="input-group">                                
+                                        <input class="w-100" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].nombre">
+                                    </div>                                                        
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label for="aCobrar" class="fs-5">A Cobrar</label>
+                                    <div class="input-group">  
+                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                               
+                                        <input class="form-control w-100" type="text" [value]="formatearValor(tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].aCobrar)">
+                                    </div>                                                        
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label for="aPagar" class="fs-5">A Pagar</label>
+                                    <div class="input-group">                    
+                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>             
+                                        <input class="form-control w-100" type="text" [value]="formatearValor(tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].aPagar)">
+                                    </div>                                                        
+                                </div>
+                            </div>
                         </div>
-                    </form>      
+                    </ng-container>
+                </div>
+                <div class="col-8 h-100">
+                    <h3>Operacion</h3>
+                    <div class="row border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
+                        <div class="col">
+                            <h4 class="">Detalle</h4>
+                            <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded" >
+                                <div class="form-group mb-3 isDisabled">
+                                    <label for="Fecha" class="fs-5">Fecha</label>
+                                    <div class="input-group">                                
+                                        <input class="w-100" type="text" [value]="operacion.fecha">
+                                    </div>                                                        
+                                </div>
+                                <div class="form-group mb-3 isDisabled">
+                                    <label for="Chofer" class="fs-5">Chofer</label>
+                                    <div class="input-group">                                
+                                        <input class="w-100" type="text" [value]="operacion.chofer.apellido + ' ' + operacion.chofer.nombre ">
+                                    </div>                                                        
+                                </div>
+                                <div class="form-group mb-3 isDisabled">
+                                    <label for="Acompaniante" class="fs-5">Acompañante</label>
+                                    <div class="input-group">                                
+                                        <input class="w-100" type="text" [value]="operacion.acompaniante ? 'Si' : 'No'">
+                                    </div>                                                        
+                                </div>
+                                <div class="form-group mb-3 isDisabled">
+                                    <label for="km" class="fs-5">Km recorridos</label>
+                                    <div class="input-group">  
+                                        <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>                              
+                                        <input class="form-control" type="text" [value]="formatearValor(operacion.km)">
+                                    </div>                                                  
+                                </div>
+                                <div class="form-group mb-3 " >
+                                    <label for="observaciones" class="fs-5">Observaciones</label>
+                                    <div class="input-group">    
+                                        <textarea class="w-100" type="text" style="height: 75px;" [(ngModel)]="operacion.observaciones"></textarea>                                        
+                                    </div>                                                        
+                                </div>
+                                
+                            </div>    
+                        </div>
+                        <div class="col">
+                            <h4 class="">Valores</h4>
+                            <ng-container *ngIf="!facDetallada.tarifaTipo.personalizada" else personalizada>
+                                <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
+                                    <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual}">
+                                        <label for="Base" class="fs-5">Tarifa Base</label>
+                                        <div class="input-group">       
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
+                                            <input  class="form-control edicion" required type="number" [(ngModel)]="facDetallada.valores.tarifaBase">
+                                        </div>                                                        
+                                    </div>                                
+                                    <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual}">
+                                        <label for="adiconalAcompaniante" class="fs-5">Adicional Acompañante</label>
+                                        <div class="input-group">     
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                
+                                            <input  class="form-control edicion" required type="number" [(ngModel)]="facDetallada.valores.acompaniante">
+                                        </div>                                                        
+                                    </div>
+                                    <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual}">
+                                        <label for="adiconalKm" class="fs-5">Adicional Km</label>
+                                        <div class="input-group">   
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                  
+                                            <input  class="form-control edicion" required type="number" [(ngModel)]="facDetallada.valores.kmMonto">
+                                        </div>                                                        
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label for="total" class="fs-5">Total</label>
+                                        <div class="input-group">    
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                 
+                                            <input  class="form-control edicion" required type="number" [(ngModel)]="facDetallada.valores.total">
+                                        </div>                                                        
+                                    </div>                               
+                                </div>    
+                                <ng-container *ngIf="facDetallada.tarifaTipo.general || facDetallada.tarifaTipo.especial">
+                                    <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded">
+                                        <p class="fs-5">Los cambios en los montos no se verán reflejados en la tarfia, solo se aplicarán a esta factura.</p>
+                                    </div>                       
+                                </ng-container>                            
+                                <ng-container *ngIf="facDetallada.tarifaTipo.eventual">
+                                    <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded">
+                                        <p class="fs-5">En la Tarifa Eventual el único valor modificable de la factura es el Total a cobrar.</p>
+                                    </div>                       
+                                </ng-container>
+                            </ng-container>  
+                            <ng-container #personalizada>
+                                <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
+                                    <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual}">
+                                        <label for="Base" class="fs-5">Tarifa Base</label>
+                                        <div class="input-group">       
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
+                                            <input  class="form-control edicion" required type="number" [(ngModel)]="facDetallada.valores.tarifaBase">
+                                        </div>                                                        
+                                    </div>                                
+                                    <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual}">
+                                        <label for="adiconalAcompaniante" class="fs-5">Adicional Acompañante</label>
+                                        <div class="input-group">     
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                
+                                            <input  class="form-control edicion" required type="number" [(ngModel)]="facDetallada.valores.acompaniante">
+                                        </div>                                                        
+                                    </div>
+                                    <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual}">
+                                        <label for="adiconalKm" class="fs-5">Adicional Km</label>
+                                        <div class="input-group">   
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                  
+                                            <input  class="form-control edicion" required type="number" [(ngModel)]="facDetallada.valores.kmMonto">
+                                        </div>                                                        
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label for="total" class="fs-5">Total</label>
+                                        <div class="input-group">    
+                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                 
+                                            <input  class="form-control edicion" required type="number" [(ngModel)]="facDetallada.valores.total">
+                                        </div>                                                        
+                                    </div>                               
+                                </div>  
+                            </ng-container>                          
+                        </div>
+                    </div>
+                </div>
+                
 
-                  <div class="modal-footer d-flex justify-content-between">
+                  <!-- <div class="modal-footer d-flex justify-content-between">
                     <div>
                       <div>
                         <button *ngIf="!edicion"  class="btn btn-outline-secondary mb-2" (click)="modificarTarifa()">
@@ -185,9 +269,12 @@
                     <div>
                       <button class="btn btn-outline-secondary" (click)="onSubmitEdit()" >Guardar</button>  
                     </div>                
-                  </div>
+                  </div> -->
                 </div>      
-            </div>        
+            </div>    
+            <div class="modal-footer">
+                <app-btn-agregar name="Guardar" (click)="onSubmit()"></app-btn-agregar>        
+            </div>    
         </div>
-    </div>
+    
   

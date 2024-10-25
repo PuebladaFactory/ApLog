@@ -36,6 +36,7 @@ export class FacturacionOpService {
   clienteFacOp!: FacturaOp [];
   choferFacOp!: FacturaOp [];
   ProveedorFacOp!: FacturaOp [];
+  operacion!: Operacion
 
 
   constructor( private facturacionCliente: FacturacionClienteService, private facturacionChofer: FacturacionChoferService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
@@ -107,6 +108,7 @@ export class FacturacionOpService {
     this.$ultTarifaEspProveedor.cargasGenerales = this.$ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
     ////console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
     }); */
+    this.operacion = op;
     this.$facturarOpCliente(op);
     if(op.chofer.proveedor === "monotributista"){
       this.$facturarOpChofer(op);
@@ -119,10 +121,18 @@ export class FacturacionOpService {
   }
 
   $facturarOpCliente(op: Operacion){
+    let respuesta : {
+      op: Operacion,
+      factura: FacturaOp
+    }
 
     if(op.tarifaTipo.general){ //tarifa general
-      ////console.log("1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);
-      this.facturaOpCliente = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaGralCliente);
+     ////console.log("1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);     
+      respuesta = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaGralCliente);
+      this.operacion.valores.cliente = respuesta.op.valores.cliente;
+      this.facturaOpCliente = respuesta.factura;
+
+      //this.facturaOpCliente = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaGralCliente);
       //console.log("Factura OP cliente ", this.facturaOpCliente);      
       this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
     }
@@ -136,7 +146,10 @@ export class FacturacionOpService {
           this.$ultTarifaEspCliente.cargasGenerales = this.$ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío     
           //console.log("2) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);
           if(this.$ultTarifaEspCliente.cargasGenerales.length > 0){
-            this.facturaOpCliente = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaEspCliente);
+            //this.facturaOpCliente = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaEspCliente);
+            respuesta = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaEspCliente);
+            this.operacion.valores.cliente = respuesta.op.valores.cliente;
+            this.facturaOpCliente = respuesta.factura;
             //console.log("Factura OP cliente ", this.facturaOpCliente);
             this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
           }
@@ -145,7 +158,10 @@ export class FacturacionOpService {
             
       } else {
         //console.log("1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);
-        this.facturaOpCliente = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaGralCliente);
+        //this.facturaOpCliente = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaGralCliente);
+        respuesta = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaGralCliente);
+        this.operacion.valores.cliente = respuesta.op.valores.cliente;
+        this.facturaOpCliente = respuesta.factura;
         //console.log("Factura OP cliente ", this.facturaOpCliente);       
         this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
       }
@@ -159,6 +175,7 @@ export class FacturacionOpService {
           console.log("1)",this.$ultTarifaPersCliente);     
           if(this.$ultTarifaPersCliente.secciones.length > 0){
             this.facturaOpCliente = this.facturacionCliente.$facturarOpPersCliente(op, this.$ultTarifaPersCliente);
+            this.operacion.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
             console.log("Factura OP cliente ", this.facturaOpCliente);
             this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
           }   
@@ -168,6 +185,7 @@ export class FacturacionOpService {
     if(op.tarifaTipo.eventual){ //tarifa personalizada
       //console.log("op eventual");
       this.facturaOpCliente = this.facturacionCliente.$facturarOpEveCliente(op);
+      this.operacion.valores.cliente.aCobrar = this.facturaOpCliente.valores.total
       //console.log("Factura OP cliente ", this.facturaOpCliente);
       this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
     }
@@ -177,10 +195,18 @@ export class FacturacionOpService {
 
   $facturarOpChofer(op: Operacion){
     //console.log("hola");
+    let respuesta : {
+      op: Operacion,
+      factura: FacturaOp
+    }
     
     if(op.tarifaTipo.general){ //tarifa general
       ////console.log("1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);
-      this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
+      respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
+      console.log("respuesta: ", respuesta);      
+      this.operacion.valores.chofer.aPagar = respuesta.factura.valores.total;
+      this.facturaOpChofer = respuesta.factura;
+      //this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
       //console.log("Factura OP chofer ", this.facturaOpChofer)
       this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
     }
@@ -194,7 +220,10 @@ export class FacturacionOpService {
           this.$ultTarifaEspChofer.cargasGenerales = this.$ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío     
           //console.log("2) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);
           if(this.$ultTarifaEspChofer.cargasGenerales.length > 0){
-            this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaEspChofer);
+            //this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaEspChofer);
+            respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaEspChofer);
+            this.operacion.valores.chofer.aPagar = respuesta.factura.valores.total;
+            this.facturaOpChofer = respuesta.factura;
             //console.log("Factura OP chofer ", this.facturaOpChofer);
             this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
           }
@@ -203,7 +232,10 @@ export class FacturacionOpService {
             
       } else {
         //console.log("1) tarifa GENERAL CHOFER: ", this.$ultTarifaGralChofer);
-        this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
+        //this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
+        respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
+        this.operacion.valores.chofer.aPagar = respuesta.factura.valores.total;
+        this.facturaOpChofer = respuesta.factura;
         //console.log("Factura OP chofer ", this.facturaOpChofer)
         this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
       }
@@ -216,7 +248,8 @@ export class FacturacionOpService {
           this.$ultTarifaPersCliente.secciones = this.$ultTarifaPersCliente.secciones || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
           ////console.log("1)",this.$ultTarifaCliente);     
           if(this.$ultTarifaPersCliente.secciones.length > 0){
-            this.facturaOpChofer = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente);
+            this.facturaOpChofer = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente);            
+            this.operacion.valores.chofer.aPagar = this.facturaOpChofer.valores.total
             //console.log("Factura OP chofer ", this.facturaOpChofer);
             this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
           }   
@@ -225,7 +258,8 @@ export class FacturacionOpService {
     }    
     if(op.tarifaTipo.eventual){ //tarifa eventual
       //console.log("op eventual");
-      this.facturaOpChofer = this.facturacionChofer.$facturarOpEveChofer(op);
+      this.facturaOpChofer = this.facturacionChofer.$facturarOpEveChofer(op);      
+      this.operacion.valores.chofer.aPagar = this.facturaOpChofer.valores.total
       //console.log("Factura OP chofer ", this.facturaOpChofer);
       this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
     }
@@ -233,10 +267,17 @@ export class FacturacionOpService {
   }
 
   $facturarOpProveedor(op: Operacion){    
+    let respuesta : {
+      op: Operacion,
+      factura: FacturaOp
+    }
     let proveedor: Proveedor[];
     if(op.tarifaTipo.general){ //tarifa general
       ////console.log("1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);
-      this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
+      respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
+      this.operacion.valores.chofer = respuesta.op.valores.chofer;
+      this.facturaOpProveedor = respuesta.factura;
+      //this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
       //console.log("Factura OP proveedor ", this.facturaOpProveedor);
       this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
     }
@@ -259,14 +300,20 @@ export class FacturacionOpService {
               this.$ultTarifaEspProveedor.cargasGenerales = this.$ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
               ////console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
               if(this.$ultTarifaEspProveedor.cargasGenerales.length > 0) {
-                this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaEspProveedor);
+                //his.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaEspProveedor);
+                respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaEspProveedor);
+                this.operacion.valores.chofer = respuesta.op.valores.chofer;
+                this.facturaOpProveedor = respuesta.factura;
                 //console.log("Factura OP proveedor ", this.facturaOpProveedor);
                 this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
               }
               });  
           } else {
             //console.log("1) tarifa GENERAL PROVEEDOR: ", this.$ultTarifaGralProveedor);
-            this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
+            //this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
+            respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
+            this.operacion.valores.chofer = respuesta.op.valores.chofer;
+            this.facturaOpProveedor = respuesta.factura;
             //console.log("Factura OP proveedor ", this.facturaOpProveedor);
             this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
           }          
@@ -282,6 +329,7 @@ export class FacturacionOpService {
           ////console.log("1)",this.$ultTarifaCliente);     
           if(this.$ultTarifaPersCliente.secciones.length > 0){
             this.facturaOpProveedor = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente);
+            this.operacion.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
             //console.log("Factura OP proveedor ", this.facturaOpProveedor);
             this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
           }   
@@ -291,6 +339,7 @@ export class FacturacionOpService {
     if(op.tarifaTipo.eventual){ //tarifa eventual
       //console.log("op eventual");
       this.facturaOpProveedor = this.facturacionChofer.$facturarOpEveChofer(op);
+      this.operacion.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
       //console.log("Factura OP proveedor ", this.facturaOpProveedor);
       this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
     }

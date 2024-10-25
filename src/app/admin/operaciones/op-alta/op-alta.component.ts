@@ -432,14 +432,16 @@ export class OpAltaComponent implements OnInit {
           eventual: false,   
           personalizada: false, 
         } ,
-        valores:{
-          acompValor: 0,
-          kmAdicional: 0,
+        valores:{          
           cliente:{
+            acompValor: 0,
+            kmAdicional: 0,
             tarifaBase: this.tEventual ? this.formTarifaEventual.value.clienteValor : this.tarifaPersonalizada ? this.tarifaPersonalizada.aCobrar : 0,
             aCobrar: this.tEventual ? this.formTarifaEventual.value.clienteValor : this.tarifaPersonalizada ? this.tarifaPersonalizada.aCobrar : 0,
           },
           chofer:{
+            acompValor: 0,
+            kmAdicional: 0,
             tarifaBase: this.tEventual ? this.formTarifaEventual.value.choferValor : this.tarifaPersonalizada ? this.tarifaPersonalizada.aPagar : 0,
             aPagar: this.tEventual ? this.formTarifaEventual.value.choferValor : this.tarifaPersonalizada ? this.tarifaPersonalizada.aPagar : 0,
           }
