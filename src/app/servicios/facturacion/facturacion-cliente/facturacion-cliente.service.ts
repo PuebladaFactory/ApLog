@@ -178,11 +178,12 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
     liquidacion: false,
     contraParteMonto:0,
     tarifaTipo: {
-      general: op.tarifaTipo.general,
-      especial: op.tarifaTipo.eventual? op.tarifaTipo.eventual : op.tarifaTipo.personalizada ? op.tarifaTipo.personalizada : op.cliente.tarifaTipo.especial,
+      general: op.tarifaTipo.eventual? !op.tarifaTipo.eventual : op.tarifaTipo.personalizada ? !op.tarifaTipo.personalizada : op.tarifaTipo.especial ? op.cliente.tarifaTipo.general : op.cliente.tarifaTipo.general,
+      especial: op.tarifaTipo.eventual? !op.tarifaTipo.eventual : op.tarifaTipo.personalizada ? !op.tarifaTipo.personalizada : op.cliente.tarifaTipo.especial,
       eventual: op.tarifaTipo.eventual,
       personalizada: op.tarifaTipo.personalizada
-    }
+    },
+    observaciones: op.observaciones,
   }  
 }
 

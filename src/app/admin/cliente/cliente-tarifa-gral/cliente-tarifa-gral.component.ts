@@ -443,9 +443,9 @@ onGenerarNuevaTarifaAutomatica() {
         cargasGenerales: cargasGenerales,
         adicionales: adicionales,
         tipo: tipo,
-        idCliente: null,
-        idChofer: null,
-        idProveedor: null, 
+        idCliente: 0,
+        idChofer: 0,
+        idProveedor: 0, 
     };
 }
 

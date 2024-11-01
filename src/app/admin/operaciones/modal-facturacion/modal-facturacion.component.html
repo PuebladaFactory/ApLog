@@ -315,7 +315,7 @@
     </div>
     <div class="modal-footer" *ngIf="!vista">        
         <app-btn-agregar *ngIf="!cerrar" name="Guardar" (click)="onSubmit()"></app-btn-agregar>        
-        <app-btn-agregar *ngIf="cerrar" name="Cerrar" (click)="onSubmit()"></app-btn-agregar>        
+        <app-btn-agregar *ngIf="cerrar" name="Cerrar" (click)="onSubmit()"  (keydown.enter)="onSubmit()"></app-btn-agregar>        
     </div>
 </div>
 

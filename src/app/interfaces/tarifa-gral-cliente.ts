@@ -5,9 +5,9 @@ export interface TarifaGralCliente {
     cargasGenerales: CategoriaTarifa [];
     adicionales: AdicionalTarifa;
     tipo: TarifaTipo;    
-    idCliente: number|null;
-    idChofer: number|null;
-    idProveedor: number|null;
+    idCliente: number;
+    idChofer: number;
+    idProveedor: number;
 }
 export interface CategoriaTarifa {
     orden: number;

@@ -13,6 +13,11 @@ import { EditarTarifaChoferComponent } from '../modales/chofer/editar-tarifa-cho
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { take } from 'rxjs';
 import { LiquidacionOpChoferComponent } from '../modales/chofer/liquidacion-op-chofer/liquidacion-op-chofer.component';
+import { Chofer } from 'src/app/interfaces/chofer';
+import { Cliente } from 'src/app/interfaces/cliente';
+import { Proveedor } from 'src/app/interfaces/proveedor';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-liq-chofer',
@@ -26,7 +31,9 @@ export class LiqChoferComponent implements OnInit {
     fechaHasta: 0,
   };
 
-  //btnConsulta:boolean = false;
+  
+  titulo: string = "facturaOpChofer"
+  btnConsulta:boolean = false;
   searchText!:string;
   searchText2!:string;
   componente: string = "facturaChofer";
@@ -45,7 +52,7 @@ export class LiqChoferComponent implements OnInit {
   form!: any;
   facturaChofer!: FacturaChofer;  
   facturaEditada!: FacturaOpChofer;
-  facturasPorChofer: Map<number, FacturaOpChofer[]> = new Map<number, FacturaOpChofer[]>();
+  facturasPorChofer: Map<number, FacturaOp[]> = new Map<number, FacturaOp[]>();
   indiceSeleccionado!:number
   ultimaTarifa!:any;
   tarifaEditForm: any;
@@ -53,41 +60,50 @@ export class LiqChoferComponent implements OnInit {
   edicion:boolean = false;
   tarifaEspecial: boolean = false;
   idOperaciones: number [] = [];
-  facDetallada!: FacturaOpChofer
+  facDetallada!: FacturaOp;
+  $choferes!: Chofer[];
+  $clientes!: Cliente[];
+  $proveedores!: Proveedor[]; 
+  operacion!:Operacion;
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
-    this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false);
-    this.form = this.fb.group({      
-      detalle: [""],       
-    })
-    this.tarifaEditForm = this.fb.group({
-      valorJornada: [""],            
-      publicidad: [""], 
-      acompaniante: [""],
-      concepto:[""],
-      valor:[""],
-      distanciaPrimerSector: [""],
-      valorPrimerSector:[""],
-      distanciaIntervalo:[""],
-      valorIntervalo:[""],
-    })
-
-    this.swichForm = this.fb.group({
-      tarifaEspecial: [false],   
-    })
+    this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false);  
   }
 
   ngOnInit(): void {
-      
-    //this.storageService.getByDateValue(this.tituloFacOpChofer, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer");
-    this.storageService.consultasFacOpChofer$.subscribe(data => {
-      this.$facturasOpChofer = data;
-      this.procesarDatosParaTabla()
-      
-      
+
+    this.storageService.choferes$.subscribe(data => {
+      this.$choferes = data;
     });
-    
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    }); 
+    this.storageService.proveedores$.subscribe(data => {
+      this.$proveedores = data;
+    });
+
+    this.storageService.fechasConsulta$.subscribe(data => {
+      this.fechasConsulta = data;
+      console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
+      this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpChofer");
+      this.btnConsulta = true;
+       //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
+      this.storageService.consultasFacOpChofer$
+        //.pipe(take(1))
+        .subscribe(data => {
+          this.$facturasOpChofer = data;
+          console.log("1)", this.$facturasOpChofer );
+          if(this.$facturasOpChofer !== undefined){
+            console.log("?????????????");            
+            this.procesarDatosParaTabla()
+          } else {
+            console.log("");            
+          }
+          
+      });
+    });
+      
     //this.consultaMes(); 
   }
 
@@ -99,57 +115,106 @@ export class LiqChoferComponent implements OnInit {
     if(this.$facturasOpChofer !== null){
       ////console.log()("Facturas OP Chofer: ", this.$facturasOpChofer);
       
-      this.$facturasOpChofer.forEach((factura: FacturaOpChofer) => {
+      this.$facturasOpChofer.forEach((factura: FacturaOp) => {
         if (!choferesMap.has(factura.idChofer)) {
           choferesMap.set(factura.idChofer, {
             idChofer: factura.idChofer,
-            apellido: `${factura.operacion.chofer.apellido} ${factura.operacion.chofer.nombre}`,
+            apellido:  this.getChofer(factura.idChofer),
             cantOp: 0,
             opSinFacturar: 0,
             opFacturadas: 0,
-            total: 0
+            total: 0,
+            aCobrar: 0,
           });
         }
   
         const chofer = choferesMap.get(factura.idChofer);
         chofer.cantOp++;
-        if(typeof factura.total === "number"){
-          if (factura.liquidacion) {
-            chofer.opFacturadas += factura.total;
-          } else {
-            chofer.opSinFacturar += factura.total;
-          }
-          chofer.total += factura.total;
+        if (factura.liquidacion) {
+          chofer.opFacturadas += factura.valores.total;
+        } else {
+          chofer.opSinFacturar += factura.valores.total;
         }
+        chofer.total += factura.valores.total;
+        chofer.aCobrar += factura.contraParteMonto;   
         
       });
   
       this.datosTablaChofer = Array.from(choferesMap.values());
       ////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
     }
-
-    
-    
-  }
- 
-  liquidarFac(factura: FacturaOpChofer){
-    if(typeof factura.total !== "number" || factura.total === 0){
-      alert("error")
-    } else{
-      //console.log()("esta es la FACTURA: ", factura);
-      factura.liquidacion = true;
-      console.log("llamada al storage desde liq-chofer, updateItem");      
-      this.storageService.updateItem(this.tituloFacOpChofer, factura)
-      this.procesarDatosParaTabla();     
-    }
     
   }
 
-  cancelarliquidacion(factura: FacturaOpChofer) {
-    factura.liquidacion = false;
-    console.log("llamada al storage desde liq-chofer, updateItem");
-    this.storageService.updateItem(this.tituloFacOpChofer, factura)
-    this.procesarDatosParaTabla();     
+  getChofer(idChofer: number){
+    let chofer: Chofer []
+    chofer = this.$choferes.filter((chofer:Chofer)=>{
+      return chofer.idChofer === idChofer;
+    })
+
+    return chofer[0].apellido + " " + chofer[0].nombre;
+  }
+
+  getCliente(idCliente: number){
+    let cliente: Cliente []
+    cliente = this.$clientes.filter((cliente:Cliente)=>{
+      return cliente.idCliente === idCliente
+    })
+
+    return cliente[0].razonSocial;
+
+  } 
+
+  formatearValor(valor: number) : any{
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+    }).format(valor);
+   ////////console.log(nuevoValor);    
+    //   `$${nuevoValor}`   
+    return nuevoValor
+ }
+
+ limpiarValorFormateado(valorFormateado: string): number {
+  // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
+    return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+  }
+
+  liquidarFac(factura: FacturaOp) {
+    factura.liquidacion = !factura.liquidacion;
+    //console.log("Estado de liquidación cambiado:", factura.liquidacion);
+    //this.storageService.updateItem(this.tituloFacOpCliente, factura);
+    this.procesarDatosParaTabla();
+  }
+  
+  selectAllCheckboxes(event: any, idChofer: number): void {
+    //let isChecked = (event.target as HTMLInputElement).checked;
+    const seleccion = event.target.checked;
+    console.log("1)", seleccion); 
+    let facturasChofer = this.facturasPorChofer.get(idChofer);
+    console.log("2)", facturasChofer);
+      facturasChofer?.forEach((factura: FacturaOp) => {
+        factura.liquidacion = seleccion;
+        console.log("3)", factura.liquidacion);
+       
+      });   
+      console.log("primera tabla: ", this.datosTablaChofer);
+      let chofer = this.datosTablaChofer.find((chofer:any)=>{
+        return chofer.idChofer === idChofer
+      });
+      console.log("1) cliente: ", chofer);
+      facturasChofer?.forEach((factura: FacturaOp) => {
+        if (factura.liquidacion) {
+          chofer.opFacturadas += factura.valores.total;
+          chofer.opSinFacturar -= factura.valores.total;
+        } else {
+          chofer.opSinFacturar += factura.valores.total;
+          chofer.opFacturadas -= factura.valores.total;
+        }
+       
+      });   
+      console.log("2) cliente: ", chofer);
+     
   }
 
   mostrarMasDatos(index: number, chofer:any) {   
@@ -166,7 +231,7 @@ export class LiqChoferComponent implements OnInit {
    });
    this.facturasPorChofer.set(choferId, facturasChofer);
 
-   ////console.log()("FACTURAS DEL CHOFER: ", facturasChofer);  
+   console.log("FACTURAS DEL CHOFER: ", facturasChofer);  
 
   }
 
@@ -175,143 +240,110 @@ export class LiqChoferComponent implements OnInit {
   }
 
  // Modifica la función getQuincena para que acepte una fecha como parámetro
-  getQuincena(fecha: string | Date): string {
+  getQuincena(fecha: any | Date): string {
     // Convierte la fecha a objeto Date
-    const fechaObj = new Date(fecha);
-    // Obtiene el día del mes
-    const dia = fechaObj.getDate();
-    // Determina si la fecha está en la primera o segunda quincena
-    if (dia <= 15) {
-      return '1° quincena';
+    const [year, month, day] = fecha.split('-').map(Number);
+  
+    // Crear la fecha asegurando que tome la zona horaria local
+    const date = new Date(year, month - 1, day); // mes - 1 porque los meses en JavaScript son 0-indexed
+  
+    // Determinar si está en la primera o segunda quincena
+    if (day <= 15) {
+      return '1<sup> ra</sup>';
     } else {
-      return '2° quincena';
+      return '2<sup> da</sup>';
     }
   }
+  
 
   liquidarFacChofer(idChofer: any, apellido: string, index: number){
     // Obtener las facturas del cliente
-    //////console.log()("IDCHOFER: ", idChofer);
+    console.log("IDCHOFER: ", idChofer);
     
     let facturasIdChofer:any = this.facturasPorChofer.get(idChofer);    
     ////////console.log()("FACTURAS POR CHOFER: ", facturasIdChofer );
-    
-
     this.apellido = apellido;
     //////console.log()("APELLIDO: ", this.apellido);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
-    this.facturasLiquidadasChofer = facturasIdChofer.filter((factura: FacturaOpChofer) => {
+    this.facturasLiquidadasChofer = facturasIdChofer.filter((factura: FacturaOp) => {
         return factura.liquidacion === true;
     });
 
-    // Calcular el total sumando los montos de las facturas liquidadas
-    this.totalFacturasLiquidadasChofer = 0;
-    this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
-      this.totalFacturasLiquidadasChofer += factura.total;
-    });
+   
 
-    this.totalFacturasLiquidadasCliente = 0;
-    this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
-      this.totalFacturasLiquidadasCliente += factura.montoFacturaCliente;
-    });
-
-    this.indiceSeleccionado = index;
-    //console.log()("Facturas liquidadas del cliente", apellido + ":", this.facturasLiquidadasChofer);
-    //console.log()("Fecha", apellido + ":", this.facturasLiquidadasChofer[0].fecha);
-    ////console.log()("Total de las facturas liquidadas chofer:", this.totalFacturasLiquidadasChofer);
-    ////console.log()("Total de las facturas liquidadas cliente:", this.totalFacturasLiquidadasCliente);
-    //////console.log()("indice: ", this.indiceSeleccionado);
-    this.openModalLiquidacion();
-  }
-  
-
-  editarDetalle(factura:FacturaOpChofer){
-    this.facturaEditada = factura;
-    //////console.log()(this.facturaEditada);
-    this.form.patchValue({
-      detalle: factura.operacion.observaciones,      
-    });    
-  }
-
-  guardarDetalle(){    
-    //////console.log()(this.facturaEditada);
-    this.facturaEditada.operacion.observaciones = this.form.value.detalle;
-    //////console.log()(this.facturaEditada.operacion.observaciones);
-    console.log("llamada al storage desde liq-chofer, updateItem");
-    this.storageService.updateItem("facturaOpChofer", this.facturaEditada);
-
-
-  }
-
-  onSubmit(titulo:string) {
-    ////console.log()("factura chofer antes: ", this.facturasLiquidadasChofer);
-    //////console.log()(this.form.value);
-    
-    if(this.facturasLiquidadasChofer.length > 0){
-      //console.log()(this.facturasLiquidadasChofer);
-      
-      this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
-        /* idOperaciones.push(factura.operacion.idOperacion) */
-        
-        this.idOperaciones.push(factura.operacion.idOperacion)
-      });
+    this.indiceSeleccionado = index;   
  
-      //console.log()("ID OPERACIONES: ", this.idOperaciones);
-      //this.facturaChofer.operaciones = idOperaciones;
-
-      this.facturaChofer = {
-        id: null,
-        fecha: new Date().toISOString().split('T')[0],
-        idFacturaChofer: new Date().getTime(),
-        idChofer: this.facturasLiquidadasChofer[0].idChofer,
-        apellido: this.facturasLiquidadasChofer[0].operacion.chofer.apellido,
-        nombre: this.facturasLiquidadasChofer[0].operacion.chofer.nombre,
-        operaciones: this.idOperaciones,        
-        total: this.totalFacturasLiquidadasChofer,
-        cobrado:false,
-        montoFacturaCliente: this.totalFacturasLiquidadasCliente,
-      } 
-
-      //console.log()("FACTURA CHOFER: ", this.facturaChofer);
-      
-      this.addItem(this.facturaChofer, this.componente);
-      this.form.reset();
-      //this.$tarifasChofer = null;    
-      this.eliminarFacturasOp();
-      //this.ngOnInit();
-      if(titulo === "excel"){
-        this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer);
-      }else if (titulo === "pdf"){
-        this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer);
-      }
-      
-      
-    }else{
-      alert("no hay facturas")
+    if(this.facturasLiquidadasChofer.length > 0){
+      console.log("1: ",this.facturasLiquidadasChofer);
+      // Calcular el total sumando los montos de las facturas liquidadas
+      this.totalFacturasLiquidadasChofer = 0;
+      this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
+        this.totalFacturasLiquidadasChofer += factura.valores.total;
+      });
+  
+      //this.indiceSeleccionado = index;
+      console.log("3) Facturas liquidadas del cliente", apellido + ":", this.facturasLiquidadasChofer);
+      console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasChofer);
+      //console.log("indice: ", this.indiceSeleccionado);
+      this.openModalLiquidacion();
+    } else {
+      this.mensajesError("Debe seleccionar una factura para liquidar")
     }
-    
-    
-
   }
 
-  addItem(item:any, componente:string): void {  
-    console.log("llamada al storage desde liq-chofer, addItem"); 
-    this.storageService.addItem(componente, item);     
-    
+  mensajesError(msj:string){
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
+  }
+
+  addItem(item:any, componente:string): void {   
+    console.log("llamada al storage desde liq-cliente, addItem");
+    this.storageService.addItem(componente, item);        
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
-    this.facturasLiquidadasChofer.forEach((factura: FacturaOpChofer) => {
+    this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
       console.log("llamada al storage desde liq-chofer, addItem");
-      this.addItem(factura, "facOpLiqChofer");
-      this.removeItem(factura);
+      this.addItem(factura, "facLiquidadaCliente");
+      this.editarOperacionesFac(factura)
+      
     }); 
     /* this.facturaChofer.operaciones.forEach((factura: FacturaOpChofer) => {
       this.removeItem(factura);
     });  */
     this.cerrarTabla(this.indiceSeleccionado);
     this.ngOnInit(); 
+    /* this.facturaCliente.operaciones.forEach((factura: FacturaOpCliente) => {
+      this.removeItem(factura);
+    });
+    this.cerrarTabla(this.indiceSeleccionado);
+    this.ngOnInit(); */
+  }
+
+  editarOperacionesFac(factura:FacturaOp){
+    factura.idOperacion
+    let op:Operacion;
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("operaciones",factura.idOperacion, "idOperacion")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        op = data;
+        console.log("OP: ", op);
+        op.estado = {
+          abierta: false,
+          cerrada: false,
+          facturada: true,
+        }
+        this.storageService.updateItem("operaciones", op);
+        this.removeItem(factura);
+    });
+
   }
 
   removeItem(item:any){
@@ -319,111 +351,15 @@ export class LiqChoferComponent implements OnInit {
     this.storageService.deleteItem("facturaOpChofer", item);    
   }
 
-  editarFacturaOpChofer(factura: FacturaOpChofer){
-    this.ultimaTarifa = this.facOpChoferService.obtenerTarifaChofer(factura);
-    this.facDetallada = factura;
-    //console.log()(this.facDetallada);
-    
-    //console.log()("ULTIMA tarifa: ", this.ultimaTarifa);
-    //this.tarifaEspecial = factura.operacion.tarifaEspecial
-    //this.armarTarifa(factura);
-    this.buscarTarifa();
-    //this.openModalTarifa();
-    
+  editarFacturaOpCliente(factura: FacturaOp){   
+    this.facDetallada = factura;   
+    this.buscarTarifa();    
   }
 
-  eliminarFacturaOpChofer(factura:FacturaOpChofer, indice:number){
+  eliminarFacturaOpCliente(factura:FacturaOp, indice:number){
     this.removeItem(factura);
     this.cerrarTabla(indice)
     this.ngOnInit(); 
-  }
-
-  armarTarifa(factura: FacturaOpChofer){
-    this.tarifaEditForm.patchValue({
-      valorJornada: this.ultimaTarifa.valorJornada,
-      publicidad: this.ultimaTarifa.publicidad,
-      acompaniante: this.ultimaTarifa.acompaniante,
-      concepto: this.ultimaTarifa.tarifaEspecial.concepto,
-      valor: this.ultimaTarifa.tarifaEspecial.valor,
-      distanciaPrimerSector: this.ultimaTarifa.km.primerSector.distancia,
-      valorPrimerSector: this.ultimaTarifa.km.primerSector.valor,
-      distanciaIntervalo: this.ultimaTarifa.km.sectoresSiguientes.intervalo,
-      valorIntervalo: this.ultimaTarifa.km.sectoresSiguientes.valor,
-    });
-    this.swichForm.patchValue({
-      tarifaEspecial: factura.operacion.tarifaEventual,
-    })
-    //console.log()(factura.operacion.tarifaEspecial);
-    
-    //console.log()(this.swichForm.value.tarifaEspecial);      
-    this.facturaEditada = factura;
-    
-  }
-
-  modificarTarifa(){
-    this.edicion = !this.edicion;
-  }
-
-  cerrarEdicion(){
-    this.edicion = false;
-  }
-
-  modificaTarifaEspecial(){
-  /*   this.tarifaEspecial= !this.tarifaEspecial;
-    //console.log()(this.tarifaEspecial); */
-    const switchValue = !this.swichForm.get('tarifaEspecial').value;
-    //console.log()("Estado del switch:", switchValue);
-    
-  } 
-
- 
-
-  onSubmitEdit(){
-    this.nuevaTarifa()
-    console.log("llamada al storage desde liq-chofer, ademItem");
-    this.storageService.addItem("tarifasChofer", this.ultimaTarifa);     
-    let nuevaFacOpChofer = this.facOpChoferService.actualizarFacOp(this.facturaEditada, this.ultimaTarifa);    
-    //console.log()("nueva FACOPCHOFER",nuevaFacOpChofer);
-    this.facturaEditada.operacion = nuevaFacOpChofer.operacion;
-    this.facturaEditada.valorJornada = nuevaFacOpChofer.valorJornada;
-    this.facturaEditada.adicional = nuevaFacOpChofer.adicional;
-    this.facturaEditada.total = nuevaFacOpChofer.total;
-    this.edicion = false;
-    this.facturaEditada.idTarifa = this.ultimaTarifa.idTarifa;
-    console.log("llamada al storage desde liq-chofer, updateItem");
-    this.storageService.updateItem("facturaOpChofer", this.facturaEditada);   
-    this.ngOnInit()  
-  }
-
-  nuevaTarifa(){
-    this.ultimaTarifa = {
-      id:null,
-      idTarifa:new Date().getTime(),
-      valorJornada: this.tarifaEditForm.value.valorJornada,
-      km:{
-        primerSector: {
-          distancia: this.tarifaEditForm.value.distanciaPrimerSector,
-          valor: this.tarifaEditForm.value.valorPrimerSector,
-      },
-      sectoresSiguientes:{
-          intervalo: this.tarifaEditForm.value.distanciaIntervalo,
-          valor: this.tarifaEditForm.value.valorPrimerSector,
-      }
-      },
-      publicidad: this.tarifaEditForm.value.publicidad,
-      idChofer: this.ultimaTarifa.idChofer,
-      fecha: new Date().toISOString().split('T')[0],    
-      acompaniante: this.tarifaEditForm.value.acompaniante,
-      //tEspecial: boolean;
-      tarifaEspecial:{
-        concepto: this.tarifaEditForm.value.concepto,
-        valor: this.tarifaEditForm.value.valor,
-      } 
-    }    
-    //console.log()("NUEVA TARIFA", this.ultimaTarifa);
-    this.facturaEditada.operacion.tarifaEventual = this.swichForm.value.tarifaEspecial;
-    //console.log()("NUEVA operacion con nueva TARIFA", this.facturaEditada);
-
   }
 
   openModalLiquidacion(): void {   
@@ -442,16 +378,18 @@ export class LiqChoferComponent implements OnInit {
       
     let info = {      
         facturas: this.facturasLiquidadasChofer,
-        totalCliente: this.totalFacturasLiquidadasCliente,
         totalChofer: this.totalFacturasLiquidadasChofer,
+        //totalChofer: this.totalFacturasLiquidadasChofer,
       }; 
       //console.log()(info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
+          console.log(result);
           
           this.facturaChofer = result.factura;
+
 //        this.selectCrudOp(result.op, result.item);
         //this.mostrarMasDatos(row);
          //console.log()("resultado:" ,this.facturaCliente);
@@ -459,13 +397,14 @@ export class LiqChoferComponent implements OnInit {
          //this.form.reset();
         //this.$tarifasChofer = null;
         //this.ngOnInit();
-        this.eliminarFacturasOp();
+        
       
         if(result.titulo === "excel"){
-        this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+        this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes);
         }else if (result.titulo === "pdf"){
-        this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+        this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes);        
         }
+        //this.eliminarFacturasOp();
         },
         (reason) => {}
       );
@@ -473,48 +412,112 @@ export class LiqChoferComponent implements OnInit {
   }
 
   buscarTarifa() {
-    this.dbFirebase
-    .obtenerTarifaIdTarifa("tarifasChofer",this.facDetallada.idTarifa, "idTarifa")
-    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-    .subscribe(data => {      
-        this.ultimaTarifa = data;
-        console.log("TARIFA APLICADA: ", this.ultimaTarifa);
-        this.openModalTarifa()
-    });
-  }
-
-  openModalTarifa(): void {   
-    //this.facturasLiquidadasCliente
-    //this.totalFacturasLiquidadasChofer
-    //this.totalFacturasLiquidadasCliente
-
-    this.indiceSeleccionado
-    {
-      const modalRef = this.modalService.open(EditarTarifaChoferComponent, {
-        windowClass: 'myCustomModalClass',
-        centered: true,
-        size: 'md', 
-        //backdrop:"static" 
+    console.log("A)",this.facDetallada);
+    
+    if(this.facDetallada.tarifaTipo.general){
+      this.dbFirebase
+      .obtenerTarifaIdTarifa("tarifasGralChofer",this.facDetallada.idTarifa, "idTarifa")
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data => {      
+          this.ultimaTarifa = data;
+          console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+          this.dbFirebase
+          .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
+          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+          .subscribe(data => {      
+              this.operacion = data;
+              console.log("OPERACION: ", this.operacion);
+              this.openModalTarifa()
+          });        
       });
-      
-
-      let info = {
-        factura: this.facDetallada,
-        tarifaAplicada: this.ultimaTarifa,        
-      };
-      //console.log()(info);
-      
-      modalRef.componentInstance.fromParent = info;
-      modalRef.result.then(
-        (result) => {
-          
-
-        },
-        (reason) => {}
-      );
     }
-  }
+    if(this.facDetallada.tarifaTipo.especial){
+      this.dbFirebase
+      .obtenerTarifaIdTarifa("tarifasEspChofer",this.facDetallada.idTarifa, "idTarifa")
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data => {      
+          this.ultimaTarifa = data;
+          console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+          this.dbFirebase
+          .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
+          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+          .subscribe(data => {      
+              this.operacion = data;
+              console.log("OPERACION: ", this.operacion);
+              this.openModalTarifa()
+          });        
+      });
+    }
+    if(this.facDetallada.tarifaTipo.eventual){
+      this.ultimaTarifa = {};
+      console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+      this.dbFirebase
+      .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data => {      
+          this.operacion = data;
+          console.log("OPERACION: ", this.operacion);
+          this.openModalTarifa()
+      });     
+      
+    }
+    if(this.facDetallada.tarifaTipo.personalizada){
+      this.dbFirebase
+      .obtenerTarifaIdTarifa("tarifasPersCliente",this.facDetallada.idTarifa, "idTarifa")
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data => {      
+          this.ultimaTarifa = data;
+          console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+          this.dbFirebase
+          .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
+          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+          .subscribe(data => {      
+              this.operacion = data;
+              console.log("OPERACION: ", this.operacion);
+              this.openModalTarifa()
+          });        
+      });
+    }
+  
+     
+    
+    }
 
-
-
+    openModalTarifa(): void {   
+      //this.facturasLiquidadasCliente
+      //this.totalFacturasLiquidadasChofer
+      //this.totalFacturasLiquidadasCliente
+  /*     this.storageService.historialTarifasClientes$.subscribe(data => {      
+        this.ultimaTarifa = data;
+        //this.openModalTarifa();
+      }) */
+      //this.facOpClienteService.obtenerTarifaCliente(this.facDetallada)
+      this.indiceSeleccionado
+      {
+        const modalRef = this.modalService.open(EditarTarifaChoferComponent, {
+          windowClass: 'myCustomModalClass',
+          centered: true,
+          size: 'lg', 
+          //backdrop:"static" 
+        });
+        
+  
+       let info = {
+          factura: this.facDetallada,
+          tarifaAplicada: this.ultimaTarifa,   
+          op: this.operacion,     
+        }; 
+        console.log(info); 
+        
+        modalRef.componentInstance.fromParent = info;
+        modalRef.result.then(
+          (result) => {
+            
+  
+          },
+          (reason) => {}
+        );
+      }
+    }
+  
 }

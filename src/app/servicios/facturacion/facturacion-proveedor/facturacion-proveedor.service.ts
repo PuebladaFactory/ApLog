@@ -70,7 +70,7 @@ export class FacturacionProveedorService {
   buscarProveedor(op:Operacion){
     let proveedor: any;
     proveedor = this.$proveedores.filter(function (proveedor:any){
-      return proveedor.razonSocial === op.chofer.proveedor
+      return proveedor.idProveedor === op.chofer.idProveedor
     })
     //////console.log()("choferSeleccionado: ", choferSeleccionado);
     this.proveedorOp = proveedor[0];

@@ -13,6 +13,7 @@ import { FacturacionClienteService } from 'src/app/servicios/facturacion/factura
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-editar-tarifa',
@@ -34,6 +35,7 @@ export class EditarTarifaComponent implements OnInit {
   vehiculoOp!: Vehiculo[];
   operacion!: Operacion;
   tarifaPersonalizada!: TarifaPersonalizadaCliente;
+  componente: string = "facturaOpCliente"
 
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, public activeModal: NgbActiveModal){
    
@@ -98,10 +100,43 @@ export class EditarTarifaComponent implements OnInit {
     //console.log("tarifa personalizada: ", this.tarifaPersonalizada, " valor: ", this.tPersonalizada);  
     //console.log("acompaniante: ", this.acompaniante);
     //console.log("a cobrar: ", this.op.aCobrar, " y a pagar: ", this.op.aPagar);
-    
+    if(this.facDetallada.tarifaTipo.eventual || this.facDetallada.tarifaTipo.personalizada){
+      this.facDetallada.valores.tarifaBase = this.facDetallada.valores.total;
+    }
+
+    Swal.fire({
+      title: "¿Desea guardar los cambios en la factura?",
+      //text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Guardar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        ////////console.log("op: ", this.op);
+        this.updateItem();
+        Swal.fire({
+          title: "Confirmado",
+          text: "Los cambios se han guardado.",
+          icon: "success"
+        }).then((result)=>{
+          if (result.isConfirmed) {
+            this.activeModal.close();
+          }
+        });   
+        
+      }
+    });   
     console.log("factura EDITADA: ", this.facDetallada);
     
   
+   }
+
+   updateItem(){
+    this.storageService.updateItem(this.componente, this.facDetallada);
+    this.storageService.updateItem("operaciones", this.operacion);
    }
 
   armarTarifa(){
@@ -130,7 +165,7 @@ export class EditarTarifaComponent implements OnInit {
     ////console.log()(factura.operacion.tarifaEspecial);
     
     ////console.log()(this.swichForm.value.tarifaEspecial);       */
-    this.facturaEditada = this.facDetallada;
+    //this.facturaEditada = this.facDetallada;
     
   } 
 

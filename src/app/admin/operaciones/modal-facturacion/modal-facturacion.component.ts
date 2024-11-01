@@ -40,7 +40,7 @@ export class ModalFacturacionComponent implements OnInit {
 
   constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private facturacionOpServ: FacturacionOpService){
     this.form = this.fb.group({      
-      km:[''],
+      km:['', Validators.required],
       documentacion:[''],
       observaciones:[''],
     });
@@ -127,49 +127,6 @@ changeAcompaniante(event: any) {
   
 }
 
-////////// TARIFA EVENTUAL //////////////////
-  /* selectTarifaEventual(event: any) {
-    //////console.log(event.target.value);    
-    this.tarifaEventual = event.target.value.toLowerCase() == 'true';
-    //////console.log(this.tarifaEventual);
-    // si la op era con tarifa personalizada y cambia a tarifa eventual pero vuelve, retoma los datos 
-    if(!this.tarifaEventual && this.op.tarifaPersonalizada){
-      this.tarifaPersonalizada = this.op.tarifaPersonalizada;
-      ////console.log(this.op);      
-      this.tPersonalizada = this.op.tPersonalizada;
-      this.formTarifaPersonalizada.patchValue({
-        seccion: this.tarifaPersonalizada ? this.op.tPersonalizada.seccion : "Sin datos",
-        categoria: this.tarifaPersonalizada ? this.op.tPersonalizada.categoria : "Sin datos",
-      });
-      this.aCobrar = this.formatearValor(this.op.valores.cliente.aCobrar);
-      this.aPagar = this.formatearValor(this.op.valores.chofer.aPagar);  
-    }    
-    ////console.log(this.aCobrar);    
-    if(this.tarifaEventual){
-      this.tarifaPersonalizada = false;
-      this.tPersonalizada ={
-        seccion: 0,
-        categoria: 0,
-        nombre: "",
-        aCobrar: 0,
-        aPagar: 0,
-      };
-      this.tarifaTipo = {
-          general: false,
-          especial: false,
-          eventual: true,   
-          personalizada: false, 
-      };
-      //console.log(this.tEventual.cliente.valor);
-      
-      this.aCobrar = this.formatearValor(this.tEventual.cliente.valor);
-      this.aPagar = this.formatearValor(this.tEventual.chofer.valor);      
-      
-    }    
-
-} */
-
-
 
 ///////// TARIFA PERSONALIZADA /////////////
 changeSecion(e:any){
@@ -190,14 +147,7 @@ changeSecion(e:any){
     aPagar: this.tarifaPersonalizada.aPagar
   }
 
-/*   this.tarifaTipo = {
-    general: false,
-    especial: false,
-    eventual: false,   
-    personalizada: true, 
-} */
-  ////////console.log(this.seccionElegida);
-  ////////console.log(this.tPersonalizada);
+
 }
 
 changeCategoria(e:any){
@@ -216,13 +166,15 @@ changeCategoria(e:any){
 }
 
 onSubmit(){
-  //console.log("tarifa eventual: ", this.tarifaEventual, " valor: ", this.tEventual);
-  //console.log("tarifa personalizada: ", this.tarifaPersonalizada, " valor: ", this.tPersonalizada);  
-  //console.log("acompaniante: ", this.acompaniante);
-  //console.log("a cobrar: ", this.op.aCobrar, " y a pagar: ", this.op.aPagar);
+ 
   
   if(this.cerrar){
-    this.cerrarOp();
+    if(this.form.valid){
+      this.cerrarOp();
+    } else {
+      this.mensajesError("El campo de Km recorridos no puede quedar vacio")
+    }
+    
   } else {
     this.armarOp();
   }
@@ -240,15 +192,38 @@ onSubmit(){
 
 cerrarOp(){
   this.op.km = this.form.value.km;
-  /* this.op.estado = {    
-      abierta: false,
-      cerrada: true,
-      facturada: false,    
-  } */
-  //this.updateItem();
-  this.facturacionOpServ.facturarOperacion(this.op);
+ 
+  Swal.fire({
+    title: "¿Desea cerrar la operación?",
+    //text: "You won't be able to revert this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Guardar",
+    cancelButtonText: "Cancelar"
+  }).then((result) => {
+    if (result.isConfirmed) {
+      ////////console.log("op: ", this.op);
+      this.facturacionOpServ.facturarOperacion(this.op);
+      Swal.fire({
+        title: "Confirmado",
+        text: "La operación ha sido cerrada.",
+        icon: "success"
+      }).then((result)=>{
+        if (result.isConfirmed) {
+          this.activeModal.close();
+        }
+      });   
+      
+    }
+  });   
+  ////console.log("op editada: ", this.op);  
   
-  this.activeModal.close();
+  //this.form.reset();     
+  
+  
+  //this.activeModal.close();
 }
 
 armarOp(){

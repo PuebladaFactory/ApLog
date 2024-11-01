@@ -468,7 +468,7 @@ export class OpAltaComponent implements OnInit {
           this.op.valores.cliente.aCobrar = this.op.valores.cliente.tarifaBase;
         }
         if(this.choferSeleccionado.tarifaTipo.especial){
-            if(this.choferSeleccionado.proveedor === "monotributista"){
+            if(this.choferSeleccionado.idProveedor === 0){
                 this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",this.choferSeleccionado.idChofer,"ultTarifaEspChofer");
                 this.storageService.ultTarifaEspChofer$          
                   .subscribe(data =>{          
@@ -481,7 +481,7 @@ export class OpAltaComponent implements OnInit {
                 })
             } else {
               this.proveedorSeleccionado = this.$proveedores.filter((proveedor:Proveedor) =>{
-                return proveedor.razonSocial = this.choferSeleccionado.proveedor
+                return proveedor.idProveedor = this.choferSeleccionado.idProveedor
               })
               this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",this.proveedorSeleccionado[0].idProveedor,"ultTarifaEspProveedor");
               this.storageService.ultTarifaEspProveedor$          
@@ -505,6 +505,29 @@ export class OpAltaComponent implements OnInit {
       this.op.valores.chofer.tarifaBase = this.aPagarOp();  
       this.op.valores.chofer.aPagar = this.op.valores.chofer.tarifaBase;
     }
+
+    if(this.op.tarifaTipo.especial){
+      if(this.op.chofer.idProveedor === 0){
+        if(!this.op.tarifaTipo.eventual && !this.op.tarifaTipo.personalizada && this.op.tarifaTipo.especial && this.op.cliente.tarifaTipo.general && (this.ultTarifaEspChofer.idCliente !== 0 && this.ultTarifaEspChofer.idCliente !== this.op.cliente.idCliente) ){
+          this.op.tarifaTipo = {
+            general: true,
+            especial: false,
+            eventual: false,
+            personalizada: false
+          }
+        }    
+      }else {
+        if(!this.op.tarifaTipo.eventual && !this.op.tarifaTipo.personalizada && this.op.tarifaTipo.especial && this.op.cliente.tarifaTipo.general && (this.ultTarifaEspProveedor.idCliente !== 0 && this.ultTarifaEspProveedor.idCliente !== this.op.cliente.idCliente) ){
+          this.op.tarifaTipo = {
+            general: true,
+            especial: false,
+            eventual: false,
+            personalizada: false
+          }
+        }
+      }
+    }
+    
       
       //this.op.aCobrar = this.buscarTarifaServ.getACobrar(this.op, this.ultTarifaGralCliente, this.ultTarifaEspCliente)
       //this.op.aPagar = this.buscarTarifaServ.getAPagar(this.op, this.ultTarifaGralChofer, this.ultTarifaEspChofer, this.ultTarifaGralProveedor, proveedor )
@@ -583,15 +606,26 @@ aCobrarOp(){
 aPagarOp(){
   let tarifa;  
   if(this.choferSeleccionado.tarifaTipo.especial){
-    if(this.choferSeleccionado.proveedor === "monotributista"){
-      tarifa = this.ultTarifaEspChofer; 
-      console.log("2A) tarifa esp chofer a pagar: ", tarifa);        
+    if(this.choferSeleccionado.idProveedor === 0){
+      if(this.ultTarifaEspChofer.idCliente === 0 || this.ultTarifaEspChofer.idCliente === this.op.cliente.idCliente){
+        tarifa = this.ultTarifaEspChofer; 
+        console.log("2A) tarifa esp chofer a pagar: ", tarifa);  
+      } else {
+        tarifa = this.ultTarifaGralChofer;
+        console.log("2B) tarifa gral chofer a pagar: ", tarifa);   
+      }
+            
     } else {
-      tarifa = this.ultTarifaEspProveedor;
-      console.log("2B) tarifa esp proveedor a pagar: ", tarifa);       
+      if(this.ultTarifaEspProveedor.idCliente === 0 || this.ultTarifaEspProveedor.idCliente === this.op.cliente.idCliente){
+        tarifa = this.ultTarifaEspProveedor;
+        console.log("2B) tarifa esp proveedor a pagar: ", tarifa);       
+      } else {
+        tarifa = this.ultTarifaGralProveedor;
+        console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
+      }      
     }
   } else {
-    if(this.choferSeleccionado.proveedor === "monotributista"){
+    if(this.choferSeleccionado.idProveedor === 0){
       tarifa = this.ultTarifaGralChofer;
       console.log("2B) tarifa gral chofer a pagar: ", tarifa);   
     } else {

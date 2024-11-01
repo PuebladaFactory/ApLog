@@ -15,6 +15,7 @@ export interface FacturaOp {
     liquidacion: boolean;
     contraParteMonto: number;
     tarifaTipo: TarifaTipo;
+    observaciones: string;
 
 }
 

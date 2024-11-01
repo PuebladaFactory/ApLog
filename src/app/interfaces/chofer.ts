@@ -13,7 +13,8 @@ export interface Chofer {
     email: string;
     fechaNac: Date;
     vehiculo: Vehiculo[];
-    proveedor: Proveedor["razonSocial"]|string;   
+    //proveedor: Proveedor["razonSocial"]|string;   
+    idProveedor: number;
     tarifaTipo: TarifaTipo;
     
 }

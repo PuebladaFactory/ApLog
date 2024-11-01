@@ -8,6 +8,10 @@ import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
+import { StorageService } from '../../storage/storage.service';
+import { Chofer } from 'src/app/interfaces/chofer';
+import { Cliente } from 'src/app/interfaces/cliente';
 
 
 
@@ -21,10 +25,11 @@ pdfMake.vfs = pdfFonts.pdfMake.vfs;
 })
 export class PdfService {
 
-  constructor() { }
+  $choferes!:Chofer[]; 
+  constructor(private storageService:StorageService) { }
 
 // Reportes PDF para los clientes
-  async exportToPdfCliente(factura: FacturaCliente, facturasOp: FacturaOpCliente[]): Promise<void> {
+  async exportToPdfCliente(factura: FacturaCliente, facturasOp: FacturaOp[], choferes: Chofer[]): Promise<void> {
     const quincena = this.getQuincena(factura.fecha);
     ////console.log()(pdfMake.vfs);
     const imageContent = {
@@ -46,7 +51,7 @@ export class PdfService {
         { text: `Id ${factura.idFacturaCliente}`, style: 'headerId' },
         {
           table: {
-            widths: [50, 45 ,'*', 120, 60 , 55 , 75],
+            widths: [ 47, 43 , 60, 60 , 20 , 65 , 50 , 45, '*' ],
             body: [
               // Fila estática con encabezados
               [{ text: 'Fecha', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
@@ -55,25 +60,31 @@ export class PdfService {
                { text: 'Año', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },  */
                //{ text: 'Id Op', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
                { text: 'Chofer', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
-               { text: 'Concepto Cliente', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
+               { text: 'Concepto', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
+               { text: 'Km', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },                
                { text: 'Jornada', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },
-               { text: 'Adicional Km', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },
+               { text: 'Adic. Km', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },
+               { text: 'Acomp.', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },
                { text: 'A cobrar', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }],
               // Filas dinámicas
               ...facturasOp.map(facOp => [
                 { text: facOp.fecha, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-                { text: quincena, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+                { text: this.getQuincena(facOp.fecha), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
                /*  { text: `${new Date(facOp.fecha).getMonth() + 1}`, fillColor: dynamicRowFillColor, alignment: 'center' }, 
                 { text: `${new Date(facOp.fecha).getFullYear()}`, fillColor: dynamicRowFillColor, alignment: 'center' },  */
                 //{ text: facOp.operacion.idOperacion, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-                { text: facOp.operacion.chofer.apellido, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-                { text: facOp.operacion.observaciones, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-                { text: `${facOp.operacion.tarifaEventual? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
-                { text: `${facOp.operacion.tarifaEventual? "": (facOp.total-facOp.valorJornada).toFixed(2) }`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
-                { text: facOp.total.toFixed(2), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }
+                { text: this.getChofer(facOp.idChofer, choferes), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+                { text: facOp.observaciones, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+                { text: facOp.km, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+                { text: this.formatearValor(facOp.valores.tarifaBase), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+                { text: this.formatearValor(facOp.valores.kmMonto), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+                { text: this.formatearValor(facOp.valores.acompaniante), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+                /* { text: `${facOp.tarifaTipo.eventual? "Tarifa Especial": this.formatearValor(facOp.valores.total)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+                { text: `${facOp.tarifaTipo.eventual? "": this.formatearValor(facOp.valores.kmMonto)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, */
+                { text: this.formatearValor(facOp.valores.total), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }
               ]),
               // Fila estática con el total
-              [{ text: 'Total', colSpan: 6, style: 'tableHeader', fillColor: totalRowFillColor}, {}, {}, {}, {}, {}, { text: factura.total.toFixed(2), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
+              [{ text: 'Total', colSpan: 8, style: 'tableHeader', fillColor: totalRowFillColor},{}, {}, {}, {}, {}, {}, {}, { text: this.formatearValor(factura.total), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
             ]
           }
         }
@@ -107,18 +118,56 @@ export class PdfService {
       }
     };
 
-    pdfMake.createPdf(docDefinition).download(`Factura${factura.razonSocial}${factura.fecha}.pdf`);
+    pdfMake.createPdf(docDefinition).download(`Factura ${factura.razonSocial}-${factura.fecha}.pdf`);
   }
 
   getQuincena(fecha: any): string {
-    const date = new Date(fecha);
-    const day = date.getDate();
+    console.log("fecha: ", fecha);
+    
+    // Dividir el string de la fecha en año, mes y día
+    const [year, month, day] = fecha.split('-').map(Number);
+    
+    // Crear la fecha asegurando que tome la zona horaria local
+    const date = new Date(year, month - 1, day); // mes - 1 porque los meses en JavaScript son 0-indexed
+  
+    // Determinar si está en la primera o segunda quincena
     return day <= 15 ? 'Primera' : 'Segunda';
+  }
+
+  getChofer(idChofer:number, choferes: Chofer[]){
+    let chofer: Chofer []
+    chofer = choferes.filter((c:Chofer)=>{
+      return c.idChofer === idChofer
+    });
+    return chofer[0].apellido + " " + chofer[0].nombre
+  }
+
+  getCliente(idCliente:number, clientes: Cliente[]){
+    let cliente: Cliente []
+    cliente = clientes.filter((c:Cliente)=>{
+      return c.idCliente === idCliente
+    });
+    return cliente[0].razonSocial;
+  }
+
+  formatearValor(valor: number) : any{
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+    }).format(valor);
+   ////////console.log(nuevoValor);    
+    //   `$${nuevoValor}`   
+    return `$${nuevoValor}`  
+ }
+
+ limpiarValorFormateado(valorFormateado: string): number {
+  // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
+    return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
   }
 
   
 // Reportes PDF para los choferes
-async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[]): Promise<void> {
+async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clientes: Cliente[]): Promise<void> {
   const quincena = this.getQuincena(factura.fecha);
   ////console.log()(pdfMake.vfs);
   const imageContent = {
@@ -141,41 +190,49 @@ async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[]): 
       {
         table: {
           //widths: [50, 45 ,'*', 120, 60 , 55 , 75],
-          widths: [55, 48 , '*', 75, 60, 55, 75],
+          widths: [50, 45 , '*', 20, 70, 55, 50, '*'],          
           body: [
             // Fila estática con encabezados
             [{ text: 'Fecha', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
              { text: 'Quincena', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
           /*    { text: 'Mes', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
              { text: 'Año', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },  */
-             { text: 'Id Operación', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
+             /* { text: 'Id Operación', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },  */
              { text: 'Cliente', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
+             { text: 'Km', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
              { text: 'Jornada', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
-             { text: 'Adicional', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
+             { text: 'Adic Km', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
+             { text: 'Acomp', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
              { text: 'A cobrar', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }],
             // Filas dinámicas
             ...facturasOp.map(facOp => [
               { text: facOp.fecha, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-              { text: quincena, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+              { text: this.getQuincena(facOp.fecha), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
              /*  { text: `${new Date(facOp.fecha).getMonth() + 1}`, fillColor: dynamicRowFillColor, alignment: 'center' }, 
               { text: `${new Date(facOp.fecha).getFullYear()}`, fillColor: dynamicRowFillColor, alignment: 'center' },  */
-              { text: facOp.operacion.idOperacion, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-              { text: facOp.operacion.cliente.razonSocial, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-              { text: `${facOp.operacion.tarifaEventual? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
-                { text: `${facOp.operacion.tarifaEventual? "": (facOp.total-facOp.valorJornada).toFixed(2) }`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
-              { text: facOp.total.toFixed(2), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }
-            ]),
-            // Fila estática con el total
-            [{ text: 'Total', colSpan: 6, style: 'tableHeader', fillColor: totalRowFillColor}, {}, {}, {}, {},  {}, { text: factura.total.toFixed(2), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
+              { text: this.getCliente(facOp.idCliente, clientes), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+              { text: facOp.km, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+              { text: this.formatearValor(facOp.valores.tarifaBase), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+              { text: this.formatearValor(facOp.valores.kmMonto), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+              { text: this.formatearValor(facOp.valores.acompaniante), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+              { text: this.formatearValor(facOp.valores.total), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },               
+              ]),
+              // Fila estática con el total
+              [{ text: 'Total', colSpan: 7, style: 'tableHeader', fillColor: totalRowFillColor}, {}, {}, {}, {}, {}, {}, { text: this.formatearValor(factura.total), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
           ]
         }
       }
     ],
     styles: {
       header: {
-        fontSize: 14,
+        fontSize: 12,
         bold: true,
         margin: [0, 20, 0, 0]
+      },
+      headerSub:{
+        fontSize: 11,
+        bold: true,
+        margin: [0, 0, 0, 5]
       },
       headerId:{
         fontSize: 8,
@@ -184,22 +241,22 @@ async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOpChofer[]): 
       },
       body:{
         bold: false,
-        fontSize: 10,
+        fontSize: 9,
         //color: 'black',
       },
       tableHeader: {
         bold: true,
-        fontSize: 11,
+        fontSize: 10,
         color: 'black',
       }
     }
   };
 
-  pdfMake.createPdf(docDefinition).download(`Factura${factura.apellido}${factura.nombre}${factura.fecha}.pdf`);
+  pdfMake.createPdf(docDefinition).download(`Factura ${factura.apellido}-${factura.nombre}${factura.fecha}.pdf`);
 }
 
 //////////////////// Reportes PDF para los proveedores
-async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOpProveedor[]): Promise<void> {
+async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], clientes: Cliente [], choferes: Chofer[]): Promise<void> {
   const quincena = this.getQuincena(factura.fecha);
   ////console.log()(pdfMake.vfs);
   const imageContent = {
@@ -222,43 +279,50 @@ async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOpProve
       {
         table: {
           //widths: [50, 45 ,'*', 120, 60 , 55 , 75],
-          widths: [48, 43 , '*',  '*', 70, 50, 50, 75],
+          widths: [ 47, 43 , 60, 60 , 20 , 65 , 50 , 45, '*' ],
           body: [
             // Fila estática con encabezados
             [{ text: 'Fecha', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
              { text: 'Quincena', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
           /*    { text: 'Mes', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
-             { text: 'Año', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },  */
-             { text: 'Id Operación', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
+             { text: 'Año', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },  */             
              { text: 'Chofer', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
              { text: 'Cliente', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
+             { text: 'Km', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },
              { text: 'Jornada', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
-             { text: 'Adicional', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
+             { text: 'Adic Km', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }, 
+             { text: 'Acomp', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' },              
              { text: 'A cobrar', style: 'tableHeader', fillColor: headerRowFillColor, alignment: 'center' }],
             // Filas dinámicas
             ...facturasOp.map(facOp => [
               { text: facOp.fecha, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-              { text: quincena, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+              { text: this.getQuincena(facOp.fecha), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
              /*  { text: `${new Date(facOp.fecha).getMonth() + 1}`, fillColor: dynamicRowFillColor, alignment: 'center' }, 
-              { text: `${new Date(facOp.fecha).getFullYear()}`, fillColor: dynamicRowFillColor, alignment: 'center' },  */
-              { text: facOp.operacion.idOperacion, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-              { text: facOp.operacion.chofer.apellido, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-              { text: facOp.operacion.cliente.razonSocial, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
-              { text: `${facOp.operacion.tarifaEventual? "Tarifa Especial": facOp.valorJornada.toFixed(2)}`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
-                { text: `${facOp.operacion.tarifaEventual? "": (facOp.total-facOp.valorJornada).toFixed(2) }`, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
-              { text: facOp.total.toFixed(2), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }
+              { text: `${new Date(facOp.fecha).getFullYear()}`, fillColor: dynamicRowFillColor, alignment: 'center' },  */              
+              { text: this.getChofer(facOp.idChofer, choferes), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+              { text: this.getCliente(facOp.idCliente, clientes), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }, 
+              { text: facOp.km, style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+              { text: this.formatearValor(facOp.valores.tarifaBase), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+              { text: this.formatearValor(facOp.valores.kmMonto), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+              { text: this.formatearValor(facOp.valores.acompaniante), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },
+              { text: this.formatearValor(facOp.valores.total), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }
             ]),
             // Fila estática con el total
-            [{ text: 'Total', colSpan: 7, style: 'tableHeader', fillColor: totalRowFillColor}, {}, {}, {}, {}, {},  {}, { text: factura.total.toFixed(2), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
+            [{ text: 'Total', colSpan: 8, style: 'tableHeader', fillColor: totalRowFillColor}, {}, {}, {}, {}, {}, {},  {}, { text: this.formatearValor(factura.total), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
           ]
         }
       }
     ],
     styles: {
       header: {
-        fontSize: 14,
+        fontSize: 12,
         bold: true,
         margin: [0, 20, 0, 0]
+      },
+      headerSub:{
+        fontSize: 11,
+        bold: true,
+        margin: [0, 0, 0, 5]
       },
       headerId:{
         fontSize: 8,
@@ -278,7 +342,7 @@ async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOpProve
     }
   };
 
-  pdfMake.createPdf(docDefinition).download(`Factura${factura.razonSocial}${factura.fecha}.pdf`);
+  pdfMake.createPdf(docDefinition).download(`Factura ${factura.razonSocial}-${factura.fecha}.pdf`);
 }
 
 

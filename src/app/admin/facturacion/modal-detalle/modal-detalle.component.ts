@@ -192,10 +192,10 @@ export class ModalDetalleComponent implements OnInit {
           ////console.log("3) operacionFac: ", this.operacionFac);
           if (formato === 'excel') {
             ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelCliente(factura[0], this.operacionFac);
+            //this.excelServ.exportToExcelCliente(factura[0], this.operacionFac);
           } else if(formato === 'pdf') {
             //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac);
+            //this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac);
           }   
           break;
       //////////////CHOFERES///////////////////////
@@ -217,10 +217,10 @@ export class ModalDetalleComponent implements OnInit {
           ////console.log("3) operacionFac: ", this.operacionFac);
           if (formato === 'excel') {
             ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelChofer(factura[0], this.operacionFac);
+            //this.excelServ.exportToExcelChofer(factura[0], this.operacionFac);
           } else if(formato === 'pdf') {
             ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac);
+            //this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac);
           } 
           break;
       //////////////PROVEEDORES///////////////////////
@@ -242,10 +242,10 @@ export class ModalDetalleComponent implements OnInit {
           ////console.log("3) operacionFac: ", this.operacionFac);
           if (formato === 'excel') {
             ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelProveedor(factura[0], this.operacionFac);
+            //this.excelServ.exportToExcelProveedor(factura[0], this.operacionFac);
           } else if(formato === 'pdf') {
             ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac);
+            //this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac);
           }   
       break;
       default:

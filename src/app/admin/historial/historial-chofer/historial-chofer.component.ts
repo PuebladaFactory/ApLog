@@ -81,7 +81,7 @@ export class HistorialChoferComponent implements OnInit {
       chofer: `${chofer.operacion.chofer.apellido} ${chofer.operacion.chofer.nombre}`,
       categoria: chofer.operacion.chofer.vehiculo[0].categoria,
       acompaniate: chofer.operacion.acompaniante,
-      proveedor: chofer.operacion.chofer.proveedor,
+      proveedor: chofer.operacion.chofer.idProveedor,
       direccion: chofer.operacion.cliente.direccion,
       km: chofer.operacion.km,
       montoFacturaCliente: chofer.montoFacturaCliente,

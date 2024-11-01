@@ -5,6 +5,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ChoferesAltaComponent } from '../choferes-alta/choferes-alta.component';
 import Swal from 'sweetalert2';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 
 
 @Component({
@@ -71,12 +72,12 @@ export class ChoferesListadoComponent implements OnInit {
   }  
   ngOnInit(): void { 
     //console.log(this.tablaVehiculo);    
+    this.storageService.proveedores$.subscribe(data => {
+      this.$proveedores = data;
+    });    
     this.storageService.choferes$.subscribe(data => {
       this.$choferes = data;      
       this.armarTabla();
-    });
-    this.storageService.proveedores$.subscribe(data => {
-      this.$proveedores = data;
     });    
   }
   
@@ -155,13 +156,21 @@ export class ChoferesListadoComponent implements OnInit {
         celularEmergencia: chofer.celularEmergencia,
         direccion: chofer.domicilio,
         cuit: chofer.cuit,
-        proveedor: chofer.proveedor,
+        proveedor: chofer.idProveedor === 0 ? "Monotributista" : this.getProveedor(chofer.idProveedor),
         tarifa: chofer.tarifaTipo?.general ? "General" : chofer.tarifaTipo?.especial ? "Especial" : chofer.tarifaTipo?.personalizada ? "Personalizada" : chofer.tarifaTipo?.eventual ? "Eventual" : "Tarifa Proveedor",      
         correo: chofer.email,
         fechaNac: chofer.fechaNac,
         
       }));
     this.applyFilters(); // Aplica filtros y actualiza filteredRows
+  }
+
+  getProveedor(idProveedor:number) {    
+    let proveedor:Proveedor[] = [];
+    proveedor = this.$proveedores.filter((p:Proveedor)=>{
+      return p.idProveedor === idProveedor;
+    });    
+    return proveedor[0].razonSocial
   }
   
   setPage(pageInfo: any) {

@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { ModalTarifaGralEdicionComponent } from '../modal-tarifa-gral-edicion/modal-tarifa-gral-edicion.component';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { getLocaleFirstDayOfWeek } from '@angular/common';
+import { Cliente } from 'src/app/interfaces/cliente';
 
 @Component({
   selector: 'app-choferes-tarifa-gral',
@@ -37,6 +38,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
   $choferes!: Chofer[];
   chofer!: Chofer[];
   vehiculos!: Vehiculo [];
+  $clientes!: Cliente[];
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal) {
     this.tarifaForm = this.fb.group({
@@ -48,11 +50,11 @@ export class ChoferesTarifaGralComponent implements OnInit {
   ngOnInit(): void { 
     //////console.log("0)",this.tEspecial);
     ////////console.log("0)",this.idChoferEsp);
-    ////////console.log("0)",this.idClienteEsp);
+    //console.log("0)",this.idClienteEsp);
     //// CHOFER SELECCIONADO PARA LA TARIFA ESPECIAL ///////////////
     this.storageService.choferSeleccionado$.subscribe(data => {      ///
       this.idChoferEsp = data
-      //////console.log("0A)",this.idChoferEsp);
+      //console.log("0A)",this.idChoferEsp);
       if(this.tEspecial){
         this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",this.idChoferEsp[0],"ultTarifaEspChofer");
         this.storageService.choferes$.subscribe(data => {
@@ -65,10 +67,10 @@ export class ChoferesTarifaGralComponent implements OnInit {
         });
       }
     });
-    //// CHOFER SELECCIONADO PARA LA TARIFA ESPECIAL ///////////////
+    //// CLIENTE SELECCIONADO PARA LA TARIFA ESPECIAL ///////////////
     this.storageService.clienteSeleccionado$.subscribe(data => {      
       this.idClienteEsp = data
-      //////console.log("0B)",this.idClienteEsp);
+      console.log("0B)",this.idClienteEsp);
     })
     
     //// TARIFA GENERAL CLIENTE
@@ -99,6 +101,10 @@ export class ChoferesTarifaGralComponent implements OnInit {
       //////console.log("1) modoTarifa: ", this.modoTarifa);      
       this.manejoConsola();
     });
+
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    });    
     
   }
 
@@ -568,9 +574,9 @@ onGenerarNuevaTarifaAutomatica() {
       cargasGenerales: cargasGenerales,
       adicionales: adicionales,
       tipo: tipo,
-      idCliente: null,
-      idChofer: null,
-      idProveedor: null, 
+      idCliente: 0,
+      idChofer: 0,
+      idProveedor: 0, 
   };
 }
 
@@ -687,6 +693,15 @@ onGenerarNuevaTarifaAutomatica() {
   
     // Devolver true si es una categoría de vehículo o una categoría adicional
     return esCategoriaVehiculo || esCategoriaAdicional  ;
+  }
+
+  getCliente(idCliente: number){
+    let cliente:Cliente[] = this.$clientes.filter((c:Cliente) => c.idCliente === idCliente)
+    if (cliente.length > 0){
+      return cliente[0].razonSocial;
+    } else {
+      return "Error en los datos"
+    }  
   }
 
 

@@ -89,7 +89,7 @@ export class ProveedoresTarifaEspecialComponent implements OnInit {
     let id: number;  
     ////console.log()("1)",id);
     if(e.target.value === "todos"){
-      this.idClienteEsp = null;
+      this.idClienteEsp = 0;
     } else{
       id = Number(e.target.value);
       this.clienteSeleccionado = this.$clientes.filter((cliente:Cliente)=>{

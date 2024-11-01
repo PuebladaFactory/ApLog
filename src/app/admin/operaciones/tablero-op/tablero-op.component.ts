@@ -148,11 +148,12 @@ export class TableroOpComponent implements OnInit {
     //////console.log("consultasOp: ", this.$consultasOp );
     let indice = 0
     let operaciones: Operacion [];
-    if(!this.btnConsulta){
+    /* if(!this.btnConsulta){
       operaciones = this.$opActivas;
     } else {
       operaciones = this.$consultasOp;
-    }
+    } */
+    operaciones = this.$consultasOp;
     this.rows = operaciones.map((op) => ({
       indice: indice ++,
       fecha: op.fecha,
@@ -244,7 +245,9 @@ export class TableroOpComponent implements OnInit {
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   seleccionarOp(op:any){    
-    let seleccion = this.$opActivas.filter((operacion:Operacion)=>{
+    //let seleccion = this.$opActivas.filter((operacion:Operacion)=>{
+    let seleccion = this.$consultasOp.filter((operacion:Operacion)=>{
+      
       return operacion.idOperacion === op.idOperacion
     })
     this.opEditar = seleccion[0];    
@@ -329,32 +332,36 @@ export class TableroOpComponent implements OnInit {
     }
   }
 
-  filtrarEstado(modo: string){   
+  filtrarEstado(modo: string){  
+    this.storageService.consultasOp$.subscribe(data => {
+      this.$opActivas = data;     
+    });        
+    this.estadoFiltrado = modo;
     if(!this.btnConsulta){
       switch(modo){
         case "Todo":{
           this.storageService.consultasOp$.subscribe(data => {
-            this.$consultasOp = data;
+            this.$consultasOp = data;            
             this.armarTabla();
           });   
           break;
         };
         case "Abierta":{          
-          this.$opActivas = this.$opActivas.filter((op:Operacion)=>{
+          this.$consultasOp = this.$opActivas.filter((op:Operacion)=>{
             return op.estado.abierta === true; 
           });          
           this.armarTabla();
           break;
         };
         case "Cerrada":{
-          this.$opActivas = this.$opActivas.filter((op:Operacion)=>{
+          this.$consultasOp = this.$opActivas.filter((op:Operacion)=>{
             return op.estado.cerrada === true; 
           });          
           this.armarTabla();
           break;
         };
         case "Facturada":{
-          this.$opActivas = this.$opActivas.filter((op:Operacion)=>{
+          this.$consultasOp = this.$opActivas.filter((op:Operacion)=>{
             return op.estado.facturada === true; 
           });          
           this.armarTabla();
