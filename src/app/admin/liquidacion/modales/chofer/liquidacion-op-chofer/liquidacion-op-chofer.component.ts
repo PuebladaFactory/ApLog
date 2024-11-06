@@ -6,6 +6,7 @@ import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-liquidacion-op-chofer',
@@ -28,6 +29,7 @@ export class LiquidacionOpChoferComponent implements OnInit {
   edicion: boolean[] = [];
   $choferes!: Chofer[];
   choferSeleccionado!: Chofer;
+  modo: string = "vista"
 
   constructor(private storageService: StorageService, private fb: FormBuilder, public activeModal: NgbActiveModal){
     
@@ -80,7 +82,12 @@ export class LiquidacionOpChoferComponent implements OnInit {
   }
 
   closeModal() {
-    this.activeModal.close();    
+    let respuesta = {
+      factura: "",
+      titulo: "",
+      modo: this.modo
+    }
+    this.activeModal.close(respuesta);    
   }
 
   formatearValor(valor: number) : any{
@@ -120,54 +127,80 @@ export class LiquidacionOpChoferComponent implements OnInit {
     });    
   }
 
-  onSubmit(titulo:string) {
-    ////console.log()(this.facturasLiquidadas);
-    ////console.log()(this.form.value);
+  onSubmit(titulo:string) {   
     if(this.facLiqChofer.length > 0){
-
       ////console.log()(this.facturasLiquidadasCliente);
+      Swal.fire({
+        title: "¿Desea generar la liquidación de las operaciones seleccionadas?",
+        text: "Esta acción no se podrá revertir",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Guardar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.modo = "cerrar";
+          this.facLiqChofer.forEach((factura: FacturaOp) => {
+            /* idOperaciones.push(factura.operacion.idOperacion) */
+            
+            this.idOperaciones.push(factura.idOperacion)
+          });
+     
+          ////console.log()("ID OPERACIONES: ", this.idOperaciones);
+          //this.facturaChofer.operaciones = idOperaciones;
+    
+          this.facturaChofer = {
+            id: null,
+            fecha: new Date().toISOString().split('T')[0],
+            idFacturaChofer: new Date().getTime(),
+            idChofer: this.facLiqChofer[0].idCliente,
+            //razonSocial: this.facLiqCliente[0].razonSocial,
+            apellido: this.choferSeleccionado.apellido,
+            nombre: this.choferSeleccionado.nombre,
+            operaciones: this.idOperaciones,
+            total: this.totalFacLiqChofer,
+            cobrado:false,
+            montoFacturaCliente: this.totalFacLiqCliente
+          }
+         
+         
+          
+          Swal.fire({
+            title: "Confirmado",
+            //text: "Los cambios se han guardado.",
+            icon: "success"
+          }).then((result) => {
+             //console.log()("FACTURA CLIENTE: ", this.facturaCliente);
+            let respuesta = {
+              factura: this.facturaChofer,
+              titulo: titulo,
+              modo: this.modo
+            }
       
-      this.facLiqChofer.forEach((factura: FacturaOp) => {
-        /* idOperaciones.push(factura.operacion.idOperacion) */
-        
-        this.idOperaciones.push(factura.idOperacion)
-      });
- 
-      ////console.log()("ID OPERACIONES: ", this.idOperaciones);
-      //this.facturaChofer.operaciones = idOperaciones;
-
-      this.facturaChofer = {
-        id: null,
-        fecha: new Date().toISOString().split('T')[0],
-        idFacturaChofer: new Date().getTime(),
-        idChofer: this.facLiqChofer[0].idCliente,
-        //razonSocial: this.facLiqCliente[0].razonSocial,
-        apellido: this.choferSeleccionado.apellido,
-        nombre: this.choferSeleccionado.nombre,
-        operaciones: this.idOperaciones,
-        total: this.totalFacLiqChofer,
-        cobrado:false,
-        montoFacturaCliente: this.totalFacLiqCliente
-      }
-
-      //console.log()("FACTURA CLIENTE: ", this.facturaCliente);
-      let respuesta = {
-        factura: this.facturaChofer,
-        titulo: titulo,
-      }
-
-      this.activeModal.close(respuesta);
+            this.activeModal.close(respuesta);
+          });        
+        }
+      });   
+    
     
     }else{
-      alert("no hay facturas")
+      this.mensajesError("no hay facturas")
     }
     
     
 
   }
 
-  cancelarEdicion(i:number){
-    this.edicion[i] = false;
+
+  mensajesError(msj:string){
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
   }
 
   

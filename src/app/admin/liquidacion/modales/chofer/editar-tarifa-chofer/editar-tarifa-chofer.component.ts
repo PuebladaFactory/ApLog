@@ -60,12 +60,7 @@ export class EditarTarifaChoferComponent implements OnInit {
       this.$clientes = data;
     });
     this.getChofer();
-    //this.ultimaTarifa = this.fromParent.tarifaAplicada;
-    /* this.storageService.historialTarifasClientes$.subscribe(data => {      
-      let tarifas = data;
-      this.ultimaTarifa = tarifas[0];
-      this.armarTarifa();
-    }) */    
+   
   }
 
   getChofer(){
@@ -136,5 +131,14 @@ export class EditarTarifaChoferComponent implements OnInit {
     this.storageService.updateItem(this.componente, this.facDetallada);
     this.storageService.updateItem("operaciones", this.operacion);
    }
+
+   mensajesError(msj:string){
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
+  }
 
 }

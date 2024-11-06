@@ -1,4 +1,4 @@
-<input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer, chofer o número de operación">
+<input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
 <table class="table table-striped">
     <thead>
         <tr>
@@ -53,21 +53,21 @@
                         <thead>
                             <tr>
                                 <!-- <th><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th> -->
-                                <th><input type="checkbox" (change)="selectAllCheckboxes($event, chofer.idChofer)"></th>  
-                                <th scope="col" class="">Fecha</th>
-                                <th scope="col" class="">Quincena</th>
-                                <th scope="col" class="">Id Operación</th>
-                                <th scope="col" class="">Cliente</th>
-                                <th scope="col" class="">Km</th>  
-                                <th scope="col" class="">Km $</th>  
-                                <th scope="col" class="">Acomp</th>                                    
-                                <th scope="col" class="">Tarifa Base</th>                                      
-                                <th scope="col" class="">Total a Cobrar</th>                        
-                                <th scope="col" class="">A Pagar</th>
-                                <th scope="col" class="">Ganancia</th>
-                                <th scope="col" class="">Tarifa Tipo</th>  
-                                <th scope="col" class="">Facturar</th>
-                                <th scope="col" colspan="2" class="">Acciones</th>                   
+                                <th style="width: 1.5%;"><input type="checkbox" (change)="selectAllCheckboxes($event, chofer.idChofer)"></th>  
+                                <th scope="col" class="" style="width: 5%;">Fecha</th>
+                                <th scope="col" class="" style="width: 5.5%;">Quincena</th>
+                                <th scope="col" class="" style="width: 7.5%;">Id Operación</th>
+                                <th scope="col" class="" style="width: 12%;">Cliente</th>
+                                <th scope="col" class="" style="width: 3%;">Km</th>  
+                                <th scope="col" class="" style="width: 7.5%;">Km $</th>  
+                                <th scope="col" class="" style="width: 7%;">Acomp</th>                                    
+                                <th scope="col" class="" style="width: 10%;">Tarifa Base</th>                                      
+                                <th scope="col" class="" style="width: 10%;">Total a Cobrar</th>                        
+                                <th scope="col" class="" style="width: 10%;">A Pagar</th>
+                                <th scope="col" class="" style="width: 6%;">Ganancia</th>
+                                <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>  
+                                <th scope="col" class="" style="width: 4.5%;">Facturar</th>
+                                <th scope="col" colspan="2" class="" style="width: 5%;">Acciones</th>                   
                             </tr>
                         </thead>
                         <tbody>

@@ -40,6 +40,8 @@ export class CargaMultipleComponent implements OnInit {
   mostrarCategoria: boolean = false;
   operacionesForm!: FormGroup; // Usamos un formulario reactivo para manejar las selecciones
   operaciones!: Operacion[];
+  $choferesNoEventuales!: Chofer[]
+  $clientesNoEventuales!: Cliente[]
 
 
   constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService){
@@ -55,6 +57,7 @@ export class CargaMultipleComponent implements OnInit {
   ngOnInit(): void {      
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
+      this.$clientesNoEventuales = this.$clientes.filter((c:Cliente)=>{return c.tarifaTipo.eventual === false})
     }); 
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
@@ -111,6 +114,7 @@ export class CargaMultipleComponent implements OnInit {
     });  
     this.storageService.choferes$.subscribe(data => {
       this.$choferes = data;
+      this.$choferesNoEventuales = this.$choferes.filter((c:Chofer)=>{return c.tarifaTipo.eventual === false})
       this.inicializarChoferes();
     });
   }
@@ -118,7 +122,7 @@ export class CargaMultipleComponent implements OnInit {
   inicializarChoferes() {
     //const choferesFormArray = this.operacionesForm.get('choferes') as FormArray;
     //////////console.log("1)", choferesFormArray.value);
-    this.$choferes.forEach(chofer => {
+    this.$choferesNoEventuales.forEach(chofer => {
       this.choferesFormArray.push(this.fb.group({
         seleccionado: [false],
         chofer: [chofer],  // Aquí pasas el objeto completo chofer
@@ -389,7 +393,7 @@ onSubmit() {
                 })
               }else{
                   proveedor = this.$proveedores.filter((proveedor:Proveedor) =>{
-                    return proveedor.idProveedor = chofer.idProveedor
+                    return proveedor.idProveedor === chofer.idProveedor
                   })                  
                   this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",proveedor[0].idProveedor,"ultTarifaEspProveedor");
                   this.storageService.ultTarifaEspProveedor$          
@@ -412,27 +416,7 @@ onSubmit() {
           operacion.valores.chofer.aPagar = this.aPagarOp(chofer, patenteChofer, operacion); ///sino quiere decir q el cliente tiene una tarifa general
           operacion.valores.chofer.tarifaBase = operacion.valores.chofer.aPagar;
         }
-        if(operacion.tarifaTipo.especial){
-          if(operacion.chofer.idProveedor === 0){
-            if(!operacion.tarifaTipo.eventual && !operacion.tarifaTipo.personalizada && operacion.tarifaTipo.especial && operacion.cliente.tarifaTipo.general && (this.ultTarifaEspChofer.idCliente !== 0 && this.ultTarifaEspChofer.idCliente !== operacion.cliente.idCliente) ){
-              operacion.tarifaTipo = {
-                general: true,
-                especial: false,
-                eventual: false,
-                personalizada: false
-              }
-            }    
-          }else {
-            if(!operacion.tarifaTipo.eventual && !operacion.tarifaTipo.personalizada && operacion.tarifaTipo.especial && operacion.cliente.tarifaTipo.general && (this.ultTarifaEspProveedor.idCliente !== 0 && this.ultTarifaEspProveedor.idCliente !== operacion.cliente.idCliente) ){
-              operacion.tarifaTipo = {
-                general: true,
-                especial: false,
-                eventual: false,
-                personalizada: false
-              }
-            }
-          }
-        }
+
                           
         
       return operacion

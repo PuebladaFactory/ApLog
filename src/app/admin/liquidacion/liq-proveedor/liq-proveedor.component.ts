@@ -292,7 +292,7 @@ export class LiqProveedorComponent implements OnInit {
         this.totalFacturasLiquidadasProveedor += factura.valores.total;
       });
   
-      //this.indiceSeleccionado = index;
+      this.indiceSeleccionado = index;
       console.log("3) Facturas liquidadas del proveedor", apellido + ":", this.facturasLiquidadasProveedor);
       console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasProveedor);
       //console.log("indice: ", this.indiceSeleccionado);
@@ -319,8 +319,8 @@ export class LiqProveedorComponent implements OnInit {
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasProveedor.forEach((factura: FacturaOp) => {
-      console.log("llamada al storage desde liq-chofer, addItem");
-      this.addItem(factura, "facLiquidadaCliente");
+      console.log("llamada al storage desde liq-proveedor, addItem");
+      this.addItem(factura, "facOpLiqProveedor");
       this.editarOperacionesFac(factura)
       
     }); 
@@ -414,7 +414,7 @@ export class LiqProveedorComponent implements OnInit {
         }else if (result.titulo === "pdf"){          
         this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
         }
-        //this.eliminarFacturasOp();
+        this.eliminarFacturasOp();
         },
         (reason) => {}
       );

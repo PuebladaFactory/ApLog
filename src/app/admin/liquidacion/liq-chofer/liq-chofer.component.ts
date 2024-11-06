@@ -282,7 +282,7 @@ export class LiqChoferComponent implements OnInit {
         this.totalFacturasLiquidadasChofer += factura.valores.total;
       });
   
-      //this.indiceSeleccionado = index;
+      this.indiceSeleccionado = index;
       console.log("3) Facturas liquidadas del cliente", apellido + ":", this.facturasLiquidadasChofer);
       console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasChofer);
       //console.log("indice: ", this.indiceSeleccionado);
@@ -310,7 +310,7 @@ export class LiqChoferComponent implements OnInit {
     this.idOperaciones = [];
     this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
       console.log("llamada al storage desde liq-chofer, addItem");
-      this.addItem(factura, "facLiquidadaCliente");
+      this.addItem(factura, "facOpLiqChofer");
       this.editarOperacionesFac(factura)
       
     }); 
@@ -387,24 +387,19 @@ export class LiqChoferComponent implements OnInit {
       modalRef.result.then(
         (result) => {
           console.log(result);
-          
-          this.facturaChofer = result.factura;
 
-//        this.selectCrudOp(result.op, result.item);
-        //this.mostrarMasDatos(row);
-         //console.log()("resultado:" ,this.facturaCliente);
-         this.addItem(this.facturaChofer, this.componente);
-         //this.form.reset();
-        //this.$tarifasChofer = null;
-        //this.ngOnInit();
-        
-      
-        if(result.titulo === "excel"){
-        this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes);
-        }else if (result.titulo === "pdf"){
-        this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes);        
-        }
-        //this.eliminarFacturasOp();
+          if(result.modo === "cerrar"){
+            this.facturaChofer = result.factura;
+            this.addItem(this.facturaChofer, this.componente);        
+            if(result.titulo === "excel"){
+            this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes);
+            }else if (result.titulo === "pdf"){
+            this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes);        
+            }
+            this.eliminarFacturasOp();
+          }
+          
+          
         },
         (reason) => {}
       );
@@ -519,5 +514,7 @@ export class LiqChoferComponent implements OnInit {
         );
       }
     }
+
+    
   
 }

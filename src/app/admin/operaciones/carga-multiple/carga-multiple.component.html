@@ -19,7 +19,7 @@
               <label for="Cliente">Cliente</label>
               <select class="form-select mb-3" formControlName="cliente" (change)="changeCliente($event)">
                 <option [ngValue]="null">Seleccionar Cliente</option>
-                <option *ngFor="let cliente of $clientes" [value]="cliente.idCliente">
+                <option *ngFor="let cliente of $clientesNoEventuales" [value]="cliente.idCliente">
                   {{cliente.razonSocial}}
                 </option>
               </select>

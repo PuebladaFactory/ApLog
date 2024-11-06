@@ -8,6 +8,7 @@ import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-liquidacion-op-proveedor',
@@ -32,6 +33,7 @@ export class LiquidacionOpProveedorComponent implements OnInit {
   $clientes!: Cliente[];
   $proveedores!:Proveedor[]
   proveedorSeleccionado!: Proveedor;
+  modo: string = "vista"
 
   constructor(private storageService: StorageService, private fb: FormBuilder, public activeModal: NgbActiveModal){
     
@@ -131,48 +133,77 @@ export class LiquidacionOpProveedorComponent implements OnInit {
     ////console.log()(this.form.value);
     if(this.facLiqProveedor.length > 0){
 
+      Swal.fire({
+        title: "¿Desea generar la liquidación de las operaciones seleccionadas?",
+        text: "Esta acción no se podrá revertir",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Guardar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.modo = "cerrar";
+          this.facLiqProveedor.forEach((factura: FacturaOp) => {
+            /* idOperaciones.push(factura.operacion.idOperacion) */
+            
+            this.idOperaciones.push(factura.idOperacion)
+          });
+     
+          ////console.log()("ID OPERACIONES: ", this.idOperaciones);
+          //this.facturaChofer.operaciones = idOperaciones;
+    
+          this.facturaProveedor = {
+            id: null,
+            fecha: new Date().toISOString().split('T')[0],
+            idFacturaProveedor: new Date().getTime(),
+            idProveedor: this.facLiqProveedor[0].idProveedor,
+            //razonSocial: this.facLiqCliente[0].razonSocial,
+            razonSocial: this.proveedorSeleccionado.razonSocial,        
+            operaciones: this.idOperaciones,
+            total: this.totalFacLiqProveedor,
+            cobrado:false,
+            montoFacturaCliente: this.totalFacLiqCliente
+          }
+    
+          
+          Swal.fire({
+            title: "Confirmado",
+            //text: "Los cambios se han guardado.",
+            icon: "success"
+          }).then((result) => {
+             
+              let respuesta = {
+                factura: this.facturaProveedor,
+                titulo: titulo,
+              }
+        
+              this.activeModal.close(respuesta);      
+            
+          });        
+        }
+      });  
+
       ////console.log()(this.facturasLiquidadasCliente);
       
-      this.facLiqProveedor.forEach((factura: FacturaOp) => {
-        /* idOperaciones.push(factura.operacion.idOperacion) */
-        
-        this.idOperaciones.push(factura.idOperacion)
-      });
- 
-      ////console.log()("ID OPERACIONES: ", this.idOperaciones);
-      //this.facturaChofer.operaciones = idOperaciones;
-
-      this.facturaProveedor = {
-        id: null,
-        fecha: new Date().toISOString().split('T')[0],
-        idFacturaProveedor: new Date().getTime(),
-        idProveedor: this.facLiqProveedor[0].idProveedor,
-        //razonSocial: this.facLiqCliente[0].razonSocial,
-        razonSocial: this.proveedorSeleccionado.razonSocial,        
-        operaciones: this.idOperaciones,
-        total: this.totalFacLiqProveedor,
-        cobrado:false,
-        montoFacturaCliente: this.totalFacLiqCliente
-      }
-
-      //console.log()("FACTURA CLIENTE: ", this.facturaCliente);
-      let respuesta = {
-        factura: this.facturaProveedor,
-        titulo: titulo,
-      }
-
-      this.activeModal.close(respuesta);
+    
     
     }else{
-      alert("no hay facturas")
+      this.mensajesError("no hay facturas")
     }
     
     
 
   }
 
-  cancelarEdicion(i:number){
-    this.edicion[i] = false;
+  mensajesError(msj:string){
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
   }
 
   

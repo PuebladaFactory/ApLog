@@ -9,6 +9,7 @@ import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-liquidacion-op',
@@ -31,7 +32,7 @@ export class LiquidacionOpComponent implements OnInit{
   $clientes!: Cliente[];
   $choferes!: Chofer[];
   clienteSeleccionado!: Cliente;
-
+  modo: string = "vista"
 
   constructor(private storageService: StorageService, private fb: FormBuilder, private excelServ: ExcelService, private pdfServ: PdfService, public activeModal: NgbActiveModal){
     
@@ -93,8 +94,13 @@ export class LiquidacionOpComponent implements OnInit{
       return '2<sup> da</sup>';
     }
   }
-  closeModal() {
-    this.activeModal.close();    
+  closeModal() {    
+    let respuesta = {
+      factura: "",
+      titulo: "",
+      modo: this.modo
+    }
+    this.activeModal.close(respuesta);    
   }
 
   formatearValor(valor: number) : any{
@@ -111,76 +117,73 @@ export class LiquidacionOpComponent implements OnInit{
   // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
     return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
   }
-
-  guardarDetalle(i:number){    
-    this.edicion[i] = false;
-    //console.log()("1: ",this.form.value.detalle);
-    this.facturaEditada.observaciones = this.form.value.detalle;
-    //console.log()(this.facturaEditada.operacion.observaciones);
-    console.log("llamada al storage desde liq modal-informes-cliente, updateItem");      
-    this.storageService.updateItem("facturaOpCliente", this.facturaEditada);
-
-
-  }
-
-  editarDetalle(factura:FacturaOp, i:number){
-    console.log("editar: ",factura, i);
-    
-    this.edicion[i] = true;
-    this.facturaEditada = factura;
-    console.log(this.facturaEditada);
-    this.form.patchValue({
-      detalle: factura.observaciones,      
-    });    
-  }
-
   onSubmit(titulo:string) {
-    ////console.log()(this.facturasLiquidadas);
-    ////console.log()(this.form.value);
-    if(this.facLiqCliente.length > 0){
+    
 
+    if(this.facLiqCliente.length > 0){
       ////console.log()(this.facturasLiquidadasCliente);
       
-      this.facLiqCliente.forEach((factura: FacturaOp) => {
-        /* idOperaciones.push(factura.operacion.idOperacion) */
-        
-        this.idOperaciones.push(factura.idOperacion)
-      });
- 
-      ////console.log()("ID OPERACIONES: ", this.idOperaciones);
-      //this.facturaChofer.operaciones = idOperaciones;
+      Swal.fire({
+        title: "¿Desea generar la liquidación de las operaciones seleccionadas?",
+        text: "Esta acción no se podrá revertir",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Guardar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.modo = "cerrar"
+          ////////console.log("op: ", this.op);
+          this.facLiqCliente.forEach((factura: FacturaOp) => {                
+            this.idOperaciones.push(factura.idOperacion)
+          });
+     
+          ////console.log()("ID OPERACIONES: ", this.idOperaciones);
+          //this.facturaChofer.operaciones = idOperaciones;
+    
+          this.facturaCliente = {
+            id: null,
+            fecha: new Date().toISOString().split('T')[0],
+            idFacturaCliente: new Date().getTime(),
+            idCliente: this.facLiqCliente[0].idCliente,        
+            razonSocial: this.clienteSeleccionado.razonSocial,
+            operaciones: this.idOperaciones,
+            total: this.totalFacLiqCliente,
+            cobrado:false,
+            montoFacturaChofer: this.totalFacLiqChofer
+          }
+          
+          Swal.fire({
+            title: "Confirmado",
+            //text: "Los cambios se han guardado.",
+            icon: "success"
+          }).then((result) => {
+             //console.log()("FACTURA CLIENTE: ", this.facturaCliente);
+            let respuesta = {
+              factura: this.facturaCliente,
+              titulo: titulo,
+              modo: this.modo
+            }
 
-      this.facturaCliente = {
-        id: null,
-        fecha: new Date().toISOString().split('T')[0],
-        idFacturaCliente: new Date().getTime(),
-        idCliente: this.facLiqCliente[0].idCliente,
-        //razonSocial: this.facLiqCliente[0].razonSocial,
-        razonSocial: this.clienteSeleccionado.razonSocial,
-        operaciones: this.idOperaciones,
-        total: this.totalFacLiqCliente,
-        cobrado:false,
-        montoFacturaChofer: this.totalFacLiqChofer
-      }
-
-      //console.log()("FACTURA CLIENTE: ", this.facturaCliente);
-      let respuesta = {
-        factura: this.facturaCliente,
-        titulo: titulo,
-      }
-
-      this.activeModal.close(respuesta);
+            this.activeModal.close(respuesta);
+          });        
+        }
+      });   
     
     }else{
-      alert("no hay facturas")
+      this.mensajesError("No hay facturas seleccionadas")
     }
-    
-    
-
   }
 
-  cancelarEdicion(i:number){
-    this.edicion[i] = false;
+  mensajesError(msj:string){
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
   }
 
 

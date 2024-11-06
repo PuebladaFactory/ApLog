@@ -252,7 +252,7 @@ async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOp[], cliente
     }
   };
 
-  pdfMake.createPdf(docDefinition).download(`Factura ${factura.apellido}-${factura.nombre}${factura.fecha}.pdf`);
+  pdfMake.createPdf(docDefinition).download(`Factura ${factura.apellido} ${factura.nombre}-${factura.fecha}.pdf`);
 }
 
 //////////////////// Reportes PDF para los proveedores

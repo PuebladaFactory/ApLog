@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, ViewChild, ElementRef, AfterViewInit , Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer } from 'src/app/interfaces/chofer';
@@ -14,7 +14,7 @@ import Swal from 'sweetalert2';
   templateUrl: './modal-facturacion.component.html',
   styleUrls: ['./modal-facturacion.component.scss']
 })
-export class ModalFacturacionComponent implements OnInit {
+export class ModalFacturacionComponent implements OnInit, AfterViewInit {
   
   @Input() fromParent:any;
   componente:string = "operaciones"
@@ -37,6 +37,7 @@ export class ModalFacturacionComponent implements OnInit {
   aCobrar: any;
   aPagar: any;
   tarifaEventual!: TarifaEventual;
+  @ViewChild('kmInput') kmInputElement!: ElementRef;
 
   constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private facturacionOpServ: FacturacionOpService){
     this.form = this.fb.group({      
@@ -81,6 +82,14 @@ export class ModalFacturacionComponent implements OnInit {
     } else {
       this.armarForm();
     }    
+  }
+
+  ngAfterViewInit(): void {
+    // Establece el foco en el input de Km Recorridos al inicializar el componente
+    if(this.cerrar){
+      this.kmInputElement.nativeElement.focus();
+    }
+    
   }
 
   ///// ARMAR LA VISTA ///////////////

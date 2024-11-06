@@ -285,7 +285,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         this.totalFacturasLiquidadasCliente += factura.valores.total;
       });
   
-      //this.indiceSeleccionado = index;
+      this.indiceSeleccionado = index;
       console.log("3) Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadasCliente);
       console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasCliente);
       //console.log("indice: ", this.indiceSeleccionado);
@@ -399,23 +399,20 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         (result) => {
           console.log(result);
           
-          this.facturaCliente = result.factura;
+          if(result.modo === "cerrar"){
+            this.facturaCliente = result.factura;
 
-//        this.selectCrudOp(result.op, result.item);
-        //this.mostrarMasDatos(row);
-         //console.log()("resultado:" ,this.facturaCliente);
-         this.addItem(this.facturaCliente, this.componente);
-         //this.form.reset();
-        //this.$tarifasChofer = null;
-        //this.ngOnInit();        
-      
-        if(result.titulo === "excel"){
-        this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$choferes);
-        }else if (result.titulo === "pdf"){
-        this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$choferes);        
-        }
-        //this.eliminarFacturasOp();
-        },
+            this.addItem(this.facturaCliente, this.componente);
+          
+            
+            if(result.titulo === "excel"){
+            this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$choferes);
+            }else if (result.titulo === "pdf"){
+            this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$choferes);        
+            }
+            this.eliminarFacturasOp();
+          } 
+          },
         (reason) => {}
       );
     }
@@ -494,14 +491,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   }
 
   openModalTarifa(): void {   
-    //this.facturasLiquidadasCliente
-    //this.totalFacturasLiquidadasChofer
-    //this.totalFacturasLiquidadasCliente
-/*     this.storageService.historialTarifasClientes$.subscribe(data => {      
-      this.ultimaTarifa = data;
-      //this.openModalTarifa();
-    }) */
-    //this.facOpClienteService.obtenerTarifaCliente(this.facDetallada)
+   
     this.indiceSeleccionado
     {
       const modalRef = this.modalService.open(EditarTarifaComponent, {

@@ -112,12 +112,14 @@ export class TableroOpComponent implements OnInit {
    
     this.storageService.operaciones$.subscribe(data => {
       this.$opActivas = data;
-      this.armarTabla();
+      //this.armarTabla();
+      this.filtrarEstado(this.estadoFiltrado)
     });  
 
     this.storageService.consultasOp$.subscribe(data => {
       this.$consultasOp = data;
-      this.armarTabla();
+      //this.armarTabla();
+      this.filtrarEstado(this.estadoFiltrado)
     });   
     
     this.storageService.proveedores$.subscribe(data => {
