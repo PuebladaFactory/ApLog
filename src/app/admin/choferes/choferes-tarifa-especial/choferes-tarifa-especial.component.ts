@@ -29,7 +29,7 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
     this.storageService.choferes$.subscribe(data => {
       this.$choferes = data;
       this.$choferesEsp = this.$choferes.filter((chofer:Chofer)=>{
-        return chofer.tarifaTipo?.especial === true 
+        return chofer.tarifaTipo.especial === true && chofer.idProveedor === 0
       })
       console.log("1)choferes especiales: ", this.$choferesEsp);      
       this.tEspecial = false;
@@ -62,7 +62,7 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
     let id: number;  
     ////console.log()("1)",id);
     if(e.target.value === "todos"){
-      this.idClienteEsp = null;
+      this.idClienteEsp = 0;
     } else{
       id = Number(e.target.value);
       this.clienteSeleccionado = this.$clientes.filter((cliente:Cliente)=>{

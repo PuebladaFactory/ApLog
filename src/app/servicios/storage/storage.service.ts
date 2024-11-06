@@ -76,9 +76,6 @@ export class StorageService {
   private _perfilChofer$ = new BehaviorSubject<any>(this.loadInfo('perfilChofer') || []);
   public perfilChofer$ = this._perfilChofer$.asObservable();
 
-  private _facturaOpCliente$ = new BehaviorSubject<any>(this.loadInfo('facturaOpCliente') || []);
-  public facturaOpCliente$ = this._facturaOpCliente$.asObservable();
-
   private _consultasFacOpCliente$ = new BehaviorSubject<any>(this.loadInfo('consultasFacOpCliente') || []);
   public consultasFacOpCliente$ = this._consultasFacOpCliente$.asObservable();
 
@@ -181,6 +178,15 @@ export class StorageService {
   private _fechasConsulta$ = new BehaviorSubject<any>(this.loadInfo('fechasConsulta') || []);
   public fechasConsulta$ = this._fechasConsulta$.asObservable();
 
+  private _facturaOpCliente$ = new BehaviorSubject<any>(this.loadInfo('facturaOpCliente') || []);
+  public facturaOpCliente$ = this._facturaOpCliente$.asObservable();
+
+  private _facturaOpChofer$ = new BehaviorSubject<any>(this.loadInfo('facturaOpChofer') || []);
+  public facturaOpChofer$ = this._facturaOpChofer$.asObservable();
+
+  private _facturaOpProveedor$ = new BehaviorSubject<any>(this.loadInfo('facturaOpProveedor') || []);
+  public facturaOpProveedor$ = this._facturaOpProveedor$.asObservable();
+
   updateObservable(componente: any, data: any) {
     switch (componente) {
       case "clientes": {
@@ -264,6 +270,16 @@ export class StorageService {
 
       case "facturaOpCliente":{
         this._facturaOpCliente$.next(data);
+        break
+      }
+
+      case "facturaOpChofer":{
+        this._facturaOpChofer$.next(data);
+        break
+      }
+
+      case "facturaOpProveedor":{
+        this._facturaOpProveedor$.next(data);
         break
       }
 
@@ -457,6 +473,12 @@ export class StorageService {
     this.updateObservable(componente, data);
   }
 
+  public setInfoOne(componente: string, data: any) {
+    const jsonData = JSON.stringify(data);
+    localStorage.setItem(componente, jsonData);
+    this.updateObservable(componente, data);
+  }
+
   public loadInfo(componente: string): any[] {
     const jsonData = localStorage.getItem(componente);
     if (jsonData) {
@@ -494,7 +516,7 @@ export class StorageService {
 
     this.getAllSorted("clientes", 'idCliente', 'asc')
     this.getAllSorted("choferes", 'idChofer', 'asc')
-    this.getAllSorted("operaciones", 'fecha', 'desc')
+    //this.getAllSorted("operaciones", 'fecha', 'desc')
     //this.getAllSorted("facturaOpCliente", 'fecha', 'desc')
 //    this.getAllSorted("operacionesCerradas", 'fecha', 'desc')
     //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')

@@ -88,7 +88,7 @@ export class HistorialClienteComponent implements OnInit {
       chofer: `${cliente.operacion.chofer.apellido} ${cliente.operacion.chofer.nombre}`,
       categoria: cliente.operacion.chofer.vehiculo[0].categoria,
       acompaniate: cliente.operacion.acompaniante,
-      proveedor: cliente.operacion.chofer.proveedor,
+      proveedor: cliente.operacion.chofer.idProveedor,
       direccion: cliente.operacion.cliente.direccion,
       km: cliente.operacion.km,
       montoFacturaChofer: cliente.montoFacturaChofer,
@@ -153,7 +153,7 @@ export class HistorialClienteComponent implements OnInit {
     let facOpChofer!: FacturaOpChofer;
     let facOpProveedor!: FacturaOpProveedor;
     //console.log("2)idoperacion: ", this.facturaOp[0].operacion.idOperacion);
-    if(this.facturaOp[0].operacion.chofer.proveedor === "monotributista"){
+    if(this.facturaOp[0].operacion.chofer.idProveedor === 0){
       this.dbFirebase
       .obtenerTarifaIdTarifa("facOpLiqChofer",this.facturaOp[0].operacion.idOperacion, "operacion.idOperacion")
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
@@ -214,7 +214,7 @@ export class HistorialClienteComponent implements OnInit {
     tarifaAplicadaClienteArray.push(this.tarifaClienteAplicada);
     this.storageService.setInfo("tarifaClienteHistorial", tarifaAplicadaClienteArray);
 
-    if(this.facturaOp[0].operacion.chofer.proveedor === "monotributista"){      
+    if(this.facturaOp[0].operacion.chofer.idProveedor === 0){      
       tarifaAplicadaChoferArray.push(this.tarifaChoferAplicada);
       this.storageService.setInfo("tarifaChoferHistorial", tarifaAplicadaChoferArray);
     } else {

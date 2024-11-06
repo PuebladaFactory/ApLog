@@ -1,9 +1,18 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LiqGralComponent } from './liq-gral/liq-gral.component';
+import { LiqClienteComponent } from './liq-cliente/liq-cliente.component';
+import { LiqChoferComponent } from './liq-chofer/liq-chofer.component';
+import { LiqProveedorComponent } from './liq-proveedor/liq-proveedor.component';
 
 const routes: Routes = [
-  {path: '', component:LiqGralComponent},  
+  {path: '', component:LiqGralComponent,
+    children: [        
+      {path: 'clientes', component:LiqClienteComponent},    
+      {path: 'choferes', component:LiqChoferComponent},
+      {path: 'proveedores', component:LiqProveedorComponent},
+    ]
+  },  
 ];
 
 @NgModule({

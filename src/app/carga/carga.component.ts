@@ -15,8 +15,10 @@ export class CargaComponent implements OnInit {
 
   }
   ngOnInit(): void {
+    
     this.usuario = this.storageService.loadInfo("usuario");
     if(this.usuario.roles.admin){
+      this.storageService.clearAllLocalStorage()
       console.log("llamada al storage desde carga, initializerAdmin");      
       this.storageService.initializerAdmin()
       //this.router.navigate(['admin']);

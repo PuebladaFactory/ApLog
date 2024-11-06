@@ -6,50 +6,72 @@
                     <h1 >Alta Operacion</h1>      
                     <!-- <button type="button" class="btn-close" ></button> -->
                 </div>
-                <div class="d-flex justify-content-between modal-body">
-                    <div class="d-flex justify-content-center container">
+                <div class="row modal-body con">
+                    <div class="col  d-flex justify-content-center container">
                         <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                            <div class="form-group">
+                            <div class="form-group mb-2">
                                 <label for="Fecha">Fecha</label>
                                 <div class="input-group">
                                     <input formControlName="fecha" class="form-control edicion" required type="date">
                                 </div>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group mb-2">
                                 <label for="Cliente">Cliente</label>
-                                <select formControlName="cliente" class="form-select mb-3" (change)="changeCliente($event)">
+                                <select formControlName="cliente" class="form-select" (change)="changeCliente($event)">
                                     <option value="">Elegir Cliente</option>
                                     <option *ngFor="let cliente of $clientes" [value]="cliente.idCliente">
                                       {{cliente.razonSocial}}
                                     </option>
                                 </select>
                             </div>
-                            <div class="form-group">
+                            <div *ngIf="clienteSeleccionado !== undefined && clienteSeleccionado.tarifaTipo.eventual && tEventual">
+                                <p *ngIf="clienteSeleccionado.tarifaTipo?.eventual" class="my-3 border-bottom border-top">El Cliente seleccionado solo opera bajo una tarifa eventual</p>                            
+                            </div>                            
+                            <div class="form-group mb-2">
                                 <label for="Chofer">Chofer</label>
-                                <select formControlName="chofer" class="form-select mb-3" (change)="changeChofer($event)">
+                                <select formControlName="chofer" class="form-select" (change)="changeChofer($event)">
                                     <option value="">Elegir Chofer</option>
                                     <option *ngFor="let chofer of $choferes" [value]="chofer.idChofer">
                                       {{chofer.apellido}} {{chofer.nombre}}
                                     </option>
                                 </select>
-                            </div>                      
-                            <div class="form-group">
+                            </div>              
+                            <div *ngIf="choferSeleccionado !== undefined  && choferSeleccionado.tarifaTipo.eventual && tEventual">
+                                <p *ngIf="choferSeleccionado.tarifaTipo?.eventual" class="my-3 border-bottom border-top">El Chofer seleccionado solo opera bajo una tarifa eventual</p>        
+                            </div>  
+                            <div class="mb-2" [ngClass]="{'invisible': !vehiculosChofer}">                                
+                                <p class="my-3 border-top border-bottom">El chofer tiene varios vehiculos cargados. Seleccione el que corresponda para esta operación.</p>                        
+                                <form [formGroup]="formVehiculosChofer">
+                                    <ng-container *ngIf="choferSeleccionado !== undefined && choferSeleccionado.vehiculo.length > 1">
+                                        <div class="form-group">
+                                            <label for="Vehiculo Chofer">Vehiculo</label>
+                                            <select class="form-select" formControlName="patente" (change)="changeVehiculo($event)">
+                                                <option value="">Elegir Vehiculo</option>
+                                                <option *ngFor="let vehiculo of choferSeleccionado.vehiculo" [value]="vehiculo.dominio">
+                                                {{vehiculo.categoria.nombre}}: {{vehiculo.dominio}}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </ng-container>
+                                </form>
+                            </div>                          
+                            <div [ngClass]="{'invisible': ocultarSelecEventual}" class="form-group mb-2 mt-2">
                                 <label for="TarifaEventual">Tarifa Eventual</label>
-                                <select formControlName="tarifaEventual" class="form-select mb-3" aria-label="Default select example" (change)="selectTarifaEventual($event)">
+                                <select formControlName="tarifaEventual" class="form-select" aria-label="Default select example" (change)="selectTarifaEventual($event)">
                                     <option value="">Seleccione</option>
                                     <option value="si">Si</option>
                                     <option value="no">No</option>
                                 </select>
                             </div>
-                            <div *ngIf="!tarifaEventual" class="form-group mt-2">
-                                <label for="Acompaniante">Acompañante</label>
-                                <select formControlName="acompaniante" class="form-select mb-3" aria-label="Default select example" (change)="selectAcompaniante($event)">
+                            <div *ngIf="!tarifaEventual" class="form-group mb-2">
+                                <label for="Acompaniante">Acompañante</label>                                
+                                <select formControlName="acompaniante" class="form-select" aria-label="Default select example" (change)="selectAcompaniante($event)">
                                     <option value="">Seleccione</option>
-                                    <option value="si">Si</option>
-                                    <option value="no">No</option>
+                                    <option value="true">Si</option>
+                                    <option value="false">No</option>
                                 </select>
                             </div>                          
-                            <div class="form-group">
+                            <div class="form-group mb-2">
                                 <label for="Observaciones">Observaciones</label>
                                 <div class="input-group">
                                     <textarea formControlName="observaciones" class="form-control edicion"></textarea>
@@ -61,8 +83,8 @@
                             <app-btn-agregar name="Guardar" type="button" (click)="onSubmit()" [disabled]="!form.valid" ></app-btn-agregar>
                         </form>
                     </div>
-                    <div class="container" [ngClass]="{'invisible': !tarifaPersonalizada && !tarifaEventual &&!vehiculosChofer}">
-                        <div *ngIf="tarifaPersonalizada">
+                    <div class="col container" [ngClass]="{'invisible': !tPersonalizada && !tEventual && !clienteEventual && !choferEventual}">
+                        <div *ngIf="tPersonalizada">
                             <label for="TarifaEventual">Tarifa Personalizada</label>
                             <p class="m-2 border-top border-bottom">El cliente tiene una tarifa Personalizada. Seleccione la sección y la categoria correspondiente a la operación.</p>                        
                             <form [formGroup]="formTarifaPersonalizada">
@@ -85,27 +107,10 @@
                                     </select>
                                 </div>
                             </form>  
-                        </div>
-                        <div *ngIf="vehiculosChofer">
-                            <label for="TarifaEventual">Vehiculos</label>
-                            <p class="m-2 border-top border-bottom">El chofer tiene varios vehiculos cargados. Seleccione el que corresponda para esta operación.</p>                        
-                            <form [formGroup]="formVehiculosChofer">
-                                <ng-container *ngIf="choferSeleccionado !== undefined && choferSeleccionado.vehiculo.length > 1">
-                                  <div class="form-group">
-                                      <label for="Vehiculo Chofer">Vehiculo</label>
-                                      <select class="form-select mb-3" formControlName="patente" (change)="changeVehiculo($event)">
-                                        <option value="">Elegir Vehiculo</option>
-                                        <option *ngFor="let vehiculo of choferSeleccionado.vehiculo" [value]="vehiculo.dominio">
-                                          {{vehiculo.categoria.nombre}}: {{vehiculo.dominio}}
-                                        </option>
-                                      </select>
-                                  </div>
-                              </ng-container>
-                            </form>
-                        </div>
-                        <div *ngIf="tarifaEventual">                            
-                            <label for="TarifaEventual">Tarifa Eventual</label>
-                            <p class="m-2 border-top border-bottom">La tarifa eventual se aplica una unica vez a esta operación especifica.</p>                        
+                        </div>          
+                        <div [ngClass]="{'invisible': !tEventual && !clienteEventual && !choferEventual}" >                            
+                            <label for="TarifaEventual">Tarifa Eventual</label>                                                        
+                            <p class="m-2 border-top border-bottom">La tarifa eventual se aplica una unica vez a esta operación especifica.</p>   
                             <form [formGroup]="formTarifaEventual" (ngSubmit)="onSubmit()">
                               <div class="my-2">
                                 <h6 class="mt-2">Chofer:</h6>
@@ -121,7 +126,7 @@
                                       <input formControlName="choferValor" class="form-control edicion" required type="number">
                                     </div>
                                 </div>
-                                <h6 class="my-2">Cliente:</h6>
+                                <h6 class="my-2">Cliente:</h6>                                
                                 <div class="form-group">
                                     <label for="Fecha">Tarifa Eventual Concepto</label>
                                     <div class="input-group">

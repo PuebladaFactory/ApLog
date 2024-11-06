@@ -1,3 +1,17 @@
-th, td {
+input, td, th {
     font-size: 1.3rem;
-}
+  }
+
+  button{
+    border-color: #0d6efd;    
+  }
+
+  #cerrar{   
+    background-color: transparent;
+    border-color: black;
+  }
+  
+  #cerrar:hover{
+    background-color: #0d6efd;
+    color: white;
+  }

@@ -7,6 +7,7 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalTarifaGralEdicionProComponent } from '../modal-tarifa-gral-edicion-pro/modal-tarifa-gral-edicion-pro.component';
+import { Cliente } from 'src/app/interfaces/cliente';
 
 @Component({
   selector: 'app-proveedores-tarifa-gral',
@@ -34,6 +35,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     manual: false,
     automatico: true,
   }
+  $clientes!: Cliente[];
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal) {
     this.tarifaForm = this.fb.group({
@@ -87,7 +89,9 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       console.log("1) modoTarifa: ", this.modoTarifa);      
       this.manejoConsola();
     });
-    
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    });   
   }
 
   configurarTabla(){
@@ -441,9 +445,9 @@ onGenerarNuevaTarifaAutomatica() {
         cargasGenerales: cargasGenerales,
         adicionales: adicionales,
         tipo: tipo,
-        idCliente: null,
-        idChofer: null,
-        idProveedor: null, 
+        idCliente: 0,
+        idChofer: 0,
+        idProveedor: 0, 
     };
 }
 
@@ -520,6 +524,15 @@ onGenerarNuevaTarifaAutomatica() {
         (reason) => {}
       );
     }
+  }
+
+  getCliente(idCliente: number){
+    let cliente:Cliente[] = this.$clientes.filter((c:Cliente) => c.idCliente === idCliente)
+    if (cliente.length > 0){
+      return cliente[0].razonSocial;
+    } else {
+      return "Error en los datos"
+    }  
   }
 
 }

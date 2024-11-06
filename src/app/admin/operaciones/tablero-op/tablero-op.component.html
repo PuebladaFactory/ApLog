@@ -6,7 +6,7 @@
     <br>
 
 </div>
-<div [ngClass]="{'offcanvas-normal': !tarifaEventual && !tarifaPersonalizada, 'offcanvas-personalizada': tarifaPersonalizada || tarifaEventual || vehiculosChofer, 'offcanvas-alta': tarifaEventual && vehiculosChofer}" class="offcanvas offcanvas-end border border-2 rounded-end rounded-5" data-bs-scroll="true" tabindex="-1" id="offcanvasAlta" aria-labelledby="offcanvasRightLabel">
+<div [ngClass]="{'offcanvas-normal': !tarifaEventual && !tarifaPersonalizada, 'offcanvas-personalizada': tarifaPersonalizada || tarifaEventual, 'offcanvas-alta': vehiculosChofer}" class="offcanvas offcanvas-end border border-2 rounded-end rounded-5" data-bs-scroll="true" tabindex="-1" id="offcanvasAlta" aria-labelledby="offcanvasRightLabel">
     <div class="offcanvas-body">
         <button type="button" class="btn-close float-end"  id="cerrar" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         <app-op-alta></app-op-alta>
@@ -36,7 +36,7 @@
                 </div>
             </div>                    
             <div class="col-4">
-                <app-tablero-calendario></app-tablero-calendario>
+                <app-tablero-calendario [modo]="modo"></app-tablero-calendario>
             </div>
             <div class="col-4 m-0 p-0 d-flex flex-column justify-content-end">
                 <div class="">

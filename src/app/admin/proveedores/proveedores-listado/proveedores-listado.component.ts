@@ -223,7 +223,7 @@ secondFilter = '';
   mostrarVehiculos(row: any){
     this.seleccionarProveedor(row)    
     this.choferesProveedor = this.$choferes.filter((chofer:Chofer)=>{
-      return chofer.proveedor === this.proveedorEditar.razonSocial
+      return chofer.idProveedor === this.proveedorEditar.idProveedor
     })
   
   }

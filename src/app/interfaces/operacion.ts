@@ -6,25 +6,24 @@ export interface Operacion {
     id: any;
     idOperacion: number;
     fecha: Date;
-    km: number | null;    
+    km: number;    
     documentacion: string | null;
     cliente: Cliente;
     chofer: Chofer;
     observaciones: string;    
     //unidadesConFrio: boolean;
     acompaniante: boolean;    
-    facturaCliente: number | null;
-    facturaChofer: number | null;
-    tarifaEventual: boolean;
-    tEventual: TarifaEventual;
-    tarifaPersonalizada: boolean;
-    tPersonalizada: TarifaPersonalizada;
+    facturaCliente: number;
+    facturaChofer: number;
+    
+    tarifaEventual: TarifaEventual;
+    
+    tarifaPersonalizada: TarifaPersonalizada;
     patenteChofer: string;
     //facturada: boolean;
-    estado: EstadoOp;
-    aCobrar: number;
-    aPagar: number;
+    estado: EstadoOp;   
     tarifaTipo :TarifaTipo;
+    valores: Valores;
 }
 
 export interface TarifaEventual {    
@@ -51,4 +50,19 @@ export interface EstadoOp {
     abierta: boolean;
     cerrada: boolean;
     facturada: boolean;
+}
+
+export interface Valores{    
+    cliente:{
+        acompValor: number;
+        kmAdicional: number;
+        tarifaBase: number,
+        aCobrar: number;    
+    }
+    chofer: {
+        acompValor: number;
+        kmAdicional: number;
+        tarifaBase: number;
+        aPagar: number;
+    }
 }
