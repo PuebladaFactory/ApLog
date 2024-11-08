@@ -5,7 +5,7 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
-import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+import { FacturaProveedor, Valores } from 'src/app/interfaces/factura-proveedor';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
@@ -153,6 +153,13 @@ export class LiquidacionOpProveedorComponent implements OnInit {
      
           ////console.log()("ID OPERACIONES: ", this.idOperaciones);
           //this.facturaChofer.operaciones = idOperaciones;
+          let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0};
+          this.facLiqProveedor.forEach((f:FacturaOp)=>{
+            valores.totalTarifaBase += f.valores.tarifaBase;
+            valores.totalAcompaniante += f.valores.acompaniante;
+            valores.totalkmMonto += f.valores.kmMonto;
+            valores.total += f.valores.total;
+          });
     
           this.facturaProveedor = {
             id: null,
@@ -162,7 +169,7 @@ export class LiquidacionOpProveedorComponent implements OnInit {
             //razonSocial: this.facLiqCliente[0].razonSocial,
             razonSocial: this.proveedorSeleccionado.razonSocial,        
             operaciones: this.idOperaciones,
-            total: this.totalFacLiqProveedor,
+            valores: valores,
             cobrado:false,
             montoFacturaCliente: this.totalFacLiqCliente
           }

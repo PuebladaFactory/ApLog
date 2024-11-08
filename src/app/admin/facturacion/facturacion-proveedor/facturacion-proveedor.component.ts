@@ -28,7 +28,7 @@ export class FacturacionProveedorComponent implements OnInit, AfterViewInit {
   $facturaOpProveedor: FacturaOpProveedor[] = []; 
   facturasPorProveedor: Map<number, FacturaProveedor[]> = new Map<number, FacturaProveedor[]>();
   operacionFac: FacturaOpProveedor[] = [];
-
+  rows: any[] = [];
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
   totalSumaACobrar: number = 0;
@@ -65,7 +65,7 @@ export class FacturacionProveedorComponent implements OnInit, AfterViewInit {
 
   procesarDatosParaTabla() {
     const proveedoresMap = new Map<number, any>();
-    //console.log()(this.$facturasProveedor);
+    ////console.log()(this.$facturasProveedor);
     
     if(this.$facturasProveedor !== null){
       this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
@@ -93,18 +93,18 @@ export class FacturacionProveedorComponent implements OnInit, AfterViewInit {
         const proveedor = proveedoresMap.get(factura.idProveedor);
         //cliente.sumaACobrar++;
         if (factura.cobrado) {
-          proveedor.sumaAPagar += Number(factura.total);
+          proveedor.sumaAPagar += Number(factura.valores.total);
         } else {
-          proveedor.sumaAPagar += Number(factura.total);
-          proveedor.faltaPagar += Number(factura.total);
+          proveedor.sumaAPagar += Number(factura.valores.total);
+          proveedor.faltaPagar += Number(factura.valores.total);
         }
-        proveedor.total += factura.total;  
+        proveedor.total += factura.valores.total;  
         proveedor.sumaACobrar += Number(factura.montoFacturaCliente);      
         proveedor.cant += Number(factura.operaciones.length);      
       });
   
       this.datosTablaProveedor = Array.from(proveedoresMap.values());
-      //console.log()("Datos para la tabla: ", this.datosTablaProveedor); 
+      ////console.log()("Datos para la tabla: ", this.datosTablaProveedor); 
       this.datosTablaProveedor.forEach(proveedor => {
         this.totalCant += proveedor.cant;
         this.totalSumaAPagar += proveedor.sumaAPagar;
@@ -120,9 +120,31 @@ export class FacturacionProveedorComponent implements OnInit, AfterViewInit {
         this.totalPorcentajeGanancia = 0;
       }
     }
+
+    this.armarTabla()
+
     setTimeout(() => {
       this.syncColumnWidths();
     });
+  }
+
+  armarTabla(){
+    //console.log("PRIMERO) datosTablaCliente: ",this.datosTablaProveedor);
+    this.rows = this.datosTablaProveedor.map((c) => ({
+      idProveedor: c.idProveedor,
+      proveedor: c.proveedor,
+      cant: c.cant,
+      sumaAPagar:`$ ${this.formatearValor(c.sumaAPagar)}`,
+      sumaACobrar: `$ ${this.formatearValor(c.sumaACobrar)}`,
+      ganancia: `$ ${this.formatearValor (c.sumaACobrar - c.sumaAPagar)}`,
+      porcentaje: `${this.formatearValor(100-((c.sumaAPagar*100)/c.sumaACobrar))} %`,
+      faltaPagar: `$ ${this.formatearValor(c.faltaPagar)}`,
+  
+    }));
+    //console.log("DESP) rows: ",this.rows);
+    this.datosTablaProveedor = this.rows
+    //console.log("ULTIMO) datosTablaCliente: ",this.datosTablaProveedor);
+    
   }
 
   syncColumnWidths = () => {
@@ -147,6 +169,33 @@ export class FacturacionProveedorComponent implements OnInit, AfterViewInit {
       });
     }
   };
+
+  formatearValor(valor: any) : any{     
+    valor = Number(valor)
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    }).format(valor);   
+    //////console.log(nuevoValor);    
+    return nuevoValor
+   
+  
+ }
+
+ limpiarValorFormateado(valorFormateado: any): number {
+  if (typeof valorFormateado === 'string') {
+    // Si es un string, eliminar puntos de miles y reemplazar coma por punto
+    return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+  } else if (typeof valorFormateado === 'number') {
+    // Si ya es un número, simplemente devuélvelo
+    return valorFormateado;
+  } else {
+    // Si es null o undefined, devolver 0 como fallback
+    return 0;
+  }
+}
+
+
   mostrarMasDatos(index: number, proveedor:any) {   
 
    if (this.datosTablaProveedor && this.datosTablaProveedor[index]) {
@@ -154,8 +203,8 @@ export class FacturacionProveedorComponent implements OnInit, AfterViewInit {
     const proveedorId = this.datosTablaProveedor[index].idProveedor;
     const facturasProveedor = this.$facturasProveedor.filter((factura: any) => factura.idProveedor === proveedorId);
     this.facturasPorProveedor.set(proveedorId, facturasProveedor);        
-    //console.log("1) facturasCliente: ", facturasCliente);
-    //console.log("2) facturas por cliente: ", this.facturasPorCliente);
+    //console.log("1) facturasProveedor: ", facturasProveedor);
+    //console.log("2) facturas por proveedor: ", this.facturasPorProveedor);
     this.openModal(facturasProveedor, index)  
     
   } else {
@@ -187,12 +236,12 @@ openModal(factura: any, index: number): void {
       modo: "proveedores",
       item: factura,
     }; 
-    //console.log()(info);
+    ////console.log()(info);
     
     modalRef.componentInstance.fromParent = info;
     modalRef.result.then(
       (result) => {
-        ////console.log()("ROOWW:" ,row);
+        //////console.log()("ROOWW:" ,row);
         
 //        this.selectCrudOp(result.op, result.item);
      

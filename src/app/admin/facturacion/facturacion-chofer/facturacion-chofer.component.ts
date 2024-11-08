@@ -28,7 +28,7 @@ export class FacturacionChoferComponent implements OnInit, AfterViewInit {
   $facturaOpChofer: FacturaOpChofer[] = [];
   facturasPorChofer: Map<number, FacturaChofer[]> = new Map<number, FacturaChofer[]>();
   operacionFac: FacturaOpChofer[] = [];
-
+  rows: any[] = [];
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
   totalSumaACobrar: number = 0;
@@ -92,12 +92,12 @@ export class FacturacionChoferComponent implements OnInit, AfterViewInit {
         const chofer = choferesMap.get(factura.idChofer);
         //cliente.sumaACobrar++;
         if (factura.cobrado) {
-          chofer.sumaAPagar += Number(factura.total);
+          chofer.sumaAPagar += Number(factura.valores.total);
         } else {
-          chofer.sumaAPagar += Number(factura.total);
-          chofer.faltaPagar += Number(factura.total);
+          chofer.sumaAPagar += Number(factura.valores.total);
+          chofer.faltaPagar += Number(factura.valores.total);
         }
-        chofer.total += Number(factura.total);
+        chofer.total += Number(factura.valores.total);
         chofer.sumaACobrar += Number(factura.montoFacturaCliente);  
         chofer.cant += Number(factura.operaciones.length);      
       });
@@ -120,10 +120,31 @@ export class FacturacionChoferComponent implements OnInit, AfterViewInit {
         this.totalPorcentajeGanancia = 0;
       }
     }    
+
+    this.armarTabla();
     
     setTimeout(() => {
       this.syncColumnWidths();
     });
+  }
+
+  armarTabla(){
+    console.log("PRIMERO) datosTablaCliente: ",this.datosTablaChofer);
+    this.rows = this.datosTablaChofer.map((c) => ({
+      idChofer: c.idChofer,
+      chofer: c.chofer,
+      cant: c.cant,
+      sumaAPagar:`$ ${this.formatearValor(c.sumaAPagar)}`,
+      sumaACobrar: `$ ${this.formatearValor(c.sumaACobrar)}`,
+      ganancia: `$ ${this.formatearValor (c.sumaACobrar - c.sumaAPagar)}`,
+      porcentaje: `${this.formatearValor(100-((c.sumaAPagar*100)/c.sumaACobrar))} %`,
+      faltaPagar: `$ ${this.formatearValor(c.faltaPagar)}`,
+  
+    }));
+    console.log("DESP) rows: ",this.rows);
+    this.datosTablaChofer = this.rows
+    console.log("ULTIMO) datosTablaCliente: ",this.datosTablaChofer);
+    
   }
 
   syncColumnWidths = () => {
@@ -149,7 +170,32 @@ export class FacturacionChoferComponent implements OnInit, AfterViewInit {
     }
   };
 
-  mostrarMasDatos(index: number, cliente:any) {   
+  formatearValor(valor: any) : any{     
+    valor = Number(valor)
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    }).format(valor);   
+    ////console.log(nuevoValor);    
+    return nuevoValor
+   
+  
+ }
+
+ limpiarValorFormateado(valorFormateado: any): number {
+  if (typeof valorFormateado === 'string') {
+    // Si es un string, eliminar puntos de miles y reemplazar coma por punto
+    return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+  } else if (typeof valorFormateado === 'number') {
+    // Si ya es un número, simplemente devuélvelo
+    return valorFormateado;
+  } else {
+    // Si es null o undefined, devolver 0 como fallback
+    return 0;
+  }
+}
+
+  mostrarMasDatos(index: number, chofer:any) {   
  
    if (this.datosTablaChofer && this.datosTablaChofer[index]) {
     this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];

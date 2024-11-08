@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { CategoriaTarifa, Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -147,8 +147,28 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
    return nuevoValor
  }
 
+  // Función que convierte un string formateado en un número correcto para cálculos
+  limpiarValorFormateado(valorFormateado: any): number {
+    if (typeof valorFormateado === 'string') {
+      // Si es un string, eliminar puntos de miles y reemplazar coma por punto
+      return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+    } else if (typeof valorFormateado === 'number') {
+      // Si ya es un número, simplemente devuélvelo
+      return valorFormateado;
+    } else {
+      // Si es null o undefined, devolver 0 como fallback
+      return 0;
+    }
+  }
+
 updateItem(){
-  //console.log("TARIFA EDITADA", this.$ultimaTarifa);
+  this.$ultimaTarifa.secciones.forEach((seccion:Seccion)=>{
+    seccion.categorias.forEach((categoria:CategoriaTarifa)=>{
+      categoria.aCobrar = this.limpiarValorFormateado(categoria.aCobrar);
+      categoria.aPagar = this.limpiarValorFormateado(categoria.aPagar);
+    })
+  })
+  console.log("TARIFA EDITADA", this.$ultimaTarifa);
   this.storageService.updateItem(this.componente, this.$ultimaTarifa);   
 }
 

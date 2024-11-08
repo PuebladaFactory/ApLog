@@ -9,8 +9,8 @@
     { prop: 'cant', name: 'Cant Op'},
     { prop: 'sumaAPagar', name: 'Suma a Pagar' },
     { prop: 'sumaACobrar', name: 'Suma a Cobrar' },
-    { name: 'Ganancia', cellTemplate: gananciaTpl },
-    { name: '% Ganancia', cellTemplate: porcentajeGananciaTpl },
+    { prop: 'ganancia', name: 'Ganancia Neta'},
+    { prop: 'porcentaje', name: '% Ganancia'},
     { prop: 'faltaCobrar', name: 'Falta Cobrar' },
     { name: 'Acciones', cellTemplate: accionesTpl }
   ]"
@@ -24,21 +24,13 @@
 <div class="totales-row">
     <div class="totales-cell" id="total-razon-social">Totales</div>
     <div class="totales-cell" id="total-cant">{{ totalCant }}</div>
-    <div class="totales-cell" id="total-suma-a-pagar">{{ totalSumaAPagar }}</div>
-    <div class="totales-cell" id="total-suma-a-cobrar">{{ totalSumaACobrar }}</div>
-    <div class="totales-cell" id="total-ganancia">{{ totalGanancia }}</div>
-    <div class="totales-cell" id="total-porcentaje-ganancia">{{ (totalPorcentajeGanancia).toFixed(2) }}%</div>
-    <div class="totales-cell" id="total-falta-cobrar">{{totalFaltaCobrar}}</div>
+    <div class="totales-cell" id="total-suma-a-pagar">$ {{formatearValor(totalSumaAPagar)}}</div>
+    <div class="totales-cell" id="total-suma-a-cobrar">$ {{formatearValor(totalSumaACobrar)}}</div>
+    <div class="totales-cell" id="total-ganancia">$ {{formatearValor(totalGanancia)}}</div>
+    <div class="totales-cell" id="total-porcentaje-ganancia">{{formatearValor((totalPorcentajeGanancia))}} %</div>
+    <div class="totales-cell" id="total-falta-cobrar">$ {{formatearValor(totalFaltaCobrar)}}</div>
     <div class="totales-cell" id="total-acciones"></div>
 </div>
-
-<ng-template #gananciaTpl let-row="row">
-  {{ row.sumaACobrar - row.sumaAPagar }}
-</ng-template>
-
-<ng-template #porcentajeGananciaTpl let-row="row">
-  {{ ((row.sumaACobrar - row.sumaAPagar) * 100 / row.sumaACobrar).toFixed(2) }}%
-</ng-template>
 
 <ng-template #accionesTpl let-row="row" let-rowIndex="rowIndex">  
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(rowIndex, row)">   

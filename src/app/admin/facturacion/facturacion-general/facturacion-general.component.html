@@ -1,7 +1,7 @@
 
   <h1 class="mt-3">Facturación</h1>
-  <div class="d-flex justify-content-between m-0 mt-3">
-    <div class="border border-rounded rounded-4" style="background-color: #bbb9b9; width: 500px;">
+  <div class="row">
+    <div class=" col-4 border border-rounded rounded-4" style="background-color: #002b5c; color: white; width: 500px; opacity: 0.8;">
       <div class="m-5">
           <div class="d-flex justify-content-between">
             <h2>Resumen</h2>
@@ -20,34 +20,36 @@
           
           <div class="mt-3" [ngClass]="{'blur-large': !resumenVisible}">
               <div class="row">
-                  <div class="col-4">
-                      <p>Ingreso Total Op:</p>
-                      <p>Pago Total Op:</p>
+                  <div class="col-6 text-center">
+                      <p class="mb-0">Ingreso Total Op:</p>
+                      <p class="">$ {{formatearValor(totalIngresosOp)}}</p>
+                     
                   </div>
-                  <div class="col">
-                      <p class="text-end">${{totalIngresosOp}}</p>
-                      <p class="text-end">${{totalPagosOp}}</p>
+                  <div class="col-6 text-center">
+                      <p class="mb-0">Pago Total Op:</p>
+                      <p class="">$ {{formatearValor(totalPagosOp)}}</p>
                   </div>
-              
-              
-                  <div class="col-3">
-                      <P>Falta Cobrar:</P>  
-                      <P>Falta Pagar:</P>                
+              </div>       
+              <div class="row mt-2">
+                  <div class="col-6 text-center">
+                      <P class="mb-0">Falta Cobrar:</P>  
+                      <P class="">$ {{formatearValor(totalFaltaCobrar)}}</P> 
+                           
                   </div>
-                  <div class="col">
-                      <P class="text-end">${{totalFaltaCobrar}}</P>  
-                      <P class="text-end">${{totalFaltaPagar}}</P>                  
+                  <div class="col-6 text-center">
+                      <P class="mb-0">Falta Pagar:</P>           
+                      <P class="">$ {{formatearValor(totalFaltaPagar)}}</P>                  
                   </div>
-              </div>        
+              </div>   
           </div>        
       </div>  
     </div>
-    <div>
-      <!-- <app-facturacion-consulta  [componenteConsulta]="componenteConsulta" (newItemEvent)="getMsg($event)" [fechasConsulta]="fechasConsulta" ></app-facturacion-consulta> -->
+    <!-- <div>
+     
       <button   data-bs-target="#consultaModal" data-bs-toggle="modal" id="bt" class="btn btn-outline-secondary ">
         Consultar Operaciones
       </button>
-    <!-- MODAL CONSULTA OPERACION -->
+    
       <div class="modal fade modal-sm" id="consultaModal" tabindex="-1" aria-labelledby="consultaModal" aria-hidden="true">
           <div class="modal-dialog">
               <div class="modal-content">
@@ -60,10 +62,15 @@
               </div>
           </div>
       </div>     
+    </div> -->
+    <div class="col-4 d-flex align-items-end justify-content-center">
+      <app-tablero-calendario></app-tablero-calendario>
     </div>
+    <div class="col-4"></div>
+    
   </div>
   
-  <h3 class="mt-5">Periodo: {{fechasConsulta.fechaDesde}} / {{fechasConsulta.fechaHasta}}</h3> 
+  <h3 class="mt-5">Detalle:</h3> 
   <div class="mt-4">       
     
     <app-facturacion-cliente></app-facturacion-cliente>

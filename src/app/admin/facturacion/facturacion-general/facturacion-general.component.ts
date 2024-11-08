@@ -69,9 +69,9 @@ export class FacturacionGeneralComponent implements OnInit {
 
     if(this.$facturasCliente !== null){
       this.$facturasCliente.forEach((factura: FacturaCliente) => {
-        this.totalIngresosOp += Number(factura.total);
+        this.totalIngresosOp += Number(factura.valores.total);
         if(!factura.cobrado){
-          this.totalFaltaCobrar += Number(factura.total);        
+          this.totalFaltaCobrar += Number(factura.valores.total);        
         }        
       })      
     }       
@@ -83,21 +83,44 @@ export class FacturacionGeneralComponent implements OnInit {
 
     if(this.$facturasChofer !== null){
       this.$facturasChofer.forEach((factura: FacturaChofer) => {
-        this.totalPagosOp += Number(factura.total);
+        this.totalPagosOp += Number(factura.valores.total);
         if(!factura.cobrado){
-          this.totalFaltaPagar += Number(factura.total);        
+          this.totalFaltaPagar += Number(factura.valores.total);        
         }        
       });      
     }
     if(this.$facturasProveedor !== null){
       this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
-        this.totalPagosOp += Number(factura.total);
+        this.totalPagosOp += Number(factura.valores.total);
         if(!factura.cobrado){
-          this.totalFaltaPagar += Number(factura.total);        
+          this.totalFaltaPagar += Number(factura.valores.total);        
         }        
       });      
     }    
 
+  }
+
+  formatearValor(valor: number) : any{
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+     minimumFractionDigits: 2, 
+     maximumFractionDigits: 2 
+   }).format(valor);
+   ////////////console.log(nuevoValor);    
+   return nuevoValor
+ }
+
+   // Función que convierte un string formateado en un número correcto para cálculos
+   limpiarValorFormateado(valorFormateado: any): number {
+    if (typeof valorFormateado === 'string') {
+      // Si es un string, eliminar puntos de miles y reemplazar coma por punto
+      return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+    } else if (typeof valorFormateado === 'number') {
+      // Si ya es un número, simplemente devuélvelo
+      return valorFormateado;
+    } else {
+      // Si es null o undefined, devolver 0 como fallback
+      return 0;
+    }
   }
 
   getMsg(msg: any) {

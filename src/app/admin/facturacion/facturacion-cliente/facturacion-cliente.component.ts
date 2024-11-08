@@ -5,6 +5,7 @@ import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
+import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 
 @Component({
   selector: 'app-facturacion-cliente',
@@ -28,13 +29,41 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
   $facturasCliente: any;
   $facturaOpCliente: any;
   operacionFac: any[] = [];
-
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
   totalSumaACobrar: number = 0;
   totalGanancia: number = 0;
   totalPorcentajeGanancia: number = 0;
   totalFaltaCobrar: number = 0;
+  //////////////////////////////TABLA/////////////////////////////////////////////////////////
+  rows: any[] = [];
+  filteredRows: any[] = [];
+  paginatedRows: any[] = [];
+  allColumns = [
+  //    { prop: '', name: '', selected: true, flexGrow:1  },
+   { prop: 'razonSocial', name: 'Razon Social', selected: true },
+    { prop: 'cant', name: 'Cant Op', selected: true},
+    { prop: 'sumaAPagar', name: 'Suma a Pagar', selected: true },
+    { prop: 'sumaACobrar', name: 'Suma a Cobrar', selected: true },
+    { prop: 'ganancia', name: 'Ganancia', selected: true},
+    { prop: 'porcentaje', name: '% Ganancia', selected: true},
+    { prop: 'faltaCobrar', name: 'Falta Cobrar', selected: true },   
+  
+    
+  ];
+  visibleColumns = this.allColumns.filter(column => column.selected);
+  selected = [];
+  count = 0;
+  limit = 20;
+  offset = 0;
+  sortType = SortType.multi; // Aquí usamos la enumeración SortType
+  selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
+  ColumnMode = ColumnMode;    
+  ajustes: boolean = false;
+  firstFilter = '';
+  secondFilter = '';
+
+//////////////////////////////////////////////////////////////////////////////////////////
   
 
     constructor(
@@ -89,7 +118,7 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
             });
           }
           const cliente = clientesMap.get(factura.idCliente);
-          const totalFactura = Number(factura.total);
+          const totalFactura = Number(factura.valores.total);
           const montoFacturaChofer = Number(factura.montoFacturaChofer);
     
           if (factura.cobrado) {
@@ -122,9 +151,31 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
         }
       }
 
+      this.armarTabla();
+
       setTimeout(() => {
         this.syncColumnWidths();
       });
+
+    }
+
+    armarTabla(){
+      //console.log("PRIMERO) datosTablaCliente: ",this.datosTablaCliente);
+      this.rows = this.datosTablaCliente.map((c) => ({
+        idCliente: c.idCliente,
+        razonSocial: c.razonSocial,
+        cant: c.cant,
+        sumaAPagar:`$ ${this.formatearValor(c.sumaAPagar)}`,
+        sumaACobrar: `$ ${this.formatearValor(c.sumaACobrar)}`,
+        ganancia: `$ ${this.formatearValor (c.sumaACobrar - c.sumaAPagar)}`,
+        porcentaje: `${this.formatearValor(100-((c.sumaAPagar*100)/c.sumaACobrar))} %`,
+        faltaCobrar: `$ ${this.formatearValor(c.faltaCobrar)}`,
+    
+      }));
+      
+      this.datosTablaCliente = this.rows
+      //console.log("DESP) datosTablaCliente: ",this.datosTablaCliente);
+      
     }
 
     syncColumnWidths = () => {
@@ -149,8 +200,35 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
         });
       }
     };
+
+    formatearValor(valor: any) : any{     
+      valor = Number(valor)
+      let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+      }).format(valor);   
+      ////console.log(nuevoValor);    
+      return nuevoValor
+     
+    
+   }
+
+   limpiarValorFormateado(valorFormateado: any): number {
+    if (typeof valorFormateado === 'string') {
+      // Si es un string, eliminar puntos de miles y reemplazar coma por punto
+      return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+    } else if (typeof valorFormateado === 'number') {
+      // Si ya es un número, simplemente devuélvelo
+      return valorFormateado;
+    } else {
+      // Si es null o undefined, devolver 0 como fallback
+      return 0;
+    }
+  }
   
     mostrarMasDatos(index: number, cliente: any) {
+      //console.log("index: ", index, " cliente: ", cliente);
+      
       if (this.datosTablaCliente && this.datosTablaCliente[index]) {
         this.mostrarTablaCliente[index] = !this.mostrarTablaCliente[index];
         const clienteId = this.datosTablaCliente[index].idCliente;
@@ -185,12 +263,12 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
           modo: "clientes",
           item: factura,
         }; 
-        //console.log()(info);
+        ////console.log()(info);
         
         modalRef.componentInstance.fromParent = info;
         modalRef.result.then(
           (result) => {
-            ////console.log()("ROOWW:" ,row);
+            //////console.log()("ROOWW:" ,row);
             
   //        this.selectCrudOp(result.op, result.item);
          
