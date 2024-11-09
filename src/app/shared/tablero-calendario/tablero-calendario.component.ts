@@ -36,6 +36,7 @@ export class TableroCalendarioComponent implements OnInit {
 	hoveredDate: NgbDate | null = null;
 	fromDate: NgbDate = this.calendar.getToday();
 	toDate: NgbDate | null = this.calendar.getNext(this.fromDate, 'd', 10);
+  anual:boolean = false
 
   constructor(private storageService: StorageService){
 
@@ -49,6 +50,11 @@ export class TableroCalendarioComponent implements OnInit {
     }
     if(this.modo === "liquidaciones"){
       this.calcularMesActual();
+    }
+
+    if(this.modo === "facturacion"){
+      this.anual = true
+      this.calcularAnioActual();
     }
     
   }
@@ -385,4 +391,27 @@ export class TableroCalendarioComponent implements OnInit {
 			this.isHovered(date)
 		);
 	}
+
+  calcularSemestreActual() {
+    const now = new Date();
+    const semestreInicio = Math.floor(now.getMonth() / 6) * 6; // 0 para primer semestre (ene-jun) y 6 para segundo semestre (jul-dic)
+    const firstDay = new Date(now.getFullYear(), semestreInicio, 1);
+    const lastDay = new Date(now.getFullYear(), semestreInicio + 6, 0); // 0 da el último día del mes anterior, en este caso el último del semestre
+    
+    this.fechasConsulta.fechaDesde = firstDay.toISOString().split('T')[0];
+    this.fechasConsulta.fechaHasta = lastDay.toISOString().split('T')[0];
+    this.formatoSeleccionado = 'Semestre';
+    this.actualizarFechasString();
+  }
+  
+  calcularAnioActual() {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), 0, 1); // 1 de enero del año actual
+    const lastDay = new Date(now.getFullYear(), 11, 31); // 31 de diciembre del año actual
+    
+    this.fechasConsulta.fechaDesde = firstDay.toISOString().split('T')[0];
+    this.fechasConsulta.fechaHasta = lastDay.toISOString().split('T')[0];
+    this.formatoSeleccionado = 'Año';
+    this.actualizarFechasString();
+  }
 }

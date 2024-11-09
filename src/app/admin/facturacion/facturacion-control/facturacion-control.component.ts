@@ -33,11 +33,11 @@ export class FacturacionControlComponent implements OnInit {
     if (tab === 'tab1') {
       this.router.navigate(['facturacion/gral']);
     } else if (tab === 'tab2') {
-      this.router.navigate(['facturacion/cliente']);
+      this.router.navigate(['facturacion/clientes']);
     } else if (tab === 'tab3') {
-      this.router.navigate(['facturacion/chofer']);
+      this.router.navigate(['facturacion/choferes']);
     } else if (tab === 'tab4') {
-      this.router.navigate(['facturacion/proveedor']);
+      this.router.navigate(['facturacion/proveedores']);
     } 
   }
 

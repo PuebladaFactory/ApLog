@@ -1,43 +1,103 @@
 
 
-    <h2 class="mt-3">Choferes</h2>   
-    <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer, cliente o número de operación">
+<h2 class="mt-3">Choferes</h2>   
+<input type="text" placeholder="Buscar chofer..." [(ngModel)]="filtroBusqueda" (input)="filtrarTabla()" class="form-control mb-2" />
+<table class="table table-light table-striped table-bordered">
+    <thead>
+        <th (click)="ordenar('chofer')" style="cursor: pointer; width: 19%">
+            Chofer 
+            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up bg-transparent" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/>
+            </svg>
+            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down bg-transparent" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
+            </svg>
+        </th>
+        <th (click)="ordenar('cant')" style="cursor: pointer; width: 6%">
+            Cant Op 
+            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up bg-transparent" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/>
+            </svg>
+            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down bg-transparent" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
+            </svg>
+        </th>
+        <th (click)="ordenar('sumaACobrar')" style="cursor: pointer; width: 15%">
+            Suma a Cobrar 
+            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up bg-transparent" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/>
+            </svg>
+            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down bg-transparent" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
+            </svg>
+        </th>
+        <th (click)="ordenar('sumaAPagar')" style="cursor: pointer; width: 15%">
+            Suma a Pagar 
+            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up bg-transparent" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/>
+            </svg>
+            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down bg-transparent" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
+            </svg>
+        </th>
+        <th (click)="ordenar('neta')" style="cursor: pointer; width: 15%">
+            Ganancia Neta
+            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up bg-transparent" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/>
+            </svg>
+            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down bg-transparent" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
+            </svg>
+        </th>
+        <th (click)="ordenar('porcentaje')" style="cursor: pointer; width: 9%">
+          % Ganancia
+          <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up bg-transparent" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/>
+          </svg>
+          <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down bg-transparent" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
+          </svg>
+        </th>
+        <th (click)="ordenar('faltaPagar')" style="cursor: pointer; width: 15%">
+          Falta Cobrar 
+          <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up bg-transparent" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/>
+          </svg>
+          <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-down bg-transparent" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
+          </svg>
+        </th>
+        <th style="width: 6%" class="text-center">Acciones</th>
+    </thead>
+    <tbody>
+        <tr *ngFor="let chofer of datosFiltrados; let i = index">
+            <td>{{chofer.chofer}}</td>
+            <td class="text-center">{{chofer.cant}}</td>
+            <td>$ {{formatearValor(chofer.sumaACobrar)}}</td>
+            <td class="table-danger">$ {{formatearValor(chofer.sumaAPagar)}}</td>        
+            <td>$ {{formatearValor(chofer.neta)}}</td>
+            <td>{{formatearValor(chofer.porcentaje)}} %</td>
+            <td class="table-warning">$ {{formatearValor(chofer.faltaPagar)}}</td>
+            <td class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, chofer)">   
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>   
+                </svg>
+            </td>
+        </tr>
+    </tbody>
+    <tfoot class="table-group-divider">
+        <tr>
+            <th>Total</th>
+            <th class="text-center">{{ totalCant }}</th>
+            <th>$ {{formatearValor(totalSumaACobrar)}}</th>
+            <th class="table-danger">$ {{formatearValor(totalSumaAPagar)}}</th>            
+            <th>$ {{formatearValor(totalGanancia)}}</th>
+            <th>{{formatearValor((totalPorcentajeGanancia))}} %</th>
+            <th class="table-warning">$ {{formatearValor(totalFaltaPagar)}}</th>
+            <th></th>
+        </tr>
+    </tfoot>
+</table>
 
-<ngx-datatable
-  class="dark"
-  [rows]="datosTablaChofer | filter: searchText"
-  [columns]="[
-    { prop: 'chofer', name: 'Chofer' },
-    { prop: 'cant', name: 'Cant Op' },
-    { prop: 'sumaAPagar', name: 'Suma a Pagar' },
-    { prop: 'sumaACobrar', name: 'Suma a Cobrar' },
-    { prop: 'ganancia', name: 'Ganancia Neta'},
-    { prop: 'porcentaje', name: '% Ganancia'},
-    { prop: 'faltaPagar', name: 'Falta Pagar' },
-    { name: 'Acciones', cellTemplate: accionesTpl }
-  ]"
-  [columnMode]="'force'"
-  [headerHeight]="40"
-  
-  [rowHeight]="'auto'">
-</ngx-datatable>
-
-<div class="totales-row">
-    <div class="totales-cell" id="total-razon-social">Totales</div>
-    <div class="totales-cell" id="total-cant">{{ totalCant }}</div>
-    <div class="totales-cell" id="total-suma-a-pagar">$ {{formatearValor(totalSumaAPagar)}}</div>
-    <div class="totales-cell" id="total-suma-a-cobrar">$ {{formatearValor(totalSumaACobrar)}}</div>
-    <div class="totales-cell" id="total-ganancia">$ {{formatearValor(totalGanancia)}}</div>
-    <div class="totales-cell" id="total-porcentaje-ganancia">{{formatearValor(totalPorcentajeGanancia)}} %</div>
-    <div class="totales-cell" id="total-falta-cobrar">$ {{formatearValor(totalFaltaCobrar)}}</div>
-    <div class="totales-cell" id="total-acciones"></div>
-</div>
-
-
-<ng-template #accionesTpl let-row="row" let-rowIndex="rowIndex">  
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(rowIndex, row)">   
-        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>   
-    </svg>
-</ng-template>
 

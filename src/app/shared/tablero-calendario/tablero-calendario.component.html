@@ -6,6 +6,8 @@
         </button>
         <ul class="dropdown-menu w-100" style="font-size: 1.25rem;">
             <li><a class="dropdown-item" (click)="establecerRangoManual()">Manual</a></li>
+            <li [ngClass]="{'invisible': !anual}"><a class="dropdown-item" (click)="calcularAnioActual()">Año</a></li>
+            <li><a class="dropdown-item" (click)="calcularSemestreActual()">Semestre</a></li>
             <li><a class="dropdown-item" (click)="calcularTrimestreActual()">Trimestre</a></li>
             <li><a class="dropdown-item" (click)="calcularMesActual()">Mes</a></li>
             <li><a class="dropdown-item" (click)="calcularQuincenaActual()">Quincena</a></li>

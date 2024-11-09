@@ -11,6 +11,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 })
 export class FacturacionGeneralComponent implements OnInit {
 
+  modo : string = "facturacion"
   componenteConsulta: string = "Liquidacion"
   fechasConsulta: any = {
     fechaDesde: 0,
@@ -35,8 +36,9 @@ export class FacturacionGeneralComponent implements OnInit {
   totalPagosOp!: number;
   totalFaltaPagar!: number;
   resumenVisible: boolean = false;
+  estadoVisible: boolean = false;
 
-  ngOnInit(): void {
+  ngOnInit(): void {    
     this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
     this.storageService.consultasFacCliente$.subscribe(data => {
       this.$facturasCliente = data; 
@@ -56,11 +58,19 @@ export class FacturacionGeneralComponent implements OnInit {
     });
 
     
-    this.fechasConsulta = {
-      fechaDesde: this.primerDia,
-      fechaHasta: this.ultimoDia,
-    };
+    this.storageService.fechasConsulta$.subscribe(data => {
+      this.fechasConsulta = data;
+      console.log("FACTURACION GRAL: fechas consulta: ",this.fechasConsulta);      
+      this.btnConsulta = true;
+      this.consultasFacturas();
+    });
    
+  }
+
+  consultasFacturas(){
+    this.storageService.getByDateValue("facturaCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacCliente");
+    this.storageService.getByDateValue("facturaChofer", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacChofer");
+    this.storageService.getByDateValue("facturaProveedor", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacProveedor");
   }
 
   calcularIngresos(){
@@ -158,6 +168,10 @@ export class FacturacionGeneralComponent implements OnInit {
   toogleResumen(){
     this.resumenVisible = !this.resumenVisible;
   }
+
+/*   toogleEstado(){
+    this.estadoVisible = !this.estadoVisible;
+  } */
 
 
 }

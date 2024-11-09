@@ -1,10 +1,7 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { LoginComponent } from 'src/app/appLogin/login/login.component';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
-import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 
@@ -13,28 +10,27 @@ import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component'
   templateUrl: './facturacion-chofer.component.html',
   styleUrls: ['./facturacion-chofer.component.scss']
 })
-export class FacturacionChoferComponent implements OnInit, AfterViewInit {
+export class FacturacionChoferComponent implements OnInit {
   
-  searchText!:string;
-  componente: string = "facturaChofer";
-  $facturasChofer: any;
-  date:any = new Date();
-  primerDiaAnio: any = new Date(this.date.getFullYear(), 0, 1).toISOString().split('T')[0];
-  ultimoDiaAnio:any = new Date(this.date.getFullYear(), 11 + 1, 0).toISOString().split('T')[0];  
+  searchText!:string;  
+  $facturasChofer!: FacturaChofer[];    
   datosTablaChofer: any[] = [];
-  mostrarTablaChofer: boolean[] = [];  
-  tituloFacChofer: string = "facturaChofer";
+  mostrarTablaChofer: boolean[] = [];    
   facturaChofer!: FacturaChofer;  
   $facturaOpChofer: FacturaOpChofer[] = [];
   facturasPorChofer: Map<number, FacturaChofer[]> = new Map<number, FacturaChofer[]>();
-  operacionFac: FacturaOpChofer[] = [];
-  rows: any[] = [];
+  operacionFac: FacturaOpChofer[] = [];  
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
   totalSumaACobrar: number = 0;
   totalGanancia: number = 0;
   totalPorcentajeGanancia: number = 0;
-  totalFaltaCobrar: number = 0;
+  totalFaltaPagar: number = 0;
+  /////////////////////////////////////////////////
+  filtroBusqueda: string = '';
+  datosFiltrados = [...this.datosTablaChofer];
+  ordenColumna: string = '';
+  ordenAscendente: boolean = true;
 
     constructor(
       private storageService: StorageService,
@@ -53,201 +49,180 @@ export class FacturacionChoferComponent implements OnInit, AfterViewInit {
       });
     }
 
-    ngAfterViewInit() {
-      this.syncColumnWidths();
-      window.addEventListener('resize', this.syncColumnWidths);
-    }
-  
-    ngOnDestroy() {
-      window.removeEventListener('resize', this.syncColumnWidths);
-    }
 
-  procesarDatosParaTabla() {
-    const choferesMap = new Map<number, any>();
-    ////console.log()(this.$facturasChofer);
-    
-    if(this.$facturasChofer !== null){
-       // Inicializar los totales a cero
-       this.totalCant = 0;
-       this.totalSumaAPagar = 0;
-       this.totalSumaACobrar = 0;
-       this.totalGanancia = 0;
-       this.totalPorcentajeGanancia = 0;
-       this.totalFaltaCobrar = 0;
-   
-       // Procesar cada factura y actualizar los datos del cliente
-      this.$facturasChofer.forEach((factura: FacturaChofer) => {
-        if (!choferesMap.has(factura.idChofer)) {
-          choferesMap.set(factura.idChofer, {
-            idChofer: factura.idChofer,            
-            chofer: factura.apellido + " " + factura.nombre,            
-            sumaAPagar: 0,
-            sumaACobrar: 0,
-            faltaPagar: 0,
-            total: 0,
-            cant: 0,
-          });
-        }
-  
-        const chofer = choferesMap.get(factura.idChofer);
-        //cliente.sumaACobrar++;
-        if (factura.cobrado) {
-          chofer.sumaAPagar += Number(factura.valores.total);
-        } else {
-          chofer.sumaAPagar += Number(factura.valores.total);
-          chofer.faltaPagar += Number(factura.valores.total);
-        }
-        chofer.total += Number(factura.valores.total);
-        chofer.sumaACobrar += Number(factura.montoFacturaCliente);  
-        chofer.cant += Number(factura.operaciones.length);      
-      });
-  
-      this.datosTablaChofer = Array.from(choferesMap.values());
-      ////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
+    procesarDatosParaTabla() {
+      const choferesMap = new Map<number, any>();
+      ////console.log()(this.$facturasChofer);
       
-      this.datosTablaChofer.forEach(chofer => {
-        this.totalCant += chofer.cant;
-        this.totalSumaAPagar += chofer.sumaAPagar;
-        this.totalSumaACobrar += chofer.sumaACobrar;
-        this.totalFaltaCobrar += chofer.faltaPagar;
-      });
-  
-      // Calcular totales de ganancia y porcentaje de ganancia
-      this.totalGanancia = this.totalSumaACobrar - this.totalSumaAPagar;
-      if (this.totalSumaACobrar > 0) {
-        this.totalPorcentajeGanancia = (this.totalGanancia * 100) / this.totalSumaACobrar;
-      } else {
+      if(this.$facturasChofer !== null){
+        // Inicializar los totales a cero
+        this.totalCant = 0;
+        this.totalSumaAPagar = 0;
+        this.totalSumaACobrar = 0;
+        this.totalGanancia = 0;
         this.totalPorcentajeGanancia = 0;
-      }
-    }    
-
-    this.armarTabla();
+        this.totalFaltaPagar = 0;
     
-    setTimeout(() => {
-      this.syncColumnWidths();
-    });
-  }
-
-  armarTabla(){
-    console.log("PRIMERO) datosTablaCliente: ",this.datosTablaChofer);
-    this.rows = this.datosTablaChofer.map((c) => ({
-      idChofer: c.idChofer,
-      chofer: c.chofer,
-      cant: c.cant,
-      sumaAPagar:`$ ${this.formatearValor(c.sumaAPagar)}`,
-      sumaACobrar: `$ ${this.formatearValor(c.sumaACobrar)}`,
-      ganancia: `$ ${this.formatearValor (c.sumaACobrar - c.sumaAPagar)}`,
-      porcentaje: `${this.formatearValor(100-((c.sumaAPagar*100)/c.sumaACobrar))} %`,
-      faltaPagar: `$ ${this.formatearValor(c.faltaPagar)}`,
-  
-    }));
-    console.log("DESP) rows: ",this.rows);
-    this.datosTablaChofer = this.rows
-    console.log("ULTIMO) datosTablaCliente: ",this.datosTablaChofer);
+        // Procesar cada factura y actualizar los datos del cliente
+        this.$facturasChofer.forEach((factura: FacturaChofer) => {
+          if (!choferesMap.has(factura.idChofer)) {
+            choferesMap.set(factura.idChofer, {
+              idChofer: factura.idChofer,            
+              chofer: factura.apellido + " " + factura.nombre,            
+              sumaAPagar: 0,
+              sumaACobrar: 0,
+              faltaPagar: 0,
+              total: 0,
+              cant: 0,
+              neta: 0,
+              porcentaje:0,
+            });
+          }
     
-  }
-
-  syncColumnWidths = () => {
-    const headerCells = document.querySelectorAll('.datatable-header-cell');
-    const totalCells = [
-      document.getElementById('total-razon-social'),
-      document.getElementById('total-cant'),
-      document.getElementById('total-suma-a-pagar'),
-      document.getElementById('total-suma-a-cobrar'),
-      document.getElementById('total-ganancia'),
-      document.getElementById('total-porcentaje-ganancia'),
-      document.getElementById('total-falta-cobrar'),
-      document.getElementById('total-acciones')
-    ];
-
-    if (headerCells.length === totalCells.length) {
-      headerCells.forEach((headerCell, index) => {
-        const headerWidth = (headerCell as HTMLElement).offsetWidth;
-        if (totalCells[index]) {
-          (totalCells[index] as HTMLElement).style.width = `${headerWidth}px`;
+          const chofer = choferesMap.get(factura.idChofer);
+          //cliente.sumaACobrar++;
+          if (factura.cobrado) {
+            chofer.sumaAPagar += Number(factura.valores.total);
+          } else {
+            chofer.sumaAPagar += Number(factura.valores.total);
+            chofer.faltaPagar += Number(factura.valores.total);
+          }
+          chofer.total += Number(factura.valores.total);
+          chofer.sumaACobrar += Number(factura.montoFacturaCliente);  
+          chofer.cant += Number(factura.operaciones.length);    
+          chofer.neta = chofer.sumaACobrar - chofer.sumaAPagar
+          chofer.porcentaje = (chofer.neta * 100) / chofer.sumaACobrar  
+        });
+    
+        this.datosTablaChofer = Array.from(choferesMap.values());
+        ////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
+        
+        this.datosTablaChofer.forEach(chofer => {
+          this.totalCant += chofer.cant;
+          this.totalSumaAPagar += chofer.sumaAPagar;
+          this.totalSumaACobrar += chofer.sumaACobrar;
+          this.totalFaltaPagar += chofer.faltaPagar;
+        });
+    
+        // Calcular totales de ganancia y porcentaje de ganancia
+        this.totalGanancia = this.totalSumaACobrar - this.totalSumaAPagar;
+        if (this.totalSumaACobrar > 0) {
+          this.totalPorcentajeGanancia = (this.totalGanancia * 100) / this.totalSumaACobrar;
+        } else {
+          this.totalPorcentajeGanancia = 0;
         }
-      });
+      }    
+      this.datosFiltrados = this.datosTablaChofer;
     }
-  };
 
-  formatearValor(valor: any) : any{     
-    valor = Number(valor)
-    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
-      minimumFractionDigits: 2, 
-      maximumFractionDigits: 2 
-    }).format(valor);   
-    ////console.log(nuevoValor);    
-    return nuevoValor
-   
   
- }
 
- limpiarValorFormateado(valorFormateado: any): number {
-  if (typeof valorFormateado === 'string') {
-    // Si es un string, eliminar puntos de miles y reemplazar coma por punto
-    return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
-  } else if (typeof valorFormateado === 'number') {
-    // Si ya es un número, simplemente devuélvelo
-    return valorFormateado;
-  } else {
-    // Si es null o undefined, devolver 0 como fallback
-    return 0;
-  }
-}
-
-  mostrarMasDatos(index: number, chofer:any) {   
- 
-   if (this.datosTablaChofer && this.datosTablaChofer[index]) {
-    this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
-    const choferId = this.datosTablaChofer[index].idChofer;
-    const facturasChofer = this.$facturasChofer.filter((factura: any) => factura.idChofer === choferId);
-    this.facturasPorChofer.set(choferId, facturasChofer);        
-    //console.log("1) facturasCliente: ", facturasCliente);
-    //console.log("2) facturas por cliente: ", this.facturasPorCliente);
-    this.openModal(facturasChofer, index)  
+    formatearValor(valor: any) : any{     
+      valor = Number(valor)
+      let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+      }).format(valor);   
+      ////console.log(nuevoValor);    
+      return nuevoValor
     
-  } else {
-    console.error('Elemento en datosTablaCliente no encontrado en el índice:', index);
-  }
-  }
+    
+    }
 
-  cerrarTabla(index: number){
-    this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
-  }
+    limpiarValorFormateado(valorFormateado: any): number {
+      if (typeof valorFormateado === 'string') {
+        // Si es un string, eliminar puntos de miles y reemplazar coma por punto
+        return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+      } else if (typeof valorFormateado === 'number') {
+        // Si ya es un número, simplemente devuélvelo
+        return valorFormateado;
+      } else {
+        // Si es null o undefined, devolver 0 como fallback
+        return 0;
+      }
+    }
 
- // Modifica la función getQuincena para que acepte una fecha como parámetro
-  getQuincena(fecha: string | Date): string {
-    const fechaObj = new Date(fecha);
-    const dia = fechaObj.getDate();
-    return dia <= 15 ? '1° quincena' : '2° quincena';
-  }
+    mostrarMasDatos(index: number, chofer:any) {   
+  
+      if (this.datosTablaChofer && this.datosTablaChofer[index]) {
+        this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
+        const choferId = this.datosTablaChofer[index].idChofer;
+        const facturasChofer = this.$facturasChofer.filter((factura: any) => factura.idChofer === choferId);
+        this.facturasPorChofer.set(choferId, facturasChofer);        
+        //console.log("1) facturasCliente: ", facturasCliente);
+        //console.log("2) facturas por cliente: ", this.facturasPorCliente);
+        this.openModal(facturasChofer, index)  
+        
+      } else {
+        console.error('Elemento en datosTablaCliente no encontrado en el índice:', index);
+      }
+    }
 
-  openModal(factura: any, index: number): void {          
-    {
-      const modalRef = this.modalService.open(ModalDetalleComponent, {
-        windowClass: 'myCustomModalClass',
-        centered: true,
-        size: 'xl', 
-        backdrop:"static" 
-      });
+    cerrarTabla(index: number){
+      this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
+    }
+ 
+    openModal(factura: any, index: number): void {          
+      {
+        const modalRef = this.modalService.open(ModalDetalleComponent, {
+          windowClass: 'myCustomModalClass',
+          centered: true,
+          size: 'xl', 
+          backdrop:"static" 
+        });
 
-     let info = {
-        modo: "choferes",
-        item: factura,
-      }; 
-      //console.log()(info);
-      
-      modalRef.componentInstance.fromParent = info;
-      modalRef.result.then(
-        (result) => {
-          ////console.log()("ROOWW:" ,row);
-          
-//        this.selectCrudOp(result.op, result.item);
-       
-        },
-        (reason) => {}
+      let info = {
+          modo: "choferes",
+          item: factura,
+        }; 
+        //console.log()(info);
+        
+        modalRef.componentInstance.fromParent = info;
+        modalRef.result.then(
+          (result) => {
+            ////console.log()("ROOWW:" ,row);
+            
+          //this.selectCrudOp(result.op, result.item);
+        
+          },
+          (reason) => {}
+        );
+      }
+    }
+
+     ////////////////////////
+    filtrarTabla(): void {
+      const filtro = this.filtroBusqueda.toLowerCase();
+      this.datosFiltrados = this.datosTablaChofer.filter(chofer =>
+        chofer.chofer.toLowerCase().includes(filtro) ||
+        chofer.cant.toString().includes(filtro) ||
+        chofer.sumaACobrar.toString().includes(filtro) ||
+        chofer.sumaAPagar.toString().includes(filtro) ||
+        chofer.faltaPagar.toString().includes(filtro) ||
+        chofer.neta.toString().includes(filtro) ||
+        chofer.porcentaje.toString().includes(filtro)
       );
     }
-  }
+
+      // Ordenar por columna
+    ordenar(columna: string): void {
+      if (this.ordenColumna === columna) {
+        this.ordenAscendente = !this.ordenAscendente;
+      } else {
+        this.ordenColumna = columna;
+        this.ordenAscendente = true;
+      }
+      this.datosFiltrados.sort((a, b) => {
+        const valorA = a[columna];
+        const valorB = b[columna];
+        if (typeof valorA === 'string') {
+          return this.ordenAscendente
+            ? valorA.localeCompare(valorB)
+            : valorB.localeCompare(valorA);
+        } else {
+          return this.ordenAscendente ? valorA - valorB : valorB - valorA;
+        }
+      });
+    }
 
 }

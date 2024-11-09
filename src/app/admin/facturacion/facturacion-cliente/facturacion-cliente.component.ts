@@ -1,33 +1,23 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
-import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
 
 @Component({
   selector: 'app-facturacion-cliente',
   templateUrl: './facturacion-cliente.component.html',
   styleUrls: ['./facturacion-cliente.component.scss']
 })
-export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
-
-  
-  //searchText!:string;
-  componente: string = "facturaCliente";
-  //$facturasCliente: any;
-  date:any = new Date();
-  primerDiaAnio: any = new Date(this.date.getFullYear(), 0, 1).toISOString().split('T')[0];
-  ultimoDiaAnio:any = new Date(this.date.getFullYear(), 11 + 1, 0).toISOString().split('T')[0]; 
+export class FacturacionClienteComponent implements OnInit {
   
   datosTablaCliente: any[] = [];
   facturasPorCliente = new Map<number, any[]>();
   mostrarTablaCliente: boolean[] = [];
   searchText: string = '';
-  $facturasCliente: any;
-  $facturaOpCliente: any;
+  $facturasCliente!: FacturaCliente[];
+  $facturaOpCliente!: FacturaOp[];
   operacionFac: any[] = [];
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
@@ -35,35 +25,11 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
   totalGanancia: number = 0;
   totalPorcentajeGanancia: number = 0;
   totalFaltaCobrar: number = 0;
-  //////////////////////////////TABLA/////////////////////////////////////////////////////////
-  rows: any[] = [];
-  filteredRows: any[] = [];
-  paginatedRows: any[] = [];
-  allColumns = [
-  //    { prop: '', name: '', selected: true, flexGrow:1  },
-   { prop: 'razonSocial', name: 'Razon Social', selected: true },
-    { prop: 'cant', name: 'Cant Op', selected: true},
-    { prop: 'sumaAPagar', name: 'Suma a Pagar', selected: true },
-    { prop: 'sumaACobrar', name: 'Suma a Cobrar', selected: true },
-    { prop: 'ganancia', name: 'Ganancia', selected: true},
-    { prop: 'porcentaje', name: '% Ganancia', selected: true},
-    { prop: 'faltaCobrar', name: 'Falta Cobrar', selected: true },   
-  
-    
-  ];
-  visibleColumns = this.allColumns.filter(column => column.selected);
-  selected = [];
-  count = 0;
-  limit = 20;
-  offset = 0;
-  sortType = SortType.multi; // Aquí usamos la enumeración SortType
-  selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
-  ColumnMode = ColumnMode;    
-  ajustes: boolean = false;
-  firstFilter = '';
-  secondFilter = '';
-
-//////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////
+  filtroBusqueda: string = '';
+  datosFiltrados = [...this.datosTablaCliente];
+  ordenColumna: string = '';
+  ordenAscendente: boolean = true;
   
 
     constructor(
@@ -80,17 +46,9 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
     
       this.storageService.consultasFacOpLiqCliente$.subscribe(data => {
         this.$facturaOpCliente = data;
-      });
+      });      
     }
 
-    ngAfterViewInit() {
-      this.syncColumnWidths();
-      window.addEventListener('resize', this.syncColumnWidths);
-    }
-  
-    ngOnDestroy() {
-      window.removeEventListener('resize', this.syncColumnWidths);
-    }
   
     procesarDatosParaTabla() {
       const clientesMap = new Map<number, any>();
@@ -114,7 +72,9 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
               sumaACobrar: 0,
               faltaCobrar: 0,
               total: 0,
-              cant: 0
+              cant: 0,
+              neta:0,
+              porcentaje:0
             });
           }
           const cliente = clientesMap.get(factura.idCliente);
@@ -130,6 +90,8 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
           cliente.total += totalFactura;
           cliente.sumaAPagar += montoFacturaChofer;
           cliente.cant += Number(factura.operaciones.length);
+          cliente.neta = cliente.sumaACobrar - cliente.sumaAPagar
+          cliente.porcentaje = (cliente.neta * 100) / cliente.sumaACobrar
         });
     
         // Convertir los datos del cliente a una lista y calcular los totales globales
@@ -150,57 +112,10 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
           this.totalPorcentajeGanancia = 0;
         }
       }
-
-      this.armarTabla();
-
-      setTimeout(() => {
-        this.syncColumnWidths();
-      });
-
+      this.datosFiltrados = this.datosTablaCliente;
     }
 
-    armarTabla(){
-      //console.log("PRIMERO) datosTablaCliente: ",this.datosTablaCliente);
-      this.rows = this.datosTablaCliente.map((c) => ({
-        idCliente: c.idCliente,
-        razonSocial: c.razonSocial,
-        cant: c.cant,
-        sumaAPagar:`$ ${this.formatearValor(c.sumaAPagar)}`,
-        sumaACobrar: `$ ${this.formatearValor(c.sumaACobrar)}`,
-        ganancia: `$ ${this.formatearValor (c.sumaACobrar - c.sumaAPagar)}`,
-        porcentaje: `${this.formatearValor(100-((c.sumaAPagar*100)/c.sumaACobrar))} %`,
-        faltaCobrar: `$ ${this.formatearValor(c.faltaCobrar)}`,
-    
-      }));
-      
-      this.datosTablaCliente = this.rows
-      //console.log("DESP) datosTablaCliente: ",this.datosTablaCliente);
-      
-    }
-
-    syncColumnWidths = () => {
-      const headerCells = document.querySelectorAll('.datatable-header-cell');
-      const totalCells = [
-        document.getElementById('total-razon-social'),
-        document.getElementById('total-cant'),
-        document.getElementById('total-suma-a-pagar'),
-        document.getElementById('total-suma-a-cobrar'),
-        document.getElementById('total-ganancia'),
-        document.getElementById('total-porcentaje-ganancia'),
-        document.getElementById('total-falta-cobrar'),
-        document.getElementById('total-acciones')
-      ];
-  
-      if (headerCells.length === totalCells.length) {
-        headerCells.forEach((headerCell, index) => {
-          const headerWidth = (headerCell as HTMLElement).offsetWidth;
-          if (totalCells[index]) {
-            (totalCells[index] as HTMLElement).style.width = `${headerWidth}px`;
-          }
-        });
-      }
-    };
-
+   
     formatearValor(valor: any) : any{     
       valor = Number(valor)
       let nuevoValor =  new Intl.NumberFormat('es-ES', { 
@@ -236,18 +151,11 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
         this.facturasPorCliente.set(clienteId, facturasCliente);        
         //console.log("1) facturasCliente: ", facturasCliente);
         //console.log("2) facturas por cliente: ", this.facturasPorCliente);
-        this.openModal(facturasCliente, index)  
-        
+        this.openModal(facturasCliente, index);          
       } else {
         console.error('Elemento en datosTablaCliente no encontrado en el índice:', index);
       }
       
-    }
-  
-    getQuincena(fecha: string | Date): string {
-      const fechaObj = new Date(fecha);
-      const dia = fechaObj.getDate();
-      return dia <= 15 ? '1° quincena' : '2° quincena';
     }
 
     openModal(factura: any, index: number): void {          
@@ -278,6 +186,40 @@ export class FacturacionClienteComponent implements OnInit, AfterViewInit   {
       }
     }
     
+    ////////////////////////
+    filtrarTabla(): void {
+      const filtro = this.filtroBusqueda.toLowerCase();
+      this.datosFiltrados = this.datosTablaCliente.filter(cliente =>
+        cliente.razonSocial.toLowerCase().includes(filtro) ||
+        cliente.cant.toString().includes(filtro) ||
+        cliente.sumaACobrar.toString().includes(filtro) ||
+        cliente.sumaAPagar.toString().includes(filtro) ||
+        cliente.faltaCobrar.toString().includes(filtro) ||
+        cliente.neta.toString().includes(filtro) ||
+        cliente.porcentaje.toString().includes(filtro)
+      );
+    }
+
+    // Ordenar por columna
+  ordenar(columna: string): void {
+    if (this.ordenColumna === columna) {
+      this.ordenAscendente = !this.ordenAscendente;
+    } else {
+      this.ordenColumna = columna;
+      this.ordenAscendente = true;
+    }
+    this.datosFiltrados.sort((a, b) => {
+      const valorA = a[columna];
+      const valorB = b[columna];
+      if (typeof valorA === 'string') {
+        return this.ordenAscendente
+          ? valorA.localeCompare(valorB)
+          : valorB.localeCompare(valorA);
+      } else {
+        return this.ordenAscendente ? valorA - valorB : valorB - valorA;
+      }
+    });
+  }
 
   
 }

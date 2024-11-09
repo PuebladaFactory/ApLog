@@ -91,7 +91,7 @@ export class ModalDetalleComponent implements OnInit {
           });
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
-          this.idFactura = this.data[0].idFacturaCliente;
+          //this.idFactura = this.data[0].idFacturaCliente;
           this.armarTabla()
           break;
       //////////////CHOFERES///////////////////////
@@ -103,7 +103,7 @@ export class ModalDetalleComponent implements OnInit {
           });
           //console.log("data: ", this.data);
           this.titulo = `${this.data[0].apellido} ${this.data[0].nombre}`
-          this.idFactura = this.data[0].idFacturaChofer;
+          //this.idFactura = this.data[0].idFacturaChofer;
           this.armarTabla()
           break;
       //////////////PROVEEDORES///////////////////////
@@ -115,7 +115,7 @@ export class ModalDetalleComponent implements OnInit {
           });
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
-          this.idFactura = this.data[0].idFacturaProveedor;
+          //this.idFactura = this.data[0].idFacturaProveedor;
           this.armarTabla()
           break;
       default:
