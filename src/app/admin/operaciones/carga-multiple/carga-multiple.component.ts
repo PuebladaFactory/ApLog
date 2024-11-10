@@ -57,7 +57,9 @@ export class CargaMultipleComponent implements OnInit {
   ngOnInit(): void {      
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
-      this.$clientesNoEventuales = this.$clientes.filter((c:Cliente)=>{return c.tarifaTipo.eventual === false})
+      this.$clientesNoEventuales = this.$clientes
+      .filter((c:Cliente)=>{return c.tarifaTipo.eventual === false})
+      .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
@@ -114,7 +116,9 @@ export class CargaMultipleComponent implements OnInit {
     });  
     this.storageService.choferes$.subscribe(data => {
       this.$choferes = data;
-      this.$choferesNoEventuales = this.$choferes.filter((c:Chofer)=>{return c.tarifaTipo.eventual === false})
+      this.$choferesNoEventuales = this.$choferes
+        .filter((c: Chofer) => c.tarifaTipo.eventual === false)
+        .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
       this.inicializarChoferes();
     });
   }

@@ -84,7 +84,7 @@ export class PdfService {
                 { text: this.formatearValor(facOp.valores.total), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }
               ]),
               // Fila estática con el total
-              [{ text: 'Total', colSpan: 8, style: 'tableHeader', fillColor: totalRowFillColor},{}, {}, {}, {}, {}, {}, {}, { text: this.formatearValor(factura.total), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
+              [{ text: 'Total', colSpan: 8, style: 'tableHeader', fillColor: totalRowFillColor},{}, {}, {}, {}, {}, {}, {}, { text: this.formatearValor(factura.valores.total), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
             ]
           }
         }
@@ -218,7 +218,7 @@ async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOp[], cliente
               { text: this.formatearValor(facOp.valores.total), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' },               
               ]),
               // Fila estática con el total
-              [{ text: 'Total', colSpan: 7, style: 'tableHeader', fillColor: totalRowFillColor}, {}, {}, {}, {}, {}, {}, { text: this.formatearValor(factura.total), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
+              [{ text: 'Total', colSpan: 7, style: 'tableHeader', fillColor: totalRowFillColor}, {}, {}, {}, {}, {}, {}, { text: this.formatearValor(factura.valores.total), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
           ]
         }
       }
@@ -308,7 +308,7 @@ async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], c
               { text: this.formatearValor(facOp.valores.total), style: 'body', fillColor: dynamicRowFillColor, alignment: 'center' }
             ]),
             // Fila estática con el total
-            [{ text: 'Total', colSpan: 8, style: 'tableHeader', fillColor: totalRowFillColor}, {}, {}, {}, {}, {}, {},  {}, { text: this.formatearValor(factura.total), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
+            [{ text: 'Total', colSpan: 8, style: 'tableHeader', fillColor: totalRowFillColor}, {}, {}, {}, {}, {}, {},  {}, { text: this.formatearValor(factura.valores.total), style: 'tableHeader', fillColor: totalRowFillColor, alignment: 'center' }]
           ]
         }
       }

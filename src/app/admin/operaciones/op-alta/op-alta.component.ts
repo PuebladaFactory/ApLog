@@ -91,9 +91,12 @@ export class OpAltaComponent implements OnInit {
   ngOnInit(): void {    
     this.storageService.choferes$.subscribe(data => {
       this.$choferes = data;
+      this.$choferes = this.$choferes        
+        .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
     });
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
+      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;            

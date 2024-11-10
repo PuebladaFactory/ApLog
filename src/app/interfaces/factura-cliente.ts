@@ -7,9 +7,16 @@ export interface FacturaCliente {
     idCliente: number;    
     razonSocial: string;
     operaciones: number [];
-    total: number;
+    valores: Valores;
     cobrado:boolean;
     montoFacturaChofer:number;
 
     
+}
+
+export interface Valores{
+    totalTarifaBase: number;
+    totalAcompaniante: number;
+    totalkmMonto: number;
+    total: number;
 }

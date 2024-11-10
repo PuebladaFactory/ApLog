@@ -1,6 +1,4 @@
-import { FacturaOpChofer } from "./factura-op-chofer";
-
-export interface FacturaChofer {
+export interface Factura {
 
     id: any|null;
     idFacturaChofer: number;   
@@ -9,10 +7,9 @@ export interface FacturaChofer {
     apellido: string;
     nombre: string;
     operaciones: number [];
-    valores: Valores;
+    valores: Valores;    
     cobrado:boolean;
     montoFacturaCliente:number;
-
 }
 
 export interface Valores{

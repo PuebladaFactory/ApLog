@@ -11,6 +11,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 })
 export class FacturacionGeneralComponent implements OnInit {
 
+  modo : string = "facturacion"
   componenteConsulta: string = "Liquidacion"
   fechasConsulta: any = {
     fechaDesde: 0,
@@ -35,8 +36,9 @@ export class FacturacionGeneralComponent implements OnInit {
   totalPagosOp!: number;
   totalFaltaPagar!: number;
   resumenVisible: boolean = false;
+  estadoVisible: boolean = false;
 
-  ngOnInit(): void {
+  ngOnInit(): void {    
     this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
     this.storageService.consultasFacCliente$.subscribe(data => {
       this.$facturasCliente = data; 
@@ -56,11 +58,19 @@ export class FacturacionGeneralComponent implements OnInit {
     });
 
     
-    this.fechasConsulta = {
-      fechaDesde: this.primerDia,
-      fechaHasta: this.ultimoDia,
-    };
+    this.storageService.fechasConsulta$.subscribe(data => {
+      this.fechasConsulta = data;
+      console.log("FACTURACION GRAL: fechas consulta: ",this.fechasConsulta);      
+      this.btnConsulta = true;
+      this.consultasFacturas();
+    });
    
+  }
+
+  consultasFacturas(){
+    this.storageService.getByDateValue("facturaCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacCliente");
+    this.storageService.getByDateValue("facturaChofer", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacChofer");
+    this.storageService.getByDateValue("facturaProveedor", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacProveedor");
   }
 
   calcularIngresos(){
@@ -69,9 +79,9 @@ export class FacturacionGeneralComponent implements OnInit {
 
     if(this.$facturasCliente !== null){
       this.$facturasCliente.forEach((factura: FacturaCliente) => {
-        this.totalIngresosOp += Number(factura.total);
+        this.totalIngresosOp += Number(factura.valores.total);
         if(!factura.cobrado){
-          this.totalFaltaCobrar += Number(factura.total);        
+          this.totalFaltaCobrar += Number(factura.valores.total);        
         }        
       })      
     }       
@@ -83,21 +93,44 @@ export class FacturacionGeneralComponent implements OnInit {
 
     if(this.$facturasChofer !== null){
       this.$facturasChofer.forEach((factura: FacturaChofer) => {
-        this.totalPagosOp += Number(factura.total);
+        this.totalPagosOp += Number(factura.valores.total);
         if(!factura.cobrado){
-          this.totalFaltaPagar += Number(factura.total);        
+          this.totalFaltaPagar += Number(factura.valores.total);        
         }        
       });      
     }
     if(this.$facturasProveedor !== null){
       this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
-        this.totalPagosOp += Number(factura.total);
+        this.totalPagosOp += Number(factura.valores.total);
         if(!factura.cobrado){
-          this.totalFaltaPagar += Number(factura.total);        
+          this.totalFaltaPagar += Number(factura.valores.total);        
         }        
       });      
     }    
 
+  }
+
+  formatearValor(valor: number) : any{
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+     minimumFractionDigits: 2, 
+     maximumFractionDigits: 2 
+   }).format(valor);
+   ////////////console.log(nuevoValor);    
+   return nuevoValor
+ }
+
+   // Función que convierte un string formateado en un número correcto para cálculos
+   limpiarValorFormateado(valorFormateado: any): number {
+    if (typeof valorFormateado === 'string') {
+      // Si es un string, eliminar puntos de miles y reemplazar coma por punto
+      return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+    } else if (typeof valorFormateado === 'number') {
+      // Si ya es un número, simplemente devuélvelo
+      return valorFormateado;
+    } else {
+      // Si es null o undefined, devolver 0 como fallback
+      return 0;
+    }
   }
 
   getMsg(msg: any) {
@@ -135,6 +168,10 @@ export class FacturacionGeneralComponent implements OnInit {
   toogleResumen(){
     this.resumenVisible = !this.resumenVisible;
   }
+
+/*   toogleEstado(){
+    this.estadoVisible = !this.estadoVisible;
+  } */
 
 
 }

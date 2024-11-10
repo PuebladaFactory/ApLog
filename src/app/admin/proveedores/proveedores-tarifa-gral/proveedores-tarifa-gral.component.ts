@@ -131,8 +131,8 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     }else {
       this.ultTarifa = this.ultTarifaGralProveedor;
     }
-    const categorias = this.ultTarifa?.cargasGenerales?.length > 0 
-     ? this.ultTarifa.cargasGenerales.map((cat, index) => ({
+    const categorias = this.ultTarifaCliente?.cargasGenerales?.length > 0 
+     ? this.ultTarifaCliente.cargasGenerales.map((cat, index) => ({
         categoria: `Categoria ${index + 1}`,
         valorAnterior: this.formatearValor(cat.valor),
         nombreAnterior: this.ultTarifaCliente?.cargasGenerales[index]?.nombre || '',

@@ -60,11 +60,13 @@ secondFilter = '';
     //this.proveedores$ = this.storageService.proveedores$; 
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
+      this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       this.armarTabla();
     })
 
     this.storageService.choferes$.subscribe(data => {
-      this.$choferes = data;            
+      this.$choferes = data; 
+      this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer           
     });
   }
   

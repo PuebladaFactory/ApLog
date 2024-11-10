@@ -76,26 +76,6 @@ export class LiqGralComponent implements OnInit {
     //this.ngOnInit()
   }
 
-  
 
-/*   consultaOperaciones(fechaDesde:any, fechaHasta:any){   
-    ////console.log()("desde: ", fechaDesde, "hasta: ", fechaHasta);
-    this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");    
-    ////console.log()("consulta facturas op clientes: ", this.$facturasOpCliente);  
-    //this.agruparClientes();      
-    //this.procesarDatosParaTabla();
-  } */
-
-  consultaMes(){
-    if(!this.btnConsulta){   
-      //console.log()(this.primerDia, this.ultimoDia) 
-      console.log("llamada al storage desde liq-gral, getByDateValue");        
-      this.storageService.getByDateValue("facturaOpChofer", "fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer");    
-      console.log("llamada al storage desde liq-gral, getByDateValue");       
-      this.storageService.getByDateValue("facturaOpCliente", "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");    
-      console.log("llamada al storage desde liq-gral, getByDateValue");       
-      this.storageService.getByDateValue("facturaOpProveedor", "fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor");    
-    }     
-  }
 
 }

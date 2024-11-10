@@ -45,3 +45,10 @@
   button:hover{
     background: #0d6efd;    
   }
+
+  @media (max-width: 1400px){
+    .principal{
+        width: 80%;
+    }
+
+}

@@ -1,11 +1,13 @@
 <div class="container text-center mt-0 p-0">
     <!-- Dropup para seleccionar el formato -->
-    <div class="btn-group dropup align-self-end">
+    <div class="btn-group dropup align-self-end align-items-end">
         <button class="btn btn-lg dropdown-toggle" style="width: 150px; font-size: 1.6rem;" type="button" data-bs-toggle="dropdown">
           {{ formatoSeleccionado }}
         </button>
         <ul class="dropdown-menu w-100" style="font-size: 1.25rem;">
             <li><a class="dropdown-item" (click)="establecerRangoManual()">Manual</a></li>
+            <li [ngClass]="{'invisible': !anual}"><a class="dropdown-item" (click)="calcularAnioActual()">Año</a></li>
+            <li><a class="dropdown-item" (click)="calcularSemestreActual()">Semestre</a></li>
             <li><a class="dropdown-item" (click)="calcularTrimestreActual()">Trimestre</a></li>
             <li><a class="dropdown-item" (click)="calcularMesActual()">Mes</a></li>
             <li><a class="dropdown-item" (click)="calcularQuincenaActual()">Quincena</a></li>

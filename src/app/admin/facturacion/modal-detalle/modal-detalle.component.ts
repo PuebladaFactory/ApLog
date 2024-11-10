@@ -1,12 +1,15 @@
 import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import { Chofer } from 'src/app/interfaces/chofer';
+import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
@@ -56,25 +59,39 @@ export class ModalDetalleComponent implements OnInit {
   $facturasOpProveedor: FacturaOpProveedor[] = [];
   titulo:string = ""
   idFactura!: number;
+  $choferes!: Chofer[];
+  $clientes!: Cliente[];
+  $proveedores!: Proveedor[];
+
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private excelServ: ExcelService, 
     private pdfServ: PdfService, private dbFirebase: DbFirestoreService){
 
   }
   
   ngOnInit(): void {
+    this.storageService.choferes$.subscribe(data => {
+      this.$choferes = data;
+    });
+    this.storageService.clientes$.subscribe(data => {
+      this.$clientes = data;
+    }); 
+    this.storageService.proveedores$.subscribe(data => {
+      this.$proveedores = data;            
+    })       
+    console.log("0) ", this.fromParent);
     this.data = this.fromParent.item;
-    //console.log("data: ", this.data); 
+    console.log("data: ", this.data); 
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "clientes":
           this.storageService.getByFieldValue("facOpLiqCliente", "idCliente", this.data[0].idCliente);
           this.storageService.facOpLiqCliente$.subscribe(data=>{
             this.$facturasOpCliente = data;
-            ////console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);      
+            console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);      
           });
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
-          this.idFactura = this.data[0].idFacturaCliente;
+          //this.idFactura = this.data[0].idFacturaCliente;
           this.armarTabla()
           break;
       //////////////CHOFERES///////////////////////
@@ -82,11 +99,11 @@ export class ModalDetalleComponent implements OnInit {
           this.storageService.getByFieldValue("facOpLiqChofer", "idChofer", this.data[0].idChofer);
           this.storageService.facOpLiqChofer$.subscribe(data=>{
             this.$facturasOpChofer = data;
-            ////console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);      
+            console.log("1) ngOnInit facOpChofer:",this.$facturasOpChofer);      
           });
           //console.log("data: ", this.data);
           this.titulo = `${this.data[0].apellido} ${this.data[0].nombre}`
-          this.idFactura = this.data[0].idFacturaChofer;
+          //this.idFactura = this.data[0].idFacturaChofer;
           this.armarTabla()
           break;
       //////////////PROVEEDORES///////////////////////
@@ -94,11 +111,11 @@ export class ModalDetalleComponent implements OnInit {
           this.storageService.getByFieldValue("facOpLiqProveedor", "idProveedor", this.data[0].idProveedor);
           this.storageService.facOpLiqProveedor$.subscribe(data=>{
             this.$facturasOpProveedor = data;
-            ////console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);      
+            console.log("1) ngOnInit facOpProveedor:",this.$facturasOpCliente);      
           });
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
-          this.idFactura = this.data[0].idFacturaProveedor;
+          //this.idFactura = this.data[0].idFacturaProveedor;
           this.armarTabla()
           break;
       default:
@@ -175,52 +192,52 @@ export class ModalDetalleComponent implements OnInit {
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "clientes":
-            ////console.log("1) row: ",row);    
+          console.log("1) row: ",row);    
           factura = this.data.filter((factura:FacturaCliente) => {
             return factura.idFacturaCliente === row.idFactura
           })
-          ////console.log(factura);
+          console.log(factura);
           factura[0].operaciones.forEach((id: number) => {
             if (this.$facturasOpCliente !== null) {
               this.$facturasOpCliente.forEach((facturaOp: any) => {
-                if (facturaOp.operacion.idOperacion === id) {
+                if (facturaOp.idOperacion === id) {
                   this.operacionFac.push(facturaOp);
                 }
               });
             }
           });
-          ////console.log("3) operacionFac: ", this.operacionFac);
+          console.log("3) operacionFac: ", this.operacionFac);
           if (formato === 'excel') {
-            ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-            //this.excelServ.exportToExcelCliente(factura[0], this.operacionFac);
+            console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelCliente(factura[0], this.operacionFac, this.$choferes);
           } else if(formato === 'pdf') {
-            //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-            //this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac);
+            console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac, this.$choferes);
           }   
           break;
       //////////////CHOFERES///////////////////////
       case "choferes":
-              ////console.log("1) row: ",row);    
+          console.log("1) row: ",row);    
           factura = this.data.filter((factura:FacturaChofer) => {
             return factura.idFacturaChofer === row.idFactura
           })
-          ////console.log(factura);
+          console.log(factura);
           factura[0].operaciones.forEach((id: number) => {
             if (this.$facturasOpChofer !== null) {
               this.$facturasOpChofer.forEach((facturaOp: any) => {
-                if (facturaOp.operacion.idOperacion === id) {
+                if (facturaOp.idOperacion === id) {
                   this.operacionFac.push(facturaOp);
                 }
               });
             }
           });
-          ////console.log("3) operacionFac: ", this.operacionFac);
+          console.log("3) operacionFac: ", this.operacionFac);
           if (formato === 'excel') {
-            ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-            //this.excelServ.exportToExcelChofer(factura[0], this.operacionFac);
+            console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelChofer(factura[0], this.operacionFac, this.$clientes);
           } else if(formato === 'pdf') {
-            ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-            //this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac);
+            console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac, this.$clientes);
           } 
           break;
       //////////////PROVEEDORES///////////////////////
@@ -233,19 +250,19 @@ export class ModalDetalleComponent implements OnInit {
           factura[0].operaciones.forEach((id: number) => {
             if (this.$facturasOpProveedor !== null) {
               this.$facturasOpProveedor.forEach((facturaOp: any) => {
-                if (facturaOp.operacion.idOperacion === id) {
+                if (facturaOp.idOperacion === id) {
                   this.operacionFac.push(facturaOp);
                 }
               });
             }
           });
-          ////console.log("3) operacionFac: ", this.operacionFac);
+          console.log("3) operacionFac: ", this.operacionFac);
           if (formato === 'excel') {
-            ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-            //this.excelServ.exportToExcelProveedor(factura[0], this.operacionFac);
+            console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
           } else if(formato === 'pdf') {
-            ////console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-            //this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac);
+            console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
           }   
       break;
       default:
@@ -267,40 +284,40 @@ export class ModalDetalleComponent implements OnInit {
               quincena: this.getQuincena(factura.fecha),
               idFactura: factura.idFacturaCliente,
               cant: factura.operaciones.length,
-              sumaPagar: factura.montoFacturaChofer,
-              sumaCobrar: factura.total,
-              neta: factura.total - factura.montoFacturaChofer,
-              porcentaje: ((factura.total - factura.montoFacturaChofer)*100/factura.total).toFixed(2),
+              sumaPagar: `$ ${this.formatearValor(factura.montoFacturaChofer)}`,
+              sumaCobrar: `$ ${this.formatearValor(factura.valores.total)}`,
+              neta: `$ ${this.formatearValor(factura.valores.total - factura.montoFacturaChofer)}`,
+              porcentaje: `${this.formatearValor((factura.valores.total - factura.montoFacturaChofer)*100/factura.valores.total)} %`,
               cobrado: factura.cobrado,
           }));
           break;
       //////////////CHOFERES///////////////////////
-      case "choferes":
+     case "choferes":
           this.rows = this.data.map((factura: FacturaChofer) => ({
               indice: indice ++,
               fecha: factura.fecha,
               quincena: this.getQuincena(factura.fecha),
               idFactura: factura.idFacturaChofer,
               cant: factura.operaciones.length,
-              sumaPagar: factura.total,
-              sumaCobrar: factura.montoFacturaCliente,
-              neta: factura.montoFacturaCliente - factura.total,
-              porcentaje: ((factura.montoFacturaCliente - factura.total)*100/factura.montoFacturaCliente).toFixed(2),
-              cobrado: factura.cobrado,
+              sumaPagar: `$ ${this.formatearValor(factura.valores.total)}`,
+              sumaCobrar: `$ ${this.formatearValor(factura.montoFacturaCliente)}`,
+              neta: `$ ${this.formatearValor(factura.montoFacturaCliente - factura.valores.total)}`,
+              porcentaje: `${this.formatearValor((factura.montoFacturaCliente - factura.valores.total)*100/factura.montoFacturaCliente)} %`,
+              cobrado: factura.cobrado,              
           }));
           break;
       //////////////PROVEEDORES///////////////////////
-      case "proveedores":
+       case "proveedores":
           this.rows = this.data.map((factura: FacturaProveedor) => ({
               indice: indice ++,
               fecha: factura.fecha,
               quincena: this.getQuincena(factura.fecha),
               idFactura: factura.idFacturaProveedor,
               cant: factura.operaciones.length,
-              sumaPagar: factura.total,
-              sumaCobrar: factura.montoFacturaCliente,
-              neta: factura.montoFacturaCliente - factura.total,
-              porcentaje: ((factura.montoFacturaCliente - factura.total)*100/factura.montoFacturaCliente).toFixed(2),
+              sumaPagar: `$ ${this.formatearValor(factura.valores.total)}`,
+              sumaCobrar: `$ ${this.formatearValor(factura.montoFacturaCliente)}`,
+              neta: `$ ${this.formatearValor(factura.montoFacturaCliente - factura.valores.total)}`,
+              porcentaje: `$ ${this.formatearValor((factura.montoFacturaCliente - factura.valores.total)*100/factura.montoFacturaCliente)}`,
               cobrado: factura.cobrado,
           }));
           break;
@@ -309,7 +326,7 @@ export class ModalDetalleComponent implements OnInit {
       break;
     }    
     ////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
-    this.applyFilters(); // Aplica filtros y actualiza filteredRows
+    this.applyFilters(); // Aplica filtros y actualiza filteredRows */
   }
   
   setPage(pageInfo: any) {
@@ -371,5 +388,30 @@ export class ModalDetalleComponent implements OnInit {
   toogleAjustes(){
     this.ajustes = !this.ajustes;
   }
+
+  formatearValor(valor: any) : any{     
+    valor = Number(valor)
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    }).format(valor);   
+    ////console.log(nuevoValor);    
+    return nuevoValor
+   
+  
+ }
+
+ limpiarValorFormateado(valorFormateado: any): number {
+  if (typeof valorFormateado === 'string') {
+    // Si es un string, eliminar puntos de miles y reemplazar coma por punto
+    return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+  } else if (typeof valorFormateado === 'number') {
+    // Si ya es un número, simplemente devuélvelo
+    return valorFormateado;
+  } else {
+    // Si es null o undefined, devolver 0 como fallback
+    return 0;
+  }
+}
 
 }

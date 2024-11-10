@@ -2,8 +2,8 @@
     display:none;   
 }
 
-th, td{
-    font-size:1.25rem;
+th, td, input{
+    font-size:1.3rem;
 }
 
 .celeste-fijo:hover{
@@ -12,4 +12,8 @@ th, td{
     border-color: blue;
     font-size: 1.25rem;
   }
+
+/* @media (max-width:1400px) and (min-width:992px){
+
+} */
 

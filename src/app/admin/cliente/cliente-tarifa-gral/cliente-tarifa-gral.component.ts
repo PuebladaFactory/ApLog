@@ -129,11 +129,11 @@ export class ClienteTarifaGralComponent implements OnInit {
       this.ultTarifa = this.tarifaGeneral;
     }
     // Si no hay tarifa anterior, crear 8 categorías vacías y las filas adicionales con valores predeterminados
-    const categorias = this.ultTarifa?.cargasGenerales?.length > 0 
-        ? this.ultTarifa.cargasGenerales.map((cat, index) => ({
+    const categorias = this.tarifaGeneral.cargasGenerales.length > 0 
+        ? this.tarifaGeneral.cargasGenerales.map((cat, index) => ({
             categoria: `Categoria ${index + 1}`,
             valorAnterior: this.formatearValor(cat.valor),
-            nombreAnterior: this.tEspecial? this.ultTarifa.cargasGenerales[index]?.nombre : cat.nombre || '',
+            nombreAnterior: this.tEspecial? this.tarifaGeneral.cargasGenerales[index]?.nombre : cat.nombre || '',
             adicionalKm: {
                 primerSectorValor: cat.adicionalKm?.primerSector || 0,
                 sectoresSiguientesValor: cat.adicionalKm?.sectoresSiguientes || 0,
@@ -148,7 +148,7 @@ export class ClienteTarifaGralComponent implements OnInit {
                 sectoresSiguientesValor: 0
             }
         }));
-
+        console.log("0) categorias:", categorias )
     categorias.forEach((cat, index) => {
         const isManualEnabled = this.isManualMethodSelected;
         const isNombreInputEnabled = index < 8 && isManualEnabled;

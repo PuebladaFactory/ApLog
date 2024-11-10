@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer } from 'src/app/interfaces/chofer';
-import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
+import { FacturaChofer, Valores } from 'src/app/interfaces/factura-chofer';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -150,17 +150,25 @@ export class LiquidacionOpChoferComponent implements OnInit {
      
           ////console.log()("ID OPERACIONES: ", this.idOperaciones);
           //this.facturaChofer.operaciones = idOperaciones;
-    
+          let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0};
+          this.facLiqChofer.forEach((f:FacturaOp)=>{
+            valores.totalTarifaBase += f.valores.tarifaBase;
+            valores.totalAcompaniante += f.valores.acompaniante;
+            valores.totalkmMonto += f.valores.kmMonto;
+            valores.total += f.valores.total;
+          });
+
+
           this.facturaChofer = {
             id: null,
             fecha: new Date().toISOString().split('T')[0],
             idFacturaChofer: new Date().getTime(),
-            idChofer: this.facLiqChofer[0].idCliente,
+            idChofer: this.facLiqChofer[0].idChofer,
             //razonSocial: this.facLiqCliente[0].razonSocial,
             apellido: this.choferSeleccionado.apellido,
             nombre: this.choferSeleccionado.nombre,
             operaciones: this.idOperaciones,
-            total: this.totalFacLiqChofer,
+            valores: valores,
             cobrado:false,
             montoFacturaCliente: this.totalFacLiqCliente
           }

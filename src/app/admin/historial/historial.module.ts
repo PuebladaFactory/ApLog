@@ -14,6 +14,7 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { ModalDetalleComponent } from './modal-detalle/modal-detalle.component';
+import { HistorialControlComponent } from './historial-control/historial-control.component';
 
 
 
@@ -24,6 +25,7 @@ import { ModalDetalleComponent } from './modal-detalle/modal-detalle.component';
     HistorialChoferComponent,
     HistorialProveedorComponent,
     ModalDetalleComponent,
+    HistorialControlComponent,
     
   ],
   imports: [

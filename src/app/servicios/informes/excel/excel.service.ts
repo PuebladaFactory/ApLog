@@ -131,7 +131,7 @@ getQuincena(fecha: any): string {
         };
       });  
     });
-    const facturaData = ["Total", "", "", "", "", "", "","",this.formatearValor(factura.total)];
+    const facturaData = ["Total", "", "", "", "", "", "","",this.formatearValor(factura.valores.total)];
       worksheet.addRow(facturaData).eachCell(cell => {
         cell.font = { size: 11, bold: true };
         cell.alignment = { horizontal: 'center' };
@@ -236,7 +236,7 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
       };
     });  
   });
-  const facturaData = ["Total", "", "", "", "","", "", this.formatearValor(factura.total)];
+  const facturaData = ["Total", "", "", "", "","", "", this.formatearValor(factura.valores.total)];
     worksheet.addRow(facturaData).eachCell(cell => {
       cell.font = { size: 11, bold: true };      
       cell.alignment = { horizontal: 'center' };
@@ -342,7 +342,7 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
       };
     });  
   });
-  const facturaData = ["Total", "", "", "", "","","","", this.formatearValor(factura.total)];
+  const facturaData = ["Total", "", "", "", "","","","", this.formatearValor(factura.valores.total)];
     worksheet.addRow(facturaData).eachCell(cell => {
       cell.font = { size: 10, bold: true };
       cell.alignment = { horizontal: 'center' };

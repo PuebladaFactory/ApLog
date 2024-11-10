@@ -1,7 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
+import { FacturaCliente, Valores } from 'src/app/interfaces/factura-cliente';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
@@ -101,6 +102,14 @@ export class ModalInformesClienteComponent implements OnInit {
  
       ////console.log()("ID OPERACIONES: ", this.idOperaciones);
       //this.facturaChofer.operaciones = idOperaciones;
+      let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0};
+          this.facturasLiquidadasCliente.forEach((f:FacturaOp)=>{
+            valores.totalTarifaBase += f.valores.tarifaBase;
+            valores.totalAcompaniante += f.valores.acompaniante;
+            valores.totalkmMonto += f.valores.kmMonto;
+            valores.total += f.valores.total;
+          });
+
 
       this.facturaCliente = {
         id: null,
@@ -109,7 +118,7 @@ export class ModalInformesClienteComponent implements OnInit {
         idCliente: this.facturasLiquidadasCliente[0].idCliente,
         razonSocial: this.facturasLiquidadasCliente[0].operacion.cliente.razonSocial,
         operaciones: this.idOperaciones,
-        total: this.totalFacturasLiquidadasCliente,
+        valores: valores,
         cobrado:false,
         montoFacturaChofer: this.totalFacturasLiquidadasChofer
       }

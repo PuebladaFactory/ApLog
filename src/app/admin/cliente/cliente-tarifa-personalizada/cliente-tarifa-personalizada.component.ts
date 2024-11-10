@@ -50,9 +50,10 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   ngOnInit(): void {
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
-      this.$clientesPers = this.$clientes.filter((cliente:Cliente)=>{
-        return cliente.tarifaTipo.personalizada === true 
-      })
+      this.$clientesPers = this.$clientes
+      .filter((c:Cliente)=>{return c.tarifaTipo.personalizada === true})
+      .sort((a:Cliente, b:Cliente) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+      
       this.storageService.ultTarifaPersCliente$.subscribe(data => {
         this.$ultTarifaCliente = data;
         //console.log("1)",this.$ultTarifaCliente);        
