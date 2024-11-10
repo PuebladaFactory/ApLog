@@ -76,7 +76,8 @@ export class ChoferesListadoComponent implements OnInit {
       this.$proveedores = data;
     });    
     this.storageService.choferes$.subscribe(data => {
-      this.$choferes = data;      
+      this.$choferes = data;     
+      this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer 
       this.armarTabla();
     });    
   }

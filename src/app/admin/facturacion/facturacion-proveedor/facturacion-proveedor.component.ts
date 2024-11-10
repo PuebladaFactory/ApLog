@@ -191,7 +191,7 @@ export class FacturacionProveedorComponent implements OnInit {
          filtrarTabla(): void {
           const filtro = this.filtroBusqueda.toLowerCase();
           this.datosFiltrados = this.datosTablaProveedor.filter(proveedor =>
-            proveedor.chofer.toLowerCase().includes(filtro) ||
+            proveedor.proveedor.toLowerCase().includes(filtro) ||
             proveedor.cant.toString().includes(filtro) ||
             proveedor.sumaACobrar.toString().includes(filtro) ||
             proveedor.sumaAPagar.toString().includes(filtro) ||

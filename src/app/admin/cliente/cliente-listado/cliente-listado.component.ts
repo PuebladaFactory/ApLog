@@ -56,6 +56,7 @@ export class ClienteListadoComponent implements OnInit {
     
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
+      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       this.armarTabla();
     })
   }

@@ -32,14 +32,15 @@ export class ProveedoresTarifaEspecialComponent implements OnInit {
 
   ngOnInit() {
     //choferes todos
-    this.storageService.choferes$.subscribe(data => {
+   /*  this.storageService.choferes$.subscribe(data => {
       this.$choferes = data;
       console.log("1)choferes especiales: ", this.$choferesEsp);      
       this.tEspecial = false;
-    })  
+    })   */
     //clientes todos
     this.storageService.clientes$.subscribe(data => {
-      this.$clientes = data;      
+      this.$clientes = data;     
+      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       console.log("2)clientes: ", this.$clientes);      
       
     })          
@@ -47,27 +48,12 @@ export class ProveedoresTarifaEspecialComponent implements OnInit {
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;      
       console.log("2)proveedores: ", this.$proveedores);      
-      this.$proveedoresEsp = this.$proveedores.filter((proveedor:Proveedor)=>{
-        return proveedor.tarifaTipo?.especial === true 
-      })
+      this.$proveedoresEsp = this.$proveedores
+      .filter((p:Proveedor)=>{return p.tarifaTipo.especial === true})
+      .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     })   
 
   }
-
-/*   changeChofer(e: any) {    
-    console.log(e.target.value);    
-    let id = Number(e.target.value);
-    ////console.log()("1)",id);    
-    this.choferSeleccionado = this.$choferesEsp.filter((chofer:Chofer)=>{
-      ////console.log()("2", cliente.idCliente, id);
-      return chofer.idChofer === id;
-    })
-    //this.tEspecial = true;
-    this.idChoferEsp = id 
-    this.consultaChofer.push(this.idChoferEsp);    
-    this.storageService.setInfo("choferSeleccionado", this.consultaChofer);   
-    this.consultaChofer = [];
-  } */
 
   changeProveedor(e: any) {    
     console.log(e.target.value);    

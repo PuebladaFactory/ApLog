@@ -221,5 +221,13 @@ export class FacturacionClienteComponent implements OnInit {
     });
   }
 
+   // Icono de ordenamiento
+   iconoOrdenamiento(columna: string): string {
+    if (this.ordenColumna === columna) {
+      return this.ordenAscendente ? 'bi bi-arrow-down' : 'bi bi-arrow-up';
+    }
+    return '';
+  }
+
   
 }

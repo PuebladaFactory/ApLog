@@ -90,6 +90,7 @@ export class ChoferesAltaComponent implements OnInit {
     console.log("1)", this.fromParent);
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
+      this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     });
     if(this.fromParent.modo === "vista"){
       this.chofer = this.fromParent?.item;

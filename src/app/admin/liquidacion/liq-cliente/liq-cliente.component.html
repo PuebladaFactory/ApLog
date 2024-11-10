@@ -1,16 +1,16 @@
 <div class="">    
     <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por cliente">
-    <table class="table table-striped">
+    <table class="table table-striped table-bordered">
         <thead>
             <tr>
-                <th scope="col" style="width:5%" class=""></th>
-                <th scope="col" style="width:10%" class="">Razon Social</th>
-                <th scope="col" style="width:5%" class="">Cant Op</th>
+                <th scope="col" style="width:3%" class=""></th>
+                <th scope="col" style="width:18%" class="">Razon Social</th>
+                <th scope="col" style="width:7%" class="">Cant Op</th>
                 <th scope="col" style="width:15%" class="">Sin Facturar</th>  
                 <th scope="col" style="width:15%" class="">A Cobrar</th>                        
                 <th scope="col" style="width:15%" class="table-success">Total</th>
                 <th scope="col" style="width:15%" class="">Total a Pagar</th>                        
-                <th scope="col" style="width:15%" class="">Ganancia</th>                        
+                <th scope="col" style="width:7%" class="">Ganancia</th>                        
                 <th scope="col" style="width:5%" class="">Facturar</th> 
             </tr>
         </thead>
@@ -31,13 +31,13 @@
                     </svg>
                     </td>
                     <td>{{ cliente.razonSocial }}</td>
-                    <td>{{ cliente.cantOp }}</td>
+                    <td class="text-center">{{ cliente.cantOp }}</td>
                     <td>$ {{formatearValor(cliente.opSinFacturar)}}</td>
                     <td>$ {{formatearValor(cliente.opFacturadas)}}</td>
                     <td class="table-success">$ {{formatearValor(cliente.total)}}</td>
                     <td>$ {{formatearValor(cliente.aPagar)}}</td>
-                    <td>{{formatearValor(100-((cliente.aPagar*100)/cliente.total))}} %</td>
-                    <td> 
+                    <td class="text-center">{{formatearValor(100-((cliente.aPagar*100)/cliente.total))}} %</td>
+                    <td class="text-center"> 
                         <button class="btn btn-outline-secondary m-0 p-0" (click)="liquidarFacCliente(cliente.idCliente, cliente.razonSocial, i)" [ngClass]="{'isDisabled': !mostrarTablaCliente[i]}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-receipt" viewBox="0 0 16 16">
                               <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27m.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0z"/>
@@ -56,19 +56,18 @@
                                     <!-- <th><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th> -->
                                     <th style="width: 1.5%;"><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th>  
                                     <th scope="col" class="" style="width: 5%;">Fecha</th>
-                                    <th scope="col" class="" style="width: 5.5%;">Quincena</th>
-                                    <th scope="col" class="" style="width: 7.5%;">Id Operación</th>
-                                    <th scope="col" class="" style="width: 12%;">Chofer</th>
+                                    <th scope="col" class="" style="width: 5.5%;">Quincena</th>                                    
+                                    <th scope="col" class="" style="width: 13%;">Chofer</th>
                                     <th scope="col" class="" style="width: 3%;">Km</th>  
-                                    <th scope="col" class="" style="width: 7.5%;">Km $</th>  
-                                    <th scope="col" class="" style="width: 7%;">Acomp</th>                                    
-                                    <th scope="col" class="" style="width: 10%;">Tarifa Base</th>                                      
-                                    <th scope="col" class="" style="width: 10%;">Total a Cobrar</th>                        
-                                    <th scope="col" class="" style="width: 10%;">A Pagar</th>
+                                    <th scope="col" class="" style="width: 8.5%;">Km $</th>  
+                                    <th scope="col" class="" style="width: 8.5%;">Acomp</th>                                    
+                                    <th scope="col" class="" style="width: 12%;">Tarifa Base</th>                                      
+                                    <th scope="col" class="" style="width: 12%;">Total a Cobrar</th>                        
+                                    <th scope="col" class="" style="width: 12%;">A Pagar</th>
                                     <th scope="col" class="" style="width: 6%;">Ganancia</th>
                                     <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>  
                                     <th scope="col" class="" style="width: 4.5%;" >Facturar</th>
-                                    <th scope="col" colspan="2" style="width: 5%;" class="">Acciones</th>                   
+                                    <th scope="col" colspan="2" style="width:3%;" class=""></th>                   
                                 </tr>
                             </thead>
                             <tbody>
@@ -77,8 +76,7 @@
                                         <input type="checkbox" [checked]="factura.liquidacion" (change)="liquidarFac(factura)">
                                     </td>
                                     <td>{{factura.fecha}}</td>
-                                    <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>
-                                    <td>{{factura.idOperacion}}</td>
+                                    <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>                                    
                                     <td>{{getChofer(factura.idChofer)}}</td>
                                     <td>{{factura.km}}</td>
                                     <td>$ {{formatearValor(factura.valores.kmMonto)}}</td>
@@ -86,7 +84,7 @@
                                     <td>$ {{formatearValor(factura.valores.tarifaBase)}}</td>
                                     <td class="table-success">$ {{formatearValor(factura.valores.total)}}</td>
                                     <td>$ {{formatearValor(factura.contraParteMonto)}}</td>
-                                    <td>{{formatearValor(100-((factura.contraParteMonto*100)/factura.valores.total))}} %</td>                                   
+                                    <td class="text-center">{{formatearValor(100-((factura.contraParteMonto*100)/factura.valores.total))}} %</td>                                   
                                     <td>
                                         <span [ngClass]="{'eventual':factura.tarifaTipo.eventual, 'personalizada':factura.tarifaTipo.personalizada}" >
                                             {{factura.tarifaTipo.personalizada ? "Personalizada" : factura.tarifaTipo.eventual ? "Eventual" : factura.tarifaTipo.especial ? "Especial" : "General"}}

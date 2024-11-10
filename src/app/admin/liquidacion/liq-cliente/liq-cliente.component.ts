@@ -419,7 +419,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   }
 
   buscarTarifa() {
-  console.log("A)",this.facDetallada);
+  //console.log("A)",this.facDetallada);
   
   if(this.facDetallada.tarifaTipo.general){
     this.dbFirebase
@@ -427,13 +427,13 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         this.ultimaTarifa = data;
-        console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+        //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
         this.dbFirebase
         .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             this.operacion = data;
-            console.log("OPERACION: ", this.operacion);
+            //console.log("OPERACION: ", this.operacion);
             this.openModalTarifa()
         });        
     });
