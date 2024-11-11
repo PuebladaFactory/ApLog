@@ -134,19 +134,6 @@ export class ChoferesTarifaGralComponent implements OnInit {
     }
   }
 
-  /* crearCategorias(){
-    this.categorias = []
-    for(let i=0; i<8; i++ ){
-      this.categoria ={
-        orden: i+1,
-        nombre: "",
-        valor: 0,
-      }
-      this.categorias.push(this.categoria);
-    }
-    //////////console.log(this.categorias);      
-  } */
-
   // Método para resetear la tabla
   resetTable() {
     this.filas.clear(); // Limpia el FormArray
@@ -165,7 +152,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
     const categorias = this.ultTarifa?.cargasGenerales?.length > 0 
      ? this.ultTarifaGralChofer.cargasGenerales.map((cat, index) => ({
         categoria: `Categoria ${index + 1}`,
-        valorAnterior: this.formatearValor(cat.valor),
+        valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifa?.cargasGenerales[index]?.valor) : this.formatearValor(cat.valor),
         nombreAnterior: this.ultTarifaCliente?.cargasGenerales[index]?.nombre || '',
         adicionalKm: {
             primerSectorValor: cat.adicionalKm.primerSector,
@@ -351,14 +338,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
             nuevaTarifaControl?.setValue(this.formatearValor(nuevaTarifa));
             diferenciaControl?.setValue(this.formatearValor(nuevaTarifa - ultimaTarifa));
           }
-          
-          /* if (categoria === 'Acompañante' || categoria === 'Km 1er Sector distancia' || categoria === 'Km 1er Sector distancia') {
-            const ultimaTarifa = this.limpiarValorFormateado(ultimaTarifaControl?.value) || 0;
-            const nuevaTarifa = ultimaTarifa * (1 + porcentaje);
-      
-            nuevaTarifaControl?.setValue(this.formatearValor(nuevaTarifa));
-            diferenciaControl?.setValue(this.formatearValor(nuevaTarifa - ultimaTarifa));
-          } */
+         
         });
       } else {
         const porcentaje = this.consolaTarifa;  // Porcentaje a aplicar
@@ -534,22 +514,37 @@ onGenerarNuevaTarifaAutomatica() {
         const kmPrimerSectorFila = filas.at(i + 1);
         const kmIntervalosFila = filas.at(i + 2);       
         
-        
-        if(categoriaFila.get('nombre')?.value !== ""){
-          cargasGenerales.push({
-            orden: i / 3 + 1,
-            nombre: categoriaFila.get('nombre')?.value || '',
-            valor: this.limpiarValorFormateado(categoriaFila.get('nuevaTarifa')?.value || 0),
-            adicionalKm: {
-                primerSector: this.limpiarValorFormateado(kmPrimerSectorFila.get('nuevaTarifa')?.value || 0),
-                sectoresSiguientes: this.limpiarValorFormateado(kmIntervalosFila.get('nuevaTarifa')?.value || 0)
-            }
-          });
-        }
-
+        if(this.tEspecial){
+          console.log("1)");
+          if(categoriaFila.get('seleccionado')?.value && categoriaFila.get('nombre')?.value !== ""){            
+            cargasGenerales.push({
+              orden: i / 3 + 1,
+              nombre: categoriaFila.get('nombre')?.value || '',
+              valor: this.limpiarValorFormateado(categoriaFila.get('nuevaTarifa')?.value || 0),
+              adicionalKm: {
+                  primerSector: this.limpiarValorFormateado(kmPrimerSectorFila.get('nuevaTarifa')?.value || 0),
+                  sectoresSiguientes: this.limpiarValorFormateado(kmIntervalosFila.get('nuevaTarifa')?.value || 0)
+              }
+            });
+          }
+        } else {
+          
+          if(categoriaFila.get('nombre')?.value !== ""){
+            cargasGenerales.push({
+              orden: i / 3 + 1,
+              nombre: categoriaFila.get('nombre')?.value || '',
+              valor: this.limpiarValorFormateado(categoriaFila.get('nuevaTarifa')?.value || 0),
+              adicionalKm: {
+                  primerSector: this.limpiarValorFormateado(kmPrimerSectorFila.get('nuevaTarifa')?.value || 0),
+                  sectoresSiguientes: this.limpiarValorFormateado(kmIntervalosFila.get('nuevaTarifa')?.value || 0)
+              }
+            });
+          }
+        } 
+        console.log("2)")
         
     }
-  
+    console.log("cargasGenerales: ", cargasGenerales);
     // Construcción del objeto `AdicionalTarifa` para los valores generales
     const adicionales: AdicionalTarifa = {
       acompaniante: this.limpiarValorFormateado(filas.at(filas.length - 3).get('nuevaTarifa')?.value || 0),
@@ -579,6 +574,7 @@ onGenerarNuevaTarifaAutomatica() {
       idChofer: 0,
       idProveedor: 0, 
   };
+  console.log("NUEVA Tarifa: ", this.nuevaTarifaGral);
 }
 
 
