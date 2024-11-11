@@ -152,7 +152,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
     const categorias = this.ultTarifa?.cargasGenerales?.length > 0 
      ? this.ultTarifaGralChofer.cargasGenerales.map((cat, index) => ({
         categoria: `Categoria ${index + 1}`,
-        valorAnterior: this.tEspecial? this.formatearValor(this.ultTarifa?.cargasGenerales[index]?.valor) : this.formatearValor(cat.valor),
+        valorAnterior: this.formatearValor(cat.valor),
         nombreAnterior: this.ultTarifaCliente?.cargasGenerales[index]?.nombre || '',
         adicionalKm: {
             primerSectorValor: cat.adicionalKm.primerSector,
@@ -185,7 +185,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
           seleccionado: [vehiculoTieneCategoria ? true : false],
           categoria: [cat.categoria],
           nombre: [{ value: cat.nombreAnterior, disabled: !isInputEnabled }],
-          ultimaTarifa: [{ value: cat.valorAnterior, disabled: true }],
+          ultimaTarifa: [{ value: vehiculoTieneCategoria ?  : false, disabled: true }],
           diferencia: [{ value: this.formatearValor(0), disabled: true }],
           nuevaTarifa: [{ value: this.formatearValor(0), disabled: !isInputEnabled }],
           orden: cat.orden
@@ -253,7 +253,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
 
 
   
-    //////console.log("1)", this.ultTarifa?.adicionales?.acompaniante);
+    console.log("1)", categorias);
     
     // Fila para Acompañante
     this.filas.push(this.fb.group({
