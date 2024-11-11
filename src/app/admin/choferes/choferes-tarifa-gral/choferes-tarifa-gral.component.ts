@@ -161,8 +161,9 @@ export class ChoferesTarifaGralComponent implements OnInit {
     }else {
       this.ultTarifa = this.ultTarifaGralChofer;
     }
-    const categorias = this.ultTarifaCliente?.cargasGenerales?.length > 0 
-     ? this.ultTarifaCliente.cargasGenerales.map((cat, index) => ({
+      console.log("ultima tarifa Especial: ", this.ultTarifa);
+    const categorias = this.ultTarifa?.cargasGenerales?.length > 0 
+     ? this.ultTarifaGralChofer.cargasGenerales.map((cat, index) => ({
         categoria: `Categoria ${index + 1}`,
         valorAnterior: this.formatearValor(cat.valor),
         nombreAnterior: this.ultTarifaCliente?.cargasGenerales[index]?.nombre || '',
@@ -175,7 +176,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
     : Array(this.ultTarifaCliente?.cargasGenerales.length).fill(0).map((_, index) => ({
       categoria: `Categoria ${index + 1}`,
       valorAnterior: this.formatearValor(0),
-      nombreAnterior: this.ultTarifaCliente?.cargasGenerales[index]?.nombre || "",
+      nombreAnterior:  this.tEspecial? this.ultTarifaCliente?.cargasGenerales[index]?.nombre : "",
       adicionalKm: {
           primerSectorValor: 0,
           sectoresSiguientesValor: 0

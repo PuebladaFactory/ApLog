@@ -128,9 +128,11 @@ export class ClienteTarifaGralComponent implements OnInit {
     }else {
       this.ultTarifa = this.tarifaGeneral;
     }
+    console.log("ultima tarifa Especial: ", this.ultTarifa);
+    
     // Si no hay tarifa anterior, crear 8 categorías vacías y las filas adicionales con valores predeterminados
-    const categorias = this.tarifaGeneral.cargasGenerales.length > 0 
-        ? this.tarifaGeneral.cargasGenerales.map((cat, index) => ({
+    const categorias = this.ultTarifa.cargasGenerales.length > 0 
+        ? this.ultTarifa.cargasGenerales.map((cat, index) => ({
             categoria: `Categoria ${index + 1}`,
             valorAnterior: this.formatearValor(cat.valor),
             nombreAnterior: this.tEspecial? this.tarifaGeneral.cargasGenerales[index]?.nombre : cat.nombre || '',
@@ -139,7 +141,7 @@ export class ClienteTarifaGralComponent implements OnInit {
                 sectoresSiguientesValor: cat.adicionalKm?.sectoresSiguientes || 0,
             },           
         }))
-        : Array(8).fill(0).map((_, index) => ({
+        : Array(this.tarifaGeneral?.cargasGenerales.length).fill(0).map((_, index) => ({
             categoria: `Categoria ${index + 1}`,
             valorAnterior: this.formatearValor(0),
             nombreAnterior: this.tEspecial? this.tarifaGeneral?.cargasGenerales[index]?.nombre : "",

@@ -10,8 +10,11 @@
 
 </div>
 <div>
-    <div *ngIf="tEspecial" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
+    <div *ngIf="tEspecial && ultTarifaEspecial.cargasGenerales.length > 0" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
         <p *ngIf="ultTarifaEspecial.idCliente === 0 else clienteEsp" class="mb-0 fs-5">La última tarifa aplica para todos los clientes</p>        
+    </div>
+    <div *ngIf="tEspecial && ultTarifaEspecial.cargasGenerales.length === 0" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
+        <p class="mb-0 fs-5">El chofer aun no tiene asignada una tarifa</p>        
     </div>
     <ng-template #clienteEsp>
         <p class="mb-0 fs-5">La última tarifa aplica para el cliente: {{getCliente(ultTarifaEspecial.idCliente)}} </p>
