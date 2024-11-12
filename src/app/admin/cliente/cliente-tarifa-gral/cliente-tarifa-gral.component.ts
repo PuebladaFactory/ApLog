@@ -131,23 +131,23 @@ export class ClienteTarifaGralComponent implements OnInit {
     console.log("ultima tarifa Especial: ", this.ultTarifa);
     
     // Si no hay tarifa anterior, crear 8 categorías vacías y las filas adicionales con valores predeterminados
-    const categorias = this.ultTarifa.cargasGenerales.length > 0 
-        ? this.ultTarifa.cargasGenerales.map((cat, index) => ({
+    const categorias = this.tarifaGeneral.cargasGenerales.length > 0 
+        ? this.tarifaGeneral.cargasGenerales.map((cat, index) => ({
             categoria: `Categoria ${index + 1}`,
-            valorAnterior: this.formatearValor(cat.valor),
+            valorAnterior: !this.tEspecial? this.formatearValor(cat.valor) : this.ultTarifaEspecial.cargasGenerales.length > 0 ? this.formatearValor(this.ultTarifaEspecial.cargasGenerales[index]?.valor) : this.formatearValor(0) ,
             nombreAnterior: this.tEspecial? this.tarifaGeneral.cargasGenerales[index]?.nombre : cat.nombre || '',
             adicionalKm: {
-                primerSectorValor: cat.adicionalKm?.primerSector || 0,
-                sectoresSiguientesValor: cat.adicionalKm?.sectoresSiguientes || 0,
+                primerSectorValor: !this.tEspecial? this.formatearValor(cat.adicionalKm?.primerSector) : this.ultTarifaEspecial.cargasGenerales.length > 0 ? this.formatearValor(this.ultTarifaEspecial.cargasGenerales[index]?.adicionalKm?.primerSector) : this.formatearValor(0) ,
+                sectoresSiguientesValor: !this.tEspecial? this.formatearValor(cat.adicionalKm?.sectoresSiguientes) : this.ultTarifaEspecial.cargasGenerales.length > 0 ? this.formatearValor(this.ultTarifaEspecial.cargasGenerales[index]?.adicionalKm?.sectoresSiguientes) : this.formatearValor(0),
             },           
         }))
-        : Array(this.tarifaGeneral?.cargasGenerales.length).fill(0).map((_, index) => ({
+        : Array(8).fill(0).map((_, index) => ({
             categoria: `Categoria ${index + 1}`,
             valorAnterior: this.formatearValor(0),
-            nombreAnterior: this.tEspecial? this.tarifaGeneral?.cargasGenerales[index]?.nombre : "",
+            nombreAnterior: this.tarifaGeneral?.cargasGenerales[index]?.nombre || "",
             adicionalKm: {
-                primerSectorValor: 0,
-                sectoresSiguientesValor: 0
+                primerSectorValor: this.formatearValor(0),
+                sectoresSiguientesValor: this.formatearValor(0),
             }
         }));
         console.log("0) categorias:", categorias )
@@ -170,7 +170,7 @@ export class ClienteTarifaGralComponent implements OnInit {
             seleccionado: [false],
             categoria: [''],
             nombre: [{ value: 'Km 1er Sector valor', disabled: true }],
-            ultimaTarifa: [{ value: this.formatearValor(cat.adicionalKm.primerSectorValor), disabled: true }],
+            ultimaTarifa: [{ value: cat.adicionalKm.primerSectorValor, disabled: true }],
             diferencia: [{ value: this.formatearValor(0), disabled: true }],
             nuevaTarifa: [{ value: this.formatearValor(0), disabled: false }]
         }));
@@ -180,7 +180,7 @@ export class ClienteTarifaGralComponent implements OnInit {
             seleccionado: [false],
             categoria: [''],
             nombre: [{ value: 'Km Intervalos valor', disabled: true }],
-            ultimaTarifa: [{ value: this.formatearValor(cat.adicionalKm.sectoresSiguientesValor), disabled: true }],
+            ultimaTarifa: [{ value: cat.adicionalKm.sectoresSiguientesValor, disabled: true }],
             diferencia: [{ value: this.formatearValor(0), disabled: true }],
             nuevaTarifa: [{ value: this.formatearValor(0), disabled: false }]
         }));
@@ -203,7 +203,7 @@ export class ClienteTarifaGralComponent implements OnInit {
         nombre: [{ value: '', disabled: true }],
         ultimaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.primerSector !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.primerSector) : this.formatearValor(0), disabled: true }],
         diferencia: [{ value: this.formatearValor(0), disabled: true }],
-        nuevaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.primerSector) : 0, disabled: false }]
+        nuevaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.primerSector) : this.formatearValor(0), disabled: false }]
     }));
 
     // Fila para Km Intervalos distancia
@@ -213,7 +213,7 @@ export class ClienteTarifaGralComponent implements OnInit {
         nombre: [{ value: '', disabled: true }],
         ultimaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ?  this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes) : this.formatearValor(0), disabled: true }],
         diferencia: [{ value: this.formatearValor(0), disabled: true }],
-        nuevaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes) : 0, disabled: false }]
+        nuevaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes) : this.formatearValor(0), disabled: false }]
     }));
 }
 
@@ -507,7 +507,7 @@ onGenerarNuevaTarifaAutomatica() {
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-         
+          this.ngOnInit()
         },
         (reason) => {}
       );

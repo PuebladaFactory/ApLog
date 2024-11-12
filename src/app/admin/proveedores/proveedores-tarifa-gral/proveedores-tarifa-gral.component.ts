@@ -131,8 +131,8 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     }else {
       this.ultTarifa = this.ultTarifaGralProveedor;
     }
-    const categorias = this.ultTarifaCliente?.cargasGenerales?.length > 0 
-     ? this.ultTarifaCliente.cargasGenerales.map((cat, index) => ({
+    const categorias = this.ultTarifa?.cargasGenerales?.length > 0 
+     ? this.ultTarifa.cargasGenerales.map((cat, index) => ({
         categoria: `Categoria ${index + 1}`,
         valorAnterior: this.formatearValor(cat.valor),
         nombreAnterior: this.ultTarifaCliente?.cargasGenerales[index]?.nombre || '',
@@ -162,10 +162,10 @@ export class ProveedoresTarifaGralComponent implements OnInit {
         this.filas.push(this.fb.group({
             seleccionado: [true], 
             categoria: [cat.categoria],
-            nombre: [{ value: cat.nombreAnterior, disabled: !isNombreInputEnabled }],
+            nombre: [{ value: cat.nombreAnterior, disabled: true }],
             ultimaTarifa: [{ value: cat.valorAnterior, disabled: true }],
-            diferencia: [{ value: 0, disabled: true }],
-            nuevaTarifa: [{ value: 0, disabled: false }]
+            diferencia: [{ value: this.formatearValor(0), disabled: true }],
+            nuevaTarifa: [{ value: this.formatearValor(0), disabled: true }]
         }));
 
         // Fila para Km 1er Sector valor
@@ -174,8 +174,8 @@ export class ProveedoresTarifaGralComponent implements OnInit {
             categoria: [''],
             nombre: [{ value: 'Km 1er Sector valor', disabled: true }],
             ultimaTarifa: [{ value: this.formatearValor(cat.adicionalKm.primerSectorValor), disabled: true }],
-            diferencia: [{ value: 0, disabled: true }],
-            nuevaTarifa: [{ value: 0, disabled: false }]
+            diferencia: [{ value: this.formatearValor(0), disabled: true }],
+            nuevaTarifa: [{ value: this.formatearValor(0), disabled: true }]
         }));
 
         // Fila para Km Intervalos valor
@@ -184,8 +184,8 @@ export class ProveedoresTarifaGralComponent implements OnInit {
             categoria: [''],
             nombre: [{ value: 'Km Intervalos valor', disabled: true }],
             ultimaTarifa: [{ value: this.formatearValor(cat.adicionalKm.sectoresSiguientesValor), disabled: true }],
-            diferencia: [{ value: 0, disabled: true }],
-            nuevaTarifa: [{ value: 0, disabled: false }]
+            diferencia: [{ value: this.formatearValor(0), disabled: true }],
+            nuevaTarifa: [{ value: this.formatearValor(0), disabled: true }]
         }));
     });
 
@@ -196,7 +196,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       nombre: [{ value: '', disabled: true }],
       ultimaTarifa: [{ value: this.ultTarifa?.adicionales?.acompaniante !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.acompaniante) : this.formatearValor(0), disabled: true }],        
       diferencia: [{ value: this.formatearValor(0), disabled: true }],
-      nuevaTarifa: [{ value: this.formatearValor(0), disabled: false }]
+      nuevaTarifa: [{ value: this.formatearValor(0), disabled: true }]
   }));
   // Fila para Km 1er Sector distancia
   this.filas.push(this.fb.group({
@@ -205,7 +205,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       nombre: [{ value: '', disabled: true }],
       ultimaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.primerSector !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.primerSector) : this.formatearValor(0), disabled: true }],
       diferencia: [{ value: this.formatearValor(0), disabled: true }],
-      nuevaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.primerSector) : 0, disabled: false }]
+      nuevaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.primerSector) : this.formatearValor(0), disabled: true }]
   }));
 
   // Fila para Km Intervalos distancia
@@ -215,7 +215,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       nombre: [{ value: '', disabled: true }],
       ultimaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ?  this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes) : this.formatearValor(0), disabled: true }],
       diferencia: [{ value: this.formatearValor(0), disabled: true }],
-      nuevaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes) : 0, disabled: false }]
+      nuevaTarifa: [{ value: this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes !== undefined ? this.formatearValor(this.ultTarifa?.adicionales?.KmDistancia?.sectoresSiguientes) : this.formatearValor(0), disabled: true }]
   }));
 }
 

@@ -35,7 +35,7 @@ export class ModalTarifaGralEdicionComponent implements OnInit {
         position: "top-end",
         //icon: "success",
         //title: "Your work has been saved",
-        text:"Los valores modificados de las tarifas solo aplicarán para las futuras operaciones y para las operaciones que aun no hayan sido cerradas.",
+        text:"Los valores modificados de las tarifas solo aplicarán para las operaciones que aun no hayan sido cerradas y para las futuras operaciones.",
         showConfirmButton: false,
         timer: 10000
       });    

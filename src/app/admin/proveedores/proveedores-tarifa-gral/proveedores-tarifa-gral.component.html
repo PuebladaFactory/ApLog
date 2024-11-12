@@ -10,12 +10,17 @@
 
 </div>
 <div>
-    <div *ngIf="tEspecial" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
-        <p class="mb-0 fs-5" *ngIf="ultTarifaEspecial.idCliente === 0 else clienteEsp">La tarifa aplica para todos los clientes</p>        
-    </div>
-    <ng-template #clienteEsp>
-        <p class="mb-0 fs-5">La tarifa aplica para todos el cliente: {{getCliente(ultTarifaEspecial.idCliente)}} </p>
-    </ng-template>
+    <ng-container *ngIf="tEspecial">
+        <div *ngIf="ultTarifaEspecial.cargasGenerales.length > 0" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
+            <p *ngIf="ultTarifaEspecial.idCliente === 0 else clienteEsp" class="mb-0 fs-5">La última tarifa aplica para todos los clientes</p>        
+        </div>
+        <ng-template #clienteEsp>
+            <p class="mb-0 fs-5">La última tarifa aplica para el cliente: {{getCliente(ultTarifaEspecial.idCliente)}} </p>
+        </ng-template>
+        <div *ngIf="ultTarifaEspecial.cargasGenerales.length === 0" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
+            <p class="mb-0 fs-5">El proveedor aun no tiene asignada una tarifa</p>        
+        </div>
+    </ng-container>    
     <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
         <table class="table table-bordered">
             <thead>
