@@ -12,6 +12,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TableroCalendarioComponent } from './tablero-calendario/tablero-calendario.component';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
+import { HistorialTarifasGralComponent } from './historial-tarifas-gral/historial-tarifas-gral.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-boot
     BtnReimpresionComponent,
     BtnLeerComponent,
     ConsolaTarifaComponent,
-    TableroCalendarioComponent
+    TableroCalendarioComponent,
+    HistorialTarifasGralComponent
   ],
   imports: [
     CommonModule,
@@ -39,7 +41,8 @@ import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-boot
     BtnReimpresionComponent,
     BtnLeerComponent,
     ConsolaTarifaComponent,
-    TableroCalendarioComponent
+    TableroCalendarioComponent, 
+    HistorialTarifasGralComponent
   ]
 })
 export class SharedModule { }

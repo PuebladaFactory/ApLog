@@ -187,6 +187,15 @@ export class StorageService {
   private _facturaOpProveedor$ = new BehaviorSubject<any>(this.loadInfo('facturaOpProveedor') || []);
   public facturaOpProveedor$ = this._facturaOpProveedor$.asObservable();
 
+  private _historialTarifaGralCliente$ = new BehaviorSubject<any>(this.loadInfo('historialTarifaGralCliente') || []);
+  public historialTarifaGralCliente$ = this._historialTarifaGralCliente$.asObservable();
+
+  private _historialTarifaGralChofer$ = new BehaviorSubject<any>(this.loadInfo('historialTarifaGralChofer') || []);
+  public historialTarifaGralChofer$ = this._historialTarifaGralChofer$.asObservable();
+
+  private _historialTarifaGralProveedor$ = new BehaviorSubject<any>(this.loadInfo('historialTarifaGralProveedor') || []);
+  public historialTarifaGralProveedor$ = this._historialTarifaGralProveedor$.asObservable();
+
   updateObservable(componente: any, data: any) {
     switch (componente) {
       case "clientes": {
@@ -452,6 +461,21 @@ export class StorageService {
         this._fechasConsulta$.next(data);
         break
       }
+
+      case "historialTarifaGralCliente":{
+        this._historialTarifaGralCliente$.next(data);
+        break
+      }
+
+      case "historialTarifaGralChofer":{
+        this._historialTarifaGralChofer$.next(data);
+        break
+      }
+
+      case "historialTarifaGralProveedor":{
+        this._historialTarifaGralProveedor$.next(data);
+        break
+      }
       
       default: {
         //statements; 
@@ -562,6 +586,34 @@ export class StorageService {
         //console.log("storage initializer ", componente, data);
       });
 
+  }
+
+  getAllSortedLimit(componente: any, campo: any, orden: any, limite: number, titulo: string) {
+    console.log(` storage getAllSortedLimit ${componente}`, componente, campo, orden, limite)
+    // pasar campo y orden (asc o desc)
+    this.dbFirebase
+      .getAllSortedLimit(componente, campo, orden, limite)
+      .subscribe(data => {
+
+        this.setInfo(titulo, data)
+        this.updateObservable(componente, data)
+        //console.log("storage initializer ", componente, data);
+      });
+      
+  }
+
+  getAllSortedIdLimit(componente: any, campo: any, id:number, campo2: any, orden: any, limite: number, titulo: string) {
+    console.log(` storage getAllSortedLimit ${componente}`, componente, campo, orden, limite)
+    // pasar campo y orden (asc o desc)
+    this.dbFirebase
+      .getAllSortedIdLimit(componente, campo, id, campo2, orden, limite)
+      .subscribe(data => {
+
+        this.setInfo(titulo, data)
+        this.updateObservable(componente, data)
+        //console.log("storage initializer ", componente, data);
+      });
+      
   }
   
   getByFieldValue(componente: any, campo:any, value:any){

@@ -1,0 +1,64 @@
+<div class="modal-content">
+    <div class="modal-header row">
+        <div class="d-flex justify-content-between">
+            <h1>Historial de Tarifas</h1>
+            <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
+        </div>        
+        <h2 *ngIf="!fromParent.tEspecial">Tarifas Generales</h2>
+        <h2 *ngIf="fromParent.tEspecial">Tarifas Especiales del {{fromParent.modo === "clientes" ? "Cliente" : this.fromParent.modo === "choferes" ? "Chofer" : "Proveedor"}}: {{getNombre(fromParent.id)}} </h2>
+        
+    </div>
+    <div class="modal-body">
+        <div *ngIf="tarifasHistorial.length > 0; else sinTarifas">    
+            <table class="table table-striped table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th style="width: 5%">Fecha</th>
+                        <th style="width: 5%">Tipo</th>
+                        <th style="width: 8%">IdTarifa</th>
+                        <th style="width: 8%">% Aumento</th>
+                        <th style="width: 52%">Detalle</th>
+                        <th style="width: 8%">Acompañante</th>
+                        <th style="width: 7%">1er Sector</th>
+                        <th style="width: 7%">Intervalos</th>
+                        
+                    </tr>                  
+                </thead>
+                <tbody>                
+                    <tr *ngFor="let tarifa of tarifasHistorial; let i = index">           
+                        <td>{{tarifa.fecha}}</td>
+                        <td>{{obtenerTipoTarifa(tarifa.tipo)}}</td>
+                        <td>{{tarifa.idTarifa}}</td>
+                        <td>{{ aumentos[i] | number: '1.2-2' }} %</td>
+                        <td>
+                            <table class="w-100">
+                                <tr>
+                                    <th style="width: 55%;">Categoria</th>
+                                    <th style="width: 15%;" >Valor</th>
+                                    <th style="width: 15%;">Km 1° sector</th>
+                                    <th style="width: 15%;">Km intervalos</th>
+                                </tr>
+                                <ng-container *ngFor="let cat of tarifa.cargasGenerales; let i = index" >
+                                    <tr [ngStyle]= "{background: i % 2 === 0 ? 'rgb(228, 245, 238)' : 'rgb(212, 234, 241)'}">
+                                        <td>{{cat.nombre}}</td>
+                                        <td>$ {{formatearValor(cat.valor)}}</td>
+                                        <td>$ {{formatearValor(cat.adicionalKm.primerSector)}}</td>
+                                        <td>$ {{formatearValor(cat.adicionalKm.sectoresSiguientes)}}</td>
+                                    </tr>
+                                </ng-container>                              
+                            </table>                
+                        </td>
+                        <td>$ {{formatearValor(tarifa.adicionales.acompaniante)}} </td>
+                        <td>Km {{formatearValor(tarifa.adicionales.KmDistancia.primerSector)}}</td>
+                        <td>Km {{formatearValor(tarifa.adicionales.KmDistancia.sectoresSiguientes)}}</td>           
+                        
+                    </tr>
+                </tbody>    
+            </table>          
+        </div>
+        
+        <ng-template #sinTarifas>
+            <p class="text-muted">No hay historial de tarifas disponibles.</p>
+        </ng-template>
+    </div>
+</div>

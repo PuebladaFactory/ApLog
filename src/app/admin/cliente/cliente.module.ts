@@ -22,6 +22,7 @@ import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/mod
 
 
 
+
 @NgModule({
   declarations: [
     ClienteControlComponent,
@@ -31,8 +32,8 @@ import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/mod
     ClienteTarifaGralComponent, 
     ClienteTarifaEspecialComponent, 
     ModalContactoComponent, 
-    ModalTarifaPersonalizadaComponent, ModalTarifaGralEdicionComponent, 
-    
+    ModalTarifaPersonalizadaComponent, 
+    ModalTarifaGralEdicionComponent,     
 
   ],
   imports: [

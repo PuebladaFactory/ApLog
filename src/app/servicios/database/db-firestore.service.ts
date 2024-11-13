@@ -42,6 +42,37 @@ getAllSorted(componente:string, campo:string, orden:any) {
   // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
 // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
 
+getAllSortedLimit(componente:string, campo:string, orden:any, limite:number) {
+  // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
+  // orden solo asc o desc
+
+  let dataCollection = `/Vantruck/datos/${componente}`;
+
+  return this.firestore2.collection(dataCollection, ref => ref
+    .orderBy(campo, orden)
+    .limit(limite))
+    .valueChanges(({  idField: 'id' }))
+    ; }
+
+  // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
+// this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
+
+getAllSortedIdLimit(componente:string, campo:string, id:number, campo2:string, orden:any, limite:number) {
+  // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
+  // orden solo asc o desc
+
+  let dataCollection = `/Vantruck/datos/${componente}`;
+
+  return this.firestore2.collection(dataCollection, ref => ref
+    .where(campo, '==', id )
+    .orderBy(campo2, orden)
+    .limit(limite))
+    .valueChanges(({  idField: 'id' }))
+    ; }
+
+  // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
+// this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
+
 
 getByFieldValue(componente:string, campo:string, value:any){
   // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
