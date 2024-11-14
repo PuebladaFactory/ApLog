@@ -33,7 +33,7 @@ import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/mod
     ClienteTarifaEspecialComponent, 
     ModalContactoComponent, 
     ModalTarifaPersonalizadaComponent, 
-    ModalTarifaGralEdicionComponent,     
+    ModalTarifaGralEdicionComponent,
 
   ],
   imports: [

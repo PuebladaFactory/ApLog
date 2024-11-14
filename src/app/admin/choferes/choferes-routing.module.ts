@@ -5,6 +5,7 @@ import { ChoferesControlComponent } from './choferes-control/choferes-control.co
 import { ChoferesListadoComponent } from './choferes-listado/choferes-listado.component';
 import { ChoferesTarifaGralComponent } from './choferes-tarifa-gral/choferes-tarifa-gral.component';
 import { ChoferesTarifaEspecialComponent } from './choferes-tarifa-especial/choferes-tarifa-especial.component';
+import { TarifasEventualesComponent } from 'src/app/shared/tarifas-eventuales/tarifas-eventuales.component';
 
 
 const routes: Routes = [
@@ -13,7 +14,8 @@ const routes: Routes = [
     {path: 'alta', component:ChoferesAltaComponent},    
     {path: 'listado', component:ChoferesListadoComponent},    
     {path: 'general', component:ChoferesTarifaGralComponent},
-    {path: 'especial', component:ChoferesTarifaEspecialComponent},    
+    {path: 'especial', component:ChoferesTarifaEspecialComponent},
+    {path: 'eventual', component:TarifasEventualesComponent},    
 ]  },
   
 ];

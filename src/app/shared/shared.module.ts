@@ -13,6 +13,7 @@ import { TableroCalendarioComponent } from './tablero-calendario/tablero-calenda
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 import { HistorialTarifasGralComponent } from './historial-tarifas-gral/historial-tarifas-gral.component';
+import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventuales.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +24,8 @@ import { HistorialTarifasGralComponent } from './historial-tarifas-gral/historia
     BtnLeerComponent,
     ConsolaTarifaComponent,
     TableroCalendarioComponent,
-    HistorialTarifasGralComponent
+    HistorialTarifasGralComponent,
+    TarifasEventualesComponent
   ],
   imports: [
     CommonModule,
@@ -42,7 +44,8 @@ import { HistorialTarifasGralComponent } from './historial-tarifas-gral/historia
     BtnLeerComponent,
     ConsolaTarifaComponent,
     TableroCalendarioComponent, 
-    HistorialTarifasGralComponent
+    HistorialTarifasGralComponent, 
+    TarifasEventualesComponent
   ]
 })
 export class SharedModule { }
