@@ -24,6 +24,7 @@ export class HistorialTarifasGralComponent implements OnInit {
   aumentos: number[] = [];  // Array para almacenar el % de aumento entre tarifas consecutivas
   aumentosPersonalizados: number[] = [];
   tPersonalizada: boolean = false;  
+  limite:number = 5;
 
   constructor(private storageService: StorageService, public activeModal: NgbActiveModal) {}
 
@@ -39,13 +40,17 @@ export class HistorialTarifasGralComponent implements OnInit {
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;            
     })   
+    this.consultarTarifas()
     
+  }
+
+  consultarTarifas(){
     switch(this.fromParent.modo){
       case 'clientes':
         if (!this.fromParent.tEspecial) {
-          this.storageService.getAllSortedLimit('tarifasGralCliente', 'idTarifa', 'desc', 10, 'historialTarifaGralCliente');
+          this.storageService.getAllSortedLimit('tarifasGralCliente', 'idTarifa', 'desc', this.limite, 'historialTarifaGralCliente');
         } else {
-          this.storageService.getAllSortedIdLimit('tarifasEspCliente', 'idCliente', this.fromParent.id, 'idTarifa', 'desc', 5, 'historialTarifaGralCliente');
+          this.storageService.getAllSortedIdLimit('tarifasEspCliente', 'idCliente', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralCliente');
         }
 
         this.storageService.historialTarifaGralCliente$.subscribe((tarifas: TarifaGralCliente[]) => {
@@ -56,9 +61,9 @@ export class HistorialTarifasGralComponent implements OnInit {
 
       case "choferes":{
         if (!this.fromParent.tEspecial) {
-          this.storageService.getAllSortedLimit('tarifasGralChofer', 'idTarifa', 'desc', 10, 'historialTarifaGralChofer');
+          this.storageService.getAllSortedLimit('tarifasGralChofer', 'idTarifa', 'desc', this.limite, 'historialTarifaGralChofer');
         } else {
-          this.storageService.getAllSortedIdLimit('tarifasEspChofer', 'idChofer', this.fromParent.id, 'idTarifa', 'desc', 5, 'historialTarifaGralChofer');
+          this.storageService.getAllSortedIdLimit('tarifasEspChofer', 'idChofer', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralChofer');
         }
 
         this.storageService.historialTarifaGralChofer$.subscribe((tarifas: TarifaGralCliente[]) => {
@@ -70,9 +75,9 @@ export class HistorialTarifasGralComponent implements OnInit {
       };
       case "proveedores":{
         if (!this.fromParent.tEspecial) {
-          this.storageService.getAllSortedLimit('tarifasGralProveedor', 'idTarifa', 'desc', 10, 'historialTarifaGralProveedor');
+          this.storageService.getAllSortedLimit('tarifasGralProveedor', 'idTarifa', 'desc', this.limite, 'historialTarifaGralProveedor');
         } else {
-          this.storageService.getAllSortedIdLimit('tarifasEspProveedor', 'idProveedor', this.fromParent.id, 'idTarifa', 'desc', 5, 'historialTarifaGralProveedor');
+          this.storageService.getAllSortedIdLimit('tarifasEspProveedor', 'idProveedor', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralProveedor');
         }
 
         this.storageService.historialTarifaGralProveedor$.subscribe((tarifas: TarifaGralCliente[]) => {
@@ -85,7 +90,7 @@ export class HistorialTarifasGralComponent implements OnInit {
     
       case "personalizada": {
         this.tPersonalizada = true;        
-        this.storageService.getAllSortedIdLimit('tarifasPersCliente', 'idCliente', this.fromParent.id, 'idTarifa', 'desc', 5, 'historialTarifaPersCliente');
+        this.storageService.getAllSortedIdLimit('tarifasPersCliente', 'idCliente', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaPersCliente');
         this.storageService.historialTarifaPersCliente$.subscribe((tarifas: TarifaPersonalizadaCliente[]) => {
           this.tarifasPersHistorial = tarifas.sort((a, b) => b.idTarifa - a.idTarifa);
           console.log(this.tarifasPersHistorial);          
@@ -225,6 +230,13 @@ export class HistorialTarifasGralComponent implements OnInit {
       showConfirmButton: false,
       timer: 10000
     });
+  }
+
+  getCliente(id:number){
+    let cliente = this.$clientes.filter((c)=> c.idCliente === id)
+    console.log(cliente[0].razonSocial);
+    
+    return cliente[0].razonSocial
   }
 
 }

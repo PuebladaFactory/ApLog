@@ -468,6 +468,9 @@ export class FacturacionOpService {
     this.storageService.clearInfo("facturaOpCliente");
     this.storageService.clearInfo("facturaOpChofer");
     this.storageService.clearInfo("facturaOpProveedor");
+    if(op.tarifaTipo.eventual){
+      this.guardarTarifasEventuales(op);
+    }
 
   }
 
@@ -477,6 +480,10 @@ export class FacturacionOpService {
 
   updateItem(componente: string, item: any){
     this.storageService.updateItem(componente, item);
+  }
+
+  guardarTarifasEventuales(op:Operacion){
+
   }
 
   facturarOpChofer(op:Operacion){

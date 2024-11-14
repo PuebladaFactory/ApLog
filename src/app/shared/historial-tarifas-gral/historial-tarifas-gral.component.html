@@ -4,14 +4,22 @@
             <h1>Historial de Tarifas</h1>
             <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
         </div>   
-        <div *ngIf="!tPersonalizada else tituloPers">
-            <h2 *ngIf="!fromParent.tEspecial">Tarifas Generales</h2>
-            <h2 *ngIf="fromParent.tEspecial">Tarifas Especiales del {{fromParent.modo === "clientes" ? "Cliente" : this.fromParent.modo === "choferes" ? "Chofer" : "Proveedor"}}: {{getNombre(fromParent.id)}} </h2>
-        </div>     
-        <ng-template #tituloPers>
-            <h2 *ngIf="!fromParent.tEspecial">Tarifas Personalizadas</h2>
-        </ng-template>
-        
+        <div class="d-flex justify-content-between">
+            <div *ngIf="!tPersonalizada else tituloPers">
+                <h2 *ngIf="!fromParent.tEspecial">Tarifas Generales</h2>
+                <h2 *ngIf="fromParent.tEspecial">Tarifas Especiales del {{fromParent.modo === "clientes" ? "Cliente" : this.fromParent.modo === "choferes" ? "Chofer" : "Proveedor"}}: {{getNombre(fromParent.id)}} </h2>
+            </div>     
+            <ng-template #tituloPers>
+                <h2 *ngIf="!fromParent.tEspecial">Tarifas Personalizadas</h2>
+            </ng-template>
+            <div style="width:100px;">
+                <label for="">Cantidad de Tarifas</label>
+                <div class="input-group">                    
+                    <input type="text" class="form-control"  placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarTarifas()">
+                    <button class="btn btn-outline-secondary" type="button" id="button-addon2"  (click)="consultarTarifas()">Consultar</button>
+                </div>                  
+            </div>
+        </div>
     </div>
     <div class="modal-body">
         <div *ngIf="!tPersonalizada else tablaPersonalizada">
@@ -25,7 +33,26 @@
                                 <td style="width: 20%"></td>
                                 <th style="width: 10%">IdTarifa</th>
                                 <td style="width: 10%">{{tarifa.idTarifa}}</td>
-                                <td style="width: 20%"></td>
+                                <td style="width: 20%" *ngIf="!fromParent.tEspecial else tarifaEspecial"></td>
+                                <ng-template #tarifaEspecial> 
+                                    <td *ngIf="fromParent.modo === 'clientes'"></td>                                   
+                                    <ng-container *ngIf="fromParent.modo === 'choferes'">
+                                        <td style="width: 20%" *ngIf="tarifa.idCliente !== 0 else todosClientes">
+                                            <span class="text-bold">Tarfia Aplicada al Cliente: </span>
+                                             {{getCliente(tarifa.idCliente)}}
+                                        </td>
+                                    </ng-container>
+                                    <ng-container *ngIf="fromParent.modo === 'proveedores'">
+                                        <td style="width: 20%" *ngIf="tarifa.idCliente !== 0 else todosClientes">
+                                            <span class="text-bold">Tarfia Aplicada: </span>
+                                             {{getCliente(tarifa.idCliente)}}
+                                        </td>
+                                    </ng-container>                                   
+                                    <ng-template #todosClientes>
+                                        <td style="width: 20%"><span class="text-bold">Tarfia Aplicada: Todos los Clientes </span></td>
+                                    </ng-template>
+
+                                </ng-template>
                                 <th style="width: 10%">
                                     % Aumento 
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle ms-2 pb-2" viewBox="0 0 16 16" type="button" (click)="mostrarInfo()">
@@ -71,7 +98,7 @@
             </div>            
             <ng-template #sinTarifas>
                 <p class="text-muted">No hay historial de tarifas disponibles.</p>
-            </ng-template>
+            </ng-template>           
         </div>       
     </div>
 </div>
