@@ -12,6 +12,7 @@ import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personaliz
 import { FacturacionChoferService } from '../facturacion-chofer/facturacion-chofer.service';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { take } from 'rxjs';
+import { TarifaEventual } from 'src/app/interfaces/tarifa-eventual';
 
 @Injectable({
   providedIn: 'root'
@@ -38,6 +39,7 @@ export class FacturacionOpService {
   ProveedorFacOp!: FacturaOp [];
   operacion!: Operacion;
   proveedorSeleccionado!: Proveedor;
+  tarifaEventual! : TarifaEventual;  
 
 
   constructor( private facturacionCliente: FacturacionClienteService, private facturacionChofer: FacturacionChoferService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
@@ -483,6 +485,33 @@ export class FacturacionOpService {
   }
 
   guardarTarifasEventuales(op:Operacion){
+    this.tarifaEventual = {
+      id: null,
+      idTarifa: new Date().getTime(),
+      fecha: op.fecha,
+      cliente: {
+        concepto: op.tarifaEventual.cliente.concepto,
+        valor:op.tarifaEventual.cliente.valor,
+      },
+      chofer: {
+        concepto: op.tarifaEventual.chofer.concepto,
+        valor:op.tarifaEventual.chofer.valor,
+      },      
+      tipo: {
+        general: false,
+        especial: false,
+        eventual: true,
+        personalizada: false,
+      },
+      idCliente: op.cliente.idCliente,
+      idChofer: op.chofer.idChofer,
+      idProveedor: op.chofer.idProveedor,
+      idOperacion: op.idOperacion,
+      km: op.km,
+    }
+
+    this.addItem("tarifasEventuales", this.tarifaEventual);
+
 
   }
 
