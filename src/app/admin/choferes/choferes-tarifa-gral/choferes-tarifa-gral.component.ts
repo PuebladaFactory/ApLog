@@ -8,6 +8,7 @@ import { ModalTarifaGralEdicionComponent } from '../modal-tarifa-gral-edicion/mo
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { getLocaleFirstDayOfWeek } from '@angular/common';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
 
 @Component({
   selector: 'app-choferes-tarifa-gral',
@@ -728,6 +729,30 @@ onGenerarNuevaTarifaAutomatica() {
     } else {
       return "Error en los datos"
     }  
+  }
+
+  abrirHistorialTarifas(){
+    {
+      const modalRef = this.modalService.open(HistorialTarifasGralComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'xl', 
+        //backdrop:"static" 
+      });      
+
+    let info = {
+        modo: "choferes",
+        tEspecial: this.tEspecial,
+        id: this.idChoferEsp[0],
+      } 
+      //////////console.log()(info); */
+      
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {},
+        (reason) => {}
+      );
+    }
   }
 
 

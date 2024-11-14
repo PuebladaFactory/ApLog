@@ -7,6 +7,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalTarifaPersonalizadaComponent } from '../modal-tarifa-personalizada/modal-tarifa-personalizada.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
 
 @Component({
   selector: 'app-cliente-tarifa-personalizada',
@@ -193,5 +194,29 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
    //////console.log(nuevoValor);    
    return nuevoValor
  }
+
+ abrirHistorialTarifas(){
+  {
+    const modalRef = this.modalService.open(HistorialTarifasGralComponent, {
+      windowClass: 'myCustomModalClass',
+      centered: true,
+      size: 'xl', 
+      //backdrop:"static" 
+    });      
+
+  let info = {
+      modo: "personalizada",
+      tEspecial: false,
+      id: this.clienteSeleccionado[0].idCliente,
+    } 
+    //////////console.log()(info); */
+    
+    modalRef.componentInstance.fromParent = info;
+    modalRef.result.then(
+      (result) => {},
+      (reason) => {}
+    );
+  }
+}
 
 }

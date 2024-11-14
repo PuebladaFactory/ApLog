@@ -8,6 +8,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalTarifaGralEdicionProComponent } from '../modal-tarifa-gral-edicion-pro/modal-tarifa-gral-edicion-pro.component';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
 
 @Component({
   selector: 'app-proveedores-tarifa-gral',
@@ -533,6 +534,30 @@ onGenerarNuevaTarifaAutomatica() {
     } else {
       return "Error en los datos"
     }  
+  }
+
+  abrirHistorialTarifas(){
+    {
+      const modalRef = this.modalService.open(HistorialTarifasGralComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'xl', 
+        //backdrop:"static" 
+      });      
+
+    let info = {
+        modo: "proveedores",
+        tEspecial: this.tEspecial,
+        id: this.idProveedorEsp[0],
+      } 
+      //////////console.log()(info); */
+      
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {},
+        (reason) => {}
+      );
+    }
   }
 
 }
