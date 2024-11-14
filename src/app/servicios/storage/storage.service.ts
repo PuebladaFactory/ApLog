@@ -196,6 +196,9 @@ export class StorageService {
   private _historialTarifaGralProveedor$ = new BehaviorSubject<any>(this.loadInfo('historialTarifaGralProveedor') || []);
   public historialTarifaGralProveedor$ = this._historialTarifaGralProveedor$.asObservable();
 
+  private _historialTarifaPersCliente$ = new BehaviorSubject<any>(this.loadInfo('historialTarifaPersCliente') || []);
+  public historialTarifaPersCliente$ = this._historialTarifaPersCliente$.asObservable();
+
   updateObservable(componente: any, data: any) {
     switch (componente) {
       case "clientes": {
@@ -477,6 +480,11 @@ export class StorageService {
         break
       }
       
+      case "historialTarifaPersCliente":{
+        this._historialTarifaPersCliente$.next(data);
+        break
+      }
+
       default: {
         //statements; 
         break;

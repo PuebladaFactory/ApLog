@@ -3,62 +3,137 @@
         <div class="d-flex justify-content-between">
             <h1>Historial de Tarifas</h1>
             <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
-        </div>        
-        <h2 *ngIf="!fromParent.tEspecial">Tarifas Generales</h2>
-        <h2 *ngIf="fromParent.tEspecial">Tarifas Especiales del {{fromParent.modo === "clientes" ? "Cliente" : this.fromParent.modo === "choferes" ? "Chofer" : "Proveedor"}}: {{getNombre(fromParent.id)}} </h2>
+        </div>   
+        <div *ngIf="!tPersonalizada else tituloPers">
+            <h2 *ngIf="!fromParent.tEspecial">Tarifas Generales</h2>
+            <h2 *ngIf="fromParent.tEspecial">Tarifas Especiales del {{fromParent.modo === "clientes" ? "Cliente" : this.fromParent.modo === "choferes" ? "Chofer" : "Proveedor"}}: {{getNombre(fromParent.id)}} </h2>
+        </div>     
+        <ng-template #tituloPers>
+            <h2 *ngIf="!fromParent.tEspecial">Tarifas Personalizadas</h2>
+        </ng-template>
         
     </div>
     <div class="modal-body">
-        <div *ngIf="tarifasHistorial.length > 0; else sinTarifas">    
-            <table class="table table-striped table-bordered mt-3">
-                <thead>
-                    <tr>
-                        <th style="width: 5%">Fecha</th>
-                        <th style="width: 5%">Tipo</th>
-                        <th style="width: 8%">IdTarifa</th>
-                        <th style="width: 8%">% Aumento</th>
-                        <th style="width: 52%">Detalle</th>
-                        <th style="width: 8%">Acompañante</th>
-                        <th style="width: 7%">1er Sector</th>
-                        <th style="width: 7%">Intervalos</th>
-                        
-                    </tr>                  
-                </thead>
-                <tbody>                
-                    <tr *ngFor="let tarifa of tarifasHistorial; let i = index">           
-                        <td>{{tarifa.fecha}}</td>
-                        <td>{{obtenerTipoTarifa(tarifa.tipo)}}</td>
-                        <td>{{tarifa.idTarifa}}</td>
-                        <td class="table-warning text-center">{{ aumentos[i] | number: '1.2-2' }} %</td>
-                        <td>
-                            <table class="w-100">
-                                <tr>
-                                    <th style="width: 55%;">Categoria</th>
-                                    <th style="width: 15%;" >Valor</th>
-                                    <th style="width: 15%;">Km 1° sector</th>
-                                    <th style="width: 15%;">Km intervalos</th>
+        <div *ngIf="!tPersonalizada else tablaPersonalizada">
+            <div *ngIf="tarifasHistorial.length > 0; else sinTarifas">    
+                <ng-container *ngFor="let tarifa of tarifasHistorial; let i = index">
+                    <table class="table table-striped table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%">Fecha</th>
+                                <td style="width: 10%">{{tarifa.fecha}}</td>
+                                <td style="width: 20%"></td>
+                                <th style="width: 10%">IdTarifa</th>
+                                <td style="width: 10%">{{tarifa.idTarifa}}</td>
+                                <td style="width: 20%"></td>
+                                <th style="width: 10%">
+                                    % Aumento 
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle ms-2 pb-2" viewBox="0 0 16 16" type="button" (click)="mostrarInfo()">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                        <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
+                                    </svg>
+                                </th>
+                                <td style="width: 10%" class="table-warning text-center">{{ aumentos[i] | number: '1.2-2' }} %</td>                                
+                            </tr>                                      
+                            <tr>
+                                <th style="width: 8%">Acompañante</th>
+                                <td>$ {{formatearValor(tarifa.adicionales.acompaniante)}} </td>
+                                <td></td>
+                                <th style="width: 7%">1er Sector</th>
+                                <td>Km {{formatearValor(tarifa.adicionales.KmDistancia.primerSector)}}</td>
+                                <td></td>
+                                <th style="width: 7%">Intervalos</th>
+                                <td>Km {{formatearValor(tarifa.adicionales.KmDistancia.sectoresSiguientes)}}</td>           
+                            </tr>
+                        </thead>
+                    </table>
+                    <table class="table table-striped table-bordered mb-5">
+                        <thead>
+                            <tr>
+                                <th style="width: 55%;">Categoria</th>
+                                <th style="width: 15%;" >Valor</th>
+                                <th style="width: 15%;">Km 1° sector</th>
+                                <th style="width: 15%;">Km intervalos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <ng-container *ngFor="let cat of tarifa.cargasGenerales; let i = index" >
+                                <tr [ngStyle]= "{background: i % 2 === 0 ? 'rgb(228, 245, 238)' : 'rgb(212, 234, 241)'}">
+                                    <td>{{cat.nombre}}</td>
+                                    <td>$ {{formatearValor(cat.valor)}}</td>
+                                    <td>$ {{formatearValor(cat.adicionalKm.primerSector)}}</td>
+                                    <td>$ {{formatearValor(cat.adicionalKm.sectoresSiguientes)}}</td>
                                 </tr>
-                                <ng-container *ngFor="let cat of tarifa.cargasGenerales; let i = index" >
-                                    <tr [ngStyle]= "{background: i % 2 === 0 ? 'rgb(228, 245, 238)' : 'rgb(212, 234, 241)'}">
-                                        <td>{{cat.nombre}}</td>
-                                        <td>$ {{formatearValor(cat.valor)}}</td>
-                                        <td>$ {{formatearValor(cat.adicionalKm.primerSector)}}</td>
-                                        <td>$ {{formatearValor(cat.adicionalKm.sectoresSiguientes)}}</td>
-                                    </tr>
-                                </ng-container>                              
-                            </table>                
-                        </td>
-                        <td>$ {{formatearValor(tarifa.adicionales.acompaniante)}} </td>
-                        <td>Km {{formatearValor(tarifa.adicionales.KmDistancia.primerSector)}}</td>
-                        <td>Km {{formatearValor(tarifa.adicionales.KmDistancia.sectoresSiguientes)}}</td>           
-                        
-                    </tr>
-                </tbody>    
-            </table>          
-        </div>
-        
-        <ng-template #sinTarifas>
-            <p class="text-muted">No hay historial de tarifas disponibles.</p>
-        </ng-template>
+                            </ng-container>       
+                        </tbody>
+                    </table>
+                </ng-container>                       
+            </div>            
+            <ng-template #sinTarifas>
+                <p class="text-muted">No hay historial de tarifas disponibles.</p>
+            </ng-template>
+        </div>       
     </div>
 </div>
+
+<ng-template #tablaPersonalizada>
+    <ng-container *ngFor="let tarifa of tarifasPersHistorial; let i = index">
+        <table class="table table-striped table-bordered mb-0">
+            <thead>
+                <tr>
+                    <th style="width: 10%">Fecha</th>
+                    <td class="text-center" style="width: 10%">{{tarifa.fecha}}</td>
+                    <td style="width: 20%"></td>
+                    <th style="width: 10%">IdTarifa</th>
+                    <td class="text-center" style="width: 10%">{{tarifa.idTarifa}}</td>
+                    <td style="width: 20%"></td>
+                    <th style="width: 10%">
+                        % Aumento 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle ms-2 pb-2" viewBox="0 0 16 16" type="button" (click)="mostrarInfo()">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
+                        </svg>
+                    </th>       
+                    <td class="table-warning text-center" style="width: 10%">{{ aumentosPersonalizados[i] | number: '1.2-2' }} %</td>
+                </tr> 
+            </thead>            
+        </table>              
+        <table class="table table-striped table-bordered mb-5">
+            <thead>
+                <tr>
+                    <th style="width: 12%">Seccion</th>
+                    <th style="width: 13%">Descripcion</th>
+                    <th style="width: 15%">Categoria</th>
+                    <th style="width: 15%">Nombre</th>
+                    <th style="width: 15%">A Cobrar</th>
+                    <th style="width: 15%">A Pagar</th>
+                    <th class="align-middle" style="width:15%">Ganancia %</th>   
+                </tr>
+            </thead>
+            <tbody> 
+                <tr *ngFor="let seccion of tarifa.secciones">
+                    <td> Seccion {{seccion.orden}}</td>
+                    <td> {{seccion.descripcion}}</td>
+                    <td colspan="6">
+                        <table class="table table-striped table-bordered w-100">
+                            <tbody *ngFor="let cat of seccion.categorias; let i = index">
+                                <tr [ngStyle]= "{background: i % 2 === 0 ? 'rgb(228, 245, 238)' : 'rgb(212, 234, 241)'}">
+                                    <td style="width: 20%">Categoria {{cat.orden}}</td>
+                                    <td style="width: 20%">{{cat.nombre}}</td>
+                                    <td style="width: 20%">$ {{formatearValor(cat.aCobrar)}}</td>
+                                    <td style="width: 20%">$ {{formatearValor(cat.aPagar)}}</td>
+                                    <td style="width: 20%" class="align-middle">{{(formatearValor(100-((cat.aPagar*100)/cat.aCobrar)))}} %</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                
+            </tbody>    
+        </table>
+        
+    </ng-container>
+    
+
+
+</ng-template>
