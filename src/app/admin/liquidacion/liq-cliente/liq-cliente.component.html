@@ -10,7 +10,7 @@
                 <th scope="col" style="width:15%" class="">A Cobrar</th>                        
                 <th scope="col" style="width:15%" class="table-success">Total</th>
                 <th scope="col" style="width:15%" class="">Total a Pagar</th>                        
-                <th scope="col" style="width:7%" class="">Ganancia</th>                        
+                <th scope="col" style="width:7%" class="table-warning">Ganancia</th>                        
                 <th scope="col" style="width:5%" class="">Facturar</th> 
             </tr>
         </thead>
@@ -36,12 +36,11 @@
                     <td>$ {{formatearValor(cliente.opFacturadas)}}</td>
                     <td class="table-success">$ {{formatearValor(cliente.total)}}</td>
                     <td>$ {{formatearValor(cliente.aPagar)}}</td>
-                    <td class="text-center">{{formatearValor(100-((cliente.aPagar*100)/cliente.total))}} %</td>
+                    <td class="text-center table-warning">{{formatearValor(100-((cliente.aPagar*100)/cliente.total))}} %</td>
                     <td class="text-center"> 
                         <button class="btn btn-outline-secondary m-0 p-0" (click)="liquidarFacCliente(cliente.idCliente, cliente.razonSocial, i)" [ngClass]="{'isDisabled': !mostrarTablaCliente[i]}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-receipt" viewBox="0 0 16 16">
-                              <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27m.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0z"/>
-                              <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16">
+                                <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z"/>
                             </svg>
                         </button>                    
                     </td>
@@ -84,7 +83,7 @@
                                     <td>$ {{formatearValor(factura.valores.tarifaBase)}}</td>
                                     <td class="table-success">$ {{formatearValor(factura.valores.total)}}</td>
                                     <td>$ {{formatearValor(factura.contraParteMonto)}}</td>
-                                    <td class="text-center">{{formatearValor(100-((factura.contraParteMonto*100)/factura.valores.total))}} %</td>                                   
+                                    <td class="text-center table-warning">{{formatearValor(100-((factura.contraParteMonto*100)/factura.valores.total))}} %</td>                                   
                                     <td>
                                         <span [ngClass]="{'eventual':factura.tarifaTipo.eventual, 'personalizada':factura.tarifaTipo.personalizada}" >
                                             {{factura.tarifaTipo.personalizada ? "Personalizada" : factura.tarifaTipo.eventual ? "Eventual" : factura.tarifaTipo.especial ? "Especial" : "General"}}

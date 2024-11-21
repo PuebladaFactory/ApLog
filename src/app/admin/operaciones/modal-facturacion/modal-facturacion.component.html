@@ -231,7 +231,7 @@
                                         <label for="Fecha" class="fs-5">Tarifa Personalizada Valor</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                            <input  class="form-control edicion isDisabled" required type="number" [(ngModel)]="op.tarifaPersonalizada.aCobrar">
+                                            <input  class="form-control edicion isDisabled" required type="text" [value]="formatearValor(op.tarifaPersonalizada.aCobrar)">
                                         </div>                                                        
                                     </div>
                                 </div>
@@ -241,7 +241,7 @@
                                         <label for="Fecha" class="fs-5">Tarifa Personalizada Valor</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                            <input  class="form-control edicion isDisabled" required type="number" [(ngModel)]="op.tarifaPersonalizada.aPagar">
+                                            <input  class="form-control edicion isDisabled" required type="text" [value]="formatearValor(op.tarifaPersonalizada.aPagar)">
                                         </div>                                                        
                                     </div>
                                 </div>
@@ -256,7 +256,7 @@
                                         <label for="Fecha" class="fs-5">Tarifa Base Valor</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                            <input  class="form-control edicion" required type="number" [(ngModel)]="op.valores.cliente.tarifaBase">
+                                            <input  class="form-control edicion" required type="text" [value]="formatearValor(op.valores.cliente.tarifaBase)">
                                         </div>                                                        
                                     </div>
                                 </div>
@@ -266,7 +266,7 @@
                                         <label for="Fecha" class="fs-5">Tarifa Base Valor</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                            <input  class="form-control edicion" required type="number" [(ngModel)]="op.valores.chofer.tarifaBase">
+                                            <input  class="form-control edicion" required type="text" [value]="formatearValor(op.valores.chofer.tarifaBase)">
                                         </div>                                                        
                                     </div>
                                 </div>
@@ -279,14 +279,14 @@
                                     <label for="Fecha" class="fs-5">Acompañante valor</label>
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? 0 : op.valores.cliente.acompValor">
+                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.cliente.acompValor)">
                                     </div>                                                        
                                 </div>
                                 <div class="form-group mt-3">
                                     <label for="Fecha" class="fs-5">Km adicionales valor</label>
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? 0 : op.valores.cliente.kmAdicional">
+                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.cliente.kmAdicional)">
                                     </div>                                                        
                                 </div>
                             </div>
@@ -295,14 +295,14 @@
                                     <label for="Fecha" class="fs-5">Acompañante valor</label>
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? 0 : op.valores.chofer.acompValor">
+                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.chofer.acompValor)">
                                     </div>                                                        
                                 </div>
                                 <div class="form-group mt-3">
                                     <label for="Fecha" class="fs-5">Km adicionales valor</label>
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? 0 : op.valores.chofer.kmAdicional">
+                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.chofer.kmAdicional)">
                                     </div>                                                        
                                 </div>                       
                             </div>
