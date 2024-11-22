@@ -1,25 +1,25 @@
 export interface Legajo {
 
-    id: any | undefined;
-    idLegajo: number | undefined;
-    idChofer: number | undefined;    
-    documentacion: Documentacion | undefined;
+    id: any;
+    idLegajo: number;
+    idChofer: number;    
+    documentacion: Documentacion [];
+    estadoGral: Estado;
 
 }
 
-export interface Documentacion {
-    
-    fotoDniFrente: string;
-    fotoDniDorso: string;
-    fotoRegistroFrente: string;
-    fotoRegistroDorso: string;
-    fotoCedulaFrente: string;
-    fotoCedulaDorso: string;
-    fotoPolizaSeguro: string;
-    fotoRutaFrente: string;   
-    fotoCamioneta1: string;
-    fotoCamioneta2: string;
-    fotoCamioneta3: string;
+export interface Documentacion {    
+    titulo: string;
+    sinVto: boolean;
+    fechaVto: Date | number;
+    estado: Estado;
+    imagenes: string[];
+}
 
+export interface Estado {
+    enFecha: boolean;
+    porVencer: boolean;
+    vencido: boolean;    
+    vacio: boolean;
 }
 

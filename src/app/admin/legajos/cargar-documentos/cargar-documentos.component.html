@@ -1,1 +1,81 @@
-<p>cargar-documentos works!</p>
+<div>
+    <div class="col-3 mt-4">
+        <h2>Seleccionar Chofer: </h2>
+        <select class="form-select form-select-md mb-3" (change)="changeChofer($event)">
+            <option selected>Seleccione</option>
+            <option *ngFor="let chofer of $choferes" [value]="chofer.idChofer">
+              {{chofer.apellido}} {{chofer.nombre}} 
+            </option>
+          </select>
+    </div>     
+</div>
+
+<!-- Documentación del chofer seleccionado -->
+<div *ngIf="legajoSeleccionado" class="mt-4">
+    <h3>Documentación de {{ choferSeleccionado.apellido }} {{ choferSeleccionado.nombre }}</h3>
+    <form>
+      <div class="row" *ngFor="let doc of legajoSeleccionado.documentacion; let i = index">
+        <!-- <div class="col-md-3">
+          <label>{{ doc.titulo }}</label>
+        </div>
+        <div class="col-md-2">
+          <input
+            type="checkbox"
+            id="sinVto-{{ i }}"
+            [(ngModel)]="doc.sinVto"
+            [ngModelOptions]="{standalone: true}"
+            (change)="toggleSinVto(i, $any($event.target).checked)"
+          />
+          <label for="sinVto-{{ i }}">Sin vencimiento</label>
+        </div>
+        <div class="col-md-3" *ngIf="!doc.sinVto">
+          <input
+            type="date"
+            class="form-control"
+            [value]="doc.fechaVto ? (doc.fechaVto | date:'yyyy-MM-dd') : ''"
+            (change)="actualizarFechaVto(i, $any($event.target).value)"
+          />
+        </div>
+        <div class="col-md-4">
+          <label for="fileInput-{{ i }}">Subir imágenes:</label>
+          <input
+            type="file"
+            id="fileInput-{{ i }}"
+            multiple
+            class="form-control"
+            (change)="agregarImagen(i, $any($event.target).files)"
+            />
+        </div> -->
+        <!-- Lista de imágenes cargadas -->
+        <!-- <div class="col-12 mt-2">
+          <div class="row">
+            <div
+              class="col-md-2"
+              *ngFor="let imagen of doc.imagenes; let j = index"
+            >
+              <div class="card">
+                <img [src]="imagen" class="card-img-top" alt="Imagen cargada" />
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  (click)="eliminarImagen(i, j)"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div> -->
+      </div>
+    </form>
+</div>
+<!--   <div class="mt-4">
+    <button
+      class="btn btn-primary"
+      (click)="guardar()"
+      [disabled]="!legajoSeleccionado"
+    >
+      Guardar Cambios
+    </button>
+  </div> -->
+

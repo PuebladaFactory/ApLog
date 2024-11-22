@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Legajo } from 'src/app/interfaces/legajo';
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -10,9 +12,18 @@ import Swal from 'sweetalert2';
 })
 export class AdminSidebarComponent implements OnInit {
 
-  constructor(private router: Router, private authService: AuthService) { }
+  $legajos!: Legajo[];
+  alertaRoja: boolean = false;
+  alertaAmarilla: boolean = false;
+
+  constructor(private router: Router, private authService: AuthService, private storageService: StorageService) { }
 
   ngOnInit(): void {
+    this.storageService.legajos$.subscribe(data => {
+      this.$legajos = data;     
+      this.buscarAlertas();
+    });
+
   }
   
   volverLogin(){
@@ -38,6 +49,20 @@ export class AdminSidebarComponent implements OnInit {
     });   
    }
     
-  
+  buscarAlertas(){
+    this.$legajos.forEach((legajo:Legajo)=>{
+      if(legajo.estadoGral.porVencer || legajo.estadoGral.vencido){
+        if(legajo.estadoGral.vencido){
+          this.alertaRoja = true;
+          console.log("alerta roja: ", this.alertaRoja);          
+        } else{
+          if(legajo.estadoGral.porVencer){
+            this.alertaAmarilla = true;
+            console.log("alerta amarilla: ", this.alertaAmarilla);
+          }          
+        }
+      }
+    })
+  }
 
 }

@@ -561,7 +561,8 @@ export class StorageService {
 //    this.getAllSorted("operacionesCerradas", 'fecha', 'desc')
     //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
     //this.getAllSorted("jornadas", 'idChofer', 'asc')
-    this.getAllSorted("proveedores", 'idProveedor', 'asc')
+    this.getAllSorted("proveedores", 'idProveedor', 'asc');
+    this.getAllSorted("legajos", 'idLegajo', 'asc');
     //this.getAllSorted("tarifasChofer", 'fecha', 'asc')
    // this.getAllSorted("tarifasCliente", 'fecha', 'asc')
    // this.getAllSorted("tarifasProveedor", 'fecha', 'asc')
@@ -572,7 +573,7 @@ export class StorageService {
     //this.getByDateValue("facturaOpProveedor","fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor")
     this.getUltElemColeccion("tarifasGralCliente", "idTarifa", "desc", 1,"ultTarifaGralCliente")
     this.getUltElemColeccion("tarifasGralChofer", "idTarifa", "desc", 1,"ultTarifaGralChofer")
-    this.getUltElemColeccion("tarifasGralProveedor", "idTarifa", "desc", 1,"ultTarifaGralProveedor")
+    this.getUltElemColeccion("tarifasGralProveedor", "idTarifa", "desc", 1,"ultTarifaGralProveedor");
   }
 
   // metodo initializer si el rol es user
