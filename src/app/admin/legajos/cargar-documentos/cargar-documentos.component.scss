@@ -13,6 +13,15 @@ th, td, select, input{
   label {
     font-weight: bold;
   }
+  
+  .isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  
+  .isDisabled:hover {
+    cursor: not-allowed;
+  }
 
 .card {
     position: relative;

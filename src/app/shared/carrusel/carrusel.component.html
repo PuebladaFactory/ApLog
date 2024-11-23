@@ -1,0 +1,20 @@
+<p>carrusel works!</p><div *ngIf="fromParent?.item && fromParent.item.length > 0">
+    <ngb-carousel>
+      <ng-template ngbSlide *ngFor="let imagen of fromParent.item; let index = index">
+        <div class="d-flex justify-content-center align-items-center" style="height: 400px;">
+          <img
+            [src]="imagen.contenido"
+            [alt]="'Imagen ' + (index + 1)"
+            class="d-block"
+            style="max-height: 100%; max-width: 100%;"
+          />
+        </div>
+        <div class="carousel-caption">
+          Imagen {{ index + 1 }} de {{ fromParent.item.length }}
+        </div>
+      </ng-template>
+    </ngb-carousel>
+  </div>
+  <div *ngIf="!fromParent?.item || fromParent.item.length === 0" class="text-center">
+    <p>No hay imágenes disponibles.</p>
+  </div>

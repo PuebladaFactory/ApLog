@@ -13,7 +13,7 @@ export interface Documentacion {
     sinVto: boolean;
     fechaVto: Date | number;
     estado: Estado;
-    imagenes: string[];
+    imagenes: any[];
 }
 
 export interface Estado {
