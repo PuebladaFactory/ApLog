@@ -63,6 +63,7 @@ import { OperacionesModule } from './admin/operaciones/operaciones.module';
 import { ProveedoresModule } from './admin/proveedores/proveedores.module';
 import { FacturacionModule } from './admin/facturacion/facturacion.module';
 import { CargaComponent } from './carga/carga.component';
+import { CloudinaryModule } from '@cloudinary/ng';
 
 
 
@@ -107,7 +108,7 @@ import { CargaComponent } from './carga/carga.component';
     NgbModule, //se importa la clase RouterModule y se le indica la const donde estan las rutas
     ReactiveFormsModule,
     HttpClientModule,
-    
+    CloudinaryModule,
     ChoferesModule,
     AdminModule,
     OperacionesModule,

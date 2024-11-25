@@ -1,0 +1,37 @@
+th, td, select, input{
+    font-size:1.4rem;
+}
+
+.isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  
+  .isDisabled:hover {
+    cursor: not-allowed;
+  }
+
+.verde{
+    background-color: green;
+    color: white !important;
+}
+
+.amarillo{
+    background-color: yellow;
+    color: black !important;    
+}
+
+.rojo{
+    background-color: red;
+    color: white !important;
+}
+
+.gris{
+    background-color: grey;
+    color: white !important;
+}
+
+.celeste{
+    background-color: lightblue;
+    color: white !important;
+}

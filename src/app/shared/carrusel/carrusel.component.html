@@ -1,9 +1,9 @@
-<p>carrusel works!</p><div *ngIf="fromParent?.item && fromParent.item.length > 0">
+<div *ngIf="fromParent?.item && fromParent.item.length > 0">
     <ngb-carousel>
       <ng-template ngbSlide *ngFor="let imagen of fromParent.item; let index = index">
-        <div class="d-flex justify-content-center align-items-center" style="height: 400px;">
+        <div class="d-flex justify-content-center align-items-center">
           <img
-            [src]="imagen.contenido"
+            [src]="imagen.url"
             [alt]="'Imagen ' + (index + 1)"
             class="d-block"
             style="max-height: 100%; max-width: 100%;"

@@ -2,9 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer } from 'src/app/interfaces/chofer';
-import { Legajo } from 'src/app/interfaces/legajo';
+import { Documentacion, Estado, Legajo } from 'src/app/interfaces/legajo';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { CarruselComponent } from 'src/app/shared/carrusel/carrusel.component';
+import { environment } from 'src/environments/environment';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-cargar-documentos',
@@ -17,25 +19,30 @@ export class CargarDocumentosComponent implements OnInit {
   $legajos!: Legajo[];
   choferSeleccionado!: Chofer;
   legajoSeleccionado!: Legajo;
-  tramites: string[] = [
-    'DNI',
-    'Antecedentes Penales',
-    'Licencia',
-    'LINTI',
-    'Libreta Sanitaria',
-    'ART/ACC. Personales',
-    'Cedula',
-    'Título',
-    'Seguro',
-    'VTV/RTO',
-    'RUTA',
-    'Senasa'
+  tramites: any[] = [
+    {nombre:'DNI', seleccionado : false},
+    {nombre:'Antecedentes Penales', seleccionado : false},
+    {nombre:'Licencia', seleccionado : false},
+    {nombre:'LINTI', seleccionado : false},
+    {nombre:'Libreta Sanitaria', seleccionado : false},
+    {nombre:'ART/ACC. Personales', seleccionado : false},
+    {nombre:'Cedula', seleccionado : false},
+    {nombre:'Título', seleccionado : false},
+    {nombre:'Seguro', seleccionado : false},
+    {nombre:'VTV/RTO', seleccionado : false},
+    {nombre:'RUTA', seleccionado : false},
+    {nombre:'Senasa', seleccionado : false},
   ];
+  tramitesSeleccionados:Documentacion[] = [];
+  tieneVto: boolean = false;
+  docu!:Documentacion;
+  fechaDeVto:number = 0;
   archivosPrevisualizados: string[] = [];
   svg:string = "";
+  cloudinaryUrl = `https://api.cloudinary.com/v1_1/${environment.cloudinary.cloudName}/image/upload`;
   
   
-  constructor(private storageService: StorageService, private sanitizer: DomSanitizer, private modalService: NgbModal){
+  constructor(private storageService: StorageService, private sanitizer: DomSanitizer, private modalService: NgbModal, private http: HttpClient){
 
   }  
   
@@ -73,6 +80,117 @@ export class CargarDocumentosComponent implements OnInit {
     if (this.legajoSeleccionado) {
       this.inicializarDocumentacion();
     }
+  }
+
+  changeTramite(e:any){
+    //console.log(e.target.value);
+    let id = Number(e.target.value)
+    this.docu = {
+      titulo: this.tramites[id].nombre,
+      sinVto: false,
+      fechaVto:0,
+      estado:{enFecha:false, porVencer: false, vencido: false, vacio:false},
+      imagenes : [],
+    }
+    console.log("docu", this.docu);
+    
+    
+  }
+
+  seleccioneVto(e:any){
+    this.tieneVto = e.target.value.toLowerCase() == 'true';
+    console.log(this.tieneVto);
+    if(!this.tieneVto){
+      this.fechaDeVto = 0;
+      console.log(this.fechaDeVto);
+    }
+    
+  }
+
+  fechaVto(fecha:string){
+      if(this.tieneVto){
+        this.fechaDeVto = new Date(fecha).getTime();
+      } else {
+        this.fechaDeVto = 0;
+      }
+      console.log(this.fechaDeVto);
+      
+  }
+
+  agregarDocumento(archivos: FileList | null){
+    if (!archivos) return;
+
+    const documentoSeleccionado = this.tramites.find((doc) => !doc.seleccionado);
+    console.log("documentoSeleccionado", documentoSeleccionado);
+    
+    if (documentoSeleccionado) {
+      for (let i = 0; i < archivos.length; i++) {
+        const archivo = archivos[i];
+        const reader = new FileReader();
+  
+        reader.onload = (e: any) => {
+          // Agrega el archivo al array de imágenes temporalmente
+          this.docu.imagenes = this.docu.imagenes || [];
+          this.docu.imagenes.push({
+            nombre: archivo.name,
+            contenido: e.target.result, // Base64
+          });
+        };
+  
+        reader.readAsDataURL(archivo);
+        console.log("docu", this.docu);
+        
+      }
+    }
+  }
+
+  agregarTramite(): void {
+    const documentoSeleccionado = this.tramites.find((doc) => !doc.seleccionado);
+    if (!documentoSeleccionado || this.docu.imagenes.length === 0) {
+      console.error('No se seleccionó un trámite válido.');
+      return;
+    }
+  
+    // Calcular estado del documento
+    let estado: Estado = { enFecha: false, porVencer: false, vencido: false, vacio: false };
+    const fechaActual = new Date().getTime();
+  
+    if (this.tieneVto) {
+      const diferenciaDias = Math.floor((this.fechaDeVto - fechaActual) / (1000 * 60 * 60 * 24));
+      estado = {
+        enFecha: diferenciaDias > 30,
+        porVencer: diferenciaDias <= 30 && diferenciaDias >= 0,
+        vencido: diferenciaDias < 0,
+        vacio: false,
+      };
+    } else {
+      estado = { enFecha: false, porVencer: false, vencido: false, vacio: true };
+    }
+  
+    // Crear el objeto Documentacion
+    const nuevoTramite: Documentacion = {
+      titulo: this.docu.titulo,
+      sinVto: !this.tieneVto,
+      fechaVto: this.tieneVto ? this.fechaDeVto : 0,
+      estado,
+      imagenes: this.docu.imagenes || [],
+    };
+  
+    // Agregar al array de tramites seleccionados
+    this.tramitesSeleccionados.push(nuevoTramite);
+  
+    // Marcar el trámite como seleccionado
+    documentoSeleccionado.seleccionado = true;
+    
+    // Reiniciar valores para el siguiente trámite
+    this.tieneVto = false;
+    this.fechaDeVto = 0;
+    documentoSeleccionado.imagenes = [];
+    this.docu.imagenes = [];
+    this.docu.titulo = "";
+    console.log("tramites: ",this.tramites);
+    console.log("docu: ",this.docu);
+    
   }
 
   inicializarDocumentacion(): void {
@@ -141,49 +259,38 @@ export class CargarDocumentosComponent implements OnInit {
       return;
     }
   
+    // Verificar fechas de vencimiento y estados
     let algunVencido = false;
     let algunPorVencer = false;
     let todosEnFecha = true;
   
     this.legajoSeleccionado.documentacion.forEach((doc) => {
-      // Limpiamos el array de imágenes porque no está implementada su gestión en la base de datos aún
-      doc.imagenes = [];
-  
       if (doc.sinVto) {
         doc.fechaVto = 0;
         doc.estado = {
           enFecha: false,
           porVencer: false,
           vencido: false,
-          vacio: !doc.titulo.trim(), // Está vacío si no hay título
+          vacio: !doc.titulo.trim(),
         };
       } else {
         const fechaActual = new Date().getTime();
         const fechaVto = typeof doc.fechaVto === 'number' ? doc.fechaVto : doc.fechaVto.getTime();
         const diferenciaDias = Math.floor((fechaVto - fechaActual) / (1000 * 60 * 60 * 24));
   
-        // Actualizamos el estado individual del documento
         doc.estado = {
           enFecha: diferenciaDias > 30,
           porVencer: diferenciaDias <= 30 && diferenciaDias >= 0,
           vencido: diferenciaDias < 0,
-          vacio: !doc.titulo.trim(), // Está vacío si no hay título
+          vacio: !doc.titulo.trim(),
         };
   
-        // Verificamos el estado general del legajo
-        if (doc.estado.vencido) {
-          algunVencido = true;
-        }
-        if (doc.estado.porVencer) {
-          algunPorVencer = true;
-        }
-        if (!doc.estado.enFecha) {
-          todosEnFecha = false;
-        }
+        if (doc.estado.vencido) algunVencido = true;
+        if (doc.estado.porVencer) algunPorVencer = true;
+        if (!doc.estado.enFecha) todosEnFecha = false;
       }
     });
   
-    // Actualizamos el estado general del legajo
     this.legajoSeleccionado.estadoGral = {
       vencido: algunVencido,
       porVencer: algunPorVencer,
@@ -191,13 +298,16 @@ export class CargarDocumentosComponent implements OnInit {
       vacio: this.legajoSeleccionado.documentacion.every((doc) => doc.estado.vacio),
     };
   
-    // Llamamos a updateItem para guardar el legajo actualizado
-    try {
-      this.storageService.updateItem('legajos', this.legajoSeleccionado);
-      console.log("Legajo actualizado correctamente:", this.legajoSeleccionado);
-    } catch (error) {
-      console.error("Error al actualizar el legajo:", error);
-    }
+    // Subir imágenes a Cloudinary y guardar legajo
+    this.subirImagenesACloudinary()
+      .then(() => {
+        // Guardar legajo actualizado en la base de datos
+        this.storageService.updateItem('legajos', this.legajoSeleccionado);
+        console.log("Legajo guardado correctamente:", this.legajoSeleccionado);
+      })
+      .catch((error) => {
+        console.error("Error al subir imágenes o guardar el legajo:", error);
+      });
   }
 
   
@@ -305,6 +415,37 @@ export class CargarDocumentosComponent implements OnInit {
         (reason) => {}
       );
     }
+  }
+
+  subirImagenesACloudinary(): Promise<void> {
+    const promises: Promise<any>[] = [];
+  
+    this.legajoSeleccionado.documentacion.forEach((documento) => {
+      // Procesar imágenes con contenido base64
+      documento.imagenes.forEach((imagen, index) => {
+        if (imagen.contenido) {
+          const formData = new FormData();
+          formData.append('file', imagen.contenido); // Contenido base64
+          formData.append('upload_preset', environment.cloudinary.uploadPreset);
+  
+          // Subir a Cloudinary
+          const uploadPromise = this.http.post(this.cloudinaryUrl, formData).toPromise();
+          promises.push(
+            uploadPromise.then((response: any) => {
+              // Reemplazar contenido base64 con la URL de Cloudinary
+              documento.imagenes[index] = {
+                nombre: imagen.nombre, // Mantener el nombre
+                url: response.secure_url, // URL de Cloudinary
+              };
+            })
+          );
+        }
+      });
+    });
+  
+    return Promise.all(promises).then(() => {
+      console.log('Todas las imágenes fueron subidas a Cloudinary');
+    });
   }
 }
   

@@ -21,6 +21,10 @@ import { Component, Input, OnInit } from '@angular/core';
     Guardar 
 </button>
 
+<button *ngIf="name === 'Descargar Legajo'" class="btn azul mt-2" type="submit">
+    Descargar Legajo 
+</button>
+
 <button *ngIf="name === 'GuardarClaro'" class="btn btn-outline-secondary mt-2" type="submit">
     Guardar 
 </button>

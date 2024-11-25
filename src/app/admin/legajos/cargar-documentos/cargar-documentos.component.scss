@@ -2,6 +2,10 @@ th, td, select, input{
     font-size:1.4rem;
 }
 
+button{
+  font-size: 1.2rem;
+}
+
 .container {
     margin-top: 20px;
   }
@@ -17,6 +21,7 @@ th, td, select, input{
   .isDisabled {
     pointer-events: none;
     cursor: not-allowed;
+    opacity: 0.5;
   }
   
   .isDisabled:hover {

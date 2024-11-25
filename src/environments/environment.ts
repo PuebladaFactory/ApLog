@@ -55,5 +55,9 @@ export const environment = {
   
     measurementId: "G-QKQXYG18DZ"
   
+  },
+  cloudinary: {
+    cloudName: 'dfrstiqwd',
+    uploadPreset: 'ml_default'
   }
 };
