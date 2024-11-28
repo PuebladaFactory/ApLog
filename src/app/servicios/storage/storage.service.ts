@@ -769,6 +769,9 @@ export class StorageService {
           case "tarifasGralProveedor":
             this.setInfo("ultTarifaGralProveedor", item);            
             break;
+          case "legajos":
+            this.getAllSorted("legajos", 'idLegajo', 'asc');
+            break;
           /* case "tarifasChofer":
             this.getByFieldValue("tarifasChofer", 'fecha', 'asc');
             break;

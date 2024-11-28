@@ -1,9 +1,9 @@
 <div class="row mt-4">
-    <div class="col-8 d-flex justify-content-between">
-        <div class="col-3" >      
+    <div class="col-8 row">
+        <div class="col-4" >      
             <h1 class="mt-2">Tarifa Especial</h1>
-        </div>  
-        <div class="col-3">
+        </div>          
+        <div class="col-4">
             <h2>Seleccionar Proveedor</h2>
             <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)">
                 <option selected>Seleccione</option>
@@ -11,8 +11,8 @@
                     {{proveedor.razonSocial}} 
                 </option>
             </select>
-        </div>         
-        <div class="col-3" [ngClass]="{'invisible': proveedorSeleccionado === undefined}">
+        </div>                 
+        <div class="col-4" [ngClass]="{'invisible': proveedorSeleccionado === undefined}">
             <div class="d-flex">
                 <h2>Seleccionar Cliente</h2>
                 <div class="ms-2">

@@ -27,7 +27,7 @@
               <tr>
                   <th style="width: 2%"><input type="checkbox" (change)="onSeleccionarTodosChange($event)" formControlName="seleccionarTodos"></th>
                   <th style="width: 12%">Categoria Tarifa Gral</th>
-                  <th style="width: 26%" class="d-flex">
+                  <th style="width: 26%" class="">
                     Nombre  
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle ms-2" viewBox="0 0 16 16" type="button" (click)="mostrarInfo()">
                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -42,10 +42,10 @@
             </thead>
             <tbody formArrayName="filas"  *ngIf="ultTarifaCliente.cargasGenerales !== undefined else sinTarifaGral" >
                 <tr *ngFor="let fila of filas.controls; let i = index" [formGroupName]="i">
-                    <td><input type="checkbox" formControlName="seleccionado"></td>
-                    <td>{{ fila.get('categoria')?.value }}</td>
-                    <td><input type="text" formControlName="nombre"></td>
-                    <td>
+                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}"><input type="checkbox" formControlName="seleccionado"></td>
+                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">{{ fila.get('categoria')?.value }}</td>
+                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}"><input type="text" formControlName="nombre"></td>
+                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">
                                 {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
@@ -53,7 +53,7 @@
                             <input type="text" class="form-control" formControlName="ultimaTarifa">
                         </div>                                
                     </td>
-                    <td>
+                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">
                                 {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
@@ -61,7 +61,7 @@
                             <input type="text" class="form-control" formControlName="diferencia">
                         </div>                                                        
                     </td>
-                    <td>
+                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">
                                 {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}

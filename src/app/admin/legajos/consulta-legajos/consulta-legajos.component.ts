@@ -5,6 +5,8 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { CarruselComponent } from 'src/app/shared/carrusel/carrusel.component';
+import * as JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-consulta-legajos',
@@ -17,7 +19,7 @@ export class ConsultaLegajosComponent implements OnInit {
   $legajos!: Legajo[];
   choferSeleccionado!: Chofer;
   legajoSeleccionado!: Legajo;
-  archivosPrevisualizados: string[] = [];
+  archivosPrevisualizados!: { nombre: string; url: string }[]; // Especificamos el tipo = [];
 
   constructor(private storageService: StorageService, private modalService: NgbModal, private sanitizer: DomSanitizer){}
 
@@ -26,8 +28,6 @@ export class ConsultaLegajosComponent implements OnInit {
       this.$choferes = data;     
       this.$choferes = this.$choferes      
       .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-      console.log("1)choferes especiales: ", this.$choferes);      
-      
     })     
     this.storageService.legajos$.subscribe(data => {
       this.$legajos = data;     
@@ -51,12 +51,8 @@ export class ConsultaLegajosComponent implements OnInit {
     //console.log("legajos: ", this.$legajos);    
     let legajoSel : Legajo[];
     legajoSel = this.$legajos.filter((l)=> l.idChofer === this.choferSeleccionado.idChofer);    
-    this.legajoSeleccionado = legajoSel[0]
-    console.log("legajo seleccionado: ",this.legajoSeleccionado);
-    
-    if (this.legajoSeleccionado) {
-      //this.inicializarDocumentacion();
-    }
+    this.legajoSeleccionado = legajoSel[0];    
+    //console.log("legajo seleccionado: ",this.legajoSeleccionado);  
   }
 
   getFileIconSVG(fileName: string): SafeHtml {
@@ -113,9 +109,6 @@ export class ConsultaLegajosComponent implements OnInit {
     }
   }
 
-  getFileName(filePath: string): string {
-    return filePath.split('/').pop() || filePath;
-  }
 
   getShortFileName(fileName: string): string {
     console.log("fileName: ", fileName);
@@ -127,17 +120,6 @@ export class ConsultaLegajosComponent implements OnInit {
     return '...' + fileName.slice(-maxLength); // Mostrar los últimos caracteres
   }
 
-  getFecha(fecha:any){
-    
-    
-    let fechaDate = new Date(fecha) 
-    //console.log("fechaDate: ", fechaDate);    
-    return fechaDate.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  }
 
   abrirModal(index: number){
     this.archivosPrevisualizados = this.legajoSeleccionado.documentacion[index].imagenes || [];
@@ -166,8 +148,45 @@ export class ConsultaLegajosComponent implements OnInit {
     }
   }
 
-  descargarLegajo(){
-    alert("aca va un legajo re copado")
+  descargarLegajo(): void {
+    if (!this.legajoSeleccionado) {
+      console.error('No hay legajo seleccionado');
+      return;
+    }
+  
+    const zip = new JSZip(); // Crear el archivo ZIP
+    const carpeta = zip.folder(this.choferSeleccionado.apellido + '_' + this.choferSeleccionado.nombre); // Carpeta principal
+  
+    const promises: Promise<any>[] = [];
+  
+    this.legajoSeleccionado.documentacion.forEach((doc) => {
+      doc.imagenes.forEach((archivo) => {
+        const url = archivo.url; // URL de la imagen en Cloudinary
+        const nombreArchivo = archivo.nombre; // Nombre del archivo
+  
+        // Descargar el archivo y agregarlo al ZIP
+        const promesa = fetch(url)
+          .then((response) => response.blob()) // Convertir a Blob
+          .then((blob) => {
+            carpeta?.file(nombreArchivo, blob); // Agregar al ZIP
+          });
+  
+        promises.push(promesa); // Agregar la promesa al array
+      });
+    });
+  
+    // Esperar a que todos los archivos se descarguen
+    Promise.all(promises)
+      .then(() => {
+        zip.generateAsync({ type: 'blob' }) // Generar el archivo ZIP
+          .then((contenido: string | Blob) => {
+            // Descargar el archivo ZIP
+            saveAs(contenido, `${this.choferSeleccionado.apellido}_${this.choferSeleccionado.nombre}_legajo.zip`);
+          });
+      })
+      .catch((error) => {
+        console.error('Error al descargar los archivos:', error);
+      });
   }
 
 }

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Documentacion, Estado, Legajo } from 'src/app/interfaces/legajo';
@@ -7,6 +7,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { CarruselComponent } from 'src/app/shared/carrusel/carrusel.component';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-cargar-documentos',
@@ -17,7 +18,7 @@ export class CargarDocumentosComponent implements OnInit {
   
   $choferes!: Chofer[];
   $legajos!: Legajo[];
-  choferSeleccionado!: Chofer;
+  choferSeleccionado!: Chofer | null;
   legajoSeleccionado!: Legajo;
   tramites: any[] = [
     {nombre:'DNI', seleccionado : false},
@@ -34,13 +35,16 @@ export class CargarDocumentosComponent implements OnInit {
     {nombre:'Senasa', seleccionado : false},
   ];
   tramitesSeleccionados:Documentacion[] = [];
-  tieneVto: boolean = false;
+  tieneVto: any = null;
   docu!:Documentacion;
-  fechaDeVto:number = 0;
-  archivosPrevisualizados: string[] = [];
+  titulo: any = null; 
+  imagenes: { nombre: string; url: string }[] = []; // Especificamos el tipo = [];
+  fechaDeVto!: string | null;
+  archivosPrevisualizados: { nombre: string; url: string }[] = []; // Especificamos el tipo = [];
+  archivosSeleccionados: File[] = [];
   svg:string = "";
   cloudinaryUrl = `https://api.cloudinary.com/v1_1/${environment.cloudinary.cloudName}/image/upload`;
-  
+  archivoPDFBase64: SafeResourceUrl | null = null;
   
   constructor(private storageService: StorageService, private sanitizer: DomSanitizer, private modalService: NgbModal, private http: HttpClient){
 
@@ -70,130 +74,199 @@ export class CargarDocumentosComponent implements OnInit {
     });
     this.choferSeleccionado = choferSel[0];
     this.buscarLegajo();
+    if(this.tramitesSeleccionados.length > 0){
+      this.reiniciarDatos();
+    }
+  }
+
+  reiniciarDatos(){
+    this.tramitesSeleccionados.forEach((tramite)=>{
+      this.tramites.forEach((t)=>{
+        if(t.nombre === tramite.titulo){
+          t.seleccionado = false;
+        }
+      })
+    })
+    this.fechaDeVto = null;      
+    this.imagenes = [];
+    this.titulo = null;
+    this.tieneVto = null;
+     // Limpieza: reinicia los archivos seleccionados
+    this.archivosSeleccionados = [];
+    const inputArchivos = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (inputArchivos) {
+      inputArchivos.value = ''; // Limpia el campo de archivos en el DOM
+    };
+    this.tramitesSeleccionados = []
   }
 
   buscarLegajo(){    
-    console.log("legajos: ", this.$legajos);    
+    //console.log("legajos: ", this.$legajos);    
     let legajoSel : Legajo[];
-    legajoSel = this.$legajos.filter((l)=> l.idChofer === this.choferSeleccionado.idChofer);    
+    legajoSel = this.$legajos.filter((l)=> l.idChofer === this.choferSeleccionado?.idChofer);    
     this.legajoSeleccionado = legajoSel[0];
-    if (this.legajoSeleccionado) {
-      this.inicializarDocumentacion();
-    }
+    console.log("legajo seleccionado: ", this.legajoSeleccionado);       
   }
 
-  changeTramite(e:any){
-    //console.log(e.target.value);
-    let id = Number(e.target.value)
-    this.docu = {
-      titulo: this.tramites[id].nombre,
-      sinVto: false,
-      fechaVto:0,
-      estado:{enFecha:false, porVencer: false, vencido: false, vacio:false},
-      imagenes : [],
-    }
-    console.log("docu", this.docu);
-    
-    
+  changeTramite(e:any){   
+    let id = Number(e.target.value);   
+    this.titulo = this.tramites[id].nombre;
   }
 
   seleccioneVto(e:any){
     this.tieneVto = e.target.value.toLowerCase() == 'true';
-    console.log(this.tieneVto);
+    //console.log(this.tieneVto);
     if(!this.tieneVto){
-      this.fechaDeVto = 0;
-      console.log(this.fechaDeVto);
-    }
-    
+      this.fechaDeVto = null;
+      //console.log(this.fechaDeVto);
+    }    
   }
 
-  fechaVto(fecha:string){
-      if(this.tieneVto){
-        this.fechaDeVto = new Date(fecha).getTime();
-      } else {
-        this.fechaDeVto = 0;
-      }
-      console.log(this.fechaDeVto);
-      
+  fechaVto(fecha: Date): void {
+    //console.log(fecha);
+  
+    if (this.tieneVto) {
+      this.fechaDeVto = fecha.toLocaleString()
+    } else {
+      this.fechaDeVto = null;
+    }
+  
+    console.log(this.fechaDeVto);
+  }
+
+  onArchivosSeleccionados(event: any): void {
+    let archivos = event.target.files;
+    this.archivosSeleccionados = Array.from(archivos); // Convierte FileList a un array de File
   }
 
   agregarDocumento(archivos: FileList | null){
     if (!archivos) return;
-
-    const documentoSeleccionado = this.tramites.find((doc) => !doc.seleccionado);
+    
+    
+    let documentoSeleccionado = this.tramites.find((doc) => !doc.seleccionado);
     console.log("documentoSeleccionado", documentoSeleccionado);
     
     if (documentoSeleccionado) {
       for (let i = 0; i < archivos.length; i++) {
-        const archivo = archivos[i];
-        const reader = new FileReader();
+        let archivo = archivos[i];
+        this.convertirPDFaBase64(archivo)
+        let reader = new FileReader();
   
         reader.onload = (e: any) => {
           // Agrega el archivo al array de imágenes temporalmente
-          this.docu.imagenes = this.docu.imagenes || [];
-          this.docu.imagenes.push({
+          this.imagenes = this.imagenes || [];
+          this.imagenes.push({
             nombre: archivo.name,
-            contenido: e.target.result, // Base64
+            url: e.target.result, // Base64
           });
         };
   
         reader.readAsDataURL(archivo);
-        console.log("docu", this.docu);
+        //console.log("docu", this.docu);
         
       }
     }
   }
 
+  getFecha(fecha:any){   
+    let fechaDate = new Date(fecha) 
+    //console.log("fechaDate: ", fechaDate);    
+    return fechaDate.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  }
+
   agregarTramite(): void {
-    const documentoSeleccionado = this.tramites.find((doc) => !doc.seleccionado);
-    if (!documentoSeleccionado || this.docu.imagenes.length === 0) {
-      console.error('No se seleccionó un trámite válido.');
+    //let documentoSeleccionado = this.tramites.find((doc) => !doc.seleccionado);
+    /* if (this.imagenes.length === 0) {
+      console.error('No se cargaron archivos.');
       return;
-    }
+    } */
   
     // Calcular estado del documento
     let estado: Estado = { enFecha: false, porVencer: false, vencido: false, vacio: false };
-    const fechaActual = new Date().getTime();
+    let fechaActual = new Date().getTime();
+    
   
     if (this.tieneVto) {
-      const diferenciaDias = Math.floor((this.fechaDeVto - fechaActual) / (1000 * 60 * 60 * 24));
-      estado = {
-        enFecha: diferenciaDias > 30,
-        porVencer: diferenciaDias <= 30 && diferenciaDias >= 0,
-        vencido: diferenciaDias < 0,
-        vacio: false,
-      };
+      if(this.fechaDeVto){
+        console.log("1)this.fechaDeVto", this.fechaDeVto);
+        let fechaVto = new Date(this.fechaDeVto).getTime();
+        let diferenciaDias = Math.floor((fechaVto - fechaActual) / (1000 * 60 * 60 * 24));
+        estado = {
+          enFecha: diferenciaDias > 30,
+          porVencer: diferenciaDias <= 30 && diferenciaDias >= 0,
+          vencido: diferenciaDias < 0,
+          vacio: false,
+        };
+      }      
     } else {
-      estado = { enFecha: false, porVencer: false, vencido: false, vacio: true };
+      estado = { enFecha: false, porVencer: false, vencido: false, vacio: false };
     }
-  
+    //console.log("titulo: ",this.titulo);
     // Crear el objeto Documentacion
-    const nuevoTramite: Documentacion = {
-      titulo: this.docu.titulo,
+    console.log("2)this.fechaDeVto", this.fechaDeVto);
+    let nuevoTramite: Documentacion = {
+      titulo: this.titulo,
       sinVto: !this.tieneVto,
-      fechaVto: this.tieneVto ? this.fechaDeVto : 0,
+      fechaVto: this.tieneVto ? this.fechaDeVto : null,
       estado,
-      imagenes: this.docu.imagenes || [],
+      imagenes: this.imagenes || [],
     };
-  
+    console.log("nuevoTramite", nuevoTramite);
+    
     // Agregar al array de tramites seleccionados
     this.tramitesSeleccionados.push(nuevoTramite);
   
     // Marcar el trámite como seleccionado
-    documentoSeleccionado.seleccionado = true;
+    //documentoSeleccionado.seleccionado = true;
+    this.tramites.map((doc)=>{
+      if(doc.nombre === this.titulo){
+        doc.seleccionado = true;
+      }
+    })
     
     // Reiniciar valores para el siguiente trámite
-    this.tieneVto = false;
-    this.fechaDeVto = 0;
-    documentoSeleccionado.imagenes = [];
-    this.docu.imagenes = [];
-    this.docu.titulo = "";
-    console.log("tramites: ",this.tramites);
-    console.log("docu: ",this.docu);
     
+    this.fechaDeVto = null;
+    //documentoSeleccionado.imagenes = [];
+    this.imagenes = [];
+    this.titulo = null;
+    this.tieneVto = null;
+     // Limpieza: reinicia los archivos seleccionados
+    this.archivosSeleccionados = [];
+    const inputArchivos = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (inputArchivos) {
+      inputArchivos.value = ''; // Limpia el campo de archivos en el DOM
+    }
+    //console.log("tramites: ",this.tramites);
+    console.log("tramitesSeleccionados: ", this.tramitesSeleccionados);
+    //console.log("titulo: ",this.titulo);
+    //console.log("imagenes: ", this.imagenes);
+
+   
   }
 
-  inicializarDocumentacion(): void {
+  eliminarTramite(doc:Documentacion){    
+      let index = this.tramitesSeleccionados.indexOf(doc);
+      let titulo = doc.titulo;      
+      if (index !== -1) {
+        this.tramitesSeleccionados.splice(index, 1); // Eliminar archivo del array
+      } else {
+        return this.mensajesError("Error al eliminar el archivo")
+      }
+      this.tramites.map((doc)=>{
+        if(doc.nombre === titulo){
+          doc.seleccionado = false;
+        }
+      });
+      console.log("tramites", this.tramites);
+      
+  }
+
+/*   inicializarDocumentacion(): void {
     if (!this.legajoSeleccionado) return;
 
     this.legajoSeleccionado.documentacion = this.tramites.map((tramite) => {
@@ -209,25 +282,25 @@ export class CargarDocumentosComponent implements OnInit {
         }
       );
     });
-  }
+  } */
 
-  actualizarFechaVto(index: number, fecha: string): void {
+/*   actualizarFechaVto(index: number, fecha: string): void {
     if (this.legajoSeleccionado) {
       const documento = this.legajoSeleccionado.documentacion[index];
       documento.sinVto = false;
       documento.fechaVto = new Date(fecha).getTime();
     }
-  }
+  } */
 
-  toggleSinVto(index: number, checked: boolean): void {
+ /*  toggleSinVto(index: number, checked: boolean): void {
     if (this.legajoSeleccionado) {
       const documento = this.legajoSeleccionado.documentacion[index];
       documento.sinVto = checked;
       if (checked) documento.fechaVto = 0;
     }
-  }
+  } */
 
-  agregarImagen(tramiteIndex: number, archivos: FileList | null): void {
+  /* agregarImagen(tramiteIndex: number, archivos: FileList | null): void {
     if (this.legajoSeleccionado && archivos) {
       const documento = this.legajoSeleccionado.documentacion[tramiteIndex];
   
@@ -239,21 +312,177 @@ export class CargarDocumentosComponent implements OnInit {
         reader.onload = (e: any) => {
           documento.imagenes.push({
             nombre: archivo.name, // Nombre original del archivo
-            contenido: e.target.result, // Contenido en base64
+            url: e.target.result, // Contenido en base64
           });
         };
         reader.readAsDataURL(archivo);
       }
     }
-  }
+  } */
   
-  eliminarImagen(tramiteIndex: number, imagenIndex: number): void {
+ /*  eliminarImagen(tramiteIndex: number, imagenIndex: number): void {
     if (this.legajoSeleccionado) {
       this.legajoSeleccionado.documentacion[tramiteIndex].imagenes.splice(imagenIndex, 1);
     }
+  } */
+
+    guardar(): void {
+      if (!this.legajoSeleccionado) {
+        this.mensajesError("No hay legajo seleccionado")
+        return;
+      }
+
+      Swal.fire({
+        title: "¿Desea guardar los datos del legajo?",
+        //text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Agregar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          ///
+           // Promesas para subir imágenes a Cloudinary
+          const uploadPromises: Promise<any>[] = [];
+        
+          // Actualizar trámites seleccionados en el legajo
+          this.tramitesSeleccionados.forEach((nuevoTramite) => {
+            // Buscar el trámite existente en el legajo
+            const tramiteExistente = this.legajoSeleccionado.documentacion.find(
+              (doc) => doc.titulo === nuevoTramite.titulo
+            );
+            console.log("tramiteExistente", tramiteExistente);
+        
+              if (tramiteExistente) {
+                // Actualizar los datos del trámite existente
+                tramiteExistente.sinVto = nuevoTramite.sinVto;
+                tramiteExistente.fechaVto = nuevoTramite.fechaVto;
+                tramiteExistente.estado = nuevoTramite.estado;
+          
+                if (nuevoTramite.imagenes.length > 0) {
+                  console.log('1) Tramite existente con nuevas imágenes: ', nuevoTramite.imagenes);
+                  tramiteExistente.imagenes = [];
+                  nuevoTramite.imagenes.forEach((archivo: any) => {
+                    const formData = new FormData();
+                    formData.append('file', archivo.url); // Contenido base64
+                    formData.append('upload_preset', environment.cloudinary.uploadPreset);
+          
+                    const uploadPromise = this.http.post(this.cloudinaryUrl, formData).toPromise();
+                    uploadPromises.push(
+                      uploadPromise.then((response: any) => {
+                        tramiteExistente.imagenes.push({
+                          nombre: archivo.nombre,
+                          url: response.secure_url,
+                        });
+                      })
+                    );
+                  });
+                } else {
+                  console.log('2) Tramite existente sin nuevas imágenes: Solo se actualiza vencimiento');
+                  // No subimos imágenes, solo actualizamos la fecha de vencimiento y estado
+                }
+              } else {
+                // Crear un nuevo trámite si no existe
+                const tramiteNuevo: Documentacion = {
+                  titulo: nuevoTramite.titulo,
+                  sinVto: nuevoTramite.sinVto,
+                  fechaVto: nuevoTramite.fechaVto,
+                  estado: nuevoTramite.estado,
+                  imagenes: [], // Inicializamos vacío ya que no hay imágenes
+                };
+          
+                console.log('3) Tramite nuevo, nuevoTramite.imagenes:', nuevoTramite.imagenes);
+          
+                if (nuevoTramite.imagenes.length > 0) {
+                  nuevoTramite.imagenes.forEach((archivo: any) => {
+                    const formData = new FormData();
+                    formData.append('file', archivo.url);
+                    formData.append('upload_preset', environment.cloudinary.uploadPreset);
+          
+                    const uploadPromise = this.http.post(this.cloudinaryUrl, formData).toPromise();
+                    uploadPromises.push(
+                      uploadPromise.then((response: any) => {
+                        tramiteNuevo.imagenes.push({
+                          nombre: archivo.nombre,
+                          url: response.secure_url,
+                        });
+                      })
+                    );
+                  });
+                }
+          
+                // Agregar el trámite nuevo al legajo
+                this.legajoSeleccionado.documentacion.push(tramiteNuevo);
+              }
+            });
+    
+          // Esperar a que todas las imágenes se suban antes de guardar el legajo
+          Promise.all(uploadPromises)
+            .then(() => {
+              // Actualizar estado general del legajo
+              this.actualizarEstadoGeneral();
+        
+              // Guardar el legajo en la base de datos
+              this.updateItem()
+              console.log('Legajo actualizado correctamente:', this.legajoSeleccionado);
+            })
+            .catch((error) => {
+              console.error('Error al subir imágenes o guardar el legajo:', error);
+              this.mensajesError("Error al subir imágenes o guardar el legajo")
+            });
+
+              ///////
+              Swal.fire({
+                title: "Confirmado",
+                text: "El legajo ha sido guardado.",
+                icon: "success"
+              }).then((result)=>{
+                if (result.isConfirmed) {
+                  this.tramitesSeleccionados = [];
+                  this.choferSeleccionado = null;
+
+                }
+              });   
+              
+            }
+          });   
+    
+     
+    }
+
+  actualizarEstadoGeneral(): void {
+    let algunVencido = false;
+    let algunPorVencer = false;
+    let todosEnFecha = true;
+  
+    this.legajoSeleccionado.documentacion.forEach((doc) => {
+      if (doc.sinVto || !doc.fechaVto) return; // Saltar si no tiene vencimiento o fechaVto es null
+    
+      const fechaActual = new Date().getTime();
+      const fechaVto = new Date(doc.fechaVto).getTime();
+      const diferenciaDias = Math.floor((fechaVto - fechaActual) / (1000 * 60 * 60 * 24));
+    
+      if (diferenciaDias < 0) {
+        algunVencido = true;
+      } else if (diferenciaDias <= 30) {
+        algunPorVencer = true;
+      } else {
+        todosEnFecha = todosEnFecha && true;
+      }
+    });
+  
+    this.legajoSeleccionado.estadoGral = {
+      vencido: algunVencido,
+      porVencer: algunPorVencer,
+      enFecha: !algunVencido && !algunPorVencer && todosEnFecha,
+      vacio: this.legajoSeleccionado.documentacion.every((doc) => doc.estado.vacio),
+    };
   }
 
-  guardar(): void {
+
+  /* guardar(): void {
     if (!this.legajoSeleccionado) {
       console.error("No hay legajo seleccionado");
       return;
@@ -308,13 +537,12 @@ export class CargarDocumentosComponent implements OnInit {
       .catch((error) => {
         console.error("Error al subir imágenes o guardar el legajo:", error);
       });
-  }
+  } */
 
   
     getFileIconSVG(fileName: string): SafeHtml {
       const extension = this.getFileExtension(fileName);
-      //console.log("extension: ", extension);
-      
+      //console.log("extension: ", extension);      
       const svgIcons: { [key: string]: string } = {
         jpg: `<svg xmlns="http://www.w3.org/2000/svg" width="25" height="34" fill="currentColor" class="bi bi-filetype-jpg" viewBox="0 0 16 16">
               <path fill-rule="evenodd" d="M14 4.5V14a2 2 0 0 1-2 2h-1v-1h1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5zm-4.34 8.132q.114.23.14.492h-.776a.8.8 0 0 0-.097-.249.7.7 0 0 0-.17-.19.7.7 0 0 0-.237-.126 1 1 0 0 0-.299-.044q-.428 0-.665.302-.234.301-.234.85v.498q0 .351.097.615a.9.9 0 0 0 .304.413.87.87 0 0 0 .519.146 1 1 0 0 0 .457-.096.67.67 0 0 0 .272-.264q.09-.164.091-.363v-.255H8.24v-.59h1.576v.798q0 .29-.097.55a1.3 1.3 0 0 1-.293.458 1.4 1.4 0 0 1-.495.313q-.296.111-.697.111a2 2 0 0 1-.753-.132 1.45 1.45 0 0 1-.533-.377 1.6 1.6 0 0 1-.32-.58 2.5 2.5 0 0 1-.105-.745v-.506q0-.543.2-.95.201-.406.582-.633.384-.228.926-.228.357 0 .636.1.28.1.48.275t.314.407ZM0 14.786q0 .246.082.465.083.22.243.39.165.17.407.267.246.093.569.093.63 0 .984-.345.357-.346.358-1.005v-2.725h-.791v2.745q0 .303-.138.466t-.422.164a.5.5 0 0 1-.454-.246.6.6 0 0 1-.073-.27H0Zm4.92-2.86H3.322v4h.791v-1.343h.803q.43 0 .732-.172.305-.177.463-.475.162-.302.161-.677 0-.374-.158-.677a1.2 1.2 0 0 0-.46-.477q-.3-.18-.732-.179Zm.546 1.333a.8.8 0 0 1-.085.381.57.57 0 0 1-.238.24.8.8 0 0 1-.375.082H4.11v-1.406h.66q.327 0 .512.182.185.181.185.521Z"/>
@@ -363,12 +591,12 @@ export class CargarDocumentosComponent implements OnInit {
       }
     }
 
-  getFileName(filePath: string): string {
+  /* getFileName(filePath: string): string {
     return filePath.split('/').pop() || filePath;
-  }
+  } */
 
   getShortFileName(fileName: string): string {
-    console.log("fileName: ", fileName);
+    //console.log("fileName: ", fileName);
     
     const maxLength = 30; // Cantidad de caracteres a mostrar
     if (fileName.length <= maxLength) {
@@ -377,21 +605,36 @@ export class CargarDocumentosComponent implements OnInit {
     return '...' + fileName.slice(-maxLength); // Mostrar los últimos caracteres
   }
 
-  eliminarArchivo(doc: any, archivo: any): void {
+  eliminarArchivoCarga(archivo: any): void {
+    let index = this.imagenes.indexOf(archivo);
+    console.log("index", index);    
+    if (index !== -1) {
+      this.imagenes.splice(index, 1); // Eliminar archivo del array
+    }
+  }
+  
+
+  eliminarArchivoTramite(doc: any, archivo: any): void {
     const index = doc.imagenes.indexOf(archivo);
+    console.log("index", index);
+    
     if (index !== -1) {
       doc.imagenes.splice(index, 1); // Eliminar archivo del array
     }
   }
   
-  esImagen(fileName: string): boolean {
+ /*  esImagen(fileName: string): boolean {
     const extension = fileName.split('.').pop()?.toLowerCase();
     return extension === 'jpg' || extension === 'png';
-  }
+  } */
   
+  updateItem(): void {
+    this.storageService.updateItem('legajos', this.legajoSeleccionado);
+  }
+
  
-  abrirModal(index: number){
-    this.archivosPrevisualizados = this.legajoSeleccionado.documentacion[index].imagenes || [];
+  abrirModal(doc: Documentacion){
+    this.archivosPrevisualizados = doc.imagenes || [];
     
     {
       const modalRef = this.modalService.open(CarruselComponent, {
@@ -417,15 +660,33 @@ export class CargarDocumentosComponent implements OnInit {
     }
   }
 
-  subirImagenesACloudinary(): Promise<void> {
+  mensajesError(msj:string){
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
+  }
+
+  convertirPDFaBase64(file: File): void {
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const base64 = e.target.result; // Base64 generado
+      this.archivoPDFBase64 = this.sanitizer.bypassSecurityTrustResourceUrl(base64); // Sanitiza la URL
+    };
+    reader.readAsDataURL(file);
+  }
+
+/*   subirImagenesACloudinary(): Promise<void> {
     const promises: Promise<any>[] = [];
   
-    this.legajoSeleccionado.documentacion.forEach((documento) => {
+    this.tramitesSeleccionados.forEach((documento) => {
       // Procesar imágenes con contenido base64
       documento.imagenes.forEach((imagen, index) => {
-        if (imagen.contenido) {
+        if (imagen.url) {
           const formData = new FormData();
-          formData.append('file', imagen.contenido); // Contenido base64
+          formData.append('file', imagen.url); // Contenido base64
           formData.append('upload_preset', environment.cloudinary.uploadPreset);
   
           // Subir a Cloudinary
@@ -446,7 +707,7 @@ export class CargarDocumentosComponent implements OnInit {
     return Promise.all(promises).then(() => {
       console.log('Todas las imágenes fueron subidas a Cloudinary');
     });
-  }
+  } */
 }
   
 

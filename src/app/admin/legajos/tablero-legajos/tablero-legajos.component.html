@@ -2,15 +2,15 @@
     <table class="table table-striped table-bordered">
         <thead>
             <th style="width:15%">Chofer</th>
-            <th style="width: 7%;">Estado</th>
-            <th style="width: 6.5%;">Dni</th>
+            <th style="width: 8%;">Estado</th>
+            <th style="width: 6%;">Dni</th>
             <th style="width: 6.5%;">Ant. Penales</th>
             <th style="width: 6.5%;">Licencia</th>
             <th style="width: 6.5%;">LINTI</th>
             <th style="width: 6.5%;">L. Sanitaria</th>
             <th style="width: 6.5%;">ART/ ACC Personales</th>
             <th style="width: 6.5%;">Cedula</th>
-            <th style="width: 6.5%;">Titulo</th>
+            <th style="width: 6%;">Titulo</th>
             <th style="width: 6.5%;">Seguro</th>
             <th style="width: 6.5%;">VTV/RTO</th>
             <th style="width: 6.5%;">RUTA</th>
@@ -19,12 +19,12 @@
         <tbody>
             <tr *ngFor="let legajo of $legajos">
                 <td>{{getChofer(legajo.idChofer)}}</td>
-                <td [ngClass]="{'verde':legajo.estadoGral.enFecha , 'amarillo':legajo.estadoGral.porVencer, 'rojo':legajo.estadoGral.vencido, 'gris':legajo.estadoGral.vacio}">
-                    {{legajo.estadoGral.enFecha ? "En fecha" : legajo.estadoGral.porVencer ? "Por vencer" : legajo.estadoGral.vencido ? "Vencido" : legajo.estadoGral.vacio ? "Sin datos" : ""}}
+                <td [ngClass]="{'rojo':legajo.estadoGral.vencido,'verde':legajo.estadoGral.enFecha , 'amarillo':legajo.estadoGral.porVencer,'gris':legajo.estadoGral.vacio}">
+                    {{legajo.estadoGral.vencido ? "Vencido" : legajo.estadoGral.porVencer ? "Por vencer" : legajo.estadoGral.enFecha ? "En fecha" : legajo.estadoGral.vacio ? "Sin datos" : ""}}
                 </td>
                 <ng-container *ngFor="let doc of legajo.documentacion">
                     <td [ngClass]="{'celeste':doc.sinVto,'verde':doc.estado.enFecha, 'amarillo':doc.estado.porVencer, 'rojo':doc.estado.vencido }">
-                        {{doc.fechaVto === 0 ? "Sin Vto" : obtenerFecha(doc.fechaVto) }}
+                        {{doc.fechaVto === null ? "Sin Vto" : doc.fechaVto }}
                     </td>
                 </ng-container>                
             </tr>            

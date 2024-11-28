@@ -11,9 +11,9 @@ export interface Legajo {
 export interface Documentacion {    
     titulo: string;
     sinVto: boolean;
-    fechaVto: Date | number;
+    fechaVto: string | null;
     estado: Estado;
-    imagenes: any[];
+    imagenes: { nombre: string; url: string }[]; // Especificamos el tipo
 }
 
 export interface Estado {

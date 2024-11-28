@@ -40,7 +40,7 @@
                   <ul class="list-group list-group-flush" >
                     <li class="list-group-item d-flex justify-content-between" [ngClass]="{'celeste': doc.sinVto}">
                       <td style="width:40%" class="text-center">{{doc.estado.vacio? "Sin datos" :doc.sinVto? "Sin Vencimiento" : "Con vencimiento"}}</td>
-                      <td style="width:30%" class="text-center">{{doc.estado.vacio? "Sin datos" : doc.fechaVto === 0 ? "-" : getFecha(doc.fechaVto) }}</td>
+                      <td style="width:30%" class="text-center">{{doc.estado.vacio? "Sin datos" : doc.fechaVto === null ? "-" : doc.fechaVto }}</td>
                       <td style="width:30%" class="text-center" [ngClass]="{'gris':doc.estado.vacio,'verde': doc.estado.enFecha, 'amarillo': doc.estado.porVencer, 'rojo': doc.estado.vencido}">{{doc.estado.vacio? "Sin datos" :doc.sinVto ? "-" : doc.estado.enFecha ? "En fecha" : doc.estado.porVencer ? "Por vencer" : doc.estado.vencido ? "Vencido" : "Sin datos"}}</td>
                     </li>                 
                   </ul>
