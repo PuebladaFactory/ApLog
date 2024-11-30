@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Legajo } from 'src/app/interfaces/legajo';
@@ -7,6 +7,17 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { CarruselComponent } from 'src/app/shared/carrusel/carrusel.component';
 import * as JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({ name: 'safeUrl' })
+export class SafeUrlPipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) {}
+
+  transform(url: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+}
+
 
 @Component({
   selector: 'app-consulta-legajos',
@@ -22,6 +33,11 @@ export class ConsultaLegajosComponent implements OnInit {
   archivosPrevisualizados!: { nombre: string; url: string }[]; // Especificamos el tipo = [];
 
   constructor(private storageService: StorageService, private modalService: NgbModal, private sanitizer: DomSanitizer){}
+
+
+  transform(url: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
 
   ngOnInit(): void {
     this.storageService.choferes$.subscribe(data => {
@@ -154,39 +170,67 @@ export class ConsultaLegajosComponent implements OnInit {
       return;
     }
   
-    const zip = new JSZip(); // Crear el archivo ZIP
-    const carpeta = zip.folder(this.choferSeleccionado.apellido + '_' + this.choferSeleccionado.nombre); // Carpeta principal
-  
+    const zip = new JSZip();
+    const carpeta = zip.folder(this.choferSeleccionado.apellido + '_' + this.choferSeleccionado.nombre);
     const promises: Promise<any>[] = [];
   
     this.legajoSeleccionado.documentacion.forEach((doc) => {
       doc.imagenes.forEach((archivo) => {
-        const url = archivo.url; // URL de la imagen en Cloudinary
-        const nombreArchivo = archivo.nombre; // Nombre del archivo
+        const url = archivo.url;
+        const nombreArchivo = archivo.nombre;
   
-        // Descargar el archivo y agregarlo al ZIP
         const promesa = fetch(url)
-          .then((response) => response.blob()) // Convertir a Blob
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`Error al descargar ${nombreArchivo}: ${response.statusText}`);
+            }
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !(contentType.includes('application/pdf') || contentType.includes('image/'))) {
+              throw new Error(`El archivo ${nombreArchivo} no es válido (${contentType})`);
+            }
+            return response.blob();
+          })
           .then((blob) => {
-            carpeta?.file(nombreArchivo, blob); // Agregar al ZIP
+            if (blob.size === 0) {
+              throw new Error(`El archivo ${nombreArchivo} está vacío.`);
+            }
+            carpeta?.file(nombreArchivo, blob);
+          })
+          .catch((error) => {
+            console.error('Error al procesar archivo:', error);
           });
   
-        promises.push(promesa); // Agregar la promesa al array
+        promises.push(promesa);
       });
     });
   
-    // Esperar a que todos los archivos se descarguen
     Promise.all(promises)
       .then(() => {
-        zip.generateAsync({ type: 'blob' }) // Generar el archivo ZIP
+        if (carpeta?.length === 0) {
+          console.error('No se pudo agregar ningún archivo al ZIP');
+          return;
+        }
+        zip.generateAsync({ type: 'blob' })
           .then((contenido: string | Blob) => {
-            // Descargar el archivo ZIP
             saveAs(contenido, `${this.choferSeleccionado.apellido}_${this.choferSeleccionado.nombre}_legajo.zip`);
           });
       })
       .catch((error) => {
-        console.error('Error al descargar los archivos:', error);
+        console.error('Error al generar el ZIP:', error);
       });
+  }
+
+  
+  esImagen(url: string): boolean {
+    const extensionesImagen = ['jpg', 'jpeg', 'png', 'gif'];
+    const extension = url.split('.').pop()?.toLowerCase();
+    return extensionesImagen.includes(extension || '');
+  }
+
+  esPDF(url: string): boolean {
+    console.log("pasa por aca?");    
+
+    return /\.pdf$/i.test(url);
   }
 
 }

@@ -50,6 +50,8 @@ export class AdminSidebarComponent implements OnInit {
    }
     
   buscarAlertas(){
+    console.log("0)sidebar");
+    
     this.$legajos.forEach((legajo:Legajo)=>{
       if(legajo.estadoGral.porVencer || legajo.estadoGral.vencido){
         if(legajo.estadoGral.vencido){

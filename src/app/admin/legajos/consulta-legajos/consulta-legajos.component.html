@@ -44,21 +44,32 @@
                       <td style="width:30%" class="text-center" [ngClass]="{'gris':doc.estado.vacio,'verde': doc.estado.enFecha, 'amarillo': doc.estado.porVencer, 'rojo': doc.estado.vencido}">{{doc.estado.vacio? "Sin datos" :doc.sinVto ? "-" : doc.estado.enFecha ? "En fecha" : doc.estado.porVencer ? "Por vencer" : doc.estado.vencido ? "Vencido" : "Sin datos"}}</td>
                     </li>                 
                   </ul>
-                  <div id="carouselExample" class="carousel slide">
-                    <div class="carousel-inner">
-                      <div *ngFor="let imagen of doc.imagenes" class="carousel-item active">
-                        <img [src]="imagen.url" class="d-block w-100" alt="...">
-                      </div>                    
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-                      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                      <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-                      <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                      <span class="visually-hidden">Next</span>
-                    </button>
-                  </div>
+                  <ngb-carousel>
+                    <ng-template ngbSlide *ngFor="let archivo of doc.imagenes; let index = index">
+                      <div class="d-flex justify-content-center align-items-center">
+                        <!-- Condicional para mostrar imágenes o PDFs -->
+                        <ng-container *ngIf="esImagen(archivo.url); else pdfPreview">
+                          <img
+                            [src]="archivo.url"
+                            [alt]="'Imagen ' + (index + 1)"
+                            class="d-block"
+                            style="max-height: 100%; max-width: 100%;"
+                          />
+                        </ng-container>
+                        <!-- Vista previa para PDFs -->
+                        <ng-template #pdfPreview>
+                          <iframe
+                            [src]="archivo.url | safeUrl"
+                            type="application/pdf"
+                            style="width: 100%; height: 400px;"
+                          ></iframe>
+                        </ng-template>
+                      </div>
+                      <div class="carousel-caption">
+                        Archivo {{ index + 1 }} de {{ doc.imagenes.length }}
+                      </div>
+                    </ng-template>
+                  </ngb-carousel>
                 
               
                 

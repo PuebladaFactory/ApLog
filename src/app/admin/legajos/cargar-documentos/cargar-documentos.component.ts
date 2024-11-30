@@ -40,10 +40,11 @@ export class CargarDocumentosComponent implements OnInit {
   titulo: any = null; 
   imagenes: { nombre: string; url: string }[] = []; // Especificamos el tipo = [];
   fechaDeVto!: string | null;
-  archivosPrevisualizados: { nombre: string; url: string }[] = []; // Especificamos el tipo = [];
+  archivosPrevisualizados: any
   archivosSeleccionados: File[] = [];
   svg:string = "";
   cloudinaryUrl = `https://api.cloudinary.com/v1_1/${environment.cloudinary.cloudName}/image/upload`;
+  
   archivoPDFBase64: SafeResourceUrl | null = null;
   
   constructor(private storageService: StorageService, private sanitizer: DomSanitizer, private modalService: NgbModal, private http: HttpClient){
@@ -328,13 +329,12 @@ export class CargarDocumentosComponent implements OnInit {
 
     guardar(): void {
       if (!this.legajoSeleccionado) {
-        this.mensajesError("No hay legajo seleccionado")
+        this.mensajesError("No hay legajo seleccionado");
         return;
       }
-
+    
       Swal.fire({
         title: "¿Desea guardar los datos del legajo?",
-        //text: "You won't be able to revert this!",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -343,113 +343,114 @@ export class CargarDocumentosComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          ///
-           // Promesas para subir imágenes a Cloudinary
+          // Promesas para subir imágenes a Cloudinary
           const uploadPromises: Promise<any>[] = [];
-        
+    
           // Actualizar trámites seleccionados en el legajo
           this.tramitesSeleccionados.forEach((nuevoTramite) => {
-            // Buscar el trámite existente en el legajo
             const tramiteExistente = this.legajoSeleccionado.documentacion.find(
               (doc) => doc.titulo === nuevoTramite.titulo
             );
-            console.log("tramiteExistente", tramiteExistente);
-        
-              if (tramiteExistente) {
-                // Actualizar los datos del trámite existente
-                tramiteExistente.sinVto = nuevoTramite.sinVto;
-                tramiteExistente.fechaVto = nuevoTramite.fechaVto;
-                tramiteExistente.estado = nuevoTramite.estado;
-          
-                if (nuevoTramite.imagenes.length > 0) {
-                  console.log('1) Tramite existente con nuevas imágenes: ', nuevoTramite.imagenes);
-                  tramiteExistente.imagenes = [];
-                  nuevoTramite.imagenes.forEach((archivo: any) => {
-                    const formData = new FormData();
-                    formData.append('file', archivo.url); // Contenido base64
-                    formData.append('upload_preset', environment.cloudinary.uploadPreset);
-          
-                    const uploadPromise = this.http.post(this.cloudinaryUrl, formData).toPromise();
-                    uploadPromises.push(
-                      uploadPromise.then((response: any) => {
-                        tramiteExistente.imagenes.push({
-                          nombre: archivo.nombre,
-                          url: response.secure_url,
-                        });
-                      })
-                    );
-                  });
-                } else {
-                  console.log('2) Tramite existente sin nuevas imágenes: Solo se actualiza vencimiento');
-                  // No subimos imágenes, solo actualizamos la fecha de vencimiento y estado
-                }
-              } else {
-                // Crear un nuevo trámite si no existe
-                const tramiteNuevo: Documentacion = {
-                  titulo: nuevoTramite.titulo,
-                  sinVto: nuevoTramite.sinVto,
-                  fechaVto: nuevoTramite.fechaVto,
-                  estado: nuevoTramite.estado,
-                  imagenes: [], // Inicializamos vacío ya que no hay imágenes
-                };
-          
-                console.log('3) Tramite nuevo, nuevoTramite.imagenes:', nuevoTramite.imagenes);
-          
-                if (nuevoTramite.imagenes.length > 0) {
-                  nuevoTramite.imagenes.forEach((archivo: any) => {
-                    const formData = new FormData();
-                    formData.append('file', archivo.url);
-                    formData.append('upload_preset', environment.cloudinary.uploadPreset);
-          
-                    const uploadPromise = this.http.post(this.cloudinaryUrl, formData).toPromise();
-                    uploadPromises.push(
-                      uploadPromise.then((response: any) => {
-                        tramiteNuevo.imagenes.push({
-                          nombre: archivo.nombre,
-                          url: response.secure_url,
-                        });
-                      })
-                    );
-                  });
-                }
-          
-                // Agregar el trámite nuevo al legajo
-                this.legajoSeleccionado.documentacion.push(tramiteNuevo);
+    
+            if (tramiteExistente) {
+              // Actualizar los datos del trámite existente
+              tramiteExistente.sinVto = nuevoTramite.sinVto;
+              tramiteExistente.fechaVto = nuevoTramite.fechaVto;
+              tramiteExistente.estado = nuevoTramite.estado;
+    
+              if (nuevoTramite.imagenes.length > 0) {
+                tramiteExistente.imagenes = [];
+                nuevoTramite.imagenes.forEach((archivo: any) => {
+                  if (!archivo.url.startsWith('data:') || archivo.url.split(',')[1].length === 0) {
+                    console.error('El archivo no tiene datos válidos:', archivo.nombre);
+                    return;
+                  }
+                  const blob = this.dataURLtoBlob(archivo.url);
+                  const formData = new FormData();
+                  formData.append('file', blob);
+                  formData.append('upload_preset', environment.cloudinary.uploadPreset);
+    
+                  const uploadPromise = this.http.post(this.cloudinaryUrl, formData).toPromise();
+                  uploadPromises.push(
+                    uploadPromise.then((response: any) => {
+                      tramiteExistente.imagenes.push({
+                        nombre: archivo.nombre,
+                        url: response.secure_url,
+                      });
+                    })
+                  );
+                });
               }
-            });
+            } else {
+              // Crear un nuevo trámite si no existe
+              const tramiteNuevo: Documentacion = {
+                titulo: nuevoTramite.titulo,
+                sinVto: nuevoTramite.sinVto,
+                fechaVto: nuevoTramite.fechaVto,
+                estado: nuevoTramite.estado,
+                imagenes: [],
+              };
+    
+              if (nuevoTramite.imagenes.length > 0) {
+                nuevoTramite.imagenes.forEach((archivo: any) => {
+                  if (!archivo.url.startsWith('data:') || archivo.url.split(',')[1].length === 0) {
+                    console.error('El archivo no tiene datos válidos:', archivo.nombre);
+                    return;
+                  }
+                  const blob = this.dataURLtoBlob(archivo.url);
+                  const formData = new FormData();
+                  formData.append('file', blob);
+                  formData.append('upload_preset', environment.cloudinary.uploadPreset);
+    
+                  const uploadPromise = this.http.post(this.cloudinaryUrl, formData).toPromise();
+                  uploadPromises.push(
+                    uploadPromise.then((response: any) => {
+                      tramiteNuevo.imagenes.push({
+                        nombre: archivo.nombre,
+                        url: response.secure_url,
+                      });
+                    })
+                  );
+                });
+              }
+    
+              this.legajoSeleccionado.documentacion.push(tramiteNuevo);
+            }
+          });
     
           // Esperar a que todas las imágenes se suban antes de guardar el legajo
           Promise.all(uploadPromises)
             .then(() => {
-              // Actualizar estado general del legajo
               this.actualizarEstadoGeneral();
-        
-              // Guardar el legajo en la base de datos
-              this.updateItem()
-              console.log('Legajo actualizado correctamente:', this.legajoSeleccionado);
-            })
-            .catch((error) => {
-              console.error('Error al subir imágenes o guardar el legajo:', error);
-              this.mensajesError("Error al subir imágenes o guardar el legajo")
-            });
-
-              ///////
+              this.updateItem();
               Swal.fire({
                 title: "Confirmado",
                 text: "El legajo ha sido guardado.",
                 icon: "success"
-              }).then((result)=>{
+              }).then((result) => {
                 if (result.isConfirmed) {
                   this.tramitesSeleccionados = [];
                   this.choferSeleccionado = null;
-
                 }
-              });   
-              
-            }
-          });   
+              });
+            })
+            .catch((error) => {
+              console.error('Error al subir imágenes o guardar el legajo:', error);
+              this.mensajesError("Error al subir imágenes o guardar el legajo");
+            });
+        }
+      });
+    }
     
-     
+    dataURLtoBlob(dataURL: string): Blob {
+      const byteString = atob(dataURL.split(',')[1]);
+      const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      return new Blob([ab], { type: mimeString });
     }
 
   actualizarEstadoGeneral(): void {
@@ -480,6 +481,7 @@ export class CargarDocumentosComponent implements OnInit {
       vacio: this.legajoSeleccionado.documentacion.every((doc) => doc.estado.vacio),
     };
   }
+
 
 
   /* guardar(): void {
@@ -634,7 +636,10 @@ export class CargarDocumentosComponent implements OnInit {
 
  
   abrirModal(doc: Documentacion){
-    this.archivosPrevisualizados = doc.imagenes || [];
+    this.archivosPrevisualizados = doc.imagenes.map(imagen => ({
+      url: imagen.url,
+      vistaPreviaSanitizada: this.sanitizer.bypassSecurityTrustResourceUrl(imagen.url),
+    }));
     
     {
       const modalRef = this.modalService.open(CarruselComponent, {

@@ -14,7 +14,7 @@ import { NgbDropdownModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 import { HistorialTarifasGralComponent } from './historial-tarifas-gral/historial-tarifas-gral.component';
 import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventuales.component';
-import { CarruselComponent } from './carrusel/carrusel.component';
+import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +27,8 @@ import { CarruselComponent } from './carrusel/carrusel.component';
     TableroCalendarioComponent,
     HistorialTarifasGralComponent,
     TarifasEventualesComponent,
-    CarruselComponent
+    CarruselComponent,
+    SafeUrlPipe
   ],
   imports: [
     CommonModule,
