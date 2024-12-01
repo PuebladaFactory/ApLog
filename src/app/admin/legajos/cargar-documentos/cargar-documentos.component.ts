@@ -185,6 +185,11 @@ export class CargarDocumentosComponent implements OnInit {
       console.error('No se cargaron archivos.');
       return;
     } */
+   console.log("tiene vto:", this.tieneVto, "fecha de vto: ", this.fechaDeVto);
+      if (this.tieneVto && !this.fechaDeVto) {
+        
+        return this.mensajesError("No se ingreso una fecha de vencimiento");
+      }
   
     // Calcular estado del documento
     let estado: Estado = { enFecha: false, porVencer: false, vencido: false, vacio: false };

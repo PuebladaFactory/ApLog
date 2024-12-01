@@ -1,8 +1,7 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { Chofer } from 'src/app/interfaces/chofer';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { Operacion } from 'src/app/interfaces/operacion';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { take } from 'rxjs';
+import { Legajo } from 'src/app/interfaces/legajo';
+import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -13,14 +12,25 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class AdminHomeComponent implements OnInit {
 
   
-  activo!:boolean
+  activo!:boolean;
+  $legajos!:Legajo[];
   
 
-  constructor() { }
+  constructor(private storageService: StorageService, private legajoServ: LegajosService) { }
 
   ngOnInit(): void {
     this.setInitialSidebarState();
     window.addEventListener('resize', this.onResize);
+    this.storageService.legajos$
+      .pipe(take(1))
+      .subscribe(data => {
+        this.$legajos = data;     
+        if(this.$legajos.length > 0){
+          this.legajoServ.verificarEstadosLegajos(this.$legajos);
+        };        
+        //this.router.navigate(['admin']);
+        
+      });
   }
 
   ngOnDestroy(): void {
@@ -39,5 +49,7 @@ export class AdminHomeComponent implements OnInit {
   toogleSidebar(): void {
     this.activo = !this.activo;   
   }
+
+
 
 }

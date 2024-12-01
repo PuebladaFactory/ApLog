@@ -9,6 +9,10 @@ export const environment = {
     messagingSenderId: "333531493406",
     appId: "1:333531493406:web:2be93d73101e7f569fea0f",
     measurementId: "G-77CC9T9J1N"
+  },
+  cloudinary: {
+    cloudName: 'dfrstiqwd',
+    uploadPreset: 'ml_default'
   }
 };
 

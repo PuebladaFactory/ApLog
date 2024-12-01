@@ -4,7 +4,7 @@
 
 //ENVIRONMENT PARA DEMO
 
-/* export const environment = {
+export const environment = {
   production: false,
   firebase: {
     apiKey: "AIzaSyCM-WuXYmaZU0AJQk7jVXyrSt1eMGIC0ps",
@@ -14,8 +14,12 @@
     messagingSenderId: "333531493406",
     appId: "1:333531493406:web:2be93d73101e7f569fea0f",
     measurementId: "G-77CC9T9J1N"
+  },
+  cloudinary: {
+    cloudName: 'dfrstiqwd',
+    uploadPreset: 'ml_default'
   }
-}; */
+};
 
 // ENVIROMENT PARA PRODUCCION
 /* export const environment = {
@@ -38,7 +42,7 @@
  */
 // import 'zone.js/plugins/zone-error';  // Included with Angular CLI.
 
-export const environment = {
+/* export const environment = {
   production: false,
   firebase: {
     apiKey: "AIzaSyB4jR5D6ORBu70EM7vN8fnZhIeszvz3QTs",
@@ -60,4 +64,4 @@ export const environment = {
     cloudName: 'dfrstiqwd',
     uploadPreset: 'ml_default'
   }
-};
+}; */

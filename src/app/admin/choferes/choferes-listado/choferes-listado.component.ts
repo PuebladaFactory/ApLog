@@ -6,6 +6,7 @@ import { ChoferesAltaComponent } from '../choferes-alta/choferes-alta.component'
 import Swal from 'sweetalert2';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { Proveedor } from 'src/app/interfaces/proveedor';
+import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 
 
 @Component({
@@ -68,7 +69,7 @@ export class ChoferesListadoComponent implements OnInit {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-  constructor(private storageService: StorageService, private modalService: NgbModal){   
+  constructor(private storageService: StorageService, private modalService: NgbModal, private legajoServ: LegajosService){   
   }  
   ngOnInit(): void { 
     //console.log(this.tablaVehiculo);    
@@ -243,5 +244,11 @@ export class ChoferesListadoComponent implements OnInit {
     this.vehiculos = chofer[0].vehiculo
     
   }
+
+/*   legajo(){
+    this.$choferes.forEach((c:Chofer)=>{
+      this.legajoServ.crearLegajo(c.idChofer)
+    })
+  } */
 
 }

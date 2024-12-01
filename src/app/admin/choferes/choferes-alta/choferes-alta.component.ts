@@ -9,7 +9,8 @@ import { CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfac
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalVehiculoComponent } from '../modal-vehiculo/modal-vehiculo.component';
-import { LegajosService } from 'src/app/servicios/legajos.service';
+import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
+
 
 @Component({
   selector: 'app-choferes-alta',
