@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { StorageService } from '../storage/storage.service';
+import { take } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -8,6 +9,7 @@ import { StorageService } from '../storage/storage.service';
 export class LegajosService {
 
   legajo!: Legajo
+  $legajos!: Legajo[];
 
   constructor(private storageService: StorageService) { }
 
@@ -146,6 +148,22 @@ export class LegajosService {
       enFecha: documentosConFecha.length > 0 && todosEnFecha, // Excluir documentos sin vencimiento
       vacio: false, // Ya sabemos que no está vacío si llegamos aquí
     };
+  }
+
+  eliminarLegajo(idChofer:number){
+    let legajo: Legajo[];
+    this.storageService.legajos$
+    .pipe(take(1))
+    .subscribe(data=>{
+      this.$legajos = data;
+      if(this.$legajos.length > 0){
+        legajo = this.$legajos.filter((l:Legajo)=>{
+          return l.idChofer === idChofer;
+        });
+        console.log("legajo", legajo);
+        this.storageService.deleteItem("legajos", legajo[0]);
+      }
+    })
   }
 }
 
