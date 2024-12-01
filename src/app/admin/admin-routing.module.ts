@@ -35,6 +35,10 @@ const routes: Routes = [
       path: 'historial',
       loadChildren: () => import('./historial/historial.module').then(m => m.HistorialModule)
     },        
+    {
+      path: 'legajos',
+      loadChildren: () => import('./legajos/legajos.module').then(m => m.LegajosModule)
+    },
     
 ]  },  
 /* {

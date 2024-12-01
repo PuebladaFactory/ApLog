@@ -10,10 +10,11 @@ import { BtnLeerComponent } from './btn-leer/btn-leer.component';
 import { ConsolaTarifaComponent } from './consola-tarifa/consola-tarifa.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TableroCalendarioComponent } from './tablero-calendario/tablero-calendario.component';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdownModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 import { HistorialTarifasGralComponent } from './historial-tarifas-gral/historial-tarifas-gral.component';
 import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventuales.component';
+import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,9 @@ import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventua
     ConsolaTarifaComponent,
     TableroCalendarioComponent,
     HistorialTarifasGralComponent,
-    TarifasEventualesComponent
+    TarifasEventualesComponent,
+    CarruselComponent,
+    SafeUrlPipe
   ],
   imports: [
     CommonModule,
@@ -34,7 +37,8 @@ import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventua
     ReactiveFormsModule,
     NgbDropdownModule,
     JsonPipe,
-    NgbDatepickerModule
+    NgbDatepickerModule,
+    NgbModule,
   ],
   exports:[
     BtnAgregarComponent,
@@ -45,7 +49,8 @@ import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventua
     ConsolaTarifaComponent,
     TableroCalendarioComponent, 
     HistorialTarifasGralComponent, 
-    TarifasEventualesComponent
+    TarifasEventualesComponent, 
+    CarruselComponent
   ]
 })
 export class SharedModule { }

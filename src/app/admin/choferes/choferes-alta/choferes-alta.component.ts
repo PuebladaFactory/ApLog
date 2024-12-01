@@ -9,6 +9,8 @@ import { CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfac
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalVehiculoComponent } from '../modal-vehiculo/modal-vehiculo.component';
+import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
+
 
 @Component({
   selector: 'app-choferes-alta',
@@ -50,7 +52,7 @@ export class ChoferesAltaComponent implements OnInit {
   satelital!: SeguimientoSatelital | boolean;
   formTipoTarifa!:any;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private legajoServ: LegajosService) {
     this.form = this.fb.group({                             //formulario para el perfil 
      nombre: ["", [Validators.required, Validators.maxLength(30)]], 
      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
@@ -244,6 +246,7 @@ export class ChoferesAltaComponent implements OnInit {
       }).then((result) => {
         if (result.isConfirmed) {
           this.storageService.addItem(this.componente, this.chofer); 
+          this.legajoServ.crearLegajo(this.chofer.idChofer);
           Swal.fire({
             title: "Confirmado",
             text: "Alta exitosa",

@@ -1,6 +1,7 @@
 <div class="d-flex justify-content-between mt-3">
   <!-- <h1>Choferes</h1> -->
   <app-btn-leer name="Chofer" (click)="openModal('alta')"></app-btn-leer>
+  <!-- <button (click)="legajo()">Legajo</button> -->
 </div>
 
 <div class="custom-datatable mt-3">
@@ -61,7 +62,7 @@ class="dark"
         <app-btn-editar class="me-2" name="Editar" (click)="abrirEdicion(row.idChofer, 'edicion')"></app-btn-editar>
         
         <app-btn-eliminar name="Eliminar" (click)="eliminarChofer(row.idChofer)"></app-btn-eliminar>
-
+        <!-- <button (click)="legajoId(row.idChofer)">Legajo</button> -->
     </ng-template>
 </ngx-datatable-column>
 
