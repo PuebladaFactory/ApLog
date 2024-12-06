@@ -120,7 +120,8 @@ export class ModalInformesClienteComponent implements OnInit {
         operaciones: this.idOperaciones,
         valores: valores,
         cobrado:false,
-        montoFacturaChofer: this.totalFacturasLiquidadasChofer
+        montoFacturaChofer: this.totalFacturasLiquidadasChofer,
+        columnas: [],
       }
 
       //console.log()("FACTURA CLIENTE: ", this.facturaCliente);

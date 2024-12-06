@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer } from 'src/app/interfaces/chofer';
@@ -18,6 +18,8 @@ import Swal from 'sweetalert2';
 })
 export class LiquidacionOpComponent implements OnInit{
   @Input() fromParent: any;
+  @Output() generarPdf = new EventEmitter<any>(); // Emite la factura con las columnas seleccionadas
+
   form:any;
   facLiqCliente: FacturaOp[] = []; // Nuevo array para almacenar las facturas liquidadas
   totalFacLiqCliente: number = 0 ; // Variable para almacenar el total de las facturas liquidadas
@@ -32,7 +34,23 @@ export class LiquidacionOpComponent implements OnInit{
   $clientes!: Cliente[];
   $choferes!: Chofer[];
   clienteSeleccionado!: Cliente;
-  modo: string = "vista"
+  modo: string = "vista";  
+
+  columnas = [
+    { nombre: 'Fecha', propiedad: 'fecha', seleccionada: true },
+    { nombre: 'Quincena', propiedad: 'quincena', seleccionada: true },
+    { nombre: 'Chofer', propiedad: 'chofer', seleccionada: true },
+    { nombre: 'Patente', propiedad: 'patente', seleccionada: false },
+    { nombre: 'Concepto', propiedad: 'conceptoCliente', seleccionada: true },
+    { nombre: 'Hoja de Ruta', propiedad: 'hojaRuta', seleccionada: false },
+    { nombre: 'Km', propiedad: 'km', seleccionada: true },
+    { nombre: 'Jornada', propiedad: 'jornada', seleccionada: true },
+    { nombre: 'Ad Km', propiedad: 'adicionalKm', seleccionada: true },
+    { nombre: 'Acomp', propiedad: 'acompanante', seleccionada: true },
+    { nombre: 'A Cobrar', propiedad: 'aCobrar', seleccionada: true }
+  ];
+  operaciones: any[] = []; // Recibe las operaciones desde el LiqClienteComponent
+  columnasSeleccionadas: any[] = [];
 
   constructor(private storageService: StorageService, private fb: FormBuilder, private excelServ: ExcelService, private pdfServ: PdfService, public activeModal: NgbActiveModal){
     
@@ -61,6 +79,8 @@ export class LiquidacionOpComponent implements OnInit{
       this.$clientes = data;
       this.getCliente()
     }); 
+
+    this.actualizarColumnasSeleccionadas(); // Inicializar la lista de columnas seleccionadas
   }
 
   getCliente(){
@@ -110,7 +130,7 @@ export class LiquidacionOpComponent implements OnInit{
     }).format(valor);
    ////////console.log(nuevoValor);    
     //   `$${nuevoValor}`   
-    return nuevoValor
+    return `$${nuevoValor}`
  }
 
  limpiarValorFormateado(valorFormateado: string): number {
@@ -119,7 +139,10 @@ export class LiquidacionOpComponent implements OnInit{
   }
   onSubmit(titulo:string) {
     
-
+    console.log("columnas seleccionadas", this.columnasSeleccionadas);
+    let colSel: string [] = [];
+    this.columnasSeleccionadas.forEach(c => colSel.push(c.nombre))
+    console.log("colSel", colSel);
     if(this.facLiqCliente.length > 0){
       ////console.log()(this.facturasLiquidadasCliente);
       
@@ -160,7 +183,8 @@ export class LiquidacionOpComponent implements OnInit{
             operaciones: this.idOperaciones,
             valores: valores,
             cobrado:false,
-            montoFacturaChofer: this.totalFacLiqChofer
+            montoFacturaChofer: this.totalFacLiqChofer,
+            columnas: colSel,
           }
           
           Swal.fire({
@@ -172,7 +196,8 @@ export class LiquidacionOpComponent implements OnInit{
             let respuesta = {
               factura: this.facturaCliente,
               titulo: titulo,
-              modo: this.modo
+              modo: this.modo,
+              columnas: colSel
             }
 
             this.activeModal.close(respuesta);
@@ -192,6 +217,69 @@ export class LiquidacionOpComponent implements OnInit{
       text: `${msj}`
       //footer: `${msj}`
     });
+  }
+
+  actualizarColumnasSeleccionadas(): void {
+    this.columnasSeleccionadas = this.columnas.filter(col => col.seleccionada);
+    console.log("col sel:", this.columnasSeleccionadas);
+    
+  }
+
+  confirmarYGenerarPdf(): void {
+    const facturaCliente = this.facLiqCliente.map(operacion =>
+      this.columnasSeleccionadas.reduce((acc, col) => {
+        //acc[col.propiedad] = operacion[col.propiedad];
+        return acc;
+      }, {})
+    );
+
+    this.generarPdf.emit({
+      facturaCliente,
+      columnasSeleccionadas: this.columnasSeleccionadas.map(col => col.nombre)
+    });
+  }
+
+  obtenerDatoColumna(facOp: FacturaOp, col: any) {
+    
+    
+    switch (col.nombre) {
+      case 'Fecha':{
+        return facOp.fecha;
+      };
+      case 'Quincena':{
+        return this.getQuincena(facOp.fecha);
+      };      
+      case 'Chofer':{
+        return this.getChofer(facOp.idChofer);
+      };
+      case 'Patente':{
+        return facOp.patente;
+      };
+      case 'Concepto':{
+        return facOp.observaciones;
+      };
+      case 'Hoja de Ruta':{
+        return facOp.hojaRuta;
+      };
+      case "Km":{
+        return facOp.km;
+      };
+      case "Jornada":{
+        return this.formatearValor(facOp.valores.tarifaBase);
+      };
+      case "Ad Km":{
+        return this.formatearValor(facOp.valores.kmMonto);
+      };
+      case "Acomp":{
+        return this.formatearValor(facOp.valores.acompaniante);
+      };
+      case "A Cobrar":{
+        return this.formatearValor(facOp.valores.total);
+      };
+      default:{
+        return ''
+      }
+    }
   }
 
 

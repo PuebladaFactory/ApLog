@@ -5,7 +5,7 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { CarruselComponent } from 'src/app/shared/carrusel/carrusel.component';
-import * as JSZip from 'jszip';
+import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Pipe, PipeTransform } from '@angular/core';
 

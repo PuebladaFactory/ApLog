@@ -10,7 +10,7 @@ export interface FacturaCliente {
     valores: Valores;
     cobrado:boolean;
     montoFacturaChofer:number;
-
+    columnas: string [];
     
 }
 

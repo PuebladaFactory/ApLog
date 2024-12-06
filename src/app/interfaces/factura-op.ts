@@ -16,6 +16,8 @@ export interface FacturaOp {
     contraParteMonto: number;
     tarifaTipo: TarifaTipo;
     observaciones: string;
+    hojaRuta: string;
+    patente: string;
 
 }
 

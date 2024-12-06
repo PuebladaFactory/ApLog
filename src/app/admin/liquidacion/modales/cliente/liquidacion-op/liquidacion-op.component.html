@@ -9,35 +9,36 @@
     </div>        
     <div class="modal-body">
         <h3>{{clienteSeleccionado.razonSocial}}</h3>       
-            <table class="table table-success table-striped table-bordered w-100">
-                <thead>
-                    <tr>
-                        <th scope="col" class="aling-middle" style="width: 10%;">Fecha</th>
-                        <th scope="col" class="align-middle" style="width: 10%;">Quincena</th>
-                        <th scope="col" class="align-middle" style="width: 10%;">Chofer</th>
-                        <th scope="col" class="align-middle" style="width: 55%;">Concepto Cliente</th>
-                        <th scope="col" class="align-middle" style="width: 15%;">A cobrar</th>                              
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let facturaCliente of facLiqCliente; let i = index">
-                        <td class="align-middle">{{facturaCliente.fecha}}</td>
-                        <td class="text-center align-middle" [innerHTML]="getQuincena(facturaCliente.fecha)"></td>                        
-                        <td class="align-middle">{{getChofer(facturaCliente.idChofer)}}</td>
-                        <td class="align-middle">
-                            <div class="input-group">                                       
-                                <input  class="form-control edicion align-middle" type="text" [(ngModel)]="facturaCliente.observaciones">
-                            </div>                
-                        </td>
-                       
-                        <td class="align-middle">$ {{formatearValor(facturaCliente.valores.total)}}</td>                                        
-                    </tr>
-                </tbody> 
-                <tfoot>
-                    <td colspan="4" class="table-active ps-2 fw-bold fs-4 ">Total</td>
-                    <td class="table-active ps-2 fw-bold ">$ {{formatearValor(totalFacLiqCliente)}}</td>
-                </tfoot>
-            </table>     
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th *ngFor="let col of columnas" class="text-center">
+                    <div class="d-flex">
+                        <span class="w-100 text-center">{{ col.nombre }}</span>
+                        <input
+                          type="checkbox"
+                          [(ngModel)]="col.seleccionada"
+                          class="flex-shrink-1"
+                          (change)="actualizarColumnasSeleccionadas()"
+                        />
+                    </div>                    
+                    
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let operacion of facLiqCliente">
+                  <td *ngFor="let col of columnas" class="text-center">
+                    <span *ngIf="col.nombre === 'Quincena'; else defaultContent" [innerHTML]="obtenerDatoColumna(operacion, col)"></span>
+                    <ng-template #defaultContent>
+                      {{ obtenerDatoColumna(operacion, col) }}
+                    </ng-template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
     </div>
     <div class="modal-footer">
         <h4>Generar Factura:</h4>

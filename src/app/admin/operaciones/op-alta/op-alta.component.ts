@@ -70,7 +70,8 @@ export class OpAltaComponent implements OnInit {
       chofer: ['', Validators.required],
       tarifaEventual: ['', Validators.required],
       acompaniante: ['', Validators.required],
-      observaciones: ['',],    
+      observaciones: [''],    
+      hojaRuta:[''],
     });
 
     this.formTarifaPersonalizada = this.fb.group({
@@ -433,6 +434,7 @@ export class OpAltaComponent implements OnInit {
       cliente: this.clienteSeleccionado,
       chofer: this.choferSeleccionado,
       observaciones: formValues.observaciones,
+      hojaRuta:formValues.hojaRuta,
       //unidadesConFrio: false,
       acompaniante: this.acompaniante,
       //facturada: false,

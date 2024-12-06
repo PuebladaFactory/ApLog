@@ -64,6 +64,7 @@ export class TableroOpComponent implements OnInit {
     { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow:2  },   
     { prop: 'aCobrar', name: 'A Cobrar', selected: true, flexGrow:2  },   
     { prop: 'aPagar', name: 'A Pagar', selected: true, flexGrow:2  },      
+    { prop: 'hojaRuta', name: 'Hoja de Ruta', selected: true, flexGrow:2  }, 
     { prop: 'observaciones', name: 'Observaciones', selected: true, flexGrow:3  },  
     
   ];
@@ -168,7 +169,8 @@ export class TableroOpComponent implements OnInit {
       acompaniante: `${op.acompaniante ? "Si" : "No"}` ,
       tarifa: op.tarifaTipo.especial ? "Especial" : op.tarifaTipo.eventual ? "Eventual" : op.tarifaTipo.personalizada ? "Personalizada" : "General",
       aCobrar: this.formatearValor(op.valores.cliente.aCobrar),
-      aPagar: this.formatearValor(op.valores.chofer.aPagar),        
+      aPagar: this.formatearValor(op.valores.chofer.aPagar),    
+      hojaRuta: op.hojaRuta,    
       observaciones: op.observaciones,
       
     }));   

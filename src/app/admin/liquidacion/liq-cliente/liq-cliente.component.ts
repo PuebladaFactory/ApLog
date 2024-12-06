@@ -383,7 +383,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       const modalRef = this.modalService.open(LiquidacionOpComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
-        size: 'lg', 
+        size: 'xl', 
         //backdrop:"static" 
       });
       
@@ -401,9 +401,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           
           if(result.modo === "cerrar"){
             this.facturaCliente = result.factura;
-
+            let columnas: any[] = result.columnas;
             this.addItem(this.facturaCliente, this.componente);
-          
+            //console.log("factura: ", this.facturaCliente);
+            
             
             if(result.titulo === "excel"){
             this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$choferes);
