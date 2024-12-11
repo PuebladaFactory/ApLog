@@ -2,22 +2,20 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { take } from 'rxjs';
-import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
-import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { EditarTarifaProveedorComponent } from '../modales/proveedor/editar-tarifa-proveedor/editar-tarifa-proveedor.component';
-import { LiquidacionOpProveedorComponent } from '../modales/proveedor/liquidacion-op-proveedor/liquidacion-op-proveedor.component';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
+import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
 
 @Component({
   selector: 'app-liq-proveedor',
@@ -379,16 +377,17 @@ export class LiqProveedorComponent implements OnInit {
 
     this.indiceSeleccionado
     {
-      const modalRef = this.modalService.open(LiquidacionOpProveedorComponent, {
+      const modalRef = this.modalService.open(FacturarOpComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
-        size: 'lg', 
+        size: 'xl', 
         //backdrop:"static" 
       });
       
-    let info = {      
+    let info = {    
+        origen:"proveedores",     
         facturas: this.facturasLiquidadasProveedor,
-        totalProveedor: this.totalFacturasLiquidadasProveedor,
+        total: this.totalFacturasLiquidadasProveedor,
         //totalChofer: this.totalFacturasLiquidadasChofer,
       }; 
       //console.log()(info);
@@ -397,24 +396,17 @@ export class LiqProveedorComponent implements OnInit {
       modalRef.result.then(
         (result) => {
           console.log(result);
-          
-          this.facturaProveedor = result.factura;
-
-//        this.selectCrudOp(result.op, result.item);
-        //this.mostrarMasDatos(row);
-         //console.log()("resultado:" ,this.facturaCliente);
-         this.addItem(this.facturaProveedor, this.componente);
-         //this.form.reset();
-        //this.$tarifasChofer = null;
-        //this.ngOnInit();
-        
-      
-        if(result.titulo === "excel"){
-        this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
-        }else if (result.titulo === "pdf"){          
-        this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
-        }
-        this.eliminarFacturasOp();
+          if(result.modo === "cerrar"){
+            this.facturaProveedor = result.factura;
+            this.addItem(this.facturaProveedor, this.componente);
+            if(result.titulo === "excel"){
+              this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
+              }else if (result.titulo === "pdf"){          
+              this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
+              }
+            this.eliminarFacturasOp();
+          }
+         
         },
         (reason) => {}
       );

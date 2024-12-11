@@ -5,13 +5,9 @@ import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
 import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import * as ExcelJS from 'exceljs';
-import * as FileSaver from 'file-saver';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ModalInformesClienteComponent } from '../modal-informes-cliente/modal-informes-cliente.component';
-import { LiquidacionOpComponent } from '../modales/cliente/liquidacion-op/liquidacion-op.component';
 import { EditarTarifaComponent } from '../modales/cliente/editar-tarifa/editar-tarifa.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { take } from 'rxjs';
@@ -21,6 +17,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
+import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
 
 @Component({
   selector: 'app-liq-cliente',
@@ -380,16 +377,17 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
     this.indiceSeleccionado
     {
-      const modalRef = this.modalService.open(LiquidacionOpComponent, {
+      const modalRef = this.modalService.open(FacturarOpComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         size: 'xl', 
         //backdrop:"static" 
       });
       
-    let info = {      
+    let info = {
+        origen:"clientes",
         facturas: this.facturasLiquidadasCliente,
-        totalCliente: this.totalFacturasLiquidadasCliente,
+        total: this.totalFacturasLiquidadasCliente,
         //totalChofer: this.totalFacturasLiquidadasChofer,
       }; 
       //console.log()(info);
@@ -400,16 +398,12 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           console.log(result);
           
           if(result.modo === "cerrar"){
-            this.facturaCliente = result.factura;
-            let columnas: any[] = result.columnas;
-            this.addItem(this.facturaCliente, this.componente);
-            //console.log("factura: ", this.facturaCliente);
-            
-            
+            this.facturaCliente = result.factura;            
+            this.addItem(this.facturaCliente, this.componente);            
             if(result.titulo === "excel"){
-            this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$choferes);
+            this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);
             }else if (result.titulo === "pdf"){
-            this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$choferes);        
+            this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);        
             }
             this.eliminarFacturasOp();
           } 

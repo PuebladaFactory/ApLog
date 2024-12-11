@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LiquidacionOpComponent } from './liquidacion-op.component';
+import { FacturarOpComponent } from './facturar-op.component';
 
-describe('LiquidacionOpComponent', () => {
-  let component: LiquidacionOpComponent;
-  let fixture: ComponentFixture<LiquidacionOpComponent>;
+describe('FacturarOpComponent', () => {
+  let component: FacturarOpComponent;
+  let fixture: ComponentFixture<FacturarOpComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ LiquidacionOpComponent ]
+      declarations: [ FacturarOpComponent ]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(LiquidacionOpComponent);
+    fixture = TestBed.createComponent(FacturarOpComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

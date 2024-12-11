@@ -102,7 +102,7 @@ export class ModalInformesClienteComponent implements OnInit {
  
       ////console.log()("ID OPERACIONES: ", this.idOperaciones);
       //this.facturaChofer.operaciones = idOperaciones;
-      let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0};
+      let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, descuentoTotal: 0, total:0};
           this.facturasLiquidadasCliente.forEach((f:FacturaOp)=>{
             valores.totalTarifaBase += f.valores.tarifaBase;
             valores.totalAcompaniante += f.valores.acompaniante;
@@ -122,6 +122,7 @@ export class ModalInformesClienteComponent implements OnInit {
         cobrado:false,
         montoFacturaChofer: this.totalFacturasLiquidadasChofer,
         columnas: [],
+        descuentos: [],
       }
 
       //console.log()("FACTURA CLIENTE: ", this.facturaCliente);
