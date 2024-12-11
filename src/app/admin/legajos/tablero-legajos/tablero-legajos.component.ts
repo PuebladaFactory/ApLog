@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Chofer } from 'src/app/interfaces/chofer';
-import { Legajo } from 'src/app/interfaces/legajo';
+import { Documentacion, Legajo } from 'src/app/interfaces/legajo';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -14,6 +14,20 @@ export class TableroLegajosComponent implements OnInit {
   choferSeleccionado!: Chofer[];
   legajoSeleccionado!: Legajo[];
   legajo!: Legajo;
+  titulos: string[] = [
+    'DNI',
+    'Antecedentes Penales',
+    'Licencia',
+    'LINTI',
+    'Libreta Sanitaria',
+    'ART/ACC. Personales',
+    'Cedula',
+    'Título',
+    'Seguro',
+    'VTV/RTO',
+    'RUTA',
+    'Senasa'
+  ];
   
   constructor(private storageService: StorageService){}  
   
@@ -31,6 +45,10 @@ export class TableroLegajosComponent implements OnInit {
     console.log(this.$legajos);
     
     //this.crearLegajos()        
+  }
+
+  getDocumento(documentacion: Documentacion[], titulo: string): Documentacion | undefined {
+    return documentacion.find((doc) => doc.titulo === titulo);
   }
 
   /*  crearLegajos(){

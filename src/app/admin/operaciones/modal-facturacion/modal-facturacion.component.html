@@ -68,13 +68,19 @@
                     </div>  
                     <form [formGroup]="form" >    
                         <div class="form-group" [ngClass]="{'invisible': cerrar}">
+                            <label for="HojaRuta" class="fs-5">Hoja de Ruta</label>
+                            <div class="input-group" [ngClass]="{'isDisabled': vista}">
+                                <textarea formControlName="hojaRuta"  class="form-control edicion"></textarea>
+                            </div>
+                        </div> 
+                        <div class="form-group" [ngClass]="{'invisible': cerrar}">
                             <label for="Observaciones" class="fs-5">Observaciones</label>
                             <div class="input-group" [ngClass]="{'isDisabled': vista}">
                                 <textarea formControlName="observaciones"  class="form-control edicion"></textarea>
                             </div>
                         </div> 
                     </form>           
-                    <h3 class="mt-2">Totales Op</h3>                                                                          
+                    <!-- <h3 class="mt-2">Totales Op</h3>                                                                          
                     <div class="form-group" >                                    
                         <label for="A Cobrar" class="fs-5">A Cobrar</label>
                         <div class="input-group">
@@ -88,7 +94,7 @@
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
                             <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aPagar">
                         </div>                        
-                    </div>     
+                    </div>      -->
                     <h3 class="mt-4 mb-3" [ngClass]="{'invisible': !cerrar}">Cerrar Operación:</h3> 
                     <form [formGroup]="form" class="border border-dark border-1 rounded-4 shadow p-3 mb-1 bg-body-tertiary rounded pb-5" [ngClass]="{'invisible': !cerrar}">         
                         <div class="form-group">                                    
@@ -126,7 +132,21 @@
                             <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
                             <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="op.km">
                         </div>                        
-                    </div>                                                             
+                    </div>      
+                    <form [formGroup]="form" class="m-2">    
+                        <div class="form-group" [ngClass]="{'invisible': cerrar}">
+                            <label for="HojaRuta" class="fs-5">Hoja de Ruta</label>
+                            <div class="input-group" [ngClass]="{'isDisabled': vista}">
+                                <textarea formControlName="hojaRuta"  class="form-control edicion"></textarea>
+                            </div>
+                        </div> 
+                        <div class="form-group" [ngClass]="{'invisible': cerrar}">
+                            <label for="Observaciones" class="fs-5">Observaciones</label>
+                            <div class="input-group" [ngClass]="{'isDisabled': vista}">
+                                <textarea formControlName="observaciones"  class="form-control edicion"></textarea>
+                            </div>
+                        </div> 
+                    </form>                                                                  
                     <!-- <div class="form-group" >                                    
                         <label for="A Cobrar" class="fs-5">Total Adicionales</label>
                         <div class="input-group">
@@ -134,7 +154,7 @@
                             <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="op.km">
                         </div>                        
                     </div>    -->
-                    <h3 class="mt-2">Totales Op</h3>  
+                    <!-- <h3 class="mt-2">Totales Op</h3>  
                     <div class="form-group" >                                    
                         <label for="A Pagar" class="fs-5">A Cobrar</label>
                         <div class="input-group">
@@ -148,7 +168,7 @@
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
                             <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aPagar">
                         </div>                        
-                    </div>                         
+                    </div>                         --> 
                 </div>   
             </div>
             <div class="col-8 " [ngClass]="{'isDisabled': vista || cerrar || op.estado.cerrada || op.estado.facturada}">
@@ -279,14 +299,14 @@
                                     <label for="Fecha" class="fs-5">Acompañante valor</label>
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.cliente.acompValor)">
+                                        <input  class="form-control edicion isDisabled" required type="text" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.cliente.acompValor)">
                                     </div>                                                        
                                 </div>
                                 <div class="form-group mt-3">
                                     <label for="Fecha" class="fs-5">Km adicionales valor</label>
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.cliente.kmAdicional)">
+                                        <input  class="form-control edicion isDisabled" required type="text" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.cliente.kmAdicional)">
                                     </div>                                                        
                                 </div>
                             </div>
@@ -295,14 +315,14 @@
                                     <label for="Fecha" class="fs-5">Acompañante valor</label>
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.chofer.acompValor)">
+                                        <input  class="form-control edicion isDisabled" required type="text" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.chofer.acompValor)">
                                     </div>                                                        
                                 </div>
                                 <div class="form-group mt-3">
                                     <label for="Fecha" class="fs-5">Km adicionales valor</label>
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input  class="form-control edicion isDisabled" required type="number" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.chofer.kmAdicional)">
+                                        <input  class="form-control edicion isDisabled" required type="text" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.chofer.kmAdicional)">
                                     </div>                                                        
                                 </div>                       
                             </div>
@@ -311,6 +331,29 @@
                     </div>                   
                 </div>                
             </div>
+        </div>
+        <div class="row border border-dark border-1 rounded-4 shadow p-3 mt-3 bg-body-tertiary rounded mx-1 px-0 isDisabled">
+            <div class="col-4 d-flex align-items-center">
+                <h3 class="m-0 ms-2">Totales Op:</h3>     
+            </div>            
+            <div class="col-4">
+                <div class="form-group" >                                    
+                    <label for="A Cobrar" class="fs-5">A Cobrar</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                        <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aCobrar">
+                    </div>                        
+                </div>                                        
+            </div>                                                                     
+            <div class="col-4">
+                <div class="form-group" >                                    
+                    <label for="A Pagar" class="fs-5">A Pagar</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                        <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aPagar">
+                    </div>                        
+                </div>     
+            </div>            
         </div>
     </div>
     <div class="modal-footer" *ngIf="!vista">        

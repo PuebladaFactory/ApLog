@@ -15,7 +15,7 @@ export interface Operacion {
     acompaniante: boolean;    
     facturaCliente: number;
     facturaChofer: number;
-    
+    hojaRuta:string;
     tarifaEventual: TarifaEventual;
     
     tarifaPersonalizada: TarifaPersonalizada;

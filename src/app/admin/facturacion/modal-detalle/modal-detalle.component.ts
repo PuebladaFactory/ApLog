@@ -209,10 +209,10 @@ export class ModalDetalleComponent implements OnInit {
           console.log("3) operacionFac: ", this.operacionFac);
           if (formato === 'excel') {
             console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelCliente(factura[0], this.operacionFac, this.$choferes);
+            this.excelServ.exportToExcelCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
           } else if(formato === 'pdf') {
             console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac, this.$choferes);
+            this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
           }   
           break;
       //////////////CHOFERES///////////////////////
@@ -234,10 +234,10 @@ export class ModalDetalleComponent implements OnInit {
           console.log("3) operacionFac: ", this.operacionFac);
           if (formato === 'excel') {
             console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelChofer(factura[0], this.operacionFac, this.$clientes);
+            this.excelServ.exportToExcelChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
           } else if(formato === 'pdf') {
             console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac, this.$clientes);
+            this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
           } 
           break;
       //////////////PROVEEDORES///////////////////////

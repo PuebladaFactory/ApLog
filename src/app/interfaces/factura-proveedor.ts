@@ -10,11 +10,19 @@ export interface FacturaProveedor {
     valores: Valores;
     cobrado:boolean;
     montoFacturaCliente:number;
+    columnas: string[];
+    descuentos: Descuento [];
 }
 
 export interface Valores{
     totalTarifaBase: number;
     totalAcompaniante: number;
     totalkmMonto: number;
+    descuentoTotal: number;
     total: number;
+}
+
+export interface Descuento {
+    concepto: string;
+    valor: number;
 }

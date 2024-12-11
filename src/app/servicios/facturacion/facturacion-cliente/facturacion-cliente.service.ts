@@ -184,6 +184,8 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
       personalizada: op.tarifaTipo.personalizada
     },
     observaciones: op.observaciones,
+    hojaRuta: op.hojaRuta,
+    patente: op.patenteChofer,
   }  
 }
 

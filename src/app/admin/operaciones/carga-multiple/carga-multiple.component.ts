@@ -137,7 +137,8 @@ export class CargaMultipleComponent implements OnInit {
         acompaniante: [false],
         seccion: [""],
         categoria: [""],
-        observaciones: ['']
+        observaciones: [''],
+        hojaRuta:[''],
       }));
     });
     ////////console.log("2)",this.choferesFormArray.value);
@@ -283,6 +284,7 @@ onSubmit() {
         let chofer: Chofer = choferForm.chofer;
         let vehiculoSeleccionado: Vehiculo [] = choferForm.vehiculoSeleccionado;      
         let observaciones: string = choferForm.observaciones || '';
+        let hojaRuta: string = choferForm.hojaRuta || '';
         let patenteChofer: string = vehiculoSeleccionado.length === 1 ? vehiculoSeleccionado[0].dominio : choferForm.patenteChofer;
         let acompaniante: boolean = choferForm.acompaniante;
         let seccion: number = this.tPersonalizada ? choferForm.seccion : 0;
@@ -307,6 +309,7 @@ onSubmit() {
             cliente: cliente,
             chofer: chofer,
             observaciones: observaciones,   
+            hojaRuta: hojaRuta,
             acompaniante: acompaniante, 
             facturaCliente: 0,
             facturaChofer: 0,            

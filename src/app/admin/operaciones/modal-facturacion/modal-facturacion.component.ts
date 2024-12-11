@@ -44,6 +44,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
       km:['', Validators.required],
       documentacion:[''],
       observaciones:[''],
+      hojaRuta:[''],
     });
 
     this.formTarifaPersonalizada = this.fb.group({
@@ -110,6 +111,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
     }
     this.form.patchValue({      
       observaciones: this.op.observaciones,
+      hojaRuta: this.op.hojaRuta,
     })           
   }  
 
@@ -245,6 +247,7 @@ armarOp(){
   // editar la operación básica  
   this.op.acompaniante = this.acompaniante;  
   this.op.observaciones = this.form.value.observaciones;
+  this.op.hojaRuta = this.form.value.hojaRuta;
   //this.op.tarifaEventual = this.tarifaEventual;
   //this.op.tarifaPersonalizada = this.tarifaPersonalizada;
   this.op.tarifaPersonalizada = this.tarifaPersonalizada;

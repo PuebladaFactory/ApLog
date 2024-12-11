@@ -224,7 +224,7 @@ export class FacturacionOpService {
     }
     
     if(op.tarifaTipo.general){ //tarifa general
-      console.log("2)A.1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);
+      console.log("2)A.1) tarifa GENERAL CHOFER: ", this.$ultTarifaGralChofer);
       respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
       //console.log("respuesta: ", respuesta);      
       this.operacion.valores.chofer.aPagar = respuesta.factura.valores.total;

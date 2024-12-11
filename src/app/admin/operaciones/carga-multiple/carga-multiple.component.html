@@ -38,12 +38,13 @@
                   <input type="checkbox" (change)="onSeleccionarTodosChange($event)">
                 </th>
                 <th class="align-middle" style="width: 10%;">Chofer</th>
-                <th class="align-middle" style="width: 15%;">Vehiculo</th>
+                <th class="align-middle" style="width: 10%;">Vehiculo</th>
                 <th class="align-middle" style="width: 8%;">Tarifa Chofer</th>
                 <th class="align-middle" style="width: 10%;">Acompañante</th>
-                <th class="align-middle" style="width: 20%;">Sección</th>
-                <th class="align-middle" style="width: 20%;">Categoria</th>
-                <th class="align-middle" style="width: 20%;">Observaciones</th>
+                <th class="align-middle" style="width: 15%;">Sección</th>
+                <th class="align-middle" style="width: 15%;">Categoria</th>
+                <th class="align-middle" style="width: 15%;">Hoja de Ruta</th>
+                <th class="align-middle" style="width: 17%;">Observaciones</th>
               </tr>                    
             </thead>
             <tbody formArrayName="choferes">
@@ -87,6 +88,9 @@
                               Categoria {{categoria.orden}}: {{categoria.nombre}} 
                             </option>
                         </select>
+                    </td>                    
+                    <td class="align-middle">
+                      <input class="form-control" formControlName="hojaRuta" rows="2">
                     </td>
                     <td class="align-middle">
                       <textarea class="form-control" formControlName="observaciones" rows="2"></textarea>

@@ -3,7 +3,6 @@ import { FormBuilder } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
-import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
@@ -12,12 +11,12 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { EditarTarifaChoferComponent } from '../modales/chofer/editar-tarifa-chofer/editar-tarifa-chofer.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { take } from 'rxjs';
-import { LiquidacionOpChoferComponent } from '../modales/chofer/liquidacion-op-chofer/liquidacion-op-chofer.component';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import Swal from 'sweetalert2';
+import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
 
 @Component({
   selector: 'app-liq-chofer',
@@ -369,16 +368,17 @@ export class LiqChoferComponent implements OnInit {
 
     this.indiceSeleccionado
     {
-      const modalRef = this.modalService.open(LiquidacionOpChoferComponent, {
+      const modalRef = this.modalService.open(FacturarOpComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
-        size: 'lg', 
+        size: 'xl', 
         //backdrop:"static" 
       });
       
-    let info = {      
+    let info = {   
+        origen:"choferes",   
         facturas: this.facturasLiquidadasChofer,
-        totalChofer: this.totalFacturasLiquidadasChofer,
+        total: this.totalFacturasLiquidadasChofer,
         //totalChofer: this.totalFacturasLiquidadasChofer,
       }; 
       //console.log()(info);
@@ -392,9 +392,9 @@ export class LiqChoferComponent implements OnInit {
             this.facturaChofer = result.factura;
             this.addItem(this.facturaChofer, this.componente);        
             if(result.titulo === "excel"){
-            this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes);
+            this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);
             }else if (result.titulo === "pdf"){
-            this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes);        
+            this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);        
             }
             this.eliminarFacturasOp();
           }

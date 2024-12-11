@@ -1,5 +1,3 @@
-import { FacturaOpCliente } from "./factura-op-cliente";
-
 export interface FacturaCliente {
     id: any|null;
     idFacturaCliente: number;   
@@ -10,7 +8,8 @@ export interface FacturaCliente {
     valores: Valores;
     cobrado:boolean;
     montoFacturaChofer:number;
-
+    columnas: string [];
+    descuentos: Descuento [];
     
 }
 
@@ -18,5 +17,10 @@ export interface Valores{
     totalTarifaBase: number;
     totalAcompaniante: number;
     totalkmMonto: number;
+    descuentoTotal: number;
     total: number;
+}
+export interface Descuento {
+    concepto: string;
+    valor: number;
 }
