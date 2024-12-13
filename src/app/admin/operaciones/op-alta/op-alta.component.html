@@ -90,8 +90,8 @@
                         </form>
                     </div>
                     <div class="col container" [ngClass]="{'invisible': !tPersonalizada && !tEventual && !clienteEventual && !choferEventual}">
-                        <div *ngIf="tPersonalizada">
-                            <label for="TarifaEventual">Tarifa Personalizada</label>
+                        <div *ngIf="tPersonalizada">                            
+                            <h5 for="TarifaPersonalizada" class="fw-normal">Tarifa Personalizada</h5>                                                        
                             <p class="m-2 border-top border-bottom">El cliente tiene una tarifa Personalizada. Seleccione la sección y la categoria correspondiente a la operación.</p>                        
                             <form [formGroup]="formTarifaPersonalizada">
                                 <div class="form-group">
@@ -115,34 +115,36 @@
                             </form>  
                         </div>          
                         <div [ngClass]="{'invisible': !tEventual && !clienteEventual && !choferEventual}" >                            
-                            <label for="TarifaEventual">Tarifa Eventual</label>                                                        
+                            <h5 for="TarifaEventual" class="fw-normal">Tarifa Eventual</h5>                                                        
                             <p class="m-2 border-top border-bottom">La tarifa eventual se aplica una unica vez a esta operación especifica.</p>   
                             <form [formGroup]="formTarifaEventual" (ngSubmit)="onSubmit()">
                               <div class="my-2">
-                                <h6 class="mt-2">Chofer:</h6>
+                                <h5 class="mt-2 fw-normal">Chofer:</h5>
                                 <div class="form-group">
                                     <label for="Fecha">Tarifa Eventual Concepto</label>
                                     <div class="input-group">
-                                      <input formControlName="choferConcepto" class="form-control edicion" required type="text">
+                                        <input formControlName="choferConcepto" class="form-control edicion" required type="text">
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label for="Fecha">Tarifa Eventual Valor</label>
                                     <div class="input-group">
-                                      <input formControlName="choferValor" class="form-control edicion" required type="number">
+                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                        <input formControlName="choferValor" class="form-control edicion" required type="number">
                                     </div>
                                 </div>
-                                <h6 class="my-2">Cliente:</h6>                                
+                                <h5 class="my-2 fw-normal">Cliente:</h5>                                
                                 <div class="form-group">
                                     <label for="Fecha">Tarifa Eventual Concepto</label>
                                     <div class="input-group">
-                                      <input formControlName="clienteConcepto" class="form-control edicion" required type="text">
+                                        <input formControlName="clienteConcepto" class="form-control edicion" required type="text">
                                     </div>
                                 </div>
                                 <div class="form-group mb-2">
                                     <label for="Fecha">Tarifa Eventual Valor</label>
                                     <div class="input-group">
-                                      <input formControlName="clienteValor" class="form-control edicion" required type="number">
+                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                        <input formControlName="clienteValor" class="form-control edicion" required type="number">
                                     </div>
                                 </div>
                                 </div>              

@@ -402,7 +402,7 @@ export class OpAltaComponent implements OnInit {
         }
      
     }  else {
-      this.mensajesError("Ingrese una fecha por favor")
+      this.mensajesError("Error en el formulario")
     }     
    }
   
