@@ -69,6 +69,7 @@ import { CloudinaryModule } from '@cloudinary/ng';
 
 
 
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -92,6 +93,7 @@ import { CloudinaryModule } from '@cloudinary/ng';
     SignUpComponent,
     LoginHeaderComponent,
     CargaComponent,
+    
 
    
    

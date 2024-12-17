@@ -17,6 +17,7 @@ import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/mod
 
 
 
+
 @NgModule({
   declarations: [
     ChoferesControlComponent,
@@ -36,7 +37,8 @@ import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/mod
     ReactiveFormsModule,
     SharedModule,
     Ng2SearchPipeModule,
-    NgxDatatableModule
+    NgxDatatableModule, 
+    
   ]
 })
 export class ChoferesModule { }

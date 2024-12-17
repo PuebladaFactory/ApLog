@@ -75,6 +75,42 @@ export class ValidarService implements Validators {
       marcaGps: ["", [Validators.required, Validators.maxLength(30)]],
     });
 
+     // Validador para solo permitir caracteres alfabéticos y especiales
+  static soloLetras(control: AbstractControl): ValidationErrors | null {
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-']*$/;
+    const valid = regex.test(control.value);
+    return valid ? null : { soloLetras: true };
+  }
+
+  // Validador para solo permitir números
+  static soloNumeros(control: AbstractControl): ValidationErrors | null {
+    const regex = /^[0-9]*$/;
+    const valid = regex.test(control.value);
+    return valid ? null : { soloNumeros: true };
+  }
+
+  static cuitValido(control: AbstractControl): ValidationErrors | null {
+    const regex = /^\d{2}-\d{8}-\d{1}$/; // 2 dígitos, guion, 8 dígitos, guion, 1 dígito
+    const valid = regex.test(control.value);
+    return valid ? null : { cuitInvalido: true };
+  }
+
+  static validarDominio(control: AbstractControl): ValidationErrors | null {
+    const dominio = control.value;
+
+    // Expresiones regulares insensibles a mayúsculas/minúsculas (flag "i")
+    const formatoViejo = /^[a-zA-Z]{3}[0-9]{3}$/i; // AAA111 o aaa111
+    const formatoNuevo = /^[a-zA-Z]{2}[0-9]{3}[a-zA-Z]{2}$/i; // AA111AA o aa111aa
+
+    // Validar contra ambas expresiones
+    if (dominio && !formatoViejo.test(dominio) && !formatoNuevo.test(dominio)) {
+      return { dominioInvalido: true }; // Error si no cumple con ninguno
+    }
+
+    return null; // Sin errores
+  }
+  
+
 
 
    /* formato2Form = this.fb.group({                             

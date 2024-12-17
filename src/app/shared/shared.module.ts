@@ -15,6 +15,7 @@ import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-boot
 import { HistorialTarifasGralComponent } from './historial-tarifas-gral/historial-tarifas-gral.component';
 import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventuales.component';
 import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
+import { CuitFormatDirective } from './directives/cuit-format.directive';
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
     HistorialTarifasGralComponent,
     TarifasEventualesComponent,
     CarruselComponent,
-    SafeUrlPipe
+    SafeUrlPipe,
+    CuitFormatDirective
   ],
   imports: [
     CommonModule,
@@ -50,7 +52,8 @@ import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
     TableroCalendarioComponent, 
     HistorialTarifasGralComponent, 
     TarifasEventualesComponent, 
-    CarruselComponent
+    CarruselComponent,
+    CuitFormatDirective
   ]
 })
 export class SharedModule { }

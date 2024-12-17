@@ -10,6 +10,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalVehiculoComponent } from '../modal-vehiculo/modal-vehiculo.component';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
+import { ValidarService } from 'src/app/servicios/validar/validar.service';
 
 
 @Component({
@@ -54,13 +55,18 @@ export class ChoferesAltaComponent implements OnInit {
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private legajoServ: LegajosService) {
     this.form = this.fb.group({                             //formulario para el perfil 
-     nombre: ["", [Validators.required, Validators.maxLength(30)]], 
-     apellido: ["",[Validators.required, Validators.maxLength(30)]], 
-     cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],            
+     nombre: ["", [Validators.required, Validators.maxLength(30), ValidarService.soloLetras]], 
+     apellido: ["",[Validators.required, Validators.maxLength(30), ValidarService.soloLetras]], 
+     cuit: ["",[
+      Validators.required,
+      Validators.minLength(13),
+      Validators.maxLength(13), // Ajustado para incluir los guiones
+      ValidarService.cuitValido,
+    ],],            
      fechaNac: ["",Validators.required],
      email: ["",[Validators.required, Validators.email]],
-     celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
-     celularEmergencia: ["",[Validators.minLength(10), Validators.maxLength(10)]],
+     celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10), ValidarService.soloNumeros]],
+     celularEmergencia: ["",[Validators.minLength(10), Validators.maxLength(10), ValidarService.soloNumeros]],
      domicilio: ["", [Validators.required, Validators.maxLength(50)]],     
 
   });
@@ -130,7 +136,7 @@ export class ChoferesAltaComponent implements OnInit {
     this.form.patchValue({
       nombre: this.chofer.nombre, 
       apellido: this.chofer.apellido, 
-      cuit: this.chofer.cuit,            
+      cuit: this.formatCuit(this.chofer.cuit),            
       fechaNac: this.chofer.fechaNac,
       email: this.chofer.email,
       celularContacto: this.chofer.celularContacto,
@@ -152,18 +158,20 @@ export class ChoferesAltaComponent implements OnInit {
 
    onSubmit(){ 
     
-    if (this.form.valid){
-      let id = this.chofer?.id;
-      this.armarChofer();
-      //this.armarVehiculo();        
-      this.addItem();
-      //this.(armarLegajo();      
-      
+    if(this.idProveedor !== undefined){
+        if (this.form.valid){
+          let id = this.chofer?.id;
+          this.armarChofer();
+          //this.armarVehiculo();        
+          this.addItem();
+          //this.(armarLegajo();      
+          
+        } else{
+          this.mensajesError("Error en el formulario")
+        }  
     } else{
-      alert("error en el formulario")
+      this.mensajesError("Debe seleccionar un proveedor")
     }  
-      
-    
     
    }
 
@@ -173,8 +181,14 @@ export class ChoferesAltaComponent implements OnInit {
     const tarifaSeleccionada = this.getTarifaTipo();      
     if(this.fromParent.modo === "edicion"){
         let id = this.chofer.id;
-        let idChofer = this.chofer.idChofer
-        this.chofer = this.form.value;
+        let idChofer = this.chofer.idChofer;
+        let formValue = this.form.value;
+        // Eliminar los guiones del CUIT
+        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
+        this.chofer = {
+          ...formValue,
+          cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
+        };                
         /*  this.chofer.categoria = this.categoriaSeleccionada; */
         this.chofer.idChofer = idChofer; 
         this.chofer.id = id;    
@@ -183,7 +197,13 @@ export class ChoferesAltaComponent implements OnInit {
         this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa
         console.log("este es el chofer EDITADO: ",this.chofer);     
     } else {
-        this.chofer = this.form.value;
+        let formValue = this.form.value;
+        // Eliminar los guiones del CUIT
+        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
+        this.chofer = {
+          ...formValue,
+          cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
+        };
       /*  this.chofer.categoria = this.categoriaSeleccionada; */
         this.chofer.idChofer = new Date().getTime();   
         this.chofer.id = null;  
@@ -404,5 +424,32 @@ export class ChoferesAltaComponent implements OnInit {
       );
     }
   }
+
+   hasError(controlName: string, errorName: string): boolean {
+      const control = this.form.get(controlName);
+      return control?.hasError(errorName) && control.touched;
+    }
+  
+     mensajesError(msj:string){
+        Swal.fire({
+          icon: "error",
+          //title: "Oops...",
+          text: `${msj}`
+          //footer: `${msj}`
+        });
+      }
+
+      formatCuit(cuitNumber: number | string): string {
+        // Convertir el número a string, si no lo es
+        const cuitString = cuitNumber.toString();
+      
+        // Validar que tiene exactamente 11 dígitos
+        if (cuitString.length !== 11 || isNaN(Number(cuitString))) {
+          throw new Error('El CUIT debe ser un número de 11 dígitos');
+        }
+      
+        // Insertar los guiones en las posiciones correctas
+        return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
+      }
 
 }

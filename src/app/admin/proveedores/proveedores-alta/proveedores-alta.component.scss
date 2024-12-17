@@ -41,3 +41,12 @@ label{
   color: white;
   font-size: 1.25rem;
 }    
+
+.isDisabled {
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.isDisabled:hover {
+  cursor: not-allowed;
+}

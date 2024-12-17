@@ -158,7 +158,7 @@ export class ChoferesListadoComponent implements OnInit {
         celular: chofer.celularContacto,
         celularEmergencia: chofer.celularEmergencia,
         direccion: chofer.domicilio,
-        cuit: chofer.cuit,
+        cuit: this.formatCuit(chofer.cuit),
         proveedor: chofer.idProveedor === 0 ? "Monotributista" : this.getProveedor(chofer.idProveedor),
         tarifa: chofer.tarifaTipo?.general ? "General" : chofer.tarifaTipo?.especial ? "Especial" : chofer.tarifaTipo?.personalizada ? "Personalizada" : chofer.tarifaTipo?.eventual ? "Eventual" : "Tarifa Proveedor",      
         correo: chofer.email,
@@ -244,6 +244,19 @@ export class ChoferesListadoComponent implements OnInit {
     this.choferVehiculos = chofer[0];
     this.vehiculos = chofer[0].vehiculo
     
+  }
+
+  formatCuit(cuitNumber: number | string): string {
+    // Convertir el número a string, si no lo es
+    const cuitString = cuitNumber.toString();
+  
+    // Validar que tiene exactamente 11 dígitos
+    if (cuitString.length !== 11 || isNaN(Number(cuitString))) {
+      throw new Error('El CUIT debe ser un número de 11 dígitos');
+    }
+  
+    // Insertar los guiones en las posiciones correctas
+    return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
   }
 
 /*   legajo(){

@@ -16,6 +16,7 @@
               [ngClass]="{ 'is-invalid': formContacto.get('puesto').invalid && 
               (formContacto.get('puesto').dirty || formContacto.get('puesto').touched) }">
           </div>
+          <div *ngIf="hasError('puesto', 'required')">El puesto es obligatorio.</div>
         </div>
         <div class="form-group mt-2">
           <label for="Apellido">Apellido</label>
@@ -26,16 +27,22 @@
               type="text"  [ngClass]="{ 'is-invalid': formContacto.get('apellido').invalid &&
               (formContacto.get('apellido').dirty || formContacto.get('apellido').touched) }">
           </div>
+          <div *ngIf="hasError('apellido', 'required')">El apellido es obligatorio.</div>
+          <div *ngIf="hasError('apellido', 'maxlength')">El apellido no debe exceder 30 caracteres.</div>
+          <div *ngIf="hasError('apellido', 'soloLetras')">Solo se permiten letras y caracteres especiales.</div>
         </div>
         <div class="form-group mt-2">
-          <label for="Nombre">Nombre</label>
-          <div class="input-group">
-            <input
-              formControlName="nombre"
-              class="form-control" required
-              type="text"  [ngClass]="{ 'is-invalid': formContacto.get('nombre').invalid && 
-              (formContacto.get('nombre').dirty || formContacto.get('nombre').touched) }">
-          </div>
+            <label for="Nombre">Nombre</label>
+            <div class="input-group">
+              <input
+                formControlName="nombre"
+                class="form-control" required
+                type="text"  [ngClass]="{ 'is-invalid': formContacto.get('nombre').invalid && 
+                (formContacto.get('nombre').dirty || formContacto.get('nombre').touched) }">              
+            </div>
+            <div *ngIf="hasError('nombre', 'required')">El nombre es obligatorio.</div>
+            <div *ngIf="hasError('nombre', 'maxlength')">El nombre no debe exceder 30 caracteres.</div>
+            <div *ngIf="hasError('nombre', 'soloLetras')">Solo se permiten letras y caracteres especiales.</div>
         </div>
         <div class="form-group mt-2">
           <label for="Telefono">Telefono</label>
@@ -47,6 +54,10 @@
               [ngClass]="{ 'is-invalid': formContacto.get('telefono').invalid && 
               (formContacto.get('telefono').dirty || formContacto.get('telefono').touched) }">
           </div>
+          <div *ngIf="hasError('telefono', 'required')">El teléfono es obligatorio.</div>
+          <div *ngIf="hasError('telefono', 'minlength')">El teléfono debe tener al menos 10 dígitos.</div>
+          <div *ngIf="hasError('telefono', 'maxlength')">El teléfono no debe exceder 10 dígitos.</div>
+          <div *ngIf="hasError('telefono', 'soloNumeros')">Solo se permiten números en el teléfono.</div>
         </div>
         <div class="form-group mt-2">
           <label for="Email">Email</label>
@@ -56,12 +67,15 @@
               class="form-control" required
               type="text" [placeholder]="'ej:  davidcortes@gmail.com'" 
               [ngClass]="{ 'is-invalid': formContacto.get('email').invalid && 
-              (formContacto.get('email').dirty || formContacto.get('email').touched) }">
+              (formContacto.get('email').dirty || formContacto.get('email').touched) }"
+              (keyup.enter)="guardarContacto()">
           </div>
+          <div *ngIf="hasError('email', 'required')">El mail es obligatorio.</div>
+          <div *ngIf="hasError('email', 'email')">El formato no es correcto</div>
         </div>           
       </form>
     </div>
-    <div class="modal-footer">
-        <app-btn-agregar name="Agregar"  type="submit" [disabled]="formContacto.invalid"  (click)="guardarContacto()"></app-btn-agregar>
+    <div class="modal-footer" [ngClass]="{'isDisabled': formContacto.invalid}">
+        <app-btn-agregar name="Agregar"  type="button" (click)="guardarContacto()"></app-btn-agregar>
     </div>
 </div>
