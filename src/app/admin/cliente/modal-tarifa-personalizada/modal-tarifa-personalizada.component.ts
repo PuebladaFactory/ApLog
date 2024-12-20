@@ -22,7 +22,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService){}
 
   ngOnInit(): void {    
-    console.log("0) ", this.fromParent);
+    //console.log("0) ", this.fromParent);
     this.$ultimaTarifa = this.fromParent.item;
     this.nuevaTarifa = this.fromParent.item;
   }
@@ -130,7 +130,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
     };
   
     // Aquí puedes guardar o enviar el objeto tarifaNueva
-    console.log("Tarifa Nueva Guardada: ", tarifaNueva);
+    //console.log("Tarifa Nueva Guardada: ", tarifaNueva);
     this.addItem(tarifaNueva)
   }
 
@@ -138,14 +138,6 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
     this.storageService.addItem(this.componente, item);        
   }
 
-  formatearValor(valor: number) : any{
-    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
-     minimumFractionDigits: 2, 
-     maximumFractionDigits: 2 
-   }).format(valor);
-   //////console.log(nuevoValor);    
-   return nuevoValor
- }
 
   // Función que convierte un string formateado en un número correcto para cálculos
   limpiarValorFormateado(valorFormateado: any): number {
@@ -169,7 +161,7 @@ updateItem(){
     })
   })
   console.log("TARIFA EDITADA", this.$ultimaTarifa);
-  this.storageService.updateItem(this.componente, this.$ultimaTarifa);   
+  //this.storageService.updateItem(this.componente, this.$ultimaTarifa);   
 }
 
 }

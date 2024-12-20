@@ -18,9 +18,9 @@ export class ModalContactoComponent implements OnInit {
   constructor(private fb: FormBuilder, public activeModal: NgbActiveModal){
     this.formContacto = this.fb.group({      
       puesto: ["",[Validators.required]], 
-      apellido: ["",[Validators.required, Validators.maxLength(30), ValidarService.soloLetras]],
-      nombre: ["",[Validators.required, Validators.maxLength(30), ValidarService.soloLetras]],      
-      telefono: ["",[Validators.required, Validators.minLength(10), Validators.maxLength(10), ValidarService.soloNumeros]],
+      apellido: ["",[Validators.required, Validators.maxLength(30)]],
+      nombre: ["",[Validators.required, Validators.maxLength(30)]],      
+      telefono: ["",[Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
       email: ["",[Validators.required, Validators.email]],
     })
   }

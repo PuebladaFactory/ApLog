@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -42,7 +42,15 @@ export class ModalTarifaGralEdicionComponent implements OnInit {
   }
 
     guardarCambios(){
-      console.log(this.tarifa);
+      //console.log(this.tarifa);
+      this.tarifa.cargasGenerales.forEach((c:CategoriaTarifa)=>{
+        c.valor = Number(c.valor);        
+        c.adicionalKm.primerSector = Number(c.adicionalKm.primerSector);
+        c.adicionalKm.sectoresSiguientes = Number(c.adicionalKm.sectoresSiguientes);
+      });
+      this.tarifa.adicionales.acompaniante = Number(this.tarifa.adicionales.acompaniante);
+      this.tarifa.adicionales.KmDistancia.primerSector = Number(this.tarifa.adicionales.KmDistancia.primerSector);
+      this.tarifa.adicionales.KmDistancia.sectoresSiguientes = Number(this.tarifa.adicionales.KmDistancia.sectoresSiguientes);
       this.updateItem();
     }
 
@@ -60,7 +68,7 @@ export class ModalTarifaGralEdicionComponent implements OnInit {
     cancelButtonText: "Cancelar"
   }).then((result) => {
     if (result.isConfirmed) {
-      //////console.log("op: ", this.op);
+      console.log("tarifa editada: ", this.tarifa);
       this.storageService.updateItem(this.componente, this.tarifa);    
       Swal.fire({
         title: "Confirmado",
@@ -109,5 +117,14 @@ eliminarCategoria(orden:number){
     });       
     
   }
+
+  formatearValor(valor: number) : any{
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+     minimumFractionDigits: 2, 
+     maximumFractionDigits: 2 
+   }).format(valor);
+   ////////////////console.log(nuevoValor);    
+   return nuevoValor
+ }
 
 }

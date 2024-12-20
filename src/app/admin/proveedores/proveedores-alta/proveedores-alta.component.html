@@ -77,37 +77,36 @@
                           </svg>          
                       </button>                         
                     </div>
-                    <div class="form-group mt-2">   
-                        <h4 *ngIf="contactos.length === 0 ">Sin contactos agendados</h4>
-                        <div *ngIf="contactos.length > 0 ">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                      <th class="tabla align-baseline" scope="col">Puesto</th>                    
-                                      <th class="tabla align-baseline" scope="col">Apellido</th>
-                                      <th class="tabla align-baseline" scope="col">Nombre</th>
-                                      <th class="tabla align-baseline" scope="col">Telefono</th> 
-                                      <th class="tabla align-baseline" scope="col">Email</th>
-                                      <th *ngIf="!soloVista"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr *ngFor="let contacto of contactos, let i = index" [ngClass]="{'isDisabled': soloVista}">
-                                        <th class="tabla align-baseline" scope="col">{{contacto.puesto}}</th>                    
-                                        <th class="tabla align-baseline" scope="col">{{contacto.apellido}}</th>
-                                        <th class="tabla align-baseline" scope="col">{{contacto.nombre}}</th>
-                                        <th class="tabla align-baseline" scope="col">{{contacto.telefono}}</th>
-                                        <th class="tabla align-baseline" scope="col">{{contacto.email}}</th>
-                                        <th class="tabla align-baseline" scope="col" *ngIf="!soloVista">                                  
-                                            <app-btn-eliminar name="Eliminar" (click)="eliminarContacto(i)"></app-btn-eliminar>
-                                        </th>
-                                    </tr> 
-                                </tbody>                    
-                            </table>          
-                        </div>
-                    </div>                          
-                    
                 </form>
+                <div class="form-group mt-2">   
+                  <h4 *ngIf="contactos.length === 0 ">Sin contactos agendados</h4>
+                  <div *ngIf="contactos.length > 0 ">
+                      <table class="table table-striped">
+                          <thead>
+                              <tr>
+                                <th class="tabla align-baseline" scope="col">Puesto</th>                    
+                                <th class="tabla align-baseline" scope="col">Apellido</th>
+                                <th class="tabla align-baseline" scope="col">Nombre</th>
+                                <th class="tabla align-baseline" scope="col">Telefono</th> 
+                                <th class="tabla align-baseline" scope="col">Email</th>
+                                <th *ngIf="!soloVista"></th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              <tr *ngFor="let contacto of contactos, let i = index" [ngClass]="{'isDisabled': soloVista}">
+                                  <th class="tabla align-baseline" scope="col">{{contacto.puesto}}</th>                    
+                                  <th class="tabla align-baseline" scope="col">{{contacto.apellido}}</th>
+                                  <th class="tabla align-baseline" scope="col">{{contacto.nombre}}</th>
+                                  <th class="tabla align-baseline" scope="col">{{contacto.telefono}}</th>
+                                  <th class="tabla align-baseline" scope="col">{{contacto.email}}</th>
+                                  <th class="tabla align-baseline" scope="col" *ngIf="!soloVista">                                  
+                                      <app-btn-eliminar name="Eliminar" (click)="eliminarContacto(i)"></app-btn-eliminar>
+                                  </th>
+                              </tr> 
+                          </tbody>                    
+                      </table>          
+                  </div>
+              </div>  
             </div>
         </div>        
     </div>

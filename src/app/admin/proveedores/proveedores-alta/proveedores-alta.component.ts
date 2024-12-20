@@ -204,7 +204,26 @@ export class ProveedoresAltaComponent implements OnInit {
   }
 
   eliminarContacto(indice:number){
-    this.contactos.splice(indice, 1);    
+     Swal.fire({
+          title: `Desea eliminar el contacto del Proveedor?`,
+          //text: "You won't be able to revert this!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Confirmar",
+          cancelButtonText: "Cancelar"
+        }).then((result) => {
+          if (result.isConfirmed) {     
+            this.contactos.splice(indice, 1);    
+            Swal.fire({
+              title: "Confirmado",
+              text: `Contacto borrado`,
+              icon: "success"
+            })           
+          }
+        });       
+   
   }
 
   abrirModalContactos(): void {   

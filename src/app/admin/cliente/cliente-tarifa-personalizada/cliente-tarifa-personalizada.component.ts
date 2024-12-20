@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import { ModalTarifaPersonalizadaComponent } from '../modal-tarifa-personalizada/modal-tarifa-personalizada.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
+import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 
 @Component({
   selector: 'app-cliente-tarifa-personalizada',
@@ -31,7 +32,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     $clientesPers! : Cliente [];
     $ultTarifaCliente!: TarifaPersonalizadaCliente;
     
-  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, private formNumService:FormatoNumericoService ) {
     this.inputSecciones = this.fb.group({
       cantSecciones : [""],
           })
@@ -87,17 +88,34 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
 
   agregarCategoria(index: number) {           
     //console.log("1)seccion", this.secciones[index]);
+    console.log("categoria: ", this.categoriaForm.value);
+    if(this.categoriaForm.value.nombre === "" || this.categoriaForm.value.nombre === null || this.categoriaForm.value.aCobrar === "" || this.categoriaForm.value.aCobrar === null ||this.categoriaForm.value.aPagar === "" || this.categoriaForm.value.aPagar === null){
+      return this.mensajesError("Los datos de la categoria no pueden estar en blanco");
+    }
     this.categoria = {
       orden: this.secciones[index].categorias.length + 1,
       nombre: this.categoriaForm.value.nombre,
-      aCobrar: this.categoriaForm.value.aCobrar,
-      aPagar: this.categoriaForm.value.aPagar,
+      aCobrar: this.formNumService.convertirAValorNumerico(this.categoriaForm.value.aCobrar),
+      aPagar: this.formNumService.convertirAValorNumerico(this.categoriaForm.value.aPagar),
       nuevoACobrar: 0,
       nuevoAPagar: 0,
     };  
     this.secciones[index].categorias.push(this.categoria)
     this.categoriaForm.reset()
-   
+    console.log("categorias: ",  this.secciones[index].categorias);
+  }
+
+  limpiarValorFormateado(valorFormateado: any): number {
+    if (typeof valorFormateado === 'string') {
+      // Si es un string, eliminar puntos de miles y reemplazar coma por punto
+      return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
+    } else if (typeof valorFormateado === 'number') {
+      // Si ya es un número, simplemente devuélvelo
+      return valorFormateado;
+    } else {
+      // Si es null o undefined, devolver 0 como fallback
+      return 0;
+    }
   }
 
   eliminarCategoria(index: number, orden:number) {
@@ -126,7 +144,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     };
     
     console.log('Tarifa guardada:', this.tarifaPersonalizadaCliente);
-    this.addItem();
+    //this.addItem();
   }
 
   addItem(): void {
@@ -186,14 +204,6 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     }
   }
 
-  formatearValor(valor: number) : any{
-    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
-     minimumFractionDigits: 2, 
-     maximumFractionDigits: 2 
-   }).format(valor);
-   //////console.log(nuevoValor);    
-   return nuevoValor
- }
 
  abrirHistorialTarifas(){
   {
@@ -218,5 +228,14 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     );
   }
 }
+
+  mensajesError(msj:string){
+      Swal.fire({
+        icon: "error",
+        //title: "Oops...",
+        text: `${msj}`
+        //footer: `${msj}`
+      });
+    }
 
 }

@@ -54,7 +54,7 @@ export class ClienteAltaComponent implements OnInit {
    }
 
    ngOnInit(): void {
-      console.log("1)", this.fromParent);
+      //console.log("1)", this.fromParent);
       if(this.fromParent.modo === "vista"){
         this.soloVista = true;
         this.clienteEditar = this.fromParent.item
@@ -70,7 +70,7 @@ export class ClienteAltaComponent implements OnInit {
    }
 
    onSubmit(){
-    ////console.log()(new Date().getTime());   
+    //////console.log()(new Date().getTime());   
     const tarifaSeleccionada = this.getTarifaTipo();    
     if (this.form.valid) {
       if(this.fromParent.modo === "edicion"){
@@ -84,9 +84,9 @@ export class ClienteAltaComponent implements OnInit {
         this.cliente.idCliente = this.clienteEditar.idCliente;
         this.cliente.id = this.clienteEditar.id;
         this.cliente.contactos = this.contactos;
-        //console.log()(this.cliente);     
+        ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        //console.log(this.cliente);      
+        ////console.log(this.cliente);      
         this.addItem("Edicion");        
         this.activeModal.close();    
       }else{
@@ -100,21 +100,14 @@ export class ClienteAltaComponent implements OnInit {
         //this.cliente = this.form.value
         this.cliente.idCliente = new Date().getTime();
         this.cliente.contactos = this.contactos;
-        //console.log()(this.cliente);     
+        ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        //console.log(this.cliente);      
+        ////console.log(this.cliente);      
         this.addItem("Alta");        
         this.activeModal.close();    
       }      
     } else{
-      //alert("error en el formulario")
-      Swal.fire({
-        icon: "error",
-        
-        text: "El formulario contiene errores ",
-//        
-      });
-
+      this.mensajesError("El formulario contiene errores");      
     } 
     
    }
@@ -180,12 +173,15 @@ export class ClienteAltaComponent implements OnInit {
 
   toggle() {
     this.mostrarFormulario = !this.mostrarFormulario;
-    ////console.log()(this.form);
+    //////console.log()(this.form);
   }
 
   
 
   eliminarContacto(indice:number){
+
+    console.log("llega aca?");
+    
 
     Swal.fire({
       title: `Desea eliminar el contacto del Cliente?`,
@@ -223,15 +219,15 @@ export class ClienteAltaComponent implements OnInit {
         modo: "clientes",
         item: facturaOp[0],
       }; 
-      //console.log()(info); */
+      ////console.log()(info); */
       
       //modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          //console.log("contacto:" ,result);
+          ////console.log("contacto:" ,result);
           if(result){
             this.contactos.push(result);
-            //console.log(this.contactos);
+            ////console.log(this.contactos);
           }
           
           
@@ -276,5 +272,14 @@ export class ClienteAltaComponent implements OnInit {
     // Insertar los guiones en las posiciones correctas
     return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
   }
+
+    mensajesError(msj:string){
+      Swal.fire({
+        icon: "error",
+        //title: "Oops...",
+        text: `${msj}`
+        //footer: `${msj}`
+      });
+    }
 
 }

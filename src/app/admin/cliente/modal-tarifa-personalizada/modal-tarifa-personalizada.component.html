@@ -14,7 +14,7 @@
             <div *ngIf="modoAutomatico" class="col-5 d-flex justify-content-start">
                 <div class="input-group flex-shrink-1" style="width: 30%">
                     <span class="input-group-text" id="basic-addon1">%</span>
-                    <input type="number" class="w-75" [(ngModel)]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento" (keydown.enter)="aplicarPorcentaje()">
+                    <input type="text" inputmode="numeric" class="w-75" [(ngModel)]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento" (keydown.enter)="aplicarPorcentaje()" appSoloNumeros>
                 </div>                
                 <button type="button" class="btn btn-outline-primary ms-2" style="font-size:1.25rem" (click)="aplicarPorcentaje()">Aplicar Porcentaje</button>
             </div>
@@ -44,16 +44,16 @@
                         <td class="align-middle">Categoria {{categoria.orden}}</td>
                         <td class="align-middle">{{categoria.nombre}}</td>
                         <!-- Valores originales -->
-                        <td class="align-middle">${{formatearValor(categoria.aCobrar)}}</td>
-                        <td class="align-middle">${{formatearValor(categoria.aPagar)}}</td>
+                        <td class="align-middle">{{categoria.aCobrar | formatearValor:'$' }}</td>
+                        <td class="align-middle">{{categoria.aPagar | formatearValor:'$' }}</td>
                         <!-- Diferencias calculadas (mostrando 0 inicialmente) -->
-                        <td class="align-middle" style="border-left: black 2px solid">${{ formatearValor(calcularDiferencia(categoria.aCobrar, categoria.nuevoACobrar))}}</td>
-                        <td class="align-middle">${{formatearValor(calcularDiferencia(categoria.aPagar, categoria.nuevoAPagar))}}</td>
+                        <td class="align-middle" style="border-left: black 2px solid">{{calcularDiferencia(categoria.aCobrar, categoria.nuevoACobrar) | formatearValor:'$' }}</td>
+                        <td class="align-middle">{{calcularDiferencia(categoria.aPagar, categoria.nuevoAPagar) | formatearValor:'$' }}</td>
                         <!-- Nuevos valores calculados -->
                         <td style="border-left: black 2px solid" class="align-middle">
                             <div class="input-group">
                                 <span class="input-group-text" id="basic-addon1">$</span>
-                                <input type="number" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoACobrar">
+                                <input type="number" [disabled]="modoAutomatico" [value]="categoria.nuevoACobrar  | formatearValor">
                             </div>                          
                         </td>
                         <td class="align-middle">
@@ -97,7 +97,7 @@
                             <td class="align-middle">
                                 <div class="form-group">                                    
                                     <div class="input-group ">
-                                        <input type="text" [(ngModel)]="categoria.nombre">
+                                        <input type="text" [(ngModel)]="categoria.nombre" appSoloNumeros>
                                     </div>
                                 </div>                                     
                             </td>
@@ -106,14 +106,14 @@
                                 <div class="form-group" >                                                                        
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input type="text" [(ngModel)]="categoria.aCobrar">
+                                        <input type="text" [(ngModel)]="categoria.aCobrar" appSoloNumeros>
                                     </div>                        
                                 </div>                                
                             <td class="align-middle">
                                 <div class="form-group" >                                                                        
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input type="text" [(ngModel)]="categoria.aPagar">
+                                        <input type="text" [(ngModel)]="categoria.aPagar" appSoloNumeros>
                                     </div>                        
                                 </div>
                             </td>

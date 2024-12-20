@@ -34,7 +34,7 @@
                         <td>
                             <div class="input-group mb-3">
                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                <input type="text" class="w-75" [(ngModel)]="categoria.valor">
+                                <input type="text" class="w-75" [(ngModel)]="categoria.valor" appSoloNumeros>
                             </div>
                         </td>
                     </tr>
@@ -43,7 +43,7 @@
                         <td>Km 1er Sector valor</td>                        
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" class="w-75" [(ngModel)]="categoria.adicionalKm.primerSector">
+                            <input type="text" class="w-75" [(ngModel)]="categoria.adicionalKm.primerSector" appSoloNumeros>
                         </div>
                     </tr>
                     <tr>
@@ -51,7 +51,7 @@
                         <td>Km Intervalos valor</td>
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" class="w-75" [(ngModel)]="categoria.adicionalKm.sectoresSiguientes">
+                            <input type="text" class="w-75" [(ngModel)]="categoria.adicionalKm.sectoresSiguientes" appSoloNumeros>
                         </div>
                     </tr>
                 </ng-container>                           
@@ -60,7 +60,7 @@
                     <td>
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.acompaniante">
+                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.acompaniante" appSoloNumeros>
                         </div>                        
                     </td>
                 </tr>
@@ -69,7 +69,7 @@
                     <td>
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
-                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.KmDistancia.primerSector">
+                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.KmDistancia.primerSector" appSoloNumeros>
                         </div>                        
                     </td>
                 </tr>
@@ -78,7 +78,7 @@
                     <td>
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
-                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.KmDistancia.sectoresSiguientes">
+                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.KmDistancia.sectoresSiguientes" appSoloNumeros>
                         </div>                        
                     </td>
                 </tr>

@@ -16,6 +16,10 @@ import { HistorialTarifasGralComponent } from './historial-tarifas-gral/historia
 import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventuales.component';
 import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
 import { CuitFormatDirective } from './directives/cuit-format.directive';
+import { SoloNumerosDirective } from './directives/solo-numeros.directive';
+import { FormatearValorPipe } from './pipes/formatear-valor.pipe';
+import { FormatoNumericoDirective } from './directives/formato-numerico.directive';
+import { SoloLetrasDirective } from './directives/solo-letras.directive';
 
 @NgModule({
   declarations: [
@@ -30,7 +34,11 @@ import { CuitFormatDirective } from './directives/cuit-format.directive';
     TarifasEventualesComponent,
     CarruselComponent,
     SafeUrlPipe,
-    CuitFormatDirective
+    CuitFormatDirective,
+    SoloNumerosDirective,
+    FormatearValorPipe,
+    FormatoNumericoDirective,
+    SoloLetrasDirective
   ],
   imports: [
     CommonModule,
@@ -53,7 +61,11 @@ import { CuitFormatDirective } from './directives/cuit-format.directive';
     HistorialTarifasGralComponent, 
     TarifasEventualesComponent, 
     CarruselComponent,
-    CuitFormatDirective
+    CuitFormatDirective,
+    SoloNumerosDirective,
+    FormatearValorPipe,
+    FormatoNumericoDirective,
+    SoloLetrasDirective
   ]
 })
 export class SharedModule { }

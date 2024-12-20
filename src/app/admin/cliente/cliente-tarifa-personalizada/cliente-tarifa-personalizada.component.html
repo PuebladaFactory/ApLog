@@ -93,7 +93,10 @@
                             <input
                             formControlName="aCobrar"
                             class="form-control" required
-                            type="number">
+                            type="text"
+                            inputmode="numeric"
+                            appFormatoNumerico
+                            >
                         </div>
                     </td>    
                     <td class="align-middle me-2">
@@ -103,7 +106,9 @@
                             <input
                             formControlName="aPagar"
                             class="form-control" required
-                            type="number">
+                            type="text" 
+                            inputmode="numeric"                            
+                            appFormatoNumerico>
                         </div>                        
                     </td>
                     <td class="d-flex align-self-center mt-3 me-2 ">
@@ -126,9 +131,9 @@
                     <tr *ngFor="let categoria of seccion.categorias; let j = index">
                       <td class="align-middle">Categoria {{categoria.orden}}</td>
                       <td class="align-middle">{{categoria.nombre}}</td>
-                      <td class="align-middle">${{formatearValor(categoria.aCobrar)}}</td>
-                      <td class="align-middle">${{formatearValor(categoria.aPagar)}}</td>
-                      <td class="align-middle">{{(formatearValor(100-((categoria.aPagar*100)/categoria.aCobrar)))}}%</td>
+                      <td class="align-middle">{{ categoria.aCobrar | formatearValor:'$' }}</td>
+                      <td class="align-middle">{{ categoria.aPagar | formatearValor:'$' }}</td>
+                      <td class="align-middle">{{ (100-((categoria.aPagar*100)/categoria.aCobrar)) | formatearValor }} %</td>
                       <td class="align-middle"><app-btn-eliminar name="EliminarClaro" (click)="eliminarCategoria(i,j)"></app-btn-eliminar></td>
                     </tr>
                 </tbody>
@@ -169,9 +174,9 @@
                             <tr *ngFor="let categoria of seccion.categorias">
                                 <td class="align-middle" class="align-middle">Categoria {{categoria.orden}}</td>
                                 <td class="align-middle" class="align-middle">{{categoria.nombre}}</td>
-                                <td class="align-middle" class="align-middle">${{formatearValor(categoria.aCobrar)}}</td>
-                                <td class="align-middle" class="align-middle">${{formatearValor(categoria.aPagar)}}</td>
-                                <td class="align-middle" class="align-middle">{{(formatearValor(100-((categoria.aPagar*100)/categoria.aCobrar)))}}%</td>
+                                <td class="align-middle" class="align-middle">{{categoria.aCobrar | formatearValor:'$' }}</td>
+                                <td class="align-middle" class="align-middle">{{ categoria.aPagar | formatearValor:'$' }}</td>
+                                <td class="align-middle" class="align-middle">{{(100-((categoria.aPagar*100)/categoria.aCobrar)) | formatearValor }}  %</td>
                             </tr>
                         </tbody>
                     </table>
