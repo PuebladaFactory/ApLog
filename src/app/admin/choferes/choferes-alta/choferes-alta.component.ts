@@ -55,8 +55,8 @@ export class ChoferesAltaComponent implements OnInit {
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private legajoServ: LegajosService) {
     this.form = this.fb.group({                             //formulario para el perfil 
-     nombre: ["", [Validators.required, Validators.maxLength(30), ValidarService.soloLetras]], 
-     apellido: ["",[Validators.required, Validators.maxLength(30), ValidarService.soloLetras]], 
+     nombre: ["", [Validators.required, Validators.maxLength(30)]], 
+     apellido: ["",[Validators.required, Validators.maxLength(30)]], 
      cuit: ["",[
       Validators.required,
       Validators.minLength(13),
@@ -65,8 +65,8 @@ export class ChoferesAltaComponent implements OnInit {
     ],],            
      fechaNac: ["",Validators.required],
      email: ["",[Validators.required, Validators.email]],
-     celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10), ValidarService.soloNumeros]],
-     celularEmergencia: ["",[Validators.minLength(10), Validators.maxLength(10), ValidarService.soloNumeros]],
+     celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
+     celularEmergencia: ["",[Validators.minLength(10), Validators.maxLength(10)]],
      domicilio: ["", [Validators.required, Validators.maxLength(50)]],     
 
   });

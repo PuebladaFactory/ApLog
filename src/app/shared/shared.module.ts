@@ -20,6 +20,9 @@ import { SoloNumerosDirective } from './directives/solo-numeros.directive';
 import { FormatearValorPipe } from './pipes/formatear-valor.pipe';
 import { FormatoNumericoDirective } from './directives/formato-numerico.directive';
 import { SoloLetrasDirective } from './directives/solo-letras.directive';
+import { FormatoNumericoNgModelDirective } from './directives/formato-numerico-ng-model.directive';
+import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-edicion.component';
+
 
 @NgModule({
   declarations: [
@@ -38,7 +41,10 @@ import { SoloLetrasDirective } from './directives/solo-letras.directive';
     SoloNumerosDirective,
     FormatearValorPipe,
     FormatoNumericoDirective,
-    SoloLetrasDirective
+    SoloLetrasDirective,
+    FormatoNumericoNgModelDirective,
+    TarigaGralEdicionComponent,
+    
   ],
   imports: [
     CommonModule,
@@ -65,7 +71,9 @@ import { SoloLetrasDirective } from './directives/solo-letras.directive';
     SoloNumerosDirective,
     FormatearValorPipe,
     FormatoNumericoDirective,
-    SoloLetrasDirective
+    SoloLetrasDirective,
+    FormatoNumericoNgModelDirective,
+    TarigaGralEdicionComponent
   ]
 })
 export class SharedModule { }

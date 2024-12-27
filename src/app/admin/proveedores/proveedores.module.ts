@@ -12,7 +12,7 @@ import { ProveedoresControlComponent } from './proveedores-control/proveedores-c
 import { ProveedoresTarifaGralComponent } from './proveedores-tarifa-gral/proveedores-tarifa-gral.component';
 import { ProveedoresTarifaEspecialComponent } from './proveedores-tarifa-especial/proveedores-tarifa-especial.component';
 import { ModalContactoProveedoresComponent } from './modal-contacto-proveedores/modal-contacto-proveedores.component';
-import { ModalTarifaGralEdicionProComponent } from './modal-tarifa-gral-edicion-pro/modal-tarifa-gral-edicion-pro.component';
+
 
 
 @NgModule({
@@ -22,8 +22,7 @@ import { ModalTarifaGralEdicionProComponent } from './modal-tarifa-gral-edicion-
     ProveedoresControlComponent,
     ProveedoresTarifaGralComponent,
     ProveedoresTarifaEspecialComponent,
-    ModalContactoProveedoresComponent,
-    ModalTarifaGralEdicionProComponent
+    ModalContactoProveedoresComponent,    
   ],
   imports: [
     CommonModule,

@@ -79,16 +79,21 @@
             <form [formGroup]="categoriaForm" (ngSubmit)="agregarCategoria(i)">
                 <div class="input-group input-group-sm mt-2 mb-3">        
                     <td *ngIf="seccion.categorias.length !== undefined" class="d-flex me-3"><h4 class="align-self-end mb-4">Categoria  {{seccion.categorias.length + 1}}</h4></td>
-                    <td class="align-middle me-2">
+                    <td class="align-middle me-2 form-group">
                         <label>Nombre: </label>    
-                        <input
-                        formControlName="nombre"
-                        class="form-control" required
-                        type="text">
+                        <div class="input-group">                            
+                            <input
+                            formControlName="nombre"
+                            class="form-control" required
+                            type="text"
+                            [ngClass]="{ 'is-invalid': categoriaForm.get('nombre').invalid &&
+                            (categoriaForm.get('nombre').dirty || categoriaForm.get('nombre').touched) }">
+                        </div>
+                        <div *ngIf="hasError('nombre', 'required')" class="fs-6">El nombre de la categoria es obligatorio.</div>
                     </td>
-                    <td class="align-middle me-2">
+                    <td class="align-middle me-2 form-group">
                         <label>A Cobrar: </label>    
-                        <div class="input-group mb-3">                            
+                        <div class="input-group">                            
                             <span class="input-group-text" style="font-size: 1.25rem;" id="basic-addon1">$</span>
                             <input
                             formControlName="aCobrar"
@@ -96,20 +101,27 @@
                             type="text"
                             inputmode="numeric"
                             appFormatoNumerico
+                            [ngClass]="{ 'is-invalid': categoriaForm.get('aCobrar').invalid &&
+                            (categoriaForm.get('aCobrar').dirty || categoriaForm.get('aCobrar').touched) }"
                             >
                         </div>
+                        <div *ngIf="hasError('aCobrar', 'required')"  class="fs-6">El valor a cobrar es obligatorio.</div>
                     </td>    
-                    <td class="align-middle me-2">
+                    <td class="align-middle me-2 form-group">
                         <label>A Pagar: </label>   
-                        <div class="input-group mb-3">                            
+                        <div class="input-group">                            
                             <span class="input-group-text" style="font-size: 1.25rem;" id="basic-addon1">$</span>
                             <input
                             formControlName="aPagar"
                             class="form-control" required
                             type="text" 
                             inputmode="numeric"                            
-                            appFormatoNumerico>
-                        </div>                        
+                            appFormatoNumerico
+                            [ngClass]="{ 'is-invalid': categoriaForm.get('aPagar').invalid &&
+                            (categoriaForm.get('aPagar').dirty || categoriaForm.get('aPagar').touched) }"
+                            >
+                        </div>  
+                        <div *ngIf="hasError('aPagar', 'required')" class="fs-6">El valor a pagar es obligatorio.</div>                      
                     </td>
                     <td class="d-flex align-self-center mt-3 me-2 ">
                         <button class="btn agregar" type="submit">Agregar Categoria</button>

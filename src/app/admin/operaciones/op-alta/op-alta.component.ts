@@ -13,6 +13,7 @@ import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-p
 import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2'
 
@@ -63,7 +64,7 @@ export class OpAltaComponent implements OnInit {
   clienteEventual: boolean = false;
   choferEventual: boolean = false;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, private dbFirebase: DbFirestoreService ) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, private formNumServ: FormatoNumericoService  ) {
     this.form = this.fb.group({
       fecha: ['', Validators.required],
       cliente: ['', Validators.required],
@@ -369,7 +370,7 @@ export class OpAltaComponent implements OnInit {
             if(this.formTarifaPersonalizada.valid){
                 this.armarOp();
             } else {
-              this.mensajesError("error en el formulario de la tarifa personalizada")
+              this.mensajesError("El cliente tiene asignada una tarifa personalizada. Debe seleccionar una sección y una categoria.")
             }         
         } else if (!this.tPersonalizada && this.tEventual && !this.vehiculosChofer){
             ////console.log("solo eventual");
@@ -383,7 +384,7 @@ export class OpAltaComponent implements OnInit {
             if(this.formVehiculosChofer.valid){
               this.armarOp()
             } else{
-              this.mensajesError("error en el formulario del vehiculo del chofer")
+              this.mensajesError("El chofer seleccionado tiene asignado varios vehiculos. Debe seleccionar uno")
             }          
         } else if(this.tPersonalizada && !this.tEventual && this.vehiculosChofer){
             ////console.log("tarifa personalizada y vehiculos chofer ");
@@ -443,11 +444,11 @@ export class OpAltaComponent implements OnInit {
       tarifaEventual: this.tEventual ? { 
         chofer: {
           concepto: this.formTarifaEventual.value.choferConcepto,
-          valor: this.formTarifaEventual.value.choferValor
+          valor: this.formNumServ.convertirAValorNumerico(this.formTarifaEventual.value.choferValor)
         },
         cliente: {
             concepto: this.formTarifaEventual.value.clienteConcepto,
-            valor: this.formTarifaEventual.value.clienteValor
+            valor: this.formNumServ.convertirAValorNumerico(this.formTarifaEventual.value.clienteValor)
         }} : {
       chofer:{
         concepto: "",
@@ -497,14 +498,14 @@ export class OpAltaComponent implements OnInit {
         cliente:{
           acompValor: 0,
           kmAdicional: 0,
-          tarifaBase: this.tEventual ? this.formTarifaEventual.value.clienteValor : this.tarifaPersonalizada ? this.tarifaPersonalizada.aCobrar : 0,
-          aCobrar: this.tEventual ? this.formTarifaEventual.value.clienteValor : this.tarifaPersonalizada ? this.tarifaPersonalizada.aCobrar : 0,
+          tarifaBase: this.tEventual ? this.formNumServ.convertirAValorNumerico(this.formTarifaEventual.value.clienteValor) : this.tarifaPersonalizada ? this.tarifaPersonalizada.aCobrar : 0,
+          aCobrar: this.tEventual ? this.formNumServ.convertirAValorNumerico(this.formTarifaEventual.value.clienteValor) : this.tarifaPersonalizada ? this.tarifaPersonalizada.aCobrar : 0,
         },
         chofer:{
           acompValor: 0,
           kmAdicional: 0,
-          tarifaBase: this.tEventual ? this.formTarifaEventual.value.choferValor : this.tarifaPersonalizada ? this.tarifaPersonalizada.aPagar : 0,
-          aPagar: this.tEventual ? this.formTarifaEventual.value.choferValor : this.tarifaPersonalizada ? this.tarifaPersonalizada.aPagar : 0,
+          tarifaBase: this.tEventual ? this.formNumServ.convertirAValorNumerico(this.formTarifaEventual.value.choferValor) : this.tarifaPersonalizada ? this.tarifaPersonalizada.aPagar : 0,
+          aPagar: this.tEventual ? this.formNumServ.convertirAValorNumerico(this.formTarifaEventual.value.choferValor) : this.tarifaPersonalizada ? this.tarifaPersonalizada.aPagar : 0,
         }
       },
       documentacion: null,
@@ -683,4 +684,13 @@ export class OpAltaComponent implements OnInit {
     return this.buscarTarifaServ.$getAPagar(tarifa, this.choferSeleccionado, this.patenteChofer);
     
   } 
+
+  hasError(controlName: string, errorName: string): boolean {
+    const control = this.form.get(controlName);
+    return control?.hasError(errorName) && control.touched;
+  }
+  hasErrorTeventual(controlName: string, errorName: string): boolean {
+    const control = this.formTarifaEventual.get(controlName);
+    return control?.hasError(errorName) && control.touched;
+  }
 }

@@ -197,12 +197,6 @@ export class ProveedoresAltaComponent implements OnInit {
     ////console.log()(this.form);
   }
 
-  guardarContacto(){
-    this.contactos.push(this.formContacto.value);
-    this.formContacto.reset();
-    this.mostrarFormulario = !this.mostrarFormulario;
-  }
-
   eliminarContacto(indice:number){
      Swal.fire({
           title: `Desea eliminar el contacto del Proveedor?`,

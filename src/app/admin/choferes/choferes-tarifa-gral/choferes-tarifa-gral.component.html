@@ -71,7 +71,7 @@
                             <span class="input-group-text" id="basic-addon1" style="width:30px">
                                 {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
                             </span>
-                            <input type="text" class="form-control" formControlName="nuevaTarifa" [ngClass]="{'input-resaltado': tEspecial && comprobarCategoria(fila.get('orden')?.value)}">
+                            <input type="text" class="form-control" formControlName="nuevaTarifa" [ngClass]="{'input-resaltado': tEspecial && comprobarCategoria(fila.get('orden')?.value)}" appFormatoNumerico>
                         </div>                                                
                     </td>
                 </tr>

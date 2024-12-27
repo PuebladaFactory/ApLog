@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 
 
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 
 @Component({
@@ -20,15 +21,16 @@ export class LoginComponent implements OnInit {
 
 
 
-  constructor(private router: Router,
+  constructor(
     public authService: AuthService,
+    private storageService: StorageService
   ) {
 
 
   }
 
   ngOnInit(): void {
-
+    this.storageService.clearAllLocalStorage()
   }
 
 

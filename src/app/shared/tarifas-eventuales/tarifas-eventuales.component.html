@@ -13,7 +13,7 @@
     <div *ngIf="tarifasEventuales && tarifasEventuales.length > 0"  style="width:100px;">
         <label for="">Cantidad de Tarifas</label>
         <div class="input-group">                    
-            <input type="text" class="form-control"  placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarTarifasEventuales()">
+            <input type="text" inputmode="numeric" class="form-control"  placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarTarifasEventuales()" appSoloNumeros>
             <button class="btn btn-secondary " type="button" id="button-addon2"  (click)="consultarTarifasEventuales()">Consultar</button>
         </div>                  
     </div>

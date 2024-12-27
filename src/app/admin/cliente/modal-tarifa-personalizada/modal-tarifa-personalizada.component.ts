@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { CategoriaTarifa, Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -19,12 +20,13 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   nuevaTarifa!: TarifaPersonalizadaCliente;  // suponiendo que ya tienes los datos cargados
   componente: string = "tarifasPersCliente"
   
-  constructor(public activeModal: NgbActiveModal, private storageService: StorageService){}
+  constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private formNumServ: FormatoNumericoService){}
 
   ngOnInit(): void {    
     //console.log("0) ", this.fromParent);
-    this.$ultimaTarifa = this.fromParent.item;
-    this.nuevaTarifa = this.fromParent.item;
+    this.nuevaTarifa = this.fromParent.item;    
+    this.$ultimaTarifa = structuredClone(this.nuevaTarifa);
+    
   }
 
   // Método para calcular automáticamente el aumento en las tarifas
@@ -33,6 +35,9 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
       this.$ultimaTarifa.secciones.forEach(seccion => {
         seccion.categorias.forEach(categoria => {
           // Calcula nuevos valores y limita a dos decimales, luego convierte a número
+          console.log("categoria.aCobrar: ", categoria.aCobrar);
+          console.log("categoria.aPagar: ", categoria.aPagar);
+          
           categoria.nuevoACobrar = categoria.aCobrar + (categoria.aCobrar * (this.porcentajeAumento / 100));
           categoria.nuevoAPagar = categoria.aPagar + (categoria.aPagar * (this.porcentajeAumento / 100));
         });
@@ -42,10 +47,12 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   
   // Método para calcular la diferencia
   calcularDiferencia(valorOriginal: number, nuevoValor: number | null | undefined): number {
-    if (nuevoValor === null || nuevoValor === undefined || nuevoValor === 0) {
+    console.log("valorOriginal: ", valorOriginal, "nuevoValor: ", nuevoValor);
+    
+    if (nuevoValor === null || nuevoValor === undefined || this.formNumServ.convertirAValorNumerico(nuevoValor) === 0) {
       return 0;  // Devuelve 0 si no hay nuevo valor calculado
     }
-    return nuevoValor - valorOriginal;
+    return this.formNumServ.convertirAValorNumerico(nuevoValor) - valorOriginal;
   }
 
   // Cambia entre modos automático y manual
@@ -120,8 +127,8 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
         categorias: seccion.categorias.map(categoria => ({
           ...categoria,
           // Asignamos los valores de nuevoACobrar a aCobrar, y de nuevoAPagar a aPagar
-          aCobrar: categoria.nuevoACobrar,
-          aPagar: categoria.nuevoAPagar,
+          aCobrar: this.formNumServ.convertirAValorNumerico(categoria.nuevoACobrar),
+          aPagar: this.formNumServ.convertirAValorNumerico(categoria.nuevoAPagar),
           // Reseteamos los valores de nuevoACobrar y nuevoAPagar a 0
           nuevoACobrar: 0,
           nuevoAPagar: 0
@@ -140,28 +147,17 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
 
 
   // Función que convierte un string formateado en un número correcto para cálculos
-  limpiarValorFormateado(valorFormateado: any): number {
-    if (typeof valorFormateado === 'string') {
-      // Si es un string, eliminar puntos de miles y reemplazar coma por punto
-      return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
-    } else if (typeof valorFormateado === 'number') {
-      // Si ya es un número, simplemente devuélvelo
-      return valorFormateado;
-    } else {
-      // Si es null o undefined, devolver 0 como fallback
-      return 0;
-    }
-  }
+
 
 updateItem(){
   this.$ultimaTarifa.secciones.forEach((seccion:Seccion)=>{
     seccion.categorias.forEach((categoria:CategoriaTarifa)=>{
-      categoria.aCobrar = this.limpiarValorFormateado(categoria.aCobrar);
-      categoria.aPagar = this.limpiarValorFormateado(categoria.aPagar);
+      categoria.aCobrar = this.formNumServ.convertirAValorNumerico(categoria.aCobrar);
+      categoria.aPagar = this.formNumServ.convertirAValorNumerico(categoria.aPagar);
     })
   })
   console.log("TARIFA EDITADA", this.$ultimaTarifa);
-  //this.storageService.updateItem(this.componente, this.$ultimaTarifa);   
+  this.storageService.updateItem(this.componente, this.$ultimaTarifa);   
 }
 
 }

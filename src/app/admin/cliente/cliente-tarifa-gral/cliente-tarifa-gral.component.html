@@ -68,7 +68,7 @@
                                 <span class="input-group-text" style="width:30px">
                                     {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
                                 </span>
-                                <input type="text" class="form-control" formControlName="nuevaTarifa" appSoloNumeros>
+                                <input type="text" class="form-control" formControlName="nuevaTarifa" appFormatoNumerico >
                             </div>
                         </td>
                     </tr>

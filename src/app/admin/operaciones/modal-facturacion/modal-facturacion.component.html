@@ -87,7 +87,7 @@
                             <label for="Km" class="fs-5">Km Recorridos</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
-                                <input #kmInput formControlName="km" class="form-control edicion" required type="number" (keyup.enter)="onSubmit()">
+                                <input #kmInput formControlName="km" class="form-control edicion" required type="text" inputmode="numeric" (keyup.enter)="onSubmit()" appSoloNumeros>
                             </div>                        
                         </div>                        
                         <div class="form-group mt-3">                                    
@@ -156,7 +156,7 @@
                                             <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
                                             <div class="input-group">
                                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                                <input  class="form-control edicion" required type="number" [(ngModel)]="tarifaEventual.cliente.valor">
+                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="tarifaEventual.cliente.valor" appFormatoNumericoNgModel>
                                             </div>                                                        
                                         </div>
                                     </div>
@@ -173,7 +173,7 @@
                                         <label for="Fecha" class="fs-5">Tarifa Eventual Valor</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                            <input class="form-control edicion" required type="number" [(ngModel)]="tarifaEventual.chofer.valor">
+                                            <input class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="tarifaEventual.chofer.valor" appFormatoNumericoNgModel>
                                         </div>                                                                                        
                                     </div>                               
                                 </div>

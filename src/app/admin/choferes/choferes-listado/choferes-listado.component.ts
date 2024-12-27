@@ -269,4 +269,16 @@ export class ChoferesListadoComponent implements OnInit {
       this.legajoServ.crearLegajo(idChofer);
     }  */
 
+      /* convertirPatente(){
+        this.$choferes.forEach((c:Chofer)=>{
+          if(c.vehiculo.length > 0){
+            c.vehiculo.forEach((v:Vehiculo)=>{
+              v.dominio = v.dominio?.toUpperCase();            
+            });
+            this.storageService.updateItem(this.componente, c);
+          }
+          
+        })
+      } */
+
 }

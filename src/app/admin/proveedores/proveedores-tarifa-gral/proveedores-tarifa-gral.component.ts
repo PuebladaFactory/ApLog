@@ -2,13 +2,11 @@ import { Component, Input, OnInit } from '@angular/core';
 import { AbstractControl, FormArray, FormBuilder, FormControl } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AdicionalTarifa, CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
-import { TarifaGralProveedor } from 'src/app/interfaces/tarifa-gral-proveedor';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
-import { ModalTarifaGralEdicionProComponent } from '../modal-tarifa-gral-edicion-pro/modal-tarifa-gral-edicion-pro.component';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
+import { TarigaGralEdicionComponent } from 'src/app/shared/tariga-gral-edicion/tariga-gral-edicion.component';
 
 @Component({
   selector: 'app-proveedores-tarifa-gral',
@@ -489,7 +487,7 @@ onGenerarNuevaTarifaAutomatica() {
 
   openModalEdicion(): void {      
     {
-      const modalRef = this.modalService.open(ModalTarifaGralEdicionProComponent, {
+      const modalRef = this.modalService.open(TarigaGralEdicionComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         size: 'md', 
@@ -498,6 +496,7 @@ onGenerarNuevaTarifaAutomatica() {
 
     let tarifa: TarifaGralCliente;
     let modo: string = ""
+    let origen: string = "proveedores"
 
 
       if(this.tEspecial){
@@ -511,6 +510,7 @@ onGenerarNuevaTarifaAutomatica() {
     let info = {
         modo: modo,
         item: tarifa,
+        origen: origen,
       } 
       //console.log()(info); */
       

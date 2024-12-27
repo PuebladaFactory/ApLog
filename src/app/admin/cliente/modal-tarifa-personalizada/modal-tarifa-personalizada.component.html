@@ -53,13 +53,13 @@
                         <td style="border-left: black 2px solid" class="align-middle">
                             <div class="input-group">
                                 <span class="input-group-text" id="basic-addon1">$</span>
-                                <input type="number" [disabled]="modoAutomatico" [value]="categoria.nuevoACobrar  | formatearValor">
+                                <input type="text" inputmode="numeric" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoACobrar" appFormatoNumericoNgModel>
                             </div>                          
                         </td>
                         <td class="align-middle">
                             <div class="input-group">
                                 <span class="input-group-text" id="basic-addon1">$</span>
-                                <input type="number" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoAPagar">
+                                <input type="text" inputmode="numeric" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoAPagar" appFormatoNumericoNgModel>
                             </div>            
                         </td>
                     </tr>
@@ -97,7 +97,7 @@
                             <td class="align-middle">
                                 <div class="form-group">                                    
                                     <div class="input-group ">
-                                        <input type="text" [(ngModel)]="categoria.nombre" appSoloNumeros>
+                                        <input type="text" [(ngModel)]="categoria.nombre">
                                     </div>
                                 </div>                                     
                             </td>
@@ -106,14 +106,14 @@
                                 <div class="form-group" >                                                                        
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input type="text" [(ngModel)]="categoria.aCobrar" appSoloNumeros>
+                                        <input type="text" inputmode="numeric" appFormatoNumericoNgModel [(ngModel)]="categoria.aCobrar">
                                     </div>                        
                                 </div>                                
                             <td class="align-middle">
                                 <div class="form-group" >                                                                        
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input type="text" [(ngModel)]="categoria.aPagar" appSoloNumeros>
+                                        <input type="text" inputmode="numeric" appFormatoNumericoNgModel [(ngModel)]="categoria.aPagar">
                                     </div>                        
                                 </div>
                             </td>

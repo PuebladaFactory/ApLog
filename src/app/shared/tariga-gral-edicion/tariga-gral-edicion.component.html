@@ -9,7 +9,7 @@
                 </svg>
             </div>
         </div>        
-        <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
+        <button type="button" class="btn-close btn" id="cerrar" (click)="closeModal()"></button>
     </div>
     <div class="modal-body">
         <table class="table">
@@ -34,7 +34,7 @@
                         <td>
                             <div class="input-group mb-3">
                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                <input type="text" class="w-75" [(ngModel)]="categoria.valor" appSoloNumeros>
+                                <input type="text" inputmode="numeric"   class="w-75" [(ngModel)]="categoria.valor" appFormatoNumericoNgModel>
                             </div>
                         </td>
                     </tr>
@@ -43,7 +43,7 @@
                         <td>Km 1er Sector valor</td>                        
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" class="w-75" [(ngModel)]="categoria.adicionalKm.primerSector" appSoloNumeros>
+                            <input type="text" inputmode="numeric"  class="w-75" [(ngModel)]="categoria.adicionalKm.primerSector" appFormatoNumericoNgModel>
                         </div>
                     </tr>
                     <tr>
@@ -51,7 +51,7 @@
                         <td>Km Intervalos valor</td>
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" class="w-75" [(ngModel)]="categoria.adicionalKm.sectoresSiguientes" appSoloNumeros>
+                            <input type="text" inputmode="numeric"  class="w-75" [(ngModel)]="categoria.adicionalKm.sectoresSiguientes" appFormatoNumericoNgModel>
                         </div>
                     </tr>
                 </ng-container>                           
@@ -60,7 +60,7 @@
                     <td>
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.acompaniante" appSoloNumeros>
+                            <input type="text" inputmode="numeric"  class="w-75" [(ngModel)]="tarifa.adicionales.acompaniante" appFormatoNumericoNgModel>
                         </div>                        
                     </td>
                 </tr>
@@ -69,7 +69,7 @@
                     <td>
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
-                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.KmDistancia.primerSector" appSoloNumeros>
+                            <input type="text" inputmode="numeric"  class="w-75" [(ngModel)]="tarifa.adicionales.KmDistancia.primerSector" appFormatoNumericoNgModel>
                         </div>                        
                     </td>
                 </tr>
@@ -78,52 +78,14 @@
                     <td>
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
-                            <input type="text" class="w-75" [(ngModel)]="tarifa.adicionales.KmDistancia.sectoresSiguientes" appSoloNumeros>
+                            <input type="text" inputmode="numeric"  class="w-75" [(ngModel)]="tarifa.adicionales.KmDistancia.sectoresSiguientes" appFormatoNumericoNgModel>
                         </div>                        
                     </td>
                 </tr>
-                
-                <!-- Modificación para adicionalKm -->
-                <!-- <tr>
-                    <td colspan="2">Km 1er Sector distancia: </td>
-                    <td>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
-                            <input type="text" [(ngModel)]="tarifa.adicionales.adicionalKm.primerSector.distancia">
-                        </div>  
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2">Km 1er Sector valor: </td>
-                    <td>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" [(ngModel)]="tarifa.adicionales.adicionalKm.primerSector.valor">
-                        </div>  
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2">Km Intervalos distancia: </td>
-                    <td>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
-                            <input type="text" [(ngModel)]="tarifa.adicionales.adicionalKm.sectoresSiguientes.intervalo">
-                        </div>  
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2">Km Intervalos valor: </td>
-                    <td>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                            <input type="text" [(ngModel)]="tarifa.adicionales.adicionalKm.sectoresSiguientes.valor">
-                        </div> 
-                    </td>
-                </tr> -->
             </tbody>
         </table>
     </div>
     <div class="modal-footer">
-        <app-btn-agregar name="Guardar" (click)="guardarCambios()"></app-btn-agregar>
+        <app-btn-agregar name="Guardar" (click)="updateItem()"></app-btn-agregar>
     </div>
 </div>

@@ -14,7 +14,7 @@ import { ClienteTarifaGralComponent } from './cliente-tarifa-gral/cliente-tarifa
 import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/cliente-tarifa-especial.component';
 import { ModalContactoComponent } from './modal-contacto/modal-contacto.component';
 import { ModalTarifaPersonalizadaComponent } from './modal-tarifa-personalizada/modal-tarifa-personalizada.component';
-import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/modal-tarifa-gral-edicion.component';
+
 
 
 
@@ -34,7 +34,7 @@ import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/mod
     ClienteTarifaEspecialComponent, 
     ModalContactoComponent, 
     ModalTarifaPersonalizadaComponent, 
-    ModalTarifaGralEdicionComponent,
+    
     
   ],
   imports: [

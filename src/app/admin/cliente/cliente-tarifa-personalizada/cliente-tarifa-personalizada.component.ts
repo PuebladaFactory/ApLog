@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder} from '@angular/forms';
+import { FormArray, FormBuilder, Validators} from '@angular/forms';
 
 import { Cliente } from 'src/app/interfaces/cliente';
 import { CategoriaTarifa, Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
@@ -38,9 +38,9 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
           })
     this.categoriaForm = this.fb.group({
       categoriaNum : [""],
-      nombre: [""],
-      aCobrar: [""],
-      aPagar: [""],
+      nombre: ["", [Validators.required]],
+      aCobrar: ["", [Validators.required]],
+      aPagar: ["", [Validators.required]],
           })
     this.seccionesForm = this.fb.array([]);
     this.descripcionForm = this.fb.group({
@@ -105,7 +105,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     console.log("categorias: ",  this.secciones[index].categorias);
   }
 
-  limpiarValorFormateado(valorFormateado: any): number {
+/*   limpiarValorFormateado(valorFormateado: any): number {
     if (typeof valorFormateado === 'string') {
       // Si es un string, eliminar puntos de miles y reemplazar coma por punto
       return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
@@ -116,7 +116,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       // Si es null o undefined, devolver 0 como fallback
       return 0;
     }
-  }
+  } */
 
   eliminarCategoria(index: number, orden:number) {
     this.secciones[index].categorias.splice(orden, 1);
@@ -237,5 +237,10 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
         //footer: `${msj}`
       });
     }
+
+  hasError(controlName: string, errorName: string): boolean {
+    const control = this.categoriaForm.get(controlName);
+    return control?.hasError(errorName) && control.touched;
+  }
 
 }
