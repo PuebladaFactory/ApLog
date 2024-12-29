@@ -272,7 +272,7 @@ export class OpAltaComponent implements OnInit {
     this.mostrarCategoria = true;
     this.seccionElegida = this.tarifaClienteSel.secciones[e.target.value - 1];
     this.tarifaPersonalizada = {
-      seccion : e.target.value,
+      seccion : Number(e.target.value),
       categoria: 0,
       nombre: "",
       aCobrar: 0,

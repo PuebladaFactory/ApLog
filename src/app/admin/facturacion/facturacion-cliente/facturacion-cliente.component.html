@@ -71,11 +71,11 @@
     <tr *ngFor="let cliente of datosFiltrados; let i = index">
       <td>{{cliente.razonSocial}}</td>
       <td class="text-center">{{cliente.cant}}</td>
-      <td class="table-success">$ {{formatearValor(cliente.sumaACobrar)}}</td>
-      <td>$ {{formatearValor(cliente.sumaAPagar)}}</td>        
-      <td>$ {{formatearValor(cliente.neta)}}</td>
-      <td>{{formatearValor(cliente.porcentaje)}} %</td>
-      <td class="table-warning">$ {{formatearValor(cliente.faltaCobrar)}}</td>
+      <td class="table-success">{{cliente.sumaACobrar | formatearValor : '$'}}</td>
+      <td>{{cliente.sumaAPagar | formatearValor : '$'}}</td>        
+      <td>{{cliente.neta | formatearValor : '$'}}</td>
+      <td>{{cliente.porcentaje | formatearValor}} %</td>
+      <td class="table-warning">{{cliente.faltaCobrar | formatearValor : '$'}}</td>
       <td class="text-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, cliente)">   
             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -88,11 +88,11 @@
     <tr>
         <th>Total</th>
         <th class="text-center">{{ totalCant }}</th>
-        <th  class="table-success">$ {{formatearValor(totalSumaACobrar)}}</th>
-        <th>$ {{formatearValor(totalSumaAPagar)}}</th>            
-        <th>$ {{formatearValor(totalGanancia)}}</th>
-        <th>{{formatearValor((totalPorcentajeGanancia))}} %</th>
-        <th class="table-warning">$ {{formatearValor(totalFaltaCobrar)}}</th>
+        <th  class="table-success">{{totalSumaACobrar | formatearValor : '$'}}</th>
+        <th>{{totalSumaAPagar | formatearValor : '$'}}</th>            
+        <th>{{totalGanancia | formatearValor : '$'}}</th>
+        <th>{{totalPorcentajeGanancia | formatearValor}} %</th>
+        <th class="table-warning">{{totalFaltaCobrar | formatearValor : '$'}}</th>
         <th></th>
     </tr>
 </tfoot>

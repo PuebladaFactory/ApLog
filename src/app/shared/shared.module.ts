@@ -24,6 +24,7 @@ import { FormatoNumericoNgModelDirective } from './directives/formato-numerico-n
 import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-edicion.component';
 
 
+
 @NgModule({
   declarations: [
     BtnAgregarComponent,
@@ -44,6 +45,7 @@ import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-ed
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,
+    
     
   ],
   imports: [
@@ -73,7 +75,8 @@ import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-ed
     FormatoNumericoDirective,
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
-    TarigaGralEdicionComponent
+    TarigaGralEdicionComponent,
+    
   ]
 })
 export class SharedModule { }

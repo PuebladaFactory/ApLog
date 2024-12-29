@@ -73,11 +73,11 @@
         <tr *ngFor="let chofer of datosFiltrados; let i = index">
             <td>{{chofer.chofer}}</td>
             <td class="text-center">{{chofer.cant}}</td>
-            <td>$ {{formatearValor(chofer.sumaACobrar)}}</td>
-            <td class="table-danger">$ {{formatearValor(chofer.sumaAPagar)}}</td>        
-            <td>$ {{formatearValor(chofer.neta)}}</td>
-            <td>{{formatearValor(chofer.porcentaje)}} %</td>
-            <td class="table-warning">$ {{formatearValor(chofer.faltaPagar)}}</td>
+            <td>{{chofer.sumaACobrar | formatearValor : '$'}}</td>
+            <td class="table-danger">{{chofer.sumaAPagar | formatearValor : '$'}}</td>        
+            <td>{{chofer.neta | formatearValor : '$'}}</td>
+            <td>{{chofer.porcentaje | formatearValor}} %</td>
+            <td class="table-warning">{{chofer.faltaPagar | formatearValor : '$' }}</td>
             <td class="text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, chofer)">   
                   <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -90,11 +90,11 @@
         <tr>
             <th>Total</th>
             <th class="text-center">{{ totalCant }}</th>
-            <th>$ {{formatearValor(totalSumaACobrar)}}</th>
-            <th class="table-danger">$ {{formatearValor(totalSumaAPagar)}}</th>            
-            <th>$ {{formatearValor(totalGanancia)}}</th>
-            <th>{{formatearValor((totalPorcentajeGanancia))}} %</th>
-            <th class="table-warning">$ {{formatearValor(totalFaltaPagar)}}</th>
+            <th>{{totalSumaACobrar | formatearValor : '$'}}</th>
+            <th class="table-danger">{{totalSumaAPagar | formatearValor : '$'}}</th>            
+            <th>{{totalGanancia | formatearValor : '$'}}</th>
+            <th>{{totalPorcentajeGanancia | formatearValor}} %</th>
+            <th class="table-warning">{{totalFaltaPagar | formatearValor : '$'}}</th>
             <th></th>
         </tr>
     </tfoot>

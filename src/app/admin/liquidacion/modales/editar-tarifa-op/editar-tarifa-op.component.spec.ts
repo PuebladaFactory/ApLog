@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ModalFacturaComponent } from './modal-factura.component';
+import { EditarTarifaOpComponent } from './editar-tarifa-op.component';
 
-describe('ModalFacturaComponent', () => {
-  let component: ModalFacturaComponent;
-  let fixture: ComponentFixture<ModalFacturaComponent>;
+describe('EditarTarifaOpComponent', () => {
+  let component: EditarTarifaOpComponent;
+  let fixture: ComponentFixture<EditarTarifaOpComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ModalFacturaComponent ]
+      declarations: [ EditarTarifaOpComponent ]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ModalFacturaComponent);
+    fixture = TestBed.createComponent(EditarTarifaOpComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

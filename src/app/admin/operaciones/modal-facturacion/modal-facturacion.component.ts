@@ -155,7 +155,7 @@ changeSecion(e:any){
   }
   this.seccionElegida = this.tarifaClienteSel.secciones[e.target.value - 1];
   this.tarifaPersonalizada = {
-    seccion : e.target.value,
+    seccion : Number(e.target.value),
     categoria: this.tarifaPersonalizada.categoria,
     nombre: this.tarifaPersonalizada.nombre,
     aCobrar: this.tarifaPersonalizada.aCobrar,
@@ -169,7 +169,7 @@ changeCategoria(e:any){
   //////console.log("categoria: ", e.target.value);
   this.tarifaPersonalizada = {
     seccion : this.tarifaPersonalizada.seccion,
-    categoria: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].orden,
+    categoria: Number(this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[Number(e.target.value)-1].orden),
     nombre: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].nombre,
     aCobrar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aCobrar,
     aPagar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aPagar,
@@ -206,7 +206,7 @@ onSubmit(){
 }
 
 cerrarOp(){
-  this.op.km = this.form.value.km;
+  this.op.km = this.formNumServ.convertirAValorNumerico(this.form.value.km);
  
   Swal.fire({
     title: "¿Desea cerrar la operación?",

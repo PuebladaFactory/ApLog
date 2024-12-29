@@ -8,7 +8,6 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { EditarTarifaComponent } from '../modales/cliente/editar-tarifa/editar-tarifa.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { take } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
@@ -18,6 +17,8 @@ import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
 import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
+import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
+
 
 @Component({
   selector: 'app-liq-cliente',
@@ -63,6 +64,10 @@ export class LiqClienteComponent {
   $clientes!: Cliente[];
   $proveedores!: Proveedor[]; 
   operacion!:Operacion;
+  ////////////////////////////////
+  ordenColumna: string = '';
+  ordenAscendente: boolean = true;
+  columnaOrdenada: string = '';
 
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
@@ -79,12 +84,15 @@ export class LiqClienteComponent {
 
     this.storageService.choferes$.subscribe(data => {
       this.$choferes = data;
+      this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
     });
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
+      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
+      this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     });  
 
     this.storageService.fechasConsulta$.subscribe(data => {
@@ -128,6 +136,7 @@ export class LiqClienteComponent {
             opFacturadas: 0,
             total: 0,
             aPagar: 0,
+            ganancia: 0,
           });
         }
      
@@ -139,12 +148,14 @@ export class LiqClienteComponent {
           cliente.opSinFacturar += factura.valores.total;
         }
         cliente.total += factura.valores.total;
-        cliente.aPagar += factura.contraParteMonto;        
+        cliente.aPagar += factura.contraParteMonto;   
+        cliente.ganancia = 100-((cliente.aPagar*100)/cliente.total);
         
-      });
+      });      
   
       this.datosTablaCliente = Array.from(clientesMap.values());
-      ////console.log()("Datos para la tabla: ", this.datosTablaCliente); 
+      this.datosTablaCliente = this.datosTablaCliente.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+      //console.log("Datos para la tabla: ", this.datosTablaCliente); 
     }
     
   }
@@ -172,15 +183,6 @@ export class LiqClienteComponent {
     
   }
 
-  formatearValor(valor: number) : any{
-    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-    }).format(valor);
-   ////////console.log(nuevoValor);    
-    //   `$${nuevoValor}`   
-    return nuevoValor
- }
 
  limpiarValorFormateado(valorFormateado: string): number {
   // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
@@ -211,7 +213,20 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       return cliente.idCliente === idCliente
     });
     console.log("1) cliente: ", cliente);
-    facturasCliente?.forEach((factura: FacturaOp) => {
+    if(seleccion){
+      cliente.opFacturadas = 0
+      facturasCliente?.forEach((factura: FacturaOp) => {                  
+          cliente.opFacturadas += factura.valores.total;
+          cliente.opSinFacturar = 0;
+        });   
+    } else {
+      cliente.opSinFacturar = 0
+      facturasCliente?.forEach((factura: FacturaOp) => {                
+        cliente.opFacturadas = 0;
+        cliente.opSinFacturar += factura.valores.total;
+      });   
+    }
+    /* facturasCliente?.forEach((factura: FacturaOp) => {
       if (factura.liquidacion) {
         cliente.opFacturadas += factura.valores.total;
         cliente.opSinFacturar -= factura.valores.total;
@@ -220,7 +235,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         cliente.opFacturadas -= factura.valores.total;
       }
      
-    });   
+    });    */
     console.log("2) cliente: ", cliente);
    
 }
@@ -355,9 +370,9 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     this.storageService.deleteItem("facturaOpCliente", item);    
   }
 
-  editarFacturaOpCliente(factura: FacturaOp){   
+  editarFacturaOpCliente(factura: FacturaOp, i: number){   
     this.facDetallada = factura;   
-    this.buscarTarifa();    
+    this.buscarTarifa(i);    
   } 
 
   eliminarFacturaOpCliente(factura:FacturaOp, indice:number){
@@ -413,7 +428,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     }
   }
 
-  buscarTarifa() {
+  buscarTarifa(i:number) {
   //console.log("A)",this.facDetallada);
   
   if(this.facDetallada.tarifaTipo.general){
@@ -429,7 +444,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         .subscribe(data => {      
             this.operacion = data;
             //console.log("OPERACION: ", this.operacion);
-            this.openModalTarifa()
+            this.openModalTarifa(i)
         });        
     });
   }
@@ -446,7 +461,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         .subscribe(data => {      
             this.operacion = data;
             console.log("OPERACION: ", this.operacion);
-            this.openModalTarifa()
+            this.openModalTarifa(i)
         });        
     });
   }
@@ -459,7 +474,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     .subscribe(data => {      
         this.operacion = data;
         console.log("OPERACION: ", this.operacion);
-        this.openModalTarifa()
+        this.openModalTarifa(i)
     });     
     
   }
@@ -476,7 +491,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         .subscribe(data => {      
             this.operacion = data;
             console.log("OPERACION: ", this.operacion);
-            this.openModalTarifa()
+            this.openModalTarifa(i)
         });        
     });
   }
@@ -485,34 +500,100 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   
   }
 
-  openModalTarifa(): void {   
+  openModalTarifa(i:number): void {   
    
     this.indiceSeleccionado
     {
-      const modalRef = this.modalService.open(EditarTarifaComponent, {
+      const modalRef = this.modalService.open(EditarTarifaOpComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         size: 'lg', 
         //backdrop:"static" 
       });
       
+    let origen = "clientes";
 
      let info = {
         factura: this.facDetallada,
         tarifaAplicada: this.ultimaTarifa,   
         op: this.operacion,     
+        origen: origen,
       }; 
       console.log(info); 
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          
-
+          this.procesarDatosParaTabla();
+          this.cerrarTabla(i)
         },
         (reason) => {}
       );
     }
+  }
+
+  ordenar(columna: string): void {
+    if (this.ordenColumna === columna) {
+      this.ordenAscendente = !this.ordenAscendente;
+    } else {
+      this.ordenColumna = columna;
+      this.ordenAscendente = true;
+    }
+    this.datosTablaCliente.sort((a, b) => {
+      const valorA = a[columna];
+      const valorB = b[columna];
+      if (typeof valorA === 'string') {
+        return this.ordenAscendente
+          ? valorA.localeCompare(valorB)
+          : valorB.localeCompare(valorA);
+      } else {
+        return this.ordenAscendente ? valorA - valorB : valorB - valorA;
+      }
+    });
+  }
+
+  ordenarMap(columna: string): void {
+    // Convertimos el Map a un array de pares clave-valor
+    const arrayFacturas:any[] = Array.from(this.facturasPorCliente.entries());
+    console.log("arrayFacturas: ", arrayFacturas);
+    
+    // Determinar el orden actual
+    if (this.ordenColumna === columna) {
+      this.ordenAscendente = !this.ordenAscendente;
+    } else {
+      this.ordenColumna = columna;
+      this.ordenAscendente = true;
+    }
+  
+    // Ordenamos el array basado en la columna especificada ///////////// METODO EN PROCESO NO TERMINADO
+    arrayFacturas.sort((a, b) => {
+     /*  const [claveA, facturasA] = a;
+      const [claveB, facturasB] = b;
+  
+      // Aquí asumimos que el dato a ordenar está dentro de cada FacturaOp
+      const valorA = facturasA[0]?.[columna];
+      const valorB = facturasB[0]?.[columna];
+  
+      if (typeof valorA === 'string') {
+        return this.ordenAscendente
+          ? valorA.localeCompare(valorB)
+          : valorB.localeCompare(valorA);
+      } else {
+        return this.ordenAscendente ? valorA - valorB : valorB - valorA;
+      } */
+        const valorA = a[columna];
+        const valorB = b[columna];
+        if (typeof valorA === 'string') {
+          return this.ordenAscendente
+            ? valorA.localeCompare(valorB)
+            : valorB.localeCompare(valorA);
+        } else {
+          return this.ordenAscendente ? valorA - valorB : valorB - valorA;
+        }
+    });
+  
+    // Convertimos el array nuevamente a un Map
+    //this.facturasPorCliente = new Map(arrayFacturas);
   }
 
 }

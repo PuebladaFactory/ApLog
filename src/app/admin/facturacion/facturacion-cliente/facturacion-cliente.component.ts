@@ -30,6 +30,7 @@ export class FacturacionClienteComponent implements OnInit {
   datosFiltrados = [...this.datosTablaCliente];
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
+  iconosColumnas: any [] = [];
   
 
     constructor(
@@ -115,18 +116,7 @@ export class FacturacionClienteComponent implements OnInit {
       this.datosFiltrados = this.datosTablaCliente;
     }
 
-   
-    formatearValor(valor: any) : any{     
-      valor = Number(valor)
-      let nuevoValor =  new Intl.NumberFormat('es-ES', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-      }).format(valor);   
-      ////console.log(nuevoValor);    
-      return nuevoValor
-     
-    
-   }
+
 
    limpiarValorFormateado(valorFormateado: any): number {
     if (typeof valorFormateado === 'string') {
