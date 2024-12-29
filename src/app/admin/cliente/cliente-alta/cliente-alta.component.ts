@@ -6,6 +6,7 @@ import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoComponent } from '../modal-contacto/modal-contacto.component';
+import { ValidarService } from 'src/app/servicios/validar/validar.service';
 
 @Component({
   selector: 'app-cliente-alta',
@@ -30,7 +31,15 @@ export class ClienteAltaComponent implements OnInit {
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal) {
     this.form = this.fb.group({      
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
-      cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
+      cuit: [
+        "",
+        [
+          Validators.required,
+          Validators.minLength(13),
+          Validators.maxLength(13), // Ajustado para incluir los guiones
+          ValidarService.cuitValido,
+        ],
+      ],
       direccion: [""],        
     });
 
@@ -45,7 +54,7 @@ export class ClienteAltaComponent implements OnInit {
    }
 
    ngOnInit(): void {
-      console.log("1)", this.fromParent);
+      //console.log("1)", this.fromParent);
       if(this.fromParent.modo === "vista"){
         this.soloVista = true;
         this.clienteEditar = this.fromParent.item
@@ -61,38 +70,44 @@ export class ClienteAltaComponent implements OnInit {
    }
 
    onSubmit(){
-    ////console.log()(new Date().getTime());   
+    //////console.log()(new Date().getTime());   
     const tarifaSeleccionada = this.getTarifaTipo();    
     if (this.form.valid) {
       if(this.fromParent.modo === "edicion"){
-        this.cliente = this.form.value
+        let formValue = this.form.value;
+        // Eliminar los guiones del CUIT
+        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
+        this.cliente = {
+          ...formValue,
+          cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
+        };                
         this.cliente.idCliente = this.clienteEditar.idCliente;
         this.cliente.id = this.clienteEditar.id;
         this.cliente.contactos = this.contactos;
-        //console.log()(this.cliente);     
+        ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        //console.log(this.cliente);      
+        ////console.log(this.cliente);      
         this.addItem("Edicion");        
         this.activeModal.close();    
       }else{
-        this.cliente = this.form.value
+        let formValue = this.form.value;
+        // Eliminar los guiones del CUIT
+        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
+        this.cliente = {
+          ...formValue,
+          cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
+        };        
+        //this.cliente = this.form.value
         this.cliente.idCliente = new Date().getTime();
         this.cliente.contactos = this.contactos;
-        //console.log()(this.cliente);     
+        ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        //console.log(this.cliente);      
+        ////console.log(this.cliente);      
         this.addItem("Alta");        
         this.activeModal.close();    
       }      
     } else{
-      //alert("error en el formulario")
-      Swal.fire({
-        icon: "error",
-        
-        text: "El formulario contiene errores ",
-//        
-      });
-
+      this.mensajesError("El formulario contiene errores");      
     } 
     
    }
@@ -158,13 +173,36 @@ export class ClienteAltaComponent implements OnInit {
 
   toggle() {
     this.mostrarFormulario = !this.mostrarFormulario;
-    ////console.log()(this.form);
+    //////console.log()(this.form);
   }
 
   
 
   eliminarContacto(indice:number){
-    this.contactos.splice(indice, 1);    
+
+    console.log("llega aca?");
+    
+
+    Swal.fire({
+      title: `Desea eliminar el contacto del Cliente?`,
+      //text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {     
+        this.contactos.splice(indice, 1);    
+        Swal.fire({
+          title: "Confirmado",
+          text: `Contacto borrado`,
+          icon: "success"
+        })           
+      }
+    });       
+    
   }
 
   abrirModalContactos(): void {   
@@ -181,14 +219,17 @@ export class ClienteAltaComponent implements OnInit {
         modo: "clientes",
         item: facturaOp[0],
       }; 
-      //console.log()(info); */
+      ////console.log()(info); */
       
       //modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          //console.log("contacto:" ,result);
-          this.contactos.push(result);
-          console.log(this.contactos);
+          ////console.log("contacto:" ,result);
+          if(result){
+            this.contactos.push(result);
+            ////console.log(this.contactos);
+          }
+          
           
           //this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
 //        this.selectCrudOp(result.op, result.item);
@@ -203,7 +244,7 @@ export class ClienteAltaComponent implements OnInit {
     this.form.patchValue({
       razonSocial: this.clienteEditar.razonSocial,
       direccion: this.clienteEditar.direccion,
-      cuit: this.clienteEditar.cuit,
+      cuit: this.formatCuit(this.clienteEditar.cuit),
     });
     this.formTipoTarifa.patchValue({
         general: this.clienteEditar.tarifaTipo.general, 
@@ -213,5 +254,32 @@ export class ClienteAltaComponent implements OnInit {
     });
     this.contactos = this.clienteEditar.contactos;
   }
+
+    hasError(controlName: string, errorName: string): boolean {
+    const control = this.form.get(controlName);
+    return control?.hasError(errorName) && control.touched;
+  }
+
+  formatCuit(cuitNumber: number | string): string {
+    // Convertir el número a string, si no lo es
+    const cuitString = cuitNumber.toString();
+  
+    // Validar que tiene exactamente 11 dígitos
+    if (cuitString.length !== 11 || isNaN(Number(cuitString))) {
+      throw new Error('El CUIT debe ser un número de 11 dígitos');
+    }
+  
+    // Insertar los guiones en las posiciones correctas
+    return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
+  }
+
+    mensajesError(msj:string){
+      Swal.fire({
+        icon: "error",
+        //title: "Oops...",
+        text: `${msj}`
+        //footer: `${msj}`
+      });
+    }
 
 }

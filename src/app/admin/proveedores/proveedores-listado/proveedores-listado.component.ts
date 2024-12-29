@@ -149,7 +149,7 @@ secondFilter = '';
         idProveedor: proveedor.idProveedor,
         razonSocial: proveedor.razonSocial,
         direccion: proveedor.direccion,
-        cuit: proveedor.cuit,
+        cuit: this.formatCuit(proveedor.cuit),
         tarifa: proveedor.tarifaTipo.general ? "General" : proveedor.tarifaTipo.especial ? "Especial" : proveedor.tarifaTipo.personalizada ? "Personalizada" : "Eventual",
         contacto: proveedor.contactos.length > 0 ? proveedor.contactos[0].apellido : "Sin Datos",
         puesto: proveedor.contactos.length > 0 ? proveedor.contactos[0].puesto : "Sin Datos" ,
@@ -228,6 +228,19 @@ secondFilter = '';
       return chofer.idProveedor === this.proveedorEditar.idProveedor
     })
   
+  }
+
+  formatCuit(cuitNumber: number | string): string {
+    // Convertir el número a string, si no lo es
+    const cuitString = cuitNumber.toString();
+  
+    // Validar que tiene exactamente 11 dígitos
+    if (cuitString.length !== 11 || isNaN(Number(cuitString))) {
+      throw new Error('El CUIT debe ser un número de 11 dígitos');
+    }
+  
+    // Insertar los guiones en las posiciones correctas
+    return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
   }
 
 }

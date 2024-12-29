@@ -11,24 +11,38 @@
             </div>
             <div>
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
-                    <div class="form-group mt-3">
-                      <label for="RazonSocial">Razon Social</label>
-                      <div class="input-group">
-                        <input formControlName="razonSocial" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': form.get('razonSocial').invalid && (form.get('razonSocial').dirty || form.get('razonSocial').touched) }" [ngClass]="{'isDisabled': soloVista}">                        
-                      </div>
-                    </div>    
-                    <div class="form-group mt-2">
+                  <div class="form-group mt-3">
+                    <label for="RazonSocial">Razón Social</label>
+                    <div class="input-group">
+                      <input formControlName="razonSocial" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': form.get('razonSocial').invalid && (form.get('razonSocial').dirty || form.get('razonSocial').touched) }" [ngClass]="{'isDisabled': soloVista}">                        
+                    </div>
+                    <div *ngIf="hasError('razonSocial','required')">La razón social es obligatoria.</div>
+                    <div *ngIf="hasError('razonSocial', 'maxlength')">La razón social no debe exceder 30 caracteres.</div>
+                  </div>    
+                  <div class="form-group mt-2">
                       <label for="Cuit">CUIT</label>
                       <div class="input-group">
-                        <input formControlName="cuit" class="form-control edicion" required type="text" [placeholder]="'ej: 31456784569'" [ngClass]="{ 'is-invalid': form.get('cuit').invalid && (form.get('cuit').dirty || form.get('cuit').touched) }" [ngClass]="{'isDisabled': soloVista}">
+                        <input 
+                        formControlName="cuit" 
+                        class="form-control edicion" 
+                        required 
+                        type="text" 
+                        appCuitFormat
+                        [placeholder]="'ej: 20-12345678-9'"
+                        [ngClass]="{
+                          'is-invalid': form.get('cuit').invalid && (form.get('cuit').dirty || form.get('cuit').touched),
+                          'isDisabled': soloVista
+                        }">
                       </div>
-                    </div>    
-                    <div class="form-group mt-2">
-                      <label for="Direccion">Direccion</label>
-                      <div class="input-group">
-                        <input formControlName="direccion" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('direccion').invalid && (form.get('direccion').dirty || form.get('direccion').touched) }" [ngClass]="{'isDisabled': soloVista}">
-                      </div>
-                    </div>  
+                      <div *ngIf="hasError('cuit','required')">El CUIT es obligatorio.</div>
+                      <div *ngIf="hasError('cuit','cuitInvalido')">El CUIT debe tener el formato xx-xxxxxxxx-x.</div>
+                  </div>    
+                  <div class="form-group mt-2">
+                    <label for="Direccion">Direccion</label>
+                    <div class="input-group">
+                      <input formControlName="direccion" class="form-control" type="text" >
+                    </div>
+                  </div>  
                     <div class="form-group mt-3">
                         <h3 class="">Tipo de Tarifa</h3>
                         <form [formGroup]="formTipoTarifa" (ngSubmit)="onSubmit()" class="d-flex mt-2">
@@ -63,42 +77,41 @@
                           </svg>          
                       </button>                         
                     </div>
-                    <div class="form-group mt-2">   
-                        <h4 *ngIf="contactos.length === 0 ">Sin contactos agendados</h4>
-                        <div *ngIf="contactos.length > 0 ">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                      <th class="tabla align-baseline" scope="col">Puesto</th>                    
-                                      <th class="tabla align-baseline" scope="col">Apellido</th>
-                                      <th class="tabla align-baseline" scope="col">Nombre</th>
-                                      <th class="tabla align-baseline" scope="col">Telefono</th> 
-                                      <th class="tabla align-baseline" scope="col">Email</th>
-                                      <th *ngIf="!soloVista"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr *ngFor="let contacto of contactos, let i = index" [ngClass]="{'isDisabled': soloVista}">
-                                        <th class="tabla align-baseline" scope="col">{{contacto.puesto}}</th>                    
-                                        <th class="tabla align-baseline" scope="col">{{contacto.apellido}}</th>
-                                        <th class="tabla align-baseline" scope="col">{{contacto.nombre}}</th>
-                                        <th class="tabla align-baseline" scope="col">{{contacto.telefono}}</th>
-                                        <th class="tabla align-baseline" scope="col">{{contacto.email}}</th>
-                                        <th class="tabla align-baseline" scope="col" *ngIf="!soloVista">                                  
-                                            <app-btn-eliminar name="Eliminar" (click)="eliminarContacto(i)"></app-btn-eliminar>
-                                        </th>
-                                    </tr> 
-                                </tbody>                    
-                            </table>          
-                        </div>
-                    </div>                          
-                    
                 </form>
+                <div class="form-group mt-2">   
+                  <h4 *ngIf="contactos.length === 0 ">Sin contactos agendados</h4>
+                  <div *ngIf="contactos.length > 0 ">
+                      <table class="table table-striped">
+                          <thead>
+                              <tr>
+                                <th class="tabla align-baseline" scope="col">Puesto</th>                    
+                                <th class="tabla align-baseline" scope="col">Apellido</th>
+                                <th class="tabla align-baseline" scope="col">Nombre</th>
+                                <th class="tabla align-baseline" scope="col">Telefono</th> 
+                                <th class="tabla align-baseline" scope="col">Email</th>
+                                <th *ngIf="!soloVista"></th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              <tr *ngFor="let contacto of contactos, let i = index" [ngClass]="{'isDisabled': soloVista}">
+                                  <th class="tabla align-baseline" scope="col">{{contacto.puesto}}</th>                    
+                                  <th class="tabla align-baseline" scope="col">{{contacto.apellido}}</th>
+                                  <th class="tabla align-baseline" scope="col">{{contacto.nombre}}</th>
+                                  <th class="tabla align-baseline" scope="col">{{contacto.telefono}}</th>
+                                  <th class="tabla align-baseline" scope="col">{{contacto.email}}</th>
+                                  <th class="tabla align-baseline" scope="col" *ngIf="!soloVista">                                  
+                                      <app-btn-eliminar name="Eliminar" (click)="eliminarContacto(i)"></app-btn-eliminar>
+                                  </th>
+                              </tr> 
+                          </tbody>                    
+                      </table>          
+                  </div>
+              </div>  
             </div>
         </div>        
     </div>
   </div>
-  <div class="modal-footer" *ngIf="!soloVista">
+  <div class="modal-footer" *ngIf="!soloVista" [ngClass]="{'isDisabled': form.invalid}">
     <app-btn-agregar name="Guardar"  type="button" (click)="onSubmit()"></app-btn-agregar>
   </div>        
 </div>  

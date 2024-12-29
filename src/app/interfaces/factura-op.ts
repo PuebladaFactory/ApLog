@@ -14,6 +14,7 @@ export interface FacturaOp {
     km: number;    
     liquidacion: boolean;
     contraParteMonto: number;
+    contraParteId: number;
     tarifaTipo: TarifaTipo;
     observaciones: string;
     hojaRuta: string;

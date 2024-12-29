@@ -8,7 +8,6 @@ import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturac
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { EditarTarifaChoferComponent } from '../modales/chofer/editar-tarifa-chofer/editar-tarifa-chofer.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { take } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
@@ -17,6 +16,8 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import Swal from 'sweetalert2';
 import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
+import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
+
 
 @Component({
   selector: 'app-liq-chofer',
@@ -64,6 +65,10 @@ export class LiqChoferComponent implements OnInit {
   $clientes!: Cliente[];
   $proveedores!: Proveedor[]; 
   operacion!:Operacion;
+  ////////////////////////////////
+  ordenColumna: string = '';
+  ordenAscendente: boolean = true;
+  columnaOrdenada: string = '';
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -124,6 +129,7 @@ export class LiqChoferComponent implements OnInit {
             opFacturadas: 0,
             total: 0,
             aCobrar: 0,
+            ganancia:0,
           });
         }
   
@@ -136,6 +142,7 @@ export class LiqChoferComponent implements OnInit {
         }
         chofer.total += factura.valores.total;
         chofer.aCobrar += factura.contraParteMonto;   
+        chofer.ganancia = 100-((chofer.total*100)/chofer.aCobrar);
         
       });
   
@@ -164,15 +171,6 @@ export class LiqChoferComponent implements OnInit {
 
   } 
 
-  formatearValor(valor: number) : any{
-    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-    }).format(valor);
-   ////////console.log(nuevoValor);    
-    //   `$${nuevoValor}`   
-    return nuevoValor
- }
 
  limpiarValorFormateado(valorFormateado: string): number {
   // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
@@ -202,7 +200,21 @@ export class LiqChoferComponent implements OnInit {
         return chofer.idChofer === idChofer
       });
       console.log("1) cliente: ", chofer);
-      facturasChofer?.forEach((factura: FacturaOp) => {
+      if(seleccion){
+        chofer.opFacturadas = 0
+        facturasChofer?.forEach((factura: FacturaOp) => {                  
+            chofer.opFacturadas += factura.valores.total;
+            chofer.opSinFacturar = 0;
+          });   
+      } else {
+        chofer.opSinFacturar = 0
+        facturasChofer?.forEach((factura: FacturaOp) => {                
+          chofer.opFacturadas = 0;
+          chofer.opSinFacturar += factura.valores.total;
+        });   
+      }
+
+      /* facturasChofer?.forEach((factura: FacturaOp) => {
         if (factura.liquidacion) {
           chofer.opFacturadas += factura.valores.total;
           chofer.opSinFacturar -= factura.valores.total;
@@ -211,7 +223,7 @@ export class LiqChoferComponent implements OnInit {
           chofer.opFacturadas -= factura.valores.total;
         }
        
-      });   
+      });    */
       console.log("2) cliente: ", chofer);
      
   }
@@ -350,9 +362,9 @@ export class LiqChoferComponent implements OnInit {
     this.storageService.deleteItem("facturaOpChofer", item);    
   }
 
-  editarFacturaOpCliente(factura: FacturaOp){   
+  editarFacturaOpCliente(factura: FacturaOp, i:number){   
     this.facDetallada = factura;   
-    this.buscarTarifa();    
+    this.buscarTarifa(i);    
   }
 
   eliminarFacturaOpCliente(factura:FacturaOp, indice:number){
@@ -406,7 +418,7 @@ export class LiqChoferComponent implements OnInit {
     }
   }
 
-  buscarTarifa() {
+  buscarTarifa(i:number) {
     console.log("A)",this.facDetallada);
     
     if(this.facDetallada.tarifaTipo.general){
@@ -422,7 +434,7 @@ export class LiqChoferComponent implements OnInit {
           .subscribe(data => {      
               this.operacion = data;
               console.log("OPERACION: ", this.operacion);
-              this.openModalTarifa()
+              this.openModalTarifa(i)
           });        
       });
     }
@@ -439,7 +451,7 @@ export class LiqChoferComponent implements OnInit {
           .subscribe(data => {      
               this.operacion = data;
               console.log("OPERACION: ", this.operacion);
-              this.openModalTarifa()
+              this.openModalTarifa(i)
           });        
       });
     }
@@ -452,7 +464,7 @@ export class LiqChoferComponent implements OnInit {
       .subscribe(data => {      
           this.operacion = data;
           console.log("OPERACION: ", this.operacion);
-          this.openModalTarifa()
+          this.openModalTarifa(i)
       });     
       
     }
@@ -469,7 +481,7 @@ export class LiqChoferComponent implements OnInit {
           .subscribe(data => {      
               this.operacion = data;
               console.log("OPERACION: ", this.operacion);
-              this.openModalTarifa()
+              this.openModalTarifa(i)
           });        
       });
     }
@@ -478,7 +490,7 @@ export class LiqChoferComponent implements OnInit {
     
     }
 
-    openModalTarifa(): void {   
+    openModalTarifa(i:number): void {   
       //this.facturasLiquidadasCliente
       //this.totalFacturasLiquidadasChofer
       //this.totalFacturasLiquidadasCliente
@@ -489,30 +501,53 @@ export class LiqChoferComponent implements OnInit {
       //this.facOpClienteService.obtenerTarifaCliente(this.facDetallada)
       this.indiceSeleccionado
       {
-        const modalRef = this.modalService.open(EditarTarifaChoferComponent, {
+        const modalRef = this.modalService.open(EditarTarifaOpComponent, {
           windowClass: 'myCustomModalClass',
           centered: true,
-          size: 'lg', 
+          size: 'lg',           
           //backdrop:"static" 
         });
         
+      let origen: string = "choferes"  
   
        let info = {
           factura: this.facDetallada,
           tarifaAplicada: this.ultimaTarifa,   
-          op: this.operacion,     
+          op: this.operacion,   
+          origen: origen,  
         }; 
         console.log(info); 
         
         modalRef.componentInstance.fromParent = info;
         modalRef.result.then(
           (result) => {
-            
+            this.procesarDatosParaTabla();
+            this.cerrarTabla(i)
   
           },
           (reason) => {}
         );
       }
+    }
+
+    ordenar(columna: string): void {
+      if (this.ordenColumna === columna) {
+        this.ordenAscendente = !this.ordenAscendente;
+      } else {
+        this.ordenColumna = columna;
+        this.ordenAscendente = true;
+      }
+      this.datosTablaChofer.sort((a, b) => {
+        const valorA = a[columna];
+        const valorB = b[columna];
+        if (typeof valorA === 'string') {
+          return this.ordenAscendente
+            ? valorA.localeCompare(valorB)
+            : valorB.localeCompare(valorA);
+        } else {
+          return this.ordenAscendente ? valorA - valorB : valorB - valorA;
+        }
+      });
     }
 
     

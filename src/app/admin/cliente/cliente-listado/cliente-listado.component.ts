@@ -137,7 +137,7 @@ export class ClienteListadoComponent implements OnInit {
         idCliente: cliente.idCliente,
         razonSocial: cliente.razonSocial,
         direccion: cliente.direccion,
-        cuit: cliente.cuit,
+        cuit: this.formatCuit(cliente.cuit),
         tarifa: cliente.tarifaTipo.general ? "General" : cliente.tarifaTipo.especial ? "Especial" : cliente.tarifaTipo.personalizada ? "Personalizada" : "Eventual",
         contacto: cliente.contactos.length > 0 ? cliente.contactos[0].apellido : "Sin Datos",
         puesto: cliente.contactos.length > 0 ? cliente.contactos[0].puesto : "Sin Datos" ,
@@ -208,6 +208,19 @@ export class ClienteListadoComponent implements OnInit {
   
   toogleAjustes(){
     this.ajustes = !this.ajustes;
+  }
+
+  formatCuit(cuitNumber: number | string): string {
+    // Convertir el número a string, si no lo es
+    const cuitString = cuitNumber.toString();
+  
+    // Validar que tiene exactamente 11 dígitos
+    if (cuitString.length !== 11 || isNaN(Number(cuitString))) {
+      throw new Error('El CUIT debe ser un número de 11 dígitos');
+    }
+  
+    // Insertar los guiones en las posiciones correctas
+    return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
   }
 
 }

@@ -11,12 +11,10 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FacturacionModule } from '../facturacion/facturacion.module';
-import { ModalInformesClienteComponent } from './modal-informes-cliente/modal-informes-cliente.component';
-import { EditarTarifaComponent } from './modales/cliente/editar-tarifa/editar-tarifa.component';
-import { EditarTarifaChoferComponent } from './modales/chofer/editar-tarifa-chofer/editar-tarifa-chofer.component';
-import { EditarTarifaProveedorComponent } from './modales/proveedor/editar-tarifa-proveedor/editar-tarifa-proveedor.component';
+
 import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { FacturarOpComponent } from './modales/facturar-op/facturar-op.component';
+import { EditarTarifaOpComponent } from './modales/editar-tarifa-op/editar-tarifa-op.component';
 
 
 
@@ -25,16 +23,12 @@ import { FacturarOpComponent } from './modales/facturar-op/facturar-op.component
     LiqProveedorComponent,
     LiqChoferComponent,
     LiqGralComponent,
-    LiqClienteComponent,
-    ModalInformesClienteComponent,
+    LiqClienteComponent,    
     
-    EditarTarifaComponent,
-    EditarTarifaChoferComponent,
-    
-    EditarTarifaProveedorComponent,
     
     DescuentosComponent,
-    FacturarOpComponent
+    FacturarOpComponent,
+    EditarTarifaOpComponent
     
   ],
   imports: [

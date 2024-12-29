@@ -6,6 +6,7 @@ import { Operacion, TarifaEventual, TarifaPersonalizada } from 'src/app/interfac
 import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
+import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -19,6 +20,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
   @Input() fromParent:any;
   componente:string = "operaciones"
   op!: Operacion;
+  opOriginal!: Operacion;
   form!:any;
   formTarifaPersonalizada!:any;
   formTarifaEventual!:any;    
@@ -39,7 +41,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
   tarifaEventual!: TarifaEventual;
   @ViewChild('kmInput') kmInputElement!: ElementRef;
 
-  constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private facturacionOpServ: FacturacionOpService){
+  constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private facturacionOpServ: FacturacionOpService, private formNumServ: FormatoNumericoService){
     this.form = this.fb.group({      
       km:['', Validators.required],
       documentacion:[''],
@@ -59,6 +61,8 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
     //console.log("vista: ",this.vista);
     //console.log("editar: ",this.editar);
     //console.log("cerrar: ",this.cerrar);
+    this.opOriginal = this.fromParent.item;    
+    this.op = structuredClone(this.opOriginal);
         
     this.op = this.fromParent.item;
     switch (this.fromParent.modo) {
@@ -151,7 +155,7 @@ changeSecion(e:any){
   }
   this.seccionElegida = this.tarifaClienteSel.secciones[e.target.value - 1];
   this.tarifaPersonalizada = {
-    seccion : e.target.value,
+    seccion : Number(e.target.value),
     categoria: this.tarifaPersonalizada.categoria,
     nombre: this.tarifaPersonalizada.nombre,
     aCobrar: this.tarifaPersonalizada.aCobrar,
@@ -165,7 +169,7 @@ changeCategoria(e:any){
   //////console.log("categoria: ", e.target.value);
   this.tarifaPersonalizada = {
     seccion : this.tarifaPersonalizada.seccion,
-    categoria: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].orden,
+    categoria: Number(this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[Number(e.target.value)-1].orden),
     nombre: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].nombre,
     aCobrar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aCobrar,
     aPagar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aPagar,
@@ -202,7 +206,7 @@ onSubmit(){
 }
 
 cerrarOp(){
-  this.op.km = this.form.value.km;
+  this.op.km = this.formNumServ.convertirAValorNumerico(this.form.value.km);
  
   Swal.fire({
     title: "¿Desea cerrar la operación?",
@@ -243,6 +247,8 @@ armarOp(){
   // Extraer valores del formulario y otros datos
   const formValues = this.form.value;
   console.log("tarifa eventual: ", this.tarifaEventual);
+  this.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(this.tarifaEventual.chofer.valor);
+  this.tarifaEventual.cliente.valor = this.formNumServ.convertirAValorNumerico(this.tarifaEventual.cliente.valor);
   
   // editar la operación básica  
   this.op.acompaniante = this.acompaniante;  

@@ -10,3 +10,22 @@ td, th, input {
     background-color:rgb(228, 245, 238);
     border: solid 1px cyan
 }
+
+
+#cerrar{
+    background-color: transparent;
+    border-color: black;
+  }
+  
+  #cerrar:hover{
+    background-color: #0d6efd;
+    color: white;
+  }
+
+  .rojo{
+    background:  rgb(252, 0, 0) ;
+  }
+
+  .verde {
+    background-color:green !important;
+  }

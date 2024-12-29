@@ -253,10 +253,13 @@ export class FacturacionOpService {
               console.log("2)B.2)Factura OP chofer ", this.facturaOpChofer);
               this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
             } else {
-              console.log("2)A.1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);
+              ////este caso es donde la tarifa especial no aplica                  
+              console.log("2)A.1) tarifa GENERAL CHOFER: ", this.$ultTarifaGralCliente);
               respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
               //console.log("respuesta: ", respuesta);      
               this.operacion.valores.chofer.aPagar = respuesta.factura.valores.total;
+              //aca le cambio el tipo de tarifa pq usa una tarifa especial no aplica
+              respuesta.factura.tarifaTipo = {general: true, especial: false, eventual:false, personalizada: false}
               this.facturaOpChofer = respuesta.factura;
               //this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
               console.log("2)A.2)Factura OP chofer ", this.facturaOpChofer)
@@ -342,9 +345,12 @@ export class FacturacionOpService {
                   console.log("3)B.2) Factura OP proveedor ", this.facturaOpProveedor);
                   this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
                 }else{
+                  ////este caso es donde la tarifa especial no aplica
                   //this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
                   console.log("3)A.1) tarifa GENERAL Proveedor: ", this.$ultTarifaGralProveedor);
-                  respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor, this.proveedorSeleccionado.idProveedor);
+                  respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor, this.proveedorSeleccionado.idProveedor);                  
+                  //aca le cambio el tipo de tarifa pq usa una tarifa especial no aplica
+                  respuesta.factura.tarifaTipo = {general: true, especial: false, eventual:false, personalizada: false}
                   this.operacion.valores.chofer = respuesta.op.valores.chofer;
                   this.facturaOpProveedor = respuesta.factura;
                   console.log("3)A.2) Factura OP proveedor ", this.facturaOpProveedor);
@@ -420,6 +426,8 @@ export class FacturacionOpService {
                         op.facturaChofer = this.facturaOpChofer.idFacturaOp;
                         this.facturaOpCliente.contraParteMonto = this.facturaOpChofer.valores.total;
                         this.facturaOpChofer.contraParteMonto = this.facturaOpCliente.valores.total;
+                        this.facturaOpCliente.contraParteId = this.facturaOpChofer.idFacturaOp;
+                        this.facturaOpChofer.contraParteId = this.facturaOpCliente.idFacturaOp;
                         this.$guardarFacturas(op);
                     }
                 })

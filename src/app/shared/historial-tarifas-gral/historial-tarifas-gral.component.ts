@@ -115,15 +115,6 @@ export class HistorialTarifasGralComponent implements OnInit {
     return 'Desconocido';
   }
 
-  formatearValor(valor: number) : any{
-    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
-    minimumFractionDigits: 2, 
-    maximumFractionDigits: 2 
-  }).format(valor);
-  ////////////console.log(nuevoValor);    
-  return nuevoValor
-  }
-
   getNombre(id:number){
     switch(this.fromParent.modo){
       case 'clientes':

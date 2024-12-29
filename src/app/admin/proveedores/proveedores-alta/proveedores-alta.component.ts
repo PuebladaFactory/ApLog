@@ -7,6 +7,7 @@ import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoProveedoresComponent } from '../modal-contacto-proveedores/modal-contacto-proveedores.component';
+import { ValidarService } from 'src/app/servicios/validar/validar.service';
 
 @Component({
   selector: 'app-proveedores-alta',
@@ -29,8 +30,16 @@ export class ProveedoresAltaComponent implements OnInit {
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, public activeModal: NgbActiveModal, private modalService: NgbModal) {
     this.form = this.fb.group({      
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
-      cuit: ["",[Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
-      direccion: ["",[Validators.required, Validators.maxLength(50)]],        
+      cuit: [
+              "",
+              [
+                Validators.required,
+                Validators.minLength(13),
+                Validators.maxLength(13), // Ajustado para incluir los guiones
+                ValidarService.cuitValido,
+              ],
+            ],
+      direccion: [""],        
     });
 
     this.formTipoTarifa = this.fb.group({
@@ -62,7 +71,13 @@ export class ProveedoresAltaComponent implements OnInit {
     const tarifaSeleccionada = this.getTarifaTipo();    
     if (this.form.valid) {
       if(this.fromParent.modo === "edicion"){
-        this.proveedor = this.form.value
+        let formValue = this.form.value;
+        // Eliminar los guiones del CUIT
+        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
+        this.proveedor = {
+          ...formValue,
+          cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
+        };                        
         this.proveedor.idProveedor = this.proveedorEditar.idProveedor;
         this.proveedor.id = this.proveedorEditar.id;
         this.proveedor.contactos = this.contactos;
@@ -72,7 +87,13 @@ export class ProveedoresAltaComponent implements OnInit {
         this.addItem("Edicion");        
         this.activeModal.close();    
       }else{
-        this.proveedor = this.form.value
+        let formValue = this.form.value;
+        // Eliminar los guiones del CUIT
+        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
+        this.proveedor = {
+          ...formValue,
+          cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
+        };                
         this.proveedor.idProveedor = new Date().getTime();
         this.proveedor.contactos = this.contactos;
         //console.log()(this.cliente);     
@@ -98,7 +119,7 @@ export class ProveedoresAltaComponent implements OnInit {
       this.form.patchValue({
         razonSocial: this.proveedorEditar.razonSocial,
         direccion: this.proveedorEditar.direccion,
-        cuit: this.proveedorEditar.cuit,
+        cuit: this.formatCuit(this.proveedorEditar.cuit),
       });
       this.formTipoTarifa.patchValue({
           general: this.proveedorEditar.tarifaTipo.general, 
@@ -176,14 +197,27 @@ export class ProveedoresAltaComponent implements OnInit {
     ////console.log()(this.form);
   }
 
-  guardarContacto(){
-    this.contactos.push(this.formContacto.value);
-    this.formContacto.reset();
-    this.mostrarFormulario = !this.mostrarFormulario;
-  }
-
   eliminarContacto(indice:number){
-    this.contactos.splice(indice, 1);    
+     Swal.fire({
+          title: `Desea eliminar el contacto del Proveedor?`,
+          //text: "You won't be able to revert this!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Confirmar",
+          cancelButtonText: "Cancelar"
+        }).then((result) => {
+          if (result.isConfirmed) {     
+            this.contactos.splice(indice, 1);    
+            Swal.fire({
+              title: "Confirmado",
+              text: `Contacto borrado`,
+              icon: "success"
+            })           
+          }
+        });       
+   
   }
 
   abrirModalContactos(): void {   
@@ -215,5 +249,23 @@ export class ProveedoresAltaComponent implements OnInit {
         (reason) => {}
       );
     }
+  }
+
+  hasError(controlName: string, errorName: string): boolean {
+    const control = this.form.get(controlName);
+    return control?.hasError(errorName) && control.touched;
+  }
+
+  formatCuit(cuitNumber: number | string): string {
+    // Convertir el número a string, si no lo es
+    const cuitString = cuitNumber.toString();
+  
+    // Validar que tiene exactamente 11 dígitos
+    if (cuitString.length !== 11 || isNaN(Number(cuitString))) {
+      throw new Error('El CUIT debe ser un número de 11 dígitos');
+    }
+  
+    // Insertar los guiones en las posiciones correctas
+    return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
   }
 }

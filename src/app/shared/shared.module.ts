@@ -15,6 +15,15 @@ import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-boot
 import { HistorialTarifasGralComponent } from './historial-tarifas-gral/historial-tarifas-gral.component';
 import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventuales.component';
 import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
+import { CuitFormatDirective } from './directives/cuit-format.directive';
+import { SoloNumerosDirective } from './directives/solo-numeros.directive';
+import { FormatearValorPipe } from './pipes/formatear-valor.pipe';
+import { FormatoNumericoDirective } from './directives/formato-numerico.directive';
+import { SoloLetrasDirective } from './directives/solo-letras.directive';
+import { FormatoNumericoNgModelDirective } from './directives/formato-numerico-ng-model.directive';
+import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-edicion.component';
+
+
 
 @NgModule({
   declarations: [
@@ -28,7 +37,16 @@ import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
     HistorialTarifasGralComponent,
     TarifasEventualesComponent,
     CarruselComponent,
-    SafeUrlPipe
+    SafeUrlPipe,
+    CuitFormatDirective,
+    SoloNumerosDirective,
+    FormatearValorPipe,
+    FormatoNumericoDirective,
+    SoloLetrasDirective,
+    FormatoNumericoNgModelDirective,
+    TarigaGralEdicionComponent,
+    
+    
   ],
   imports: [
     CommonModule,
@@ -50,7 +68,15 @@ import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
     TableroCalendarioComponent, 
     HistorialTarifasGralComponent, 
     TarifasEventualesComponent, 
-    CarruselComponent
+    CarruselComponent,
+    CuitFormatDirective,
+    SoloNumerosDirective,
+    FormatearValorPipe,
+    FormatoNumericoDirective,
+    SoloLetrasDirective,
+    FormatoNumericoNgModelDirective,
+    TarigaGralEdicionComponent,
+    
   ]
 })
 export class SharedModule { }

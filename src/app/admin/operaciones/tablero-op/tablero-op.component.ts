@@ -61,7 +61,7 @@ export class TableroOpComponent implements OnInit {
     { prop: 'categoria', name: 'Categoria', selected: true, flexGrow:2  },    
     { prop: 'patente', name: 'Patente', selected: false, flexGrow:2  },   
     { prop: 'acompaniante', name: 'Acomp', selected: false, flexGrow:2  },    
-    { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow:2  },   
+    { prop: 'tarifa', name: 'Tarifa', selected: false, flexGrow:2  },   
     { prop: 'aCobrar', name: 'A Cobrar', selected: true, flexGrow:2  },   
     { prop: 'aPagar', name: 'A Pagar', selected: true, flexGrow:2  },      
     { prop: 'hojaRuta', name: 'Hoja de Ruta', selected: true, flexGrow:2  }, 

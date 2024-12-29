@@ -192,15 +192,15 @@ export class CargaMultipleComponent implements OnInit {
   }
     // Manejar el cambio de sección
     changeSeccion(index: number, event: any) {
-      const seccionId = event.target.value;
-      this.seccionElegida = this.tarifaPersonalizada.secciones[event.target.value - 1]; 
+      const seccionId = Number(event.target.value);
+      this.seccionElegida = this.tarifaPersonalizada.secciones[Number(event.target.value) - 1]; 
       this.choferesFormArray.at(index).patchValue({ seccion: seccionId, categoria: null });
       // Aquí puedes cargar las categorías correspondientes a la sección seleccionada si es necesario
     }
   
     // Manejar el cambio de categoría
     changeCategoria(index: number, event: any) {
-      const categoriaId = event.target.value;
+      const categoriaId = Number(event.target.value);
       this.choferesFormArray.at(index).patchValue({ categoria: categoriaId });
     }
 

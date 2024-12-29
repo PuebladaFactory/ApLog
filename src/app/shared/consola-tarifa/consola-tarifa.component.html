@@ -8,7 +8,7 @@
             <div class="col-12 col-xl-7 col-xxl-7 p-0 d-flex grandes" *ngIf="modoAutomatico">
                 <div class="input-group flex-shrink-1">
                     <span  class="input-group-text">%</span>
-                    <input type="number" [formControl]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento" (keydown.enter)="enviarValores()" class="w-50">
+                    <input type="text" inputmode="numeric"  [formControl]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento" (keydown.enter)="enviarValores()" class="w-50" appSoloNumeros>
                 </div>                
                <!--  <div class="input-group flex-shrink-1">
                     <span  class="input-group-text">$</span>

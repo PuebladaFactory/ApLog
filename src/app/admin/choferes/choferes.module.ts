@@ -12,7 +12,8 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ChoferesTarifaGralComponent } from './choferes-tarifa-gral/choferes-tarifa-gral.component';
 import { ChoferesTarifaEspecialComponent } from './choferes-tarifa-especial/choferes-tarifa-especial.component';
 import { ModalVehiculoComponent } from './modal-vehiculo/modal-vehiculo.component';
-import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/modal-tarifa-gral-edicion.component';
+
+
 
 
 
@@ -26,7 +27,7 @@ import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/mod
     ChoferesTarifaGralComponent,
     ChoferesTarifaEspecialComponent,    
     ModalVehiculoComponent,
-    ModalTarifaGralEdicionComponent,
+    
     
   ],
   imports: [
@@ -36,7 +37,8 @@ import { ModalTarifaGralEdicionComponent } from './modal-tarifa-gral-edicion/mod
     ReactiveFormsModule,
     SharedModule,
     Ng2SearchPipeModule,
-    NgxDatatableModule
+    NgxDatatableModule, 
+    
   ]
 })
 export class ChoferesModule { }

@@ -164,6 +164,7 @@ $crearFacturaOpChofer(op:Operacion, idTarifa: number, idProveedor: number){
     km:op.km,
     liquidacion: false,
     contraParteMonto:0,
+    contraParteId:0,
     tarifaTipo: {
       general: op.tarifaTipo.eventual? false : op.tarifaTipo.personalizada ? false : op.tarifaTipo.especial ? op.chofer.tarifaTipo.general : op.chofer.tarifaTipo.general,
       especial: op.tarifaTipo.eventual? false : op.tarifaTipo.personalizada ? false : op.chofer.tarifaTipo.especial,

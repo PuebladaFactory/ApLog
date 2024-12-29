@@ -8,7 +8,6 @@ import { FacturacionProveedorService } from 'src/app/servicios/facturacion/factu
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { EditarTarifaProveedorComponent } from '../modales/proveedor/editar-tarifa-proveedor/editar-tarifa-proveedor.component';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
@@ -16,6 +15,7 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
 import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
+import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
 
 @Component({
   selector: 'app-liq-proveedor',
@@ -62,6 +62,10 @@ export class LiqProveedorComponent implements OnInit {
   $clientes!: Cliente[];
   $proveedores!: Proveedor[]; 
   operacion!:Operacion;
+  ////////////////////////////////
+  ordenColumna: string = '';
+  ordenAscendente: boolean = true;
+  columnaOrdenada: string = '';
   
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
@@ -122,6 +126,7 @@ export class LiqProveedorComponent implements OnInit {
             opFacturadas: 0,
             total: 0,
             aCobrar: 0,
+            ganancia: 0,
           });
         }
   
@@ -134,6 +139,7 @@ export class LiqProveedorComponent implements OnInit {
         }
         proveedor.total += factura.valores.total;
         proveedor.aCobrar += factura.contraParteMonto;   
+        proveedor.ganancia = 100-((proveedor.total*100)/proveedor.aCobrar);
         
       });
   
@@ -171,15 +177,6 @@ export class LiqProveedorComponent implements OnInit {
     return proveedor[0].razonSocial
   }
 
-  formatearValor(valor: number) : any{
-    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-    }).format(valor);
-   ////////console.log(nuevoValor);    
-    //   `$${nuevoValor}`   
-    return nuevoValor
- }
 
  limpiarValorFormateado(valorFormateado: string): number {
   // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
@@ -209,7 +206,20 @@ export class LiqProveedorComponent implements OnInit {
         return proveedor.idProveedor === idProveedor
       });
       console.log("1) cliente: ", proveedor);
-      facturasProveedor?.forEach((factura: FacturaOp) => {
+      if(seleccion){
+        proveedor.opFacturadas = 0
+        facturasProveedor?.forEach((factura: FacturaOp) => {                  
+          proveedor.opFacturadas += factura.valores.total;
+          proveedor.opSinFacturar = 0;
+          });   
+      } else {
+        proveedor.opSinFacturar = 0
+        facturasProveedor?.forEach((factura: FacturaOp) => {                
+          proveedor.opFacturadas = 0;
+          proveedor.opSinFacturar += factura.valores.total;
+        });   
+      }
+     /*  facturasProveedor?.forEach((factura: FacturaOp) => {
         if (factura.liquidacion) {
           proveedor.opFacturadas += factura.valores.total;
           proveedor.opSinFacturar -= factura.valores.total;
@@ -218,7 +228,7 @@ export class LiqProveedorComponent implements OnInit {
           proveedor.opFacturadas -= factura.valores.total;
         }
        
-      });   
+      });    */
       console.log("2) cliente: ", proveedor);
      
   }
@@ -359,9 +369,9 @@ export class LiqProveedorComponent implements OnInit {
     this.storageService.deleteItem("facturaOpProveedor", item);    
   }
 
-  editarFacturaOpCliente(factura: FacturaOp){   
+  editarFacturaOpCliente(factura: FacturaOp, i:number){   
     this.facDetallada = factura;   
-    this.buscarTarifa();    
+    this.buscarTarifa(i);    
   }
 
   eliminarFacturaOpCliente(factura:FacturaOp, indice:number){
@@ -413,8 +423,9 @@ export class LiqProveedorComponent implements OnInit {
     }
   }
 
-  buscarTarifa() {
-    console.log("A)",this.facDetallada);
+  ////////////////////////////////////////////////ACA ESTA EL ERROR!!!!!!!!!!!!!!!!!!!!///////////////////////
+  buscarTarifa(i:number) {
+    console.log("A)Factura",this.facDetallada);
     
     if(this.facDetallada.tarifaTipo.general){
       this.dbFirebase
@@ -429,7 +440,7 @@ export class LiqProveedorComponent implements OnInit {
           .subscribe(data => {      
               this.operacion = data;
               console.log("OPERACION: ", this.operacion);
-              this.openModalTarifa()
+              this.openModalTarifa(i)
           });        
       });
     }
@@ -446,7 +457,7 @@ export class LiqProveedorComponent implements OnInit {
           .subscribe(data => {      
               this.operacion = data;
               console.log("OPERACION: ", this.operacion);
-              this.openModalTarifa()
+              this.openModalTarifa(i)
           });        
       });
     }
@@ -459,7 +470,7 @@ export class LiqProveedorComponent implements OnInit {
       .subscribe(data => {      
           this.operacion = data;
           console.log("OPERACION: ", this.operacion);
-          this.openModalTarifa()
+          this.openModalTarifa(i)
       });     
       
     }
@@ -476,7 +487,7 @@ export class LiqProveedorComponent implements OnInit {
           .subscribe(data => {      
               this.operacion = data;
               console.log("OPERACION: ", this.operacion);
-              this.openModalTarifa()
+              this.openModalTarifa(i)
           });        
       });
     }
@@ -485,7 +496,7 @@ export class LiqProveedorComponent implements OnInit {
     
     }
 
-    openModalTarifa(): void {   
+    openModalTarifa(i:number): void {   
       //this.facturasLiquidadasCliente
       //this.totalFacturasLiquidadasChofer
       //this.totalFacturasLiquidadasCliente
@@ -496,30 +507,54 @@ export class LiqProveedorComponent implements OnInit {
       //this.facOpClienteService.obtenerTarifaCliente(this.facDetallada)
       this.indiceSeleccionado
       {
-        const modalRef = this.modalService.open(EditarTarifaProveedorComponent, {
+        const modalRef = this.modalService.open(EditarTarifaOpComponent, {
           windowClass: 'myCustomModalClass',
           centered: true,
           size: 'lg', 
           //backdrop:"static" 
         });
         
+      
+        let origen:string = "proveedores"
   
        let info = {
           factura: this.facDetallada,
           tarifaAplicada: this.ultimaTarifa,   
-          op: this.operacion,     
+          op: this.operacion, 
+          origen:origen,    
         }; 
         console.log(info); 
         
         modalRef.componentInstance.fromParent = info;
         modalRef.result.then(
           (result) => {
-            
+            this.procesarDatosParaTabla();
+            this.cerrarTabla(i);
   
           },
           (reason) => {}
         );
       }
+    }
+
+    ordenar(columna: string): void {
+      if (this.ordenColumna === columna) {
+        this.ordenAscendente = !this.ordenAscendente;
+      } else {
+        this.ordenColumna = columna;
+        this.ordenAscendente = true;
+      }
+      this.datosTablaProveedor.sort((a, b) => {
+        const valorA = a[columna];
+        const valorB = b[columna];
+        if (typeof valorA === 'string') {
+          return this.ordenAscendente
+            ? valorA.localeCompare(valorB)
+            : valorB.localeCompare(valorA);
+        } else {
+          return this.ordenAscendente ? valorA - valorB : valorB - valorA;
+        }
+      });
     }
 
 }

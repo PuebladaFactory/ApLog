@@ -4,11 +4,10 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AdicionalTarifa, CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
-import { ModalTarifaGralEdicionComponent } from '../modal-tarifa-gral-edicion/modal-tarifa-gral-edicion.component';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
-import { getLocaleFirstDayOfWeek } from '@angular/common';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
+import { TarigaGralEdicionComponent } from 'src/app/shared/tariga-gral-edicion/tariga-gral-edicion.component';
 
 @Component({
   selector: 'app-choferes-tarifa-gral',
@@ -647,7 +646,7 @@ onGenerarNuevaTarifaAutomatica() {
 
   openModalEdicion(): void {      
     {
-      const modalRef = this.modalService.open(ModalTarifaGralEdicionComponent, {
+      const modalRef = this.modalService.open(TarigaGralEdicionComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         size: 'md', 
@@ -655,7 +654,8 @@ onGenerarNuevaTarifaAutomatica() {
       });      
 
     let tarifa: TarifaGralCliente;
-    let modo: string = ""
+    let modo: string = "";
+    let origen: string = "choferes"
 
 
     if(this.tEspecial){
@@ -669,7 +669,8 @@ onGenerarNuevaTarifaAutomatica() {
     let info = {
         modo: modo,
         item: tarifa,
-        vehiculos: this.vehiculos
+        vehiculos: this.vehiculos,
+        origen: origen,
       } 
       //////////console.log()(info); */
       

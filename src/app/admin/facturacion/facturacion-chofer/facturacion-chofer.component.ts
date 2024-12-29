@@ -115,19 +115,6 @@ export class FacturacionChoferComponent implements OnInit {
       this.datosFiltrados = this.datosTablaChofer;
     }
 
-  
-
-    formatearValor(valor: any) : any{     
-      valor = Number(valor)
-      let nuevoValor =  new Intl.NumberFormat('es-ES', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-      }).format(valor);   
-      ////console.log(nuevoValor);    
-      return nuevoValor
-    
-    
-    }
 
     limpiarValorFormateado(valorFormateado: any): number {
       if (typeof valorFormateado === 'string') {
