@@ -72,14 +72,18 @@ export class ChoferesListadoComponent implements OnInit {
   constructor(private storageService: StorageService, private modalService: NgbModal, private legajoServ: LegajosService){   
   }  
   ngOnInit(): void { 
-    //console.log(this.tablaVehiculo);    
+    //console.log(this.tablaVehiculo);  
+    this.storageService.getAllSorted("choferes", 'idChofer', 'asc') 
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
     });    
     this.storageService.choferes$.subscribe(data => {
-      this.$choferes = data;     
-      this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer 
-      this.armarTabla();
+      if (data) {
+        console.log('Datos choferes actualizados:', data);
+        this.$choferes = [...data]; // Clona el array para evitar problemas con referencias
+        this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
+        this.armarTabla();
+      }
     });    
   }
   

@@ -5,6 +5,8 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
 import Swal from 'sweetalert2';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 
 @Component({
@@ -47,6 +49,9 @@ export class ClienteListadoComponent implements OnInit {
   ajustes: boolean = false;
   firstFilter = '';
   secondFilter = '';
+  
+
+  private destroy$ = new Subject<void>()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,10 +59,13 @@ export class ClienteListadoComponent implements OnInit {
   
   ngOnInit(): void { 
     
-    this.storageService.clientes$.subscribe(data => {
-      this.$clientes = data;
-      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      this.armarTabla();
+    this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
+    this.storageService.clientes$    
+    .subscribe(data => {
+        console.log('Datos clientes actualizados:', data);
+        this.$clientes = [...data]; // Clona el array para evitar problemas con referencias
+        this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
+        this.armarTabla();
     })
   }
   
@@ -221,6 +229,11 @@ export class ClienteListadoComponent implements OnInit {
   
     // Insertar los guiones en las posiciones correctas
     return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
 }

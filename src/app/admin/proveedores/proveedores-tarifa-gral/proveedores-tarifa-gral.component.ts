@@ -48,6 +48,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     //console.log("0)",this.idChoferEsp);
     //console.log("0)",this.idClienteEsp);
     //////tarifa especial: proveedor seleccionado
+    this.storageService.getUltElemColeccion("tarifasGralProveedor", "idTarifa", "desc", 1,"ultTarifaGralProveedor")
     this.storageService.proveedorSeleccionado$.subscribe(data => {      ///
       this.idProveedorEsp = data
       //console.log("0A)",this.idProveedorEsp);
