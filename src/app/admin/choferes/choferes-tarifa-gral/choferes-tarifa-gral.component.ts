@@ -52,6 +52,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
     //////////console.log("0)",this.idChoferEsp);
     ////console.log("0)",this.idClienteEsp);
     //// CHOFER SELECCIONADO PARA LA TARIFA ESPECIAL ///////////////
+    this.storageService.getUltElemColeccion("tarifasGralChofer", "idTarifa", "desc", 1,"ultTarifaGralChofer")
     this.storageService.choferSeleccionado$.subscribe(data => {      ///
       this.idChoferEsp = data
       ////console.log("0A)",this.idChoferEsp);

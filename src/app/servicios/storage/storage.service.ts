@@ -597,7 +597,7 @@ export class StorageService {
     this.dbFirebase
       .getAllSorted(componente, campo, orden)
       .subscribe(data => {
-
+        console.log(` storage getAllSorted ${componente} respuesta: `, data)
         this.setInfo(componente, data)
         this.updateObservable(componente, data)
         //console.log("storage initializer ", componente, data);

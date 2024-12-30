@@ -53,6 +53,7 @@ export class ClienteTarifaGralComponent implements OnInit {
   ngOnInit() {
     ////////////////////console.log("0)",this.tEspecial);    
     /////esto es para la tarifa especial
+    this.storageService.getUltElemColeccion("tarifasGralCliente", "idTarifa", "desc", 1,"ultTarifaGralCliente")
     this.storageService.clienteSeleccionado$.subscribe(data => {      
       this.idClienteEsp = data;
       
