@@ -450,6 +450,8 @@ export class FacturacionOpService {
                     op.facturaChofer = this.facturaOpProveedor.idFacturaOp;
                     this.facturaOpCliente.contraParteMonto = this.facturaOpProveedor.valores.total;
                     this.facturaOpProveedor.contraParteMonto = this.facturaOpCliente.valores.total;
+                    this.facturaOpCliente.contraParteId = this.facturaOpProveedor.idFacturaOp;
+                    this.facturaOpProveedor.contraParteId = this.facturaOpCliente.idFacturaOp;
                     this.$guardarFacturas(op);
                 }
             })

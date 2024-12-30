@@ -1,6 +1,9 @@
 {
   "projects": {
-    "dev": "demoapplog",
-    "default": "demoapplog"
-  }
+    "demo": "demoapplog",
+    "default": "demoapplog",
+    "vantruck": "pf-logistics"
+  },
+  "targets": {},
+  "etags": {}
 }
