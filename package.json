@@ -6,7 +6,11 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "build:demo": "ng build --configuration=demo",
+    "deploy:demo": "ng build --configuration=demo && firebase use demo && firebase deploy",
+    "build:vantruck": "ng build --configuration=vantruck",
+    "deploy:vantruck": "ng build --configuration=vantruck && firebase use vantruck && firebase deploy"
   },
   "private": true,
   "dependencies": {

@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { take } from 'rxjs';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Operacion } from 'src/app/interfaces/operacion';
@@ -33,6 +34,7 @@ export class EditarTarifaOpComponent implements OnInit {
     componente: string = "";
     facOriginal!: FacturaOp;
     opOriginal!: Operacion;
+    facContraParte!: FacturaOp;
   
     constructor(private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private formNumServ: FormatoNumericoService, private dbFirebase: DbFirestoreService){
      
@@ -148,8 +150,8 @@ export class EditarTarifaOpComponent implements OnInit {
             this.operacion.valores.cliente.acompValor = this.facDetallada.valores.acompaniante;
             this.operacion.valores.cliente.kmAdicional = this.facDetallada.valores.kmMonto;
             this.operacion.valores.cliente.tarifaBase = this.facDetallada.valores.tarifaBase;            
-            //this.buscarContraParte();
-            this.updateItem();
+            this.buscarContraParte();
+            //this.updateItem();
             break;
         };
         case "choferes":{
@@ -157,7 +159,7 @@ export class EditarTarifaOpComponent implements OnInit {
             this.operacion.valores.chofer.acompValor = this.facDetallada.valores.acompaniante;
             this.operacion.valores.chofer.kmAdicional = this.facDetallada.valores.kmMonto;
             this.operacion.valores.chofer.tarifaBase = this.facDetallada.valores.tarifaBase;
-            this.updateItem();
+            this.buscarContraParte();
           break;
         }
         case "proveedores":{
@@ -165,7 +167,7 @@ export class EditarTarifaOpComponent implements OnInit {
             this.operacion.valores.chofer.acompValor = this.facDetallada.valores.acompaniante;
             this.operacion.valores.chofer.kmAdicional = this.facDetallada.valores.kmMonto;
             this.operacion.valores.chofer.tarifaBase = this.facDetallada.valores.tarifaBase;
-            this.updateItem();
+            this.buscarContraParte();
           break;
         }
         default:{
@@ -178,26 +180,93 @@ export class EditarTarifaOpComponent implements OnInit {
      updateItem(){
 
       console.log("this.facDetallada: ", this.facDetallada);
-      console.log("this.operacion: ", this.operacion);
-      
+      console.log("this.operacion: ", this.operacion);      
       this.storageService.updateItem(this.componente, this.facDetallada);
       this.storageService.updateItem("operaciones", this.operacion);
+      switch(this.fromParent.origen){
+        case "clientes":{
+          if(this.operacion.chofer.idProveedor === 0){
+            this.storageService.updateItem("facturaOpChofer", this.facContraParte);
+          } else {
+            this.storageService.updateItem("facturaOpProveedor", this.facContraParte);
+          }          
+          break;
+        };
+        case "choferes":{
+          this.storageService.updateItem("facturaOpCliente", this.facContraParte);
+          break;
+        }
+        case "proveedores":{
+          this.storageService.updateItem("facturaOpCliente", this.facContraParte);
+          break;
+        }
+        default:{
+          console.log("error en fromParent.origen")
+          break
+        }
+      } 
+
      }
 
-     buscarContraParte(){
-     ////METODO NO TERMINADO
-     //// DEBE LA FACTURA DE LA CONTRAPARTE QUE CORRESPONDA A LA OP
+     buscarContraParte(){     
 
       switch(this.fromParent.origen){
         case "clientes":{
-            
+            if(this.operacion.chofer.idProveedor === 0){
+              this.dbFirebase
+                  .obtenerTarifaIdTarifa("facturaOpChofer",this.facDetallada.contraParteId, "idFacturaOp")
+                  .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+                  .subscribe(data => {      
+                      this.facContraParte = data || {};
+                      console.log("factura contraparte: ", this.facContraParte);
+                      if(this.facContraParte !== undefined){
+                        this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
+                        this.updateItem()
+                      }
+                  });
+            } else {
+              this.dbFirebase
+                  .obtenerTarifaIdTarifa("facturaOpProveedor",this.facDetallada.contraParteId, "idFacturaOp")
+                  .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+                  .subscribe(data => {      
+                      this.facContraParte = data || {};
+                      console.log("factura contraparte: ", this.facContraParte);
+                      if(this.facContraParte !== undefined){
+                        this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
+                        this.updateItem()
+                      }
+                  });
+            }
+
             break;
         };
         case "choferes":{
+          this.dbFirebase
+                  .obtenerTarifaIdTarifa("facturaOpCliente",this.facDetallada.contraParteId, "idFacturaOp")  
+                  .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+                  .subscribe(data => {      
+                      this.facContraParte = data || {};
+                      console.log("factura contraparte: ", this.facContraParte);
+                      if(this.facContraParte !== undefined){
+                        this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
+                        this.updateItem()
+                      }
+                  });
            
           break;
         }
         case "proveedores":{
+          this.dbFirebase
+                  .obtenerTarifaIdTarifa("facturaOpCliente",this.facDetallada.contraParteId, "idFacturaOp")  
+                  .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+                  .subscribe(data => {      
+                      this.facContraParte = data || {};
+                      console.log("factura contraparte: ", this.facContraParte);
+                      if(this.facContraParte !== undefined){
+                        this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
+                        this.updateItem()
+                      }
+                  });
             
           break;
         }
