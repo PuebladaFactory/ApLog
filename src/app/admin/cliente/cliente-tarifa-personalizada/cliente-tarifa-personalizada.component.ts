@@ -144,7 +144,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     };
     
     console.log('Tarifa guardada:', this.tarifaPersonalizadaCliente);
-    //this.addItem();
+    this.addItem();
   }
 
   addItem(): void {
