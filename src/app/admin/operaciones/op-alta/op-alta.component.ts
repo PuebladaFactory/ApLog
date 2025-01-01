@@ -184,6 +184,7 @@ export class OpAltaComponent implements OnInit {
       this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");     
       this.form.patchValue({
         tarifaEventual:"si",
+        acompaniante: "false"
       });
     } else {      
       this.clienteEventual = false;      
@@ -229,6 +230,7 @@ export class OpAltaComponent implements OnInit {
       this.choferEventual = true;
       this.form.patchValue({
         tarifaEventual:"si",
+        acompaniante: "false"
       });
       this.medidasModal(this.tEventual, "opTarifaEventual");      
       this.tPersonalizada = false;
