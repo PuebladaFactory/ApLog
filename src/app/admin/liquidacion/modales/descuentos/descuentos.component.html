@@ -24,7 +24,9 @@
                         class="form-control" 
                         (keyup.enter)="agregarDescuento()"
                         [(ngModel)]="descuento.valor"
-                        type="number"
+                        type="text"
+                        inputmode="number"
+                        appFormatoNumericoNgModel
                         >
                     </div>
                 </td>
@@ -48,14 +50,14 @@
                     <tbody>
                         <tr *ngFor="let desc of descuentos; let i=index">
                             <td>{{desc.concepto}}</td>
-                            <td>{{formatearValor(desc.valor)}}</td>
+                            <td>{{desc.valor  | formatearValor:"$"}}</td>
                             <td style="width: 10%;"><app-btn-eliminar name="Eliminar" (click)="eliminarDescuento(i)"></app-btn-eliminar> </td>
                         </tr>
                     </tbody>
                     <tfoot class="table-group-divider">
                         <tr>
                             <th>Total</th>
-                            <th colspan="2">{{formatearValor(totalDescuento)}}</th>
+                            <th colspan="2">{{totalDescuento | formatearValor:"$"}}</th>
                         </tr>
                     </tfoot>
                 </table>

@@ -53,14 +53,14 @@
                           <tr><th colspan="11">Descuentos:</th></tr>
                           <tr *ngFor="let desc of descuentosAplicados">
                               <td colspan="10">{{desc.concepto}}</td>
-                              <td class="text-center">- {{formatearValor(desc.valor)}}</td>
+                              <td class="text-center">- {{desc.valor | formatearValor :"$"}}</td>
                           </tr>
                       </ng-container>
                       <ng-template #proveedoresDesc>
                           <tr><th colspan="12">Descuentos:</th></tr>
                           <tr *ngFor="let desc of descuentosAplicados">
                               <td colspan="11">{{desc.concepto}}</td>
-                              <td class="text-center">- {{formatearValor(desc.valor)}}</td>
+                              <td class="text-center">- {{desc.valor  | formatearValor :"$"}}</td>
                           </tr>
                       </ng-template>
                       

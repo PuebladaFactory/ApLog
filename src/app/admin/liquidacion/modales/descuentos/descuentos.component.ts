@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Descuento } from 'src/app/interfaces/factura-chofer';
+import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 
 @Component({
   selector: 'app-descuentos',
@@ -14,7 +15,7 @@ export class DescuentosComponent implements OnInit{
   descuento: Descuento = {concepto:"", valor:0};
   totalDescuento: number = 0;
 
-  constructor(public activeModal: NgbActiveModal){}
+  constructor(public activeModal: NgbActiveModal, private formNumServ: FormatoNumericoService){}
   ngOnInit(): void {      
       this.descuentos = this.fromParent.descuentos;    
       console.log("descuentos: ", this.descuentos);
@@ -31,7 +32,9 @@ export class DescuentosComponent implements OnInit{
   }
 
   agregarDescuento(){        
+    this.descuento.valor = this.formNumServ.convertirAValorNumerico(this.descuento.valor)
     this.descuentos.push(this.descuento);
+
     this.descuento = {concepto:"", valor:0};
     console.log("concepto: ", this.descuento?.concepto, "valor: ", this.descuento?.valor)
     console.log("descuentos: ", this.descuento);

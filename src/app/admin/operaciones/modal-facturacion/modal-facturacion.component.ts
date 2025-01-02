@@ -207,7 +207,12 @@ onSubmit(){
 
 cerrarOp(){
   this.op.km = this.formNumServ.convertirAValorNumerico(this.form.value.km);
- 
+  this.op.valores.chofer.aPagar = this.formNumServ.convertirAValorNumerico(this.op.valores.chofer.aPagar);
+  this.op.valores.chofer.tarifaBase = this.formNumServ.convertirAValorNumerico(this.op.valores.chofer.tarifaBase);
+  this.op.valores.cliente.aCobrar = this.formNumServ.convertirAValorNumerico(this.op.valores.cliente.aCobrar);
+  this.op.valores.cliente.tarifaBase = this.formNumServ.convertirAValorNumerico(this.op.valores.cliente.tarifaBase);
+  this.op.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(this.op.tarifaEventual.chofer.valor);
+  this.op.tarifaEventual.cliente.valor = this.formNumServ.convertirAValorNumerico(this.op.tarifaEventual.cliente.valor);
   Swal.fire({
     title: "¿Desea cerrar la operación?",
     //text: "You won't be able to revert this!",
