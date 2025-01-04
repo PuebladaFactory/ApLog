@@ -58,7 +58,7 @@ secondFilter = '';
   
   ngOnInit(): void { 
     //this.proveedores$ = this.storageService.proveedores$; 
-    this.storageService.getAllSorted("proveedores", 'idProveedor', 'asc') 
+    
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
       this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
@@ -69,6 +69,8 @@ secondFilter = '';
       this.$choferes = data; 
       this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer           
     });
+
+    this.storageService.syncChanges<Proveedor>('proveedores');
   }
   
   abrirEdicion(row:any):void {

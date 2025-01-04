@@ -58,8 +58,9 @@ export class ModalVehiculoComponent implements OnInit {
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
     });
-    this.storageService.ultTarifaGralCliente$.subscribe(data =>{      
-      this.tarifaGralCliente = data;      
+    this.storageService.tarifasGralCliente$.subscribe(data =>{   
+      console.log("data vehiculos: ", data);         
+      this.tarifaGralCliente = data[0];      
     })           
     console.log("1)",this.fromParent);
     if(this.fromParent !== undefined){

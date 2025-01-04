@@ -102,6 +102,7 @@ export class ClienteAltaComponent implements OnInit {
         this.cliente.contactos = this.contactos;
         ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
+        this.cliente.id = null;
         ////console.log(this.cliente);      
         this.addItem("Alta");        
         this.activeModal.close();    
