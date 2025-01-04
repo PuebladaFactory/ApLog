@@ -47,8 +47,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     //console.log("0)",this.tEspecial);
     //console.log("0)",this.idChoferEsp);
     //console.log("0)",this.idClienteEsp);
-    //////tarifa especial: proveedor seleccionado
-    this.storageService.getUltElemColeccion("tarifasGralProveedor", "idTarifa", "desc", 1,"ultTarifaGralProveedor")
+    //////tarifa especial: proveedor seleccionado    
     this.storageService.proveedorSeleccionado$.subscribe(data => {      ///
       this.idProveedorEsp = data
       //console.log("0A)",this.idProveedorEsp);
@@ -61,20 +60,26 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       this.idClienteEsp = data
       //console.log("0B)",this.idClienteEsp);
     })
-    ///tarifa general para obtener las categorias
-    this.storageService.ultTarifaGralCliente$.subscribe(data =>{
-      ////console.log("data: ", data);                
-      this.ultTarifaCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-      //console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);        
-      /// ultima tarifa gral de proveedores
-      this.storageService.ultTarifaGralProveedor$.subscribe(data =>{
-        console.log("data", data);        
-        this.ultTarifaGralProveedor = data || {};
-        this.ultTarifaGralProveedor.cargasGenerales = this.ultTarifaGralProveedor.cargasGenerales || [];
-        //console.log("2) ult tarifa GRAL Proveedor: ", this.ultTarifaGralProveedor);
-        this.configurarTabla();
-      })
-    });                  
+    
+    //TARIFA GRAL PROVEEDOR
+    this.storageService.tarifasGralProveedor$.subscribe(data =>{
+      console.log("data", data);        
+      this.ultTarifaGralProveedor = data[0] || {};      
+      this.ultTarifaGralProveedor.cargasGenerales = this.ultTarifaGralProveedor.cargasGenerales || [];
+      console.log("ultTarifaGralProveedor", this.ultTarifaGralProveedor);        
+      ///tarifa general para obtener las categorias
+      this.storageService.tarifasGralCliente$.subscribe(data =>{
+        ////console.log("data: ", data);                
+        this.ultTarifaCliente = data[0] || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+        this.ultTarifaCliente.cargasGenerales = this.ultTarifaCliente.cargasGenerales || [];
+        console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);       
+        this.configurarTabla();  
+      });          
+      //console.log("2) ult tarifa GRAL Proveedor: ", this.ultTarifaGralProveedor);      
+    })
+
+
+           
     //consola de tarifas
     this.storageService.consolaTarifa$.subscribe(data =>{
       this.consolaTarifa = data;
@@ -92,6 +97,8 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     this.storageService.clientes$.subscribe(data => {
       this.$clientes = data;
     });   
+
+    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa');    
   }
 
   configurarTabla(){

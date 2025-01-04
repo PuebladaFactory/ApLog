@@ -158,7 +158,7 @@
     </div>
     
 
-    <div *ngIf="$ultTarifaCliente !== null else sinTarifas" class="mt-4">
+    <div *ngIf="$ultTarifaCliente !== undefined else sinTarifas" class="mt-4">
         <div class="d-flex justify-content-between">
             <h2>Última Tarifa {{$ultTarifaCliente.fecha}}</h2>
             <div>

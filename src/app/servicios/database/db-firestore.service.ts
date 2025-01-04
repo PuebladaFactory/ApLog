@@ -19,15 +19,45 @@ export class DbFirestoreService {
 
   }
 
-  getAll(componente:string) {
+/*   getAll(componente:string) {
     let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
         
     return collectionData(dataCollection, {
       idField: 'id',
     }) as Observable<any[]>;
-  }
+  } */
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    getAll<T>(componente: string): Observable<T[]> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
+        })))
+      );
+    }
 
+    getMostRecent<T>(componente: string, idField: string): Observable<T | undefined> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref =>
+        ref.orderBy(idField, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
+      ).valueChanges().pipe(
+        map(data => data[0]) // Retorna el primer (y único) elemento del array
+      );
+    }
+
+    getMostRecentId<T>(componente: string, idField: string, campo:string, id:number): Observable<T | undefined> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref =>
+        ref.orderBy(idField, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
+        .where(campo, "==" ,id)
+      ).valueChanges().pipe(
+        map(data => data[0]) // Retorna el primer (y único) elemento del array
+      );
+    }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GET ALL ORDENADO POR CAMPO Y ORDEN
 getAllSorted(componente:string, campo:string, orden:any) {
   // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)

@@ -56,11 +56,12 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       .filter((c:Cliente)=>{return c.tarifaTipo.personalizada === true})
       .sort((a:Cliente, b:Cliente) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       
-      this.storageService.ultTarifaPersCliente$.subscribe(data => {
+      this.storageService.tarifasPersCliente$.subscribe(data => {
         this.$ultTarifaCliente = data;
-        //console.log("1)",this.$ultTarifaCliente);        
-      });   
-    });             
+        console.log("1)",this.$ultTarifaCliente);        
+      });  
+
+    });               
   }
 
   changeCliente(e: any) {    
@@ -69,7 +70,9 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     this.clienteSeleccionado = this.$clientesPers.filter((cliente:Cliente)=>{     
       return cliente.idCliente === id
     })   
-    this.storageService.getElemntByIdLimit("tarifasPersCliente","idCliente","idTarifa",this.clienteSeleccionado[0].idCliente,"ultTarifaPersCliente");  
+    //this.storageService.getElemntByIdLimit("tarifasPersCliente","idCliente","idTarifa",this.clienteSeleccionado[0].idCliente,"ultTarifaPersCliente");  
+    this.storageService.getMostRecentItemId("tarifasPersCliente","idTarifa", "idCliente",this.clienteSeleccionado[0].idCliente);  
+    this.storageService.syncChangesByOneElemId<TarifaPersonalizadaCliente>("tarifasPersCliente","idTarifa","idCliente",this.clienteSeleccionado[0].idCliente);  
   }
 
   agregarSeccion() {        
