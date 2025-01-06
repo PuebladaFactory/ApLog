@@ -140,7 +140,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   crearTarifa() {
    
     this.tarifaPersonalizadaCliente = {
-      id: null,
+      //id: null,
       idTarifa: new Date().getTime(),
       fecha: new Date().toISOString().split('T')[0],
       secciones: this.secciones,

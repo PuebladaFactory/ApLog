@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 import { ModalVehiculoComponent } from '../modal-vehiculo/modal-vehiculo.component';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
+import { ConId } from 'src/app/interfaces/conId';
 
 
 @Component({
@@ -29,7 +30,7 @@ export class ChoferesAltaComponent implements OnInit {
   seguimientoForm: any;
   adicionalForm:any;
   categoriasForm:any;
-  chofer!: Chofer;  
+  chofer!: ConId<Chofer>;  
   soloVista:boolean = false;
   edicion: boolean = false;
   seguimiento: boolean = false;  
@@ -99,7 +100,8 @@ export class ChoferesAltaComponent implements OnInit {
       this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     });
     if(this.fromParent.modo === "vista"){
-      this.chofer = this.fromParent?.item;
+      let choferOriginal = this.fromParent?.item;
+      this.chofer = structuredClone(choferOriginal)
       this.soloVista = true;
       this.armarForm()
 
@@ -181,6 +183,7 @@ export class ChoferesAltaComponent implements OnInit {
         
         let idChofer = this.chofer.idChofer;
         let formValue = this.form.value;
+        let id = this.chofer.id
         // Eliminar los guiones del CUIT
         let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
         this.chofer = {
@@ -189,7 +192,7 @@ export class ChoferesAltaComponent implements OnInit {
         };                
         /*  this.chofer.categoria = this.categoriaSeleccionada; */
         this.chofer.idChofer = idChofer; 
-           
+        this.chofer.id = id;  
         this.chofer.idProveedor = this.idProveedor;
         this.chofer.vehiculo = this.vehiculos;
         this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa

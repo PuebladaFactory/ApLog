@@ -8,6 +8,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoProveedoresComponent } from '../modal-contacto-proveedores/modal-contacto-proveedores.component';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
+import { ConId } from 'src/app/interfaces/conId';
 
 @Component({
   selector: 'app-proveedores-alta',
@@ -20,12 +21,12 @@ export class ProveedoresAltaComponent implements OnInit {
   componente:string = "proveedores"
   form:any;
   formContacto:any;
-  proveedor!: Proveedor;
+  proveedor!: ConId<Proveedor>;
   contactos: Contacto[] = [];
   mostrarFormulario: boolean = false;
   formTipoTarifa:any;
   soloVista:boolean = false;
-  proveedorEditar!: Proveedor;
+  proveedorEditar!: ConId<Proveedor>;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, public activeModal: NgbActiveModal, private modalService: NgbModal) {
     this.form = this.fb.group({      
@@ -52,13 +53,13 @@ export class ProveedoresAltaComponent implements OnInit {
 
    ngOnInit(): void {
     console.log("1)", this.fromParent);
+    let proveedorOriginal = this.fromParent.item
+    this.proveedorEditar = structuredClone(proveedorOriginal)
     if(this.fromParent.modo === "vista"){
-      this.soloVista = true;
-      this.proveedorEditar = this.fromParent.item
+      this.soloVista = true;      
       this.armarForm()
     }else if(this.fromParent.modo === "edicion"){
-      this.soloVista = false;
-      this.proveedorEditar = this.fromParent.item
+      this.soloVista = false;      
       this.armarForm()
     }else {
       this.soloVista = false;
@@ -79,7 +80,7 @@ export class ProveedoresAltaComponent implements OnInit {
           cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
         };                        
         this.proveedor.idProveedor = this.proveedorEditar.idProveedor;
-        
+        this.proveedor.id = this.proveedorEditar.id;
         this.proveedor.contactos = this.contactos;
         //console.log()(this.cliente);     
         this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa

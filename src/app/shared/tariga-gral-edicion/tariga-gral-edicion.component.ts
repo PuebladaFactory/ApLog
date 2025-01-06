@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Vehiculo } from 'src/app/interfaces/chofer';
+import { ConId } from 'src/app/interfaces/conId';
 import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -15,8 +16,8 @@ import Swal from 'sweetalert2';
 export class TarigaGralEdicionComponent implements OnInit {
 
     @Input() fromParent:any;
-    tarifa!:TarifaGralCliente;
-    tarifaOriginal!:TarifaGralCliente;
+    tarifa!:ConId<TarifaGralCliente>;
+    tarifaOriginal!:ConId<TarifaGralCliente>;
     componente:string = '';
   
     constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private formNumServ: FormatoNumericoService){

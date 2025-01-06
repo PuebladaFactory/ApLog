@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { ConId } from 'src/app/interfaces/conId';
 import { CategoriaTarifa, Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -14,16 +15,16 @@ import Swal from 'sweetalert2';
 export class ModalTarifaPersonalizadaComponent implements OnInit {
   
   @Input() fromParent:any;
-  $ultimaTarifa!: TarifaPersonalizadaCliente;  
+  $ultimaTarifa!: ConId<TarifaPersonalizadaCliente>;  
   modoAutomatico = true;  // por defecto en modo automático
   porcentajeAumento: number = 0; // variable para almacenar el porcentaje
-  nuevaTarifa!: TarifaPersonalizadaCliente;  // suponiendo que ya tienes los datos cargados
+  nuevaTarifa!: ConId<TarifaPersonalizadaCliente>;  // suponiendo que ya tienes los datos cargados
   componente: string = "tarifasPersCliente"
   
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private formNumServ: FormatoNumericoService){}
 
   ngOnInit(): void {    
-    //console.log("0) ", this.fromParent);
+    console.log("0) ", this.fromParent);
     this.nuevaTarifa = this.fromParent.item;    
     this.$ultimaTarifa = structuredClone(this.nuevaTarifa);
     
@@ -120,7 +121,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
     const tarifaNueva: TarifaPersonalizadaCliente = {
       ...this.nuevaTarifa,
       idTarifa: new Date().getTime(),  // Asignar nuevo idTarifa
-      id: null,
+      //id: null,
       fecha: new Date().toISOString().split('T')[0],
       secciones: this.$ultimaTarifa.secciones.map(seccion => ({
         ...seccion,

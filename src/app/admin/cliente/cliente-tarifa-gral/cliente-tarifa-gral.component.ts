@@ -440,7 +440,7 @@ onGenerarNuevaTarifaAutomatica() {
   
     // Construcción final del objeto `TarifaGralCliente`
     this.nuevaTarifaGral = {
-        id: null,
+      
         idTarifa: new Date().getTime(),
         fecha: new Date().toISOString().split('T')[0],
         cargasGenerales: cargasGenerales,
