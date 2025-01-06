@@ -15,6 +15,7 @@ export class AdminSidebarComponent implements OnInit {
   $legajos!: Legajo[];
   alertaRoja: boolean = false;
   alertaAmarilla: boolean = false;
+  usuario!: any;
 
   constructor(private router: Router, private authService: AuthService, private storageService: StorageService) { }
 
@@ -23,7 +24,9 @@ export class AdminSidebarComponent implements OnInit {
       this.$legajos = data;     
       this.buscarAlertas();
     });
-
+    this.usuario = this.storageService.loadInfo("usuario")
+    console.log("this.usuario: ", this.usuario);
+    
   }
   
   volverLogin(){

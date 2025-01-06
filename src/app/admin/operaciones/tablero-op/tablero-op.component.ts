@@ -8,7 +8,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
-import { TarifaGralChofer } from 'src/app/interfaces/tarifa-gral-chofer';
+
 import { ModalFacturacionComponent } from '../modal-facturacion/modal-facturacion.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 
@@ -44,7 +44,7 @@ export class TableroOpComponent implements OnInit {
     fechaHasta: 0,
   };
   ultTarifaGralCliente!: TarifaGralCliente;
-  ultTarifaGralChofer!: TarifaGralChofer;
+  ultTarifaGralChofer!: TarifaGralCliente;
   estadoFiltrado: string ="Todo"
   operacionesFiltrado!: Operacion[];
   ///////////////////////  TABLA  ////////////////////////////////////////////////////

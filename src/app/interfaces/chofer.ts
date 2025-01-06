@@ -1,8 +1,7 @@
 import { Proveedor } from "./proveedor";
 import { TarifaTipo } from "./tarifa-gral-cliente";
 
-export interface Chofer {
-    id:any;
+export interface Chofer {    
     idChofer: number;
     nombre: string;
     apellido: string;

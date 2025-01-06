@@ -8,9 +8,9 @@ export interface TarifaPersonalizadaCliente {
 }
 
 export interface Seccion {    
-        orden: number,
-        descripcion: string | null,
-        categorias: CategoriaTarifa[],    
+    orden: number,
+    descripcion: string | null,
+    categorias: CategoriaTarifa[],    
 }
 
 export interface CategoriaTarifa {

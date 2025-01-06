@@ -33,19 +33,24 @@ export class TarifasEventualesComponent implements OnInit {
       console.log('Módulo origen:', this.moduloOrigen);
     }
 
-    this.storageService.choferes$.subscribe(data => {
-      this.$choferes = data;
-      this.$choferes = this.$choferes        
-        .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-    });
-    this.storageService.clientes$.subscribe(data => {
-      this.$clientes = data;
-      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+    this.storageService.getObservable<Chofer>('choferes').subscribe(data => {
+      if (data) {        
+        this.$choferes = data;
+        this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));        
+      }
+    });    
+    this.storageService.getObservable<Cliente>('clientes').subscribe(data => {
+      if (data) {        
+        this.$clientes = data;
+        this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer        
+      }      
     }); 
-    this.storageService.proveedores$.subscribe(data => {
-      this.$proveedores = data;       
-      this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer     
-    })   
+    this.storageService.getObservable<Proveedor>('proveedores').subscribe(data => {
+      if(data){
+        this.$proveedores = data;
+        this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer        
+      }      
+    })  
     this.changeObjeto()
   }
 
@@ -84,6 +89,7 @@ export class TarifasEventualesComponent implements OnInit {
   }
 
   selectObjeto(e: any) {    
+    console.log(e.target.value);    
     switch(this.moduloOrigen){
       case "clientes":{
         let cliente: Cliente[];        

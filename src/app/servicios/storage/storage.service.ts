@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, take } from 'rxjs';
+import { BehaviorSubject, Observable, take } from 'rxjs';
 import { DbFirestoreService } from '../database/db-firestore.service';
+import { Cliente } from 'src/app/interfaces/cliente';
+import { Proveedor } from 'src/app/interfaces/proveedor';
+import { Chofer } from 'src/app/interfaces/chofer';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 
 
 
@@ -201,6 +205,27 @@ export class StorageService {
 
   private _tarifasEventuales$ = new BehaviorSubject<any>(this.loadInfo('tarifasEventuales') || []);
   public tarifasEventuales$ = this._tarifasEventuales$.asObservable();
+  
+  private _tarifasGralCliente$ = new BehaviorSubject<any>(this.loadInfo('tarifasGralCliente') || []);
+  public tarifasGralCliente$ = this._tarifasGralCliente$.asObservable();
+
+  private _tarifasEspCliente$ = new BehaviorSubject<any>(this.loadInfo('tarifasEspCliente') || []);
+  public tarifasEspCliente$ = this._tarifasEspCliente$.asObservable();
+
+  private _tarifasPersCliente$ = new BehaviorSubject<any>(this.loadInfo('tarifasPersCliente') || []);
+  public tarifasPersCliente$ = this._tarifasPersCliente$.asObservable();
+  
+  private _tarifasGralChofer$ = new BehaviorSubject<any>(this.loadInfo('tarifasGralChofer') || []);
+  public tarifasGralChofer$ = this._tarifasGralChofer$.asObservable();
+  
+  private _tarifasEspChofer$ = new BehaviorSubject<any>(this.loadInfo('tarifasEspChofer') || []);
+  public tarifasEspChofer$ = this._tarifasEspChofer$.asObservable();
+
+  private _tarifasGralProveedor$ = new BehaviorSubject<any>(this.loadInfo('tarifasGralProveedor') || []);
+  public tarifasGralProveedor$ = this._tarifasGralProveedor$.asObservable();
+  
+  private _tarifasEspProveedor$ = new BehaviorSubject<any>(this.loadInfo('tarifasEspProveedor') || []);
+  public tarifasEspProveedor$ = this._tarifasEspProveedor$.asObservable();
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
@@ -493,6 +518,41 @@ export class StorageService {
         break
       }
 
+      case "tarifasGralCliente":{
+        this._tarifasGralCliente$.next(data);
+        break
+      }
+
+      case "tarifasEspCliente":{
+        this._tarifasEspCliente$.next(data);
+        break
+      }
+
+      case "tarifasPersCliente":{
+        this._tarifasPersCliente$.next(data);
+        break
+      }
+
+      case "tarifasGralChofer":{
+        this._tarifasGralChofer$.next(data);
+        break
+      }      
+      
+      case "tarifasEspChofer":{
+        this._tarifasEspChofer$.next(data);
+        break
+      }  
+
+      case "tarifasGralProveedor":{
+        this._tarifasGralProveedor$.next(data);
+        break
+      }      
+      
+      case "tarifasEspProveedor":{
+        this._tarifasEspProveedor$.next(data);
+        break
+      } 
+
       default: {
         //statements; 
         break;
@@ -553,15 +613,20 @@ export class StorageService {
 
   // metodo initializer si el rol es admin
   initializerAdmin() {
-
-    this.getAllSorted("clientes", 'idCliente', 'asc')
-    this.getAllSorted("choferes", 'idChofer', 'asc')
+    this.getAll<Cliente>("clientes");
+    this.getAll<Chofer>("choferes");
+    this.getAll<Proveedor>("proveedores");
+    this.getMostRecentItem<TarifaGralCliente>("tarifasGralCliente", "idTarifa");
+    this.getMostRecentItem<TarifaGralCliente>("tarifasGralChofer", "idTarifa");
+    this.getMostRecentItem<TarifaGralCliente>("tarifasGralProveedor", "idTarifa");
+    //this.getAllSorted("clientes", 'idCliente', 'asc')
+    //this.getAllSorted("choferes", 'idChofer', 'asc')
     //this.getAllSorted("operaciones", 'fecha', 'desc')
     //this.getAllSorted("facturaOpCliente", 'fecha', 'desc')
 //    this.getAllSorted("operacionesCerradas", 'fecha', 'desc')
     //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
     //this.getAllSorted("jornadas", 'idChofer', 'asc')
-    this.getAllSorted("proveedores", 'idProveedor', 'asc');
+    //this.getAllSorted("proveedores", 'idProveedor', 'asc');
     this.getAllSorted("legajos", 'idLegajo', 'asc');
     //this.getAllSorted("tarifasChofer", 'fecha', 'asc')
    // this.getAllSorted("tarifasCliente", 'fecha', 'asc')
@@ -571,9 +636,9 @@ export class StorageService {
     //this.getByDateValue("facturaOpChofer","fecha", this.primerDia, this.ultimoDia, "consultasFacOpChofer")
     //this.getByDateValue("facturaOpCliente","fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente")
     //this.getByDateValue("facturaOpProveedor","fecha", this.primerDia, this.ultimoDia, "consultasFacOpProveedor")
-    this.getUltElemColeccion("tarifasGralCliente", "idTarifa", "desc", 1,"ultTarifaGralCliente")
-    this.getUltElemColeccion("tarifasGralChofer", "idTarifa", "desc", 1,"ultTarifaGralChofer")
-    this.getUltElemColeccion("tarifasGralProveedor", "idTarifa", "desc", 1,"ultTarifaGralProveedor");
+    //this.getUltElemColeccion("tarifasGralCliente", "idTarifa", "desc", 1,"ultTarifaGralCliente")
+    //this.getUltElemColeccion("tarifasGralChofer", "idTarifa", "desc", 1,"ultTarifaGralChofer")
+    //this.getUltElemColeccion("tarifasGralProveedor", "idTarifa", "desc", 1,"ultTarifaGralProveedor");
   }
 
   // metodo initializer si el rol es user
@@ -591,13 +656,127 @@ export class StorageService {
 
   // METODOS CRUD
 
+  getAll<T>(componente: string): Observable<T[]> {
+    const cachedData = this.loadInfo(componente); // Carga desde local storage
+    console.log("getAll cachedData: ", cachedData);
+    
+    if (cachedData.length > 0) {
+      console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
+      this.updateObservable(componente, cachedData);
+    } else {
+      console.log(`Caché vacío, consultando Firestore para ${componente}`);
+      this.dbFirebase.getAll<T>(componente).subscribe(data => {
+        this.setInfo(componente, data); // Guarda en el caché
+        this.updateObservable(componente, data); // Actualiza el observable
+      });
+    }
+    return this.getObservable(componente); // Devuelve el observable
+  }
+
+  getMostRecentItem<T>(componente: string, id: string): void {
+    const cachedData = this.loadInfo(componente); // Carga desde local storage
+    if (cachedData) {
+      console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
+      this.updateObservable(componente, cachedData[0]); // Usa directamente el objeto
+    } else {
+      this.dbFirebase.getMostRecent<T>(componente, id).subscribe(item => {
+        console.log(`Elemento más reciente de ${componente}:`, item[0]);
+        this.setInfo(componente, [item[0]]); // Guarda como un array por compatibilidad
+        this.updateObservable(componente, item[0]); // Actualiza el observable con el objeto
+      });
+    }
+  }
+
+  getMostRecentItemId<T>(componente: string, id:string, campo:string, value:number): void {
+    this.dbFirebase.getMostRecentId<T>(componente, id, campo, value).subscribe(item => {
+      const cachedData = this.loadInfo(componente);
+      console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
+      console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item[0]);
+      if (item) {
+        //console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item);
+        this.setInfo(componente, [item[0]]); // Actualiza el caché
+        this.updateObservable(componente, item[0]); // Actualiza el observable con el objeto más reciente
+      }
+    });
+  }
+
+  syncChanges<T>(componente: string): void {    
+    this.dbFirebase.getAll<T>(componente).subscribe(data => {
+      const currentData = this.loadInfo(componente);
+      //console.log("currentData", currentData);
+      //console.log("data", data);
+      if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
+        console.log(`Datos sincronizados para ${componente}`, data);
+        this.setInfo(componente, data); // Actualiza el caché
+        this.updateObservable(componente, data); // Actualiza el observable
+      } else {
+        console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+      }
+      
+    });
+  }
+
+  syncChangesByOneElem<T>(componente: string, id: string): void {
+    this.dbFirebase.getMostRecent<T>(componente, id).subscribe((data: any) => {
+      const currentData = this.loadInfo(componente);
+      if (!currentData || JSON.stringify(currentData[0]) !== JSON.stringify(data[0])) {
+        console.log(`Datos sincronizados para ${componente}`, data[0]);
+        this.setInfo(componente, [data[0]]); // Guarda en el caché
+        this.updateObservable(componente, data[0]); // Actualiza el observable con el objeto
+      } else {
+        console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+      }
+    });
+  }
+
+  syncChangesByOneElemId<T>(componente: string, id:string, campo:string, value:number): void {
+    this.dbFirebase.getMostRecentId<T>(componente, id, campo, value).subscribe((data:any) => {
+      const currentData = this.loadInfo(componente);
+      if (!currentData || JSON.stringify(currentData[0]) !== JSON.stringify(data[0])) {
+        console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, data);
+        this.setInfo(componente, [data[0]]); // Actualiza el caché
+        this.updateObservable(componente, data[0]); // Actualiza el observable
+      } else {
+        console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+      }      
+    });
+  }
+
+  getObservable<T>(componente: string): Observable<T[]> {
+    switch (componente) {
+      case 'clientes':
+        return this._clientes$.asObservable();
+      case 'choferes':
+        return this._choferes$.asObservable();
+      case 'proveedores':
+        return this._proveedores$.asObservable();      
+      case 'tarifasGralCliente':
+        return this._tarifasGralCliente$.asObservable();      
+      case 'tarifasEspCliente':
+        return this._tarifasEspCliente$.asObservable();      
+      case 'tarifasPersCliente':
+        return this._tarifasPersCliente$.asObservable();  
+      case 'tarifasGralChofer':
+        return this._tarifasGralChofer$.asObservable();
+      case 'tarifasEspChofer':
+        return this._tarifasEspChofer$.asObservable();  
+      case 'tarifasGralProveedor':
+        return this._tarifasGralProveedor$.asObservable();
+      case 'tarifasEspProveedor':
+        return this._tarifasEspProveedor$.asObservable();        
+        
+      default:
+        throw new Error(`Componente no reconocido: ${componente}`);
+    }
+  }
+
   getAllSorted(componente: any, campo: any, orden: any) {
     console.log(` storage getAllSorted ${componente}`, componente, campo, orden)
     // pasar campo y orden (asc o desc)
     this.dbFirebase
       .getAllSorted(componente, campo, orden)
       .subscribe(data => {
-        console.log(` storage getAllSorted ${componente} respuesta: `, data)
+
         this.setInfo(componente, data)
         this.updateObservable(componente, data)
         //console.log("storage initializer ", componente, data);
@@ -716,21 +895,21 @@ export class StorageService {
       public addItem(componente: string, item: any): void {
         console.log("storage add item", componente, item);
         this.dbFirebase.create(componente, item).then(() => {
-          this.refreshData(componente, item);
+          //this.refreshData(componente, item);
         }).catch((e) => console.log(e.message));
       }
     
       public deleteItem(componente: string, item: any): void {
         console.log("storage delete item", componente, item);
         this.dbFirebase.delete(componente, item.id).then(() => {
-          this.refreshData(componente,item);
+          //this.refreshData(componente,item);
         }).catch((e) => console.log(e.message));
       }
     
       public updateItem(componente: string, item: any): void {
         console.log("storage update item", componente, item);
         this.dbFirebase.update(componente, item).then(() => {
-          this.refreshData(componente, item);
+          //this.refreshData(componente, item);
         }).catch((e) => console.log(e.message));
       }
     

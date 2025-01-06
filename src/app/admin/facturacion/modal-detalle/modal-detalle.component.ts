@@ -5,9 +5,7 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
-import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
-import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
@@ -54,9 +52,9 @@ export class ModalDetalleComponent implements OnInit {
   ajustes: boolean = false;
   firstFilter = '';
   secondFilter = '';
-  $facturasOpCliente: FacturaOpCliente[] = [];
-  $facturasOpChofer: FacturaOpChofer[] = [];
-  $facturasOpProveedor: FacturaOpProveedor[] = [];
+  $facturasOpCliente: FacturaOp[] = [];
+  $facturasOpChofer: FacturaOp[] = [];
+  $facturasOpProveedor: FacturaOp[] = [];
   titulo:string = ""
   idFactura!: number;
   $choferes!: Chofer[];

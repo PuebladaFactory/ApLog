@@ -2,14 +2,12 @@ import { Injectable } from '@angular/core';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { StorageService } from '../storage/storage.service';
-import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
-import { CargasGenerales, TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
+
+
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+
 import { Operacion } from 'src/app/interfaces/operacion';
-import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
-import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
-import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+
 import { DbFirestoreService } from '../database/db-firestore.service';
 import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 
@@ -20,9 +18,7 @@ import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gr
 })
 export class BuscarTarifaService {
 //Este es el que va
-  $tarifasChoferes: TarifaChofer [] = [];
-  $tarifasClientes: TarifaCliente [] = []; 
-  $tarifasProveedores: TarifaProveedor [] = [];
+  
   $proveedores!: Proveedor[]  ;
   $choferes!: any;
   $clientes!: any;
@@ -32,7 +28,7 @@ export class BuscarTarifaService {
   
 
   ngOnInit(): void {   
-    this.storageService.historialTarifas$.subscribe(data => {
+    /* this.storageService.historialTarifas$.subscribe(data => {
       this.$tarifasChoferes = data;
     });
     this.storageService.historialTarifasProveedores$.subscribe(data => {
@@ -41,7 +37,7 @@ export class BuscarTarifaService {
     this.storageService.historialTarifasClientes$.subscribe(data => {
       this.$tarifasClientes = data;
     });   
-   
+    */
     
   }
 
@@ -125,16 +121,12 @@ export class BuscarTarifaService {
     return facOpChoferes[0].idTarifa;
   }
   
-  buscarTarifaChofer() :TarifaChofer{
+  /* buscarTarifaChofer() :TarifaChofer{
     //let facuraChofer: FacturaOpChofer [] = []
     //let tarifaAplicada : TarifaChofer [] = [];
     //let facOpChoferes : FacturaOpChofer [] = []; 
     
-     /*  let facOpChoferes = this.storageService.loadInfo("facOpLiqChofer")
-      //console.log("1)factura Op chofer", facOpChoferes);
-      let idTarifa = facOpChoferes[0].idTarifa;
-      //console.log("2", idTarifa);
-      this.storageService.getByFieldValue("tarifasChofer", "idTarifaChofer", idTarifa) */
+     
       let tarifaAplicada: any;
       
       //console.log("5) tarifas chofer: ",tarifaAplicada);    
@@ -143,34 +135,13 @@ export class BuscarTarifaService {
         
       }, 1000); // 5000 milisegundos = 5 segundos 
       
-/*     this.storageService.consultasFacOpLiqChofer$.subscribe(data =>{
-      //console.log("1) data op choferes: ",data);
-      facOpChoferes = data;
-      //console.log("facuras op choferes: ",facOpChoferes);
-      
-      facuraChofer = facOpChoferes.filter((factura : FacturaOpChofer)=>{
-        //console.log("2)", factura.operacion.idOperacion, operacion.idOperacion);        
-        return factura.operacion.idOperacion === operacion.idOperacion
-      });
-      //console.log("3) ", facuraChofer);      
-      
-      this.storageService.historialTarifas$.subscribe(data =>{
-        this.$tarifasChoferes = data;
-        //console.log("4) tarifas choferes: ",this.$tarifasChoferes);
-        tarifaAplicada = this.$tarifasChoferes.filter((tarifa:TarifaChofer) =>{
-          return tarifa.idTarifa === facuraChofer[0].idTarifa;
-        })
-        
-    })
-      
-     
-    }) */
+
     
     return tarifaAplicada[0];
     
-  }
+  } */
 
-  buscarTarifaProveedor(operacion:Operacion) :TarifaProveedor{
+ /*  buscarTarifaProveedor(operacion:Operacion) :TarifaProveedor{
     let facuraProveedor: FacturaOpProveedor [] = []
     let tarifaAplicada : TarifaProveedor [] = [];
     let facOpProveedores : FacturaOpProveedor [] = [];
@@ -197,9 +168,9 @@ export class BuscarTarifaService {
     })    
     ////console.log("4) tarifas proveedor: ",tarifaAplicada[0]);    
     return tarifaAplicada[0];
-  }
+  } */
 
-  buscarCategoriaProveedor(tarifa: TarifaProveedor, categoria: string):number{
+ /*  buscarCategoriaProveedor(tarifa: TarifaProveedor, categoria: string):number{
     switch (categoria) {
       case "mini":
         return tarifa.cargasGenerales.utilitario;        
@@ -228,10 +199,10 @@ export class BuscarTarifaService {
       default:
         return 0;
   }
-}
+} */
 
 
-buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
+/* buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
   switch (categoria) {
     case "mini":
       return tarifa.cargasGenerales.utilitario;        
@@ -260,9 +231,9 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
     default:
       return 0;
 }
-}
+} */
 
-  buscarTarifaClienteId():TarifaCliente{
+  /* buscarTarifaClienteId():TarifaCliente{
     //let tarifaAplicada : TarifaCliente [] = [];
     ////console.log("1S) tarifas clientes: ",this.$tarifasClientes[0]);
     let tarifaAplicada: any;
@@ -274,23 +245,11 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
       console.log("1) tarifa aplicada", tarifaAplicada);
       return tarifaAplicada[0];
  
-    /* this.storageService.historialTarifasClientes$.subscribe(data =>{
-      this.$tarifasClientes = data;
-      //console.log("1S) tarifas choferes: ",this.$tarifasChoferes);
-      tarifaAplicada = this.$tarifasClientes.filter((tarifa:TarifaCliente)=>{
-        //console.log("2S) tarifa aplicada:", tarifa.idTarifaCliente, idTarifa);        
-        return tarifa.idTarifaCliente === idTarifa  
-      })     
-      ////console.log("tarifas clientes: ",tarifaAplicada);   
-      tarifaAplicada = this.$tarifasClientes;
-      //console.log("2S) tarifa aplicada:", tarifaAplicada);        
-    }) */
-    
-    
+  
 //    return tarifaAplicada[0];
-  }
+  } */
 
-  buscarTarifaChoferId(idTarifa:number):TarifaChofer{
+/*   buscarTarifaChoferId(idTarifa:number):TarifaChofer{
     let tarifaAplicada : TarifaChofer [] = [];
     this.storageService.historialTarifas$.subscribe(data =>{
       this.$tarifasChoferes = data;
@@ -304,9 +263,9 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
     
     ////console.log("3) tarifa chofere: ",tarifaAplicada[0]);    
     return tarifaAplicada[0];
-  }
+  } */
 
-  buscarTarifaCliente(operacion:Operacion) :TarifaCliente{
+ /*  buscarTarifaCliente(operacion:Operacion) :TarifaCliente{
     let facuraCliente: FacturaOpCliente [] = []
     let tarifaAplicada : TarifaCliente [] = [];
     let facOpClientes : FacturaOpCliente [] = [];
@@ -339,9 +298,9 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
     
     ////console.log("6) tarifa cliente: ",tarifaAplicada[0]);    
     return tarifaAplicada[0];
-  }
+  } */
 
-  buscarTarifaProveedorId(idTarifa:number):TarifaProveedor{
+/*   buscarTarifaProveedorId(idTarifa:number):TarifaProveedor{
     let tarifaAplicada : TarifaProveedor [] = [];
     this.storageService.historialTarifasProveedores$.subscribe(data =>{
       this.$tarifasProveedores = data;
@@ -355,7 +314,7 @@ buscarCategoriaCliente(tarifa: TarifaCliente, categoria: string):number{
     
     ////console.log("4) tarifas proveedores: ",tarifaAplicada[0]);    
     return tarifaAplicada[0];
-  }
+  } */
 
 //// METODOS PARA OBTENER ELPRIMER VALOR A COBRAR Y A PAGAR CUANDO SE DA DE ALTA LA OP ////
 

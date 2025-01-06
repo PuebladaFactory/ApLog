@@ -2,12 +2,11 @@ import { Injectable } from '@angular/core';
 import { FacturacionClienteService } from '../facturacion-cliente/facturacion-cliente.service';
 import { StorageService } from '../../storage/storage.service';
 import { DbFirestoreService } from '../../database/db-firestore.service';
-import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
-import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+
 import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
@@ -16,14 +15,11 @@ import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-p
   providedIn: 'root'
 })
 export class FacturacionChoferService {
-
-  $tarifaChofer!:TarifaChofer;
-  facturaChofer!:FacturaOpChofer;
-  facturaProveedor!:FacturaOpProveedor;
+  
   total:number = 0;
   $adicional!:number;
   $tarifas!: any;
-  ultimaTarifa!: TarifaChofer;
+  
   choferOp!: Chofer;
   $choferes!: Chofer[];
   $proveedores!: Proveedor[];
@@ -147,7 +143,7 @@ $calcularKm(op: Operacion, tarifa: TarifaGralCliente, vehiculo:Vehiculo){
 $crearFacturaOpChofer(op:Operacion, idTarifa: number, idProveedor: number){
 
   this.facturaOpChofer = {
-    id: null,
+    
     idFacturaOp: new Date().getTime(),
     idOperacion: op.idOperacion,
     idCliente: op.cliente.idCliente,
@@ -213,7 +209,7 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
   return respuesta;
 }
 
-  facturarOpChofer(op: Operacion, tarifa: TarifaChofer)  :FacturaOpChofer{    
+  /* facturarOpChofer(op: Operacion, tarifa: TarifaChofer)  :FacturaOpChofer{    
  
     ////console.log("esto tarifa recibe: ",this.ultimaTarifa);    
     this.ultimaTarifa = tarifa;
@@ -225,7 +221,7 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
     
     //console.log("esto vuelve: ",this.facturaChofer);    
     return this.facturaChofer
-  }
+  } */
 
   
 /* 
@@ -298,7 +294,7 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
     });  
   } */
 
-  calcularLiquidacion(op:Operacion){    
+/*   calcularLiquidacion(op:Operacion){    
     this.$tarifaChofer = this.ultimaTarifa
     //console.log("1) esta es la tarifa a facturar: ", this.$tarifaChofer);
     
@@ -318,9 +314,9 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
     }
 
     //this.crearFacturaChofer(op);    
-  }
+  } */
 
-  calcularAdicional(op:Operacion, tarifa: TarifaChofer) {
+/*   calcularAdicional(op:Operacion, tarifa: TarifaChofer) {
     let acompaniante: any;
     let adicional: any;
     
@@ -330,36 +326,7 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
       acompaniante = 0;
     }
     
-    /* switch(true){
-      case (op.km !== null && op.km <= 100):{
-        adicional = 0;
-        return adicional + acompaniante;
-      }
-      case (op.km !== null && op.km > 100 && op.km <= 150):{        
-        adicional = this.$tarifaChofer.km.adicionalKm1;
-        ////console.log()("adicional + acompañante: ", acompaniante+adicional);
-        return adicional + acompaniante;
-      }
-      case (op.km !== null && op.km > 150 && op.km <= 200):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2;
-        return adicional + acompaniante;
-      }
-      case (op.km !== null && op.km > 200 && op.km <= 250):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2 + this.$tarifaChofer.km.adicionalKm3;
-        return adicional + acompaniante;
-      }
-      case (op.km !== null && op.km > 250 && op.km <= 300):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2 + this.$tarifaChofer.km.adicionalKm3 + this.$tarifaChofer.km.adicionalKm4;
-        return adicional + acompaniante;
-      }
-      case (op.km !== null && op.km > 300):{
-        adicional = this.$tarifaChofer.km.adicionalKm1 + this.$tarifaChofer.km.adicionalKm2 + this.$tarifaChofer.km.adicionalKm3 + this.$tarifaChofer.km.adicionalKm4 + this.$tarifaChofer.km.adicionalKm5;
-        return adicional + acompaniante;
-      }
-      default:{ 
-        return adicional=0;
-      }
-    } */
+    
 
     if(op.km !== null){
       if(op.km < this.ultimaTarifa.km.primerSector.distancia){
@@ -390,12 +357,12 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
         }         
       }  
     }
-  }
+  } */
 
-  crearFacturaChofer(op:Operacion){
+  /* crearFacturaChofer(op:Operacion){
 
     this.facturaChofer = {
-      id: null,
+      
       idFacturaOpChofer: new Date().getTime(),
       operacion: op,        
       fecha: op.fecha,      
@@ -411,9 +378,9 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
       //console.log("factura chofer FINAL: ", this.facturaChofer);
     
     //this.altaFacturaChofer()
-  }
+  } */
 
-  facturarTarifaEspecial(op:Operacion){
+  /* facturarTarifaEspecial(op:Operacion){
     //console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!: ", this.ultimaTarifa.tarifaEspecial.valor);
     
     //if(op.tarifaEspecial){
@@ -432,38 +399,27 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
     //this.total = this.$tarifaChofer.tarifaEspecial.valor;
     this.$adicional = 0;
     //this.$tarifaChofer.valorJornada = this.$tarifaChofer.tarifaEspecial.valor;
-  }
+  } */
 
-  obtenerTarifaChofer(factura:FacturaOpChofer){
+  /* obtenerTarifaChofer(factura:FacturaOpChofer){
     //let ultimaTarifa;
     this.storageService.getByFieldValueTitle("tarifasChofer", "idTarifa", factura.idTarifa, "tarifasChofer");
-    /* this.storageService.historialTarifas$.subscribe(data => {
-      //this.$tarifas = data.filter((tarifa: { idTarifa: number; }) => tarifa.idTarifa === factura.idTarifa);
-      this.$tarifas = data
-      ////console.log()("Todas: ",this.$tarifas);
-
-      // Encontrar la tarifa con el idTarifa más elevado
-  
-
-      // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
-      //console.log("ultima: ", ultimaTarifa);
-      
-    });   */
+   
     
     //return ultimaTarifa;
     
-  }
+  } */
 
-  actualizarFacOp(factura:FacturaOpChofer, tarifa: TarifaChofer){
+  /* actualizarFacOp(factura:FacturaOpChofer, tarifa: TarifaChofer){
     //console.log("chofer service. factura recibida: ", factura);
     //console.log("chofer service. tarifa recibida: ", tarifa);
     this.ultimaTarifa = tarifa;
     this.calcularLiquidacion(factura.operacion)
     this.editarFacOpChofer(factura);
     return this.facturaChofer;
-  }
+  } */
 
-  editarFacOpChofer(factura:FacturaOpChofer){
+  /* editarFacOpChofer(factura:FacturaOpChofer){
     this.facturaChofer = {
       id: factura.id,
       idFacturaOpChofer: factura.idFacturaOpChofer,
@@ -479,6 +435,6 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
     }
     
     ////console.log()("factura EDITADA FINAL: ", this.facturaChofer);
-  }
+  } */
   
 }

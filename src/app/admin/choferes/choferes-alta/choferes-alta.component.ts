@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Categoria, Chofer, SeguimientoSatelital, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { AdicionalKm, TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
 import { CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
@@ -35,10 +34,9 @@ export class ChoferesAltaComponent implements OnInit {
   edicion: boolean = false;
   seguimiento: boolean = false;  
   tipoCombustible!:string;
-  tarjetaCombustible!:boolean;
-  jornada!:TarifaChofer;
+  tarjetaCombustible!:boolean;  
   vehiculo!:Vehiculo;
-  adicionalKm!:AdicionalKm;  
+  
   legajo!: any;
   refrigeracion!:boolean;
   $proveedores!: Proveedor[]; 
@@ -160,7 +158,7 @@ export class ChoferesAltaComponent implements OnInit {
     
     if(this.idProveedor !== undefined){
         if (this.form.valid){
-          let id = this.chofer?.id;
+          
           this.armarChofer();
           //this.armarVehiculo();        
           this.addItem();
@@ -180,7 +178,7 @@ export class ChoferesAltaComponent implements OnInit {
     this.componente = "choferes";  
     const tarifaSeleccionada = this.getTarifaTipo();      
     if(this.fromParent.modo === "edicion"){
-        let id = this.chofer.id;
+        
         let idChofer = this.chofer.idChofer;
         let formValue = this.form.value;
         // Eliminar los guiones del CUIT
@@ -191,7 +189,7 @@ export class ChoferesAltaComponent implements OnInit {
         };                
         /*  this.chofer.categoria = this.categoriaSeleccionada; */
         this.chofer.idChofer = idChofer; 
-        this.chofer.id = id;    
+           
         this.chofer.idProveedor = this.idProveedor;
         this.chofer.vehiculo = this.vehiculos;
         this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa
@@ -206,7 +204,7 @@ export class ChoferesAltaComponent implements OnInit {
         };
       /*  this.chofer.categoria = this.categoriaSeleccionada; */
         this.chofer.idChofer = new Date().getTime();   
-        this.chofer.id = null;  
+        
         this.chofer.idProveedor = this.idProveedor;
         this.chofer.vehiculo = this.vehiculos;
         this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
@@ -18,7 +18,7 @@ export class FacturacionProveedorComponent implements OnInit {
   mostrarTablaProveedor: boolean[] = [];      
   $facturaOpProveedor: FacturaOp[] = []; 
   facturasPorProveedor: Map<number, FacturaProveedor[]> = new Map<number, FacturaProveedor[]>();
-  operacionFac: FacturaOpProveedor[] = [];  
+  
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
   totalSumaACobrar: number = 0;

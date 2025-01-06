@@ -82,7 +82,7 @@ export class ClienteAltaComponent implements OnInit {
           cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
         };                
         this.cliente.idCliente = this.clienteEditar.idCliente;
-        this.cliente.id = this.clienteEditar.id;
+        
         this.cliente.contactos = this.contactos;
         ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
@@ -102,6 +102,7 @@ export class ClienteAltaComponent implements OnInit {
         this.cliente.contactos = this.contactos;
         ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
+        
         ////console.log(this.cliente);      
         this.addItem("Alta");        
         this.activeModal.close();    

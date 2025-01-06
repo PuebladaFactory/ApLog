@@ -1,14 +1,13 @@
 import { TarifaTipo } from "./tarifa-gral-cliente";
 
 export interface Proveedor {
-   
-        id:any | null;
-        idProveedor: number;
-        razonSocial: string;
-        cuit: number;
-        direccion: string;
-        contactos: Contacto [];
-        tarifaTipo: TarifaTipo;
+       
+    idProveedor: number;
+    razonSocial: string;
+    cuit: number;
+    direccion: string;
+    contactos: Contacto [];
+    tarifaTipo: TarifaTipo;
 }
 
 export interface Contacto {    

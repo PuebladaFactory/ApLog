@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
+
 import { StorageService } from '../../storage/storage.service';
 import { DbFirestoreService } from '../../database/db-firestore.service';
 import { Operacion } from 'src/app/interfaces/operacion';
-import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { parseActionCodeURL } from 'firebase/auth';
@@ -19,14 +19,13 @@ import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-p
 export class FacturacionClienteService {
 
   $clientes!: Cliente[];
-  facturaCliente!: FacturaOpCliente;
+  
   clienteOp!: Cliente;
-  $tarifas!: TarifaCliente[];
-  ultimaTarifa!: TarifaCliente;
+  
   categoriaMonto!: number;
   acompanianteMonto!: number;
   adicionalKmMonto!: number;
-  $tarifaCliente!: TarifaCliente;
+  
   total!:number;
   tarifaGralCliente! : TarifaGralCliente;
   facturaOpCliente!: FacturaOp;
@@ -160,7 +159,7 @@ $calcularKm(op: Operacion, tarifa: TarifaGralCliente, vehiculo:Vehiculo){
 $crearFacturaOpCliente(op:Operacion, idTarifa: number){
 
   this.facturaOpCliente = {
-    id: null,
+    
     idFacturaOp: new Date().getTime(),
     idOperacion: op.idOperacion,
     idCliente: op.cliente.idCliente,
@@ -190,7 +189,7 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
   }  
 }
 
-  facturarOpCliente(op:Operacion, tarifa:TarifaCliente): FacturaOpCliente{
+  /* facturarOpCliente(op:Operacion, tarifa:TarifaCliente): FacturaOpCliente{
     console.log("cliente service. op recibida: ", op);
     console.log("cliente service. tarifa recibida: ", tarifa);
    //console.log("esto tarifa recibe: ",this.ultimaTarifa);    
@@ -200,13 +199,11 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
    //this.buscarTarifaChofer(op);   
    this.crearFacturaCliente(op);     
 
-/*     this.storageService.getByFieldValueLimitBuscarTarifa("tarifasCliente", "idCliente", op.cliente.idCliente,1)
-    this.buscarCliente(op);   
-    this.crearFacturaCliente(op);     */
+
     return this.facturaCliente
     
 
-  }
+  } */
 
   buscarCliente(op: Operacion){
     /* let opCliente: any;
@@ -220,27 +217,25 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
     //this.buscarTarifa(op);
   }
 
-  buscarTarifa(op: Operacion){    
+  /* buscarTarifa(op: Operacion){    
     this.storageService.historialTarifasClientes$.subscribe(data => {
       //this.$tarifas = data.filter((tarifa: { idCliente: number; }) => tarifa.idCliente === this.clienteOp.idCliente);
       this.$tarifas = data
       console.log("1) data Todas CLIENTES: ",this.$tarifas);
 
       // Encontrar la tarifa con el idTarifa más elevado
-      /* this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: TarifaCliente, tarifaActual: TarifaCliente) => {
-        return tarifaActual.idTarifaCliente > tarifaMaxima.idTarifaCliente ? tarifaActual : tarifaMaxima;
-      });  */
+    
       this.ultimaTarifa = this.$tarifas[0];
       // Ahora, tarifaMasElevada contiene la tarifa con el idTarifa más elevado
       console.log("2) ultima CLIENTE: ", this.ultimaTarifa);
       //this.calcularLiquidacion(op);
       this.calcularLiquidacion(op);
     });  
-  }
+  } */
 
   
 
-  calcularLiquidacion(op:Operacion){    
+ /*  calcularLiquidacion(op:Operacion){    
     this.$tarifaCliente = this.ultimaTarifa
     ////console.log()("esta es la tarifa a facturar: ", this.$tarifaCliente);
     
@@ -265,7 +260,7 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
     }
 
     //this.crearFacturaChofer(op);    
-  }
+  } */
 
   facturarCG(op: Operacion){
     ////console.log()("cargas generales");
@@ -311,7 +306,7 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
 
  
 
-  calcularAdicional(op: Operacion, tarifa: TarifaCliente){
+/*   calcularAdicional(op: Operacion, tarifa: TarifaCliente){
     let acompaniante: any;
     let adicional: any;
     
@@ -348,7 +343,7 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
       }  
     }
     
-  }
+  } */
 
   /* facturarAdicionalKm(op: Operacion){
     if(op.km !== null){
@@ -380,7 +375,7 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
     
   } */
 
-  crearFacturaCliente(op:Operacion){
+ /*  crearFacturaCliente(op:Operacion){
 
     this.facturaCliente = {
       id: null,
@@ -398,11 +393,11 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
     ////console.log()(this.facturaCliente);
     
     //this.altaFacturaChofer()
-  }
+  } */
 
   
 
-  facturarTarifaEspecial(op: Operacion){
+/*   facturarTarifaEspecial(op: Operacion){
     
       //this.categoriaMonto = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
       //this.total = typeof op.tEspecial.cliente.valor === 'number'? op.tEspecial.cliente.valor : 0;
@@ -418,25 +413,14 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
     this.adicionalKmMonto = 0;
     //////console.log()("pasa por aca 2°");
     
-  }
+  } */
 
-  obtenerTarifaCliente(factura:FacturaOpCliente){
+  /* obtenerTarifaCliente(factura:FacturaOpCliente){
     //console.log("FACTURAAA: ", factura);
     
     let ultimaTarifa;
     this.storageService.getByFieldValueTitle("tarifasCliente", "idTarifa", factura.idTarifa, "tarifasCliente");
-    /* this.storageService.historialTarifasClientes$.subscribe(data => {
-      ////console.log()(data);
-      
-      //this.$tarifas = data.filter((tarifa: { idTarifaCliente: number; }) => tarifa.idTarifaCliente === factura.idTarifa);
-      this.$tarifas = data
-      ////console.log()("Todas: ",this.$tarifas);
-
-      // Encontrar la tarifa con el idTarifa más elevado
-      //ultimaTarifa = this.$tarifas[0]
-      //ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
-       // return tarifaActual.idTarifa > tarifaMaxima.idTarifa ? tarifaActual : tarifaMaxima;
-      });  */
+   
 
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
       //console.log("ultima: ", ultimaTarifa);
@@ -447,18 +431,18 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
     
     //return ultimaTarifa;
     
-  }
+  } */
 
-  actualizarFacOp(factura:FacturaOpCliente, tarifa: TarifaCliente){
+/*   actualizarFacOp(factura:FacturaOpCliente, tarifa: TarifaCliente){
     console.log("cliente service. factura recibida: ", factura);
     console.log("cliente service. tarifa recibida: ", tarifa);
     this.ultimaTarifa = tarifa;
     this.calcularLiquidacion(factura.operacion)
     this.editarFacOpCliente(factura);
     return this.facturaCliente;
-  }
+  } */
 
-  editarFacOpCliente(factura:FacturaOpCliente){
+  /* editarFacOpCliente(factura:FacturaOpCliente){
     this.facturaCliente = {
       id: factura.id,
       idFacturaOpCliente: factura.idFacturaOpCliente,
@@ -474,7 +458,7 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
     }
     
     ////console.log()("factura EDITADA FINAL: ", this.facturaCliente);
-  }
+  } */
 
 
   ////prueba.......

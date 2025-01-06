@@ -1,7 +1,7 @@
 import { TarifaTipo } from "./tarifa-gral-cliente";
+export type ClienteConId = Cliente & { id: string };
 
-export interface Cliente {    
-    id:any | null;
+export interface Cliente {        
     idCliente: number;
     razonSocial: string;
     cuit: number;

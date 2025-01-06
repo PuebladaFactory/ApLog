@@ -2,7 +2,6 @@ import { TarifaTipo } from "./tarifa-gral-cliente";
 
 export interface FacturaOp {
 
-    id: any|null;
     idFacturaOp: number;    
     idOperacion: number
     fecha: string | Date;        

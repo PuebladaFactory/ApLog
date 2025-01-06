@@ -58,15 +58,17 @@ export class ClienteListadoComponent implements OnInit {
   constructor(private storageService: StorageService,  private modalService: NgbModal){}
   
   ngOnInit(): void { 
-    
-    this.storageService.getAllSorted("clientes", 'idCliente', 'asc')
-    this.storageService.clientes$    
-    .subscribe(data => {
-        console.log('Datos clientes actualizados:', data);
-        this.$clientes = [...data]; // Clona el array para evitar problemas con referencias
-        this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
+
+    this.storageService.getObservable<Cliente>('clientes').subscribe(data => {
+      if (data) {
+        console.log('Datos cargados para clientes:', data);
+        this.$clientes = data;
+        this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
         this.armarTabla();
-    })
+      }      
+    });  
+    // Sincroniza cambios en tiempo real
+    this.storageService.syncChanges<Cliente>('clientes');
   }
   
   abrirEdicion(row:any):void {

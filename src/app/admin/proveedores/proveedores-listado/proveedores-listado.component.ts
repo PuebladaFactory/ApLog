@@ -58,17 +58,26 @@ secondFilter = '';
   
   ngOnInit(): void { 
     //this.proveedores$ = this.storageService.proveedores$; 
-    this.storageService.getAllSorted("proveedores", 'idProveedor', 'asc') 
-    this.storageService.proveedores$.subscribe(data => {
-      this.$proveedores = data;
-      this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      this.armarTabla();
+    
+    this.storageService.getObservable<Proveedor>('proveedores').subscribe(data => {
+      if(data){
+        this.$proveedores = data;
+        this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+        this.armarTabla();
+      }      
     })
 
-    this.storageService.choferes$.subscribe(data => {
-      this.$choferes = data; 
-      this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer           
-    });
+    this.storageService.getObservable<Chofer>('choferes').subscribe(data => {
+      if (data) {
+        console.log('Datos choferes actualizados:', data);
+        this.$choferes = [...data]; // Clona el array para evitar problemas con referencias
+        this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
+        this.armarTabla();
+      }
+    });    
+
+    this.storageService.syncChanges<Proveedor>('proveedores');
+    this.storageService.syncChanges<Chofer>('choferes');
   }
   
   abrirEdicion(row:any):void {

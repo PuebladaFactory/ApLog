@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { CargasGenerales, TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
+
 import { StorageService } from '../../storage/storage.service';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Vehiculo } from 'src/app/interfaces/chofer';
@@ -11,14 +11,14 @@ import { Vehiculo } from 'src/app/interfaces/chofer';
 })
 export class FacturacionProveedorService {
   
-  facturaProveedor!:FacturaOpProveedor;
+  
   total!:number;
   $adicional!:number ;
   $tarifas!: any;
-  ultimaTarifa!: TarifaProveedor;  
+  
   $proveedores!: Proveedor[];
   proveedorOp!: Proveedor;
-  $tarifaProveedor!:TarifaProveedor;
+  
   categoriaMonto!: number;
   acompanianteMonto!: number;
   adicionalKmMonto!: number;
@@ -38,14 +38,14 @@ export class FacturacionProveedorService {
     return this.facturaProveedor;
   } */
 
-  facturarOpProveedor(op: Operacion, tarifa:TarifaProveedor, proveedor:Proveedor)  :FacturaOpProveedor{        
+ /*  facturarOpProveedor(op: Operacion, tarifa:TarifaProveedor, proveedor:Proveedor)  :FacturaOpProveedor{        
     //this.proveedores();   
     this.ultimaTarifa = tarifa;
     this.proveedorOp = proveedor;
     this.calcularLiquidacion(op);
     this.crearFacturaProveedor(op);  
     return this.facturaProveedor;
-  }
+  } */
 
  /*  facturarOpProveedor(op: Operacion){            
     
@@ -92,7 +92,7 @@ export class FacturacionProveedorService {
       /* this.ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
         return tarifaActual.idTarifa > tarifaMaxima.idTarifa ? tarifaActual : tarifaMaxima;
       }); */
-      this.ultimaTarifa = this.$tarifas[0];
+      //this.ultimaTarifa = this.$tarifas[0];
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
       ////console.log()("ultima: ", this.ultimaTarifa);
       this.calcularLiquidacion(op);
@@ -100,7 +100,7 @@ export class FacturacionProveedorService {
   }
 
   calcularLiquidacion(op:Operacion){    
-    this.$tarifaProveedor = this.ultimaTarifa
+   /*  this.$tarifaProveedor = this.ultimaTarifa
     ////console.log()("esta es la tarifa a facturar: ", this.$tarifaProveedor);
     
     if(op.tarifaEventual){
@@ -120,7 +120,7 @@ export class FacturacionProveedorService {
       this.total = this.categoriaMonto + (this.acompanianteMonto + this.adicionalKmMonto)
   
       ////console.log()("esta es facturaClienteService. liquidacion del chofer: ", this.total);
-    }
+    } */
 
     //this.crearFacturaChofer(op);    
   }
@@ -167,7 +167,7 @@ export class FacturacionProveedorService {
     }  */
   }
 
-  calcularAdicional(op: Operacion, tarifa: TarifaProveedor){
+/*   calcularAdicional(op: Operacion, tarifa: TarifaProveedor){
     let acompaniante: any;
     let adicional: any;
     
@@ -204,7 +204,7 @@ export class FacturacionProveedorService {
       }  
     }
     
-  }
+  } */
 
   
 
@@ -243,7 +243,7 @@ export class FacturacionProveedorService {
     
   } */
 
-  crearFacturaProveedor(op:Operacion){
+/*   crearFacturaProveedor(op:Operacion){
 
     this.facturaProveedor = {
       id: null,
@@ -262,9 +262,9 @@ export class FacturacionProveedorService {
     ////console.log()("FACTURA PROVEEDOR: ", this.facturaProveedor);
     
     //this.altaFacturaChofer()
-  }
+  } */
 
-  facturarTarifaEspecial(op: Operacion){
+/*   facturarTarifaEspecial(op: Operacion){
 
   
       this.categoriaMonto = op.tarifaEventual.chofer.valor;
@@ -277,9 +277,9 @@ export class FacturacionProveedorService {
     this.adicionalKmMonto = 0;
     //////console.log()("pasa por aca 2°");
     
-  }
+  } */
 
-  obtenerTarifaProveedor(factura:FacturaOpProveedor):TarifaProveedor|undefined{
+/*   obtenerTarifaProveedor(factura:FacturaOpProveedor):TarifaProveedor|undefined{
     let ultimaTarifa
     ////console.log()("factura: ", factura);
     
@@ -292,9 +292,7 @@ export class FacturacionProveedorService {
 
       // Encontrar la tarifa con el idTarifa más elevado
       ultimaTarifa = this.$tarifas[0]
-      /* ultimaTarifa = this.$tarifas.reduce((tarifaMaxima: { idTarifa: number; }, tarifaActual: { idTarifa: number; }) => {
-        return tarifaActual.idTarifa > tarifaMaxima.idTarifa ? tarifaActual : tarifaMaxima;
-      }); */
+     
 
       // Ahora, ultimaTarifa contiene la tarifa con el idTarifa más elevado
       ////console.log()("ultima: ", ultimaTarifa);
@@ -305,16 +303,16 @@ export class FacturacionProveedorService {
     
     return ultimaTarifa;
     
-  }
+  } */
 
-  actualizarFacOp(factura:FacturaOpProveedor, tarifa: TarifaProveedor){
+/*   actualizarFacOp(factura:FacturaOpProveedor, tarifa: TarifaProveedor){
     this.ultimaTarifa = tarifa;
     this.calcularLiquidacion(factura.operacion)
     this.editarFacOpProveedor(factura);
     return this.facturaProveedor;
-  }
+  } */
 
-  editarFacOpProveedor(factura:FacturaOpProveedor){
+  /* editarFacOpProveedor(factura:FacturaOpProveedor){
     ////console.log()("FacOpProveedor antes de EDITAR: ", factura);
     
     this.facturaProveedor = {
@@ -333,7 +331,7 @@ export class FacturacionProveedorService {
     }
     
     ////console.log()("factura EDITADA FINAL: ", this.facturaProveedor);
-  }
+  } */
 
 
 

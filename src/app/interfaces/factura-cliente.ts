@@ -1,5 +1,5 @@
 export interface FacturaCliente {
-    id: any|null;
+    
     idFacturaCliente: number;   
     fecha: string | Date;        
     idCliente: number;    

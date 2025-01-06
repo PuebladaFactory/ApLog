@@ -79,7 +79,7 @@ export class ProveedoresAltaComponent implements OnInit {
           cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
         };                        
         this.proveedor.idProveedor = this.proveedorEditar.idProveedor;
-        this.proveedor.id = this.proveedorEditar.id;
+        
         this.proveedor.contactos = this.contactos;
         //console.log()(this.cliente);     
         this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa

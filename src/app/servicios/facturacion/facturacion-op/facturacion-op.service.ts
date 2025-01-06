@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+
 import { Operacion } from 'src/app/interfaces/operacion';
 
 import { FacturacionClienteService } from '../facturacion-cliente/facturacion-cliente.service';
 import { StorageService } from '../../storage/storage.service';
-import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+
 import { DbFirestoreService } from '../../database/db-firestore.service';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
@@ -496,7 +496,7 @@ export class FacturacionOpService {
 
   guardarTarifasEventuales(op:Operacion){
     this.tarifaEventual = {
-      id: null,
+      
       idTarifa: new Date().getTime(),
       fecha: op.fecha,
       cliente: {
