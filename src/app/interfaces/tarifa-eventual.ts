@@ -1,7 +1,7 @@
 import { TarifaTipo } from "./tarifa-gral-cliente";
 
 export interface TarifaEventual {
-    id: any;
+    
     idTarifa: number;
     fecha: string | Date;
     cliente: ClienteEventual;

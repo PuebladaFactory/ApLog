@@ -673,58 +673,72 @@ export class StorageService {
     return this.getObservable(componente); // Devuelve el observable
   }
 
-  getMostRecentItem<T>(componente: string, id:string): void {
+  getMostRecentItem<T>(componente: string, id: string): void {
     const cachedData = this.loadInfo(componente); // Carga desde local storage
-    console.log("cachedData: ", cachedData);
-    
-    if (cachedData.length > 0) {
+    if (cachedData) {
       console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
-      this.updateObservable(componente, cachedData);
-    }else{
+      this.updateObservable(componente, cachedData[0]); // Usa directamente el objeto
+    } else {
       this.dbFirebase.getMostRecent<T>(componente, id).subscribe(item => {
-        /* if (item) {
-          console.log(`Elemento más reciente de ${componente}:`, item);
-          this.updateObservable(componente, [item]); // Actualiza el observable con el objeto más reciente
-        } */
-        console.log(`Elemento más reciente de ${componente}:`, item);
-        this.setInfo(componente, [item]); // Actualiza el caché
-        this.updateObservable(componente, [item]); // Actualiza el observable con el objeto más reciente
+        console.log(`Elemento más reciente de ${componente}:`, item[0]);
+        this.setInfo(componente, [item[0]]); // Guarda como un array por compatibilidad
+        this.updateObservable(componente, item[0]); // Actualiza el observable con el objeto
       });
     }
-    
   }
 
   getMostRecentItemId<T>(componente: string, id:string, campo:string, value:number): void {
     this.dbFirebase.getMostRecentId<T>(componente, id, campo, value).subscribe(item => {
+      const cachedData = this.loadInfo(componente);
+      console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
+      console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item[0]);
       if (item) {
-        console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item);
-        this.setInfo(componente, [item]); // Actualiza el caché
-        this.updateObservable(componente, [item]); // Actualiza el observable con el objeto más reciente
+        //console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item);
+        this.setInfo(componente, [item[0]]); // Actualiza el caché
+        this.updateObservable(componente, item[0]); // Actualiza el observable con el objeto más reciente
       }
     });
   }
 
-  syncChanges<T>(componente: string): void {
+  syncChanges<T>(componente: string): void {    
     this.dbFirebase.getAll<T>(componente).subscribe(data => {
-      console.log(`Datos sincronizados para ${componente}`, data);
-      this.setInfo(componente, data); // Actualiza el caché
-      this.updateObservable(componente, data); // Actualiza el observable
+      const currentData = this.loadInfo(componente);
+      //console.log("currentData", currentData);
+      //console.log("data", data);
+      if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
+        console.log(`Datos sincronizados para ${componente}`, data);
+        this.setInfo(componente, data); // Actualiza el caché
+        this.updateObservable(componente, data); // Actualiza el observable
+      } else {
+        console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+      }
+      
     });
   }
 
-  syncChangesByOneElem<T>(componente: string, id:string): void {
-    this.dbFirebase.getMostRecent<T>(componente, id).subscribe((data:any) => {
-      console.log(`Datos sincronizados para ${componente}`, data);
-      this.setInfo(componente, [data]); // Actualiza el caché
-      this.updateObservable(componente, data); // Actualiza el observable
+  syncChangesByOneElem<T>(componente: string, id: string): void {
+    this.dbFirebase.getMostRecent<T>(componente, id).subscribe((data: any) => {
+      const currentData = this.loadInfo(componente);
+      if (!currentData || JSON.stringify(currentData[0]) !== JSON.stringify(data[0])) {
+        console.log(`Datos sincronizados para ${componente}`, data[0]);
+        this.setInfo(componente, [data[0]]); // Guarda en el caché
+        this.updateObservable(componente, data[0]); // Actualiza el observable con el objeto
+      } else {
+        console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+      }
     });
   }
 
   syncChangesByOneElemId<T>(componente: string, id:string, campo:string, value:number): void {
     this.dbFirebase.getMostRecentId<T>(componente, id, campo, value).subscribe((data:any) => {
-      console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, data);
-      this.setInfo(componente, [data]); // Actualiza el caché
-      this.updateObservable(componente, data); // Actualiza el observable
+      const currentData = this.loadInfo(componente);
+      if (!currentData || JSON.stringify(currentData[0]) !== JSON.stringify(data[0])) {
+        console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, data);
+        this.setInfo(componente, [data[0]]); // Actualiza el caché
+        this.updateObservable(componente, data[0]); // Actualiza el observable
+      } else {
+        console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+      }      
     });
   }
 
@@ -747,9 +761,9 @@ export class StorageService {
       case 'tarifasEspChofer':
         return this._tarifasEspChofer$.asObservable();  
       case 'tarifasGralProveedor':
-        return this._tarifasGralChofer$.asObservable();
+        return this._tarifasGralProveedor$.asObservable();
       case 'tarifasEspProveedor':
-        return this._tarifasEspChofer$.asObservable();        
+        return this._tarifasEspProveedor$.asObservable();        
         
       default:
         throw new Error(`Componente no reconocido: ${componente}`);

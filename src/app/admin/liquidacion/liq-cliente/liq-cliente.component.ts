@@ -1,8 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
-import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
+
 import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
@@ -18,6 +17,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
 import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 
 
 @Component({
@@ -50,12 +50,12 @@ export class LiqClienteComponent {
   razonSocFac!: string ;
   form!: any;
   facturaCliente!: FacturaCliente;  
-  facturaEditada!: FacturaOpCliente;
+  
   facturasPorCliente: Map<number, FacturaOp[]> = new Map<number, FacturaOp[]>();
   indiceSeleccionado!:number;
   idOperaciones: number [] = [];
   facDetallada!: FacturaOp;
-  ultimaTarifa!: TarifaCliente|any;
+  ultimaTarifa!: TarifaGralCliente |  any
   tarifaEditForm: any;
   swichForm:any;
   edicion:boolean = false;

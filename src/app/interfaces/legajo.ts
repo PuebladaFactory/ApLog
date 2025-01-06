@@ -1,6 +1,5 @@
 export interface Legajo {
-
-    id: any;
+    
     idLegajo: number;
     idChofer: number;    
     documentacion: Documentacion [];

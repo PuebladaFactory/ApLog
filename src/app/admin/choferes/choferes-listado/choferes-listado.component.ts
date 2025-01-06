@@ -40,15 +40,7 @@ export class ChoferesListadoComponent implements OnInit {
   { prop: 'direccion', name: 'Direccion', selected: false, flexGrow:2  },
   { prop: 'cuit', name: 'CUIT', selected: true, flexGrow:2  },
   { prop: 'proveedor', name: 'Proveedor', selected: true, flexGrow:2  },
-  { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow:2  },
-  /* { prop: 'dominio', name: 'Patente', selected: true, flexGrow:2 },
-  { prop: 'categoria', name: 'Categoria', selected: true, flexGrow:3 },
-  { prop: 'marca', name: 'Marca', selected: false, flexGrow:2 },
-  { prop: 'modelo', name: 'Modelo', selected: false, flexGrow:2 },
-  { prop: 'tarjCombustible', name: 'Tarj Combustible', selected: false, flexGrow:2  },    
-  { prop: 'tipoCombustible', name: 'Tipo Combustible', selected: false, flexGrow:2  },    
-  { prop: 'publicidad', name: 'Publicidad', selected: true, flexGrow:2  },    
-  { prop: 'satelital', name: 'Satelital', selected: false, flexGrow:2  },     */
+  { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow:2  }, 
   { prop: 'correo', name: 'Correo', selected: true, flexGrow:2  },  
   { prop: 'fechaNac', name: 'Fech Nac', selected: false, flexGrow:2  },  
   
@@ -73,18 +65,20 @@ export class ChoferesListadoComponent implements OnInit {
   }  
   ngOnInit(): void { 
     //console.log(this.tablaVehiculo);  
-    this.storageService.getAllSorted("choferes", 'idChofer', 'asc') 
-    this.storageService.proveedores$.subscribe(data => {
+    //this.storageService.getAllSorted("choferes", 'idChofer', 'asc') 
+    this.storageService.getObservable<Proveedor>('proveedores').subscribe(data => {
       this.$proveedores = data;
     });    
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.getObservable<Chofer>('choferes').subscribe(data => {
       if (data) {
         console.log('Datos choferes actualizados:', data);
-        this.$choferes = [...data]; // Clona el array para evitar problemas con referencias
+        this.$choferes = data; // Clona el array para evitar problemas con referencias
         this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
         this.armarTabla();
       }
     });    
+    this.storageService.syncChanges<Chofer>('choferes');
+    this.storageService.syncChanges<Proveedor>('proveedores');
   }
   
   seleccionarChofer(row:any){ 

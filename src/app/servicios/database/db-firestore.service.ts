@@ -3,7 +3,7 @@ import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, updateDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+
 
 
 @Injectable({
@@ -27,6 +27,8 @@ export class DbFirestoreService {
     }) as Observable<any[]>;
   } */
 
+    
+
     ////////////////////////////////////////////////////////////////////////////////////
     getAll<T>(componente: string): Observable<T[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
@@ -38,22 +40,47 @@ export class DbFirestoreService {
       );
     }
 
-    getMostRecent<T>(componente: string, idField: string): Observable<T | undefined> {
+    /* getMostRecent<T>(componente: string, idField: string): Observable<T | undefined> {
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection, ref =>
         ref.orderBy(idField, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
       ).valueChanges().pipe(
         map(data => data[0]) // Retorna el primer (y único) elemento del array
       );
+    } */
+
+    getMostRecent<T>(componente: string, field: string): Observable<T[]> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref =>
+        ref.orderBy(field, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
+      ).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
+        })))
+      );
     }
 
-    getMostRecentId<T>(componente: string, idField: string, campo:string, id:number): Observable<T | undefined> {
+    /* getMostRecentId<T>(componente: string, idField: string, campo:string, id:number): Observable<T | undefined> {
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection, ref =>
         ref.orderBy(idField, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
         .where(campo, "==" ,id)
       ).valueChanges().pipe(
         map(data => data[0]) // Retorna el primer (y único) elemento del array
+      );
+    } */
+
+    getMostRecentId<T>(componente: string, field: string, campo:string, id:number): Observable<T[]> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref =>
+        ref.orderBy(field, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
+        .where(campo, "==" ,id)
+      ).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
+        })))
       );
     }
 

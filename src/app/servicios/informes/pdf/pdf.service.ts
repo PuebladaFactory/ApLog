@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Descuento, FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
+
 /* import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts'; */
 import { Alignment } from 'pdfmake/interfaces';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
-import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
-import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { StorageService } from '../../storage/storage.service';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';

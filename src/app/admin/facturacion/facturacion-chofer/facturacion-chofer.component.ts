@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
-import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
 
 @Component({
   selector: 'app-facturacion-chofer',
@@ -17,9 +18,9 @@ export class FacturacionChoferComponent implements OnInit {
   datosTablaChofer: any[] = [];
   mostrarTablaChofer: boolean[] = [];    
   facturaChofer!: FacturaChofer;  
-  $facturaOpChofer: FacturaOpChofer[] = [];
+  $facturaOpChofer: FacturaOp[] = [];
   facturasPorChofer: Map<number, FacturaChofer[]> = new Map<number, FacturaChofer[]>();
-  operacionFac: FacturaOpChofer[] = [];  
+  
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
   totalSumaACobrar: number = 0;

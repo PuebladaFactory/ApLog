@@ -2,7 +2,7 @@ import { Chofer } from "./chofer";
 import { Cliente } from "./cliente";
 
 export interface OperacionFacturada {
-    id: any;
+    
     idOperacion: number;
     fecha: Date;
     km: number | null;    

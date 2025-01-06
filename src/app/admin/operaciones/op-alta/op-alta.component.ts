@@ -4,13 +4,10 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion, TarifaEventual, TarifaPersonalizada } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
-import { TarifaCliente } from 'src/app/interfaces/tarifa-cliente';
-import { TarifaGralChofer } from 'src/app/interfaces/tarifa-gral-chofer';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
-import { TarifaGralProveedor } from 'src/app/interfaces/tarifa-gral-proveedor';
+
 import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
-import { TarifaProveedor } from 'src/app/interfaces/tarifa-proveedor';
+
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
@@ -38,9 +35,6 @@ export class OpAltaComponent implements OnInit {
   acompaniante: boolean = false ;
   tarifaEventual!: TarifaEventual;
   tEventual: boolean = false ;
-  $tarifasChoferes!:TarifaChofer [];
-  $tarifasProveedores!: TarifaProveedor [];
-  $tarifasClientes!: TarifaCliente [];
   $proveedores!:any;  
   tPersonalizada: boolean = false;
   tarifaClienteSel!: TarifaPersonalizadaCliente;
@@ -429,7 +423,7 @@ export class OpAltaComponent implements OnInit {
 
   // Construir la operación básica
   this.op = {
-      id:null,
+      
       idOperacion: new Date().getTime(),
       fecha: formValues.fecha,
       km: 0,

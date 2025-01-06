@@ -6,9 +6,9 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
-import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
-import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
-import { FacturaOpProveedor } from 'src/app/interfaces/factura-op-proveedor';
+
+
+
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 
 @Injectable({
@@ -17,7 +17,7 @@ import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 export class ExcelService {
 
   factura!: FacturaChofer|FacturaCliente| FacturaProveedor
-  facturaOp!: FacturaOpChofer| FacturaOpCliente | FacturaOpProveedor
+  
 
   constructor() { }
 

@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
-import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+
 import { Operacion } from 'src/app/interfaces/operacion';
 import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
@@ -51,7 +51,7 @@ export class LiqChoferComponent implements OnInit {
   apellido!: string ;
   form!: any;
   facturaChofer!: FacturaChofer;  
-  facturaEditada!: FacturaOpChofer;
+  
   facturasPorChofer: Map<number, FacturaOp[]> = new Map<number, FacturaOp[]>();
   indiceSeleccionado!:number
   ultimaTarifa!:any;
@@ -237,7 +237,7 @@ export class LiqChoferComponent implements OnInit {
    let choferId = this.datosTablaChofer[index].idChofer;
 
    // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
-   let facturasChofer = this.$facturasOpChofer.filter((factura: FacturaOpChofer) => {
+   let facturasChofer = this.$facturasOpChofer.filter((factura: FacturaOp) => {
        return factura.idChofer === choferId;
    });
    this.facturasPorChofer.set(choferId, facturasChofer);

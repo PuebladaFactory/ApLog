@@ -30,11 +30,7 @@ const routes: Routes = [
     {
       path: 'liquidacion',
       loadChildren: () => import('./liquidacion/liquidacion.module').then(m => m.LiquidacionModule)
-    },  
-    {
-      path: 'historial',
-      loadChildren: () => import('./historial/historial.module').then(m => m.HistorialModule)
-    },        
+    },             
     {
       path: 'legajos',
       loadChildren: () => import('./legajos/legajos.module').then(m => m.LegajosModule)

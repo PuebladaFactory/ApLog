@@ -3,7 +3,7 @@ import { Cliente } from "./cliente";
 import { TarifaTipo } from "./tarifa-gral-cliente";
 
 export interface Operacion {
-    id: any;
+    
     idOperacion: number;
     fecha: Date;
     km: number;    

@@ -57,8 +57,10 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       .sort((a:Cliente, b:Cliente) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       
       this.storageService.tarifasPersCliente$.subscribe(data => {
-        this.$ultTarifaCliente = data;
-        console.log("1)",this.$ultTarifaCliente);        
+        if (data) {
+          this.$ultTarifaCliente = data;          
+          console.log("1) ult tarifa personalizada: ", this.$ultTarifaCliente);
+        }              
       });  
 
     });               

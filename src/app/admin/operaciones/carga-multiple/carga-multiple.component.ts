@@ -301,7 +301,7 @@ onSubmit() {
         console.log("antes de crear las op, tPersonalizada: ",this.tPersonalizada);
         
         const operacion: Operacion = {
-            id: null, // Será asignado por la base de datos
+            
             idOperacion: idOperacionUnico,
             fecha: fecha,
             km: 0,    

@@ -5,7 +5,7 @@ import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaCliente, Valores } from 'src/app/interfaces/factura-cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
-import { FacturaOpCliente } from 'src/app/interfaces/factura-op-cliente';
+
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -393,7 +393,7 @@ export class FacturarOpComponent implements OnInit {
 
   generarFacCliente(valores:Valores, colSel: any[]){
     this.facturaCliente = {
-      id: null,
+      
       fecha: new Date().toISOString().split('T')[0],
       idFacturaCliente: new Date().getTime(),
       idCliente: this.clienteSel.idCliente,        
@@ -411,7 +411,7 @@ export class FacturarOpComponent implements OnInit {
 
   generarFacChofer(valores:Valores, colSel: any[]){
     this.facturaChofer = {
-      id: null,
+      
       fecha: new Date().toISOString().split('T')[0],
       idFacturaChofer: new Date().getTime(),
       idChofer: this.choferSel.idChofer,
@@ -430,7 +430,7 @@ export class FacturarOpComponent implements OnInit {
 
   generarFacProveedor(valores:Valores, colSel: any[]){
     this.facturaProveedor = {
-      id: null,
+      
       fecha: new Date().toISOString().split('T')[0],
       idFacturaProveedor: new Date().getTime(),
       idProveedor: this.proveedorSel.idProveedor,

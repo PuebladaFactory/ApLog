@@ -15,7 +15,7 @@ export class LegajosService {
 
   crearLegajo(idChofer:number){
     this.legajo ={
-      id: null,
+      
       idLegajo:new Date().getTime(),
       idChofer: idChofer,      
       estadoGral:{
@@ -80,7 +80,7 @@ export class LegajosService {
         // Si se modificó el legajo, actualizar en la base de datos
         if (legajoModificado) {
           this.storageService.updateItem("legajos", legajo);
-          console.log(`Legajo actualizado: ${legajo.id}`);
+          console.log(`Legajo actualizado: ${legajo.idLegajo}`);
         }
       });
     } catch (error) {
