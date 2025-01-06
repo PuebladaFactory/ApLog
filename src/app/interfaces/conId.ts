@@ -1,0 +1,1 @@
+export type ConId<T> = T & { id: string };

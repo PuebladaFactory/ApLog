@@ -1,5 +1,5 @@
 export interface TarifaGralCliente {
-    id: any;
+    
     idTarifa: number;
     fecha: string;    
     cargasGenerales: CategoriaTarifa [];

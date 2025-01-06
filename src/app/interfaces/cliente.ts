@@ -1,5 +1,4 @@
 import { TarifaTipo } from "./tarifa-gral-cliente";
-export type ClienteConId = Cliente & { id: string };
 
 export interface Cliente {        
     idCliente: number;

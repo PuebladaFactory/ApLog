@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { ConId } from 'src/app/interfaces/conId';
 
 
 @Component({
@@ -59,7 +60,7 @@ export class ClienteListadoComponent implements OnInit {
   
   ngOnInit(): void { 
 
-    this.storageService.getObservable<Cliente>('clientes').subscribe(data => {
+    this.storageService.getObservable<ConId<Cliente>>('clientes').subscribe(data => {
       if (data) {
         console.log('Datos cargados para clientes:', data);
         this.$clientes = data;

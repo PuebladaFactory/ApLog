@@ -3,6 +3,7 @@ import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, updateDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ConId } from 'src/app/interfaces/conId';
 
 
 
@@ -30,7 +31,7 @@ export class DbFirestoreService {
     
 
     ////////////////////////////////////////////////////////////////////////////////////
-    getAll<T>(componente: string): Observable<T[]> {
+    getAll<T>(componente: string): Observable<ConId<T>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection).snapshotChanges().pipe(
         map(snapshot => snapshot.map(change => ({
@@ -49,7 +50,7 @@ export class DbFirestoreService {
       );
     } */
 
-    getMostRecent<T>(componente: string, field: string): Observable<T[]> {
+    getMostRecent<T>(componente: string, field: string): Observable<ConId<T>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection, ref =>
         ref.orderBy(field, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
@@ -71,7 +72,7 @@ export class DbFirestoreService {
       );
     } */
 
-    getMostRecentId<T>(componente: string, field: string, campo:string, id:number): Observable<T[]> {
+    getMostRecentId<T>(componente: string, field: string, campo:string, id:number): Observable<ConId<T>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection, ref =>
         ref.orderBy(field, 'desc').limit(1) // Ordenar por id descendente y limitar a 1

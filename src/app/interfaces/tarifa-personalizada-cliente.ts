@@ -1,5 +1,5 @@
 export interface TarifaPersonalizadaCliente {
-    id: any;
+    
     idTarifa: number;
     fecha: string;
     secciones: Seccion [];

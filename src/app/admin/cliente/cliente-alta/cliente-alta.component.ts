@@ -1,12 +1,13 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Cliente, Contacto } from 'src/app/interfaces/cliente';
+import { Cliente, Contacto  } from 'src/app/interfaces/cliente';
 import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoComponent } from '../modal-contacto/modal-contacto.component';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
+import { ConId } from 'src/app/interfaces/conId';
 
 @Component({
   selector: 'app-cliente-alta',
@@ -21,11 +22,11 @@ export class ClienteAltaComponent implements OnInit {
   form:any;
   formContacto:any;
   formTipoTarifa:any;
-  cliente!: Cliente;
+  cliente!: ConId<Cliente>;
   contactos: Contacto[] = [];
   mostrarFormulario: boolean = false;
   soloVista:boolean = false;
-  clienteEditar!: Cliente;
+  clienteEditar!: ConId<Cliente>;
   modal:any;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal) {
@@ -54,14 +55,16 @@ export class ClienteAltaComponent implements OnInit {
    }
 
    ngOnInit(): void {
-      //console.log("1)", this.fromParent);
+      console.log("1)", this.fromParent);
+      let clienteOriginal = this.fromParent.item
+      this.clienteEditar = structuredClone(clienteOriginal)
       if(this.fromParent.modo === "vista"){
-        this.soloVista = true;
-        this.clienteEditar = this.fromParent.item
+        this.soloVista = true;        
         this.armarForm()
       }else if(this.fromParent.modo === "edicion"){
-        this.soloVista = false;
-        this.clienteEditar = this.fromParent.item
+        this.soloVista = false;        
+        console.log("2) this.clienteEditar: ", this.clienteEditar);
+        
         this.armarForm()
       }else {
         this.soloVista = false;
@@ -81,8 +84,8 @@ export class ClienteAltaComponent implements OnInit {
           ...formValue,
           cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
         };                
-        this.cliente.idCliente = this.clienteEditar.idCliente;
-        
+        this.cliente.idCliente = this.clienteEditar.idCliente;  
+        this.cliente.id = this.clienteEditar.id;       
         this.cliente.contactos = this.contactos;
         ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
@@ -142,7 +145,7 @@ export class ClienteAltaComponent implements OnInit {
     } else if (modo === "Edicion"){
       titulo = "la edicion"
     }
-
+    console.log("this.cliente: ", this.cliente);    
     Swal.fire({
       title: `¿Confirmar ${titulo} del Cliente?`,
       //text: "You won't be able to revert this!",
