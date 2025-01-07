@@ -61,7 +61,7 @@ export class FacturacionClienteService {
       op: Operacion,
       factura: FacturaOp
     }
-    //console.log("1b) op: ", op, " tarifa: ", tarifa);
+    console.log("$facturarOpCliente) op: ", op, " tarifa: ", tarifa);
     let vehiculo = op.chofer.vehiculo.filter(vehiculo => vehiculo.dominio === op.patenteChofer)
     //console.log("1c) vehiculo: ", vehiculo);    
 
