@@ -58,15 +58,30 @@ export class FacturacionOpService {
     ////console.log("op: ", op);
     
      /////////PROVEEDORES /////////////////////////
-    this.storageService.proveedores$.subscribe(data => {      
-      this.$proveedores = data || {};      
-    });
+     this.storageService.getObservable<Proveedor>('proveedores').subscribe(data => {
+      if(data){
+        this.$proveedores = data;        
+        if(op.chofer.idProveedor !== 0){
+          let proveedores
+          proveedores = this.$proveedores.filter((prov: Proveedor) =>{
+            return prov.idProveedor === op.chofer.idProveedor;
+          });
+          
+          this.proveedorSeleccionado = proveedores[0];
+          console.log("0) Proveedor SELECCIONADO: ",this.proveedorSeleccionado);    
+        }
+      }      
+    })
     /////////TARIFA GENERAL CLIENTE /////////////////////////
-    this.storageService.ultTarifaGralCliente$.subscribe(data =>{
+    this.storageService.tarifasGralCliente$.subscribe(data =>{
       //////////console.log("data: ", data);                
-      this.$ultTarifaGralCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-      this.$ultTarifaGralCliente.cargasGenerales = this.$ultTarifaGralCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      //////console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);              
+      if(data){
+        this.$ultTarifaGralCliente = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+        //this.$ultTarifaGralCliente.cargasGenerales = this.$ultTarifaGralCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+        console.log("1) ult tarifa GRAL CLIENTE: ",this.$ultTarifaGralCliente);              
+      }
+      
+      
     });
 
   /*    /////////TARIFA ESPECIAL CLIENTE /////////////////////////
@@ -84,11 +99,13 @@ export class FacturacionOpService {
     }); */
 
     /////////TARIFA GENERAL CHOFER /////////////////////////
-    this.storageService.ultTarifaGralChofer$.subscribe(data =>{
+    this.storageService.tarifasGralChofer$.subscribe(data =>{
       //////////console.log("data: ", data);                
-      this.$ultTarifaGralChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-      this.$ultTarifaGralChofer.cargasGenerales = this.$ultTarifaGralChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      //////console.log("2) ult tarifa GRAL CHOFER: ",this.ultTarifaGralChofer);              
+      if(data){
+        this.$ultTarifaGralChofer = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+        //this.$ultTarifaGralChofer.cargasGenerales = this.$ultTarifaGralChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+        console.log("2) ult tarifa GRAL CHOFER: ",this.$ultTarifaGralChofer);              
+      }      
     });
    
    /*  /////////TARIFA ESPECIAL CHOFER /////////////////////////
@@ -101,12 +118,49 @@ export class FacturacionOpService {
       //////console.log("4) ult tarifa ESP CHOFER: ",this.ultTarifaEspChofer);           
     }) */
     //////////////// TARIFA GENERAL PROVEEDORES ///////////////////
-    this.storageService.ultTarifaGralProveedor$.subscribe(data =>{
-      //////console.log("data", data);        
-      this.$ultTarifaGralProveedor = data || {};
-      this.$ultTarifaGralProveedor.cargasGenerales = this.$ultTarifaGralProveedor.cargasGenerales || [];
-      //console.log("5) ult tarifa GRAL PROVEEDOR: ", this.$ultTarifaGralProveedor);      
+    this.storageService.tarifasGralProveedor$.subscribe(data =>{
+      if(data){
+        //////console.log("data", data);        
+        this.$ultTarifaGralProveedor = data;
+        //this.$ultTarifaGralProveedor.cargasGenerales = this.$ultTarifaGralProveedor.cargasGenerales || [];
+        console.log("5) ult tarifa GRAL PROVEEDOR: ", this.$ultTarifaGralProveedor);      
+      }
+      
     })
+
+    /////////FACTURA OP CLIENTE /////////////////////////
+    this.storageService.facturaOpCliente$
+    .pipe(take(1))
+    .subscribe(data =>{
+        if(data){
+            //console.log("data: ", data);                
+            this.facturaOpCliente = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos            
+            //console.log("facturaOpCliente: ", this.facturaOpCliente);                            
+        }      
+    });
+
+     /////////FACTURA OP PROVEEDOR /////////////////////////
+     this.storageService.facturaOpChofer$
+     .pipe(take(1))
+     .subscribe(data =>{
+       if(data){
+         //////////console.log("data: ", data);                
+         this.facturaOpProveedor = data;
+         //console.log("facturaOpProveedor: ", this.facturaOpProveedor);          
+       }
+     });
+     /////////FACTURA OP CHOFER /////////////////////////
+     this.storageService.facturaOpChofer$
+     .pipe(take(1))
+     .subscribe(data =>{
+       if(data){
+         //////////console.log("data: ", data);                
+         this.facturaOpChofer = data;
+         //console.log("facturaOpChofer: ", this.facturaOpChofer); 
+       }
+     });         
+
+     
    /*  ////////////////TARIFA ESPECIAL PROVEEDORES//////////////////
     this.storageService.ultTarifaEspProveedor$
     //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
@@ -117,28 +171,9 @@ export class FacturacionOpService {
     //////console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
     }); */
     this.operacion = op;
+
     this.$facturarOpCliente(op);
-    if(op.chofer.idProveedor === 0){
-      this.$facturarOpChofer(op);   
-    } else {
-      let proveedores: any;
-      console.log("0.5) Proveedores TODOS: ",this.$proveedores);            
-      if(this.$proveedores.length > 0){        
-        console.log("1) Proveedores TODOS: ",this.$proveedores);                   
-        console.log("1.5) idProveedor: ", op.chofer.idProveedor);        
-         //busco el proveedor
-        proveedores = this.$proveedores.filter((prov: Proveedor) =>{
-          return prov.idProveedor === op.chofer.idProveedor;
-        });
-        
-        this.proveedorSeleccionado = proveedores[0];
-        console.log("2) Proveedor SELECCIONADO: ",this.proveedorSeleccionado);        
-        this.$facturarOpProveedor(op);        
-      } 
-      
-    }
-   
-    this.$armarFacturasOp(op);
+    
     //this.storageService.addItem("facturaOpChofer", op);    
   }
 
@@ -157,25 +192,37 @@ export class FacturacionOpService {
       //this.facturaOpCliente = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaGralCliente);
       console.log("1)A.2)Factura OP cliente ", this.facturaOpCliente);      
       this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
+      if(op.chofer.idProveedor === 0){
+        this.$facturarOpChofer(op);   
+      } else {      
+        this.$facturarOpProveedor(op);        
+      }
     }
     if(op.tarifaTipo.especial){  //tarifa especial cliente
       if(op.cliente.tarifaTipo.especial){
-        this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",op.cliente.idCliente,"ultTarifaEspCliente");  
+        this.storageService.getMostRecentItemId("tarifasEspCliente","idTarifa","idCliente",op.cliente.idCliente)
+        //this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",op.cliente.idCliente,"ultTarifaEspCliente");  
             /////////TARIFA ESPECIAL CLIENTE /////////////////////////
-        this.storageService.ultTarifaEspCliente$   
-          .subscribe(data =>{            
-          this.$ultTarifaEspCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-          this.$ultTarifaEspCliente.cargasGenerales = this.$ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío     
-          ////console.log("2) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);
-          if(this.$ultTarifaEspCliente.cargasGenerales.length > 0){
-            console.log("1)B.1) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);
-            respuesta = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaEspCliente);
-            this.operacion.valores.cliente = respuesta.op.valores.cliente;
-            this.facturaOpCliente = respuesta.factura;
-            console.log("1)B.2) Factura OP cliente ", this.facturaOpCliente);
-            this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
-          }
-          
+        this.storageService.tarifasEspCliente$   
+          .subscribe(data =>{ 
+            if(data){
+                this.$ultTarifaEspCliente = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+                //this.$ultTarifaEspCliente.cargasGenerales = this.$ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío     
+                ////console.log("2) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);
+                if(this.$ultTarifaEspCliente?.cargasGenerales?.length > 0){
+                  console.log("1)B.1) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);
+                  respuesta = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaEspCliente);
+                  this.operacion.valores.cliente = respuesta.op.valores.cliente;
+                  this.facturaOpCliente = respuesta.factura;
+                  console.log("1)B.2) Factura OP cliente ", this.facturaOpCliente);
+                  this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
+                  if(op.chofer.idProveedor === 0){
+                    this.$facturarOpChofer(op);   
+                  } else {      
+                    this.$facturarOpProveedor(op);        
+                  }
+                }
+            }
         });
             
       } else {
@@ -186,22 +233,35 @@ export class FacturacionOpService {
         this.facturaOpCliente = respuesta.factura;
         console.log("1)A.2) Factura OP cliente ", this.facturaOpCliente);       
         this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
+        if(op.chofer.idProveedor === 0){
+          this.$facturarOpChofer(op);   
+        } else {      
+          this.$facturarOpProveedor(op);        
+        }
       }
     }
     if(op.tarifaTipo.personalizada){ //tarifa personalizada
-      this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", op.cliente.idCliente, "ultTarifaPersCliente" )
+      this.storageService.getMostRecentItemId("tarifasPersCliente", "idTarifa","idCliente", op.cliente.idCliente)
+      //this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", op.cliente.idCliente, "ultTarifaPersCliente" )
         /////////TARIFA PERSONALIZADA CLIENTE /////////////////////////
-        this.storageService.ultTarifaPersCliente$.subscribe(data => {
-          this.$ultTarifaPersCliente = data;
-          this.$ultTarifaPersCliente.secciones = this.$ultTarifaPersCliente.secciones || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-          //console.log("1)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);     
-          if(this.$ultTarifaPersCliente.secciones.length > 0){
-            console.log("1)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);     
-            this.facturaOpCliente = this.facturacionCliente.$facturarOpPersCliente(op, this.$ultTarifaPersCliente);
-            this.operacion.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
-            console.log("1)C.2) Factura OP cliente ", this.facturaOpCliente);
-            this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
-          }   
+        this.storageService.tarifasPersCliente$.subscribe(data => {
+          if(data){
+              this.$ultTarifaPersCliente = data;
+              //this.$ultTarifaPersCliente.secciones = this.$ultTarifaPersCliente.secciones || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+              //console.log("1)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);     
+              if(this.$ultTarifaPersCliente?.secciones?.length > 0){
+                console.log("1)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);     
+                this.facturaOpCliente = this.facturacionCliente.$facturarOpPersCliente(op, this.$ultTarifaPersCliente);
+                this.operacion.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
+                console.log("1)C.2) Factura OP cliente ", this.facturaOpCliente);
+                this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
+                if(op.chofer.idProveedor === 0){
+                  this.$facturarOpChofer(op);   
+                } else {      
+                  this.$facturarOpProveedor(op);        
+                }
+              }   
+          }          
         });
       ////console.log("3) tarifa PERSONALIZADA CLIENTE: ", this.$ultTarifaPersCliente);
     }
@@ -211,6 +271,11 @@ export class FacturacionOpService {
       this.operacion.valores.cliente.aCobrar = this.facturaOpCliente.valores.total
       console.log("1)D.2) Factura OP cliente ", this.facturaOpCliente);
       this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
+      if(op.chofer.idProveedor === 0){
+        this.$facturarOpChofer(op);   
+      } else {      
+        this.$facturarOpProveedor(op);        
+      }
     }
    
   
@@ -232,41 +297,46 @@ export class FacturacionOpService {
       //this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
       console.log("2)A.2)Factura OP chofer ", this.facturaOpChofer)
       this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
+      this.$armarFacturasOp(op);
     }
     if(op.tarifaTipo.especial){  //tarifa especial chofer
       if(op.chofer.tarifaTipo.especial){
-        this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",op.chofer.idChofer,"ultTarifaEspChofer");  
-            /////////TARIFA ESPECIAL CLIENTE /////////////////////////
-        this.storageService.ultTarifaEspChofer$   
-          .subscribe(data =>{            
-          this.$ultTarifaEspChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-          this.$ultTarifaEspChofer.cargasGenerales = this.$ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío     
-          ////console.log("2) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);
-          if(this.$ultTarifaEspChofer.cargasGenerales.length > 0){
-            console.log("2)B.1) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);
-            //this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaEspChofer);
-            //si la tarifa especial del chofer es            
-            if(this.$ultTarifaEspChofer.idCliente === 0 || this.$ultTarifaEspChofer.idCliente === op.cliente.idCliente){
-              respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaEspChofer);
-              this.operacion.valores.chofer.aPagar = respuesta.factura.valores.total;
-              this.facturaOpChofer = respuesta.factura;
-              console.log("2)B.2)Factura OP chofer ", this.facturaOpChofer);
-              this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
-            } else {
-              ////este caso es donde la tarifa especial no aplica                  
-              console.log("2)A.1) tarifa GENERAL CHOFER: ", this.$ultTarifaGralCliente);
-              respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
-              //console.log("respuesta: ", respuesta);      
-              this.operacion.valores.chofer.aPagar = respuesta.factura.valores.total;
-              //aca le cambio el tipo de tarifa pq usa una tarifa especial no aplica
-              respuesta.factura.tarifaTipo = {general: true, especial: false, eventual:false, personalizada: false}
-              this.facturaOpChofer = respuesta.factura;
-              //this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
-              console.log("2)A.2)Factura OP chofer ", this.facturaOpChofer)
-              this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
+        //this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",op.chofer.idChofer,"ultTarifaEspChofer");
+        this.storageService.getMostRecentItemId("tarifasEspChofer","idTarifa","idChofer",op.chofer.idChofer);  
+            /////////TARIFA ESPECIAL CHOFER /////////////////////////
+        this.storageService.tarifasEspChofer$   
+          .subscribe(data =>{    
+            if(data){
+              this.$ultTarifaEspChofer = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+              //this.$ultTarifaEspChofer.cargasGenerales = this.$ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío     
+              ////console.log("2) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);
+              if(this.$ultTarifaEspChofer?.cargasGenerales?.length > 0){
+                console.log("2)B.1) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);
+                //this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaEspChofer);
+                //si la tarifa especial del chofer es            
+                if(this.$ultTarifaEspChofer?.idCliente === 0 || this.$ultTarifaEspChofer?.idCliente === op.cliente.idCliente){
+                    respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaEspChofer);
+                    this.operacion.valores.chofer.aPagar = respuesta.factura.valores.total;
+                    this.facturaOpChofer = respuesta.factura;
+                    console.log("2)B.2)Factura OP chofer ", this.facturaOpChofer);
+                    this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
+                    this.$armarFacturasOp(op);
+                } else {
+                  ////este caso es donde la tarifa especial no aplica                  
+                  console.log("2)A.1) tarifa GENERAL CHOFER: ", this.$ultTarifaGralCliente);
+                  respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
+                  //console.log("respuesta: ", respuesta);      
+                  this.operacion.valores.chofer.aPagar = respuesta.factura.valores.total;
+                  //aca le cambio el tipo de tarifa pq usa una tarifa especial no aplica
+                  respuesta.factura.tarifaTipo = {general: true, especial: false, eventual:false, personalizada: false}
+                  this.facturaOpChofer = respuesta.factura;
+                  //this.facturaOpChofer = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
+                  console.log("2)A.2)Factura OP chofer ", this.facturaOpChofer)
+                  this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
+                  this.$armarFacturasOp(op);
+                }
+              } 
             }
-          }
-          
         });
             
       } else {
@@ -277,22 +347,27 @@ export class FacturacionOpService {
         this.facturaOpChofer = respuesta.factura;
         console.log("2)A.2)Factura OP chofer ", this.facturaOpChofer)
         this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
+        this.$armarFacturasOp(op);
       }
     };
     if(op.tarifaTipo.personalizada){ //tarifa personalizada
       //this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", op.cliente.idCliente, "ultTarifaPersCliente" )
         /////////TARIFA PERSONALIZADA CLIENTE /////////////////////////
-        this.storageService.ultTarifaPersCliente$.subscribe(data => {
-          this.$ultTarifaPersCliente = data;
-          this.$ultTarifaPersCliente.secciones = this.$ultTarifaPersCliente.secciones || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-          //////console.log("1)",this.$ultTarifaCliente);     
-          if(this.$ultTarifaPersCliente.secciones.length > 0){
-            console.log("2)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);     //se utiliza la tarifa del cliente pq ahi estan todos los valores
-            this.facturaOpChofer = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente, 0);            
-            this.operacion.valores.chofer.aPagar = this.facturaOpChofer.valores.total
-            console.log("2)C.2) Factura OP chofer ", this.facturaOpChofer);
-            this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
-          }   
+        this.storageService.tarifasPersCliente$.subscribe(data => {
+          if(data){
+              this.$ultTarifaPersCliente = data;
+              //this.$ultTarifaPersCliente.secciones = this.$ultTarifaPersCliente.secciones || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+              //////console.log("1)",this.$ultTarifaCliente);     
+              if(this.$ultTarifaPersCliente?.secciones.length > 0){
+                console.log("2)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);     //se utiliza la tarifa del cliente pq ahi estan todos los valores
+                this.facturaOpChofer = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente, 0);            
+                this.operacion.valores.chofer.aPagar = this.facturaOpChofer.valores.total
+                console.log("2)C.2) Factura OP chofer ", this.facturaOpChofer);
+                this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
+                this.$armarFacturasOp(op);
+              }   
+          }
+          
         });
       ////console.log("3) tarifa PERSONALIZADA CLIENTE: ", this.$ultTarifaPersCliente);
     }    
@@ -302,6 +377,7 @@ export class FacturacionOpService {
       this.operacion.valores.chofer.aPagar = this.facturaOpChofer.valores.total
       console.log("2)D.2) Factura OP chofer ", this.facturaOpChofer);
       this.storageService.setInfoOne("facturaOpChofer", this.facturaOpChofer);
+      this.$armarFacturasOp(op);
     }
     
   }
@@ -322,67 +398,76 @@ export class FacturacionOpService {
       //this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
       console.log("3)A.2) Factura OP proveedor ", this.facturaOpProveedor);
       this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
+      this.$armarFacturasOp(op);
     }
     if(op.tarifaTipo.especial){  //tarifa especial proveedor       
 
           if (this.proveedorSeleccionado.tarifaTipo.especial){
-            this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",this.proveedorSeleccionado.idProveedor,"ultTarifaEspProveedor");
-            this.storageService.ultTarifaEspProveedor$
+            this.storageService.getMostRecentItemId("tarifasEspProveedor","idTarifa","idProveedor",this.proveedorSeleccionado.idProveedor);
+            //this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",this.proveedorSeleccionado.idProveedor,"ultTarifaEspProveedor");
+            this.storageService.tarifasEspProveedor$
               //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
               .subscribe(data =>{
-              //////////console.log("2c) data: ", data);                
-              this.$ultTarifaEspProveedor = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-              this.$ultTarifaEspProveedor.cargasGenerales = this.$ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-              //////console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
-              if(this.$ultTarifaEspProveedor.cargasGenerales.length > 0) {
-                
-                console.log("3)B.1) tarifa ESPECIAL PROVEEDOR: ", this.$ultTarifaEspProveedor);
-                if(this.$ultTarifaEspProveedor.idCliente === 0 || this.$ultTarifaEspProveedor.idCliente === op.cliente.idCliente){
-                  //his.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaEspProveedor);
-                  respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaEspProveedor, this.proveedorSeleccionado.idProveedor);
-                  this.operacion.valores.chofer = respuesta.op.valores.chofer;
-                  this.facturaOpProveedor = respuesta.factura;
-                  console.log("3)B.2) Factura OP proveedor ", this.facturaOpProveedor);
-                  this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
-                }else{
-                  ////este caso es donde la tarifa especial no aplica
-                  //this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
-                  console.log("3)A.1) tarifa GENERAL Proveedor: ", this.$ultTarifaGralProveedor);
-                  respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor, this.proveedorSeleccionado.idProveedor);                  
-                  //aca le cambio el tipo de tarifa pq usa una tarifa especial no aplica
-                  respuesta.factura.tarifaTipo = {general: true, especial: false, eventual:false, personalizada: false}
-                  this.operacion.valores.chofer = respuesta.op.valores.chofer;
-                  this.facturaOpProveedor = respuesta.factura;
-                  console.log("3)A.2) Factura OP proveedor ", this.facturaOpProveedor);
-                  this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
-                }
-             
-              }
+                if(data){
+                  //////////console.log("2c) data: ", data);                
+                  this.$ultTarifaEspProveedor = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+                  //this.$ultTarifaEspProveedor.cargasGenerales = this.$ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+                  //////console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
+                  if(this.$ultTarifaEspProveedor?.cargasGenerales?.length > 0) {
+                    
+                    console.log("3)B.1) tarifa ESPECIAL PROVEEDOR: ", this.$ultTarifaEspProveedor);
+                    if(this.$ultTarifaEspProveedor?.idCliente === 0 || this.$ultTarifaEspProveedor?.idCliente === op.cliente.idCliente){
+                        //his.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaEspProveedor);
+                        respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaEspProveedor, this.proveedorSeleccionado.idProveedor);
+                        this.operacion.valores.chofer = respuesta.op.valores.chofer;
+                        this.facturaOpProveedor = respuesta.factura;
+                        console.log("3)B.2) Factura OP proveedor ", this.facturaOpProveedor);
+                        this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
+                        this.$armarFacturasOp(op);
+                    }else{
+                        ////este caso es donde la tarifa especial no aplica
+                        //this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
+                        console.log("3)A.1) tarifa GENERAL Proveedor: ", this.$ultTarifaGralProveedor);
+                        respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor, this.proveedorSeleccionado.idProveedor);                  
+                        //aca le cambio el tipo de tarifa pq usa una tarifa especial no aplica
+                        respuesta.factura.tarifaTipo = {general: true, especial: false, eventual:false, personalizada: false}
+                        this.operacion.valores.chofer = respuesta.op.valores.chofer;
+                        this.facturaOpProveedor = respuesta.factura;
+                        console.log("3)A.2) Factura OP proveedor ", this.facturaOpProveedor);
+                        this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
+                        this.$armarFacturasOp(op);
+                    }                
+                  }
+                }              
               });  
-          } else {            
-            //this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
-            console.log("3)A.1) tarifa GENERAL Proveedor: ", this.$ultTarifaGralProveedor);
-            respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor, this.proveedorSeleccionado.idProveedor);
-            this.operacion.valores.chofer = respuesta.op.valores.chofer;
-            this.facturaOpProveedor = respuesta.factura;
-            console.log("3)A.2) Factura OP proveedor ", this.facturaOpProveedor);
-            this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
-          }          
+              } else {            
+                //this.facturaOpProveedor = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor);
+                console.log("3)A.1) tarifa GENERAL Proveedor: ", this.$ultTarifaGralProveedor);
+                respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor, this.proveedorSeleccionado.idProveedor);
+                this.operacion.valores.chofer = respuesta.op.valores.chofer;
+                this.facturaOpProveedor = respuesta.factura;
+                console.log("3)A.2) Factura OP proveedor ", this.facturaOpProveedor);
+                this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
+                this.$armarFacturasOp(op);
+              }          
     };
     if(op.tarifaTipo.personalizada){ //tarifa personalizada
       //this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", op.cliente.idCliente, "ultTarifaPersCliente" )
         /////////TARIFA PERSONALIZADA CLIENTE /////////////////////////
-        this.storageService.ultTarifaPersCliente$.subscribe(data => {
-          this.$ultTarifaPersCliente = data;
-          this.$ultTarifaPersCliente.secciones = this.$ultTarifaPersCliente.secciones || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-          //////console.log("1)",this.$ultTarifaCliente);     
-          if(this.$ultTarifaPersCliente.secciones.length > 0){
-            console.log("3)C.1) tarifa PERSONALIZADA Cliente: ", this.$ultTarifaPersCliente);
-            this.facturaOpProveedor = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente, this.proveedorSeleccionado.idProveedor);
-            this.operacion.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
-            console.log("3)C.2) Factura OP proveedor ", this.facturaOpProveedor);
-            this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
-          }   
+        this.storageService.tarifasPersCliente$.subscribe(data => {
+          if(data){
+              this.$ultTarifaPersCliente = data;
+              //this.$ultTarifaPersCliente.secciones = this.$ultTarifaPersCliente.secciones || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+              //////console.log("1)",this.$ultTarifaCliente);     
+              if(this.$ultTarifaPersCliente?.secciones?.length > 0){
+                console.log("3)C.1) tarifa PERSONALIZADA Cliente: ", this.$ultTarifaPersCliente);
+                this.facturaOpProveedor = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente, this.proveedorSeleccionado.idProveedor);
+                this.operacion.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
+                console.log("3)C.2) Factura OP proveedor ", this.facturaOpProveedor);
+                this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
+                this.$armarFacturasOp(op);
+              }   
+          }          
         });
       ////console.log("3) tarifa PERSONALIZADA CLIENTE: ", this.$ultTarifaPersCliente);
     }    
@@ -392,91 +477,66 @@ export class FacturacionOpService {
       this.operacion.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
       console.log("3)D.2) Factura OP proveedor ", this.facturaOpProveedor);
       this.storageService.setInfoOne("facturaOpProveedor", this.facturaOpProveedor);
+      this.$armarFacturasOp(op);
     }
   
   }
 
   $armarFacturasOp(op:Operacion){
-    console.log("1) Op: ", op);   
-    /////////TARIFA GENERAL CLIENTE /////////////////////////
-    this.storageService.facturaOpCliente$
-    .pipe(take(1))
-    .subscribe(data =>{
-      //////////console.log("data: ", data);                
-        this.facturaOpCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-        //this.facturaOpCliente. || {}; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-        //console.log("1)$armarFacturasOp: CLIENTE: ",this.facturaOpCliente);              
-        if(this.$facturarOpCliente !== undefined){
-            if(op.chofer.idProveedor === 0){
-                this.storageService.facturaOpChofer$
-                .pipe(take(1))
-                .subscribe(data =>{
-                    this.facturaOpChofer = data ; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-                    //console.log("2)$armarFacturasOp: CHOFER: ",this.facturaOpChofer);              
-                    if(this.facturaOpChofer !== undefined){
-                       ////console.log("3)Aca se haria el proceso ");
-                        op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
-                        op.valores.chofer.aPagar = this.facturaOpChofer.valores.total;
-                        op.estado = {
-                          abierta : false,
-                          cerrada : true,
-                          facturada : false,
-                        };
-                        op.facturaCliente = this.facturaOpCliente.idFacturaOp;
-                        op.facturaChofer = this.facturaOpChofer.idFacturaOp;
-                        this.facturaOpCliente.contraParteMonto = this.facturaOpChofer.valores.total;
-                        this.facturaOpChofer.contraParteMonto = this.facturaOpCliente.valores.total;
-                        this.facturaOpCliente.contraParteId = this.facturaOpChofer.idFacturaOp;
-                        this.facturaOpChofer.contraParteId = this.facturaOpCliente.idFacturaOp;
-                        this.$guardarFacturas(op);
-                    }
-                })
-            } else {
-              this.storageService.facturaOpProveedor$
-              .pipe(take(1))
-              .subscribe(data =>{
-                this.facturaOpProveedor = data ; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-                //console.log("2)$armarFacturasOp: CHOFER: ",this.facturaOpChofer);              
-                if(this.facturaOpProveedor !== undefined){
-                   //console.log("3)Aca se haria el proceso ");
-                    op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
-                    op.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
-                    op.estado = {
-                      abierta : false,
-                      cerrada : true,
-                      facturada : false,
-                    };
-                    op.facturaCliente = this.facturaOpCliente.idFacturaOp;
-                    op.facturaChofer = this.facturaOpProveedor.idFacturaOp;
-                    this.facturaOpCliente.contraParteMonto = this.facturaOpProveedor.valores.total;
-                    this.facturaOpProveedor.contraParteMonto = this.facturaOpCliente.valores.total;
-                    this.facturaOpCliente.contraParteId = this.facturaOpProveedor.idFacturaOp;
-                    this.facturaOpProveedor.contraParteId = this.facturaOpCliente.idFacturaOp;
-                    this.$guardarFacturas(op);
-                }
-            })
-              
-            }
-        }
-    });
-
-    
+    console.log("FINAL 1) Op: ", op);      
+    console.log("FIVAL 2) this.facturaOpCliente: ", this.facturaOpCliente, " this.facturaOpChofer: ", this.facturaOpChofer, " this.facturaOpProveedor: ", this.facturaOpProveedor);      
+    if(op.chofer.idProveedor === 0){
+      
+          op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
+          op.valores.chofer.aPagar = this.facturaOpChofer.valores.total;
+          op.estado = {
+            abierta : false,
+            cerrada : true,
+            facturada : false,
+          };
+          op.facturaCliente = this.facturaOpCliente.idFacturaOp;
+          op.facturaChofer = this.facturaOpChofer.idFacturaOp;
+          this.facturaOpCliente.contraParteMonto = this.facturaOpChofer.valores.total;
+          this.facturaOpChofer.contraParteMonto = this.facturaOpCliente.valores.total;
+          this.facturaOpCliente.contraParteId = this.facturaOpChofer.idFacturaOp;
+          this.facturaOpChofer.contraParteId = this.facturaOpCliente.idFacturaOp;
+          this.$guardarFacturas(op);
+     
+    } else {
+      
+          op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
+          op.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
+          op.estado = {
+            abierta : false,
+            cerrada : true,
+            facturada : false,
+          };
+          op.facturaCliente = this.facturaOpCliente.idFacturaOp;
+          op.facturaChofer = this.facturaOpProveedor.idFacturaOp;
+          this.facturaOpCliente.contraParteMonto = this.facturaOpProveedor.valores.total;
+          this.facturaOpProveedor.contraParteMonto = this.facturaOpCliente.valores.total;
+          this.facturaOpCliente.contraParteId = this.facturaOpProveedor.idFacturaOp;
+          this.facturaOpProveedor.contraParteId = this.facturaOpCliente.idFacturaOp;
+          this.$guardarFacturas(op);
+      
+    }
   }
 
   $guardarFacturas(op: Operacion){
-    console.log("1) Op: ", op);
-    console.log("2) CLIENTE: ", this.facturaOpCliente);
-    console.log("3) CHOFER: ", this.facturaOpChofer);
-    console.log("4) PROVEEDOR: ", this.facturaOpProveedor);
+    //console.log("1) Op: ", op);
+    //console.log("2) CLIENTE: ", this.facturaOpCliente);
+    //console.log("3) CHOFER: ", this.facturaOpChofer);    //
+    //console.log("4) PROVEEDOR: ", this.facturaOpProveedor);
     //console.log("proveedores FINAL: ", this.$proveedores)
-    this.updateItem("operaciones", op);
-    if(op.chofer.idProveedor === 0){
+    
+     if(op.chofer.idProveedor === 0){
       this.addItem("facturaOpCliente", this.facturaOpCliente);
       this.addItem("facturaOpChofer", this.facturaOpChofer);
     } else {
       this.addItem("facturaOpCliente", this.facturaOpCliente);
       this.addItem("facturaOpProveedor", this.facturaOpProveedor);
     }
+    this.updateItem("operaciones", op);
     this.storageService.clearInfo("facturaOpCliente");
     this.storageService.clearInfo("facturaOpChofer");
     this.storageService.clearInfo("facturaOpProveedor");

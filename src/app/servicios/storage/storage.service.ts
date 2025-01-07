@@ -675,7 +675,7 @@ export class StorageService {
 
   getMostRecentItem<T>(componente: string, id: string): void {
     const cachedData = this.loadInfo(componente); // Carga desde local storage
-    if (cachedData) {
+    if (cachedData.length > 0) {
       console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
       this.updateObservable(componente, cachedData[0]); // Usa directamente el objeto
     } else {
@@ -689,8 +689,8 @@ export class StorageService {
 
   getMostRecentItemId<T>(componente: string, id:string, campo:string, value:number): void {
     this.dbFirebase.getMostRecentId<T>(componente, id, campo, value).subscribe(item => {
-      const cachedData = this.loadInfo(componente);
-      console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
+      //const cachedData = this.loadInfo(componente);
+      //console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
       console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item[0]);
       if (item) {
         //console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item);

@@ -55,13 +55,16 @@ export class ModalVehiculoComponent implements OnInit {
   
   
   ngOnInit(): void {
+    let tarifaGral = this.storageService.loadInfo("tarifasGralCliente");
+    this.tarifaGralCliente = tarifaGral[0];
+    console.log("data tarifasGralCliente: ", this.tarifaGralCliente);         
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;
     });
-    this.storageService.tarifasGralCliente$.subscribe(data =>{   
+   /*  this.storageService.tarifasGralCliente$.subscribe(data =>{   
       console.log("data tarifasGralCliente: ", data);         
       this.tarifaGralCliente = data;      
-    })           
+    }) */           
     console.log("1)",this.fromParent);
     if(this.fromParent !== undefined){
         this.edicion = true;

@@ -97,8 +97,11 @@ export class OpAltaComponent implements OnInit {
     this.storageService.proveedores$.subscribe(data => {
       this.$proveedores = data;            
     })   
-    this.storageService.ultTarifaPersCliente$.subscribe(data => {
-      this.tarifaClienteSel = data || {}
+    this.storageService.tarifasPersCliente$.subscribe(data => {
+      if(data){
+        this.tarifaClienteSel = data;
+      }
+      
     })
     this.storageService.opTarEve$.subscribe(data=>{
       let datos = data
@@ -109,45 +112,68 @@ export class OpAltaComponent implements OnInit {
       this.tarifaPersonalizada = datos[0];
     });
     /////////TARIFA GENERAL CLIENTE /////////////////////////
-    this.storageService.ultTarifaGralCliente$.subscribe(data =>{
-      ////////console.log("data: ", data);                
-      this.ultTarifaGralCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-      this.ultTarifaGralCliente.cargasGenerales = this.ultTarifaGralCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      ////console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);              
+    this.storageService.tarifasGralCliente$.subscribe(data =>{
+      ////////console.log("data: ", data);  
+      if(data){
+        this.ultTarifaGralCliente = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+        //this.ultTarifaGralCliente.cargasGenerales = this.ultTarifaGralCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+        console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);              
+      }      
     });
     /////////TARIFA GENERAL CHOFER /////////////////////////
-    this.storageService.ultTarifaGralChofer$.subscribe(data =>{
+    this.storageService.tarifasGralChofer$.subscribe(data =>{
       ////////console.log("data: ", data);                
-      this.ultTarifaGralChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-      this.ultTarifaGralChofer.cargasGenerales = this.ultTarifaGralChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      ////console.log("2) ult tarifa GRAL CHOFER: ",this.ultTarifaGralChofer);              
+      if(data){
+        this.ultTarifaGralChofer = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+        //this.ultTarifaGralChofer.cargasGenerales = this.ultTarifaGralChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+        console.log("2) ult tarifa GRAL CHOFER: ",this.ultTarifaGralChofer);              
+      }
+      
     });
+    //////////////// TARIFA GENERAL PROVEEDORES ///////////////////
+    this.storageService.tarifasGralProveedor$.subscribe(data =>{
+      if(data){
+        ////console.log("data", data);        
+        this.ultTarifaGralProveedor = data;
+        //this.ultTarifaGralProveedor.cargasGenerales = this.ultTarifaGralProveedor.cargasGenerales || [];
+        console.log("5) ult tarifa GRAL PROVEEDOR: ", this.ultTarifaGralProveedor);      
+      }
+      
+    })
+     /* /////////TARIFA ESPECIAL CLIENTE /////////////////////////
+     this.storageService.tarifasEspCliente$
+     //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
+     .subscribe(data =>{
+     ////////console.log("2c) data: ", data);                
+     if(data){
+       this.ultTarifaEspCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+       this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+       console.log("3) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);           
+     }      
+   })
    
     /////////TARIFA ESPECIAL CHOFER /////////////////////////
-    this.storageService.ultTarifaEspChofer$
+    this.storageService.tarifasEspChofer$
       //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data =>{
       ////////console.log("2c) data: ", data);                
-      this.ultTarifaEspChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-      this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      ////console.log("4) ult tarifa ESP CHOFER: ",this.ultTarifaEspChofer);           
-    })
-    //////////////// TARIFA GENERAL PROVEEDORES ///////////////////
-    this.storageService.ultTarifaGralProveedor$.subscribe(data =>{
-      ////console.log("data", data);        
-      this.ultTarifaGralProveedor = data || {};
-      this.ultTarifaGralProveedor.cargasGenerales = this.ultTarifaGralProveedor.cargasGenerales || [];
-      ////console.log("5) ult tarifa GRAL PROVEEDOR: ", this.ultTarifaGralProveedor);      
-    })
+      if(data){
+        this.ultTarifaEspChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+        this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+        console.log("4) ult tarifa ESP CHOFER: ",this.ultTarifaEspChofer);           
+      }      
+    })    
     ////////////////TARIFA ESPECIAL PROVEEDORES//////////////////
-    this.storageService.ultTarifaEspProveedor$
+    this.storageService.tarifasEspProveedor$
     //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data =>{
     ////////console.log("2c) data: ", data);                
-    this.ultTarifaEspProveedor = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-    this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-    ////console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
-    });
+      if(data){
+        this.ultTarifaEspProveedor = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+        this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+        console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
+      }    
+    }); */
     this.medidasModal(this.tEventual, "opTarifaEventual");
     this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");
     this.medidasModal(this.vehiculosChofer, "vehiculosChofer");    
@@ -291,7 +317,7 @@ export class OpAltaComponent implements OnInit {
   }
 
   buscarTarifaPersonalizada(){
-    this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", this.clienteSeleccionado?.idCliente, "ultTarifaPersCliente" );   
+    this.storageService.getMostRecentItemId("tarifasPersCliente", "idTarifa", "idCliente", this.clienteSeleccionado?.idCliente);   
     //console.log("BUSCAR TARIFA PERSONALIZADA) proveedores: ", this.$proveedores);
   }
 
@@ -512,17 +538,20 @@ export class OpAltaComponent implements OnInit {
 
   if(this.op.tarifaTipo.especial){
       if(this.clienteSeleccionado.tarifaTipo.especial){
-        this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",this.clienteSeleccionado.idCliente,"ultTarifaEspCliente");  
+        //this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",this.clienteSeleccionado.idCliente,"ultTarifaEspCliente");  
+        this.storageService.getMostRecentItemId("tarifasEspCliente","idTarifa","idCliente",this.clienteSeleccionado.idCliente)
         /////////TARIFA ESPECIAL CLIENTE /////////////////////////
-        this.storageService.ultTarifaEspCliente$          
-          .subscribe(data =>{            
-          this.ultTarifaEspCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-          this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-          ////console.log("3) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
-          if(this.ultTarifaEspCliente.cargasGenerales.length > 0 ){
-            this.op.valores.cliente.tarifaBase = this.aCobrarOp();
-            this.op.valores.cliente.aCobrar = this.op.valores.cliente.tarifaBase;
-          }            
+        this.storageService.tarifasEspCliente$          
+          .subscribe(data =>{     
+            if(data){
+                this.ultTarifaEspCliente = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+                //this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+                console.log("4) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
+                if(this.ultTarifaEspCliente?.cargasGenerales?.length > 0 ){
+                  this.op.valores.cliente.tarifaBase = this.aCobrarOp();
+                  this.op.valores.cliente.aCobrar = this.op.valores.cliente.tarifaBase;
+                }            
+            }          
         })
       } else {
         this.op.valores.cliente.tarifaBase = this.aCobrarOp();
@@ -530,29 +559,35 @@ export class OpAltaComponent implements OnInit {
       }
       if(this.choferSeleccionado.tarifaTipo.especial){
           if(this.choferSeleccionado.idProveedor === 0){
-              this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",this.choferSeleccionado.idChofer,"ultTarifaEspChofer");
-              this.storageService.ultTarifaEspChofer$          
-                .subscribe(data =>{          
-                this.ultTarifaEspChofer = data || {};           
-                this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-                if(this.ultTarifaEspChofer.cargasGenerales.length > 0){
-                  this.op.valores.chofer.tarifaBase = this.aPagarOp();  
-                  this.op.valores.chofer.aPagar = this.op.valores.chofer.tarifaBase;
-                }                  
+              //this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",this.choferSeleccionado.idChofer,"ultTarifaEspChofer");
+              this.storageService.getMostRecentItemId("tarifasEspChofer","idTarifa","idChofer",this.choferSeleccionado.idChofer)
+              this.storageService.tarifasEspChofer$          
+                .subscribe(data =>{ 
+                  if(data){
+                      this.ultTarifaEspChofer = data;           
+                      //this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+                      if(this.ultTarifaEspChofer?.cargasGenerales?.length > 0){
+                        this.op.valores.chofer.tarifaBase = this.aPagarOp();  
+                        this.op.valores.chofer.aPagar = this.op.valores.chofer.tarifaBase;
+                      }        
+                  }                          
               })
           } else {
             this.proveedorSeleccionado = this.$proveedores.filter((proveedor:Proveedor) =>{
               return proveedor.idProveedor === this.choferSeleccionado.idProveedor;
             })
-            this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",this.proveedorSeleccionado[0].idProveedor,"ultTarifaEspProveedor");
-            this.storageService.ultTarifaEspProveedor$          
-              .subscribe(data =>{          
-              this.ultTarifaEspProveedor = data || {};   
-              this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-              if(this.ultTarifaEspProveedor.cargasGenerales.length > 0){
-                this.op.valores.chofer.tarifaBase = this.aPagarOp();  
-                this.op.valores.chofer.aPagar = this.op.valores.chofer.tarifaBase;
-              };                
+            this.storageService.getMostRecentItemId("tarifasEspProveedor","idTarifa","idProveedor",this.proveedorSeleccionado[0].idProveedor)
+            //this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",this.proveedorSeleccionado[0].idProveedor,"ultTarifaEspProveedor");
+            this.storageService.tarifasEspProveedor$          
+              .subscribe(data =>{ 
+                if(data){
+                    this.ultTarifaEspProveedor = data;   
+                    //this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+                    if(this.ultTarifaEspProveedor?.cargasGenerales?.length > 0){
+                      this.op.valores.chofer.tarifaBase = this.aPagarOp();  
+                      this.op.valores.chofer.aPagar = this.op.valores.chofer.tarifaBase;
+                    };                
+                }              
             });
           }        
         } else {
@@ -641,7 +676,7 @@ export class OpAltaComponent implements OnInit {
     //console.log("1A) tarifa esp a cobrar: ", tarifa);    
   } else {
     tarifa = this.ultTarifaGralCliente;
-    //console.log("1B) tarifa gral cobrar: ", tarifa);     
+    console.log("1B) tarifa gral cobrar: ", tarifa);     
   }
   return this.buscarTarifaServ.$getACobrar(tarifa, this.choferSeleccionado, this.patenteChofer);  
   }
@@ -652,28 +687,28 @@ export class OpAltaComponent implements OnInit {
       if(this.choferSeleccionado.idProveedor === 0){
         if(this.ultTarifaEspChofer.idCliente === 0 || this.ultTarifaEspChofer.idCliente === this.op.cliente.idCliente){
           tarifa = this.ultTarifaEspChofer; 
-          //console.log("2A) tarifa esp chofer a pagar: ", tarifa);  
+          console.log("2A) tarifa esp chofer a pagar: ", tarifa);  
         } else {
           tarifa = this.ultTarifaGralChofer;
-          //console.log("2B) tarifa gral chofer a pagar: ", tarifa);   
+          console.log("2B) tarifa gral chofer a pagar: ", tarifa);   
         }
               
       } else {
         if(this.ultTarifaEspProveedor.idCliente === 0 || this.ultTarifaEspProveedor.idCliente === this.op.cliente.idCliente){
           tarifa = this.ultTarifaEspProveedor;
-          //console.log("2B) tarifa esp proveedor a pagar: ", tarifa);       
+          console.log("2B) tarifa esp proveedor a pagar: ", tarifa);       
         } else {
           tarifa = this.ultTarifaGralProveedor;
-          //console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
+          console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
         }      
       }
     } else {
       if(this.choferSeleccionado.idProveedor === 0){
         tarifa = this.ultTarifaGralChofer;
-        //console.log("2B) tarifa gral chofer a pagar: ", tarifa);   
+        console.log("2B) tarifa gral chofer a pagar: ", tarifa);   
       } else {
         tarifa = this.ultTarifaGralProveedor;
-        //console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
+        console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
       }    
       
     }
