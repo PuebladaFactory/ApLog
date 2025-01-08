@@ -24,7 +24,9 @@ export class FormatoNumericoDirective {
         'Backspace',
         'Delete',
         'Tab',
-        'Enter'
+        'Enter',
+        'Alt',
+        'Shift'
       ].includes(event.key)
     ) {
       return; // No bloquear estas teclas
