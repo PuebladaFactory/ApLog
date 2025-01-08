@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -17,17 +18,26 @@ export class ConsolaTarifaComponent implements OnInit {
     manual: false,
     automatico: true,
   }
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
   constructor(private storageService: StorageService){}
   
   ngOnInit(): void {    
-    this.storageService.consolaTarifa$.subscribe(data =>{
+    this.storageService.consolaTarifa$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data =>{
       this.consolaTarifa = data;
       console.log("consola tarifa: ", this.consolaTarifa);   
       if(this.consolaTarifa === 0)  {
         this.porcentajeAumento.patchValue(0)
       } ;      
     });
+  }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   cambiarModo(modo: 'manual' | 'automatico'): void {

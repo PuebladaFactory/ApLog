@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
+import { Subject, takeUntil } from 'rxjs';
 
 
 @Component({
@@ -58,7 +59,7 @@ export class ChoferesListadoComponent implements OnInit {
   firstFilter = '';
   secondFilter = '';
   vehiculos: Vehiculo[] = [];
-
+  private destroy$ = new Subject<void>();
 //////////////////////////////////////////////////////////////////////////////////////////
 
   constructor(private storageService: StorageService, private modalService: NgbModal, private legajoServ: LegajosService){   
@@ -66,10 +67,14 @@ export class ChoferesListadoComponent implements OnInit {
   ngOnInit(): void { 
     //console.log(this.tablaVehiculo);  
     //this.storageService.getAllSorted("choferes", 'idChofer', 'asc') 
-    this.storageService.getObservable<Proveedor>('proveedores').subscribe(data => {
+    this.storageService.getObservable<Proveedor>('proveedores')
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$proveedores = data;
     });    
-    this.storageService.getObservable<Chofer>('choferes').subscribe(data => {
+    this.storageService.getObservable<Chofer>('choferes')
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       if (data) {
         console.log('Datos choferes actualizados:', data);
         this.$choferes = data; // Clona el array para evitar problemas con referencias
@@ -79,6 +84,11 @@ export class ChoferesListadoComponent implements OnInit {
     });    
     this.storageService.syncChanges<Chofer>('choferes');
     this.storageService.syncChanges<Proveedor>('proveedores');
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
   
   seleccionarChofer(row:any){ 

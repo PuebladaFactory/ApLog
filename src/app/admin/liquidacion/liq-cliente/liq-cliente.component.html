@@ -4,8 +4,8 @@
         <thead>
             <tr>
                 <th scope="col" style="width:3%" class=""></th>
-                <th scope="col" style="width:18%" class="" type="button" (click)="ordenar('razonSocial')">
-                    Razon Social
+                <th scope="col" style="width:18%" class=""  (click)="ordenar('razonSocial')">
+                    <span type="button">Razon Social</span>
                     <span *ngIf="ordenColumna === 'razonSocial'">
                         <span *ngIf="ordenAscendente">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -19,8 +19,8 @@
                         </span>
                     </span>
                 </th>
-                <th scope="col" style="width:8%" class="" type="button" (click)="ordenar('cantOp')">
-                    Cant Op
+                <th scope="col" style="width:8%" class=""  (click)="ordenar('cantOp')">
+                    <span type="button">Cant Op</span>
                     <span *ngIf="ordenColumna === 'cantOp'">
                         <span *ngIf="ordenAscendente">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -34,8 +34,8 @@
                         </span>
                     </span>
                 </th>
-                <th scope="col" style="width:14.5%" class="" type="button" (click)="ordenar('opSinFacturar')">
-                    Sin Facturar
+                <th scope="col" style="width:14.5%" class=""  (click)="ordenar('opSinFacturar')">
+                    <span type="button">Sin Facturar</span>
                     <span *ngIf="ordenColumna === 'opSinFacturar'">
                         <span *ngIf="ordenAscendente">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -49,8 +49,8 @@
                         </span>
                     </span>   
                 </th>  
-                <th scope="col" style="width:14.5%" class="" type="button" (click)="ordenar('opFacturadas')">
-                    A Cobrar
+                <th scope="col" style="width:14.5%" class=""  (click)="ordenar('opFacturadas')">
+                    <span type="button">A Cobrar</span>
                     <span *ngIf="ordenColumna === 'opFacturadas'">
                         <span *ngIf="ordenAscendente">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -64,8 +64,8 @@
                         </span>
                     </span>        
                 </th>                        
-                <th scope="col" style="width:14.5%" class="table-success" type="button" (click)="ordenar('total')">
-                    Total
+                <th scope="col" style="width:14.5%" class="table-success"  (click)="ordenar('total')">
+                    <span type="button">Total</span>
                     <span *ngIf="ordenColumna === 'total'">
                         <span *ngIf="ordenAscendente">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -79,8 +79,8 @@
                         </span>
                     </span>              
                 </th>
-                <th scope="col" style="width:14.5%" class="" type="button" (click)="ordenar('aPagar')">
-                    Total a Pagar
+                <th scope="col" style="width:14.5%" class=""  (click)="ordenar('aPagar')">
+                    <span type="button">Total a Pagar</span>
                     <span *ngIf="ordenColumna === 'aPagar'">
                         <span *ngIf="ordenAscendente">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -94,8 +94,8 @@
                         </span>
                     </span>        
                 </th>                        
-                <th scope="col" style="width:8%" class="table-warning" type="button" (click)="ordenar('ganancia')">
-                    Ganancia
+                <th scope="col" style="width:8%" class="table-warning"  (click)="ordenar('ganancia')">
+                    <span type="button">Ganancia</span>
                     <span *ngIf="ordenColumna === 'ganancia'">
                         <span *ngIf="ordenAscendente">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -151,15 +151,15 @@
                                 <tr>
                                     <!-- <th><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th> -->
                                     <th style="width: 1.5%;"><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th>  
-                                    <th scope="col" class="" style="width: 5%;" >Fecha</th>
+                                    <th scope="col" class="" style="width: 8%;" >Fecha</th>
                                     <th scope="col" class="" style="width: 5.5%;">Quincena</th>                                    
                                     <th scope="col" class="" style="width: 13%;">Chofer</th>
                                     <th scope="col" class="" style="width: 3%;">Km</th>  
                                     <th scope="col" class="" style="width: 8.5%;">Km $</th>  
-                                    <th scope="col" class="" style="width: 8.5%;">Acomp</th>                                    
-                                    <th scope="col" class="" style="width: 12%;">Tarifa Base</th>                                      
-                                    <th scope="col" class="" style="width: 12%;">Total a Cobrar</th>                        
-                                    <th scope="col" class="" style="width: 12%;">A Pagar</th>
+                                    <th scope="col" class="" style="width: 8%;">Acomp</th>                                    
+                                    <th scope="col" class="" style="width: 11%;">Tarifa Base</th>                                      
+                                    <th scope="col" class="" style="width: 11.5%;">Total a Cobrar</th>                        
+                                    <th scope="col" class="" style="width: 11%;">A Pagar</th>
                                     <th scope="col" class="" style="width: 6%;">Ganancia</th>
                                     <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>  
                                     <th scope="col" class="" style="width: 4.5%;" >Facturar</th>

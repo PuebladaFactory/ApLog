@@ -1,4 +1,5 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
@@ -20,9 +21,6 @@ export class FacturacionGeneralComponent implements OnInit {
   $facturasCliente: any;
   $facturasChofer: any;
   $facturasProveedor: any;
-
-  constructor(private storageService: StorageService){}
-
   titulo: string = "facturacion"
   btnConsulta:boolean = false;
   date:any = new Date();
@@ -37,34 +35,51 @@ export class FacturacionGeneralComponent implements OnInit {
   totalFaltaPagar!: number;
   resumenVisible: boolean = false;
   estadoVisible: boolean = false;
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
+
+  constructor(private storageService: StorageService){}
 
   ngOnInit(): void {    
     this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
-    this.storageService.consultasFacCliente$.subscribe(data => {
+    this.storageService.consultasFacCliente$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$facturasCliente = data; 
       this.calcularIngresos();     
     });
 
     this.storageService.getByDateValue("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacChofer");
-    this.storageService.consultasFacChofer$.subscribe(data => {
+    this.storageService.consultasFacChofer$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$facturasChofer = data;
       this.calcularPagos();
     });
 
     this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacProveedor");
-    this.storageService.consultasFacProveedor$.subscribe(data => {
+    this.storageService.consultasFacProveedor$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$facturasProveedor = data;
       this.calcularPagos();
     });
 
     
-    this.storageService.fechasConsulta$.subscribe(data => {
+    this.storageService.fechasConsulta$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.fechasConsulta = data;
       console.log("FACTURACION GRAL: fechas consulta: ",this.fechasConsulta);      
       this.btnConsulta = true;
       this.consultasFacturas();
     });
    
+  }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   consultasFacturas(){

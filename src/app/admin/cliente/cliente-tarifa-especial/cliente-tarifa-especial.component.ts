@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -17,13 +18,13 @@ export class ClienteTarifaEspecialComponent implements OnInit {
   tEspecial: boolean = false;
   idClienteEsp!: number;
   consultaCliente: any [] = [];
+  private destroy$ = new Subject<void>();
 
-  constructor(private storageService: StorageService){
-
-  }
+  constructor(private storageService: StorageService){}
 
   ngOnInit() {
-    this.storageService.clientes$    
+    this.storageService.clientes$  
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario  
     .subscribe(data => {
       this.$clientes = data;     
       this.$clientesEsp = this.$clientes
@@ -32,6 +33,11 @@ export class ClienteTarifaEspecialComponent implements OnInit {
       //console.log(this.$clientesEsp);      
       this.tEspecial = false;
     });   
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   changeCliente(e: any) {    

@@ -8,6 +8,7 @@ import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
 import { TarigaGralEdicionComponent } from 'src/app/shared/tariga-gral-edicion/tariga-gral-edicion.component';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-choferes-tarifa-gral',
@@ -39,6 +40,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
   chofer!: Chofer[];
   vehiculos!: Vehiculo [];
   $clientes!: Cliente[];
+  private destroy$ = new Subject<void>();
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal) {
     this.tarifaForm = this.fb.group({
@@ -55,17 +57,23 @@ export class ChoferesTarifaGralComponent implements OnInit {
     //this.storageService.getUltElemColeccion("tarifasGralChofer", "idTarifa", "desc", 1,"ultTarifaGralChofer")
     if(this.tEspecial){
            //// CLIENTE SELECCIONADO PARA LA TARIFA ESPECIAL ///////////////
-           this.storageService.clienteSeleccionado$.subscribe(data => {      
+           this.storageService.clienteSeleccionado$
+           .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+           .subscribe(data => {      
             this.idClienteEsp = data
             ////console.log("0B)",this.idClienteEsp);
           })
           //// CHOFER SELECCIONADO PARA LA TARIFA ESPECIAL ///////////////
-          this.storageService.choferSeleccionado$.subscribe(data => {      ///
+          this.storageService.choferSeleccionado$
+          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+          .subscribe(data => {      ///
             this.idChoferEsp = data
             //////console.log("0A)",this.idChoferEsp);                
             //this.storageService.getMostRecentItemId("tarifasEspChofer","idTarifa","idChofer",this.idChoferEsp[0]);
             this.storageService.syncChangesByOneElemId<TarifaGralCliente>("tarifasEspChofer","idTarifa","idChofer",this.idChoferEsp[0]);
-            this.storageService.choferes$.subscribe(data => {
+            this.storageService.choferes$
+            .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+            .subscribe(data => {
               this.$choferes = data;
               this.chofer = this.$choferes.filter((chofer:Chofer) => {
                 return chofer.idChofer === this.idChoferEsp[0];
@@ -78,7 +86,9 @@ export class ChoferesTarifaGralComponent implements OnInit {
     }
     
     //// TARIFA GENERAL CLIENTE
-    this.storageService.tarifasGralCliente$.subscribe(data =>{
+    this.storageService.tarifasGralCliente$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data =>{
         ////console.log("data tgCliente: ", data);                
         if (data) {
           this.ultTarifaCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
@@ -86,7 +96,9 @@ export class ChoferesTarifaGralComponent implements OnInit {
           //console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);          
         }
         if(this.tEspecial){ 
-          this.storageService.tarifasEspChofer$.subscribe(data => {
+          this.storageService.tarifasEspChofer$
+          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+          .subscribe(data => {
             if(data){
                 this.ultTarifaEspecial = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
                 this.ultTarifaEspecial.cargasGenerales = this.ultTarifaEspecial.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío            
@@ -98,7 +110,9 @@ export class ChoferesTarifaGralComponent implements OnInit {
           })
         } else {
               //// TARIFA GENERAL CHOFER
-            this.storageService.tarifasGralChofer$.subscribe(data =>{
+            this.storageService.tarifasGralChofer$
+            .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+            .subscribe(data =>{
               ////console.log("data tgChofer", data); 
               if(data){
                 this.ultTarifaGralChofer = data || {};
@@ -116,26 +130,37 @@ export class ChoferesTarifaGralComponent implements OnInit {
     
     
     //////// CONSOLA DE TARIFA ////////////////////////////
-    this.storageService.consolaTarifa$.subscribe(data =>{
+    this.storageService.consolaTarifa$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data =>{
       this.consolaTarifa = data;
       //////////console.log("consola tarifa: ", this.consolaTarifa);   
       if(this.consolaTarifa > 0)  {
         this.calcularNuevaTarifaPorcentaje();
       } ;      
     });
-    this.storageService.modoTarifa$.subscribe(data =>{
+    this.storageService.modoTarifa$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data =>{
       this.modoTarifa = data;
       //////////console.log("1) modoTarifa: ", this.modoTarifa);      
       this.manejoConsola();
     });
 
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$clientes = data;
     });    
     
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');    
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralChofer', 'idTarifa');    
     //his.configurarTabla();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   configurarTabla(){    

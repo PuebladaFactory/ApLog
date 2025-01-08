@@ -9,6 +9,7 @@ import { ModalTarifaPersonalizadaComponent } from '../modal-tarifa-personalizada
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-cliente-tarifa-personalizada',
@@ -31,6 +32,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     clienteSeleccionado!: Cliente[];
     $clientesPers! : Cliente [];
     $ultTarifaCliente!: TarifaPersonalizadaCliente;
+    private destroy$ = new Subject<void>();
     
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, private formNumService:FormatoNumericoService ) {
     this.inputSecciones = this.fb.group({
@@ -50,13 +52,17 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$clientes = data;
       this.$clientesPers = this.$clientes
       .filter((c:Cliente)=>{return c.tarifaTipo.personalizada === true})
       .sort((a:Cliente, b:Cliente) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       
-      this.storageService.tarifasPersCliente$.subscribe(data => {
+      this.storageService.tarifasPersCliente$
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data => {
         if (data) {
           this.$ultTarifaCliente = data;          
           console.log("1) ult tarifa personalizada: ", this.$ultTarifaCliente);
@@ -64,6 +70,11 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       });  
 
     });               
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   changeCliente(e: any) {    

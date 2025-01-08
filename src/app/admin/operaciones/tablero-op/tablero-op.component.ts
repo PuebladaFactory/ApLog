@@ -11,6 +11,8 @@ import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 
 import { ModalFacturacionComponent } from '../modal-facturacion/modal-facturacion.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
+import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-tablero-op',
@@ -81,59 +83,84 @@ export class TableroOpComponent implements OnInit {
   firstFilter = '';
   secondFilter = '';
   /////////////////////////////////////////////////////////////////////
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
   constructor(private storageService: StorageService, private modalService: NgbModal){}
   
   ngOnInit(): void {
-    this.storageService.opTarEve$.subscribe(data=>{
+   /*  this.storageService.opTarEve$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data=>{
       let datos = data
       this.tarifaEventual = datos[0];
       //console.log("tarifa eventual: ", this.tarifaEventual);
       
     });
-    this.storageService.opTarPers$.subscribe(data=>{
+    this.storageService.opTarPers$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data=>{
       let datos = data
       this.tarifaPersonalizada = datos[0];
       //console.log("tarifa personalizada: ", this.tarifaPersonalizada);
     });
 
-    this.storageService.vehiculosChofer$.subscribe(data=>{
+    this.storageService.vehiculosChofer$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data=>{
       let datos = data
       this.vehiculosChofer = datos[0];
       //console.log("vehiculos chofer: ", this.vehiculosChofer);
-    });
+    }); */
 
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$choferes = data;
     });
   
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$clientes = data;
     });    
    
-    this.storageService.operaciones$.subscribe(data => {
+    this.storageService.operaciones$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$opActivas = data;
       //this.armarTabla();
       this.filtrarEstado(this.estadoFiltrado)
     });  
 
-    this.storageService.consultasOp$.subscribe(data => {
+    this.storageService.consultasOp$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$consultasOp = data;
       //this.armarTabla();
       this.filtrarEstado(this.estadoFiltrado)
     });   
     
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$proveedores = data;
     });
 
-    this.storageService.fechasConsulta$.subscribe(data => {
+    this.storageService.fechasConsulta$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.fechasConsulta = data;
       console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);
       this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasOp");
       this.btnConsulta = true;
     });
      
+  }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getMsg(msg: any) {
@@ -438,4 +465,21 @@ export class TableroOpComponent implements OnInit {
       );
     }
   }
+
+  modalAltaOp(){
+    {
+      const modalRef = this.modalService.open(ModalOpAltaComponent, {
+        windowClass: 'custom-modal-top-right',        
+        scrollable: true,      
+      });      
+    
+      modalRef.result.then(
+        (result) => {
+         
+        },
+        (reason) => {}
+      );
+    }
+  }
+  
 }

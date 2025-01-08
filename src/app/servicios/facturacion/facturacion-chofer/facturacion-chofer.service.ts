@@ -50,9 +50,9 @@ export class FacturacionChoferService {
       op: Operacion,
       factura: FacturaOp
     }
-    //console.log("1)Chofer Serv:  op: ", op, " tarifa: ", tarifa);
+    console.log("1)Chofer Serv:  op: ", op, " tarifa: ", tarifa);
     let vehiculo = op.chofer.vehiculo.filter(vehiculo => vehiculo.dominio === op.patenteChofer);
-    ////console.log("1c) vehiculo: ", vehiculo);    
+    console.log("1c) vehiculo: ", vehiculo);    
 
     this.tarifaBase = this.$calcularCG(tarifa, vehiculo[0]);
     op.valores.chofer.tarifaBase = this.tarifaBase;  
@@ -97,6 +97,8 @@ export class FacturacionChoferService {
     let catCg = tarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
       return cat.orden === vehiculo.categoria.catOrden;
     });
+    console.log("Chofer Service: catCg: ", catCg);
+    
     return catCg[0].valor
 }
 

@@ -7,6 +7,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
 import { TarigaGralEdicionComponent } from 'src/app/shared/tariga-gral-edicion/tariga-gral-edicion.component';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-cliente-tarifa-gral',
@@ -40,7 +41,8 @@ export class ClienteTarifaGralComponent implements OnInit {
   }
   tarifaGeneral!: TarifaGralCliente;  
   historial: boolean = false;
-  modo: string = "clientes"
+  modo: string = "clientes";
+  private destroy$ = new Subject<void>();
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, private cdr: ChangeDetectorRef) {
     this.tarifaForm = this.fb.group({
@@ -54,7 +56,9 @@ export class ClienteTarifaGralComponent implements OnInit {
     //console.log("0)",this.tEspecial);
         
     //////esto es la tarifa general
-    this.storageService.tarifasGralCliente$.subscribe(data => {
+    this.storageService.tarifasGralCliente$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       if (data) {
         this.tarifaGeneral = data; // Ahora siempre es un objeto
         this.tarifaGeneral.cargasGenerales = this.tarifaGeneral.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
@@ -67,6 +71,7 @@ export class ClienteTarifaGralComponent implements OnInit {
           //this.storageService.getMostRecentItemId("tarifasEspCliente","idTarifa","idCliente",this.idClienteEsp[0]);
           this.storageService.syncChangesByOneElemId<TarifaGralCliente>("tarifasEspCliente","idTarifa","idCliente",this.idClienteEsp[0]);
           this.storageService.clientes$    
+              .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
               .subscribe(data => {
               this.$clientes = data;
               this.$clientesEsp = this.$clientes.filter((cliente:Cliente)=>{
@@ -78,6 +83,7 @@ export class ClienteTarifaGralComponent implements OnInit {
               });
           }); 
         this.storageService.tarifasEspCliente$   
+            .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
             .subscribe(data =>{ 
               //console.log("data tarifa esp: ", data );
               if (data) {
@@ -94,14 +100,18 @@ export class ClienteTarifaGralComponent implements OnInit {
       
     })      
     /// esto es la consola de tarifa
-    this.storageService.consolaTarifa$.subscribe(data =>{
+    this.storageService.consolaTarifa$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data =>{
       this.consolaTarifa = data;
       ////////////////////console.log("consola tarifa: ", this.consolaTarifa);   
       if(this.consolaTarifa > 0)  {
         this.calcularNuevaTarifaPorcentaje();
       } ;      
     });
-    this.storageService.modoTarifa$.subscribe(data =>{
+    this.storageService.modoTarifa$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data =>{
       this.modoTarifa = data;
       ////////////////////console.log("1) modoTarifa: ", this.modoTarifa);      
       this.manejoConsola();
@@ -109,6 +119,11 @@ export class ClienteTarifaGralComponent implements OnInit {
 
     // Sincroniza cambios en tiempo real
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');    
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   configurarTabla(){    

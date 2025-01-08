@@ -11,6 +11,7 @@ import { ModalVehiculoComponent } from '../modal-vehiculo/modal-vehiculo.compone
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import { ConId } from 'src/app/interfaces/conId';
+import { Subject, takeUntil } from 'rxjs';
 
 
 @Component({
@@ -51,6 +52,7 @@ export class ChoferesAltaComponent implements OnInit {
   vehiculos: Vehiculo[] = [];
   satelital!: SeguimientoSatelital | boolean;
   formTipoTarifa!:any;
+  private destroy$ = new Subject<void>();
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private legajoServ: LegajosService) {
     this.form = this.fb.group({                             //formulario para el perfil 
@@ -95,7 +97,9 @@ export class ChoferesAltaComponent implements OnInit {
 
    ngOnInit(): void {
     console.log("1)", this.fromParent);
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$proveedores = data;
       this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     });
@@ -114,6 +118,11 @@ export class ChoferesAltaComponent implements OnInit {
     }
 
    }
+
+   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
    onTarifaTipoChange(tipoSeleccionado: string) {
     // Resetea los demás switches a false, excepto el seleccionado

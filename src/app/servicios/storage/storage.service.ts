@@ -770,6 +770,7 @@ export class StorageService {
     }
   }
 
+
   getAllSorted(componente: any, campo: any, orden: any) {
     console.log(` storage getAllSorted ${componente}`, componente, campo, orden)
     // pasar campo y orden (asc o desc)

@@ -14,6 +14,7 @@ import { DescuentosComponent } from '../descuentos/descuentos.component';
 import { Descuento, FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-facturar-op',
@@ -62,20 +63,27 @@ export class FacturarOpComponent implements OnInit {
   totalContraParte: number = 0;
   columnasVisibles: any[] = [];
   factura!: any;  
+  private destroy$ = new Subject<void>();
 
   constructor(private storageService: StorageService, private fb: FormBuilder, private excelServ: ExcelService, private pdfServ: PdfService, public activeModal: NgbActiveModal, private modalService: NgbModal){}
   
   ngOnInit(): void {
     console.log("0) ", this.fromParent);
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$choferes = data;      
     }); 
 
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$clientes = data;      
     }); 
 
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$proveedores = data;      
     }); 
     this.facLiquidadas = this.fromParent.facturas;
@@ -108,6 +116,11 @@ export class FacturarOpComponent implements OnInit {
         break
       }
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getCliente(){

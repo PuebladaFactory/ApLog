@@ -8,6 +8,7 @@ import { CarruselComponent } from 'src/app/shared/carrusel/carrusel.component';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Pipe, PipeTransform } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
 
 @Pipe({ name: 'safeUrl' })
 export class SafeUrlPipe implements PipeTransform {
@@ -31,6 +32,7 @@ export class ConsultaLegajosComponent implements OnInit {
   choferSeleccionado!: Chofer;
   legajoSeleccionado!: Legajo;
   archivosPrevisualizados!: { nombre: string; url: string }[]; // Especificamos el tipo = [];
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
   constructor(private storageService: StorageService, private modalService: NgbModal, private sanitizer: DomSanitizer){}
 
@@ -40,14 +42,24 @@ export class ConsultaLegajosComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$choferes = data;     
       this.$choferes = this.$choferes      
       .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
     })     
-    this.storageService.legajos$.subscribe(data => {
+    this.storageService.legajos$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$legajos = data;     
     })        
+  }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   changeChofer(e: any) {    

@@ -1,10 +1,12 @@
 import { Component, ViewChild, ElementRef, AfterViewInit , Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Operacion, TarifaEventual, TarifaPersonalizada } from 'src/app/interfaces/operacion';
 import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -40,8 +42,9 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
   aPagar: any;
   tarifaEventual!: TarifaEventual;
   @ViewChild('kmInput') kmInputElement!: ElementRef;
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
-  constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private facturacionOpServ: FacturacionOpService, private formNumServ: FormatoNumericoService){
+  constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private facturacionOpServ: FacturacionOpService, private formNumServ: FormatoNumericoService, private dbFirebase: DbFirestoreService){
     this.form = this.fb.group({      
       km:['', Validators.required],
       documentacion:[''],
@@ -77,16 +80,31 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
         break;
     }
     if(this.op.tarifaTipo.personalizada){
-      this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", this.op.cliente.idCliente, "ultTarifaPersCliente" )      
-      this.storageService.ultTarifaPersCliente$.subscribe(data=>{        
-        this.tarifaClienteSel = data || {};
-        ////console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
-        this.tarifaClienteSel.secciones = this.tarifaClienteSel.secciones || []; // Si secciones no está definido, lo inicializamos como array vacío  
+      //this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", this.op.cliente.idCliente, "ultTarifaPersCliente" )      
+      this.dbFirebase.getMostRecentId<TarifaPersonalizadaCliente>("tarifasPersCliente","idTarifa","idCliente",this.op.cliente.idCliente) //buscamos la tarifa especial      
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data=>{        
+        if(data){
+          this.tarifaClienteSel = data[0];
+          ////console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
+          //this.tarifaClienteSel.secciones = this.tarifaClienteSel.secciones || []; // Si secciones no está definido, lo inicializamos como array vacío  
+          if(this.fromParent.modo === "cerrar"){
+            this.storageService.setInfo("tPersCliente", [this.tarifaClienteSel]);
+          }
+          this.armarForm();   
+        }        
       });
-      this.armarForm();      
+       
     } else {
       this.armarForm();
     }    
+  }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.storageService.clearInfo("tPersCliente");
   }
 
   ngAfterViewInit(): void {

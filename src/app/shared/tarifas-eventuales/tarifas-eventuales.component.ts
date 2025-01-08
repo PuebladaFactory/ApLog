@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
@@ -21,7 +22,7 @@ export class TarifasEventualesComponent implements OnInit {
   limite: number = 5;
   seleccion: string = "";
   tarifasEventuales!: TarifaEventual[];
-
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
   constructor(private router: Router, private storageService: StorageService) {}
 
@@ -33,25 +34,37 @@ export class TarifasEventualesComponent implements OnInit {
       console.log('Módulo origen:', this.moduloOrigen);
     }
 
-    this.storageService.getObservable<Chofer>('choferes').subscribe(data => {
+    this.storageService.getObservable<Chofer>('choferes')
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       if (data) {        
         this.$choferes = data;
         this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));        
       }
     });    
-    this.storageService.getObservable<Cliente>('clientes').subscribe(data => {
+    this.storageService.getObservable<Cliente>('clientes')
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       if (data) {        
         this.$clientes = data;
         this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer        
       }      
     }); 
-    this.storageService.getObservable<Proveedor>('proveedores').subscribe(data => {
+    this.storageService.getObservable<Proveedor>('proveedores')
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       if(data){
         this.$proveedores = data;
         this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer        
       }      
     })  
     this.changeObjeto()
+  }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   changeObjeto(){

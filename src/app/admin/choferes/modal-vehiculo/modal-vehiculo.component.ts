@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Subject, takeUntil } from 'rxjs';
 import { Categoria, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
@@ -34,6 +35,7 @@ export class ModalVehiculoComponent implements OnInit {
   categoria!: Categoria;
   ordCat!: number;
   edicion:boolean = false;
+  private destroy$ = new Subject<void>();
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal){
     this.vehiculoForm = this.fb.group({
@@ -58,7 +60,9 @@ export class ModalVehiculoComponent implements OnInit {
     let tarifaGral = this.storageService.loadInfo("tarifasGralCliente");
     this.tarifaGralCliente = tarifaGral[0];
     console.log("data tarifasGralCliente: ", this.tarifaGralCliente);         
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$proveedores = data;
     });
    /*  this.storageService.tarifasGralCliente$.subscribe(data =>{   
@@ -73,6 +77,11 @@ export class ModalVehiculoComponent implements OnInit {
         this.armarForms()
     }
        
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   guardarVehiculo(){ 

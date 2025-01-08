@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Subject, takeUntil } from 'rxjs';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion, TarifaPersonalizada } from 'src/app/interfaces/operacion';
@@ -8,6 +9,7 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -42,9 +44,9 @@ export class CargaMultipleComponent implements OnInit {
   operaciones!: Operacion[];
   $choferesNoEventuales!: Chofer[]
   $clientesNoEventuales!: Cliente[]
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
-
-  constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService){
+  constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, private dbFirebase: DbFirestoreService){
     this.operacionesForm = this.fb.group({
       fecha: ['', []],
       cliente: [null, []],
@@ -55,22 +57,35 @@ export class CargaMultipleComponent implements OnInit {
   
   
   ngOnInit(): void {      
-    this.storageService.clientes$.subscribe(data => {
+
+    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralChofer', 'idTarifa');        
+    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa');    
+    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');
+    
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$clientes = data;
       this.$clientesNoEventuales = this.$clientes
       .filter((c:Cliente)=>{return c.tarifaTipo.eventual === false})
       .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$proveedores = data;
     });    
-    this.storageService.tarifasPersCliente$.subscribe(data => {
+    this.storageService.tarifasPersCliente$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       if(data){
         this.tarifaPersonalizada = data;
       }      
     })       
-    /////////TARIFA GENERAL CLIENTE /////////////////////////
-    this.storageService.tarifasGralCliente$.subscribe(data =>{
+    /////////TARIFA GENERAL CLIENTE /////////////////////////    
+    this.storageService.tarifasGralCliente$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data =>{
       //////////////////console.log("data: ", data);                
       if(data){
         this.ultTarifaGralCliente = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
@@ -78,8 +93,10 @@ export class CargaMultipleComponent implements OnInit {
         console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);              
       }      
     });
-    /////////TARIFA GENERAL CHOFER /////////////////////////
-    this.storageService.tarifasGralChofer$.subscribe(data =>{
+    /////////TARIFA GENERAL CHOFER /////////////////////////    
+    this.storageService.tarifasGralChofer$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data =>{
       //////////////////console.log("data: ", data); 
       if(data){
         this.ultTarifaGralChofer = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
@@ -88,8 +105,10 @@ export class CargaMultipleComponent implements OnInit {
       }               
       
     });
-    //////////////// TARIFA GENERAL PROVEEDORES ///////////////////
-    this.storageService.tarifasGralProveedor$.subscribe(data =>{
+    //////////////// TARIFA GENERAL PROVEEDORES ///////////////////    
+    this.storageService.tarifasGralProveedor$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data =>{
       //////////////console.log("data", data);    
       if(data){
         this.ultTarifaGralProveedor = data;
@@ -97,49 +116,23 @@ export class CargaMultipleComponent implements OnInit {
         console.log("5) ult tarifa GRAL PROVEEDOR: ", this.ultTarifaGralProveedor);      
       }          
     })
-  /*   /////////TARIFA ESPECIAL CLIENTE /////////////////////////
-    this.storageService.tarifasEspCliente$
-      //.pipe(take(3)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe(data =>{       
-        if(data){
-          this.ultTarifaEspCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-          this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-          //console.log("3) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
-        }     
-      
-    })
-    /////////TARIFA ESPECIAL CHOFER /////////////////////////
-    this.storageService.tarifasEspChofer$
-      //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe(data =>{
-      //////////////////console.log("2c) data: ", data);    
-      if(data){
-        this.ultTarifaEspChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-        this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-        //console.log("4) ult tarifa ESP CHOFER: ",this.ultTarifaEspChofer);           
-      }
-      
-    })
-    
-    ////////////////TARIFA ESPECIAL PROVEEDORES//////////////////
-    this.storageService.tarifasEspProveedor$
-    //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
-    .subscribe(data =>{
-    //////////////////console.log("2c) data: ", data);  
-    if(data){
-      this.ultTarifaEspProveedor = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-      this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-      //console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
-    }    
-    });   */
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$choferes = data;
       this.$choferesNoEventuales = this.$choferes
         .filter((c: Chofer) => c.tarifaTipo.eventual === false)
         .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
       this.inicializarChoferes();
-    });
+    });    
   }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
 
   inicializarChoferes() {
     //const choferesFormArray = this.operacionesForm.get('choferes') as FormArray;
@@ -388,13 +381,12 @@ onSubmit() {
         };
         if(operacion.tarifaTipo.especial){
             if(cliente.tarifaTipo.especial){///si el cliente tiene una tarifa especial la buscar y llama al servicio
-                /////////TARIFA ESPECIAL CLIENTE /////////////////////////
-                this.storageService.getMostRecentItemId("tarifasEspCliente","idTarifa","idCliente",cliente.idCliente)
-                //this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",this.clienteSeleccionado.idCliente,"ultTarifaEspCliente");  
-                this.storageService.tarifasEspCliente$                
+                /////////TARIFA ESPECIAL CLIENTE /////////////////////////                
+                this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspCliente","idTarifa","idCliente",cliente.idCliente) //buscamos la tarifa especial
+                .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario   
                 .subscribe(data =>{   
                   if(data){
-                      this.ultTarifaEspCliente = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+                      this.ultTarifaEspCliente = data[0]; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
                       //this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
                       console.log("3) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
                       if(this.ultTarifaEspCliente?.cargasGenerales?.length > 0){
@@ -410,12 +402,11 @@ onSubmit() {
             if(chofer.tarifaTipo.especial){ ///si el chofer/proveedor tiene una tarifa especial la buscar y llama al servicio
               if(chofer.idProveedor === 0){
                 /////////TARIFA ESPECIAL CHOFER /////////////////////////
-                //this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",chofer.idChofer,"ultTarifaEspChofer");
-                this.storageService.getMostRecentItemId("tarifasEspChofer","idTarifa","idChofer",chofer.idChofer);
-                this.storageService.tarifasEspChofer$          
+                this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspChofer","idTarifa","idChofer", chofer.idChofer) //buscamos la tarifa especial
+                  .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario  
                   .subscribe(data =>{          
                     if(data){
-                        this.ultTarifaEspChofer = data;     
+                        this.ultTarifaEspChofer = data[0];     
                         //this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío      
                         if(this.ultTarifaEspChofer?.cargasGenerales?.length > 0){
                           operacion.valores.chofer.aPagar = this.aPagarOp(chofer, patenteChofer, operacion);
@@ -428,12 +419,11 @@ onSubmit() {
                   proveedor = this.$proveedores.filter((proveedor:Proveedor) =>{
                     return proveedor.idProveedor === chofer.idProveedor
                   })                  
-                  //this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",proveedor[0].idProveedor,"ultTarifaEspProveedor");
-                  this.storageService.getMostRecentItemId("tarifasEspProveedor","idTarifa","idProveedor",proveedor[0].idProveedor);
-                  this.storageService.tarifasEspProveedor$          
+                  this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspProveedor","idTarifa","idProveedor", proveedor[0].idProveedor) //buscamos la tarifa especial
+                    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario 
                     .subscribe(data =>{          
                       if(data){
-                          this.ultTarifaEspProveedor = data;           
+                          this.ultTarifaEspProveedor = data[0];           
                           //this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío      
                           if(this.ultTarifaEspProveedor?.cargasGenerales?.length > 0){
                             operacion.valores.chofer.aPagar = this.aPagarOp(chofer, patenteChofer, operacion);                      

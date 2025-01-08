@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { take } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
@@ -66,7 +66,7 @@ export class LiqProveedorComponent implements OnInit {
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
-  
+  private destroy$ = new Subject<void>();
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -76,24 +76,32 @@ export class LiqProveedorComponent implements OnInit {
 
   ngOnInit(): void {
      
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$choferes = data;
     });
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$clientes = data;
     }); 
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$proveedores = data;
     });
 
-    this.storageService.fechasConsulta$.subscribe(data => {
+    this.storageService.fechasConsulta$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.fechasConsulta = data;
       console.log("LIQ proveedor: fechas consulta: ",this.fechasConsulta);
       this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpProveedor");
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
       this.storageService.consultasFacOpProveedor$
-        //.pipe(take(1))
+        .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpProveedor = data;
           console.log("1)", this.$facturasOpProveedor );
@@ -107,6 +115,11 @@ export class LiqProveedorComponent implements OnInit {
       });
     });
       
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   

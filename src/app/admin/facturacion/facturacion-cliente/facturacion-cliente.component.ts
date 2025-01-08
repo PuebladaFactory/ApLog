@@ -4,6 +4,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-facturacion-cliente',
@@ -31,7 +32,7 @@ export class FacturacionClienteComponent implements OnInit {
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
   iconosColumnas: any [] = [];
-  
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
     constructor(
       private storageService: StorageService,
@@ -39,15 +40,25 @@ export class FacturacionClienteComponent implements OnInit {
     ) {}
   
     ngOnInit(): void {
-      this.storageService.consultasFacCliente$.subscribe(data => {
+      this.storageService.consultasFacCliente$
+      .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+      .subscribe(data => {
         this.$facturasCliente = data;
         this.procesarDatosParaTabla();
         this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false); // Mueve esta línea aquí
       });
     
-      this.storageService.consultasFacOpLiqCliente$.subscribe(data => {
+      this.storageService.consultasFacOpLiqCliente$
+      .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+      .subscribe(data => {
         this.$facturaOpCliente = data;
       });      
+    }
+
+    ngOnDestroy(): void {
+      // Completa el Subject para cancelar todas las suscripciones
+      this.destroy$.next();
+      this.destroy$.complete();
     }
 
   

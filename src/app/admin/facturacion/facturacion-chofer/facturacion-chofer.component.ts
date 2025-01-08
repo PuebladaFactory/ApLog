@@ -5,6 +5,7 @@ import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-facturacion-chofer',
@@ -32,6 +33,7 @@ export class FacturacionChoferComponent implements OnInit {
   datosFiltrados = [...this.datosTablaChofer];
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
     constructor(
       private storageService: StorageService,
@@ -39,15 +41,25 @@ export class FacturacionChoferComponent implements OnInit {
     ) {}
   
     ngOnInit(): void {
-      this.storageService.consultasFacChofer$.subscribe(data => {
+      this.storageService.consultasFacChofer$
+      .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+      .subscribe(data => {
         this.$facturasChofer = data;
         this.procesarDatosParaTabla();
         this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false); // Mueve esta línea aquí
       });
     
-      this.storageService.consultasFacOpLiqChofer$.subscribe(data => {
+      this.storageService.consultasFacOpLiqChofer$
+      .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+      .subscribe(data => {
         this.$facturaOpChofer = data;
       });
+    }
+
+    ngOnDestroy(): void {
+      // Completa el Subject para cancelar todas las suscripciones
+      this.destroy$.next();
+      this.destroy$.complete();
     }
 
 

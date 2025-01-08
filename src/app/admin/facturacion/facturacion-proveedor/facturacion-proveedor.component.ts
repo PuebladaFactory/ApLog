@@ -5,6 +5,7 @@ import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-facturacion-proveedor',
@@ -30,6 +31,8 @@ export class FacturacionProveedorComponent implements OnInit {
   datosFiltrados = [...this.datosTablaProveedor];
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
+  ///////////////////////////////////////////////////
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
     
     constructor(
       private storageService: StorageService,
@@ -37,15 +40,25 @@ export class FacturacionProveedorComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-      this.storageService.consultasFacProveedor$.subscribe(data => {
+      this.storageService.consultasFacProveedor$
+      .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+      .subscribe(data => {
         this.$facturasProveedor = data;
         this.procesarDatosParaTabla();
         this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false); // Mueve esta línea aquí
       });
     
-      this.storageService.consultasFacOpLiqProveedor$.subscribe(data => {
+      this.storageService.consultasFacOpLiqProveedor$
+      .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+      .subscribe(data => {
         this.$facturaOpProveedor = data;
       });
+    }
+
+    ngOnDestroy(): void {
+      // Completa el Subject para cancelar todas las suscripciones
+      this.destroy$.next();
+      this.destroy$.complete();
     }
 
     procesarDatosParaTabla() {

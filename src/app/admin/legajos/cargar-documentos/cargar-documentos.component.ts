@@ -8,6 +8,7 @@ import { CarruselComponent } from 'src/app/shared/carrusel/carrusel.component';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import Swal from 'sweetalert2';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-cargar-documentos',
@@ -46,22 +47,33 @@ export class CargarDocumentosComponent implements OnInit {
   cloudinaryUrl = `https://api.cloudinary.com/v1_1/${environment.cloudinary.cloudName}/image/upload`;
   
   archivoPDFBase64: SafeResourceUrl | null = null;
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   
   constructor(private storageService: StorageService, private sanitizer: DomSanitizer, private modalService: NgbModal, private http: HttpClient){
 
   }  
   
   ngOnInit(): void {
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$choferes = data;     
       this.$choferes = this.$choferes      
       .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
       console.log("1)choferes especiales: ", this.$choferes);      
       
     })     
-    this.storageService.legajos$.subscribe(data => {
+    this.storageService.legajos$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$legajos = data;     
     })        
+  }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   changeChofer(e: any) {    
