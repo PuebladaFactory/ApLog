@@ -9,7 +9,7 @@ import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { take } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
@@ -69,6 +69,7 @@ export class LiqChoferComponent implements OnInit {
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
+  private destroy$ = new Subject<void>();
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -77,24 +78,32 @@ export class LiqChoferComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$choferes = data;
     });
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$clientes = data;
     }); 
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$proveedores = data;
     });
 
-    this.storageService.fechasConsulta$.subscribe(data => {
+    this.storageService.fechasConsulta$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.fechasConsulta = data;
       console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
       this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpChofer");
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
       this.storageService.consultasFacOpChofer$
-        //.pipe(take(1))
+        .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpChofer = data;
           console.log("1)", this.$facturasOpChofer );
@@ -108,10 +117,12 @@ export class LiqChoferComponent implements OnInit {
       });
     });
       
-    //this.consultaMes(); 
   }
 
-  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
   
   procesarDatosParaTabla() {
     const choferesMap = new Map<number, any>();

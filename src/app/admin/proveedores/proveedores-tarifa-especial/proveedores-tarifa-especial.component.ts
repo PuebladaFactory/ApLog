@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
@@ -26,9 +27,9 @@ export class ProveedoresTarifaEspecialComponent implements OnInit {
   idClienteEsp!: any;
   consultaProveedor: any [] = [];
   consultaCliente: any [] = [];
-  constructor(private storageService: StorageService){
-
-  }
+  private destroy$ = new Subject<void>();
+  
+  constructor(private storageService: StorageService){}
 
   ngOnInit() {
     //choferes todos
@@ -38,14 +39,18 @@ export class ProveedoresTarifaEspecialComponent implements OnInit {
       this.tEspecial = false;
     })   */
     //clientes todos
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$clientes = data;     
       this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       console.log("2)clientes: ", this.$clientes);      
       
     })          
     //proveedores todos y especiales
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$proveedores = data;      
       console.log("2)proveedores: ", this.$proveedores);      
       this.$proveedoresEsp = this.$proveedores
@@ -53,6 +58,11 @@ export class ProveedoresTarifaEspecialComponent implements OnInit {
       .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     })   
 
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   changeProveedor(e: any) {    

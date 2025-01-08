@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { OperacionesRoutingModule } from './operaciones-routing.module';
 import { OpControlComponent } from './op-control/op-control.component';
-import { OpAltaComponent } from './op-alta/op-alta.component';
+
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
@@ -14,15 +14,15 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { ModalFacturacionComponent } from './modal-facturacion/modal-facturacion.component';
 import { CargaMultipleComponent } from './carga-multiple/carga-multiple.component';
+import { ModalOpAltaComponent } from './modal-op-alta/modal-op-alta.component';
 
 
 @NgModule({
   declarations: [
-    OpControlComponent,
-    OpAltaComponent,    
+    OpControlComponent,      
     ConsultaOpComponent,           
     TableroOpComponent,     
-    ModalFacturacionComponent, CargaMultipleComponent,
+    ModalFacturacionComponent, CargaMultipleComponent, ModalOpAltaComponent,
   ],
   imports: [
     CommonModule,

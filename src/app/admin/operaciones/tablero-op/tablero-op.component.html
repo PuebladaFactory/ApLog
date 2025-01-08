@@ -1,17 +1,14 @@
 <div class="mt-2">
-    <button  class="btn btn-primary boton-alta mt-2" type="button" id="" data-bs-toggle="offcanvas" data-bs-target="#offcanvasAlta" aria-controls="offcanvasAlta">
-      {{ buttonNameAlta }}
+    
+    <button  class="btn btn-primary boton-alta mt-2" type="button" id="" (click)="modalAltaOp()">
+        {{ buttonNameAlta }}
     </button>
+    
     <app-btn-editar name="cargaMultiple" class="ms-3" (click)="modalCargaMultiple()" ></app-btn-editar>
     <br>
 
 </div>
-<div [ngClass]="{'offcanvas-normal': !tarifaEventual && !tarifaPersonalizada, 'offcanvas-personalizada': tarifaPersonalizada || tarifaEventual, 'offcanvas-alta': vehiculosChofer}" class="offcanvas offcanvas-end border border-2 rounded-end rounded-5" data-bs-scroll="true" tabindex="-1" id="offcanvasAlta" aria-labelledby="offcanvasRightLabel">
-    <div class="offcanvas-body">
-        <button type="button" class="btn-close float-end"  id="cerrar" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        <app-op-alta></app-op-alta>
-    </div>
-</div>
+
 <!-- ///////////////////////////////////////////////////////////////////////////////////////// -->  
 <div>    
     <div class="custom-datatable">    

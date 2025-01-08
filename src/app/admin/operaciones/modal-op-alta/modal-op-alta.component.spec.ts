@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { OpAltaComponent } from './op-alta.component';
+import { ModalOpAltaComponent } from './modal-op-alta.component';
 
-describe('OpAltaComponent', () => {
-  let component: OpAltaComponent;
-  let fixture: ComponentFixture<OpAltaComponent>;
+describe('ModalOpAltaComponent', () => {
+  let component: ModalOpAltaComponent;
+  let fixture: ComponentFixture<ModalOpAltaComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ OpAltaComponent ]
+      declarations: [ ModalOpAltaComponent ]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(OpAltaComponent);
+    fixture = TestBed.createComponent(ModalOpAltaComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

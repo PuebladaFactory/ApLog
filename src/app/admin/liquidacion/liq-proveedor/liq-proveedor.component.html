@@ -2,9 +2,9 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th scope="col" style="width:3%" class=""></th>
-            <th scope="col" style="width:18%" class="" type="button" (click)="ordenar('razonSocial')">
-                Razon Social
+            <th scope="col" style="width:3%" ></th>
+            <th scope="col" style="width:18%"  (click)="ordenar('razonSocial')">
+                <span>Razon Social</span>
                 <span *ngIf="ordenColumna === 'razonSocial'">
                     <span *ngIf="ordenAscendente">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -18,8 +18,8 @@
                     </span>
                 </span>
             </th>
-            <th scope="col" style="width:8%" class="" type="button" (click)="ordenar('cantOp')">
-                Cant Op
+            <th scope="col" style="width:8%"  (click)="ordenar('cantOp')">
+                <span>Cant Op</span>
                 <span *ngIf="ordenColumna === 'cantOp'">
                     <span *ngIf="ordenAscendente">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -33,8 +33,8 @@
                     </span>
                 </span>
             </th>
-            <th scope="col" style="width:14.5%" class="" type="button" (click)="ordenar('opSinFacturar')">
-                Sin Facturar
+            <th scope="col" style="width:14.5%"  (click)="ordenar('opSinFacturar')">
+                <span>Sin Facturar</span>
                 <span *ngIf="ordenColumna === 'opSinFacturar'">
                     <span *ngIf="ordenAscendente">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -48,8 +48,8 @@
                     </span>
                 </span>
             </th>  
-            <th scope="col" style="width:14.5%" class="" type="button" (click)="ordenar('opFacturadas')">
-                A Cobrar
+            <th scope="col" style="width:14.5%"  (click)="ordenar('opFacturadas')">
+                <span>A Cobrar</span>
                 <span *ngIf="ordenColumna === 'opFacturadas'">
                     <span *ngIf="ordenAscendente">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -63,8 +63,8 @@
                     </span>
                 </span>
             </th>                        
-            <th scope="col" style="width:14.5%" class="table-success" type="button" (click)="ordenar('total')">
-                Total
+            <th scope="col" style="width:14.5%" class="table-success" (click)="ordenar('total')">
+                <span>Total</span>
                 <span *ngIf="ordenColumna === 'total'">
                     <span *ngIf="ordenAscendente">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -78,8 +78,8 @@
                     </span>
                 </span>
             </th>
-            <th scope="col" style="width:14.5%" class="" type="button" (click)="ordenar('aCobrar')">
-                Total a Cobrar
+            <th scope="col" style="width:14.5%"  (click)="ordenar('aCobrar')">
+                <span>Total a Cobrar</span>
                 <span *ngIf="ordenColumna === 'aCobrar'">
                     <span *ngIf="ordenAscendente">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -93,8 +93,8 @@
                     </span>
                 </span>
             </th>                        
-            <th scope="col" style="width:8%" class="table-warning" type="button" (click)="ordenar('ganancia')">
-                Ganancia
+            <th scope="col" style="width:8%" class="table-warning" (click)="ordenar('ganancia')">
+                <span>Ganancia</span>
                 <span *ngIf="ordenColumna === 'ganancia'">
                     <span *ngIf="ordenAscendente">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -108,7 +108,7 @@
                     </span>
                 </span>
             </th>                        
-            <th scope="col" style="width:5%" class="">Facturar</th> 
+            <th scope="col" style="width:5%" >Facturar</th> 
         </tr>
     </thead>
     <tbody>

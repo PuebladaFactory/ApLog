@@ -1,28 +1,28 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { Operacion, TarifaEventual, TarifaPersonalizada } from 'src/app/interfaces/operacion';
+import { Operacion, TarifaPersonalizada } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
+import { TarifaEventual } from 'src/app/interfaces/tarifa-eventual';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
-
 import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
-
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import Swal from 'sweetalert2'
-
+import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-op-alta',
-  templateUrl: './op-alta.component.html',
-  styleUrls: ['./op-alta.component.scss'],
-  
+  selector: 'app-modal-op-alta',
+  templateUrl: './modal-op-alta.component.html',
+  styleUrls: ['./modal-op-alta.component.scss']
 })
-export class OpAltaComponent implements OnInit {
-  @Output() newItemEvent = new EventEmitter<any>();
+export class ModalOpAltaComponent implements OnInit {
+
+@Output() newItemEvent = new EventEmitter<any>();
   componente:string = "operaciones"
   form:any;
   op!: Operacion;
@@ -57,8 +57,9 @@ export class OpAltaComponent implements OnInit {
   ocultarSelecEventual: boolean = false;
   clienteEventual: boolean = false;
   choferEventual: boolean = false;
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, private formNumServ: FormatoNumericoService  ) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, private formNumServ: FormatoNumericoService, public activeModal: NgbActiveModal,  private dbFirebase: DbFirestoreService){
     this.form = this.fb.group({
       fecha: ['', Validators.required],
       cliente: ['', Validators.required],
@@ -84,106 +85,86 @@ export class OpAltaComponent implements OnInit {
     });
    }
 
-  ngOnInit(): void {    
-    this.storageService.choferes$.subscribe(data => {
+  ngOnInit(): void { 
+    
+    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralChofer', 'idTarifa');        
+    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa');    
+    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');
+    
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$choferes = data;
       this.$choferes = this.$choferes        
         .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
     });
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$clientes = data;
       this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$proveedores = data;            
     })   
-    this.storageService.tarifasPersCliente$.subscribe(data => {
+    this.storageService.tarifasPersCliente$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       if(data){
         this.tarifaClienteSel = data;
       }
       
     })
-    this.storageService.opTarEve$.subscribe(data=>{
+    this.storageService.opTarEve$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data=>{
       let datos = data
       this.tarifaEventual = datos[0];
     })
-    this.storageService.opTarPers$.subscribe(data=>{
+    this.storageService.opTarPers$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data=>{
       let datos = data
       this.tarifaPersonalizada = datos[0];
     });
-    /////////TARIFA GENERAL CLIENTE /////////////////////////
-    this.storageService.tarifasGralCliente$.subscribe(data =>{
-      ////////console.log("data: ", data);  
+    /////////TARIFA GENERAL CLIENTE /////////////////////////    
+    this.storageService.tarifasGralCliente$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data =>{    
       if(data){
-        this.ultTarifaGralCliente = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-        //this.ultTarifaGralCliente.cargasGenerales = this.ultTarifaGralCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-        console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);              
+        this.ultTarifaGralCliente = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos        
+        //console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralCliente);              
       }      
     });
-    /////////TARIFA GENERAL CHOFER /////////////////////////
-    this.storageService.tarifasGralChofer$.subscribe(data =>{
-      ////////console.log("data: ", data);                
+    /////////TARIFA GENERAL CHOFER /////////////////////////    
+    this.storageService.tarifasGralChofer$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data =>{    
       if(data){
-        this.ultTarifaGralChofer = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-        //this.ultTarifaGralChofer.cargasGenerales = this.ultTarifaGralChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-        console.log("2) ult tarifa GRAL CHOFER: ",this.ultTarifaGralChofer);              
+        this.ultTarifaGralChofer = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos        
+        //console.log("2) ult tarifa GRAL CHOFER: ",this.ultTarifaGralChofer);              
       }
       
     });
-    //////////////// TARIFA GENERAL PROVEEDORES ///////////////////
-    this.storageService.tarifasGralProveedor$.subscribe(data =>{
-      if(data){
-        ////console.log("data", data);        
+    //////////////// TARIFA GENERAL PROVEEDORES ///////////////////    
+    this.storageService.tarifasGralProveedor$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data =>{
+      if(data){        
         this.ultTarifaGralProveedor = data;
-        //this.ultTarifaGralProveedor.cargasGenerales = this.ultTarifaGralProveedor.cargasGenerales || [];
-        console.log("5) ult tarifa GRAL PROVEEDOR: ", this.ultTarifaGralProveedor);      
+        //console.log("5) ult tarifa GRAL PROVEEDOR: ", this.ultTarifaGralProveedor);      
       }
       
     })
-     /* /////////TARIFA ESPECIAL CLIENTE /////////////////////////
-     this.storageService.tarifasEspCliente$
-     //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
-     .subscribe(data =>{
-     ////////console.log("2c) data: ", data);                
-     if(data){
-       this.ultTarifaEspCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-       this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-       console.log("3) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);           
-     }      
-   })
-   
-    /////////TARIFA ESPECIAL CHOFER /////////////////////////
-    this.storageService.tarifasEspChofer$
-      //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe(data =>{
-      ////////console.log("2c) data: ", data);                
-      if(data){
-        this.ultTarifaEspChofer = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-        this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-        console.log("4) ult tarifa ESP CHOFER: ",this.ultTarifaEspChofer);           
-      }      
-    })    
-    ////////////////TARIFA ESPECIAL PROVEEDORES//////////////////
-    this.storageService.tarifasEspProveedor$
-    //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
-    .subscribe(data =>{
-    ////////console.log("2c) data: ", data);                
-      if(data){
-        this.ultTarifaEspProveedor = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-        this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-        console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
-      }    
-    }); */
-    this.medidasModal(this.tEventual, "opTarifaEventual");
-    this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");
-    this.medidasModal(this.vehiculosChofer, "vehiculosChofer");    
+     
   }
 
-  medidasModal(item:any, msj: string){
-    let array = [];
-    array.push(item)
-    this.storageService.setInfo(msj, array);
-    array = []
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   changeCliente(e: any) {
@@ -199,9 +180,9 @@ export class OpAltaComponent implements OnInit {
       this.tEventual = true;
       this.clienteEventual = true;
       this.ocultarSelecEventual = true;      
-      this.medidasModal(this.tEventual, "opTarifaEventual");    
+      //this.medidasModal(this.tEventual, "opTarifaEventual");    
       this.tPersonalizada = false;
-      this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");     
+      //this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");     
       this.form.patchValue({
         tarifaEventual:"si",
         acompaniante: "false"
@@ -214,7 +195,7 @@ export class OpAltaComponent implements OnInit {
         this.form.patchValue({
           tarifaEventual:"no",
         });
-        this.medidasModal(this.tEventual, "opTarifaEventual");        
+        //this.medidasModal(this.tEventual, "opTarifaEventual");        
       };      
       
     }
@@ -227,11 +208,11 @@ export class OpAltaComponent implements OnInit {
       } else{
         this.tPersonalizada = true;      
         this.tEventual = false
-        this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");        
+        //this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");        
       }      
     } else {
       this.tPersonalizada = false;
-      this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");      
+      //this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");      
     }
     //console.log("CHANGE CLIENTE) proveedores: ", this.$proveedores);
   }
@@ -252,9 +233,9 @@ export class OpAltaComponent implements OnInit {
         tarifaEventual:"si",
         acompaniante: "false"
       });
-      this.medidasModal(this.tEventual, "opTarifaEventual");      
+      //this.medidasModal(this.tEventual, "opTarifaEventual");      
       this.tPersonalizada = false;
-      this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");      
+      //this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");      
     } else {      
       this.choferEventual = false;
       if(!this.clienteEventual){ 
@@ -263,19 +244,19 @@ export class OpAltaComponent implements OnInit {
         });       
         this.tEventual = false;
         this.ocultarSelecEventual = false;
-        this.medidasModal(this.tEventual, "opTarifaEventual");        
+        //this.medidasModal(this.tEventual, "opTarifaEventual");        
       };            
     }  
     //////////console.log()(this.choferSeleccionado); 
     //this.form.patchValue({ chofer: e.target.value });
     if(this.choferSeleccionado.vehiculo.length > 1){
       this.vehiculosChofer = true;
-      this.medidasModal(this.vehiculosChofer, "vehiculosChofer");      
+      //this.medidasModal(this.vehiculosChofer, "vehiculosChofer");      
     } else {
       this.patenteChofer = this.choferSeleccionado.vehiculo[0].dominio;
       ////console.log("1)patente chofer: ", this.patenteChofer);   
       this.vehiculosChofer = false;
-      this.medidasModal(this.vehiculosChofer, "vehiculosChofer");      
+      //this.medidasModal(this.vehiculosChofer, "vehiculosChofer");      
     }
     //console.log("CHANGE CHOFER) proveedores: ", this.$proveedores);
   } 
@@ -343,9 +324,9 @@ export class OpAltaComponent implements OnInit {
       this.formTarifaEventual.get('clienteConcepto').setValidators(Validators.required);
       this.formTarifaEventual.get('clienteValor').setValidators(Validators.required);
       //this.tarifaEventual = true;      
-      this.medidasModal(this.tEventual, "opTarifaEventual");     
+      //this.medidasModal(this.tEventual, "opTarifaEventual");     
       this.tPersonalizada = false;
-      this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");      
+      //this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");      
     } else {
       this.form.get('acompaniante').setValidators(Validators.required);
 
@@ -355,7 +336,7 @@ export class OpAltaComponent implements OnInit {
       this.formTarifaEventual.get('clienteConcepto').clearValidators();
       this.formTarifaEventual.get('clienteValor').clearValidators();
       //this.tEventual = false;      
-      this.medidasModal(this.tEventual, "opTarifaEventual");        
+      //this.medidasModal(this.tEventual, "opTarifaEventual");        
       /* let array = [];
       array.push(this.tEventual)
       this.storageService.setInfo("opTarifaEventual", array);
@@ -537,16 +518,14 @@ export class OpAltaComponent implements OnInit {
   
 
   if(this.op.tarifaTipo.especial){
-      if(this.clienteSeleccionado.tarifaTipo.especial){
-        //this.storageService.getElemntByIdLimit("tarifasEspCliente","idCliente","idTarifa",this.clienteSeleccionado.idCliente,"ultTarifaEspCliente");  
-        this.storageService.getMostRecentItemId("tarifasEspCliente","idTarifa","idCliente",this.clienteSeleccionado.idCliente)
+      if(this.clienteSeleccionado.tarifaTipo.especial){        
         /////////TARIFA ESPECIAL CLIENTE /////////////////////////
-        this.storageService.tarifasEspCliente$          
+        this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspCliente","idTarifa","idCliente",this.clienteSeleccionado.idCliente) //buscamos la tarifa especial
+          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario   
           .subscribe(data =>{     
             if(data){
-                this.ultTarifaEspCliente = data; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-                //this.ultTarifaEspCliente.cargasGenerales = this.ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-                console.log("4) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
+                this.ultTarifaEspCliente = data[0];                
+                //console.log("4) ult tarifa ESP CLIENTE: ",this.ultTarifaEspCliente);              
                 if(this.ultTarifaEspCliente?.cargasGenerales?.length > 0 ){
                   this.op.valores.cliente.tarifaBase = this.aCobrarOp();
                   this.op.valores.cliente.aCobrar = this.op.valores.cliente.tarifaBase;
@@ -559,13 +538,12 @@ export class OpAltaComponent implements OnInit {
       }
       if(this.choferSeleccionado.tarifaTipo.especial){
           if(this.choferSeleccionado.idProveedor === 0){
-              //this.storageService.getElemntByIdLimit("tarifasEspChofer","idChofer","idTarifa",this.choferSeleccionado.idChofer,"ultTarifaEspChofer");
-              this.storageService.getMostRecentItemId("tarifasEspChofer","idTarifa","idChofer",this.choferSeleccionado.idChofer)
-              this.storageService.tarifasEspChofer$          
+              /////////TARIFA ESPECIAL CHOFER /////////////////////////
+              this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspChofer","idTarifa","idChofer", this.choferSeleccionado.idChofer) //buscamos la tarifa especial
+                .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario  
                 .subscribe(data =>{ 
                   if(data){
-                      this.ultTarifaEspChofer = data;           
-                      //this.ultTarifaEspChofer.cargasGenerales = this.ultTarifaEspChofer.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+                      this.ultTarifaEspChofer = data[0];                      
                       if(this.ultTarifaEspChofer?.cargasGenerales?.length > 0){
                         this.op.valores.chofer.tarifaBase = this.aPagarOp();  
                         this.op.valores.chofer.aPagar = this.op.valores.chofer.tarifaBase;
@@ -573,16 +551,15 @@ export class OpAltaComponent implements OnInit {
                   }                          
               })
           } else {
+            /////////TARIFA ESPECIAL PROVEEDOR /////////////////////////
             this.proveedorSeleccionado = this.$proveedores.filter((proveedor:Proveedor) =>{
               return proveedor.idProveedor === this.choferSeleccionado.idProveedor;
-            })
-            this.storageService.getMostRecentItemId("tarifasEspProveedor","idTarifa","idProveedor",this.proveedorSeleccionado[0].idProveedor)
-            //this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",this.proveedorSeleccionado[0].idProveedor,"ultTarifaEspProveedor");
-            this.storageService.tarifasEspProveedor$          
+            })            
+            this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspProveedor","idTarifa","idProveedor", this.proveedorSeleccionado[0].idProveedor) //buscamos la tarifa especial
+              .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario 
               .subscribe(data =>{ 
                 if(data){
-                    this.ultTarifaEspProveedor = data;   
-                    //this.ultTarifaEspProveedor.cargasGenerales = this.ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+                    this.ultTarifaEspProveedor = data[0];                       
                     if(this.ultTarifaEspProveedor?.cargasGenerales?.length > 0){
                       this.op.valores.chofer.tarifaBase = this.aPagarOp();  
                       this.op.valores.chofer.aPagar = this.op.valores.chofer.tarifaBase;
@@ -602,10 +579,6 @@ export class OpAltaComponent implements OnInit {
     this.op.valores.chofer.aPagar = this.op.valores.chofer.tarifaBase;
   }
 
-  
-    
-    //this.op.aCobrar = this.buscarTarifaServ.getACobrar(this.op, this.ultTarifaGralCliente, this.ultTarifaEspCliente)
-    //this.op.aPagar = this.buscarTarifaServ.getAPagar(this.op, this.ultTarifaGralChofer, this.ultTarifaEspChofer, this.ultTarifaGralProveedor, proveedor )
   ////console.log("esta es la operacion: ", this.op);  
   Swal.fire({
     title: "¿Desea agregar la operación?",
@@ -651,11 +624,11 @@ export class OpAltaComponent implements OnInit {
     this.clienteEventual = false;
     this.choferEventual = false;   
     this.vehiculosChofer = false;
-    this.medidasModal(this.vehiculosChofer, "vehiculosChofer");    
+    //this.medidasModal(this.vehiculosChofer, "vehiculosChofer");    
     this.tEventual = false;
-    this.medidasModal(this.tEventual, "opTarifaEventual");          
+    //this.medidasModal(this.tEventual, "opTarifaEventual");          
     this.tPersonalizada = false;
-    this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");
+    //this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");
     this.ngOnInit()
   
   }  
@@ -724,4 +697,5 @@ export class OpAltaComponent implements OnInit {
     const control = this.formTarifaEventual.get(controlName);
     return control?.hasError(errorName) && control.touched;
   }
+
 }

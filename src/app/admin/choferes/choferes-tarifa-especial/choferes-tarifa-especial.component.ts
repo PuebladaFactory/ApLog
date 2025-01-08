@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -21,12 +22,14 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
   idClienteEsp!: any;
   consultaChofer: any [] = [];
   consultaCliente: any [] = [];
-  constructor(private storageService: StorageService){
+  private destroy$ = new Subject<void>();
 
-  }
+  constructor(private storageService: StorageService){}
 
   ngOnInit() {
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$choferes = data;     
       this.$choferesEsp = this.$choferes
       .filter((c:Chofer)=>{return c.tarifaTipo.especial === true && c.idProveedor === 0})
@@ -34,7 +37,9 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
       console.log("1)choferes especiales: ", this.$choferesEsp);      
       this.tEspecial = false;
     })             
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$clientes = data;    
       this.$clientes = this.$clientes      
       .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del c  
@@ -42,6 +47,11 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
       
     })             
 
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   changeChofer(e: any) {    

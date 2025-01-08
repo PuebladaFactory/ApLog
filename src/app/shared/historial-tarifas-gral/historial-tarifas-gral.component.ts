@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
@@ -25,23 +26,36 @@ export class HistorialTarifasGralComponent implements OnInit {
   aumentosPersonalizados: number[] = [];
   tPersonalizada: boolean = false;  
   limite:number = 5;
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
   constructor(private storageService: StorageService, public activeModal: NgbActiveModal) {}
 
   ngOnInit(): void {    
  
     console.log("0)", this.fromParent);
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$choferes = data;      
     });
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$clientes = data;      
     }); 
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$proveedores = data;            
     })   
     this.consultarTarifas()
     
+  }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   consultarTarifas(){

@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
 import { TarigaGralEdicionComponent } from 'src/app/shared/tariga-gral-edicion/tariga-gral-edicion.component';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-proveedores-tarifa-gral',
@@ -35,6 +36,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     automatico: true,
   }
   $clientes!: Cliente[];
+  private destroy$ = new Subject<void>();
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal) {
     this.tarifaForm = this.fb.group({
@@ -65,7 +67,9 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     } 
 
     ///tarifa general para obtener las categorias
-    this.storageService.tarifasGralCliente$.subscribe(data =>{
+    this.storageService.tarifasGralCliente$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data =>{
       if(data){
         this.ultTarifaCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
         //console.log("2A) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);    
@@ -87,7 +91,9 @@ export class ProveedoresTarifaGralComponent implements OnInit {
           });
         } else {
           //TARIFA GRAL PROVEEDOR
-          this.storageService.tarifasGralProveedor$.subscribe(data =>{
+          this.storageService.tarifasGralProveedor$
+          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+          .subscribe(data =>{
             if(data){
               //console.log("data", data);        
               this.ultTarifaGralProveedor = data || {};      
@@ -102,7 +108,9 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       }
     }); 
     //consola de tarifas
-    this.storageService.consolaTarifa$.subscribe(data =>{
+    this.storageService.consolaTarifa$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data =>{
       this.consolaTarifa = data;
       console.log("consola tarifa: ", this.consolaTarifa);   
       if(this.consolaTarifa > 0)  {
@@ -110,18 +118,27 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       } ;      
     });
     //modo de tarifa
-    this.storageService.modoTarifa$.subscribe(data =>{
+    this.storageService.modoTarifa$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data =>{
       this.modoTarifa = data;
       console.log("1) modoTarifa: ", this.modoTarifa);      
       this.manejoConsola();
     });
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$clientes = data;
     });   
     
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa');    
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');
     
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   configurarTabla(){  

@@ -6,6 +6,7 @@ import { ProveedoresAltaComponent } from '../proveedores-alta/proveedores-alta.c
 import Swal from 'sweetalert2';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { Chofer } from 'src/app/interfaces/chofer';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -50,6 +51,7 @@ encapsulation!: ViewEncapsulation.None;
 ajustes: boolean = false;
 firstFilter = '';
 secondFilter = '';
+private destroy$ = new Subject<void>();
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +61,9 @@ secondFilter = '';
   ngOnInit(): void { 
     //this.proveedores$ = this.storageService.proveedores$; 
     
-    this.storageService.getObservable<Proveedor>('proveedores').subscribe(data => {
+    this.storageService.getObservable<Proveedor>('proveedores')
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       if(data){
         this.$proveedores = data;
         this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
@@ -67,7 +71,9 @@ secondFilter = '';
       }      
     })
 
-    this.storageService.getObservable<Chofer>('choferes').subscribe(data => {
+    this.storageService.getObservable<Chofer>('choferes')
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       if (data) {
         console.log('Datos choferes actualizados:', data);
         this.$choferes = [...data]; // Clona el array para evitar problemas con referencias
@@ -78,6 +84,11 @@ secondFilter = '';
 
     this.storageService.syncChanges<Proveedor>('proveedores');
     this.storageService.syncChanges<Chofer>('choferes');
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
   
   abrirEdicion(row:any):void {

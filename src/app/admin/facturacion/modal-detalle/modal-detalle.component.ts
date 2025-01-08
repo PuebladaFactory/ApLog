@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
@@ -60,6 +61,7 @@ export class ModalDetalleComponent implements OnInit {
   $choferes!: Chofer[];
   $clientes!: Cliente[];
   $proveedores!: Proveedor[];
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private excelServ: ExcelService, 
     private pdfServ: PdfService, private dbFirebase: DbFirestoreService){
@@ -67,13 +69,19 @@ export class ModalDetalleComponent implements OnInit {
   }
   
   ngOnInit(): void {
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$choferes = data;
     });
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$clientes = data;
     }); 
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$proveedores = data;            
     })       
     console.log("0) ", this.fromParent);
@@ -83,7 +91,9 @@ export class ModalDetalleComponent implements OnInit {
       //////////////CLIENTES///////////////////////
       case "clientes":
           this.storageService.getByFieldValue("facOpLiqCliente", "idCliente", this.data[0].idCliente);
-          this.storageService.facOpLiqCliente$.subscribe(data=>{
+          this.storageService.facOpLiqCliente$
+          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+          .subscribe(data=>{
             this.$facturasOpCliente = data;
             console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);      
           });
@@ -95,7 +105,9 @@ export class ModalDetalleComponent implements OnInit {
       //////////////CHOFERES///////////////////////
       case "choferes":
           this.storageService.getByFieldValue("facOpLiqChofer", "idChofer", this.data[0].idChofer);
-          this.storageService.facOpLiqChofer$.subscribe(data=>{
+          this.storageService.facOpLiqChofer$
+          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+          .subscribe(data=>{
             this.$facturasOpChofer = data;
             console.log("1) ngOnInit facOpChofer:",this.$facturasOpChofer);      
           });
@@ -107,7 +119,9 @@ export class ModalDetalleComponent implements OnInit {
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
           this.storageService.getByFieldValue("facOpLiqProveedor", "idProveedor", this.data[0].idProveedor);
-          this.storageService.facOpLiqProveedor$.subscribe(data=>{
+          this.storageService.facOpLiqProveedor$
+          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+          .subscribe(data=>{
             this.$facturasOpProveedor = data;
             console.log("1) ngOnInit facOpProveedor:",this.$facturasOpCliente);      
           });
@@ -120,6 +134,12 @@ export class ModalDetalleComponent implements OnInit {
         alert("error update")
       break;
     }       
+  }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getQuincena(fecha: string | Date): string {

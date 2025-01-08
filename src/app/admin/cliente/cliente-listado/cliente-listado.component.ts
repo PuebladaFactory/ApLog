@@ -52,7 +52,7 @@ export class ClienteListadoComponent implements OnInit {
   secondFilter = '';
   
 
-  private destroy$ = new Subject<void>()
+  private destroy$ = new Subject<void>();
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +60,9 @@ export class ClienteListadoComponent implements OnInit {
   
   ngOnInit(): void { 
 
-    this.storageService.getObservable<ConId<Cliente>>('clientes').subscribe(data => {
+    this.storageService.getObservable<ConId<Cliente>>('clientes')
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       if (data) {
         console.log('Datos cargados para clientes:', data);
         this.$clientes = data;
@@ -71,6 +73,8 @@ export class ClienteListadoComponent implements OnInit {
     // Sincroniza cambios en tiempo real
     this.storageService.syncChanges<Cliente>('clientes');
   }
+
+  
   
   abrirEdicion(row:any):void {
     this.seleccionarCliente(row);

@@ -8,7 +8,7 @@ import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { take } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Cliente } from 'src/app/interfaces/cliente';
@@ -68,7 +68,7 @@ export class LiqClienteComponent {
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
-
+  private destroy$ = new Subject<void>();
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -82,27 +82,35 @@ export class LiqClienteComponent {
 
   ngOnInit(): void {
 
-    this.storageService.choferes$.subscribe(data => {
+    this.storageService.choferes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$choferes = data;
       this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
     });
-    this.storageService.clientes$.subscribe(data => {
+    this.storageService.clientes$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$clientes = data;
       this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
-    this.storageService.proveedores$.subscribe(data => {
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.$proveedores = data;
       this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     });  
 
-    this.storageService.fechasConsulta$.subscribe(data => {
+    this.storageService.fechasConsulta$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
       this.fechasConsulta = data;
       console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
       this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpCliente");
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
       this.storageService.consultasFacOpCliente$
-        //.pipe(take(1))
+        .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpCliente = data;
           console.log("1)", this.$facturasOpCliente );
@@ -116,9 +124,12 @@ export class LiqClienteComponent {
       });
     });
       
-   
-    
     //this.consultaMes(); 
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   procesarDatosParaTabla() {
