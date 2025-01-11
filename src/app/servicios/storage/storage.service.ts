@@ -227,6 +227,9 @@ export class StorageService {
   private _tarifasEspProveedor$ = new BehaviorSubject<any>(this.loadInfo('tarifasEspProveedor') || []);
   public tarifasEspProveedor$ = this._tarifasEspProveedor$.asObservable();
 
+  private _users$ = new BehaviorSubject<any>(this.loadInfo('users') || []);
+  public users$ = this._users$.asObservable();
+
   updateObservable(componente: any, data: any) {
     switch (componente) {
       case "clientes": {
@@ -553,6 +556,11 @@ export class StorageService {
         break
       } 
 
+      case "users":{
+        this._users$.next(data);
+        break
+      } 
+
       default: {
         //statements; 
         break;
@@ -619,6 +627,7 @@ export class StorageService {
     this.getMostRecentItem<TarifaGralCliente>("tarifasGralCliente", "idTarifa");
     this.getMostRecentItem<TarifaGralCliente>("tarifasGralChofer", "idTarifa");
     this.getMostRecentItem<TarifaGralCliente>("tarifasGralProveedor", "idTarifa");
+    this.getAllUser("users");
     //this.getAllSorted("clientes", 'idCliente', 'asc')
     //this.getAllSorted("choferes", 'idChofer', 'asc')
     //this.getAllSorted("operaciones", 'fecha', 'desc')
@@ -655,6 +664,24 @@ export class StorageService {
 
 
   // METODOS CRUD
+
+  getAllUser(componente: string){
+    const cachedData = this.loadInfo(componente); // Carga desde local storage
+    console.log("getAll cachedData: ", cachedData);
+    
+    if (cachedData.length > 0) {
+      console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
+      this.updateObservable(componente, cachedData);
+    } else {
+      console.log(`Caché vacío, consultando Firestore para ${componente}`);
+      this.dbFirebase.getAllUser().subscribe(data => {
+        this.setInfo(componente, data); // Guarda en el caché
+        this.updateObservable(componente, data); // Actualiza el observable
+      });
+    }
+    return this.getObservable(componente); // Devuelve el observable
+  }
+
 
   getAll<T>(componente: string): Observable<T[]> {
     const cachedData = this.loadInfo(componente); // Carga desde local storage
@@ -742,6 +769,22 @@ export class StorageService {
     });
   }
 
+  syncChangesUsers<T>(componente: string): void {    
+    this.dbFirebase.getAllUser().subscribe(data => {
+      const currentData = this.loadInfo(componente);
+      //console.log("currentData", currentData);
+      //console.log("data", data);
+      if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
+        console.log(`Datos sincronizados para ${componente}`, data);
+        this.setInfo(componente, data); // Actualiza el caché
+        this.updateObservable(componente, data); // Actualiza el observable
+      } else {
+        console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+      }
+      
+    });
+  }
+
   getObservable<T>(componente: string): Observable<T[]> {
     switch (componente) {
       case 'clientes':
@@ -763,7 +806,11 @@ export class StorageService {
       case 'tarifasGralProveedor':
         return this._tarifasGralProveedor$.asObservable();
       case 'tarifasEspProveedor':
-        return this._tarifasEspProveedor$.asObservable();        
+        return this._tarifasEspProveedor$.asObservable();            
+      case 'users':
+        return this._users$.asObservable(); 
+      case 'usuario':
+        return this._usuario$.asObservable(); 
         
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
@@ -911,6 +958,20 @@ export class StorageService {
         console.log("storage update item", componente, item);
         this.dbFirebase.update(componente, item).then(() => {
           //this.refreshData(componente, item);
+        }).catch((e) => console.log(e.message));
+      }
+
+      public updateUser(componente: string, item: any): void {
+        console.log("storage update item", componente, item);
+        this.dbFirebase.updateUser(item).then(() => {
+          //this.refreshData(componente, item);
+        }).catch((e) => console.log(e.message));
+      }
+
+      public deleteUser(componente: string, item: any): void {
+        console.log("storage delete item", componente, item);
+        this.dbFirebase.deleteUser(item.id).then(() => {
+          //this.refreshData(componente,item);
         }).catch((e) => console.log(e.message));
       }
     

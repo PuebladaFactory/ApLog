@@ -15,7 +15,7 @@ import { LiquidacionModule } from './liquidacion/liquidacion.module';
 @NgModule({
   declarations: [
     AdminHomeComponent,
-    AdminSidebarComponent,    
+    AdminSidebarComponent,     
   ],
   imports: [
     CommonModule,

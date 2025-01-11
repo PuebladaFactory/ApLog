@@ -22,6 +22,7 @@ import { FormatoNumericoDirective } from './directives/formato-numerico.directiv
 import { SoloLetrasDirective } from './directives/solo-letras.directive';
 import { FormatoNumericoNgModelDirective } from './directives/formato-numerico-ng-model.directive';
 import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-edicion.component';
+import { RoleDirective } from './directives/role.directive';
 
 
 
@@ -44,7 +45,8 @@ import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-ed
     FormatoNumericoDirective,
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
-    TarigaGralEdicionComponent,
+    TarigaGralEdicionComponent,    
+    RoleDirective,
     
     
   ],
@@ -76,6 +78,7 @@ import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-ed
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,
+    RoleDirective,
     
   ]
 })

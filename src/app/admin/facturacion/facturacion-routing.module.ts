@@ -12,10 +12,7 @@ import { PagenotfoundComponent } from 'src/app/pagenotfound/pagenotfound.compone
 const routes: Routes = [
   {path: '', component:FacturacionControlComponent,
     children: [        
-      {path: 'gral', component:FacturacionGeneralComponent},    
-      /* {path: 'clientes', component:FacturacionClienteComponent},
-      {path: 'choferes', component:FacturacionChoferComponent},
-      {path: 'proveedores', component:FacturacionProveedorComponent}, */      
+      {path: 'gral', component:FacturacionGeneralComponent},       
     ]
   },
   {path: 'facturacion/clientes', component:PagenotfoundComponent},

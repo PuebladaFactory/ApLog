@@ -1,7 +1,7 @@
 
 <div class="d-flex justify-content-between mt-3">
     <!-- <h1>Clientes</h1> -->
-    <app-btn-leer  name="Cliente" (click)="openModal('alta')"></app-btn-leer>
+    <app-btn-leer *appRole="['god','admin', 'manager']"  name="Cliente" (click)="openModal('alta')"></app-btn-leer>
 </div>
 <!-- ////////////////////////////////////////////////////////////// -->
 <div class="custom-datatable mt-3">
@@ -57,9 +57,9 @@
             <ng-template ngx-datatable-cell-template let-row="row">
               <app-btn-leer name="Detalle" (click)="abrirVista(row)"></app-btn-leer>
                     
-              <app-btn-editar class="mx-2" name="Editar" (click)="abrirEdicion(row)"></app-btn-editar>
+              <app-btn-editar *appRole="['god','admin', 'manager']"  class="mx-2" name="Editar" (click)="abrirEdicion(row)"></app-btn-editar>
             
-              <app-btn-eliminar name="Eliminar" (click)="eliminarCliente(row)"></app-btn-eliminar>
+              <app-btn-eliminar *appRole="['god','admin', 'manager']"  name="Eliminar" (click)="eliminarCliente(row)"></app-btn-eliminar>
             </ng-template>
         </ngx-datatable-column>
     </ngx-datatable>

@@ -31,6 +31,17 @@ export class DbFirestoreService {
     
 
     ////////////////////////////////////////////////////////////////////////////////////
+    getAllUser() {
+      const dataCollection = `/users`;
+      return this.firestore2.collection(dataCollection, (ref) => ref.where('roles.god', '==', false)).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as any,
+        })))
+      );
+    }
+   
+   
     getAll<T>(componente: string): Observable<ConId<T>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection).snapshotChanges().pipe(
@@ -50,7 +61,7 @@ export class DbFirestoreService {
       );
     } */
 
-    getMostRecent<T>(componente: string, field: string): Observable<ConId<T>[]> {
+    getMostRecent<T>(componente: string, field: string): Observable<ConId<any>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection, ref =>
         ref.orderBy(field, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
@@ -320,5 +331,20 @@ getByFieldValue(componente:string, campo:string, value:any){
     return collectionData(dataCollection, {
       idField: 'id',
     }) as Observable<any[]>
+  }
+
+  updateUser(item: any) {
+    //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
+    const estacionamiento1DocumentReference = doc(
+      this.firestore,
+      `/users/${item.id}`
+    );
+    return updateDoc(estacionamiento1DocumentReference, { ...item });
+  }
+
+  deleteUser(id: string) {
+    //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
+    const estacionamiento1DocumentReference = doc(this.firestore, `/users/${id}`);
+    return deleteDoc(estacionamiento1DocumentReference);
   }
 }

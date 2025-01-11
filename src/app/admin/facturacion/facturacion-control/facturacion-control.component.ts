@@ -9,9 +9,9 @@ import { Router } from '@angular/router';
   </div>   
   <div class="tab-container">
       <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab1')">General</div>
-      <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Cliente</div>
+      <!-- <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Cliente</div>
       <div class="tab" [class.active]="selectedTab === 'tab3'" (click)="selectTab('tab3')">Chofer</div>    
-      <div class="tab" [class.active]="selectedTab === 'tab4'" (click)="selectTab('tab4')">Proveedor</div>    
+      <div class="tab" [class.active]="selectedTab === 'tab4'" (click)="selectTab('tab4')">Proveedor</div>     -->
       
   </div>
   <router-outlet></router-outlet>
