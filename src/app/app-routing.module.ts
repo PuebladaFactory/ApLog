@@ -8,6 +8,7 @@ import { SignUpComponent } from './appLogin/sign-up/sign-up.component';
 import { CargaComponent } from './carga/carga.component';
 import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
 import { RoleGuard } from './guards/role.guard';
+import { LimboComponent } from './limbo/limbo.component';
 
 // const routes: Routes = [];
 
@@ -25,7 +26,8 @@ const appRoutes: Routes = [
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'verify-email-address', component: VerifyEmailComponent },
   { path: 'register-user', component: SignUpComponent},
-  { path: 'unauthorized', component: PagenotfoundComponent}
+  { path: 'unauthorized', component: PagenotfoundComponent},
+  { path: 'limbo', component: LimboComponent}
 ];
 
 

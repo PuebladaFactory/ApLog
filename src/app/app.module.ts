@@ -64,6 +64,7 @@ import { ProveedoresModule } from './admin/proveedores/proveedores.module';
 import { FacturacionModule } from './admin/facturacion/facturacion.module';
 import { CargaComponent } from './carga/carga.component';
 import { CloudinaryModule } from '@cloudinary/ng';
+import { LimboComponent } from './limbo/limbo.component';
 
 
 
@@ -93,6 +94,7 @@ import { CloudinaryModule } from '@cloudinary/ng';
     SignUpComponent,
     LoginHeaderComponent,
     CargaComponent,
+    LimboComponent,
     
 
    
