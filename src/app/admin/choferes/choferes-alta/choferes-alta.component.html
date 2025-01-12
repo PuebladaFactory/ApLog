@@ -75,13 +75,21 @@
                         </div>
                         <div *ngIf="hasError('celularEmergencia', 'minlength')">El número de celular debe tener al menos 10 dígitos.</div>
                         <div *ngIf="hasError('celularEmergencia', 'maxlength')">El número de celular no debe exceder 10 dígitos.</div>                        
-                    </div>                       
+                    </div>  
+                    <div class="form-group mt-2">
+                        <label for="Contacto">Contacto de Emergencia</label>
+                        <div class="input-group">
+                            <input formControlName="contactoEmergencia" class="form-control" type="text"  [ngClass]="{ 'is-invalid': form.get('contactoEmergencia').invalid && (form.get('contactoEmergencia').dirty || form.get('contactoEmergencia').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloLetras>                            
+                        </div>
+                        
+                        <div *ngIf="hasError('contactoEmergencia', 'maxlength')">El contacto no debe exceder 60 caracteres.</div>                        
+                    </div>                         
                     <div class="form-group">
                         <label for="Email">Email</label>
                         <div class="input-group">
-                            <input formControlName="email" class="form-control" required type="email"[placeholder]="'ej: davidcortes@gmail.com'" [ngClass]="{ 'is-invalid': form.get('email').invalid && (form.get('email').dirty || form.get('email').touched) }" [ngClass]="{'isDisabled': soloVista}">
+                            <input formControlName="email" class="form-control" type="email"[placeholder]="'ej: davidcortes@gmail.com'" [ngClass]="{ 'is-invalid': form.get('email').invalid && (form.get('email').dirty || form.get('email').touched) }" [ngClass]="{'isDisabled': soloVista}">
                         </div>
-                        <div *ngIf="hasError('email', 'required')">El mail es obligatorio.</div>
+                        <!-- <div *ngIf="hasError('email', 'required')">El mail es obligatorio.</div> -->
                         <div *ngIf="hasError('email', 'email')">El formato no es correcto</div>
                     </div>                           
                     <div class="form-group">
@@ -159,7 +167,7 @@
                             <td class="align-middle">{{vehiculo.tipoCombustible}}</td>
                             <td class="align-middle">{{vehiculo.tarjetaCombustible ? "Si" : "No"}}</td>
                             <td class="align-middle">{{vehiculo.publicidad ? "Si" : "No"}}</td>                            
-                            <td class="align-middle">{{!vehiculo.segSat ? "No" : vehiculo.satelital?.proveedor + ': ' + vehiculo.satelital?.marcaGps}}</td>
+                            <td class="align-middle">{{!vehiculo.segSat ? "No" : vehiculo.satelital}}</td>
                             <td class="align-middle" *ngIf="!soloVista">
                                 <app-btn-editar name="EditarClaro" (click)="editarVehiculo(i)"></app-btn-editar>
                                 <app-btn-eliminar name="EliminarClaro" (click)="eliminarVehiculo(i)"></app-btn-eliminar>

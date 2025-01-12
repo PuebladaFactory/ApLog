@@ -26,7 +26,7 @@ export class ModalVehiculoComponent implements OnInit {
   seguimientoForm:any;
   categoriasForm:any;
   proveedorSeleccionado!: string;
-  tipoCombustible!:string;
+  tipoCombustible:string[] = [];
   tarjetaCombustible!:boolean;
   publicidad!: boolean;
   seguimiento!: boolean;
@@ -47,7 +47,7 @@ export class ModalVehiculoComponent implements OnInit {
 
     this.seguimientoForm = this.fb.group({
       proveedor: ["",[Validators.required, Validators.maxLength(30)]],
-      marcaGps: ["",[Validators.required, Validators.maxLength(30)]],
+      //marcaGps: ["",[Validators.required, Validators.maxLength(30)]],
     })
 
     this.categoriasForm = this.fb.group({
@@ -74,6 +74,7 @@ export class ModalVehiculoComponent implements OnInit {
         this.edicion = true;
         this.vehiculo = this.fromParent;
         this.ordCat = this.vehiculo.categoria.catOrden;
+        //this.tipoCombustible = this.vehiculo.tipoCombustible
         this.armarForms()
     }
        
@@ -89,7 +90,7 @@ export class ModalVehiculoComponent implements OnInit {
     if(this.ordCat === undefined){
       return this.mensajesError("Debe seleccionar una Categoria Tipo")    
     };
-    if(this.tipoCombustible === undefined){
+    if(this.tipoCombustible.length === 0){
       return this.mensajesError("Debe seleccionar un tipo de combustible")    
     };
     if(this.tarjetaCombustible === undefined){
@@ -102,7 +103,7 @@ export class ModalVehiculoComponent implements OnInit {
       return this.mensajesError("Debe seleccionar si tiene seguimiento satelital")    
     };
     if(this.seguimiento && this.seguimientoForm.invalid){
-      return this.mensajesError("Debe ingresar un proveedor y una marca del gps")    
+      return this.mensajesError("Debe ingresar un proveedor")    
     }
     if (this.vehiculoForm.valid){
 
@@ -121,8 +122,25 @@ export class ModalVehiculoComponent implements OnInit {
         this.proveedorSeleccionado = e.target.value;   
   }  
 
-  changeTipoCombustible(e: any) {    
+  /* changeTipoCombustible(e: any) {    
     this.tipoCombustible = e.target.value   
+  } */
+
+  changeTipoCombustible(event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+    const value = checkbox.value;
+
+    if (checkbox.checked) {
+      // Agregar el valor si está marcado
+      if (!this.tipoCombustible.includes(value)) {
+        this.tipoCombustible.push(value);
+      }
+    } else {
+      // Eliminar el valor si está desmarcado
+      this.tipoCombustible = this.tipoCombustible.filter(item => item !== value);
+    }
+
+    console.log('Seleccionados:', this.tipoCombustible);
   }
 
   changeTarjetaombustible(e: any) {    
@@ -183,10 +201,10 @@ export class ModalVehiculoComponent implements OnInit {
     this.vehiculo.publicidad = this.publicidad;
     if(this.seguimiento){
       this.vehiculo.segSat = true;
-      this.vehiculo.satelital = this.seguimientoForm.value;
+      this.vehiculo.satelital = this.seguimientoForm.value.proveedor;
     }else{
       this.vehiculo.segSat = false;
-      this.vehiculo.satelital = null;
+      this.vehiculo.satelital = "";
     }
     this.vehiculo.refrigeracion = null;
     //console.log(this.vehiculo);    
@@ -215,13 +233,13 @@ export class ModalVehiculoComponent implements OnInit {
       this.seguimiento = false;      
       this.seguimientoForm.patchValue({
         proveedor: "",
-        marcaGps: "",
+        //marcaGps: "",
       })
     }else{
       this.seguimiento = true;
       this.seguimientoForm.patchValue({
-        proveedor: this.vehiculo.satelital?.proveedor,
-        marcaGps: this.vehiculo.satelital?.marcaGps,
+        proveedor: this.vehiculo.satelital,
+        //marcaGps: this.vehiculo.satelital?.marcaGps,
       })
     }
   }

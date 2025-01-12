@@ -21,7 +21,7 @@
                     <td>{{u.emailVerified}}</td>
                     <td>{{u.name}}</td>
                     <td>{{u.roles.admin ? "Administrador" : u.roles.manager ? "Manager" : u.roles.user ? "Usuario" : "Sin rol asignado"}}</td>
-                    <td [ngClass]="{'isDisabled': $usuario.roles.manager || $usuario.roles.user || ($usuario.roles.admin && u.roles.admin && $usuario.id !== u.id) }">
+                    <td [ngClass]="{'isDisabled': $usuario.roles.manager || $usuario.roles.user || ($usuario.roles.admin && u.roles.admin && $usuario.uid !== u.uid) }">
                         <app-btn-editar name="Editar" class="mx-2" (click)="openModal(u)"></app-btn-editar>                
                     </td>
                     <td [ngClass]="{'isDisabled': $usuario.roles.manager || $usuario.roles.user || u.roles.admin }">

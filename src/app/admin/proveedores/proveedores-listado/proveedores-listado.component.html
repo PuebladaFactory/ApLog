@@ -1,5 +1,5 @@
 <div class="d-flex justify-content-between mt-3">    
-    <app-btn-leer name="Proveedor" (click)="openModal('alta')"></app-btn-leer>    
+    <app-btn-leer *appRole="['god','admin', 'manager']" name="Proveedor" (click)="openModal('alta')"></app-btn-leer>    
 </div>
 
 <div class="custom-datatable mt-3">
@@ -63,9 +63,9 @@
 
             <app-btn-leer name="Detalle" class="me-2" (click)="abrirVista(row)"></app-btn-leer>
                   
-            <app-btn-editar class="me-2" name="Editar"  (click)="abrirEdicion(row)"></app-btn-editar>
+            <app-btn-editar *appRole="['god','admin', 'manager']" class="me-2" name="Editar"  (click)="abrirEdicion(row)"></app-btn-editar>
           
-            <app-btn-eliminar name="Eliminar" (click)="eliminarProveedor(row)"></app-btn-eliminar>
+            <app-btn-eliminar *appRole="['god','admin', 'manager']" name="Eliminar" (click)="eliminarProveedor(row)"></app-btn-eliminar>
         </ng-template>
     </ngx-datatable-column>
         </ngx-datatable>
@@ -102,7 +102,7 @@
                                     <td>{{vehiculo.modelo}}</td>   
                                     <td>{{vehiculo.tipoCombustible}}</td>   
                                     <td>{{vehiculo.categoria.nombre}}</td>   
-                                    <td>{{!vehiculo.segSat ? "No" : vehiculo.satelital?.proveedor + ': ' + vehiculo.satelital?.marcaGps}}</td>   
+                                    <td>{{!vehiculo.segSat ? "No" : vehiculo.satelital}}</td>   
                                     <td>{{vehiculo.tarjetaCombustible ? "Si" : "No"}}</td>   
                                     <td>{{vehiculo.publicidad ? "Si" : "No"}}</td>   
                                 </tr>       

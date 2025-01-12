@@ -96,6 +96,31 @@ export class DbFirestoreService {
       );
     }
 
+    getMostRecentLimit<T>(componente: string, field: string, limit:number): Observable<ConId<T>[]> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref =>
+        ref.orderBy(field, 'desc').limit(limit) // Ordenar por id descendente y limitar a 1        
+      ).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
+        })))
+      );
+    }
+
+    getMostRecentLimitId<T>(componente: string, field: string, campo:string, id:number, limit:number): Observable<ConId<T>[]> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref =>
+        ref.orderBy(field, 'desc').limit(limit) // Ordenar por id descendente y limitar a 1        
+        .where(campo, "==" ,id)
+      ).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
+        })))
+      );
+    }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GET ALL ORDENADO POR CAMPO Y ORDEN
 getAllSorted(componente:string, campo:string, orden:any) {

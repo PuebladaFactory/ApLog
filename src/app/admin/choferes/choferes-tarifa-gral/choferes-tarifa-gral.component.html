@@ -6,7 +6,7 @@
 
   </div>
 
-  <app-consola-tarifa class="col-4 "></app-consola-tarifa>
+  <app-consola-tarifa *appRole="['god','admin', 'manager']" class="col-4 "></app-consola-tarifa>
 
 </div>
 <div>
@@ -90,9 +90,9 @@
                 </tr>
             </ng-template>
         </table>         
-        <app-btn-editar name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
+        <app-btn-editar *appRole="['god','admin', 'manager']" name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
         
-        <app-btn-agregar name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
+        <app-btn-agregar *appRole="['god','admin', 'manager']" name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
         <!-- <button type="button" class="btn btn-primary" (click)="guardarTarifa()">Guardar Tarifa</button> -->
     </form>
     <hr class="mt-4">
