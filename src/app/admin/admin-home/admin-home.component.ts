@@ -14,7 +14,7 @@ export class AdminHomeComponent implements OnInit {
   
   activo!:boolean;
   $legajos!:Legajo[];
-  
+  $usuario!: any;
 
   constructor(private storageService: StorageService, private legajoServ: LegajosService) { }
 
@@ -31,6 +31,11 @@ export class AdminHomeComponent implements OnInit {
         //this.router.navigate(['admin']);
         
       });
+      this.storageService.usuario$.subscribe(data=>{
+        if(data){
+          this.$usuario = data
+        }
+      })
   }
 
   ngOnDestroy(): void {

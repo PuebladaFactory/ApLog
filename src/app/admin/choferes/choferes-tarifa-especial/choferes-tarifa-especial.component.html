@@ -33,7 +33,10 @@
         </div>  
     </div>
     
-    <app-consola-tarifa class="col-4 " *ngIf="tEspecial"></app-consola-tarifa>     
+    <ng-container *appRole="['god','admin', 'manager']">
+        <app-consola-tarifa class="col-4 " *ngIf="tEspecial"></app-consola-tarifa>     
+    </ng-container>
+    
 </div>
 
 <div>

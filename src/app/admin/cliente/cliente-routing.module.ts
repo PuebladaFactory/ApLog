@@ -8,11 +8,15 @@ import { ClienteTarifaPersonalizadaComponent } from './cliente-tarifa-personaliz
 import { ClienteTarifaGralComponent } from './cliente-tarifa-gral/cliente-tarifa-gral.component';
 import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/cliente-tarifa-especial.component';
 import { TarifasEventualesComponent } from 'src/app/shared/tarifas-eventuales/tarifas-eventuales.component';
+import { RoleGuard } from 'src/app/guards/role.guard';
 
 const routes: Routes = [
   {path: '', component:ClienteControlComponent,
   children: [        
-    {path: 'alta', component:ClienteAltaComponent},    
+    {path: 'alta', component:ClienteAltaComponent,
+      canActivate: [RoleGuard],
+      data: { roles: ['god', 'admin', 'manager'] }, // no se permiten usuarios
+    },    
     {path: 'listado', component:ClienteListadoComponent},
     {path: 'general', component:ClienteTarifaGralComponent},
     {path: 'especial', component:ClienteTarifaEspecialComponent},

@@ -5,8 +5,10 @@
     <div class="col-4">
 
     </div>
-
-    <app-consola-tarifa class="col-4 "></app-consola-tarifa>
+    <ng-container *appRole="['god','admin', 'manager']">
+        <app-consola-tarifa  class="col-4 "></app-consola-tarifa>
+    </ng-container>
+    
 
 </div>
 <div>
@@ -85,8 +87,8 @@
                 </tr>
             </ng-template>
         </table>        
-        <app-btn-editar name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
-        <app-btn-agregar name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
+        <app-btn-editar *appRole="['god','admin', 'manager']" name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
+        <app-btn-agregar *appRole="['god','admin', 'manager']" name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
     </form>
     <hr class="mt-4">
     <div class="mt-4">

@@ -1,11 +1,12 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subject, takeUntil } from 'rxjs';
+import { distinctUntilChanged, Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -28,7 +29,7 @@ export class HistorialTarifasGralComponent implements OnInit {
   limite:number = 5;
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
-  constructor(private storageService: StorageService, public activeModal: NgbActiveModal) {}
+  constructor(private storageService: StorageService, public activeModal: NgbActiveModal, private dbFirebase: DbFirestoreService) {}
 
   ngOnInit(): void {    
  
@@ -62,54 +63,110 @@ export class HistorialTarifasGralComponent implements OnInit {
     switch(this.fromParent.modo){
       case 'clientes':
         if (!this.fromParent.tEspecial) {
-          this.storageService.getAllSortedLimit('tarifasGralCliente', 'idTarifa', 'desc', this.limite, 'historialTarifaGralCliente');
+          //this.storageService.getAllSortedLimit('tarifasGralCliente', 'idTarifa', 'desc', this.limite, 'historialTarifaGralCliente');
+          this.dbFirebase.getMostRecentLimit<TarifaGralCliente>('tarifasGralCliente', 'idTarifa', this.limite)
+          .pipe(
+            takeUntil(this.destroy$),
+            distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
+          )
+          .subscribe(data => {                    
+            this.tarifasHistorial = data;
+            this.tarifasHistorial = this.tarifasHistorial.sort((a, b) => b.idTarifa - a.idTarifa);
+            this.calcularAumentos();      
+          });
         } else {
-          this.storageService.getAllSortedIdLimit('tarifasEspCliente', 'idCliente', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralCliente');
+          //this.storageService.getAllSortedIdLimit('tarifasEspCliente', 'idCliente', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralCliente');
+          this.dbFirebase.getMostRecentLimitId<TarifaGralCliente>('tarifasEspCliente', 'idTarifa', 'idCliente', this.fromParent.id,  this.limite)
+          .pipe(
+            takeUntil(this.destroy$),
+            distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
+          )
+          .subscribe(data => { 
+            console.log("data", data);
+                               
+            this.tarifasHistorial = data;
+            this.tarifasHistorial = this.tarifasHistorial.sort((a, b) => b.idTarifa - a.idTarifa);
+            this.calcularAumentos();      
+          });
         }
-
-        this.storageService.historialTarifaGralCliente$.subscribe((tarifas: TarifaGralCliente[]) => {
-          this.tarifasHistorial = tarifas.sort((a, b) => b.idTarifa - a.idTarifa);
-          this.calcularAumentos();
-        });
+       
         break;
 
       case "choferes":{
         if (!this.fromParent.tEspecial) {
-          this.storageService.getAllSortedLimit('tarifasGralChofer', 'idTarifa', 'desc', this.limite, 'historialTarifaGralChofer');
+          //this.storageService.getAllSortedLimit('tarifasGralChofer', 'idTarifa', 'desc', this.limite, 'historialTarifaGralChofer');
+          this.dbFirebase.getMostRecentLimit<TarifaGralCliente>('tarifasGralChofer', 'idTarifa', this.limite)
+          .pipe(
+            takeUntil(this.destroy$),
+            distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
+          )
+          .subscribe(data => {                    
+            this.tarifasHistorial = data;
+            this.tarifasHistorial = this.tarifasHistorial.sort((a, b) => b.idTarifa - a.idTarifa);
+            this.calcularAumentos();      
+          });
         } else {
-          this.storageService.getAllSortedIdLimit('tarifasEspChofer', 'idChofer', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralChofer');
+          //this.storageService.getAllSortedIdLimit('tarifasEspChofer', 'idChofer', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralChofer');
+          this.dbFirebase.getMostRecentLimitId<TarifaGralCliente>('tarifasEspChofer', 'idTarifa', 'idChofer', this.fromParent.id,  this.limite)
+          .pipe(
+            takeUntil(this.destroy$),
+            distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
+          )
+          .subscribe(data => { 
+            console.log("data", data);
+                               
+            this.tarifasHistorial = data;
+            this.tarifasHistorial = this.tarifasHistorial.sort((a, b) => b.idTarifa - a.idTarifa);
+            this.calcularAumentos();      
+          });
         }
-
-        this.storageService.historialTarifaGralChofer$.subscribe((tarifas: TarifaGralCliente[]) => {
-          this.tarifasHistorial = tarifas.sort((a, b) => b.idTarifa - a.idTarifa);
-          this.calcularAumentos();
-        });
-        
         break
       };
       case "proveedores":{
         if (!this.fromParent.tEspecial) {
-          this.storageService.getAllSortedLimit('tarifasGralProveedor', 'idTarifa', 'desc', this.limite, 'historialTarifaGralProveedor');
+          //this.storageService.getAllSortedLimit('tarifasGralProveedor', 'idTarifa', 'desc', this.limite, 'historialTarifaGralProveedor');
+          this.dbFirebase.getMostRecentLimit<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa', this.limite)
+          .pipe(
+            takeUntil(this.destroy$),
+            distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
+          )
+          .subscribe(data => {                    
+            this.tarifasHistorial = data;
+            this.tarifasHistorial = this.tarifasHistorial.sort((a, b) => b.idTarifa - a.idTarifa);
+            this.calcularAumentos();      
+          });
         } else {
-          this.storageService.getAllSortedIdLimit('tarifasEspProveedor', 'idProveedor', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralProveedor');
+          //this.storageService.getAllSortedIdLimit('tarifasEspProveedor', 'idProveedor', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralProveedor');
+          this.dbFirebase.getMostRecentLimitId<TarifaGralCliente>('tarifasEspProveedor', 'idTarifa', 'idProveedor', this.fromParent.id,  this.limite)
+          .pipe(
+            takeUntil(this.destroy$),
+            distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
+          )
+          .subscribe(data => { 
+            console.log("data", data);
+                               
+            this.tarifasHistorial = data;
+            this.tarifasHistorial = this.tarifasHistorial.sort((a, b) => b.idTarifa - a.idTarifa);
+            this.calcularAumentos();      
+          });
         }
-
-        this.storageService.historialTarifaGralProveedor$.subscribe((tarifas: TarifaGralCliente[]) => {
-          this.tarifasHistorial = tarifas.sort((a, b) => b.idTarifa - a.idTarifa);
-          this.calcularAumentos();
-        });
-        
         break
       }
     
       case "personalizada": {
-        this.tPersonalizada = true;        
-        this.storageService.getAllSortedIdLimit('tarifasPersCliente', 'idCliente', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaPersCliente');
-        this.storageService.historialTarifaPersCliente$.subscribe((tarifas: TarifaPersonalizadaCliente[]) => {
-          this.tarifasPersHistorial = tarifas.sort((a, b) => b.idTarifa - a.idTarifa);
-          console.log(this.tarifasPersHistorial);          
-          this.calcularAumentos();
-        });
+        this.tPersonalizada = true;                
+        this.dbFirebase.getMostRecentLimitId<TarifaPersonalizadaCliente>('tarifasPersCliente', 'idTarifa', 'idCliente', this.fromParent.id,  this.limite)
+          .pipe(
+            takeUntil(this.destroy$),
+            distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
+          )
+          .subscribe(data => { 
+            console.log("data", data);
+                               
+            this.tarifasPersHistorial = data;
+            this.tarifasPersHistorial = this.tarifasPersHistorial.sort((a, b) => b.idTarifa - a.idTarifa);
+            this.calcularAumentos();      
+          });
 
         break
       }
@@ -159,26 +216,36 @@ export class HistorialTarifasGralComponent implements OnInit {
   }
 
   calcularAumentos(): void {
-    if(!this.tPersonalizada){
-        this.aumentos = new Array(this.tarifasHistorial.length).fill(0); // Inicializamos el array con ceros
+    if(!this.tPersonalizada){        
+        
+      this.aumentos = new Array(this.tarifasHistorial.length).fill(0); // Inicializamos el array con ceros
+
+      for (let i = this.tarifasHistorial.length - 1; i > 0; i--) {
+        const tarifaActual = this.tarifasHistorial[i];
+        const tarifaSiguiente = this.tarifasHistorial[i - 1];
     
-        for (let i = this.tarifasHistorial.length - 1; i > 0; i--) {
-          const tarifaActual = this.tarifasHistorial[i];
-          const tarifaSiguiente = this.tarifasHistorial[i - 1];
-      
-          const aumentoTotal = tarifaSiguiente.cargasGenerales.reduce((total, categoriaSiguiente, index) => {
-            const categoriaActual = tarifaActual.cargasGenerales[index];
-            if (categoriaActual) {
-              const aumentoCategoria = ((categoriaSiguiente.valor - categoriaActual.valor) / categoriaActual.valor) * 100;
-              return total + aumentoCategoria;
-            }
-            return total;
-          }, 0);
-      
-          // Calculamos el promedio de aumento para todas las categorías
-          const promedioAumento = aumentoTotal / tarifaSiguiente.cargasGenerales.length;
-          this.aumentos[i - 1] = promedioAumento; // Guardamos el aumento en la posición de la tarifa "más antigua"
-        }
+        const aumentoTotal = tarifaSiguiente.cargasGenerales.reduce((total, categoriaSiguiente, index) => {
+          const categoriaActual = tarifaActual.cargasGenerales[index];
+    
+          if (categoriaActual && categoriaSiguiente && categoriaActual.valor && categoriaSiguiente.valor) {
+            const valorActual = categoriaActual.valor || 0;
+            const valorSiguiente = categoriaSiguiente.valor || 0;
+    
+            // Evitar división entre 0
+            if (valorActual === 0) return total;
+    
+            const aumentoCategoria = ((valorSiguiente - valorActual) / valorActual) * 100;
+            return total + aumentoCategoria;
+          }
+          return total;
+        }, 0);
+    
+        const categoriasCount = tarifaSiguiente.cargasGenerales.filter(cat => cat.valor).length || 1;
+        const promedioAumento = aumentoTotal / categoriasCount;
+        this.aumentos[i - 1] = promedioAumento; // Guardamos el aumento en la posición correspondiente
+      }
+          
+        
     } else {
       // Inicializamos el array de aumentos con 0 para cada tarifa
   this.aumentosPersonalizados = new Array(this.tarifasPersHistorial.length).fill(0);

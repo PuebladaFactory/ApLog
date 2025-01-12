@@ -36,36 +36,108 @@ export class AuthService {
   }
 
   // Sign in with email/password
-  SignIn(email: string, password: string) {
+/*   SignIn(email: string, password: string) {
     return this.afAuth
       .signInWithEmailAndPassword(email, password)
       .then((result) => {
-        this.SetUserData(result.user);
-        /* this.afAuth.authState.subscribe((user) => {
-          if (user) {
-            this.router.navigate(['/carga']);
-          }
-        }); */
+        this.SetUserData(result.user);        
       })
       .catch((error) => {
         window.alert(error.message);
       });
-  }
+  } */
+
+      SignIn(email: string, password: string) {
+        return this.afAuth
+          .signInWithEmailAndPassword(email, password)
+          .then((result) => {
+            // Obtener los datos del usuario desde Firestore
+            this.GetUserData(result.user!.uid).then((userData) => {
+              console.log('User data:', userData);
+              if(userData === null) {
+                this.router.navigate(['/unauthorized']);
+              } else {
+                this.checkEmailVerification();
+                this.usuario = userData;              
+                this.storage.setInfo(`usuario`, this.usuario);
+                //this.dbFirebase.setearColeccion('Vantruck')
+                if(this.usuario.hasOwnProperty('roles')){
+                  this.router.navigate(['/carga']);
+                } else {
+                  this.router.navigate(['/unauthorized']);
+                }
+              }
+              //this.setearColeccion();
+              //this.filtrarRoles()
+              // Aquí puedes manejar los datos del usuario (por ejemplo, guardar en un servicio)
+            });
+          })
+          .catch((error) => {
+            window.alert(error.message);
+          });
+      }
+      
+      GetUserData(uid: string): Promise<any> {
+        return this.afs.doc(`users/${uid}`).ref.get().then((doc) => {
+          if (doc.exists) {
+            return doc.data(); // Retorna los datos del usuario
+          } else {
+            console.error('No user data found!');
+            return null;
+          }
+        });
+      }
+
+       // Verificar correo electrónico y actualizar Firestore
+      checkEmailVerification(): void {
+        this.afAuth.currentUser.then((user) => {
+          if (user) {
+            // Recarga la información del usuario para actualizar su estado
+            user.reload().then(() => {
+              if (user.emailVerified) {
+                this.updateEmailVerifiedStatus(user.uid);
+              }
+            });
+          }
+        });
+      }
+
+      // Actualiza el campo emailVerified en Firestore
+      private updateEmailVerifiedStatus(uid: string): void {
+        const userRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${uid}`);
+        userRef.update({ emailVerified: true }).then(() => {
+          console.log('Email verification status updated successfully in Firestore.');
+        });
+      }
+      
 
   // Sign up with email/password
-  SignUp(email: string, password: string) {
+/*   SignUp(email: string, password: string) {
     return this.afAuth
       .createUserWithEmailAndPassword(email, password)
       .then((result) => {
-        /* Call the SendVerificaitonMail() function when new user sign 
-        up and returns promise */
+        //Call the SendVerificaitonMail() function when new user sign up and returns promise 
         this.SendVerificationMail();
         this.SetUserData(result.user);
       })
       .catch((error) => {
         window.alert(error.message);
       });
-  }
+  } */
+
+      SignUp(email: string, password: string) {
+        return this.afAuth
+          .createUserWithEmailAndPassword(email, password)
+          .then((result) => {
+            this.SendVerificationMail();
+            const initialRoles = { god: false, admin: false, manager: false, user: false }; // Roles iniciales
+            this.SetUserData(result.user, initialRoles);
+          })
+          .catch((error) => {
+            window.alert(error.message);
+          });
+      }
+      
 
   // Send email verfificaiton when new user sign up
   SendVerificationMail() {
@@ -131,7 +203,7 @@ export class AuthService {
   /* Setting up user data when sign in with username/password, 
   sign up with username/password and sign in with social auth  
   provider in Firestore database using AngularFirestore + AngularFirestoreDocument service */
-  SetUserData(user: any) {
+/*   SetUserData(user: any) {
     const userRef: AngularFirestoreDocument<any> = this.afs.doc(
       `users/${user.uid}`
     );
@@ -146,7 +218,25 @@ export class AuthService {
     return userRef.set(userData, {
       merge: true,
     });
-  }
+  } */
+
+    SetUserData(user: any, roles: { admin: boolean; manager: boolean; user: boolean } = { admin: false, manager: false, user: false }) {
+      const userRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}`);
+      const userData: any = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
+        emailVerified: user.emailVerified,
+        roles: roles, // Solo se asigna al registrar el usuario,
+        name: user.name || '',
+      };
+    
+      return userRef.set(userData, {
+        merge: true, // Evita sobrescribir datos existentes
+      });
+    }
+    
 
 
 
@@ -179,13 +269,17 @@ export class AuthService {
   // de acuerdo al rol, navega a la ruta correspondiente
   // esto habria que hacerlo con guards, pero los guards trabajan sacando la info del token
   filtrarRoles(){
-     if(this.usuario.roles.user){
-      this.router.navigate(['/chofer']);
-    } else if(this.usuario.roles.admin){
+    this.router.navigate(['/carga']);
+     /* if(this.usuario.roles.god || this.usuario.roles.admin || this.usuario.roles.manager || this.usuario.roles.user){
       this.router.navigate(['/carga']);
-    } else{
-      this.router.navigate(['/home']);
-    }
+    } else {
+      alert("aca va el limbo")
+    } */
+  }
+
+  currentUserRoles() {
+    const user = JSON.parse(localStorage.getItem('usuario')!);
+    return user ? user.roles : { god: false, admin: false, manager: false, user: false };
   }
 
 

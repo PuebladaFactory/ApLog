@@ -1,0 +1,54 @@
+<div class="modal-content">
+    <div class="modal-header row">
+        <div class="d-flex justify-content-between">
+            <h1>Editar Usuario</h1>
+            <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
+        </div>           
+    </div>
+    <div class="modal-body">
+        <table>
+            <tbody>
+                <tr>
+                    <td>Correo</td>
+                    <td>{{usuario.email}}</td>
+                </tr>
+                <tr>
+                    <td>Correo Verificado</td>
+                    <td>
+                        <div class="form-group mb-2">                            
+                            <select class="form-select" aria-label="Default select example" (change)="verificarCorreo($event)" >
+                                <option [value]="correoVerificado">{{correoVerificado ? "Si" : "No"}}</option>
+                                <option value="true">Si</option>
+                                <option value="false">No</option>
+                            </select>                            
+                        </div>      
+                    </td>
+                </tr>
+                <tr>
+                    <td>Nombre</td>
+                    <td>
+                        <div class="form-group">                            
+                            <div class="input-group">
+                                <input class="form-control edicion" type="text" [(ngModel)]="nombre"  appSoloLetras >                                        
+                            </div>                            
+                        </div>    
+                    </td>
+                </tr>
+                <tr>
+                    <td>Rol</td>
+                    <td>                    
+                        <select class="form-select" aria-label="Default select example" (change)="asignarRoles($event)" >
+                            <option [value]="roles">{{roles.admin ? "Administrador" : roles.manager ? "Manager" : roles.user ? "Usuario" : "Sin rol asignado"}}</option>
+                            <option value="admin">Administrador</option>
+                            <option value="manager">Manager</option>
+                            <option value="user">Usuario</option>
+                        </select>                                                
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="modal-footer">
+        <app-btn-agregar name="Guardar" (click)="updateUser()"></app-btn-agregar>
+    </div>
+</div>

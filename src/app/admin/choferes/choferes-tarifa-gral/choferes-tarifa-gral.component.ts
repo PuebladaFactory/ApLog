@@ -55,6 +55,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
     //////console.log("0)",this.idClienteEsp);
     //// CHOFER SELECCIONADO PARA LA TARIFA ESPECIAL ///////////////
     //this.storageService.getUltElemColeccion("tarifasGralChofer", "idTarifa", "desc", 1,"ultTarifaGralChofer")
+    this.storageService.setInfo("consolaTarifa", [0]);
     if(this.tEspecial){
            //// CLIENTE SELECCIONADO PARA LA TARIFA ESPECIAL ///////////////
            this.storageService.clienteSeleccionado$
@@ -83,6 +84,8 @@ export class ChoferesTarifaGralComponent implements OnInit {
             });       
            
           });
+    }else{
+      this.idChoferEsp = [0];
     }
     
     //// TARIFA GENERAL CLIENTE

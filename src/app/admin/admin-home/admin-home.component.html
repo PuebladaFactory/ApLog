@@ -11,6 +11,16 @@
                 <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
             </svg>
         </button>
-        <router-outlet></router-outlet>
+        <ng-container *ngIf="$usuario.roles.god || $usuario.roles.admin || $usuario.roles.manager || $usuario.roles.user; else sinRol">
+            <router-outlet></router-outlet>
+        </ng-container>
+        <ng-template #sinRol>
+            <div class="container" id="contenido">
+                <h1>¡Bienvenido!</h1>
+                <h2>Su correo electrónico ha sido verificado exitosamente. En breve recibirá los permisos necesarios para ingresar en la aplicación.</h2>
+                <!-- <button class="btn btn-primary" (click)="salirLimbo()"> Salir</button> -->
+               </div>
+        </ng-template>
+        
     </body>   
 </div>

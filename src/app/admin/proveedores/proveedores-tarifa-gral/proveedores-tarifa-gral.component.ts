@@ -50,6 +50,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     //console.log("0)",this.idChoferEsp);
     //console.log("0)",this.idClienteEsp);
     //////////TARIFA ESPECIAL////////
+    this.storageService.setInfo("consolaTarifa", [0]);
     if(this.tEspecial){
       console.log("0b)",this.idProveedorEsp);
       
@@ -64,7 +65,9 @@ export class ProveedoresTarifaGralComponent implements OnInit {
         this.idClienteEsp = data
       //console.log("0B)",this.idClienteEsp);
       })
-    } 
+    } else {
+      this.idProveedorEsp = [0];
+    }
 
     ///tarifa general para obtener las categorias
     this.storageService.tarifasGralCliente$
@@ -160,7 +163,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       this.ultTarifa = this.ultTarifaGralProveedor;
     }
     const categorias = this.ultTarifa?.cargasGenerales?.length > 0 
-     ? this.ultTarifaGralProveedor.cargasGenerales.map((cat, index) => ({
+     ? this.ultTarifa.cargasGenerales.map((cat, index) => ({
         categoria: `Categoria ${index + 1}`,
         valorAnterior: this.formatearValor(cat.valor),
         nombreAnterior: this.ultTarifaCliente?.cargasGenerales[index]?.nombre || '',

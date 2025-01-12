@@ -1,13 +1,15 @@
 <div class="row mt-3" [ngClass]="{'invisible': tEspecial}" >
     <div class="col-4">
-        <h1 class="mt-2">Tarifa General</h1>          
-        <app-btn-editar *ngIf="!tEspecial" name="agregarCategoria" class="me-3" (click)="agregarCategoria()"></app-btn-editar>
+        <h1 class="mt-2">Tarifa General</h1>     
+        <ng-container *appRole="['god','admin', 'manager']" >
+            <app-btn-editar *ngIf="!tEspecial" name="agregarCategoria" class="me-3" (click)="agregarCategoria()"></app-btn-editar>
+        </ng-container>             
     </div>
     <div class="col-4">
 
     </div>
  
-    <app-consola-tarifa class="col-4 p-0"></app-consola-tarifa>
+    <app-consola-tarifa *appRole="['god','admin', 'manager']"  class="col-4 p-0"></app-consola-tarifa>
 
 </div>
 <div *ngIf="tEspecial && ultTarifaEspecial.cargasGenerales.length === 0 && tarifaGeneral.cargasGenerales.length === 0 else conTarifas">
@@ -74,9 +76,9 @@
                     </tr>
                 </tbody>            
             </table>
-            <app-btn-editar name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
+            <app-btn-editar *appRole="['god','admin', 'manager']" name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
             
-            <app-btn-agregar name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
+            <app-btn-agregar *appRole="['god','admin', 'manager']" name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
 
             <!-- <button type="button" class="btn btn-primary" (click)="guardarTarifa()">Guardar Tarifa</button> -->
         </form>

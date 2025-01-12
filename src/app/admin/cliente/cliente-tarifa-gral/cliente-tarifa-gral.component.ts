@@ -56,6 +56,7 @@ export class ClienteTarifaGralComponent implements OnInit {
     //console.log("0)",this.tEspecial);
         
     //////esto es la tarifa general
+    this.storageService.setInfo("consolaTarifa", [0]);
     this.storageService.tarifasGralCliente$
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
@@ -95,6 +96,7 @@ export class ClienteTarifaGralComponent implements OnInit {
           });     
         })     
       } else {
+        this.idClienteEsp = [0]
         this.configurarTabla();
       }   
       
@@ -582,6 +584,8 @@ onGenerarNuevaTarifaAutomatica() {
   }
 
   abrirHistorialTarifas(){
+    console.log("aca?");
+    
     {
       const modalRef = this.modalService.open(HistorialTarifasGralComponent, {
         windowClass: 'myCustomModalClass',
@@ -595,7 +599,7 @@ onGenerarNuevaTarifaAutomatica() {
         tEspecial: this.tEspecial,
         id: this.idClienteEsp[0],
       } 
-      //////////////console.log()(info); */
+      //console.log("tarifaGralCliente: info:", info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(

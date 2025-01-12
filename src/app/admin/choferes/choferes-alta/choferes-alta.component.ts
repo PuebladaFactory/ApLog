@@ -65,9 +65,10 @@ export class ChoferesAltaComponent implements OnInit {
       ValidarService.cuitValido,
     ],],            
      fechaNac: ["",Validators.required],
-     email: ["",[Validators.required, Validators.email]],
+     email: ["",[Validators.email]],
      celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
      celularEmergencia: ["",[Validators.minLength(10), Validators.maxLength(10)]],
+     contactoEmergencia: ["", [Validators.maxLength(60)]],
      domicilio: ["", [Validators.required, Validators.maxLength(50)]],     
 
   });
@@ -150,6 +151,7 @@ export class ChoferesAltaComponent implements OnInit {
       email: this.chofer.email,
       celularContacto: this.chofer.celularContacto,
       celularEmergencia: this.chofer.celularEmergencia,
+      contactoEmergencia: this.chofer.contactoEmergencia,
       domicilio: this.chofer.domicilio,           
     });    
     this.formTipoTarifa.patchValue({

@@ -29,7 +29,7 @@ export class ConsolaTarifaComponent implements OnInit {
       this.consolaTarifa = data;
       console.log("consola tarifa: ", this.consolaTarifa);   
       if(this.consolaTarifa === 0)  {
-        this.porcentajeAumento.patchValue(0)
+        this.porcentajeAumento.patchValue(0);
       } ;      
     });
   }
@@ -72,7 +72,8 @@ export class ConsolaTarifaComponent implements OnInit {
     console.log("B) ", new Intl.NumberFormat("de-DE").format(this.prueba.value));
     
     //console.log(this.consolaTarifa);    
-    this.storageService.setInfo("consolaTarifa", this.consolaTarifa)
+    this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
+    
   }
 
 }

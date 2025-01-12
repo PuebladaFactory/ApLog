@@ -56,11 +56,58 @@
         </div> 
         <div class="form-group mt-1">
             <label for="Categoria">Tipo de Combustible</label>
-            <select class="form-select" (change)="changeTipoCombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
+            <!-- <select class="form-select" (change)="changeTipoCombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
               <option>{{edicion? tipoCombustible : "Seleccione"}}</option>
               <option value="gas">Gas</option>
               <option value="nafta">Nafta</option>                        
-            </select>
+            </select> -->
+            <button 
+              id="botonCollapse"
+              class="btn w-100 mt-2 text-start ms-0 border-light-subtle border-opacity-25"
+              type="button" 
+              data-bs-toggle="collapse" 
+              data-bs-target="#combustibleOptions" 
+              aria-expanded="false" 
+              aria-controls="combustibleOptions">
+              Seleccionar Tipo de Combustible
+            </button>
+
+            <!-- Contenedor colapsable -->
+            <div class="collapse mt-2" id="combustibleOptions">
+              <div class="card card-body">
+                <!-- Checkboxes para selección -->
+                <div class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    id="gas" 
+                    value="Gas" 
+                    (change)="changeTipoCombustible($event)" 
+                    [checked]="tipoCombustible.includes('Gas')">
+                  <label class="form-check-label" for="gas">Gas</label>
+                </div>
+                <div class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    id="nafta" 
+                    value="Nafta" 
+                    (change)="changeTipoCombustible($event)" 
+                    [checked]="tipoCombustible.includes('Nafta')">
+                  <label class="form-check-label" for="nafta">Nafta</label>
+                </div>
+                <div class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    id="diesel" 
+                    value="Diesel" 
+                    (change)="changeTipoCombustible($event)" 
+                    [checked]="tipoCombustible.includes('Diesel')">
+                  <label class="form-check-label" for="diesel">Diesel</label>
+                </div>
+              </div>
+            </div>
         </div> 
         <div class="form-group mt-1">
             <label for="Categoria">Tarjeta de Combustible</label>
@@ -95,10 +142,10 @@
                 <div class="input-group">
                   <input formControlName="proveedor" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
                 </div>
-                <label for="Marca">Marca</label>
+                <!-- <label for="Marca">Marca</label>
                 <div class="input-group">
                   <input formControlName="marcaGps" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
-                </div>
+                </div> -->
             </form>  
         </div>                    
     </form>
