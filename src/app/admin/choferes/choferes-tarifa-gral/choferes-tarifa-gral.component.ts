@@ -96,7 +96,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
         if (data) {
           this.ultTarifaCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
           this.ultTarifaCliente.cargasGenerales = this.ultTarifaCliente.cargasGenerales || [];
-          //console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);          
+          console.log("1) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);          
         }
         if(this.tEspecial){ 
           this.storageService.tarifasEspChofer$
@@ -115,12 +115,11 @@ export class ChoferesTarifaGralComponent implements OnInit {
               //// TARIFA GENERAL CHOFER
             this.storageService.tarifasGralChofer$
             .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-            .subscribe(data =>{
-              ////console.log("data tgChofer", data); 
+            .subscribe(data =>{              
               if(data){
                 this.ultTarifaGralChofer = data || {};
                 this.ultTarifaGralChofer.cargasGenerales = this.ultTarifaGralChofer.cargasGenerales || [];
-                //console.log("2) ult tarifa GRAL CHOFER: ", this.ultTarifaGralChofer);            
+                console.log("2) ult tarifa GRAL CHOFER: ", this.ultTarifaGralChofer);            
                 this.configurarTabla();
               }                
           })       

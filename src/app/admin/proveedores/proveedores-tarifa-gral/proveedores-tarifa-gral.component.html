@@ -42,7 +42,7 @@
                   <th style="width: 20%">Nueva Tarifa</th>
               </tr>
             </thead>
-            <tbody formArrayName="filas"  *ngIf="ultTarifaCliente.cargasGenerales !== undefined else sinTarifaGral" >
+            <tbody *ngIf="ultTarifaCliente.cargasGenerales.length > 0 else sinTarifaGral" formArrayName="filas" >
                 <tr *ngFor="let fila of filas.controls; let i = index" [formGroupName]="i">
                     <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}"><input type="checkbox" formControlName="seleccionado"></td>
                     <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">{{ fila.get('categoria')?.value }}</td>

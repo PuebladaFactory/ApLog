@@ -52,63 +52,64 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     //////////TARIFA ESPECIAL////////
     this.storageService.setInfo("consolaTarifa", [0]);
     if(this.tEspecial){
-      console.log("0b)",this.idProveedorEsp);
-      
-      //this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",this.idProveedorEsp[0],"ultTarifaEspProveedor");
-      this.storageService.proveedorSeleccionado$.subscribe(data => {      ///
-        this.idProveedorEsp = data
-        console.log("0c)",this.idProveedorEsp);
-        this.storageService.syncChangesByOneElemId<TarifaGralCliente>('tarifasEspProveedor', 'idTarifa', "idProveedor",this.idProveedorEsp[0]);    
-         //////tarifa especial: cliente seleccionado seleccionado
-      });
-      this.storageService.clienteSeleccionado$.subscribe(data => {      
+      this.storageService.clienteSeleccionado$
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data => {      
         this.idClienteEsp = data
       //console.log("0B)",this.idClienteEsp);
       })
+      //console.log("0b)",this.idProveedorEsp);      
+      //this.storageService.getElemntByIdLimit("tarifasEspProveedor","idProveedor","idTarifa",this.idProveedorEsp[0],"ultTarifaEspProveedor");
+      this.storageService.proveedorSeleccionado$
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data => {      ///
+        this.idProveedorEsp = data
+        //console.log("0c)",this.idProveedorEsp);
+        this.storageService.syncChangesByOneElemId<TarifaGralCliente>('tarifasEspProveedor', 'idTarifa', "idProveedor",this.idProveedorEsp[0]);    
+         //////tarifa especial: cliente seleccionado seleccionado
+      });
+     
     } else {
       this.idProveedorEsp = [0];
     }
 
-    ///tarifa general para obtener las categorias
+     //// TARIFA GENERAL para obtener las categorias
     this.storageService.tarifasGralCliente$
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data =>{
       if(data){
-        this.ultTarifaCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-        //console.log("2A) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);    
+        this.ultTarifaCliente = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos        
         this.ultTarifaCliente.cargasGenerales = this.ultTarifaCliente.cargasGenerales || [];
-        //console.log("2B) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente); 
-        if(this.tEspecial){
-          this.storageService.tarifasEspProveedor$
-            //.pipe(take(2)) // Asegúrate de que la suscripción se complete después de la primera emisión
-              .subscribe(data =>{
-                if(data){
-                  ////////////console.log("2c) data: ", data);                
-                  this.ultTarifaEspecial = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
-                  this.ultTarifaEspecial.cargasGenerales = this.ultTarifaEspecial.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
-                  console.log("2d) ult tarifa ESP: ",this.ultTarifaEspecial);    
-                  let tarifas = this.storageService.loadInfo("tarifasGralProveedor")
-                  this.ultTarifaGralProveedor = tarifas[0]    
-                  this.configurarTabla();  
-                }              
-          });
-        } else {
-          //TARIFA GRAL PROVEEDOR
-          this.storageService.tarifasGralProveedor$
-          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-          .subscribe(data =>{
-            if(data){
-              //console.log("data", data);        
-              this.ultTarifaGralProveedor = data || {};      
-              //console.log("1A) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralProveedor);    
-              this.ultTarifaGralProveedor.cargasGenerales = this.ultTarifaGralProveedor.cargasGenerales || [];
-              //console.log("1B) ult tarifa GRAL CLIENTE: ",this.ultTarifaGralProveedor);     
-              //console.log("2) ult tarifa GRAL Proveedor: ", this.ultTarifaGralProveedor);   
-              this.configurarTabla();  
-            }            
-          })
-        }
+        console.log("2B) ult tarifa GRAL CLIENTE: ",this.ultTarifaCliente);         
       }
+      if(this.tEspecial){
+        this.storageService.tarifasEspProveedor$
+            .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+            .subscribe(data =>{
+              if(data){
+                ////////////console.log("2c) data: ", data);                
+                this.ultTarifaEspecial = data || {}; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+                this.ultTarifaEspecial.cargasGenerales = this.ultTarifaEspecial.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
+                console.log("2d) ult tarifa ESP: ",this.ultTarifaEspecial);    
+                let tarifas = this.storageService.loadInfo("tarifasGralProveedor")
+                this.ultTarifaGralProveedor = tarifas[0]    
+                this.configurarTabla();  
+              }              
+        });
+      } else {
+        //TARIFA GRAL PROVEEDOR
+        this.storageService.tarifasGralProveedor$
+        .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+        .subscribe(data =>{
+          if(data){               
+            this.ultTarifaGralProveedor = data || {};                  
+            this.ultTarifaGralProveedor.cargasGenerales = this.ultTarifaGralProveedor.cargasGenerales || [];            
+            console.log("2) ult tarifa GRAL Proveedor: ", this.ultTarifaGralProveedor);   
+            this.configurarTabla();         
+          }            
+        })
+      }
+      
     }); 
     //consola de tarifas
     this.storageService.consolaTarifa$
@@ -134,8 +135,9 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       this.$clientes = data;
     });   
     
-    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa');    
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');
+    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa');    
+    
     
   }
 
@@ -162,6 +164,8 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     }else {
       this.ultTarifa = this.ultTarifaGralProveedor;
     }
+    console.log("this.ultTarifa!!!!!!!!!!!:", this.ultTarifa);
+    
     const categorias = this.ultTarifa?.cargasGenerales?.length > 0 
      ? this.ultTarifa.cargasGenerales.map((cat, index) => ({
         categoria: `Categoria ${index + 1}`,
@@ -184,7 +188,8 @@ export class ProveedoresTarifaGralComponent implements OnInit {
       orden: index + 1
     }));
     ;
-
+    console.log("categorias", categorias);
+    
     categorias.forEach((cat, index) => {
         const isManualEnabled = this.isManualMethodSelected;
         const isNombreInputEnabled = index < 8 && isManualEnabled;
