@@ -3,12 +3,22 @@
         <h1 >Alta Chofer</h1>
         <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
     </div>
-    <div class="modal-body">          
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" >        
-            <div class="row">                  
+    <div class="modal-body">
+        <div class="row">
+            <div class="col">
                 <h2>Datos Personales</h2>
-                <div class="col-6">                        
-                    <div class="form-group">
+            </div>
+            <div class="col">
+                <h2 class="">Dirección:</h2>
+            </div>
+            <div class="col">
+              <h2 class=""></h2>
+            </div>      
+        </div>            
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" >        
+            <div class="row">     
+                <div class="col">                        
+                    <div class="form-group mb-2">
                         <label for="Nombre">Nombre</label>
                         <div class="input-group">
                             <input formControlName="nombre" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': form.get('nombre').invalid && (form.get('nombre').dirty || form.get('nombre').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloLetras >                                        
@@ -16,15 +26,90 @@
                         <div *ngIf="hasError('nombre', 'required')">El nombre es obligatorio.</div>
                         <div *ngIf="hasError('nombre', 'maxlength')">El nombre no debe exceder 30 caracteres.</div>                        
                     </div>    
-                    <div class="form-group">
+                    <div class="form-grou mb-2">
                         <label for="Apellido">Apellido</label>
                         <div class="input-group">
                             <input formControlName="apellido" class="form-control" required type="text"  [ngClass]="{ 'is-invalid': form.get('apellido').invalid && (form.get('apellido').dirty || form.get('apellido').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloLetras>                            
                         </div>
                         <div *ngIf="hasError('apellido', 'required')">El apellido es obligatorio.</div>
                         <div *ngIf="hasError('apellido', 'maxlength')">El apellido no debe exceder 30 caracteres.</div>                        
+                    </div>  
+                    <div class="form-group mb-2">
+                        <label for="FechaNac">Fecha Nacimiento</label>
+                        <div class="input-group">
+                            <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{ 'is-invalid': form.get('fechaNac').invalid && (form.get('fechaNac').dirty || form.get('fechaNac').touched) }" [ngClass]="{'isDisabled': soloVista}">
+                        </div>
+                        <div *ngIf="hasError('fechaNac', 'required')">La fecha de nacimiento es obligatoria.</div>
+                    </div>  
+                    <div class="form-group mb-2">
+                        <label for="Celular de contacto">Celular de Contacto</label>
+                        <div class="input-group">
+                            <input formControlName="celularContacto" class="form-control" required type="text" [placeholder]="'ej: 1154776234'"  [ngClass]="{ 'is-invalid': form.get('celularContacto').invalid && (form.get('celularContacto').dirty || form.get('celularContacto').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloNumeros>
+                        </div>
+                        <div *ngIf="hasError('celularContacto', 'required')">El celular de contacto es obligatorio.</div>
+                        <div *ngIf="hasError('celularContacto', 'minlength')">El número de celular debe tener al menos 10 dígitos.</div>
+                        <div *ngIf="hasError('celularContacto', 'maxlength')">El número de celular no debe exceder 10 dígitos.</div>                        
+                    </div>   
+                    <div class="form-group mb-2">
+                        <label for="Celular de emergencia">Celular de Emergencia</label>
+                        <div class="input-group">
+                            <input formControlName="celularEmergencia" class="form-control" type="text" [placeholder]="'ej: 1154776234'" [ngClass]="{ 'is-invalid': form.get('celularEmergencia').invalid && (form.get('celularEmergencia').dirty || form.get('celularEmergencia').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloNumeros>
+                        </div>
+                        <div *ngIf="hasError('celularEmergencia', 'minlength')">El número de celular debe tener al menos 10 dígitos.</div>
+                        <div *ngIf="hasError('celularEmergencia', 'maxlength')">El número de celular no debe exceder 10 dígitos.</div>                        
+                    </div>  
+                    <div class="form-group ">
+                        <label for="Contacto">Contacto de Emergencia</label>
+                        <div class="input-group">
+                            <input formControlName="contactoEmergencia" class="form-control" type="text"  [ngClass]="{ 'is-invalid': form.get('contactoEmergencia').invalid && (form.get('contactoEmergencia').dirty || form.get('contactoEmergencia').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloLetras>                            
+                        </div>
+                        
+                        <div *ngIf="hasError('contactoEmergencia', 'maxlength')">El contacto no debe exceder 60 caracteres.</div>                        
+                    </div>         
+                </div> 
+                <div class="col">                                                            
+                    <div class="form-group mb-2">
+                        <label>Provincia</label>
+                        <select id="selectProvincias"     class="form-select form-select-md" (change)="selectProvincia($event)">
+                            <option [value]="$provinciaSeleccionada"> {{$provinciaSeleccionada === "" ? "Elige una provincia" : $provinciaSeleccionada }}</option>
+                            <option *ngFor="let prov of $provincias" [value]="prov.nombre">{{prov.nombre}}</option>
+                        </select>
+                        <span></span>
+                    </div>                    
+                    <div class="form-group mb-2">
+                        <label>Municipio</label>
+                        <select id="selectMunicipios" class="form-select form-select-md"  (change)="selectMunicipio($event)">
+                            <option [value]="$municipioSeleccionado"> {{$municipioSeleccionado === "" ? "Elige un municipio" : $municipioSeleccionado }}</option>
+                            <option *ngFor="let mun of $municipios" [value]="mun.nombre">{{mun.nombre}}</option>
+                        </select>
+                        <span></span>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label>Localidad</label>
+                        <select id="selectLocalidades" class="form-select form-select-md" (change)="selectLocalidad($event)">
+                            <option [value]="$localidadSeleccionada"> {{$localidadSeleccionada === "" ? "Elige una localidad" : $localidadSeleccionada }}</option>
+                            <option *ngFor="let loc of $localidades" [value]="loc.nombre">{{loc.nombre}}</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="Direccion">Domicilio</label>
+                        <div class="input-group">
+                            <input formControlName="direccion" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('direccion').invalid && (form.get('direccion').dirty || form.get('direccion').touched) }" [ngClass]="{'isDisabled': soloVista}">                            
+                        </div>
+                        <div *ngIf="hasError('direccion', 'required')">El domicilio es obligatorio.</div>
+                        <div *ngIf="hasError('direccion', 'maxlength')">El domicilio no debe exceder 100 caracteres.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="Email">Email</label>
+                        <div class="input-group">
+                            <input formControlName="email" class="form-control" type="email"[placeholder]="'ej: davidcortes@gmail.com'" [ngClass]="{ 'is-invalid': form.get('email').invalid && (form.get('email').dirty || form.get('email').touched) }" [ngClass]="{'isDisabled': soloVista}">
+                        </div>
+                        <!-- <div *ngIf="hasError('email', 'required')">El mail es obligatorio.</div> -->
+                        <div *ngIf="hasError('email', 'email')">El formato no es correcto</div>
                     </div>    
-                    <div class="form-group mt-2">
+                </div>     
+                <div class="col">
+                    <div class="form-group mb-2">
                         <label for="Cuit">CUIT/CUIL</label>
                         <div class="input-group">
                           <input 
@@ -41,69 +126,29 @@
                         </div>
                         <div *ngIf="hasError('cuit','required')">El CUIT/CUIL es obligatorio.</div>
                         <div *ngIf="hasError('cuit','cuitInvalido')">El CUIT/CUIL debe tener el formato xx-xxxxxxxx-x.</div>
-                    </div>                 
-                    <div class="form-group">
-                        <label for="Domicilio">Domicilio</label>
-                        <div class="input-group">
-                            <input formControlName="domicilio" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('domicilio').invalid && (form.get('domicilio').dirty || form.get('domicilio').touched) }" [ngClass]="{'isDisabled': soloVista}">                            
-                        </div>
-                        <div *ngIf="hasError('domicilio', 'required')">El domicilio es obligatorio.</div>
-                        <div *ngIf="hasError('domicilio', 'maxlength')">El domicilio no debe exceder 50 caracteres.</div>
-                    </div> 
-                    <div class="form-group">
-                        <label for="FechaNac">Fecha Nacimiento</label>
-                        <div class="input-group">
-                            <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{ 'is-invalid': form.get('fechaNac').invalid && (form.get('fechaNac').dirty || form.get('fechaNac').touched) }" [ngClass]="{'isDisabled': soloVista}">
-                        </div>
-                        <div *ngIf="hasError('fechaNac', 'required')">La fecha de nacimiento es obligatoria.</div>
-                    </div>        
-                </div>      
-                <div class="col-6">
-                    <div class="form-group">
-                        <label for="Celular de contacto">Celular de Contacto</label>
-                        <div class="input-group">
-                            <input formControlName="celularContacto" class="form-control" required type="text" [placeholder]="'ej: 1154776234'"  [ngClass]="{ 'is-invalid': form.get('celularContacto').invalid && (form.get('celularContacto').dirty || form.get('celularContacto').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloNumeros>
-                        </div>
-                        <div *ngIf="hasError('celularContacto', 'required')">El celular de contacto es obligatorio.</div>
-                        <div *ngIf="hasError('celularContacto', 'minlength')">El número de celular debe tener al menos 10 dígitos.</div>
-                        <div *ngIf="hasError('celularContacto', 'maxlength')">El número de celular no debe exceder 10 dígitos.</div>                        
-                    </div>   
-                    <div class="form-group">
-                        <label for="Celular de emergencia">Celular de Emergencia</label>
-                        <div class="input-group">
-                            <input formControlName="celularEmergencia" class="form-control" type="text" [placeholder]="'ej: 1154776234'" [ngClass]="{ 'is-invalid': form.get('celularEmergencia').invalid && (form.get('celularEmergencia').dirty || form.get('celularEmergencia').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloNumeros>
-                        </div>
-                        <div *ngIf="hasError('celularEmergencia', 'minlength')">El número de celular debe tener al menos 10 dígitos.</div>
-                        <div *ngIf="hasError('celularEmergencia', 'maxlength')">El número de celular no debe exceder 10 dígitos.</div>                        
-                    </div>  
-                    <div class="form-group mt-2">
-                        <label for="Contacto">Contacto de Emergencia</label>
-                        <div class="input-group">
-                            <input formControlName="contactoEmergencia" class="form-control" type="text"  [ngClass]="{ 'is-invalid': form.get('contactoEmergencia').invalid && (form.get('contactoEmergencia').dirty || form.get('contactoEmergencia').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloLetras>                            
-                        </div>
-                        
-                        <div *ngIf="hasError('contactoEmergencia', 'maxlength')">El contacto no debe exceder 60 caracteres.</div>                        
-                    </div>                         
-                    <div class="form-group">
-                        <label for="Email">Email</label>
-                        <div class="input-group">
-                            <input formControlName="email" class="form-control" type="email"[placeholder]="'ej: davidcortes@gmail.com'" [ngClass]="{ 'is-invalid': form.get('email').invalid && (form.get('email').dirty || form.get('email').touched) }" [ngClass]="{'isDisabled': soloVista}">
-                        </div>
-                        <!-- <div *ngIf="hasError('email', 'required')">El mail es obligatorio.</div> -->
-                        <div *ngIf="hasError('email', 'email')">El formato no es correcto</div>
-                    </div>                           
-                    <div class="form-group">
+                    </div>     
+                    <div class="form-group mb-2">
+                        <label for="Proveedor">Condición Fiscal</label>
+                        <select class="form-select form-select-md" (change)="changeCondFiscal($event)" required [ngClass]="{'isDisabled': soloVista}">                            
+                            <option [value]="condFiscal"> {{condFiscal === "" ? "Elegir Cond. Fiscal" : condFiscal }}</option>
+                            <option value="Responsable Inscripto - Factura A">Responsable Inscripto - Factura A</option>
+                            <option value="Monotributista - Factura C">Monotributista - Factura C</option>
+                            <option value="Autónomo - Factura A">Autónomo - Factura A</option>
+                            <option value="Autónomo - Factura B">Autónomo - Factura B</option>                            
+                        </select>
+                    </div>                     
+                    <div class="form-group mb-2">
                         <label for="Proveedor">Proveedor</label>
-                        <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)" required [ngClass]="{'isDisabled': soloVista}">                            
-                            <option>{{fromParent.modo === "alta" ? "Elegir Cond. Fiscal": chofer.idProveedor === 0 ? "Monotributista" : getProveedor(chofer.idProveedor)}}</option>
-                            <option value="1">monotributista</option>
+                        <select class="form-select form-select-md" (change)="changeProveedor($event)" required [ngClass]="{'isDisabled': soloVista}">                            
+                            <option>{{fromParent.modo === "alta" ? "Seleccione": chofer.idProveedor === 0 ? "No" : getProveedor(chofer.idProveedor)}}</option>
+                            <option value="1">No</option>
                             <option *ngFor="let proveedor of $proveedores" [value]="proveedor.idProveedor">
                                 {{proveedor.razonSocial}}
                             </option>
                         </select>
                     </div>
                     <div class="form-group mt-3" *ngIf="(idProveedor === 0 || idProveedor === undefined ) else conProveedor" [ngClass]="{'isDisabled': soloVista}">
-                        <h3 class="">Tipo de Tarifa</h3>
+                        <h3 class="my-2">Tipo de Tarifa</h3>
                         <form [formGroup]="formTipoTarifa" (ngSubmit)="onSubmit()" class="d-flex mt-2">
                           <div class="form-check form-switch form-check-reverse ms-2 me-4">
                             <input formControlName="general" class="form-check-input" type="checkbox" 
@@ -134,16 +179,17 @@
                     </ng-template>                               
                 </div>                   
             </div>      
-        </form>      
+        </form>    
+        <hr>  
         <div class="row mt-3">
             <div class="d-flex justify-content-between">
-              <h2 class="w-25">Vehiculos</h2>
-              <button class="btn azul" (click)="openModal()" *ngIf="!soloVista"> Agregar Vehiculo
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
-                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                  </svg>
-              </button>
+                <h2 class="w-25">Vehiculos</h2>
+                <button class="btn azul" (click)="openModal()" *ngIf="!soloVista"> Agregar Vehiculo
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                    </svg>
+                </button>
             </div>  
             <div class="mt-3">
                 <table class="table table-bordered border-primary table-hover">

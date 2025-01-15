@@ -64,13 +64,13 @@
                 <div class="input-group">
                     <input type="text"
                       formControlName="email"
-                      class="form-control" required
+                      class="form-control" 
                       type="text" [placeholder]="'ej:  davidcortes@gmail.com'" 
                       [ngClass]="{ 'is-invalid': formContacto.get('email').invalid && 
                       (formContacto.get('email').dirty || formContacto.get('email').touched) }"
                       (keyup.enter)="guardarContacto()">
                 </div>
-                <div *ngIf="hasError('email', 'required')">El mail es obligatorio.</div>
+               <!--  <div *ngIf="hasError('email', 'required')">El mail es obligatorio.</div> -->
                 <div *ngIf="hasError('email', 'email')">El formato no es correcto</div>
             </div>
         </form>

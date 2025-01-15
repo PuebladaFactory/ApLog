@@ -12,6 +12,7 @@ import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import { ConId } from 'src/app/interfaces/conId';
 import { Subject, takeUntil } from 'rxjs';
+import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
 
 
 @Component({
@@ -53,8 +54,17 @@ export class ChoferesAltaComponent implements OnInit {
   satelital!: SeguimientoSatelital | boolean;
   formTipoTarifa!:any;
   private destroy$ = new Subject<void>();
+  $provincias:any;
+  $provinciaSeleccionada: string = "";
+  $municipios!:any;
+  $municipioSeleccionado:string = "";
+  $localidades!:any;
+  $localidadSeleccionada:string = "";
+  direccionCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};
+  condFiscal: string = ""
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private legajoServ: LegajosService) {
+
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private legajoServ: LegajosService, private domicilioServ:  DomicilioService) {
     this.form = this.fb.group({                             //formulario para el perfil 
      nombre: ["", [Validators.required, Validators.maxLength(30)]], 
      apellido: ["",[Validators.required, Validators.maxLength(30)]], 
@@ -69,7 +79,7 @@ export class ChoferesAltaComponent implements OnInit {
      celularContacto: ["",[Validators.required,Validators.minLength(10), Validators.maxLength(10)]],
      celularEmergencia: ["",[Validators.minLength(10), Validators.maxLength(10)]],
      contactoEmergencia: ["", [Validators.maxLength(60)]],
-     domicilio: ["", [Validators.required, Validators.maxLength(50)]],     
+     direccion: ["", [Validators.required, Validators.maxLength(50)]],     
 
   });
 
@@ -103,7 +113,7 @@ export class ChoferesAltaComponent implements OnInit {
     .subscribe(data => {
       this.$proveedores = data;
       this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-    });
+    });    
     if(this.fromParent.modo === "vista"){
       let choferOriginal = this.fromParent?.item;
       this.chofer = structuredClone(choferOriginal)
@@ -117,8 +127,18 @@ export class ChoferesAltaComponent implements OnInit {
     }else{
       this.soloVista = false;
     }
-
-   }
+    
+    this.domicilioServ.getProvincias().subscribe({
+      next: (data) => {
+        this.$provincias = data.provincias; // Asume que la respuesta tiene un atributo `provincias`.
+        console.log(this.$provincias);
+      },
+      error: (error) => {
+        console.error('Error al obtener provincias:', error);
+      }
+    });
+    
+  }
 
    ngOnDestroy(): void {
     this.destroy$.next();
@@ -152,7 +172,7 @@ export class ChoferesAltaComponent implements OnInit {
       celularContacto: this.chofer.celularContacto,
       celularEmergencia: this.chofer.celularEmergencia,
       contactoEmergencia: this.chofer.contactoEmergencia,
-      domicilio: this.chofer.domicilio,           
+      direccion: this.chofer.direccion.domicilio,           
     });    
     this.formTipoTarifa.patchValue({
       general: this.chofer.tarifaTipo.general, 
@@ -160,6 +180,10 @@ export class ChoferesAltaComponent implements OnInit {
       eventual: this.chofer.tarifaTipo.eventual,
       personalizada: this.chofer.tarifaTipo.personalizada,      
   });
+    this.$provinciaSeleccionada = this.chofer.direccion.provincia;
+    this.$municipioSeleccionado = this.chofer.direccion.municipio;
+    this.$localidadSeleccionada = this.chofer.direccion.localidad;
+    this.condFiscal = this.chofer.condFiscal
     this.armarVehiculoForm();   
   }
 
@@ -169,20 +193,19 @@ export class ChoferesAltaComponent implements OnInit {
 
    onSubmit(){ 
     
-    if(this.idProveedor !== undefined){
-        if (this.form.valid){
-          
-          this.armarChofer();
-          //this.armarVehiculo();        
-          this.addItem();
-          //this.(armarLegajo();      
-          
-        } else{
-          this.mensajesError("Error en el formulario")
-        }  
+    if(this.idProveedor === undefined){ return this.mensajesError("Debe seleccionar un proveedor")};
+    if(this.$provinciaSeleccionada === "" || this.$municipioSeleccionado === "" || this.$localidadSeleccionada === ""){ return this.mensajesError("Debe completar el domicilio")};
+    if(this.vehiculos.length === 0){return this.mensajesError("Debe asignarle un vehiculo al chofer")};
+    if(this.condFiscal === ""){ return this.mensajesError("Debe seleccionar una condición fiscal")};
+    if (this.form.valid){
+      this.armarChofer();
+      this.addItem();          
     } else{
-      this.mensajesError("Debe seleccionar un proveedor")
+      this.mensajesError("Error en el formulario")
     }  
+    
+      
+      
     
    }
 
@@ -197,31 +220,37 @@ export class ChoferesAltaComponent implements OnInit {
         let id = this.chofer.id
         // Eliminar los guiones del CUIT
         let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
+        this.direccionCompleta = {provincia: this.$provinciaSeleccionada, municipio: this.$municipioSeleccionado, localidad: this.$localidadSeleccionada, domicilio: this.form.value.direccion}        
         this.chofer = {
           ...formValue,
           cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
+          direccion: this.direccionCompleta,
         };                
         /*  this.chofer.categoria = this.categoriaSeleccionada; */
         this.chofer.idChofer = idChofer; 
         this.chofer.id = id;  
         this.chofer.idProveedor = this.idProveedor;
+        this.chofer.condFiscal = this.condFiscal;
         this.chofer.vehiculo = this.vehiculos;
-        this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa
+        this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa                
         console.log("este es el chofer EDITADO: ",this.chofer);     
     } else {
         let formValue = this.form.value;
         // Eliminar los guiones del CUIT
-        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
+        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));   
+        this.direccionCompleta = {provincia: this.$provinciaSeleccionada, municipio: this.$municipioSeleccionado, localidad: this.$localidadSeleccionada, domicilio: this.form.value.direccion}
+
         this.chofer = {
           ...formValue,
           cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
+          direccion: this.direccionCompleta,
         };
       /*  this.chofer.categoria = this.categoriaSeleccionada; */
         this.chofer.idChofer = new Date().getTime();   
-        
+        this.chofer.condFiscal = this.condFiscal;
         this.chofer.idProveedor = this.idProveedor;
         this.chofer.vehiculo = this.vehiculos;
-        this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa
+        this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa        
         console.log("este es el chofer NUEVO: ",this.chofer);     
     }
    }
@@ -310,6 +339,12 @@ export class ChoferesAltaComponent implements OnInit {
     }
     
 
+  }  
+
+  changeCondFiscal(e:any){          
+   this.condFiscal = e.target.value
+   console.log("this.condFiscal: ", this.condFiscal);
+   
   }  
 
   getProveedor(id:number){
@@ -462,6 +497,52 @@ export class ChoferesAltaComponent implements OnInit {
       
         // Insertar los guiones en las posiciones correctas
         return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
+      }
+
+      selectProvincia(e:any){
+        console.log(e.target.value);
+        this.$provinciaSeleccionada = e.target.value;
+        this.cargarMunicipios()
+      }
+
+      cargarMunicipios(): void {
+        if (this.$provinciaSeleccionada) {
+          this.domicilioServ.getMunicipios(this.$provinciaSeleccionada).subscribe({
+            next: (data) => {
+              this.$municipios = data.municipios;
+              console.log(this.$municipios);
+            },
+            error: (error) => {
+              console.error('Error al obtener municipios:', error);
+            }
+          });
+        }
+      }
+
+      selectMunicipio(e:any){
+        console.log(e.target.value);
+        this.$municipioSeleccionado = e.target.value;
+        this.cargarLocalidades()
+      }
+
+      cargarLocalidades(): void {
+        if (this.$municipioSeleccionado) {
+          this.domicilioServ.getLocalidades(this.$municipioSeleccionado, this.$provinciaSeleccionada).subscribe({
+            next: (data) => {
+              this.$localidades = data.localidades;
+              console.log(this.$localidades);
+            },
+            error: (error) => {
+              console.error('Error al obtener localidades:', error);
+            }
+          });
+        }
+      }
+
+      selectLocalidad(e:any){
+        console.log(e.target.value);
+        this.$localidadSeleccionada = e.target.value;
+        
       }
 
 }

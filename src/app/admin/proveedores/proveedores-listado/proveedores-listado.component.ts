@@ -31,6 +31,7 @@ export class ProveedoresListadoComponent implements OnInit {
     { prop: 'idProveedor', name: 'Id Proveedor', selected: false, flexGrow:2  },  
     { prop: 'razonSocial', name: 'Razon Social', selected: true, flexGrow:2  },          
     { prop: 'cuit', name: 'CUIT', selected: true, flexGrow:2  },
+    { prop: 'condFiscal', name: 'Condición Fiscal', selected: true, flexGrow:2  },
     { prop: 'direccion', name: 'Direccion', selected: true, flexGrow:2 },
     { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow: 2 },
     { prop: 'contacto', name: 'Contacto', selected: false, flexGrow:2  },    
@@ -141,7 +142,7 @@ private destroy$ = new Subject<void>();
       const modalRef = this.modalService.open(ProveedoresAltaComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
-        size: 'md', 
+        size: 'lg', 
         //backdrop:"static" 
       });
 
@@ -169,8 +170,9 @@ private destroy$ = new Subject<void>();
         indice: indice ++,
         idProveedor: proveedor.idProveedor,
         razonSocial: proveedor.razonSocial,
-        direccion: proveedor.direccion,
+        direccion: `${proveedor.direccion.domicilio}, ${proveedor.direccion.municipio}, ${proveedor.direccion.provincia}`,
         cuit: this.formatCuit(proveedor.cuit),
+        condFiscal: proveedor.condFiscal,
         tarifa: proveedor.tarifaTipo.general ? "General" : proveedor.tarifaTipo.especial ? "Especial" : proveedor.tarifaTipo.personalizada ? "Personalizada" : "Eventual",
         contacto: proveedor.contactos.length > 0 ? proveedor.contactos[0].apellido : "Sin Datos",
         puesto: proveedor.contactos.length > 0 ? proveedor.contactos[0].puesto : "Sin Datos" ,
