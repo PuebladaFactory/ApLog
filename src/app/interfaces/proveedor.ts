@@ -1,11 +1,13 @@
+import { Dirección } from "./chofer";
 import { TarifaTipo } from "./tarifa-gral-cliente";
 
 export interface Proveedor {
        
     idProveedor: number;
     razonSocial: string;
-    cuit: number;
-    direccion: string;
+    cuit: number;    
+    condFiscal: string;
+    direccion: Dirección;
     contactos: Contacto [];
     tarifaTipo: TarifaTipo;
 }

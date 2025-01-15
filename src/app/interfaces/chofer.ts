@@ -9,11 +9,11 @@ export interface Chofer {
     celularContacto: number;
     celularEmergencia: number;
     contactoEmergencia: string;
-    domicilio: string;
+    direccion: Dirección;
     email: string;
     fechaNac: Date;
     vehiculo: Vehiculo[];
-    //proveedor: Proveedor["razonSocial"]|string;   
+    condFiscal: string;
     idProveedor: number;
     tarifaTipo: TarifaTipo;
     
@@ -41,5 +41,12 @@ export interface SeguimientoSatelital {
 export interface Categoria {
     catOrden:number;
     nombre: string;    
+}
+
+export interface Dirección {
+    provincia: string;
+    municipio: string;
+    localidad: string;
+    domicilio: string;
 }
 

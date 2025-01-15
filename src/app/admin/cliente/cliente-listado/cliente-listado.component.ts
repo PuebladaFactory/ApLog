@@ -30,7 +30,9 @@ export class ClienteListadoComponent implements OnInit {
     { prop: 'idCliente', name: 'Id Cliente', selected: false, flexGrow:2  },  
     { prop: 'razonSocial', name: 'Razon Social', selected: true, flexGrow:2  },          
     { prop: 'cuit', name: 'CUIT', selected: true, flexGrow:2  },
-    { prop: 'direccion', name: 'Direccion', selected: true, flexGrow:2 },
+    { prop: 'condFiscal', name: 'Condición Fiscal', selected: false, flexGrow:2  },
+    { prop: 'direccionFiscal', name: 'Direccion Fiscal', selected: true, flexGrow:2 },
+    { prop: 'direccionOperativa', name: 'Direccion Operativa', selected: true, flexGrow:2 },
     { prop: 'tarifa', name: 'Tarifa', selected: true, flexGrow: 2 },
     { prop: 'contacto', name: 'Contacto', selected: false, flexGrow:2  },    
     { prop: 'puesto', name: 'Puesto', selected: false, flexGrow:2  },    
@@ -123,7 +125,7 @@ export class ClienteListadoComponent implements OnInit {
       const modalRef = this.modalService.open(ClienteAltaComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
-        size: 'md', 
+        size: 'lg', 
         //backdrop:"static" 
       });      
 
@@ -151,7 +153,9 @@ export class ClienteListadoComponent implements OnInit {
         indice: indice ++,
         idCliente: cliente.idCliente,
         razonSocial: cliente.razonSocial,
-        direccion: cliente.direccion,
+        condFiscal: cliente.condFiscal,
+        direccionFiscal: `${cliente.direccionFiscal.domicilio}, ${cliente.direccionFiscal.municipio}, ${cliente.direccionFiscal.provincia}`,
+        direccionOperativa: `${cliente.direccionOperativa.domicilio}, ${cliente.direccionOperativa.municipio}, ${cliente.direccionOperativa.provincia}`,
         cuit: this.formatCuit(cliente.cuit),
         tarifa: cliente.tarifaTipo.general ? "General" : cliente.tarifaTipo.especial ? "Especial" : cliente.tarifaTipo.personalizada ? "Personalizada" : "Eventual",
         contacto: cliente.contactos.length > 0 ? cliente.contactos[0].apellido : "Sin Datos",

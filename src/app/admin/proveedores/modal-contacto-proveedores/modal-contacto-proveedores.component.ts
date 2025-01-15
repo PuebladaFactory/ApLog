@@ -21,7 +21,7 @@ export class ModalContactoProveedoresComponent implements OnInit {
       apellido: ["",[Validators.required, Validators.maxLength(30), ValidarService.soloLetras]],
       nombre: ["",[Validators.required, Validators.maxLength(30), ValidarService.soloLetras]],      
       telefono: ["",[Validators.required, Validators.minLength(10), Validators.maxLength(10), ValidarService.soloNumeros]],
-      email: ["",[Validators.required, Validators.email]],
+      email: ["",[Validators.email]],
     })
   }
 
