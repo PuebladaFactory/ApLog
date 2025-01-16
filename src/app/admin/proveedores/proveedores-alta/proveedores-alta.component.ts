@@ -3,7 +3,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
-import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoProveedoresComponent } from '../modal-contacto-proveedores/modal-contacto-proveedores.component';
@@ -88,7 +88,7 @@ export class ProveedoresAltaComponent implements OnInit {
 
     onSubmit(){
     ////console.log()(new Date().getTime()); 
-    
+    let tarifaGeneral: TarifaGralCliente [] = this.storageService.loadInfo("tarifasGralProveedor");   
     if(this.$provinciaSeleccionada === "" || this.$municipioSeleccionado === "" || this.$localidadSeleccionada === ""){ return this.mensajesError("Debe completar el domicilio")};
     if(this.condFiscal === ""){ return this.mensajesError("Debe seleccionar una condición fiscal")};
     const tarifaSeleccionada = this.getTarifaTipo();    
@@ -109,6 +109,7 @@ export class ProveedoresAltaComponent implements OnInit {
         //console.log()(this.cliente);     
         this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
         this.proveedor.condFiscal = this.condFiscal;
+        this.proveedor.tarifaAsignada = this.proveedorEditar.tarifaAsignada;
        console.log(this.proveedor);      
         this.addItem("Edicion");        
         this.activeModal.close();    
@@ -127,6 +128,7 @@ export class ProveedoresAltaComponent implements OnInit {
         //console.log()(this.cliente);     
         this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
         this.proveedor.condFiscal = this.condFiscal;
+        this.proveedor.tarifaAsignada = tarifaSeleccionada.general ? tarifaGeneral[0] === null ? false : true : false;
         console.log(this.proveedor);      
         this.addItem("Alta");        
         this.activeModal.close();    
@@ -310,6 +312,8 @@ export class ProveedoresAltaComponent implements OnInit {
 
   selectProvincia(e:any){
     console.log(e.target.value);
+    this.$municipioSeleccionado = "";
+    this.$localidadSeleccionada = "";
     this.$provinciaSeleccionada = e.target.value;
     this.cargarMunicipios()
   }
@@ -329,7 +333,8 @@ export class ProveedoresAltaComponent implements OnInit {
   }
 
   selectMunicipio(e:any){
-    console.log(e.target.value);
+    console.log(e.target.value);    
+    this.$localidadSeleccionada = "";
     this.$municipioSeleccionado = e.target.value;
     this.cargarLocalidades()
   }

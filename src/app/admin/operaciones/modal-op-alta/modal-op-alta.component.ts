@@ -2,8 +2,10 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
+import { LoginComponent } from 'src/app/appLogin/login/login.component';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { ConId } from 'src/app/interfaces/conId';
 import { Operacion, TarifaPersonalizada } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaEventual } from 'src/app/interfaces/tarifa-eventual';
@@ -109,14 +111,7 @@ export class ModalOpAltaComponent implements OnInit {
     .subscribe(data => {
       this.$proveedores = data;            
     })   
-    this.storageService.tarifasPersCliente$
-    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-    .subscribe(data => {
-      if(data){
-        this.tarifaClienteSel = data;
-      }
-      
-    })
+    
     this.storageService.opTarEve$
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data=>{
@@ -203,13 +198,13 @@ export class ModalOpAltaComponent implements OnInit {
     if(this.clienteSeleccionado.tarifaTipo.personalizada){
       //////console.log("El cliente tiene tarifa personalizada");
       this.buscarTarifaPersonalizada();
-      if(this.choferEventual){
+      /* if(this.choferEventual){
         this.tPersonalizada = false;         
       } else{
         this.tPersonalizada = true;      
         this.tEventual = false
-        //this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");        
-      }      
+        
+      }       */
     } else {
       this.tPersonalizada = false;
       //this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");      
@@ -300,6 +295,25 @@ export class ModalOpAltaComponent implements OnInit {
   buscarTarifaPersonalizada(){
     this.storageService.getMostRecentItemId("tarifasPersCliente", "idTarifa", "idCliente", this.clienteSeleccionado?.idCliente);   
     //console.log("BUSCAR TARIFA PERSONALIZADA) proveedores: ", this.$proveedores);
+    this.storageService.tarifasPersCliente$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
+      if(data){
+        this.tarifaClienteSel = data;
+        console.log("this.tarifaClienteSel: ", this.tarifaClienteSel);    
+        if(this.choferEventual){
+          this.tPersonalizada = false;         
+        } else{
+          this.tPersonalizada = true;      
+          this.tEventual = false
+          
+        }           
+        /* if(this.tPersonalizada && typeof this.tarifaClienteSel !== 'object'){
+          this.mensajesError("El cliente aun no tiene una tarifa personalizada asignada. Para continuar debe asignarle una tarifa.")
+        }     */
+      }
+      
+    })
   }
 
   selectTarifaEventual(event: any) {
@@ -364,49 +378,52 @@ export class ModalOpAltaComponent implements OnInit {
     ////console.log("personalizada: ",this.tarifaPersonalizada, "eventual: ", this.tarifaEventual, "vehiculos: ", this.vehiculosChofer );
     //console.log("ON SUBMIT) proveedores: ", this.$proveedores);
     
-    if (this.form.valid) {    
-        if (!this.tPersonalizada && !this.tEventual && !this.vehiculosChofer){
+    let proveedores : Proveedor[] = this.storageService.loadInfo("proveedores");
+    
+    if (this.choferSeleccionado.vehiculo.length > 0) {   
+      
+        if(this.vehiculosChofer && !this.formVehiculosChofer.valid){            
+          return this.mensajesError("El chofer seleccionado tiene asignado varios vehiculos. Debe seleccionar uno");
+        }
+
+        if (!this.tPersonalizada && !this.tEventual){ // Op con TARIFAS GENERALES Y ESPECIALES
+            if(!this.clienteSeleccionado.tarifaAsignada){            
+                return this.mensajesError(`El cliente ${this.clienteSeleccionado.razonSocial} aún no tiene una tarifa asignada`);            
+            } 
+            if(!this.choferSeleccionado.tarifaAsignada && this.choferSeleccionado.idProveedor === 0){
+              return this.mensajesError(`El chofer ${this.choferSeleccionado.apellido} ${this.choferSeleccionado.nombre}  aún no tiene una tarifa asignada`); 
+            }
+            if(this.choferSeleccionado.idProveedor !== 0){
+              console.log("aca?");
+              let prov = proveedores.filter((p:Proveedor)=>{return p.idProveedor === this.choferSeleccionado.idProveedor})
+              if (!prov[0].tarifaAsignada){
+                return this.mensajesError(`El proveedor ${prov[0].razonSocial} aún no tiene una tarifa asignada`);            
+              }            
+            }
+            this.armarOp();
+          
           ////console.log("operacin basica");
-          this.armarOp();
-        } else if(this.tPersonalizada && !this.tEventual && !this.vehiculosChofer){
-            ////console.log("solo personalizada");
+          
+        } else if(this.tPersonalizada && !this.tEventual){ //OP TARIFA PERSONALIZADA
+            if(!this.clienteSeleccionado.tarifaAsignada){            
+                return this.mensajesError(`El cliente ${this.clienteSeleccionado.razonSocial} aún no tiene una tarifa asignada`);            
+            } 
             if(this.formTarifaPersonalizada.valid){
                 this.armarOp();
             } else {
               this.mensajesError("El cliente tiene asignada una tarifa personalizada. Debe seleccionar una sección y una categoria.")
             }         
-        } else if (!this.tPersonalizada && this.tEventual && !this.vehiculosChofer){
+        } else if (!this.tPersonalizada && this.tEventual){ //op TARIFA EVENTUAL
             ////console.log("solo eventual");
             if(this.formTarifaEventual.valid){
               this.armarOp();
             } else {
             this.mensajesError("error en el formulario de la tarifa eventual")
             }                   
-        } else if (!this.tPersonalizada && !this.tEventual && this.vehiculosChofer) {
-            ////console.log("solo vehiculos chofer");
-            if(this.formVehiculosChofer.valid){
-              this.armarOp()
-            } else{
-              this.mensajesError("El chofer seleccionado tiene asignado varios vehiculos. Debe seleccionar uno")
-            }          
-        } else if(this.tPersonalizada && !this.tEventual && this.vehiculosChofer){
-            ////console.log("tarifa personalizada y vehiculos chofer ");
-            if(this.formTarifaPersonalizada.valid && this.formVehiculosChofer.valid){
-              this.armarOp()    
-            } else {
-              this.mensajesError("error en los formularios de tarifa personalizada y vehiculos del chofer")
-            }            
-        } else if (!this.tPersonalizada && this.tEventual && this.vehiculosChofer){
-            ////console.log("tarifa eventual y vehiculos chofer ");
-            if (this.formTarifaEventual.valid && this.formVehiculosChofer.valid){
-              this.armarOp()
-            } else {
-              this.mensajesError("error en los formularios de tarifa eventual y vehiculos del chofer")
-            }
         }
      
     }  else {
-      this.mensajesError("Error en el formulario")
+      this.mensajesError("El chofer no tiene asignado ningun vehículo")
     }     
    }
   
@@ -603,6 +620,19 @@ export class ModalOpAltaComponent implements OnInit {
         }
       });   
       
+    }else if (result.dismiss === Swal.DismissReason.cancel) {
+      // Si el usuario cancela, realiza la acción correspondiente
+      console.log("Operación cancelada por el usuario.");
+      
+      // Puedes realizar cualquier otra acción aquí, como mostrar un mensaje o restablecer un formulario
+      Swal.fire({
+        title: "Cancelado",
+        text: "La operación no ha sido agregada.",
+        icon: "info",
+        confirmButtonText: "Entendido"
+      });
+      this.limpiarCampos();
+      this.ngOnInit()
     }
   });   
   
@@ -613,6 +643,16 @@ export class ModalOpAltaComponent implements OnInit {
     //console.log("FIN) proveedores: ", this.$proveedores);
     
     this.storageService.addItem(this.componente, this.op);    
+    this.limpiarCampos()
+    this.ngOnInit()
+  
+  }  
+
+  get Fecha() {
+  return this.form.get('fecha');
+  } 
+
+  limpiarCampos() {
     this.form.reset();     
     this.formTarifaEventual.reset();
     this.formTarifaPersonalizada.reset();
@@ -629,13 +669,7 @@ export class ModalOpAltaComponent implements OnInit {
     //this.medidasModal(this.tEventual, "opTarifaEventual");          
     this.tPersonalizada = false;
     //this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");
-    this.ngOnInit()
-  
-  }  
-
-  get Fecha() {
-  return this.form.get('fecha');
-  } 
+  }
 
 
 

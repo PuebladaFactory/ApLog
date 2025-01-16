@@ -79,44 +79,50 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <ng-container *ngFor="let chofer of choferesProveedor">                                            
-                    <h4>{{chofer.apellido + " " +  chofer.nombre}}</h4>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr class="table table-light table-group-divider">
-                                <th>Dominio</th>
-                                <th>Marca</th>
-                                <th>Modelo</th>
-                                <th>Tipo Comb.</th>
-                                <th>Categoria</th>
-                                <th>Seguimiento</th>
-                                <th>Tarj. Comb.</th>
-                                <th>Publicidad</th>                   
-                            </tr>
-                        </thead>                        
-                        <tbody >                                
-                            <ng-container *ngIf="chofer.vehiculo.length > 0 else SinVehiculos">
-                                <tr *ngFor="let vehiculo of chofer.vehiculo" class="table-light w-100">
-                                    <td>{{vehiculo.dominio}}</td>   
-                                    <td>{{vehiculo.marca}}</td>   
-                                    <td>{{vehiculo.modelo}}</td>   
-                                    <td>{{vehiculo.tipoCombustible}}</td>   
-                                    <td>{{vehiculo.categoria.nombre}}</td>   
-                                    <td>{{!vehiculo.segSat ? "No" : vehiculo.satelital}}</td>   
-                                    <td>{{vehiculo.tarjetaCombustible ? "Si" : "No"}}</td>   
-                                    <td>{{vehiculo.publicidad ? "Si" : "No"}}</td>   
-                                </tr>       
-                            </ng-container>                            
-                        </tbody>
-                        <ng-template #SinVehiculos>                                
-                            <tr>
-                                <td colspan="8">
-                                    Sin vehiculos cargados
-                                </td>
-                            </tr>                                
-                        </ng-template>
-                    </table>
-                </ng-container>                   
+                <ng-container *ngIf="choferesProveedor !== undefined && choferesProveedor.length > 0 else sinChoferes">
+                    <div *ngFor="let chofer of choferesProveedor">                                            
+                        <h4>{{chofer.apellido + " " +  chofer.nombre}}</h4>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr class="table table-light table-group-divider">
+                                    <th>Dominio</th>
+                                    <th>Marca</th>
+                                    <th>Modelo</th>
+                                    <th>Tipo Comb.</th>
+                                    <th>Categoria</th>
+                                    <th>Seguimiento</th>
+                                    <th>Tarj. Comb.</th>
+                                    <th>Publicidad</th>                   
+                                </tr>
+                            </thead>                        
+                            <tbody >                                
+                                <ng-container *ngIf="chofer.vehiculo.length > 0 else SinVehiculos">
+                                    <tr *ngFor="let vehiculo of chofer.vehiculo" class="table-light w-100">
+                                        <td>{{vehiculo.dominio}}</td>   
+                                        <td>{{vehiculo.marca}}</td>   
+                                        <td>{{vehiculo.modelo}}</td>   
+                                        <td>{{vehiculo.tipoCombustible}}</td>   
+                                        <td>{{vehiculo.categoria.nombre}}</td>   
+                                        <td>{{!vehiculo.segSat ? "No" : vehiculo.satelital}}</td>   
+                                        <td>{{vehiculo.tarjetaCombustible ? "Si" : "No"}}</td>   
+                                        <td>{{vehiculo.publicidad ? "Si" : "No"}}</td>   
+                                    </tr>       
+                                </ng-container>                            
+                            </tbody>
+                            <ng-template #SinVehiculos>                                
+                                <tr>
+                                    <td colspan="8">
+                                        Sin vehiculos cargados
+                                    </td>
+                                </tr>                                
+                            </ng-template>
+                        </table>
+                    </div>       
+                </ng-container>
+                <ng-template #sinChoferes>
+                    <h4>El proveedor aún no cuenta con choferes asociados</h4>
+                </ng-template>
+                            
             </div>
         </div>
     </div>    

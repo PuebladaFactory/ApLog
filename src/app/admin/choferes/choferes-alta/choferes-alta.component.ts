@@ -62,7 +62,7 @@ export class ChoferesAltaComponent implements OnInit {
   $localidadSeleccionada:string = "";
   direccionCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};
   condFiscal: string = ""
-
+  tarifaAsignada: boolean = false;
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private legajoServ: LegajosService, private domicilioServ:  DomicilioService) {
     this.form = this.fb.group({                             //formulario para el perfil 
@@ -113,15 +113,17 @@ export class ChoferesAltaComponent implements OnInit {
     .subscribe(data => {
       this.$proveedores = data;
       this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-    });    
+    });        
     if(this.fromParent.modo === "vista"){
       let choferOriginal = this.fromParent?.item;
-      this.chofer = structuredClone(choferOriginal)
+      this.chofer = structuredClone(choferOriginal);
+      this.tarifaAsignada = this.chofer.tarifaAsignada;
       this.soloVista = true;
       this.armarForm()
 
     }else if (this.fromParent.modo === "edicion"){
       this.chofer = this.fromParent?.item;
+      this.tarifaAsignada = this.chofer.tarifaAsignada;
       this.soloVista = false;
       this.armarForm()
     }else{
@@ -212,7 +214,10 @@ export class ChoferesAltaComponent implements OnInit {
    
    armarChofer(){
     this.componente = "choferes";  
-    const tarifaSeleccionada = this.getTarifaTipo();      
+    const tarifaSeleccionada = this.getTarifaTipo();   
+    let tarifaGeneral: TarifaGralCliente [] = this.storageService.loadInfo("tarifasGralChofer")   
+    console.log("ALTA CHOFER: TARIFA GRAL: ", tarifaGeneral);
+    
     if(this.fromParent.modo === "edicion"){
         
         let idChofer = this.chofer.idChofer;
@@ -232,7 +237,8 @@ export class ChoferesAltaComponent implements OnInit {
         this.chofer.idProveedor = this.idProveedor;
         this.chofer.condFiscal = this.condFiscal;
         this.chofer.vehiculo = this.vehiculos;
-        this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa                
+        this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa      
+        this.chofer.tarifaAsignada = this.tarifaAsignada;
         console.log("este es el chofer EDITADO: ",this.chofer);     
     } else {
         let formValue = this.form.value;
@@ -251,6 +257,7 @@ export class ChoferesAltaComponent implements OnInit {
         this.chofer.idProveedor = this.idProveedor;
         this.chofer.vehiculo = this.vehiculos;
         this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa        
+        this.chofer.tarifaAsignada = this.idProveedor === 0 ? tarifaSeleccionada.general ? tarifaGeneral[0] === null ? false : true : false : false;
         console.log("este es el chofer NUEVO: ",this.chofer);     
     }
    }
@@ -501,6 +508,8 @@ export class ChoferesAltaComponent implements OnInit {
 
       selectProvincia(e:any){
         console.log(e.target.value);
+        this.$municipioSeleccionado = "";
+        this.$localidadSeleccionada = "";
         this.$provinciaSeleccionada = e.target.value;
         this.cargarMunicipios()
       }
@@ -520,7 +529,8 @@ export class ChoferesAltaComponent implements OnInit {
       }
 
       selectMunicipio(e:any){
-        console.log(e.target.value);
+        console.log(e.target.value);        
+        this.$localidadSeleccionada = "";
         this.$municipioSeleccionado = e.target.value;
         this.cargarLocalidades()
       }

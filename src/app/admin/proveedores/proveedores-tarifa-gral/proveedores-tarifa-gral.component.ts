@@ -8,6 +8,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
 import { TarigaGralEdicionComponent } from 'src/app/shared/tariga-gral-edicion/tariga-gral-edicion.component';
 import { Subject, takeUntil } from 'rxjs';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 
 @Component({
   selector: 'app-proveedores-tarifa-gral',
@@ -499,14 +500,35 @@ onGenerarNuevaTarifaAutomatica() {
 
   addItem(){    
     ////console.log("1)",this.tEspecial);
+    let proveedores: Proveedor [] = this.storageService.loadInfo("proveedores");
     if(!this.tEspecial){
       this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
+      this.consolaTarifa = 0;
+      this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
+      if(proveedores.length > 0){
+        proveedores.forEach((p:Proveedor)=>{
+          if(p.tarifaTipo.general && !p.tarifaAsignada){
+            p.tarifaAsignada = true;
+            this.storageService.updateItem("proveedores", p);
+          }
+        })
+    }      
     }else if(this.tEspecial){
       this.nuevaTarifaGral.idProveedor = this.idProveedorEsp[0];
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
       this.nuevaTarifaGral.tipo.especial = true;
       this.storageService.addItem("tarifasEspProveedor", this.nuevaTarifaGral);         
+      this.consolaTarifa = 0;
+      this.storageService.setInfo("consolaTarifa", this.consolaTarifa);      
+      if(proveedores.length > 0){
+        proveedores.forEach((p:Proveedor)=>{
+          if(p.tarifaTipo.especial  && p.idProveedor === this.idProveedorEsp[0] && !p.tarifaAsignada){
+            p.tarifaAsignada = true;
+            this.storageService.updateItem("proveedores", p);
+          }
+        })
+      }      
     }
     //   
   }

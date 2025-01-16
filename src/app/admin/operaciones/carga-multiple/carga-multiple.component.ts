@@ -228,6 +228,8 @@ onSubmit() {
     let fecha: Date = formValue.fecha;
     let proveedor
     const cliente: Cliente | null = this.clienteSeleccionado;
+    let proveedores : Proveedor[] = this.storageService.loadInfo("proveedores");
+    let proveedoresSeleccionados : Proveedor [] = []
     ////////console.log("1) choferes seleccionados: ", cliente);
     if (!fecha) {
       // Manejar errores de validación
@@ -240,9 +242,11 @@ onSubmit() {
       return;
     }
 
+    if(!cliente.tarifaAsignada){return this.mensajesError(`El cliente ${this.clienteSeleccionado.razonSocial} aún no tiene una tarifa asignada`)};
+
     // Filtrar los choferes seleccionados
     let choferesSeleccionados = formValue.choferes.filter((c: any) => c.seleccionado);
-    ////////console.log("2) choferes seleccionados: ", choferesSeleccionados);    
+    console.log("2) choferes seleccionados: ", choferesSeleccionados);    
 
     if (choferesSeleccionados.length === 0) {
       this.mensajesError('Por favor, selecciona al menos un chofer.');
@@ -275,6 +279,39 @@ onSubmit() {
         return;
       }
     }
+    /// comprobacion choferes con tarifas
+    let choferesDirectos = choferesSeleccionados.filter((choferForm: any) => {      
+      return choferForm.chofer.idProveedor === 0;
+    });
+    console.log("choferesDirectos", choferesDirectos);
+    let chofereSinTarifa = choferesDirectos.filter((choferForm:any) => !choferForm.chofer.tarifaAsignada);    
+    if(chofereSinTarifa.length > 0){return this.mensajesError(`Uno de los choferes de los choferes no tiene asignada una tarifa.`)};
+    console.log("choferesSeleccionados", chofereSinTarifa);
+    
+    let choferesProveedores = choferesSeleccionados.filter((choferForm: any) => {      
+      return choferForm.chofer.idProveedor !== 0;
+    });
+
+    console.log("choferesProveedores", choferesProveedores);
+    
+
+    if(choferesProveedores.length > 0) { 
+      const idsProveedoresSeleccionados = choferesProveedores.map((chofer:any) => {
+        console.log("chofer.idProveedor", chofer.chofer.idProveedor);
+        
+        return chofer.chofer.idProveedor
+      });
+      console.log("idsProveedoresSeleccionados", idsProveedoresSeleccionados);
+      
+      // Filtra los proveedores que tengan un idProveedor incluido en los ids de los choferes seleccionados
+      proveedoresSeleccionados = proveedores.filter(proveedor =>
+        idsProveedoresSeleccionados.includes(proveedor.idProveedor)
+      );  
+    }
+    console.log("provedoresSeleccionados", proveedoresSeleccionados);
+    let proveedoresSinTarifa = proveedoresSeleccionados.filter((p:Proveedor) => !p.tarifaAsignada)    
+    
+    if(proveedoresSinTarifa.length > 0){return this.mensajesError(`Uno de los proveedores de los choferes no tiene asignada una tarifa`)};
 
     let baseTime = new Date().getTime(); // Obtén el timestamp base
     let increment = 0;
@@ -286,7 +323,7 @@ onSubmit() {
 
     choferesSeleccionados.forEach((choferForm:any) => {      
      
-    
+      
       // Crear operaciones para cada chofer seleccionado
       //let operaciones: Operacion[] = choferesSeleccionados.map((choferForm: any) => {      
       this.operaciones = choferesSeleccionados.map((choferForm: any) => {      
@@ -310,6 +347,7 @@ onSubmit() {
   
         // Crear la operación
         //console.log("antes de crear las op, tPersonalizada: ",this.tPersonalizada);
+        
         
         const operacion: Operacion = {
             

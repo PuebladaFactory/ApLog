@@ -9,7 +9,8 @@ export interface Cliente {
     direccionOperativa: Dirección;
     condFiscal: string;
     contactos: Contacto [];
-    tarifaTipo: TarifaTipo
+    tarifaTipo: TarifaTipo;
+    tarifaAsignada: boolean;
 }
 
 export interface Contacto {    

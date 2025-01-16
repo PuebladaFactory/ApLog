@@ -10,6 +10,7 @@ export interface Proveedor {
     direccion: Dirección;
     contactos: Contacto [];
     tarifaTipo: TarifaTipo;
+    tarifaAsignada: boolean;
 }
 
 export interface Contacto {    

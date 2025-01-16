@@ -16,6 +16,7 @@ export interface Chofer {
     condFiscal: string;
     idProveedor: number;
     tarifaTipo: TarifaTipo;
+    tarifaAsignada: boolean;
     
 }
 

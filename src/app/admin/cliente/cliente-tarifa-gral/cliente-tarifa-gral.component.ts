@@ -479,17 +479,35 @@ onGenerarNuevaTarifaAutomatica() {
 
   addItem(){    
     //////////////console.log("1)",this.nuevaTarifaGral);
+    let clientes: Cliente [] = this.storageService.loadInfo("clientes")
     if(!this.tEspecial){
-      this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
-      this.consolaTarifa = 0;
-      this.storageService.setInfo("consolaTarifa", this.consolaTarifa)
+        this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
+        this.consolaTarifa = 0;
+        this.storageService.setInfo("consolaTarifa", this.consolaTarifa);        
+        if(clientes.length > 0){
+            clientes.forEach((c:Cliente)=>{
+              if(c.tarifaTipo.general && !c.tarifaAsignada){
+                c.tarifaAsignada = true;
+                this.storageService.updateItem("clientes", c);
+              }
+            })
+        }      
     }else if(this.tEspecial){
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
       this.nuevaTarifaGral.tipo.especial = true;
       this.storageService.addItem("tarifasEspCliente", this.nuevaTarifaGral);      
       this.consolaTarifa = 0;
-      this.storageService.setInfo("consolaTarifa", this.consolaTarifa)   
+      this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
+      if(clientes.length > 0){
+        clientes.forEach((c:Cliente)=>{
+          if(c.tarifaTipo.especial  && c.idCliente === this.idClienteEsp[0] && !c.tarifaAsignada){
+            c.tarifaAsignada = true;
+            this.storageService.updateItem("clientes", c);
+          }
+        })
+    }      
+         
     }
 
     //console.log("Tarifa nueva: ", this.nuevaTarifaGral);
