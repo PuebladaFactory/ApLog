@@ -164,6 +164,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   addItem(): void {
+    let clientes: Cliente [] = this.storageService.loadInfo("clientes");
     Swal.fire({
       title: "¿Confirmar el alta de la tarifa?",
       //text: "You won't be able to revert this!",
@@ -175,7 +176,15 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {        
-        this.storageService.addItem(this.componente, this.tarifaPersonalizadaCliente)
+        this.storageService.addItem(this.componente, this.tarifaPersonalizadaCliente);
+        if(clientes.length > 0){
+          clientes.forEach((c:Cliente)=>{
+            if(c.tarifaTipo.personalizada && c.idCliente === this.clienteSeleccionado[0].idCliente && !c.tarifaAsignada){
+              c.tarifaAsignada = true;
+              this.storageService.updateItem("clientes", c);
+            }
+          })
+      }      
         Swal.fire({
           title: "Confirmado",
           text: "Alta exitosa",

@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente, Contacto  } from 'src/app/interfaces/cliente';
-import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoComponent } from '../modal-contacto/modal-contacto.component';
@@ -105,6 +105,7 @@ export class ClienteAltaComponent implements OnInit {
     if(this.$provinciaSeleccionadaO === "" || this.$municipioSeleccionadoO === "" || this.$localidadSeleccionadaO === ""){ return this.mensajesError("Debe completar el domicilio operativo")};
     if(this.condFiscal === ""){ return this.mensajesError("Debe seleccionar una condición fiscal")};
     const tarifaSeleccionada = this.getTarifaTipo();    
+    let tarifaGeneral: TarifaGralCliente [] = this.storageService.loadInfo("tarifasGralCliente")
     if (this.form.valid) {
       if(this.fromParent.modo === "edicion"){
         let formValue = this.form.value;
@@ -124,6 +125,7 @@ export class ClienteAltaComponent implements OnInit {
         ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
         this.cliente.condFiscal = this.condFiscal;
+        this.cliente.tarifaAsignada = this.clienteEditar.tarifaAsignada
         ////console.log(this.cliente);      
         this.addItem("Edicion");        
         this.activeModal.close();    
@@ -145,7 +147,7 @@ export class ClienteAltaComponent implements OnInit {
         this.cliente.condFiscal = this.condFiscal;
         ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        
+        this.cliente.tarifaAsignada= tarifaSeleccionada.general? tarifaGeneral[0] === null ? false : true : false,
         ////console.log(this.cliente);      
         this.addItem("Alta");        
         this.activeModal.close();    
@@ -340,13 +342,17 @@ export class ClienteAltaComponent implements OnInit {
       });
     }
 
-    selectProvincia(e:any, modo:string ){
+    selectProvincia(e:any, modo:string ){      
       if(modo === "fiscal"){
         console.log(e.target.value);
+        this.$municipioSeleccionadoF = "";
+        this.$localidadSeleccionadaF = "";
         this.$provinciaSeleccionadaF = e.target.value;
         this.cargarMunicipios("fiscal")
       } else {
         console.log(e.target.value);
+        this.$municipioSeleccionadoO = "";
+        this.$localidadSeleccionadaO = "";
         this.$provinciaSeleccionadaO = e.target.value;
         this.cargarMunicipios("operativo")
       }
@@ -384,11 +390,13 @@ export class ClienteAltaComponent implements OnInit {
 
     selectMunicipio(e:any, modo: string){
       if(modo === "fiscal"){
-        console.log(e.target.value);
+        console.log(e.target.value);        
+        this.$localidadSeleccionadaF = "";
         this.$municipioSeleccionadoF = e.target.value;
         this.cargarLocalidades("fiscal")
       }else{
         console.log(e.target.value);
+        this.$localidadSeleccionadaO = "";
         this.$municipioSeleccionadoO = e.target.value;
         this.cargarLocalidades("operativo")
       }

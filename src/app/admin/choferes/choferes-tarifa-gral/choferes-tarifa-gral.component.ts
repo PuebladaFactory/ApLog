@@ -660,10 +660,19 @@ onGenerarNuevaTarifaAutomatica() {
 
   addItem(){    
     //////////////console.log("1)",this.tEspecial);
+    let choferes: Chofer [] = this.storageService.loadInfo("choferes")
     if(!this.tEspecial){
       this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
       this.consolaTarifa = 0;
-      this.storageService.setInfo("consolaTarifa", this.consolaTarifa)
+      this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
+      if(choferes.length > 0){
+        choferes.forEach((c:Chofer)=>{
+          if(c.tarifaTipo.general && !c.tarifaAsignada){
+            c.tarifaAsignada = true;
+            this.storageService.updateItem("choferes", c);
+          }
+        })
+    }     
     }else if(this.tEspecial){
       this.nuevaTarifaGral.idChofer = this.idChoferEsp[0];
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
@@ -671,7 +680,15 @@ onGenerarNuevaTarifaAutomatica() {
       this.nuevaTarifaGral.tipo.especial = true;
       this.storageService.addItem("tarifasEspChofer", this.nuevaTarifaGral);         
       this.consolaTarifa = 0;
-      this.storageService.setInfo("consolaTarifa", this.consolaTarifa)
+      this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
+      if(choferes.length > 0){
+        choferes.forEach((c:Chofer)=>{
+          if(c.tarifaTipo.especial  && c.idChofer === this.idChoferEsp[0] && !c.tarifaAsignada){
+            c.tarifaAsignada = true;
+            this.storageService.updateItem("choferes", c);
+          }
+        })
+      }      
     }
     //   
   }

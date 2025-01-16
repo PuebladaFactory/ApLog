@@ -170,7 +170,7 @@ export class ChoferesListadoComponent implements OnInit {
         cuit: this.formatCuit(chofer.cuit),
         condFiscal: chofer.condFiscal,
         proveedor: chofer.idProveedor === 0 ? "No" : this.getProveedor(chofer.idProveedor),
-        tarifa: chofer.tarifaTipo?.general ? "General" : chofer.tarifaTipo?.especial ? "Especial" : chofer.tarifaTipo?.personalizada ? "Personalizada" : chofer.tarifaTipo?.eventual ? "Eventual" : "Tarifa Proveedor",      
+        tarifa: chofer.idProveedor !== 0 ? "Tarifa Proveedor" : chofer.tarifaTipo?.general ? "General" : chofer.tarifaTipo?.especial ? "Especial" : chofer.tarifaTipo?.personalizada ? "Personalizada" : "Eventual",
         correo: chofer.email,
         fechaNac: chofer.fechaNac,
         
