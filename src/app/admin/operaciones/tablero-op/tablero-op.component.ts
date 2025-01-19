@@ -93,7 +93,7 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.tarifaEventual = datos[0];
-      //console.log("tarifa eventual: ", this.tarifaEventual);
+      ////console.log("tarifa eventual: ", this.tarifaEventual);
       
     });
     this.storageService.opTarPers$
@@ -101,7 +101,7 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.tarifaPersonalizada = datos[0];
-      //console.log("tarifa personalizada: ", this.tarifaPersonalizada);
+      ////console.log("tarifa personalizada: ", this.tarifaPersonalizada);
     });
 
     this.storageService.vehiculosChofer$
@@ -109,7 +109,7 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.vehiculosChofer = datos[0];
-      //console.log("vehiculos chofer: ", this.vehiculosChofer);
+      ////console.log("vehiculos chofer: ", this.vehiculosChofer);
     }); */
 
     this.storageService.choferes$
@@ -150,7 +150,7 @@ export class TableroOpComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.fechasConsulta = data;
-      console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);
+      //console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);
       this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasOp");
       this.btnConsulta = true;
     });
@@ -165,7 +165,7 @@ export class TableroOpComponent implements OnInit {
 
   getMsg(msg: any) {
     this.btnConsulta = true;
-    //console.log(msg);
+    ////console.log(msg);
     this.fechasConsulta = {
       fechaDesde: msg.fechaDesde,
       fechaHasta: msg.fechaHasta,
@@ -175,7 +175,7 @@ export class TableroOpComponent implements OnInit {
 
   ///////////// TABLA //////////////////////////////////////////////////////////////////////////////////
   armarTabla() {
-    //////console.log("consultasOp: ", this.$consultasOp );
+    ////////console.log("consultasOp: ", this.$consultasOp );
     let indice = 0
     let operaciones: Operacion [];
     /* if(!this.btnConsulta){
@@ -201,7 +201,7 @@ export class TableroOpComponent implements OnInit {
       observaciones: op.observaciones,
       
     }));   
-    //////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+    ////////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
     this.applyFilters(); // Aplica filtros y actualiza filteredRows
   }
 
@@ -210,7 +210,7 @@ export class TableroOpComponent implements OnInit {
      minimumFractionDigits: 2, 
      maximumFractionDigits: 2 
    }).format(valor);
-   ////////console.log(nuevoValor);    
+   //////////console.log(nuevoValor);    
 //   `$${nuevoValor}`
    return `$${nuevoValor}`
  }
@@ -308,9 +308,9 @@ export class TableroOpComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        //////console.log("llamada al storage desde op-abiertas, deleteItem");
+        ////////console.log("llamada al storage desde op-abiertas, deleteItem");
         this.storageService.deleteItem(this.componente, this.opEditar);
-        //////console.log("consultas Op: " , this.$consultasOp);
+        ////////console.log("consultas Op: " , this.$consultasOp);
         Swal.fire({
           title: "Confirmado",
           text: "La operación ha sido cancelada",
@@ -333,7 +333,7 @@ export class TableroOpComponent implements OnInit {
     vehiculo  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === op.patenteChofer;
     });
-    ////console.log(vehiculo[0].categoria.nombre);
+    //////console.log(vehiculo[0].categoria.nombre);
     return vehiculo[0].categoria.nombre
 
   }
@@ -351,7 +351,7 @@ export class TableroOpComponent implements OnInit {
         modo: modo,
         item: this.opEditar,
       } 
-      ////console.log()(info); */
+      //////console.log()(info); */
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
@@ -364,14 +364,18 @@ export class TableroOpComponent implements OnInit {
   }
 
   filtrarEstado(modo: string){  
-    this.storageService.consultasOp$.subscribe(data => {
+    this.storageService.consultasOp$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.$opActivas = data;     
     });        
     this.estadoFiltrado = modo;
     if(!this.btnConsulta){
       switch(modo){
         case "Todo":{
-          this.storageService.consultasOp$.subscribe(data => {
+          this.storageService.consultasOp$
+          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+          .subscribe(data => {
             this.$consultasOp = data;            
             this.armarTabla();
           });   
@@ -406,7 +410,9 @@ export class TableroOpComponent implements OnInit {
     } else {      
       switch(modo){
         case "Todo":{
-          this.storageService.consultasOp$.subscribe(data => {
+          this.storageService.consultasOp$
+          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+          .subscribe(data => {
             this.$consultasOp = data;
             this.armarTabla();
           });   
@@ -454,7 +460,7 @@ export class TableroOpComponent implements OnInit {
         modo: modo,
         item: this.opEditar,
       }  */
-      ////console.log()(info); */
+      //////console.log()(info); */
       
       //modalRef.componentInstance.fromParent = info;
       modalRef.result.then(

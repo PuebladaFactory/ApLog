@@ -31,11 +31,8 @@ export class AdminHomeComponent implements OnInit {
         //this.router.navigate(['admin']);
         
       });
-      this.storageService.usuario$.subscribe(data=>{
-        if(data){
-          this.$usuario = data
-        }
-      })
+      let usuarioLogueado = this.storageService.loadInfo("usuario");
+      this.$usuario = structuredClone(usuarioLogueado[0]);
   }
 
   ngOnDestroy(): void {

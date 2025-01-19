@@ -14,24 +14,13 @@ export class CargaComponent implements OnInit {
   constructor(private storageService: StorageService, private router: Router){
 
   }
-  ngOnInit(): void {
-    
-    this.usuario = this.storageService.loadInfo("usuario");
-    /* if(this.usuario.roles.admin){
-      //this.storageService.clearAllLocalStorage()
-      console.log("llamada al storage desde carga, initializerAdmin");      
+  ngOnInit(): void {    
+      //console.log("pasa por aca?");      
       this.storageService.initializerAdmin()
       //this.router.navigate(['admin']);
       setTimeout(() => {
         this.router.navigate(['admin']);
       }, 3000); // 5000 milisegundos = 5 segundos 
-    }     */
-      this.storageService.initializerAdmin()
-      //this.router.navigate(['admin']);
-      setTimeout(() => {
-        this.router.navigate(['admin']);
-      }, 3000); // 5000 milisegundos = 5 segundos 
-  }  
- 
+  }   
 
 }

@@ -16,7 +16,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let u of $usuarios | filter: searchText">
+                <tr *ngFor="let u of $usuariosTodos | filter: searchText">
                     <td>{{u.email}}</td>
                     <td>{{u.emailVerified}}</td>
                     <td>{{u.name}}</td>

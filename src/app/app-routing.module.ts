@@ -10,18 +10,13 @@ import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
 import { RoleGuard } from './guards/role.guard';
 import { LimboComponent } from './limbo/limbo.component';
 
-// const routes: Routes = [];
 
-//se crea una const del tipo Routes para guardar todas las rutas
-//esto importa la clase Routes
-const redirectUnauthorizedToLogin = () => redirectUnauthorizedTo(['login']);
-const redirectLoggedInToHome = () => redirectLoggedInTo(['home']);
 
 const appRoutes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   
   {path: 'admin', loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule)},
-  { path: 'carga', component: CargaComponent }, // la ruta al login
+  { path: 'carga', component: CargaComponent }, 
   { path: 'login', component: LoginComponent }, // la ruta al login
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'verify-email-address', component: VerifyEmailComponent },

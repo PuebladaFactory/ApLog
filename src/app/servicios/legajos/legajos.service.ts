@@ -32,7 +32,7 @@ export class LegajosService {
 
   // Método para verificar y actualizar el estado de los documentos
   verificarEstadosLegajos(legajos: Legajo[]) {
-    console.log("0) Legajo", legajos);
+    //console.log("0) Legajo", legajos);
   
     try {
       // Recorrer cada legajo
@@ -43,7 +43,7 @@ export class LegajosService {
         for (const documento of legajo.documentacion) {
           if (documento.fechaVto && !documento.sinVto) {
             const nuevoEstado = this.calcularEstado(documento.fechaVto);
-            console.log("chofer legajo: ", legajo.idChofer, "estado: ", nuevoEstado);
+            //console.log("chofer legajo: ", legajo.idChofer, "estado: ", nuevoEstado);
             
             // Verificar si el estado general del documento cambió
             if (
@@ -51,11 +51,11 @@ export class LegajosService {
               documento.estado.porVencer !== nuevoEstado.porVencer ||
               documento.estado.enFecha !== nuevoEstado.enFecha
             ) {
-              console.log("1) Se modificó el estado del documento");
+              //console.log("1) Se modificó el estado del documento");
               documento.estado = nuevoEstado;
               legajoModificado = true; // Indicar que se realizaron cambios
             } else {
-              console.log("2) No se modificó el estado del documento");
+              //console.log("2) No se modificó el estado del documento");
             }
           }
         }
@@ -70,17 +70,17 @@ export class LegajosService {
           legajo.estadoGral.enFecha !== estadoGral.enFecha ||
           legajo.estadoGral.vacio !== estadoGral.vacio
         ) {
-          console.log("3) Se modificó el estado general del legajo");
+          //console.log("3) Se modificó el estado general del legajo");
           legajo.estadoGral = estadoGral;
           legajoModificado = true; // Indicar que se realizaron cambios
         } else {
-          console.log("4) No se modificó el estado general del legajo");
+          //console.log("4) No se modificó el estado general del legajo");
         }
   
         // Si se modificó el legajo, actualizar en la base de datos
         if (legajoModificado) {
           this.storageService.updateItem("legajos", legajo);
-          console.log(`Legajo actualizado: ${legajo.idLegajo}`);
+          //console.log(`Legajo actualizado: ${legajo.idLegajo}`);
         }
       });
     } catch (error) {
@@ -160,7 +160,7 @@ export class LegajosService {
         legajo = this.$legajos.filter((l:Legajo)=>{
           return l.idChofer === idChofer;
         });
-        console.log("legajo", legajo);
+        //console.log("legajo", legajo);
         this.storageService.deleteItem("legajos", legajo[0]);
       }
     })

@@ -14,22 +14,22 @@ import { Subject, takeUntil } from 'rxjs';
 export class AjustesUsuariosComponent implements OnInit {
   
   searchText: string = "";
-  $usuarios: any[] = [];
+  $usuariosTodos: any[] = [];
   $usuario!: any;
   private destroy$ = new Subject<void>();
 
   constructor(private storageService: StorageService, private modalService: NgbModal){}
 
   ngOnInit(): void {
-
-    this.$usuario = this.storageService.loadInfo("usuario")
+    let usuarioLogueado = this.storageService.loadInfo("usuario");
+    this.$usuario = structuredClone(usuarioLogueado[0]);
     console.log("this.usuario2: ", this.$usuario);
     this.storageService.users$
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       if(data){
-        console.log("usuarios todos: ", this.$usuarios);        
-        this.$usuarios = data;
+        console.log("usuarios todos: ", this.$usuariosTodos);        
+        this.$usuariosTodos = data;
       }      
     });
 

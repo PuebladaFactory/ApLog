@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { FacturaOpChofer } from 'src/app/interfaces/factura-op-chofer';
+
 import { Operacion } from 'src/app/interfaces/operacion';
-import { TarifaChofer } from 'src/app/interfaces/tarifa-chofer';
+
 import { DbFirestoreService } from '../../database/db-firestore.service';
 import { StorageService } from '../../storage/storage.service';
 
