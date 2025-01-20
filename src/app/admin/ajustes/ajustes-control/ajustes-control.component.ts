@@ -5,10 +5,11 @@ import { Router } from '@angular/router';
   selector: 'app-ajustes-control',
   template: `
   <div class="d-flex justify-content-between mt-3">
-    <h1>Ajustes</h1>    
+    <h1>Configuración</h1>    
   </div>   
   <div class="tab-container">
       <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab1')">Usuarios</div>      
+      <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab2')">Registro</div>      
       
   </div>
   <router-outlet></router-outlet>
@@ -29,6 +30,9 @@ export class AjustesControlComponent implements OnInit {
       this.selectedTab = tab;
       if (tab === 'tab1') {
         this.router.navigate(['ajustes/usuarios']);
+      } 
+      if (tab === 'tab2') {
+        this.router.navigate(['ajustes/registro']);
       } 
     }
 

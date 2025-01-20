@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { AjustesControlComponent } from './ajustes-control/ajustes-control.component';
 import { AjustesUsuariosComponent } from './ajustes-usuarios/ajustes-usuarios.component';
 import { RoleGuard } from 'src/app/guards/role.guard';
+import { RegistroComponent } from './registro/registro.component';
 
 const routes: Routes = [
   {path: '', component:AjustesControlComponent,
@@ -11,6 +12,10 @@ const routes: Routes = [
             canActivate: [RoleGuard],
             data: { roles: ['god', 'admin'] }, // no se permiten usuarios
       },          
+      {path: 'registro', component:RegistroComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['god', 'admin'] }, // no se permiten usuarios
+      },
   ]}
 ];
 

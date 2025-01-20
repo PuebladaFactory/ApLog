@@ -206,7 +206,7 @@ export class ClienteAltaComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {     
         if(modo === "Alta")   {
-          this.storageService.addItem(this.componente, this.cliente)
+          this.storageService.addItem(this.componente, this.cliente, this.cliente.idCliente)
         } else if (modo === "Edicion"){
           this.storageService.updateItem(this.componente, this.cliente)
         }        

@@ -143,7 +143,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   }
 
   addItem(item:TarifaPersonalizadaCliente){
-    this.storageService.addItem(this.componente, item);        
+    this.storageService.addItem(this.componente, item, item.idTarifa);        
   }
 
 

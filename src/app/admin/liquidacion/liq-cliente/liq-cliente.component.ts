@@ -331,16 +331,16 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   
 
 
-  addItem(item:any, componente:string): void {   
+  addItem(item:any, componente:string, idItem:number): void {   
     console.log("llamada al storage desde liq-cliente, addItem");
-    this.storageService.addItem(componente, item);        
+    this.storageService.addItem(componente, item, idItem);        
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasCliente.forEach((factura: FacturaOp) => {
       console.log("llamada al storage desde liq-cliente, addItem");
-      this.addItem(factura, "facOpLiqCliente");
+      this.addItem(factura, "facOpLiqCliente", factura.idFacturaOp);
       this.editarOperacionesFac(factura)
       
     }); 
@@ -425,7 +425,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           
           if(result.modo === "cerrar"){
             this.facturaCliente = result.factura;            
-            this.addItem(this.facturaCliente, this.componente);            
+            this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente);            
             if(result.titulo === "excel"){
             this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);
             }else if (result.titulo === "pdf"){

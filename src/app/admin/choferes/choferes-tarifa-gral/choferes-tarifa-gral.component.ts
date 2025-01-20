@@ -662,7 +662,7 @@ onGenerarNuevaTarifaAutomatica() {
     //////////////console.log("1)",this.tEspecial);
     let choferes: Chofer [] = this.storageService.loadInfo("choferes")
     if(!this.tEspecial){
-      this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
+      this.storageService.addItem(this.componente, this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa);     
       this.consolaTarifa = 0;
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(choferes.length > 0){
@@ -678,7 +678,7 @@ onGenerarNuevaTarifaAutomatica() {
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
       this.nuevaTarifaGral.tipo.especial = true;
-      this.storageService.addItem("tarifasEspChofer", this.nuevaTarifaGral);         
+      this.storageService.addItem("tarifasEspChofer", this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa);         
       this.consolaTarifa = 0;
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(choferes.length > 0){

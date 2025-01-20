@@ -313,7 +313,7 @@ export class ChoferesAltaComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          this.storageService.addItem(this.componente, this.chofer); 
+          this.storageService.addItem(this.componente, this.chofer, this.chofer.idChofer); 
           this.legajoServ.crearLegajo(this.chofer.idChofer);
           Swal.fire({
             title: "Confirmado",

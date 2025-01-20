@@ -502,7 +502,7 @@ onGenerarNuevaTarifaAutomatica() {
     ////console.log("1)",this.tEspecial);
     let proveedores: Proveedor [] = this.storageService.loadInfo("proveedores");
     if(!this.tEspecial){
-      this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
+      this.storageService.addItem(this.componente, this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa);     
       this.consolaTarifa = 0;
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(proveedores.length > 0){
@@ -518,7 +518,7 @@ onGenerarNuevaTarifaAutomatica() {
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
       this.nuevaTarifaGral.tipo.especial = true;
-      this.storageService.addItem("tarifasEspProveedor", this.nuevaTarifaGral);         
+      this.storageService.addItem("tarifasEspProveedor", this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa);         
       this.consolaTarifa = 0;
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);      
       if(proveedores.length > 0){

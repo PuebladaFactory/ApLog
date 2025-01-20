@@ -215,7 +215,7 @@ export class ProveedoresAltaComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {     
         if(modo === "Alta")   {
-          this.storageService.addItem(this.componente, this.proveedor)
+          this.storageService.addItem(this.componente, this.proveedor, this.proveedor.idProveedor)
         } else if (modo === "Edicion"){
           this.storageService.updateItem(this.componente, this.proveedor)
         }              

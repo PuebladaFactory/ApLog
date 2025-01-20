@@ -26,7 +26,7 @@ export class LegajosService {
       },
       documentacion:[],  
     };
-    this.storageService.addItem("legajos", this.legajo)
+    this.storageService.addItem("legajos", this.legajo, this.legajo.idLegajo)
     
   }
 

@@ -1,0 +1,12 @@
+th, td {
+    font-size: 1.4rem;
+}
+
+.isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  
+.isDisabled:hover {
+cursor: not-allowed;
+}

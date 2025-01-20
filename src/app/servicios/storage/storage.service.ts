@@ -9,6 +9,7 @@ import { LogService } from '../log/log.service';
 
 
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,12 +24,9 @@ export class StorageService {
   // los observables mantienen la info sincronizada entre comp y storage.
 
 
-  constructor(private dbFirebase: DbFirestoreService, private logService: LogService
-
-
-
-
-
+  constructor(
+    private dbFirebase: DbFirestoreService, 
+    private logService: LogService
   ) { }
 
   // Observables //
@@ -633,7 +631,7 @@ export class StorageService {
     this.getMostRecentItem<TarifaGralCliente>("tarifasGralCliente", "idTarifa");
     this.getMostRecentItem<TarifaGralCliente>("tarifasGralChofer", "idTarifa");
     this.getMostRecentItem<TarifaGralCliente>("tarifasGralProveedor", "idTarifa");
-    this.getAllUser("users");    
+    this.getAllColection("users");    
     this.getAllSorted("legajos", 'idLegajo', 'asc');    
   }
 
@@ -641,7 +639,7 @@ export class StorageService {
 
   // METODOS CRUD
 
-  getAllUser(componente: string){
+  getAllColection(componente: string){
     //console.log("getAllUser componente: ", componente);
     const cachedData = this.loadInfo(componente); // Carga desde local storage
     ////console.log("getAll cachedData: ", cachedData);
@@ -651,7 +649,7 @@ export class StorageService {
       this.updateObservable(componente, cachedData);
     } else {
       ////console.log(`Caché vacío, consultando Firestore para ${componente}`);
-      this.dbFirebase.getAllUser()
+      this.dbFirebase.getAllColection(componente)
       .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
       .subscribe(data => {
         this.setInfo(componente, data); // Guarda en el caché
@@ -763,7 +761,7 @@ export class StorageService {
   }
 
   syncChangesUsers<T>(componente: string): void {    
-    this.dbFirebase.getAllUser()
+    this.dbFirebase.getAllColection(componente)
     .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
     .subscribe(data => {
       const currentData = this.loadInfo(componente);
@@ -938,13 +936,18 @@ export class StorageService {
       }
 
 
+     
       public addItem(componente: string, item: any, idItem:number): void {
-        ////console.log("storage add item", componente, item);
-        this.dbFirebase.create(componente, item).then(() => {
-        this.logService.logEvent('CREATE', componente, `Alta de objeto en colección ${componente}`, idItem, true )
+        let user = this.loadInfo('usuario')
+        this.dbFirebase.create(componente, item).then(() => {        
+          if (!user[0].roles.god){
+            this.logService.logEvent("CREATE", componente, `Alta de objeto en la colección ${componente}`, idItem, true);
+          }          
           //this.refreshData(componente, item);
-        }).catch((e) => {
-          this.logService.logEvent('CREATE', componente, `Alta de objeto en colección ${componente}`, idItem, false )
+        }).catch((e) => {          
+          if (!user[0].roles.god){
+            this.logService.logEvent("CREATE", componente, `Alta de objeto en la colección ${componente}`, idItem, false);
+          }
           console.log(e.message)});
       }
     

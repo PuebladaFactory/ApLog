@@ -202,7 +202,7 @@ export class AuthService {
       }
 
       
-      this.storage.signOut()
+      //this.storage.signOut()
       // 3. Borrar el local storage
       //this.storage.clearAllLocalStorage();
       localStorage.clear();

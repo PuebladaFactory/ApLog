@@ -28,8 +28,9 @@ export class AjustesUsuariosComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       if(data){
-        console.log("usuarios todos: ", this.$usuariosTodos);        
+        
         this.$usuariosTodos = data;
+        console.log("usuarios todos: ", this.$usuariosTodos);        
       }      
     });
 

@@ -31,12 +31,22 @@ export class DbFirestoreService {
     
 
     ////////////////////////////////////////////////////////////////////////////////////
-    getAllUser() {
-      const dataCollection = `/users`;
+    getAllColection(coleccion:string) {
+      const dataCollection = `/${coleccion}`;
       return this.firestore2.collection(dataCollection, (ref) => ref.where('roles.god', '==', false)).snapshotChanges().pipe(
         map(snapshot => snapshot.map(change => ({
           id: change.payload.doc.id,
           ...change.payload.doc.data() as any,
+        })))
+      );
+    }
+
+    getAllColectionLimit<T>(coleccion:string, limite:number) {
+      const dataCollection = `/${coleccion}`;
+      return this.firestore2.collection(dataCollection, (ref) => ref.orderBy('timestamp', 'desc').limit(limite)).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
         })))
       );
     }

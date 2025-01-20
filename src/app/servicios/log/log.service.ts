@@ -10,7 +10,7 @@ import { StorageService } from '../storage/storage.service';
 export class LogService {
   private usuario: any;
 
-  constructor(private afs: AngularFirestore, private storageService: StorageService) {
+  constructor(private afs: AngularFirestore) {
         
   }
 
@@ -44,7 +44,8 @@ export class LogService {
     idObjeto: number,
     resultado: boolean
   ): LogEntry {
-    let usuarioLogueado = this.storageService.loadInfo('usuario');
+    const jsonData = localStorage.getItem('usuario') || '';
+    let usuarioLogueado = JSON.parse(jsonData)    
     this.usuario = structuredClone(usuarioLogueado[0]);
     console.log("log: this.usuario", this.usuario);
     

@@ -332,16 +332,16 @@ export class LiqProveedorComponent implements OnInit {
     });
   }
 
-  addItem(item:any, componente:string): void {   
+  addItem(item:any, componente:string, idItem:number): void {   
     console.log("llamada al storage desde liq-cliente, addItem");
-    this.storageService.addItem(componente, item);        
+    this.storageService.addItem(componente, item, idItem);        
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasProveedor.forEach((factura: FacturaOp) => {
       console.log("llamada al storage desde liq-proveedor, addItem");
-      this.addItem(factura, "facOpLiqProveedor");
+      this.addItem(factura, "facOpLiqProveedor", factura.idFacturaOp);
       this.editarOperacionesFac(factura)
       
     }); 
@@ -421,7 +421,7 @@ export class LiqProveedorComponent implements OnInit {
           console.log(result);
           if(result.modo === "cerrar"){
             this.facturaProveedor = result.factura;
-            this.addItem(this.facturaProveedor, this.componente);
+            this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor);
             if(result.titulo === "excel"){
               this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
               }else if (result.titulo === "pdf"){          

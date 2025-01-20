@@ -323,16 +323,16 @@ export class LiqChoferComponent implements OnInit {
     });
   }
 
-  addItem(item:any, componente:string): void {   
+  addItem(item:any, componente:string, idItem:number): void {   
     console.log("llamada al storage desde liq-cliente, addItem");
-    this.storageService.addItem(componente, item);        
+    this.storageService.addItem(componente, item, idItem);        
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
       console.log("llamada al storage desde liq-chofer, addItem");
-      this.addItem(factura, "facOpLiqChofer");
+      this.addItem(factura, "facOpLiqChofer", factura.idFacturaOp);
       this.editarOperacionesFac(factura)
       
     }); 
@@ -413,7 +413,7 @@ export class LiqChoferComponent implements OnInit {
 
           if(result.modo === "cerrar"){
             this.facturaChofer = result.factura;
-            this.addItem(this.facturaChofer, this.componente);        
+            this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer);        
             if(result.titulo === "excel"){
             this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);
             }else if (result.titulo === "pdf"){
