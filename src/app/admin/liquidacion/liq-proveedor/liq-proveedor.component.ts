@@ -67,6 +67,7 @@ export class LiqProveedorComponent implements OnInit {
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>();
+  opAbiertas!: Operacion[];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -134,7 +135,8 @@ export class LiqProveedorComponent implements OnInit {
           proveedoresMap.set(factura.idProveedor, {
             idProveedor: factura.idProveedor,
             razonSocial:  this.getProveedor(factura.idProveedor),
-            cantOp: 0,
+            opCerradas: 0,
+            opAbiertas: 0,
             opSinFacturar: 0,
             opFacturadas: 0,
             total: 0,
@@ -144,7 +146,7 @@ export class LiqProveedorComponent implements OnInit {
         }
   
         const proveedor = proveedoresMap.get(factura.idProveedor);
-        proveedor.cantOp++;
+        proveedor.opCerradas++;
         if (factura.liquidacion) {
           proveedor.opFacturadas += factura.valores.total;
         } else {
@@ -157,10 +159,31 @@ export class LiqProveedorComponent implements OnInit {
       });
   
       this.datosTablaProveedor = Array.from(proveedoresMap.values());
+      this.datosTablaProveedor = this.datosTablaProveedor.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       ////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
+      this.dbFirebase.getAllByDateValueField<Operacion>('operaciones', 'fecha', this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "estado.abierta", true).subscribe(data=>{      
+        if(data){
+          this.opAbiertas = data;
+          this.opAbiertas = this.opAbiertas.filter((op:Operacion)=> op.estado.abierta)
+          console.log("this.opAbiertas", this.opAbiertas.length);    
+          this.datosTablaProveedor.forEach(p=>{
+            p.opAbiertas = this.getOpAbiertas(p.idProveedor)
+          })        
+        }      
+      });
     }
     
   }
+
+  getOpAbiertas(idProveedor:number){
+      if(this.opAbiertas !== undefined){
+        let cantOpAbiertas = this.opAbiertas.filter((op:Operacion)=>{return op.chofer.idProveedor === idProveedor})      
+        return cantOpAbiertas.length
+      } else{
+        return 0 
+      }
+    
+    }
 
   getChofer(idChofer: number){
     let chofer: Chofer []

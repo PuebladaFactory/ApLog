@@ -70,6 +70,7 @@ export class LiqChoferComponent implements OnInit {
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>();
+  opAbiertas!: Operacion[];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -135,7 +136,8 @@ export class LiqChoferComponent implements OnInit {
           choferesMap.set(factura.idChofer, {
             idChofer: factura.idChofer,
             apellido:  this.getChofer(factura.idChofer),
-            cantOp: 0,
+            opCerradas: 0,
+            opAbiertas: 0,
             opSinFacturar: 0,
             opFacturadas: 0,
             total: 0,
@@ -145,7 +147,7 @@ export class LiqChoferComponent implements OnInit {
         }
   
         const chofer = choferesMap.get(factura.idChofer);
-        chofer.cantOp++;
+        chofer.opCerradas++;
         if (factura.liquidacion) {
           chofer.opFacturadas += factura.valores.total;
         } else {
@@ -158,10 +160,32 @@ export class LiqChoferComponent implements OnInit {
       });
   
       this.datosTablaChofer = Array.from(choferesMap.values());
+      this.datosTablaChofer = this.datosTablaChofer.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+      this.dbFirebase.getAllByDateValueField<Operacion>('operaciones', 'fecha', this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "estado.abierta", true).subscribe(data=>{      
+        if(data){
+          this.opAbiertas = data;
+          this.opAbiertas = this.opAbiertas.filter((op:Operacion)=> op.estado.abierta)
+          console.log("this.opAbiertas", this.opAbiertas.length);    
+          this.datosTablaChofer.forEach(c=>{
+            c.opAbiertas = this.getOpAbiertas(c.idChofer)
+          })        
+        }      
+      });    
       ////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
     }
     
   }
+
+    getOpAbiertas(idChofer:number){
+      if(this.opAbiertas !== undefined){
+        let cantOpAbiertas = this.opAbiertas.filter((op:Operacion)=>{return op.chofer.idChofer === idChofer})
+      
+        return cantOpAbiertas.length
+      } else{
+        return 0 
+      }
+    
+    }
 
   getChofer(idChofer: number){
     let chofer: Chofer []

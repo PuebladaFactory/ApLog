@@ -24,10 +24,10 @@
                           <span class="visually-hidden">Toggle Dropdown</span>
                         </button>
                         <ul class="dropdown-menu">
-                            <li class="dropdown-item" (click)="filtrarEstado('Todo')">Todo</li>
-                            <li class="dropdown-item" (click)="filtrarEstado('Abierta')">Abierta</li>
-                            <li class="dropdown-item" (click)="filtrarEstado('Cerrada')">Cerrada</li>
-                            <li class="dropdown-item" (click)="filtrarEstado('Facturada')">Facturada</li>
+                            <li class="dropdown-item" (click)="guardarFiltro('Todo')">Todo</li>
+                            <li class="dropdown-item" (click)="guardarFiltro('Abierta')">Abierta</li>
+                            <li class="dropdown-item" (click)="guardarFiltro('Cerrada')">Cerrada</li>
+                            <li class="dropdown-item" (click)="guardarFiltro('Facturada')">Facturada</li>
                         </ul>
                     </div>                
                 </div>
@@ -47,9 +47,9 @@
                 <div class="d-flex m-0 p-0 ">
                     <div class="col-11 px-0 ">
                         <!-- <input type="text" placeholder="Buscar..." (input)="updateFilter($event)" />             -->
-                        <input class=" align-self-end" style="width: 45%;" type="text" placeholder="Buscar por primer criterio..." (input)="updateFilter($event, 'first')" />
+                        <input class=" align-self-end" style="width: 45%;" type="text" placeholder="Buscar por primer criterio..." (input)="updateFilter($event, 'first')" [(ngModel)]="firstFilter" />
                         <span class="mx-2"> y </span>
-                        <input class="" style="width: 45%;" type="text" placeholder="Buscar por segundo criterio..." (input)="updateFilter($event, 'second')" />
+                        <input class="" style="width: 45%;" type="text" placeholder="Buscar por segundo criterio..." (input)="updateFilter($event, 'second')" [(ngModel)]="secondFilter" />
                     </div>    
                     <div class="col-1 px-0 d-flex justify-content-end mb-1">
                         <div class="text-end align-items-end d-flex justify-content-end">

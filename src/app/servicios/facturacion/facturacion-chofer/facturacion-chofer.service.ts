@@ -188,7 +188,7 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
     op: Operacion,
     factura: FacturaOp
   }
-  //console.log("1)Chofer Serv:  op: ", op, " tarifa: ", tarifa);
+  console.log("1)Proveedor Serv:  op: ", op, " tarifa: ", tarifa);
   let vehiculo = op.chofer.vehiculo.filter(vehiculo => vehiculo.dominio === op.patenteChofer)
   ////console.log("1c) vehiculo: ", vehiculo);    
 

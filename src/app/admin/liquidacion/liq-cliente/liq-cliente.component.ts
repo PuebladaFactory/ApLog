@@ -68,7 +68,8 @@ export class LiqClienteComponent {
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
-  private destroy$ = new Subject<void>();
+  private destroy$ = new Subject<void>()
+  opAbiertas!: Operacion[];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -142,7 +143,8 @@ export class LiqClienteComponent {
           clientesMap.set(factura.idCliente, {
             idCliente: factura.idCliente,
             razonSocial: this.getCliente(factura.idCliente),
-            cantOp: 0,
+            opCerradas: 0,
+            opAbiertas: 0,
             opSinFacturar: 0,
             opFacturadas: 0,
             total: 0,
@@ -152,7 +154,7 @@ export class LiqClienteComponent {
         }
      
         const cliente = clientesMap.get(factura.idCliente);
-        cliente.cantOp++;
+        cliente.opCerradas++;
         if (factura.liquidacion) {
           cliente.opFacturadas += factura.valores.total;
         } else {
@@ -162,13 +164,35 @@ export class LiqClienteComponent {
         cliente.aPagar += factura.contraParteMonto;   
         cliente.ganancia = 100-((cliente.aPagar*100)/cliente.total);
         
+        
       });      
   
       this.datosTablaCliente = Array.from(clientesMap.values());
       this.datosTablaCliente = this.datosTablaCliente.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       //console.log("Datos para la tabla: ", this.datosTablaCliente); 
+      this.dbFirebase.getAllByDateValueField<Operacion>('operaciones', 'fecha', this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "estado.abierta", true).subscribe(data=>{      
+        if(data){
+          this.opAbiertas = data;
+          this.opAbiertas = this.opAbiertas.filter((op:Operacion)=> op.estado.abierta)
+          console.log("this.opAbiertas", this.opAbiertas.length);    
+          this.datosTablaCliente.forEach(c=>{
+            c.opAbiertas = this.getOpAbiertas(c.idCliente)
+          })        
+        }      
+      });      
     }
     
+  }
+
+  getOpAbiertas(idCliente:number){
+    if(this.opAbiertas !== undefined){
+      let cantOpAbiertas = this.opAbiertas.filter((op:Operacion)=>{return op.cliente.idCliente === idCliente})
+    
+      return cantOpAbiertas.length
+    } else{
+      return 0 
+    }
+  
   }
 
   getCliente(idCliente: number){
