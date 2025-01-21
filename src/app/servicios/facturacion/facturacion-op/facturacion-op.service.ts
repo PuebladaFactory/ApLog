@@ -71,7 +71,7 @@ export class FacturacionOpService {
     .subscribe(data =>{      
       if(data){
         this.$ultTarifaGralCliente = data;
-        //console.log("1) ult tarifa GRAL CLIENTE: ",this.$ultTarifaGralCliente);              
+        console.log("1) ult tarifa GRAL CLIENTE: ",this.$ultTarifaGralCliente);              
       }
     });
  
@@ -82,7 +82,7 @@ export class FacturacionOpService {
       if(data){
         this.$ultTarifaGralChofer = data;
         
-        //console.log("2) ult tarifa GRAL CHOFER: ",this.$ultTarifaGralChofer);              
+        console.log("2) ult tarifa GRAL CHOFER: ",this.$ultTarifaGralChofer);              
       }      
     });
   
@@ -93,7 +93,7 @@ export class FacturacionOpService {
     .subscribe(data =>{
       if(data){    
         this.$ultTarifaGralProveedor = data;        
-        //console.log("5) ult tarifa GRAL PROVEEDOR: ", this.$ultTarifaGralProveedor);      
+        console.log("3) ult tarifa GRAL PROVEEDOR: ", this.$ultTarifaGralProveedor);      
       }
     });
     this.operacion = op;
@@ -107,7 +107,7 @@ export class FacturacionOpService {
     }
 
     if(op.tarifaTipo.general){ //tarifa general
-      //console.log("1)A.1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);     
+      console.log("1)A.1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);     
       respuesta = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaGralCliente);
       this.operacion.valores.cliente = respuesta.op.valores.cliente;
       this.facturaOpCliente = respuesta.factura;
@@ -226,7 +226,7 @@ export class FacturacionOpService {
     }
     
     if(op.tarifaTipo.general){ //tarifa general
-      //console.log("2)A.1) tarifa GENERAL CHOFER: ", this.$ultTarifaGralChofer);
+      console.log("2)A.1) tarifa GENERAL CHOFER: ", this.$ultTarifaGralChofer);
       respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
       ////console.log("respuesta: ", respuesta);      
       this.operacion.valores.chofer.aPagar = respuesta.factura.valores.total;
@@ -337,7 +337,7 @@ export class FacturacionOpService {
     }
 
     if(op.tarifaTipo.general){ //tarifa general
-      //console.log("3)A.1) tarifa GENERAL Proveedor: ", this.$ultTarifaGralProveedor);
+      console.log("3)A.1) tarifa GENERAL Proveedor: ", this.$ultTarifaGralProveedor);
       //console.log("3)A.1.1) PROVEEDOR SELECCIONADO: ", this.proveedorSeleccionado);
       
       respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor, this.proveedorSeleccionado.idProveedor);

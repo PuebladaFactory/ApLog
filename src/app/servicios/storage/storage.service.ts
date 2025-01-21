@@ -727,6 +727,15 @@ export class StorageService {
     });
   }
 
+  getAllByDateValue(componente:string, campo:string, value1:any, value2:any){
+    console.log(" storage getAllByDateValue ", componente)
+    this.dbFirebase
+    .getAllByDateValue(componente, campo, value1, value2)
+    .subscribe(data => {
+      this.setInfo(componente , data)
+    })
+    }
+
   syncChanges<T>(componente: string): void {    
     this.dbFirebase.getAll<T>(componente).subscribe(data => {
       const currentData = this.loadInfo(componente);
@@ -811,6 +820,8 @@ export class StorageService {
         return this._users$.asObservable(); 
       case 'usuario':
         return this._usuario$.asObservable(); 
+      case 'operaciones':
+        return this._operaciones$.asObservable(); 
         
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
