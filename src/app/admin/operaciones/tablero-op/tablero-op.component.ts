@@ -309,7 +309,7 @@ export class TableroOpComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         ////////console.log("llamada al storage desde op-abiertas, deleteItem");
-        this.storageService.deleteItem(this.componente, this.opEditar);
+        this.storageService.deleteItem(this.componente, this.opEditar, this.opEditar.idOperacion);
         ////////console.log("consultas Op: " , this.$consultasOp);
         Swal.fire({
           title: "Confirmado",

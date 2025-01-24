@@ -378,7 +378,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
   removeItem(item:any){
     console.log("llamada al storage desde liq-cliente, deleteItem");
-    this.storageService.deleteItem("facturaOpCliente", item);    
+    this.storageService.deleteItem("facturaOpCliente", item, item.idFacturaOp);    
   }
 
   editarFacturaOpCliente(factura: FacturaOp, i: number){   

@@ -18,7 +18,7 @@ export class StorageService {
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
-
+  logControl!: boolean;
   // los componentes trabajan solo con el storage
   // el storage hace las operaciones crud solo cuando hagan falta 
   // los observables mantienen la info sincronizada entre comp y storage.
@@ -941,91 +941,108 @@ export class StorageService {
         let user = this.loadInfo('usuario')
         this.dbFirebase.create(componente, item).then(() => {        
           if (!user[0].roles.god){
-            this.logService.logEvent("CREATE", componente, `Alta de objeto en la colección ${componente}`, idItem, true);
+            if(componente === 'facturaOpChofer' || componente === 'facturaOpCliente' || componente === 'facturaOpProveedor'){
+              
+            } else {
+              this.logService.logEvent("CREATE", componente, `Alta de objeto en la colección ${componente}`, idItem, true);
+            }            
           }          
-          //this.refreshData(componente, item);
+          
         }).catch((e) => {          
           if (!user[0].roles.god){
-            this.logService.logEvent("CREATE", componente, `Alta de objeto en la colección ${componente}`, idItem, false);
+            if(componente === 'facturaOpChofer' || componente === 'facturaOpCliente' || componente === 'facturaOpProveedor'){
+              
+            } else {
+              this.logService.logEvent("CREATE", componente, `Alta de objeto en la colección ${componente}`, idItem, false);
+            }                  
           }
           console.log(e.message)});
       }
     
-      public deleteItem(componente: string, item: any): void {
+      public deleteItem(componente: string, item: any,  idItem:number): void {
+        let user = this.loadInfo('usuario')
         ////console.log("storage delete item", componente, item);
         this.dbFirebase.delete(componente, item.id).then(() => {
-          //this.refreshData(componente,item);
-        }).catch((e) => console.log(e.message));
+          if (!user[0].roles.god){ 
+            if(componente === 'facturaOpChofer' || componente === 'facturaOpCliente' || componente === 'facturaOpProveedor'){
+              
+            } else {
+              this.logService.logEvent("DELETE", componente, `Baja de objeto en la colección ${componente}`, idItem, true);
+            }
+          }       
+          
+        }).catch((e) => {
+          if (!user[0].roles.god){
+            if(componente === 'facturaOpChofer' || componente === 'facturaOpCliente' || componente === 'facturaOpProveedor'){
+              
+            } else {
+              this.logService.logEvent("DELETE", componente, `Baja de objeto en la colección ${componente}`, idItem, false);
+            }            
+          }
+          console.log(e.message)});
       }
     
       public updateItem(componente: string, item: any): void {
         ////console.log("storage update item", componente, item);
         this.dbFirebase.update(componente, item).then(() => {
-          //this.refreshData(componente, item);
+          
         }).catch((e) => console.log(e.message));
       }
 
       public updateUser(componente: string, item: any): void {
         ////console.log("storage update item", componente, item);
         this.dbFirebase.updateUser(item).then(() => {
-          //this.refreshData(componente, item);
+          
         }).catch((e) => console.log(e.message));
       }
 
       public deleteUser(componente: string, item: any): void {
         ////console.log("storage delete item", componente, item);
         this.dbFirebase.deleteUser(item.id).then(() => {
-          //this.refreshData(componente,item);
+          
         }).catch((e) => console.log(e.message));
       }
     
-      private refreshData(componente: string, item:any) {
+      private controlLog(componente: string, accion:string) {
         switch(componente){
           case "clientes":
-            this.getAllSorted("clientes", 'idCliente', 'asc');
+            
             break;
           case "choferes":
-            this.getAllSorted("choferes", 'idChofer', 'asc');
+            
             break;
           case "proveedores":
-            this.getAllSorted("proveedores", 'idProveedor', 'asc');
+            
             break;
           case "operaciones":
-            this.getAllSorted("operaciones", 'fecha', 'desc');
-            break;
-          case "tarifasGralCliente":
-            this.setInfo("ultTarifaGralCliente", item);                        
-            break;
-          case "tarifasEspCliente":
-            this.setInfo("ultTarifaEspCliente", item);            
-            break;
-          case "tarifasPersCliente":
-            this.setInfo("ultTarifaPersCliente", item);            
-            break;
-          case "tarifasGralChofer":
-            this.setInfo("ultTarifaGralChofer", item);                        
-            break;
-          case "tarifasEspChofer":
-            this.setInfo("ultTarifaEspChofer", item);            
-            break;
-          case "tarifasPersChofer":
-            this.setInfo("ultTarifaPersChofer", item);            
-            break;
-          case "tarifasGralProveedor":
-            this.setInfo("ultTarifaGralProveedor", item);            
+            
             break;
           case "legajos":
-            this.getAllSorted("legajos", 'idLegajo', 'asc');
+            
             break;
-          /* case "tarifasChofer":
-            this.getByFieldValue("tarifasChofer", 'fecha', 'asc');
+          case "tarifasGralCliente":
+            
             break;
-          case "tarifasCliente":
-            this.getByFieldValue("tarifasCliente", 'fecha', 'asc');
-            break
-          case "tarifasProveedor":
-            this.getByFieldValue("tarifasProveedor", 'fecha', 'asc');
-            break */
+          case "tarifasEspCliente":
+            
+            break;
+          case "tarifasPersCliente":
+            
+            break;
+          case "tarifasGralChofer":
+            
+            break;
+          case "tarifasEspChofer":
+            
+            break;
+          case "tarifasPersChofer":
+            
+            break;
+          case "tarifasGralProveedor":
+            
+            break;
+          
+         
         }
         
       }

@@ -108,7 +108,7 @@ export class ClienteListadoComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        this.storageService.deleteItem(this.componente, this.clienteEditar);
+        this.storageService.deleteItem(this.componente, this.clienteEditar, this.clienteEditar.idCliente);
         Swal.fire({
           title: "Confirmado",
           text: "El Cliente ha sido borrado",

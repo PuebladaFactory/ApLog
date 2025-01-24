@@ -50,6 +50,17 @@ export class DbFirestoreService {
         })))
       );
     }
+
+    getAllColectionRangeLimit<T>(coleccion:string, range1: any, range2:any,  limite:number) {
+      const dataCollection = `/${coleccion}`;
+      return this.firestore2.collection(dataCollection, (ref) =>
+        ref.orderBy('timestamp', 'desc').where("timestamp", ">=", range1).where("timestamp", "<=", range2).limit(limite)).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
+        })))
+      );
+    }
    
    
     getAll<T>(componente: string): Observable<ConId<T>[]> {

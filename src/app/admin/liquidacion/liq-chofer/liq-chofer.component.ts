@@ -370,7 +370,7 @@ export class LiqChoferComponent implements OnInit {
 
   removeItem(item:any){
     console.log("llamada al storage desde liq-chofer, deleteItem");
-    this.storageService.deleteItem("facturaOpChofer", item);    
+    this.storageService.deleteItem("facturaOpChofer", item, item.idFacturaOp);    
   }
 
   editarFacturaOpCliente(factura: FacturaOp, i:number){   

@@ -379,7 +379,7 @@ export class LiqProveedorComponent implements OnInit {
 
   removeItem(item:any){
     console.log("llamada al storage desde liq-Proveedor, deleteItem");
-    this.storageService.deleteItem("facturaOpProveedor", item);    
+    this.storageService.deleteItem("facturaOpProveedor", item, item.idFacturaOp);    
   }
 
   editarFacturaOpCliente(factura: FacturaOp, i:number){   

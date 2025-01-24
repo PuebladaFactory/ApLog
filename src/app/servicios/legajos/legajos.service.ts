@@ -161,7 +161,7 @@ export class LegajosService {
           return l.idChofer === idChofer;
         });
         //console.log("legajo", legajo);
-        this.storageService.deleteItem("legajos", legajo[0]);
+        this.storageService.deleteItem("legajos", legajo[0], legajo[0].idLegajo);
       }
     })
   }
