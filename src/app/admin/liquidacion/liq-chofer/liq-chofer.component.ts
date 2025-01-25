@@ -302,13 +302,22 @@ export class LiqChoferComponent implements OnInit {
   }
   
 
-  liquidarFacChofer(idChofer: any, apellido: string, index: number){
+  liquidarFacChofer(chofer: any, index: number){
     // Obtener las facturas del cliente
-    console.log("IDCHOFER: ", idChofer);
+    //console.log("IDCHOFER: ", chofer.idChofer);
+
+    if(chofer.opAbiertas > 0){
+       Swal.fire({
+          icon: "warning",
+          title: "¡Atención!",
+          text: "El chofer tiene operaciones abiertas que corresponden al periodo que se esta facturando",
+          //footer: '<a href="#">Why do I have this issue?</a>'
+        });
+    }
     
-    let facturasIdChofer:any = this.facturasPorChofer.get(idChofer);    
+    let facturasIdChofer:any = this.facturasPorChofer.get(chofer.idChofer);    
     ////////console.log()("FACTURAS POR CHOFER: ", facturasIdChofer );
-    this.apellido = apellido;
+    this.apellido = chofer.apellido;
     //////console.log()("APELLIDO: ", this.apellido);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
@@ -329,7 +338,7 @@ export class LiqChoferComponent implements OnInit {
       });
   
       this.indiceSeleccionado = index;
-      console.log("3) Facturas liquidadas del cliente", apellido + ":", this.facturasLiquidadasChofer);
+      console.log("3) Facturas liquidadas del cliente", chofer.apellido + ":", this.facturasLiquidadasChofer);
       console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasChofer);
       //console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
