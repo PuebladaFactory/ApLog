@@ -313,12 +313,21 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     }
   }
 
-  liquidarFacCliente(idCliente: any, razonSocial: string, index: number){
+   liquidarFacCliente(cliente: any, index: number){
     // Obtener las facturas del cliente
     //console.log("1: ",this.facturasLiquidadasCliente);
+
+    if(cliente.opAbiertas > 0){
+        Swal.fire({
+          icon: "warning",
+          title: "¡Atención!",
+          text: "El cliente tiene operaciones abiertas que corresponden al periodo que se esta facturando",
+          //footer: '<a href="#">Why do I have this issue?</a>'
+        });
+    }
     
-    let facturasIdCliente:any = this.facturasPorCliente.get(idCliente);
-    this.razonSocFac = razonSocial;
+    let facturasIdCliente:any = this.facturasPorCliente.get(cliente.idCliente);
+    this.razonSocFac = cliente.razonSocial;
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasCliente = facturasIdCliente.filter((factura: FacturaOp) => {
         return factura.liquidacion === true;
@@ -333,7 +342,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       });
   
       this.indiceSeleccionado = index;
-      console.log("3) Facturas liquidadas del cliente", razonSocial + ":", this.facturasLiquidadasCliente);
+      console.log("3) Facturas liquidadas del cliente", cliente.razonSocial + ":", this.facturasLiquidadasCliente);
       console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasCliente);
       //console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();

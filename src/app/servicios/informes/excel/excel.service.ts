@@ -302,7 +302,7 @@ async exportToExcelCliente(
 
   // Guardar archivo
   const buffer = await workbook.xlsx.writeBuffer();
-  FileSaver.saveAs(new Blob([buffer]), `Factura_${factura.razonSocial}_${factura.fecha}.xlsx`);
+  FileSaver.saveAs(new Blob([buffer]), `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx`);
 }
 
 
@@ -478,7 +478,7 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
 
   // Guardar archivo
   const buffer = await workbook.xlsx.writeBuffer();
-    FileSaver.saveAs(new Blob([buffer]), `Factura_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx`);
+    FileSaver.saveAs(new Blob([buffer]), `Detalle_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx`);
 
 }
 
@@ -656,7 +656,7 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
 
   // Guardar archivo
   const buffer = await workbook.xlsx.writeBuffer();
-  FileSaver.saveAs(new Blob([buffer]), `Factura_${factura.razonSocial}_${factura.fecha}.xlsx`);
+  FileSaver.saveAs(new Blob([buffer]), `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx`);
 
 }
 

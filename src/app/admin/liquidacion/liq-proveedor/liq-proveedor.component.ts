@@ -307,15 +307,24 @@ export class LiqProveedorComponent implements OnInit {
   }
 }
 
-  liquidarFacProveedor(idProveedor: any, apellido: string, index: number){
+  liquidarFacProveedor(proveedor: any, index: number){
     // Obtener las facturas del cliente
     //////console.log()("IDCHOFER: ", idChofer);
+
+    if(proveedor.opAbiertas > 0){
+        Swal.fire({
+          icon: "warning",
+          title: "¡Atención!",
+          text: "El proveedor tiene operaciones abiertas que corresponden al periodo que se esta facturando",
+          //footer: '<a href="#">Why do I have this issue?</a>'
+        });
+    }
     
-    let facturasIdProveedor:any = this.facturasPorProveedor.get(idProveedor);    
+    let facturasIdProveedor:any = this.facturasPorProveedor.get(proveedor.idProveedor);    
     ////////console.log()("FACTURAS POR CHOFER: ", facturasIdChofer );
     
 
-    this.razonSocial = apellido;
+    this.razonSocial = proveedor.razonSocial;
     //////console.log()("APELLIDO: ", this.apellido);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
@@ -337,7 +346,7 @@ export class LiqProveedorComponent implements OnInit {
       });
   
       this.indiceSeleccionado = index;
-      console.log("3) Facturas liquidadas del proveedor", apellido + ":", this.facturasLiquidadasProveedor);
+      console.log("3) Facturas liquidadas del proveedor", proveedor.razonSocial + ":", this.facturasLiquidadasProveedor);
       console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasProveedor);
       //console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
