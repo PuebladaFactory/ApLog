@@ -145,7 +145,7 @@ async exportToPdfCliente(
       doc.rect(margin + subtotalWidth, finalY, lastColumnWidth, footerHeight, 'FD'); // Celda de valor
 
       doc.text(descuento.concepto, margin + 5, finalY + footerHeight / 2, { baseline: 'middle' });
-      doc.text(`${this.formatearValor(descuento.valor)}`, margin + tableWidth - (factura.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
+      doc.text(`- ${this.formatearValor(descuento.valor)}`, margin + tableWidth - (factura.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
         align: 'right',
         baseline: 'middle',
       });
@@ -442,7 +442,7 @@ async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOp[], cliente
       doc.rect(margin + subtotalWidth, finalY, lastColumnWidth, footerHeight, 'FD'); // Celda de valor
 
       doc.text(descuento.concepto, margin + 5, finalY + footerHeight / 2, { baseline: 'middle' });
-      doc.text(`${this.formatearValor(descuento.valor)}`, margin + tableWidth - (factura.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
+      doc.text(`- ${this.formatearValor(descuento.valor)}`, margin + tableWidth - (factura.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
         align: 'right',
         baseline: 'middle',
       });
@@ -578,7 +578,7 @@ async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], c
       doc.rect(margin + subtotalWidth, finalY, lastColumnWidth, footerHeight, 'FD'); // Celda de valor
 
       doc.text(descuento.concepto, margin + 5, finalY + footerHeight / 2, { baseline: 'middle' });
-      doc.text(`${this.formatearValor(descuento.valor)}`, margin + tableWidth - (factura.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
+      doc.text(`- ${this.formatearValor(descuento.valor)}`, margin + tableWidth - (factura.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
         align: 'right',
         baseline: 'middle',
       });
