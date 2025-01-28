@@ -4,6 +4,7 @@ import { AjustesControlComponent } from './ajustes-control/ajustes-control.compo
 import { AjustesUsuariosComponent } from './ajustes-usuarios/ajustes-usuarios.component';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { RegistroComponent } from './registro/registro.component';
+import { PapeleraComponent } from './papelera/papelera.component';
 
 const routes: Routes = [
   {path: '', component:AjustesControlComponent,
@@ -13,6 +14,10 @@ const routes: Routes = [
             data: { roles: ['god', 'admin'] }, // no se permiten usuarios
       },          
       {path: 'registro', component:RegistroComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['god', 'admin'] }, // no se permiten usuarios
+      },
+      {path: 'papelera', component:PapeleraComponent,
         canActivate: [RoleGuard],
         data: { roles: ['god', 'admin'] }, // no se permiten usuarios
       },

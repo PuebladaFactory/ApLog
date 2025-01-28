@@ -123,7 +123,7 @@ private destroy$ = new Subject<void>();
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        this.storageService.deleteItem(this.componente, this.proveedorEditar, this.proveedorEditar.idProveedor);
+        this.storageService.deleteItem(this.componente, this.proveedorEditar, this.proveedorEditar.idProveedor, "BAJA", `Baja de Proveedor ${this.proveedorEditar.razonSocial}`);
         Swal.fire({
           title: "Confirmado",
           text: "El Proveedor ha sido borrado",

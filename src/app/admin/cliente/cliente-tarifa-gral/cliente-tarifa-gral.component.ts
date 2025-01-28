@@ -481,14 +481,14 @@ onGenerarNuevaTarifaAutomatica() {
     //////////////console.log("1)",this.nuevaTarifaGral);
     let clientes: Cliente [] = this.storageService.loadInfo("clientes")
     if(!this.tEspecial){
-        this.storageService.addItem(this.componente, this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa);     
+        this.storageService.addItem(this.componente, this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa, "ALTA", "Alta de Tarifa General para Clientes");     
         this.consolaTarifa = 0;
         this.storageService.setInfo("consolaTarifa", this.consolaTarifa);        
         if(clientes.length > 0){
             clientes.forEach((c:Cliente)=>{
               if(c.tarifaTipo.general && !c.tarifaAsignada){
                 c.tarifaAsignada = true;
-                this.storageService.updateItem("clientes", c);
+                this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
               }
             })
         }      
@@ -496,14 +496,14 @@ onGenerarNuevaTarifaAutomatica() {
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
       this.nuevaTarifaGral.tipo.especial = true;
-      this.storageService.addItem("tarifasEspCliente", this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa);      
+      this.storageService.addItem("tarifasEspCliente", this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa, "ALTA", `Alta de Tarifa Especial para Cliente ${this.getClienteEsp(this.idClienteEsp[0])}`);      
       this.consolaTarifa = 0;
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(clientes.length > 0){
         clientes.forEach((c:Cliente)=>{
           if(c.tarifaTipo.especial  && c.idCliente === this.idClienteEsp[0] && !c.tarifaAsignada){
             c.tarifaAsignada = true;
-            this.storageService.updateItem("clientes", c);
+            this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
           }
         })
     }      
@@ -627,6 +627,14 @@ onGenerarNuevaTarifaAutomatica() {
     }
   }
 
+  getClienteEsp(idCliente:number){
+    let clientes : Cliente[] = [];
+
+    clientes = this.$clientesEsp.filter(c => c.idCliente === idCliente);
+
+    return clientes[0].razonSocial;
+
+  }
 
 
 

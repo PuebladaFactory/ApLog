@@ -54,7 +54,7 @@ export class AjustesUsuariosComponent implements OnInit {
           cancelButtonText: "Cancelar"
         }).then((result) => {
           if (result.isConfirmed) {
-            this.storageService.deleteUser("users", user);
+            this.storageService.deleteUser("users", user, "BAJA");
             Swal.fire({
               title: "Confirmado",
               text: "El Usuario ha sido borrado",

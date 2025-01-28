@@ -12,6 +12,7 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
+import { LogService } from 'src/app/servicios/log/log.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -62,9 +63,10 @@ export class ModalDetalleComponent implements OnInit {
   $clientes!: Cliente[];
   $proveedores!: Proveedor[];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
+  searchText!:string;
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private excelServ: ExcelService, 
-    private pdfServ: PdfService, private dbFirebase: DbFirestoreService){
+    private pdfServ: PdfService, private logService: LogService){
 
   }
   
@@ -158,7 +160,7 @@ export class ModalDetalleComponent implements OnInit {
       //console.log(factura);
       
       factura[0].cobrado = !factura[0].cobrado;
-      this.updateItem(factura[0]);
+      this.updateItem(factura[0], factura[0].idFacturaCliente);
     }
     //////////////CHOFERES///////////////////////
     if(this.fromParent.modo === "choferes"){
@@ -169,7 +171,7 @@ export class ModalDetalleComponent implements OnInit {
       //console.log(factura);
       
       factura[0].cobrado = !factura[0].cobrado;
-      this.updateItem(factura[0]);
+      this.updateItem(factura[0], factura[0].idFacturaChofer);
     }
     //////////////PROVEEDORES///////////////////////
     if(this.fromParent.modo === "proveedores"){
@@ -180,23 +182,23 @@ export class ModalDetalleComponent implements OnInit {
       //console.log(factura);
       
       factura[0].cobrado = !factura[0].cobrado;
-      this.updateItem(factura[0]);
+      this.updateItem(factura[0], factura[0].idFacturaProveedor);
     }
   }
 
-  updateItem(item: any) {
+  updateItem(item: any, idItem: number) {
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "clientes":
-          this.storageService.updateItem('facturaCliente', item);
+          this.storageService.updateItem('facturaCliente', item, idItem, "EDITAR", item.cobrado ? `Factura Cliente ${item.razonSocial} cobrada` : `Factura Cliente ${item.razonSocial} sin cobrar` );
           break;
       //////////////CHOFERES///////////////////////
       case "choferes":
-          this.storageService.updateItem('facturaChofer', item);
+          this.storageService.updateItem('facturaChofer', item, idItem, "EDITAR", item.cobrado ? `Factura Chofer ${item.apellido} ${item.nombre}  cobrada` : `Factura Chofer ${item.apellido} ${item.nombre} sin cobrar` );
           break;
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
-          this.storageService.updateItem('facturaProveedor', item);
+          this.storageService.updateItem('facturaProveedor', item, idItem, "EDITAR", item.cobrado ? `Factura Proveedor ${item.razonSocial} cobrada` : `Factura Proveedor ${item.razonSocial} sin cobrar`);
       break;
       default:
         alert("error update")
@@ -228,9 +230,11 @@ export class ModalDetalleComponent implements OnInit {
           if (formato === 'excel') {
             console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
             this.excelServ.exportToExcelCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en excel del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
           } else if(formato === 'pdf') {
             console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
             this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
           }   
           break;
       //////////////CHOFERES///////////////////////
@@ -253,9 +257,11 @@ export class ModalDetalleComponent implements OnInit {
           if (formato === 'excel') {
             console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );      
             this.excelServ.exportToExcelChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en excel del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
           } else if(formato === 'pdf') {
             console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );
             this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en pdf del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
           } 
           break;
       //////////////PROVEEDORES///////////////////////
@@ -278,9 +284,11 @@ export class ModalDetalleComponent implements OnInit {
           if (formato === 'excel') {
             console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );      
             this.excelServ.exportToExcelProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
           } else if(formato === 'pdf') {
             console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );
             this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
           }   
       break;
       default:

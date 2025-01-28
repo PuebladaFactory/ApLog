@@ -778,6 +778,24 @@ export class StorageService {
     });
   }
 
+  syncChangesLimit<T>(componente: string, field:string, limit: number): void {    
+    this.dbFirebase.getMostRecentLimit<T>(componente, field, limit)
+    .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
+    .subscribe(data => {
+      //const currentData = this.loadInfo(componente);
+      //////console.log("currentData", currentData);
+      //////console.log("data", data);
+      /* if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
+        ////console.log(`Datos sincronizados para ${componente}`, data);
+        this.setInfo(componente, data); // Actualiza el caché
+        this.updateObservable(componente, data); // Actualiza el observable
+      } else {
+        ////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+      } */
+      
+    });
+  }
+
   getObservable<T>(componente: string): Observable<T[]> {
     switch (componente) {
       case 'clientes':
@@ -937,111 +955,173 @@ export class StorageService {
 
 
      
-      public addItem(componente: string, item: any, idItem:number): void {
-        let user = this.loadInfo('usuario')
+      public addItem(componente: string, item: any, idItem:number, accion:string, msj: string): void {
+        let user = this.loadInfo('usuario');
+        //let accion: string = "ALTA";
+        let regLog:boolean = this.controlLog(componente, accion);
         this.dbFirebase.create(componente, item).then(() => {        
-          if (!user[0].roles.god){
-            if(componente === 'facturaOpChofer' || componente === 'facturaOpCliente' || componente === 'facturaOpProveedor'){
-              
-            } else {
-              this.logService.logEvent("CREATE", componente, `Alta de objeto en la colección ${componente}`, idItem, true);
-            }            
+          if (!user[0].roles.god && regLog){            
+            this.logService.logEvent(accion, componente, msj, idItem, true);           
           }          
           
         }).catch((e) => {          
-          if (!user[0].roles.god){
-            if(componente === 'facturaOpChofer' || componente === 'facturaOpCliente' || componente === 'facturaOpProveedor'){
-              
-            } else {
-              this.logService.logEvent("CREATE", componente, `Alta de objeto en la colección ${componente}`, idItem, false);
-            }                  
+          if (!user[0].roles.god && regLog){
+            this.logService.logEvent(accion, componente, msj, idItem, false);
           }
           console.log(e.message)});
       }
     
-      public deleteItem(componente: string, item: any,  idItem:number): void {
-        let user = this.loadInfo('usuario')
-        ////console.log("storage delete item", componente, item);
+      public deleteItem(componente: string, item: any,  idItem:number, accion:string, msj:string): void {
+        let user = this.loadInfo('usuario');
+        //let accion: string = "BAJA";
+        let regLog:boolean = this.controlLog(componente, accion);
         this.dbFirebase.delete(componente, item.id).then(() => {
-          if (!user[0].roles.god){ 
-            if(componente === 'facturaOpChofer' || componente === 'facturaOpCliente' || componente === 'facturaOpProveedor'){
-              
-            } else {
-              this.logService.logEvent("DELETE", componente, `Baja de objeto en la colección ${componente}`, idItem, true);
+          if (!user[0].roles.god && regLog) {             
+            if(componente === "operaciones"){
+              this.logService.logEventDoc(accion, componente, msj, idItem, item, true);
+            } else{
+              this.logService.logEvent(accion, componente, msj, idItem, true);
             }
-          }       
-          
+          }                 
         }).catch((e) => {
-          if (!user[0].roles.god){
-            if(componente === 'facturaOpChofer' || componente === 'facturaOpCliente' || componente === 'facturaOpProveedor'){
-              
-            } else {
-              this.logService.logEvent("DELETE", componente, `Baja de objeto en la colección ${componente}`, idItem, false);
-            }            
+          if (!user[0].roles.god && regLog){
+            this.logService.logEvent(accion, componente, msj, idItem, false);
           }
           console.log(e.message)});
       }
     
-      public updateItem(componente: string, item: any): void {
+      public updateItem(componente: string, item: any, idItem:number, accion:string, msj: string): void {
         ////console.log("storage update item", componente, item);
+        let user = this.loadInfo('usuario');
+        //let accion: string = "BAJA";
+        let regLog:boolean = this.controlLog(componente, accion);
+        console.log("regLog", regLog);
+        
         this.dbFirebase.update(componente, item).then(() => {
-          
-        }).catch((e) => console.log(e.message));
+          if (!user[0].roles.god && regLog) { 
+            this.logService.logEvent(accion, componente, msj, idItem, true);
+          }      
+        }).catch((e) => {
+          if (!user[0].roles.god && regLog){
+            this.logService.logEvent(accion, componente, msj, idItem, false);
+          }
+          console.log(e.message)});
       }
 
-      public updateUser(componente: string, item: any): void {
+      public updateUser(componente: string, item: any, accion:string): void {
         ////console.log("storage update item", componente, item);
+        let user = this.loadInfo('usuario');
+        //let accion: string = "BAJA";
+        let regLog:boolean = this.controlLog(componente, accion);
         this.dbFirebase.updateUser(item).then(() => {
-          
-        }).catch((e) => console.log(e.message));
+          if (!user[0].roles.god && regLog) { 
+            this.logService.logEvent(accion, componente, `Edición de Usuario ${item.email}`, item.uid, true);
+          }   
+        }).catch((e) => {
+          if (!user[0].roles.god && regLog) { 
+            this.logService.logEvent(accion, componente, `Edición de Usuario ${item.email}`, item.uid, false);
+          }  
+          console.log(e.message)
+        });
       }
 
-      public deleteUser(componente: string, item: any): void {
+      public deleteUser(componente: string, item: any, accion: string): void {
         ////console.log("storage delete item", componente, item);
+        let user = this.loadInfo('usuario');
+        //let accion: string = "BAJA";
+        let regLog:boolean = this.controlLog(componente, accion);
         this.dbFirebase.deleteUser(item.id).then(() => {
-          
-        }).catch((e) => console.log(e.message));
+          if (!user[0].roles.god && regLog) { 
+            this.logService.logEvent(accion, componente, `Baja de Usuario ${item.email}`, item.uid, true);
+          }  
+        }).catch((e) => {
+          if (!user[0].roles.god && regLog) { 
+            this.logService.logEvent(accion, componente, `Baja de Usuario ${item.email}`, item.uid, false);
+          }  
+          console.log(e.message)
+        });
       }
     
       private controlLog(componente: string, accion:string) {
         switch(componente){
           case "clientes":
-            
-            break;
           case "choferes":
-            
-            break;
           case "proveedores":
-            
-            break;
-          case "operaciones":
-            
-            break;
-          case "legajos":
-            
-            break;
+          case "legajos":          
+          case "operaciones": 
           case "tarifasGralCliente":
-            
-            break;
           case "tarifasEspCliente":
-            
-            break;
-          case "tarifasPersCliente":
-            
-            break;
-          case "tarifasGralChofer":
-            
-            break;
+          case "tarifasPersCliente":            
+          case "tarifasGralChofer":            
           case "tarifasEspChofer":
-            
-            break;
           case "tarifasPersChofer":
-            
-            break;
           case "tarifasGralProveedor":
-            
-            break;
-          
+          case "tarifasEspProveedor":
+          case "users":
+          case "facturaCliente":
+          case "facturaChofer":
+          case "facturaProveedor":
+            if(accion === "INTERNA"){
+              return false;
+            } else{
+              return true;
+            }                                 
+          case "facturaOpCliente":
+            if(accion === "EDITAR"){
+              return true;
+            } else {
+              return false;
+            }
+            /* switch(accion){
+              case "ALTA":
+                return false;
+              case "EDITAR":
+                return true;
+              case "BAJA":
+                return false;              
+              default:
+                return false;
+            } */
+          case "facturaOpChofer":
+            if(accion === "EDITAR"){
+              return true;
+            } else {
+              return false;
+            }
+            /* switch(accion){
+              case "ALTA":
+                return false;
+              case "EDITAR":
+                return true;
+              case "BAJA":
+                return false;              
+              default:
+                return false;
+            } */
+          case "facturaOpProveedor":
+            if(accion === "EDITAR"){
+              return true;
+            } else {
+              return false;
+            }
+            /* switch(accion){
+              case "ALTA":
+                return false;
+              case "EDITAR":
+                return true;
+              case "BAJA":
+                return false;              
+              default:
+                return false;
+            } */
+          case "facOpLiqCliente":
+            return false;
+          case "facOpLiqChofer":
+            return false;
+          case "facOpLiqProveedor":
+            return false;
+          default:
+            return false;
          
         }
         

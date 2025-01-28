@@ -26,7 +26,7 @@ export class LegajosService {
       },
       documentacion:[],  
     };
-    this.storageService.addItem("legajos", this.legajo, this.legajo.idLegajo)
+    this.storageService.addItem("legajos", this.legajo, this.legajo.idLegajo, "ALTA", "Alta de Legajo")
     
   }
 
@@ -79,7 +79,7 @@ export class LegajosService {
   
         // Si se modificó el legajo, actualizar en la base de datos
         if (legajoModificado) {
-          this.storageService.updateItem("legajos", legajo);
+          this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "EDITAR", "Edición de Legajo");
           //console.log(`Legajo actualizado: ${legajo.idLegajo}`);
         }
       });
@@ -161,7 +161,7 @@ export class LegajosService {
           return l.idChofer === idChofer;
         });
         //console.log("legajo", legajo);
-        this.storageService.deleteItem("legajos", legajo[0], legajo[0].idLegajo);
+        this.storageService.deleteItem("legajos", legajo[0], legajo[0].idLegajo, "BAJA", "Baja de Legajo");
       }
     })
   }

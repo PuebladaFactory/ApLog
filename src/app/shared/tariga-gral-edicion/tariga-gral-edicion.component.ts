@@ -90,7 +90,7 @@ export class TarigaGralEdicionComponent implements OnInit {
       if (result.isConfirmed) {
         this.formatearTarifa()
         console.log("tarifa editada: ", this.tarifa);
-        this.storageService.updateItem(this.componente, this.tarifa);    
+        this.storageService.updateItem(this.componente, this.tarifa, this.tarifa.idTarifa, "EDITAR", "Edición de la tarifa");    
         Swal.fire({
           title: "Confirmado",
           text: "La tarifa ha sido modificada.",
@@ -123,7 +123,7 @@ export class TarigaGralEdicionComponent implements OnInit {
           this.tarifa.cargasGenerales.splice(orden-1,1)
           console.log("tarifa: ", this.tarifa);
           
-          this.storageService.updateItem(this.componente, this.tarifa);    
+          this.storageService.updateItem(this.componente, this.tarifa, this.tarifa.idTarifa, "EDICIÓN", "Eliminar categoria de la tarifa");    
           //////console.log("consultas Op: " , this.$consultasOp);
           Swal.fire({
             title: "Confirmado",

@@ -206,9 +206,9 @@ export class ClienteAltaComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {     
         if(modo === "Alta")   {
-          this.storageService.addItem(this.componente, this.cliente, this.cliente.idCliente)
+          this.storageService.addItem(this.componente, this.cliente, this.cliente.idCliente, "ALTA", `Alta de Cliente ${this.cliente.razonSocial}`)
         } else if (modo === "Edicion"){
-          this.storageService.updateItem(this.componente, this.cliente)
+          this.storageService.updateItem(this.componente, this.cliente, this.cliente.idCliente, "EDITAR", `Cliente ${this.cliente.razonSocial} editado`)
         }        
         Swal.fire({
           title: "Confirmado",

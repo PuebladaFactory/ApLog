@@ -288,7 +288,7 @@ export class ChoferesAltaComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          this.storageService.updateItem(this.componente, this.chofer); 
+          this.storageService.updateItem(this.componente, this.chofer, this.chofer.idChofer, "EDITAR", `Chofer Editado ${this.chofer.apellido} ${this.chofer.nombre}`); 
           Swal.fire({
             title: "Confirmado",
             text: "Cambios guardados",
@@ -313,7 +313,7 @@ export class ChoferesAltaComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          this.storageService.addItem(this.componente, this.chofer, this.chofer.idChofer); 
+          this.storageService.addItem(this.componente, this.chofer, this.chofer.idChofer, "ALTA", `Alta de Chofer ${this.chofer.apellido} ${this.chofer.nombre}`); 
           this.legajoServ.crearLegajo(this.chofer.idChofer);
           Swal.fire({
             title: "Confirmado",

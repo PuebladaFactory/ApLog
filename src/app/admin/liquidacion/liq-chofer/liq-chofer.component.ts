@@ -323,16 +323,16 @@ export class LiqChoferComponent implements OnInit {
     });
   }
 
-  addItem(item:any, componente:string, idItem:number): void {   
+  addItem(item:any, componente:string, idItem:number, accion:string): void {   
     console.log("llamada al storage desde liq-cliente, addItem");
-    this.storageService.addItem(componente, item, idItem);        
+    this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : `Alta de Factura de Chofer ${item.apellido} ${item.nombre}`);        
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
       console.log("llamada al storage desde liq-chofer, addItem");
-      this.addItem(factura, "facOpLiqChofer", factura.idFacturaOp);
+      this.addItem(factura, "facOpLiqChofer", factura.idFacturaOp, "INTERNA");
       this.editarOperacionesFac(factura)
       
     }); 
@@ -362,7 +362,7 @@ export class LiqChoferComponent implements OnInit {
           cerrada: false,
           facturada: true,
         }
-        this.storageService.updateItem("operaciones", op);
+        this.storageService.updateItem("operaciones", op, op.idOperacion, "Liquidar", `Operación de Chofer ${op.chofer.apellido} ${op.chofer.nombre} Liquidada`);
         this.removeItem(factura);
     });
 
@@ -370,7 +370,7 @@ export class LiqChoferComponent implements OnInit {
 
   removeItem(item:any){
     console.log("llamada al storage desde liq-chofer, deleteItem");
-    this.storageService.deleteItem("facturaOpChofer", item, item.idFacturaOp);    
+    this.storageService.deleteItem("facturaOpChofer", item, item.idFacturaOp, "INTERNA", "");    
   }
 
   editarFacturaOpCliente(factura: FacturaOp, i:number){   
@@ -413,7 +413,7 @@ export class LiqChoferComponent implements OnInit {
 
           if(result.modo === "cerrar"){
             this.facturaChofer = result.factura;
-            this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer);        
+            this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer, "ALTA");        
             if(result.titulo === "excel"){
             this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);
             }else if (result.titulo === "pdf"){

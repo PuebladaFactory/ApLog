@@ -41,7 +41,7 @@ export class DbFirestoreService {
       );
     }
 
-    getAllColectionLimit<T>(coleccion:string, limite:number) {
+/*     getAllColectionLimit<T>(coleccion:string, limite:number) {
       const dataCollection = `/${coleccion}`;
       return this.firestore2.collection(dataCollection, (ref) => ref.orderBy('timestamp', 'desc').limit(limite)).snapshotChanges().pipe(
         map(snapshot => snapshot.map(change => ({
@@ -49,10 +49,10 @@ export class DbFirestoreService {
           ...change.payload.doc.data() as T,
         })))
       );
-    }
+    } */
 
     getAllColectionRangeLimit<T>(coleccion:string, range1: any, range2:any,  limite:number) {
-      const dataCollection = `/${coleccion}`;
+      const dataCollection = `/Vantruck/datos/${coleccion}`;
       return this.firestore2.collection(dataCollection, (ref) =>
         ref.orderBy('timestamp', 'desc').where("timestamp", ">=", range1).where("timestamp", "<=", range2).limit(limite)).snapshotChanges().pipe(
         map(snapshot => snapshot.map(change => ({

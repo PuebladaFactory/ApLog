@@ -11,6 +11,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { UsuariosEdicionComponent } from './modales/usuarios-edicion/usuarios-edicion.component';
 import { RegistroComponent } from './registro/registro.component';
 import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
+import { PapeleraComponent } from './papelera/papelera.component';
 
 
 
@@ -19,7 +20,8 @@ import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
     AjustesControlComponent,
     AjustesUsuariosComponent,
     UsuariosEdicionComponent,
-    RegistroComponent
+    RegistroComponent,
+    PapeleraComponent
   ],
   imports: [
     CommonModule,

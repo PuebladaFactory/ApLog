@@ -513,11 +513,11 @@ export class FacturacionOpService {
   }
 
   addItem(componente: string, item:any, idItem:any){
-    this.storageService.addItem(componente, item, idItem)
+    this.storageService.addItem(componente, item, idItem, "INTERNA", "")
   }
 
-  updateItem(componente: string, item: any){
-    this.storageService.updateItem(componente, item);
+  updateItem(componente: string, op: Operacion){
+    this.storageService.updateItem(componente, op, op.idOperacion, "CERRAR", "Cierre de Operación");
   }
 
   guardarTarifasEventuales(op:Operacion){

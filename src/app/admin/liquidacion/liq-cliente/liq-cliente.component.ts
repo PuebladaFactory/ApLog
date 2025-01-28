@@ -331,16 +331,16 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   
 
 
-  addItem(item:any, componente:string, idItem:number): void {   
+  addItem(item:any, componente:string, idItem:number, accion:string): void {   
     console.log("llamada al storage desde liq-cliente, addItem");
-    this.storageService.addItem(componente, item, idItem);        
+    this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : `Alta de Factura de Cliente ${item.razonSocial}`);        
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasCliente.forEach((factura: FacturaOp) => {
       console.log("llamada al storage desde liq-cliente, addItem");
-      this.addItem(factura, "facOpLiqCliente", factura.idFacturaOp);
+      this.addItem(factura, "facOpLiqCliente", factura.idFacturaOp, "INTERNA");
       this.editarOperacionesFac(factura)
       
     }); 
@@ -370,7 +370,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           cerrada: false,
           facturada: true,
         }
-        this.storageService.updateItem("operaciones", op);
+        this.storageService.updateItem("operaciones", op, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`);
         this.removeItem(factura);
     });
 
@@ -378,7 +378,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
   removeItem(item:any){
     console.log("llamada al storage desde liq-cliente, deleteItem");
-    this.storageService.deleteItem("facturaOpCliente", item, item.idFacturaOp);    
+    this.storageService.deleteItem("facturaOpCliente", item, item.idFacturaOp, "INTERNA", "");    
   }
 
   editarFacturaOpCliente(factura: FacturaOp, i: number){   
@@ -425,7 +425,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           
           if(result.modo === "cerrar"){
             this.facturaCliente = result.factura;            
-            this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente);            
+            this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");            
             if(result.titulo === "excel"){
             this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);
             }else if (result.titulo === "pdf"){

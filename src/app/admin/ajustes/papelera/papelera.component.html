@@ -1,0 +1,61 @@
+<div class="d-flex justify-content-between mt-3">
+    <div class="">
+        <h2 class="ng ">Papelera de documentos</h2>
+        <h3>Últimos {{limite}} resultados:</h3>
+    </div>
+    <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded" style="width: 200px;">            
+        <table>
+            <thead>              
+                <th colspan="2">Cantidad de Consultas</th>                
+            </thead>
+            <tbody>                
+                <td>
+                    <input  type="text" inputmode="numeric" style="width: 60px;  font-size: 1.2rem;"  class="form-control"  aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarPapelera()" appSoloNumeros>
+                </td>
+                <td>
+                    <button class="btn btn-primary boton" type="button" id="button-addon2"   (click)="consultarPapelera()">Consultar</button>
+                </td>
+            </tbody>
+        </table>
+        
+    </div>        
+</div>
+<div class="">    
+    <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por usuario">
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>                    
+                <th scope="col" class="">Fecha de Baja</th>                    
+                <th scope="col" class="">Usuario</th>
+                <th scope="col" class="">Colección</th>
+                <th scope="col" class="">Detalle</th>
+                <th scope="col" class="">Id Objeto</th>
+                <th scope="col" class="">Objeto</th>
+                <th scope="col" class="">Restaurar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="papelera && papelera.length > 0 else sinDatos">
+                <tr *ngFor="let p of papelera | filter: searchText">
+                    <td>{{getFecha(p.logEntry.timestamp)}}</td>
+                    <td>{{getUsuario(p.logEntry.userEmail)}}</td>
+                    <td>{{p.logEntry.coleccion}}</td>
+                    <td>{{p.logEntry.details}}</td>
+                    <td>{{p.logEntry.idObjet}}</td>
+                    <td><app-btn-leer name="Detalle" (click)="modalObjeto(p.objeto)"></app-btn-leer></td>
+                    <td>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-recycle" viewBox="0 0 16 16">
+                            <path d="M9.302 1.256a1.5 1.5 0 0 0-2.604 0l-1.704 2.98a.5.5 0 0 0 .869.497l1.703-2.981a.5.5 0 0 1 .868 0l2.54 4.444-1.256-.337a.5.5 0 1 0-.26.966l2.415.647a.5.5 0 0 0 .613-.353l.647-2.415a.5.5 0 1 0-.966-.259l-.333 1.242zM2.973 7.773l-1.255.337a.5.5 0 1 1-.26-.966l2.416-.647a.5.5 0 0 1 .612.353l.647 2.415a.5.5 0 0 1-.966.259l-.333-1.242-2.545 4.454a.5.5 0 0 0 .434.748H5a.5.5 0 0 1 0 1H1.723A1.5 1.5 0 0 1 .421 12.24zm10.89 1.463a.5.5 0 1 0-.868.496l1.716 3.004a.5.5 0 0 1-.434.748h-5.57l.647-.646a.5.5 0 1 0-.708-.707l-1.5 1.5a.5.5 0 0 0 0 .707l1.5 1.5a.5.5 0 1 0 .708-.707l-.647-.647h5.57a1.5 1.5 0 0 0 1.302-2.244z"/>
+                        </svg>
+                    </td>
+                </tr>                
+            </ng-container>
+            <ng-template #sinDatos>
+                <tr>
+                    <td colspan="7"> Sin registros en la Papelera</td>
+                </tr>
+            </ng-template>    
+        </tbody> 
+        
+    </table>
+</div>

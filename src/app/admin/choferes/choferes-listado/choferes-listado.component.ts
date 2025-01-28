@@ -114,7 +114,7 @@ export class ChoferesListadoComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.legajoServ.eliminarLegajo(this.choferEditar.idChofer);
-        this.storageService.deleteItem(this.componente, this.choferEditar, this.choferEditar.idChofer);        
+        this.storageService.deleteItem(this.componente, this.choferEditar, this.choferEditar.idChofer, "BAJA", `Baja de Chofer ${this.choferEditar.apellido} ${this.choferEditar.nombre}`);        
         Swal.fire({
           title: "Confirmado",
           text: "El Chofer ha sido borrado",

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { LogEntry } from 'src/app/interfaces/log-entry';
 import { StorageService } from '../storage/storage.service';
+import { LogDoc } from 'src/app/interfaces/log-doc';
 
 
 @Injectable({
@@ -27,7 +28,7 @@ export class LogService {
     try {
       const logId = this.afs.createId(); // Genera un ID único para el log
       const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado);
-      await this.afs.collection('logs').doc(logId).set(logEntry);
+      await this.afs.collection('/Vantruck/datos/logs').doc(logId).set(logEntry);
       console.log('Log registrado exitosamente:', logEntry);
     } catch (error) {
       console.error('Error al registrar el log:', error);
@@ -60,5 +61,29 @@ export class LogService {
       status: resultado ? 'SUCCESS' : 'ERROR',
     };
   }
+
+  async logEventDoc(
+    accion: string,
+    coleccion: string,
+    detalle: string,
+    idObjeto: number,
+    objeto:any,
+    resultado: boolean
+  ): Promise<void> {
+    try {
+      const logId = this.afs.createId(); // Genera un ID único para el log
+      const logDocId = this.afs.createId(); // Genera un ID único para el logDoc
+      const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado);
+      const logDoc : LogDoc = {idDoc: logEntry.timestamp, logEntry: logEntry, objeto: objeto} 
+      await this.afs.collection('/Vantruck/datos/logs').doc(logId).set(logEntry);
+      console.log('Log registrado exitosamente:', logEntry);
+      await this.afs.collection('/Vantruck/datos/papelera').doc(logDocId).set(logDoc);
+      console.log('Log registrado exitosamente:', logDoc);
+    } catch (error) {
+      console.error('Error al registrar el log y el logDoc:', error);
+    }
+  }
+
+  
 }
 

@@ -332,16 +332,16 @@ export class LiqProveedorComponent implements OnInit {
     });
   }
 
-  addItem(item:any, componente:string, idItem:number): void {   
+  addItem(item:any, componente:string, idItem:number, accion:string): void {   
     console.log("llamada al storage desde liq-cliente, addItem");
-    this.storageService.addItem(componente, item, idItem);        
+    this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : `Alta de Factura de Proveedor ${item.razonSocial}`);        
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasProveedor.forEach((factura: FacturaOp) => {
       console.log("llamada al storage desde liq-proveedor, addItem");
-      this.addItem(factura, "facOpLiqProveedor", factura.idFacturaOp);
+      this.addItem(factura, "facOpLiqProveedor", factura.idFacturaOp, "INTERNA");
       this.editarOperacionesFac(factura)
       
     }); 
@@ -371,7 +371,7 @@ export class LiqProveedorComponent implements OnInit {
           cerrada: false,
           facturada: true,
         }
-        this.storageService.updateItem("operaciones", op);
+        this.storageService.updateItem("operaciones", op, op.idOperacion, "LIQUIDAR", `Operacion de Proveedor ${this.getProveedor(op.chofer.idProveedor)} Liquidada`);
         this.removeItem(factura);
     });
 
@@ -379,7 +379,7 @@ export class LiqProveedorComponent implements OnInit {
 
   removeItem(item:any){
     console.log("llamada al storage desde liq-Proveedor, deleteItem");
-    this.storageService.deleteItem("facturaOpProveedor", item, item.idFacturaOp);    
+    this.storageService.deleteItem("facturaOpProveedor", item, item.idFacturaOp, "INTERNA", "");    
   }
 
   editarFacturaOpCliente(factura: FacturaOp, i:number){   
@@ -421,7 +421,7 @@ export class LiqProveedorComponent implements OnInit {
           console.log(result);
           if(result.modo === "cerrar"){
             this.facturaProveedor = result.factura;
-            this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor);
+            this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA");
             if(result.titulo === "excel"){
               this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
               }else if (result.titulo === "pdf"){          

@@ -176,12 +176,12 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {        
-        this.storageService.addItem(this.componente, this.tarifaPersonalizadaCliente, this.tarifaPersonalizadaCliente.idTarifa);
+        this.storageService.addItem(this.componente, this.tarifaPersonalizadaCliente, this.tarifaPersonalizadaCliente.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.getClientePers(this.clienteSeleccionado[0].idCliente)}`);
         if(clientes.length > 0){
           clientes.forEach((c:Cliente)=>{
             if(c.tarifaTipo.personalizada && c.idCliente === this.clienteSeleccionado[0].idCliente && !c.tarifaAsignada){
               c.tarifaAsignada = true;
-              this.storageService.updateItem("clientes", c);
+              this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
             }
           })
       }      
@@ -213,10 +213,14 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
         centered: true,
         size: 'lg', 
         //backdrop:"static" 
-      });      
+      });     
+      
+    let razonSocial: string = this.getClientePers(this.clienteSeleccionado[0].idCliente)
+
      let info = {
         modo: modo,
         item: this.$ultTarifaCliente,
+        cliente: razonSocial,
       }  
       ////console.log()(info); */
       
@@ -266,6 +270,15 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   hasError(controlName: string, errorName: string): boolean {
     const control = this.categoriaForm.get(controlName);
     return control?.hasError(errorName) && control.touched;
+  }
+
+  getClientePers(idCliente:number){
+    let clientes : Cliente[] = [];
+
+    clientes = this.$clientes.filter((c:Cliente) => c.idCliente === idCliente);
+
+    return clientes[0].razonSocial;
+
   }
 
 }
