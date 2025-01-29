@@ -21,7 +21,7 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class TableroOpComponent implements OnInit {
 
-  @Input() btnConsulta:boolean = false;
+  btnConsulta:boolean = false;
   modo : string = "operaciones"
   componente:string = "operaciones"  
   public buttonName: any = 'Consultar Operaciones';  
@@ -68,6 +68,7 @@ export class TableroOpComponent implements OnInit {
     { prop: 'aCobrar', name: 'A Cobrar', selected: true, flexGrow:2  },   
     { prop: 'aPagar', name: 'A Pagar', selected: true, flexGrow:2  },      
     { prop: 'hojaRuta', name: 'Hoja de Ruta', selected: true, flexGrow:2  }, 
+    { prop: 'proveedor', name: 'Proveedor', selected: false, flexGrow:2  },
     { prop: 'observaciones', name: 'Observaciones', selected: true, flexGrow:3  },  
     
   ];
@@ -84,6 +85,7 @@ export class TableroOpComponent implements OnInit {
   firstFilter = '';
   secondFilter = '';
   /////////////////////////////////////////////////////////////////////
+  rango!: string [];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
   constructor(private storageService: StorageService, private modalService: NgbModal){}
@@ -94,7 +96,7 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.tarifaEventual = datos[0];
-      //console.log("tarifa eventual: ", this.tarifaEventual);
+      ////console.log("tarifa eventual: ", this.tarifaEventual);
       
     });
     this.storageService.opTarPers$
@@ -102,7 +104,7 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.tarifaPersonalizada = datos[0];
-      //console.log("tarifa personalizada: ", this.tarifaPersonalizada);
+      ////console.log("tarifa personalizada: ", this.tarifaPersonalizada);
     });
 
     this.storageService.vehiculosChofer$
@@ -110,9 +112,15 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.vehiculosChofer = datos[0];
-      //console.log("vehiculos chofer: ", this.vehiculosChofer);
+      ////console.log("vehiculos chofer: ", this.vehiculosChofer);
     }); */
-
+    let limite = this.storageService.loadInfo("pageLimitOp");
+    this.limit = limite.length === 0 ? 20 : limite[0];
+    this.rango = this.storageService.loadInfo("formatoSeleccionado");
+    console.log("rango en tableroOp: ", this.rango);
+    
+    
+    
     this.storageService.choferes$
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
@@ -123,16 +131,23 @@ export class TableroOpComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$clientes = data;
-    });    
+    });   
+    
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
+      this.$proveedores = data;
+    });
    
     //¿PORQUE?
     this.storageService.getObservable<Operacion>('operaciones')
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if(data){
-        console.log("data operaciones: ", data);      
+        console.log("1)aca??: ");      
         this.$opActivas = data;
         //this.armarTabla();
+        
         this.filtrarEstado()
       }      
     });  
@@ -145,20 +160,8 @@ export class TableroOpComponent implements OnInit {
       this.filtrarEstado(this.estadoFiltrado)
     });    */
     
-    this.storageService.proveedores$
-    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-    .subscribe(data => {
-      this.$proveedores = data;
-    });
-
-    this.storageService.fechasConsulta$
-    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-    .subscribe(data => {
-      this.fechasConsulta = data;
-      console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);
-      this.storageService.getAllByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta);
-      this.btnConsulta = true;
-    });
+    
+    
      
   }
 
@@ -168,19 +171,31 @@ export class TableroOpComponent implements OnInit {
     this.destroy$.complete();
   }
 
-  getMsg(msg: any) {
-    this.btnConsulta = true;
-    //console.log(msg);
-    this.fechasConsulta = {
-      fechaDesde: msg.fechaDesde,
-      fechaHasta: msg.fechaHasta,
+  getMsg(e:any) {
+    this.btnConsulta = e
+    console.log("getMsg: ", this.btnConsulta);
+    
+      //this.btnConsulta = true;
+    if(this.btnConsulta){
+      console.log("2)aca??: ");            
+      this.storageService.fechasConsulta$
+        .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+        .subscribe(data => {
+          if(data){
+            this.fechasConsulta = data;
+            this.storageService.getAllByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta);
+          }
+          //console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
+          //this.getMsg()
+      });
+      
     }
 
   }
 
   ///////////// TABLA //////////////////////////////////////////////////////////////////////////////////
   armarTabla() {
-    //////console.log("consultasOp: ", this.$consultasOp );
+    ////////console.log("consultasOp: ", this.$consultasOp );
     let indice = 0
     let operaciones: Operacion [];
     /* if(!this.btnConsulta){
@@ -203,12 +218,13 @@ export class TableroOpComponent implements OnInit {
       aCobrar: this.formatearValor(op.valores.cliente.aCobrar),
       aPagar: this.formatearValor(op.valores.chofer.aPagar),    
       hojaRuta: op.hojaRuta,    
+      proveedor: this.getProveedor(op.chofer.idProveedor),
       observaciones: op.observaciones,
       
     }));   
-    //////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+    ////////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
     let filtrosTabla = this.storageService.loadInfo('filtrosTabla')
-    console.log("filtrosTabla", filtrosTabla);    
+    //console.log("filtrosTabla", filtrosTabla);    
     if(filtrosTabla.length > 0){
       this.firstFilter = filtrosTabla[0];
       this.secondFilter = filtrosTabla[1];
@@ -221,7 +237,7 @@ export class TableroOpComponent implements OnInit {
      minimumFractionDigits: 2, 
      maximumFractionDigits: 2 
    }).format(valor);
-   ////////console.log(nuevoValor);    
+   //////////console.log(nuevoValor);    
 //   `$${nuevoValor}`
    return `$${nuevoValor}`
  }
@@ -235,6 +251,7 @@ export class TableroOpComponent implements OnInit {
     const start = this.offset * this.limit;
     const end = start + this.limit;
     this.paginatedRows = this.filteredRows.slice(start, end);
+    this.storageService.setInfo("pageLimitOp", [this.limit]);
   }
   
   onSort(event:any) {
@@ -320,9 +337,9 @@ export class TableroOpComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        //////console.log("llamada al storage desde op-abiertas, deleteItem");
+        ////////console.log("llamada al storage desde op-abiertas, deleteItem");
         this.storageService.deleteItem(this.componente, this.opEditar);
-        //////console.log("consultas Op: " , this.$consultasOp);
+        ////////console.log("consultas Op: " , this.$consultasOp);
         Swal.fire({
           title: "Confirmado",
           text: "La operación ha sido cancelada",
@@ -345,7 +362,7 @@ export class TableroOpComponent implements OnInit {
     vehiculo  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === op.patenteChofer;
     });
-    ////console.log(vehiculo[0].categoria.nombre);
+    //////console.log(vehiculo[0].categoria.nombre);
     return vehiculo[0].categoria.nombre
 
   }
@@ -363,7 +380,7 @@ export class TableroOpComponent implements OnInit {
         modo: modo,
         item: this.opEditar,
       } 
-      ////console.log()(info); */
+      //////console.log()(info); */
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
@@ -385,10 +402,10 @@ export class TableroOpComponent implements OnInit {
     let modo = "";
     let modoStorage = this.storageService.loadInfo("filtroOp");
     
-    console.log("this.btnConsulta", this.btnConsulta);
-    console.log("this.estadoFiltrado", this.estadoFiltrado);
-    console.log("modoStorage", modoStorage[0]);
-    console.log("modo", modo);
+    //console.log("this.btnConsulta", this.btnConsulta);
+    //console.log("this.estadoFiltrado", this.estadoFiltrado);
+    //console.log("modoStorage", modoStorage[0]);
+    //console.log("modo", modo);
 
     if(modoStorage[0] === undefined){
       modo = this.estadoFiltrado;
@@ -397,7 +414,7 @@ export class TableroOpComponent implements OnInit {
     }
     this.$opFiltradas = this.$opActivas;
     this.estadoFiltrado = modo;
-    if(!this.btnConsulta){
+/*     if(!this.btnConsulta){
       switch(modo){
         case "Todo":{
           this.$opFiltradas = this.$opActivas;
@@ -431,41 +448,42 @@ export class TableroOpComponent implements OnInit {
         }
       }
     } else {      
-      switch(modo){
-        case "Todo":{
-          /* this.storageService.consultasOp$.subscribe(data => {
-            this.$consultasOp = data;            
-            this.armarTabla();            
-          });    */
-          this.$opFiltradas = this.$opActivas;
-          this.armarTabla();
-          break;
-        };
-        case "Abierta":{          
-          this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
-            return op.estado.abierta === true; 
-          });          
-          this.armarTabla();
-          break;
-        };
-        case "Cerrada":{
-          this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
-            return op.estado.cerrada === true; 
-          });          
-          this.armarTabla();
-          break;
-        };
-        case "Facturada":{
-          this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
-            return op.estado.facturada === true; 
-          });          
-          this.armarTabla();
-          break;
-        }
-        default:{
-            alert("error filtrado");
-          break
-        }
+      
+    } */
+    switch(modo){
+      case "Todo":{
+        /* this.storageService.consultasOp$.subscribe(data => {
+          this.$consultasOp = data;            
+          this.armarTabla();            
+        });    */
+        this.$opFiltradas = this.$opActivas;
+        this.armarTabla();
+        break;
+      };
+      case "Abierta":{          
+        this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
+          return op.estado.abierta === true; 
+        });          
+        this.armarTabla();
+        break;
+      };
+      case "Cerrada":{
+        this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
+          return op.estado.cerrada === true; 
+        });          
+        this.armarTabla();
+        break;
+      };
+      case "Facturada":{
+        this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
+          return op.estado.facturada === true; 
+        });          
+        this.armarTabla();
+        break;
+      }
+      default:{
+          alert("error filtrado");
+        break
       }
     }
   }
@@ -483,7 +501,7 @@ export class TableroOpComponent implements OnInit {
         modo: modo,
         item: this.opEditar,
       }  */
-      ////console.log()(info); */
+      //////console.log()(info); */
       
       //modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
@@ -509,6 +527,15 @@ export class TableroOpComponent implements OnInit {
         },
         (reason) => {}
       );
+    }
+  }
+
+  getProveedor(idProveedor:number){
+    if(this.$proveedores && idProveedor !== 0){
+      let proveedor: Proveedor [] = this.$proveedores.filter(p => p.idProveedor === idProveedor);
+      return proveedor[0].razonSocial;
+    } else {
+      return "No"
     }
   }
   

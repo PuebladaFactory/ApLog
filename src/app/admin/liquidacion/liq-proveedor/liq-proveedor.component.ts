@@ -454,11 +454,27 @@ export class LiqProveedorComponent implements OnInit {
           if(result.modo === "cerrar"){
             this.facturaProveedor = result.factura;
             this.addItem(this.facturaProveedor, this.componente);
-            if(result.titulo === "excel"){
-              this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
-              }else if (result.titulo === "pdf"){          
-              this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
-              }
+            let titulo = result.titulo
+            Swal.fire({
+                title: `¿Desea imprimir el detalle del Proveedor?`,
+                //text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Confirmar",
+                cancelButtonText: "Cancelar"
+              }).then((result) => {
+                if (result.isConfirmed) {     
+                  if(titulo === "excel"){
+                    this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
+                    }else if (titulo === "pdf"){          
+                    this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
+                  }
+                }
+              });   
+
+            
             this.eliminarFacturasOp();
           }
          

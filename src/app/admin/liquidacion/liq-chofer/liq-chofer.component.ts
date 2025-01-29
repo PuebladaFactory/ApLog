@@ -446,12 +446,27 @@ export class LiqChoferComponent implements OnInit {
 
           if(result.modo === "cerrar"){
             this.facturaChofer = result.factura;
-            this.addItem(this.facturaChofer, this.componente);        
-            if(result.titulo === "excel"){
-            this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);
-            }else if (result.titulo === "pdf"){
-            this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);        
-            }
+            this.addItem(this.facturaChofer, this.componente);
+            let titulo = result.titulo
+            Swal.fire({
+                title: `¿Desea imprimir el detalle del Chofer?`,
+                //text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Confirmar",
+                cancelButtonText: "Cancelar"
+              }).then((result) => {
+                if (result.isConfirmed) {     
+                  if(titulo === "excel"){
+                    this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);
+                    }else if (titulo === "pdf"){
+                    this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);        
+                    } 
+                }
+              });   
+            
             this.eliminarFacturasOp();
           }
           
