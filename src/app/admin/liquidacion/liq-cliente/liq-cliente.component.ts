@@ -457,13 +457,29 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           console.log(result);
           
           if(result.modo === "cerrar"){
+            let titulo = result.titulo
             this.facturaCliente = result.factura;            
-            this.addItem(this.facturaCliente, this.componente);            
-            if(result.titulo === "excel"){
-            this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);
-            }else if (result.titulo === "pdf"){
-            this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);        
-            }
+            this.addItem(this.facturaCliente, this.componente);        
+
+            Swal.fire({
+                  title: `¿Desea imprimir el detalle del Cliente?`,
+                  //text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Confirmar",
+                  cancelButtonText: "Cancelar"
+                }).then((result) => {
+                  if (result.isConfirmed) {     
+                    if(titulo === "excel"){
+                      this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);
+                      }else if (titulo === "pdf"){
+                      this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);        
+                      }      
+                  }
+                });   
+
             this.eliminarFacturasOp();
           } 
           },

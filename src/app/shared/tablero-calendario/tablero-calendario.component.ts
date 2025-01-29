@@ -1,7 +1,8 @@
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-tablero-calendario',
@@ -16,7 +17,9 @@ export class TableroCalendarioComponent implements OnInit {
     fechaDesde: '',
     fechaHasta: ''
   };
-  
+  @Output() consultaOp = new EventEmitter<boolean>();
+  @Output() consultaLiq = new EventEmitter<boolean>();
+  @Output() consultaFac = new EventEmitter<boolean>();
   // Variables para controlar el formato seleccionado
   formatoSeleccionado: string = 'Semana';
   
@@ -36,7 +39,7 @@ export class TableroCalendarioComponent implements OnInit {
 	hoveredDate: NgbDate | null = null;
 	fromDate: NgbDate = this.calendar.getToday();
 	toDate: NgbDate | null = this.calendar.getNext(this.fromDate, 'd', 10);
-  anual:boolean = false
+  anual:boolean = false;  
 
   constructor(private storageService: StorageService){
 
@@ -44,21 +47,48 @@ export class TableroCalendarioComponent implements OnInit {
 
   ngOnInit(): void {
     // Al iniciar, calcular la semana actual como rango por defecto
+    let rango = this.storageService.loadInfo("formatoSeleccionado");
     console.log("modo: ", this.modo);
-    if(this.modo === "operaciones"){
-      this.calcularSemanaActual();
-    }
-    if(this.modo === "liquidaciones"){
-      this.calcularMesActual();
-    }
-
-    if(this.modo === "facturacion"){
-      this.anual = true
-      this.calcularAnioActual();
+    console.log("rango en calendario: ", rango[0]);
+    switch(this.modo){
+      case "operaciones":{
+        if(rango[0] === undefined){
+          console.log("aca tablero calendario?");          
+          this.calcularSemanaActual();
+        } else {
+          let fechasConsultadas = this.storageService.loadInfo("fechasConsulta");
+          console.log("calendario: fechasConsultadas:", fechasConsultadas);
+          this.fechasConsulta = fechasConsultadas;
+          this.formatoSeleccionado = rango[0];
+          this.fechaDesdeString = this.fechasConsulta.fechaDesde;
+          this.fechaHastaString = this.fechasConsulta.fechaHasta;
+        }
+        break;
+      }
+      case "liquidaciones":{
+        this.calcularMesActual();
+        break;
+      }
+      case "facturacion":{
+        this.calcularAnioActual();
+        break;
+      }
+      default:
+        this.msjError("error en el modo del calendario")
+        break
+      }
     }
     
-  }
-
+    
+    
+    msjError(msj:string){
+        Swal.fire({
+          icon: "error",
+          //title: "Oops...",
+          text: `${msj}`
+          //footer: `${msj}`
+        });
+      }
   // Métodos para calcular los distintos formatos de consulta
   calcularDiaActual() {
     const today = new Date();
@@ -347,8 +377,9 @@ export class TableroCalendarioComponent implements OnInit {
     console.log("consulta: ", this.fechasConsulta);        
     this.fechaDesdeString = this.fechasConsulta.fechaDesde;
     this.fechaHastaString = this.fechasConsulta.fechaHasta;
-    this.storageService.setInfo("fechasConsulta",this.fechasConsulta)
-
+    this.storageService.setInfo("fechasConsulta",this.fechasConsulta);
+    this.storageService.setInfo("formatoSeleccionado", [this.formatoSeleccionado]);    
+    this.mensajesConsulta();
   }
 
   onDateSelection(date: NgbDate) {
@@ -413,5 +444,25 @@ export class TableroCalendarioComponent implements OnInit {
     this.fechasConsulta.fechaHasta = lastDay.toISOString().split('T')[0];
     this.formatoSeleccionado = 'Año';
     this.actualizarFechasString();
+  }
+
+  mensajesConsulta(){
+    switch(this.modo){
+      case "operaciones":{                
+        this.consultaOp.emit(true);
+        console.log("termina el ciclo calendario??", this.consultaOp);
+        break;
+      }
+      case "liquidaciones":{
+        this.consultaLiq.emit(true);
+        break;
+      }
+      case "facturacion":{
+        this.consultaFac.emit(true);
+        break;
+      }
+      default:
+        break;
+    }
   }
 }
