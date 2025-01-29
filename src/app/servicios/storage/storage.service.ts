@@ -182,6 +182,9 @@ export class StorageService {
   private _fechasConsulta$ = new BehaviorSubject<any>(this.loadInfo('fechasConsulta') || []);
   public fechasConsulta$ = this._fechasConsulta$.asObservable();
 
+  private _respuestaOp$ = new BehaviorSubject<any>(this.loadInfo('respuestaOp') || []);
+  public respuestaOp$ = this._respuestaOp$.asObservable();
+
   private _facturaOpCliente$ = new BehaviorSubject<any>(this.loadInfo('facturaOpCliente') || []);
   public facturaOpCliente$ = this._facturaOpCliente$.asObservable();
 
@@ -496,6 +499,11 @@ export class StorageService {
         break
       }
 
+      case "respuestaOp":{
+        this._respuestaOp$.next(data);
+        break
+      }
+
       case "historialTarifaGralCliente":{
         this._historialTarifaGralCliente$.next(data);
         break
@@ -727,10 +735,10 @@ export class StorageService {
     });
   }
 
-  getAllByDateValue(componente:string, campo:string, value1:any, value2:any){
+  getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any){
     console.log(" storage getAllByDateValue ", componente)
     this.dbFirebase
-    .getAllByDateValue(componente, campo, value1, value2)
+    .getAllByDateValue<T>(componente, campo, value1, value2)
     .subscribe(data => {
       this.setInfo(componente , data)
     })
@@ -777,6 +785,20 @@ export class StorageService {
       }      
     });
   }
+
+  syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any){
+    console.log(" storage syncChangesDateValue ", componente)
+    this.dbFirebase.getAllByDateValue<T>(componente, campo, value1, value2).subscribe(data => {
+      const currentData = this.loadInfo(componente);
+      if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
+        console.log(`Datos sincronizados para ${componente}`, data);
+        this.setInfo(componente, data); // Actualiza el caché
+        this.updateObservable(componente, data); // Actualiza el observable
+      } else {
+        console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+      }      
+    })
+    }
 
   syncChangesUsers<T>(componente: string): void {    
     this.dbFirebase.getAllUser().subscribe(data => {

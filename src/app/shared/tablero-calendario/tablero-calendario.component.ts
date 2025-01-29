@@ -40,6 +40,8 @@ export class TableroCalendarioComponent implements OnInit {
 	fromDate: NgbDate = this.calendar.getToday();
 	toDate: NgbDate | null = this.calendar.getNext(this.fromDate, 'd', 10);
   anual:boolean = false;  
+  respuesta!:any; 
+  
 
   constructor(private storageService: StorageService){
 
@@ -47,19 +49,19 @@ export class TableroCalendarioComponent implements OnInit {
 
   ngOnInit(): void {
     // Al iniciar, calcular la semana actual como rango por defecto
-    let rango = this.storageService.loadInfo("formatoSeleccionado");
+    let rango = this.storageService.loadInfo("respuestaOp");
     console.log("modo: ", this.modo);
-    console.log("rango en calendario: ", rango[0]);
+    console.log("rango en calendario: ", rango);
     switch(this.modo){
       case "operaciones":{
         if(rango[0] === undefined){
           console.log("aca tablero calendario?");          
           this.calcularSemanaActual();
         } else {
-          let fechasConsultadas = this.storageService.loadInfo("fechasConsulta");
+          let fechasConsultadas = rango[0].fechas
           console.log("calendario: fechasConsultadas:", fechasConsultadas);
           this.fechasConsulta = fechasConsultadas;
-          this.formatoSeleccionado = rango[0];
+          this.formatoSeleccionado = rango[0].rango;
           this.fechaDesdeString = this.fechasConsulta.fechaDesde;
           this.fechaHastaString = this.fechasConsulta.fechaHasta;
         }
@@ -377,9 +379,32 @@ export class TableroCalendarioComponent implements OnInit {
     console.log("consulta: ", this.fechasConsulta);        
     this.fechaDesdeString = this.fechasConsulta.fechaDesde;
     this.fechaHastaString = this.fechasConsulta.fechaHasta;
-    this.storageService.setInfo("fechasConsulta",this.fechasConsulta);
-    this.storageService.setInfo("formatoSeleccionado", [this.formatoSeleccionado]);    
-    this.mensajesConsulta();
+    
+    switch(this.modo){
+      case "operaciones":{  
+        this.respuesta = {
+          rango: this.formatoSeleccionado,
+          fechas: this.fechasConsulta,
+        }
+        this.storageService.setInfo("respuestaOp",[this.respuesta]);                  
+        this.consultaOp.emit(true);
+        console.log("termina el ciclo calendario??", this.consultaOp);
+        break;
+      }
+      case "liquidaciones":{
+        this.storageService.setInfo("fechasConsulta",this.fechasConsulta);
+        this.consultaLiq.emit(true);
+        break;
+      }
+      case "facturacion":{
+        this.storageService.setInfo("fechasConsulta",this.fechasConsulta);
+        this.consultaFac.emit(true);
+        break;
+      }
+      default:
+        break;
+    }
+
   }
 
   onDateSelection(date: NgbDate) {
@@ -446,23 +471,4 @@ export class TableroCalendarioComponent implements OnInit {
     this.actualizarFechasString();
   }
 
-  mensajesConsulta(){
-    switch(this.modo){
-      case "operaciones":{                
-        this.consultaOp.emit(true);
-        console.log("termina el ciclo calendario??", this.consultaOp);
-        break;
-      }
-      case "liquidaciones":{
-        this.consultaLiq.emit(true);
-        break;
-      }
-      case "facturacion":{
-        this.consultaFac.emit(true);
-        break;
-      }
-      default:
-        break;
-    }
-  }
 }
