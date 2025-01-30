@@ -5,4 +5,5 @@ export interface LogDoc {
         idDoc: number;
         logEntry: LogEntry;
         objeto:any;
+        motivoBaja:string;
 }

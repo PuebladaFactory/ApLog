@@ -13,6 +13,7 @@ import { ModalFacturacionComponent } from '../modal-facturacion/modal-facturacio
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { Subject, takeUntil } from 'rxjs';
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 
 @Component({
   selector: 'app-tablero-op',
@@ -298,8 +299,8 @@ export class TableroOpComponent implements OnInit {
   eliminarOperacion(row: any){
     this.seleccionarOp(row)
     Swal.fire({
-      title: "¿Cancelar la operación?",
-      text: "No se podrá revertir esta acción",
+      title: "¿Desea dar de baja la operación?",
+      //text: "No se podrá revertir esta acción",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -308,14 +309,8 @@ export class TableroOpComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        ////////console.log("llamada al storage desde op-abiertas, deleteItem");
-        this.storageService.deleteItem(this.componente, this.opEditar, this.opEditar.idOperacion, "BAJA", "Baja de Operación");
-        ////////console.log("consultas Op: " , this.$consultasOp);
-        Swal.fire({
-          title: "Confirmado",
-          text: "La operación ha sido cancelada",
-          icon: "success"
-        });
+        this.openModalBaja(row.idOperacion)
+        
       }
     });       
     
@@ -476,12 +471,50 @@ export class TableroOpComponent implements OnInit {
     {
       const modalRef = this.modalService.open(ModalOpAltaComponent, {
         windowClass: 'custom-modal-top-right',        
-        scrollable: true,      
+        scrollable: true, 
+        size: 'md',      
       });      
     
       modalRef.result.then(
         (result) => {
          
+        },
+        (reason) => {}
+      );
+    }
+  }
+
+  openModalBaja(idOp:number){
+    {
+      const modalRef = this.modalService.open(ModalBajaComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        scrollable: true, 
+        size: 'sm',     
+      });   
+      
+      let operacion:Operacion [] = this.$opActivas.filter(o => o.idOperacion === idOp);
+
+      let info = {
+        modo: "operaciones",
+        item: operacion [0]
+      }  
+      //////console.log()(info); */
+      
+      modalRef.componentInstance.fromParent = info;
+    
+      modalRef.result.then(
+        (result) => {
+          console.log("result", result);
+          
+         ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+        this.storageService.deleteItemPapelera(this.componente, this.opEditar, this.opEditar.idOperacion, "BAJA", "Baja de Operación", result);
+        ////////console.log("consultas Op: " , this.$consultasOp);
+        Swal.fire({
+          title: "Confirmado",
+          text: "La operación ha sido dada de baja",
+          icon: "success"
+        });
         },
         (reason) => {}
       );

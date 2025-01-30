@@ -1,0 +1,46 @@
+<div class="modal-content">
+    <div class="modal-header">
+        <h1 >Baja de  {{titulo}}</h1>
+        <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
+    </div>
+    <div class="modal-body">
+        <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded altura" >                    
+            <div class="form-group isDisabled">
+                <label for="Fecha" class="fs-5">Fecha</label>
+                <div class="input-group">
+                    <input class="form-control edicion" type="date" [value]="fecha">
+                </div>
+            </div>  
+            <div *ngIf="fromParent.modo === 'operaciones' || fromParent.modo === 'liquidaciones'">
+                <div class="form-group isDisabled">   
+                    <label for="Acompaniante" class="fs-5">Id {{titulo}}</label>                                 
+                    <div class="input-group">
+                        <input class="form-control edicion" type="text" [value]="op.idOperacion">
+                    </div>
+                </div>                 
+                <div class="isDisabled">
+                    <label for="Acompaniante" class="fs-5">Cliente</label>                                 
+                    <div class="input-group">
+                        <input class="form-control edicion" type="text" [value]="op.cliente.razonSocial">
+                    </div>
+                </div>
+                <div class="isDisabled">
+                    <label for="Acompaniante" class="fs-5">Chofer</label>                                 
+                    <div class="input-group">
+                        <input class="form-control edicion" type="text" [value]="op.chofer.apellido + ' ' + op.chofer.nombre ">
+                    </div>
+                </div>
+            </div>             
+            
+            <div class="form-group">
+                <label for="Observaciones" class="fs-5">Motivo de la baja</label>
+                <div class="input-group">
+                    <textarea  class="form-control edicion" style="height:100px" [(ngModel)]="motivoBaja"></textarea>
+                </div>
+            </div>                       
+        </div>
+    </div>
+    <div class="modal-footer">
+        <app-btn-agregar name="Guardar"  type="button" (click)="onSubmit()"></app-btn-agregar>
+    </div>        
+</div>

@@ -68,13 +68,14 @@ export class LogService {
     detalle: string,
     idObjeto: number,
     objeto:any,
-    resultado: boolean
+    resultado: boolean,
+    motivo:string,
   ): Promise<void> {
     try {
       const logId = this.afs.createId(); // Genera un ID único para el log
       const logDocId = this.afs.createId(); // Genera un ID único para el logDoc
       const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado);
-      const logDoc : LogDoc = {idDoc: logEntry.timestamp, logEntry: logEntry, objeto: objeto} 
+      const logDoc : LogDoc = {idDoc: logEntry.timestamp, logEntry: logEntry, objeto: objeto, motivoBaja:motivo} 
       await this.afs.collection('/Vantruck/datos/logs').doc(logId).set(logEntry);
       console.log('Log registrado exitosamente:', logEntry);
       await this.afs.collection('/Vantruck/datos/papelera').doc(logDocId).set(logDoc);

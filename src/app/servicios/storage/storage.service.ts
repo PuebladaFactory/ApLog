@@ -977,11 +977,22 @@ export class StorageService {
         let regLog:boolean = this.controlLog(componente, accion);
         this.dbFirebase.delete(componente, item.id).then(() => {
           if (!user[0].roles.god && regLog) {             
-            if(componente === "operaciones"){
-              this.logService.logEventDoc(accion, componente, msj, idItem, item, true);
-            } else{
-              this.logService.logEvent(accion, componente, msj, idItem, true);
-            }
+            this.logService.logEvent(accion, componente, msj, idItem, true);
+          }                 
+        }).catch((e) => {
+          if (!user[0].roles.god && regLog){
+            this.logService.logEvent(accion, componente, msj, idItem, false);
+          }
+          console.log(e.message)});
+      }
+
+      public deleteItemPapelera(componente: string, item: any,  idItem:number, accion:string, msj:string, motivo:string): void {
+        let user = this.loadInfo('usuario');
+        //let accion: string = "BAJA";
+        let regLog:boolean = this.controlLog(componente, accion);
+        this.dbFirebase.delete(componente, item.id).then(() => {
+          if (!user[0].roles.god && regLog) {             
+            this.logService.logEventDoc(accion, componente, msj, idItem, item, true, motivo);
           }                 
         }).catch((e) => {
           if (!user[0].roles.god && regLog){
