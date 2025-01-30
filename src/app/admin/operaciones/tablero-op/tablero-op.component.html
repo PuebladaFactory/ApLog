@@ -103,7 +103,7 @@
         </ngx-datatable-column>
         <!-- Generar todas las columnas excepto 'Estado' -->
         <ng-container *ngFor="let column of visibleColumns">
-            <ngx-datatable-column [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow" *ngIf="column.prop !== 'estado'">
+            <ngx-datatable-column [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow" [comparator]="column.comparator" *ngIf="column.prop !== 'estado'">
                 <ng-template ngx-datatable-cell-template let-row="row">
                 {{ row[column.prop] }}
                 </ng-template>
