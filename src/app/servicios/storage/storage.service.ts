@@ -972,6 +972,7 @@ export class StorageService {
       }
     
       public deleteItem(componente: string, item: any,  idItem:number, accion:string, msj:string): void {
+        console.log(" storage deleteItem ", componente)
         let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);

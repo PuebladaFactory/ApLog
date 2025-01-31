@@ -560,14 +560,28 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   }
 
   bajaOp(factura:FacturaOp, indice:number){
-    this.dbFirebase
-    .obtenerTarifaIdTarifa("operaciones", factura.idOperacion, "idOperacion")
-    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-    .subscribe(data => {      
-        this.operacion = data;
-        //console.log("OPERACION: ", this.operacion);
-        this.openModalBaja(factura, indice)
-    });   
+    Swal.fire({
+          title: "¿Desea anular la operación?",
+          //text: "No se podrá revertir esta acción",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Confirmar",
+          cancelButtonText: "Cancelar"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.dbFirebase
+              .obtenerTarifaIdTarifa("operaciones", factura.idOperacion, "idOperacion")
+              .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+              .subscribe(data => {      
+                  this.operacion = data;
+                  //console.log("OPERACION: ", this.operacion);
+                  this.openModalBaja(factura, indice)
+              });               
+          }
+        });
+    
   }
 
   openModalBaja(factura:FacturaOp, indice:number){
@@ -590,21 +604,38 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       modalRef.result.then(
         (result) => {
           console.log("result", result);
-          /* if(result !== undefined){          
-
-              //BAJA DE FACTURA OP CLIENTE
-              this.storageService.deleteItem("facturaOpCliente", factura, factura.idFacturaOp, "INTERNA", "");    
-              
+          if(result !== undefined){   
+            
               if(this.operacion.chofer.idProveedor === 0){
                 //BAJA DE FACTURA OP CHOFER
-
+                this.dbFirebase.obtenerTarifaMasReciente("facturaOpChofer", factura.contraParteId, "idFacturaOp", "idFacturaOp").subscribe(data => {
+                  if(data){
+                    let facturaContraParte = data
+                    console.log("facturaContraParte: ", factura);
+                    this.storageService.deleteItem("facturaOpChofer", facturaContraParte, factura.contraParteId, "INTERNA", "");        
+                  }
+                  
+                })
+                
               } else {
                 //BAJA DE FACTURA OP PROVEEDOR
-
+                this.dbFirebase.obtenerTarifaMasReciente("facturaOpProveedor", factura.contraParteId, "idFacturaOp", "idFacturaOp").subscribe(data => {
+                  if(data){
+                    let facturaContraParte = data
+                    console.log("facturaContraParte: ", factura);
+                    this.storageService.deleteItem("facturaOpProveedor", facturaContraParte, factura.contraParteId, "INTERNA", "");    
+                  }
+                  
+                })
+                
               }
+
+              //BAJA DE FACTURA OP CLIENTE
+              this.removeItem(factura);              
+              
               //BAJA DE OP
-              //this.storageService.deleteItemPapelera("operaciones", this.operacion, this.operacion.idOperacion, "Baja", `Baja de operacion ${this.operacion.idOperacion} desde Liquidaciones`, result);    
-              this.removeItem(factura);
+              this.storageService.deleteItemPapelera("operaciones", this.operacion, this.operacion.idOperacion, "Baja", `Baja de operacion ${this.operacion.idOperacion} desde Liquidaciones`, result);    
+              
               this.cerrarTabla(indice)
               this.ngOnInit(); 
               //////////////////
@@ -618,7 +649,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
               text: "La operación ha sido dada de baja",
               icon: "success"
               });
-          } */
+          }
           
         },
         (reason) => {}
