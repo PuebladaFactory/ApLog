@@ -14,10 +14,10 @@
     <div class="custom-datatable">    
         <div class="row w-100">
             <div class="col-4 d-flex justify-content-star  align-items-end">          
-                <div class="">
+                <div class="col-4">
                     <h4 class="mb-0">Filtrar Estado:</h4>
                     <div class="btn-group dropup">
-                        <button type="button" class="btn boton-alta">
+                        <button type="button" class="btn boton-filtros">
                             {{estadoFiltrado}}
                         </button>
                         <button type="button" class="btn boton dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
@@ -31,34 +31,56 @@
                         </ul>
                     </div>                
                 </div>
-                <div class="mb-2 mx-3 ">
-                    <svg *ngIf="!cantPorPagina" type="button" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" (click)="toggleCantPag()">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                    </svg>
-                    <svg *ngIf="cantPorPagina" type="button" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16" (click)="toggleCantPag()">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                        <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
-                    </svg>
-                </div>           
-                <div *ngIf="cantPorPagina">
-                    <h4 class="mb-0">Op por página:</h4>
-                    <div class="d-flex">
-                        <input  type="text" inputmode="numeric" style="width: 60px;  font-size: 1.2rem;"  class="form-control"  aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limit" (keyup.enter)="updatePaginatedRows()" appSoloNumeros>
-                        <button class="btn btn-primary boton" type="button" id="button-addon2"   (click)="updatePaginatedRows()">Consultar</button>
-                    </div>                    
-                </div>  
+                <div class="col-4">
+                    <!-- <h4 class="mb-0">Clientes:</h4> -->
+                    <div class="btn-group ">
+                        <button type="button" class="btn boton-filtros">
+                            {{filtrosClientes ? filtrosClientes : "Clientes"}}
+                        </button>
+                        <button type="button" class="btn boton dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                          <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu">                            
+                            <li class="dropdown-item" *ngFor="let c of $clientes " (click)="filtrarClientes(c.idCliente)">{{c.razonSocial}}</li>
+                            <li class="dropdown-item" (click)="filtrarClientes(0)">Limpiar Filtro</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <!-- <h4 class="mb-0">Choferes:</h4> -->
+                    <div class="btn-group ">
+                        <button type="button" class="btn boton-filtros">
+                            {{filtrosChoferes ? filtrosChoferes : "Choferes"}}
+                        </button>
+                        <button type="button" class="btn boton dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                          <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-item" *ngFor="let c of $choferes " (click)="filtrarChoferes(c.idChofer)">{{c.apellido}} {{c.nombre}}</li>
+                            <li class="dropdown-item" (click)="filtrarChoferes(0)">Limpiar Filtro</li>
+
+                        </ul>
+                    </div>
+                </div>
+                
             </div>                    
             <div class="col-4">
                 <app-tablero-calendario [modo]="modo" (consultaOp)="getMsg($event)"></app-tablero-calendario>
             </div>
             <div class="col-4 m-0 p-0 d-flex flex-column justify-content-end">
-                <div class="">
-                    <div [ngClass]="{'isInvisible': !ajustes}" class="w-100" >
+                <div [ngClass]="{'isInvisible': !ajustes && !cantPorPagina}">
+                    <div *ngIf="ajustes" >
                         <label *ngFor="let column of allColumns" class="me-2" [ngClass]="{'invicible':column.prop === 'estado'}">
                           <input type="checkbox" [checked]="column.selected" (change)="toggleColumn(column)"  />
                           {{ column.name }}
                         </label>
+                    </div>
+                    <div *ngIf="cantPorPagina"  class="d-flex w-100 mb-1">
+                        <h4 class="mb-0 me-4 align-self-center">Operaciones por página:</h4>
+                        <div class="d-flex">
+                            <input  type="text" inputmode="numeric" style="width: 60px;  font-size: 1.2rem;"  class="form-control"  aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limit" (keyup.enter)="updatePaginatedRows()" appSoloNumeros>
+                            <button class="btn btn-primary boton" type="button" id="button-addon2"   (click)="updatePaginatedRows()">Consultar</button>
+                        </div>                    
                     </div>       
                 </div>
                 <div class="d-flex m-0 p-0 ">
@@ -69,12 +91,22 @@
                         <input class="" style="width: 45%;" type="text" placeholder="Buscar por segundo criterio..." (input)="updateFilter($event, 'second')" [(ngModel)]="secondFilter" />
                     </div>    
                     <div class="col-1 px-0 d-flex justify-content-end mb-1">
+                        <div class="d-flex align-items-end mx-3">
+                            <svg *ngIf="!cantPorPagina" type="button" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" (click)="toggleCantPag()">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                            </svg>
+                            <svg *ngIf="cantPorPagina" type="button" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16" (click)="toggleCantPag()">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
+                            </svg>
+                        </div>                                     
                         <div class="text-end align-items-end d-flex justify-content-end">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear " viewBox="0 0 16 16"  type="button" (click)="toogleAjustes()">
                               <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/>
                               <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/>
                             </svg>  
-                          </div>
+                        </div>
                     </div>
                 </div>
                 
