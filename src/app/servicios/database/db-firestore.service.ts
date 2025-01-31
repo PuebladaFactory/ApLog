@@ -121,14 +121,14 @@ export class DbFirestoreService {
       );
     }
     
-    getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any){
+    getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:any){
       // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
       // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
       // orden solo asc o desc
     
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.orderBy(campo, 'asc')
+        ref.orderBy(campo, orden)
         .where(campo, ">=", value1).where(campo, "<=", value2)
       ).snapshotChanges().pipe(
         map(snapshot => snapshot.map(change => ({

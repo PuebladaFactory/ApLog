@@ -33,7 +33,7 @@ export class TableroOpComponent implements OnInit {
   titulo: string = "operaciones";
   $clientes!: Cliente[];
   $choferes!: Chofer[];
-  
+  cantPorPagina: boolean = false;
   $proveedores!: Proveedor[];
   $opActivas!: Operacion[];
   $opFiltradas!: Operacion[];
@@ -72,7 +72,7 @@ export class TableroOpComponent implements OnInit {
   visibleColumns = this.allColumns.filter(column => column.selected);
   selected = [];
   count = 0;
-  limit = 50;
+  limit = 1000;
   offset = 0;
   sortType = SortType.multi; // Aquí usamos la enumeración SortType
   selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
@@ -114,7 +114,7 @@ export class TableroOpComponent implements OnInit {
     }); */
     this.loadColumnSelection();
     let limite = this.storageService.loadInfo("pageLimitOp");
-    this.limit = limite.length === 0 ? 20 : limite[0];
+    this.limit = limite.length === 0 ? 1000 : limite[0];
     this.rango = this.storageService.loadInfo("formatoSeleccionado");
     //console.log("rango en tableroOp: ", this.rango);
     
@@ -145,7 +145,7 @@ export class TableroOpComponent implements OnInit {
       if(data){
         //console.log("1)aca??: ");      
         this.$opActivas = data;
-        //this.$opActivas = this.$opActivas.sort((a, b) => b.fecha.getTime() - a.fecha.getTime()); // Ordena por el nombre del chofer
+        //this.$opActivas = this.$opActivas.sort((a, b) => a.fecha.getTime() - b.fecha.getTime()); // Ordena por el nombre del chofer
         //this.armarTabla();
         this.consultarOp()
         
@@ -210,7 +210,7 @@ export class TableroOpComponent implements OnInit {
             console.log("fechasConsulta: ", this.fechasConsulta);
             this.rango = this.respuestaOp[0].rango
             console.log("rango: ", this.rango);
-            this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta);
+            this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
             this.filtrarEstado()
           }
           ////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
@@ -571,6 +571,10 @@ export class TableroOpComponent implements OnInit {
     } else {
       return "No"
     }
+  }
+
+  toggleCantPag(){
+    this.cantPorPagina = !this.cantPorPagina;
   }
   
 }

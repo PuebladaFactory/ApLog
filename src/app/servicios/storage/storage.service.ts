@@ -735,10 +735,10 @@ export class StorageService {
     });
   }
 
-  getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any){
+  getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
     console.log(" storage getAllByDateValue ", componente)
     this.dbFirebase
-    .getAllByDateValue<T>(componente, campo, value1, value2)
+    .getAllByDateValue<T>(componente, campo, value1, value2, orden)
     .subscribe(data => {
       this.setInfo(componente , data)
     })
@@ -786,9 +786,9 @@ export class StorageService {
     });
   }
 
-  syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any){
+  syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
     console.log(" storage syncChangesDateValue ", componente)
-    this.dbFirebase.getAllByDateValue<T>(componente, campo, value1, value2).subscribe(data => {
+    this.dbFirebase.getAllByDateValue<T>(componente, campo, value1, value2, orden).subscribe(data => {
       const currentData = this.loadInfo(componente);
       if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
         console.log(`Datos sincronizados para ${componente}`, data);
