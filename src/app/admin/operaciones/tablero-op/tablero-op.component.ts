@@ -33,7 +33,7 @@ export class TableroOpComponent implements OnInit {
   titulo: string = "operaciones";
   $clientes!: Cliente[];
   $choferes!: Chofer[];
-  
+  cantPorPagina: boolean = false;
   $proveedores!: Proveedor[];
   $opActivas!: Operacion[];
   $opFiltradas!: Operacion[];
@@ -62,8 +62,8 @@ export class TableroOpComponent implements OnInit {
     { prop: 'patente', name: 'Patente', selected: false, flexGrow:2  },   
     { prop: 'acompaniante', name: 'Acomp', selected: false, flexGrow:2  },    
     { prop: 'tarifa', name: 'Tarifa', selected: false, flexGrow:2  },   
-    { prop: 'aCobrar', name: 'A Cobrar', selected: true, flexGrow:2  },   
-    { prop: 'aPagar', name: 'A Pagar', selected: true, flexGrow:2  },      
+    { prop: 'aCobrar', name: 'A Cobrar', selected: true, flexGrow: 2, comparator: this.currencyComparator },
+    { prop: 'aPagar', name: 'A Pagar', selected: true, flexGrow: 2, comparator: this.currencyComparator },
     { prop: 'hojaRuta', name: 'Hoja de Ruta', selected: true, flexGrow:2  }, 
     { prop: 'proveedor', name: 'Proveedor', selected: false, flexGrow:2  },
     { prop: 'observaciones', name: 'Observaciones', selected: true, flexGrow:3  },  
@@ -72,7 +72,7 @@ export class TableroOpComponent implements OnInit {
   visibleColumns = this.allColumns.filter(column => column.selected);
   selected = [];
   count = 0;
-  limit = 20;
+  limit = 1000;
   offset = 0;
   sortType = SortType.multi; // Aquí usamos la enumeración SortType
   selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
@@ -112,8 +112,9 @@ export class TableroOpComponent implements OnInit {
       this.vehiculosChofer = datos[0];
       //////console.log("vehiculos chofer: ", this.vehiculosChofer);
     }); */
+    this.loadColumnSelection();
     let limite = this.storageService.loadInfo("pageLimitOp");
-    this.limit = limite.length === 0 ? 20 : limite[0];
+    this.limit = limite.length === 0 ? 1000 : limite[0];
     this.rango = this.storageService.loadInfo("formatoSeleccionado");
     //console.log("rango en tableroOp: ", this.rango);
     
@@ -144,6 +145,7 @@ export class TableroOpComponent implements OnInit {
       if(data){
         //console.log("1)aca??: ");      
         this.$opActivas = data;
+        //this.$opActivas = this.$opActivas.sort((a, b) => a.fecha.getTime() - b.fecha.getTime()); // Ordena por el nombre del chofer
         //this.armarTabla();
         this.consultarOp()
         
@@ -168,6 +170,18 @@ export class TableroOpComponent implements OnInit {
     // Completa el Subject para cancelar todas las suscripciones
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  loadColumnSelection() {
+    const savedSelection = localStorage.getItem('columnSelection');
+    
+    if (savedSelection) {
+      this.allColumns = JSON.parse(savedSelection);
+      this.visibleColumns = this.allColumns.filter(col => col.selected);
+    } else {
+      // Si no hay configuración guardada, aplicar la configuración estándar
+      this.visibleColumns = this.allColumns.filter(col => col.selected);
+    }
   }
 
   getMsg(e:any) {
@@ -196,7 +210,7 @@ export class TableroOpComponent implements OnInit {
             console.log("fechasConsulta: ", this.fechasConsulta);
             this.rango = this.respuestaOp[0].rango
             console.log("rango: ", this.rango);
-            this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta);
+            this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
             this.filtrarEstado()
           }
           ////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
@@ -208,12 +222,7 @@ export class TableroOpComponent implements OnInit {
   armarTabla() {
     //////////console.log("consultasOp: ", this.$consultasOp );
     let indice = 0
-    let operaciones: Operacion [];
-    /* if(!this.btnConsulta){
-      operaciones = this.$opActivas;
-    } else {
-      operaciones = this.$consultasOp;
-    } */
+    let operaciones: Operacion [];    
     operaciones = this.$opFiltradas;
     this.rows = operaciones.map((op) => ({
       indice: indice ++,
@@ -252,6 +261,20 @@ export class TableroOpComponent implements OnInit {
 //   `$${nuevoValor}`
    return `$${nuevoValor}`
  }
+
+ currencyComparator(a: string, b: string) {
+  // Eliminar el símbolo de moneda y las comas, luego convertir a número
+  console.log("a inicial:", a);
+  
+  const valueA = parseFloat(a.replace(/[^0-9.-]+/g, ''));
+  console.log("a final:", valueA);
+  const valueB = parseFloat(b.replace(/[^0-9.-]+/g, ''));
+  
+  // Comparar los valores numéricos
+  if (valueA < valueB) return -1;
+  if (valueA > valueB) return 1;
+  return 0;
+}
   
   setPage(pageInfo: any) {
     this.offset = pageInfo.offset;
@@ -309,6 +332,8 @@ export class TableroOpComponent implements OnInit {
       column.selected = !column.selected;
     }
     this.visibleColumns = this.allColumns.filter(col => col.selected);
+    // Guardar la configuración en el localStorage
+    localStorage.setItem('columnSelection', JSON.stringify(this.allColumns));
   }
   
   toogleAjustes(){
@@ -546,6 +571,10 @@ export class TableroOpComponent implements OnInit {
     } else {
       return "No"
     }
+  }
+
+  toggleCantPag(){
+    this.cantPorPagina = !this.cantPorPagina;
   }
   
 }
