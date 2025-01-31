@@ -81,11 +81,13 @@ export class TableroOpComponent implements OnInit {
   ajustes: boolean = false;
   firstFilter = '';
   secondFilter = '';
+  filtrosClientes = '';
+  filtrosChoferes = '';
   /////////////////////////////////////////////////////////////////////
   rango!: string [];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   respuestaOp!:any;
-
+  
   constructor(private storageService: StorageService, private modalService: NgbModal){}
   
   ngOnInit(): void {
@@ -124,12 +126,14 @@ export class TableroOpComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$choferes = data;
+      this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
     });
   
     this.storageService.clientes$
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$clientes = data;
+      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     });   
     
     this.storageService.proveedores$
@@ -248,7 +252,10 @@ export class TableroOpComponent implements OnInit {
     if(filtrosTabla.length > 0){
       this.firstFilter = filtrosTabla[0];
       this.secondFilter = filtrosTabla[1];
+      this.filtrosClientes = filtrosTabla[2];      
+      this.filtrosChoferes = filtrosTabla[3];            
     }
+
     this.applyFilters(); // Aplica filtros y actualiza filteredRows
   }
 
@@ -307,7 +314,7 @@ export class TableroOpComponent implements OnInit {
     } else if (filterType === 'second') {
       this.secondFilter = val;
     }
-    this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter])
+    this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes])
     this.applyFilters();
   }
   
@@ -319,8 +326,14 @@ export class TableroOpComponent implements OnInit {
       const secondCondition = Object.values(row).some(value => 
         String(value).toLowerCase().includes(this.secondFilter)
       );
+      const thirdCondition = Object.values(row).some(value => 
+        String(value).toLowerCase().includes(this.filtrosClientes.toLowerCase())
+      );    
+      const fourthCondition = Object.values(row).some(value => 
+        String(value).toLowerCase().includes(this.filtrosChoferes.toLowerCase())
+      );
   
-      return firstCondition && secondCondition;
+      return firstCondition && secondCondition && thirdCondition && fourthCondition;
     });
   
     this.count = this.filteredRows.length; // Actualiza el conteo de filas
@@ -337,6 +350,7 @@ export class TableroOpComponent implements OnInit {
   }
   
   toogleAjustes(){
+    this.cantPorPagina= false;
     this.ajustes = !this.ajustes;
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -574,7 +588,38 @@ export class TableroOpComponent implements OnInit {
   }
 
   toggleCantPag(){
+    this.ajustes = false;
     this.cantPorPagina = !this.cantPorPagina;
+
+  }
+
+  filtrarClientes(idCliente: number){
+    if(idCliente !== 0){
+      let cliente = this.$clientes.filter(c => c.idCliente === idCliente);      
+      this.filtrosClientes = cliente[0].razonSocial;
+      this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes])
+      console.log("this.filtrosClientes", this.filtrosClientes);
+    }else {      
+      this.filtrosClientes = "";
+    }
+    
+    
+    this.applyFilters()
+  }
+
+  filtrarChoferes(idChofer: number){
+    if(idChofer !== 0){
+      let chofer = this.$choferes.filter(c => c.idChofer === idChofer);      
+      this.filtrosChoferes = chofer[0].apellido + " " + chofer[0].nombre;
+      this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes])
+      console.log("this.filtrosChoferes", this.filtrosChoferes);
+    }else {      
+      this.filtrosChoferes = "";
+    }
+
+    
+    
+    this.applyFilters()
   }
   
 }
