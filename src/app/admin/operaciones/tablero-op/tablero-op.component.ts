@@ -234,7 +234,9 @@ export class TableroOpComponent implements OnInit {
       estado: op.estado.abierta ? "Abierta" : op.estado.cerrada ? "Cerrada" : "Facturada",
       idOperacion: op.idOperacion,
       cliente: op.cliente.razonSocial,
+      idCliente: op.cliente.idCliente,
       chofer: `${op.chofer.apellido} ${op.chofer.nombre}`,
+      idChofer: op.chofer.idChofer,
       categoria: this.getCategoria(op),
       patente: op.patenteChofer,
       acompaniante: `${op.acompaniante ? "Si" : "No"}` ,
@@ -327,10 +329,10 @@ export class TableroOpComponent implements OnInit {
         String(value).toLowerCase().includes(this.secondFilter)
       );
       const thirdCondition = Object.values(row).some(value => 
-        String(value).toLowerCase().includes(this.filtrosClientes.toLowerCase())
+        String(value).toLowerCase().includes(this.getCliente(this.filtrosClientes, "interna"))
       );    
       const fourthCondition = Object.values(row).some(value => 
-        String(value).toLowerCase().includes(this.filtrosChoferes.toLowerCase())
+        String(value).toLowerCase().includes(this.getChofer(this.filtrosChoferes, "interna"))
       );
   
       return firstCondition && secondCondition && thirdCondition && fourthCondition;
@@ -595,31 +597,59 @@ export class TableroOpComponent implements OnInit {
 
   filtrarClientes(idCliente: number){
     if(idCliente !== 0){
-      let cliente = this.$clientes.filter(c => c.idCliente === idCliente);      
-      this.filtrosClientes = cliente[0].razonSocial;
+      this.filtrosClientes = idCliente.toString();      
       this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes])
       console.log("this.filtrosClientes", this.filtrosClientes);
     }else {      
       this.filtrosClientes = "";
+      this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes])
     }
-    
-    
     this.applyFilters()
   }
 
-  filtrarChoferes(idChofer: number){
-    if(idChofer !== 0){
-      let chofer = this.$choferes.filter(c => c.idChofer === idChofer);      
-      this.filtrosChoferes = chofer[0].apellido + " " + chofer[0].nombre;
-      this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes])
+  getCliente(idCliente:string, modo:string){
+    let id = Number(idCliente);  
+    console.log("id", id);
+    let cliente = this.$clientes?.filter(c => c.idCliente === id);      
+    if(id !== 0 && modo === "vista"){      
+      return cliente[0].razonSocial;
+    } else if(id !== 0 && modo === "interna") {      
+      return cliente[0].idCliente.toString();
+    } else{
+      return "";
+    }
+
+
+    
+  }
+
+  filtrarChoferes(idChofer: number){    
+    if(idChofer !== 0){      
+      this.filtrosChoferes = idChofer.toString();
+      this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes]);
       console.log("this.filtrosChoferes", this.filtrosChoferes);
     }else {      
       this.filtrosChoferes = "";
+      this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes]);
     }
 
     
     
     this.applyFilters()
   }
+
+  getChofer(idChofer:string, modo:string){
+    let id = Number(idChofer);  
+    console.log("id", id);
+    let chofer = this.$choferes?.filter(c => c.idChofer === id);      
+    if(id !== 0 && modo === "vista"){      
+      return chofer[0].apellido + " " + chofer[0].nombre;
+    } else if(id !== 0 && modo === "interna") {      
+      return chofer[0].idChofer.toString();
+    } else{
+      return "";
+    }
+  }
+  
   
 }
