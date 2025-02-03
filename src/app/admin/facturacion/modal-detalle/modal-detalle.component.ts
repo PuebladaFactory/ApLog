@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
@@ -14,6 +14,8 @@ import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { LogService } from 'src/app/servicios/log/log.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-modal-detalle',
@@ -66,7 +68,8 @@ export class ModalDetalleComponent implements OnInit {
   searchText!:string;
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private excelServ: ExcelService, 
-    private pdfServ: PdfService, private logService: LogService){
+    private pdfServ: PdfService, private logService: LogService,
+    private dbFirebase: DbFirestoreService, private modalService: NgbModal){
 
   }
   
@@ -439,5 +442,52 @@ export class ModalDetalleComponent implements OnInit {
     return 0;
   }
 }
+
+bajaOp(factura:any){
+  console.log("fila: ", factura);
+  
+    Swal.fire({
+          title: "¿Desea anular la factura?",
+          //text: "No se podrá revertir esta acción",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Confirmar",
+          cancelButtonText: "Cancelar"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            //this.openModalBaja(factura);
+          }
+        });
+    
+  }
+
+  openModalBaja(factura:any){
+    {
+      const modalRef = this.modalService.open(ModalBajaComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        scrollable: true, 
+        size: 'sm',     
+      });       
+      console.log("factura",factura);
+      let info = {
+        modo: "facturacion",
+        item: factura,
+      }  
+      
+      
+      modalRef.componentInstance.fromParent = info;
+    
+      modalRef.result.then(
+        (result) => {
+          console.log("result", result);
+          
+        },
+        (reason) => {}
+      );
+    }
+  }
 
 }
