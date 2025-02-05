@@ -763,6 +763,7 @@ export class StorageService {
   syncChangesByOneElem<T>(componente: string, id: string): void {
     this.dbFirebase.getMostRecent<T>(componente, id).subscribe((data: any) => {
       const currentData = this.loadInfo(componente);
+      
       if (!currentData || JSON.stringify(currentData[0]) !== JSON.stringify(data[0])) {
         console.log(`Datos sincronizados para ${componente}`, data[0]);
         this.setInfo(componente, [data[0]]); // Guarda en el caché

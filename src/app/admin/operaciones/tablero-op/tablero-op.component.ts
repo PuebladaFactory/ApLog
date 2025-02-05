@@ -96,7 +96,7 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.tarifaEventual = datos[0];
-      //////console.log("tarifa eventual: ", this.tarifaEventual);
+      ////////console.log("tarifa eventual: ", this.tarifaEventual);
       
     });
     this.storageService.opTarPers$
@@ -104,7 +104,7 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.tarifaPersonalizada = datos[0];
-      //////console.log("tarifa personalizada: ", this.tarifaPersonalizada);
+      ////////console.log("tarifa personalizada: ", this.tarifaPersonalizada);
     });
 
     this.storageService.vehiculosChofer$
@@ -112,13 +112,13 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.vehiculosChofer = datos[0];
-      //////console.log("vehiculos chofer: ", this.vehiculosChofer);
+      ////////console.log("vehiculos chofer: ", this.vehiculosChofer);
     }); */
     this.loadColumnSelection();
     let limite = this.storageService.loadInfo("pageLimitOp");
     this.limit = limite.length === 0 ? 1000 : limite[0];
     this.rango = this.storageService.loadInfo("formatoSeleccionado");
-    //console.log("rango en tableroOp: ", this.rango);
+    ////console.log("rango en tableroOp: ", this.rango);
     
     
     
@@ -147,7 +147,7 @@ export class TableroOpComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if(data){
-        //console.log("1)aca??: ");      
+        ////console.log("1)aca??: ");      
         this.$opActivas = data;
         //this.$opActivas = this.$opActivas.sort((a, b) => a.fecha.getTime() - b.fecha.getTime()); // Ordena por el nombre del chofer
         //this.armarTabla();
@@ -190,11 +190,11 @@ export class TableroOpComponent implements OnInit {
 
   getMsg(e:any) {
     this.btnConsulta = e
-    //console.log("getMsg: ", this.btnConsulta);
+    ////console.log("getMsg: ", this.btnConsulta);
     
       //this.btnConsulta = true;
     if(this.btnConsulta){
-      //console.log("2)aca??: ");            
+      ////console.log("2)aca??: ");            
       this.consultarOp()
       
     }
@@ -202,29 +202,29 @@ export class TableroOpComponent implements OnInit {
   }
 
   consultarOp(){
-    //console.log("2)aca??: ");            
+    ////console.log("2)aca??: ");            
       this.storageService.respuestaOp$
         .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
         .subscribe(data => {
           if(data){
-            //console.log("respuestaOp data: ", data);
+            ////console.log("respuestaOp data: ", data);
             
             this.respuestaOp = data
             this.fechasConsulta = this.respuestaOp[0].fechas;
-            console.log("fechasConsulta: ", this.fechasConsulta);
+            //console.log("fechasConsulta: ", this.fechasConsulta);
             this.rango = this.respuestaOp[0].rango
-            console.log("rango: ", this.rango);
+            //console.log("rango: ", this.rango);
             this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
             this.filtrarEstado()
           }
-          ////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
+          //////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
           //this.getMsg()
       });
   }
 
   ///////////// TABLA //////////////////////////////////////////////////////////////////////////////////
   armarTabla() {
-    //////////console.log("consultasOp: ", this.$consultasOp );
+    ////////////console.log("consultasOp: ", this.$consultasOp );
     let indice = 0
     let operaciones: Operacion [];    
     operaciones = this.$opFiltradas;
@@ -248,9 +248,9 @@ export class TableroOpComponent implements OnInit {
       observaciones: op.observaciones,
       
     }));   
-    //////////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+    ////////////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
     let filtrosTabla = this.storageService.loadInfo('filtrosTabla')
-    ////console.log("filtrosTabla", filtrosTabla);    
+    //////console.log("filtrosTabla", filtrosTabla);    
     if(filtrosTabla.length > 0){
       this.firstFilter = filtrosTabla[0];
       this.secondFilter = filtrosTabla[1];
@@ -266,17 +266,17 @@ export class TableroOpComponent implements OnInit {
      minimumFractionDigits: 2, 
      maximumFractionDigits: 2 
    }).format(valor);
-   ////////////console.log(nuevoValor);    
+   //////////////console.log(nuevoValor);    
 //   `$${nuevoValor}`
    return `$${nuevoValor}`
  }
 
  currencyComparator(a: string, b: string) {
   // Eliminar el símbolo de moneda y las comas, luego convertir a número
-  console.log("a inicial:", a);
+  //console.log("a inicial:", a);
   
   const valueA = parseFloat(a.replace(/[^0-9.-]+/g, ''));
-  console.log("a final:", valueA);
+  //console.log("a final:", valueA);
   const valueB = parseFloat(b.replace(/[^0-9.-]+/g, ''));
   
   // Comparar los valores numéricos
@@ -389,9 +389,9 @@ export class TableroOpComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        //////////console.log("llamada al storage desde op-abiertas, deleteItem");
+        ////////////console.log("llamada al storage desde op-abiertas, deleteItem");
         this.storageService.deleteItem(this.componente, this.opEditar);
-        //////////console.log("consultas Op: " , this.$consultasOp);
+        ////////////console.log("consultas Op: " , this.$consultasOp);
         Swal.fire({
           title: "Confirmado",
           text: "La operación ha sido cancelada",
@@ -414,7 +414,7 @@ export class TableroOpComponent implements OnInit {
     vehiculo  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === op.patenteChofer;
     });
-    ////////console.log(vehiculo[0].categoria.nombre);
+    //////////console.log(vehiculo[0].categoria.nombre);
     return vehiculo[0].categoria.nombre
 
   }
@@ -432,7 +432,7 @@ export class TableroOpComponent implements OnInit {
         modo: modo,
         item: this.opEditar,
       } 
-      ////////console.log()(info); */
+      //////////console.log()(info); */
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
@@ -454,10 +454,10 @@ export class TableroOpComponent implements OnInit {
     let modo = "";
     let modoStorage = this.storageService.loadInfo("filtroOp");
     
-    ////console.log("this.btnConsulta", this.btnConsulta);
-    ////console.log("this.estadoFiltrado", this.estadoFiltrado);
-    ////console.log("modoStorage", modoStorage[0]);
-    ////console.log("modo", modo);
+    //////console.log("this.btnConsulta", this.btnConsulta);
+    //////console.log("this.estadoFiltrado", this.estadoFiltrado);
+    //////console.log("modoStorage", modoStorage[0]);
+    //////console.log("modo", modo);
 
     if(modoStorage[0] === undefined){
       modo = this.estadoFiltrado;
@@ -504,7 +504,7 @@ export class TableroOpComponent implements OnInit {
     } */
     switch(modo){
       case "Todo":{
-        //console.log("ACCCAAA??");
+        ////console.log("ACCCAAA??");
         
         this.$opFiltradas = this.$opActivas;
         this.armarTabla();
@@ -551,7 +551,7 @@ export class TableroOpComponent implements OnInit {
         modo: modo,
         item: this.opEditar,
       }  */
-      ////////console.log()(info); */
+      //////////console.log()(info); */
       
       //modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
@@ -599,7 +599,7 @@ export class TableroOpComponent implements OnInit {
     if(idCliente !== 0){
       this.filtrosClientes = idCliente.toString();      
       this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes])
-      console.log("this.filtrosClientes", this.filtrosClientes);
+      //console.log("this.filtrosClientes", this.filtrosClientes);
     }else {      
       this.filtrosClientes = "";
       this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes])
@@ -609,7 +609,7 @@ export class TableroOpComponent implements OnInit {
 
   getCliente(idCliente:string, modo:string){
     let id = Number(idCliente);  
-    console.log("id", id);
+    //console.log("id", id);
     let cliente = this.$clientes?.filter(c => c.idCliente === id);      
     if(id !== 0 && modo === "vista"){      
       return cliente[0].razonSocial;
@@ -627,7 +627,7 @@ export class TableroOpComponent implements OnInit {
     if(idChofer !== 0){      
       this.filtrosChoferes = idChofer.toString();
       this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes]);
-      console.log("this.filtrosChoferes", this.filtrosChoferes);
+      //console.log("this.filtrosChoferes", this.filtrosChoferes);
     }else {      
       this.filtrosChoferes = "";
       this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes]);
@@ -640,7 +640,7 @@ export class TableroOpComponent implements OnInit {
 
   getChofer(idChofer:string, modo:string){
     let id = Number(idChofer);  
-    console.log("id", id);
+    //console.log("id", id);
     let chofer = this.$choferes?.filter(c => c.idChofer === id);      
     if(id !== 0 && modo === "vista"){      
       return chofer[0].apellido + " " + chofer[0].nombre;
