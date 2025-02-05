@@ -35,6 +35,7 @@ export class LiqClienteComponent {
   btnConsulta:boolean = false;
   searchText!:string;
   searchText2!:string;
+  searchText3!:string;
   componente: string = "facturaCliente";
   $facturasOpCliente: any;
   date:any = new Date();
@@ -70,15 +71,16 @@ export class LiqClienteComponent {
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>()
   opAbiertas!: Operacion[];
-  
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpClienteService: FacturacionClienteService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
+  $facturasOpDuplicadas: FacturaOp[] = [];
+  $facturasOpChofer: FacturaOp[] = []; // Array de facturas de choferes
+  $facturasOpChoferDuplicadas: FacturaOp[] = []; // Array para guardar facturas de choferes duplicadas
+  $facturasOpProveedor: FacturaOp[] = []; // Array de facturas de choferes
+
+
+  constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false);
-    
-   /*  this.form = this.fb.group({      
-      detalle: [""],       
-    }); */
-
+   
   }
 
   ngOnInit(): void {
@@ -106,7 +108,7 @@ export class LiqClienteComponent {
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.fechasConsulta = data;
-      console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
+      ////console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
       this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpCliente");
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
@@ -114,12 +116,12 @@ export class LiqClienteComponent {
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpCliente = data;
-          console.log("1)", this.$facturasOpCliente );
+          //console.log("1)", this.$facturasOpCliente );
           if(this.$facturasOpCliente !== undefined){
-            console.log("?????????????");            
+            ////console.log("?????????????");                   
             this.procesarDatosParaTabla()
           } else {
-            console.log("");            
+            ////console.log("");            
           }
           
       });
@@ -132,12 +134,13 @@ export class LiqClienteComponent {
     this.destroy$.next();
     this.destroy$.complete();
   }
+  
 
   procesarDatosParaTabla() {
-    const clientesMap = new Map<number, any>();
+    const clientesMap = new Map<number, any>();    
 
     if(this.$facturasOpCliente !== null){
-      ////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
+      ////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
       this.$facturasOpCliente.forEach((factura: FacturaOp) => {
         if (!clientesMap.has(factura.idCliente)) {
           clientesMap.set(factura.idCliente, {
@@ -169,12 +172,12 @@ export class LiqClienteComponent {
   
       this.datosTablaCliente = Array.from(clientesMap.values());
       this.datosTablaCliente = this.datosTablaCliente.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      //console.log("Datos para la tabla: ", this.datosTablaCliente); 
+      //////console.log("Datos para la tabla: ", this.datosTablaCliente); 
       this.dbFirebase.getAllByDateValueField<Operacion>('operaciones', 'fecha', this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "estado.abierta", true).subscribe(data=>{      
         if(data){
           this.opAbiertas = data;
           this.opAbiertas = this.opAbiertas.filter((op:Operacion)=> op.estado.abierta)
-          console.log("this.opAbiertas", this.opAbiertas.length);    
+          ////console.log("this.opAbiertas", this.opAbiertas.length);    
           this.datosTablaCliente.forEach(c=>{
             c.opAbiertas = this.getOpAbiertas(c.idCliente)
           })        
@@ -227,7 +230,7 @@ export class LiqClienteComponent {
 // Modifica liquidarFac para solo actualizar el estado y hacer cualquier procesamiento adicional
 liquidarFac(factura: FacturaOp) {
   factura.liquidacion = !factura.liquidacion;
-  //console.log("Estado de liquidación cambiado:", factura.liquidacion);
+  //////console.log("Estado de liquidación cambiado:", factura.liquidacion);
   //this.storageService.updateItem(this.tituloFacOpCliente, factura);
   this.procesarDatosParaTabla();
 }
@@ -235,19 +238,19 @@ liquidarFac(factura: FacturaOp) {
 selectAllCheckboxes(event: any, idCliente: number): void {
   //let isChecked = (event.target as HTMLInputElement).checked;
   const seleccion = event.target.checked;
-  console.log("1)", seleccion); 
+  ////console.log("1)", seleccion); 
   let facturasCliente = this.facturasPorCliente.get(idCliente);
-  console.log("2)", facturasCliente);
+  ////console.log("2)", facturasCliente);
     facturasCliente?.forEach((factura: FacturaOp) => {
       factura.liquidacion = seleccion;
-      console.log("3)", factura.liquidacion);
+      ////console.log("3)", factura.liquidacion);
      
     });   
-    console.log("primera tabla: ", this.datosTablaCliente);
+    ////console.log("primera tabla: ", this.datosTablaCliente);
     let cliente = this.datosTablaCliente.find((cliente:any)=>{
       return cliente.idCliente === idCliente
     });
-    console.log("1) cliente: ", cliente);
+    ////console.log("1) cliente: ", cliente);
     if(seleccion){
       cliente.opFacturadas = 0
       facturasCliente?.forEach((factura: FacturaOp) => {                  
@@ -271,7 +274,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       }
      
     });    */
-    console.log("2) cliente: ", cliente);
+    ////console.log("2) cliente: ", cliente);
    
 }
  
@@ -279,18 +282,18 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   mostrarMasDatos(index: number, cliente:any) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaCliente[index] = !this.mostrarTablaCliente[index];
-   //console.log("CLIENTE: ", cliente);
+   //////console.log("CLIENTE: ", cliente);
 
    // Obtener el id del cliente utilizando el índice proporcionado
    let clienteId = this.datosTablaCliente[index].idCliente;
-    console.log("clienteId: ", clienteId);
+    ////console.log("clienteId: ", clienteId);
     
    // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
    let facturasCliente = this.$facturasOpCliente.filter((factura: FacturaOp) => {
        return factura.idCliente === clienteId;
    });
    this.facturasPorCliente.set(clienteId, facturasCliente);
-   console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
+   ////console.log("FACTURAS DEL CLIENTE: ", facturasCliente);  
   }
 
   cerrarTabla(index: number){
@@ -315,7 +318,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
    liquidarFacCliente(cliente: any, index: number){
     // Obtener las facturas del cliente
-    //console.log("1: ",this.facturasLiquidadasCliente);
+    //////console.log("1: ",this.facturasLiquidadasCliente);
 
     if(cliente.opAbiertas > 0){
         Swal.fire({
@@ -334,7 +337,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     });
 
     if(this.facturasLiquidadasCliente.length > 0){
-      console.log("1: ",this.facturasLiquidadasCliente);
+      ////console.log("1: ",this.facturasLiquidadasCliente);
       // Calcular el total sumando los montos de las facturas liquidadas
       this.totalFacturasLiquidadasCliente = 0;
       this.facturasLiquidadasCliente.forEach((factura: FacturaOp) => {
@@ -342,9 +345,9 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       });
   
       this.indiceSeleccionado = index;
-      console.log("3) Facturas liquidadas del cliente", cliente.razonSocial + ":", this.facturasLiquidadasCliente);
-      console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasCliente);
-      //console.log("indice: ", this.indiceSeleccionado);
+      ////console.log("3) Facturas liquidadas del cliente", cliente.razonSocial + ":", this.facturasLiquidadasCliente);
+      ////console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasCliente);
+      //////console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
     } else {
       this.mensajesError("Debe seleccionar una factura para liquidar")
@@ -365,14 +368,14 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
 
   addItem(item:any, componente:string): void {   
-    console.log("llamada al storage desde liq-cliente, addItem");
+    ////console.log("llamada al storage desde liq-cliente, addItem");
     this.storageService.addItem(componente, item);        
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasCliente.forEach((factura: FacturaOp) => {
-      console.log("llamada al storage desde liq-cliente, addItem");
+      ////console.log("llamada al storage desde liq-cliente, addItem");
       this.addItem(factura, "facOpLiqCliente");
       this.editarOperacionesFac(factura)
       
@@ -397,7 +400,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         op = data;
-        console.log("OP: ", op);
+        ////console.log("OP: ", op);
         op.estado = {
           abierta: false,
           cerrada: false,
@@ -410,7 +413,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   }
 
   removeItem(item:any){
-    console.log("llamada al storage desde liq-cliente, deleteItem");
+    ////console.log("llamada al storage desde liq-cliente, deleteItem");
     this.storageService.deleteItem("facturaOpCliente", item);    
   }
 
@@ -421,8 +424,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
   eliminarFacturaOpCliente(factura:FacturaOp, indice:number){
     this.removeItem(factura);
-    this.cerrarTabla(indice)
-    this.ngOnInit(); 
+    //this.cerrarTabla(indice)
+    //this.ngOnInit(); 
   }
 
 
@@ -449,12 +452,12 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         total: this.totalFacturasLiquidadasCliente,
         //totalChofer: this.totalFacturasLiquidadasChofer,
       }; 
-      //console.log()(info);
+      //////console.log()(info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          console.log(result);
+          ////console.log(result);
           
           if(result.modo === "cerrar"){
             let titulo = result.titulo
@@ -489,7 +492,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   }
 
   buscarTarifa(i:number) {
-  //console.log("A)",this.facDetallada);
+  //////console.log("A)",this.facDetallada);
   
   if(this.facDetallada.tarifaTipo.general){
     this.dbFirebase
@@ -497,13 +500,13 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         this.ultimaTarifa = data;
-        //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+        //////console.log("TARIFA APLICADA: ", this.ultimaTarifa);
         this.dbFirebase
         .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             this.operacion = data;
-            //console.log("OPERACION: ", this.operacion);
+            //////console.log("OPERACION: ", this.operacion);
             this.openModalTarifa(i)
         });        
     });
@@ -514,26 +517,26 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         this.ultimaTarifa = data;
-        console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+        ////console.log("TARIFA APLICADA: ", this.ultimaTarifa);
         this.dbFirebase
         .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             this.operacion = data;
-            console.log("OPERACION: ", this.operacion);
+            ////console.log("OPERACION: ", this.operacion);
             this.openModalTarifa(i)
         });        
     });
   }
   if(this.facDetallada.tarifaTipo.eventual){
     this.ultimaTarifa = {};
-    console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+    ////console.log("TARIFA APLICADA: ", this.ultimaTarifa);
     this.dbFirebase
     .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         this.operacion = data;
-        console.log("OPERACION: ", this.operacion);
+        ////console.log("OPERACION: ", this.operacion);
         this.openModalTarifa(i)
     });     
     
@@ -544,13 +547,13 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         this.ultimaTarifa = data;
-        console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+        ////console.log("TARIFA APLICADA: ", this.ultimaTarifa);
         this.dbFirebase
         .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             this.operacion = data;
-            console.log("OPERACION: ", this.operacion);
+            ////console.log("OPERACION: ", this.operacion);
             this.openModalTarifa(i)
         });        
     });
@@ -579,7 +582,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         op: this.operacion,     
         origen: origen,
       }; 
-      console.log(info); 
+      ////console.log(info); 
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
@@ -615,7 +618,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   ordenarMap(columna: string): void {
     // Convertimos el Map a un array de pares clave-valor
     const arrayFacturas:any[] = Array.from(this.facturasPorCliente.entries());
-    console.log("arrayFacturas: ", arrayFacturas);
+    ////console.log("arrayFacturas: ", arrayFacturas);
     
     // Determinar el orden actual
     if (this.ordenColumna === columna) {

@@ -513,11 +513,12 @@ export class FacturacionOpService {
   }
 
   addItem(componente: string, item:any){
-    this.storageService.addItem(componente, item)
+    //this.storageService.addItem(componente, item)
+    this.dbFirebase.guardarFacturaOp(componente, item)
   }
 
   updateItem(componente: string, item: any){
-    this.storageService.updateItem(componente, item);
+    this.storageService.updateItem(componente, item);    
   }
 
   guardarTarifasEventuales(op:Operacion){

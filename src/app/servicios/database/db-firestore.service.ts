@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, updateDoc } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConId } from 'src/app/interfaces/conId';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
 
 
 
@@ -357,6 +358,29 @@ getByFieldValue(componente:string, campo:string, value:any){
       console.log('Create. Escritura en la base de datos en: ', componente)
     );
   }
+
+  async guardarFacturaOp(componente:string, facturaOp: FacturaOp) {
+    try {
+        // Verificar si ya existe una factura con el mismo idOperacion
+        const query = this.firestore2.collection(`/Vantruck/datos/${componente}`, ref =>
+            ref.where('idOperacion', '==', facturaOp.idOperacion)
+        ).get();
+
+        const querySnapshot = await firstValueFrom(query); // Convertir el observable en una promesa
+
+        if (!querySnapshot.empty) {
+            // Si ya existe una factura con el mismo idOperacion
+            console.error("Ya existe una factura con el mismo idOperacion:", facturaOp.idOperacion);
+            throw new Error("Ya existe una factura con el mismo idOperacion.");
+        } else {
+            // Si no existe, guardar la nueva factura
+            await this.firestore2.collection(`/Vantruck/datos/${componente}`).add(facturaOp);
+            console.log("Factura guardada correctamente.");
+        }
+    } catch (error) {
+        console.error("Error al guardar la factura:", error);
+    }
+}
 
   update(componente: string, item: any) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
