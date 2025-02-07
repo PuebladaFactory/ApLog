@@ -7,6 +7,8 @@ import Swal from 'sweetalert2';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Subject, takeUntil } from 'rxjs';
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -57,7 +59,7 @@ private destroy$ = new Subject<void>();
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
-  constructor(private storageService: StorageService, private modalService: NgbModal){}
+  constructor(private storageService: StorageService, private modalService: NgbModal, private legajoServ: LegajosService){}
   
   ngOnInit(): void { 
     //this.proveedores$ = this.storageService.proveedores$; 
@@ -113,8 +115,8 @@ private destroy$ = new Subject<void>();
   eliminarProveedor(row: any){
     this.seleccionarProveedor(row)
     Swal.fire({
-      title: "¿Eliminar el Proveedor?",
-      text: "No se podrá revertir esta acción",
+      title: "Desea dar de baja el Proveedor?",
+      text: "Esta acción también dará de baja a los Choferes asociados al Proveedor. No se podrá revertir esta acción",      
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -123,14 +125,9 @@ private destroy$ = new Subject<void>();
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        this.storageService.deleteItem(this.componente, this.proveedorEditar, this.proveedorEditar.idProveedor, "BAJA", `Baja de Proveedor ${this.proveedorEditar.razonSocial}`);
-        Swal.fire({
-          title: "Confirmado",
-          text: "El Proveedor ha sido borrado",
-          icon: "success"
-        });
-      }
-    });   
+        this.openModalBaja();
+        
+  }});   
     
     /* this.ngOnInit(); */    
   }
@@ -265,5 +262,60 @@ private destroy$ = new Subject<void>();
     // Insertar los guiones en las posiciones correctas
     return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
   }
+
+  openModalBaja(){
+          {
+            const modalRef = this.modalService.open(ModalBajaComponent, {
+              windowClass: 'myCustomModalClass',
+              centered: true,
+              scrollable: true, 
+              size: 'sm',     
+            });   
+            
+            
+      
+            let info = {
+              modo: "Proveedor",
+              item: this.proveedorEditar,
+            }  
+            //////console.log()(info); */
+            
+            modalRef.componentInstance.fromParent = info;
+          
+            modalRef.result.then(
+              (result) => {
+                console.log("result", result);
+                if(result !== undefined){   
+                  ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+                  //this.storageService.deleteItem(this.componente, this.clienteEditar, this.clienteEditar.idCliente, "BAJA", `Baja de Cliente ${this.clienteEditar.razonSocial}`);
+                  this.storageService.deleteItemPapelera(this.componente, this.proveedorEditar, this.proveedorEditar.idProveedor, "BAJA", `Baja de Proveedor ${this.proveedorEditar.razonSocial}`, result);
+                  //this.storageService.deleteItem(this.componente, this.proveedorEditar, this.proveedorEditar.idProveedor, "BAJA", `Baja de Proveedor ${this.proveedorEditar.razonSocial}`);
+                  ////////console.log("consultas Op: " , this.$consultasOp);
+                  this.eliminarChoferes(result)
+                  
+                  //this.storageService.deleteItem(this.componente, this.choferEditar, this.choferEditar.idChofer, "BAJA", `Baja de Chofer ${this.choferEditar.apellido} ${this.choferEditar.nombre}`);        
+                  Swal.fire({
+                    title: "Confirmado",
+                    text: "El Proveedor ha sido dada de baja",
+                    icon: "success"
+                  });
+                }
+                
+              },
+              (reason) => {}
+            );
+          }
+        }
+
+        eliminarChoferes(motivo:string){
+          let choferesBorrar: Chofer[] = this.$choferes.filter(c=> c.idProveedor === this.proveedorEditar.idProveedor);
+          console.log("choferesBorrar", choferesBorrar);
+          choferesBorrar.forEach(c=>{
+            this.storageService.deleteItemPapelera(this.componente, c, c.idChofer, "BAJA", `Baja de Chofer ${c.apellido} ${c.nombre}`, motivo);
+            ////////console.log("consultas Op: " , this.$consultasOp);
+            this.legajoServ.eliminarLegajo(c.idChofer, motivo);
+          })
+          //this.legajoServ.eliminarLegajo(this.choferEditar.idChofer, result);
+        }
 
 }

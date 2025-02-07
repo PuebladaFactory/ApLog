@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { StorageService } from '../storage/storage.service';
-import { take } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
+import { DbFirestoreService } from '../database/db-firestore.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,8 +11,9 @@ export class LegajosService {
 
   legajo!: Legajo
   $legajos!: Legajo[];
+  private destroy$ = new Subject<void>();
 
-  constructor(private storageService: StorageService) { }
+  constructor(private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
 
   crearLegajo(idChofer:number){
     this.legajo ={
@@ -150,19 +152,19 @@ export class LegajosService {
     };
   }
 
-  eliminarLegajo(idChofer:number){
+  eliminarLegajo(idChofer:number, motivo: string){
+    
     let legajo: Legajo[];
-    this.storageService.legajos$
+    this.dbFirebase.getByFieldValue("legajos", "idChofer", idChofer)
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .pipe(take(1))
     .subscribe(data=>{
-      this.$legajos = data;
-      if(this.$legajos.length > 0){
-        legajo = this.$legajos.filter((l:Legajo)=>{
-          return l.idChofer === idChofer;
-        });
-        //console.log("legajo", legajo);
-        this.storageService.deleteItem("legajos", legajo[0], legajo[0].idLegajo, "BAJA", "Baja de Legajo");
-      }
+      if(data){
+        let legajo: any = data;
+        console.log("legajo", legajo);
+        this.storageService.deleteItemPapelera("legajos", legajo[0], legajo[0].idLegajo, "BAJA", "Baja de Legajo", `Baja de legajo: ${motivo}`);
+      }      
+      
     })
   }
 }

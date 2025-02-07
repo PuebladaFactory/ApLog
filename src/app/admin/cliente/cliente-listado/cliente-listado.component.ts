@@ -8,6 +8,7 @@ import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 
 
 @Component({
@@ -108,12 +109,8 @@ export class ClienteListadoComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        this.storageService.deleteItem(this.componente, this.clienteEditar, this.clienteEditar.idCliente, "BAJA", `Baja de Cliente ${this.clienteEditar.razonSocial}`);
-        Swal.fire({
-          title: "Confirmado",
-          text: "El Cliente ha sido borrado",
-          icon: "success"
-        });
+        this.openModalBaja(row.idOperacion)        
+        
       }
     });   
     
@@ -246,5 +243,45 @@ export class ClienteListadoComponent implements OnInit {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  openModalBaja(idOp:number){
+      {
+        const modalRef = this.modalService.open(ModalBajaComponent, {
+          windowClass: 'myCustomModalClass',
+          centered: true,
+          scrollable: true, 
+          size: 'sm',     
+        });   
+        
+        
+  
+        let info = {
+          modo: "Cliente",
+          item: this.clienteEditar,
+        }  
+        //////console.log()(info); */
+        
+        modalRef.componentInstance.fromParent = info;
+      
+        modalRef.result.then(
+          (result) => {
+            console.log("result", result);
+            if(result !== undefined){   
+              ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+              //this.storageService.deleteItem(this.componente, this.clienteEditar, this.clienteEditar.idCliente, "BAJA", `Baja de Cliente ${this.clienteEditar.razonSocial}`);
+              this.storageService.deleteItemPapelera(this.componente, this.clienteEditar, this.clienteEditar.idCliente, "BAJA", `Baja de Cliente ${this.clienteEditar.razonSocial}`, result);
+              ////////console.log("consultas Op: " , this.$consultasOp);
+              Swal.fire({
+                title: "Confirmado",
+                text: "El Cliente ha sido dada de baja",
+                icon: "success"
+              });
+            }
+           
+          },
+          (reason) => {}
+        );
+      }
+    }
 
 }

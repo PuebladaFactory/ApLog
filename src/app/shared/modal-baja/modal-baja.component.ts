@@ -24,6 +24,7 @@ export class ModalBajaComponent implements OnInit {
   factura!: any;
   id:number = 0;
   item:string = "";
+  objeto!:any;
   
 
   constructor(private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal){}
@@ -48,6 +49,12 @@ export class ModalBajaComponent implements OnInit {
           this.id = this.fromParent.tipo === "clientes" ? this.factura.idFacturaCliente : this.fromParent.tipo === "choferes" ? this.factura.idFacturaChofer : this.factura.idFacturaProveedor
           this.item = this.fromParent.tipo === "clientes" ? "Cliente" : this.fromParent.tipo === "choferes" ? "Chofer" : "Proveedor"
         }  
+        break;
+      case "Cliente": case "Chofer": case "Proveedor":{          
+        this.item = this.fromParent.modo;
+        this.titulo = this.fromParent.modo;
+        this.objeto = this.fromParent.item;
+        }
         break;
       default:
         break;  

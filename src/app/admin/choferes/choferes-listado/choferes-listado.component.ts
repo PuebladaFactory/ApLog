@@ -8,6 +8,7 @@ import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { Subject, takeUntil } from 'rxjs';
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 
 
 @Component({
@@ -103,7 +104,7 @@ export class ChoferesListadoComponent implements OnInit {
     this.seleccionarChofer(row)
     let chofer = this.choferEditar
     Swal.fire({
-      title: "¿Eliminar el Chofer?",
+      title: "Desea dar de baja el Chofer?",
       text: "No se podrá revertir esta acción",
       icon: "warning",
       showCancelButton: true,
@@ -113,13 +114,8 @@ export class ChoferesListadoComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        this.legajoServ.eliminarLegajo(this.choferEditar.idChofer);
-        this.storageService.deleteItem(this.componente, this.choferEditar, this.choferEditar.idChofer, "BAJA", `Baja de Chofer ${this.choferEditar.apellido} ${this.choferEditar.nombre}`);        
-        Swal.fire({
-          title: "Confirmado",
-          text: "El Chofer ha sido borrado",
-          icon: "success"
-        });
+        this.openModalBaja();
+       
       }
     });   
   
@@ -290,5 +286,47 @@ export class ChoferesListadoComponent implements OnInit {
           
         })
       } */
+
+    openModalBaja(){
+        {
+          const modalRef = this.modalService.open(ModalBajaComponent, {
+            windowClass: 'myCustomModalClass',
+            centered: true,
+            scrollable: true, 
+            size: 'sm',     
+          });   
+          
+          
+    
+          let info = {
+            modo: "Chofer",
+            item: this.choferEditar,
+          }  
+          //////console.log()(info); */
+          
+          modalRef.componentInstance.fromParent = info;
+        
+          modalRef.result.then(
+            (result) => {
+              console.log("result", result);
+              if(result !== undefined){   
+                ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+                //this.storageService.deleteItem(this.componente, this.clienteEditar, this.clienteEditar.idCliente, "BAJA", `Baja de Cliente ${this.clienteEditar.razonSocial}`);
+                this.storageService.deleteItemPapelera(this.componente, this.choferEditar, this.choferEditar.idChofer, "BAJA", `Baja de Chofer ${this.choferEditar.apellido} ${this.choferEditar.nombre}`, result);
+                ////////console.log("consultas Op: " , this.$consultasOp);
+                this.legajoServ.eliminarLegajo(this.choferEditar.idChofer, result);
+                //this.storageService.deleteItem(this.componente, this.choferEditar, this.choferEditar.idChofer, "BAJA", `Baja de Chofer ${this.choferEditar.apellido} ${this.choferEditar.nombre}`);        
+                Swal.fire({
+                  title: "Confirmado",
+                  text: "El Chofer ha sido dada de baja",
+                  icon: "success"
+                });
+              }
+              
+            },
+            (reason) => {}
+          );
+        }
+      }
 
 }
