@@ -288,10 +288,11 @@ private destroy$ = new Subject<void>();
                 if(result !== undefined){   
                   ////////console.log("llamada al storage desde op-abiertas, deleteItem");
                   //this.storageService.deleteItem(this.componente, this.clienteEditar, this.clienteEditar.idCliente, "BAJA", `Baja de Cliente ${this.clienteEditar.razonSocial}`);
-                  this.storageService.deleteItemPapelera(this.componente, this.proveedorEditar, this.proveedorEditar.idProveedor, "BAJA", `Baja de Proveedor ${this.proveedorEditar.razonSocial}`, result);
+                  this.eliminarChoferes(result);
+                  this.storageService.deleteItemPapelera(this.componente, this.proveedorEditar, this.proveedorEditar.idProveedor, "BAJA", `Baja de Proveedor ${this.proveedorEditar.razonSocial}`, `Proveedor ${this.proveedorEditar.razonSocial}: ${result}`);
                   //this.storageService.deleteItem(this.componente, this.proveedorEditar, this.proveedorEditar.idProveedor, "BAJA", `Baja de Proveedor ${this.proveedorEditar.razonSocial}`);
                   ////////console.log("consultas Op: " , this.$consultasOp);
-                  this.eliminarChoferes(result)
+                  
                   
                   //this.storageService.deleteItem(this.componente, this.choferEditar, this.choferEditar.idChofer, "BAJA", `Baja de Chofer ${this.choferEditar.apellido} ${this.choferEditar.nombre}`);        
                   Swal.fire({
@@ -311,7 +312,7 @@ private destroy$ = new Subject<void>();
           let choferesBorrar: Chofer[] = this.$choferes.filter(c=> c.idProveedor === this.proveedorEditar.idProveedor);
           console.log("choferesBorrar", choferesBorrar);
           choferesBorrar.forEach(c=>{
-            this.storageService.deleteItemPapelera(this.componente, c, c.idChofer, "BAJA", `Baja de Chofer ${c.apellido} ${c.nombre}`, motivo);
+            this.storageService.deleteItemPapelera("choferes", c, c.idChofer, "BAJA", `Baja de Chofer ${c.apellido} ${c.nombre}`, `Chofer: ${c.apellido} ${c.nombre}. Baja de Proveedor ${this.proveedorEditar.razonSocial}: ${motivo}`);
             ////////console.log("consultas Op: " , this.$consultasOp);
             this.legajoServ.eliminarLegajo(c.idChofer, motivo);
           })
