@@ -506,15 +506,17 @@ export class TableroOpComponent implements OnInit {
       modalRef.result.then(
         (result) => {
           console.log("result", result);
-          
-         ////////console.log("llamada al storage desde op-abiertas, deleteItem");
-        this.storageService.deleteItemPapelera(this.componente, this.opEditar, this.opEditar.idOperacion, "BAJA", "Baja de Operación", result);
-        ////////console.log("consultas Op: " , this.$consultasOp);
-        Swal.fire({
-          title: "Confirmado",
-          text: "La operación ha sido dada de baja",
-          icon: "success"
-        });
+          if(result !== undefined){   
+            ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+            this.storageService.deleteItemPapelera(this.componente, this.opEditar, this.opEditar.idOperacion, "BAJA", "Baja de Operación", result);
+            ////////console.log("consultas Op: " , this.$consultasOp);
+            Swal.fire({
+              title: "Confirmado",
+              text: "La operación ha sido dada de baja",
+              icon: "success"
+            });
+          }
+         
         },
         (reason) => {}
       );

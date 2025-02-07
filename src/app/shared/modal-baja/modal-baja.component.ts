@@ -20,13 +20,17 @@ export class ModalBajaComponent implements OnInit {
   chofer!: Chofer;
   proveedor!: Proveedor;
   fecha = new Date().toISOString().split('T')[0];;
-  motivoBaja: string = ""
+  motivoBaja: string = "";
+  factura!: any;
+  id:number = 0;
+  item:string = "";
   
 
   constructor(private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal){}
   
   
   ngOnInit(): void { 
+    console.log("this.fromParent", this.fromParent);
     switch(this.fromParent.modo){
       case "operaciones":{
           this.titulo = "Operación"
@@ -36,6 +40,13 @@ export class ModalBajaComponent implements OnInit {
       case "liquidaciones":{
           this.titulo = "Operación"
           this.op = this.fromParent.item
+        }  
+        break;
+      case "facturacion":{
+          this.titulo = "Factura"
+          this.factura = this.fromParent.item
+          this.id = this.fromParent.tipo === "clientes" ? this.factura.idFacturaCliente : this.fromParent.tipo === "choferes" ? this.factura.idFacturaChofer : this.factura.idFacturaProveedor
+          this.item = this.fromParent.tipo === "clientes" ? "Cliente" : this.fromParent.tipo === "choferes" ? "Chofer" : "Proveedor"
         }  
         break;
       default:

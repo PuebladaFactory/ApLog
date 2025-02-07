@@ -66,6 +66,7 @@ export class ModalDetalleComponent implements OnInit {
   $proveedores!: Proveedor[];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   searchText!:string;
+  componente: string = "";
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private excelServ: ExcelService, 
     private pdfServ: PdfService, private logService: LogService,
@@ -105,6 +106,7 @@ export class ModalDetalleComponent implements OnInit {
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
           //this.idFactura = this.data[0].idFacturaCliente;
+          this.componente = "facturaCliente";
           this.armarTabla()
           break;
       //////////////CHOFERES///////////////////////
@@ -119,6 +121,7 @@ export class ModalDetalleComponent implements OnInit {
           //console.log("data: ", this.data);
           this.titulo = `${this.data[0].apellido} ${this.data[0].nombre}`
           //this.idFactura = this.data[0].idFacturaChofer;
+          this.componente = "facturaChofer";
           this.armarTabla()
           break;
       //////////////PROVEEDORES///////////////////////
@@ -128,11 +131,12 @@ export class ModalDetalleComponent implements OnInit {
           .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
           .subscribe(data=>{
             this.$facturasOpProveedor = data;
-            console.log("1) ngOnInit facOpProveedor:",this.$facturasOpCliente);      
+            console.log("1) ngOnInit facOpProveedor:",this.$facturasOpProveedor);      
           });
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
           //this.idFactura = this.data[0].idFacturaProveedor;
+          this.componente = "facturaProveedor";
           this.armarTabla()
           break;
       default:
@@ -445,6 +449,27 @@ export class ModalDetalleComponent implements OnInit {
 
 bajaOp(factura:any){
   console.log("fila: ", factura);
+  let facturaBaja:any;
+  switch (this.fromParent.modo){
+    //////////////CLIENTES///////////////////////
+    case "clientes":
+      facturaBaja = this.data.filter((f:any) => f.idFacturaCliente === factura.idFactura);
+      console.log("facturaBaja", facturaBaja[0]);
+      break;
+    case "choferes":
+      facturaBaja = this.data.filter((f:any) => f.idFacturaChofer === factura.idFactura);
+      console.log("facturaBaja", facturaBaja[0]);
+      break;
+    case "proveedores":
+      facturaBaja = this.data.filter((f:any) => f.idFacturaProveedor === factura.idFactura);
+      console.log("facturaBaja", facturaBaja[0]);
+      break;  
+    default:
+      break;
+  }  
+  
+  
+  
   
     Swal.fire({
           title: "¿Desea anular la factura?",
@@ -457,7 +482,7 @@ bajaOp(factura:any){
           cancelButtonText: "Cancelar"
         }).then((result) => {
           if (result.isConfirmed) {
-            //this.openModalBaja(factura);
+            this.openModalBaja(facturaBaja[0]);
           }
         });
     
@@ -475,14 +500,37 @@ bajaOp(factura:any){
       let info = {
         modo: "facturacion",
         item: factura,
+        tipo: this.fromParent.modo 
       }  
+
+      let id : number = this.fromParent.modo === "clientes" ? factura.idFacturaCliente : this.fromParent.modo === "choferes" ? factura.idFacturaChofer : factura.idFacturaProveedor;
       
       
       modalRef.componentInstance.fromParent = info;
     
       modalRef.result.then(
         (result) => {
-          console.log("result", result);
+          if(result !== undefined){   
+            console.log("result", result);
+            ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+            this.storageService.deleteItemPapelera(
+              this.componente, 
+              factura, 
+              id, 
+              "BAJA", 
+              `Baja de Factura del ${this.fromParent.modo === "clientes" ? "Cliente" : this.fromParent.modo === "choferes" ? "Chofer" : "Proveedor"} 
+              ${this.fromParent.modo === "clientes" ? factura.razonSocial : this.fromParent.modo === "choferes" ? factura.apellido + " " + factura.nombre : factura.razonSocial}
+              `, 
+              result);
+            ////////console.log("consultas Op: " , this.$consultasOp);
+            Swal.fire({
+              title: "Confirmado",
+              text: "La factura ha sido anulada",
+              icon: "success"
+            });
+            this.activeModal.close();
+          }
+
           
         },
         (reason) => {}

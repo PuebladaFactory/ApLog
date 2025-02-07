@@ -30,6 +30,26 @@
                         <input class="form-control edicion" type="text" [value]="op.chofer.apellido + ' ' + op.chofer.nombre ">
                     </div>
                 </div>
+            </div>
+            <div *ngIf="fromParent.modo === 'facturacion'">
+                <div class="form-group isDisabled">   
+                    <label for="Acompaniante" class="fs-5">Id {{titulo}}</label>                                 
+                    <div class="input-group">
+                        <input class="form-control edicion" type="text" [value]="id">
+                    </div>
+                </div>                 
+                <div class="isDisabled">
+                    <label for="" class="fs-5">{{item}}</label>                                 
+                    <div class="input-group">
+                        <input class="form-control edicion" type="text" [value]="item === 'Cliente' ? factura?.razonSocial : item === 'Chofer' ? factura?.apellido + ' ' + factura?.nombre : factura?.razonSocial">
+                    </div>
+                </div>    
+                <div class="isDisabled">
+                    <label for="" class="fs-5">Total de la Factura</label>                                 
+                    <div class="input-group">
+                        <input class="form-control edicion" type="text" [value]="factura.valores.total | formatearValor: '$'">
+                    </div>
+                </div>    
             </div>             
             
             <div class="form-group">
