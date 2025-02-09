@@ -27,7 +27,7 @@ export class ModalBajaComponent implements OnInit {
   objeto!:any;
   
 
-  constructor(private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal){}
+  constructor(public activeModal: NgbActiveModal){}
   
   
   ngOnInit(): void { 

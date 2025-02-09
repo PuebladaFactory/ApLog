@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { LogDoc } from 'src/app/interfaces/log-doc';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ModalObjetoComponent } from 'src/app/shared/modal-objeto/modal-objeto.component';
 
 @Component({
   selector: 'app-papelera',
@@ -18,7 +20,7 @@ export class PapeleraComponent implements OnInit {
   papelera: LogDoc [] = [];
   private destroy$ = new Subject<void>();         
   
-  constructor(private dbFirebase: DbFirestoreService, private storageService: StorageService){}
+  constructor(private dbFirebase: DbFirestoreService, private storageService: StorageService, private modalService: NgbModal){}
   
   ngOnInit(): void {
       
@@ -56,8 +58,32 @@ export class PapeleraComponent implements OnInit {
       });
     }
 
-    modalObjeto(objeto:any){
-
+    modalObjeto(p:LogDoc){
+ {
+            const modalRef = this.modalService.open(ModalObjetoComponent, {
+              windowClass: 'myCustomModalClass',
+              centered: true,
+              scrollable: true, 
+              size: 'lg',     
+            });   
+            
+            
+      
+            let info = {
+              modo: p.logEntry.coleccion,
+              item: p.objeto,
+            }  
+            //////console.log()(info); */
+            
+            modalRef.componentInstance.fromParent = info;
+          
+            modalRef.result.then(
+              (result) => {
+                
+              },
+              (reason) => {}
+            );
+          }
     }
 
     

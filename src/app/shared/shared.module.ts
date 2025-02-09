@@ -24,6 +24,7 @@ import { FormatoNumericoNgModelDirective } from './directives/formato-numerico-n
 import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-edicion.component';
 import { RoleDirective } from './directives/role.directive';
 import { ModalBajaComponent } from './modal-baja/modal-baja.component';
+import { ModalObjetoComponent } from './modal-objeto/modal-objeto.component';
 
 
 
@@ -47,7 +48,7 @@ import { ModalBajaComponent } from './modal-baja/modal-baja.component';
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,    
-    RoleDirective, ModalBajaComponent,
+    RoleDirective, ModalBajaComponent, ModalObjetoComponent,
     
     
   ],
