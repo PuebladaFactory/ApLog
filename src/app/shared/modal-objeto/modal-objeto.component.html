@@ -3,8 +3,8 @@
         <h2 >Objeto Eliminado</h2>
         <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
     </div>
-    <div class="modal-body isDisabled" >
-        <div *ngIf="fromParent.modo === 'operaciones'">            
+    <div class="modal-body" >
+        <div *ngIf="fromParent.modo === 'operaciones'" class="isDisabled">            
             <div class="h-100">
                 <h3>Operacion N°: {{objeto.idOperacion}}</h3>
                 <div class="row border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
@@ -142,50 +142,335 @@
                     <div class="col">
                         <h4 class="">Detalle</h4>
                         <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded" >
-                            <div class="form-group mb-2">
+                            <div class="form-group mb-2 isDisabled">
                                 <label for="Fecha" class="fs-5">Fecha</label>
                                 <div class="input-group">                                
                                     <input class="w-100" type="text" [value]="objeto.fecha">
                                 </div>                                                        
                             </div>
-                            <div class="form-group mb-2">
+                            <div class="form-group mb-2 isDisabled">
                                 <label for="Nombre" class="fs-5">{{fromParent.modo === 'facturaCliente' || fromParent.modo === 'facturaProveedor' ? 'Razon Social' : 'Nombre'}}</label>
                                 <div class="input-group">                                
                                     <input class="w-100" type="text" [value]="fromParent.modo === 'facturaCliente' || fromParent.modo === 'facturaProveedor' ? objeto.razonSocial : objeto.apellido + ' ' + objeto.nombre">
                                 </div>                                                        
-                            </div>                                 
-                            <div class="form-group mb-2">
-                                <label for="Nombre" class="fs-5">Cantidad de Operaciones</label>
-                                <div class="input-group">                                
-                                    <input class="w-100" type="text" [value]="objeto.operaciones.length">
-                                </div>                                                        
-                            </div>                                 
-                            
-                            
+                            </div>   
+                            <div class="d-flex mb-2">
+                                <div class="col me-3">
+                                    <div class="form-group mb-2 isDisabled">
+                                        <label for="Nombre" class="fs-5">Cant de Op</label>
+                                        <div class="input-group">                                
+                                            <input class="w-100" type="text" [value]="objeto.operaciones.length">
+                                        </div>                                                        
+                                    </div>  
+                                </div>
+                                <div class="col">
+                                    <div class="form-group mb-2">
+                                        <label for="Reimpresión" class="fs-5">Reimpresión</label>
+                                        <div class="input-group  mx-auto">                                
+                                            <app-btn-leer name="excel" type="button"  (click)="reimprimirFac('excel')" class="me-2"></app-btn-leer>   
+                                            <app-btn-leer name="pdf" type="button"  (click)="reimprimirFac('pdf')"></app-btn-leer>   
+                                        </div>                                                        
+                                    </div>
+                                </div>
+                            </div>  
                         </div>    
                     </div>
                     <div class="col">
-                        <h4 class="">Cliente</h4>
-                        <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
-                                                         
+                        <h4 class="">Valores</h4>
+                        <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded isDisabled">
+
+                            <div class="form-group mb-2">
+                                <label for="Fecha" class="fs-5">Total Operaciones</label>                                    
+                                <div class="input-group">                                
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
+                                    <input  class="form-control edicion" type="text" [value]="objeto.valores.totalTarifaBase + objeto.valores.totalAcompaniante + objeto.valores.totalkmMonto | formatearValor" >
+                                </div>                                                        
+                            </div> 
+                            <div class="form-group mb-2">
+                                <label for="Fecha" class="fs-5">Total Descuentos</label>                                    
+                                <div class="input-group">                                
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                                                  
+                                    <input  class="form-control edicion" type="text" [value]="this.objeto.valores.descuentoTotal === 0 ? (0 | formatearValor) : this.objeto.valores.descuentoTotal | formatearValor : '-'" >
+                                </div>                                                        
+                            </div>                              
+                            <div class="form-group mb-2">
+                                <label for="Fecha" class="fs-5">Total</label>                                    
+                                <div class="input-group">                                
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
+                                    <input  class="form-control edicion" type="text" [value]="this.objeto.valores.total | formatearValor" >
+                                </div>                                                        
+                            </div>                               
                         </div>                                
                     </div>
                     
                 </div>
             </div>
         </div>        
-        <div *ngIf="fromParent.modo === 'clientes'">
-            <h1>clientes</h1>
+        <div *ngIf="fromParent.modo === 'clientes' || fromParent.modo === 'proveedores'" class="isDisabled">
+            <div class="row">            
+                <div class="col">
+                    <h2>Datos del cliente:</h2>
+                </div>
+                <div class="col">
+                    <h2 class="">Dirección Fiscal:</h2>
+                </div>
+                <div class="col">
+                    <h2 class=""  *ngIf="fromParent.modo === 'clientes'">Dirección Operativa:</h2>
+                </div>            
+            </div>
+            <div class="row">
+                <div>                    
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group mb-2">
+                                  <label for="RazonSocial">Razón Social</label>
+                                  <div class="input-group">
+                                    <input  class="form-control edicion"  type="text" [value]="objeto.razonSocial">                        
+                                  </div>                                  
+                                </div>    
+                                <div class="form-group mb-2">
+                                    <label for="Cuit">CUIT</label>
+                                    <div class="input-group">
+                                      <input                                       
+                                      class="form-control edicion"                                       
+                                      type="text" 
+                                      appCuitFormat
+                                      [ngModel]="objeto.cuit"                                      >
+                                    </div>                                    
+                                </div>   
+                                <div class="form-group mb-2">
+                                    <label for="Proveedor">Condición Fiscal</label>
+                                    <input  class="form-control edicion"  type="text" [value]="objeto.condFiscal">                                                                                            
+                                </div> 
+                                <div class="form-group mb-2">
+                                    <label for="Proveedor">Tipo de Tarifa</label>
+                                    <input class="form-control edicion" type="text" [value]="objeto.tarifaTipo.general ? 'General' : objeto.tarifaTipo.especial ? 'Especial' : objeto.tarifaTipo.personalizada ? 'Personalizada' : 'Eventual' ">                                    
+                                </div>
+                            </div>
+                            <div class="col">                                                                  
+                                <div class="form-group mb-2">
+                                    <label>Provincia</label>
+                                    <input class="form-control edicion" type="text" [value]="objeto.direccionFiscal.provincia">                                                                        
+                                </div>                    
+                                <div class="form-group mb-2">
+                                    <label>Municipio</label>
+                                    <input class="form-control edicion" type="text" [value]="objeto.direccionFiscal.municipio">                                                                        
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label>Localidad</label>
+                                    <input class="form-control edicion" type="text" [value]="objeto.direccionFiscal.localidad">
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label for="Direccion">Domicilio</label>
+                                    <div class="input-group">
+                                        <input class="form-control" type="text" [value]="objeto.direccionFiscal.domicilio">                            
+                                    </div>                                    
+                                </div>
+                            </div>    
+                            <div class="col" *ngIf="fromParent.modo === 'clientes'">                                                                  
+                                <div class="form-group mb-2">
+                                    <label>Provincia</label>
+                                    <input class="form-control edicion" type="text" [value]="objeto.direccionOperativa.provincia">                                                                        
+                                </div>                    
+                                <div class="form-group mb-2">
+                                    <label>Municipio</label>
+                                    <input class="form-control edicion" type="text" [value]="objeto.direccionOperativa.municipio">                                                                        
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label>Localidad</label>
+                                    <input class="form-control edicion" type="text" [value]="objeto.direccionOperativa.localidad">
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label for="Direccion">Domicilio</label>
+                                    <div class="input-group">
+                                        <input class="form-control" type="text" [value]="objeto.direccionOperativa.domicilio">                            
+                                    </div>                                    
+                                </div>
+                            </div>  
+                        </div>                                          
+                    <hr>                    
+                    <div class="form-group mt-2">   
+                      <h4 *ngIf="objeto.contactos.length === 0 ">Sin contactos agendados</h4>
+                      <div *ngIf="objeto.contactos.length > 0 ">
+                          <table class="table table-striped">
+                              <thead>
+                                  <tr>
+                                    <th class="tabla align-baseline" scope="col">Puesto</th>                    
+                                    <th class="tabla align-baseline" scope="col">Apellido</th>
+                                    <th class="tabla align-baseline" scope="col">Nombre</th>
+                                    <th class="tabla align-baseline" scope="col">Telefono</th> 
+                                    <th class="tabla align-baseline" scope="col">Email</th>                                    
+                                  </tr>
+                              </thead>
+                              <tbody>                                      
+                                  <tr *ngFor="let contacto of objeto.contactos, let i = index">
+                                      <td class="tabla align-baseline" scope="col">{{contacto.puesto}}</td>                    
+                                      <td class="tabla align-baseline" scope="col">{{contacto.apellido}}</td>
+                                      <td class="tabla align-baseline" scope="col">{{contacto.nombre}}</td>
+                                      <td class="tabla align-baseline" scope="col">{{contacto.telefono}}</td>
+                                      <td class="tabla align-baseline" scope="col">{{contacto.email}}</td>                                      
+                                  </tr>                                       
+                              </tbody>                    
+                          </table>          
+                      </div>
+                    </div>                          
+                </div>     
+            </div>
         </div>
-        <div *ngIf="fromParent.modo === 'choferes'">
-            <h1>choferes</h1>
-        </div>
-        <div *ngIf="fromParent.modo === 'proveedores'">
-            <h1>proveedores</h1>
-        </div>
+        <div *ngIf="fromParent.modo === 'choferes'" class="isDisabled">
+            <div class="row">
+                <div class="col">
+                    <h2>Datos Personales</h2>
+                </div>
+                <div class="col">
+                    <h2 class="">Dirección:</h2>
+                </div>
+                <div class="col">
+                  <h2 class=""></h2>
+                </div>      
+            </div>            
+            
+                <div class="row">     
+                    <div class="col">                        
+                        <div class="form-group mb-2">
+                            <label for="Nombre">Nombre</label>
+                            <div class="input-group">
+                                <input class="form-control edicion" type="text" [value]="objeto.nombre">
+                            </div>
+                            
+                        </div>    
+                        <div class="form-grou mb-2">
+                            <label for="Apellido">Apellido</label>
+                            <div class="input-group">
+                                <input class="form-control" type="text" [value]="objeto.apellido">                            
+                            </div>                            
+                        </div>  
+                        <div class="form-group mb-2">
+                            <label for="FechaNac">Fecha Nacimiento</label>
+                            <div class="input-group">
+                                <input class="form-control" type="date" [value]="objeto.fechaNac">
+                            </div>                            
+                        </div>  
+                        <div class="form-group mb-2">
+                            <label for="Celular de contacto">Celular de Contacto</label>
+                            <div class="input-group">
+                                <input  class="form-control" type="text" [value]="objeto.celularContacto">
+                            </div>                                            
+                        </div>   
+                        <div class="form-group mb-2">
+                            <label for="Celular de emergencia">Celular de Emergencia</label>
+                            <div class="input-group">
+                                <input class="form-control" type="text" [value]="objeto.celularEmergencia">
+                            </div>                                            
+                        </div>  
+                        <div class="form-group ">
+                            <label for="Contacto">Contacto de Emergencia</label>
+                            <div class="input-group">
+                                <input class="form-control" type="text" [value]="objeto.contactoEmergencia">                            
+                            </div>                                                            
+                        </div>         
+                    </div> 
+                    <div class="col">                                                            
+                        <div class="col">                                                                  
+                            <div class="form-group mb-2">
+                                <label>Provincia</label>
+                                <input class="form-control edicion" type="text" [value]="objeto.direccion.provincia">                                                                        
+                            </div>                    
+                            <div class="form-group mb-2">
+                                <label>Municipio</label>
+                                <input class="form-control edicion" type="text" [value]="objeto.direccion.municipio">                                                                        
+                            </div>
+                            <div class="form-group mb-2">
+                                <label>Localidad</label>
+                                <input class="form-control edicion" type="text" [value]="objeto.direccion.localidad">
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="Direccion">Domicilio</label>
+                                <div class="input-group">
+                                    <input class="form-control" type="text" [value]="objeto.direccion.domicilio">                            
+                                </div>                                    
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="Email">Email</label>
+                            <div class="input-group">
+                                <input class="form-control" type="email "[value]="objeto.email">
+                            </div>                            
+                        </div>    
+                    </div>     
+                    <div class="col">
+                        <div class="form-group mb-2">
+                            <label for="Cuit">CUIT/CUIL</label>
+                            <div class="input-group">
+                              <input                               
+                              class="form-control edicion"                               
+                              type="text"                                                     
+                              appCuitFormat                          
+                              [ngModel]="objeto.cuit"
+                              >
+                            </div>                            
+                        </div>
+                        <div class="form-group mb-2">
+                            <label for="Proveedor">Condición Fiscal</label>
+                            <input  class="form-control edicion"  type="text" [value]="objeto.condFiscal">                                                                                            
+                        </div> 
+                        <div class="form-group mb-2">
+                            <label for="Proveedor">Proveedorl</label>
+                            <input  class="form-control edicion"  type="text" [value]="objeto.idProveedor === 0 ? 'No' : objeto.idProveedor">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label for="Proveedor">Tipo de Tarifa</label>
+                            <input class="form-control edicion" type="text" [value]="objeto.tarifaTipo.general ? 'General' : objeto.tarifaTipo.especial ? 'Especial' : objeto.tarifaTipo.personalizada ? 'Personalizada' : 'Eventual' ">                                    
+                        </div>                                               
+                                                       
+                    </div>                   
+                </div>      
+            
+            <hr>  
+            <div class="row mt-3">
+                <div class="d-flex justify-content-between">
+                    <h2 class="w-25">Vehiculos</h2>                    
+                </div>  
+                <div class="mt-3">
+                    <table class="table table-bordered border-primary table-hover">
+                        <thead>
+                            <th>Categoria</th>
+                            <th>Dominio</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Tipo Comb</th>
+                            <th>Tarj Comb</th>
+                            <th>Publicidad</th>
+                            <th>Satelital</th>                            
+                        </thead>
+                        <tbody *ngIf="objeto.vehiculo.length > 0 else SinVehiculos">
+                            <tr *ngFor="let vehiculo of objeto.vehiculo, let i = index">
+                                <td class="align-middle">{{vehiculo.categoria.nombre}}</td>
+                                <td class="align-middle">{{vehiculo.dominio}}</td>
+                                <td class="align-middle">{{vehiculo.marca}}</td>
+                                <td class="align-middle">{{vehiculo.modelo}}</td>
+                                <td class="align-middle">{{vehiculo.tipoCombustible}}</td>
+                                <td class="align-middle">{{vehiculo.tarjetaCombustible ? "Si" : "No"}}</td>
+                                <td class="align-middle">{{vehiculo.publicidad ? "Si" : "No"}}</td>                            
+                                <td class="align-middle">{{!vehiculo.segSat ? "No" : vehiculo.satelital}}</td>                                
+                            </tr>
+                        </tbody>
+                        <ng-template #SinVehiculos>
+                            <tbody>
+                                <tr>Sin Datos</tr>
+                            </tbody>                        
+                        </ng-template>
+                    </table>
+                </div>
+            </div> 
+        </div>        
         <div *ngIf="fromParent.modo === 'legajos'">
-            <h1>legajos</h1>
+            <h3>Legajo N°: {{objeto.idLegajo}}</h3>
+            <h3>{{chofer}}</h3>
+                <div class="row border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
+                    <app-carrusel [legajoBorrado]="objeto"></app-carrusel>
+                </div>
         </div>
-
+ 
     </div>
 </div>

@@ -64,7 +64,7 @@ export class PapeleraComponent implements OnInit {
               windowClass: 'myCustomModalClass',
               centered: true,
               scrollable: true, 
-              size: 'lg',     
+              size: p.logEntry.coleccion === 'operaciones' ? 'lg' : p.logEntry.coleccion === 'facturaCliente' || p.logEntry.coleccion === 'facturaChofer' || p.logEntry.coleccion === 'facturaProveedor' ? 'md' : 'lg',     
             });   
             
             
@@ -76,6 +76,9 @@ export class PapeleraComponent implements OnInit {
             //////console.log()(info); */
             
             modalRef.componentInstance.fromParent = info;
+            if(p.logEntry.coleccion === 'legajos'){
+              modalRef.componentInstance.fromParentPapelera = this.papelera;
+            }
           
             modalRef.result.then(
               (result) => {

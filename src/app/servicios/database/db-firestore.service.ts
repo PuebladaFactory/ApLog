@@ -142,11 +142,10 @@ export class DbFirestoreService {
       );
     }
 
-    getOneElement<T>(componente: string, campo:string, id:number): Observable<ConId<T>[]> {
+    getAllColectionRangeIdValue<T>(componente:string, range1: any, range2:any,  campo:string, filtro:string, valor:number) : Observable<ConId<T>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.where(campo, "==" ,id)
-      ).snapshotChanges().pipe(
+        ref.where(filtro, "==", valor).where(campo, ">=", range1).where(campo, "<=", range2)).snapshotChanges().pipe(
         map(snapshot => snapshot.map(change => ({
           id: change.payload.doc.id,
           ...change.payload.doc.data() as T,
