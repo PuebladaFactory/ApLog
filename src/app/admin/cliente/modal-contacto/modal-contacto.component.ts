@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto } from 'src/app/interfaces/proveedor';
@@ -12,6 +12,8 @@ import Swal from 'sweetalert2';
 })
 export class ModalContactoComponent implements OnInit {
   
+  @Input() fromParent:any;
+
   formContacto:any;
   contacto!: Contacto;
 
@@ -25,7 +27,24 @@ export class ModalContactoComponent implements OnInit {
     })
   }
 
-  ngOnInit(): void {    
+  ngOnInit(): void {  
+    
+    if(this.fromParent.modo === "editar"){
+      let contacto = this.fromParent.item;
+      this.contacto = structuredClone(contacto)
+      this.armarForm();
+    }
+
+  }
+
+  armarForm(){
+    this.formContacto.patchValue({      
+      puesto: this.contacto.puesto, 
+      apellido: this.contacto.apellido,
+      nombre: this.contacto.nombre,      
+      telefono: this.contacto.telefono,
+      email: this.contacto.email,
+    })
   }
 
   guardarContacto(){

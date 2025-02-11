@@ -17,7 +17,7 @@ import Swal from 'sweetalert2';
 })
 export class HistorialTarifasGralComponent implements OnInit {
   
-  @Input() fromParent:any;;
+  @Input() fromParent:any;
   tarifasHistorial: TarifaGralCliente[] = [];
   tarifasPersHistorial!: TarifaPersonalizadaCliente[];
   $clientes!: Cliente[];

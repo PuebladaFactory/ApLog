@@ -25,6 +25,7 @@ export class ClienteAltaComponent implements OnInit {
   formTipoTarifa:any;
   cliente!: ConId<Cliente>;
   contactos: Contacto[] = [];
+  contactoEditar!: Contacto
   mostrarFormulario: boolean = false;
   soloVista:boolean = false;
   clienteEditar!: ConId<Cliente>;
@@ -257,7 +258,13 @@ export class ClienteAltaComponent implements OnInit {
     
   }
 
-  abrirModalContactos(): void {   
+  editarContacto(contacto: Contacto, indice:number){    
+    this.contactoEditar = contacto;
+    this.abrirModalContactos("editar", indice)
+
+  }
+
+  abrirModalContactos(modo:string, indice:number): void {   
    
     {
       const modalRef = this.modalService.open(ModalContactoComponent, {
@@ -267,18 +274,23 @@ export class ClienteAltaComponent implements OnInit {
         //backdrop:"static" 
       });
 
-    /*  let info = {
-        modo: "clientes",
-        item: facturaOp[0],
+     let info = {
+        modo: modo,
+        item: this.contactoEditar,
       }; 
-      ////console.log()(info); */
+      ////console.log()(info);
       
-      //modalRef.componentInstance.fromParent = info;
+      modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
           ////console.log("contacto:" ,result);
           if(result){
-            this.contactos.push(result);
+            if(modo === 'alta'){
+              this.contactos.push(result);
+            }else{
+              this.contactos[indice] = result;
+            }
+            
             ////console.log(this.contactos);
           }
           

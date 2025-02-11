@@ -71,6 +71,8 @@ export class LiqChoferComponent implements OnInit {
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>();
+  opAbiertas!: Operacion[];
+  $facturasOpDuplicadas: FacturaOp[] = [];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -99,7 +101,7 @@ export class LiqChoferComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.fechasConsulta = data;
-      console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
+      //console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
       this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpChofer");
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
@@ -109,10 +111,10 @@ export class LiqChoferComponent implements OnInit {
           this.$facturasOpChofer = data;
           console.log("1)", this.$facturasOpChofer );
           if(this.$facturasOpChofer !== undefined){
-            console.log("?????????????");            
+            //console.log("?????????????");            
             this.procesarDatosParaTabla()
           } else {
-            console.log("");            
+            //console.log("");            
           }
           
       });
@@ -129,14 +131,15 @@ export class LiqChoferComponent implements OnInit {
     const choferesMap = new Map<number, any>();
 
     if(this.$facturasOpChofer !== null){
-      ////console.log()("Facturas OP Chofer: ", this.$facturasOpChofer);
+      //////console.log()("Facturas OP Chofer: ", this.$facturasOpChofer);
       
       this.$facturasOpChofer.forEach((factura: FacturaOp) => {
         if (!choferesMap.has(factura.idChofer)) {
           choferesMap.set(factura.idChofer, {
             idChofer: factura.idChofer,
             apellido:  this.getChofer(factura.idChofer),
-            cantOp: 0,
+            opCerradas: 0,
+            opAbiertas: 0,
             opSinFacturar: 0,
             opFacturadas: 0,
             total: 0,
@@ -146,7 +149,7 @@ export class LiqChoferComponent implements OnInit {
         }
   
         const chofer = choferesMap.get(factura.idChofer);
-        chofer.cantOp++;
+        chofer.opCerradas++;
         if (factura.liquidacion) {
           chofer.opFacturadas += factura.valores.total;
         } else {
@@ -159,10 +162,32 @@ export class LiqChoferComponent implements OnInit {
       });
   
       this.datosTablaChofer = Array.from(choferesMap.values());
-      ////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
+      this.datosTablaChofer = this.datosTablaChofer.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+      this.dbFirebase.getAllByDateValueField<Operacion>('operaciones', 'fecha', this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "estado.abierta", true).subscribe(data=>{      
+        if(data){
+          this.opAbiertas = data;
+          this.opAbiertas = this.opAbiertas.filter((op:Operacion)=> op.estado.abierta)
+          //console.log("this.opAbiertas", this.opAbiertas.length);    
+          this.datosTablaChofer.forEach(c=>{
+            c.opAbiertas = this.getOpAbiertas(c.idChofer)
+          })        
+        }      
+      });    
+      //////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
     }
     
   }
+
+    getOpAbiertas(idChofer:number){
+      if(this.opAbiertas !== undefined){
+        let cantOpAbiertas = this.opAbiertas.filter((op:Operacion)=>{return op.chofer.idChofer === idChofer})
+      
+        return cantOpAbiertas.length
+      } else{
+        return 0 
+      }
+    
+    }
 
   getChofer(idChofer: number){
     let chofer: Chofer []
@@ -191,7 +216,7 @@ export class LiqChoferComponent implements OnInit {
 
   liquidarFac(factura: FacturaOp) {
     factura.liquidacion = !factura.liquidacion;
-    //console.log("Estado de liquidación cambiado:", factura.liquidacion);
+    ////console.log("Estado de liquidación cambiado:", factura.liquidacion);
     //this.storageService.updateItem(this.tituloFacOpCliente, factura);
     this.procesarDatosParaTabla();
   }
@@ -199,19 +224,19 @@ export class LiqChoferComponent implements OnInit {
   selectAllCheckboxes(event: any, idChofer: number): void {
     //let isChecked = (event.target as HTMLInputElement).checked;
     const seleccion = event.target.checked;
-    console.log("1)", seleccion); 
+    //console.log("1)", seleccion); 
     let facturasChofer = this.facturasPorChofer.get(idChofer);
-    console.log("2)", facturasChofer);
+    //console.log("2)", facturasChofer);
       facturasChofer?.forEach((factura: FacturaOp) => {
         factura.liquidacion = seleccion;
-        console.log("3)", factura.liquidacion);
+        //console.log("3)", factura.liquidacion);
        
       });   
-      console.log("primera tabla: ", this.datosTablaChofer);
+      //console.log("primera tabla: ", this.datosTablaChofer);
       let chofer = this.datosTablaChofer.find((chofer:any)=>{
         return chofer.idChofer === idChofer
       });
-      console.log("1) cliente: ", chofer);
+      //console.log("1) cliente: ", chofer);
       if(seleccion){
         chofer.opFacturadas = 0
         facturasChofer?.forEach((factura: FacturaOp) => {                  
@@ -236,14 +261,14 @@ export class LiqChoferComponent implements OnInit {
         }
        
       });    */
-      console.log("2) cliente: ", chofer);
+      //console.log("2) cliente: ", chofer);
      
   }
 
   mostrarMasDatos(index: number, chofer:any) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
-   //////console.log()("Chofer: ", chofer);
+   ////////console.log()("Chofer: ", chofer);
 
    // Obtener el id del cliente utilizando el índice proporcionado
    let choferId = this.datosTablaChofer[index].idChofer;
@@ -254,7 +279,7 @@ export class LiqChoferComponent implements OnInit {
    });
    this.facturasPorChofer.set(choferId, facturasChofer);
 
-   console.log("FACTURAS DEL CHOFER: ", facturasChofer);  
+   //console.log("FACTURAS DEL CHOFER: ", facturasChofer);  
 
   }
 
@@ -279,14 +304,23 @@ export class LiqChoferComponent implements OnInit {
   }
   
 
-  liquidarFacChofer(idChofer: any, apellido: string, index: number){
+  liquidarFacChofer(chofer: any, index: number){
     // Obtener las facturas del cliente
-    console.log("IDCHOFER: ", idChofer);
+    ////console.log("IDCHOFER: ", chofer.idChofer);
+
+    if(chofer.opAbiertas > 0){
+       Swal.fire({
+          icon: "warning",
+          title: "¡Atención!",
+          text: "El chofer tiene operaciones abiertas que corresponden al periodo que se esta facturando",
+          //footer: '<a href="#">Why do I have this issue?</a>'
+        });
+    }
     
-    let facturasIdChofer:any = this.facturasPorChofer.get(idChofer);    
-    ////////console.log()("FACTURAS POR CHOFER: ", facturasIdChofer );
-    this.apellido = apellido;
-    //////console.log()("APELLIDO: ", this.apellido);
+    let facturasIdChofer:any = this.facturasPorChofer.get(chofer.idChofer);    
+    //////////console.log()("FACTURAS POR CHOFER: ", facturasIdChofer );
+    this.apellido = chofer.apellido;
+    ////////console.log()("APELLIDO: ", this.apellido);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasChofer = facturasIdChofer.filter((factura: FacturaOp) => {
@@ -298,7 +332,7 @@ export class LiqChoferComponent implements OnInit {
     this.indiceSeleccionado = index;   
  
     if(this.facturasLiquidadasChofer.length > 0){
-      console.log("1: ",this.facturasLiquidadasChofer);
+      //console.log("1: ",this.facturasLiquidadasChofer);
       // Calcular el total sumando los montos de las facturas liquidadas
       this.totalFacturasLiquidadasChofer = 0;
       this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
@@ -306,9 +340,9 @@ export class LiqChoferComponent implements OnInit {
       });
   
       this.indiceSeleccionado = index;
-      console.log("3) Facturas liquidadas del cliente", apellido + ":", this.facturasLiquidadasChofer);
-      console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasChofer);
-      //console.log("indice: ", this.indiceSeleccionado);
+      //console.log("3) Facturas liquidadas del cliente", chofer.apellido + ":", this.facturasLiquidadasChofer);
+      //console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasChofer);
+      ////console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
     } else {
       this.mensajesError("Debe seleccionar una factura para liquidar")
@@ -324,16 +358,20 @@ export class LiqChoferComponent implements OnInit {
     });
   }
 
+
   addItem(item:any, componente:string, idItem:number, accion:string): void {   
     console.log("llamada al storage desde liq-cliente, addItem");
     this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : `Alta de Factura de Chofer ${item.apellido} ${item.nombre}`);        
+
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
+
       console.log("llamada al storage desde liq-chofer, addItem");
       this.addItem(factura, "facOpLiqChofer", factura.idFacturaOp, "INTERNA");
+
       this.editarOperacionesFac(factura)
       
     }); 
@@ -357,7 +395,7 @@ export class LiqChoferComponent implements OnInit {
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         op = data;
-        console.log("OP: ", op);
+        //console.log("OP: ", op);
         op.estado = {
           abierta: false,
           cerrada: false,
@@ -381,8 +419,8 @@ export class LiqChoferComponent implements OnInit {
 
   eliminarFacturaOpCliente(factura:FacturaOp, indice:number){
     this.removeItem(factura);
-    this.cerrarTabla(indice)
-    this.ngOnInit(); 
+    //this.cerrarTabla(indice)
+    //this.ngOnInit(); 
   }
 
   openModalLiquidacion(): void {   
@@ -405,21 +443,38 @@ export class LiqChoferComponent implements OnInit {
         total: this.totalFacturasLiquidadasChofer,
         //totalChofer: this.totalFacturasLiquidadasChofer,
       }; 
-      //console.log()(info);
+      ////console.log()(info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          console.log(result);
+          //console.log(result);
 
           if(result.modo === "cerrar"){
             this.facturaChofer = result.factura;
-            this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer, "ALTA");        
-            if(result.titulo === "excel"){
-            this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);
-            }else if (result.titulo === "pdf"){
-            this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);        
-            }
+
+            this.addItem(this.facturaChofer, this.componente);
+            let titulo = result.titulo
+            Swal.fire({
+                title: `¿Desea imprimir el detalle del Chofer?`,
+                //text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Confirmar",
+                cancelButtonText: "Cancelar"
+              }).then((result) => {
+                if (result.isConfirmed) {     
+                  if(titulo === "excel"){
+                    this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);
+                    }else if (titulo === "pdf"){
+                    this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);        
+                    } 
+                }
+              });   
+            
+
             this.eliminarFacturasOp();
           }
           
@@ -431,7 +486,7 @@ export class LiqChoferComponent implements OnInit {
   }
 
   buscarTarifa(i:number) {
-    console.log("A)",this.facDetallada);
+    //console.log("A)",this.facDetallada);
     
     if(this.facDetallada.tarifaTipo.general){
       this.dbFirebase
@@ -439,13 +494,13 @@ export class LiqChoferComponent implements OnInit {
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data => {      
           this.ultimaTarifa = data;
-          console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+          //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
           this.dbFirebase
           .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
           .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
           .subscribe(data => {      
               this.operacion = data;
-              console.log("OPERACION: ", this.operacion);
+              //console.log("OPERACION: ", this.operacion);
               this.openModalTarifa(i)
           });        
       });
@@ -456,26 +511,26 @@ export class LiqChoferComponent implements OnInit {
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data => {      
           this.ultimaTarifa = data;
-          console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+          //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
           this.dbFirebase
           .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
           .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
           .subscribe(data => {      
               this.operacion = data;
-              console.log("OPERACION: ", this.operacion);
+              //console.log("OPERACION: ", this.operacion);
               this.openModalTarifa(i)
           });        
       });
     }
     if(this.facDetallada.tarifaTipo.eventual){
       this.ultimaTarifa = {};
-      console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+      //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
       this.dbFirebase
       .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data => {      
           this.operacion = data;
-          console.log("OPERACION: ", this.operacion);
+          //console.log("OPERACION: ", this.operacion);
           this.openModalTarifa(i)
       });     
       
@@ -486,13 +541,13 @@ export class LiqChoferComponent implements OnInit {
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data => {      
           this.ultimaTarifa = data;
-          console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+          //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
           this.dbFirebase
           .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
           .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
           .subscribe(data => {      
               this.operacion = data;
-              console.log("OPERACION: ", this.operacion);
+              //console.log("OPERACION: ", this.operacion);
               this.openModalTarifa(i)
           });        
       });
@@ -528,7 +583,7 @@ export class LiqChoferComponent implements OnInit {
           op: this.operacion,   
           origen: origen,  
         }; 
-        console.log(info); 
+        //console.log(info); 
         
         modalRef.componentInstance.fromParent = info;
         modalRef.result.then(

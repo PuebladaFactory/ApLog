@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, updateDoc } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConId } from 'src/app/interfaces/conId';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
 
 
 
@@ -141,6 +142,40 @@ export class DbFirestoreService {
         })))
       );
     }
+    
+    getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:any){
+      // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
+      // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
+      // orden solo asc o desc
+    
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref =>
+        ref.orderBy(campo, orden)
+        .where(campo, ">=", value1).where(campo, "<=", value2)
+      ).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
+        })))
+      );
+      }
+
+      getAllByDateValueField<T>(componente:string, campo:string, value1:any, value2:any, field:string, value3:any){
+        // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
+        // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
+        // orden solo asc o desc
+      
+        const dataCollection = `/Vantruck/datos/${componente}`;
+        return this.firestore2.collection<T>(dataCollection, ref =>
+          ref.orderBy(campo, 'asc')
+          .where(campo, ">=", value1).where(campo, "<=", value2).where(field, "==", value3)
+        ).snapshotChanges().pipe(
+          map(snapshot => snapshot.map(change => ({
+            id: change.payload.doc.id,
+            ...change.payload.doc.data() as T,
+          })))
+        );
+        }
 
     getAllColectionRangeIdValue<T>(componente:string, range1: any, range2:any,  campo:string, filtro:string, valor:number) : Observable<ConId<T>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
@@ -355,6 +390,29 @@ getByFieldValue(componente:string, campo:string, value:any){
       console.log('Create. Escritura en la base de datos en: ', componente)
     );
   }
+
+  async guardarFacturaOp(componente:string, facturaOp: FacturaOp) {
+    try {
+        // Verificar si ya existe una factura con el mismo idOperacion
+        const query = this.firestore2.collection(`/Vantruck/datos/${componente}`, ref =>
+            ref.where('idOperacion', '==', facturaOp.idOperacion)
+        ).get();
+
+        const querySnapshot = await firstValueFrom(query); // Convertir el observable en una promesa
+
+        if (!querySnapshot.empty) {
+            // Si ya existe una factura con el mismo idOperacion
+            console.error("Ya existe una factura con el mismo idOperacion:", facturaOp.idOperacion);
+            throw new Error("Ya existe una factura con el mismo idOperacion.");
+        } else {
+            // Si no existe, guardar la nueva factura
+            await this.firestore2.collection(`/Vantruck/datos/${componente}`).add(facturaOp);
+            console.log("Factura guardada correctamente.");
+        }
+    } catch (error) {
+        console.error("Error al guardar la factura:", error);
+    }
+}
 
   update(componente: string, item: any) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);

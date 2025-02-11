@@ -68,6 +68,8 @@ export class LiqProveedorComponent implements OnInit {
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>();
+  opAbiertas!: Operacion[];
+  $facturasOpDuplicadas: FacturaOp[] = [];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -97,7 +99,7 @@ export class LiqProveedorComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.fechasConsulta = data;
-      console.log("LIQ proveedor: fechas consulta: ",this.fechasConsulta);
+      //console.log("LIQ proveedor: fechas consulta: ",this.fechasConsulta);
       this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpProveedor");
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
@@ -105,12 +107,12 @@ export class LiqProveedorComponent implements OnInit {
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpProveedor = data;
-          console.log("1)", this.$facturasOpProveedor );
+          //console.log("1)", this.$facturasOpProveedor );
           if(this.$facturasOpProveedor !== undefined){
-            console.log("?????????????");            
+            //console.log("?????????????");                
             this.procesarDatosParaTabla()
           } else {
-            console.log("");            
+            //console.log("");            
           }
           
       });
@@ -128,14 +130,15 @@ export class LiqProveedorComponent implements OnInit {
     const proveedoresMap = new Map<number, any>();
 
     if(this.$facturasOpProveedor !== null){
-      ////console.log()("Facturas OP Chofer: ", this.$facturasOpChofer);
+      //////console.log()("Facturas OP Chofer: ", this.$facturasOpChofer);
       
       this.$facturasOpProveedor.forEach((factura: FacturaOp) => {
         if (!proveedoresMap.has(factura.idProveedor)) {
           proveedoresMap.set(factura.idProveedor, {
             idProveedor: factura.idProveedor,
             razonSocial:  this.getProveedor(factura.idProveedor),
-            cantOp: 0,
+            opCerradas: 0,
+            opAbiertas: 0,
             opSinFacturar: 0,
             opFacturadas: 0,
             total: 0,
@@ -145,7 +148,7 @@ export class LiqProveedorComponent implements OnInit {
         }
   
         const proveedor = proveedoresMap.get(factura.idProveedor);
-        proveedor.cantOp++;
+        proveedor.opCerradas++;
         if (factura.liquidacion) {
           proveedor.opFacturadas += factura.valores.total;
         } else {
@@ -158,10 +161,31 @@ export class LiqProveedorComponent implements OnInit {
       });
   
       this.datosTablaProveedor = Array.from(proveedoresMap.values());
-      ////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
+      this.datosTablaProveedor = this.datosTablaProveedor.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+      //////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
+      this.dbFirebase.getAllByDateValueField<Operacion>('operaciones', 'fecha', this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "estado.abierta", true).subscribe(data=>{      
+        if(data){
+          this.opAbiertas = data;
+          this.opAbiertas = this.opAbiertas.filter((op:Operacion)=> op.estado.abierta)
+          //console.log("this.opAbiertas", this.opAbiertas.length);    
+          this.datosTablaProveedor.forEach(p=>{
+            p.opAbiertas = this.getOpAbiertas(p.idProveedor)
+          })        
+        }      
+      });
     }
     
   }
+
+  getOpAbiertas(idProveedor:number){
+      if(this.opAbiertas !== undefined){
+        let cantOpAbiertas = this.opAbiertas.filter((op:Operacion)=>{return op.chofer.idProveedor === idProveedor})      
+        return cantOpAbiertas.length
+      } else{
+        return 0 
+      }
+    
+    }
 
   getChofer(idChofer: number){
     let chofer: Chofer []
@@ -199,7 +223,7 @@ export class LiqProveedorComponent implements OnInit {
 
   liquidarFac(factura: FacturaOp) {
     factura.liquidacion = !factura.liquidacion;
-    //console.log("Estado de liquidación cambiado:", factura.liquidacion);
+    ////console.log("Estado de liquidación cambiado:", factura.liquidacion);
     //this.storageService.updateItem(this.tituloFacOpCliente, factura);
     this.procesarDatosParaTabla();
   }
@@ -207,19 +231,19 @@ export class LiqProveedorComponent implements OnInit {
   selectAllCheckboxes(event: any, idProveedor: number): void {
     //let isChecked = (event.target as HTMLInputElement).checked;
     const seleccion = event.target.checked;
-    console.log("1)", seleccion); 
+    //console.log("1)", seleccion); 
     let facturasProveedor = this.facturasPorProveedor.get(idProveedor);
-    console.log("2)", facturasProveedor);
+    //console.log("2)", facturasProveedor);
       facturasProveedor?.forEach((factura: FacturaOp) => {
         factura.liquidacion = seleccion;
-        console.log("3)", factura.liquidacion);
+        //console.log("3)", factura.liquidacion);
        
       });   
-      console.log("primera tabla: ", this.datosTablaProveedor);
+      //console.log("primera tabla: ", this.datosTablaProveedor);
       let proveedor = this.datosTablaProveedor.find((proveedor:any)=>{
         return proveedor.idProveedor === idProveedor
       });
-      console.log("1) cliente: ", proveedor);
+      //console.log("1) cliente: ", proveedor);
       if(seleccion){
         proveedor.opFacturadas = 0
         facturasProveedor?.forEach((factura: FacturaOp) => {                  
@@ -243,14 +267,14 @@ export class LiqProveedorComponent implements OnInit {
         }
        
       });    */
-      console.log("2) cliente: ", proveedor);
+      //console.log("2) cliente: ", proveedor);
      
   }
 
   mostrarMasDatos(index: number, chofer:any) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
-   //////console.log()("Chofer: ", chofer);
+   ////////console.log()("Chofer: ", chofer);
 
    // Obtener el id del cliente utilizando el índice proporcionado
    let proveedorId = this.datosTablaProveedor[index].idProveedor;
@@ -261,7 +285,7 @@ export class LiqProveedorComponent implements OnInit {
    });
    this.facturasPorProveedor.set(proveedorId, facturasProveedor);
 
-   ////console.log()("FACTURAS DEL CHOFER: ", facturasChofer);  
+   //////console.log()("FACTURAS DEL CHOFER: ", facturasChofer);  
 
   }
 
@@ -285,16 +309,25 @@ export class LiqProveedorComponent implements OnInit {
   }
 }
 
-  liquidarFacProveedor(idProveedor: any, apellido: string, index: number){
+  liquidarFacProveedor(proveedor: any, index: number){
     // Obtener las facturas del cliente
-    //////console.log()("IDCHOFER: ", idChofer);
+    ////////console.log()("IDCHOFER: ", idChofer);
+
+    if(proveedor.opAbiertas > 0){
+        Swal.fire({
+          icon: "warning",
+          title: "¡Atención!",
+          text: "El proveedor tiene operaciones abiertas que corresponden al periodo que se esta facturando",
+          //footer: '<a href="#">Why do I have this issue?</a>'
+        });
+    }
     
-    let facturasIdProveedor:any = this.facturasPorProveedor.get(idProveedor);    
-    ////////console.log()("FACTURAS POR CHOFER: ", facturasIdChofer );
+    let facturasIdProveedor:any = this.facturasPorProveedor.get(proveedor.idProveedor);    
+    //////////console.log()("FACTURAS POR CHOFER: ", facturasIdChofer );
     
 
-    this.razonSocial = apellido;
-    //////console.log()("APELLIDO: ", this.apellido);
+    this.razonSocial = proveedor.razonSocial;
+    ////////console.log()("APELLIDO: ", this.apellido);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasProveedor = facturasIdProveedor.filter((factura: FacturaOp) => {
@@ -307,7 +340,7 @@ export class LiqProveedorComponent implements OnInit {
    
     
     if(this.facturasLiquidadasProveedor.length > 0){
-      console.log("1: ",this.facturasLiquidadasProveedor);
+      //console.log("1: ",this.facturasLiquidadasProveedor);
       // Calcular el total sumando los montos de las facturas liquidadas
       this.totalFacturasLiquidadasProveedor = 0;
       this.facturasLiquidadasProveedor.forEach((factura: FacturaOp) => {
@@ -315,9 +348,9 @@ export class LiqProveedorComponent implements OnInit {
       });
   
       this.indiceSeleccionado = index;
-      console.log("3) Facturas liquidadas del proveedor", apellido + ":", this.facturasLiquidadasProveedor);
-      console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasProveedor);
-      //console.log("indice: ", this.indiceSeleccionado);
+      //console.log("3) Facturas liquidadas del proveedor", proveedor.razonSocial + ":", this.facturasLiquidadasProveedor);
+      //console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasProveedor);
+      ////console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
     } else {
       this.mensajesError("Debe seleccionar una factura para liquidar")
@@ -333,16 +366,20 @@ export class LiqProveedorComponent implements OnInit {
     });
   }
 
+
   addItem(item:any, componente:string, idItem:number, accion:string): void {   
     console.log("llamada al storage desde liq-cliente, addItem");
     this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : `Alta de Factura de Proveedor ${item.razonSocial}`);        
+
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasProveedor.forEach((factura: FacturaOp) => {
+
       console.log("llamada al storage desde liq-proveedor, addItem");
       this.addItem(factura, "facOpLiqProveedor", factura.idFacturaOp, "INTERNA");
+
       this.editarOperacionesFac(factura)
       
     }); 
@@ -366,7 +403,7 @@ export class LiqProveedorComponent implements OnInit {
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         op = data;
-        console.log("OP: ", op);
+        //console.log("OP: ", op);
         op.estado = {
           abierta: false,
           cerrada: false,
@@ -379,14 +416,17 @@ export class LiqProveedorComponent implements OnInit {
   }
 
   removeItem(item:any){
+
     console.log("llamada al storage desde liq-Proveedor, deleteItem");
     this.storageService.deleteItem("facturaOpProveedor", item, item.idFacturaOp, "INTERNA", "");    
+
   }
 
   editarFacturaOpCliente(factura: FacturaOp, i:number){   
     this.facDetallada = factura;   
     this.buscarTarifa(i);    
   }
+
 
 
   openModalLiquidacion(): void {   
@@ -409,20 +449,38 @@ export class LiqProveedorComponent implements OnInit {
         total: this.totalFacturasLiquidadasProveedor,
         //totalChofer: this.totalFacturasLiquidadasChofer,
       }; 
-      //console.log()(info);
+      ////console.log()(info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          console.log(result);
+          //console.log(result);
           if(result.modo === "cerrar"){
             this.facturaProveedor = result.factura;
-            this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA");
-            if(result.titulo === "excel"){
-              this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
-              }else if (result.titulo === "pdf"){          
-              this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
-              }
+
+            this.addItem(this.facturaProveedor, this.componente);
+            let titulo = result.titulo
+            Swal.fire({
+                title: `¿Desea imprimir el detalle del Proveedor?`,
+                //text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Confirmar",
+                cancelButtonText: "Cancelar"
+              }).then((result) => {
+                if (result.isConfirmed) {     
+                  if(titulo === "excel"){
+                    this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
+                    }else if (titulo === "pdf"){          
+                    this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
+                  }
+                }
+              });   
+
+            
+
             this.eliminarFacturasOp();
           }
          
@@ -434,7 +492,7 @@ export class LiqProveedorComponent implements OnInit {
 
   ////////////////////////////////////////////////ACA ESTA EL ERROR!!!!!!!!!!!!!!!!!!!!///////////////////////
   buscarTarifa(i:number) {
-    console.log("A)Factura",this.facDetallada);
+    //console.log("A)Factura",this.facDetallada);
     
     if(this.facDetallada.tarifaTipo.general){
       this.dbFirebase
@@ -442,13 +500,13 @@ export class LiqProveedorComponent implements OnInit {
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data => {      
           this.ultimaTarifa = data;
-          console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+          //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
           this.dbFirebase
           .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
           .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
           .subscribe(data => {      
               this.operacion = data;
-              console.log("OPERACION: ", this.operacion);
+              //console.log("OPERACION: ", this.operacion);
               this.openModalTarifa(i)
           });        
       });
@@ -459,26 +517,26 @@ export class LiqProveedorComponent implements OnInit {
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data => {      
           this.ultimaTarifa = data;
-          console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+          //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
           this.dbFirebase
           .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
           .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
           .subscribe(data => {      
               this.operacion = data;
-              console.log("OPERACION: ", this.operacion);
+              //console.log("OPERACION: ", this.operacion);
               this.openModalTarifa(i)
           });        
       });
     }
     if(this.facDetallada.tarifaTipo.eventual){
       this.ultimaTarifa = {};
-      console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+      //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
       this.dbFirebase
       .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data => {      
           this.operacion = data;
-          console.log("OPERACION: ", this.operacion);
+          //console.log("OPERACION: ", this.operacion);
           this.openModalTarifa(i)
       });     
       
@@ -489,13 +547,13 @@ export class LiqProveedorComponent implements OnInit {
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data => {      
           this.ultimaTarifa = data;
-          console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+          //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
           this.dbFirebase
           .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
           .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
           .subscribe(data => {      
               this.operacion = data;
-              console.log("OPERACION: ", this.operacion);
+              //console.log("OPERACION: ", this.operacion);
               this.openModalTarifa(i)
           });        
       });
@@ -532,7 +590,7 @@ export class LiqProveedorComponent implements OnInit {
           op: this.operacion, 
           origen:origen,    
         }; 
-        console.log(info); 
+        //console.log(info); 
         
         modalRef.componentInstance.fromParent = info;
         modalRef.result.then(
