@@ -5,6 +5,7 @@ import { LogDoc } from 'src/app/interfaces/log-doc';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalObjetoComponent } from 'src/app/shared/modal-objeto/modal-objeto.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-papelera',
@@ -59,34 +60,99 @@ export class PapeleraComponent implements OnInit {
     }
 
     modalObjeto(p:LogDoc){
- {
-            const modalRef = this.modalService.open(ModalObjetoComponent, {
-              windowClass: 'myCustomModalClass',
-              centered: true,
-              scrollable: true, 
-              size: p.logEntry.coleccion === 'operaciones' ? 'lg' : p.logEntry.coleccion === 'facturaCliente' || p.logEntry.coleccion === 'facturaChofer' || p.logEntry.coleccion === 'facturaProveedor' ? 'md' : 'lg',     
-            });   
-            
-            
-      
-            let info = {
-              modo: p.logEntry.coleccion,
-              item: p.objeto,
-            }  
-            //////console.log()(info); */
-            
-            modalRef.componentInstance.fromParent = info;
-            if(p.logEntry.coleccion === 'legajos'){
-              modalRef.componentInstance.fromParentPapelera = this.papelera;
-            }
+      {
+          const modalRef = this.modalService.open(ModalObjetoComponent, {
+            windowClass: 'myCustomModalClass',
+            centered: true,
+            scrollable: true, 
+            size: p.logEntry.coleccion === 'operaciones' ? 'lg' : p.logEntry.coleccion === 'facturaCliente' || p.logEntry.coleccion === 'facturaChofer' || p.logEntry.coleccion === 'facturaProveedor' ? 'md' : 'lg',     
+          });   
           
-            modalRef.result.then(
-              (result) => {
-                
-              },
-              (reason) => {}
-            );
+          
+
+          let info = {
+            modo: p.logEntry.coleccion,
+            item: p.objeto,
+          }  
+          //////console.log()(info); */
+          
+          modalRef.componentInstance.fromParent = info;
+          if(p.logEntry.coleccion === 'legajos'){
+            modalRef.componentInstance.fromParentPapelera = this.papelera;
           }
+        
+          modalRef.result.then(
+            (result) => {
+              
+            },
+            (reason) => {}
+          );
+      }
+    }
+
+    restaurarObjeto(logDoc:LogDoc){
+      console.log("objeto", logDoc);
+      let id: number = 0;
+      let titulo: string = ""
+      switch(logDoc.logEntry.coleccion){
+        case "operaciones":
+          id = logDoc.objeto.idOperacion;
+          titulo = "Operación";
+          break;
+        case "clientes":
+          id = logDoc.objeto.idCliente;
+          titulo = "Cliente";
+          break;
+        case "choferes":
+          id = logDoc.objeto.idChofer;
+          titulo = "Chofer";
+          break;
+        case "proveedores":
+          id = logDoc.objeto.proveedor;
+          titulo = "Proveedor";
+          break;
+        case "facturaCliente":
+          id = logDoc.objeto.idFacturaCliente;
+          titulo = "Factura Cliente";
+          break;
+        case "facturaChofer":
+          id = logDoc.objeto.idFacturaChofer;
+          titulo = "Factura Chofer";
+          break;
+        case "facturaProveedor":
+          id = logDoc.objeto.idFacturaProveedor;
+          titulo = "Factura Proveedor";
+          break;
+        case "legajos":
+          id = logDoc.objeto.idLegajo;
+          titulo = "Legajo";
+          break;
+        default:
+          break;
+      }
+      console.log("id", id);
+      
+      
+        Swal.fire({
+              title: "¡Atención!",
+              text: "A la hora de restaurar un objeto debe tener en cuento que algunos items trabajan en relación con otros objetos. Ej: un legajo esta asignado a un chofer, un chofer puede estar asignado a un proveedor. Tenga en cuenta estas relaciones y restaure todos los objetos relacionados entre si para un correcto funcionamiento de la app. ¿Desea restaurar este objeto?",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Confirmar",
+              cancelButtonText: "Cancelar"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.storageService.addItem(logDoc.logEntry.coleccion, logDoc.objeto, id, "RESTAURAR", `${titulo} ${id} restaurado desde la Papelera`);   
+                this.storageService.deleteItem("papelera", logDoc, logDoc.idDoc, "INTERNA", "" ) 
+                Swal.fire({
+                  title: "Confirmado",
+                  text: "El Objeto ha sido restaurado",
+                  icon: "success"
+                });
+              }
+            });  
     }
 
     
