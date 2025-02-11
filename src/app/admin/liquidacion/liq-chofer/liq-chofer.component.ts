@@ -17,6 +17,7 @@ import { FacturaOp } from 'src/app/interfaces/factura-op';
 import Swal from 'sweetalert2';
 import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 
 
 @Component({
@@ -357,16 +358,20 @@ export class LiqChoferComponent implements OnInit {
     });
   }
 
-  addItem(item:any, componente:string): void {   
-    //console.log("llamada al storage desde liq-cliente, addItem");
-    this.storageService.addItem(componente, item);        
+
+  addItem(item:any, componente:string, idItem:number, accion:string): void {   
+    console.log("llamada al storage desde liq-cliente, addItem");
+    this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : `Alta de Factura de Chofer ${item.apellido} ${item.nombre}`);        
+
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
-      //console.log("llamada al storage desde liq-chofer, addItem");
-      this.addItem(factura, "facOpLiqChofer");
+
+      console.log("llamada al storage desde liq-chofer, addItem");
+      this.addItem(factura, "facOpLiqChofer", factura.idFacturaOp, "INTERNA");
+
       this.editarOperacionesFac(factura)
       
     }); 
@@ -396,15 +401,15 @@ export class LiqChoferComponent implements OnInit {
           cerrada: false,
           facturada: true,
         }
-        this.storageService.updateItem("operaciones", op);
+        this.storageService.updateItem("operaciones", op, op.idOperacion, "Liquidar", `Operación de Chofer ${op.chofer.apellido} ${op.chofer.nombre} Liquidada`);
         this.removeItem(factura);
     });
 
   }
 
   removeItem(item:any){
-    //console.log("llamada al storage desde liq-chofer, deleteItem");
-    this.storageService.deleteItem("facturaOpChofer", item);    
+    console.log("llamada al storage desde liq-chofer, deleteItem");
+    this.storageService.deleteItem("facturaOpChofer", item, item.idFacturaOp, "INTERNA", "");    
   }
 
   editarFacturaOpCliente(factura: FacturaOp, i:number){   
@@ -447,6 +452,7 @@ export class LiqChoferComponent implements OnInit {
 
           if(result.modo === "cerrar"){
             this.facturaChofer = result.factura;
+
             this.addItem(this.facturaChofer, this.componente);
             let titulo = result.titulo
             Swal.fire({
@@ -468,6 +474,7 @@ export class LiqChoferComponent implements OnInit {
                 }
               });   
             
+
             this.eliminarFacturasOp();
           }
           
@@ -610,6 +617,88 @@ export class LiqChoferComponent implements OnInit {
       });
     }
 
+     bajaOp(factura:FacturaOp, indice:number){
+        Swal.fire({
+              title: "¿Desea anular la operación?",
+              //text: "No se podrá revertir esta acción",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Confirmar",
+              cancelButtonText: "Cancelar"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.dbFirebase
+                  .obtenerTarifaIdTarifa("operaciones", factura.idOperacion, "idOperacion")
+                  .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+                  .subscribe(data => {      
+                      this.operacion = data;
+                      //console.log("OPERACION: ", this.operacion);
+                      this.openModalBaja(factura, indice)
+                  });               
+              }
+            });
+        
+      }
+    
+      openModalBaja(factura:FacturaOp, indice:number){
+        {
+          const modalRef = this.modalService.open(ModalBajaComponent, {
+            windowClass: 'myCustomModalClass',
+            centered: true,
+            scrollable: true, 
+            size: 'sm',     
+          });       
+          console.log("factura",factura);
+          let info = {
+            modo: "liquidaciones",
+            item: this.operacion,
+          }  
+          
+          
+          modalRef.componentInstance.fromParent = info;
+        
+          modalRef.result.then(
+            (result) => {
+              console.log("result", result);
+              if(result !== undefined){   
+                  //BAJA DE FACTURA OP CHOFER
+                  this.removeItem(factura);              
+                 
+                  //BAJA DE FACTURA OP CLIENTE
+                  this.dbFirebase.obtenerTarifaMasReciente("facturaOpCliente", factura.contraParteId, "idFacturaOp", "idFacturaOp").subscribe(data => {
+                    if(data){
+                      let facturaContraParte = data
+                      console.log("facturaContraParte: ", factura);
+                      this.storageService.deleteItem("facturaOpCliente", facturaContraParte, factura.contraParteId, "INTERNA", "");        
+                    }
+                    
+                  })
+                  
+                  //BAJA DE OP
+                  this.storageService.deleteItemPapelera("operaciones", this.operacion, this.operacion.idOperacion, "Baja", `Baja de operacion ${this.operacion.idOperacion} desde Liquidaciones`, result);    
+                  
+                  this.cerrarTabla(indice)
+                  this.ngOnInit(); 
+                  //////////////////
+    
+    
+                  ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+    
+                  ////////console.log("consultas Op: " , this.$consultasOp);
+                  Swal.fire({
+                  title: "Confirmado",
+                  text: "La operación ha sido dada de baja",
+                  icon: "success"
+                  });
+              }
+              
+            },
+            (reason) => {}
+          );
+        }
+      }
     
   
 }

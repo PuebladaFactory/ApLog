@@ -50,6 +50,7 @@
       </ngx-datatable>
     </div> -->
     <div class="modal-body">
+        <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por parámetro">
         <table class="table table-light table-striped table-bordered">
             <thead>
                 <th scope="col">Fecha</th>
@@ -62,9 +63,10 @@
                 <th scope="col">Porcentaje</th>
                 <th scope="col">{{fromParent.modo === 'clientes' ? 'Cobrado' : 'Pagado'}}</th>
                 <th scope="col">Reimpresión </th>
+                <th scope="col">Anular </th>
             </thead>
             <tbody>
-                <tr *ngFor="let fila of rows; let i = index">
+                <tr *ngFor="let fila of rows | filter: searchText; let i = index">
                     <td>{{fila.fecha}}</td>
                     <td>{{fila.quincena}}</td>
                     <td>{{fila.idFactura}}</td>
@@ -83,6 +85,9 @@
                       <app-btn-leer name="excel" data-bs-toggle="collapse" data-bs-target="#reimpresionCliente" aria-expanded="false" aria-controls="reimpresionCliente" (click)="reimprimirFac(fila, 'excel')" class="me-2"></app-btn-leer>   
                       <app-btn-leer name="pdf" data-bs-toggle="collapse" data-bs-target="#reimpresionCliente" aria-expanded="false" aria-controls="reimpresionCliente" (click)="reimprimirFac(fila, 'pdf')"></app-btn-leer>   
                     </td> 
+                    <td>
+                      <app-btn-eliminar *appRole="['god','admin', 'manager']"  name="Eliminar" (click)="bajaOp(fila)"></app-btn-eliminar>
+                    </td>
                 </tr>
             </tbody>           
         </table>

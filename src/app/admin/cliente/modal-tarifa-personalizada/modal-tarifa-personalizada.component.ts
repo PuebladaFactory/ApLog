@@ -19,7 +19,8 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   modoAutomatico = true;  // por defecto en modo automático
   porcentajeAumento: number = 0; // variable para almacenar el porcentaje
   nuevaTarifa!: ConId<TarifaPersonalizadaCliente>;  // suponiendo que ya tienes los datos cargados
-  componente: string = "tarifasPersCliente"
+  componente: string = "tarifasPersCliente";
+  razonSocial: string = ""
   
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private formNumServ: FormatoNumericoService){}
 
@@ -27,7 +28,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
     console.log("0) ", this.fromParent);
     this.nuevaTarifa = this.fromParent.item;    
     this.$ultimaTarifa = structuredClone(this.nuevaTarifa);
-    
+    this.razonSocial = this.fromParent.cliente;
   }
 
   // Método para calcular automáticamente el aumento en las tarifas
@@ -143,7 +144,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   }
 
   addItem(item:TarifaPersonalizadaCliente){
-    this.storageService.addItem(this.componente, item);        
+    this.storageService.addItem(this.componente, item, item.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.razonSocial}`);        
   }
 
 
@@ -158,7 +159,9 @@ updateItem(){
     })
   })
   console.log("TARIFA EDITADA", this.$ultimaTarifa);
-  this.storageService.updateItem(this.componente, this.$ultimaTarifa);   
+  this.storageService.updateItem(this.componente, this.$ultimaTarifa, this.$ultimaTarifa.idTarifa, "EDITAR", `Tarifa Personalizada para Cliente ${this.razonSocial}, editada`);   
 }
+
+
 
 }

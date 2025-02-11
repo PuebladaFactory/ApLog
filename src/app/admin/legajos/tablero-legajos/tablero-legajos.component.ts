@@ -50,7 +50,8 @@ export class TableroLegajosComponent implements OnInit {
     });
     console.log(this.$legajos);
     
-    //this.crearLegajos()        
+    //this.crearLegajos()  
+    this.storageService.syncChanges("legajos");
   }
 
   ngOnDestroy(): void {

@@ -1,5 +1,5 @@
-<div class="container">
-    <div>
+
+    <div class="mt-3">
         <h2>Listado de Usuarios</h2>
     </div>
     <div class="">    
@@ -11,12 +11,11 @@
                     <th scope="col" class="">Verificado</th>
                     <th scope="col" class="">Nombre</th>
                     <th scope="col" class="">Rol</th>
-                    <th scope="col" colspan="2"></th>
-                    
+                    <th scope="col" colspan="2" style="width:7%;"></th>                    
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let u of $usuarios | filter: searchText">
+                <tr *ngFor="let u of $usuariosTodos | filter: searchText">
                     <td>{{u.email}}</td>
                     <td>{{u.emailVerified}}</td>
                     <td>{{u.name}}</td>
@@ -31,7 +30,7 @@
             </tbody> 
         </table>
     </div>
-</div>
+
 
 
 

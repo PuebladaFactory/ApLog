@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
@@ -12,7 +12,10 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
+import { LogService } from 'src/app/servicios/log/log.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-modal-detalle',
@@ -62,9 +65,12 @@ export class ModalDetalleComponent implements OnInit {
   $clientes!: Cliente[];
   $proveedores!: Proveedor[];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
+  searchText!:string;
+  componente: string = "";
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private excelServ: ExcelService, 
-    private pdfServ: PdfService, private dbFirebase: DbFirestoreService){
+    private pdfServ: PdfService, private logService: LogService,
+    private dbFirebase: DbFirestoreService, private modalService: NgbModal){
 
   }
   
@@ -100,6 +106,7 @@ export class ModalDetalleComponent implements OnInit {
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
           //this.idFactura = this.data[0].idFacturaCliente;
+          this.componente = "facturaCliente";
           this.armarTabla()
           break;
       //////////////CHOFERES///////////////////////
@@ -114,6 +121,7 @@ export class ModalDetalleComponent implements OnInit {
           //console.log("data: ", this.data);
           this.titulo = `${this.data[0].apellido} ${this.data[0].nombre}`
           //this.idFactura = this.data[0].idFacturaChofer;
+          this.componente = "facturaChofer";
           this.armarTabla()
           break;
       //////////////PROVEEDORES///////////////////////
@@ -123,11 +131,12 @@ export class ModalDetalleComponent implements OnInit {
           .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
           .subscribe(data=>{
             this.$facturasOpProveedor = data;
-            console.log("1) ngOnInit facOpProveedor:",this.$facturasOpCliente);      
+            console.log("1) ngOnInit facOpProveedor:",this.$facturasOpProveedor);      
           });
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
           //this.idFactura = this.data[0].idFacturaProveedor;
+          this.componente = "facturaProveedor";
           this.armarTabla()
           break;
       default:
@@ -158,7 +167,7 @@ export class ModalDetalleComponent implements OnInit {
       //console.log(factura);
       
       factura[0].cobrado = !factura[0].cobrado;
-      this.updateItem(factura[0]);
+      this.updateItem(factura[0], factura[0].idFacturaCliente);
     }
     //////////////CHOFERES///////////////////////
     if(this.fromParent.modo === "choferes"){
@@ -169,7 +178,7 @@ export class ModalDetalleComponent implements OnInit {
       //console.log(factura);
       
       factura[0].cobrado = !factura[0].cobrado;
-      this.updateItem(factura[0]);
+      this.updateItem(factura[0], factura[0].idFacturaChofer);
     }
     //////////////PROVEEDORES///////////////////////
     if(this.fromParent.modo === "proveedores"){
@@ -180,23 +189,23 @@ export class ModalDetalleComponent implements OnInit {
       //console.log(factura);
       
       factura[0].cobrado = !factura[0].cobrado;
-      this.updateItem(factura[0]);
+      this.updateItem(factura[0], factura[0].idFacturaProveedor);
     }
   }
 
-  updateItem(item: any) {
+  updateItem(item: any, idItem: number) {
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "clientes":
-          this.storageService.updateItem('facturaCliente', item);
+          this.storageService.updateItem('facturaCliente', item, idItem, "EDITAR", item.cobrado ? `Factura Cliente ${item.razonSocial} cobrada` : `Factura Cliente ${item.razonSocial} sin cobrar` );
           break;
       //////////////CHOFERES///////////////////////
       case "choferes":
-          this.storageService.updateItem('facturaChofer', item);
+          this.storageService.updateItem('facturaChofer', item, idItem, "EDITAR", item.cobrado ? `Factura Chofer ${item.apellido} ${item.nombre}  cobrada` : `Factura Chofer ${item.apellido} ${item.nombre} sin cobrar` );
           break;
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
-          this.storageService.updateItem('facturaProveedor', item);
+          this.storageService.updateItem('facturaProveedor', item, idItem, "EDITAR", item.cobrado ? `Factura Proveedor ${item.razonSocial} cobrada` : `Factura Proveedor ${item.razonSocial} sin cobrar`);
       break;
       default:
         alert("error update")
@@ -228,9 +237,11 @@ export class ModalDetalleComponent implements OnInit {
           if (formato === 'excel') {
             console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
             this.excelServ.exportToExcelCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en excel del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
           } else if(formato === 'pdf') {
             console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
             this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
           }   
           break;
       //////////////CHOFERES///////////////////////
@@ -253,9 +264,11 @@ export class ModalDetalleComponent implements OnInit {
           if (formato === 'excel') {
             console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );      
             this.excelServ.exportToExcelChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en excel del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
           } else if(formato === 'pdf') {
             console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );
             this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en pdf del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
           } 
           break;
       //////////////PROVEEDORES///////////////////////
@@ -278,9 +291,11 @@ export class ModalDetalleComponent implements OnInit {
           if (formato === 'excel') {
             console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );      
             this.excelServ.exportToExcelProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
           } else if(formato === 'pdf') {
             console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );
             this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
           }   
       break;
       default:
@@ -431,5 +446,96 @@ export class ModalDetalleComponent implements OnInit {
     return 0;
   }
 }
+
+bajaOp(factura:any){
+  console.log("fila: ", factura);
+  let facturaBaja:any;
+  switch (this.fromParent.modo){
+    //////////////CLIENTES///////////////////////
+    case "clientes":
+      facturaBaja = this.data.filter((f:any) => f.idFacturaCliente === factura.idFactura);
+      console.log("facturaBaja", facturaBaja[0]);
+      break;
+    case "choferes":
+      facturaBaja = this.data.filter((f:any) => f.idFacturaChofer === factura.idFactura);
+      console.log("facturaBaja", facturaBaja[0]);
+      break;
+    case "proveedores":
+      facturaBaja = this.data.filter((f:any) => f.idFacturaProveedor === factura.idFactura);
+      console.log("facturaBaja", facturaBaja[0]);
+      break;  
+    default:
+      break;
+  }  
+  
+  
+  
+  
+    Swal.fire({
+          title: "¿Desea anular la factura?",
+          //text: "No se podrá revertir esta acción",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Confirmar",
+          cancelButtonText: "Cancelar"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.openModalBaja(facturaBaja[0]);
+          }
+        });
+    
+  }
+
+  openModalBaja(factura:any){
+    {
+      const modalRef = this.modalService.open(ModalBajaComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        scrollable: true, 
+        size: 'sm',     
+      });       
+      console.log("factura",factura);
+      let info = {
+        modo: "facturacion",
+        item: factura,
+        tipo: this.fromParent.modo 
+      }  
+
+      let id : number = this.fromParent.modo === "clientes" ? factura.idFacturaCliente : this.fromParent.modo === "choferes" ? factura.idFacturaChofer : factura.idFacturaProveedor;
+      
+      
+      modalRef.componentInstance.fromParent = info;
+    
+      modalRef.result.then(
+        (result) => {
+          if(result !== undefined){   
+            console.log("result", result);
+            ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+            this.storageService.deleteItemPapelera(
+              this.componente, 
+              factura, 
+              id, 
+              "BAJA", 
+              `Baja de Factura del ${this.fromParent.modo === "clientes" ? "Cliente" : this.fromParent.modo === "choferes" ? "Chofer" : "Proveedor"} 
+              ${this.fromParent.modo === "clientes" ? factura.razonSocial : this.fromParent.modo === "choferes" ? factura.apellido + " " + factura.nombre : factura.razonSocial}
+              `, 
+              result);
+            ////////console.log("consultas Op: " , this.$consultasOp);
+            Swal.fire({
+              title: "Confirmado",
+              text: "La factura ha sido anulada",
+              icon: "success"
+            });
+            this.activeModal.close();
+          }
+
+          
+        },
+        (reason) => {}
+      );
+    }
+  }
 
 }

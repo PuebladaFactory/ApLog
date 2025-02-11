@@ -38,6 +38,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
   }
   $clientes!: Cliente[];
   private destroy$ = new Subject<void>();
+  $proveedores!: Proveedor[];
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal) {
     this.tarifaForm = this.fb.group({
@@ -134,6 +135,12 @@ export class ProveedoresTarifaGralComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.$clientes = data;
+    });   
+
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
+      this.$proveedores = data;
     });   
     
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');
@@ -502,30 +509,32 @@ onGenerarNuevaTarifaAutomatica() {
     ////console.log("1)",this.tEspecial);
     let proveedores: Proveedor [] = this.storageService.loadInfo("proveedores");
     if(!this.tEspecial){
-      this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
+      this.storageService.addItem(this.componente, this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa, "ALTA", "Alta de Tarifa General para Proveedores");     
       this.consolaTarifa = 0;
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(proveedores.length > 0){
         proveedores.forEach((p:Proveedor)=>{
           if(p.tarifaTipo.general && !p.tarifaAsignada){
             p.tarifaAsignada = true;
-            this.storageService.updateItem("proveedores", p);
+            this.storageService.updateItem("proveedores", p, p.idProveedor,"INTERNA", "");
           }
         })
     }      
     }else if(this.tEspecial){
+      console.log("aca??");
+      
       this.nuevaTarifaGral.idProveedor = this.idProveedorEsp[0];
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
       this.nuevaTarifaGral.tipo.especial = true;
-      this.storageService.addItem("tarifasEspProveedor", this.nuevaTarifaGral);         
+      this.storageService.addItem("tarifasEspProveedor", this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa,"ALTA", `Alta de Tarifa Especial para Proveedor ${this.getProveedorEsp(this.idProveedorEsp[0])}`);         
       this.consolaTarifa = 0;
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);      
       if(proveedores.length > 0){
         proveedores.forEach((p:Proveedor)=>{
           if(p.tarifaTipo.especial  && p.idProveedor === this.idProveedorEsp[0] && !p.tarifaAsignada){
             p.tarifaAsignada = true;
-            this.storageService.updateItem("proveedores", p);
+            this.storageService.updateItem("proveedores", p, p.idProveedor,"INTERNA", "");
           }
         })
       }      
@@ -617,6 +626,14 @@ onGenerarNuevaTarifaAutomatica() {
         (reason) => {}
       );
     }
+  }
+
+  getProveedorEsp(idProveedor:number){
+    let prov : Proveedor[] = this.$proveedores.filter(p => p.idProveedor === idProveedor);
+    console.log("porveedor razon social: ", prov[0].razonSocial);
+    
+    return prov[0].razonSocial;
+
   }
 
 }

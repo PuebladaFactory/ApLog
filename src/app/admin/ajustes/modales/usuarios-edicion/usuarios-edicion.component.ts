@@ -73,7 +73,7 @@ export class UsuariosEdicionComponent implements OnInit {
               cancelButtonText: "Cancelar"
             }).then((result) => {
               if (result.isConfirmed) {
-                this.storageService.updateUser('users', this.usuario);
+                this.storageService.updateUser('users', this.usuario, "EDITAR");
                 this.activeModal.close()
                 Swal.fire({
                   title: "Confirmado",

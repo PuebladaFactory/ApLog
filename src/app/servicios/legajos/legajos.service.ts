@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { StorageService } from '../storage/storage.service';
-import { take } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
+import { DbFirestoreService } from '../database/db-firestore.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,8 +11,9 @@ export class LegajosService {
 
   legajo!: Legajo
   $legajos!: Legajo[];
+  private destroy$ = new Subject<void>();
 
-  constructor(private storageService: StorageService) { }
+  constructor(private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
 
   crearLegajo(idChofer:number){
     this.legajo ={
@@ -26,13 +28,13 @@ export class LegajosService {
       },
       documentacion:[],  
     };
-    this.storageService.addItem("legajos", this.legajo)
+    this.storageService.addItem("legajos", this.legajo, this.legajo.idLegajo, "ALTA", "Alta de Legajo")
     
   }
 
   // Método para verificar y actualizar el estado de los documentos
   verificarEstadosLegajos(legajos: Legajo[]) {
-    console.log("0) Legajo", legajos);
+    //console.log("0) Legajo", legajos);
   
     try {
       // Recorrer cada legajo
@@ -43,7 +45,7 @@ export class LegajosService {
         for (const documento of legajo.documentacion) {
           if (documento.fechaVto && !documento.sinVto) {
             const nuevoEstado = this.calcularEstado(documento.fechaVto);
-            console.log("chofer legajo: ", legajo.idChofer, "estado: ", nuevoEstado);
+            //console.log("chofer legajo: ", legajo.idChofer, "estado: ", nuevoEstado);
             
             // Verificar si el estado general del documento cambió
             if (
@@ -51,11 +53,11 @@ export class LegajosService {
               documento.estado.porVencer !== nuevoEstado.porVencer ||
               documento.estado.enFecha !== nuevoEstado.enFecha
             ) {
-              console.log("1) Se modificó el estado del documento");
+              //console.log("1) Se modificó el estado del documento");
               documento.estado = nuevoEstado;
               legajoModificado = true; // Indicar que se realizaron cambios
             } else {
-              console.log("2) No se modificó el estado del documento");
+              //console.log("2) No se modificó el estado del documento");
             }
           }
         }
@@ -70,17 +72,17 @@ export class LegajosService {
           legajo.estadoGral.enFecha !== estadoGral.enFecha ||
           legajo.estadoGral.vacio !== estadoGral.vacio
         ) {
-          console.log("3) Se modificó el estado general del legajo");
+          //console.log("3) Se modificó el estado general del legajo");
           legajo.estadoGral = estadoGral;
           legajoModificado = true; // Indicar que se realizaron cambios
         } else {
-          console.log("4) No se modificó el estado general del legajo");
+          //console.log("4) No se modificó el estado general del legajo");
         }
   
         // Si se modificó el legajo, actualizar en la base de datos
         if (legajoModificado) {
-          this.storageService.updateItem("legajos", legajo);
-          console.log(`Legajo actualizado: ${legajo.idLegajo}`);
+          this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "EDITAR", "Edición de Legajo");
+          //console.log(`Legajo actualizado: ${legajo.idLegajo}`);
         }
       });
     } catch (error) {
@@ -150,19 +152,19 @@ export class LegajosService {
     };
   }
 
-  eliminarLegajo(idChofer:number){
+  eliminarLegajo(idChofer:number, motivo: string){
+    
     let legajo: Legajo[];
-    this.storageService.legajos$
+    this.dbFirebase.getByFieldValue("legajos", "idChofer", idChofer)
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .pipe(take(1))
     .subscribe(data=>{
-      this.$legajos = data;
-      if(this.$legajos.length > 0){
-        legajo = this.$legajos.filter((l:Legajo)=>{
-          return l.idChofer === idChofer;
-        });
+      if(data){
+        let legajo: any = data;
         console.log("legajo", legajo);
-        this.storageService.deleteItem("legajos", legajo[0]);
-      }
+        this.storageService.deleteItemPapelera("legajos", legajo[0], legajo[0].idLegajo, "BAJA", "Baja de Legajo", `Baja de legajo: ${motivo}`);
+      }      
+      
     })
   }
 }

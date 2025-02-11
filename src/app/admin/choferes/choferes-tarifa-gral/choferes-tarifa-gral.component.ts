@@ -662,14 +662,14 @@ onGenerarNuevaTarifaAutomatica() {
     //////////////console.log("1)",this.tEspecial);
     let choferes: Chofer [] = this.storageService.loadInfo("choferes")
     if(!this.tEspecial){
-      this.storageService.addItem(this.componente, this.nuevaTarifaGral);     
+      this.storageService.addItem(this.componente, this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa, "ALTA", "Alta de Tarifa General para Choferes");     
       this.consolaTarifa = 0;
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(choferes.length > 0){
         choferes.forEach((c:Chofer)=>{
           if(c.tarifaTipo.general && !c.tarifaAsignada){
             c.tarifaAsignada = true;
-            this.storageService.updateItem("choferes", c);
+            this.storageService.updateItem("choferes", c, c.idChofer, "INTERNA", "");
           }
         })
     }     
@@ -678,14 +678,14 @@ onGenerarNuevaTarifaAutomatica() {
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
       this.nuevaTarifaGral.tipo.especial = true;
-      this.storageService.addItem("tarifasEspChofer", this.nuevaTarifaGral);         
+      this.storageService.addItem("tarifasEspChofer", this.nuevaTarifaGral, this.nuevaTarifaGral.idTarifa, "ALTA", `Alta de Tarifa Especial para Chofer ${this.getChoferEsp(this.idChoferEsp[0])}`);         
       this.consolaTarifa = 0;
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(choferes.length > 0){
         choferes.forEach((c:Chofer)=>{
           if(c.tarifaTipo.especial  && c.idChofer === this.idChoferEsp[0] && !c.tarifaAsignada){
             c.tarifaAsignada = true;
-            this.storageService.updateItem("choferes", c);
+            this.storageService.updateItem("choferes", c, c.idChofer, "INTERNA", "");
           }
         })
       }      
@@ -814,6 +814,15 @@ onGenerarNuevaTarifaAutomatica() {
         (reason) => {}
       );
     }
+  }
+
+  getChoferEsp(idChofer:number){
+    let choferes : Chofer[] = [];
+
+    choferes = this.$choferes.filter(c => c.idChofer === idChofer);
+
+    return choferes[0].apellido + " " + choferes[0].nombre;
+
   }
 
 

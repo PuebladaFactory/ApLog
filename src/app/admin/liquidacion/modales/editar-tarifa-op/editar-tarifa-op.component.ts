@@ -1,9 +1,11 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { take } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
@@ -27,6 +29,8 @@ export class EditarTarifaOpComponent implements OnInit {
     facturaEditada!: FacturaOp;
     swich!: boolean;
     $choferes!: Chofer[];
+    $clientes!: Cliente[];
+    $proveedores!: Proveedor[];
     choferOp!: Chofer[];
     vehiculoOp!: Vehiculo[];
     operacion!: Operacion;
@@ -35,6 +39,7 @@ export class EditarTarifaOpComponent implements OnInit {
     facOriginal!: FacturaOp;
     opOriginal!: Operacion;
     facContraParte!: FacturaOp;
+     private destroy$ = new Subject<void>();
   
     constructor(private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private formNumServ: FormatoNumericoService, private dbFirebase: DbFirestoreService){
      
@@ -46,8 +51,20 @@ export class EditarTarifaOpComponent implements OnInit {
       this.facDetallada = structuredClone(this.facOriginal);
       this.opOriginal = this.fromParent.op;
       this.operacion = structuredClone(this.opOriginal);
-      this.storageService.choferes$.subscribe(data => {
-        this.$choferes = data;
+      this.storageService.choferes$
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data => {
+        if(data){this.$choferes = data};        
+      });
+      this.storageService.clientes$
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data => {
+        if(data){this.$clientes = data};        
+      });
+      this.storageService.proveedores$
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data => {
+        if(data){this.$proveedores = data};        
       });
       this.getChofer(); 
       switch(this.fromParent.origen){
@@ -181,23 +198,28 @@ export class EditarTarifaOpComponent implements OnInit {
 
       console.log("this.facDetallada: ", this.facDetallada);
       console.log("this.operacion: ", this.operacion);      
-      this.storageService.updateItem(this.componente, this.facDetallada);
-      this.storageService.updateItem("operaciones", this.operacion);
+      this.storageService.updateItem(
+        this.componente, 
+        this.facDetallada, 
+        this.facDetallada.idFacturaOp, 
+        "EDITAR", 
+        this.componente === "facturaOpCliente" ? `Edición de Informe de Operación del Cliente ${this.getClienteId(this.facDetallada.idCliente)}` : this.componente === "facturaOpChofer" ? `Edición de Informe de Operación del Chofer ${this.getChoferId(this.facDetallada.idChofer)}` : `Edición de Informe de Operación del Proveedor ${this.getProveedorId(this.facDetallada.idProveedor)}`);
+      this.storageService.updateItem("operaciones", this.operacion, this.operacion.idOperacion,"EDITAR", "Edición de Operación desde Liquidación");
       switch(this.fromParent.origen){
         case "clientes":{
           if(this.operacion.chofer.idProveedor === 0){
-            this.storageService.updateItem("facturaOpChofer", this.facContraParte);
+            this.storageService.updateItem("facturaOpChofer", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
           } else {
-            this.storageService.updateItem("facturaOpProveedor", this.facContraParte);
+            this.storageService.updateItem("facturaOpProveedor", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
           }          
           break;
         };
         case "choferes":{
-          this.storageService.updateItem("facturaOpCliente", this.facContraParte);
+          this.storageService.updateItem("facturaOpCliente", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
           break;
         }
         case "proveedores":{
-          this.storageService.updateItem("facturaOpCliente", this.facContraParte);
+          this.storageService.updateItem("facturaOpCliente", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
           break;
         }
         default:{
@@ -277,10 +299,23 @@ export class EditarTarifaOpComponent implements OnInit {
       }
      }
   
-    
-  
     cerrarEdicion(){
       this.edicion = false;
     } 
+
+    getClienteId(idCliente:number){
+      let clientes: Cliente [] = this.$clientes.filter((c:Cliente) => {return c.idCliente === idCliente});
+      return clientes[0].razonSocial;
+    }
+
+    getChoferId(idChofer:number){
+      let choferes: Chofer [] = this.$choferes.filter((c:Chofer) => { return c.idChofer === idChofer});
+      return choferes[0].apellido + " " + choferes[0].nombre;
+    }
+
+    getProveedorId(idProveedor:number){
+      let prov: Proveedor [] = this.$proveedores.filter((p:Proveedor) => {return p.idProveedor === idProveedor});
+      return prov[0].razonSocial;
+    }
 
 }

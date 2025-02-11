@@ -43,10 +43,10 @@ private checkRoleAccess(route: any): boolean {
 
   if (!hasAccess) {
     let usuario  = this.storageService.loadInfo("usuario");
-    if(usuario.hasOwnProperty('roles')){
+    if(usuario[0].hasOwnProperty('roles')){
       this.router.navigate(['/limbo'])
     } else {
-    this.router.navigate(['/unauthorized']); // Redirige si no tiene permisos        
+      this.router.navigate(['/unauthorized']); // Redirige si no tiene permisos        
     }
     return false;
   }

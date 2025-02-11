@@ -9,6 +9,9 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { UsuariosEdicionComponent } from './modales/usuarios-edicion/usuarios-edicion.component';
+import { RegistroComponent } from './registro/registro.component';
+import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
+import { PapeleraComponent } from './papelera/papelera.component';
 
 
 
@@ -16,7 +19,9 @@ import { UsuariosEdicionComponent } from './modales/usuarios-edicion/usuarios-ed
   declarations: [
     AjustesControlComponent,
     AjustesUsuariosComponent,
-    UsuariosEdicionComponent
+    UsuariosEdicionComponent,
+    RegistroComponent,
+    PapeleraComponent
   ],
   imports: [
     CommonModule,
@@ -26,6 +31,7 @@ import { UsuariosEdicionComponent } from './modales/usuarios-edicion/usuarios-ed
     SharedModule,
     Ng2SearchPipeModule,
     NgxDatatableModule, 
+    NgbDatepickerModule,
   ]
 })
 export class AjustesModule { }

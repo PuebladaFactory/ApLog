@@ -13,6 +13,7 @@ import { ModalFacturacionComponent } from '../modal-facturacion/modal-facturacio
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { Subject, takeUntil } from 'rxjs';
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 
 @Component({
   selector: 'app-tablero-op',
@@ -96,7 +97,6 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.tarifaEventual = datos[0];
-      ////////console.log("tarifa eventual: ", this.tarifaEventual);
       
     });
     this.storageService.opTarPers$
@@ -104,7 +104,6 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.tarifaPersonalizada = datos[0];
-      ////////console.log("tarifa personalizada: ", this.tarifaPersonalizada);
     });
 
     this.storageService.vehiculosChofer$
@@ -112,7 +111,7 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data=>{
       let datos = data
       this.vehiculosChofer = datos[0];
-      ////////console.log("vehiculos chofer: ", this.vehiculosChofer);
+
     }); */
     this.loadColumnSelection();
     let limite = this.storageService.loadInfo("pageLimitOp");
@@ -164,9 +163,6 @@ export class TableroOpComponent implements OnInit {
       this.filtrarEstado(this.estadoFiltrado)
     });    */
     
-    /* if(this.fechasConsulta){
-      this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta);
-    }     */
      
   }
 
@@ -175,6 +171,7 @@ export class TableroOpComponent implements OnInit {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
 
   loadColumnSelection() {
     const savedSelection = localStorage.getItem('columnSelection');
@@ -224,7 +221,6 @@ export class TableroOpComponent implements OnInit {
 
   ///////////// TABLA //////////////////////////////////////////////////////////////////////////////////
   armarTabla() {
-    ////////////console.log("consultasOp: ", this.$consultasOp );
     let indice = 0
     let operaciones: Operacion [];    
     operaciones = this.$opFiltradas;
@@ -248,6 +244,7 @@ export class TableroOpComponent implements OnInit {
       observaciones: op.observaciones,
       
     }));   
+
     ////////////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
     let filtrosTabla = this.storageService.loadInfo('filtrosTabla')
     //////console.log("filtrosTabla", filtrosTabla);    
@@ -257,7 +254,6 @@ export class TableroOpComponent implements OnInit {
       this.filtrosClientes = filtrosTabla[2];      
       this.filtrosChoferes = filtrosTabla[3];            
     }
-
     this.applyFilters(); // Aplica filtros y actualiza filteredRows
   }
 
@@ -266,8 +262,7 @@ export class TableroOpComponent implements OnInit {
      minimumFractionDigits: 2, 
      maximumFractionDigits: 2 
    }).format(valor);
-   //////////////console.log(nuevoValor);    
-//   `$${nuevoValor}`
+
    return `$${nuevoValor}`
  }
 
@@ -379,8 +374,8 @@ export class TableroOpComponent implements OnInit {
   eliminarOperacion(row: any){
     this.seleccionarOp(row)
     Swal.fire({
-      title: "¿Cancelar la operación?",
-      text: "No se podrá revertir esta acción",
+      title: "¿Desea dar de baja la operación?",
+      //text: "No se podrá revertir esta acción",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -389,14 +384,7 @@ export class TableroOpComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        ////////////console.log("llamada al storage desde op-abiertas, deleteItem");
-        this.storageService.deleteItem(this.componente, this.opEditar);
-        ////////////console.log("consultas Op: " , this.$consultasOp);
-        Swal.fire({
-          title: "Confirmado",
-          text: "La operación ha sido cancelada",
-          icon: "success"
-        });
+        this.openModalBaja(row.idOperacion)    
       }
     });       
     
@@ -414,9 +402,7 @@ export class TableroOpComponent implements OnInit {
     vehiculo  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === op.patenteChofer;
     });
-    //////////console.log(vehiculo[0].categoria.nombre);
-    return vehiculo[0].categoria.nombre
-
+    return vehiculo[0].categoria.nombre;
   }
 
   openModal(modo: string){
@@ -432,8 +418,7 @@ export class TableroOpComponent implements OnInit {
         modo: modo,
         item: this.opEditar,
       } 
-      //////////console.log()(info); */
-      
+
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
@@ -465,12 +450,15 @@ export class TableroOpComponent implements OnInit {
       modo = modoStorage[0];
     }
     this.$opFiltradas = this.$opActivas;
+
     this.estadoFiltrado = modo;
 /*     if(!this.btnConsulta){
       switch(modo){
         case "Todo":{
+
           this.$opFiltradas = this.$opActivas;
           this.armarTabla();
+
           break;
         };
         case "Abierta":{          
@@ -500,6 +488,7 @@ export class TableroOpComponent implements OnInit {
         }
       }
     } else {      
+
       
     } */
     switch(modo){
@@ -534,6 +523,7 @@ export class TableroOpComponent implements OnInit {
       default:{
           alert("error filtrado");
         break
+
       }
     }
   }
@@ -551,7 +541,7 @@ export class TableroOpComponent implements OnInit {
         modo: modo,
         item: this.opEditar,
       }  */
-      //////////console.log()(info); */
+
       
       //modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
@@ -567,12 +557,53 @@ export class TableroOpComponent implements OnInit {
     {
       const modalRef = this.modalService.open(ModalOpAltaComponent, {
         windowClass: 'custom-modal-top-right',        
+
         scrollable: true,    
         backdrop:"static"   
+
       });      
     
       modalRef.result.then(
         (result) => {
+         
+        },
+        (reason) => {}
+      );
+    }
+  }
+
+  openModalBaja(idOp:number){
+    {
+      const modalRef = this.modalService.open(ModalBajaComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        scrollable: true, 
+        size: 'sm',     
+      });   
+      
+      let operacion:Operacion [] = this.$opActivas.filter(o => o.idOperacion === idOp);
+
+      let info = {
+        modo: "operaciones",
+        item: operacion [0]
+      }  
+      //////console.log()(info); */
+      
+      modalRef.componentInstance.fromParent = info;
+    
+      modalRef.result.then(
+        (result) => {
+          console.log("result", result);
+          if(result !== undefined){   
+            ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+            this.storageService.deleteItemPapelera(this.componente, this.opEditar, this.opEditar.idOperacion, "BAJA", "Baja de Operación", result);
+            ////////console.log("consultas Op: " , this.$consultasOp);
+            Swal.fire({
+              title: "Confirmado",
+              text: "La operación ha sido dada de baja",
+              icon: "success"
+            });
+          }
          
         },
         (reason) => {}
@@ -651,5 +682,6 @@ export class TableroOpComponent implements OnInit {
     }
   }
   
+
   
 }

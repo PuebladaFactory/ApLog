@@ -9,16 +9,17 @@ import { StorageService } from '../servicios/storage/storage.service';
 })
 export class PagenotfoundComponent implements OnInit {
 
-  $usuario!: any;
+  usuario!: any;
 
   constructor(private router: Router, private storageService: StorageService ) { }
 
   ngOnInit(): void {
-    this.$usuario = this.storageService.loadInfo("usuario");
+    let usuarioLogueado = this.storageService.loadInfo("usuario");
+    this.usuario = structuredClone(usuarioLogueado[0])
   }
 
   volver() {
-    if(this.$usuario.hasOwnProperty('roles')){
+    if(this.usuario.hasOwnProperty('roles')){
       this.router.navigate(['op']);
     }else {
       this.router.navigate(['login']);

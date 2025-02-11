@@ -493,11 +493,11 @@ export class FacturacionOpService {
     ////console.log("proveedores FINAL: ", this.$proveedores)
     
      if(op.chofer.idProveedor === 0){
-      this.addItem("facturaOpCliente", this.facturaOpCliente);
-      this.addItem("facturaOpChofer", this.facturaOpChofer);
+      this.addItem("facturaOpCliente", this.facturaOpCliente, this.facturaOpCliente?.idFacturaOp);
+      this.addItem("facturaOpChofer", this.facturaOpChofer, this.facturaOpChofer?.idFacturaOp);
     } else {
-      this.addItem("facturaOpCliente", this.facturaOpCliente);
-      this.addItem("facturaOpProveedor", this.facturaOpProveedor);
+      this.addItem("facturaOpCliente", this.facturaOpCliente, this.facturaOpCliente?.idFacturaOp);
+      this.addItem("facturaOpProveedor", this.facturaOpProveedor, this.facturaOpProveedor?.idFacturaOp);
     }
     this.updateItem("operaciones", op);
     //this.storageService.clearInfo("facturaOpCliente");
@@ -512,13 +512,15 @@ export class FacturacionOpService {
     this.finalizarFacturacion();
   }
 
+
   addItem(componente: string, item:any){
     //this.storageService.addItem(componente, item)
     this.dbFirebase.guardarFacturaOp(componente, item)
   }
 
   updateItem(componente: string, item: any){
-    this.storageService.updateItem(componente, item);    
+    this.storageService.updateItem(componente, op, op.idOperacion, "CERRAR", "Cierre de Operación");   
+
   }
 
   guardarTarifasEventuales(op:Operacion){
@@ -547,7 +549,7 @@ export class FacturacionOpService {
       km: op.km,
     }
 
-    this.addItem("tarifasEventuales", this.tarifaEventual);
+    this.addItem("tarifasEventuales", this.tarifaEventual, this.tarifaEventual.idTarifa);
 
 
   }

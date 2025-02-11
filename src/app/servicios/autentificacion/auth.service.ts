@@ -9,6 +9,7 @@ import {
 import { Router } from '@angular/router';
 import { DbFirestoreService } from '../database/db-firestore.service';
 import { StorageService } from '../storage/storage.service';
+import { LogService } from '../log/log.service';
 @Injectable({
   providedIn: 'root',
 })
@@ -31,26 +32,17 @@ export class AuthService {
     // SERVICIOS DE LA APP
     private storage: StorageService,
     private dbFirebase: DbFirestoreService,
+    private logService: LogService
   ) {
 
   }
 
-  // Sign in with email/password
-/*   SignIn(email: string, password: string) {
-    return this.afAuth
-      .signInWithEmailAndPassword(email, password)
-      .then((result) => {
-        this.SetUserData(result.user);        
-      })
-      .catch((error) => {
-        window.alert(error.message);
-      });
-  } */
-
+ 
       SignIn(email: string, password: string) {
         return this.afAuth
           .signInWithEmailAndPassword(email, password)
           .then((result) => {
+            //console.log("result: ", result)
             // Obtener los datos del usuario desde Firestore
             this.GetUserData(result.user!.uid).then((userData) => {
               console.log('User data:', userData);
@@ -59,20 +51,38 @@ export class AuthService {
               } else {
                 this.checkEmailVerification();
                 this.usuario = userData;              
-                this.storage.setInfo(`usuario`, this.usuario);
+                //this.storage.setInfo(`usuario`, this.usuario);
+                this.storage.setInfo(`usuario`, [userData]);
                 //this.dbFirebase.setearColeccion('Vantruck')
+
+                //registra el ingreso
+                this.logService.logEvent(
+                  'LOGIN',
+                  'users',
+                  `Usuario ${result.user!.email} inició sesión.`,
+                  0,
+                  true
+                );
+
                 if(this.usuario.hasOwnProperty('roles')){
                   this.router.navigate(['/carga']);
                 } else {
                   this.router.navigate(['/unauthorized']);
                 }
-              }
-              //this.setearColeccion();
-              //this.filtrarRoles()
-              // Aquí puedes manejar los datos del usuario (por ejemplo, guardar en un servicio)
+              }              
             });
           })
           .catch((error) => {
+
+            this.logService.logEvent(
+              'LOGIN',
+              'users',
+              `Error al iniciar sesión: ${error.message}`,
+              0,
+              false
+            );
+    
+
             window.alert(error.message);
           });
       }
@@ -111,20 +121,7 @@ export class AuthService {
       }
       
 
-  // Sign up with email/password
-/*   SignUp(email: string, password: string) {
-    return this.afAuth
-      .createUserWithEmailAndPassword(email, password)
-      .then((result) => {
-        //Call the SendVerificaitonMail() function when new user sign up and returns promise 
-        this.SendVerificationMail();
-        this.SetUserData(result.user);
-      })
-      .catch((error) => {
-        window.alert(error.message);
-      });
-  } */
-
+ 
       SignUp(email: string, password: string) {
         return this.afAuth
           .createUserWithEmailAndPassword(email, password)
@@ -188,37 +185,50 @@ export class AuthService {
 
   // PORQUE NO ANDA???  USAR LOGOUT MIENTRAS
   // // Sign out
-  SignOut() {
-    //console.log("saliendo signout")
-    return this.afAuth.signOut().then(() => {
-      this.storage.clearInfo('usuario');
-      this.storage.clearAllLocalStorage()
-      // this.router.navigate(['']);
-      //Reload Angular to refresh components and prevent old data from loading up for a 
-      //another user after login. This especially applies lazy loading cases. 
-      location.reload();
-    });
-  }
+  async SignOut(): Promise<void> {
+   
+    try {
+      const usuario = this.storage.loadInfo('usuario'); // Cargar usuario del local storage
+      
+      // 1. Registrar en el log el cierre de sesión
+      if (usuario[0]) {
+        await this.logService.logEvent(
+          'LOGOUT',
+          'users',
+          `Usuario ${usuario[0].email} cerró sesión.`,
+          0,
+          true
+        );
+      }
 
-  /* Setting up user data when sign in with username/password, 
-  sign up with username/password and sign in with social auth  
-  provider in Firestore database using AngularFirestore + AngularFirestoreDocument service */
-/*   SetUserData(user: any) {
-    const userRef: AngularFirestoreDocument<any> = this.afs.doc(
-      `users/${user.uid}`
-    );
-    const userData: any = {   //aca va la interface usuario
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      emailVerified: user.emailVerified,
-    };
-    this.getUsuario(user.uid)
-    return userRef.set(userData, {
-      merge: true,
-    });
-  } */
+      
+      //this.storage.signOut()
+      // 3. Borrar el local storage
+      //this.storage.clearAllLocalStorage();
+      localStorage.clear();
+      // 4. Redirigir al login
+      this.router.navigate(['/login']);
+
+      console.log('Cierre de sesión exitoso.');
+
+      // 2. Cerrar sesión en Firebase
+      await this.afAuth.signOut();
+    } catch (error:any) {
+      console.error('Error al cerrar sesión:', error);
+
+      // Registrar el error en el log
+      await this.logService.logEvent(
+        'LOGOUT',
+        'users',
+        `Error al cerrar sesión: ${error.message}`,
+        0,
+        false
+      );
+    }
+  }
+  
+  
+  
 
     SetUserData(user: any, roles: { admin: boolean; manager: boolean; user: boolean } = { admin: false, manager: false, user: false }) {
       const userRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}`);
@@ -242,46 +252,10 @@ export class AuthService {
 
   // METODOS DE LA APP NO DEL LOGIN
 
-  getUsuario(id: string) {
-    this.dbFirebase.getUsuarioUid(id).subscribe((data) => {
-      this.usuario = data;
-      console.log("auth.service. el usuario logueado: ", data);      
-      this.storage.setInfo(`usuario`, this.usuario);
-      this.setearColeccion();
-      this.filtrarRoles()
-    });
-  }
-
-  //por alguno motivo no funciona
-  setearColeccion() {
-    this.dbFirebase.setearColeccion(this.usuario.coleccion);
-    //this.storage.initializer()
-    //this.router.navigate(['/home']);
-    /* if(this.usuario.roles.user){
-      this.router.navigate(['/chofer']);
-    } else {
-      this.router.navigate(['/home']);
-    } */
-    
-  }
-
-
-  // de acuerdo al rol, navega a la ruta correspondiente
-  // esto habria que hacerlo con guards, pero los guards trabajan sacando la info del token
-  filtrarRoles(){
-    this.router.navigate(['/carga']);
-     /* if(this.usuario.roles.god || this.usuario.roles.admin || this.usuario.roles.manager || this.usuario.roles.user){
-      this.router.navigate(['/carga']);
-    } else {
-      alert("aca va el limbo")
-    } */
-  }
 
   currentUserRoles() {
     const user = JSON.parse(localStorage.getItem('usuario')!);
-    return user ? user.roles : { god: false, admin: false, manager: false, user: false };
+    return user ? user[0].roles : { god: false, admin: false, manager: false, user: false };
   }
-
-
 
 }

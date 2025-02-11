@@ -32,12 +32,33 @@ export class DbFirestoreService {
     
 
     ////////////////////////////////////////////////////////////////////////////////////
-    getAllUser() {
-      const dataCollection = `/users`;
+    getAllColection(coleccion:string) {
+      const dataCollection = `/${coleccion}`;
       return this.firestore2.collection(dataCollection, (ref) => ref.where('roles.god', '==', false)).snapshotChanges().pipe(
         map(snapshot => snapshot.map(change => ({
           id: change.payload.doc.id,
           ...change.payload.doc.data() as any,
+        })))
+      );
+    }
+
+/*     getAllColectionLimit<T>(coleccion:string, limite:number) {
+      const dataCollection = `/${coleccion}`;
+      return this.firestore2.collection(dataCollection, (ref) => ref.orderBy('timestamp', 'desc').limit(limite)).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
+        })))
+      );
+    } */
+
+    getAllColectionRangeLimit<T>(coleccion:string, range1: any, range2:any,  limite:number) {
+      const dataCollection = `/Vantruck/datos/${coleccion}`;
+      return this.firestore2.collection(dataCollection, (ref) =>
+        ref.orderBy('timestamp', 'desc').where("timestamp", ">=", range1).where("timestamp", "<=", range2).limit(limite)).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
         })))
       );
     }
@@ -155,6 +176,17 @@ export class DbFirestoreService {
           })))
         );
         }
+
+    getAllColectionRangeIdValue<T>(componente:string, range1: any, range2:any,  campo:string, filtro:string, valor:number) : Observable<ConId<T>[]> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref =>
+        ref.where(filtro, "==", valor).where(campo, ">=", range1).where(campo, "<=", range2)).snapshotChanges().pipe(
+        map(snapshot => snapshot.map(change => ({
+          id: change.payload.doc.id,
+          ...change.payload.doc.data() as T,
+        })))
+      );
+    }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GET ALL ORDENADO POR CAMPO Y ORDEN

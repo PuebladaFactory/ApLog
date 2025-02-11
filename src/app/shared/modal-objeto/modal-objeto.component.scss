@@ -1,0 +1,26 @@
+input, option, textarea, select, span {
+    font-size: 1.3rem;
+  }
+
+  label{
+    font-size: 1.15rem;
+  }
+
+  #cerrar{   
+    background-color: transparent;
+    border-color: black;
+  }
+  
+  #cerrar:hover{
+    background-color: #0d6efd;
+    color: white;
+  }
+
+  .isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  
+  .isDisabled:hover {
+    cursor: not-allowed;
+  }

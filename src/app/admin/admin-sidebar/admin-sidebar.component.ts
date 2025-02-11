@@ -24,8 +24,10 @@ export class AdminSidebarComponent implements OnInit {
       this.$legajos = data;     
       this.buscarAlertas();
     });
-    this.$usuario = this.storageService.loadInfo("usuario")
-    console.log("this.usuario: ", this.$usuario);
+    //this.$usuario = this.storageService.loadInfo("usuario")
+    //console.log("this.usuario: ", this.$usuario);
+    let usuarioLogueado = this.storageService.loadInfo("usuario");
+    this.$usuario = structuredClone(usuarioLogueado[0]);
     
   }
   
@@ -42,7 +44,7 @@ export class AdminSidebarComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.authService.SignOut()
-        this.router.navigate(['login'])      
+        //this.router.navigate(['login'])      
         /* Swal.fire({
           title: "Confirmado",
           text: "Los cambios se han guardado",
@@ -59,11 +61,11 @@ export class AdminSidebarComponent implements OnInit {
       if(legajo.estadoGral.porVencer || legajo.estadoGral.vencido){
         if(legajo.estadoGral.vencido){
           this.alertaRoja = true;
-          console.log("alerta roja: ", this.alertaRoja);          
+          //console.log("alerta roja: ", this.alertaRoja);          
         } else{
           if(legajo.estadoGral.porVencer){
             this.alertaAmarilla = true;
-            console.log("alerta amarilla: ", this.alertaAmarilla);
+            //console.log("alerta amarilla: ", this.alertaAmarilla);
           }          
         }
       }

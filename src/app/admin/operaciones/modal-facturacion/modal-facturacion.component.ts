@@ -328,7 +328,7 @@ armarOp(){
   }).then((result) => {
     if (result.isConfirmed) {
       ////////console.log("op: ", this.op);
-      this.storageService.updateItem(this.componente, this.op);    
+      this.storageService.updateItem(this.componente, this.op, this.op.idOperacion,"EDITAR", "Edición de Operación");    
       Swal.fire({
         title: "Confirmado",
         text: "La operación ha sido editada.",

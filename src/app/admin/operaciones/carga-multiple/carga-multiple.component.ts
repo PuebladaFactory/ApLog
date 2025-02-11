@@ -568,7 +568,7 @@ aPagarOp(chofer: Chofer, patente: string, op: Operacion){
          if (result.isConfirmed) {
           for (const op of this.operaciones) {
           // Guardar la operación en la base de datos
-          await this.storageService.addItem(this.componente, op);
+          await this.storageService.addItem(this.componente, op, op.idOperacion, "ALTA", "Alta de Operación");
           
          
         }

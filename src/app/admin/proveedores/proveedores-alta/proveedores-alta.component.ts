@@ -215,9 +215,9 @@ export class ProveedoresAltaComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {     
         if(modo === "Alta")   {
-          this.storageService.addItem(this.componente, this.proveedor)
+          this.storageService.addItem(this.componente, this.proveedor, this.proveedor.idProveedor, "ALTA", `Alta de Proveedor ${this.proveedor.razonSocial}`)
         } else if (modo === "Edicion"){
-          this.storageService.updateItem(this.componente, this.proveedor)
+          this.storageService.updateItem(this.componente, this.proveedor, this.proveedor.idProveedor,"EDITAR", `Edición de Proveedor ${this.proveedor.razonSocial}`)
         }              
         Swal.fire({
           title: "Confirmado",

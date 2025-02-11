@@ -642,7 +642,7 @@ export class ModalOpAltaComponent implements OnInit {
     ////////console.log("llamada al storage desde op-alta, addItem");
     //console.log("FIN) proveedores: ", this.$proveedores);
     
-    this.storageService.addItem(this.componente, this.op);    
+    this.storageService.addItem(this.componente, this.op, this.op.idOperacion, "ALTA", "Alta de Operación");    
     this.limpiarCampos()
     this.ngOnInit()
   

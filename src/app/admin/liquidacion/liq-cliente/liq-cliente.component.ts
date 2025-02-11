@@ -18,6 +18,7 @@ import Swal from 'sweetalert2';
 import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 
 
 @Component({
@@ -367,16 +368,20 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   
 
 
-  addItem(item:any, componente:string): void {   
-    ////console.log("llamada al storage desde liq-cliente, addItem");
-    this.storageService.addItem(componente, item);        
+
+  addItem(item:any, componente:string, idItem:number, accion:string): void {   
+    console.log("llamada al storage desde liq-cliente, addItem");
+    this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : `Alta de Factura de Cliente ${item.razonSocial}`);        
+
   } 
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
     this.facturasLiquidadasCliente.forEach((factura: FacturaOp) => {
-      ////console.log("llamada al storage desde liq-cliente, addItem");
-      this.addItem(factura, "facOpLiqCliente");
+
+      console.log("llamada al storage desde liq-cliente, addItem");
+      this.addItem(factura, "facOpLiqCliente", factura.idFacturaOp, "INTERNA");
+
       this.editarOperacionesFac(factura)
       
     }); 
@@ -406,29 +411,23 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           cerrada: false,
           facturada: true,
         }
-        this.storageService.updateItem("operaciones", op);
+        this.storageService.updateItem("operaciones", op, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`);
         this.removeItem(factura);
     });
 
   }
 
   removeItem(item:any){
-    ////console.log("llamada al storage desde liq-cliente, deleteItem");
-    this.storageService.deleteItem("facturaOpCliente", item);    
+
+    console.log("llamada al storage desde liq-cliente, deleteItem");
+    this.storageService.deleteItem("facturaOpCliente", item, item.idFacturaOp, "INTERNA", "");    
+
   }
 
   editarFacturaOpCliente(factura: FacturaOp, i: number){   
     this.facDetallada = factura;   
     this.buscarTarifa(i);    
   } 
-
-  eliminarFacturaOpCliente(factura:FacturaOp, indice:number){
-    this.removeItem(factura);
-    //this.cerrarTabla(indice)
-    //this.ngOnInit(); 
-  }
-
-
 
 
 
@@ -462,6 +461,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           if(result.modo === "cerrar"){
             let titulo = result.titulo
             this.facturaCliente = result.factura;            
+
             this.addItem(this.facturaCliente, this.componente);        
 
             Swal.fire({
@@ -482,6 +482,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
                       }      
                   }
                 });   
+
 
             this.eliminarFacturasOp();
           } 
@@ -615,48 +616,104 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     });
   }
 
-  ordenarMap(columna: string): void {
-    // Convertimos el Map a un array de pares clave-valor
-    const arrayFacturas:any[] = Array.from(this.facturasPorCliente.entries());
-    ////console.log("arrayFacturas: ", arrayFacturas);
+
+  bajaOp(factura:FacturaOp, indice:number){
+    Swal.fire({
+          title: "¿Desea anular la operación?",
+          //text: "No se podrá revertir esta acción",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Confirmar",
+          cancelButtonText: "Cancelar"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.dbFirebase
+              .obtenerTarifaIdTarifa("operaciones", factura.idOperacion, "idOperacion")
+              .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+              .subscribe(data => {      
+                  this.operacion = data;
+                  //console.log("OPERACION: ", this.operacion);
+                  this.openModalBaja(factura, indice)
+              });               
+          }
+        });
+
     
-    // Determinar el orden actual
-    if (this.ordenColumna === columna) {
-      this.ordenAscendente = !this.ordenAscendente;
-    } else {
-      this.ordenColumna = columna;
-      this.ordenAscendente = true;
+  }
+
+  openModalBaja(factura:FacturaOp, indice:number){
+    {
+      const modalRef = this.modalService.open(ModalBajaComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        scrollable: true, 
+        size: 'sm',     
+      });       
+      console.log("factura",factura);
+      let info = {
+        modo: "liquidaciones",
+        item: this.operacion,
+      }  
+      
+      
+      modalRef.componentInstance.fromParent = info;
+    
+      modalRef.result.then(
+        (result) => {
+          console.log("result", result);
+          if(result !== undefined){   
+            
+              if(this.operacion.chofer.idProveedor === 0){
+                //BAJA DE FACTURA OP CHOFER
+                this.dbFirebase.obtenerTarifaMasReciente("facturaOpChofer", factura.contraParteId, "idFacturaOp", "idFacturaOp").subscribe(data => {
+                  if(data){
+                    let facturaContraParte = data
+                    console.log("facturaContraParte: ", factura);
+                    this.storageService.deleteItem("facturaOpChofer", facturaContraParte, factura.contraParteId, "INTERNA", "");        
+                  }
+                  
+                })
+                
+              } else {
+                //BAJA DE FACTURA OP PROVEEDOR
+                this.dbFirebase.obtenerTarifaMasReciente("facturaOpProveedor", factura.contraParteId, "idFacturaOp", "idFacturaOp").subscribe(data => {
+                  if(data){
+                    let facturaContraParte = data
+                    console.log("facturaContraParte: ", factura);
+                    this.storageService.deleteItem("facturaOpProveedor", facturaContraParte, factura.contraParteId, "INTERNA", "");    
+                  }
+                  
+                })
+                
+              }
+
+              //BAJA DE FACTURA OP CLIENTE
+              this.removeItem(factura);              
+              
+              //BAJA DE OP
+              this.storageService.deleteItemPapelera("operaciones", this.operacion, this.operacion.idOperacion, "Baja", `Baja de operacion ${this.operacion.idOperacion} desde Liquidaciones`, result);    
+              
+              this.cerrarTabla(indice)
+              this.ngOnInit(); 
+              //////////////////
+
+
+              ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+
+              ////////console.log("consultas Op: " , this.$consultasOp);
+              Swal.fire({
+              title: "Confirmado",
+              text: "La operación ha sido dada de baja",
+              icon: "success"
+              });
+          }
+          
+        },
+        (reason) => {}
+      );
     }
-  
-    // Ordenamos el array basado en la columna especificada ///////////// METODO EN PROCESO NO TERMINADO
-    arrayFacturas.sort((a, b) => {
-     /*  const [claveA, facturasA] = a;
-      const [claveB, facturasB] = b;
-  
-      // Aquí asumimos que el dato a ordenar está dentro de cada FacturaOp
-      const valorA = facturasA[0]?.[columna];
-      const valorB = facturasB[0]?.[columna];
-  
-      if (typeof valorA === 'string') {
-        return this.ordenAscendente
-          ? valorA.localeCompare(valorB)
-          : valorB.localeCompare(valorA);
-      } else {
-        return this.ordenAscendente ? valorA - valorB : valorB - valorA;
-      } */
-        const valorA = a[columna];
-        const valorB = b[columna];
-        if (typeof valorA === 'string') {
-          return this.ordenAscendente
-            ? valorA.localeCompare(valorB)
-            : valorB.localeCompare(valorA);
-        } else {
-          return this.ordenAscendente ? valorA - valorB : valorB - valorA;
-        }
-    });
-  
-    // Convertimos el array nuevamente a un Map
-    //this.facturasPorCliente = new Map(arrayFacturas);
   }
 
 }
