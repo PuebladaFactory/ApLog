@@ -462,7 +462,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
             let titulo = result.titulo
             this.facturaCliente = result.factura;            
 
-            this.addItem(this.facturaCliente, this.componente);        
+            this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
 
             Swal.fire({
                   title: `¿Desea imprimir el detalle del Cliente?`,

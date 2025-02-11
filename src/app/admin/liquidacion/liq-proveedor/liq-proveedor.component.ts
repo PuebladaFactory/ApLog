@@ -458,7 +458,7 @@ export class LiqProveedorComponent implements OnInit {
           if(result.modo === "cerrar"){
             this.facturaProveedor = result.factura;
 
-            this.addItem(this.facturaProveedor, this.componente);
+            this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA" );
             let titulo = result.titulo
             Swal.fire({
                 title: `¿Desea imprimir el detalle del Proveedor?`,

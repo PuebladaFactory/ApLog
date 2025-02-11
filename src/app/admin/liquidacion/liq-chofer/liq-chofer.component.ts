@@ -453,7 +453,7 @@ export class LiqChoferComponent implements OnInit {
           if(result.modo === "cerrar"){
             this.facturaChofer = result.factura;
 
-            this.addItem(this.facturaChofer, this.componente);
+            this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer, "ALTA");
             let titulo = result.titulo
             Swal.fire({
                 title: `¿Desea imprimir el detalle del Chofer?`,

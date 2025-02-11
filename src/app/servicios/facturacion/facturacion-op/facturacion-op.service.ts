@@ -493,11 +493,11 @@ export class FacturacionOpService {
     ////console.log("proveedores FINAL: ", this.$proveedores)
     
      if(op.chofer.idProveedor === 0){
-      this.addItem("facturaOpCliente", this.facturaOpCliente, this.facturaOpCliente?.idFacturaOp);
-      this.addItem("facturaOpChofer", this.facturaOpChofer, this.facturaOpChofer?.idFacturaOp);
+      this.addItem("facturaOpCliente", this.facturaOpCliente);
+      this.addItem("facturaOpChofer", this.facturaOpChofer);
     } else {
-      this.addItem("facturaOpCliente", this.facturaOpCliente, this.facturaOpCliente?.idFacturaOp);
-      this.addItem("facturaOpProveedor", this.facturaOpProveedor, this.facturaOpProveedor?.idFacturaOp);
+      this.addItem("facturaOpCliente", this.facturaOpCliente);
+      this.addItem("facturaOpProveedor", this.facturaOpProveedor);
     }
     this.updateItem("operaciones", op);
     //this.storageService.clearInfo("facturaOpCliente");
@@ -519,7 +519,7 @@ export class FacturacionOpService {
   }
 
   updateItem(componente: string, item: any){
-    this.storageService.updateItem(componente, op, op.idOperacion, "CERRAR", "Cierre de Operación");   
+    this.storageService.updateItem(componente, item, item.idOperacion, "CERRAR", "Cierre de Operación");   
 
   }
 
@@ -548,8 +548,8 @@ export class FacturacionOpService {
       idOperacion: op.idOperacion,
       km: op.km,
     }
-
-    this.addItem("tarifasEventuales", this.tarifaEventual, this.tarifaEventual.idTarifa);
+    this.storageService.addItem("tarifasEventuales", this.tarifaEventual, this.tarifaEventual.idTarifa, "ALTA", `Alta de Tarifa Eventual ${this.tarifaEventual.idTarifa}, Cliente ${op.cliente.razonSocial}, Chofer ${op.chofer.apellido} ${op.chofer.nombre} `);
+    
 
 
   }
