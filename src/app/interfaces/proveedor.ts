@@ -7,7 +7,9 @@ export interface Proveedor {
     razonSocial: string;
     cuit: number;    
     condFiscal: string;
-    direccion: Dirección;
+    //direccion: Dirección;
+    direccionFiscal: Dirección;
+    direccionOperativa: Dirección;
     contactos: Contacto [];
     tarifaTipo: TarifaTipo;
     tarifaAsignada: boolean;

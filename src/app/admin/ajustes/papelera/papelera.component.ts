@@ -98,6 +98,9 @@ export class PapeleraComponent implements OnInit {
         case "operaciones":
           id = logDoc.objeto.idOperacion;
           titulo = "Operación";
+          logDoc.objeto.estado = {abierta: true, cerrada: false, facturada: false}
+          logDoc.objeto.km = 0;
+          
           break;
         case "clientes":
           id = logDoc.objeto.idCliente;
@@ -131,7 +134,7 @@ export class PapeleraComponent implements OnInit {
           break;
       }
       console.log("id", id);
-      
+      delete logDoc.objeto.id
       
         Swal.fire({
               title: "¡Atención!",
@@ -144,6 +147,8 @@ export class PapeleraComponent implements OnInit {
               cancelButtonText: "Cancelar"
             }).then((result) => {
               if (result.isConfirmed) {
+                console.log("RESTAURAR logDoc.objeto:", logDoc.objeto);
+                
                 this.storageService.addItem(logDoc.logEntry.coleccion, logDoc.objeto, id, "RESTAURAR", `${titulo} ${id} restaurado desde la Papelera`);   
                 this.storageService.deleteItem("papelera", logDoc, logDoc.idDoc, "INTERNA", "" ) 
                 Swal.fire({

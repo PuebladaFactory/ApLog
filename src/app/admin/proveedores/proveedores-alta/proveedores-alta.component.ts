@@ -29,13 +29,19 @@ export class ProveedoresAltaComponent implements OnInit {
   soloVista:boolean = false;
   proveedorEditar!: ConId<Proveedor>;
   $provincias:any;
-  $provinciaSeleccionada: string = "";
-  $municipios!:any;
-  $municipioSeleccionado:string = "";
-  $localidades!:any;
-  $localidadSeleccionada:string = "";
-  direccionCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};
-  condFiscal: string = ""
+  $provinciaSeleccionadaF: string = "";
+  $municipiosF!:any;
+  $municipioSeleccionadoF:string = "";
+  $localidadesF!:any;
+  $localidadSeleccionadaF:string = "";
+  direccionFiscalCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};
+  condFiscal: string = "";
+  $provinciaSeleccionadaO: string = "";
+  $municipiosO!:any;
+  $municipioSeleccionadoO:string = "";
+  $localidadesO!:any;
+  $localidadSeleccionadaO:string = "";
+  direccionOperativaCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};  
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private domicilioServ:  DomicilioService) {
     this.form = this.fb.group({      
@@ -49,7 +55,8 @@ export class ProveedoresAltaComponent implements OnInit {
                 ValidarService.cuitValido,
               ],
             ],
-      direccion: [""],        
+      direccionFiscal: [""],
+      direccionOperativa: [""],
     });
 
     this.formTipoTarifa = this.fb.group({
@@ -89,7 +96,8 @@ export class ProveedoresAltaComponent implements OnInit {
     onSubmit(){
     ////console.log()(new Date().getTime()); 
     let tarifaGeneral: TarifaGralCliente [] = this.storageService.loadInfo("tarifasGralProveedor");   
-    if(this.$provinciaSeleccionada === "" || this.$municipioSeleccionado === "" || this.$localidadSeleccionada === ""){ return this.mensajesError("Debe completar el domicilio")};
+    if(this.$provinciaSeleccionadaF === "" || this.$municipioSeleccionadoF === "" || this.$localidadSeleccionadaF === ""){ return this.mensajesError("Debe completar el domicilio fiscal")};
+    if(this.$provinciaSeleccionadaO === "" || this.$municipioSeleccionadoO === "" || this.$localidadSeleccionadaO === ""){ return this.mensajesError("Debe completar el domicilio operativo")};
     if(this.condFiscal === ""){ return this.mensajesError("Debe seleccionar una condición fiscal")};
     const tarifaSeleccionada = this.getTarifaTipo();    
     if (this.form.valid) {
@@ -97,11 +105,13 @@ export class ProveedoresAltaComponent implements OnInit {
         let formValue = this.form.value;
         // Eliminar los guiones del CUIT
         let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));   
-        this.direccionCompleta = {provincia: this.$provinciaSeleccionada, municipio: this.$municipioSeleccionado, localidad: this.$localidadSeleccionada, domicilio: this.form.value.direccion}             
+        this.direccionFiscalCompleta = {provincia: this.$provinciaSeleccionadaF, municipio: this.$municipioSeleccionadoF, localidad: this.$localidadSeleccionadaF, domicilio: this.form.value.direccionFiscal};
+        this.direccionOperativaCompleta = {provincia: this.$provinciaSeleccionadaO, municipio: this.$municipioSeleccionadoO, localidad: this.$localidadSeleccionadaO, domicilio: this.form.value.direccionOperativa};
         this.proveedor = {
           ...formValue,
           cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
-          direccion: this.direccionCompleta,
+          direccionFiscal: this.direccionFiscalCompleta,
+          direccionOperativa: this.direccionOperativaCompleta,
         };                        
         this.proveedor.idProveedor = this.proveedorEditar.idProveedor;
         this.proveedor.id = this.proveedorEditar.id;
@@ -117,11 +127,13 @@ export class ProveedoresAltaComponent implements OnInit {
         let formValue = this.form.value;
         // Eliminar los guiones del CUIT
         let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));  
-        this.direccionCompleta = {provincia: this.$provinciaSeleccionada, municipio: this.$municipioSeleccionado, localidad: this.$localidadSeleccionada, domicilio: this.form.value.direccion}             
+        this.direccionFiscalCompleta = {provincia: this.$provinciaSeleccionadaF, municipio: this.$municipioSeleccionadoF, localidad: this.$localidadSeleccionadaF, domicilio: this.form.value.direccionFiscal};
+        this.direccionOperativaCompleta = {provincia: this.$provinciaSeleccionadaO, municipio: this.$municipioSeleccionadoO, localidad: this.$localidadSeleccionadaO, domicilio: this.form.value.direccionOperativa};             
         this.proveedor = {
           ...formValue,
           cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
-          direccion: this.direccionCompleta,
+          direccionFiscal: this.direccionFiscalCompleta,
+          direccionOperativa: this.direccionOperativaCompleta,
         };                
         this.proveedor.idProveedor = new Date().getTime();
         this.proveedor.contactos = this.contactos;
@@ -149,7 +161,8 @@ export class ProveedoresAltaComponent implements OnInit {
     armarForm(){
       this.form.patchValue({
         razonSocial: this.proveedorEditar.razonSocial,
-        direccion: this.proveedorEditar.direccion.domicilio,
+        direccionFiscal: this.proveedorEditar.direccionFiscal.domicilio,
+        direccionOperativa: this.proveedorEditar.direccionOperativa.domicilio,
         cuit: this.formatCuit(this.proveedorEditar.cuit),
       });
       this.formTipoTarifa.patchValue({
@@ -158,9 +171,12 @@ export class ProveedoresAltaComponent implements OnInit {
           eventual: this.proveedorEditar.tarifaTipo.eventual,
           personalizada: this.proveedorEditar.tarifaTipo.personalizada,      
       });
-      this.$provinciaSeleccionada = this.proveedorEditar.direccion.provincia;
-      this.$municipioSeleccionado = this.proveedorEditar.direccion.municipio;
-      this.$localidadSeleccionada = this.proveedorEditar.direccion.localidad;
+      this.$provinciaSeleccionadaF = this.proveedorEditar.direccionFiscal.provincia;
+      this.$municipioSeleccionadoF = this.proveedorEditar.direccionFiscal.municipio;
+      this.$localidadSeleccionadaF = this.proveedorEditar.direccionFiscal.localidad;
+      this.$provinciaSeleccionadaO = this.proveedorEditar.direccionOperativa.provincia;
+      this.$municipioSeleccionadoO = this.proveedorEditar.direccionOperativa.municipio;
+      this.$localidadSeleccionadaO = this.proveedorEditar.direccionOperativa.localidad;
       this.contactos = this.proveedorEditar.contactos;
       this.condFiscal = this.proveedorEditar.condFiscal;
     }    
@@ -310,52 +326,105 @@ export class ProveedoresAltaComponent implements OnInit {
     return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
   }
 
-  selectProvincia(e:any){
-    console.log(e.target.value);
-    this.$municipioSeleccionado = "";
-    this.$localidadSeleccionada = "";
-    this.$provinciaSeleccionada = e.target.value;
-    this.cargarMunicipios()
-  }
-
-  cargarMunicipios(): void {
-    if (this.$provinciaSeleccionada) {
-      this.domicilioServ.getMunicipios(this.$provinciaSeleccionada).subscribe({
-        next: (data) => {
-          this.$municipios = data.municipios;
-          console.log(this.$municipios);
-        },
-        error: (error) => {
-          console.error('Error al obtener municipios:', error);
-        }
-      });
+  selectProvincia(e:any, modo:string ){      
+    if(modo === "fiscal"){
+      console.log(e.target.value);
+      this.$municipioSeleccionadoF = "";
+      this.$localidadSeleccionadaF = "";
+      this.$provinciaSeleccionadaF = e.target.value;
+      this.cargarMunicipios("fiscal")
+    } else {
+      console.log(e.target.value);
+      this.$municipioSeleccionadoO = "";
+      this.$localidadSeleccionadaO = "";
+      this.$provinciaSeleccionadaO = e.target.value;
+      this.cargarMunicipios("operativo")
     }
+    
   }
 
-  selectMunicipio(e:any){
-    console.log(e.target.value);    
-    this.$localidadSeleccionada = "";
-    this.$municipioSeleccionado = e.target.value;
-    this.cargarLocalidades()
-  }
-
-  cargarLocalidades(): void {
-    if (this.$municipioSeleccionado) {
-      this.domicilioServ.getLocalidades(this.$municipioSeleccionado, this.$provinciaSeleccionada).subscribe({
-        next: (data) => {
-          this.$localidades = data.localidades;
-          console.log(this.$localidades);
-        },
-        error: (error) => {
-          console.error('Error al obtener localidades:', error);
-        }
-      });
+  cargarMunicipios(modo:string): void {
+    if(modo === "fiscal"){
+      if (this.$provinciaSeleccionadaF) {
+        this.domicilioServ.getMunicipios(this.$provinciaSeleccionadaF).subscribe({
+          next: (data) => {
+            this.$municipiosF = data.municipios;
+            console.log(this.$municipiosF);
+          },
+          error: (error) => {
+            console.error('Error al obtener municipios:', error);
+          }
+        });
+      }
+    }else{
+      if (this.$provinciaSeleccionadaO) {
+        this.domicilioServ.getMunicipios(this.$provinciaSeleccionadaO).subscribe({
+          next: (data) => {
+            this.$municipiosO = data.municipios;
+            console.log(this.$municipiosO);
+          },
+          error: (error) => {
+            console.error('Error al obtener municipios:', error);
+          }
+        });
+      }
     }
+    
   }
 
-  selectLocalidad(e:any){
-    console.log(e.target.value);
-    this.$localidadSeleccionada = e.target.value;
+  selectMunicipio(e:any, modo: string){
+    if(modo === "fiscal"){
+      console.log(e.target.value);        
+      this.$localidadSeleccionadaF = "";
+      this.$municipioSeleccionadoF = e.target.value;
+      this.cargarLocalidades("fiscal")
+    }else{
+      console.log(e.target.value);
+      this.$localidadSeleccionadaO = "";
+      this.$municipioSeleccionadoO = e.target.value;
+      this.cargarLocalidades("operativo")
+    }
+    
+  }
+
+  cargarLocalidades(modo:string): void {
+    if(modo === "fiscal"){
+      if (this.$municipioSeleccionadoF) {
+        this.domicilioServ.getLocalidades(this.$municipioSeleccionadoF, this.$provinciaSeleccionadaF).subscribe({
+          next: (data) => {
+            this.$localidadesF = data.localidades;
+            console.log(this.$localidadesF);
+          },
+          error: (error) => {
+            console.error('Error al obtener localidades:', error);
+          }
+        });
+      }
+    }else{
+      if (this.$municipioSeleccionadoO) {
+        this.domicilioServ.getLocalidades(this.$municipioSeleccionadoO, this.$provinciaSeleccionadaO).subscribe({
+          next: (data) => {
+            this.$localidadesO = data.localidades;
+            console.log(this.$localidadesO);
+          },
+          error: (error) => {
+            console.error('Error al obtener localidades:', error);
+          }
+        });
+      }
+    }
+    
+  }
+
+  selectLocalidad(e:any, modo:string){
+    if(modo === "fiscal"){
+      console.log(e.target.value);
+      this.$localidadSeleccionadaF = e.target.value;
+    }else{
+      console.log(e.target.value);
+      this.$localidadSeleccionadaO = e.target.value;
+    }
+    
     
   }
   

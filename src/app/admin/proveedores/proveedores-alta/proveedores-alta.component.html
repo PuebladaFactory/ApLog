@@ -3,16 +3,19 @@
         <h1 >Alta Proveedor</h1>
         <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
     </div>
-    <div class="modal-body">
-        <div class="row">        
-            <div class="d-flex my-2">
-                <div class="w-50">
-                    <h2>Datos del Proveedor:</h2>
-                </div>
-                <div class="w-50">
-                    <h2 class="ms-2">Dirección:</h2>
-                </div>
+    <div class="modal-body">        
+        <div class="row">
+            <div class="col">
+                <h2>Datos del Proveedor:</h2>
             </div>
+            <div class="col">
+                <h2 class="">Dirección Fiscal:</h2>
+            </div>
+            <div class="col">
+                <h2 class="">Dirección Operativa:</h2>
+            </div>
+        </div>
+        <div class="row">
             <div>
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                     <div class="row">                        
@@ -53,60 +56,97 @@
                                     <option value="Autónomo - Factura B">Autónomo - Factura B</option> -->                            
                                 </select>
                             </div>                         
-                            <div class="form-group mb-2" [ngClass]="{'isDisabled': soloVista}">
+                            <div class="form-group mb-2"  [ngClass]="{'isDisabled': soloVista}">
                                 <h3 class="">Tipo de Tarifa</h3>
-                                <form [formGroup]="formTipoTarifa" (ngSubmit)="onSubmit()" class="d-flex mt-2 justify-content-start">
-                                    <div class="form-check form-switch form-check-reverse w-25 ">
-                                        <input formControlName="general" class="form-check-input" type="checkbox" 
-                                                (change)="onTarifaTipoChange('general')" id="tarifaGeneral" checked >
-                                        <label class="form-check-label" for="tarifaGeneral">General</label>
-                                    </div>
-                                    <div class="form-check form-switch form-check-reverse w-25">
-                                        <input formControlName="especial" class="form-check-input" type="checkbox" 
+                                <form [formGroup]="formTipoTarifa" (ngSubmit)="onSubmit()" class="d-flex mt-2">
+                                    <div class="w-100">
+                                        <div class="form-check form-switch ms-2 me-4">
+                                          <input formControlName="general" class="form-check-input" type="checkbox" 
+                                                (change)="onTarifaTipoChange('general')" id="tarifaGeneral" checked>
+                                          <label class="form-check-label" for="tarifaGeneral">General</label>
+                                        </div>
+                                        <div class="form-check form-switch ms-2 me-4">
+                                          <input formControlName="especial" class="form-check-input" type="checkbox" 
                                                 (change)="onTarifaTipoChange('especial')" id="tarifaEspecial">
-                                        <label class="form-check-label" for="tarifaEspecial">Especial</label>
+                                          <label class="form-check-label" for="tarifaEspecial">Especial</label>
+                                        </div>
                                     </div>
-                                    <div class="form-check form-switch form-check-reverse w-25">
-                                        <input formControlName="eventual" class="form-check-input" type="checkbox" 
-                                                (change)="onTarifaTipoChange('eventual')" id="tarifaEventual" >
-                                        <label class="form-check-label" for="tarifaEventual">Eventual</label>
-                                    </div>                            
+                                    <div class="w-100">
+                                        <div class="form-check form-switch me-4">
+                                          <input formControlName="eventual" class="form-check-input" type="checkbox" 
+                                                (change)="onTarifaTipoChange('eventual')" id="tarifaEventual">
+                                          <label class="form-check-label" for="tarifaEventual">Eventual</label>
+                                        </div>                                        
+                                    </div>
                                 </form>
-                            </div>                             
+                              </div>                        
                         </div>
                         <div class="col" [ngClass]="{'isDisabled': soloVista}">                                                                  
                             <div class="form-group mb-2">
                                 <label>Provincia</label>
-                                <select id="selectProvincias"     class="form-select form-select-md" (change)="selectProvincia($event)">
-                                    <option [value]="$provinciaSeleccionada"> {{$provinciaSeleccionada === "" ? "Elige una provincia" : $provinciaSeleccionada }}</option>
+                                <select id="selectProvincias"     class="form-select form-select-md" (change)="selectProvincia($event,'fiscal')">
+                                    <option [value]="$provinciaSeleccionadaF"> {{$provinciaSeleccionadaF === "" ? "Elige una provincia" : $provinciaSeleccionadaF }}</option>
                                     <option *ngFor="let prov of $provincias" [value]="prov.nombre">{{prov.nombre}}</option>
                                 </select>
                                 <span></span>
                             </div>                    
                             <div class="form-group mb-2">
                                 <label>Municipio</label>
-                                <select id="selectMunicipios" class="form-select form-select-md"  (change)="selectMunicipio($event)">
-                                    <option [value]="$municipioSeleccionado"> {{$municipioSeleccionado === "" ? "Elige un municipio" : $municipioSeleccionado }}</option>
-                                    <option *ngFor="let mun of $municipios" [value]="mun.nombre">{{mun.nombre}}</option>
+                                <select id="selectMunicipios" class="form-select form-select-md"  (change)="selectMunicipio($event, 'fiscal')">
+                                    <option [value]="$municipioSeleccionadoF"> {{$municipioSeleccionadoF === "" ? "Elige un municipio" : $municipioSeleccionadoF }}</option>
+                                    <option *ngFor="let mun of $municipiosF" [value]="mun.nombre">{{mun.nombre}}</option>
                                 </select>
                                 <span></span>
                             </div>
                             <div class="form-group mb-2">
                                 <label>Localidad</label>
-                                <select id="selectLocalidades" class="form-select form-select-md" (change)="selectLocalidad($event)">
-                                    <option [value]="$localidadSeleccionada"> {{$localidadSeleccionada === "" ? "Elige una localidad" : $localidadSeleccionada }}</option>
-                                    <option *ngFor="let loc of $localidades" [value]="loc.nombre">{{loc.nombre}}</option>
+                                <select id="selectLocalidades" class="form-select form-select-md" (change)="selectLocalidad($event, 'fiscal')">
+                                    <option [value]="$localidadSeleccionadaF"> {{$localidadSeleccionadaF === "" ? "Elige una localidad" : $localidadSeleccionadaF }}</option>
+                                    <option *ngFor="let loc of $localidadesF" [value]="loc.nombre">{{loc.nombre}}</option>
                                 </select>
                             </div>
                             <div class="form-group mb-2">
                                 <label for="Direccion">Domicilio</label>
                                 <div class="input-group">
-                                    <input formControlName="direccion" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('direccion').invalid && (form.get('direccion').dirty || form.get('direccion').touched) }" [ngClass]="{'isDisabled': soloVista}">                            
+                                    <input formControlName="direccionFiscal" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('direccionFiscal').invalid && (form.get('direccionFiscal').dirty || form.get('direccionFiscal').touched) }" [ngClass]="{'isDisabled': soloVista}">                            
                                 </div>
-                                <div *ngIf="hasError('direccion', 'required')">El domicilio es obligatorio.</div>
-                                <div *ngIf="hasError('direccion', 'maxlength')">El domicilio no debe exceder 100 caracteres.</div>
+                                <div *ngIf="hasError('direccionFiscal', 'required')">El domicilio fiscal es obligatorio.</div>
+                                <div *ngIf="hasError('direccionFiscal', 'maxlength')">El domicilio fiscal no debe exceder 100 caracteres.</div>
                             </div>
-                        </div>                    
+                        </div>    
+                        <div class="col" [ngClass]="{'isDisabled': soloVista}">                                                                  
+                          <div class="form-group mb-2">
+                              <label>Provincia</label>
+                              <select id="selectProvincias"     class="form-select form-select-md" (change)="selectProvincia($event, 'operativa')">
+                                  <option [value]="$provinciaSeleccionadaO"> {{$provinciaSeleccionadaO === "" ? "Elige una provincia" : $provinciaSeleccionadaO }}</option>
+                                  <option *ngFor="let prov of $provincias" [value]="prov.nombre">{{prov.nombre}}</option>
+                              </select>
+                              <span></span>
+                          </div>                    
+                          <div class="form-group mb-2">
+                              <label>Municipio</label>
+                              <select id="selectMunicipios" class="form-select form-select-md"  (change)="selectMunicipio($event, 'operativa')">
+                                  <option [value]="$municipioSeleccionadoO"> {{$municipioSeleccionadoO === "" ? "Elige un municipio" : $municipioSeleccionadoO }}</option>
+                                  <option *ngFor="let mun of $municipiosO" [value]="mun.nombre">{{mun.nombre}}</option>
+                              </select>
+                              <span></span>
+                          </div>
+                          <div class="form-group mb-2">
+                              <label>Localidad</label>
+                              <select id="selectLocalidades" class="form-select form-select-md" (change)="selectLocalidad($event, 'operativa')">
+                                  <option [value]="$localidadSeleccionadaO"> {{$localidadSeleccionadaO === "" ? "Elige una localidad" : $localidadSeleccionadaO }}</option>
+                                  <option *ngFor="let loc of $localidadesO" [value]="loc.nombre">{{loc.nombre}}</option>
+                              </select>
+                          </div>
+                          <div class="form-group mb-2">
+                              <label for="Direccion">Domicilio</label>
+                              <div class="input-group">
+                                  <input formControlName="direccionOperativa" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('direccionOperativa').invalid && (form.get('direccionOperativa').dirty || form.get('direccionOperativa').touched) }" [ngClass]="{'isDisabled': soloVista}">                            
+                              </div>
+                              <div *ngIf="hasError('direccionOperativa', 'required')">El domicilio operativo es obligatorio.</div>
+                              <div *ngIf="hasError('direccionOperativa', 'maxlength')">El domicilio operativo no debe exceder 100 caracteres.</div>
+                          </div>
+                        </div>
                     </div>                
                 </form>
                 <hr>
