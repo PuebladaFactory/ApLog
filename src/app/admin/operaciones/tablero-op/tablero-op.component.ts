@@ -614,7 +614,12 @@ export class TableroOpComponent implements OnInit {
   getProveedor(idProveedor:number){
     if(this.$proveedores && idProveedor !== 0){
       let proveedor: Proveedor [] = this.$proveedores.filter(p => p.idProveedor === idProveedor);
-      return proveedor[0].razonSocial;
+      if(proveedor[0]){
+        return proveedor[0].razonSocial;  
+      } else {
+        return "Proveedor dado de baja";
+      }
+      
     } else {
       return "No"
     }
