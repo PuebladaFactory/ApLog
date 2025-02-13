@@ -76,7 +76,7 @@
                     <td>{{getFecha(r.timestamp)}}</td>
                     <td>{{getUsuario(r.userEmail)}}</td>
                     <td>{{r.action}}</td>
-                    <td>{{r.coleccion}}</td>
+                    <td>{{r.coleccion === "facturaCliente" ? "Factura Cliente" : r.coleccion === "facturaChofer" ? "Factura Chofer" : r.coleccion === "facturaProveedor" ? "Factura Proveedor" : r.coleccion}}</td>
                     <td>{{r.details}}</td>
                     <td>{{r.idObjet}}</td>
                     <td>{{r.status }}</td>    

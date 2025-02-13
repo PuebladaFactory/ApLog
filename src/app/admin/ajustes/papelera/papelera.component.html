@@ -39,7 +39,7 @@
                 <tr *ngFor="let p of papelera | filter: searchText">
                     <td>{{getFecha(p.logEntry.timestamp)}}</td>
                     <td>{{getUsuario(p.logEntry.userEmail)}}</td>
-                    <td>{{p.logEntry.coleccion}}</td>
+                    <td>{{p.logEntry.coleccion === "facturaCliente" ? "Factura Cliente" : p.logEntry.coleccion === "facturaChofer" ? "Factura Chofer" : p.logEntry.coleccion === "facturaProveedor" ? "Factura Proveedor" : p.logEntry.coleccion}}</td>                    
                     <td>{{p.motivoBaja}}</td>
                     <td>{{p.logEntry.idObjet}}</td>
                     <td class="text-center"><app-btn-leer name="Detalle" (click)="modalObjeto(p)"></app-btn-leer></td>
