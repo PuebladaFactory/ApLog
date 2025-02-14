@@ -54,15 +54,17 @@ export class AuthService {
                 //this.storage.setInfo(`usuario`, this.usuario);
                 this.storage.setInfo(`usuario`, [userData]);
                 //this.dbFirebase.setearColeccion('Vantruck')
-
-                //registra el ingreso
-                this.logService.logEvent(
-                  'LOGIN',
-                  'users',
-                  `Usuario ${result.user!.email} inició sesión.`,
-                  0,
-                  true
-                );
+                if(!this.usuario.roles.god){
+                    //registra el ingreso
+                    this.logService.logEvent(
+                      'LOGIN',
+                      'users',
+                      `Usuario ${result.user!.email} inició sesión.`,
+                      0,
+                      true
+                    );
+                }
+                
 
                 if(this.usuario.hasOwnProperty('roles')){
                   this.router.navigate(['/carga']);
@@ -191,7 +193,7 @@ export class AuthService {
       const usuario = this.storage.loadInfo('usuario'); // Cargar usuario del local storage
       
       // 1. Registrar en el log el cierre de sesión
-      if (usuario[0]) {
+      if (usuario[0] && !usuario[0].roles.god) {
         await this.logService.logEvent(
           'LOGOUT',
           'users',
