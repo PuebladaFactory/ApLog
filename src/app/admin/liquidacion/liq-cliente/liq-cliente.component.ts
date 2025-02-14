@@ -204,8 +204,13 @@ export class LiqClienteComponent {
     cliente = this.$clientes.filter((cliente:Cliente)=>{
       return cliente.idCliente === idCliente
     })
+    if(cliente[0]){
+      return cliente[0].razonSocial;
+    } else {
+      return `Cliente dado de baja. idChofer ${idCliente}`;
+    }
 
-    return cliente[0].razonSocial;
+
 
   }
 
@@ -214,8 +219,12 @@ export class LiqClienteComponent {
     chofer = this.$choferes.filter((chofer:Chofer)=>{
       return chofer.idChofer === idChofer
     })
-
-    return chofer[0].apellido + " " + chofer[0].nombre;
+    if(chofer[0]){
+      return chofer[0].apellido + " " + chofer[0].nombre; 
+    } else {
+      return `Chofer dado de baja. idChofer ${idChofer}`;
+    }
+  
   }
 
   getProveedor(proveedor: Proveedor){
@@ -409,7 +418,9 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         op.estado = {
           abierta: false,
           cerrada: false,
-          facturada: true,
+          facCliente: true,
+          facChofer: op.estado.facChofer,
+          facturada: op.estado.facCliente && op.estado.facChofer ? true : false,
         }
         this.storageService.updateItem("operaciones", op, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`);
         this.removeItem(factura);

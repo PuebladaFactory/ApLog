@@ -194,8 +194,13 @@ export class LiqChoferComponent implements OnInit {
     chofer = this.$choferes.filter((chofer:Chofer)=>{
       return chofer.idChofer === idChofer;
     })
+    if(chofer[0]){
+      return chofer[0].apellido + " " + chofer[0].nombre; 
+    } else {
+      return `Chofer dado de baja. idChofer ${idChofer}`;
+    }
 
-    return chofer[0].apellido + " " + chofer[0].nombre;
+    
   }
 
   getCliente(idCliente: number){
@@ -203,8 +208,11 @@ export class LiqChoferComponent implements OnInit {
     cliente = this.$clientes.filter((cliente:Cliente)=>{
       return cliente.idCliente === idCliente
     })
-
-    return cliente[0].razonSocial;
+    if(cliente[0]){
+      return cliente[0].razonSocial;
+    } else {
+      return `Cliente dado de baja. idChofer ${idCliente}`;
+    }
 
   } 
 
@@ -399,7 +407,9 @@ export class LiqChoferComponent implements OnInit {
         op.estado = {
           abierta: false,
           cerrada: false,
-          facturada: true,
+          facCliente: op.estado.facCliente,
+          facChofer: true,
+          facturada: op.estado.facCliente && op.estado.facChofer ? true : false,
         }
         this.storageService.updateItem("operaciones", op, op.idOperacion, "Liquidar", `Operación de Chofer ${op.chofer.apellido} ${op.chofer.nombre} Liquidada`);
         this.removeItem(factura);

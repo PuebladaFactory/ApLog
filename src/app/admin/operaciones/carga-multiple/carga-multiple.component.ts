@@ -383,6 +383,8 @@ onSubmit() {
             estado: {
               abierta: true,
               cerrada: false,
+              facCliente: false,
+              facChofer: false,
               facturada: false
             },            
             tarifaTipo: this.tPersonalizada ? {

@@ -137,6 +137,8 @@
               <span [ngClass]="{
                   'estado-abierta': row.estado === 'Abierta',
                   'estado-cerrada': row.estado === 'Cerrada',
+                  'estado-facCliente': row.estado === 'Cliente Fac',
+                  'estado-facChofer': row.estado === 'Chofer Fac',
                   'estado-facturada': row.estado === 'Facturada'
                 }">
                 {{ row.estado }}

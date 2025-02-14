@@ -49,6 +49,8 @@ export interface TarifaPersonalizada {
 export interface EstadoOp {    
     abierta: boolean;
     cerrada: boolean;
+    facCliente: boolean;
+    facChofer: boolean;
     facturada: boolean;
 }
 

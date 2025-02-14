@@ -491,6 +491,8 @@ export class ModalOpAltaComponent implements OnInit {
       estado:{
         abierta: true,
         cerrada: false,
+        facCliente: false,
+        facChofer: false,
         facturada: false,
       },        
       tarifaTipo: this.tEventual ? {
