@@ -531,6 +531,8 @@ export class ModalOpAltaComponent implements OnInit {
         }
       },
       documentacion: null,
+      multiplicadorCliente: 1,
+      multiplicadorChofer: 1,
   };   
 
   //console.log("APENAS SE CREA: ", this.op);

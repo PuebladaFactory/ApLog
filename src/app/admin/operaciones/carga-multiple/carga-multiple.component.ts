@@ -417,7 +417,9 @@ onSubmit() {
                 tarifaBase: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aPagar : 0, // Ajustar según tu lógica
                 aPagar: this.tPersonalizada ? this.tarifaPersonalizada.secciones[seccion - 1].categorias[categoria - 1].aPagar : 0, // Ajustar según tu lógica
               }
-            }
+            },
+            multiplicadorCliente: 1,
+            multiplicadorChofer: 1,
         };
         if(operacion.tarifaTipo.especial){
             if(cliente.tarifaTipo.especial){///si el cliente tiene una tarifa especial la buscar y llama al servicio

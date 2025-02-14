@@ -24,6 +24,8 @@ export interface Operacion {
     estado: EstadoOp;   
     tarifaTipo :TarifaTipo;
     valores: Valores;
+    multiplicadorCliente:number;
+    multiplicadorChofer:number;
 }
 
 export interface TarifaEventual {    

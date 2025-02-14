@@ -148,10 +148,11 @@ export class TableroOpComponent implements OnInit {
     .subscribe(data => {
       if(data){
         ////console.log("1)aca??: ");      
-        //this.$opActivas = data;
-        this.$opActivas = this.actualizarEstadoOp(data);
+        this.$opActivas = data;
+        //this.$opActivas = this.actualizarEstadoOp(data);
+        //this.$opActivas = this.agregarMultiplicador(data);
         //this.$opActivas = this.$opActivas.sort((a, b) => a.fecha.getTime() - b.fecha.getTime()); // Ordena por el nombre del chofer
-        //console.log("this.$opActivas", this.$opActivas);        
+        console.log("this.$opActivas", this.$opActivas);        
         /* this.$opActivas.forEach(op=>{
               this.dbFirebase.update("operaciones", op)
         }) */
@@ -172,7 +173,7 @@ export class TableroOpComponent implements OnInit {
      
   }
 
-  actualizarEstadoOp(operaciones: Operacion[]): Operacion[] {
+/*   actualizarEstadoOp(operaciones: Operacion[]): Operacion[] {
     return operaciones.map(operacion => {
       // Si el estado no tiene las nuevas propiedades, las inicializamos
       if (!operacion.estado.facCliente && !operacion.estado.facChofer) {
@@ -181,6 +182,20 @@ export class TableroOpComponent implements OnInit {
           facCliente: operacion.estado.facturada ? true : false, // Inicializamos como false o según la lógica de tu aplicación
           facChofer: false,  // Inicializamos como false o según la lógica de tu aplicación
           facturada: false // Mantenemos el valor existente de facturada
+        };
+      }
+      return operacion;
+    });
+  } */
+
+  agregarMultiplicador(operaciones: Operacion[]): Operacion[] {
+    return operaciones.map(operacion => {
+      // Si el estado no tiene las nuevas propiedades, las inicializamos
+      if (!operacion.multiplicadorCliente && !operacion.multiplicadorChofer) {
+        operacion = {
+          ...operacion,
+          multiplicadorCliente: 1,
+          multiplicadorChofer: 1,
         };
       }
       return operacion;
