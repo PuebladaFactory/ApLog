@@ -9,6 +9,7 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { Subject, takeUntil } from 'rxjs';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -46,7 +47,7 @@ export class ProveedoresListadoComponent implements OnInit {
 visibleColumns = this.allColumns.filter(column => column.selected);
 selected = [];
 count = 0;
-limit = 20;
+limit = 100;
 offset = 0;
 sortType = SortType.multi; // Aquí usamos la enumeración SortType
 selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
@@ -60,7 +61,7 @@ private destroy$ = new Subject<void>();
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
-  constructor(private storageService: StorageService, private modalService: NgbModal, private legajoServ: LegajosService){}
+  constructor(private storageService: StorageService, private modalService: NgbModal, private legajoServ: LegajosService, private dbFirebase: DbFirestoreService, ){}
   
   ngOnInit(): void { 
     //this.proveedores$ = this.storageService.proveedores$; 
@@ -69,9 +70,12 @@ private destroy$ = new Subject<void>();
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       if(data){
-        this.$proveedores = data;
-        this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-        this.armarTabla();
+        //this.$proveedores = data;
+        this.$proveedores = this.actualizarProveedor(data);
+        //this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+        //this.armarTabla();
+        console.log("this.$proveedores", this.$proveedores);
+        
       }      
     })
 
@@ -89,6 +93,23 @@ private destroy$ = new Subject<void>();
     this.storageService.syncChanges<Proveedor>('proveedores');
     this.storageService.syncChanges<Chofer>('choferes');
   }
+
+  
+ actualizarProveedor(proveedores: any[]): Proveedor[] {
+  return proveedores.map(proveedor => {
+    // Si el proveedor tiene la propiedad `direccion`, la dividimos en `direccionFiscal` y `direccionOperativa`
+    if (proveedor.direccion) {
+      proveedor = {
+        ...proveedor, // Mantenemos todas las propiedades existentes
+        direccionFiscal: proveedor.direccion, // Asignamos la dirección existente a `direccionFiscal`
+        direccionOperativa: proveedor.direccion, // Asignamos la misma dirección a `direccionOperativa`
+        //direccion: undefined // Eliminamos la propiedad `direccion` (opcional, dependiendo de si quieres mantenerla)
+      };
+      delete proveedor.direccion
+    }
+    return proveedor;
+  });
+}
 
   ngOnDestroy(): void {
     this.destroy$.next();

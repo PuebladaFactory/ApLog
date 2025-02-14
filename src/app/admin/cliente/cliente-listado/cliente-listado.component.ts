@@ -44,7 +44,7 @@ export class ClienteListadoComponent implements OnInit {
   visibleColumns = this.allColumns.filter(column => column.selected);
   selected = [];
   count = 0;
-  limit = 20;
+  limit = 100;
   offset = 0;
   sortType = SortType.multi; // Aquí usamos la enumeración SortType
   selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
