@@ -473,6 +473,8 @@ export class FacturacionOpService {
             op.estado = {
               abierta : false,
               cerrada : true,
+              facCliente: false,
+              facChofer: false,
               facturada : false,
             };
             op.facturaCliente = this.facturaOpCliente.idFacturaOp;
@@ -490,6 +492,8 @@ export class FacturacionOpService {
         op.estado = {
           abierta : false,
           cerrada : true,
+          facCliente: false,
+          facChofer: false,
           facturada : false,
         };
         op.facturaCliente = this.facturaOpCliente.idFacturaOp;

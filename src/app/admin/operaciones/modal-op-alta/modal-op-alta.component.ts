@@ -491,6 +491,8 @@ export class ModalOpAltaComponent implements OnInit {
       estado:{
         abierta: true,
         cerrada: false,
+        facCliente: false,
+        facChofer: false,
         facturada: false,
       },        
       tarifaTipo: this.tEventual ? {
@@ -529,6 +531,8 @@ export class ModalOpAltaComponent implements OnInit {
         }
       },
       documentacion: null,
+      multiplicadorCliente: 1,
+      multiplicadorChofer: 1,
   };   
 
   //console.log("APENAS SE CREA: ", this.op);

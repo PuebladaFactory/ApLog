@@ -161,7 +161,8 @@
             <!-- Aquí agregamos la tabla adicional -->
             <tr *ngIf="mostrarTablaChofer[i]" >
                 <td  [attr.colspan]="datosTablaChofer.length + 9">
-                    <!-- Aquí irían los datos adicionales del cliente -->                         
+                    <!-- Aquí irían los datos adicionales del cliente --> 
+                    <input class="form-control mt-2" type="text" [(ngModel)]="searchText2" placeholder="Buscar por parámetro">                           
                     <table class="table table-light table-striped table-bordered" >
                         <thead>
                             <tr>
@@ -184,7 +185,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let factura of facturasPorChofer.get(chofer.idChofer)">
+                            <tr *ngFor="let factura of facturasPorChofer.get(chofer.idChofer) | filter: searchText2;">
                                 <td >
                                     <input type="checkbox" [checked]="factura.liquidacion" (change)="liquidarFac(factura)">
                                 </td>
