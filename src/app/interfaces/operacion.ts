@@ -24,6 +24,8 @@ export interface Operacion {
     estado: EstadoOp;   
     tarifaTipo :TarifaTipo;
     valores: Valores;
+    multiplicadorCliente:number;
+    multiplicadorChofer:number;
 }
 
 export interface TarifaEventual {    
@@ -49,6 +51,8 @@ export interface TarifaPersonalizada {
 export interface EstadoOp {    
     abierta: boolean;
     cerrada: boolean;
+    facCliente: boolean;
+    facChofer: boolean;
     facturada: boolean;
 }
 

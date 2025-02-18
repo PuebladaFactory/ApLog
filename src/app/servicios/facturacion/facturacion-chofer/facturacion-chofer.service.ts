@@ -54,15 +54,29 @@ export class FacturacionChoferService {
     let vehiculo = op.chofer.vehiculo.filter(vehiculo => vehiculo.dominio === op.patenteChofer);
     console.log("1c) vehiculo: ", vehiculo);    
 
-    this.tarifaBase = this.$calcularCG(tarifa, vehiculo[0]);
-    op.valores.chofer.tarifaBase = this.tarifaBase;  
-    ////console.log("tarifa base: " ,this.tarifaBase);
-    this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0 ;
-    op.valores.chofer.acompValor = this.acompaniante;
-    ////console.log("acompañante valor: ", this.acompaniante);
-    this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
-    op.valores.chofer.kmAdicional = this.kmValor;
-    op.valores.chofer.aPagar = this.tarifaBase + this.acompaniante + this.kmValor;    
+    if(op.multiplicadorCliente === 0){
+      this.tarifaBase = 0;  
+      op.valores.chofer.tarifaBase = 0;  
+      //console.log("tarifa base: " ,this.tarifaBase);
+      this.acompaniante = 0 ;
+      op.valores.chofer.acompValor = 0
+      //console.log("acompañante valor: ", this.acompaniante);
+      this.kmValor = 0;
+      op.valores.chofer.kmAdicional = 0;
+      op.valores.chofer.aPagar = 0;
+    } else {
+      this.tarifaBase = this.$calcularCG(tarifa, vehiculo[0])*op.multiplicadorChofer;
+      op.valores.chofer.tarifaBase = this.tarifaBase;  
+      ////console.log("tarifa base: " ,this.tarifaBase);
+      this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0 ;
+      op.valores.chofer.acompValor = this.acompaniante;
+      ////console.log("acompañante valor: ", this.acompaniante);
+      this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
+      op.valores.chofer.kmAdicional = this.kmValor;
+      op.valores.chofer.aPagar = this.tarifaBase + this.acompaniante + this.kmValor;    
+    }
+
+    
     ////console.log("km valor: ", this.kmValor);
     this.$crearFacturaOpChofer(op, tarifa.idTarifa,0);
     respuesta = {
@@ -74,7 +88,7 @@ export class FacturacionChoferService {
   }
 
   $facturarOpPersChofer(op: Operacion, tarifa: TarifaPersonalizadaCliente, idProveedor: number){
-    this.tarifaBase = this.$calcularCGPersonalizada(tarifa, op);
+    this.tarifaBase = this.$calcularCGPersonalizada(tarifa, op)*op.multiplicadorChofer;
     this.acompaniante = 0,
     this.kmValor = 0 , 
     //console.log("tarifa base: " ,this.tarifaBase);
@@ -84,7 +98,7 @@ export class FacturacionChoferService {
   }
 
   $facturarOpEveChofer(op: Operacion, idProveedor: number){
-    this.tarifaBase = op.tarifaEventual.chofer.valor;
+    this.tarifaBase = op.tarifaEventual.chofer.valor*op.multiplicadorChofer;
     this.acompaniante = 0;
     this.kmValor = 0;
     this.$crearFacturaOpChofer(op, 0,idProveedor);
@@ -190,18 +204,32 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
   }
   console.log("1)Proveedor Serv:  op: ", op, " tarifa: ", tarifa);
   let vehiculo = op.chofer.vehiculo.filter(vehiculo => vehiculo.dominio === op.patenteChofer)
-  ////console.log("1c) vehiculo: ", vehiculo);    
+  ////console.log("1c) vehiculo: ", vehiculo); 
+  
+  if(op.multiplicadorCliente === 0){
+    this.tarifaBase = 0;  
+    op.valores.chofer.tarifaBase = 0;  
+    //console.log("tarifa base: " ,this.tarifaBase);
+    this.acompaniante = 0 ;
+    op.valores.chofer.acompValor = 0
+    //console.log("acompañante valor: ", this.acompaniante);
+    this.kmValor = 0;
+    op.valores.chofer.kmAdicional = 0;
+    op.valores.chofer.aPagar = 0;
+  } else {
+    this.tarifaBase = this.$calcularCG(tarifa, vehiculo[0])*op.multiplicadorChofer;
+    op.valores.chofer.tarifaBase = this.tarifaBase;  
+    ////console.log("tarifa base: " ,this.tarifaBase);
+    this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0 ;
+    op.valores.chofer.acompValor = this.acompaniante;  
+    ////console.log("acompañante valor: ", this.acompaniante);
+    this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
+    op.valores.chofer.kmAdicional = this.kmValor;  
+    op.valores.chofer.aPagar = this.tarifaBase + this.acompaniante + this.kmValor;    
+    ////console.log("km valor: ", this.kmValor);
+  }
 
-  this.tarifaBase = this.$calcularCG(tarifa, vehiculo[0]);
-  op.valores.chofer.tarifaBase = this.tarifaBase;  
-  ////console.log("tarifa base: " ,this.tarifaBase);
-  this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0 ;
-  op.valores.chofer.acompValor = this.acompaniante;  
-  ////console.log("acompañante valor: ", this.acompaniante);
-  this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
-  op.valores.chofer.kmAdicional = this.kmValor;  
-  op.valores.chofer.aPagar = this.tarifaBase + this.acompaniante + this.kmValor;    
-  ////console.log("km valor: ", this.kmValor);
+  
   this.$crearFacturaOpChofer(op, tarifa.idTarifa, idProveedor);
   respuesta = {
     op: op,

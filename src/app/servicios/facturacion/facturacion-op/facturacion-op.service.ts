@@ -473,6 +473,8 @@ export class FacturacionOpService {
             op.estado = {
               abierta : false,
               cerrada : true,
+              facCliente: false,
+              facChofer: false,
               facturada : false,
             };
             op.facturaCliente = this.facturaOpCliente.idFacturaOp;
@@ -490,6 +492,8 @@ export class FacturacionOpService {
         op.estado = {
           abierta : false,
           cerrada : true,
+          facCliente: false,
+          facChofer: false,
           facturada : false,
         };
         op.facturaCliente = this.facturaOpCliente.idFacturaOp;
@@ -504,20 +508,20 @@ export class FacturacionOpService {
   }
 
   $guardarFacturas(op: Operacion){
-    ////console.log("1) Op: ", op);
-    ////console.log("2) CLIENTE: ", this.facturaOpCliente);
-    ////console.log("3) CHOFER: ", this.facturaOpChofer);    //
-    ////console.log("4) PROVEEDOR: ", this.facturaOpProveedor);
+    console.log("1) Op: ", op);
+    console.log("2) CLIENTE: ", this.facturaOpCliente);
+    console.log("3) CHOFER: ", this.facturaOpChofer);    //
+    console.log("4) PROVEEDOR: ", this.facturaOpProveedor);
     ////console.log("proveedores FINAL: ", this.$proveedores)
     
-     if(op.chofer.idProveedor === 0){
+      if(op.chofer.idProveedor === 0){
       this.addItem("facturaOpCliente", this.facturaOpCliente);
       this.addItem("facturaOpChofer", this.facturaOpChofer);
     } else {
       this.addItem("facturaOpCliente", this.facturaOpCliente);
       this.addItem("facturaOpProveedor", this.facturaOpProveedor);
     }
-    this.updateItem("operaciones", op);
+    this.updateItem("operaciones", op); 
     //this.storageService.clearInfo("facturaOpCliente");
     //this.storageService.clearInfo("facturaOpChofer");
     //this.storageService.clearInfo("facturaOpProveedor");

@@ -5,6 +5,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-modal-baja',
@@ -63,7 +64,21 @@ export class ModalBajaComponent implements OnInit {
   
 
   onSubmit(){
-    this.activeModal.close(this.motivoBaja)
+    if(this.motivoBaja !== ""){
+      this.activeModal.close(this.motivoBaja)
+    } else {
+      return this.mensajesError("Debe especificar un motivo para la baja")
+    }
+    
   }
+
+   mensajesError(msj:string){
+        Swal.fire({
+          icon: "error",
+          //title: "Oops...",
+          text: `${msj}`
+          //footer: `${msj}`
+        });
+      }
 
 }

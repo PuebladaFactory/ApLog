@@ -14,6 +14,7 @@ import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.compone
 import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { Subject, takeUntil } from 'rxjs';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 @Component({
   selector: 'app-tablero-op',
@@ -89,7 +90,7 @@ export class TableroOpComponent implements OnInit {
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   respuestaOp!:any;
   
-  constructor(private storageService: StorageService, private modalService: NgbModal){}
+  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, ){}
   
   ngOnInit(): void {
    /*  this.storageService.opTarEve$
@@ -148,7 +149,13 @@ export class TableroOpComponent implements OnInit {
       if(data){
         ////console.log("1)aca??: ");      
         this.$opActivas = data;
+        //this.$opActivas = this.actualizarEstadoOp(data);
+        //this.$opActivas = this.agregarMultiplicador(data);
         //this.$opActivas = this.$opActivas.sort((a, b) => a.fecha.getTime() - b.fecha.getTime()); // Ordena por el nombre del chofer
+        console.log("this.$opActivas", this.$opActivas);        
+        /* this.$opActivas.forEach(op=>{
+              this.dbFirebase.update("operaciones", op)
+        }) */
         //this.armarTabla();
         this.consultarOp()
         
@@ -164,6 +171,35 @@ export class TableroOpComponent implements OnInit {
     });    */
     
      
+  }
+
+/*   actualizarEstadoOp(operaciones: Operacion[]): Operacion[] {
+    return operaciones.map(operacion => {
+      // Si el estado no tiene las nuevas propiedades, las inicializamos
+      if (!operacion.estado.facCliente && !operacion.estado.facChofer) {
+        operacion.estado = {
+          ...operacion.estado,
+          facCliente: operacion.estado.facturada ? true : false, // Inicializamos como false o según la lógica de tu aplicación
+          facChofer: false,  // Inicializamos como false o según la lógica de tu aplicación
+          facturada: false // Mantenemos el valor existente de facturada
+        };
+      }
+      return operacion;
+    });
+  } */
+
+  agregarMultiplicador(operaciones: Operacion[]): Operacion[] {
+    return operaciones.map(operacion => {
+      // Si el estado no tiene las nuevas propiedades, las inicializamos
+      if (!operacion.multiplicadorCliente && !operacion.multiplicadorChofer) {
+        operacion = {
+          ...operacion,
+          multiplicadorCliente: 1,
+          multiplicadorChofer: 1,
+        };
+      }
+      return operacion;
+    });
   }
 
   ngOnDestroy(): void {
@@ -227,7 +263,7 @@ export class TableroOpComponent implements OnInit {
     this.rows = operaciones.map((op) => ({
       indice: indice ++,
       fecha: op.fecha,
-      estado: op.estado.abierta ? "Abierta" : op.estado.cerrada ? "Cerrada" : "Facturada",
+      estado: op.estado.abierta ? "Abierta" : op.estado.cerrada ? "Cerrada" : (op.estado.facCliente && op.estado.facChofer)  ? "Facturada" : op.estado.facCliente  ? "Cliente Fac" :  op.estado.facChofer  ? "Chofer Fac" : "Sin Datos",
       idOperacion: op.idOperacion,
       cliente: op.cliente.razonSocial,
       idCliente: op.cliente.idCliente,
@@ -513,6 +549,20 @@ export class TableroOpComponent implements OnInit {
         this.armarTabla();
         break;
       };
+      case "Cliente Fac":{
+        this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
+          return op.estado.facCliente === true; 
+        });          
+        this.armarTabla();
+        break;
+      }
+      case "Chofer Fac":{
+        this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
+          return op.estado.facChofer === true; 
+        });          
+        this.armarTabla();
+        break;
+      }
       case "Facturada":{
         this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
           return op.estado.facturada === true; 
@@ -685,6 +735,30 @@ export class TableroOpComponent implements OnInit {
     } else{
       return "";
     }
+  }
+
+  actualizarOp(){
+    let id = 1736794593418
+    let op: any[]
+    let opActualizar: Operacion[]
+    this.dbFirebase.getByFieldValue("operaciones","chofer.idProveedor", id ).subscribe(data=>{
+      if(data){
+        
+        op = data
+        console.log("op", op);
+        opActualizar = op.filter((op:Operacion)=>{ return !op.estado.cerrada && !op.estado.abierta})
+        
+        opActualizar.forEach(op =>{
+          op.estado.facChofer = true
+        })
+        console.log("opActualizar", opActualizar);
+        /* opActualizar.forEach(op =>{
+          this.dbFirebase.update("operaciones", op);
+        }) */
+      }
+    })
+    
+    
   }
   
 

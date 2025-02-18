@@ -231,6 +231,7 @@ cerrarOp(){
   this.op.valores.cliente.tarifaBase = this.formNumServ.convertirAValorNumerico(this.op.valores.cliente.tarifaBase);
   this.op.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(this.op.tarifaEventual.chofer.valor);
   this.op.tarifaEventual.cliente.valor = this.formNumServ.convertirAValorNumerico(this.op.tarifaEventual.cliente.valor);
+
   Swal.fire({
     title: "¿Desea cerrar la operación?",
     //text: "You won't be able to revert this!",
@@ -242,7 +243,7 @@ cerrarOp(){
     cancelButtonText: "Cancelar"
   }).then((result) => {
     if (result.isConfirmed) {
-      ////////console.log("op: ", this.op);
+      console.log("op: ", this.op);
       this.facturacionOpServ.facturarOperacion(this.op);
       Swal.fire({
         title: "Confirmado",
@@ -346,5 +347,24 @@ armarOp(){
   this.form.reset();     
  
 } 
+
+changeMultiCliente(event: any) {
+  console.log("multi cliente: ", Number(event.target.value));    
+  //this.acompaniante = event.target.value.toLowerCase() == 'true';
+  this.op.multiplicadorCliente = Number(event.target.value);
+  this.aCobrar = this.formatearValor(this.op.valores.cliente.aCobrar * this.op.multiplicadorCliente);
+    
+  //console.log(this.acompaniante);
+  
+}
+
+changeMultiChofer(event: any) {
+  console.log("multi chofer: ", Number(event.target.value));    
+  this.op.multiplicadorChofer = Number(event.target.value);
+  this.aPagar = this.formatearValor(this.op.valores.chofer.aPagar * this.op.multiplicadorChofer);
+  //this.acompaniante = event.target.value.toLowerCase() == 'true';
+  //console.log(this.acompaniante);
+  
+}
 
 }
