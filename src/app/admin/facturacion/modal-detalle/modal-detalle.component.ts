@@ -242,7 +242,10 @@ export class ModalDetalleComponent implements OnInit {
             console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
             this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
             this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
-          }   
+          } else {
+            console.log("listado de op", this.operacionFac);
+            
+          }  
           break;
       //////////////CHOFERES///////////////////////
       case "choferes":
@@ -269,7 +272,10 @@ export class ModalDetalleComponent implements OnInit {
             console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );
             this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
             this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en pdf del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
-          } 
+          } else {
+            console.log("listado de op", this.operacionFac);
+            
+          }  
           break;
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
@@ -296,7 +302,10 @@ export class ModalDetalleComponent implements OnInit {
             console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );
             this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
             this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
-          }   
+          }   else {
+            console.log("listado de op", this.operacionFac);
+            
+          }  
       break;
       default:
         alert("error de reimpresion")

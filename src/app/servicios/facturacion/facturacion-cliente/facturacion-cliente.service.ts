@@ -65,15 +65,29 @@ export class FacturacionClienteService {
     let vehiculo = op.chofer.vehiculo.filter(vehiculo => vehiculo.dominio === op.patenteChofer)
     //console.log("1c) vehiculo: ", vehiculo);    
 
-    this.tarifaBase = this.$calcularCG(tarifa, vehiculo[0]);  
-    op.valores.cliente.tarifaBase = this.tarifaBase;  
-    //console.log("tarifa base: " ,this.tarifaBase);
-    this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0 ;
-    op.valores.cliente.acompValor = this.acompaniante
-    //console.log("acompañante valor: ", this.acompaniante);
-    this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
-    op.valores.cliente.kmAdicional = this.kmValor;
-    op.valores.cliente.aCobrar = this.tarifaBase + this.acompaniante + this.kmValor;    
+    if(op.multiplicadorCliente === 0){
+      this.tarifaBase = 0;  
+      op.valores.cliente.tarifaBase = 0;  
+      //console.log("tarifa base: " ,this.tarifaBase);
+      this.acompaniante = 0 ;
+      op.valores.cliente.acompValor = 0
+      //console.log("acompañante valor: ", this.acompaniante);
+      this.kmValor = 0;
+      op.valores.cliente.kmAdicional = 0;
+      op.valores.cliente.aCobrar = 0;
+    } else {
+      this.tarifaBase = this.$calcularCG(tarifa, vehiculo[0])*op.multiplicadorCliente;  
+      op.valores.cliente.tarifaBase = this.tarifaBase;  
+      //console.log("tarifa base: " ,this.tarifaBase);
+      this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0 ;
+      op.valores.cliente.acompValor = this.acompaniante
+      //console.log("acompañante valor: ", this.acompaniante);
+      this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
+      op.valores.cliente.kmAdicional = this.kmValor;
+      op.valores.cliente.aCobrar = this.tarifaBase + this.acompaniante + this.kmValor;    
+    }
+
+    
     //console.log("km valor: ", this.kmValor);
     this.$crearFacturaOpCliente(op, tarifa.idTarifa);
     respuesta = {
@@ -87,7 +101,7 @@ export class FacturacionClienteService {
   $facturarOpPersCliente(op: Operacion, tarifa: TarifaPersonalizadaCliente){
     console.log("!!!!!!!!!!!)op: ", op, " y tarifa: ",tarifa);
     
-    this.tarifaBase = this.$calcularCGPersonalizada(tarifa, op);
+    this.tarifaBase = this.$calcularCGPersonalizada(tarifa, op)*op.multiplicadorCliente;
     this.acompaniante = 0,
     this.kmValor = 0 , 
     console.log("tarifa base: " ,this.tarifaBase);
@@ -97,7 +111,7 @@ export class FacturacionClienteService {
   }
 
   $facturarOpEveCliente(op: Operacion){
-    this.tarifaBase = op.tarifaEventual.cliente.valor;
+    this.tarifaBase = op.tarifaEventual.cliente.valor*op.multiplicadorCliente;
     this.acompaniante = 0;
     this.kmValor = 0;
     this.$crearFacturaOpCliente(op, 0);

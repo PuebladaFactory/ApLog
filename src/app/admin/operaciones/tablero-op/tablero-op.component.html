@@ -5,6 +5,8 @@
     </button>
     
     <app-btn-editar name="cargaMultiple" class="ms-3" (click)="modalCargaMultiple()" ></app-btn-editar>
+
+    <!-- <button class="btn btn-primary" (click)="actualizarOp()">Actualizar Op</button> -->
     <br>
 
 </div>
@@ -27,6 +29,8 @@
                             <li class="dropdown-item" (click)="guardarFiltro('Todo')">Todo</li>
                             <li class="dropdown-item" (click)="guardarFiltro('Abierta')">Abierta</li>
                             <li class="dropdown-item" (click)="guardarFiltro('Cerrada')">Cerrada</li>
+                            <li class="dropdown-item" (click)="guardarFiltro('Cliente Fac')">Cliente Facturado</li>
+                            <li class="dropdown-item" (click)="guardarFiltro('Chofer Fac')">Chofer Facturado</li>
                             <li class="dropdown-item" (click)="guardarFiltro('Facturada')">Facturada</li>
                         </ul>
                     </div>                

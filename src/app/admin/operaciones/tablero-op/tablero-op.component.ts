@@ -549,6 +549,20 @@ export class TableroOpComponent implements OnInit {
         this.armarTabla();
         break;
       };
+      case "Cliente Fac":{
+        this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
+          return op.estado.facCliente === true; 
+        });          
+        this.armarTabla();
+        break;
+      }
+      case "Chofer Fac":{
+        this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
+          return op.estado.facChofer === true; 
+        });          
+        this.armarTabla();
+        break;
+      }
       case "Facturada":{
         this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
           return op.estado.facturada === true; 
@@ -721,6 +735,30 @@ export class TableroOpComponent implements OnInit {
     } else{
       return "";
     }
+  }
+
+  actualizarOp(){
+    let id = 1736794593418
+    let op: any[]
+    let opActualizar: Operacion[]
+    this.dbFirebase.getByFieldValue("operaciones","chofer.idProveedor", id ).subscribe(data=>{
+      if(data){
+        
+        op = data
+        console.log("op", op);
+        opActualizar = op.filter((op:Operacion)=>{ return !op.estado.cerrada && !op.estado.abierta})
+        
+        opActualizar.forEach(op =>{
+          op.estado.facChofer = true
+        })
+        console.log("opActualizar", opActualizar);
+        /* opActualizar.forEach(op =>{
+          this.dbFirebase.update("operaciones", op);
+        }) */
+      }
+    })
+    
+    
   }
   
 

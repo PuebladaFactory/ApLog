@@ -299,28 +299,62 @@
                 </div>                
             </div>
         </div>
-        <div class="row border border-dark border-1 rounded-4 shadow p-3 mt-3 bg-body-tertiary rounded mx-1 px-0 isDisabled">
-            <div class="col-4 d-flex align-items-center">
-                <h3 class="m-0 ms-2">Totales Op:</h3>     
-            </div>            
-            <div class="col-4">
-                <div class="form-group" >                                    
-                    <label for="A Cobrar" class="fs-5">A Cobrar</label>
+        <div class="row border border-dark border-1 rounded-4 shadow p-3 mt-3 bg-body-tertiary rounded mx-1 px-0 ">
+            <div class="row isDisabled">
+                <div class="col-4 d-flex align-items-center">
+                    <h3 class="m-0 ms-2">Totales Op:</h3>     
+                </div>            
+                <div class="col-4">
+                    <div class="form-group" >                                    
+                        <label for="A Cobrar" class="fs-5">A Cobrar</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aCobrar">
+                        </div>                        
+                    </div>                                        
+                </div>                                                                     
+                <div class="col-4">
+                    <div class="form-group" >                                    
+                        <label for="A Pagar" class="fs-5">A Pagar</label>
+                        <div class="input-group">
+                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                            <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aPagar">
+                        </div>                        
+                    </div>     
+                </div>            
+            </div>
+            <div class="row" [ngClass]="{'isDisabled': !cerrar}">
+                <div class="col-4">
+
+                </div>
+                <div class="col-4">
                     <div class="input-group">
-                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                        <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aCobrar">
-                    </div>                        
-                </div>                                        
-            </div>                                                                     
-            <div class="col-4">
-                <div class="form-group" >                                    
-                    <label for="A Pagar" class="fs-5">A Pagar</label>
-                    <div class="input-group">
-                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                        <input class="form-control edicion isDisabled" required type="text" [(ngModel)]="aPagar">
-                    </div>                        
-                </div>     
-            </div>            
+                            <span class="input-group-text" id="basic-addon1" >Multiplicador Cliente</span>
+                            <select class="form-select" (change)="changeMultiCliente($event)">                                        
+                                <option [value]="op.multiplicadorCliente" selected>{{op.multiplicadorCliente}}</option>
+                                <option [value]="0">0</option>
+                                <option [value]="1/2">0.5</option>
+                                <option [value]="1">1</option>
+                                <option [value]="3/2">1.5</option>
+                            </select>
+                        </div>                        
+                </div>
+                <div class="col-4">
+                    <div class="form-group" >                                                            
+                        <div class="input-group">
+                            <span class="input-group-text" id="basic-addon1" >Multiplicador Chofer</span>
+                            <select class="form-select" (change)="changeMultiChofer($event)">                                        
+                                <option [value]="op.multiplicadorChofer" selected>{{op.multiplicadorChofer}}</option>
+                                <option [value]="0">0</option>
+                                <option [value]="1/2">0.5</option>
+                                <option [value]="1">1</option>
+                                <option [value]="3/2">1.5</option>
+                            </select>
+                        </div>                        
+                    </div>  
+                </div>
+            </div>
+            
         </div>
     </div>
     <div class="modal-footer" *ngIf="!vista">        
