@@ -87,22 +87,46 @@ export class FacturacionChoferService {
     return respuesta;
   }
 
-  $facturarOpPersChofer(op: Operacion, tarifa: TarifaPersonalizadaCliente, idProveedor: number){
+  $facturarOpPersChofer(op: Operacion, tarifa: TarifaPersonalizadaCliente, idProveedor: number, tGeneral:TarifaGralCliente){
+    let respuesta : {
+      op: Operacion,
+      factura: FacturaOp
+    }
     this.tarifaBase = this.$calcularCGPersonalizada(tarifa, op)*op.multiplicadorChofer;
-    this.acompaniante = 0,
-    this.kmValor = 0 , 
+    op.valores.chofer.tarifaBase = this.tarifaBase;
+    this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
+    op.valores.chofer.acompValor = this.acompaniante;
+    this.kmValor = 0 ; 
     //console.log("tarifa base: " ,this.tarifaBase);
     this.$crearFacturaOpChofer(op, tarifa.idTarifa, idProveedor);
+    respuesta = {
+      op: op,
+      factura: this.facturaOpChofer,
+    }
     ////console.log("Factura OP cliente ", this.facturaOpCliente)
-    return this.facturaOpChofer
+    return respuesta;
+    ////console.log("Factura OP cliente ", this.facturaOpCliente)
+    //return this.facturaOpChofer
   }
 
-  $facturarOpEveChofer(op: Operacion, idProveedor: number){
+  $facturarOpEveChofer(op: Operacion, idProveedor: number, tGeneral:TarifaGralCliente){
+    let respuesta : {
+      op: Operacion,
+      factura: FacturaOp
+    }
     this.tarifaBase = op.tarifaEventual.chofer.valor*op.multiplicadorChofer;
-    this.acompaniante = 0;
+    op.valores.chofer.tarifaBase = this.tarifaBase;
+    this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
+    op.valores.chofer.acompValor = this.acompaniante;
     this.kmValor = 0;
     this.$crearFacturaOpChofer(op, 0,idProveedor);
-    return this.facturaOpChofer
+    respuesta = {
+      op: op,
+      factura: this.facturaOpChofer,
+    }
+    ////console.log("Factura OP cliente ", this.facturaOpCliente)
+    return respuesta;
+    //return this.facturaOpChofer
 
   }
 

@@ -266,7 +266,7 @@
                                     <label for="Fecha" class="fs-5">Acompañante valor</label>
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input  class="form-control edicion isDisabled" required type="text" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.cliente.acompValor)">
+                                        <input  class="form-control edicion isDisabled" required type="text" [value]="formatearValor(op.valores.cliente.acompValor)">
                                     </div>                                                        
                                 </div>
                                 <div class="form-group mt-3">
@@ -282,7 +282,7 @@
                                     <label for="Fecha" class="fs-5">Acompañante valor</label>
                                     <div class="input-group">
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input  class="form-control edicion isDisabled" required type="text" [value]="op.tarifaTipo.eventual || op.tarifaTipo.personalizada ? formatearValor(0) : formatearValor(op.valores.chofer.acompValor)">
+                                        <input  class="form-control edicion isDisabled" required type="text" [value]="formatearValor(op.valores.chofer.acompValor)">
                                     </div>                                                        
                                 </div>
                                 <div class="form-group mt-3">
