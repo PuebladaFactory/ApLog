@@ -98,24 +98,47 @@ export class FacturacionClienteService {
     return respuesta
   }
 
-  $facturarOpPersCliente(op: Operacion, tarifa: TarifaPersonalizadaCliente){
+  $facturarOpPersCliente(op: Operacion, tarifa: TarifaPersonalizadaCliente, tGeneral: TarifaGralCliente){
     console.log("!!!!!!!!!!!)op: ", op, " y tarifa: ",tarifa);
+    let respuesta : {
+      op: Operacion,
+      factura: FacturaOp
+    }
     
     this.tarifaBase = this.$calcularCGPersonalizada(tarifa, op)*op.multiplicadorCliente;
-    this.acompaniante = 0,
-    this.kmValor = 0 , 
+    op.valores.cliente.tarifaBase = this.tarifaBase;  
+    this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
+    op.valores.cliente.acompValor = this.acompaniante
+    this.kmValor = 0 ; 
     console.log("tarifa base: " ,this.tarifaBase);
     this.$crearFacturaOpCliente(op, tarifa.idTarifa);
     //console.log("Factura OP cliente ", this.facturaOpCliente)
-    return this.facturaOpCliente
+    respuesta = {
+      op: op,
+      factura: this.facturaOpCliente,
+    }
+    //console.log("Factura OP cliente ", this.facturaOpCliente)
+    return respuesta
+    //return this.facturaOpCliente
   }
 
-  $facturarOpEveCliente(op: Operacion){
+  $facturarOpEveCliente(op: Operacion, tGeneral: TarifaGralCliente){
+    let respuesta : {
+      op: Operacion,
+      factura: FacturaOp
+    }
     this.tarifaBase = op.tarifaEventual.cliente.valor*op.multiplicadorCliente;
-    this.acompaniante = 0;
+    op.valores.cliente.tarifaBase = this.tarifaBase;
+    this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
+    op.valores.cliente.acompValor = this.acompaniante;
     this.kmValor = 0;
     this.$crearFacturaOpCliente(op, 0);
-    return this.facturaOpCliente
+    respuesta = {
+      op: op,
+      factura: this.facturaOpCliente,
+    }
+    return respuesta
+    //return this.facturaOpCliente
 
   }
 
