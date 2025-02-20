@@ -59,11 +59,12 @@ export class ModalOpAltaComponent implements OnInit {
   ocultarSelecEventual: boolean = false;
   clienteEventual: boolean = false;
   choferEventual: boolean = false;
+  today = new Date().toISOString().split('T')[0];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, private formNumServ: FormatoNumericoService, public activeModal: NgbActiveModal,  private dbFirebase: DbFirestoreService){
     this.form = this.fb.group({
-      fecha: ['', Validators.required],
+      fecha: [this.today, Validators.required],
       cliente: ['', Validators.required],
       chofer: ['', Validators.required],
       tarifaEventual: ['', Validators.required],
@@ -153,6 +154,7 @@ export class ModalOpAltaComponent implements OnInit {
       }
       
     })
+
      
   }
 
@@ -602,7 +604,7 @@ export class ModalOpAltaComponent implements OnInit {
 
   ////console.log("esta es la operacion: ", this.op);  
   Swal.fire({
-    title: "¿Desea agregar la operación?",
+    title: `¿Desea agregar la operación con fecha ${this.op.fecha} para el Cliente ${this.op.cliente.razonSocial}?`,
     //text: "You won't be able to revert this!",
     icon: "warning",
     showCancelButton: true,
@@ -728,7 +730,7 @@ export class ModalOpAltaComponent implements OnInit {
   } 
 
   hasError(controlName: string, errorName: string): boolean {
-    const control = this.form.get(controlName);
+    const control = this.form.get(controlName);    
     return control?.hasError(errorName) && control.touched;
   }
   hasErrorTeventual(controlName: string, errorName: string): boolean {

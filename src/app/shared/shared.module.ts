@@ -25,6 +25,7 @@ import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-ed
 import { RoleDirective } from './directives/role.directive';
 import { ModalBajaComponent } from './modal-baja/modal-baja.component';
 import { ModalObjetoComponent } from './modal-objeto/modal-objeto.component';
+import { FechaValidaDirective } from './directives/fecha-valida.directive';
 
 
 
@@ -48,7 +49,7 @@ import { ModalObjetoComponent } from './modal-objeto/modal-objeto.component';
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,    
-    RoleDirective, ModalBajaComponent, ModalObjetoComponent,
+    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective,
     
     
   ],
@@ -81,7 +82,8 @@ import { ModalObjetoComponent } from './modal-objeto/modal-objeto.component';
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,
     RoleDirective,
-    ModalBajaComponent
+    ModalBajaComponent,
+    FechaValidaDirective
     
   ]
 })
