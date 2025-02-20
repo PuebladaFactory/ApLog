@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
@@ -42,13 +42,14 @@ export class CargaMultipleComponent implements OnInit {
   mostrarCategoria: boolean = false;
   operacionesForm!: FormGroup; // Usamos un formulario reactivo para manejar las selecciones
   operaciones!: Operacion[];
-  $choferesNoEventuales!: Chofer[]
-  $clientesNoEventuales!: Cliente[]
+  $choferesNoEventuales!: Chofer[];
+  $clientesNoEventuales!: Cliente[];
+  today = new Date().toISOString().split('T')[0];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
   constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, private dbFirebase: DbFirestoreService){
     this.operacionesForm = this.fb.group({
-      fecha: ['', []],
+      fecha: [this.today, [Validators.required]],
       cliente: [null, []],
       choferes: this.fb.array([])
     });
@@ -561,7 +562,7 @@ aPagarOp(chofer: Chofer, patente: string, op: Operacion){
     async addItem(): Promise<void> {
       
         const result = await Swal.fire({
-          title: "¿Desea agregar las operaciones?",
+          title: `¿Desea agregar las operaciones con fecha ${this.operaciones[0].fecha} para el Cliente ${this.operaciones[0].cliente.razonSocial}?`,
           icon: "warning",
           showCancelButton: true,
           confirmButtonColor: "#3085d6",
@@ -587,6 +588,11 @@ aPagarOp(chofer: Chofer, patente: string, op: Operacion){
         });
          }
       //console.log("Todas las operaciones se han agregado.");
+    }
+
+    hasError(controlName: string, errorName: string): boolean | undefined {
+      const control = this.operacionesForm.get(controlName);    
+      return control?.hasError(errorName) && control.touched;
     }
 
 

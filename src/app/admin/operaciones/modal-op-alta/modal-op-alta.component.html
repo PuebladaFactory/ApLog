@@ -13,9 +13,11 @@
                         <div class="form-group mb-2">
                             <label for="Fecha">Fecha</label>
                             <div class="input-group">
-                                <input formControlName="fecha" class="form-control edicion" required type="date" [ngClass]="{ 'is-invalid': form.get('fecha').invalid && (form.get('fecha').dirty || form.get('fecha').touched) }">
+                                <input formControlName="fecha" class="form-control edicion" required type="date" [ngClass]="{ 'is-invalid': form.get('fecha').invalid && (form.get('fecha').dirty || form.get('fecha').touched) }" appFechaValida>
                             </div>
                             <div *ngIf="hasError('fecha', 'required')">La fecha es obligatoria.</div>
+                            <div *ngIf="hasError('fecha', 'formatoInvalido')">El formato de la fecha es inválido.</div>
+                            <div *ngIf="hasError('fecha', 'yearInvalido')">El año debe tener exactamente 4 dígitos.</div>
                         </div>
                         <div class="form-group mb-2">
                             <label for="Cliente">Cliente</label>

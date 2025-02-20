@@ -10,8 +10,11 @@
             <div class="form-group">
               <label for="Fecha">Fecha</label>
               <div class="input-group mb-3">
-                <input type="date" formControlName="fecha" class="form-control">
+                <input type="date" formControlName="fecha" class="form-control"  [ngClass]="{ 'is-invalid': operacionesForm.get('fecha')?.invalid && (operacionesForm.get('fecha')?.dirty || operacionesForm.get('fecha')?.touched) }" appFechaValida>
               </div>
+              <div *ngIf="hasError('fecha', 'required')">La fecha es obligatoria.</div>
+              <div *ngIf="hasError('fecha', 'formatoInvalido')">El formato de la fecha es inválido.</div>
+              <div *ngIf="hasError('fecha', 'yearInvalido')">El año debe tener exactamente 4 dígitos.</div>
             </div>
           </div>
           <div class="col-3">
@@ -32,7 +35,7 @@
         </div>
         <div class="row mx-2">
           <table class="table">
-            <thead>
+            <thead class="sticky-top">
               <tr>
                 <th class="align-middle" style="width: 2%;">
                   <input type="checkbox" (change)="onSeleccionarTodosChange($event)">
@@ -100,8 +103,8 @@
           </table>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Guardar</button>
+      <div class="modal-footer" [ngClass]="{'isDisabled':operacionesForm.invalid}">
+        <button type="submit" class="btn btn-primary" >Guardar</button>
       </div>
     </div>
   </form>
