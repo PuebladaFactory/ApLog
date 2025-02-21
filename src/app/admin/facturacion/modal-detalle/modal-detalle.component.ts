@@ -67,6 +67,7 @@ export class ModalDetalleComponent implements OnInit {
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   searchText!:string;
   componente: string = "";
+  factura:any
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private excelServ: ExcelService, 
     private pdfServ: PdfService, private logService: LogService,
@@ -96,6 +97,7 @@ export class ModalDetalleComponent implements OnInit {
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "clientes":
+          const resultado = this.encontrarMaximoYMinimo(this.data[0].operaciones);
           this.storageService.getByFieldValue("facOpLiqCliente", "idCliente", this.data[0].idCliente);
           this.storageService.facOpLiqCliente$
           .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
@@ -545,6 +547,190 @@ bajaOp(factura:any){
         (reason) => {}
       );
     }
+  }
+
+  mostrarDetalleOp(fila:any){
+    let factura:any;
+    this.operacionFac = [];
+    switch (this.fromParent.modo){
+      //////////////CLIENTES///////////////////////
+      case "clientes":
+          console.log("1) fila: ",fila);    
+          factura = this.data.filter((factura:FacturaCliente) => {
+            return factura.idFacturaCliente === fila.idFactura
+          })
+          console.log(factura);
+          factura[0].operaciones.forEach((id: number) => {
+            if (this.$facturasOpCliente !== null) {
+              this.$facturasOpCliente.forEach((facturaOp: any) => {
+                if (facturaOp.idOperacion === id) {
+                  this.operacionFac.push(facturaOp);
+                }
+              });
+            }
+          });
+           
+          break;
+      //////////////CHOFERES///////////////////////
+      case "choferes":
+          console.log("1) fila: ",fila);    
+          factura = this.data.filter((factura:FacturaChofer) => {
+            return factura.idFacturaChofer === fila.idFactura
+          })
+          console.log(factura);
+          factura[0].operaciones.forEach((id: number) => {
+            if (this.$facturasOpChofer !== null) {
+              this.$facturasOpChofer.forEach((facturaOp: any) => {
+                if (facturaOp.idOperacion === id) {
+                  this.operacionFac.push(facturaOp);
+                }
+              });
+            }
+          });
+          console.log("3) operacionFac: ", this.operacionFac);
+          
+          break;
+      //////////////PROVEEDORES///////////////////////
+      case "proveedores":
+              ////console.log("1) row: ",row);    
+          factura = this.data.filter((factura:FacturaProveedor) => {
+            return factura.idFacturaProveedor === fila.idFactura
+          })
+          ////console.log(factura);
+          factura[0].operaciones.forEach((id: number) => {
+            if (this.$facturasOpProveedor !== null) {
+              this.$facturasOpProveedor.forEach((facturaOp: any) => {
+                if (facturaOp.idOperacion === id) {
+                  this.operacionFac.push(facturaOp);
+                }
+              });
+            }
+          });
+          console.log("3) operacionFac: ", this.operacionFac);
+          
+      break;
+      default:
+        alert("error de reimpresion")
+      break;
+    }
+  }
+
+  obtenerFacturas(){
+/*     switch (this.fromParent.modo){
+      //////////////CLIENTES///////////////////////
+      case "clientes":
+          console.log("1) row: ",row);    
+          factura = this.data.filter((factura:FacturaCliente) => {
+            return factura.idFacturaCliente === row.idFactura
+          })
+          console.log(factura);
+          factura[0].operaciones.forEach((id: number) => {
+            if (this.$facturasOpCliente !== null) {
+              this.$facturasOpCliente.forEach((facturaOp: any) => {
+                if (facturaOp.idOperacion === id) {
+                  this.operacionFac.push(facturaOp);
+                }
+              });
+            }
+          });
+          console.log("3) operacionFac: ", this.operacionFac);
+          if (formato === 'excel') {
+            console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en excel del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
+          } else if(formato === 'pdf') {
+            console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
+          } else {
+            console.log("listado de op", this.operacionFac);
+            
+          }  
+          break;
+      //////////////CHOFERES///////////////////////
+      case "choferes":
+          console.log("1) row: ",row);    
+          factura = this.data.filter((factura:FacturaChofer) => {
+            return factura.idFacturaChofer === row.idFactura
+          })
+          console.log(factura);
+          factura[0].operaciones.forEach((id: number) => {
+            if (this.$facturasOpChofer !== null) {
+              this.$facturasOpChofer.forEach((facturaOp: any) => {
+                if (facturaOp.idOperacion === id) {
+                  this.operacionFac.push(facturaOp);
+                }
+              });
+            }
+          });
+          console.log("3) operacionFac: ", this.operacionFac);
+          if (formato === 'excel') {
+            console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en excel del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
+          } else if(formato === 'pdf') {
+            console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en pdf del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
+          } else {
+            console.log("listado de op", this.operacionFac);
+            
+          }  
+          break;
+      //////////////PROVEEDORES///////////////////////
+      case "proveedores":
+              ////console.log("1) row: ",row);    
+          factura = this.data.filter((factura:FacturaProveedor) => {
+            return factura.idFacturaProveedor === row.idFactura
+          })
+          ////console.log(factura);
+          factura[0].operaciones.forEach((id: number) => {
+            if (this.$facturasOpProveedor !== null) {
+              this.$facturasOpProveedor.forEach((facturaOp: any) => {
+                if (facturaOp.idOperacion === id) {
+                  this.operacionFac.push(facturaOp);
+                }
+              });
+            }
+          });
+          console.log("3) operacionFac: ", this.operacionFac);
+          if (formato === 'excel') {
+            console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
+          } else if(formato === 'pdf') {
+            console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
+          }   else {
+            console.log("listado de op", this.operacionFac);
+            
+          }  
+      break;
+      default:
+        alert("error de reimpresion")
+      break;
+    } */
+  }
+
+  encontrarMaximoYMinimo(operaciones: number[]): { max: number, min: number } {
+    if (operaciones.length === 0) {
+      throw new Error("El array de operaciones está vacío.");
+    }
+  
+    let max = operaciones[0]; // Inicializamos con el primer valor del array
+    let min = operaciones[0]; // Inicializamos con el primer valor del array
+  
+    for (let i = 1; i < operaciones.length; i++) {
+      if (operaciones[i] > max) {
+        max = operaciones[i]; // Actualizamos el máximo si encontramos un valor mayor
+      }
+      if (operaciones[i] < min) {
+        min = operaciones[i]; // Actualizamos el mínimo si encontramos un valor menor
+      }
+    }
+  
+    return { max, min }; // Devolvemos un objeto con el máximo y el mínimo
   }
 
 }
