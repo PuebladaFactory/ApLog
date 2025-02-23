@@ -63,7 +63,7 @@
                 <th scope="col">Porcentaje</th>
                 <th scope="col">{{fromParent.modo === 'clientes' ? 'Cobrado' : 'Pagado'}}</th>
                 <th scope="col">Reimpresión </th>
-                <th scope="col">Detalle </th>
+                <th scope="col" class="text-center">Detalle </th>
                 <th scope="col">Anular </th>
             </thead>
             <tbody>
@@ -86,7 +86,7 @@
                       <app-btn-leer name="excel" (click)="reimprimirFac(fila, 'excel')" class="me-2"></app-btn-leer>   
                       <app-btn-leer name="pdf"(click)="reimprimirFac(fila, 'pdf')"></app-btn-leer>   
                     </td>
-                    <td >
+                    <td class="text-center" >
                       <app-btn-leer name="Detalle"(click)="mostrarDetalleOp(fila)" data-bs-toggle="modal" data-bs-target="#modalOp" class="me-2"></app-btn-leer>                         
                     </td>  
                     <td>

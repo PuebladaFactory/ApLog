@@ -97,14 +97,14 @@ export class ModalDetalleComponent implements OnInit {
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "clientes":
-          const resultado = this.encontrarMaximoYMinimo(this.data[0].operaciones);
+         /*  const resultado = this.encontrarMaximoYMinimo(this.data[0].operaciones);
           this.storageService.getByFieldValue("facOpLiqCliente", "idCliente", this.data[0].idCliente);
           this.storageService.facOpLiqCliente$
           .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
           .subscribe(data=>{
             this.$facturasOpCliente = data;
             console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);      
-          });
+          }); */
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
           //this.idFactura = this.data[0].idFacturaCliente;
@@ -113,13 +113,13 @@ export class ModalDetalleComponent implements OnInit {
           break;
       //////////////CHOFERES///////////////////////
       case "choferes":
-          this.storageService.getByFieldValue("facOpLiqChofer", "idChofer", this.data[0].idChofer);
+          /* this.storageService.getByFieldValue("facOpLiqChofer", "idChofer", this.data[0].idChofer);
           this.storageService.facOpLiqChofer$
           .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
           .subscribe(data=>{
             this.$facturasOpChofer = data;
             console.log("1) ngOnInit facOpChofer:",this.$facturasOpChofer);      
-          });
+          }); */
           //console.log("data: ", this.data);
           this.titulo = `${this.data[0].apellido} ${this.data[0].nombre}`
           //this.idFactura = this.data[0].idFacturaChofer;
@@ -128,13 +128,13 @@ export class ModalDetalleComponent implements OnInit {
           break;
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
-          this.storageService.getByFieldValue("facOpLiqProveedor", "idProveedor", this.data[0].idProveedor);
+          /* this.storageService.getByFieldValue("facOpLiqProveedor", "idProveedor", this.data[0].idProveedor);
           this.storageService.facOpLiqProveedor$
           .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
           .subscribe(data=>{
             this.$facturasOpProveedor = data;
             console.log("1) ngOnInit facOpProveedor:",this.$facturasOpProveedor);      
-          });
+          }); */
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
           //this.idFactura = this.data[0].idFacturaProveedor;
@@ -215,13 +215,13 @@ export class ModalDetalleComponent implements OnInit {
     }    
   }
 
-  reimprimirFac(row: any, formato: string) {    
-    let factura:any;
+  reimprimirFac(row: any, formato: string) {        
     this.operacionFac = [];
+    //this.obtenerFacturas(row)
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "clientes":
-          console.log("1) row: ",row);    
+          /* console.log("1) row: ",row);    
           factura = this.data.filter((factura:FacturaCliente) => {
             return factura.idFacturaCliente === row.idFactura
           })
@@ -234,16 +234,16 @@ export class ModalDetalleComponent implements OnInit {
                 }
               });
             }
-          });
+          }); */
           console.log("3) operacionFac: ", this.operacionFac);
           if (formato === 'excel') {
-            console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en excel del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
+            console.log("3)factura y facturasOpCliente: ",this.factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelCliente(this.factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en excel del Cliente ${this.factura[0].razonSocial}`, this.factura[0].idFacturaCliente, true);
           } else if(formato === 'pdf') {
-            console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
+            console.log("3)factura y facturasOpCliente: ",this.factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfCliente(this.factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf del Cliente ${this.factura[0].razonSocial}`, this.factura[0].idFacturaCliente, true);
           } else {
             console.log("listado de op", this.operacionFac);
             
@@ -251,7 +251,7 @@ export class ModalDetalleComponent implements OnInit {
           break;
       //////////////CHOFERES///////////////////////
       case "choferes":
-          console.log("1) row: ",row);    
+          /* console.log("1) row: ",row);    
           factura = this.data.filter((factura:FacturaChofer) => {
             return factura.idFacturaChofer === row.idFactura
           })
@@ -264,16 +264,16 @@ export class ModalDetalleComponent implements OnInit {
                 }
               });
             }
-          });
+          }); */
           console.log("3) operacionFac: ", this.operacionFac);
           if (formato === 'excel') {
-            console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en excel del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
+            console.log("3)factura y facturasOpChofer: ",this.factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelChofer(this.factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en excel del Chofer ${this.factura[0].apellido} ${this.factura[0].nombre}`, this.factura[0].idFacturaChofer, true);
           } else if(formato === 'pdf') {
-            console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en pdf del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
+            console.log("3)factura y facturasOpChofer: ",this.factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfChofer(this.factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en pdf del Chofer ${this.factura[0].apellido} ${this.factura[0].nombre}`, this.factura[0].idFacturaChofer, true);
           } else {
             console.log("listado de op", this.operacionFac);
             
@@ -282,7 +282,7 @@ export class ModalDetalleComponent implements OnInit {
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
               ////console.log("1) row: ",row);    
-          factura = this.data.filter((factura:FacturaProveedor) => {
+         /*  factura = this.data.filter((factura:FacturaProveedor) => {
             return factura.idFacturaProveedor === row.idFactura
           })
           ////console.log(factura);
@@ -295,15 +295,15 @@ export class ModalDetalleComponent implements OnInit {
               });
             }
           });
-          console.log("3) operacionFac: ", this.operacionFac);
+          console.log("3) operacionFac: ", this.operacionFac); */
           if (formato === 'excel') {
-            console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
+            console.log("3)factura y facturasOpProveedor: ",this.factura[0], this.operacionFac );      
+            this.excelServ.exportToExcelProveedor(this.factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${this.factura[0].razonSocial}`, this.factura[0].idFacturaProveedor, true);
           } else if(formato === 'pdf') {
-            console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
+            console.log("3)factura y facturasOpProveedor: ",this.factura[0], this.operacionFac );
+            this.pdfServ.exportToPdfProveedor(this.factura[0], this.operacionFac, this.$clientes, this.$choferes);
+            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${this.factura[0].razonSocial}`, this.factura[0].idFacturaProveedor, true);
           }   else {
             console.log("listado de op", this.operacionFac);
             
@@ -615,46 +615,38 @@ bajaOp(factura:any){
     }
   }
 
-  obtenerFacturas(){
-/*     switch (this.fromParent.modo){
+  obtenerFacturas(row:any, accion:string){
+    switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "clientes":
           console.log("1) row: ",row);    
-          factura = this.data.filter((factura:FacturaCliente) => {
+          this.factura = this.data.filter((factura:FacturaCliente) => {
             return factura.idFacturaCliente === row.idFactura
           })
-          console.log(factura);
-          factura[0].operaciones.forEach((id: number) => {
-            if (this.$facturasOpCliente !== null) {
-              this.$facturasOpCliente.forEach((facturaOp: any) => {
-                if (facturaOp.idOperacion === id) {
-                  this.operacionFac.push(facturaOp);
-                }
+          let respuesta = this.encontrarMaximoYMinimo(this.factura.operaciones)
+          console.log(this.factura);
+          this.dbFirebase.getAllByDateValueField<FacturaOp>("facOpLiqCliente", "idOperacion",respuesta.min, respuesta.max, "idCliente", this.factura.idCliente)
+          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+          .subscribe(data => {
+            if(data){
+              this.$facturasOpCliente = data.filter((fac) => {
+                return this.factura.operaciones.includes(fac.idOperacion);
               });
+              console.log("3) operacionFac: ", this.operacionFac);          
+              
             }
-          });
-          console.log("3) operacionFac: ", this.operacionFac);
-          if (formato === 'excel') {
-            console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en excel del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
-          } else if(formato === 'pdf') {
-            console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfCliente(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf del Cliente ${factura[0].razonSocial}`, factura[0].idFacturaCliente, true);
-          } else {
-            console.log("listado de op", this.operacionFac);
-            
-          }  
+          })
+          
+          console.log("3) operacionFac: ", this.operacionFac);          
           break;
       //////////////CHOFERES///////////////////////
       case "choferes":
           console.log("1) row: ",row);    
-          factura = this.data.filter((factura:FacturaChofer) => {
+          this.factura = this.data.filter((factura:FacturaChofer) => {
             return factura.idFacturaChofer === row.idFactura
           })
-          console.log(factura);
-          factura[0].operaciones.forEach((id: number) => {
+          console.log(this.factura);
+          this.factura[0].operaciones.forEach((id: number) => {
             if (this.$facturasOpChofer !== null) {
               this.$facturasOpChofer.forEach((facturaOp: any) => {
                 if (facturaOp.idOperacion === id) {
@@ -663,28 +655,16 @@ bajaOp(factura:any){
               });
             }
           });
-          console.log("3) operacionFac: ", this.operacionFac);
-          if (formato === 'excel') {
-            console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en excel del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
-          } else if(formato === 'pdf') {
-            console.log("3)factura y facturasOpChofer: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfChofer(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en pdf del Chofer ${factura[0].apellido} ${factura[0].nombre}`, factura[0].idFacturaChofer, true);
-          } else {
-            console.log("listado de op", this.operacionFac);
-            
-          }  
+          console.log("3) operacionFac: ", this.operacionFac);          
           break;
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
               ////console.log("1) row: ",row);    
-          factura = this.data.filter((factura:FacturaProveedor) => {
+          this.factura = this.data.filter((factura:FacturaProveedor) => {
             return factura.idFacturaProveedor === row.idFactura
           })
           ////console.log(factura);
-          factura[0].operaciones.forEach((id: number) => {
+          this.factura[0].operaciones.forEach((id: number) => {
             if (this.$facturasOpProveedor !== null) {
               this.$facturasOpProveedor.forEach((facturaOp: any) => {
                 if (facturaOp.idOperacion === id) {
@@ -693,24 +673,12 @@ bajaOp(factura:any){
               });
             }
           });
-          console.log("3) operacionFac: ", this.operacionFac);
-          if (formato === 'excel') {
-            console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );      
-            this.excelServ.exportToExcelProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
-          } else if(formato === 'pdf') {
-            console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );
-            this.pdfServ.exportToPdfProveedor(factura[0], this.operacionFac, this.$clientes, this.$choferes);
-            this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${factura[0].razonSocial}`, factura[0].idFacturaProveedor, true);
-          }   else {
-            console.log("listado de op", this.operacionFac);
-            
-          }  
+          console.log("3) operacionFac: ", this.operacionFac);          
       break;
       default:
         alert("error de reimpresion")
       break;
-    } */
+    }
   }
 
   encontrarMaximoYMinimo(operaciones: number[]): { max: number, min: number } {
