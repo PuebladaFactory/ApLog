@@ -89,6 +89,8 @@ export class TableroOpComponent implements OnInit {
   rango!: string [];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   respuestaOp!:any;
+  clientesFiltrados!: Cliente[];
+  choferesFiltrados!: Chofer[];
   
   constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, ){}
   
@@ -529,44 +531,91 @@ export class TableroOpComponent implements OnInit {
     } */
     switch(modo){
       case "Todo":{
-        ////console.log("ACCCAAA??");
-        
+        ////console.log("ACCCAAA??");        
         this.$opFiltradas = this.$opActivas;
+        /* const idClientesEnOperaciones = this.$opFiltradas.map(op => op.cliente.idCliente);
+        this.clientesFiltrados = this.$clientes.filter(cliente => 
+          idClientesEnOperaciones.includes(cliente.idCliente)
+        );
+        const idChoferesEnOperaciones = this.$opFiltradas.map(op => op.chofer.idChofer);
+        this.choferesFiltrados = this.$choferes.filter(chofer => 
+          idChoferesEnOperaciones.includes(chofer.idChofer)
+        ); */
         this.armarTabla();
         break;
       };
       case "Abierta":{          
         this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
           return op.estado.abierta === true; 
-        });          
+        });
+        /* const idClientesEnOperaciones = this.$opFiltradas.map(op => op.cliente.idCliente);
+        this.clientesFiltrados = this.$clientes.filter(cliente => 
+          idClientesEnOperaciones.includes(cliente.idCliente)
+        );
+        const idChoferesEnOperaciones = this.$opFiltradas.map(op => op.chofer.idChofer);
+        this.choferesFiltrados = this.$choferes.filter(chofer => 
+          idChoferesEnOperaciones.includes(chofer.idChofer)
+        ); */
         this.armarTabla();
         break;
       };
       case "Cerrada":{
         this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
           return op.estado.cerrada === true; 
-        });          
+        });
+        /* const idClientesEnOperaciones = this.$opFiltradas.map(op => op.cliente.idCliente);
+        this.clientesFiltrados = this.$clientes.filter(cliente => 
+          idClientesEnOperaciones.includes(cliente.idCliente)
+        );
+        const idChoferesEnOperaciones = this.$opFiltradas.map(op => op.chofer.idChofer);
+        this.choferesFiltrados = this.$choferes.filter(chofer => 
+          idChoferesEnOperaciones.includes(chofer.idChofer)
+        ); */
         this.armarTabla();
         break;
       };
       case "Cliente Fac":{
         this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
           return op.estado.facCliente === true; 
-        });          
+        });
+        /* const idClientesEnOperaciones = this.$opFiltradas.map(op => op.cliente.idCliente);
+        this.clientesFiltrados = this.$clientes.filter(cliente => 
+          idClientesEnOperaciones.includes(cliente.idCliente)
+        );
+        const idChoferesEnOperaciones = this.$opFiltradas.map(op => op.chofer.idChofer);
+        this.choferesFiltrados = this.$choferes.filter(chofer => 
+          idChoferesEnOperaciones.includes(chofer.idChofer)
+        ); */
         this.armarTabla();
         break;
       }
       case "Chofer Fac":{
         this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
           return op.estado.facChofer === true; 
-        });          
+        });
+        /* const idClientesEnOperaciones = this.$opFiltradas.map(op => op.cliente.idCliente);
+        this.clientesFiltrados = this.$clientes.filter(cliente => 
+          idClientesEnOperaciones.includes(cliente.idCliente)
+        );
+        const idChoferesEnOperaciones = this.$opFiltradas.map(op => op.chofer.idChofer);
+        this.choferesFiltrados = this.$choferes.filter(chofer => 
+          idChoferesEnOperaciones.includes(chofer.idChofer)
+        ); */
         this.armarTabla();
         break;
       }
       case "Facturada":{
         this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
           return op.estado.facturada === true; 
-        });          
+        });
+        /* const idClientesEnOperaciones = this.$opFiltradas.map(op => op.cliente.idCliente);
+        this.clientesFiltrados = this.$clientes.filter(cliente => 
+          idClientesEnOperaciones.includes(cliente.idCliente)
+        );
+        const idChoferesEnOperaciones = this.$opFiltradas.map(op => op.chofer.idChofer);
+        this.choferesFiltrados = this.$choferes.filter(chofer => 
+          idChoferesEnOperaciones.includes(chofer.idChofer)
+        ); */
         this.armarTabla();
         break;
       }
@@ -576,6 +625,14 @@ export class TableroOpComponent implements OnInit {
 
       }
     }
+    const idClientesEnOperaciones = this.$opFiltradas.map(op => op.cliente.idCliente);
+    this.clientesFiltrados = this.$clientes.filter(cliente => 
+      idClientesEnOperaciones.includes(cliente.idCliente)
+    );
+    const idChoferesEnOperaciones = this.$opFiltradas.map(op => op.chofer.idChofer);
+    this.choferesFiltrados = this.$choferes.filter(chofer => 
+      idChoferesEnOperaciones.includes(chofer.idChofer)
+    );
   }
 
   modalCargaMultiple(){
