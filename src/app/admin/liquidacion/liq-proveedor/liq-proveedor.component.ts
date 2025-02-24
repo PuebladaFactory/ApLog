@@ -421,7 +421,7 @@ export class LiqProveedorComponent implements OnInit {
           cerrada: false,
           facCliente: op.estado.facCliente,
           facChofer: true,
-          facturada: op.estado.facCliente && op.estado.facChofer ? true : false,
+          facturada: op.estado.facChofer ? true : false,
         }
         this.storageService.updateItem("operaciones", op, op.idOperacion, "LIQUIDAR", `Operacion de Proveedor ${this.getProveedor(op.chofer.idProveedor)} Liquidada`);
         this.removeItem(factura);

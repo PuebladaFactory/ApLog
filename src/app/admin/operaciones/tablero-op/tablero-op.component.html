@@ -45,7 +45,7 @@
                           <span class="visually-hidden">Toggle Dropdown</span>
                         </button>
                         <ul class="dropdown-menu">                            
-                            <li class="dropdown-item" *ngFor="let c of $clientes " (click)="filtrarClientes(c.idCliente)">{{c.razonSocial}}</li>
+                            <li class="dropdown-item" *ngFor="let c of clientesFiltrados " (click)="filtrarClientes(c.idCliente)">{{c.razonSocial}}</li>
                             <li class="dropdown-item" (click)="filtrarClientes(0)">Limpiar Filtro</li>
                         </ul>
                     </div>
@@ -60,7 +60,7 @@
                           <span class="visually-hidden">Toggle Dropdown</span>
                         </button>
                         <ul class="dropdown-menu">
-                            <li class="dropdown-item" *ngFor="let c of $choferes " (click)="filtrarChoferes(c.idChofer)">{{c.apellido}} {{c.nombre}}</li>
+                            <li class="dropdown-item" *ngFor="let c of choferesFiltrados " (click)="filtrarChoferes(c.idChofer)">{{c.apellido}} {{c.nombre}}</li>
                             <li class="dropdown-item" (click)="filtrarChoferes(0)">Limpiar Filtro</li>
 
                         </ul>

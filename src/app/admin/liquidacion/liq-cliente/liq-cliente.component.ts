@@ -414,13 +414,13 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         op = data;
-        ////console.log("OP: ", op);
+        console.log("OP LIQUIDADA: ", op);
         op.estado = {
           abierta: false,
           cerrada: false,
           facCliente: true,
           facChofer: op.estado.facChofer,
-          facturada: op.estado.facCliente && op.estado.facChofer ? true : false,
+          facturada: op.estado.facChofer ? true : false,
         }
         this.storageService.updateItem("operaciones", op, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`);
         this.removeItem(factura);

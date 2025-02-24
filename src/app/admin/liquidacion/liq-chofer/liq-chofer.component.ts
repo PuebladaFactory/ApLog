@@ -403,13 +403,13 @@ export class LiqChoferComponent implements OnInit {
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         op = data;
-        //console.log("OP: ", op);
+        console.log("OP LIQUIDADA: ", op);
         op.estado = {
           abierta: false,
           cerrada: false,
           facCliente: op.estado.facCliente,
           facChofer: true,
-          facturada: op.estado.facCliente && op.estado.facChofer ? true : false,
+          facturada: op.estado.facCliente ? true : false,
         }
         this.storageService.updateItem("operaciones", op, op.idOperacion, "Liquidar", `Operación de Chofer ${op.chofer.apellido} ${op.chofer.nombre} Liquidada`);
         this.removeItem(factura);
