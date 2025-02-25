@@ -21,3 +21,12 @@
       background-color: #0d6efd;
       color: white;
   } 
+
+  .isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  
+  .isDisabled:hover {
+    cursor: not-allowed;
+  }

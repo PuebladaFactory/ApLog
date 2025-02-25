@@ -49,11 +49,11 @@ export class FacturacionChoferComponent implements OnInit {
         this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false); // Mueve esta línea aquí
       });
     
-      this.storageService.consultasFacOpLiqChofer$
+      /* this.storageService.consultasFacOpLiqChofer$
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         this.$facturaOpChofer = data;
-      });
+      }); */
     }
 
     ngOnDestroy(): void {

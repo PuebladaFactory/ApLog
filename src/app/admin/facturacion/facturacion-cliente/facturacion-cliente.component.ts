@@ -48,11 +48,11 @@ export class FacturacionClienteComponent implements OnInit {
         this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false); // Mueve esta línea aquí
       });
     
-      this.storageService.consultasFacOpLiqCliente$
+      /* this.storageService.consultasFacOpLiqCliente$
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         this.$facturaOpCliente = data;
-      });      
+      }); */      
     }
 
     ngOnDestroy(): void {

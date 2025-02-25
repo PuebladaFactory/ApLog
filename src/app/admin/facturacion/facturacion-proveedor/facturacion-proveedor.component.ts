@@ -48,11 +48,11 @@ export class FacturacionProveedorComponent implements OnInit {
         this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false); // Mueve esta línea aquí
       });
     
-      this.storageService.consultasFacOpLiqProveedor$
+      /* this.storageService.consultasFacOpLiqProveedor$
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         this.$facturaOpProveedor = data;
-      });
+      }); */
     }
 
     ngOnDestroy(): void {

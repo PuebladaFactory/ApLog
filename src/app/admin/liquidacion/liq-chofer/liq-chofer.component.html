@@ -191,8 +191,8 @@
                                 </td>
                                 <td>{{factura.fecha}}</td>
                                 <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>                                
-                                <!-- <td>{{getCliente(factura.idCliente)}}</td> -->
-                                <td>{{factura.idOperacion}}</td>
+                                <td>{{getCliente(factura.idCliente)}}</td>
+                                <!-- <td>{{factura.idOperacion}}</td> -->
                                 <td>{{factura.km | formatearValor}}</td>
                                 <td>{{factura.valores.kmMonto | formatearValor :"$"}}</td>
                                 <td>{{factura.valores.acompaniante | formatearValor :"$"}}</td>                                    
