@@ -27,6 +27,7 @@ import { ModalBajaComponent } from './modal-baja/modal-baja.component';
 import { ModalObjetoComponent } from './modal-objeto/modal-objeto.component';
 import { FechaValidaDirective } from './directives/fecha-valida.directive';
 import { ModalFacturaComponent } from './modal-factura/modal-factura.component';
+import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
 
 
@@ -63,6 +64,7 @@ import { ModalFacturaComponent } from './modal-factura/modal-factura.component';
     JsonPipe,
     NgbDatepickerModule,
     NgbModule,
+    Ng2SearchPipeModule, 
   ],
   exports:[
     BtnAgregarComponent,
