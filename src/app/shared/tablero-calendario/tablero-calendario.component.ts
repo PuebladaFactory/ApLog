@@ -214,6 +214,9 @@ export class TableroCalendarioComponent implements OnInit {
       case 'Trimestre':
         this.calcularTrimestre(adelante)
         break;
+      case 'Semestre':
+        this.calcularSemestre(adelante)
+        break;
       default:
         return;
     }    
@@ -370,6 +373,43 @@ export class TableroCalendarioComponent implements OnInit {
     const firstDay = new Date(nuevoAnio, trimestreInicio, 1);
     // Fecha del último día del nuevo trimestre
     const lastDay = new Date(nuevoAnio, trimestreInicio + 3, 0);
+  
+    // Guardamos las fechas en el formato string "yyyy-mm-dd"
+    this.fechasConsulta.fechaDesde = firstDay.toISOString().split('T')[0];
+    this.fechasConsulta.fechaHasta = lastDay.toISOString().split('T')[0];
+     
+  }
+
+  calcularSemestre(adelante: boolean) {
+    // Tomamos la fecha actual o la que está en fechasConsulta
+    const partesFecha = this.fechasConsulta.fechaDesde.split('-');
+    const anio = parseInt(partesFecha[0], 10);
+    const mes = parseInt(partesFecha[1], 10) - 1; // El mes es base 0 en JavaScript
+  
+    // Calculamos el trimestre actual
+    let semestreInicio = Math.floor(mes / 6) * 6;
+    let nuevoAnio = anio;
+  
+    if (adelante) {
+      // Calcular el trimestre siguiente
+      semestreInicio += 6;
+      if (semestreInicio > 11) {
+        semestreInicio = 0; // Pasamos al primer trimestre del siguiente año
+        nuevoAnio += 1;
+      }
+    } else {
+      // Calcular el trimestre anterior
+      semestreInicio -= 6;
+      if (semestreInicio < 0) {
+        semestreInicio = 6; // Pasamos al último trimestre del año anterior
+        nuevoAnio -= 1;
+      }
+    }
+  
+    // Fecha del primer día del nuevo trimestre
+    const firstDay = new Date(nuevoAnio, semestreInicio, 1);
+    // Fecha del último día del nuevo trimestre
+    const lastDay = new Date(nuevoAnio, semestreInicio + 6, 0);
   
     // Guardamos las fechas en el formato string "yyyy-mm-dd"
     this.fechasConsulta.fechaDesde = firstDay.toISOString().split('T')[0];
