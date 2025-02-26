@@ -27,7 +27,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     ReactiveFormsModule,
     SharedModule,
     Ng2SearchPipeModule,
-    NgbModule,
+    NgbModule,    
   ]
 })
 export class LegajosModule { }
