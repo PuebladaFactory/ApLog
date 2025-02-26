@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Documentacion, Legajo } from 'src/app/interfaces/legajo';
+import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -30,7 +31,11 @@ export class TableroLegajosComponent implements OnInit {
     'Senasa'
   ];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
-  
+  searchText: string = "";
+  $proveedores!: Proveedor [];
+  filtrosProveedores = '';
+  $choferesFiltrados!: Chofer[];
+
   constructor(private storageService: StorageService){}  
   
   ngOnInit(): void {
@@ -40,15 +45,23 @@ export class TableroLegajosComponent implements OnInit {
       this.$choferes = data;     
       this.$choferes = this.$choferes      
       .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+      this.$choferesFiltrados = structuredClone(this.$choferes);
       //console.log("1)choferes especiales: ", this.$choferes);      
       
     })     
     this.storageService.legajos$
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
-      this.$legajos = data;     
+      this.$legajos = data;      
     });
     console.log(this.$legajos);
+
+    this.storageService.proveedores$
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
+      this.$proveedores = data;      
+    });
+    console.log(this.$proveedores);
     
     //this.crearLegajos()  
     this.storageService.syncChanges("legajos");
@@ -99,8 +112,38 @@ export class TableroLegajosComponent implements OnInit {
     getChofer(id:number):string {
       let chofer: Chofer[] = this.$choferes.filter(c=> c.idChofer=== id);
       return chofer[0].apellido + " " + chofer[0].nombre;
-
     }
+
+    getLegajo(id:number):Legajo {
+      let legajo: Legajo[] = this.$legajos.filter(l=> l.idChofer=== id);
+      return legajo[0];
+    }
+
+    getProveedor(idProveedor:string):string {
+      let id = Number(idProveedor);  
+      let proveedor = this.$proveedores?.filter(p => p.idProveedor === id);  
+      if(id === 0) {
+        return "";
+      } else {
+        let proveedor: Proveedor[] = this.$proveedores.filter(p=> p.idProveedor=== id);
+        return proveedor[0].razonSocial;
+      }
+      
+    }
+
+    filtrarChoferes(idProveedor: number, razonSocial:string){   
+      console.log("idProveedor", idProveedor, "razonSocial", razonSocial);
+      this.$choferesFiltrados = this.$choferes
+      if(idProveedor !== 0){      
+        this.filtrosProveedores = razonSocial;
+        this.$choferesFiltrados = this.$choferesFiltrados.filter(c => c.idProveedor === idProveedor);        
+        //console.log("this.filtrosChoferes", this.filtrosChoferes);
+      }else {     
+        this.filtrosProveedores = ""; 
+        this.$choferesFiltrados = this.$choferes;
+      }
+    }
+
 
     obtenerFecha(vto: any){
     /*   if (!fechaVto || fechaVto === 0) {

@@ -1,4 +1,4 @@
-th, td{
+th, td, input, li{
     font-size:1.4rem;
 }
 
@@ -26,3 +26,25 @@ th, td{
     background-color: lightblue;
     color: white !important;
 }
+
+.boton-filtros{
+    width: 12rem;
+    background: #002b5c;
+    color: white;
+    opacity: 0.8;
+    font-size: 1.3rem;
+  }
+  
+  .boton-filtros:hover{
+    background: #0d6efd;    
+  }
+
+  .boton{
+    background: #002b5c;
+    color: white;
+    opacity: 0.8;
+    font-size: 1.3rem;
+  }
+  .boton:hover{
+    background: #0d6efd;    
+  }
