@@ -169,7 +169,7 @@
                                 <!-- <th><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th> -->
                                 <th style="width: 1.5%;"><input type="checkbox" (change)="selectAllCheckboxes($event, proveedor.idProveedor)"></th>  
                                 <th scope="col" class="" style="width: 5%;">Fecha</th>
-                                <!-- <th scope="col" class="" style="width: 3%;">Quin</th> -->                                
+                                <th scope="col" class="" style="width: 3%;">Quin</th>                                
                                 <th scope="col" class="" style="width: 5.5%;">Id Op</th>
                                 <th scope="col" class="" style="width: 11.5%;">Cliente</th>
                                 <th scope="col" class="" style="width: 11.5%;">Chofer</th>
@@ -192,7 +192,7 @@
                                     <input type="checkbox" [checked]="factura.liquidacion" (change)="liquidarFac(factura)">
                                 </td>
                                 <td>{{factura.fecha}}</td>
-                                <!-- <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td> -->                                
+                                <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>                                
                                 <td>{{factura.idOperacion}}</td>
                                 <td>{{getCliente(factura.idCliente)}}</td>
                                 <td>{{getChofer(factura.idChofer)}}</td>

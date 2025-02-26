@@ -168,9 +168,9 @@
                                 <tr>
                                     <!-- <th><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th> -->
                                     <th style="width: 1.5%;"><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th>  
-                                    <th scope="col" class="" style="width: 8%;" >Fecha</th>
+                                    <th scope="col" class="" style="width: 8%;" >Fecha</th>                                    
+                                    <th scope="col" class="" style="width: 5.5%;">Quincena</th>                                    
                                     <th scope="col" class="" style="width: 5.5%;">Id Op</th>
-                                    <!-- <th scope="col" class="" style="width: 5.5%;">Quincena</th>   -->                                  
                                     <th scope="col" class="" style="width: 13%;">Chofer</th>
                                     <th scope="col" class="" style="width: 3%;">Km</th>  
                                     <th scope="col" class="" style="width: 8.5%;">Km $</th>  
@@ -190,8 +190,8 @@
                                         <input type="checkbox" [checked]="factura.liquidacion" (change)="liquidarFac(factura)">
                                     </td>
                                     <td>{{factura.fecha}}</td>
-                                    <!-- <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>   -->                                  
-                                     <td>{{factura.idOperacion}}</td>
+                                    <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>
+                                    <td>{{factura.idOperacion}}</td>
                                     <td>{{getChofer(factura.idChofer)}}</td>
                                     <td>{{factura.km | formatearValor }}</td>
                                     <td>{{factura.valores.kmMonto | formatearValor :"$"}}</td>
