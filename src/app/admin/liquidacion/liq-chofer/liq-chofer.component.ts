@@ -112,7 +112,8 @@ export class LiqChoferComponent implements OnInit {
           console.log("1)", this.$facturasOpChofer );
           if(this.$facturasOpChofer !== undefined){
             //console.log("?????????????");            
-            this.procesarDatosParaTabla()
+            this.procesarDatosParaTabla();            
+            this.verificarDuplicados();
           } else {
             //console.log("");            
           }
@@ -126,6 +127,23 @@ export class LiqChoferComponent implements OnInit {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  verificarDuplicados() {
+    const seenIds = new Set<number>();
+
+    this.$facturasOpChofer = this.$facturasOpChofer.filter((factura:FacturaOp) => {
+        if (seenIds.has(factura.idOperacion)) {
+            this.$facturasOpDuplicadas.push(factura);
+            return false; // Eliminar del array original
+        } else {
+            seenIds.add(factura.idOperacion);
+            return true; // Mantener en el array original
+        }
+    });
+    console.log("this.$facturasOpChofer", this.$facturasOpChofer);
+    console.log("duplicadas", this.$facturasOpDuplicadas);
+    
+}
   
   procesarDatosParaTabla() {
     const choferesMap = new Map<number, any>();

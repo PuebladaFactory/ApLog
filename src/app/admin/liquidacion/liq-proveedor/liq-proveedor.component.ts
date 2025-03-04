@@ -110,7 +110,8 @@ export class LiqProveedorComponent implements OnInit {
           //console.log("1)", this.$facturasOpProveedor );
           if(this.$facturasOpProveedor !== undefined){
             //console.log("?????????????");                
-            this.procesarDatosParaTabla()
+            this.procesarDatosParaTabla();
+            this.verificarDuplicados();
           } else {
             //console.log("");            
           }
@@ -124,6 +125,23 @@ export class LiqProveedorComponent implements OnInit {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  verificarDuplicados() {
+    const seenIds = new Set<number>();
+
+    this.$facturasOpProveedor = this.$facturasOpProveedor.filter((factura:FacturaOp) => {
+        if (seenIds.has(factura.idOperacion)) {
+            this.$facturasOpDuplicadas.push(factura);
+            return false; // Eliminar del array original
+        } else {
+            seenIds.add(factura.idOperacion);
+            return true; // Mantener en el array original
+        }
+    });
+    console.log("this.$facturasOpChofer", this.$facturasOpProveedor);
+    console.log("duplicadas", this.$facturasOpDuplicadas);
+    
+}
 
   
   procesarDatosParaTabla() {

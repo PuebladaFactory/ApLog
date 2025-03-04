@@ -120,7 +120,8 @@ export class LiqClienteComponent {
           //console.log("1)", this.$facturasOpCliente );
           if(this.$facturasOpCliente !== undefined){
             ////console.log("?????????????");                   
-            this.procesarDatosParaTabla()
+            this.procesarDatosParaTabla();
+            this.verificarDuplicados();
           } else {
             ////console.log("");            
           }
@@ -135,6 +136,23 @@ export class LiqClienteComponent {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  verificarDuplicados() {
+    const seenIds = new Set<number>();
+
+    this.$facturasOpCliente = this.$facturasOpCliente.filter((factura:FacturaOp) => {
+        if (seenIds.has(factura.idOperacion)) {
+            this.$facturasOpDuplicadas.push(factura);
+            return false; // Eliminar del array original
+        } else {
+            seenIds.add(factura.idOperacion);
+            return true; // Mantener en el array original
+        }
+    });
+    console.log("this.$facturasOpChofer", this.$facturasOpCliente);
+    console.log("duplicadas", this.$facturasOpDuplicadas);
+    
+}
   
 
   procesarDatosParaTabla() {
