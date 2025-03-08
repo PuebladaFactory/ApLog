@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Documentacion, Legajo } from 'src/app/interfaces/legajo';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ModalChoferesComponent } from '../modal-choferes/modal-choferes.component';
 
 @Component({
   selector: 'app-tablero-legajos',
@@ -36,7 +38,7 @@ export class TableroLegajosComponent implements OnInit {
   filtrosProveedores = '';
   $choferesFiltrados!: Chofer[];
 
-  constructor(private storageService: StorageService){}  
+  constructor(private storageService: StorageService, private modalService: NgbModal){}  
   
   ngOnInit(): void {
     this.storageService.choferes$
@@ -53,8 +55,9 @@ export class TableroLegajosComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$legajos = data;      
+      console.log("tablero legajos: legajos: ", this.$legajos);
     });
-    console.log(this.$legajos);
+    
 
     this.storageService.proveedores$
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
@@ -71,6 +74,18 @@ export class TableroLegajosComponent implements OnInit {
     // Completa el Subject para cancelar todas las suscripciones
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  actualizarLegajo(idChofer: number){
+    let legajo = this.getLegajo(idChofer);
+    console.log("legajo antes", legajo);
+    legajo = {
+      ...legajo,
+      visible: true
+    }
+    console.log("legajo desp", legajo);
+    
+    this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "INTERNA", "")
   }
 
   getDocumento(documentacion: Documentacion[], titulo: string): Documentacion | undefined {
@@ -157,4 +172,29 @@ export class TableroLegajosComponent implements OnInit {
         year: 'numeric',
       });
     }
+
+      openModalChoferes(): void {      
+        {
+          const modalRef = this.modalService.open(ModalChoferesComponent, {
+            windowClass: 'myCustomModalClass',
+            centered: true,
+            size: 'md', 
+            //backdrop:"static" 
+          });      
+    
+        let info = {
+            choferes: this.$choferes,
+            legajos: this.$legajos
+          } 
+          //console.log()(info); */
+          
+          modalRef.componentInstance.fromParent = info;
+          modalRef.result.then(
+            (result) => {
+            
+            },
+            (reason) => {}
+          );
+        }
+      }
 }

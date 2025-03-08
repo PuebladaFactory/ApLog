@@ -67,7 +67,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
     this.opOriginal = this.fromParent.item;    
     this.op = structuredClone(this.opOriginal);
         
-    this.op = this.fromParent.item;
+    //this.op = this.fromParent.item;
     switch (this.fromParent.modo) {
       case "vista":
         this.vista = true;       

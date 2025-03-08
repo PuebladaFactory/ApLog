@@ -10,6 +10,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { ModalChoferesComponent } from './modal-choferes/modal-choferes.component';
 
 
 @NgModule({
@@ -18,7 +19,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     TableroLegajosComponent,
     ConsultaLegajosComponent,
     CargarDocumentosComponent,
-    SafeUrlPipe
+    SafeUrlPipe,
+    ModalChoferesComponent
   ],
   imports: [
     CommonModule,
