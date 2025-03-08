@@ -230,6 +230,59 @@
         </tbody> 
     </table>
 </div>
+<!-- 
+<h1>DUPLICADAS</h1>
+<input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
+<table class="table table-light table-striped table-bordered" >
+    <thead>
+        <tr>
+            <th scope="col" class="" style="width: 8.5%;">Id Firebase</th>  
+            <th scope="col" class="" style="width: 8.5%;">Id Objeto</th>                        
+            <th scope="col" class="" style="width: 8.5%;">Cliente</th>                        
+            <th scope="col" class="" style="width: 8.5%;">Fecha</th>
+            <th scope="col" class="" style="width: 5.5%;">Quincena</th>                                
+            <th scope="col" class="" style="width: 5.5%;">Id Op</th>
+            <th scope="col" class="" style="width: 12%;">Cliente</th>
+            <th scope="col" class="" style="width: 4.5%;">Km</th>  
+            <th scope="col" class="" style="width: 8%;">Km $</th>  
+            <th scope="col" class="" style="width: 8%;">Acomp</th>                                    
+            <th scope="col" class="" style="width: 11%;">Tarifa Base</th>                                      
+            <th scope="col" class="" style="width: 11%;">Total a Pagar</th>                        
+            <th scope="col" class="" style="width: 11%;">A Cobrar</th>
+            <th scope="col" class="" style="width: 6%;">Ganancia</th>
+            <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>                               
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let factura of $facturasOpDuplicadas  | filter: searchText;">
+            <td>{{factura.id}}</td>
+            <td>{{factura.idFacturaOp}}</td>
+            <td >
+                {{getCliente(factura.idCliente)}}
+            </td>
+            <td>{{factura.fecha}}</td>
+            <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>                                
+            <td>{{factura.idOperacion}}</td>
+            <td>{{getCliente(factura.idCliente)}}</td>                                
+            <td>{{factura.km | formatearValor}}</td>
+            <td>{{factura.valores.kmMonto | formatearValor :"$"}}</td>
+            <td>{{factura.valores.acompaniante | formatearValor :"$"}}</td>                                    
+            <td>{{factura.valores.tarifaBase | formatearValor :"$"}}</td>
+            <td class="table-success">{{factura.valores.total | formatearValor :"$"}}</td>
+            <td>{{factura.contraParteMonto | formatearValor :"$"}}</td>
+            <td class="text-center table-warning">{{(100-((factura.valores.total*100)/factura.contraParteMonto)) | formatearValor}} %</td>                                   
+            <td>
+                <span [ngClass]="{'eventual':factura.tarifaTipo.eventual, 'personalizada':factura.tarifaTipo.personalizada}" >
+                    {{factura.tarifaTipo.personalizada ? "Personalizada" : factura.tarifaTipo.eventual ? "Eventual" : factura.tarifaTipo.especial ? "Especial" : "General"}}
+                </span>
+            </td>
+            <td class="text-center" >
+                  <span [ngClass]="{'op-facturada': factura.liquidacion, 'op-sinFacturar':!factura.liquidacion}">{{factura.liquidacion ? "Si" : "No"}}</span>    
+            </td>                                    
+            
+        </tr>
+    </tbody> 
+</table> -->
 
 
  

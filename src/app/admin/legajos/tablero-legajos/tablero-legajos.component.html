@@ -1,6 +1,9 @@
 <div class="mt-3"> 
     <div class="d-flex justify-content-end">
-        <div class="btn-group ">
+        <button type="button" class="btn boton-filtros me-3" (click)="openModalChoferes()">
+          Legajos visibles
+        </button> 
+        <div class="btn-group ">          
             <button type="button" class="btn boton-filtros">
                 {{filtrosProveedores ? filtrosProveedores : "Proveedores"}}
             </button>
@@ -31,49 +34,51 @@
             <th style="width: 6.5%;">Seguro</th>
             <th style="width: 6.5%;">VTV/RTO</th>
             <th style="width: 6.5%;">RUTA</th>
-            <th style="width: 6.5%;">SENASA</th>            
+            <th style="width: 6.5%;">SENASA</th>                        
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let chofer of $choferesFiltrados | filter: searchText;">
-            <td>{{getChofer(chofer.idChofer)}}</td>
-            <td
-              [ngClass]="{
-                rojo: getLegajo(chofer.idChofer).estadoGral.vencido,
-                verde: getLegajo(chofer.idChofer).estadoGral.enFecha,
-                amarillo: getLegajo(chofer.idChofer).estadoGral.porVencer,
-                gris: getLegajo(chofer.idChofer).estadoGral.vacio
-              }"
-            >
-              {{ getLegajo(chofer.idChofer).estadoGral.vencido
-                ? 'Vencido'
-                : getLegajo(chofer.idChofer).estadoGral.porVencer
-                ? 'Por vencer'
-                : getLegajo(chofer.idChofer).estadoGral.enFecha
-                ? 'En fecha'
-                : getLegajo(chofer.idChofer).estadoGral.vacio
-                ? 'Sin datos'
-                : '' }}
-            </td>
-      
-            <!-- Iteramos sobre una lista de títulos predefinida -->
-            <ng-container *ngFor="let titulo of titulos">
-              <td
-                [ngClass]="{
-                  celeste: getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.sinVto,
-                  verde: getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.estado?.enFecha,
-                  amarillo: getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.estado?.porVencer,
-                  rojo: getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.estado?.vencido
-                }"
-              >
-                {{
-                  getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.sinVto
-                    ? 'Sin Vto'
-                    : getDocumento(getLegajo(chofer.idChofer).documentacion, titulo) ? getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.fechaVto : "Sin Datos"
-                }}
-              </td>
+            <ng-container *ngIf="getLegajo(chofer.idChofer).visible">
+                <td>{{getChofer(chofer.idChofer)}}</td>
+                <td
+                  [ngClass]="{
+                    rojo: getLegajo(chofer.idChofer).estadoGral.vencido,
+                    verde: getLegajo(chofer.idChofer).estadoGral.enFecha,
+                    amarillo: getLegajo(chofer.idChofer).estadoGral.porVencer,
+                    gris: getLegajo(chofer.idChofer).estadoGral.vacio
+                  }"
+                >
+                  {{ getLegajo(chofer.idChofer).estadoGral.vencido
+                    ? 'Vencido'
+                    : getLegajo(chofer.idChofer).estadoGral.porVencer
+                    ? 'Por vencer'
+                    : getLegajo(chofer.idChofer).estadoGral.enFecha
+                    ? 'En fecha'
+                    : getLegajo(chofer.idChofer).estadoGral.vacio
+                    ? '-'
+                    : '' }}
+                </td>
+          
+                <!-- Iteramos sobre una lista de títulos predefinida -->
+                <ng-container *ngFor="let titulo of titulos">
+                  <td
+                    [ngClass]="{
+                      celeste: getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.sinVto,
+                      verde: getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.estado?.enFecha,
+                      amarillo: getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.estado?.porVencer,
+                      rojo: getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.estado?.vencido
+                    }"
+                  >
+                    {{
+                      getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.sinVto
+                        ? 'Sin Vto'
+                        : getDocumento(getLegajo(chofer.idChofer).documentacion, titulo) ? getDocumento(getLegajo(chofer.idChofer).documentacion, titulo)?.fechaVto : "-"
+                    }}
+                  </td>
+                </ng-container>                   
             </ng-container>            
           </tr>
         </tbody>
-      </table>
+    </table>
 </div>

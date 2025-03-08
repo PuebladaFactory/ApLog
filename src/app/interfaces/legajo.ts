@@ -4,7 +4,7 @@ export interface Legajo {
     idChofer: number;    
     documentacion: Documentacion [];
     estadoGral: Estado;
-
+    visible:boolean
 }
 
 export interface Documentacion {    
