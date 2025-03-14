@@ -76,6 +76,7 @@ export class LiqClienteComponent {
   $facturasOpChofer: FacturaOp[] = []; // Array de facturas de choferes
   $facturasOpChoferDuplicadas: FacturaOp[] = []; // Array para guardar facturas de choferes duplicadas
   $facturasOpProveedor: FacturaOp[] = []; // Array de facturas de choferes
+  $facLiqOpDuplicadas: FacturaOp[] = [];
 
 
   constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
@@ -148,10 +149,29 @@ export class LiqClienteComponent {
             seenIds.add(factura.idOperacion);
             return true; // Mantener en el array original
         }
-    });
+    });    
     console.log("this.$facturasOpChofer", this.$facturasOpCliente);
     console.log("duplicadas", this.$facturasOpDuplicadas);
-    
+    //this.verificarDuplicadosFacturadas()
+}
+
+verificarDuplicadosFacturadas(){
+  this.dbFirebase.getByDateValue("facOpLiqCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
+  .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+  .subscribe(data=>{
+    let $facturasLiqCliente: any [] = data;
+    const idsLiqCliente = new Set($facturasLiqCliente.map(factura => factura.idOperacion));
+
+  // Recorremos el array facturasOpCliente
+  this.$facLiqOpDuplicadas = this.$facturasOpCliente.filter((facturaOp:FacturaOp) => {
+    // Verificamos si el idOperacion de la factura actual está en el Set
+    return idsLiqCliente.has(facturaOp.idOperacion);
+  });
+
+  
+  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
+
+  })
 }
   
 

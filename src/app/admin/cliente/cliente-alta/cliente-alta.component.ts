@@ -126,7 +126,8 @@ export class ClienteAltaComponent implements OnInit {
         ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
         this.cliente.condFiscal = this.condFiscal;
-        this.cliente.tarifaAsignada = this.clienteEditar.tarifaAsignada
+        this.cliente.tarifaAsignada = this.clienteEditar.tarifaAsignada;
+        this.cliente.idTarifa = this.cliente.idTarifa;
         ////console.log(this.cliente);      
         this.addItem("Edicion");        
         this.activeModal.close();    
@@ -148,7 +149,8 @@ export class ClienteAltaComponent implements OnInit {
         this.cliente.condFiscal = this.condFiscal;
         ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        this.cliente.tarifaAsignada= tarifaSeleccionada.general? tarifaGeneral[0] === null ? false : true : false,
+        this.cliente.tarifaAsignada = tarifaSeleccionada.general? tarifaGeneral[0] === null ? false : true : false;
+        this.cliente.idTarifa = tarifaSeleccionada.general? tarifaGeneral[0] === null ? 0 : tarifaGeneral[0].idTarifa : 0;
         ////console.log(this.cliente);      
         this.addItem("Alta");        
         this.activeModal.close();    

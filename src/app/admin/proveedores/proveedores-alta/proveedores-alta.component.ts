@@ -120,6 +120,7 @@ export class ProveedoresAltaComponent implements OnInit {
         this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
         this.proveedor.condFiscal = this.condFiscal;
         this.proveedor.tarifaAsignada = this.proveedorEditar.tarifaAsignada;
+        this.proveedor.idTarifa = this.proveedor.idTarifa;
        console.log(this.proveedor);      
         this.addItem("Edicion");        
         this.activeModal.close();    
@@ -141,6 +142,7 @@ export class ProveedoresAltaComponent implements OnInit {
         this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
         this.proveedor.condFiscal = this.condFiscal;
         this.proveedor.tarifaAsignada = tarifaSeleccionada.general ? tarifaGeneral[0] === null ? false : true : false;
+        this.proveedor.idTarifa = tarifaSeleccionada.general? tarifaGeneral[0] === null ? 0 : tarifaGeneral[0].idTarifa : 0;
         console.log(this.proveedor);      
         this.addItem("Alta");        
         this.activeModal.close();    

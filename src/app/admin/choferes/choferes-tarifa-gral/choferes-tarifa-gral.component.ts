@@ -825,6 +825,56 @@ onGenerarNuevaTarifaAutomatica() {
 
   }
 
+  actChoferGral(){
+    let choferes: Chofer [] = this.storageService.loadInfo("choferes");
+    
+        if(choferes.length > 0){
+          choferes.forEach((c:Chofer)=>{
+              if(c.tarifaTipo.general && c.idProveedor === 0){
+                c.tarifaAsignada = true;
+                c.idTarifa = this.ultTarifaGralChofer.idTarifa;
+                this.storageService.updateItem("choferes", c, c.idChofer, "INTERNA", "");
+              }
+            })
+        }      
+    
+    
+  }
+  actChoferEsp(){
+
+    let choferes: Chofer [] = this.storageService.loadInfo("choferes");
+    
+        
+        if(choferes.length > 0){
+          choferes.forEach((c:Chofer)=>{
+              if(c.tarifaTipo.especial  && c.idChofer === this.idChoferEsp[0]){
+                c.tarifaAsignada = true;
+                c.idTarifa = this.ultTarifaEspecial.idTarifa;
+                this.storageService.updateItem("choferes", c, c.idChofer, "INTERNA", "");
+              }
+            })
+        }      
+
+  }
+
+  actChoferes(){    
+    let choferes: Chofer [] = this.storageService.loadInfo("choferes");
+        
+    if(choferes.length > 0){
+      choferes.forEach((c:any)=>{
+          c = {
+            ...c,
+            idTarifa : 0,
+          }
+          this.storageService.updateItem("choferes", c, c.idChofer, "INTERNA", "");
+        })
+    }      
+
+    
+    
+    
+}
+
 
 
 }

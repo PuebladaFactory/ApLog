@@ -6,7 +6,11 @@ import { map } from 'rxjs/operators';
 import { ConId } from 'src/app/interfaces/conId';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 
-
+export interface ConIdType<T> {
+  id: string;
+  data: T;
+  type: string; // 'added', 'modified', 'removed'
+}
 
 @Injectable({
   providedIn: 'root'
@@ -74,14 +78,6 @@ export class DbFirestoreService {
       );
     }
 
-    /* getMostRecent<T>(componente: string, idField: string): Observable<T | undefined> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.orderBy(idField, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
-      ).valueChanges().pipe(
-        map(data => data[0]) // Retorna el primer (y único) elemento del array
-      );
-    } */
 
     getMostRecent<T>(componente: string, field: string): Observable<ConId<any>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
@@ -388,6 +384,15 @@ getByFieldValue(componente:string, campo:string, value:any){
     let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
     return addDoc(dataCollection, item).then(() =>
       console.log('Create. Escritura en la base de datos en: ', componente)
+    );
+  }
+
+  createTarifasEspClientes(componente:string, item: any) {
+    //console.log("db.service, metodo create: ",this.coleccion);
+    
+    let dataCollection = collection(this.firestore, `/Vantruck/datos/tarifasEspCliente/${componente}`);
+    return addDoc(dataCollection, item).then(() =>
+      console.log('Create. Escritura en la base de datos en: tarifasEspCliente/', componente)
     );
   }
 

@@ -1,4 +1,9 @@
-<div class="row mt-3" [ngClass]="{'invisible': tEspecial}" >
+<div>
+    <button class="btn btn-primary ms-3" (click)="actCliente()">Actualizar Clientes</button>
+    <button class="btn btn-primary ms-3" (click)="actClienteGral()">Actualizar Clientes Generales</button>
+    <button class="btn btn-primary ms-3" (click)="actClienteEsp()">Actualizar Clientes Especiales</button>        
+</div>
+<div class="row mt-3" [ngClass]="{'invisible': tEspecial}" >    
     <div class="col-4">
         <h1 class="mt-2">Tarifa General</h1>     
         <ng-container *appRole="['god','admin', 'manager']" >
@@ -12,7 +17,7 @@
     <app-consola-tarifa *appRole="['god','admin', 'manager']"  class="col-4 p-0"></app-consola-tarifa>
 
 </div>
-<div *ngIf="tEspecial && ultTarifaEspecial.cargasGenerales.length === 0 && tarifaGeneral.cargasGenerales.length === 0 else conTarifas">
+<div *ngIf="tEspecial && ultTarifaEspecial?.cargasGenerales?.length === 0 && tarifaGeneral?.cargasGenerales?.length === 0 else conTarifas">
     <h2 class="mb-0">
         Primero debe generar la Tarifa General de los Clientes.
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle mb-2" viewBox="0 0 16 16">
@@ -24,7 +29,7 @@
 
 <ng-template #conTarifas>
     <div >   
-        <div *ngIf="tEspecial && ultTarifaEspecial.cargasGenerales.length === 0" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
+        <div *ngIf="tEspecial && !ultTarifaEspecial" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
             <p class="mb-0 fs-5">El cliente aun no tiene tarifas asignadas</p>        
         </div>            
         <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
@@ -34,7 +39,7 @@
                         <th style="width: 2%"><input type="checkbox" (change)="onSeleccionarTodosChange($event)" formControlName="seleccionarTodos"></th>
                         <th style="width: 12%">Categoria</th>
                         <th style="width: 26%">Nombre</th>
-                        <th style="width: 20%">Ultima Tarifa {{tEspecial? ultTarifaEspecial.fecha: ultTarifa? ultTarifa.fecha : ""}}</th>
+                        <th style="width: 20%">Ultima Tarifa {{tEspecial && ultTarifaEspecial ? ultTarifaEspecial.fecha: ultTarifa? ultTarifa.fecha : ""}}</th>
                         <th style="width: 20%">Diferencia</th>
                         <th style="width: 20%">Nueva Tarifa</th>
                     </tr>

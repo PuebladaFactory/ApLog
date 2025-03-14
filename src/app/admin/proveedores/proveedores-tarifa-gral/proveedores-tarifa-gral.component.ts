@@ -514,8 +514,9 @@ onGenerarNuevaTarifaAutomatica() {
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(proveedores.length > 0){
         proveedores.forEach((p:Proveedor)=>{
-          if(p.tarifaTipo.general && !p.tarifaAsignada){
-            p.tarifaAsignada = true;
+          if(p.tarifaTipo.general){
+            p.tarifaAsignada = true;            
+            p.idTarifa = this.nuevaTarifaGral.idTarifa;
             this.storageService.updateItem("proveedores", p, p.idProveedor,"INTERNA", "");
           }
         })
@@ -532,8 +533,9 @@ onGenerarNuevaTarifaAutomatica() {
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);      
       if(proveedores.length > 0){
         proveedores.forEach((p:Proveedor)=>{
-          if(p.tarifaTipo.especial  && p.idProveedor === this.idProveedorEsp[0] && !p.tarifaAsignada){
-            p.tarifaAsignada = true;
+          if(p.tarifaTipo.especial  && p.idProveedor === this.idProveedorEsp[0]){
+            p.tarifaAsignada = true;            
+            p.idTarifa = this.nuevaTarifaGral.idTarifa;
             this.storageService.updateItem("proveedores", p, p.idProveedor,"INTERNA", "");
           }
         })
@@ -634,6 +636,56 @@ onGenerarNuevaTarifaAutomatica() {
     
     return prov[0].razonSocial;
 
+  }
+
+    actProveedorGral(){
+      let proveedores: Proveedor [] = this.storageService.loadInfo("proveedores");
+      
+          if(proveedores.length > 0){
+            proveedores.forEach((c:Proveedor)=>{
+                if(c.tarifaTipo.general){
+                  c.tarifaAsignada = true;
+                  c.idTarifa = this.ultTarifaGralProveedor.idTarifa;
+                  this.storageService.updateItem("proveedores", c, c.idProveedor, "INTERNA", "");
+                }
+              })
+          }      
+      
+      
+    }
+    actProveedorEsp(){
+  
+      let proveedores: Proveedor [] = this.storageService.loadInfo("proveedores");
+      
+          
+          if(proveedores.length > 0){
+            proveedores.forEach((c:Proveedor)=>{
+                if(c.tarifaTipo.especial  && c.idProveedor === this.idProveedorEsp[0]){
+                  c.tarifaAsignada = true;
+                  c.idTarifa = this.ultTarifaEspecial.idTarifa;
+                  this.storageService.updateItem("proveedores", c, c.idProveedor, "INTERNA", "");
+                }
+              })
+          }      
+  
+    }
+  
+    actProveedores(){    
+      let proveedores: Proveedor [] = this.storageService.loadInfo("proveedores");
+          
+      if(proveedores.length > 0){
+        proveedores.forEach((c:any)=>{
+            c = {
+              ...c,
+              idTarifa : 0,
+            }
+            this.storageService.updateItem("proveedores", c, c.idProveedor, "INTERNA", "");
+          })
+      }      
+  
+      
+      
+      
   }
 
 }

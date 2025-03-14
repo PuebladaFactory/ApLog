@@ -239,6 +239,7 @@ export class ChoferesAltaComponent implements OnInit {
         this.chofer.vehiculo = this.vehiculos;
         this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa      
         this.chofer.tarifaAsignada = this.tarifaAsignada;
+        this.chofer.idTarifa = this.chofer.idTarifa;
         console.log("este es el chofer EDITADO: ",this.chofer);     
     } else {
         let formValue = this.form.value;
@@ -258,6 +259,7 @@ export class ChoferesAltaComponent implements OnInit {
         this.chofer.vehiculo = this.vehiculos;
         this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa        
         this.chofer.tarifaAsignada = this.idProveedor === 0 ? tarifaSeleccionada.general ? tarifaGeneral[0] === null ? false : true : false : false;
+        this.chofer.idTarifa = this.idProveedor === 0 ? tarifaSeleccionada.general ? tarifaGeneral[0] === null ? 0 : tarifaGeneral[0].idTarifa : 0 : 0;
         console.log("este es el chofer NUEVO: ",this.chofer);     
     }
    }

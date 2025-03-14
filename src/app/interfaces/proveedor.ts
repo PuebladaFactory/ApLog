@@ -13,6 +13,7 @@ export interface Proveedor {
     contactos: Contacto [];
     tarifaTipo: TarifaTipo;
     tarifaAsignada: boolean;
+    idTarifa:number;
 }
 
 export interface Contacto {    

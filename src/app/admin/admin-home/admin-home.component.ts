@@ -1,6 +1,9 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { take } from 'rxjs';
+import { Observable, take } from 'rxjs';
+import { Cliente } from 'src/app/interfaces/cliente';
 import { Legajo } from 'src/app/interfaces/legajo';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -15,6 +18,7 @@ export class AdminHomeComponent implements OnInit {
   activo!:boolean;
   $legajos!:Legajo[];
   $usuario!: any;
+  tarifas$!: Observable<any>;
 
   constructor(private storageService: StorageService, private legajoServ: LegajosService) { }
 
@@ -32,7 +36,12 @@ export class AdminHomeComponent implements OnInit {
         
       });
       let usuarioLogueado = this.storageService.loadInfo("usuario");
-      this.$usuario = structuredClone(usuarioLogueado[0]);
+      this.$usuario = structuredClone(usuarioLogueado[0]);      
+      
+      this.storageService.syncChangesTarifasGral<TarifaGralCliente>('tarifasGralCliente');
+      this.storageService.syncChangesTarifasGral<TarifaGralCliente>('tarifasEspCliente');
+      this.storageService.syncChangesTarifasGral<TarifaPersonalizadaCliente>('tarifasPersCliente');
+      //this.storageService.syncChangesTarifasEspCliente<TarifaPersonalizadaCliente>('tarifasPersCliente');
   }
 
   ngOnDestroy(): void {

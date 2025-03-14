@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, distinctUntilChanged, Observable, take } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, Observable, Subject, take, takeUntil } from 'rxjs';
 import { DbFirestoreService } from '../database/db-firestore.service';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { LogService } from '../log/log.service';
-
+import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import * as _ from 'lodash';
 
 
 
@@ -28,6 +29,8 @@ export class StorageService {
     private dbFirebase: DbFirestoreService, 
     private logService: LogService
   ) { }
+
+  private destroy$ = new Subject<void>();
 
   // Observables //
 
@@ -231,6 +234,9 @@ export class StorageService {
 
   private _users$ = new BehaviorSubject<any>(this.loadInfo('users') || [] || null);
   public users$ = this._users$.asObservable();
+
+  private _todasTarifasEspCliente$ = new BehaviorSubject<any>(this.loadInfo('todasTarifasEspCliente') || []);
+  public todasTarifasEspCliente$ = this._todasTarifasEspCliente$.asObservable()
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
@@ -568,6 +574,11 @@ export class StorageService {
         break
       } 
 
+      case "todasTarifasEspCliente":{
+        this._todasTarifasEspCliente$.next(data);
+        break
+      }
+
       default: {
         //statements; 
         break;
@@ -636,14 +647,120 @@ export class StorageService {
     this.getAll<Cliente>("clientes");
     this.getAll<Chofer>("choferes");
     this.getAll<Proveedor>("proveedores");
-    this.getMostRecentItem<TarifaGralCliente>("tarifasGralCliente", "idTarifa");
-    this.getMostRecentItem<TarifaGralCliente>("tarifasGralChofer", "idTarifa");
-    this.getMostRecentItem<TarifaGralCliente>("tarifasGralProveedor", "idTarifa");
+    //this.getMostRecentItem<TarifaGralCliente>("tarifasGralCliente", "idTarifa");
+    //this.getMostRecentItem<TarifaGralCliente>("tarifasGralChofer", "idTarifa");
+    //this.getMostRecentItem<TarifaGralCliente>("tarifasGralProveedor", "idTarifa");
     this.getAllColection("users");    
     this.getAllSorted("legajos", 'idLegajo', 'asc');    
   }
 
+  getTarifasEsp(){
+    this.getTarifasEspClientes();    
+    this.getTarifasPersClientes();
+    this.getTarifasEspChoferes();    
+    this.getTarifasEspsProveedores();    
+  }
  
+  getTarifasEspClientes(){
+    
+    let clientes: Cliente [] = this.loadInfo("clientes");
+    let tarfEspclientes: TarifaGralCliente [] = this.loadInfo("todasTarifasEspCliente");    
+    if(clientes.length > 0){
+      clientes.forEach((c:Cliente)=>{
+        if(c.tarifaTipo.especial){
+          this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspCliente", "idTarifa", "idCliente", c.idCliente)
+          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+          .subscribe(data => {
+            if(data.length > 0){
+              console.log("todasTarifasEspCliente???", data);
+              
+              tarfEspclientes.push(data[0])
+              //console.log("tarfEspclientes", tarfEspclientes);
+              this.setInfo("todasTarifasEspCliente", tarfEspclientes);
+              this.updateObservable("todasTarifasEspCliente", tarfEspclientes);
+            }
+          })      
+          
+        }
+      })
+    }
+    
+  }
+
+  getTarifasPersClientes(){
+       
+    let clientes: Cliente [] = this.loadInfo("clientes");
+    let tarfPersClientes: TarifaPersonalizadaCliente [] = this.loadInfo("tarifasPersCliente");    
+    if(clientes.length > 0){
+      clientes.forEach((c:Cliente)=>{
+        if(c.tarifaTipo.personalizada){
+          this.dbFirebase.getMostRecentId<TarifaPersonalizadaCliente>("tarifasPersCliente", "idTarifa", "idCliente", c.idCliente)
+          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+          .subscribe(data => {
+            if(data){
+              console.log("data TARIFA PERSONALIZADA DE LOS CLIENTES?", data);
+              if(data.length > 0){
+                tarfPersClientes.push(data[0])
+                //console.log("tarifasPersCliente", tarfPersClientes);
+                this.setInfo("tarifasPersCliente", tarfPersClientes)
+              };
+              
+            }
+          })      
+          
+        }
+      })
+  }
+    
+  }
+
+  getTarifasEspChoferes(){
+    let choferes: Chofer [] = this.loadInfo("choferes");
+    let tarfEspChoferes: TarifaGralCliente [] = this.loadInfo("tarifasEspChofer");    
+    if(choferes.length > 0){
+      choferes.forEach((c:Chofer)=>{
+        if(c.tarifaTipo.especial){
+          this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspChofer", "idTarifa", "idChofer", c.idChofer)
+          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+          .subscribe(data => {
+            if(data){
+              //console.log("data tarifasEspChofer?", data);
+              
+              tarfEspChoferes.push(data[0])
+              //console.log("tarifasEspChofer", tarfEspChoferes);
+              this.setInfo("tarifasEspChofer", tarfEspChoferes)
+            }
+          })      
+          
+        }
+      })
+    }
+    
+  }
+
+  getTarifasEspsProveedores(){
+    let proveedores: Proveedor [] = this.loadInfo("proveedores");
+    let tarfEspProveedores: TarifaGralCliente [] = this.loadInfo("tarifasEspProveedor");    
+    if(proveedores.length > 0){
+      proveedores.forEach((p:Proveedor)=>{
+        if(p.tarifaTipo.especial){
+          this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspProveedor", "idTarifa", "idProveedor", p.idProveedor)
+          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+          .subscribe(data => {
+            if(data){
+              //console.log("data tarifasEspProveedor?", data);
+              
+              tarfEspProveedores.push(data[0])
+              //console.log("tarfEspProveedores", tarfEspProveedores);
+              this.setInfo("tarifasEspProveedor", tarfEspProveedores)
+            }
+          })      
+          
+        }
+      })
+    }
+    
+  }
 
   // METODOS CRUD
 
@@ -744,6 +861,41 @@ export class StorageService {
         ////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
       }
       
+    });
+  }
+
+  syncChangesTarifasGral<T>(componente:string): void {
+    this.dbFirebase.getAll<T>(componente)
+    .pipe(
+      distinctUntilChanged((prev, curr) => _.isEqual(prev, curr)) // Comparación profunda
+    )
+    .subscribe(data => {
+      console.log(`${componente}: data: `, data);
+      let currentData = this.loadInfo(componente);
+      console.log(`${componente}: local storage: `, currentData);
+
+      // Comparación profunda con lodash
+      if (_.isEqual(currentData, data)) {
+        console.error(`1) EL MISMO OBJETO)${componente}`);
+      } else {
+        console.error(`2) NO ES EL MISMO OBJETO)${componente}`);
+        this.setInfo(componente, data); // Actualiza el caché
+        this.updateObservable(componente, data)
+      }
+    });
+  }
+
+  syncChangesTarifasPersCliente<T>(componente:string): void {
+    this.dbFirebase.getAll<T>(componente)
+    .pipe(
+      distinctUntilChanged((prev, curr) => _.isEqual(prev, curr)) // Comparación profunda
+    )
+    .subscribe(data => {
+      console.log(`${componente}: data`, data);
+      let currentData = this.loadInfo(`${componente}`);
+      console.log(`local storage: ${componente}`, currentData);
+      this.updateObservable(componente,currentData)
+           
     });
   }
 
@@ -856,6 +1008,8 @@ export class StorageService {
         return this._usuario$.asObservable(); 
       case 'operaciones':
         return this._operaciones$.asObservable(); 
+      case 'todasTarifasEspCliente':
+        return this._todasTarifasEspCliente$.asObservable(); 
         
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
