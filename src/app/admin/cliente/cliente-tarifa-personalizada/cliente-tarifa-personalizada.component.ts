@@ -66,7 +66,12 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       .subscribe(data => {
         if (data) {
             console.log("data: ", data);            
-            this.tarifasPersCliente = data;                   
+            this.tarifasPersCliente = data;
+            if(this.clienteSeleccionado){
+              console.log("aca????????");              
+              this.$ultTarifaCliente = this.tarifasPersCliente.find((t:TarifaPersonalizadaCliente) => {return t.idCliente === this.clienteSeleccionado[0].idCliente})
+              console.log("ultTarifaCliente", this.$ultTarifaCliente);    
+            }
         }
         /* if (data) {
           this.$ultTarifaCliente = data;          
@@ -188,7 +193,9 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       confirmButtonText: "Confirmar",
       cancelButtonText: "Cancelar"
     }).then((result) => {
-      if (result.isConfirmed) {        
+      if (result.isConfirmed) {  
+        this.storageService.addItem("historialTarifasPersCliente", this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );
+        this.storageService.deleteItem("tarifasPersCliente", this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );      
         this.storageService.addItem(this.componente, this.nuevaTarifa, this.nuevaTarifa.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.getClientePers(this.clienteSeleccionado[0].idCliente)}`);
         if(clientes.length > 0){
           clientes.forEach((c:Cliente)=>{

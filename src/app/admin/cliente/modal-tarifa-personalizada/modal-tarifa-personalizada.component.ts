@@ -37,8 +37,8 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
       this.$ultimaTarifa.secciones.forEach(seccion => {
         seccion.categorias.forEach(categoria => {
           // Calcula nuevos valores y limita a dos decimales, luego convierte a número
-          console.log("categoria.aCobrar: ", categoria.aCobrar);
-          console.log("categoria.aPagar: ", categoria.aPagar);
+          //console.log("categoria.aCobrar: ", categoria.aCobrar);
+          //console.log("categoria.aPagar: ", categoria.aPagar);
           
           categoria.nuevoACobrar = categoria.aCobrar + (categoria.aCobrar * (this.porcentajeAumento / 100));
           categoria.nuevoAPagar = categoria.aPagar + (categoria.aPagar * (this.porcentajeAumento / 100));
@@ -49,7 +49,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   
   // Método para calcular la diferencia
   calcularDiferencia(valorOriginal: number, nuevoValor: number | null | undefined): number {
-    console.log("valorOriginal: ", valorOriginal, "nuevoValor: ", nuevoValor);
+    //console.log("valorOriginal: ", valorOriginal, "nuevoValor: ", nuevoValor);
     
     if (nuevoValor === null || nuevoValor === undefined || this.formNumServ.convertirAValorNumerico(nuevoValor) === 0) {
       return 0;  // Devuelve 0 si no hay nuevo valor calculado
@@ -144,6 +144,8 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   }
 
   addItem(item:TarifaPersonalizadaCliente){
+    this.storageService.addItem("historialTarifasPersCliente", this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
+    this.storageService.deleteItem(this.componente, this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
     this.storageService.addItem(this.componente, item, item.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.razonSocial}`);        
   }
 
