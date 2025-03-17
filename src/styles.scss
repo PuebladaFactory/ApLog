@@ -39,6 +39,34 @@ body.modal-open {
   overflow: visible !important;
 }
 
+.custom-offcanvas {
+  max-width: 200px; /* Ancho personalizado */
+}
+
+.offcanvas {
+  position: fixed;
+  top: 0;
+  left: -200px; /* Oculta el offcanvas fuera de la pantalla */
+  width: 200px; /* Ancho del offcanvas */
+  height: 100vh;
+  transition: right 0.3s ease; /* Animación de desplazamiento */
+}
+
+/* Clase para abrir el offcanvas */
+.offcanvas.open {
+  left: 0; /* Muestra el offcanvas */
+}
+
+/* Estilo para el contenido principal */
+.main-content {
+  transition: margin-left 0s ease; /* Animación de desplazamiento */
+}
+
+/* Desplaza el contenido principal cuando el offcanvas está abierto */
+.main-content.shifted {
+  margin-left: 200px; /* Igual al ancho del offcanvas */
+}
+
 
 
 /* Importing Bootstrap SCSS file. */

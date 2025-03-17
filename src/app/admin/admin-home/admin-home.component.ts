@@ -1,5 +1,6 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { Observable, take } from 'rxjs';
+import { Router } from '@angular/router';
+import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
@@ -19,14 +20,16 @@ export class AdminHomeComponent implements OnInit {
   $legajos!:Legajo[];
   $usuario!: any;
   tarifas$!: Observable<any>;
-
-  constructor(private storageService: StorageService, private legajoServ: LegajosService) { }
+  private destroy$ = new Subject<void>();
+  
+  constructor(private storageService: StorageService, private legajoServ: LegajosService, private router: Router) { }
 
   ngOnInit(): void {
     this.setInitialSidebarState();
     window.addEventListener('resize', this.onResize);
     this.storageService.legajos$
       .pipe(take(1))
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
       .subscribe(data => {
         this.$legajos = data;     
         if(this.$legajos.length > 0){
@@ -37,15 +40,29 @@ export class AdminHomeComponent implements OnInit {
       });
       let usuarioLogueado = this.storageService.loadInfo("usuario");
       this.$usuario = structuredClone(usuarioLogueado[0]);      
+      this.storageService.listenForChanges<Cliente>("clientes");
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralCliente");
+      this.storageService.listenForChanges<TarifaPersonalizadaCliente>('tarifasPersCliente');
+
+      this.storageService.getObservable("ruta")
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data=>{
+        if(data){
+          console.log("ruta", data);
+          this.router.navigate([data[0]]);    
+        }
+      })
+      this.router.navigate(['op']);
       
-      this.storageService.syncChangesTarifasGral<TarifaGralCliente>('tarifasGralCliente');
-      this.storageService.syncChangesTarifasGral<TarifaGralCliente>('tarifasEspCliente');
-      this.storageService.syncChangesTarifasGral<TarifaPersonalizadaCliente>('tarifasPersCliente');
+      //this.storageService.syncChangesTarifasGral<TarifaGralCliente>('tarifasEspCliente');
+      //this.storageService.syncChangesTarifasGral<TarifaPersonalizadaCliente>('tarifasPersCliente');
       //this.storageService.syncChangesTarifasEspCliente<TarifaPersonalizadaCliente>('tarifasPersCliente');
   }
 
   ngOnDestroy(): void {
     window.removeEventListener('resize', this.onResize);
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   setInitialSidebarState(): void {

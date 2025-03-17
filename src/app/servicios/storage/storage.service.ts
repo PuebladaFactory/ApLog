@@ -238,6 +238,9 @@ export class StorageService {
   private _todasTarifasEspCliente$ = new BehaviorSubject<any>(this.loadInfo('todasTarifasEspCliente') || []);
   public todasTarifasEspCliente$ = this._todasTarifasEspCliente$.asObservable()
 
+  private _ruta$ = new BehaviorSubject<any>(this.loadInfo('ruta') || []);
+  public ruta$ = this._ruta$.asObservable()
+
   updateObservable(componente: any, data: any) {
     switch (componente) {
       case "clientes": {
@@ -579,6 +582,11 @@ export class StorageService {
         break
       }
 
+      case "ruta":{
+        this._ruta$.next(data);
+        break
+      }
+
       default: {
         //statements; 
         break;
@@ -644,9 +652,10 @@ export class StorageService {
   initializerAdmin() {
     //console.log("me llamaron???");
     
-    this.getAll<Cliente>("clientes");
+    //this.getAll<Cliente>("clientes");
     this.getAll<Chofer>("choferes");
     this.getAll<Proveedor>("proveedores");
+    //this.getAll<Proveedor>("tarifasGralCliente");
     //this.getMostRecentItem<TarifaGralCliente>("tarifasGralCliente", "idTarifa");
     //this.getMostRecentItem<TarifaGralCliente>("tarifasGralChofer", "idTarifa");
     //this.getMostRecentItem<TarifaGralCliente>("tarifasGralProveedor", "idTarifa");
@@ -786,7 +795,7 @@ export class StorageService {
 
 
   getAll<T>(componente: string): Observable<T[]> {
-    //console.log("getAll componente: ", componente);
+    console.log("getAll componente: ", componente);
     const cachedData = this.loadInfo(componente); // Carga desde local storage
     ////console.log("getAll cachedData: ", cachedData);
     
@@ -980,6 +989,30 @@ export class StorageService {
     });
   }
 
+  listenForChanges<T>(componente: string): void {
+    console.log("admin: ", componente);
+    
+    this.dbFirebase.getAllStateChanges<T>(componente)
+      .subscribe(changes => {
+        if (changes.length > 0) {
+          console.log(`${componente}: Cambios detectados`, changes);
+          let currentData = this.loadInfo(componente) || [];
+  
+          changes.forEach(change => {
+            if (change.type === 'added') {
+              currentData.push(change);
+            } else if (change.type === 'modified') {
+              currentData = currentData.map(item => item.id === change.id ? change : item);
+            } else if (change.type === 'removed') {
+              currentData = currentData.filter(item => item.id !== change.id);
+            }
+          });
+  
+          this.setInfo(componente, currentData); // Actualiza caché          
+        }
+      });
+  }
+
   getObservable<T>(componente: string): Observable<T[]> {
     switch (componente) {
       case 'clientes':
@@ -1010,7 +1043,8 @@ export class StorageService {
         return this._operaciones$.asObservable(); 
       case 'todasTarifasEspCliente':
         return this._todasTarifasEspCliente$.asObservable(); 
-        
+      case 'ruta':
+        return this._ruta$.asObservable(); 
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }

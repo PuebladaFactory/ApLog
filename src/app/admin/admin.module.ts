@@ -27,6 +27,9 @@ import { LiquidacionModule } from './liquidacion/liquidacion.module';
     FacturacionModule,
     LiquidacionModule,
         
+  ],
+  exports:[
+    AdminHomeComponent,
   ]
 })
 export class AdminModule { }

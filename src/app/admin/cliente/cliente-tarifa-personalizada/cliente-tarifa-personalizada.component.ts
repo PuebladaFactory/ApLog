@@ -53,7 +53,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.storageService.clientes$
+    this.storageService.getObservable<Cliente>('clientes')
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.$clientes = data;

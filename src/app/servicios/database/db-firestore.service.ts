@@ -3,14 +3,8 @@ import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, updateDoc } from '@angular/fire/firestore';
 import { firstValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ConId } from 'src/app/interfaces/conId';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
-
-export interface ConIdType<T> {
-  id: string;
-  data: T;
-  type: string; // 'added', 'modified', 'removed'
-}
 
 @Injectable({
   providedIn: 'root'
@@ -181,6 +175,19 @@ export class DbFirestoreService {
           id: change.payload.doc.id,
           ...change.payload.doc.data() as T,
         })))
+      );
+    }
+
+    getAllStateChanges<T>(componente: string): Observable<ConIdType<T>[]> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection).stateChanges().pipe(
+        map(changes =>
+          changes.map(change => ({
+            id: change.payload.doc.id,
+            ...change.payload.doc.data() as T,
+            type: change.type // 'added', 'modified', 'removed'
+          }))
+        )
       );
     }
 

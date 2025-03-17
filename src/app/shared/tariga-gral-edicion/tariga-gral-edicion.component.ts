@@ -31,25 +31,25 @@ export class TarigaGralEdicionComponent implements OnInit {
       switch(this.fromParent.origen){
         case 'clientes':{
           if(this.fromParent.modo === "general"){
-            this.componente = "historialTarifasGralCliente"
+            this.componente = "tarifasGralCliente"
           } else{
-            this.componente = "historialTarifasEspCliente"
+            this.componente = "tarifasEspCliente"
           }
           break;
         };
         case 'choferes':{
           if(this.fromParent.modo === "general"){
-            this.componente = "historialTarifasGralChofer"
+            this.componente = "tarifasGralChofer"
           } else{
-            this.componente = "historialTarifasEspChofer"
+            this.componente = "tarifasEspChofer"
           }
           break;
         };
         case 'proveedores':{
           if(this.fromParent.modo === "general"){
-            this.componente = "historialTarifasGralProveedor"
+            this.componente = "tarifasGralProveedor"
           } else{
-            this.componente = "historialTarifasEspProveedor"
+            this.componente = "tarifasEspProveedor"
           }
           break;
         };
