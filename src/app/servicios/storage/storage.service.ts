@@ -990,20 +990,22 @@ export class StorageService {
   }
 
   listenForChanges<T>(componente: string): void {
-    console.log("admin: ", componente);
-    
+    console.log("admin: ", componente);    
     this.dbFirebase.getAllStateChanges<T>(componente)
       .subscribe(changes => {
         if (changes.length > 0) {
           console.log(`${componente}: Cambios detectados`, changes);
-          let currentData = this.loadInfo(componente) || [];
-  
+          let currentData = this.loadInfo(componente) || [];          
           changes.forEach(change => {
             if (change.type === 'added') {
+              console.log("change", change);
+              
               currentData.push(change);
             } else if (change.type === 'modified') {
               currentData = currentData.map(item => item.id === change.id ? change : item);
             } else if (change.type === 'removed') {
+              console.log("DAAALEEE LOOOOCOOO!!!!");
+              
               currentData = currentData.filter(item => item.id !== change.id);
             }
           });

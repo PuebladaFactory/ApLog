@@ -165,6 +165,7 @@
         <div class="d-flex justify-content-between">
             <h2>Última Tarifa {{$ultTarifaCliente.fecha}}</h2>
             <div>
+                <app-btn-eliminar *appRole="['god','admin', 'manager']" name="Eliminar" (click)="eliminarTarifa()"></app-btn-eliminar>           
                 <app-btn-editar *appRole="['god','admin', 'manager']" name="editarTarifa" class="me-3" (click)="openModal('editar')" ></app-btn-editar>
                 <app-btn-editar *appRole="['god','admin', 'manager']" name="modificarTarifa" (click)="openModal('aumentar')"></app-btn-editar>           
             </div>

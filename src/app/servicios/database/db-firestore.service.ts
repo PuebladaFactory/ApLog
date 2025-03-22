@@ -438,7 +438,8 @@ getByFieldValue(componente:string, campo:string, value:any){
   delete(componente:string, id: string) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
     const estacionamiento1DocumentReference = doc(this.firestore, `/Vantruck/datos/${componente}/${id}`);
-    return deleteDoc(estacionamiento1DocumentReference);
+    return deleteDoc(estacionamiento1DocumentReference).then(() =>
+      console.log('Delete. borrado en la base de datos en: ', componente));
   }
 
   getUsuarioUid(id:string) {

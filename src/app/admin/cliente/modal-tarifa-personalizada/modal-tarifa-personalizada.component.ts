@@ -140,13 +140,25 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   
     // Aquí puedes guardar o enviar el objeto tarifaNueva
     //console.log("Tarifa Nueva Guardada: ", tarifaNueva);
+    console.log("this.nuevaTarifa", this.nuevaTarifa);    
     this.addItem(tarifaNueva)
   }
 
   addItem(item:TarifaPersonalizadaCliente){
-    this.storageService.addItem("historialTarifasPersCliente", this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
     this.storageService.deleteItem(this.componente, this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
+    this.storageService.addItem("historialTarifasPersCliente", this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );    
     this.storageService.addItem(this.componente, item, item.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.razonSocial}`);        
+    
+  }
+
+  moverTarifa(){
+    this.storageService.deleteItem(this.componente, this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
+    this.storageService.addItem("historialTarifasPersCliente", this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
+  }
+
+  borrarTarifa(){
+    this.storageService.deleteItem(this.componente, this.fromParent.item, this.fromParent.item.idTarifa, "INTERNA", "" );
+    //this.storageService.addItem("historialTarifasPersCliente", this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
   }
 
 

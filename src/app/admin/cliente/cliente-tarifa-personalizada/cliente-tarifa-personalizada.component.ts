@@ -10,6 +10,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { Subject, takeUntil } from 'rxjs';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 @Component({
   selector: 'app-cliente-tarifa-personalizada',
@@ -35,7 +36,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     nuevaTarifa!: TarifaPersonalizadaCliente;
     private destroy$ = new Subject<void>();
     
-  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, private formNumService:FormatoNumericoService ) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, private formNumService:FormatoNumericoService, private dbFirebase: DbFirestoreService ) {
     this.inputSecciones = this.fb.group({
       cantSecciones : [""],
           })
@@ -194,8 +195,10 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {  
-        this.storageService.addItem("historialTarifasPersCliente", this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );
-        this.storageService.deleteItem("tarifasPersCliente", this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );      
+        if(this.$ultTarifaCliente){
+          this.storageService.addItem("historialTarifasPersCliente", this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );
+          this.storageService.deleteItem("tarifasPersCliente", this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );      
+        }        
         this.storageService.addItem(this.componente, this.nuevaTarifa, this.nuevaTarifa.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.getClientePers(this.clienteSeleccionado[0].idCliente)}`);
         if(clientes.length > 0){
           clientes.forEach((c:Cliente)=>{
@@ -316,6 +319,13 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
             })
         }      
 
+  }
+
+  eliminarTarifa(){
+    console.log("$ultTarifaCliente", this.$ultTarifaCliente);
+    //this.storageService.deleteItem(this.componente, this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );
+    this.dbFirebase.delete(this.componente, this.$ultTarifaCliente.id);
+    
   }
 
 }
