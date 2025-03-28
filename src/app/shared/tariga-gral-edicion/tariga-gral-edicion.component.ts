@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Vehiculo } from 'src/app/interfaces/chofer';
-import { ConId } from 'src/app/interfaces/conId';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -16,8 +16,8 @@ import Swal from 'sweetalert2';
 export class TarigaGralEdicionComponent implements OnInit {
 
     @Input() fromParent:any;
-    tarifa!:ConId<TarifaGralCliente>;
-    tarifaOriginal!:ConId<TarifaGralCliente>;
+    tarifa!:ConIdType<TarifaGralCliente>;
+    tarifaOriginal!:ConIdType<TarifaGralCliente>;
     componente:string = '';
   
     constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private formNumServ: FormatoNumericoService){
@@ -90,7 +90,8 @@ export class TarigaGralEdicionComponent implements OnInit {
       if (result.isConfirmed) {
         this.formatearTarifa()
         console.log("tarifa editada: ", this.tarifa);
-        this.storageService.updateItem(this.componente, this.tarifa, this.tarifa.idTarifa, "EDITAR", "Edición de la tarifa");    
+        let {id, type, ...tarifa } = this.tarifa
+        this.storageService.updateItem(this.componente, tarifa, this.tarifa.idTarifa, "EDITAR", "Edición de la tarifa", this.tarifa.id);    
         Swal.fire({
           title: "Confirmado",
           text: "La tarifa ha sido modificada.",
@@ -123,7 +124,7 @@ export class TarigaGralEdicionComponent implements OnInit {
           this.tarifa.cargasGenerales.splice(orden-1,1)
           console.log("tarifa: ", this.tarifa);
           
-          this.storageService.updateItem(this.componente, this.tarifa, this.tarifa.idTarifa, "EDICIÓN", "Eliminar categoria de la tarifa");    
+          //this.storageService.updateItem(this.componente, this.tarifa, this.tarifa.idTarifa, "EDICIÓN", "Eliminar categoria de la tarifa");    
           //////console.log("consultas Op: " , this.$consultasOp);
           Swal.fire({
             title: "Confirmado",

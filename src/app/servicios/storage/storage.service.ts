@@ -653,8 +653,8 @@ export class StorageService {
     //console.log("me llamaron???");
     
     //this.getAll<Cliente>("clientes");
-    this.getAll<Chofer>("choferes");
-    this.getAll<Proveedor>("proveedores");
+    //this.getAll<Chofer>("choferes");
+    //this.getAll<Proveedor>("proveedores");
     //this.getAll<Proveedor>("tarifasGralCliente");
     //this.getMostRecentItem<TarifaGralCliente>("tarifasGralCliente", "idTarifa");
     //this.getMostRecentItem<TarifaGralCliente>("tarifasGralChofer", "idTarifa");
@@ -998,10 +998,54 @@ export class StorageService {
           let currentData = this.loadInfo(componente) || [];          
           changes.forEach(change => {
             if (change.type === 'added') {
-              console.log("change", change);
+              //console.log("change", change);
+              const existe = currentData.some(obj => obj.id === change.id);
+
+              if (!existe) {
+                //console.log("El id no está en el array");
+                currentData.push(change);
+              } else {
+                console.log("sin cambios en el componente: ", componente);
+              }
               
-              currentData.push(change);
+              
             } else if (change.type === 'modified') {
+              console.log("editar!!!!");
+              currentData = currentData.map(item => item.id === change.id ? change : item);
+            } else if (change.type === 'removed') {
+              console.log("DAAALEEE LOOOOCOOO!!!!");
+              
+              currentData = currentData.filter(item => item.id !== change.id);
+            }
+          });
+  
+          this.setInfo(componente, currentData); // Actualiza caché          
+        }
+      });
+  }
+
+  listenForChangesLimit<T>(componente: string, campo:string, id:number, orden:string, limite:number): void {
+    console.log("admin: ", componente);    
+    this.dbFirebase.getAllStateChangesLimit<T>(componente, campo, id, orden, limite)
+      .subscribe(changes => {
+        if (changes.length > 0) {
+          console.log(`${componente}: Cambios detectados`, changes);
+          let currentData = this.loadInfo(componente) || [];          
+          changes.forEach(change => {
+            if (change.type === 'added') {
+              //console.log("change", change);
+              const existe = currentData.some(obj => obj.id === change.id);
+
+              if (!existe) {
+                //console.log("El id no está en el array");
+                currentData.push(change);
+              } else {
+                console.log("sin cambios en el componente: ", componente);
+              }
+              
+              
+            } else if (change.type === 'modified') {
+              console.log("editar!!!!");
               currentData = currentData.map(item => item.id === change.id ? change : item);
             } else if (change.type === 'removed') {
               console.log("DAAALEEE LOOOOCOOO!!!!");
@@ -1047,6 +1091,8 @@ export class StorageService {
         return this._todasTarifasEspCliente$.asObservable(); 
       case 'ruta':
         return this._ruta$.asObservable(); 
+      case "tarifasEventuales":
+        return this._tarifasEventuales$.asObservable();
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }
@@ -1226,14 +1272,14 @@ export class StorageService {
           console.log(e.message)});
       }
     
-      public updateItem(componente: string, item: any, idItem:number, accion:string, msj: string): void {
+      public updateItem(componente: string, item: any, idItem:number, accion:string, msj: string, uid:any): void {
         ////console.log("storage update item", componente, item);
         let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
         console.log("regLog", regLog);
         
-        this.dbFirebase.update(componente, item).then(() => {
+        this.dbFirebase.update(componente, item, uid).then(() => {
           if (!user[0].roles.god && regLog) { 
             this.logService.logEvent(accion, componente, msj, idItem, true);
           }      

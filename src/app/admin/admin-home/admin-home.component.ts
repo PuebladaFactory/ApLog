@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, Subject, take, takeUntil } from 'rxjs';
+import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
@@ -41,8 +42,16 @@ export class AdminHomeComponent implements OnInit {
       let usuarioLogueado = this.storageService.loadInfo("usuario");
       this.$usuario = structuredClone(usuarioLogueado[0]);      
       this.storageService.listenForChanges<Cliente>("clientes");
+      this.storageService.listenForChanges<Chofer>("choferes");
+      this.storageService.listenForChanges<Chofer>("proveedores");
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralCliente");
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspCliente");
       this.storageService.listenForChanges<TarifaPersonalizadaCliente>('tarifasPersCliente');
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralChofer");
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspChofer");
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralProveedor");
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspProveedor");
+      
 
       this.storageService.getObservable("ruta")
       .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario

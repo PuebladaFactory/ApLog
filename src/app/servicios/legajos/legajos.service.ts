@@ -82,7 +82,7 @@ export class LegajosService {
   
         // Si se modificó el legajo, actualizar en la base de datos
         if (legajoModificado) {
-          this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "EDITAR", "Edición de Legajo");
+          //this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "EDITAR", "Edición de Legajo");
           //console.log(`Legajo actualizado: ${legajo.idLegajo}`);
         }
       });

@@ -460,7 +460,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           facChofer: op.estado.facChofer,
           facturada: op.estado.facChofer ? true : false,
         }
-        this.storageService.updateItem("operaciones", op, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`);
+        //this.storageService.updateItem("operaciones", op, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`);
         this.removeItem(factura);
     });
 

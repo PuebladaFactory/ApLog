@@ -186,7 +186,20 @@ export class DbFirestoreService {
             id: change.payload.doc.id,
             ...change.payload.doc.data() as T,
             type: change.type // 'added', 'modified', 'removed'
-          }))
+          } as ConIdType<T> ) )
+        )
+      );
+    }
+
+    getAllStateChangesLimit<T>(componente: string, campo:string, id:number, orden:string, limit:number): Observable<ConIdType<T>[]> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref => ref.where(campo, '==', id ).orderBy(orden, "desc").limit(limit)).stateChanges().pipe(
+        map(changes =>
+          changes.map(change => ({
+            id: change.payload.doc.id,
+            ...change.payload.doc.data() as T,
+            type: change.type // 'added', 'modified', 'removed'
+          } as ConIdType<T> ) )
         )
       );
     }
@@ -426,12 +439,14 @@ getByFieldValue(componente:string, campo:string, value:any){
     }
 }
 
-  update(componente: string, item: any) {
+  update(componente: string, item: any, uid:any) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
     const estacionamiento1DocumentReference = doc(
       this.firestore,
-      `/Vantruck/datos/${componente}/${item.id}`
+      `/Vantruck/datos/${componente}/${uid}`
     );
+    console.log("update item: ", item);
+    
     return updateDoc(estacionamiento1DocumentReference, { ...item });
   }
 

@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
 import { ModalVehiculoComponent } from '../modal-vehiculo/modal-vehiculo.component';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
-import { ConId } from 'src/app/interfaces/conId';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { Subject, takeUntil } from 'rxjs';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
 
@@ -32,7 +32,7 @@ export class ChoferesAltaComponent implements OnInit {
   seguimientoForm: any;
   adicionalForm:any;
   categoriasForm:any;
-  chofer!: ConId<Chofer>;  
+  chofer!: ConIdType<Chofer>;  
   soloVista:boolean = false;
   edicion: boolean = false;
   seguimiento: boolean = false;  
@@ -133,10 +133,10 @@ export class ChoferesAltaComponent implements OnInit {
     this.domicilioServ.getProvincias().subscribe({
       next: (data) => {
         this.$provincias = data.provincias; // Asume que la respuesta tiene un atributo `provincias`.
-        console.log(this.$provincias);
+        //console.log(this.$provincias);
       },
       error: (error) => {
-        console.error('Error al obtener provincias:', error);
+        //console.error('Error al obtener provincias:', error);
       }
     });
     
@@ -222,7 +222,8 @@ export class ChoferesAltaComponent implements OnInit {
         
         let idChofer = this.chofer.idChofer;
         let formValue = this.form.value;
-        let id = this.chofer.id
+        let id = this.chofer.id;
+        let idTarifa = this.chofer.idTarifa;
         // Eliminar los guiones del CUIT
         let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
         this.direccionCompleta = {provincia: this.$provinciaSeleccionada, municipio: this.$municipioSeleccionado, localidad: this.$localidadSeleccionada, domicilio: this.form.value.direccion}        
@@ -239,7 +240,7 @@ export class ChoferesAltaComponent implements OnInit {
         this.chofer.vehiculo = this.vehiculos;
         this.chofer.tarifaTipo = this.idProveedor === 0 ? tarifaSeleccionada : this.proveedorSeleccionado[0].tarifaTipo; // Asigna el tipo de tarifa      
         this.chofer.tarifaAsignada = this.tarifaAsignada;
-        this.chofer.idTarifa = this.chofer.idTarifa;
+        this.chofer.idTarifa = idTarifa;
         console.log("este es el chofer EDITADO: ",this.chofer);     
     } else {
         let formValue = this.form.value;
@@ -290,7 +291,9 @@ export class ChoferesAltaComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          this.storageService.updateItem(this.componente, this.chofer, this.chofer.idChofer, "EDITAR", `Chofer Editado ${this.chofer.apellido} ${this.chofer.nombre}`); 
+          let {id, type, ...chofer } = this.chofer
+          console.log("Objeto para actualizar: CHOFER: ", chofer );
+          this.storageService.updateItem(this.componente, chofer, this.chofer.idChofer, "EDITAR", `Chofer Editado ${this.chofer.apellido} ${this.chofer.nombre}`, this.chofer.id); 
           Swal.fire({
             title: "Confirmado",
             text: "Cambios guardados",

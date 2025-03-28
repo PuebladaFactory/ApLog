@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { ConIdType } from 'src/app/interfaces/conId';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaEventual } from 'src/app/interfaces/tarifa-eventual';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -34,7 +35,7 @@ export class TarifasEventualesComponent implements OnInit {
       console.log('Módulo origen:', this.moduloOrigen);
     }
 
-    this.storageService.getObservable<Chofer>('choferes')
+    this.storageService.getObservable<ConIdType<Chofer>>('choferes')
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if (data) {        
@@ -42,7 +43,7 @@ export class TarifasEventualesComponent implements OnInit {
         this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));        
       }
     });    
-    this.storageService.getObservable<Cliente>('clientes')
+    this.storageService.getObservable<ConIdType<Cliente>>('clientes')
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if (data) {        
@@ -50,7 +51,7 @@ export class TarifasEventualesComponent implements OnInit {
         this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer        
       }      
     }); 
-    this.storageService.getObservable<Proveedor>('proveedores')
+    this.storageService.getObservable<ConIdType<Proveedor>>('proveedores')
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if(data){
@@ -105,7 +106,7 @@ export class TarifasEventualesComponent implements OnInit {
     console.log(e.target.value);    
     switch(this.moduloOrigen){
       case "clientes":{
-        let cliente: Cliente[];        
+        let cliente: ConIdType<Cliente>[];        
         cliente = this.objetos.filter((c)=> c.id === e.target.value);
         this.idConsulta = cliente[0].idCliente;     
         this.seleccion = cliente[0].razonSocial;
@@ -114,7 +115,7 @@ export class TarifasEventualesComponent implements OnInit {
         break;        
       }
       case "choferes":{
-        let chofer: Chofer[];        
+        let chofer: ConIdType<Chofer>[];        
         chofer = this.objetos.filter((c)=> c.id === e.target.value);
         this.idConsulta = chofer[0].idChofer;        
         console.log("idConsulta: ", this.idConsulta);
@@ -122,7 +123,7 @@ export class TarifasEventualesComponent implements OnInit {
         break;        
       }
       case "proveedores":{
-        let proveedor: Proveedor[];        
+        let proveedor: ConIdType<Proveedor>[];        
         proveedor = this.objetos.filter((c)=> c.id === e.target.value);
         this.idConsulta = proveedor[0].idProveedor;        
         console.log("idConsulta: ", this.idConsulta);
@@ -157,7 +158,9 @@ export class TarifasEventualesComponent implements OnInit {
       }
     }
     
-    this.storageService.tarifasEventuales$.subscribe(data => {
+    this.storageService.getObservable<TarifaEventual>("tarifasEventuales")
+    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .subscribe(data => {
       this.tarifasEventuales = data || [];
       this.tarifasEventuales = this.tarifasEventuales.sort((a, b) => b.idTarifa - a.idTarifa);
       console.log("tarifas eventuales: ", this.tarifasEventuales);

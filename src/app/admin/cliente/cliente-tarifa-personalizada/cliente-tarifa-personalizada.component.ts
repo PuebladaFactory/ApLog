@@ -72,6 +72,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
               console.log("aca????????");              
               this.$ultTarifaCliente = this.tarifasPersCliente.find((t:TarifaPersonalizadaCliente) => {return t.idCliente === this.clienteSeleccionado[0].idCliente})
               console.log("ultTarifaCliente", this.$ultTarifaCliente);    
+              
             }
         }
         /* if (data) {
@@ -204,7 +205,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
           clientes.forEach((c:Cliente)=>{
             if(c.tarifaTipo.personalizada && c.idCliente === this.clienteSeleccionado[0].idCliente && !c.tarifaAsignada){
               c.tarifaAsignada = true;
-              this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
+              //this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
             }
           })
       }      
@@ -314,7 +315,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
               if(c.tarifaTipo.personalizada  && c.idCliente === this.clienteSeleccionado[0].idCliente){
                 c.tarifaAsignada = true;
                 c.idTarifa = this.$ultTarifaCliente.idTarifa;
-                this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
+                //this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
               }
             })
         }      
