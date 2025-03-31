@@ -24,7 +24,7 @@ export class ProveedoresTarifaGralComponent implements OnInit {
 
   tarifaForm!:any; 
   ultTarifaCliente!: ConIdType<TarifaGralCliente>; 
-  ultTarifaEspecial!: ConIdType<TarifaGralCliente>;
+  ultTarifaEspecial!: ConIdType<TarifaGralCliente> | null;
   ultTarifaGralProveedor!: ConIdType<TarifaGralCliente>;
   ultTarifa!: ConIdType<TarifaGralCliente>;
   porcentajeAumento: FormControl = new FormControl(0); // Para el aumento porcentual
@@ -126,21 +126,21 @@ export class ProveedoresTarifaGralComponent implements OnInit {
         this.storageService.getObservable<ConIdType<TarifaGralCliente>>("tarifasEspProveedor")
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
-          if (data) {
+          if (data) {            
             
             console.log("data tEspecial", data);
             let tarifas : any[] = data 
-            console.log("tarifas esp chofer", tarifas);
-            this.ultTarifaEspecial = tarifas.find((tarifa: TarifaGralCliente)  => tarifa.idCliente === this.idClienteEsp[0]);  
+            console.log("tarifas esp proveedor", tarifas);
+            this.ultTarifaEspecial = tarifas.find((tarifa: TarifaGralCliente)  => tarifa.idProveedor === this.idProveedorEsp[0][0]);  
             console.log("ultTarifaEspecial", this.ultTarifaEspecial);
             if(!this.ultTarifaEspecial){
-
+              //this.ultTarifaEspecial = null;
             }
             if(this.ultTarifaEspecial){
               this.ultTarifaEspecial.cargasGenerales = this.ultTarifaEspecial.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
             }
             
-            //console.log("this.ultTarifaEspecial", this.ultTarifaEspecial);
+            console.log("this.ultTarifaEspecial", this.ultTarifaEspecial);
             this.configurarTabla();        
           } 
                         
@@ -636,7 +636,7 @@ onGenerarNuevaTarifaAutomatica() {
     let origen: string = "proveedores"
 
 
-      if(this.tEspecial){
+      if(this.tEspecial && this.ultTarifaEspecial){
         tarifa = this.ultTarifaEspecial;
         modo = "especial"
       }else{
@@ -727,7 +727,7 @@ onGenerarNuevaTarifaAutomatica() {
           
           if(proveedores.length > 0){
             proveedores.forEach((c:Proveedor)=>{
-                if(c.tarifaTipo.especial  && c.idProveedor === this.idProveedorEsp[0]){
+                if(c.tarifaTipo.especial  && c.idProveedor === this.idProveedorEsp[0] && this.ultTarifaEspecial){
                   c.tarifaAsignada = true;
                   c.idTarifa = this.ultTarifaEspecial.idTarifa;
                   //this.storageService.updateItem("proveedores", c, c.idProveedor, "INTERNA", "");
