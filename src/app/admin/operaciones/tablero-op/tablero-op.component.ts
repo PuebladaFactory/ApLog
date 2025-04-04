@@ -15,6 +15,7 @@ import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { Subject, takeUntil } from 'rxjs';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
   selector: 'app-tablero-op',
@@ -33,10 +34,10 @@ export class TableroOpComponent implements OnInit {
   tarifaPersonalizada: boolean = false;
   vehiculosChofer:boolean = false;
   titulo: string = "operaciones";
-  $clientes!: Cliente[];
-  $choferes!: Chofer[];
+  $clientes!: ConIdType<Cliente>[];
+  $choferes!: ConIdType<Chofer>[];
   cantPorPagina: boolean = false;
-  $proveedores!: Proveedor[];
+  $proveedores!: ConIdType<Proveedor>[];
   $opActivas!: Operacion[];
   $opFiltradas!: Operacion[];
   opEditar!: Operacion;
@@ -45,8 +46,8 @@ export class TableroOpComponent implements OnInit {
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];
   facturar: boolean = false;
   fechasConsulta!: any;
-  ultTarifaGralCliente!: TarifaGralCliente;
-  ultTarifaGralChofer!: TarifaGralCliente;
+  ultTarifaGralCliente!: ConIdType<TarifaGralCliente>;
+  ultTarifaGralChofer!: ConIdType<TarifaGralCliente>;
   estadoFiltrado: string ="Todo"
   operacionesFiltrado!: Operacion[];
   ///////////////////////  TABLA  ////////////////////////////////////////////////////
@@ -124,21 +125,21 @@ export class TableroOpComponent implements OnInit {
     
     
     
-    this.storageService.choferes$
+    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$choferes = data;
       this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
     });
   
-    this.storageService.clientes$
+    this.storageService.getObservable<ConIdType<Cliente>>("clientes")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$clientes = data;
       this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     });   
     
-    this.storageService.proveedores$
+    this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$proveedores = data;
@@ -250,6 +251,7 @@ export class TableroOpComponent implements OnInit {
             this.rango = this.respuestaOp[0].rango
             //console.log("rango: ", this.rango);
             this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
+            //this.storageService.listenForChangesDate<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
             this.filtrarEstado()
           }
           //////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
