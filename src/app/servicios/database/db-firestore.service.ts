@@ -204,6 +204,21 @@ export class DbFirestoreService {
       );
     }
 
+    getAllStateChangesByDate<T>(componente: string, campo:string, orden:any, value1:any, value2:any): Observable<ConIdType<T>[]> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref =>
+        ref.orderBy(campo, orden)
+        .where(campo, ">=", value1).where(campo, "<=", value2)).stateChanges().pipe(
+        map(changes =>
+          changes.map(change => ({
+            id: change.payload.doc.id,
+            ...change.payload.doc.data() as T,
+            type: change.type // 'added', 'modified', 'removed'
+          } as ConIdType<T> ) )
+        )
+      );
+    }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // GET ALL ORDENADO POR CAMPO Y ORDEN
 getAllSorted(componente:string, campo:string, orden:any) {

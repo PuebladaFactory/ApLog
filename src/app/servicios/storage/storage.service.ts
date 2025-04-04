@@ -1059,6 +1059,41 @@ export class StorageService {
       });
   }
 
+  listenForChangesDate<T>(componente: string, campo:string, value1:any, value2:any, orden:string): void {
+    console.log("admin: ", componente);    
+    this.dbFirebase.getAllStateChangesByDate<T>(componente, campo, orden, value1, value2)
+      .subscribe(changes => {
+        if (changes.length > 0) {
+          console.log(`${componente}: Cambios detectados`, changes);
+          let currentData = this.loadInfo(componente) || [];          
+          changes.forEach(change => {
+            if (change.type === 'added') {
+              //console.log("change", change);
+              const existe = currentData.some(obj => obj.id === change.id);
+
+              if (!existe) {
+                //console.log("El id no está en el array");
+                currentData.push(change);
+              } else {
+                console.log("sin cambios en el componente: ", componente);
+              }
+              
+              
+            } else if (change.type === 'modified') {
+              console.log("editar!!!!");
+              currentData = currentData.map(item => item.id === change.id ? change : item);
+            } else if (change.type === 'removed') {
+              console.log("DAAALEEE LOOOOCOOO!!!!");
+              
+              currentData = currentData.filter(item => item.id !== change.id);
+            }
+          });
+  
+          this.setInfo(componente, currentData); // Actualiza caché          
+        }
+      });
+  }
+
   getObservable<T>(componente: string): Observable<T[]> {
     switch (componente) {
       case 'clientes':
