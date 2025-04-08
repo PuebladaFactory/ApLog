@@ -1,9 +1,11 @@
+
 <!-- 
 <div>
     <button class="btn btn-primary ms-3" (click)="actProveedores()">Actualizar Proveedores</button>
     <button class="btn btn-primary ms-3" (click)="actProveedorGral()">Actualizar Proveedores Generales</button>
     <button class="btn btn-primary ms-3" (click)="actProveedorEsp()">Actualizar Proveedores Especiales</button>        
 </div> -->
+
 <div class="row mt-3" [ngClass]="{'invisible': tEspecial}" >
     <div class="col-4">
         <h1 class="mt-2">Tarifa General</h1>        
@@ -18,24 +20,17 @@
 
 </div>
 <div>
-    
-    
     <ng-container *ngIf="tEspecial">
-        <ng-container *ngIf="!ultTarifaEspecial || ultTarifaEspecial.cargasGenerales.length === 0 else conTarifa">
-            <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
-                <p class="mb-0 fs-5">El Proveedor aun no tiene asignada una tarifa</p>        
-            </div>                
-        </ng-container>
-        <ng-template #conTarifa>
-            <div *ngIf="ultTarifaEspecial !== null && ultTarifaEspecial.cargasGenerales.length > 0" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
-                <p *ngIf="ultTarifaEspecial.idCliente === 0 else clienteEsp" class="mb-0 fs-5">La última tarifa aplica para todos los clientes</p>        
-            </div>
-            <ng-template #clienteEsp>
-                <p *ngIf="ultTarifaEspecial !== null" class="mb-0 fs-5">La última tarifa aplica para el cliente: {{getCliente(ultTarifaEspecial.idCliente)}} </p>
-            </ng-template>
-        </ng-template>            
-    </ng-container>
-
+        <div *ngIf="ultTarifaEspecial.cargasGenerales.length > 0" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
+            <p *ngIf="ultTarifaEspecial.idCliente === 0 else clienteEsp" class="mb-0 fs-5">La última tarifa aplica para todos los clientes</p>        
+        </div>
+        <ng-template #clienteEsp>
+            <p class="mb-0 fs-5">La última tarifa aplica para el cliente: {{getCliente(ultTarifaEspecial.idCliente)}} </p>
+        </ng-template>
+        <div *ngIf="ultTarifaEspecial.cargasGenerales.length === 0" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
+            <p class="mb-0 fs-5">El proveedor aun no tiene asignada una tarifa</p>        
+        </div>
+    </ng-container>    
     <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
         <table class="table table-bordered">
             <thead class="sticky-top">
@@ -50,7 +45,7 @@
                     </svg>
                     
                     </th>
-                  <th style="width: 20%">Ultima Tarifa {{tEspecial? ultTarifaEspecial?.fecha: ultTarifaGralProveedor? ultTarifaGralProveedor.fecha : ""}}</th>
+                  <th style="width: 20%">Ultima Tarifa {{tEspecial? ultTarifaEspecial.fecha: ultTarifaGralProveedor? ultTarifaGralProveedor.fecha : ""}}</th>
                   <th style="width: 20%">Diferencia</th>
                   <th style="width: 20%">Nueva Tarifa</th>
               </tr>

@@ -72,12 +72,14 @@ export class LiqClienteComponent {
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>()
+
   opAbiertas!: ConId<Operacion>[];
   $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
   $facturasOpChofer: ConId<FacturaOp>[] = []; // Array de facturas de choferes
   $facturasOpChoferDuplicadas: ConId<FacturaOp>[] = []; // Array para guardar facturas de choferes duplicadas
   $facturasOpProveedor: ConId<FacturaOp>[] = []; // Array de facturas de choferes
   $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
+
 
 
   constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
@@ -151,29 +153,10 @@ export class LiqClienteComponent {
             seenIds.add(factura.idOperacion);
             return true; // Mantener en el array original
         }
-    });    
+    });
     console.log("this.$facturasOpChofer", this.$facturasOpCliente);
     console.log("duplicadas", this.$facturasOpDuplicadas);
-    //this.verificarDuplicadosFacturadas()
-}
-
-verificarDuplicadosFacturadas(){
-  this.dbFirebase.getByDateValue("facOpLiqCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
-  .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-  .subscribe(data=>{
-    let $facturasLiqCliente: any [] = data;
-    const idsLiqCliente = new Set($facturasLiqCliente.map(factura => factura.idOperacion));
-
-  // Recorremos el array facturasOpCliente
-  this.$facLiqOpDuplicadas = this.$facturasOpCliente.filter((facturaOp:FacturaOp) => {
-    // Verificamos si el idOperacion de la factura actual está en el Set
-    return idsLiqCliente.has(facturaOp.idOperacion);
-  });
-
-  
-  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
-
-  })
+    
 }
   
 
@@ -462,8 +445,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           facChofer: op.estado.facChofer,
           facturada: op.estado.facChofer ? true : false,
         }
+
         let {id, ...opp} = op
         this.storageService.updateItem("operaciones", opp, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`, op.id);
+
         this.removeItem(factura);
     });
 

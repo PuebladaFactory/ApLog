@@ -13,7 +13,7 @@ export class FormatoNumericoService {
    */
   convertirAValorNumerico(valorFormateado: any): number {
     if (!valorFormateado) return 0;
-    //console.log("servicio. Valor formateado: ", valorFormateado) ;
+    console.log("servicio. Valor formateado: ", valorFormateado) ;
     if(typeof valorFormateado === "number") return valorFormateado;
     // Eliminar los puntos (separadores de miles)
     let valor = valorFormateado.replace(/\./g, '');
@@ -21,11 +21,11 @@ export class FormatoNumericoService {
     // Reemplazar la coma por un punto para decimales
       
     valor = valor.replace(',', '.');
-    //console.log("servicio valor: ", valor);
+    console.log("servicio valor: ", valor);
     
     // Convertir el valor a número flotante
     const numero = parseFloat(valor);
-    //console.log("servicio numero: ", numero);
+    console.log("servicio numero: ", numero);
     
     // Multiplicar por 10 si tiene más de dos decimales (ejemplo: 25.000,000 -> 250000)
     return numero;

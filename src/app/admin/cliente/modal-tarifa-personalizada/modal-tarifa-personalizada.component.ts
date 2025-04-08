@@ -1,8 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { TarifaPersonalizada } from 'src/app/interfaces/operacion';
+import { ConId } from 'src/app/interfaces/conId';
 import { CategoriaTarifa, Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -16,10 +15,10 @@ import Swal from 'sweetalert2';
 export class ModalTarifaPersonalizadaComponent implements OnInit {
   
   @Input() fromParent:any;
-  $ultimaTarifa!: ConIdType<TarifaPersonalizadaCliente>;  
+  $ultimaTarifa!: ConId<TarifaPersonalizadaCliente>;  
   modoAutomatico = true;  // por defecto en modo automático
   porcentajeAumento: number = 0; // variable para almacenar el porcentaje
-  nuevaTarifa!: ConIdType<TarifaPersonalizadaCliente>;  // suponiendo que ya tienes los datos cargados
+  nuevaTarifa!: ConId<TarifaPersonalizadaCliente>;  // suponiendo que ya tienes los datos cargados
   componente: string = "tarifasPersCliente";
   razonSocial: string = ""
   
@@ -38,8 +37,8 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
       this.$ultimaTarifa.secciones.forEach(seccion => {
         seccion.categorias.forEach(categoria => {
           // Calcula nuevos valores y limita a dos decimales, luego convierte a número
-          //console.log("categoria.aCobrar: ", categoria.aCobrar);
-          //console.log("categoria.aPagar: ", categoria.aPagar);
+          console.log("categoria.aCobrar: ", categoria.aCobrar);
+          console.log("categoria.aPagar: ", categoria.aPagar);
           
           categoria.nuevoACobrar = categoria.aCobrar + (categoria.aCobrar * (this.porcentajeAumento / 100));
           categoria.nuevoAPagar = categoria.aPagar + (categoria.aPagar * (this.porcentajeAumento / 100));
@@ -50,7 +49,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   
   // Método para calcular la diferencia
   calcularDiferencia(valorOriginal: number, nuevoValor: number | null | undefined): number {
-    //console.log("valorOriginal: ", valorOriginal, "nuevoValor: ", nuevoValor);
+    console.log("valorOriginal: ", valorOriginal, "nuevoValor: ", nuevoValor);
     
     if (nuevoValor === null || nuevoValor === undefined || this.formNumServ.convertirAValorNumerico(nuevoValor) === 0) {
       return 0;  // Devuelve 0 si no hay nuevo valor calculado
@@ -120,9 +119,8 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
     // Clonamos la tarifa original y actualizamos los valores
    
     crearTarifa(): void {
-    const { id, type, ...data } = this.nuevaTarifa;      
     const tarifaNueva: TarifaPersonalizadaCliente = {
-      ...data,
+      ...this.nuevaTarifa,
       idTarifa: new Date().getTime(),  // Asignar nuevo idTarifa
       //id: null,
       fecha: new Date().toISOString().split('T')[0],
@@ -142,25 +140,11 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
   
     // Aquí puedes guardar o enviar el objeto tarifaNueva
     //console.log("Tarifa Nueva Guardada: ", tarifaNueva);
-    console.log("this.nuevaTarifa", this.nuevaTarifa);    
     this.addItem(tarifaNueva)
   }
 
   addItem(item:TarifaPersonalizadaCliente){
-    this.storageService.deleteItem(this.componente, this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
-    this.storageService.addItem("historialTarifasPersCliente", this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );    
     this.storageService.addItem(this.componente, item, item.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.razonSocial}`);        
-    
-  }
-
-  moverTarifa(){
-    this.storageService.deleteItem(this.componente, this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
-    this.storageService.addItem("historialTarifasPersCliente", this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
-  }
-
-  borrarTarifa(){
-    this.storageService.deleteItem(this.componente, this.fromParent.item, this.fromParent.item.idTarifa, "INTERNA", "" );
-    //this.storageService.addItem("historialTarifasPersCliente", this.nuevaTarifa, this.nuevaTarifa.idTarifa, "INTERNA", "" );
   }
 
 
@@ -175,9 +159,7 @@ updateItem(){
     })
   })
   console.log("TARIFA EDITADA", this.$ultimaTarifa);
-  let {id, type, ...tarifa } = this.$ultimaTarifa
-  console.log("TARIFA EDITADA v2.0", tarifa);
-  this.storageService.updateItem(this.componente, tarifa, this.$ultimaTarifa.idTarifa, "EDITAR", `Tarifa Personalizada para Cliente ${this.razonSocial}, editada`, this.$ultimaTarifa.id);   
+  this.storageService.updateItem(this.componente, this.$ultimaTarifa, this.$ultimaTarifa.idTarifa, "EDITAR", `Tarifa Personalizada para Cliente ${this.razonSocial}, editada`);   
 }
 
 
