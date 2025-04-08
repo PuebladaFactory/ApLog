@@ -1,6 +1,6 @@
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
 <table class="table table-striped">
-    <thead>
+    <thead >
         <tr>
             <th scope="col" style="width:3%" class=""></th>
             <th scope="col" style="width:18%" class="" (click)="ordenar('apellido')">
@@ -164,7 +164,7 @@
                     <!-- Aquí irían los datos adicionales del cliente --> 
                     <input class="form-control mt-2" type="text" [(ngModel)]="searchText2" placeholder="Buscar por parámetro">                           
                     <table class="table table-light table-striped table-bordered" >
-                        <thead>
+                        <thead class="sticky-top">
                             <tr>
                                 <!-- <th><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th> -->
                                 <th style="width: 1.5%;"><input type="checkbox" (change)="selectAllCheckboxes($event, chofer.idChofer)"></th>  

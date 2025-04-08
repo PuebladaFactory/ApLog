@@ -6,6 +6,7 @@ import { Documentacion, Legajo } from 'src/app/interfaces/legajo';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalChoferesComponent } from '../modal-choferes/modal-choferes.component';
+import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
   selector: 'app-tablero-legajos',
@@ -13,11 +14,11 @@ import { ModalChoferesComponent } from '../modal-choferes/modal-choferes.compone
   styleUrls: ['./tablero-legajos.component.scss']
 })
 export class TableroLegajosComponent implements OnInit {
-  $choferes!: Chofer[];
-  $legajos!: Legajo[];
-  choferSeleccionado!: Chofer[];
-  legajoSeleccionado!: Legajo[];
-  legajo!: Legajo;
+  $choferes!: ConIdType<Chofer>[];
+  $legajos!: ConIdType<Legajo>[];
+  choferSeleccionado!:ConIdType<Chofer>[];
+  legajoSeleccionado!: ConIdType<Legajo>[];
+  legajo!: ConIdType<Legajo>;
   titulos: string[] = [
     'DNI',
     'Antecedentes Penales',
@@ -41,7 +42,8 @@ export class TableroLegajosComponent implements OnInit {
   constructor(private storageService: StorageService, private modalService: NgbModal){}  
   
   ngOnInit(): void {
-    this.storageService.choferes$
+    this.storageService.listenForChanges<Legajo>("legajos");
+    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$choferes = data;     
@@ -51,7 +53,7 @@ export class TableroLegajosComponent implements OnInit {
       //console.log("1)choferes especiales: ", this.$choferes);      
       
     })     
-    this.storageService.legajos$
+    this.storageService.getObservable<ConIdType<Legajo>>("legajos")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$legajos = data;      
@@ -59,7 +61,7 @@ export class TableroLegajosComponent implements OnInit {
     });
     
 
-    this.storageService.proveedores$
+    this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$proveedores = data;      
@@ -67,7 +69,7 @@ export class TableroLegajosComponent implements OnInit {
     console.log(this.$proveedores);
     
     //this.crearLegajos()  
-    this.storageService.syncChanges("legajos");
+    //this.storageService.syncChanges("legajos");
   }
 
   ngOnDestroy(): void {
@@ -84,8 +86,10 @@ export class TableroLegajosComponent implements OnInit {
       visible: true
     }
     console.log("legajo desp", legajo);
-    
-    this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "INTERNA", "")
+
+    let{id,type,...leg} = legajo;
+    this.storageService.updateItem("legajos", leg, legajo.idLegajo, "INTERNA", "", legajo.id)
+
   }
 
   getDocumento(documentacion: Documentacion[], titulo: string): Documentacion | undefined {
@@ -129,8 +133,8 @@ export class TableroLegajosComponent implements OnInit {
       return chofer[0].apellido + " " + chofer[0].nombre;
     }
 
-    getLegajo(id:number):Legajo {
-      let legajo: Legajo[] = this.$legajos.filter(l=> l.idChofer=== id);
+    getLegajo(id:number):ConIdType<Legajo> {
+      let legajo: ConIdType<Legajo>[] = this.$legajos.filter(l=> l.idChofer=== id);
       return legajo[0];
     }
 

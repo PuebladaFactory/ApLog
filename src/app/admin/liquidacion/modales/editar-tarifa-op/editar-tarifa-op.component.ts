@@ -3,6 +3,7 @@ import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
@@ -21,24 +22,24 @@ import Swal from 'sweetalert2';
 export class EditarTarifaOpComponent implements OnInit {
 
 @Input() fromParent: any;
-    facDetallada!: FacturaOp;
-    ultimaTarifa!: TarifaGralCliente;
+    facDetallada!: ConId<FacturaOp>;
+    ultimaTarifa!: ConIdType<TarifaGralCliente>;
     edicion:boolean = false;
     tarifaEditForm: any;
     swichForm:any;    
-    facturaEditada!: FacturaOp;
+    facturaEditada!: ConId<FacturaOp>;
     swich!: boolean;
-    $choferes!: Chofer[];
-    $clientes!: Cliente[];
-    $proveedores!: Proveedor[];
-    choferOp!: Chofer[];
+    $choferes!: ConIdType<Chofer>[];
+    $clientes!: ConIdType<Cliente>[];
+    $proveedores!: ConIdType<Proveedor>[];
+    choferOp!: ConIdType<Chofer>[];
     vehiculoOp!: Vehiculo[];
-    operacion!: Operacion;
-    tarifaPersonalizada!: TarifaPersonalizadaCliente;
+    operacion!: ConId<Operacion>;
+    tarifaPersonalizada!: ConIdType<TarifaPersonalizadaCliente>;
     componente: string = "";
-    facOriginal!: FacturaOp;
-    opOriginal!: Operacion;
-    facContraParte!: FacturaOp;
+    facOriginal!: ConId<FacturaOp>;
+    opOriginal!: ConId<Operacion>;
+    facContraParte!: ConId<FacturaOp>;
      private destroy$ = new Subject<void>();
   
     constructor(private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private formNumServ: FormatoNumericoService, private dbFirebase: DbFirestoreService){
@@ -198,28 +199,43 @@ export class EditarTarifaOpComponent implements OnInit {
 
       console.log("this.facDetallada: ", this.facDetallada);
       console.log("this.operacion: ", this.operacion);      
+
+      let {id, ...facDet} = this.facDetallada;
+
       this.storageService.updateItem(
         this.componente, 
-        this.facDetallada, 
+        facDet, 
         this.facDetallada.idFacturaOp, 
         "EDITAR", 
-        this.componente === "facturaOpCliente" ? `Edición de Informe de Operación del Cliente ${this.getClienteId(this.facDetallada.idCliente)}` : this.componente === "facturaOpChofer" ? `Edición de Informe de Operación del Chofer ${this.getChoferId(this.facDetallada.idChofer)}` : `Edición de Informe de Operación del Proveedor ${this.getProveedorId(this.facDetallada.idProveedor)}`);
-      this.storageService.updateItem("operaciones", this.operacion, this.operacion.idOperacion,"EDITAR", "Edición de Operación desde Liquidación");
+
+        this.componente === "facturaOpCliente" ? `Edición de Informe de Operación del Cliente ${this.getClienteId(this.facDetallada.idCliente)}` : this.componente === "facturaOpChofer" ? `Edición de Informe de Operación del Chofer ${this.getChoferId(this.facDetallada.idChofer)}` : `Edición de Informe de Operación del Proveedor ${this.getProveedorId(this.facDetallada.idProveedor)}`,
+        this.facDetallada.id);
+        if(this.operacion){
+          let {id, ...op} = this.operacion;
+          this.storageService.updateItem("operaciones", op, this.operacion.idOperacion,"EDITAR", "Edición de Operación desde Liquidación", this.operacion.id);
+        }
+      
       switch(this.fromParent.origen){
         case "clientes":{
-          if(this.operacion.chofer.idProveedor === 0){
-            this.storageService.updateItem("facturaOpChofer", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
+          let{id, ...facOp} = this.facContraParte;
+          if(this.operacion.chofer.idProveedor === 0){            
+            this.storageService.updateItem("facturaOpChofer", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
           } else {
-            this.storageService.updateItem("facturaOpProveedor", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
+            this.storageService.updateItem("facturaOpProveedor", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
+
           }          
           break;
         };
         case "choferes":{
-          this.storageService.updateItem("facturaOpCliente", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
+
+          let{id, ...facOp} = this.facContraParte;
+          this.storageService.updateItem("facturaOpCliente", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
           break;
         }
         case "proveedores":{
-          this.storageService.updateItem("facturaOpCliente", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
+          let{id, ...facOp} = this.facContraParte;
+          this.storageService.updateItem("facturaOpCliente", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
+
           break;
         }
         default:{

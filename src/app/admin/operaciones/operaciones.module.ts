@@ -17,6 +17,7 @@ import { CargaMultipleComponent } from './carga-multiple/carga-multiple.componen
 import { ModalOpAltaComponent } from './modal-op-alta/modal-op-alta.component';
 
 
+
 @NgModule({
   declarations: [
     OpControlComponent,      

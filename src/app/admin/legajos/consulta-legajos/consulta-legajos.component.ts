@@ -9,6 +9,7 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Pipe, PipeTransform } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
+import { ConIdType } from 'src/app/interfaces/conId';
 
 @Pipe({ name: 'safeUrl' })
 export class SafeUrlPipe implements PipeTransform {
@@ -27,10 +28,10 @@ export class SafeUrlPipe implements PipeTransform {
 })
 export class ConsultaLegajosComponent implements OnInit {
 
-  $choferes!: Chofer[];
-  $legajos!: Legajo[];
-  choferSeleccionado!: Chofer;
-  legajoSeleccionado!: Legajo;
+  $choferes!: ConIdType<Chofer>[];
+  $legajos!: ConIdType<Legajo>[];
+  choferSeleccionado!: ConIdType<Chofer>;
+  legajoSeleccionado!: ConIdType<Legajo>;
   archivosPrevisualizados!: { nombre: string; url: string }[]; // Especificamos el tipo = [];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
@@ -42,7 +43,7 @@ export class ConsultaLegajosComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.storageService.choferes$
+    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$choferes = data;     
@@ -66,7 +67,7 @@ export class ConsultaLegajosComponent implements OnInit {
     console.log(e.target.value);    
     let id = Number(e.target.value);    
     ////console.log()("1)",id);    
-    let choferSel: Chofer[];
+    let choferSel: ConIdType<Chofer>[];
     choferSel = this.$choferes.filter((chofer:Chofer)=>{
       ////console.log()("2", cliente.idCliente, id);
       return chofer.idChofer === id;
@@ -77,7 +78,7 @@ export class ConsultaLegajosComponent implements OnInit {
 
   buscarLegajo(){    
     //console.log("legajos: ", this.$legajos);    
-    let legajoSel : Legajo[];
+    let legajoSel : ConIdType<Legajo>[];
     legajoSel = this.$legajos.filter((l)=> l.idChofer === this.choferSeleccionado.idChofer);    
     this.legajoSeleccionado = legajoSel[0];    
     //console.log("legajo seleccionado: ",this.legajoSeleccionado);  

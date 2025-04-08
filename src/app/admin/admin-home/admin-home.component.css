@@ -23,6 +23,8 @@ svg{
     color: #007bff
 }
 
+
+
 /* p {
     font-family: 'Poppins', sans-serif;
     font-size: 1.1em;
@@ -169,6 +171,7 @@ a.article:hover {
     padding: 20px;
     min-height: 100vh;
     transition: all 0.3s;
+    
 }
 
 /* ---------------------------------------------------

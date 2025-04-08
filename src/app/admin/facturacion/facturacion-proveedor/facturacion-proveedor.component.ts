@@ -6,6 +6,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Subject, takeUntil } from 'rxjs';
+import { ConId } from 'src/app/interfaces/conId';
 
 @Component({
   selector: 'app-facturacion-proveedor',
@@ -14,10 +15,10 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class FacturacionProveedorComponent implements OnInit {
     
-  $facturasProveedor!: FacturaProveedor[];  
+  $facturasProveedor!: ConId<FacturaProveedor>[];  
   datosTablaProveedor: any[] = [];
   mostrarTablaProveedor: boolean[] = [];      
-  $facturaOpProveedor: FacturaOp[] = []; 
+  $facturaOpProveedor: ConId<FacturaOp>[] = []; 
   facturasPorProveedor: Map<number, FacturaProveedor[]> = new Map<number, FacturaProveedor[]>();
   
   totalCant: number = 0;
@@ -40,10 +41,11 @@ export class FacturacionProveedorComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-      this.storageService.consultasFacProveedor$
+      this.storageService.getObservable<ConId<FacturaProveedor>>("facturaProveedor")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         this.$facturasProveedor = data;
+        this.$facturasProveedor = this.$facturasProveedor.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
         this.procesarDatosParaTabla();
         this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false); // Mueve esta línea aquí
       });

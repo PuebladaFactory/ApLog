@@ -9,6 +9,7 @@ import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import Swal from 'sweetalert2';
 import { Subject, takeUntil } from 'rxjs';
+import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
   selector: 'app-cargar-documentos',
@@ -17,10 +18,10 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class CargarDocumentosComponent implements OnInit {
   
-  $choferes!: Chofer[];
-  $legajos!: Legajo[];
-  choferSeleccionado!: Chofer | null;
-  legajoSeleccionado!: Legajo;
+  $choferes!: ConIdType<Chofer>[];
+  $legajos!: ConIdType<Legajo>[];
+  choferSeleccionado!: ConIdType<Chofer> | null;
+  legajoSeleccionado!: ConIdType<Legajo>;
   tramites: any[] = [
     {nombre:'DNI', seleccionado : false},
     {nombre:'Antecedentes Penales', seleccionado : false},
@@ -54,7 +55,7 @@ export class CargarDocumentosComponent implements OnInit {
   }  
   
   ngOnInit(): void {
-    this.storageService.choferes$
+    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$choferes = data;     
@@ -63,7 +64,7 @@ export class CargarDocumentosComponent implements OnInit {
       console.log("1)choferes especiales: ", this.$choferes);      
       
     })     
-    this.storageService.legajos$
+    this.storageService.getObservable<ConIdType<Legajo>>("legajos")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$legajos = data;     
@@ -80,7 +81,7 @@ export class CargarDocumentosComponent implements OnInit {
     console.log(e.target.value);    
     let id = Number(e.target.value);    
     ////console.log()("1)",id);    
-    let choferSel: Chofer[];
+    let choferSel: ConIdType<Chofer>[];
     choferSel = this.$choferes.filter((chofer:Chofer)=>{
       ////console.log()("2", cliente.idCliente, id);
       return chofer.idChofer === id;
@@ -115,7 +116,7 @@ export class CargarDocumentosComponent implements OnInit {
 
   buscarLegajo(){    
     //console.log("legajos: ", this.$legajos);    
-    let legajoSel : Legajo[];
+    let legajoSel : ConIdType<Legajo>[];
     legajoSel = this.$legajos.filter((l)=> l.idChofer === this.choferSeleccionado?.idChofer);    
     this.legajoSeleccionado = legajoSel[0];
     console.log("legajo seleccionado: ", this.legajoSeleccionado);       
@@ -648,7 +649,10 @@ export class CargarDocumentosComponent implements OnInit {
   } */
   
   updateItem(): void {
-    this.storageService.updateItem('legajos', this.legajoSeleccionado, this.legajoSeleccionado.idLegajo, "EDITAR", "Legajo editado" );
+
+    let{id, type, ...legajo} = this.legajoSeleccionado;
+    this.storageService.updateItem('legajos', legajo, this.legajoSeleccionado.idLegajo, "EDITAR", "Legajo editado", this.legajoSeleccionado.id );
+
   }
 
  

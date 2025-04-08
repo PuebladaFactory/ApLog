@@ -5,6 +5,7 @@ import { error } from 'jquery';
 import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
@@ -58,14 +59,14 @@ export class ModalDetalleComponent implements OnInit {
   ajustes: boolean = false;
   firstFilter = '';
   secondFilter = '';
-  $facturasOpCliente: FacturaOp[] = [];
-  $facturasOpChofer: FacturaOp[] = [];
-  $facturasOpProveedor: FacturaOp[] = [];
+  $facturasOpCliente: ConId<FacturaOp>[] = [];
+  $facturasOpChofer: ConId<FacturaOp>[] = [];
+  $facturasOpProveedor: ConId<FacturaOp>[] = [];
   titulo:string = ""
   idFactura!: number;
-  $choferes!: Chofer[];
-  $clientes!: Cliente[];
-  $proveedores!: Proveedor[];
+  $choferes!: ConIdType<Chofer>[];
+  $clientes!: ConIdType<Cliente>[];
+  $proveedores!: ConIdType<Proveedor>[];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   searchText!:string;
   componente: string = "";
@@ -78,20 +79,23 @@ export class ModalDetalleComponent implements OnInit {
   }
   
   ngOnInit(): void {
-    this.storageService.choferes$
+    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$choferes = data;
+      this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
     });
-    this.storageService.clientes$
+    this.storageService.getObservable<ConIdType<Cliente>>("clientes")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$clientes = data;
+      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
-    this.storageService.proveedores$
+    this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
-      this.$proveedores = data;            
+      this.$proveedores = data; 
+      this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer           
     })       
     console.log("0) ", this.fromParent);
     this.data = this.fromParent.item;
@@ -736,5 +740,14 @@ bajaOp(factura:any){
       );
     }
   }
+
+  mensajesError(msj:string){
+      Swal.fire({
+        icon: "error",
+        //title: "Oops...",
+        text: `${msj}`
+        //footer: `${msj}`
+      });
+    }
 
 }

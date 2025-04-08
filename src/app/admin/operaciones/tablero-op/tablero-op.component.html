@@ -116,56 +116,63 @@
                 
             </div>           
         </div>
-    
-        <ngx-datatable
-        class="dark"
-        [rows]="paginatedRows"
-        [columns]="visibleColumns"
-        [columnMode]="ColumnMode.flex"
-        [headerHeight]="50"
-        [footerHeight]="50"
-        [rowHeight]="'auto'"
-        [sortType]="sortType"
-        
-        [externalPaging]="true"
-        [count]="count"
-        [limit]="limit"
-        [offset]="offset"
-        (sort)="onSort($event)"
-        (activate)="onActivate($event)"
-        (select)="onSelect($event)"
-        (page)="setPage($event)">
-        
-        <ngx-datatable-column name="Estado" prop="estado" [flexGrow]="2">
-            <ng-template ngx-datatable-cell-template let-row="row">
-              <span [ngClass]="{
-                  'estado-abierta': row.estado === 'Abierta',
-                  'estado-cerrada': row.estado === 'Cerrada',
-                  'estado-facCliente': row.estado === 'Cliente Fac',
-                  'estado-facChofer': row.estado === 'Chofer Fac',
-                  'estado-facturada': row.estado === 'Facturada'
-                }">
-                {{ row.estado }}
-              </span>
-            </ng-template>
-        </ngx-datatable-column>
-        <!-- Generar todas las columnas excepto 'Estado' -->
-        <ng-container *ngFor="let column of visibleColumns">
-            <ngx-datatable-column [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow" [comparator]="column.comparator" *ngIf="column.prop !== 'estado'">
+
+       
+            <ngx-datatable
+            class="dark"
+            [rows]="paginatedRows"
+            [columns]="visibleColumns"
+            [columnMode]="ColumnMode.flex"
+            [headerHeight]="50"
+            [footerHeight]="50"
+            [rowHeight]="'auto'"
+            [sortType]="sortType"
+            [scrollbarV]="false" 
+           
+            
+            [externalPaging]="true"
+            [count]="count"
+            [limit]="limit"
+            [offset]="offset"
+            (sort)="onSort($event)"
+            (activate)="onActivate($event)"
+            (select)="onSelect($event)"
+            (page)="setPage($event)">
+            
+            <ngx-datatable-column name="Estado" prop="estado" [flexGrow]="2">
                 <ng-template ngx-datatable-cell-template let-row="row">
-                {{ row[column.prop] }}
+                  <span [ngClass]="{
+                      'estado-abierta': row.estado === 'Abierta',
+                      'estado-cerrada': row.estado === 'Cerrada',
+                      'estado-facCliente': row.estado === 'Cliente Fac',
+                      'estado-facChofer': row.estado === 'Chofer Fac',
+                      'estado-facturada': row.estado === 'Facturada'
+                    }">
+                    {{ row.estado }}
+                  </span>
                 </ng-template>
             </ngx-datatable-column>
-        </ng-container>
-        <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="3">          
-            <ng-template ngx-datatable-cell-template let-row="row">
-                <app-btn-leer name="Detalle" (click)="abrirVista(row)" class=""></app-btn-leer>
-                <app-btn-editar name="Editar" (click)="abrirEdicion(row)" class="mx-2" [ngClass]="{'isDisabled': row.estado !== 'Abierta'}"></app-btn-editar>
-                <app-btn-eliminar name="Eliminar" (click)="eliminarOperacion(row)" class="me-2"  [ngClass]="{'isDisabled': row.estado !== 'Abierta'}"></app-btn-eliminar>
-                <app-btn-agregar name="Factura" (click)="crearFacturaOp(row)" class="" [ngClass]="{'isDisabled': row.estado !== 'Abierta'}"></app-btn-agregar>
-            </ng-template>
-        </ngx-datatable-column>
+            <!-- Generar todas las columnas excepto 'Estado' -->
+            <ng-container *ngFor="let column of visibleColumns">
+                <ngx-datatable-column [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow" [comparator]="column.comparator" *ngIf="column.prop !== 'estado'">
+                    <ng-template ngx-datatable-cell-template let-row="row">
+                    {{ row[column.prop] }}
+                    </ng-template>
+                </ngx-datatable-column>
+            </ng-container>
+            <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="3">          
+                <ng-template ngx-datatable-cell-template let-row="row">
+                    <app-btn-leer name="Detalle" (click)="abrirVista(row)" class=""></app-btn-leer>
+                    <app-btn-editar name="Editar" (click)="abrirEdicion(row)" class="mx-2" [ngClass]="{'isDisabled': row.estado !== 'Abierta'}"></app-btn-editar>
+                    <app-btn-eliminar name="Eliminar" (click)="eliminarOperacion(row)" class="me-2"  [ngClass]="{'isDisabled': row.estado !== 'Abierta'}"></app-btn-eliminar>
+                    <app-btn-agregar name="Factura" (click)="crearFacturaOp(row)" class="" [ngClass]="{'isDisabled': row.estado !== 'Abierta'}"></app-btn-agregar>
+                </ng-template>
+            </ngx-datatable-column>
+            
+            </ngx-datatable>
+       
+    
         
-        </ngx-datatable>
     </div> 
 </div>
+<app-scroll-to-top></app-scroll-to-top>

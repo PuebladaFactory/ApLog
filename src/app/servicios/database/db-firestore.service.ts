@@ -143,7 +143,7 @@ export class DbFirestoreService {
       );
     }
     
-    getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:any){
+    getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:any): Observable<ConId<T>[]>{
       // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
       // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
       // orden solo asc o desc

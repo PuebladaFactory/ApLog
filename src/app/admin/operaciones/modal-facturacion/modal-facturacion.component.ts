@@ -3,6 +3,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { Operacion, TarifaEventual, TarifaPersonalizada } from 'src/app/interfaces/operacion';
 import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
@@ -21,15 +22,15 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
   
   @Input() fromParent:any;
   componente:string = "operaciones"
-  op!: Operacion;
-  opOriginal!: Operacion;
+  op!: ConId<Operacion>;
+  opOriginal!: ConId<Operacion>;
   form!:any;
   formTarifaPersonalizada!:any;
   formTarifaEventual!:any;    
   $choferes!: Chofer[];
   acompaniante: boolean = false;
   vehiculosChofer: boolean = false;
-  tarifaClienteSel!: TarifaPersonalizadaCliente;
+  tarifaClienteSel!: ConIdType<TarifaPersonalizadaCliente>;
   mostrarCategoria: boolean = false;
   seccionElegida!: Seccion;
   categoriaElegida: number = 0;
@@ -81,16 +82,19 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
     }
     if(this.op.tarifaTipo.personalizada){
       //this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", this.op.cliente.idCliente, "ultTarifaPersCliente" )      
-      this.dbFirebase.getMostRecentId<TarifaPersonalizadaCliente>("tarifasPersCliente","idTarifa","idCliente",this.op.cliente.idCliente) //buscamos la tarifa especial      
+      //this.dbFirebase.getMostRecentId<TarifaPersonalizadaCliente>("tarifasPersCliente","idTarifa","idCliente",this.op.cliente.idCliente) //buscamos la tarifa especial      
+       this.storageService.getObservable<ConIdType<TarifaPersonalizadaCliente>>("tarifasPersCliente")
       .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
       .subscribe(data=>{        
         if(data){
-          this.tarifaClienteSel = data[0];
+          let tarifas : any[] = data 
+          console.log("tarifas pers clientes", tarifas);
+          this.tarifaClienteSel = tarifas.find((tarifa: ConIdType<TarifaPersonalizadaCliente>)  => tarifa.idCliente === this.op.cliente.idCliente);            
           ////console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
           //this.tarifaClienteSel.secciones = this.tarifaClienteSel.secciones || []; // Si secciones no está definido, lo inicializamos como array vacío  
-          if(this.fromParent.modo === "cerrar"){
+          /* if(this.fromParent.modo === "cerrar"){
             this.storageService.setInfo("tPersCliente", [this.tarifaClienteSel]);
-          }
+          } */
           this.armarForm();   
         }        
       });
@@ -329,7 +333,10 @@ armarOp(){
   }).then((result) => {
     if (result.isConfirmed) {
       ////////console.log("op: ", this.op);
-      this.storageService.updateItem(this.componente, this.op, this.op.idOperacion,"EDITAR", "Edición de Operación");    
+
+      let {id, ...op } = this.op
+      this.storageService.updateItem(this.componente, op, this.op.idOperacion,"EDITAR", "Edición de Operación", this.op.id);    
+
       Swal.fire({
         title: "Confirmado",
         text: "La operación ha sido editada.",
@@ -342,7 +349,7 @@ armarOp(){
       
     }
   });   
-  ////console.log("op editada: ", this.op);  
+  console.log("op editada: ", this.op);  
   
   this.form.reset();     
  
