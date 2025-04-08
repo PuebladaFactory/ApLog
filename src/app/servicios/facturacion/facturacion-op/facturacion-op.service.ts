@@ -584,9 +584,11 @@ export class FacturacionOpService {
     this.dbFirebase.guardarFacturaOp(componente, item)
   }
 
+
   updateItem(componente: string, item: ConId<Operacion>){
     let {id, ...op } = item
     this.storageService.updateItem(componente, op, item.idOperacion, "CERRAR", "Cierre de Operación", item.id);   
+
 
   }
 

@@ -199,12 +199,15 @@ export class EditarTarifaOpComponent implements OnInit {
 
       console.log("this.facDetallada: ", this.facDetallada);
       console.log("this.operacion: ", this.operacion);      
+
       let {id, ...facDet} = this.facDetallada;
+
       this.storageService.updateItem(
         this.componente, 
         facDet, 
         this.facDetallada.idFacturaOp, 
         "EDITAR", 
+
         this.componente === "facturaOpCliente" ? `Edición de Informe de Operación del Cliente ${this.getClienteId(this.facDetallada.idCliente)}` : this.componente === "facturaOpChofer" ? `Edición de Informe de Operación del Chofer ${this.getChoferId(this.facDetallada.idChofer)}` : `Edición de Informe de Operación del Proveedor ${this.getProveedorId(this.facDetallada.idProveedor)}`,
         this.facDetallada.id);
         if(this.operacion){
@@ -219,10 +222,12 @@ export class EditarTarifaOpComponent implements OnInit {
             this.storageService.updateItem("facturaOpChofer", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
           } else {
             this.storageService.updateItem("facturaOpProveedor", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
+
           }          
           break;
         };
         case "choferes":{
+
           let{id, ...facOp} = this.facContraParte;
           this.storageService.updateItem("facturaOpCliente", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
           break;
@@ -230,6 +235,7 @@ export class EditarTarifaOpComponent implements OnInit {
         case "proveedores":{
           let{id, ...facOp} = this.facContraParte;
           this.storageService.updateItem("facturaOpCliente", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
+
           break;
         }
         default:{

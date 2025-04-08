@@ -18,9 +18,6 @@ export class CargaComponent implements OnInit {
       //console.log("pasa por aca?");      
       this.storageService.initializerAdmin()
       //this.router.navigate(['admin']);
-      /* setTimeout(() => {
-        this.storageService.getTarifasEsp()
-      }, 2000); // 5000 milisegundos = 5 segundos  */
       setTimeout(() => {
         this.storageService.setInfo("ruta", ["op"])
         this.router.navigate(['admin']);

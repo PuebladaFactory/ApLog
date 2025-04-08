@@ -7,7 +7,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoComponent } from '../modal-contacto/modal-contacto.component';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
-import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { ConId } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
 
 @Component({
@@ -23,7 +23,7 @@ export class ClienteAltaComponent implements OnInit {
   form:any;
   formContacto:any;
   formTipoTarifa:any;
-  cliente!: ConIdType<Cliente>;
+  cliente!: ConId<Cliente>;
   contactos: Contacto[] = [];
   contactoEditar!: Contacto
   mostrarFormulario: boolean = false;
@@ -108,7 +108,7 @@ export class ClienteAltaComponent implements OnInit {
     const tarifaSeleccionada = this.getTarifaTipo();    
     let tarifaGeneral: TarifaGralCliente [] = this.storageService.loadInfo("tarifasGralCliente")
     if (this.form.valid) {
-      if(this.fromParent.modo === "edicion"){         ///edicion del cliente
+      if(this.fromParent.modo === "edicion"){
         let formValue = this.form.value;
         // Eliminar los guiones del CUIT
         let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));       
@@ -126,12 +126,11 @@ export class ClienteAltaComponent implements OnInit {
         ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
         this.cliente.condFiscal = this.condFiscal;
-        this.cliente.tarifaAsignada = this.clienteEditar.tarifaAsignada;
-        this.cliente.idTarifa = this.clienteEditar.idTarifa;
-        console.log("asi se edito el cliente: ", this.cliente);      
+        this.cliente.tarifaAsignada = this.clienteEditar.tarifaAsignada
+        ////console.log(this.cliente);      
         this.addItem("Edicion");        
         this.activeModal.close();    
-      }else{            ///alta del cliente
+      }else{
         let formValue = this.form.value;
         // Eliminar los guiones del CUIT
         let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));   
@@ -149,8 +148,7 @@ export class ClienteAltaComponent implements OnInit {
         this.cliente.condFiscal = this.condFiscal;
         ////console.log()(this.cliente);     
         this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        this.cliente.tarifaAsignada = tarifaSeleccionada.general? tarifaGeneral[0] === null ? false : true : false;
-        this.cliente.idTarifa = tarifaSeleccionada.general? tarifaGeneral[0] === null ? 0 : tarifaGeneral[0].idTarifa : 0;
+        this.cliente.tarifaAsignada= tarifaSeleccionada.general? tarifaGeneral[0] === null ? false : true : false,
         ////console.log(this.cliente);      
         this.addItem("Alta");        
         this.activeModal.close();    
@@ -209,11 +207,9 @@ export class ClienteAltaComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {     
         if(modo === "Alta")   {
-          let {id, type, ...cliente } = this.cliente
-          this.storageService.addItem(this.componente, cliente, this.cliente.idCliente, "ALTA", `Alta de Cliente ${this.cliente.razonSocial}`)
+          this.storageService.addItem(this.componente, this.cliente, this.cliente.idCliente, "ALTA", `Alta de Cliente ${this.cliente.razonSocial}`)
         } else if (modo === "Edicion"){
-          let {id, type, ...cliente } = this.cliente
-          this.storageService.updateItem(this.componente, cliente, this.cliente.idCliente, "EDITAR", `Cliente ${this.cliente.razonSocial} editado`, this.cliente.id)
+          this.storageService.updateItem(this.componente, this.cliente, this.cliente.idCliente, "EDITAR", `Cliente ${this.cliente.razonSocial} editado`)
         }        
         Swal.fire({
           title: "Confirmado",

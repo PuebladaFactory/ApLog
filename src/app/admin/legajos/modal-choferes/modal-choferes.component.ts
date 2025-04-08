@@ -40,7 +40,7 @@ export class ModalChoferesComponent implements OnInit {
     console.log("legajo antes", legajo);
     legajo.visible = !legajo.visible;
     console.log("legajo desp", legajo);
-    //this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "INTERNA", "")
+    this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "INTERNA", "")
   }
 
 

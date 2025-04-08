@@ -1,11 +1,6 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { Observable, Subject, take, takeUntil } from 'rxjs';
-import { Chofer } from 'src/app/interfaces/chofer';
-import { Cliente } from 'src/app/interfaces/cliente';
+import { take } from 'rxjs';
 import { Legajo } from 'src/app/interfaces/legajo';
-import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
-import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -20,17 +15,14 @@ export class AdminHomeComponent implements OnInit {
   activo!:boolean;
   $legajos!:Legajo[];
   $usuario!: any;
-  tarifas$!: Observable<any>;
-  private destroy$ = new Subject<void>();
-  
-  constructor(private storageService: StorageService, private legajoServ: LegajosService, private router: Router) { }
+
+  constructor(private storageService: StorageService, private legajoServ: LegajosService) { }
 
   ngOnInit(): void {
     this.setInitialSidebarState();
     window.addEventListener('resize', this.onResize);
     this.storageService.legajos$
       .pipe(take(1))
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
       .subscribe(data => {
         this.$legajos = data;     
         if(this.$legajos.length > 0){
@@ -40,6 +32,7 @@ export class AdminHomeComponent implements OnInit {
         
       });
       let usuarioLogueado = this.storageService.loadInfo("usuario");
+
       this.$usuario = structuredClone(usuarioLogueado[0]);      
       this.storageService.listenForChanges<Cliente>("clientes");
       this.storageService.listenForChanges<Chofer>("choferes");
@@ -67,12 +60,11 @@ export class AdminHomeComponent implements OnInit {
       //this.storageService.syncChangesTarifasGral<TarifaGralCliente>('tarifasEspCliente');
       //this.storageService.syncChangesTarifasGral<TarifaPersonalizadaCliente>('tarifasPersCliente');
       //this.storageService.syncChangesTarifasEspCliente<TarifaPersonalizadaCliente>('tarifasPersCliente');
+
   }
 
   ngOnDestroy(): void {
     window.removeEventListener('resize', this.onResize);
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   setInitialSidebarState(): void {

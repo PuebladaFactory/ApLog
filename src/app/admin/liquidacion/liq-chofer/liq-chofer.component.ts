@@ -447,8 +447,10 @@ export class LiqChoferComponent implements OnInit {
           facChofer: true,
           facturada: op.estado.facCliente ? true : false,
         }
+
         let{id, ...opp}=op
         this.storageService.updateItem("operaciones", opp, op.idOperacion, "Liquidar", `Operación de Chofer ${op.chofer.apellido} ${op.chofer.nombre} Liquidada`, op.id);
+
         this.removeItem(factura);
     });
 

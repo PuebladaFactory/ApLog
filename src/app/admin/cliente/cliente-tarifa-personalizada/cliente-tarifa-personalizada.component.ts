@@ -10,7 +10,6 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { Subject, takeUntil } from 'rxjs';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 @Component({
   selector: 'app-cliente-tarifa-personalizada',
@@ -28,15 +27,14 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     inputSecciones!: any;
     categoriaForm: any;
     descripcionForm: any;
-    tarifasPersCliente!: TarifaPersonalizadaCliente[];
+    tarifaPersonalizadaCliente!: TarifaPersonalizadaCliente;
     $clientes!: any;
     clienteSeleccionado!: Cliente[];
     $clientesPers! : Cliente [];
-    $ultTarifaCliente!: any;
-    nuevaTarifa!: TarifaPersonalizadaCliente;
+    $ultTarifaCliente!: TarifaPersonalizadaCliente;
     private destroy$ = new Subject<void>();
     
-  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, private formNumService:FormatoNumericoService, private dbFirebase: DbFirestoreService ) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, private formNumService:FormatoNumericoService ) {
     this.inputSecciones = this.fb.group({
       cantSecciones : [""],
           })
@@ -54,7 +52,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.storageService.getObservable<Cliente>('clientes')
+    this.storageService.clientes$
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.$clientes = data;
@@ -62,25 +60,14 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       .filter((c:Cliente)=>{return c.tarifaTipo.personalizada === true})
       .sort((a:Cliente, b:Cliente) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       
-      this.storageService.getObservable<TarifaPersonalizadaCliente>("tarifasPersCliente") 
+      this.storageService.tarifasPersCliente$
       .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
       .subscribe(data => {
         if (data) {
-            console.log("data: ", data);            
-            this.tarifasPersCliente = data;
-            if(this.clienteSeleccionado){
-              console.log("aca????????");              
-              this.$ultTarifaCliente = this.tarifasPersCliente.find((t:TarifaPersonalizadaCliente) => {return t.idCliente === this.clienteSeleccionado[0].idCliente})
-              console.log("ultTarifaCliente", this.$ultTarifaCliente);    
-              
-            }
-        }
-        /* if (data) {
           this.$ultTarifaCliente = data;          
           console.log("1) ult tarifa personalizada: ", this.$ultTarifaCliente);
-        }               */
+        }              
       });  
-     
 
     });               
   }
@@ -91,21 +78,14 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   changeCliente(e: any) {    
-    
+    //////console.log()(e.target.value);
     let id = Number(e.target.value);      
-    console.log(id);
     this.clienteSeleccionado = this.$clientesPers.filter((cliente:Cliente)=>{     
       return cliente.idCliente === id
     })   
     //this.storageService.getElemntByIdLimit("tarifasPersCliente","idCliente","idTarifa",this.clienteSeleccionado[0].idCliente,"ultTarifaPersCliente");  
-    //this.storageService.getMostRecentItemId("tarifasPersCliente","idTarifa", "idCliente",this.clienteSeleccionado[0].idCliente);  
-    //this.storageService.syncChangesByOneElemId<TarifaPersonalizadaCliente>("tarifasPersCliente","idTarifa","idCliente",this.clienteSeleccionado[0].idCliente);  
-    console.log("this.tarifasPersCliente", this.tarifasPersCliente);
-    
-    this.$ultTarifaCliente = this.tarifasPersCliente.find((t:TarifaPersonalizadaCliente) => {return t.idCliente === id})
-    console.log("this.$ultTarifaCliente", this.$ultTarifaCliente);
-    
-    
+    this.storageService.getMostRecentItemId("tarifasPersCliente","idTarifa", "idCliente",this.clienteSeleccionado[0].idCliente);  
+    this.storageService.syncChangesByOneElemId<TarifaPersonalizadaCliente>("tarifasPersCliente","idTarifa","idCliente",this.clienteSeleccionado[0].idCliente);  
   }
 
   agregarSeccion() {        
@@ -170,7 +150,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
 
   crearTarifa() {
    
-    this.nuevaTarifa = {
+    this.tarifaPersonalizadaCliente = {
       //id: null,
       idTarifa: new Date().getTime(),
       fecha: new Date().toISOString().split('T')[0],
@@ -179,7 +159,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       idCliente: this.clienteSeleccionado[0].idCliente,
     };
     
-    console.log('Tarifa guardada:', this.nuevaTarifa);
+    console.log('Tarifa guardada:', this.tarifaPersonalizadaCliente);
     this.addItem();
   }
 
@@ -195,17 +175,13 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       confirmButtonText: "Confirmar",
       cancelButtonText: "Cancelar"
     }).then((result) => {
-      if (result.isConfirmed) {  
-        if(this.$ultTarifaCliente){
-          this.storageService.addItem("historialTarifasPersCliente", this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );
-          this.storageService.deleteItem("tarifasPersCliente", this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );      
-        }        
-        this.storageService.addItem(this.componente, this.nuevaTarifa, this.nuevaTarifa.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.getClientePers(this.clienteSeleccionado[0].idCliente)}`);
+      if (result.isConfirmed) {        
+        this.storageService.addItem(this.componente, this.tarifaPersonalizadaCliente, this.tarifaPersonalizadaCliente.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.getClientePers(this.clienteSeleccionado[0].idCliente)}`);
         if(clientes.length > 0){
           clientes.forEach((c:Cliente)=>{
             if(c.tarifaTipo.personalizada && c.idCliente === this.clienteSeleccionado[0].idCliente && !c.tarifaAsignada){
               c.tarifaAsignada = true;
-              //this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
+              this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
             }
           })
       }      
@@ -303,30 +279,6 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
 
     return clientes[0].razonSocial;
 
-  }
-
-  actClientePers(){
-
-    let clientes: Cliente [] = this.storageService.loadInfo("clientes")
-    
-        
-        if(clientes.length > 0){
-            clientes.forEach((c:Cliente)=>{
-              if(c.tarifaTipo.personalizada  && c.idCliente === this.clienteSeleccionado[0].idCliente){
-                c.tarifaAsignada = true;
-                c.idTarifa = this.$ultTarifaCliente.idTarifa;
-                //this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
-              }
-            })
-        }      
-
-  }
-
-  eliminarTarifa(){
-    console.log("$ultTarifaCliente", this.$ultTarifaCliente);
-    //this.storageService.deleteItem(this.componente, this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );
-    this.dbFirebase.delete(this.componente, this.$ultTarifaCliente.id);
-    
   }
 
 }
