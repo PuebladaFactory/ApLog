@@ -14,6 +14,7 @@ import { SharedModule } from "../shared/shared.module";
 
 
 @NgModule({
+
     declarations: [
         AdminHomeComponent,
         AdminSidebarComponent,
@@ -32,5 +33,6 @@ import { SharedModule } from "../shared/shared.module";
         LiquidacionModule,
         SharedModule
     ]
+
 })
 export class AdminModule { }

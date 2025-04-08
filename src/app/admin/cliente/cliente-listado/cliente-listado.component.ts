@@ -74,7 +74,7 @@ export class ClienteListadoComponent implements OnInit {
       }      
     });  
     // Sincroniza cambios en tiempo real
-    //this.storageService.syncChanges<Cliente>('clientes');
+    this.storageService.syncChanges<Cliente>('clientes');
   }
 
   

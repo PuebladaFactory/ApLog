@@ -64,7 +64,7 @@ export class HistorialTarifasGralComponent implements OnInit {
       case 'clientes':
         if (!this.fromParent.tEspecial) {
           //this.storageService.getAllSortedLimit('tarifasGralCliente', 'idTarifa', 'desc', this.limite, 'historialTarifaGralCliente');
-          this.dbFirebase.getMostRecentLimit<TarifaGralCliente>('historialTarifasGralCliente', 'idTarifa', this.limite)
+          this.dbFirebase.getMostRecentLimit<TarifaGralCliente>('tarifasGralCliente', 'idTarifa', this.limite)
           .pipe(
             takeUntil(this.destroy$),
             distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
@@ -76,7 +76,7 @@ export class HistorialTarifasGralComponent implements OnInit {
           });
         } else {
           //this.storageService.getAllSortedIdLimit('tarifasEspCliente', 'idCliente', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralCliente');
-          this.dbFirebase.getMostRecentLimitId<TarifaGralCliente>('historialTarifasEspCliente', 'idTarifa', 'idCliente', this.fromParent.id,  this.limite)
+          this.dbFirebase.getMostRecentLimitId<TarifaGralCliente>('tarifasEspCliente', 'idTarifa', 'idCliente', this.fromParent.id,  this.limite)
           .pipe(
             takeUntil(this.destroy$),
             distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
@@ -95,7 +95,7 @@ export class HistorialTarifasGralComponent implements OnInit {
       case "choferes":{
         if (!this.fromParent.tEspecial) {
           //this.storageService.getAllSortedLimit('tarifasGralChofer', 'idTarifa', 'desc', this.limite, 'historialTarifaGralChofer');
-          this.dbFirebase.getMostRecentLimit<TarifaGralCliente>('historialTarifasGralChofer', 'idTarifa', this.limite)
+          this.dbFirebase.getMostRecentLimit<TarifaGralCliente>('tarifasGralChofer', 'idTarifa', this.limite)
           .pipe(
             takeUntil(this.destroy$),
             distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
@@ -107,7 +107,7 @@ export class HistorialTarifasGralComponent implements OnInit {
           });
         } else {
           //this.storageService.getAllSortedIdLimit('tarifasEspChofer', 'idChofer', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralChofer');
-          this.dbFirebase.getMostRecentLimitId<TarifaGralCliente>('historialTarifasEspChofer', 'idTarifa', 'idChofer', this.fromParent.id,  this.limite)
+          this.dbFirebase.getMostRecentLimitId<TarifaGralCliente>('tarifasEspChofer', 'idTarifa', 'idChofer', this.fromParent.id,  this.limite)
           .pipe(
             takeUntil(this.destroy$),
             distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
@@ -125,7 +125,7 @@ export class HistorialTarifasGralComponent implements OnInit {
       case "proveedores":{
         if (!this.fromParent.tEspecial) {
           //this.storageService.getAllSortedLimit('tarifasGralProveedor', 'idTarifa', 'desc', this.limite, 'historialTarifaGralProveedor');
-          this.dbFirebase.getMostRecentLimit<TarifaGralCliente>('historialTarifasGralProveedor', 'idTarifa', this.limite)
+          this.dbFirebase.getMostRecentLimit<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa', this.limite)
           .pipe(
             takeUntil(this.destroy$),
             distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
@@ -137,7 +137,7 @@ export class HistorialTarifasGralComponent implements OnInit {
           });
         } else {
           //this.storageService.getAllSortedIdLimit('tarifasEspProveedor', 'idProveedor', this.fromParent.id, 'idTarifa', 'desc', this.limite, 'historialTarifaGralProveedor');
-          this.dbFirebase.getMostRecentLimitId<TarifaGralCliente>('historialTarifasEspProveedor', 'idTarifa', 'idProveedor', this.fromParent.id,  this.limite)
+          this.dbFirebase.getMostRecentLimitId<TarifaGralCliente>('tarifasEspProveedor', 'idTarifa', 'idProveedor', this.fromParent.id,  this.limite)
           .pipe(
             takeUntil(this.destroy$),
             distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
@@ -155,7 +155,7 @@ export class HistorialTarifasGralComponent implements OnInit {
     
       case "personalizada": {
         this.tPersonalizada = true;                
-        this.dbFirebase.getMostRecentLimitId<TarifaPersonalizadaCliente>('historialTarifasPersCliente', 'idTarifa', 'idCliente', this.fromParent.id,  this.limite)
+        this.dbFirebase.getMostRecentLimitId<TarifaPersonalizadaCliente>('tarifasPersCliente', 'idTarifa', 'idCliente', this.fromParent.id,  this.limite)
           .pipe(
             takeUntil(this.destroy$),
             distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales

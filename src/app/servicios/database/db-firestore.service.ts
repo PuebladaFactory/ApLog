@@ -3,8 +3,10 @@ import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, updateDoc } from '@angular/fire/firestore';
 import { firstValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { ConId } from 'src/app/interfaces/conId';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
+
+
 
 @Injectable({
   providedIn: 'root'
@@ -72,6 +74,14 @@ export class DbFirestoreService {
       );
     }
 
+    /* getMostRecent<T>(componente: string, idField: string): Observable<T | undefined> {
+      const dataCollection = `/Vantruck/datos/${componente}`;
+      return this.firestore2.collection<T>(dataCollection, ref =>
+        ref.orderBy(idField, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
+      ).valueChanges().pipe(
+        map(data => data[0]) // Retorna el primer (y único) elemento del array
+      );
+    } */
 
     getMostRecent<T>(componente: string, field: string): Observable<ConId<any>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
@@ -175,47 +185,6 @@ export class DbFirestoreService {
           id: change.payload.doc.id,
           ...change.payload.doc.data() as T,
         })))
-      );
-    }
-
-    getAllStateChanges<T>(componente: string): Observable<ConIdType<T>[]> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection).stateChanges().pipe(
-        map(changes =>
-          changes.map(change => ({
-            id: change.payload.doc.id,
-            ...change.payload.doc.data() as T,
-            type: change.type // 'added', 'modified', 'removed'
-          } as ConIdType<T> ) )
-        )
-      );
-    }
-
-    getAllStateChangesLimit<T>(componente: string, campo:string, id:number, orden:string, limit:number): Observable<ConIdType<T>[]> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref => ref.where(campo, '==', id ).orderBy(orden, "desc").limit(limit)).stateChanges().pipe(
-        map(changes =>
-          changes.map(change => ({
-            id: change.payload.doc.id,
-            ...change.payload.doc.data() as T,
-            type: change.type // 'added', 'modified', 'removed'
-          } as ConIdType<T> ) )
-        )
-      );
-    }
-
-    getAllStateChangesByDate<T>(componente: string, campo:string, orden:any, value1:any, value2:any): Observable<ConIdType<T>[]> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.orderBy(campo, orden)
-        .where(campo, ">=", value1).where(campo, "<=", value2)).stateChanges().pipe(
-        map(changes =>
-          changes.map(change => ({
-            id: change.payload.doc.id,
-            ...change.payload.doc.data() as T,
-            type: change.type // 'added', 'modified', 'removed'
-          } as ConIdType<T> ) )
-        )
       );
     }
 
@@ -422,15 +391,6 @@ getByFieldValue(componente:string, campo:string, value:any){
     );
   }
 
-  createTarifasEspClientes(componente:string, item: any) {
-    //console.log("db.service, metodo create: ",this.coleccion);
-    
-    let dataCollection = collection(this.firestore, `/Vantruck/datos/tarifasEspCliente/${componente}`);
-    return addDoc(dataCollection, item).then(() =>
-      console.log('Create. Escritura en la base de datos en: tarifasEspCliente/', componente)
-    );
-  }
-
   async guardarFacturaOp(componente:string, facturaOp: FacturaOp) {
     try {
         // Verificar si ya existe una factura con el mismo idOperacion
@@ -454,22 +414,19 @@ getByFieldValue(componente:string, campo:string, value:any){
     }
 }
 
-  update(componente: string, item: any, uid:any) {
+  update(componente: string, item: any) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
     const estacionamiento1DocumentReference = doc(
       this.firestore,
-      `/Vantruck/datos/${componente}/${uid}`
+      `/Vantruck/datos/${componente}/${item.id}`
     );
-    console.log("update item: ", item);
-    
     return updateDoc(estacionamiento1DocumentReference, { ...item });
   }
 
   delete(componente:string, id: string) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
     const estacionamiento1DocumentReference = doc(this.firestore, `/Vantruck/datos/${componente}/${id}`);
-    return deleteDoc(estacionamiento1DocumentReference).then(() =>
-      console.log('Delete. borrado en la base de datos en: ', componente));
+    return deleteDoc(estacionamiento1DocumentReference);
   }
 
   getUsuarioUid(id:string) {

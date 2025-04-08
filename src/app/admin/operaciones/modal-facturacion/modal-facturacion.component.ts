@@ -333,8 +333,10 @@ armarOp(){
   }).then((result) => {
     if (result.isConfirmed) {
       ////////console.log("op: ", this.op);
+
       let {id, ...op } = this.op
       this.storageService.updateItem(this.componente, op, this.op.idOperacion,"EDITAR", "Edición de Operación", this.op.id);    
+
       Swal.fire({
         title: "Confirmado",
         text: "La operación ha sido editada.",
