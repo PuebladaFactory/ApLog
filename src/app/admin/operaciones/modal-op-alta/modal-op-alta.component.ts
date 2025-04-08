@@ -295,23 +295,9 @@ export class ModalOpAltaComponent implements OnInit {
   }
 
   buscarTarifaPersonalizada(){
-    //this.storageService.getMostRecentItemId("tarifasPersCliente", "idTarifa", "idCliente", this.clienteSeleccionado?.idCliente);   
-    let tarfPers = this.storageService.loadInfo("tarifasPersCliente");
-    console.log("tarfPers", tarfPers);
-    
-    if (tarfPers.length > 0){
-      this.tarifaClienteSel = tarfPers.find((tarifa: TarifaPersonalizadaCliente)  => tarifa.idCliente === this.clienteSeleccionado?.idCliente);
-      console.log("this.tarifaClienteSel: ", this.tarifaClienteSel);    
-        if(this.choferEventual){
-          this.tPersonalizada = false;         
-        } else{
-          this.tPersonalizada = true;      
-          this.tEventual = false
-          
-        }           
-    }
+    this.storageService.getMostRecentItemId("tarifasPersCliente", "idTarifa", "idCliente", this.clienteSeleccionado?.idCliente);   
     //console.log("BUSCAR TARIFA PERSONALIZADA) proveedores: ", this.$proveedores);
-    /* this.storageService.tarifasPersCliente$
+    this.storageService.tarifasPersCliente$
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if(data){
@@ -323,10 +309,13 @@ export class ModalOpAltaComponent implements OnInit {
           this.tPersonalizada = true;      
           this.tEventual = false
           
-        }                   
+        }           
+        /* if(this.tPersonalizada && typeof this.tarifaClienteSel !== 'object'){
+          this.mensajesError("El cliente aun no tiene una tarifa personalizada asignada. Para continuar debe asignarle una tarifa.")
+        }     */
       }
       
-    }) */
+    })
   }
 
   selectTarifaEventual(event: any) {

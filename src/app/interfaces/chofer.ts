@@ -17,7 +17,6 @@ export interface Chofer {
     idProveedor: number;
     tarifaTipo: TarifaTipo;
     tarifaAsignada: boolean;
-    idTarifa:number;
     
 }
 

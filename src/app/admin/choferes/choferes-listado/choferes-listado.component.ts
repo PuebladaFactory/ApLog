@@ -9,7 +9,6 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { Subject, takeUntil } from 'rxjs';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
-import { ConIdType } from 'src/app/interfaces/conId';
 
 
 @Component({
@@ -75,7 +74,7 @@ export class ChoferesListadoComponent implements OnInit {
     .subscribe(data => {
       this.$proveedores = data;
     });    
-    this.storageService.getObservable<ConIdType<Chofer>>('choferes')
+    this.storageService.getObservable<Chofer>('choferes')
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       if (data) {
@@ -84,7 +83,8 @@ export class ChoferesListadoComponent implements OnInit {
         this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
         this.armarTabla();
       }
-    });        
+    });    
+    this.storageService.syncChanges<Chofer>('choferes');
     this.storageService.syncChanges<Proveedor>('proveedores');
   }
 

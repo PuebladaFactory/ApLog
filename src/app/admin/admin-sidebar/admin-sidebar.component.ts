@@ -72,9 +72,4 @@ export class AdminSidebarComponent implements OnInit {
     })
   }
 
-  navegar(ruta:string){
-    this.storageService.setInfo("ruta", [ruta]);
-    //this.storageService.updateObservable("ruta", [ruta]);
-  }
-
 }
