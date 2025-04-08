@@ -65,7 +65,7 @@ export class FacturacionProveedorComponent implements OnInit {
 
     procesarDatosParaTabla() {
       const proveedoresMap = new Map<number, any>();
-      ////console.log()(this.$facturasProveedor);
+      console.log("las facturas de los proveedores: !!!!!!!!!!!", this.$facturasProveedor);
       
       if(this.$facturasProveedor !== null){
         this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
