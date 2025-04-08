@@ -37,7 +37,7 @@
             <th style="width: 6.5%;">SENASA</th>                        
           </tr>
         </thead>
-        <tbody>
+        <tbody *ngIf="$choferesFiltrados.length > 0; else sinDatos">
           <tr *ngFor="let chofer of $choferesFiltrados | filter: searchText;">
             <ng-container *ngIf="getLegajo(chofer.idChofer).visible">
                 <td>{{getChofer(chofer.idChofer)}}</td>
@@ -80,5 +80,10 @@
             </ng-container>            
           </tr>
         </tbody>
+        <ng-template #sinDatos>
+          <tbody>
+              <tr><td colspan="14">Sin Datos</td></tr>
+          </tbody>
+      </ng-template>
     </table>
 </div>

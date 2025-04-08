@@ -127,7 +127,7 @@
                 <th scope="col" style="width:5%" class="">Facturar</th> 
             </tr>
         </thead>
-        <tbody>
+        <tbody *ngIf="datosTablaCliente.length > 0; else sinDatos">
             <ng-container *ngFor="let cliente of datosTablaCliente | filter: searchText; let i = index">
                 <tr>
                     <td>
@@ -227,10 +227,15 @@
                     </td>
                 </tr>
             </ng-container>
-        </tbody> 
+        </tbody>
+        <ng-template #sinDatos>
+            <tbody>
+                <tr><td colspan="15">Sin Datos</td></tr>
+            </tbody>
+        </ng-template> 
     </table>
 </div>
-
+<!-- 
 <h1>DUPLICADAS LIQ</h1>
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
 <table class="table table-light table-striped table-bordered" >
@@ -283,7 +288,7 @@
         </tr>
     </tbody> 
 </table>
-
+ -->
 <!-- <h1>DUPLICADAS FACTURADAS</h1>
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText3" placeholder="Buscar por chofer">
 <table class="table table-light table-striped table-bordered" >
