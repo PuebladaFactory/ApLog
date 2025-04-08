@@ -547,7 +547,7 @@ export class FacturacionOpService {
   }
 
   updateItem(componente: string, item: any){
-    //this.storageService.updateItem(componente, item, item.idOperacion, "CERRAR", "Cierre de Operación");   
+    this.storageService.updateItem(componente, item, item.idOperacion, "CERRAR", "Cierre de Operación");   
 
   }
 

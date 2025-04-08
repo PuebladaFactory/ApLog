@@ -648,7 +648,7 @@ export class CargarDocumentosComponent implements OnInit {
   } */
   
   updateItem(): void {
-    //this.storageService.updateItem('legajos', this.legajoSeleccionado, this.legajoSeleccionado.idLegajo, "EDITAR", "Legajo editado" );
+    this.storageService.updateItem('legajos', this.legajoSeleccionado, this.legajoSeleccionado.idLegajo, "EDITAR", "Legajo editado" );
   }
 
  

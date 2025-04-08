@@ -10,7 +10,6 @@ import { Subject, takeUntil } from 'rxjs';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -20,10 +19,10 @@ import { ConIdType } from 'src/app/interfaces/conId';
 export class ProveedoresListadoComponent implements OnInit {
   
   searchText!: string;
-  $proveedores!: ConIdType<Proveedor>[];  
-  proveedorEditar!: ConIdType<Proveedor>;  
+  $proveedores!: Proveedor[];  
+  proveedorEditar!: Proveedor;  
   componente:string ="proveedores";
-  $choferes!: ConIdType<Chofer>[];
+  $choferes!: Chofer [];
   ////////////////////////////////////////////////////////////////////////////////////////
   //@ViewChild('tablaClientes') table: any;  
   rows: any[] = [];
@@ -67,20 +66,20 @@ private destroy$ = new Subject<void>();
   ngOnInit(): void { 
     //this.proveedores$ = this.storageService.proveedores$; 
     
-    this.storageService.getObservable<ConIdType<Proveedor>>('proveedores')
+    this.storageService.getObservable<Proveedor>('proveedores')
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       if(data){
-        this.$proveedores = data;
-        //this.$proveedores = this.actualizarProveedor(data);
-        this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-        this.armarTabla();
+        //this.$proveedores = data;
+        this.$proveedores = this.actualizarProveedor(data);
+        //this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+        //this.armarTabla();
         console.log("this.$proveedores", this.$proveedores);
         
       }      
     })
 
-    this.storageService.getObservable<ConIdType<Chofer>>('choferes')
+    this.storageService.getObservable<Chofer>('choferes')
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       if (data) {
@@ -91,7 +90,8 @@ private destroy$ = new Subject<void>();
       }
     });    
 
-   
+    this.storageService.syncChanges<Proveedor>('proveedores');
+    this.storageService.syncChanges<Chofer>('choferes');
   }
 
   
