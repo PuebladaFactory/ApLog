@@ -17,6 +17,7 @@ import Swal from 'sweetalert2';
 import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
   selector: 'app-liq-proveedor',
@@ -35,7 +36,7 @@ export class LiqProveedorComponent implements OnInit {
   searchText!:string;
   searchText2!:string;
   componente: string = "facturaProveedor";
-  $facturasOpProveedor: any;
+  $facturasOpProveedor!: ConId<FacturaOp>[];
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
@@ -49,7 +50,7 @@ export class LiqProveedorComponent implements OnInit {
   razonSocial!: string ;
   form!: any;
   facturaProveedor!: FacturaProveedor;  
-  facturaEditada!: FacturaOp;
+  facturaEditada!: ConId<FacturaOp>;
   facturasPorProveedor: Map<number, FacturaOp[]> = new Map<number, FacturaOp[]>();
   indiceSeleccionado!:number
   ultimaTarifa!:any;
@@ -58,18 +59,18 @@ export class LiqProveedorComponent implements OnInit {
   edicion:boolean = false;
   tarifaEspecial: boolean = false;
   idOperaciones: number [] = [];
-  facDetallada!: FacturaOp;
-  $choferes!: Chofer[];
-  $clientes!: Cliente[];
-  $proveedores!: Proveedor[]; 
-  operacion!:Operacion;
+  facDetallada!: ConId<FacturaOp>;
+  $choferes!: ConIdType<Chofer>[];
+  $clientes!: ConIdType<Cliente>[];
+  $proveedores!: ConIdType<Proveedor>[]; 
+  operacion!:ConId<Operacion>;
   ////////////////////////////////
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>();
-  opAbiertas!: Operacion[];
-  $facturasOpDuplicadas: FacturaOp[] = [];
+  opAbiertas!: ConId<Operacion>[];
+  $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -79,20 +80,23 @@ export class LiqProveedorComponent implements OnInit {
 
   ngOnInit(): void {
      
-    this.storageService.choferes$
+    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.$choferes = data;
+      this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
     });
-    this.storageService.clientes$
+    this.storageService.getObservable<ConIdType<Cliente>>("clientes")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.$clientes = data;
+      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
-    this.storageService.proveedores$
+    this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.$proveedores = data;
+      this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     });
 
     this.storageService.fechasConsulta$
@@ -100,21 +104,25 @@ export class LiqProveedorComponent implements OnInit {
     .subscribe(data => {
       this.fechasConsulta = data;
       //console.log("LIQ proveedor: fechas consulta: ",this.fechasConsulta);
-      this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpProveedor");
+      //this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpProveedor");
+      this.storageService.syncChangesDateValue<FacturaOp>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");      
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
-      this.storageService.consultasFacOpProveedor$
+      this.storageService.getObservable<ConId<FacturaOp>>("facturaOpProveedor")
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
-          this.$facturasOpProveedor = data;
-          //console.log("1)", this.$facturasOpProveedor );
-          if(this.$facturasOpProveedor !== undefined){
-            //console.log("?????????????");                
-            this.procesarDatosParaTabla();
-            this.verificarDuplicados();
-          } else {
-            //console.log("");            
+          if(data){
+            this.$facturasOpProveedor = data;
+            //console.log("1)", this.$facturasOpProveedor );
+            if(this.$facturasOpProveedor){
+              //console.log("?????????????");                
+              this.procesarDatosParaTabla();
+              //this.verificarDuplicados();
+            } else {
+              this.mensajesError("error: facturaOpProveedor")         
+            }
           }
+          
           
       });
     });
@@ -129,7 +137,7 @@ export class LiqProveedorComponent implements OnInit {
   verificarDuplicados() {
     const seenIds = new Set<number>();
 
-    this.$facturasOpProveedor = this.$facturasOpProveedor.filter((factura:FacturaOp) => {
+    this.$facturasOpProveedor = this.$facturasOpProveedor.filter((factura:ConId<FacturaOp>) => {
         if (seenIds.has(factura.idOperacion)) {
             this.$facturasOpDuplicadas.push(factura);
             return false; // Eliminar del array original
@@ -148,7 +156,7 @@ export class LiqProveedorComponent implements OnInit {
     const proveedoresMap = new Map<number, any>();
 
     if(this.$facturasOpProveedor !== null){
-      //////console.log()("Facturas OP Chofer: ", this.$facturasOpChofer);
+      console.log("Facturas OP Proveedor: ", this.$facturasOpProveedor);
       
       this.$facturasOpProveedor.forEach((factura: FacturaOp) => {
         if (!proveedoresMap.has(factura.idProveedor)) {
@@ -427,13 +435,13 @@ export class LiqProveedorComponent implements OnInit {
 
   editarOperacionesFac(factura:FacturaOp){
     factura.idOperacion
-    let op:Operacion;
+    let op:ConId<Operacion>;
     this.dbFirebase
     .obtenerTarifaIdTarifa("operaciones",factura.idOperacion, "idOperacion")
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         op = data;
-        //console.log("OP: ", op);
+        console.log("OP: ", op);
         op.estado = {
           abierta: false,
           cerrada: false,
@@ -441,8 +449,11 @@ export class LiqProveedorComponent implements OnInit {
           facChofer: true,
           facturada: op.estado.facChofer ? true : false,
         }
-        //this.storageService.updateItem("operaciones", op, op.idOperacion, "LIQUIDAR", `Operacion de Proveedor ${this.getProveedor(op.chofer.idProveedor)} Liquidada`);
+        let{id,...opp} = op
+        this.storageService.updateItem("operaciones", opp, op.idOperacion, "LIQUIDAR", `Operacion de Proveedor ${this.getProveedor(op.chofer.idProveedor)} Liquidada`, op.id);
         this.removeItem(factura);
+        console.log("paso x aca??");
+        
     });
 
   }
@@ -454,7 +465,7 @@ export class LiqProveedorComponent implements OnInit {
 
   }
 
-  editarFacturaOpCliente(factura: FacturaOp, i:number){   
+  editarFacturaOpCliente(factura: ConId<FacturaOp>, i:number){   
     this.facDetallada = factura;   
     this.buscarTarifa(i);    
   }
@@ -486,7 +497,7 @@ export class LiqProveedorComponent implements OnInit {
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          //console.log(result);
+          console.log("resultado factura proveedor: ",result);
           if(result.modo === "cerrar"){
             this.facturaProveedor = result.factura;
 

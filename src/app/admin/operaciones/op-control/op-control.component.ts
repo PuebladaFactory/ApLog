@@ -17,6 +17,7 @@ import { Router } from '@angular/router';
     </div>         
   </div>
   <router-outlet></router-outlet>    
+  
   `,
   styles: [`
     .tab-container {
@@ -45,15 +46,14 @@ import { Router } from '@angular/router';
       color: #007bff;
       font-size: 1.5rem;
     }
+
+
   `]
 })
 export class OpControlComponent implements OnInit {
 
   tabs = [
-    { id: 'tab1', name: 'Tablero de Operaciones', route: 'op/tablero' },
-    { id: 'tab2', name: 'AL', route: 'op/al' },
-    { id: 'tab3', name: 'Especial', route: 'choferes/especial' },
-    { id: 'tab4', name: 'Personalizada', route: 'choferes/personalizada' }
+    { id: 'tab1', name: 'Tablero de Operaciones', route: 'op/tablero' },    
   ];
 
   selectedTab: string = 'tab1';

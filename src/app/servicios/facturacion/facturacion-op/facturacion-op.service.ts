@@ -13,6 +13,7 @@ import { FacturacionChoferService } from '../facturacion-chofer/facturacion-chof
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Subject, take, takeUntil } from 'rxjs';
 import { TarifaEventual } from 'src/app/interfaces/tarifa-eventual';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 
 @Injectable({
   providedIn: 'root'
@@ -22,22 +23,22 @@ export class FacturacionOpService {
   
   //facturaChofer!:FacturaOpChofer;
       
-  $ultTarifaGralCliente!: TarifaGralCliente;
-  $ultTarifaEspCliente!: TarifaGralCliente;
-  $ultTarifaPersCliente!: TarifaPersonalizadaCliente;
-  $ultTarifaGralChofer!: TarifaGralCliente;
-  $ultTarifaEspChofer!: TarifaGralCliente;
-  $ultTarifaGralProveedor!: TarifaGralCliente;
-  $ultTarifaEspProveedor!: TarifaGralCliente;
-  tarifaOpCliente!: TarifaGralCliente;
+  $ultTarifaGralCliente!: ConIdType<TarifaGralCliente>;
+  $ultTarifaEspCliente!: ConIdType<TarifaGralCliente>;
+  $ultTarifaPersCliente!: ConIdType<TarifaPersonalizadaCliente>;
+  $ultTarifaGralChofer!: ConIdType<TarifaGralCliente>;
+  $ultTarifaEspChofer!: ConIdType<TarifaGralCliente>;
+  $ultTarifaGralProveedor!: ConIdType<TarifaGralCliente>;
+  $ultTarifaEspProveedor!: ConIdType<TarifaGralCliente>;
+  tarifaOpCliente!: ConIdType<TarifaGralCliente>;
   facturaOpCliente!: FacturaOp | null;
   facturaOpChofer!: FacturaOp | null;
   facturaOpProveedor!: FacturaOp | null;
-  $proveedores!: Proveedor[];
+  $proveedores!: ConIdType<Proveedor>[];
   clienteFacOp!: FacturaOp [];
   choferFacOp!: FacturaOp [];
   ProveedorFacOp!: FacturaOp [];
-  operacion!: Operacion;
+  operacion!: ConId<Operacion>;
   proveedorSeleccionado!: Proveedor;
   tarifaEventual! : TarifaEventual;  
   i:number=0
@@ -46,13 +47,13 @@ export class FacturacionOpService {
 
   constructor( private facturacionCliente: FacturacionClienteService, private facturacionChofer: FacturacionChoferService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
 
-  facturarOperacion(op: Operacion){      
+  facturarOperacion(op: ConId<Operacion>){      
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralChofer', 'idTarifa');        
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa');    
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');
      
     /////////PROVEEDORES /////////////////////////
-     this.storageService.getObservable<Proveedor>('proveedores').subscribe(data => {
+     this.storageService.getObservable<ConIdType<Proveedor>>('proveedores').subscribe(data => {
       if(data){
         this.$proveedores = data;        
         if(op.chofer.idProveedor !== 0){
@@ -66,7 +67,7 @@ export class FacturacionOpService {
       }      
     })
     /////////TARIFA GENERAL CLIENTE /////////////////////////    
-    this.storageService.tarifasGralCliente$
+    this.storageService.getObservable<ConIdType<TarifaGralCliente>>("tarifasGralCliente")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data =>{      
       if(data){
@@ -81,7 +82,7 @@ export class FacturacionOpService {
     });
  
     /////////TARIFA GENERAL CHOFER /////////////////////////   
-    this.storageService.tarifasGralChofer$
+    this.storageService.getObservable<ConIdType<TarifaGralCliente>>("tarifasGralChofer")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data =>{    
       if(data){
@@ -99,7 +100,7 @@ export class FacturacionOpService {
   
     //////////////// TARIFA GENERAL PROVEEDORES ///////////////////
   
-    this.storageService.tarifasGralProveedor$
+    this.storageService.getObservable<ConIdType<TarifaGralCliente>>("tarifasGralProveedor")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data =>{
       if(data){
@@ -118,7 +119,7 @@ export class FacturacionOpService {
     this.$facturarOpCliente(op);        
   }
 
-  $facturarOpCliente(op: Operacion){
+  $facturarOpCliente(op: ConId<Operacion>){
     let respuesta : {
       op: Operacion,
       factura: FacturaOp
@@ -140,11 +141,15 @@ export class FacturacionOpService {
     if(op.tarifaTipo.especial){  //tarifa especial cliente
       if(op.cliente.tarifaTipo.especial){
         /////////TARIFA ESPECIAL CLIENTE /////////////////////////                   
-          this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspCliente","idTarifa","idCliente",op.cliente.idCliente) //buscamos la tarifa especial
+          //this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspCliente","idTarifa","idCliente",op.cliente.idCliente) //buscamos la tarifa especial
+          this.storageService.getObservable<ConIdType<TarifaGralCliente>>("tarifasEspCliente")
           .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario   
           .subscribe(data =>{ 
             if(data){
-                this.$ultTarifaEspCliente = data[0]; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+              let tarifas : any[] = data 
+              console.log("tarifas esp clientes", tarifas);
+              this.$ultTarifaEspCliente = tarifas.find((tarifa: TarifaGralCliente)  => tarifa.idCliente === op.cliente.idCliente);  
+                //this.$ultTarifaEspCliente = data[0]; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
                 //this.$ultTarifaEspCliente.cargasGenerales = this.$ultTarifaEspCliente.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío     
                 //////console.log("2) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);
                 if(this.$ultTarifaEspCliente?.cargasGenerales?.length > 0){
@@ -201,23 +206,30 @@ export class FacturacionOpService {
               }   
           }          
         }); */
-        let tPers = this.storageService.loadInfo("tPersCliente");
-        this.$ultTarifaPersCliente = tPers[0];
-        if(this.$ultTarifaPersCliente?.secciones?.length > 0){
-            //console.log("1)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);     
-            respuesta = this.facturacionCliente.$facturarOpPersCliente(op, this.$ultTarifaPersCliente, this.$ultTarifaGralCliente);
-            this.operacion.valores.cliente = respuesta.op.valores.cliente;
-            this.facturaOpCliente = respuesta.factura;
-            //console.log("1)C.2) Factura OP cliente ", this.facturaOpCliente);
-            //this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
-            console.log("this.facturaOpCliente: ", this.facturaOpCliente);
-            
-            if(op.chofer.idProveedor === 0){
-              this.$facturarOpChofer(op);   
-            } else {      
-              this.$facturarOpProveedor(op);        
-            }
-        }   
+        this.storageService.getObservable<ConIdType<TarifaPersonalizadaCliente>>("tarifasPersCliente")
+        .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario   
+          .subscribe(data =>{ 
+            let tarifas : any[] = data 
+            console.log("tarifas pers clientes", tarifas);
+            this.$ultTarifaPersCliente = tarifas.find((tarifa: TarifaGralCliente)  => tarifa.idCliente === op.cliente.idCliente);  
+            if(this.$ultTarifaPersCliente?.secciones?.length > 0){
+              //console.log("1)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);     
+              respuesta = this.facturacionCliente.$facturarOpPersCliente(op, this.$ultTarifaPersCliente, this.$ultTarifaGralCliente);
+              this.operacion.valores.cliente = respuesta.op.valores.cliente;
+              this.facturaOpCliente = respuesta.factura;
+              //console.log("1)C.2) Factura OP cliente ", this.facturaOpCliente);
+              //this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
+              console.log("this.facturaOpCliente: ", this.facturaOpCliente);
+              
+              if(op.chofer.idProveedor === 0){
+                this.$facturarOpChofer(op);   
+              } else {      
+                this.$facturarOpProveedor(op);        
+              }
+          }  
+          });
+        
+         
         
       //////console.log("3) tarifa PERSONALIZADA CLIENTE: ", this.$ultTarifaPersCliente);
     }
@@ -238,7 +250,7 @@ export class FacturacionOpService {
   
   }
 
-  $facturarOpChofer(op: Operacion){
+  $facturarOpChofer(op: ConId<Operacion>){
     //////console.log("hola");
     let respuesta : {
       op: Operacion,
@@ -259,12 +271,16 @@ export class FacturacionOpService {
     if(op.tarifaTipo.especial){  //tarifa especial chofer
       if(op.chofer.tarifaTipo.especial){
         /////////TARIFA ESPECIAL CHOFER /////////////////////////
-        this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspChofer","idTarifa","idChofer",op.chofer.idChofer) //buscamos la tarifa especial
+        //this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspChofer","idTarifa","idChofer",op.chofer.idChofer) //buscamos la tarifa especial
+        this.storageService.getObservable<ConIdType<TarifaGralCliente>>("tarifasEspChofer")
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario   
-        .subscribe(item => { 
-          console.log(item);
-          if (item) {            
-            this.$ultTarifaEspChofer = item[0];   
+        .subscribe(data => { 
+          console.log(data);
+          if (data) {   
+            let tarifas : any[] = data 
+            console.log("tarifas esp clientes", tarifas);
+            this.$ultTarifaEspChofer = tarifas.find((tarifa: TarifaGralCliente)  => tarifa.idChofer === op.chofer.idChofer);  
+            
             if(this.$ultTarifaEspChofer?.cargasGenerales?.length > 0){
                 //console.log("2)B.1) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);                
                 //si la tarifa especial del chofer es para el cliente de la op o para todos los clientes           
@@ -307,7 +323,9 @@ export class FacturacionOpService {
       }
     };
     if(op.tarifaTipo.personalizada){ //tarifa personalizada      
-        /////////TARIFA PERSONALIZADA CLIENTE /////////////////////////
+        /////////TARIFA PERSONALIZADA CHOFER /////////////////////////
+
+
         /* this.dbFirebase.getMostRecentId<TarifaPersonalizadaCliente>("tarifasPersCliente","idTarifa","idCliente",op.cliente.idCliente) //buscamos la tarifa especial      
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {          
@@ -327,18 +345,26 @@ export class FacturacionOpService {
           
         }); */
       //////console.log("3) tarifa PERSONALIZADA CLIENTE: ", this.$ultTarifaPersCliente);
-        let tPers = this.storageService.loadInfo("tPersCliente");
-        this.$ultTarifaPersCliente = tPers[0];
-        if(this.$ultTarifaPersCliente?.secciones?.length > 0){
-            //console.log("1)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);     
-            respuesta = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente, 0, this.$ultTarifaGralChofer);            
-            this.operacion.valores.chofer = respuesta.op.valores.chofer;
-            this.facturaOpChofer = respuesta.factura;            
-            //console.log("1)C.2) Factura OP cliente ", this.facturaOpCliente);
-            //this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
-            console.log("this.facturaOpCliente: ", this.facturaOpCliente);
-            this.$armarFacturasOp(op);
-        }   
+      this.storageService.getObservable<ConIdType<TarifaPersonalizadaCliente>>("tarifasPersCliente")
+        .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario   
+        .subscribe(data =>{ 
+            let tarifas : any[] = data 
+            console.log("tarifas pers clientes", tarifas);
+            this.$ultTarifaPersCliente = tarifas.find((tarifa: TarifaGralCliente)  => tarifa.idCliente === op.cliente.idCliente);  
+            if(this.$ultTarifaPersCliente?.secciones?.length > 0){
+              //console.log("1)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);     
+              respuesta = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente, 0, this.$ultTarifaGralChofer);            
+              this.operacion.valores.chofer = respuesta.op.valores.chofer;
+              this.facturaOpChofer = respuesta.factura;            
+              //console.log("1)C.2) Factura OP cliente ", this.facturaOpCliente);
+              //this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
+              console.log("this.facturaOpCliente: ", this.facturaOpCliente);
+              this.$armarFacturasOp(op);
+          }  
+        })
+        
+        
+         
     }    
     if(op.tarifaTipo.eventual){ //tarifa eventual
       //console.log("2)D.1) op eventual", op.tarifaEventual);
@@ -352,7 +378,7 @@ export class FacturacionOpService {
     
   }
 
-  $facturarOpProveedor(op: Operacion){    
+  $facturarOpProveedor(op: ConId<Operacion>){    
     let respuesta : {
       op: Operacion,
       factura: FacturaOp
@@ -373,12 +399,16 @@ export class FacturacionOpService {
     if(op.tarifaTipo.especial){  //tarifa especial proveedor
           if (this.proveedorSeleccionado.tarifaTipo.especial){
              /////////TARIFA ESPECIAL PROVEEDOR /////////////////////////                   
-            this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspProveedor","idTarifa","idProveedor", this.proveedorSeleccionado.idProveedor) //buscamos la tarifa especial
+            //this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspProveedor","idTarifa","idProveedor", this.proveedorSeleccionado.idProveedor) //buscamos la tarifa especial
+            this.storageService.getObservable<ConIdType<TarifaGralCliente>>("tarifasEspProveedor")
             .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario  
             .subscribe(data =>{
               if(data){
-                ////////////console.log("2c) data: ", data);                
-                this.$ultTarifaEspProveedor = data[0]; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
+                ////////////console.log("2c) data: ", data);           
+                let tarifas : any[] = data 
+                console.log("tarifas esp clientes", tarifas);
+                this.$ultTarifaEspProveedor = tarifas.find((tarifa: TarifaGralCliente)  => tarifa.idChofer === op.chofer.idChofer);       
+                //this.$ultTarifaEspProveedor = data[0]; // Asegura que la tarifa siempre sea un objeto, incluso si no hay datos
                 //this.$ultTarifaEspProveedor.cargasGenerales = this.$ultTarifaEspProveedor.cargasGenerales || []; // Si cargasGenerales no está definido, lo inicializamos como array vacío
                 ////////console.log("6) ult tarifa ESP PROVEEDOR: ",this.ultTarifaEspProveedor);           
                 if(this.$ultTarifaEspProveedor?.cargasGenerales?.length > 0) {                  
@@ -438,19 +468,27 @@ export class FacturacionOpService {
           }          
         }); */
       //////console.log("3) tarifa PERSONALIZADA CLIENTE: ", this.$ultTarifaPersCliente);
-        let tPers = this.storageService.loadInfo("tPersCliente");
-        this.$ultTarifaPersCliente = tPers[0];
-        if(this.$ultTarifaPersCliente?.secciones?.length > 0){
-            //console.log("1)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);  
-            respuesta = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente, this.proveedorSeleccionado.idProveedor, this.$ultTarifaGralProveedor);
-            this.operacion.valores.chofer = respuesta.op.valores.chofer;
-            this.facturaOpProveedor = respuesta.factura;                        
-            //console.log("1)C.2) Factura OP cliente ", this.facturaOpCliente);
-            //this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
-            console.log("this.facturaOpProveedor: ", this.facturaOpProveedor);
-            
-            this.$armarFacturasOp(op);
-        }   
+      this.storageService.getObservable<ConIdType<TarifaPersonalizadaCliente>>("tarifasPersCliente")
+        .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario   
+        .subscribe(data =>{ 
+            let tarifas : any[] = data 
+            console.log("tarifas pers clientes", tarifas);
+            this.$ultTarifaPersCliente = tarifas.find((tarifa: TarifaGralCliente)  => tarifa.idCliente === op.cliente.idCliente);  
+            if(this.$ultTarifaPersCliente?.secciones?.length > 0){
+              //console.log("1)C.1) tarifa PERSONALIZADA CLIENTE",this.$ultTarifaPersCliente);  
+              respuesta = this.facturacionChofer.$facturarOpPersChofer(op, this.$ultTarifaPersCliente, this.proveedorSeleccionado.idProveedor, this.$ultTarifaGralProveedor);
+              this.operacion.valores.chofer = respuesta.op.valores.chofer;
+              this.facturaOpProveedor = respuesta.factura;                        
+              //console.log("1)C.2) Factura OP cliente ", this.facturaOpCliente);
+              //this.storageService.setInfoOne("facturaOpCliente", this.facturaOpCliente);
+              console.log("this.facturaOpProveedor: ", this.facturaOpProveedor);
+              
+              this.$armarFacturasOp(op);
+          }  
+        })
+        
+        
+         
         
     }    
     if(op.tarifaTipo.eventual){ //tarifa eventual
@@ -465,7 +503,7 @@ export class FacturacionOpService {
   
   }
 
-  $armarFacturasOp(op:Operacion){
+  $armarFacturasOp(op:ConId<Operacion>){
     //console.log("FINAL 1) Op: ", op);      
     //console.log("FIVAL 2) this.facturaOpCliente: ", this.facturaOpCliente, " this.facturaOpChofer: ", this.facturaOpChofer, " this.facturaOpProveedor: ", this.facturaOpProveedor);      
     this.i ++
@@ -513,7 +551,7 @@ export class FacturacionOpService {
     }
   }
 
-  $guardarFacturas(op: Operacion){
+  $guardarFacturas(op: ConId<Operacion>){
     console.log("1) Op: ", op);
     console.log("2) CLIENTE: ", this.facturaOpCliente);
     console.log("3) CHOFER: ", this.facturaOpChofer);    //
@@ -546,8 +584,9 @@ export class FacturacionOpService {
     this.dbFirebase.guardarFacturaOp(componente, item)
   }
 
-  updateItem(componente: string, item: any){
-    //this.storageService.updateItem(componente, item, item.idOperacion, "CERRAR", "Cierre de Operación");   
+  updateItem(componente: string, item: ConId<Operacion>){
+    let {id, ...op } = item
+    this.storageService.updateItem(componente, op, item.idOperacion, "CERRAR", "Cierre de Operación", item.id);   
 
   }
 

@@ -10,26 +10,27 @@ import { OperacionesModule } from './operaciones/operaciones.module';
 import { ProveedoresModule } from './proveedores/proveedores.module';
 import { FacturacionModule } from './facturacion/facturacion.module';
 import { LiquidacionModule } from './liquidacion/liquidacion.module';
+import { SharedModule } from "../shared/shared.module";
 
 
 @NgModule({
-  declarations: [
-    AdminHomeComponent,
-    AdminSidebarComponent,     
-  ],
-  imports: [
-    CommonModule,
-    AdminRoutingModule,
-    ClienteModule,
-    ChoferesModule, 
-    OperacionesModule,
-    ProveedoresModule,
-    FacturacionModule,
-    LiquidacionModule,
-        
-  ],
-  exports:[
-    AdminHomeComponent,
-  ]
+    declarations: [
+        AdminHomeComponent,
+        AdminSidebarComponent,
+    ],
+    exports: [
+        AdminHomeComponent,
+    ],
+    imports: [
+        CommonModule,
+        AdminRoutingModule,
+        ClienteModule,
+        ChoferesModule,
+        OperacionesModule,
+        ProveedoresModule,
+        FacturacionModule,
+        LiquidacionModule,
+        SharedModule
+    ]
 })
 export class AdminModule { }

@@ -5,6 +5,8 @@ import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component'
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Subject, takeUntil } from 'rxjs';
+import { ConId } from 'src/app/interfaces/conId';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-facturacion-cliente',
@@ -17,8 +19,8 @@ export class FacturacionClienteComponent implements OnInit {
   facturasPorCliente = new Map<number, any[]>();
   mostrarTablaCliente: boolean[] = [];
   searchText: string = '';
-  $facturasCliente!: FacturaCliente[];
-  $facturaOpCliente!: FacturaOp[];
+  $facturasCliente!: ConId<FacturaCliente>[];
+  $facturaOpCliente!: ConId<FacturaOp>[];
   operacionFac: any[] = [];
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
@@ -40,14 +42,19 @@ export class FacturacionClienteComponent implements OnInit {
     ) {}
   
     ngOnInit(): void {
-      this.storageService.consultasFacCliente$
+      this.storageService.getObservable<ConId<FacturaCliente>>("facturaCliente")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
-        this.$facturasCliente = data;
-        this.procesarDatosParaTabla();
-        this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false); // Mueve esta línea aquí
+        
+        if(data){
+          this.$facturasCliente = data;
+          this.$facturasCliente = this.$facturasCliente.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+          this.procesarDatosParaTabla();
+          this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false); // Mueve esta línea aquí
+        } else {
+          this.mensajesError("error facturacion-cliente: facturaCliente")
+        }
       });
-    
       /* this.storageService.consultasFacOpLiqCliente$
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
@@ -228,6 +235,15 @@ export class FacturacionClienteComponent implements OnInit {
       return this.ordenAscendente ? 'bi bi-arrow-down' : 'bi bi-arrow-up';
     }
     return '';
+  }
+
+  mensajesError(msj:string){
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
   }
 
   

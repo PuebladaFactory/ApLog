@@ -15,6 +15,7 @@ import { Descuento, FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { Subject, takeUntil } from 'rxjs';
+import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
   selector: 'app-facturar-op',
@@ -29,12 +30,12 @@ export class FacturarOpComponent implements OnInit {
   facturaChofer!: FacturaChofer;
   facturaProveedor!: FacturaProveedor;
   idOperaciones: number [] = [];        
-  $clientes!: Cliente[];
-  $choferes!: Chofer[];
-  $proveedores!: Proveedor[];
-  clienteSel!: Cliente;
-  choferSel!: Chofer;
-  proveedorSel!: Proveedor;
+  $clientes!: ConIdType<Cliente>[];
+  $choferes!: ConIdType<Chofer>[];
+  $proveedores!: ConIdType<Proveedor>[];
+  clienteSel!: ConIdType<Cliente>;
+  choferSel!: ConIdType<Chofer>;
+  proveedorSel!: ConIdType<Proveedor>;
   modo: string = "vista";  
 
   columnas = [
@@ -58,7 +59,7 @@ export class FacturarOpComponent implements OnInit {
   totalDescuento: number = 0;
   ////////////////////////////////////////////
   titulo!:string;
-  facLiquidadas: FacturaOp[] = [];
+  facLiquidadas: ConIdType<FacturaOp>[] = [];
   total!: number;
   totalContraParte: number = 0;
   columnasVisibles: any[] = [];
@@ -69,22 +70,25 @@ export class FacturarOpComponent implements OnInit {
   
   ngOnInit(): void {
     console.log("0) ", this.fromParent);
-    this.storageService.choferes$
+    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
-      this.$choferes = data;      
+      this.$choferes = data;    
+      this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer 
     }); 
 
-    this.storageService.clientes$
+    this.storageService.getObservable<ConIdType<Cliente>>("clientes")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
-      this.$clientes = data;      
+      this.$clientes = data;   
+      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer   
     }); 
 
-    this.storageService.proveedores$
+    this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.$proveedores = data;      
+      this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
     this.facLiquidadas = this.fromParent.facturas;
     //console.log("1): ", this.facLiquidadas);    

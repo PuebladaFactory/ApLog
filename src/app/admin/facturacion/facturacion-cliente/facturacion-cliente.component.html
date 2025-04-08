@@ -1,7 +1,7 @@
 <h2>Clientes</h2>   
 <input type="text" placeholder="Buscar cliente..." [(ngModel)]="filtroBusqueda" (input)="filtrarTabla()" class="form-control mb-2" />
 <table class="table table-light table-striped table-bordered">
-  <thead>
+  <thead class="sticky-top">
       <th (click)="ordenar('razonSocial')" style="cursor: pointer; width: 19%">
           Cliente 
           <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">

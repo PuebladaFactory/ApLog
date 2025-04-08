@@ -1,9 +1,9 @@
-
+<!-- 
 <div>
     <button class="btn btn-primary ms-3" (click)="actProveedores()">Actualizar Proveedores</button>
     <button class="btn btn-primary ms-3" (click)="actProveedorGral()">Actualizar Proveedores Generales</button>
     <button class="btn btn-primary ms-3" (click)="actProveedorEsp()">Actualizar Proveedores Especiales</button>        
-</div>
+</div> -->
 <div class="row mt-3" [ngClass]="{'invisible': tEspecial}" >
     <div class="col-4">
         <h1 class="mt-2">Tarifa General</h1>        
@@ -38,7 +38,7 @@
 
     <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
         <table class="table table-bordered">
-            <thead>
+            <thead class="sticky-top">
               <tr>
                   <th style="width: 2%"><input type="checkbox" (change)="onSeleccionarTodosChange($event)" formControlName="seleccionarTodos"></th>
                   <th style="width: 12%">Categoria Tarifa Gral</th>

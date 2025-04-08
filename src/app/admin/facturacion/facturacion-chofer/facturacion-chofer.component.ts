@@ -6,6 +6,8 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Subject, takeUntil } from 'rxjs';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-facturacion-chofer',
@@ -15,11 +17,11 @@ import { Subject, takeUntil } from 'rxjs';
 export class FacturacionChoferComponent implements OnInit {
   
   searchText!:string;  
-  $facturasChofer!: FacturaChofer[];    
+  $facturasChofer!: ConId<FacturaChofer>[];    
   datosTablaChofer: any[] = [];
   mostrarTablaChofer: boolean[] = [];    
-  facturaChofer!: FacturaChofer;  
-  $facturaOpChofer: FacturaOp[] = [];
+  facturaChofer!: ConId<FacturaChofer>;  
+  $facturaOpChofer: ConId<FacturaOp>[] = [];
   facturasPorChofer: Map<number, FacturaChofer[]> = new Map<number, FacturaChofer[]>();
   
   totalCant: number = 0;
@@ -41,10 +43,11 @@ export class FacturacionChoferComponent implements OnInit {
     ) {}
   
     ngOnInit(): void {
-      this.storageService.consultasFacChofer$
+      this.storageService.getObservable<ConId<FacturaChofer>>("facturaChofer")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         this.$facturasChofer = data;
+        this.$facturasChofer = this.$facturasChofer.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
         this.procesarDatosParaTabla();
         this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false); // Mueve esta línea aquí
       });
@@ -224,5 +227,14 @@ export class FacturacionChoferComponent implements OnInit {
         }
       });
     }
+
+    mensajesError(msj:string){
+            Swal.fire({
+              icon: "error",
+              //title: "Oops...",
+              text: `${msj}`
+              //footer: `${msj}`
+            });
+          }
 
 }

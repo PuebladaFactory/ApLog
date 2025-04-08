@@ -227,6 +227,8 @@ export class ClienteTarifaGralComponent implements OnInit {
   }
 
   inicializarTabla() {    
+    console.log("this.tEspecial", this.tEspecial);
+    
     if(this.tEspecial && this.ultTarifaEspecial){
       this.ultTarifa = this.ultTarifaEspecial;
     }else {

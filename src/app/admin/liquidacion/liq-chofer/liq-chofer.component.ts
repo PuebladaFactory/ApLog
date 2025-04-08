@@ -18,6 +18,7 @@ import Swal from 'sweetalert2';
 import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 
 
 @Component({
@@ -61,18 +62,18 @@ export class LiqChoferComponent implements OnInit {
   edicion:boolean = false;
   tarifaEspecial: boolean = false;
   idOperaciones: number [] = [];
-  facDetallada!: FacturaOp;
-  $choferes!: Chofer[];
-  $clientes!: Cliente[];
-  $proveedores!: Proveedor[]; 
-  operacion!:Operacion;
+  facDetallada!: ConId<FacturaOp>;
+  $choferes!: ConIdType<Chofer>[];
+  $clientes!: ConIdType<Cliente>[];
+  $proveedores!: ConIdType<Proveedor>[]; 
+  operacion!:ConId<Operacion>;
   ////////////////////////////////
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>();
-  opAbiertas!: Operacion[];
-  $facturasOpDuplicadas: FacturaOp[] = [];
+  opAbiertas!: ConId<Operacion>[];
+  $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -81,20 +82,36 @@ export class LiqChoferComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.storageService.choferes$
+    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-    .subscribe(data => {
-      this.$choferes = data;
+    .subscribe(data => {      
+      if(data){
+        this.$choferes = data;
+        this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+      } else {
+        this.mensajesError("error: choferes");
+      }
     });
-    this.storageService.clientes$
+    this.storageService.getObservable<ConIdType<Cliente>>("clientes")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-    .subscribe(data => {
-      this.$clientes = data;
+    .subscribe(data => {      
+      if(data){
+        this.$clientes = data;
+        this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+      } else {
+        this.mensajesError("error: clientes");
+      }
     }); 
-    this.storageService.proveedores$
+    this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
-      this.$proveedores = data;
+      if(data){
+        this.$proveedores = data;
+        this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+      } else {
+        this.mensajesError("error: proveedores");
+      }
+      
     });
 
     this.storageService.fechasConsulta$
@@ -102,20 +119,21 @@ export class LiqChoferComponent implements OnInit {
     .subscribe(data => {
       this.fechasConsulta = data;
       //console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
-      this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpChofer");
+      //his.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpChofer");
+      this.storageService.syncChangesDateValue<FacturaOp>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
-      this.storageService.consultasFacOpChofer$
+      this.storageService.getObservable<ConId<FacturaOp>>("facturaOpChofer")
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpChofer = data;
           console.log("1)", this.$facturasOpChofer );
-          if(this.$facturasOpChofer !== undefined){
+          if(this.$facturasOpChofer){
             //console.log("?????????????");            
             this.procesarDatosParaTabla();            
             this.verificarDuplicados();
           } else {
-            //console.log("");            
+            this.mensajesError("error: facturaOpChofer")            
           }
           
       });
@@ -131,7 +149,7 @@ export class LiqChoferComponent implements OnInit {
   verificarDuplicados() {
     const seenIds = new Set<number>();
 
-    this.$facturasOpChofer = this.$facturasOpChofer.filter((factura:FacturaOp) => {
+    this.$facturasOpChofer = this.$facturasOpChofer.filter((factura:ConId<FacturaOp>) => {
         if (seenIds.has(factura.idOperacion)) {
             this.$facturasOpDuplicadas.push(factura);
             return false; // Eliminar del array original
@@ -415,7 +433,7 @@ export class LiqChoferComponent implements OnInit {
 
   editarOperacionesFac(factura:FacturaOp){
     factura.idOperacion
-    let op:Operacion;
+    let op:ConId<Operacion>;
     this.dbFirebase
     .obtenerTarifaIdTarifa("operaciones",factura.idOperacion, "idOperacion")
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
@@ -429,7 +447,8 @@ export class LiqChoferComponent implements OnInit {
           facChofer: true,
           facturada: op.estado.facCliente ? true : false,
         }
-        //this.storageService.updateItem("operaciones", op, op.idOperacion, "Liquidar", `Operación de Chofer ${op.chofer.apellido} ${op.chofer.nombre} Liquidada`);
+        let{id, ...opp}=op
+        this.storageService.updateItem("operaciones", opp, op.idOperacion, "Liquidar", `Operación de Chofer ${op.chofer.apellido} ${op.chofer.nombre} Liquidada`, op.id);
         this.removeItem(factura);
     });
 
@@ -440,7 +459,7 @@ export class LiqChoferComponent implements OnInit {
     this.storageService.deleteItem("facturaOpChofer", item, item.idFacturaOp, "INTERNA", "");    
   }
 
-  editarFacturaOpCliente(factura: FacturaOp, i:number){   
+  editarFacturaOpCliente(factura: ConId<FacturaOp>, i:number){   
     this.facDetallada = factura;   
     this.buscarTarifa(i);    
   }

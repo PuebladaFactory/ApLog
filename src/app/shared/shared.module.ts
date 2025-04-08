@@ -28,6 +28,7 @@ import { ModalObjetoComponent } from './modal-objeto/modal-objeto.component';
 import { FechaValidaDirective } from './directives/fecha-valida.directive';
 import { ModalFacturaComponent } from './modal-factura/modal-factura.component';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
+import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
 
 
 
@@ -51,7 +52,7 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,    
-    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent,
+    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent, ScrollToTopComponent,
     
     
   ],
@@ -87,7 +88,8 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
     RoleDirective,
     ModalBajaComponent,
     FechaValidaDirective,
-    ModalFacturaComponent
+    ModalFacturaComponent, 
+    ScrollToTopComponent
     
   ]
 })

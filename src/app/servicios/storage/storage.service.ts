@@ -239,7 +239,17 @@ export class StorageService {
   public todasTarifasEspCliente$ = this._todasTarifasEspCliente$.asObservable()
 
   private _ruta$ = new BehaviorSubject<any>(this.loadInfo('ruta') || []);
-  public ruta$ = this._ruta$.asObservable()
+  public ruta$ = this._ruta$.asObservable();
+
+  private _facturaCliente$ = new BehaviorSubject<any>(this.loadInfo('facturaCliente') || []);
+  public facturaCliente$ = this._facturaCliente$.asObservable();
+
+  private _facturaChofer$ = new BehaviorSubject<any>(this.loadInfo('facturaChofer') || []);
+  public facturaChofer$ = this._facturaChofer$.asObservable();
+
+  private _facturaProveedor$ = new BehaviorSubject<any>(this.loadInfo('facturaProveedor') || []);
+  public facturaProveedor$ = this._facturaProveedor$.asObservable();
+
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
@@ -582,6 +592,21 @@ export class StorageService {
         break
       }
 
+      case "facturaCliente":{
+        this._facturaCliente$.next(data);
+        break
+      }
+
+      case "facturaChofer":{
+        this._facturaChofer$.next(data);
+        break
+      }
+
+      case "facturasProveedor":{
+        this._facturaProveedor$.next(data);
+        break
+      }
+
       case "ruta":{
         this._ruta$.next(data);
         break
@@ -660,7 +685,7 @@ export class StorageService {
     //this.getMostRecentItem<TarifaGralCliente>("tarifasGralChofer", "idTarifa");
     //this.getMostRecentItem<TarifaGralCliente>("tarifasGralProveedor", "idTarifa");
     this.getAllColection("users");    
-    this.getAllSorted("legajos", 'idLegajo', 'asc');    
+    //this.getAllSorted("legajos", 'idLegajo', 'asc');    
   }
 
   getTarifasEsp(){
@@ -1127,7 +1152,21 @@ export class StorageService {
       case 'ruta':
         return this._ruta$.asObservable(); 
       case "tarifasEventuales":
-        return this._tarifasEventuales$.asObservable();
+        return this._tarifasEventuales$.asObservable();      
+      case "facturaOpCliente":
+        return this._facturaOpCliente$.asObservable();
+      case "facturaOpChofer":
+        return this._facturaOpChofer$.asObservable();
+      case "facturaOpProveedor":
+        return this._facturaOpProveedor$.asObservable();
+      case "facturaCliente":
+        return this._facturaCliente$.asObservable();
+      case "facturaChofer":
+        return this._facturaChofer$.asObservable();
+      case "facturaProveedor":
+        return this._facturaProveedor$.asObservable();
+      case "legajos":
+        return this._legajos$.asObservable();
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }

@@ -52,6 +52,7 @@ export class AdminHomeComponent implements OnInit {
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralProveedor");
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspProveedor");
       
+      
 
       this.storageService.getObservable("ruta")
       .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
@@ -62,7 +63,7 @@ export class AdminHomeComponent implements OnInit {
         }
       })
       this.router.navigate(['op']);
-      
+      //this.storageService.setInfo("ruta", ["op"])
       //this.storageService.syncChangesTarifasGral<TarifaGralCliente>('tarifasEspCliente');
       //this.storageService.syncChangesTarifasGral<TarifaPersonalizadaCliente>('tarifasPersCliente');
       //this.storageService.syncChangesTarifasEspCliente<TarifaPersonalizadaCliente>('tarifasPersCliente');

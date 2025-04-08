@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnInit, ViewEncapsulation } from '@angular/core';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
@@ -15,7 +15,9 @@ import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { Subject, takeUntil } from 'rxjs';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { ConIdType } from 'src/app/interfaces/conId';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
+
+
 
 @Component({
   selector: 'app-tablero-op',
@@ -23,6 +25,7 @@ import { ConIdType } from 'src/app/interfaces/conId';
   styleUrls: ['./tablero-op.component.scss']
 })
 export class TableroOpComponent implements OnInit {
+
 
   btnConsulta:boolean = false;
   modo : string = "operaciones"
@@ -38,9 +41,9 @@ export class TableroOpComponent implements OnInit {
   $choferes!: ConIdType<Chofer>[];
   cantPorPagina: boolean = false;
   $proveedores!: ConIdType<Proveedor>[];
-  $opActivas!: Operacion[];
-  $opFiltradas!: Operacion[];
-  opEditar!: Operacion;
+  $opActivas!: ConId<Operacion>[];
+  $opFiltradas!: ConId<Operacion>[];
+  opEditar!: ConId<Operacion>;
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];
@@ -93,7 +96,7 @@ export class TableroOpComponent implements OnInit {
   clientesFiltrados!: Cliente[];
   choferesFiltrados!: Chofer[];
   
-  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, ){}
+  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private el: ElementRef){}
   
   ngOnInit(): void {
    /*  this.storageService.opTarEve$
@@ -146,7 +149,7 @@ export class TableroOpComponent implements OnInit {
     });
    
     //¿PORQUE?
-    this.storageService.getObservable<Operacion>('operaciones')
+    this.storageService.getObservable<ConId<Operacion>>('operaciones')
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if(data){
@@ -172,9 +175,13 @@ export class TableroOpComponent implements OnInit {
       //this.armarTabla();
       this.filtrarEstado(this.estadoFiltrado)
     });    */
+
+
+    
     
      
   }
+
 
 /*   actualizarEstadoOp(operaciones: Operacion[]): Operacion[] {
     return operaciones.map(operacion => {
