@@ -198,28 +198,28 @@ export class EditarTarifaOpComponent implements OnInit {
 
       console.log("this.facDetallada: ", this.facDetallada);
       console.log("this.operacion: ", this.operacion);      
-      this.storageService.updateItem(
+      /* this.storageService.updateItem(
         this.componente, 
         this.facDetallada, 
         this.facDetallada.idFacturaOp, 
         "EDITAR", 
-        this.componente === "facturaOpCliente" ? `Edición de Informe de Operación del Cliente ${this.getClienteId(this.facDetallada.idCliente)}` : this.componente === "facturaOpChofer" ? `Edición de Informe de Operación del Chofer ${this.getChoferId(this.facDetallada.idChofer)}` : `Edición de Informe de Operación del Proveedor ${this.getProveedorId(this.facDetallada.idProveedor)}`);
-      this.storageService.updateItem("operaciones", this.operacion, this.operacion.idOperacion,"EDITAR", "Edición de Operación desde Liquidación");
+        this.componente === "facturaOpCliente" ? `Edición de Informe de Operación del Cliente ${this.getClienteId(this.facDetallada.idCliente)}` : this.componente === "facturaOpChofer" ? `Edición de Informe de Operación del Chofer ${this.getChoferId(this.facDetallada.idChofer)}` : `Edición de Informe de Operación del Proveedor ${this.getProveedorId(this.facDetallada.idProveedor)}`); */
+      //this.storageService.updateItem("operaciones", this.operacion, this.operacion.idOperacion,"EDITAR", "Edición de Operación desde Liquidación");
       switch(this.fromParent.origen){
         case "clientes":{
           if(this.operacion.chofer.idProveedor === 0){
-            this.storageService.updateItem("facturaOpChofer", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
+            //this.storageService.updateItem("facturaOpChofer", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
           } else {
-            this.storageService.updateItem("facturaOpProveedor", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
+            //this.storageService.updateItem("facturaOpProveedor", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
           }          
           break;
         };
         case "choferes":{
-          this.storageService.updateItem("facturaOpCliente", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
+          //this.storageService.updateItem("facturaOpCliente", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
           break;
         }
         case "proveedores":{
-          this.storageService.updateItem("facturaOpCliente", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
+          //this.storageService.updateItem("facturaOpCliente", this.facContraParte, this.facContraParte.idFacturaOp, "INTERNA", "");
           break;
         }
         default:{

@@ -71,6 +71,7 @@ import { LimboComponent } from './limbo/limbo.component';
 
 
 
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -95,6 +96,7 @@ import { LimboComponent } from './limbo/limbo.component';
     LoginHeaderComponent,
     CargaComponent,
     LimboComponent,
+    
     
 
    

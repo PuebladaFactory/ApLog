@@ -8,7 +8,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoProveedoresComponent } from '../modal-contacto-proveedores/modal-contacto-proveedores.component';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
-import { ConId } from 'src/app/interfaces/conId';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
 
 @Component({
@@ -22,12 +22,12 @@ export class ProveedoresAltaComponent implements OnInit {
   componente:string = "proveedores"
   form:any;
   formContacto:any;
-  proveedor!: ConId<Proveedor>;
+  proveedor!: ConIdType<Proveedor>;
   contactos: Contacto[] = [];
   mostrarFormulario: boolean = false;
   formTipoTarifa:any;
   soloVista:boolean = false;
-  proveedorEditar!: ConId<Proveedor>;
+  proveedorEditar!: ConIdType<Proveedor>;
   $provincias:any;
   $provinciaSeleccionadaF: string = "";
   $municipiosF!:any;
@@ -120,6 +120,7 @@ export class ProveedoresAltaComponent implements OnInit {
         this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
         this.proveedor.condFiscal = this.condFiscal;
         this.proveedor.tarifaAsignada = this.proveedorEditar.tarifaAsignada;
+        this.proveedor.idTarifa = this.proveedorEditar.idTarifa;
        console.log(this.proveedor);      
         this.addItem("Edicion");        
         this.activeModal.close();    
@@ -141,6 +142,7 @@ export class ProveedoresAltaComponent implements OnInit {
         this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
         this.proveedor.condFiscal = this.condFiscal;
         this.proveedor.tarifaAsignada = tarifaSeleccionada.general ? tarifaGeneral[0] === null ? false : true : false;
+        this.proveedor.idTarifa = tarifaSeleccionada.general? tarifaGeneral[0] === null ? 0 : tarifaGeneral[0].idTarifa : 0;
         console.log(this.proveedor);      
         this.addItem("Alta");        
         this.activeModal.close();    
@@ -233,7 +235,8 @@ export class ProveedoresAltaComponent implements OnInit {
         if(modo === "Alta")   {
           this.storageService.addItem(this.componente, this.proveedor, this.proveedor.idProveedor, "ALTA", `Alta de Proveedor ${this.proveedor.razonSocial}`)
         } else if (modo === "Edicion"){
-          this.storageService.updateItem(this.componente, this.proveedor, this.proveedor.idProveedor,"EDITAR", `Edición de Proveedor ${this.proveedor.razonSocial}`)
+          let {id, type, ...proveedor } = this.proveedor
+          this.storageService.updateItem(this.componente, proveedor, this.proveedor.idProveedor, "EDITAR", `Edición de Proveedor ${this.proveedor.razonSocial} editado`, this.proveedor.id)          
         }              
         Swal.fire({
           title: "Confirmado",

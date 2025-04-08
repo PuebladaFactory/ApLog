@@ -85,7 +85,7 @@ export class TableroLegajosComponent implements OnInit {
     }
     console.log("legajo desp", legajo);
     
-    this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "INTERNA", "")
+    //this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "INTERNA", "")
   }
 
   getDocumento(documentacion: Documentacion[], titulo: string): Documentacion | undefined {
