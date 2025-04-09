@@ -33,6 +33,10 @@ body.modal-open {
   overflow: visible !important;
 }
 
+body{
+  padding-right: 0;
+}
+
 .custom-offcanvas {
   max-width: 200px; /* Ancho personalizado */
 }

@@ -52,13 +52,13 @@
             </thead>
             <tbody formArrayName="choferes">
                 <tr *ngFor="let choferForm of choferesFormArray.controls; let i = index" [formGroupName]="i">
-                    <td class="align-middle">
+                    <td class="align-middle" [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
                       <input type="checkbox" formControlName="seleccionado">
                     </td>
-                    <td class="align-middle isDisabled">
+                    <td class="align-middle isDisabled"   [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
                       <input type="text" formControlName="nombre">                        
                     </td>
-                    <td class="align-middle">
+                    <td class="align-middle"   [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
                       <select class="form-select" (change)="changeVehiculo(i,$event)" >
                         <option value="">{{choferForm.get('vehiculoSeleccionado')?.value.length === 1 ? choferForm.get('vehiculoSeleccionado')?.value[0].dominio : "Elegir Vehiculo" }}  </option>
                         <option *ngFor="let vehiculo of choferForm.get('vehiculoSeleccionado')?.value" [value]="vehiculo.dominio">
@@ -66,17 +66,17 @@
                         </option>
                       </select>
                     </td>                    
-                    <td class="align-middle">
+                    <td class="align-middle" [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
                       {{choferForm.get('tarifa')?.value}}
                     </td>
-                    <td class="align-middle">
+                    <td class="align-middle"  [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
                         <select formControlName="acompaniante" class="form-select" aria-label="Default select example" (change)="selectAcompaniante(i, $event)">
                             <!-- <option value="">Seleccione</option> -->
                             <option value="true">Si</option>
                             <option value="false">No</option>
                         </select>
                     </td>
-                    <td class="align-middle" [ngClass]="{'isDisabled': !tPersonalizada}">                        
+                    <td class="align-middle" [ngClass]="{'isDisabled': !tPersonalizada}"  [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">                        
                         <select class="form-select" (change)="changeSeccion(i, $event)">
                             <option value="">{{tPersonalizada ? "Elija la sección" : "Sin datos"}} </option>
                             <option *ngFor="let seccion of tarifaPersonalizada?.secciones" [value]="seccion.orden">
@@ -84,7 +84,7 @@
                             </option>
                         </select>
                     </td>
-                    <td class="align-middle" [ngClass]="{'isDisabled': !tPersonalizada}">
+                    <td class="align-middle" [ngClass]="{'isDisabled': !tPersonalizada}"  [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
                         <select formControlName="categoria" class="form-select " (change)="changeCategoria(i,$event)">
                             <option selected>{{tPersonalizada ? "Elija la sección" : "Sin datos"}}</option>                              
                             <option *ngFor="let categoria of seccionElegida?.categorias" [value]="categoria.orden">
@@ -92,10 +92,10 @@
                             </option>
                         </select>
                     </td>                    
-                    <td class="align-middle">
+                    <td class="align-middle"  [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
                       <input class="form-control" formControlName="hojaRuta" rows="2">
                     </td>
-                    <td class="align-middle">
+                    <td class="align-middle"  [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
                       <textarea class="form-control" formControlName="observaciones" rows="2"></textarea>
                     </td>
                   </tr>

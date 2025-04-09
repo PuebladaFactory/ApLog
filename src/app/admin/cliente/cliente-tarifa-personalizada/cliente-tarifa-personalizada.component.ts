@@ -11,6 +11,7 @@ import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { Subject, takeUntil } from 'rxjs';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
   selector: 'app-cliente-tarifa-personalizada',
@@ -184,7 +185,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   addItem(): void {
-    let clientes: Cliente [] = this.storageService.loadInfo("clientes");
+    let clientes: ConIdType<Cliente> [] = this.storageService.loadInfo("clientes");
     Swal.fire({
       title: "¿Confirmar el alta de la tarifa?",
       //text: "You won't be able to revert this!",
@@ -202,10 +203,11 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
         }        
         this.storageService.addItem(this.componente, this.nuevaTarifa, this.nuevaTarifa.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.getClientePers(this.clienteSeleccionado[0].idCliente)}`);
         if(clientes.length > 0){
-          clientes.forEach((c:Cliente)=>{
+          clientes.forEach((c:ConIdType<Cliente>)=>{
             if(c.tarifaTipo.personalizada && c.idCliente === this.clienteSeleccionado[0].idCliente && !c.tarifaAsignada){
               c.tarifaAsignada = true;
-              //this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
+              let {id, type, ...cl} = c
+              this.storageService.updateItem("clientes", cl, c.idCliente, "INTERNA", "", c.id);
             }
           })
       }      

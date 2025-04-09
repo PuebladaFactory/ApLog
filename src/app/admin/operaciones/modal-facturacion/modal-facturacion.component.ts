@@ -30,7 +30,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
   $choferes!: Chofer[];
   acompaniante: boolean = false;
   vehiculosChofer: boolean = false;
-  tarifaClienteSel!: ConIdType<TarifaPersonalizadaCliente>;
+  tarifaClienteSel!: ConIdType<TarifaPersonalizadaCliente> | undefined;
   mostrarCategoria: boolean = false;
   seccionElegida!: Seccion;
   categoriaElegida: number = 0;
@@ -83,21 +83,35 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
     if(this.op.tarifaTipo.personalizada){
       //this.storageService.getElemntByIdLimit("tarifasPersCliente", "idCliente", "idTarifa", this.op.cliente.idCliente, "ultTarifaPersCliente" )      
       //this.dbFirebase.getMostRecentId<TarifaPersonalizadaCliente>("tarifasPersCliente","idTarifa","idCliente",this.op.cliente.idCliente) //buscamos la tarifa especial      
-       this.storageService.getObservable<ConIdType<TarifaPersonalizadaCliente>>("tarifasPersCliente")
+       /* this.storageService.getObservable<ConIdType<TarifaPersonalizadaCliente>>("tarifasPersCliente")
       .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
       .subscribe(data=>{        
         if(data){
           let tarifas : any[] = data 
           console.log("tarifas pers clientes", tarifas);
           this.tarifaClienteSel = tarifas.find((tarifa: ConIdType<TarifaPersonalizadaCliente>)  => tarifa.idCliente === this.op.cliente.idCliente);            
-          ////console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
+          console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
           //this.tarifaClienteSel.secciones = this.tarifaClienteSel.secciones || []; // Si secciones no está definido, lo inicializamos como array vacío  
-          /* if(this.fromParent.modo === "cerrar"){
-            this.storageService.setInfo("tPersCliente", [this.tarifaClienteSel]);
-          } */
+          
           this.armarForm();   
         }        
-      });
+      }); */
+
+      
+        let tarifas : ConIdType<TarifaPersonalizadaCliente>[] = this.storageService.loadInfo("tarifasPersCliente")
+        console.log("tarifas pers clientes", tarifas);
+        if(tarifas.length > 0){
+          this.tarifaClienteSel = tarifas.find((tarifa: ConIdType<TarifaPersonalizadaCliente>)  => tarifa.idCliente === this.op.cliente.idCliente);            
+          console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
+        } else {
+          this.mensajesError("no hay tarifas personalizadas")
+        }
+        
+        //this.tarifaClienteSel.secciones = this.tarifaClienteSel.secciones || []; // Si secciones no está definido, lo inicializamos como array vacío  
+        /* if(this.fromParent.modo === "cerrar"){
+          this.storageService.setInfo("tPersCliente", [this.tarifaClienteSel]);
+        } */
+        this.armarForm();   
        
     } else {
       this.armarForm();
@@ -131,7 +145,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
     this.aPagar = this.formatearValor(this.op.valores.chofer.aPagar);
     this.tarifaPersonalizada = this.op.tarifaPersonalizada;
     //////console.log("1)", this.tarifaPersonalizada);
-    if(this.op.tarifaTipo.personalizada){
+    if(this.op.tarifaTipo.personalizada && this.tarifaClienteSel){
       this.seccionElegida = this.tarifaClienteSel.secciones[this.op.tarifaPersonalizada.seccion - 1];
       //this.tPersonalizada = this.op.tPersonalizada;
     }
@@ -175,31 +189,41 @@ changeSecion(e:any){
         categoria: "Sin datos",
       });
   }
-  this.seccionElegida = this.tarifaClienteSel.secciones[e.target.value - 1];
-  this.tarifaPersonalizada = {
-    seccion : Number(e.target.value),
-    categoria: this.tarifaPersonalizada.categoria,
-    nombre: this.tarifaPersonalizada.nombre,
-    aCobrar: this.tarifaPersonalizada.aCobrar,
-    aPagar: this.tarifaPersonalizada.aPagar
+  if(this.tarifaClienteSel){
+    this.seccionElegida = this.tarifaClienteSel.secciones[e.target.value - 1];
+    this.tarifaPersonalizada = {
+      seccion : Number(e.target.value),
+      categoria: this.tarifaPersonalizada.categoria,
+      nombre: this.tarifaPersonalizada.nombre,
+      aCobrar: this.tarifaPersonalizada.aCobrar,
+      aPagar: this.tarifaPersonalizada.aPagar
+    }    
+  }else{
+    this.mensajesError("no hay tarifa personalizada seleccionada")
   }
+  
 
 
 }
 
 changeCategoria(e:any){
   //////console.log("categoria: ", e.target.value);
-  this.tarifaPersonalizada = {
-    seccion : this.tarifaPersonalizada.seccion,
-    categoria: Number(this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[Number(e.target.value)-1].orden),
-    nombre: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].nombre,
-    aCobrar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aCobrar,
-    aPagar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aPagar,
+  if(this.tarifaClienteSel){
+    this.tarifaPersonalizada = {
+      seccion : this.tarifaPersonalizada.seccion,
+      categoria: Number(this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[Number(e.target.value)-1].orden),
+      nombre: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].nombre,
+      aCobrar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aCobrar,
+      aPagar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aPagar,
+    }
+    //console.log("tarifa personalizada: ", this.tPersonalizada);
+    this.op.tarifaPersonalizada = this.tarifaPersonalizada;
+    this.aCobrar = this.formatearValor(this.tarifaPersonalizada.aCobrar);
+    this.aPagar = this.formatearValor(this.tarifaPersonalizada.aPagar);  
+  } else {
+    this.mensajesError("no hay tarifa personalizada seleccionada")
   }
-  //console.log("tarifa personalizada: ", this.tPersonalizada);
-  this.op.tarifaPersonalizada = this.tarifaPersonalizada;
-  this.aCobrar = this.formatearValor(this.tarifaPersonalizada.aCobrar);
-  this.aPagar = this.formatearValor(this.tarifaPersonalizada.aPagar);  
+  
 }
 
 onSubmit(){
