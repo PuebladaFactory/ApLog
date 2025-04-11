@@ -65,7 +65,7 @@ export class FacturacionGeneralComponent implements OnInit {
       if(data){
         this.$facturasChofer = data; 
         this.$facturasChofer = this.$facturasChofer.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-        this.calcularIngresos();     
+        this.calcularPagos();     
       } else {
         this.mensajesError("error: facturaChofer")
       }
@@ -80,7 +80,7 @@ export class FacturacionGeneralComponent implements OnInit {
       if(data){
         this.$facturasProveedor = data; 
         this.$facturasProveedor = this.$facturasProveedor.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-        this.calcularIngresos();     
+        this.calcularPagos();     
       } else {
         this.mensajesError("error: facturaChofer")
       }      
@@ -147,7 +147,8 @@ export class FacturacionGeneralComponent implements OnInit {
         }        
       });      
     }    
-
+    console.log("this.totalPagosOp", this.totalPagosOp);
+    
   }
 
   formatearValor(valor: number) : any{

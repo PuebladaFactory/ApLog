@@ -70,7 +70,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
           .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
           .subscribe(data => {      ///
             this.idChoferEsp = data
-            //////console.log("0A)",this.idChoferEsp);                
+            console.log("0A)",this.idChoferEsp);                
             //this.storageService.getMostRecentItemId("tarifasEspChofer","idTarifa","idChofer",this.idChoferEsp[0]);
             //this.storageService.syncChangesByOneElemId<TarifaGralCliente>("tarifasEspChofer","idTarifa","idChofer",this.idChoferEsp[0]);
             this.storageService.choferes$
@@ -112,12 +112,13 @@ export class ChoferesTarifaGralComponent implements OnInit {
           .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
           .subscribe(data => {
             if (data) {
+              //console.log("0)this.idChoferEsp[0]", this.idChoferEsp[0]);
               
-              console.log("data tEspecial", data);
+              //console.log("1)data tEspecial", data);
               let tarifas : any[] = data 
-              console.log("tarifas esp chofer", tarifas);
-              this.ultTarifaEspecial = tarifas.find((tarifa: TarifaGralCliente)  => tarifa.idCliente === this.idClienteEsp[0]);  
-              console.log("ultTarifaEspecial", this.ultTarifaEspecial);
+              //console.log("2)tarifas esp chofer", tarifas);
+              this.ultTarifaEspecial = tarifas.find((tarifa: TarifaGralCliente)  => tarifa.idChofer === this.idChoferEsp[0]);  
+              //console.log("3)ultTarifaEspecial", this.ultTarifaEspecial);
               if(!this.ultTarifaEspecial){
 
               }
@@ -208,10 +209,12 @@ export class ChoferesTarifaGralComponent implements OnInit {
   inicializarTabla() {  
     
     if(this.tEspecial && this.ultTarifaEspecial){
-    //console.log("4) TARIFA ESPECIAL: ", this.ultTarifaEspecial );
+      //console.log("4) TARIFA ESPECIAL: ", this.ultTarifaEspecial );
       this.ultTarifa = this.ultTarifaEspecial;
+      //console.log("4.5) TARIFA ESPECIAL: ", this.ultTarifa );
+      //this.ultTarifa = this.ultTarifaGralChofer;
     }else {
-      console.log("5) por aca no tiene que pasar" );
+      //console.log("5) por aca no tiene que pasar" );
       this.ultTarifa = this.ultTarifaGralChofer;
     }
    
