@@ -10,6 +10,7 @@ import { TarigaGralEdicionComponent } from 'src/app/shared/tariga-gral-edicion/t
 import { Subject, takeUntil } from 'rxjs';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { ConIdType } from 'src/app/interfaces/conId';
+import { Chofer } from 'src/app/interfaces/chofer';
 
 @Component({
   selector: 'app-proveedores-tarifa-gral',
@@ -535,6 +536,7 @@ onGenerarNuevaTarifaAutomatica() {
   addItem(){    
     ////console.log("1)",this.tEspecial);
     let proveedores: ConIdType<Proveedor> [] = this.storageService.loadInfo("proveedores");
+    let choferes: ConIdType<Chofer> [] = this.storageService.loadInfo("choferes")
     if(!this.tEspecial){
       if(this.ultTarifaGralProveedor){
         this.storageService.addItem("historialTarifasGralProveedor", this.ultTarifaGralProveedor, this.ultTarifaGralProveedor.idTarifa, "INTERNA", "" );
@@ -549,7 +551,14 @@ onGenerarNuevaTarifaAutomatica() {
             p.tarifaAsignada = true;            
             p.idTarifa = this.nuevaTarifaGral.idTarifa;
             let {id, type, ...proveedor } = p
-            this.storageService.updateItem("proveedores", proveedor, p.idProveedor,"INTERNA", "", p.id);
+            this.storageService.updateItem("proveedores", proveedor, p.idProveedor,"INTERNA", "", p.id);            
+          }
+        })
+        choferes.forEach((c:ConIdType<Chofer>)=>{
+          if(c.tarifaTipo.general){
+            c.idTarifa = this.nuevaTarifaGral.idTarifa;
+            let{id, type, ...ch} = c
+            this.storageService.updateItem("proveedores", ch, c.idChofer,"INTERNA", "", c.id);       
           }
         })
     }      
@@ -576,7 +585,15 @@ onGenerarNuevaTarifaAutomatica() {
             this.storageService.updateItem("proveedores", proveedor, p.idProveedor,"INTERNA", "", p.id);
           }
         })
-      }      
+        choferes.forEach((c:ConIdType<Chofer>)=>{
+          if(c.tarifaTipo.especial && c.idProveedor === this.idProveedorEsp[0]){
+            c.idTarifa = this.nuevaTarifaGral.idTarifa;
+            let{id, type, ...ch} = c
+            this.storageService.updateItem("proveedores", ch, c.idChofer,"INTERNA", "", c.id);       
+          }
+        })
+      }    
+        
     }
     //   
   }
