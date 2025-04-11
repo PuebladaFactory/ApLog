@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer } from 'src/app/interfaces/chofer';
+import { ConIdType } from 'src/app/interfaces/conId';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -12,8 +13,8 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class ModalChoferesComponent implements OnInit {
   
   @Input() fromParent:any
-  choferes!: Chofer[];
-  legajos!: Legajo[];
+  choferes!: ConIdType<Chofer>[];
+  legajos!: ConIdType<Legajo>[];
   searchText: string = "";
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService,){}
@@ -31,16 +32,17 @@ export class ModalChoferesComponent implements OnInit {
     return chofer[0].apellido + " " + chofer[0].nombre;
   }
 
-  getLegajo(id:number):Legajo {
-    let legajo: Legajo[] = this.legajos.filter(l=> l.idChofer=== id);
+  getLegajo(id:number):ConIdType<Legajo> {
+    let legajo: ConIdType<Legajo>[] = this.legajos.filter(l=> l.idChofer=== id);
     return legajo[0];
   }
 
-  actualizarLegajo(legajo:Legajo){
+  actualizarLegajo(legajo:ConIdType<Legajo>){
     console.log("legajo antes", legajo);
     legajo.visible = !legajo.visible;
     console.log("legajo desp", legajo);
-    //this.storageService.updateItem("legajos", legajo, legajo.idLegajo, "INTERNA", "")
+    let {id, type, ...leg} = legajo
+    this.storageService.updateItem("legajos", leg, legajo.idLegajo, "INTERNA", "", legajo.id);
   }
 
 
