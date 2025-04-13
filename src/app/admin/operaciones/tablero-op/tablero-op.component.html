@@ -1,10 +1,19 @@
 <div class="mt-2">
+
+    <div class="d-flex justify-content-between w-100">
+        <div>
+            <button  class="btn btn-primary boton-alta mt-2" type="button" id="" (click)="modalAltaOp()">
+                {{ buttonNameAlta }}
+            </button>
+            
+            <app-btn-editar name="cargaMultiple" class="ms-3" (click)="modalCargaMultiple()" ></app-btn-editar>
+        </div>
+        <button  class="btn btn-primary boton-alta mt-2" type="button" id="" (click)="descargarOp()">
+            Descargar Op
+        </button>
+    </div>
     
-    <button  class="btn btn-primary boton-alta mt-2" type="button" id="" (click)="modalAltaOp()">
-        {{ buttonNameAlta }}
-    </button>
     
-    <app-btn-editar name="cargaMultiple" class="ms-3" (click)="modalCargaMultiple()" ></app-btn-editar>
 
     <!-- <button class="btn btn-primary" (click)="actualizarOp()">Actualizar Op</button> -->
     <br>

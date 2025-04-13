@@ -16,6 +16,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 
 
 
@@ -96,7 +97,7 @@ export class TableroOpComponent implements OnInit {
   clientesFiltrados!: Cliente[];
   choferesFiltrados!: Chofer[];
   
-  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private el: ElementRef){}
+  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private el: ElementRef, private excelServ: ExcelService){}
   
   ngOnInit(): void {
    /*  this.storageService.opTarEve$
@@ -825,6 +826,10 @@ export class TableroOpComponent implements OnInit {
     })
     
     
+  }
+
+  descargarOp(){
+    this.excelServ.generarInformeOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta,this.$opFiltradas)
   }
   
 
