@@ -145,7 +145,8 @@ async exportToExcelCliente(
   factura: FacturaCliente,
   facturasOp: FacturaOp[],
   clientes: Cliente[],
-  choferes: Chofer[]
+  choferes: Chofer[], 
+  modo:string,
 ): Promise<void> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Factura');
@@ -161,7 +162,7 @@ async exportToExcelCliente(
   // Título
   worksheet.mergeCells('A5:F5');
   const titleCell = worksheet.getCell('A5');
-  titleCell.value = `Liquidación de Servicios ${factura.razonSocial}`;
+  titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.razonSocial}` : `Proforma ${factura.razonSocial}`;
   titleCell.font = { size: 16, bold: true };
 
   // Subtítulo
@@ -173,7 +174,7 @@ async exportToExcelCliente(
   // Subtítulo adicional
   worksheet.mergeCells('A7:F7');
   const subTitleCell2 = worksheet.getCell('A7');
-  subTitleCell2.value = `${factura.idFacturaCliente}`;
+  subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaCliente}`: '';
   subTitleCell2.font = { size: 8 };
 
   // Encabezados
@@ -316,12 +317,12 @@ async exportToExcelCliente(
 
   // Guardar archivo
   const buffer = await workbook.xlsx.writeBuffer();
-  FileSaver.saveAs(new Blob([buffer]), `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx`);
+  FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.razonSocial}_${factura.fecha}.xlsx`);
 }
 
 
 // Reportes EXCEL para los choferes
-async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clientes:Cliente[], choferes: Chofer[]): Promise<void> {  
+async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clientes:Cliente[], choferes: Chofer[], modo:string,): Promise<void> {  
 
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Factura');
@@ -337,7 +338,7 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
   // Título
   worksheet.mergeCells('A5:F5');
   const titleCell = worksheet.getCell('A5');
-  titleCell.value = `Liquidación de Servicios ${factura.apellido} ${factura.nombre} `;
+  titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.apellido} ${factura.nombre} ` : `Proforma ${factura.apellido} ${factura.nombre} `;
   titleCell.font = { size: 16, bold: true };
 
   // Subtítulo
@@ -349,7 +350,7 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
   // Subtítulo adicional
   worksheet.mergeCells('A7:F7');
   const subTitleCell2 = worksheet.getCell('A7');
-  subTitleCell2.value = `${factura.idFacturaChofer}`;
+  subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaChofer}` : '';
   subTitleCell2.font = { size: 8 };
 
   // Encabezados
@@ -492,14 +493,14 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
 
   // Guardar archivo
   const buffer = await workbook.xlsx.writeBuffer();
-    FileSaver.saveAs(new Blob([buffer]), `Detalle_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx`);
+    FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx` : `Proforma_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx`);
 
 }
 
 
 
 ////////////// Reportes EXCEL para los proveedores
-async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], clientes: Cliente[], choferes: Chofer[]): Promise<void> {
+async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], clientes: Cliente[], choferes: Chofer[], modo:string): Promise<void> {
   
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Factura');
@@ -515,7 +516,7 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
   // Título
   worksheet.mergeCells('A5:F5');
   const titleCell = worksheet.getCell('A5');
-  titleCell.value = `Liquidación de Servicios ${factura.razonSocial}`;
+  titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.razonSocial}` : `Proforma ${factura.razonSocial}`;
   titleCell.font = { size: 16, bold: true };
 
   // Subtítulo
@@ -527,7 +528,7 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
   // Subtítulo adicional
   worksheet.mergeCells('A7:F7');
   const subTitleCell2 = worksheet.getCell('A7');
-  subTitleCell2.value = `${factura.idFacturaProveedor}`;
+  subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaProveedor}` : '';
   subTitleCell2.font = { size: 8 };
 
   // Encabezados
@@ -670,7 +671,7 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
 
   // Guardar archivo
   const buffer = await workbook.xlsx.writeBuffer();
-  FileSaver.saveAs(new Blob([buffer]), `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx`);
+  FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.razonSocial}_${factura.fecha}.xlsx`);
 
 }
 

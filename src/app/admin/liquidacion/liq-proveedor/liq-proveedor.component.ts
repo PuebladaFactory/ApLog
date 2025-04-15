@@ -498,10 +498,13 @@ export class LiqProveedorComponent implements OnInit {
       modalRef.result.then(
         (result) => {
           console.log("resultado factura proveedor: ",result);
-          if(result.modo === "cerrar"){
+          if(result.modo === "cerrar" || result.modo === "proforma"){
             this.facturaProveedor = result.factura;
-
-            this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA" );
+            let accion: string = result.accion;
+            if(result.modo === "cerrar"){
+              this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA" );
+            }
+            
             let titulo = result.titulo
             Swal.fire({
                 title: `¿Desea imprimir el detalle del Proveedor?`,
@@ -515,16 +518,18 @@ export class LiqProveedorComponent implements OnInit {
               }).then((result) => {
                 if (result.isConfirmed) {     
                   if(titulo === "excel"){
-                    this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
+                      this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
                     }else if (titulo === "pdf"){          
-                    this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
+                      this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
                   }
                 }
               });   
 
             
-
-            this.eliminarFacturasOp();
+              if(result.modo === "cerrar"){
+                this.eliminarFacturasOp();
+              }
+            
           }
          
         },

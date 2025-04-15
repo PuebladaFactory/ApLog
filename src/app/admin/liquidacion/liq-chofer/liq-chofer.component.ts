@@ -497,10 +497,13 @@ export class LiqChoferComponent implements OnInit {
         (result) => {
           //console.log(result);
 
-          if(result.modo === "cerrar"){
+          if(result.modo === "cerrar" || "proforma"){
             this.facturaChofer = result.factura;
-
-            this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer, "ALTA");
+            let accion: string = result.accion;
+            if(result.modo === "cerrar"){
+              this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer, "ALTA");
+            }
+            
             let titulo = result.titulo
             Swal.fire({
                 title: `¿Desea imprimir el detalle del Chofer?`,
@@ -514,15 +517,17 @@ export class LiqChoferComponent implements OnInit {
               }).then((result) => {
                 if (result.isConfirmed) {     
                   if(titulo === "excel"){
-                    this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);
+                      this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes, accion);
                     }else if (titulo === "pdf"){
-                    this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);        
+                      this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);        
                     } 
                 }
               });   
             
-
-            this.eliminarFacturasOp();
+              if(result.modo === "cerrar"){
+                this.eliminarFacturasOp();
+              }
+            
           }
           
           

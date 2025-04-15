@@ -201,7 +201,7 @@ export class FacturarOpComponent implements OnInit {
   // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
     return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
   }
-  onSubmit(titulo:string) {
+  onSubmit(titulo:string, accion:string) {
     
     //console.log("columnas seleccionadas", this.columnasSeleccionadas);
     let colSel: string [] = [];
@@ -211,7 +211,7 @@ export class FacturarOpComponent implements OnInit {
       ////console.log()(this.facturasLiquidadasCliente);
       
       Swal.fire({
-        title: "¿Desea generar la liquidación de las operaciones seleccionadas?",
+        title: accion === 'factura' ? '¿Desea generar la liquidación de las operaciones seleccionadas?' : '¿Desea generar la proforma de las operaciones seleccionadas?',
         text: "Esta acción no se podrá revertir",
         icon: "warning",
         showCancelButton: true,
@@ -220,8 +220,7 @@ export class FacturarOpComponent implements OnInit {
         confirmButtonText: "Guardar",
         cancelButtonText: "Cancelar"
       }).then((result) => {
-        if (result.isConfirmed) {
-          this.modo = "cerrar"
+        if (result.isConfirmed) {          
           ////////console.log("op: ", this.op);
           this.facLiquidadas.forEach((factura: FacturaOp) => {                
             this.idOperaciones.push(factura.idOperacion)
@@ -238,6 +237,7 @@ export class FacturarOpComponent implements OnInit {
           });
 
           valores.total -= this.totalDescuento
+          this.modo = accion === 'factura' ? 'cerrar' : 'proforma';
 
           switch(this.fromParent.origen){
             case "clientes":{
@@ -270,7 +270,8 @@ export class FacturarOpComponent implements OnInit {
               factura: this.factura,
               titulo: titulo,
               modo: this.modo,
-              columnas: colSel
+              columnas: colSel,
+              accion: accion,
             }
 
             this.activeModal.close(respuesta);
@@ -461,6 +462,12 @@ export class FacturarOpComponent implements OnInit {
     }
 
     this.factura = this.facturaProveedor;
+  }
+
+  proforma(){
+    switch(this.fromParent.origen){
+
+    }
   }
 
 

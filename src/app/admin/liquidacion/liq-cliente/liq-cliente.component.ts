@@ -510,11 +510,13 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         (result) => {
           ////console.log(result);
           
-          if(result.modo === "cerrar"){
+          if(result.modo === "cerrar" || result.modo === "proforma"){
             let titulo = result.titulo
             this.facturaCliente = result.factura;            
-
-            this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
+            let accion: string = result.accion;
+            if(result.modo === "cerrar"){
+              this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
+            }            
 
             Swal.fire({
                   title: `¿Desea imprimir el detalle del Cliente?`,
@@ -528,15 +530,17 @@ selectAllCheckboxes(event: any, idCliente: number): void {
                 }).then((result) => {
                   if (result.isConfirmed) {     
                     if(titulo === "excel"){
-                      this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);
+                        this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);
                       }else if (titulo === "pdf"){
-                      this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);        
+                        this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);        
                       }      
                   }
                 });   
 
-
-            this.eliminarFacturasOp();
+                if(result.modo === "cerrar"){
+                  this.eliminarFacturasOp();
+                }
+            
           } 
           },
         (reason) => {}
