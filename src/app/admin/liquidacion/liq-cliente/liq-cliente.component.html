@@ -185,7 +185,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr *ngFor="let factura of facturasPorCliente.get(cliente.idCliente) | filter: searchText2;">
+                                <tr *ngFor="let factura of facturasPorCliente.get(cliente.idCliente) | filter: searchText2;" [ngClass]="{'isDisabled':factura.proforma}">
                                     <td >
                                         <input type="checkbox" [checked]="factura.liquidacion" (change)="liquidarFac(factura)">
                                     </td>

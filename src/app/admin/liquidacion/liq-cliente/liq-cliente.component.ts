@@ -292,7 +292,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   let facturasCliente = this.facturasPorCliente.get(idCliente);
   ////console.log("2)", facturasCliente);
     facturasCliente?.forEach((factura: FacturaOp) => {
-      factura.liquidacion = seleccion;
+      if(!factura.proforma){
+        factura.liquidacion = seleccion;
+      }
+      
       ////console.log("3)", factura.liquidacion);
      
     });   
@@ -308,10 +311,11 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           cliente.opSinFacturar = 0;
         });   
     } else {
-      cliente.opSinFacturar = 0
+      cliente.opSinFacturar = 0;
+      cliente.opFacturadas = 0
       facturasCliente?.forEach((factura: FacturaOp) => {                
-        cliente.opFacturadas = 0;
-        cliente.opSinFacturar += factura.valores.total;
+        cliente.opFacturadas += (factura.proforma ? factura.valores.total : 0);
+        cliente.opSinFacturar += (!factura.proforma ? factura.valores.total : 0);
       });   
     }
     /* facturasCliente?.forEach((factura: FacturaOp) => {
@@ -383,7 +387,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     this.razonSocFac = cliente.razonSocial;
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasCliente = facturasIdCliente.filter((factura: FacturaOp) => {
-        return factura.liquidacion === true;
+        return factura.liquidacion === true && factura.proforma === false;
     });
 
     if(this.facturasLiquidadasCliente.length > 0){
@@ -420,7 +424,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
   addItem(item:any, componente:string, idItem:number, accion:string): void {   
     console.log("llamada al storage desde liq-cliente, addItem");
-    this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : `Alta de Factura de Cliente ${item.razonSocial}`);        
+    this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : componente === 'proforma' ? `Proforma de Cliente ${item.razonSocial}` : `Alta de Factura de Cliente ${item.razonSocial}`);        
 
   } 
 
@@ -447,7 +451,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   }
 
   editarOperacionesFac(factura:FacturaOp){
-    factura.idOperacion
+    //factura.idOperacion
     let op:ConId<Operacion>;
     this.dbFirebase
     .obtenerTarifaIdTarifa("operaciones",factura.idOperacion, "idOperacion")
@@ -516,7 +520,13 @@ selectAllCheckboxes(event: any, idCliente: number): void {
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
               this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
-            }            
+            }
+            if(result.modo === "proforma"){
+              this.addItem(this.facturaCliente, "proforma", this.facturaCliente.idFacturaCliente, "ALTA");
+              this.facturasLiquidadasCliente.forEach((factura:FacturaOp)=>{
+                this.actualizarFacOp(factura);        
+              })              
+            }                       
 
             Swal.fire({
                   title: `¿Desea imprimir el detalle del Cliente?`,
@@ -771,5 +781,25 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       );
     }
   }
+
+  actualizarFacOp(factura: FacturaOp){
+    
+    let facOp:ConId<FacturaOp>;
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("facturaOpCliente",factura.idOperacion, "idOperacion")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        facOp = data;
+        console.log("facOp: ", facOp);
+        facOp.proforma = true;
+        facOp.liquidacion = true;
+        let {id, ...fac} = facOp
+        let cliente = this.getCliente(fac.idCliente)
+        this.storageService.updateItem("facturaOpCliente", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${cliente} `, facOp.id);
+        //this.removeItem(factura);
+    });
+    
+  }
+
 
 }
