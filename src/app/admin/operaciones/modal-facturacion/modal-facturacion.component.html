@@ -186,7 +186,7 @@
                                     <form [formGroup]="formTarifaPersonalizada">
                                         <ng-container *ngIf="tarifaClienteSel">
                                             <div class="form-group">
-                                                <label for="Cliente">Secciion</label>
+                                                <label for="Cliente">Sección</label>
                                                 <select class="form-select mb-3" (change)="changeSecion($event)">
                                                     <option [value]="op.tarifaPersonalizada.seccion" selected >{{op.tarifaTipo.personalizada ? 'Seccion ' + op.tarifaPersonalizada.seccion + " : " + tarifaClienteSel.secciones[op.tarifaPersonalizada.seccion - 1].descripcion : 'Sin datos'}}</option>                              
                                                     <option *ngFor="let seccion of tarifaClienteSel?.secciones" [value]="seccion?.orden">

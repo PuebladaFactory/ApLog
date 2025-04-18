@@ -37,6 +37,13 @@ export class LiqGralComponent implements OnInit {
   //totalFacturasLiquidadas: number = 0; // Variable para almacenar el total de las facturas liquidadas
   titulo: string = "liquidacion"
   btnConsulta:boolean = false;
+  tabs = [
+    { id: 'tab1', name: 'Clientes', route: 'liquidacion/clientes'},    
+    { id: 'tab2', name: 'Choferes', route: 'liquidacion/choferes' },    
+    { id: 'tab3', name: 'Proveedores', route: 'liquidacion/proveedores' },    
+    { id: 'tab4', name: 'Proformas', route: 'liquidacion/proformas' },    
+  ];
+  ocultarCalendario: boolean = false;
 
   constructor(private storageService: StorageService, private router: Router){    
   }
@@ -46,21 +53,20 @@ export class LiqGralComponent implements OnInit {
     this.storageService.consultasFacOpCliente$.subscribe(data => {
       this.$facturasOpCliente = data;
       //this.procesarDatosParaTabla()
-    });  */      
+    });  */   
+       
     this.selectTab("tab1");
     //this.consultaMes();
    
   }
 
-  selectTab(tab: string) {
-    this.selectedTab = tab;
-    if (tab === 'tab1') {
-      this.router.navigate(['liquidacion/clientes']);
-    } else if (tab === 'tab2') {
-      this.router.navigate(['liquidacion/choferes']);
-    } else if (tab === 'tab3') {
-      this.router.navigate(['liquidacion/proveedores']);
-    } 
+  selectTab(tabId: string) {
+    this.selectedTab = tabId;
+    if(tabId === 'tab4'){this.ocultarCalendario = true} else {this.ocultarCalendario = false}
+    const tab = this.tabs.find(t => t.id === tabId);
+    if (tab) {
+      this.router.navigate([tab.route]);
+    }
   }
 
   getMsg(msg: any) {

@@ -272,7 +272,10 @@ export class LiqChoferComponent implements OnInit {
     let facturasChofer = this.facturasPorChofer.get(idChofer);
     //console.log("2)", facturasChofer);
       facturasChofer?.forEach((factura: FacturaOp) => {
-        factura.liquidacion = seleccion;
+        if(!factura.proforma){
+          factura.liquidacion = seleccion;
+        }
+        
         //console.log("3)", factura.liquidacion);
        
       });   
@@ -288,10 +291,11 @@ export class LiqChoferComponent implements OnInit {
             chofer.opSinFacturar = 0;
           });   
       } else {
-        chofer.opSinFacturar = 0
+        chofer.opSinFacturar = 0;
+        chofer.opFacturadas = 0;
         facturasChofer?.forEach((factura: FacturaOp) => {                
-          chofer.opFacturadas = 0;
-          chofer.opSinFacturar += factura.valores.total;
+          chofer.opFacturadas += (factura.proforma ? factura.valores.total : 0);
+          chofer.opSinFacturar += (!factura.proforma ? factura.valores.total : 0);
         });   
       }
 
@@ -309,7 +313,7 @@ export class LiqChoferComponent implements OnInit {
      
   }
 
-  mostrarMasDatos(index: number, chofer:any) {   
+  mostrarMasDatos(index: number) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
    ////////console.log()("Chofer: ", chofer);
@@ -368,7 +372,7 @@ export class LiqChoferComponent implements OnInit {
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasChofer = facturasIdChofer.filter((factura: FacturaOp) => {
-        return factura.liquidacion === true;
+        return factura.liquidacion === true && factura.proforma === false;
     });
 
    
@@ -497,14 +501,22 @@ export class LiqChoferComponent implements OnInit {
         (result) => {
           //console.log(result);
 
-          if(result.modo === "cerrar" || "proforma"){
+          if(result.modo === "cerrar" || result.modo === "proforma"){
+            let titulo = result.titulo
             this.facturaChofer = result.factura;
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
               this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer, "ALTA");
             }
+
+            if(result.modo === "proforma"){
+              this.addItem(this.facturaChofer, "proforma", this.facturaChofer.idFacturaChofer, "ALTA");
+              this.facturasLiquidadasChofer.forEach((factura:FacturaOp)=>{
+                this.actualizarFacOp(factura);        
+              })              
+            }     
             
-            let titulo = result.titulo
+            
             Swal.fire({
                 title: `¿Desea imprimir el detalle del Chofer?`,
                 //text: "You won't be able to revert this!",
@@ -528,6 +540,7 @@ export class LiqChoferComponent implements OnInit {
                 this.eliminarFacturasOp();
               }
             
+              this.mostrarMasDatos(this.indiceSeleccionado);
           }
           
           
@@ -752,5 +765,24 @@ export class LiqChoferComponent implements OnInit {
         }
       }
     
-  
+      actualizarFacOp(factura: FacturaOp){
+    
+        let facOp:ConId<FacturaOp>;
+        this.dbFirebase
+        .obtenerTarifaIdTarifa("facturaOpChofer",factura.idOperacion, "idOperacion")
+        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+        .subscribe(data => {      
+            facOp = data;
+            console.log("facOp: ", facOp);
+            facOp.proforma = true;
+            facOp.liquidacion = true;
+            let {id, ...fac} = facOp
+            let chofer = this.getChofer(fac.idChofer)
+            this.storageService.updateItem("facturaOpChofer", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${chofer} `, facOp.id);
+            //this.removeItem(factura);
+        });
+        
+      }
+
+
 }

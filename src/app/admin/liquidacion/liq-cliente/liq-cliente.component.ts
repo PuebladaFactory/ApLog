@@ -312,7 +312,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         });   
     } else {
       cliente.opSinFacturar = 0;
-      cliente.opFacturadas = 0
+      cliente.opFacturadas = 0;
       facturasCliente?.forEach((factura: FacturaOp) => {                
         cliente.opFacturadas += (factura.proforma ? factura.valores.total : 0);
         cliente.opSinFacturar += (!factura.proforma ? factura.valores.total : 0);

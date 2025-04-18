@@ -273,7 +273,10 @@ export class LiqProveedorComponent implements OnInit {
     let facturasProveedor = this.facturasPorProveedor.get(idProveedor);
     //console.log("2)", facturasProveedor);
       facturasProveedor?.forEach((factura: FacturaOp) => {
-        factura.liquidacion = seleccion;
+        if(!factura.proforma){
+          factura.liquidacion = seleccion;
+        }
+        
         //console.log("3)", factura.liquidacion);
        
       });   
@@ -289,10 +292,11 @@ export class LiqProveedorComponent implements OnInit {
           proveedor.opSinFacturar = 0;
           });   
       } else {
-        proveedor.opSinFacturar = 0
-        facturasProveedor?.forEach((factura: FacturaOp) => {                
-          proveedor.opFacturadas = 0;
-          proveedor.opSinFacturar += factura.valores.total;
+        proveedor.opSinFacturar = 0;
+        proveedor.opFacturadas = 0;
+        facturasProveedor?.forEach((factura: FacturaOp) => {                          
+          proveedor.opFacturadas += (factura.proforma ? factura.valores.total : 0);
+          proveedor.opSinFacturar += (!factura.proforma ? factura.valores.total : 0);
         });   
       }
      /*  facturasProveedor?.forEach((factura: FacturaOp) => {
@@ -309,7 +313,7 @@ export class LiqProveedorComponent implements OnInit {
      
   }
 
-  mostrarMasDatos(index: number, chofer:any) {   
+  mostrarMasDatos(index: number) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
    ////////console.log()("Chofer: ", chofer);
@@ -369,7 +373,7 @@ export class LiqProveedorComponent implements OnInit {
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasProveedor = facturasIdProveedor.filter((factura: FacturaOp) => {
-        return factura.liquidacion === true;
+        return factura.liquidacion === true&& factura.proforma === false;
     });
 
    
@@ -499,13 +503,21 @@ export class LiqProveedorComponent implements OnInit {
         (result) => {
           console.log("resultado factura proveedor: ",result);
           if(result.modo === "cerrar" || result.modo === "proforma"){
+            let titulo = result.titulo
             this.facturaProveedor = result.factura;
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
               this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA" );
             }
+
+            if(result.modo === "proforma"){
+              this.addItem(this.facturaProveedor, "proforma", this.facturaProveedor.idFacturaProveedor, "ALTA");
+              this.facturasLiquidadasProveedor.forEach((factura:FacturaOp)=>{
+                this.actualizarFacOp(factura);        
+              })              
+            }     
             
-            let titulo = result.titulo
+            
             Swal.fire({
                 title: `¿Desea imprimir el detalle del Proveedor?`,
                 //text: "You won't be able to revert this!",
@@ -529,13 +541,15 @@ export class LiqProveedorComponent implements OnInit {
               if(result.modo === "cerrar"){
                 this.eliminarFacturasOp();
               }
-            
+              
           }
          
         },
         (reason) => {}
+        
       );
     }
+    this.mostrarMasDatos(this.indiceSeleccionado);
   }
 
   ////////////////////////////////////////////////ACA ESTA EL ERROR!!!!!!!!!!!!!!!!!!!!///////////////////////
@@ -753,6 +767,27 @@ export class LiqProveedorComponent implements OnInit {
                 (reason) => {}
               );
             }
+
+            
+          }
+
+          actualizarFacOp(factura: FacturaOp){
+    
+            let facOp:ConId<FacturaOp>;
+            this.dbFirebase
+            .obtenerTarifaIdTarifa("facturaOpProveedor",factura.idOperacion, "idOperacion")
+            .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+            .subscribe(data => {      
+                facOp = data;
+                console.log("facOp: ", facOp);
+                facOp.proforma = true;
+                facOp.liquidacion = true;
+                let {id, ...fac} = facOp
+                let proveedor = this.getProveedor(fac.idProveedor)
+                this.storageService.updateItem("facturaOpProveedor", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${proveedor} `, facOp.id);
+                //this.removeItem(factura);
+            });
+            
           }
 
 }

@@ -202,18 +202,19 @@ export class ModalDetalleComponent implements OnInit {
   }
 
   updateItem(item: any, idItem: number) {
+    let {id,type, ...fac} = item
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
-      case "clientes":
-          //this.storageService.updateItem('facturaCliente', item, idItem, "EDITAR", item.cobrado ? `Factura Cliente ${item.razonSocial} cobrada` : `Factura Cliente ${item.razonSocial} sin cobrar` );
+      case"clientes":          
+          this.storageService.updateItem('facturaCliente', fac, idItem, "EDITAR", item.cobrado ? `Factura Cliente ${item.razonSocial} cobrada` : `Factura Cliente ${item.razonSocial} sin cobrar`, item.id );
           break;
       //////////////CHOFERES///////////////////////
       case "choferes":
-          //this.storageService.updateItem('facturaChofer', item, idItem, "EDITAR", item.cobrado ? `Factura Chofer ${item.apellido} ${item.nombre}  cobrada` : `Factura Chofer ${item.apellido} ${item.nombre} sin cobrar` );
+          this.storageService.updateItem('facturaChofer', fac, idItem, "EDITAR", item.cobrado ? `Factura Chofer ${item.apellido} ${item.nombre}  cobrada` : `Factura Chofer ${item.apellido} ${item.nombre} sin cobrar`, item.id );
           break;
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
-          //this.storageService.updateItem('facturaProveedor', item, idItem, "EDITAR", item.cobrado ? `Factura Proveedor ${item.razonSocial} cobrada` : `Factura Proveedor ${item.razonSocial} sin cobrar`);
+          this.storageService.updateItem('facturaProveedor', fac, idItem, "EDITAR", item.cobrado ? `Factura Proveedor ${item.razonSocial} cobrada` : `Factura Proveedor ${item.razonSocial} sin cobrar`, item.id);
       break;
       default:
         alert("error update")

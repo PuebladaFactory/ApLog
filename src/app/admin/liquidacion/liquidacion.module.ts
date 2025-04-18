@@ -15,6 +15,7 @@ import { FacturacionModule } from '../facturacion/facturacion.module';
 import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { FacturarOpComponent } from './modales/facturar-op/facturar-op.component';
 import { EditarTarifaOpComponent } from './modales/editar-tarifa-op/editar-tarifa-op.component';
+import { ProformaComponent } from './proforma/proforma.component';
 
 
 
@@ -28,7 +29,8 @@ import { EditarTarifaOpComponent } from './modales/editar-tarifa-op/editar-tarif
     
     DescuentosComponent,
     FacturarOpComponent,
-    EditarTarifaOpComponent
+    EditarTarifaOpComponent,
+    ProformaComponent
     
   ],
   imports: [

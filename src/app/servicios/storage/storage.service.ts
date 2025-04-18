@@ -250,6 +250,9 @@ export class StorageService {
   private _facturaProveedor$ = new BehaviorSubject<any>(this.loadInfo('facturaProveedor') || []);
   public facturaProveedor$ = this._facturaProveedor$.asObservable();
 
+  private _proforma$ = new BehaviorSubject<any>(this.loadInfo('proforma') || []);
+  public proforma$ = this._proforma$.asObservable();
+
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
@@ -609,6 +612,11 @@ export class StorageService {
 
       case "ruta":{
         this._ruta$.next(data);
+        break
+      }
+
+      case "proforma":{
+        this._proforma$.next(data);
         break
       }
 
@@ -1167,6 +1175,8 @@ export class StorageService {
         return this._facturaProveedor$.asObservable();
       case "legajos":
         return this._legajos$.asObservable();
+      case "proforma":
+        return this._proforma$.asObservable();
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }
