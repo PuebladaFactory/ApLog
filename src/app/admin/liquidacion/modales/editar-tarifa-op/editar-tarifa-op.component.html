@@ -3,7 +3,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-2">Editar</h1>                        
-                <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
+                <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close(false)"></button>
             </div>
             <div class="modal-body">                          
                 <div class="row h-100">
@@ -177,21 +177,21 @@
                                 <h4 class="">Valores</h4>
                                 
                                     <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
-                                        <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual || facDetallada.tarifaTipo.personalizada}">
+                                        <div class="form-group mb-3" >
                                             <label for="Base" class="fs-5">Tarifa Base</label>
                                             <div class="input-group">       
                                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
                                                 <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.tarifaBase" appFormatoNumericoNgModel>
                                             </div>                                                        
                                         </div>                                
-                                        <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual || facDetallada.tarifaTipo.personalizada}">
+                                        <div class="form-group mb-3">
                                             <label for="adiconalAcompaniante" class="fs-5">Adicional Acompañante</label>
                                             <div class="input-group">     
                                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                
                                                 <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.acompaniante" appFormatoNumericoNgModel>
                                             </div>                                                        
                                         </div>
-                                        <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual || facDetallada.tarifaTipo.personalizada}">
+                                        <div class="form-group mb-3">
                                             <label for="adiconalKm" class="fs-5">Adicional Km</label>
                                             <div class="input-group">   
                                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                  

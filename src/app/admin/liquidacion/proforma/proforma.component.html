@@ -14,21 +14,23 @@
             <th style="width: 13%" class="text-center">Acciones</th>
         </thead>
         <tbody>
-            <tr *ngFor="let cliente of proformasClientes | filter:filtroCliente; let i = index">
-                <td>{{cliente.razonSocial}}</td>
-                <td class="text-center">{{cliente.idFacturaCliente}}</td>
-                <td class="text-center">{{cliente.operaciones.length}}</td>
-                <td class="table-success">{{cliente.valores.total | formatearValor :"$"}}</td>        
-                <td>{{cliente.montoFacturaChofer | formatearValor :"$"}}</td>
-                <td>{{(cliente.valores.total - cliente.montoFacturaChofer) | formatearValor :"$"}}</td>        
-                <td class="text-center table-warning">{{(100-((cliente.montoFacturaChofer*100)/cliente.valores.total)) | formatearValor}} %</td>
-                <td>
-                    <app-btn-leer name="Detalle" class="me-2" (click)="detalleProforma(cliente,'clientes', 'vista')"></app-btn-leer>
-                    <app-btn-editar name="Editar" class="me-2" (click)="detalleProforma(cliente,'clientes', 'edición')"></app-btn-editar>
-                    <app-btn-eliminar name="Eliminar" class="me-2"></app-btn-eliminar>
-                    <app-btn-agregar name="Factura"></app-btn-agregar>
-                </td>
-            </tr>
+            <ng-container *ngIf="proformasClientes.length > 0 else sinProformas">
+                <tr *ngFor="let cliente of proformasClientes | filter:filtroCliente; let i = index">
+                    <td>{{cliente.razonSocial}}</td>
+                    <td class="text-center">{{cliente.idFacturaCliente}}</td>
+                    <td class="text-center">{{cliente.operaciones.length}}</td>
+                    <td class="table-success">{{cliente.valores.total | formatearValor :"$"}}</td>        
+                    <td>{{cliente.montoFacturaChofer | formatearValor :"$"}}</td>
+                    <td>{{(cliente.valores.total - cliente.montoFacturaChofer) | formatearValor :"$"}}</td>        
+                    <td class="text-center table-warning">{{(100-((cliente.montoFacturaChofer*100)/cliente.valores.total)) | formatearValor}} %</td>
+                    <td>
+                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(cliente,'clientes', 'vista')"></app-btn-leer>
+                        <app-btn-leer name='print' class="me-2" (click)="obtenerFacturasOp(cliente,'clientes', 'reimpresion')"></app-btn-leer>
+                        <app-btn-eliminar name="Eliminar" class="me-2" (click)="procesarProforma(cliente,'clientes', 'baja')"></app-btn-eliminar>
+                        <app-btn-agregar name="Factura" (click)="procesarProforma(cliente,'clientes', 'facturar')"></app-btn-agregar>
+                    </td>
+                </tr>
+            </ng-container>            
         </tbody>    
     </table>
 </div>
@@ -60,10 +62,10 @@
                     <td>{{(chofer.montoFacturaCliente - chofer.valores.total) | formatearValor :"$"}}</td>        
                     <td class="text-center table-warning">{{(100-((chofer.valores.total*100)/chofer.montoFacturaCliente)) | formatearValor}} %</td>
                     <td>
-                        <app-btn-leer name="Detalle" class="me-2" (click)="detalleProforma(chofer,'choferes', 'vista')"></app-btn-leer>
-                        <app-btn-editar name="Editar" class="me-2" (click)="detalleProforma(chofer,'choferes', 'edicion')"></app-btn-editar>
-                        <app-btn-eliminar name="Eliminar" class="me-2"></app-btn-eliminar>
-                        <app-btn-agregar name="Factura"></app-btn-agregar>
+                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(chofer,'choferes', 'vista')"></app-btn-leer>
+                        <app-btn-leer name='print' class="me-2" (click)="obtenerFacturasOp(chofer,'choferes', 'reimpresion')"></app-btn-leer>
+                        <app-btn-eliminar name="Eliminar" class="me-2" (click)="procesarProforma(chofer,'choferes', 'baja')"></app-btn-eliminar>
+                        <app-btn-agregar name="Factura" (click)="procesarProforma(chofer,'choferes', 'facturar')"></app-btn-agregar>
                     </td>
                 </tr>
             </ng-container>                        
@@ -96,10 +98,10 @@
                     <td>{{(prov.montoFacturaCliente - prov.valores.total) | formatearValor :"$"}}</td>        
                     <td class="text-center table-warning">{{(100-((prov.valores.total*100)/prov.montoFacturaCliente)) | formatearValor}} %</td>
                     <td>
-                        <app-btn-leer name="Detalle" class="me-2" (click)="detalleProforma(prov,'proveedores', 'vista')"></app-btn-leer>
-                        <app-btn-editar name="Editar" class="me-2" (click)="detalleProforma(prov,'proveedores', 'edicion')"></app-btn-editar>
-                        <app-btn-eliminar name="Eliminar" class="me-2"></app-btn-eliminar>
-                        <app-btn-agregar name="Factura"></app-btn-agregar>
+                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(prov,'proveedores', 'vista')"></app-btn-leer>
+                        <app-btn-leer name='print' class="me-2" (click)="obtenerFacturasOp(prov,'proveedores', 'reimpresion')"></app-btn-leer>
+                        <app-btn-eliminar name="Eliminar" class="me-2" (click)="procesarProforma(prov,'proveedores', 'baja')"></app-btn-eliminar>
+                        <app-btn-agregar name="Factura" (click)="procesarProforma(prov,'proveedores', 'facturar')"></app-btn-agregar>
                     </td>
                 </tr>
             </ng-container>                        

@@ -1427,6 +1427,7 @@ export class StorageService {
           case "facturaCliente":
           case "facturaChofer":
           case "facturaProveedor":
+          case "proforma":
             if(accion === "INTERNA"){
               return false;
             } else{

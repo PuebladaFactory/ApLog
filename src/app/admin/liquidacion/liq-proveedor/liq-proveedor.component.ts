@@ -18,6 +18,8 @@ import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.componen
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 
 @Component({
   selector: 'app-liq-proveedor',
@@ -60,6 +62,7 @@ export class LiqProveedorComponent implements OnInit {
   tarifaEspecial: boolean = false;
   idOperaciones: number [] = [];
   facDetallada!: ConId<FacturaOp>;
+  tarifaAplicada!:any
   $choferes!: ConIdType<Chofer>[];
   $clientes!: ConIdType<Cliente>[];
   $proveedores!: ConIdType<Proveedor>[]; 
@@ -553,75 +556,70 @@ export class LiqProveedorComponent implements OnInit {
   }
 
   ////////////////////////////////////////////////ACA ESTA EL ERROR!!!!!!!!!!!!!!!!!!!!///////////////////////
-  buscarTarifa(i:number) {
-    //console.log("A)Factura",this.facDetallada);
+  buscarTarifa(i:number ) {
     
+    let coleccionHistorialTarfGral: string = 'historialTarifasGralProveedor';
+    let coleccionHistorialTarfEsp: string = 'historialTarifasEspProveedor';
+    let tarifaGral:ConIdType<TarifaGralCliente> | undefined;
+    let tarifaEsp:ConIdType<TarifaGralCliente> | undefined;
+    let tarifaPers:ConIdType<TarifaPersonalizadaCliente> | undefined;
     if(this.facDetallada.tarifaTipo.general){
-      this.dbFirebase
-      .obtenerTarifaIdTarifa("tarifasGralProveedor",this.facDetallada.idTarifa, "idTarifa")
-      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe(data => {      
-          this.ultimaTarifa = data;
-          //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
-          this.dbFirebase
-          .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
-          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-          .subscribe(data => {      
-              this.operacion = data;
-              //console.log("OPERACION: ", this.operacion);
-              this.openModalTarifa(i)
-          });        
-      });
+      tarifaGral = this.getTarifaGral(this.facDetallada.idTarifa);
+      console.log("1)this.tarifaGral", tarifaGral);      
+      if(tarifaGral === undefined){
+        this.dbFirebase
+        .obtenerTarifaIdTarifa(coleccionHistorialTarfGral,this.facDetallada.idTarifa, "idTarifa")
+        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+        .subscribe(data => {      
+            this.tarifaAplicada = data;
+           console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
+        });
+      } else {
+        this.tarifaAplicada = tarifaGral;        
+      }
+      this.buscarOperacion(i);     
+      
     }
-    if(this.facDetallada.tarifaTipo.especial){
+  if(this.facDetallada.tarifaTipo.especial){
+    tarifaEsp = this.getTarifaEsp(this.facDetallada.idTarifa);
+    console.log("1)this.tarifaEsp", tarifaEsp);      
+    if(tarifaEsp === undefined){
       this.dbFirebase
-      .obtenerTarifaIdTarifa("tarifasEspProveedor",this.facDetallada.idTarifa, "idTarifa")
+      .obtenerTarifaIdTarifa(coleccionHistorialTarfEsp,this.facDetallada.idTarifa, "idTarifa")
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data => {      
-          this.ultimaTarifa = data;
-          //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
-          this.dbFirebase
-          .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
-          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-          .subscribe(data => {      
-              this.operacion = data;
-              //console.log("OPERACION: ", this.operacion);
-              this.openModalTarifa(i)
-          });        
+          this.tarifaAplicada = data;
+         console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
       });
+    } else {
+      this.tarifaAplicada = tarifaEsp;        
+    }
+    this.buscarOperacion(i);
+    
     }
     if(this.facDetallada.tarifaTipo.eventual){
-      this.ultimaTarifa = {};
-      //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
-      this.dbFirebase
-      .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
-      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe(data => {      
-          this.operacion = data;
-          //console.log("OPERACION: ", this.operacion);
-          this.openModalTarifa(i)
-      });     
+      this.tarifaAplicada = {};
+      console.log("1)TARIFA APLICADA: ", this.tarifaAplicada);
+      this.buscarOperacion(i);
       
     }
     if(this.facDetallada.tarifaTipo.personalizada){
-      this.dbFirebase
-      .obtenerTarifaIdTarifa("tarifasPersCliente",this.facDetallada.idTarifa, "idTarifa")
-      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe(data => {      
-          this.ultimaTarifa = data;
-          //console.log("TARIFA APLICADA: ", this.ultimaTarifa);
-          this.dbFirebase
-          .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
-          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-          .subscribe(data => {      
-              this.operacion = data;
-              //console.log("OPERACION: ", this.operacion);
-              this.openModalTarifa(i)
-          });        
-      });
-    }
-  
-     
+      tarifaPers = this.getTarifaPers(this.facDetallada.idTarifa);
+      console.log("1)this.tarifaPers", tarifaPers);
+      if(tarifaPers === undefined){
+        this.dbFirebase
+        .obtenerTarifaIdTarifa('tarifasPersCliente',this.facDetallada.idTarifa, "idTarifa")
+        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+        .subscribe(data => {      
+            this.tarifaAplicada = data;
+           console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
+        });
+      } else {
+        this.tarifaAplicada = tarifaPers;        
+      }
+      this.buscarOperacion(i);   
+      
+    }        
     
     }
 
@@ -648,9 +646,10 @@ export class LiqProveedorComponent implements OnInit {
   
        let info = {
           factura: this.facDetallada,
-          tarifaAplicada: this.ultimaTarifa,   
+          tarifaAplicada: this.tarifaAplicada,   
           op: this.operacion, 
           origen:origen,    
+          componente:'liquidacion',
         }; 
         //console.log(info); 
         
@@ -788,6 +787,47 @@ export class LiqProveedorComponent implements OnInit {
                 //this.removeItem(factura);
             });
             
+          }
+
+          getTarifaGral(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
+            let tarifasGral: ConIdType<TarifaGralCliente>[];
+            let tarifa: ConIdType<TarifaGralCliente> | undefined;
+            let coleccion: string = 'tarifasGralProveedor';
+            
+            tarifasGral = this.storageService.loadInfo(coleccion);
+            tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
+            return tarifa;      
+          }
+      
+          getTarifaEsp(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
+            let tarifasGral: ConIdType<TarifaGralCliente>[];
+            let tarifa: ConIdType<TarifaGralCliente> | undefined;
+            let coleccion: string = 'tarifasEspProveedor';
+      
+            tarifasGral = this.storageService.loadInfo(coleccion);
+            tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
+            return tarifa;                
+          }
+      
+          getTarifaPers(idTarifa: number):ConIdType<TarifaPersonalizadaCliente> | undefined{
+            let tarifasPersonalizada: ConIdType<TarifaPersonalizadaCliente>[];
+            let tarifa: ConIdType<TarifaPersonalizadaCliente> | undefined;
+            
+      
+            tarifasPersonalizada = this.storageService.loadInfo('tarifasPersCliente');
+            tarifa = tarifasPersonalizada.find((tarf:ConIdType<TarifaPersonalizadaCliente>)=> {return tarf.idTarifa === idTarifa});
+            return tarifa;                
+          }
+      
+          buscarOperacion(i:number){
+            this.dbFirebase
+            .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
+            .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+            .subscribe(data => {      
+                this.operacion = data;
+                console.log("2) OPERACION: ", this.operacion);
+                this.openModalTarifa(i)
+            });    
           }
 
 }
