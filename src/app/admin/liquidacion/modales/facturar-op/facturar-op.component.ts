@@ -45,6 +45,7 @@ export class FacturarOpComponent implements OnInit {
     { nombre: 'Cliente', propiedad: 'cliente', seleccionada: true },
     { nombre: 'Patente', propiedad: 'patente', seleccionada: false },
     { nombre: 'Concepto', propiedad: 'conceptoCliente', seleccionada: true },
+    { nombre: 'Observaciones', propiedad: 'obs', seleccionada: false },
     { nombre: 'Hoja de Ruta', propiedad: 'hojaRuta', seleccionada: false },
     { nombre: 'Km', propiedad: 'km', seleccionada: true },
     { nombre: 'Jornada', propiedad: 'jornada', seleccionada: true },
@@ -342,6 +343,14 @@ export class FacturarOpComponent implements OnInit {
           return facOp.observaciones;
         } else if (this.fromParent.origen === "choferes" || this.fromParent.origen === "proveedores") {
           return this.getCategoria(facOp);
+        } 
+        return "";
+      };
+      case 'Observaciones':{
+        if (this.fromParent.origen === "clientes") {            
+          return "Que pongo aca?";
+        } else if (this.fromParent.origen === "choferes" || this.fromParent.origen === "proveedores") {
+          return facOp.observaciones;
         } 
         return "";
       };

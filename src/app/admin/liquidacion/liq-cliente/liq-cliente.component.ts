@@ -126,7 +126,7 @@ export class LiqClienteComponent {
           if(this.$facturasOpCliente){
             ////console.log("?????????????");                   
             this.procesarDatosParaTabla();
-            this.verificarDuplicados();
+            //this.verificarDuplicados();
           } else {
             this.mensajesError("error: facturaOpCliente")
           }
@@ -156,7 +156,7 @@ export class LiqClienteComponent {
     });    
     console.log("this.$facturasOpChofer", this.$facturasOpCliente);
     console.log("duplicadas", this.$facturasOpDuplicadas);
-    //this.verificarDuplicadosFacturadas()
+    this.verificarDuplicadosFacturadas()
 }
 
 verificarDuplicadosFacturadas(){

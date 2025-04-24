@@ -50,16 +50,16 @@
                   </tr>                
                   <ng-container class="table-group-divider table-bordered table-striped" *ngIf="tieneDescuentos">                  
                       <ng-container *ngIf="fromParent.origen !== 'proveedores' else proveedoresDesc">
-                          <tr><th colspan="11">Descuentos:</th></tr>
+                          <tr><th colspan="12">Descuentos:</th></tr>
                           <tr *ngFor="let desc of descuentosAplicados">
-                              <td colspan="10">{{desc.concepto}}</td>
+                              <td colspan="11">{{desc.concepto}}</td>
                               <td class="text-center">- {{desc.valor | formatearValor :"$"}}</td>
                           </tr>
                       </ng-container>
                       <ng-template #proveedoresDesc>
-                          <tr><th colspan="12">Descuentos:</th></tr>
+                          <tr><th colspan="13">Descuentos:</th></tr>
                           <tr *ngFor="let desc of descuentosAplicados">
-                              <td colspan="11">{{desc.concepto}}</td>
+                              <td colspan="12">{{desc.concepto}}</td>
                               <td class="text-center">- {{desc.valor  | formatearValor :"$"}}</td>
                           </tr>
                       </ng-template>
@@ -69,8 +69,8 @@
                 
                 <tfoot class="table-group-divider">                  
                     <tr>
-                        <th *ngIf="fromParent.origen !== 'proveedores'" colspan="10"><span class="ms-3">Total</span></th>
-                        <th *ngIf="fromParent.origen === 'proveedores'" colspan="11"><span class="ms-3">Total</span></th>
+                        <th *ngIf="fromParent.origen !== 'proveedores'" colspan="11"><span class="ms-3">Total</span></th>
+                        <th *ngIf="fromParent.origen === 'proveedores'" colspan="12"><span class="ms-3">Total</span></th>
                         <th class="text-center">{{tieneDescuentos ? formatearValor(total - totalDescuento) : formatearValor(total)}}</th>
                     </tr>
                 </tfoot>

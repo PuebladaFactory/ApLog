@@ -133,7 +133,7 @@ export class LiqChoferComponent implements OnInit {
           if(this.$facturasOpChofer){
             //console.log("?????????????");            
             this.procesarDatosParaTabla();            
-            this.verificarDuplicados();
+            //this.verificarDuplicados();
           } else {
             this.mensajesError("error: facturaOpChofer")            
           }
