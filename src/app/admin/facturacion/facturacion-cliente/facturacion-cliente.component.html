@@ -74,8 +74,8 @@
       <td class="table-success">{{cliente.sumaACobrar | formatearValor : '$'}}</td>
       <td>{{cliente.sumaAPagar | formatearValor : '$'}}</td>        
       <td>{{cliente.neta | formatearValor : '$'}}</td>
-      <td>{{cliente.porcentaje | formatearValor}} %</td>
-      <!-- {{ cliente.sumaAPagar | calcularPorcentaje:cliente.sumaACobrar:true }} -->
+      <!-- <td>{{cliente.porcentaje | formatearValor}} %</td>       -->
+      <td>{{ cliente.sumaAPagar | calcularPorcentaje:cliente.sumaACobrar:true }}</td>            
       <td class="table-warning">{{cliente.faltaCobrar | formatearValor : '$'}}</td>
       <td class="text-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, cliente)">   
@@ -92,7 +92,8 @@
         <th  class="table-success">{{totalSumaACobrar | formatearValor : '$'}}</th>
         <th>{{totalSumaAPagar | formatearValor : '$'}}</th>            
         <th>{{totalGanancia | formatearValor : '$'}}</th>
-        <th>{{totalPorcentajeGanancia | formatearValor}} %</th>
+        <!-- <th>{{totalPorcentajeGanancia | formatearValor}} %</th> -->
+        <th>{{ totalSumaAPagar | calcularPorcentaje:totalSumaACobrar:true }}</th>      
         <th class="table-warning">{{totalFaltaCobrar | formatearValor : '$'}}</th>
         <th></th>
     </tr>
