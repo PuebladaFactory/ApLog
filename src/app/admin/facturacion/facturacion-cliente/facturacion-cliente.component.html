@@ -75,6 +75,7 @@
       <td>{{cliente.sumaAPagar | formatearValor : '$'}}</td>        
       <td>{{cliente.neta | formatearValor : '$'}}</td>
       <td>{{cliente.porcentaje | formatearValor}} %</td>
+      <!-- {{ cliente.sumaAPagar | calcularPorcentaje:cliente.sumaACobrar:true }} -->
       <td class="table-warning">{{cliente.faltaCobrar | formatearValor : '$'}}</td>
       <td class="text-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, cliente)">   

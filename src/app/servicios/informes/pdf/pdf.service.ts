@@ -34,7 +34,8 @@ async exportToPdfCliente(
   factura: FacturaCliente,
   facturasOp: FacturaOp[],
   clientes: Cliente[],
-  choferes: Chofer[]
+  choferes: Chofer[],
+  modo:string,
 ): Promise<void> {
   const doc = new jsPDF();
 
@@ -45,7 +46,7 @@ async exportToPdfCliente(
   // Título principal
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Liquidación de Servicios ${factura.razonSocial}`, 10, 30);
+  doc.text(modo === 'factura' ? `Liquidación de Servicios ${factura.razonSocial}` : `Proforma ${factura.razonSocial}`, 10, 30);
 
   // Subtítulo
   doc.setFontSize(11);
@@ -56,8 +57,8 @@ async exportToPdfCliente(
   doc.text(`Año: ${anio}  Mes: ${mes}`, 10, 35);
 
   // ID de la factura
-  doc.setFontSize(8);
-  doc.text(`ID: ${factura.idFacturaCliente}`, 10, 40);
+  doc.setFontSize(8);  
+  doc.text(modo === 'factura' ? `ID: ${factura.idFacturaCliente}`: '', 10, 40);
 
   // Configuración de la tabla
   const encabezado = factura.columnas;
@@ -167,8 +168,8 @@ async exportToPdfCliente(
     baseline: 'middle',
   });
 
-  // Guardar PDF
-  doc.save(`Detalle_${factura.razonSocial}_${factura.fecha}.pdf`);
+  // Guardar PDF  
+  doc.save(modo === 'factura' ? `Detalle_${factura.razonSocial}_${factura.fecha}.pdf` : `Proforma_${factura.razonSocial}_${factura.fecha}.pdf`);
 }
 
 
@@ -332,7 +333,7 @@ async exportToPdfCliente(
 
   
 // Reportes PDF para los choferes
-async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clientes: Cliente[], choferes:Chofer[]): Promise<void> {
+async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clientes: Cliente[], choferes:Chofer[],modo:string): Promise<void> {
   const doc = new jsPDF();
 
   // Logo en la parte superior izquierda
@@ -342,7 +343,7 @@ async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOp[], cliente
   // Título principal
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Liquidación de Servicios ${factura.apellido} ${factura.nombre}`, 10, 30);
+  doc.text(modo === 'factura' ? `Liquidación de Servicios ${factura.apellido} ${factura.nombre}` : `Proforma ${factura.apellido} ${factura.nombre}`, 10, 30);
 
   // Subtítulo
   doc.setFontSize(11);
@@ -354,7 +355,7 @@ async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOp[], cliente
 
   // ID de la factura
   doc.setFontSize(8);
-  doc.text(`ID: ${factura.idFacturaChofer}`, 10, 40);
+  doc.text(modo === 'factura' ? `ID: ${factura.idFacturaChofer}` : '', 10, 40);
 
   // Configuración de la tabla
   const encabezado = factura.columnas;
@@ -464,11 +465,11 @@ async exportToPdfChofer(factura: FacturaChofer, facturasOp: FacturaOp[], cliente
     baseline: 'middle',
   });
 
-  doc.save(`Detalle_${factura.apellido}_${factura.nombre}_${factura.fecha}.pdf`);
+  doc.save(modo === 'factura' ? `Detalle_${factura.apellido}_${factura.nombre}_${factura.fecha}.pdf` : `Proforma_${factura.apellido}_${factura.nombre}_${factura.fecha}.pdf`);  
 }
 
 //////////////////// Reportes PDF para los proveedores
-async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], clientes: Cliente [], choferes: Chofer[]): Promise<void> {
+async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], clientes: Cliente [], choferes: Chofer[],modo:string): Promise<void> {
   const doc = new jsPDF();
 
   // Logo en la parte superior izquierda
@@ -478,7 +479,7 @@ async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], c
   // Título principal
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Liquidación de Servicios ${factura.razonSocial}`, 10, 30);
+  doc.text(modo === 'factura' ? `Liquidación de Servicios ${factura.razonSocial}` : `Proforma ${factura.razonSocial}`, 10, 30);
 
   // Subtítulo
   doc.setFontSize(11);
@@ -490,7 +491,7 @@ async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], c
 
   // ID de la factura
   doc.setFontSize(8);
-  doc.text(`ID: ${factura.idFacturaProveedor}`, 10, 40);
+  doc.text(modo === 'factura' ? `ID: ${factura.idFacturaProveedor}`: '', 10, 40);
 
   // Configuración de la tabla
   const encabezado = factura.columnas;
@@ -600,7 +601,7 @@ async exportToPdfProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], c
     baseline: 'middle',
   });
 
-  doc.save(`Detalle_${factura.razonSocial}_${factura.fecha}.pdf`);
+  doc.save(modo === 'factura' ? `Detalle_${factura.razonSocial}_${factura.fecha}.pdf` : `Proforma_${factura.razonSocial}_${factura.fecha}.pdf`);
 
 }
 

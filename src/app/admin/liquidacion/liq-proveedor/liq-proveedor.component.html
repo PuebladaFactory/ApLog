@@ -149,7 +149,8 @@
                 <td>{{proveedor.opFacturadas | formatearValor :"$"}}</td>
                 <td class="table-success">{{proveedor.total | formatearValor :"$"}}</td>
                 <td>{{proveedor.aCobrar | formatearValor :"$"}}</td>
-                <td class="text-center table-warning">{{proveedor.ganancia | formatearValor}} %</td>
+                <!-- <td class="text-center table-warning">{{proveedor.ganancia | formatearValor}} %</td> -->
+                <td class="text-center table-warning">{{ proveedor.total | calcularPorcentaje:proveedor.aCobrar:true }}</td>                               
                 <td class="text-center"> 
                     <button class="btn btn-outline-secondary m-0 p-0" (click)="liquidarFacProveedor(proveedor, i)" [ngClass]="{'isDisabled': !mostrarTablaProveedor[i]}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16">
@@ -202,7 +203,8 @@
                                 <td>{{factura.valores.tarifaBase | formatearValor :"$"}}</td>
                                 <td class="table-success">{{factura.valores.total | formatearValor :"$"}}</td>
                                 <td>{{factura.contraParteMonto | formatearValor :"$"}}</td>
-                                <td class="text-center table-warning">{{(100-((factura.valores.total*100)/factura.contraParteMonto)) | formatearValor}} %</td>                                   
+                                <!-- <td class="text-center table-warning">{{(100-((factura.valores.total*100)/factura.contraParteMonto)) | formatearValor}} %</td>                                    -->
+                                <td class="text-center table-warning">{{ factura.valores.total | calcularPorcentaje:factura.contraParteMonto:true }}</td>                                                                   
                                 <td>
                                     <span [ngClass]="{'eventual':factura.tarifaTipo.eventual, 'personalizada':factura.tarifaTipo.personalizada}" >
                                         {{factura.tarifaTipo.personalizada ? "Personalizada" : factura.tarifaTipo.eventual ? "Eventual" : factura.tarifaTipo.especial ? "Especial" : "General"}}

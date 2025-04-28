@@ -29,6 +29,7 @@ import { FechaValidaDirective } from './directives/fecha-valida.directive';
 import { ModalFacturaComponent } from './modal-factura/modal-factura.component';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
+import { CalcularPorcentajePipe } from './pipes/calcular-porcentaje.pipe';
 
 
 
@@ -52,7 +53,7 @@ import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,    
-    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent, ScrollToTopComponent,
+    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent, ScrollToTopComponent, CalcularPorcentajePipe,
     
     
   ],
@@ -89,7 +90,8 @@ import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
     ModalBajaComponent,
     FechaValidaDirective,
     ModalFacturaComponent, 
-    ScrollToTopComponent
+    ScrollToTopComponent,
+    CalcularPorcentajePipe
     
   ]
 })

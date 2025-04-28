@@ -16,6 +16,7 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { LogService } from 'src/app/servicios/log/log.service';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 
 @Component({
   selector: 'app-proforma',
@@ -33,7 +34,7 @@ export class ProformaComponent implements OnInit {
   filtroChofer:string = "";
   filtroProveedor:string = "";
 
-  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private excelServ: ExcelService, private logService: LogService,){}
+  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private excelServ: ExcelService, private logService: LogService, private pdfServ: PdfService ){}
   
   ngOnInit(): void {
     this.storageService.listenForChanges<any>("proforma");
@@ -68,9 +69,9 @@ export class ProformaComponent implements OnInit {
         this.proformasProveedores.push(factura as ConIdType<FacturaProveedor>);
       }
     });
-    console.log("this.proformasClientes", this.proformasClientes);
-    console.log("this.proformasChoferes", this.proformasChoferes);
-    console.log("this.proformasProveedores", this.proformasProveedores);
+    //console.log("this.proformasClientes", this.proformasClientes);
+    //console.log("this.proformasChoferes", this.proformasChoferes);
+    //console.log("this.proformasProveedores", this.proformasProveedores);
       
     this.proformasClientes = this.proformasClientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
     this.proformasChoferes = this.proformasChoferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
@@ -79,13 +80,13 @@ export class ProformaComponent implements OnInit {
   }
 
   detalleProforma(proforma:any, origen: string, accion:string){
-    console.log("origen: ", origen);
-    console.log("proforma: ", proforma);
+    //console.log("origen: ", origen);
+    //console.log("proforma: ", proforma);
     
     let respuesta:any;
     respuesta = this.encontrarMaximoYMinimo(proforma.operaciones)
-    console.log("respuesta", respuesta);
-    this.obtenerFacturasOp(proforma, origen, accion)
+    //console.log("respuesta", respuesta);
+    this.obtenerFacturasOp(proforma, origen, accion, '')
       
   }
 
@@ -110,12 +111,12 @@ export class ProformaComponent implements OnInit {
     return { max, min }; // Devolvemos un objeto con el máximo y el mínimo
   }
 
-  obtenerFacturasOp(proforma:any, origen: string, accion:string){
+  obtenerFacturasOp(proforma:any, origen: string, accion:string, tipo:string){
     let facturasOp: ConIdType<FacturaOp>[];
     let respuesta:any;
     
     respuesta = this.encontrarMaximoYMinimo(proforma.operaciones)
-    console.log("respuesta", respuesta);
+    //console.log("respuesta", respuesta);
     
     let clientes = this.storageService.loadInfo("clientes");
     let choferes = this.storageService.loadInfo("choferes");
@@ -127,11 +128,11 @@ export class ProformaComponent implements OnInit {
           .pipe(take(1)) // Toma los valores hasta que destroy$ emita
           .subscribe(data => {
             if(data){
-              console.log("data facturaOpCliente", data);              
+              //console.log("data facturaOpCliente", data);              
               facturasOp = data.filter((fac) => {
                 return proforma.operaciones.includes(fac.idOperacion);
               });
-              console.log("3) operacionFac!!!!: ", facturasOp);          
+              //console.log("3) operacionFac!!!!: ", facturasOp);          
               if(accion === "vista"){
                   this.openModalDetalleFactura(proforma, facturasOp, origen);
               } else if (accion === "baja"){
@@ -145,9 +146,15 @@ export class ProformaComponent implements OnInit {
                 
                   
               } else if (accion === "reimpresion"){
+                if(tipo === 'excel'){
+                    this.excelServ.exportToExcelCliente(proforma, facturasOp, clientes, choferes, 'proforma');
+                    this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Cliente ${proforma.razonSocial}`, proforma.idFacturaCliente, true);
+                }else if (tipo === 'pdf'){
+                    this.pdfServ.exportToPdfCliente(proforma, facturasOp, clientes, choferes, 'proforma');
+                    this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Cliente ${proforma.razonSocial}`, proforma.idFacturaCliente, true);
+                }
                 
-                this.excelServ.exportToExcelCliente(proforma, facturasOp, clientes, choferes, 'proforma');
-                this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Cliente ${proforma.razonSocial}`, proforma.idFacturaCliente, true);
+                
 
               } else if( accion === 'facturar'){
                 this.facturarProforma(proforma, facturasOp, clientes, choferes, origen)
@@ -157,7 +164,7 @@ export class ProformaComponent implements OnInit {
             }
           })
           
-          //console.log("3) operacionFac: ", this.operacionFac);          
+          ////console.log("3) operacionFac: ", this.operacionFac);          
           break;
       //////////////CHOFERES///////////////////////
       case "choferes":
@@ -166,11 +173,11 @@ export class ProformaComponent implements OnInit {
           .pipe(take(1)) // Toma los valores hasta que destroy$ emita
           .subscribe(data => {
             if(data){
-              console.log("data facturaOpChofer", data);              
+              //console.log("data facturaOpChofer", data);              
               facturasOp = data.filter((fac) => {
                 return proforma.operaciones.includes(fac.idOperacion);
               });
-              console.log("3) operacionFac!!!!: ", facturasOp);          
+              //console.log("3) operacionFac!!!!: ", facturasOp);          
               if(accion === "vista"){
                   this.openModalDetalleFactura(proforma, facturasOp, origen);
               } else if (accion === "baja"){
@@ -183,9 +190,15 @@ export class ProformaComponent implements OnInit {
                 this.storageService.deleteItem("proforma", proforma, proforma.idFacturaChofer, "BAJA", `Baja de proforma N° ${proforma.idFacturaChofer} del Chofer ${this.getChofer(proforma.idChofer)}`)
 
               } else if (accion === "reimpresion"){
+                if(tipo === 'excel'){
+                  this.excelServ.exportToExcelChofer(proforma, facturasOp, clientes, choferes, 'proforma');
+                  this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Chofer ${proforma.apellido} ${proforma.nombre}`, proforma.idFacturaChofer, true);
+                }else if (tipo === 'pdf'){
+                  this.pdfServ.exportToPdfChofer(proforma, facturasOp, clientes, choferes, 'proforma');
+                  this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Chofer ${proforma.apellido} ${proforma.nombre}`, proforma.idFacturaChofer, true);                  
+                }
                 
-                this.excelServ.exportToExcelChofer(proforma, facturasOp, clientes, choferes, 'proforma');
-                this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Chofer ${proforma.apellido} ${proforma.nombre}`, proforma.idFacturaChofer, true);
+                
               
               } else if( accion === 'facturar'){
                 this.facturarProforma(proforma, facturasOp, clientes, choferes, origen)
@@ -207,11 +220,11 @@ export class ProformaComponent implements OnInit {
         .pipe(take(1)) // Toma los valores hasta que destroy$ emita
         .subscribe(data => {
           if(data){
-            console.log("data facturaOpProveedor", data);              
+            //console.log("data facturaOpProveedor", data);              
             facturasOp = data.filter((fac) => {
               return proforma.operaciones.includes(fac.idOperacion);
             });
-            console.log("3) operacionFac!!!!: ", facturasOp);          
+            //console.log("3) operacionFac!!!!: ", facturasOp);          
             if(accion === "vista"){
                 this.openModalDetalleFactura(proforma, facturasOp, origen);
             } else if (accion === "baja"){
@@ -224,9 +237,13 @@ export class ProformaComponent implements OnInit {
               this.storageService.deleteItem("proforma", proforma, proforma.idFacturaProveedor, "BAJA", `Baja de proforma N° ${proforma.idFacturaProveedor} del Proveedor ${this.getProveedor(proforma.idProveedor)}`)
                 
             } else if (accion === "reimpresion"){
-              
-              this.excelServ.exportToExcelProveedor(proforma, facturasOp, clientes, choferes, 'proforma');              
-              this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Proveedor ${proforma.razonSocial}`, proforma.idFacturaProveedor, true);
+              if(tipo === 'excel'){
+                this.excelServ.exportToExcelProveedor(proforma, facturasOp, clientes, choferes, 'proforma');              
+                this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Proveedor ${proforma.razonSocial}`, proforma.idFacturaProveedor, true);
+              }else if (tipo === 'pdf'){
+                this.pdfServ.exportToPdfProveedor(proforma, facturasOp, clientes, choferes, 'proforma');
+                this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Proveedor ${proforma.razonSocial}`, proforma.idFacturaProveedor, true);
+              }
             
             } else if( accion === 'facturar'){
               this.facturarProforma(proforma, facturasOp, clientes, choferes, origen)
@@ -247,7 +264,7 @@ export class ProformaComponent implements OnInit {
   }
 
   openModalDetalleFactura(factura:any, facturasOp: FacturaOp[], origen:string){
-    console.log("lega??");
+    //console.log("lega??");
     
       {
         const modalRef = this.modalService.open(ModalFacturaComponent, {
@@ -256,7 +273,7 @@ export class ProformaComponent implements OnInit {
           scrollable: true, 
           size: 'lg',     
         });       
-        console.log("factura",factura);
+        //console.log("factura",factura);
         let info = {
           modo: "proforma",
           item: factura,
@@ -280,7 +297,7 @@ export class ProformaComponent implements OnInit {
       let objeto:string = origen === 'clientes' ? this.getCliente(proforma.idCliente) : origen === 'choferes' ? this.getChofer(proforma.idChofer) : this.getProveedor(proforma.idProveedor);
       let id: number = origen === 'clientes' ? proforma.idFacturaCliente : origen === 'choferes' ? proforma.idFacturaChofer : proforma.idFacturaProveedor;
       let proceso: string = accion === 'baja' ? 'anular' : 'facturar' 
-      console.log("proceso", proceso);
+      //console.log("proceso", proceso);
       
       Swal.fire({
         title: `¿Desea ${proceso} la proforma N° ${id} del ${titulo} ${objeto}?`,
@@ -293,7 +310,7 @@ export class ProformaComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          this.obtenerFacturasOp(proforma, origen, accion)
+          this.obtenerFacturasOp(proforma, origen, accion, '')
         
         }
       });
@@ -344,7 +361,7 @@ export class ProformaComponent implements OnInit {
   }
 
    editarOperacionesFac(factura:FacturaOp, componente:string){
-     console.log("editarOperacionesFac",factura);
+     //console.log("editarOperacionesFac",factura);
      //factura.idOperacion
      let op:ConId<Operacion>;
      this.dbFirebase
@@ -352,7 +369,7 @@ export class ProformaComponent implements OnInit {
      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
      .subscribe(data => {      
          op = data;
-         console.log("OP LIQUIDADA: ", op);
+         //console.log("OP LIQUIDADA: ", op);
          op.estado = {
            abierta: false,
            cerrada: false,
@@ -369,7 +386,7 @@ export class ProformaComponent implements OnInit {
  
    removeItem(item:any, componente:string){
  
-     console.log("llamada al storage desde liq-cliente, deleteItem", item);
+     //console.log("llamada al storage desde liq-cliente, deleteItem", item);
      this.storageService.deleteItem(componente, item, item.idFacturaOp, "INTERNA", "");    
  
    }
@@ -378,7 +395,9 @@ export class ProformaComponent implements OnInit {
     let {id,type, ...prof} = proforma;
     let facOpColeccion: string = origen === 'clientes' ? 'facturaOpCliente' : origen === 'choferes' ? 'facturaOpChofer' : origen === 'proveedores' ? 'facturaOpProveedor' : '';
     let facOpLiqColeccion: string = origen === 'clientes' ? 'facOpLiqCliente' : origen === 'choferes' ? 'facOpLiqChofer' : origen === 'proveedores' ? 'facOpLiqProveedor' : '';
+    let facturaColeccion: string = origen === 'clientes' ? 'facturaCliente' : origen === 'choferes' ? 'facturaChofer' : origen === 'proveedores' ? 'facturaProveedor' : '';
     let msjAlta: string = origen === 'clientes' ? `Alta de Factura de Cliente ${prof.razonSocial}` : origen === 'choferes' ? `Alta de Factura de Chofer ${prof.apellido} ${prof.nombre}` : origen === 'proveedores' ? `Alta de Factura de Proveedor ${prof.razonSocial}` : '';
+    let idFactura: number = origen === 'clientes' ? proforma.idFacturaCliente : origen === 'choferes' ? proforma.idFacturaChofer : origen === 'proveedores' ? proforma.idFacturaProveedor : 0;
     Swal.fire({
       title: '¿Desea generar la liquidación de la proforma seleccionada?',
       text: "Esta acción no se podrá revertir",
@@ -395,17 +414,17 @@ export class ProformaComponent implements OnInit {
           factura.proforma = false;
           factura.liquidacion = true;
           let {id,type, ...fac} = factura;
-          console.log("llamada al storage desde liq-cliente, addItem", fac);
+          //console.log("llamada al storage desde liq-cliente, addItem", fac);
           //this.addItem(factura, "facOpLiqCliente", factura.idFacturaOp, "INTERNA");
           this.storageService.addItem(facOpLiqColeccion,fac, fac.idFacturaOp, "INTERNA","");
           this.editarOperacionesFac(factura, facOpColeccion);                  
 
         });
-        /////////HAY QUE DESCARGAR LA FACTURA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        this.storageService.addItem("facturaCliente", prof, prof.idFacturaCliente, "ALTA", msjAlta);        
         
-        this.storageService.deleteItem("proforma", proforma, proforma.idFacturaCliente, "INTERNA", ``)
-        ////////console.log("op: ", this.op);
+        this.storageService.addItem(facturaColeccion, prof, idFactura, "ALTA", msjAlta);        
+        
+        this.storageService.deleteItem("proforma", proforma, idFactura, "INTERNA", ``)
+        //////////console.log("op: ", this.op);
         
         
         Swal.fire({

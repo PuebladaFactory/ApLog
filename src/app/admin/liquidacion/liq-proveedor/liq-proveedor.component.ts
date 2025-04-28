@@ -535,7 +535,7 @@ export class LiqProveedorComponent implements OnInit {
                   if(titulo === "excel"){
                       this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
                     }else if (titulo === "pdf"){          
-                      this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes);
+                      this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
                   }
                 }
               });   

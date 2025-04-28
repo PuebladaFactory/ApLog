@@ -544,7 +544,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
                     if(titulo === "excel"){
                         this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);
                       }else if (titulo === "pdf"){
-                        this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);        
+                        this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);        
                       }      
                   }
                 });   

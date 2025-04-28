@@ -22,10 +22,19 @@
                     <td class="table-success">{{cliente.valores.total | formatearValor :"$"}}</td>        
                     <td>{{cliente.montoFacturaChofer | formatearValor :"$"}}</td>
                     <td>{{(cliente.valores.total - cliente.montoFacturaChofer) | formatearValor :"$"}}</td>        
-                    <td class="text-center table-warning">{{(100-((cliente.montoFacturaChofer*100)/cliente.valores.total)) | formatearValor}} %</td>
-                    <td>
-                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(cliente,'clientes', 'vista')"></app-btn-leer>
-                        <app-btn-leer name='print' class="me-2" (click)="obtenerFacturasOp(cliente,'clientes', 'reimpresion')"></app-btn-leer>
+                    <!-- <td class="text-center table-warning">{{(100-((cliente.montoFacturaChofer*100)/cliente.valores.total)) | formatearValor}} %</td> -->
+                    <td class="text-center table-warning">{{ cliente.montoFacturaChofer | calcularPorcentaje:cliente.valores.total:true }}</td>                    
+                    <td class="d-flex">
+                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(cliente,'clientes', 'vista', '')"></app-btn-leer>
+                        <div class="dropdown m-0 p-0">
+                            <app-btn-leer name='print' class="me-2"                             
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false"                            
+                            ></app-btn-leer>
+                            <ul class="dropdown-menu">
+                                <app-btn-leer name="excel" class="me-2" (click)="obtenerFacturasOp(cliente,'clientes', 'reimpresion', 'excel')"></app-btn-leer>
+                                <app-btn-leer name="pdf" (click)="obtenerFacturasOp(cliente,'clientes', 'reimpresion', 'pdf')"></app-btn-leer>                                
+                            </ul>
+                        </div>
                         <app-btn-eliminar name="Eliminar" class="me-2" (click)="procesarProforma(cliente,'clientes', 'baja')"></app-btn-eliminar>
                         <app-btn-agregar name="Factura" (click)="procesarProforma(cliente,'clientes', 'facturar')"></app-btn-agregar>
                     </td>
@@ -60,10 +69,19 @@
                     <td>{{chofer.montoFacturaCliente | formatearValor :"$"}}</td>
                     <td class="table-danger">{{chofer.valores.total | formatearValor :"$"}}</td>        
                     <td>{{(chofer.montoFacturaCliente - chofer.valores.total) | formatearValor :"$"}}</td>        
-                    <td class="text-center table-warning">{{(100-((chofer.valores.total*100)/chofer.montoFacturaCliente)) | formatearValor}} %</td>
-                    <td>
-                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(chofer,'choferes', 'vista')"></app-btn-leer>
-                        <app-btn-leer name='print' class="me-2" (click)="obtenerFacturasOp(chofer,'choferes', 'reimpresion')"></app-btn-leer>
+                    <!-- <td class="text-center table-warning">{{(100-((chofer.valores.total*100)/chofer.montoFacturaCliente)) | formatearValor}} %</td> -->
+                    <td class="text-center table-warning">{{ chofer.valores.total | calcularPorcentaje:chofer.montoFacturaCliente:true }}</td>                    
+                    <td class="d-flex">
+                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(chofer,'choferes', 'vista', '')"></app-btn-leer>
+                        <div class="dropdown m-0 p-0">
+                            <app-btn-leer name='print' class="me-2"                             
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false"                            
+                            ></app-btn-leer>
+                            <ul class="dropdown-menu">
+                                <app-btn-leer name="excel" class="me-2" (click)="obtenerFacturasOp(chofer,'choferes', 'reimpresion', 'excel')"></app-btn-leer>
+                                <app-btn-leer name="pdf" (click)="obtenerFacturasOp(chofer,'choferes', 'reimpresion', 'pdf')"></app-btn-leer>                                
+                            </ul>
+                        </div>
                         <app-btn-eliminar name="Eliminar" class="me-2" (click)="procesarProforma(chofer,'choferes', 'baja')"></app-btn-eliminar>
                         <app-btn-agregar name="Factura" (click)="procesarProforma(chofer,'choferes', 'facturar')"></app-btn-agregar>
                     </td>
@@ -96,10 +114,19 @@
                     <td>{{prov.montoFacturaCliente | formatearValor :"$"}}</td>
                     <td class="table-danger">{{prov.valores.total | formatearValor :"$"}}</td>        
                     <td>{{(prov.montoFacturaCliente - prov.valores.total) | formatearValor :"$"}}</td>        
-                    <td class="text-center table-warning">{{(100-((prov.valores.total*100)/prov.montoFacturaCliente)) | formatearValor}} %</td>
-                    <td>
-                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(prov,'proveedores', 'vista')"></app-btn-leer>
-                        <app-btn-leer name='print' class="me-2" (click)="obtenerFacturasOp(prov,'proveedores', 'reimpresion')"></app-btn-leer>
+                    <!-- <td class="text-center table-warning">{{(100-((prov.valores.total*100)/prov.montoFacturaCliente)) | formatearValor}} %</td> -->
+                    <td class="text-center table-warning">{{ prov.valores.total | calcularPorcentaje:prov.montoFacturaCliente:true }}</td>                    
+                    <td class="d-flex">
+                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(prov,'proveedores', 'vista', '')"></app-btn-leer>
+                        <div class="dropdown">
+                            <app-btn-leer name='print' class="me-2"                             
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false"                            
+                            ></app-btn-leer>
+                            <ul class="dropdown-menu">
+                                <app-btn-leer name="excel" class="me-2" (click)="obtenerFacturasOp(prov,'proveedores', 'reimpresion', 'excel')"></app-btn-leer>
+                                <app-btn-leer name="pdf" (click)="obtenerFacturasOp(prov,'proveedores', 'reimpresion', 'pdf')"></app-btn-leer>                                
+                            </ul>
+                        </div>
                         <app-btn-eliminar name="Eliminar" class="me-2" (click)="procesarProforma(prov,'proveedores', 'baja')"></app-btn-eliminar>
                         <app-btn-agregar name="Factura" (click)="procesarProforma(prov,'proveedores', 'facturar')"></app-btn-agregar>
                     </td>

@@ -339,20 +339,22 @@ export class FacturarOpComponent implements OnInit {
         return facOp.patente;
       };
       case 'Concepto':{
-        if (this.fromParent.origen === "clientes") {            
+        /* if (this.fromParent.origen === "clientes") {            
           return facOp.observaciones;
         } else if (this.fromParent.origen === "choferes" || this.fromParent.origen === "proveedores") {
           return this.getCategoria(facOp);
         } 
-        return "";
+        return ""; */
+        return this.getCategoria(facOp);
       };
       case 'Observaciones':{
-        if (this.fromParent.origen === "clientes") {            
+        /* if (this.fromParent.origen === "clientes") {            
           return "Que pongo aca?";
         } else if (this.fromParent.origen === "choferes" || this.fromParent.origen === "proveedores") {
           return facOp.observaciones;
         } 
-        return "";
+        return ""; */
+        return facOp.observaciones;
       };
       case 'Hoja de Ruta':{
         return facOp.hojaRuta;

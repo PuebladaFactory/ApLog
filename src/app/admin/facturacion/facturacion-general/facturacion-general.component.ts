@@ -48,6 +48,8 @@ export class FacturacionGeneralComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if(data){
+        console.log("data factura clientes: ", data);
+        
         this.$facturasCliente = data; 
         this.$facturasCliente = this.$facturasCliente.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
         this.calcularIngresos();     
@@ -79,6 +81,8 @@ export class FacturacionGeneralComponent implements OnInit {
     .subscribe(data => {
       if(data){
         this.$facturasProveedor = data; 
+        console.log("facturacion gral: facturas proveedor",this.$facturasProveedor );
+        
         this.$facturasProveedor = this.$facturasProveedor.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
         this.calcularPagos();     
       } else {

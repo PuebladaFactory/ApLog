@@ -533,7 +533,7 @@ export class LiqChoferComponent implements OnInit {
                   if(titulo === "excel"){
                       this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes, accion);
                     }else if (titulo === "pdf"){
-                      this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes);        
+                      this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes, accion);        
                     } 
                 }
               });   
