@@ -101,16 +101,16 @@ export class TableroOpComponent implements OnInit {
     { key: 'cerrada', label: 'Cerrada' },
     { key: 'facCliente', label: 'Cliente Facturado' },
     { key: 'facChofer', label: 'Chofer Facturado' },
-    { key: 'facturada', label: 'Facturada' },
+    { key: 'facturada', label: 'Facturada' }
   ];
   estadoSeleccionado: { [key: string]: boolean } = {
     abierta: false,
     cerrada: false,
     facCliente: false,
     facChofer: false,
-    facturada: false,    
+    facturada: false
   };
-  
+ 
 
   
   constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private el: ElementRef, private excelServ: ExcelService){}
@@ -192,15 +192,7 @@ export class TableroOpComponent implements OnInit {
       //this.armarTabla();
       this.filtrarEstado(this.estadoFiltrado)
     });    */
-    const modoStorage = this.storageService.loadInfo("filtroOp");
-
-    if (modoStorage) {
-      modoStorage.forEach((key: string) => {
-        this.estadoSeleccionado[key] = true;
-      });
-    }
-  
-    this.aplicarFiltros();
+   
 
     
     
@@ -270,6 +262,16 @@ export class TableroOpComponent implements OnInit {
   }
 
   consultarOp(){
+    const modoStorage = this.storageService.loadInfo("filtroOp");
+    console.log("ngOnInit: modoStorage ", modoStorage);
+    
+    if (modoStorage) {
+      modoStorage.forEach((key: string) => {
+        this.estadoSeleccionado[key] = true;
+      });
+    }
+
+    //this.aplicarFiltros();
     ////console.log("2)aca??: ");            
       this.storageService.respuestaOp$
         .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
@@ -587,6 +589,8 @@ export class TableroOpComponent implements OnInit {
   }
 
   limpiarFiltros(){
+    
+    
     this.estadoSeleccionado = {
       abierta: false,
       cerrada: false,
@@ -596,19 +600,22 @@ export class TableroOpComponent implements OnInit {
     };
 
     this.storageService.setInfo("filtroOp", []);
-
+    
+    
     this.aplicarFiltros()
 
   }
 
   aplicarFiltros() {
+    
     const seleccionados = Object.keys(this.estadoSeleccionado).filter(key => this.estadoSeleccionado[key]);
+    console.log("seleccionados", seleccionados);
     
     if (seleccionados.length === 0) {
       // Si no hay filtros activos, mostramos todo
       this.$opFiltradas = this.$opActivas;
     } else {
-      this.$opFiltradas = this.$opActivas.filter((op: ConId<Operacion>) => {
+      this.$opFiltradas = this.$opActivas.filter((op: Operacion) => {
         // Una operación pasa el filtro si cumple con **todos** los estados seleccionados
         return seleccionados.some(key => (op.estado as any)[key]);
       });
