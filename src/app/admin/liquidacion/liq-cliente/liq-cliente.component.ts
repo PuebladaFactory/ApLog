@@ -468,6 +468,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           facChofer: op.estado.facChofer,
           facturada: op.estado.facChofer ? true : false,
         }
+        if(op.estado.facturada){
+          op.estado.facCliente = false;  
+          op.estado.facChofer = false;
+        }
         let {id, ...opp} = op
         this.storageService.updateItem("operaciones", opp, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`, op.id);
         this.removeItem(factura);
