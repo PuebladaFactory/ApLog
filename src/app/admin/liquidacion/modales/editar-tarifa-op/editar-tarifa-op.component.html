@@ -181,24 +181,24 @@
                                             <label for="Base" class="fs-5">Tarifa Base</label>
                                             <div class="input-group">       
                                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.tarifaBase" appFormatoNumericoNgModel>
+                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.tarifaBase" appFormatoNumericoNgModel (change)="actualizarTotal()">
                                             </div>                                                        
                                         </div>                                
                                         <div class="form-group mb-3">
                                             <label for="adiconalAcompaniante" class="fs-5">Adicional Acompañante</label>
                                             <div class="input-group">     
                                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.acompaniante" appFormatoNumericoNgModel>
+                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.acompaniante" appFormatoNumericoNgModel (change)="actualizarTotal()">
                                             </div>                                                        
                                         </div>
                                         <div class="form-group mb-3">
                                             <label for="adiconalKm" class="fs-5">Adicional Km</label>
                                             <div class="input-group">   
                                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                  
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.kmMonto" appFormatoNumericoNgModel>
+                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.kmMonto" appFormatoNumericoNgModel (change)="actualizarTotal()">
                                             </div>                                                        
                                         </div>
-                                        <div class="form-group mb-3">
+                                        <div class="form-group mb-3 isDisabled">
                                             <label for="total" class="fs-5">Total</label>
                                             <div class="input-group">    
                                                 <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                 
@@ -216,47 +216,7 @@
                                             <p class="fs-5">En la Tarifa Eventual el único valor modificable de la factura es el Total.</p>
                                         </div>                       
                                     </ng-container>
-                                    <!-- <ng-container *ngIf="facDetallada.tarifaTipo.personalizada">
-                                        <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded">
-                                            <p class="fs-5">En la Tarifa Personalizada el único valor modificable de la factura es el Total.</p>
-                                        </div>   
-                                    </ng-container> -->
-                                
-                            <!--     <ng-container *ngIf="facDetallada.tarifaTipo.personalizada">
-                                    <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
-                                        <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual}">
-                                            <label for="Base" class="fs-5">Tarifa Base</label>
-                                            <div class="input-group">       
-                                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.tarifaBase" appFormatoNumericoNgModel>
-                                            </div>                                                        
-                                        </div>                                
-                                        <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual}">
-                                            <label for="adiconalAcompaniante" class="fs-5">Adicional Acompañante</label>
-                                            <div class="input-group">     
-                                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.acompaniante" appFormatoNumericoNgModel>
-                                            </div>                                                        
-                                        </div>
-                                        <div class="form-group mb-3" [ngClass]="{'isDisabled':facDetallada.tarifaTipo.eventual}">
-                                            <label for="adiconalKm" class="fs-5">Adicional Km</label>
-                                            <div class="input-group">   
-                                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                  
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.kmMonto" appFormatoNumericoNgModel>
-                                            </div>                                                        
-                                        </div>
-                                        <div class="form-group mb-3">
-                                            <label for="total" class="fs-5">Total</label>
-                                            <div class="input-group">    
-                                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                 
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.total" appFormatoNumericoNgModel>
-                                            </div>                                                        
-                                        </div>                               
-                                    </div> 
-                                    <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded">
-                                        <p class="fs-5">En la Tarifa Personalizada el único valor modificable de la factura es el Total a cobrar.</p>
-                                    </div>    
-                                </ng-container>     -->                      
+                                                         
                             </div>
                         </div>
                     </div>               

@@ -166,9 +166,9 @@ export class EditarTarifaOpComponent implements OnInit {
       this.facDetallada.valores.tarifaBase =this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.tarifaBase);
       this.facDetallada.valores.total =this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.total);
      
-      if(this.facDetallada.tarifaTipo.eventual || this.facDetallada.tarifaTipo.personalizada){
+/*       if(this.facDetallada.tarifaTipo.eventual || this.facDetallada.tarifaTipo.personalizada){
         this.facDetallada.valores.tarifaBase = this.facDetallada.valores.total;
-      }
+      } */
 
       this.operacion.km = this.facDetallada.km;
       this.operacion.observaciones = this.facDetallada.observaciones;
@@ -337,5 +337,21 @@ export class EditarTarifaOpComponent implements OnInit {
       let prov: Proveedor [] = this.$proveedores.filter((p:Proveedor) => {return p.idProveedor === idProveedor});
       return prov[0].razonSocial;
     }
+
+    actualizarTotal(){
+      
+      this.facDetallada.valores.total = this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.tarifaBase) + this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.acompaniante) + this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.kmMonto)
+      this.facDetallada.valores.total = this.formatearValor(this.facDetallada.valores.total)
+      console.log("facDetallada.valores.tarifaBase: ", this.facDetallada.valores.total);
+    }
+
+    formatearValor(valor: number) : any{
+      let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+       minimumFractionDigits: 2, 
+       maximumFractionDigits: 2 
+     }).format(valor);
+     //////////////////console.log(nuevoValor);    
+     return nuevoValor
+   }
 
 }
