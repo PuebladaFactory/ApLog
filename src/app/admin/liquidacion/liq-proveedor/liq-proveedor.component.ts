@@ -548,9 +548,11 @@ export class LiqProveedorComponent implements OnInit {
               if(result.modo === "cerrar"){
                 this.eliminarFacturasOp();
               }
-              
+              this.mostrarMasDatos(this.indiceSeleccionado);
+              this.procesarDatosParaTabla()
           }
-         
+          this.mostrarMasDatos(this.indiceSeleccionado);
+          this.procesarDatosParaTabla()
         },
         (reason) => {}
         

@@ -557,7 +557,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
                   this.eliminarFacturasOp();
                 }
                 this.mostrarMasDatos(this.indiceSeleccionado);
+                this.procesarDatosParaTabla()
           } 
+          this.mostrarMasDatos(this.indiceSeleccionado);
+          this.procesarDatosParaTabla()
           },
         (reason) => {}
       );

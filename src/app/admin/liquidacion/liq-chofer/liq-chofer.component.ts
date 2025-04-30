@@ -547,9 +547,10 @@ export class LiqChoferComponent implements OnInit {
               }
             
               this.mostrarMasDatos(this.indiceSeleccionado);
+              this.procesarDatosParaTabla();
           }
-          
-          
+          this.mostrarMasDatos(this.indiceSeleccionado);
+          this.procesarDatosParaTabla()
         },
         (reason) => {}
       );
