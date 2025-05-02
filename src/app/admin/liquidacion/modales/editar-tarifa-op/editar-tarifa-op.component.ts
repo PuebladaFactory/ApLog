@@ -147,7 +147,7 @@ export class EditarTarifaOpComponent implements OnInit {
                 }
                 this.activeModal.close(respuesta);
               } else {
-                
+                this.activeModal.close();
               }
               
             }
