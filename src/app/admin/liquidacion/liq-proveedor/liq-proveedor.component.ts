@@ -317,6 +317,8 @@ export class LiqProveedorComponent implements OnInit {
   }
 
   mostrarMasDatos(index: number) {   
+    console.log("paso por aca?");
+    
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
    ////////console.log()("Chofer: ", chofer);
@@ -431,8 +433,8 @@ export class LiqProveedorComponent implements OnInit {
     /* this.facturaChofer.operaciones.forEach((factura: FacturaOpChofer) => {
       this.removeItem(factura);
     });  */
-    this.cerrarTabla(this.indiceSeleccionado);
-    this.ngOnInit(); 
+   /*  this.cerrarTabla(this.indiceSeleccionado);
+    this.ngOnInit();  */
     /* this.facturaCliente.operaciones.forEach((factura: FacturaOpCliente) => {
       this.removeItem(factura);
     });
@@ -511,7 +513,7 @@ export class LiqProveedorComponent implements OnInit {
         (result) => {
           console.log("resultado factura proveedor: ",result);
           if(result.modo === "cerrar" || result.modo === "proforma"){
-            /* let titulo = result.titulo
+            let titulo = result.titulo
             this.facturaProveedor = result.factura;
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
@@ -525,7 +527,7 @@ export class LiqProveedorComponent implements OnInit {
               })              
             }     
             
-             */
+            
             Swal.fire({
                 title: `¿Desea imprimir el detalle del Proveedor?`,
                 //text: "You won't be able to revert this!",
@@ -537,18 +539,18 @@ export class LiqProveedorComponent implements OnInit {
                 cancelButtonText: "Cancelar"
               }).then((result) => {
                 if (result.isConfirmed) {     
-                  /* if(titulo === "excel"){
+                  if(titulo === "excel"){
                       this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
                     }else if (titulo === "pdf"){          
                       this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
-                  } */
+                  }
                 }
               });   
 
             
-              /* if(result.modo === "cerrar"){
+              if(result.modo === "cerrar"){
                 this.eliminarFacturasOp();
-              } */
+              }
               /* this.mostrarMasDatos(this.indiceSeleccionado);
               this.procesarDatosParaTabla() */
           }

@@ -443,8 +443,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     /* this.facturaChofer.operaciones.forEach((factura: FacturaOpChofer) => {
       this.removeItem(factura);
     });  */
-    this.cerrarTabla(this.indiceSeleccionado);
-    this.ngOnInit(); 
+    /* this.cerrarTabla(this.indiceSeleccionado);
+    this.ngOnInit();  */
     /* this.facturaCliente.operaciones.forEach((factura: FacturaOpCliente) => {
       this.removeItem(factura);
     });
@@ -556,8 +556,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
                 if(result.modo === "cerrar"){
                   this.eliminarFacturasOp();
                 }
-                this.mostrarMasDatos(this.indiceSeleccionado);
-                this.procesarDatosParaTabla()
+                /* this.mostrarMasDatos(this.indiceSeleccionado);
+                this.procesarDatosParaTabla() */
           } 
           this.mostrarMasDatos(this.indiceSeleccionado);
           this.procesarDatosParaTabla()
