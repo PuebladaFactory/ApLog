@@ -59,7 +59,7 @@
             </svg>        
         </th>
         <th (click)="ordenar('faltaPagar')" style="cursor: pointer; width: 15%">
-            Falta Cobrar 
+            Falta Pagar 
             <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
               <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
             </svg>
@@ -76,7 +76,9 @@
             <td>{{chofer.sumaACobrar | formatearValor : '$'}}</td>
             <td class="table-danger">{{chofer.sumaAPagar | formatearValor : '$'}}</td>        
             <td>{{chofer.neta | formatearValor : '$'}}</td>
-            <td>{{chofer.porcentaje | formatearValor}} %</td>
+            <!-- <td>{{chofer.porcentaje | formatearValor}} %</td> -->
+            <td>{{ chofer.sumaAPagar | calcularPorcentaje:chofer.sumaACobrar:true }}</td>
+            
             <td class="table-warning">{{chofer.faltaPagar | formatearValor : '$' }}</td>
             <td class="text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, chofer)">   
@@ -94,6 +96,7 @@
             <th class="table-danger">{{totalSumaAPagar | formatearValor : '$'}}</th>            
             <th>{{totalGanancia | formatearValor : '$'}}</th>
             <th>{{totalPorcentajeGanancia | formatearValor}} %</th>
+            <!-- <th>{{ totalSumaAPagar | calcularPorcentaje:totalSumaACobrar:true }}</th> -->
             <th class="table-warning">{{totalFaltaPagar | formatearValor : '$'}}</th>
             <th></th>
         </tr>

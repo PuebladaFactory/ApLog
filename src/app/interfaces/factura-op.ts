@@ -18,6 +18,7 @@ export interface FacturaOp {
     observaciones: string;
     hojaRuta: string;
     patente: string;
+    proforma: boolean;
 
 }
 

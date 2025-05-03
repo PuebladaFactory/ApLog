@@ -132,6 +132,7 @@ export class FacturacionClienteComponent implements OnInit {
         }
       }
       this.datosFiltrados = this.datosTablaCliente;
+      console.log("datos filtrados", this.datosFiltrados)
     }
 
 

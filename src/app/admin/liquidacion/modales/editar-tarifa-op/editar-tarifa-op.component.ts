@@ -47,7 +47,7 @@ export class EditarTarifaOpComponent implements OnInit {
     }
     
     ngOnInit(): void {         
-      console.log("fromParent: ",this.fromParent);    
+      //console.log("fromParent: ",this.fromParent);    
       this.facOriginal = this.fromParent.factura;
       this.facDetallada = structuredClone(this.facOriginal);
       this.opOriginal = this.fromParent.op;
@@ -82,7 +82,7 @@ export class EditarTarifaOpComponent implements OnInit {
           break;
         }
         default:{
-          console.log("error en fromParent.origen")
+          //console.log("error en fromParent.origen")
           break
         }
       } 
@@ -102,12 +102,12 @@ export class EditarTarifaOpComponent implements OnInit {
       this.choferOp = this.$choferes.filter((chofer:Chofer)=>{
         return chofer.idChofer === this.facDetallada.idChofer;
       })
-      console.log("this.choferOp: ", this.choferOp);
+      //console.log("this.choferOp: ", this.choferOp);
       
       this.vehiculoOp = this.choferOp[0].vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === this.operacion.patenteChofer.toUpperCase()
       })
-      console.log("vehiculoOp: ", this.vehiculoOp);
+      //console.log("vehiculoOp: ", this.vehiculoOp);
       
   
     }
@@ -118,7 +118,7 @@ export class EditarTarifaOpComponent implements OnInit {
     }
   
     onSubmit(){      
-  
+    let cambios:boolean = false;
       Swal.fire({
         title: "¿Desea guardar los cambios en la factura?",
         //text: "You won't be able to revert this!",
@@ -130,25 +130,37 @@ export class EditarTarifaOpComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          ////////console.log("op: ", this.op);
+          //////////console.log("op: ", this.op);
           this.formatearDatos();
+          cambios = true;
           Swal.fire({
             title: "Confirmado",
             text: "Los cambios se han guardado.",
             icon: "success"
           }).then((result)=>{
             if (result.isConfirmed) {
-              this.activeModal.close();
+              if(this.fromParent.componente === 'proforma'){
+                this.facOriginal = this.facDetallada;
+                let respuesta={
+                  factura: this.facOriginal,
+                  resultado: cambios
+                }
+                this.activeModal.close(respuesta);
+              } else {
+                this.activeModal.close();
+              }
+              
             }
           });   
           
         }
       });   
-      console.log("factura EDITADA: ", this.facDetallada);      
+      //console.log("factura EDITADA: ", this.facDetallada);      
     
      }
 
      formatearDatos(){
+      
       this.facDetallada.km = this.formNumServ.convertirAValorNumerico(this.facDetallada.km);
       
       this.facDetallada.valores.acompaniante =this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.acompaniante);
@@ -156,9 +168,9 @@ export class EditarTarifaOpComponent implements OnInit {
       this.facDetallada.valores.tarifaBase =this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.tarifaBase);
       this.facDetallada.valores.total =this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.total);
      
-      if(this.facDetallada.tarifaTipo.eventual || this.facDetallada.tarifaTipo.personalizada){
+/*       if(this.facDetallada.tarifaTipo.eventual || this.facDetallada.tarifaTipo.personalizada){
         this.facDetallada.valores.tarifaBase = this.facDetallada.valores.total;
-      }
+      } */
 
       this.operacion.km = this.facDetallada.km;
       this.operacion.observaciones = this.facDetallada.observaciones;
@@ -189,7 +201,7 @@ export class EditarTarifaOpComponent implements OnInit {
           break;
         }
         default:{
-          console.log("error en fromParent.origen")
+          //console.log("error en fromParent.origen")
           break
         }
       }
@@ -197,8 +209,8 @@ export class EditarTarifaOpComponent implements OnInit {
   
      updateItem(){
 
-      console.log("this.facDetallada: ", this.facDetallada);
-      console.log("this.operacion: ", this.operacion);      
+      //console.log("this.facDetallada: ", this.facDetallada);
+      //console.log("this.operacion: ", this.operacion);      
       let {id, ...facDet} = this.facDetallada;
       this.storageService.updateItem(
         this.componente, 
@@ -233,7 +245,7 @@ export class EditarTarifaOpComponent implements OnInit {
           break;
         }
         default:{
-          console.log("error en fromParent.origen")
+          //console.log("error en fromParent.origen")
           break
         }
       } 
@@ -250,7 +262,7 @@ export class EditarTarifaOpComponent implements OnInit {
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      console.log("factura contraparte: ", this.facContraParte);
+                      //console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -262,7 +274,7 @@ export class EditarTarifaOpComponent implements OnInit {
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      console.log("factura contraparte: ", this.facContraParte);
+                      //console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -278,7 +290,7 @@ export class EditarTarifaOpComponent implements OnInit {
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      console.log("factura contraparte: ", this.facContraParte);
+                      //console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -293,7 +305,7 @@ export class EditarTarifaOpComponent implements OnInit {
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      console.log("factura contraparte: ", this.facContraParte);
+                      //console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -303,7 +315,7 @@ export class EditarTarifaOpComponent implements OnInit {
           break;
         }
         default:{
-          console.log("error en fromParent.origen")
+          //console.log("error en fromParent.origen")
           break
         }
       }
@@ -327,5 +339,21 @@ export class EditarTarifaOpComponent implements OnInit {
       let prov: Proveedor [] = this.$proveedores.filter((p:Proveedor) => {return p.idProveedor === idProveedor});
       return prov[0].razonSocial;
     }
+
+    actualizarTotal(){
+      
+      this.facDetallada.valores.total = this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.tarifaBase) + this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.acompaniante) + this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.kmMonto)
+      this.facDetallada.valores.total = this.formatearValor(this.facDetallada.valores.total)
+      console.log("facDetallada.valores.tarifaBase: ", this.facDetallada.valores.total);
+    }
+
+    formatearValor(valor: number) : any{
+      let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+       minimumFractionDigits: 2, 
+       maximumFractionDigits: 2 
+     }).format(valor);
+     //////////////////console.log(nuevoValor);    
+     return nuevoValor
+   }
 
 }

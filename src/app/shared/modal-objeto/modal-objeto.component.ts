@@ -133,11 +133,11 @@ export class ModalObjetoComponent implements OnInit {
               ////////////// FACTURA CLIENTE ///////////////////////
               if (formato === 'excel') {
                 //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-                this.excelServ.exportToExcelCliente(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes);
+                this.excelServ.exportToExcelCliente(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
                 this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en excel de Factura Eliminada del Cliente ${this.objeto.razonSocial}`, this.objeto.idFacturaCliente, true);
               } else if(formato === 'pdf') {
                 //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-                this.pdfServ.exportToPdfCliente(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes);
+                this.pdfServ.exportToPdfCliente(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
                 this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf de Factura Eliminada del Cliente ${this.objeto.razonSocial}`, this.objeto.idFacturaCliente, true);
               }   
               break
@@ -145,11 +145,11 @@ export class ModalObjetoComponent implements OnInit {
               ////////////// FACTURA CHOFER ///////////////////////
               if (formato === 'excel') {
                 //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );      
-                this.excelServ.exportToExcelCliente(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes);
+                this.excelServ.exportToExcelCliente(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
                 this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en excel de Factura Eliminada del Chofer ${this.objeto.apellido} ${this.objeto.nombre}`, this.objeto.idFacturaCliente, true);
               } else if(formato === 'pdf') {
                 //console.log("3)factura y facturasOpCliente: ",factura[0], this.operacionFac );
-                this.pdfServ.exportToPdfCliente(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes);
+                this.pdfServ.exportToPdfCliente(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
                 this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en pdf de Factura Eliminada del Chofer ${this.objeto.apellido} ${this.objeto.nombre}`, this.objeto.idFacturaCliente, true);
               }  
               break
@@ -157,11 +157,11 @@ export class ModalObjetoComponent implements OnInit {
               if (formato === 'excel') {
                 ////////////// FACTURA PROVEEDOR ///////////////////////
                 //console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );      
-                this.excelServ.exportToExcelProveedor(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes);
+                this.excelServ.exportToExcelProveedor(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
                 this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${this.objeto.razonSocial}`, this.objeto.idFacturaProveedor, true);
               } else if(formato === 'pdf') {
                 //console.log("3)factura y facturasOpProveedor: ",factura[0], this.operacionFac );
-                this.pdfServ.exportToPdfProveedor(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes);
+                this.pdfServ.exportToPdfProveedor(this.objeto, this.arrayFacOp, this.$clientes, this.$choferes, 'factura');
                 this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${this.objeto.razonSocial}`, this.objeto.idFacturaProveedor, true);
               }   
             break

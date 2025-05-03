@@ -1,0 +1,142 @@
+<h2>Proformas Activas</h2>
+<div class="mt-4">  
+    <h4>Clientes</h4>
+    <input type="text" placeholder="Buscar cliente..." [(ngModel)]="filtroCliente" class="form-control mb-2" />
+    <table class="table table-light table-striped table-bordered">
+        <thead class="sticky-top">
+            <th style="width: 21%">Cliente</th>
+            <th>Proforma N°</th>
+            <th>Cant Op</th>
+            <th>Suma a Cobrar</th>
+            <th>Suma a Pagar</th>
+            <th>Ganancia Neta</th>
+            <th>% Ganancia</th>        
+            <th style="width: 13%" class="text-center">Acciones</th>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="proformasClientes.length > 0 else sinProformas">
+                <tr *ngFor="let cliente of proformasClientes | filter:filtroCliente; let i = index">
+                    <td>{{cliente.razonSocial}}</td>
+                    <td class="text-center">{{cliente.idFacturaCliente}}</td>
+                    <td class="text-center">{{cliente.operaciones.length}}</td>
+                    <td class="table-success">{{cliente.valores.total | formatearValor :"$"}}</td>        
+                    <td>{{cliente.montoFacturaChofer | formatearValor :"$"}}</td>
+                    <td>{{(cliente.valores.total - cliente.montoFacturaChofer) | formatearValor :"$"}}</td>        
+                    <!-- <td class="text-center table-warning">{{(100-((cliente.montoFacturaChofer*100)/cliente.valores.total)) | formatearValor}} %</td> -->
+                    <td class="text-center table-warning">{{ cliente.montoFacturaChofer | calcularPorcentaje:cliente.valores.total:true }}</td>                    
+                    <td class="d-flex">
+                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(cliente,'clientes', 'vista', '')"></app-btn-leer>
+                        <div class="dropdown m-0 p-0">
+                            <app-btn-leer name='print' class="me-2"                             
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false"                            
+                            ></app-btn-leer>
+                            <ul class="dropdown-menu">
+                                <app-btn-leer name="excel" class="me-2" (click)="obtenerFacturasOp(cliente,'clientes', 'reimpresion', 'excel')"></app-btn-leer>
+                                <app-btn-leer name="pdf" (click)="obtenerFacturasOp(cliente,'clientes', 'reimpresion', 'pdf')"></app-btn-leer>                                
+                            </ul>
+                        </div>
+                        <app-btn-eliminar name="Eliminar" class="me-2" (click)="procesarProforma(cliente,'clientes', 'baja')"></app-btn-eliminar>
+                        <app-btn-agregar name="Factura" (click)="procesarProforma(cliente,'clientes', 'facturar')"></app-btn-agregar>
+                    </td>
+                </tr>
+            </ng-container>            
+        </tbody>    
+    </table>
+</div>
+
+
+<hr class="mt-5">
+<div class="mt-5">       
+    <h4>Choferes</h4>
+    <input type="text" placeholder="Buscar chofer..." [(ngModel)]="filtroChofer" class="form-control mb-2" />
+    <table class="table table-light table-striped table-bordered">
+        <thead class="sticky-top">
+            <th style="width: 21%">Chofer</th>
+            <th>Proforma N°</th>
+            <th>Cant Op</th>
+            <th>Suma a Cobrar</th>
+            <th>Suma a Pagar</th>
+            <th>Ganancia Neta</th>
+            <th>% Ganancia</th>        
+            <th style="width: 13%" class="text-center">Acciones</th>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="proformasChoferes.length > 0 else sinProformas">
+                <tr *ngFor="let chofer of proformasChoferes | filter:filtroChofer; let i = index">
+                    <td>{{chofer.apellido + " " + chofer.nombre}}</td>
+                    <td class="text-center">{{chofer.idFacturaChofer}}</td>
+                    <td class="text-center">{{chofer.operaciones.length}}</td>                    
+                    <td>{{chofer.montoFacturaCliente | formatearValor :"$"}}</td>
+                    <td class="table-danger">{{chofer.valores.total | formatearValor :"$"}}</td>        
+                    <td>{{(chofer.montoFacturaCliente - chofer.valores.total) | formatearValor :"$"}}</td>        
+                    <!-- <td class="text-center table-warning">{{(100-((chofer.valores.total*100)/chofer.montoFacturaCliente)) | formatearValor}} %</td> -->
+                    <td class="text-center table-warning">{{ chofer.valores.total | calcularPorcentaje:chofer.montoFacturaCliente:true }}</td>                    
+                    <td class="d-flex">
+                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(chofer,'choferes', 'vista', '')"></app-btn-leer>
+                        <div class="dropdown m-0 p-0">
+                            <app-btn-leer name='print' class="me-2"                             
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false"                            
+                            ></app-btn-leer>
+                            <ul class="dropdown-menu">
+                                <app-btn-leer name="excel" class="me-2" (click)="obtenerFacturasOp(chofer,'choferes', 'reimpresion', 'excel')"></app-btn-leer>
+                                <app-btn-leer name="pdf" (click)="obtenerFacturasOp(chofer,'choferes', 'reimpresion', 'pdf')"></app-btn-leer>                                
+                            </ul>
+                        </div>
+                        <app-btn-eliminar name="Eliminar" class="me-2" (click)="procesarProforma(chofer,'choferes', 'baja')"></app-btn-eliminar>
+                        <app-btn-agregar name="Factura" (click)="procesarProforma(chofer,'choferes', 'facturar')"></app-btn-agregar>
+                    </td>
+                </tr>
+            </ng-container>                        
+        </tbody>    
+    </table>
+</div>
+<hr class="mt-5">
+<div class="mt-5">       
+    <h4>Proveedores</h4>
+    <input type="text" placeholder="Buscar proveedor..." [(ngModel)]="filtroProveedor" class="form-control mb-2" />
+    <table class="table table-light table-striped table-bordered">
+        <thead class="sticky-top">
+            <th style="width: 21%">Proveedor</th>
+            <th>Proforma N°</th>
+            <th>Cant Op</th>
+            <th>Suma a Cobrar</th>
+            <th>Suma a Pagar</th>
+            <th>Ganancia Neta</th>
+            <th>% Ganancia</th>        
+            <th style="width: 13%" class="text-center">Acciones</th>
+        </thead>
+        <tbody>
+            <ng-container *ngIf="proformasProveedores.length > 0 else sinProformas">
+                <tr *ngFor="let prov of proformasProveedores | filter:filtroProveedor; let i = index">
+                    <td>{{prov.razonSocial}}</td>
+                    <td class="text-center">{{prov.idFacturaProveedor}}</td>
+                    <td class="text-center">{{prov.operaciones.length}}</td>                    
+                    <td>{{prov.montoFacturaCliente | formatearValor :"$"}}</td>
+                    <td class="table-danger">{{prov.valores.total | formatearValor :"$"}}</td>        
+                    <td>{{(prov.montoFacturaCliente - prov.valores.total) | formatearValor :"$"}}</td>        
+                    <!-- <td class="text-center table-warning">{{(100-((prov.valores.total*100)/prov.montoFacturaCliente)) | formatearValor}} %</td> -->
+                    <td class="text-center table-warning">{{ prov.valores.total | calcularPorcentaje:prov.montoFacturaCliente:true }}</td>                    
+                    <td class="d-flex">
+                        <app-btn-leer name="Detalle" class="me-2" (click)="obtenerFacturasOp(prov,'proveedores', 'vista', '')"></app-btn-leer>
+                        <div class="dropdown">
+                            <app-btn-leer name='print' class="me-2"                             
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false"                            
+                            ></app-btn-leer>
+                            <ul class="dropdown-menu">
+                                <app-btn-leer name="excel" class="me-2" (click)="obtenerFacturasOp(prov,'proveedores', 'reimpresion', 'excel')"></app-btn-leer>
+                                <app-btn-leer name="pdf" (click)="obtenerFacturasOp(prov,'proveedores', 'reimpresion', 'pdf')"></app-btn-leer>                                
+                            </ul>
+                        </div>
+                        <app-btn-eliminar name="Eliminar" class="me-2" (click)="procesarProforma(prov,'proveedores', 'baja')"></app-btn-eliminar>
+                        <app-btn-agregar name="Factura" (click)="procesarProforma(prov,'proveedores', 'facturar')"></app-btn-agregar>
+                    </td>
+                </tr>
+            </ng-container>                        
+        </tbody>    
+    </table>
+</div>
+<ng-template #sinProformas>
+    <tr>
+        <td colspan="8">No hay proformas cargadas</td>
+    </tr>
+</ng-template>

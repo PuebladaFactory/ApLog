@@ -22,6 +22,7 @@
                     <th class="text-center">{{fromParent.tipo === 'clientes' ? 'A Pagar' : 'A Cobrar'}}</th>
                     <th class="text-center">Porcentaje</th>
                     <th class="text-end">{{fromParent.tipo === 'clientes' ? 'A Cobrar' : 'A Pagar'}}</th>
+                    <th *ngIf="fromParent.modo === 'proforma'" class="text-end"></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -31,8 +32,11 @@
                         <td *ngIf="fromParent.tipo === 'proveedores'" class="text-center">{{getChofer(fac.idChofer)}}</td>
                         <td>{{fromParent.tipo === 'clientes' ? getChofer(fac.idChofer) : getCliente(fac.idCliente)}}</td>
                         <td class="text-end">{{fac.contraParteMonto | formatearValor : "$"}}</td>
-                        <td class="text-end">{{fromParent.tipo === 'clientes' ? ((fac.valores.total - fac.contraParteMonto)*100/fac.valores.total | formatearValor) : (fac.contraParteMonto - fac.valores.total)*100/fac.contraParteMonto | formatearValor }} %</td>
+                        <!-- <td class="text-end">{{fromParent.tipo === 'clientes' ? ((fac.valores.total - fac.contraParteMonto)*100/fac.valores.total | formatearValor) : (fac.contraParteMonto - fac.valores.total)*100/fac.contraParteMonto | formatearValor }} %</td> -->
+                        <td class="text-end">{{fromParent.tipo === 'clientes' ? (fac.contraParteMonto | calcularPorcentaje:fac.valores.total:true) : (fac.valores.total | calcularPorcentaje:fac.contraParteMonto:true) }}</td>
+                        
                         <td class="text-end">{{fac.valores.total | formatearValor : "$"}}</td>
+                        <td *ngIf="fromParent.modo === 'proforma'" class="text-end"><app-btn-editar name="Editar" (click)="editarFacOp(fac)"></app-btn-editar> </td>
                     </tr>                   
                     <ng-container *ngIf="factura.descuentos.length > 0">
                         <tr class="table-group-divider" >

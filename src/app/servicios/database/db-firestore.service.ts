@@ -414,7 +414,7 @@ getByFieldValue(componente:string, campo:string, value:any){
   }
 
   create(componente:string, item: any) {
-    //console.log("db.service, metodo create: ",this.coleccion);
+    console.log("db.service, metodo create: ",this.coleccion);
     
     let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
     return addDoc(dataCollection, item).then(() =>

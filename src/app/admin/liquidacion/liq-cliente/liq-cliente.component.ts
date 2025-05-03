@@ -20,6 +20,7 @@ import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tari
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 
 
 @Component({
@@ -58,7 +59,8 @@ export class LiqClienteComponent {
   indiceSeleccionado!:number;
   idOperaciones: number [] = [];
   facDetallada!: ConId<FacturaOp>;
-  ultimaTarifa!: TarifaGralCliente |  any
+  ultimaTarifa!: TarifaGralCliente |  undefined;
+  tarifaAplicada!: any;
   tarifaEditForm: any;
   swichForm:any;
   edicion:boolean = false;
@@ -124,7 +126,7 @@ export class LiqClienteComponent {
           if(this.$facturasOpCliente){
             ////console.log("?????????????");                   
             this.procesarDatosParaTabla();
-            this.verificarDuplicados();
+            //this.verificarDuplicados();
           } else {
             this.mensajesError("error: facturaOpCliente")
           }
@@ -154,7 +156,7 @@ export class LiqClienteComponent {
     });    
     console.log("this.$facturasOpChofer", this.$facturasOpCliente);
     console.log("duplicadas", this.$facturasOpDuplicadas);
-    //this.verificarDuplicadosFacturadas()
+    this.verificarDuplicadosFacturadas()
 }
 
 verificarDuplicadosFacturadas(){
@@ -292,7 +294,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   let facturasCliente = this.facturasPorCliente.get(idCliente);
   ////console.log("2)", facturasCliente);
     facturasCliente?.forEach((factura: FacturaOp) => {
-      factura.liquidacion = seleccion;
+      if(!factura.proforma){
+        factura.liquidacion = seleccion;
+      }
+      
       ////console.log("3)", factura.liquidacion);
      
     });   
@@ -308,10 +313,11 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           cliente.opSinFacturar = 0;
         });   
     } else {
-      cliente.opSinFacturar = 0
+      cliente.opSinFacturar = 0;
+      cliente.opFacturadas = 0;
       facturasCliente?.forEach((factura: FacturaOp) => {                
-        cliente.opFacturadas = 0;
-        cliente.opSinFacturar += factura.valores.total;
+        cliente.opFacturadas += (factura.proforma ? factura.valores.total : 0);
+        cliente.opSinFacturar += (!factura.proforma ? factura.valores.total : 0);
       });   
     }
     /* facturasCliente?.forEach((factura: FacturaOp) => {
@@ -329,7 +335,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 }
  
 
-  mostrarMasDatos(index: number, cliente:any) {   
+  mostrarMasDatos(index: number) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaCliente[index] = !this.mostrarTablaCliente[index];
    //////console.log("CLIENTE: ", cliente);
@@ -383,7 +389,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     this.razonSocFac = cliente.razonSocial;
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasCliente = facturasIdCliente.filter((factura: FacturaOp) => {
-        return factura.liquidacion === true;
+        return factura.liquidacion === true && factura.proforma === false;
     });
 
     if(this.facturasLiquidadasCliente.length > 0){
@@ -420,7 +426,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
   addItem(item:any, componente:string, idItem:number, accion:string): void {   
     console.log("llamada al storage desde liq-cliente, addItem");
-    this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : `Alta de Factura de Cliente ${item.razonSocial}`);        
+    this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : componente === 'proforma' ? `Proforma de Cliente ${item.razonSocial}` : `Alta de Factura de Cliente ${item.razonSocial}`);        
 
   } 
 
@@ -437,8 +443,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     /* this.facturaChofer.operaciones.forEach((factura: FacturaOpChofer) => {
       this.removeItem(factura);
     });  */
-    this.cerrarTabla(this.indiceSeleccionado);
-    this.ngOnInit(); 
+    /* this.cerrarTabla(this.indiceSeleccionado);
+    this.ngOnInit();  */
     /* this.facturaCliente.operaciones.forEach((factura: FacturaOpCliente) => {
       this.removeItem(factura);
     });
@@ -447,7 +453,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   }
 
   editarOperacionesFac(factura:FacturaOp){
-    factura.idOperacion
+    //factura.idOperacion
     let op:ConId<Operacion>;
     this.dbFirebase
     .obtenerTarifaIdTarifa("operaciones",factura.idOperacion, "idOperacion")
@@ -461,6 +467,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           facCliente: true,
           facChofer: op.estado.facChofer,
           facturada: op.estado.facChofer ? true : false,
+        }
+        if(op.estado.facturada){
+          op.estado.facCliente = false;  
+          op.estado.facChofer = false;
         }
         let {id, ...opp} = op
         this.storageService.updateItem("operaciones", opp, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`, op.id);
@@ -510,11 +520,19 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         (result) => {
           ////console.log(result);
           
-          if(result.modo === "cerrar"){
+          if(result.modo === "cerrar" || result.modo === "proforma"){
             let titulo = result.titulo
             this.facturaCliente = result.factura;            
-
-            this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
+            let accion: string = result.accion;
+            if(result.modo === "cerrar"){
+              this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
+            }
+            if(result.modo === "proforma"){
+              this.addItem(this.facturaCliente, "proforma", this.facturaCliente.idFacturaCliente, "ALTA");
+              this.facturasLiquidadasCliente.forEach((factura:FacturaOp)=>{
+                this.actualizarFacOp(factura);        
+              })              
+            }                       
 
             Swal.fire({
                   title: `¿Desea imprimir el detalle del Cliente?`,
@@ -528,93 +546,95 @@ selectAllCheckboxes(event: any, idCliente: number): void {
                 }).then((result) => {
                   if (result.isConfirmed) {     
                     if(titulo === "excel"){
-                      this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);
+                        this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);
                       }else if (titulo === "pdf"){
-                      this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes);        
+                        this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);        
                       }      
                   }
                 });   
 
-
-            this.eliminarFacturasOp();
+                if(result.modo === "cerrar"){
+                  this.eliminarFacturasOp();
+                }
+                /* this.mostrarMasDatos(this.indiceSeleccionado);
+                this.procesarDatosParaTabla() */
           } 
+          this.mostrarMasDatos(this.indiceSeleccionado);
+          this.procesarDatosParaTabla()
           },
         (reason) => {}
       );
     }
   }
 
-  buscarTarifa(i:number) {
-  //////console.log("A)",this.facDetallada);
-  
-  if(this.facDetallada.tarifaTipo.general){
-    this.dbFirebase
-    .obtenerTarifaIdTarifa("tarifasGralCliente",this.facDetallada.idTarifa, "idTarifa")
-    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-    .subscribe(data => {      
-        this.ultimaTarifa = data;
-        //////console.log("TARIFA APLICADA: ", this.ultimaTarifa);
-        this.dbFirebase
-        .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
-        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-        .subscribe(data => {      
-            this.operacion = data;
-            //////console.log("OPERACION: ", this.operacion);
-            this.openModalTarifa(i)
-        });        
-    });
-  }
-  if(this.facDetallada.tarifaTipo.especial){
-    this.dbFirebase
-    .obtenerTarifaIdTarifa("tarifasEspCliente",this.facDetallada.idTarifa, "idTarifa")
-    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-    .subscribe(data => {      
-        this.ultimaTarifa = data;
-        ////console.log("TARIFA APLICADA: ", this.ultimaTarifa);
-        this.dbFirebase
-        .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
-        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-        .subscribe(data => {      
-            this.operacion = data;
-            ////console.log("OPERACION: ", this.operacion);
-            this.openModalTarifa(i)
-        });        
-    });
-  }
-  if(this.facDetallada.tarifaTipo.eventual){
-    this.ultimaTarifa = {};
-    ////console.log("TARIFA APLICADA: ", this.ultimaTarifa);
-    this.dbFirebase
-    .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
-    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-    .subscribe(data => {      
-        this.operacion = data;
-        ////console.log("OPERACION: ", this.operacion);
-        this.openModalTarifa(i)
-    });     
+  buscarTarifa(i:number ) {
     
-  }
-  if(this.facDetallada.tarifaTipo.personalizada){
-    this.dbFirebase
-    .obtenerTarifaIdTarifa("tarifasPersCliente",this.facDetallada.idTarifa, "idTarifa")
-    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-    .subscribe(data => {      
-        this.ultimaTarifa = data;
-        ////console.log("TARIFA APLICADA: ", this.ultimaTarifa);
+    let coleccionHistorialTarfGral: string = 'historialTarifasGralCliente';
+    let coleccionHistorialTarfEsp: string = 'historialTarifasEspCliente';
+    let tarifaGral:ConIdType<TarifaGralCliente> | undefined;
+    let tarifaEsp:ConIdType<TarifaGralCliente> | undefined;
+    let tarifaPers:ConIdType<TarifaPersonalizadaCliente> | undefined;
+    if(this.facDetallada.tarifaTipo.general){
+      tarifaGral = this.getTarifaGral(this.facDetallada.idTarifa);
+      console.log("1)this.tarifaGral", tarifaGral);      
+      if(tarifaGral === undefined){
         this.dbFirebase
-        .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
+        .obtenerTarifaIdTarifa(coleccionHistorialTarfGral,this.facDetallada.idTarifa, "idTarifa")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
-            this.operacion = data;
-            ////console.log("OPERACION: ", this.operacion);
-            this.openModalTarifa(i)
-        });        
-    });
-  }
+            this.tarifaAplicada = data;
+           console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
+        });
+      } else {
+        this.tarifaAplicada = tarifaGral;        
+      }
+      this.buscarOperacion(i);     
+      
+    }
+  if(this.facDetallada.tarifaTipo.especial){
+    tarifaEsp = this.getTarifaEsp(this.facDetallada.idTarifa);
+    console.log("1)this.tarifaEsp", tarifaEsp);      
+    if(tarifaEsp === undefined){
+      this.dbFirebase
+      .obtenerTarifaIdTarifa(coleccionHistorialTarfEsp,this.facDetallada.idTarifa, "idTarifa")
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data => {      
+          this.tarifaAplicada = data;
+         console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
+      });
+    } else {
+      this.tarifaAplicada = tarifaEsp;        
+    }
+    this.buscarOperacion(i);
+    
+    }
+    if(this.facDetallada.tarifaTipo.eventual){
+      this.tarifaAplicada = {};
+      console.log("1)TARIFA APLICADA: ", this.tarifaAplicada);
+      this.buscarOperacion(i);
+      
+    }
+    if(this.facDetallada.tarifaTipo.personalizada){
+      tarifaPers = this.getTarifaPers(this.facDetallada.idTarifa);
+      console.log("1)this.tarifaPers", tarifaPers);
+      if(tarifaPers === undefined){
+        this.dbFirebase
+        .obtenerTarifaIdTarifa('tarifasPersCliente',this.facDetallada.idTarifa, "idTarifa")
+        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+        .subscribe(data => {      
+            this.tarifaAplicada = data;
+           console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
+        });
+      } else {
+        this.tarifaAplicada = tarifaPers;        
+      }
+      this.buscarOperacion(i);   
+      
+    }        
+    
+    }
 
-   
   
-  }
 
   openModalTarifa(i:number): void {   
    
@@ -631,9 +651,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
      let info = {
         factura: this.facDetallada,
-        tarifaAplicada: this.ultimaTarifa,   
+        tarifaAplicada: this.tarifaAplicada,   
         op: this.operacion,     
         origen: origen,
+        componente:"liquidacion",
       }; 
       ////console.log(info); 
       
@@ -767,5 +788,66 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       );
     }
   }
+
+  actualizarFacOp(factura: FacturaOp){
+    
+    let facOp:ConId<FacturaOp>;
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("facturaOpCliente",factura.idOperacion, "idOperacion")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        facOp = data;
+        console.log("facOp: ", facOp);
+        facOp.proforma = true;
+        facOp.liquidacion = true;
+        let {id, ...fac} = facOp
+        let cliente = this.getCliente(fac.idCliente)
+        this.storageService.updateItem("facturaOpCliente", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${cliente} `, facOp.id);
+        //this.removeItem(factura);
+    });
+    
+  }
+
+   getTarifaGral(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
+        let tarifasGral: ConIdType<TarifaGralCliente>[];
+        let tarifa: ConIdType<TarifaGralCliente> | undefined;
+        let coleccion: string = 'tarifasGralCliente';
+        
+        tarifasGral = this.storageService.loadInfo(coleccion);
+        tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
+        return tarifa;      
+      }
+  
+      getTarifaEsp(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
+        let tarifasGral: ConIdType<TarifaGralCliente>[];
+        let tarifa: ConIdType<TarifaGralCliente> | undefined;
+        let coleccion: string = 'tarifasEspCliente';
+  
+        tarifasGral = this.storageService.loadInfo(coleccion);
+        tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
+        return tarifa;                
+      }
+  
+      getTarifaPers(idTarifa: number):ConIdType<TarifaPersonalizadaCliente> | undefined{
+        let tarifasPersonalizada: ConIdType<TarifaPersonalizadaCliente>[];
+        let tarifa: ConIdType<TarifaPersonalizadaCliente> | undefined;
+        
+  
+        tarifasPersonalizada = this.storageService.loadInfo('tarifasPersCliente');
+        tarifa = tarifasPersonalizada.find((tarf:ConIdType<TarifaPersonalizadaCliente>)=> {return tarf.idTarifa === idTarifa});
+        return tarifa;                
+      }
+  
+      buscarOperacion(i:number){
+        this.dbFirebase
+        .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
+        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+        .subscribe(data => {      
+            this.operacion = data;
+            console.log("2) OPERACION: ", this.operacion);
+            this.openModalTarifa(i)
+        });    
+      }
+
 
 }

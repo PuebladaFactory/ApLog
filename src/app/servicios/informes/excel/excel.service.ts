@@ -10,6 +10,9 @@ import { FacturaOp } from 'src/app/interfaces/factura-op';
 
 
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+import { Operacion } from 'src/app/interfaces/operacion';
+import { Proveedor } from 'src/app/interfaces/proveedor';
+import { StorageService } from '../../storage/storage.service';
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +22,7 @@ export class ExcelService {
   factura!: FacturaChofer|FacturaCliente| FacturaProveedor
   
 
-  constructor() { }
+  constructor(private storageService: StorageService) { }
 
 getQuincena(fecha: any): string {
   console.log("fecha: ", fecha);
@@ -50,10 +53,21 @@ getQuincena(fecha: any): string {
     return cliente[0].razonSocial;
   }
 
-  getCategoria(patente:string, idChofer:number, choferes: Chofer[]){
+  getProveedor(idProveedor:number){
+    let proveedores: Proveedor [] = this.storageService.loadInfo("proveedores")
+    let proveedorOp : Proveedor [];   
+    
+    proveedorOp = proveedores.filter((p:Proveedor)=>{
+      return p.idProveedor === idProveedor
+    });
+    return proveedorOp[0].razonSocial;
+  }
+
+  getCategoria(patente:string, idChofer:number){
     let veh: Vehiculo[];   
     let choferSel: Chofer[];    
-    choferSel = choferes.filter((c:Chofer)=> {return c.idChofer === idChofer});
+    let choferesStorage: Chofer[] = this.storageService.loadInfo("choferes")
+    choferSel = choferesStorage.filter((c:Chofer)=> {return c.idChofer === idChofer});
     veh = choferSel[0].vehiculo.filter((v:Vehiculo)=>{return v.dominio === patente});    
     return veh[0].categoria.nombre;
   }
@@ -95,9 +109,9 @@ getQuincena(fecha: any): string {
         if (factura.hasOwnProperty('idFacturaCliente')) {            
           return facturaOp.observaciones;
         } else if (factura.hasOwnProperty('idFacturaChofer')) {
-          return this.getCategoria(facturaOp.patente, facturaOp.idChofer, choferes);
+          return this.getCategoria(facturaOp.patente, facturaOp.idChofer);
         } else if (factura.hasOwnProperty('idFacturaProveedor')) {
-          return this.getCategoria(facturaOp.patente, facturaOp.idChofer, choferes);
+          return this.getCategoria(facturaOp.patente, facturaOp.idChofer);
         }
         return "";
       };
@@ -131,7 +145,8 @@ async exportToExcelCliente(
   factura: FacturaCliente,
   facturasOp: FacturaOp[],
   clientes: Cliente[],
-  choferes: Chofer[]
+  choferes: Chofer[], 
+  modo:string,
 ): Promise<void> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Factura');
@@ -147,7 +162,7 @@ async exportToExcelCliente(
   // Título
   worksheet.mergeCells('A5:F5');
   const titleCell = worksheet.getCell('A5');
-  titleCell.value = `Liquidación de Servicios ${factura.razonSocial}`;
+  titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.razonSocial}` : `Proforma ${factura.razonSocial}`;
   titleCell.font = { size: 16, bold: true };
 
   // Subtítulo
@@ -159,7 +174,7 @@ async exportToExcelCliente(
   // Subtítulo adicional
   worksheet.mergeCells('A7:F7');
   const subTitleCell2 = worksheet.getCell('A7');
-  subTitleCell2.value = `${factura.idFacturaCliente}`;
+  subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaCliente}`: '';
   subTitleCell2.font = { size: 8 };
 
   // Encabezados
@@ -302,12 +317,12 @@ async exportToExcelCliente(
 
   // Guardar archivo
   const buffer = await workbook.xlsx.writeBuffer();
-  FileSaver.saveAs(new Blob([buffer]), `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx`);
+  FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.razonSocial}_${factura.fecha}.xlsx`);
 }
 
 
 // Reportes EXCEL para los choferes
-async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clientes:Cliente[], choferes: Chofer[]): Promise<void> {  
+async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clientes:Cliente[], choferes: Chofer[], modo:string,): Promise<void> {  
 
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Factura');
@@ -323,7 +338,7 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
   // Título
   worksheet.mergeCells('A5:F5');
   const titleCell = worksheet.getCell('A5');
-  titleCell.value = `Liquidación de Servicios ${factura.apellido} ${factura.nombre} `;
+  titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.apellido} ${factura.nombre} ` : `Proforma ${factura.apellido} ${factura.nombre} `;
   titleCell.font = { size: 16, bold: true };
 
   // Subtítulo
@@ -335,7 +350,7 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
   // Subtítulo adicional
   worksheet.mergeCells('A7:F7');
   const subTitleCell2 = worksheet.getCell('A7');
-  subTitleCell2.value = `${factura.idFacturaChofer}`;
+  subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaChofer}` : '';
   subTitleCell2.font = { size: 8 };
 
   // Encabezados
@@ -478,14 +493,14 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
 
   // Guardar archivo
   const buffer = await workbook.xlsx.writeBuffer();
-    FileSaver.saveAs(new Blob([buffer]), `Detalle_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx`);
+    FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx` : `Proforma_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx`);
 
 }
 
 
 
 ////////////// Reportes EXCEL para los proveedores
-async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], clientes: Cliente[], choferes: Chofer[]): Promise<void> {
+async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], clientes: Cliente[], choferes: Chofer[], modo:string): Promise<void> {
   
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Factura');
@@ -501,7 +516,7 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
   // Título
   worksheet.mergeCells('A5:F5');
   const titleCell = worksheet.getCell('A5');
-  titleCell.value = `Liquidación de Servicios ${factura.razonSocial}`;
+  titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.razonSocial}` : `Proforma ${factura.razonSocial}`;
   titleCell.font = { size: 16, bold: true };
 
   // Subtítulo
@@ -513,7 +528,7 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
   // Subtítulo adicional
   worksheet.mergeCells('A7:F7');
   const subTitleCell2 = worksheet.getCell('A7');
-  subTitleCell2.value = `${factura.idFacturaProveedor}`;
+  subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaProveedor}` : '';
   subTitleCell2.font = { size: 8 };
 
   // Encabezados
@@ -656,8 +671,217 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
 
   // Guardar archivo
   const buffer = await workbook.xlsx.writeBuffer();
-  FileSaver.saveAs(new Blob([buffer]), `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx`);
+  FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.razonSocial}_${factura.fecha}.xlsx`);
 
+}
+
+
+generarInformeOperaciones(fechaDesde: string, fechaHasta: string, operaciones: Operacion[]) {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Informe');
+
+  // Fila 1 - Fecha Desde
+  worksheet.addRow(['Desde:', fechaDesde]);
+  // Fila 2 - Fecha Hasta
+  worksheet.addRow(['Hasta:', fechaHasta]);
+  worksheet.addRow([]); // fila vacía
+// Fila 4 - Encabezados combinados "Cliente" y "Chofer"
+worksheet.mergeCells('E4:I4');
+worksheet.getCell('E4').value = 'Cliente';
+worksheet.getCell('E4').alignment = { vertical: 'middle', horizontal: 'center' };
+worksheet.getCell('E4').font = { bold: true };
+
+worksheet.mergeCells('J4:Q4');
+worksheet.getCell('J4').value = 'Chofer';
+worksheet.getCell('J4').alignment = { vertical: 'middle', horizontal: 'center' };
+worksheet.getCell('J4').font = { bold: true };
+// Establecer bordes para la celda combinada "Cliente" (E4:I4)
+const clienteHeaderCell = worksheet.getCell('E4');
+clienteHeaderCell.border = {
+  top: { style: 'medium' },
+  bottom: { style: 'medium' },
+  left: { style: 'medium' },
+  right: { style: 'medium' },
+};
+
+// Establecer bordes para la celda combinada "Chofer" (J4:Q4)
+const choferHeaderCell = worksheet.getCell('J4');
+choferHeaderCell.border = {
+  top: { style: 'medium' },
+  bottom: { style: 'medium' },
+  left: { style: 'medium' },
+  right: { style: 'medium' },
+};
+
+// Fila 5 - Encabezados de columna
+const headers = [
+  'Estado', 'Fecha', 'idOperacion', 'Km',
+  'Razon Social', 'Tarifa Base', 'Adicional Km', 'Acompañante', 'Total Op',
+  'Nombre', 'Proveedor', 'Patente', 'Categoria',
+  'Tarifa Base', 'Adicional Km', 'Acompañante', 'Total Op',
+  'Acompañante', 'Hoja de Ruta', 'Observacion'
+];
+const headerRow = worksheet.addRow(headers);
+headerRow.font = { bold: true };
+headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+
+
+// Estilo de color para secciones del encabezado
+const headerStyle = (cell: ExcelJS.Cell, bgColor: string) => {
+  cell.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: bgColor.replace('#', '') },
+  };
+  cell.font = { bold: true };
+};
+
+// A5:D5 – Azul Oscuro, texto 2, claro 80%
+['A5', 'B5', 'C5', 'D5'].forEach(cell => headerStyle(worksheet.getCell(cell), '#D9E1F2'));
+
+// Cliente – E4 (título) y E5:I5
+['E4', 'E5', 'F5', 'G5', 'H5', 'I5'].forEach(cell => headerStyle(worksheet.getCell(cell), '#FCE4D6'));
+
+// Chofer – J4 (título) y J5:Q5
+['J4', 'J5', 'K5', 'L5', 'M5', 'N5', 'O5', 'P5', 'Q5'].forEach(cell => headerStyle(worksheet.getCell(cell), '#D9EAD3'));
+
+// R5:T5 – Anaranjado, Énfasis 6, claro 80%
+['R5', 'S5', 'T5'].forEach(cell => headerStyle(worksheet.getCell(cell), '#FFE699'));
+
+
+
+  // Datos
+  operaciones.forEach(op => {
+    const estado = op.estado.abierta
+      ? 'Abierta'
+      : op.estado.cerrada
+      ? 'Cerrada'
+      : op.estado.facturada
+      ? 'Facturada'
+      : op.estado.facCliente
+      ? 'Cliente Fac'
+      : op.estado.facChofer
+      ? 'Chofer Fac'
+      : 'Sin Datos';
+
+    const proveedor = op.chofer.idProveedor === 0 ? "No" : this.getProveedor(op.chofer.idProveedor);
+    const categoria = this.getCategoria(op.patenteChofer, op.chofer.idChofer)
+
+    worksheet.addRow([
+      estado,
+      op.fecha,
+      op.idOperacion,
+      op.km,
+
+      // Cliente
+      op.cliente.razonSocial,
+      op.valores.cliente.tarifaBase,
+      op.valores.cliente.kmAdicional,
+      op.valores.cliente.acompValor,
+      op.valores.cliente.aCobrar,
+
+      // Chofer
+      op.chofer.apellido + " " +  op.chofer.nombre,
+      proveedor,
+      op.patenteChofer,
+      categoria,
+      op.valores.chofer.tarifaBase,
+      op.valores.chofer.kmAdicional,
+      op.valores.chofer.acompValor,
+      op.valores.chofer.aPagar,
+
+      // Otros
+      op.acompaniante ? 'Sí' : 'No',
+      op.hojaRuta,
+      op.observaciones,
+    ]);
+  });
+
+  // Estilo de encabezados
+  worksheet.getRow(4).font = { bold: true };
+  worksheet.getRow(5).font = { bold: true };
+
+  
+  // Aplicar formato numérico sin decimales a la columna C (idOperacion)
+  worksheet.getColumn('C').numFmt = '0';
+
+  // Formato moneda con dos decimales
+const currencyFormat = '"$"#,##0.00'; // O usá '[$$-en-US]#,##0.00' si querés el formato dólar explícito
+
+['F', 'G', 'H', 'I', 'N', 'O', 'P', 'Q'].forEach((col) => {
+  worksheet.getColumn(col).numFmt = currencyFormat;
+});
+
+  // Auto ajuste de ancho de columnas
+  worksheet.columns.forEach((column) => {
+    if (!column) return;
+  
+    let maxLength = 0;
+  
+    if (typeof column.eachCell === 'function') {
+      column.eachCell({ includeEmpty: true }, (cell) => {
+        const cellValue = cell.value ? cell.value.toString() : '';
+        maxLength = Math.max(maxLength, cellValue.length);
+      });
+    }
+  
+    column.width = maxLength + 1;
+  });
+
+  // Rango de datos
+const startRow = 5;
+const endRow = worksheet.lastRow?.number;
+const totalColumns = headers.length;
+
+// Aplicar bordes
+if(endRow){
+  for (let rowNum = startRow; rowNum <= endRow; rowNum++) {
+    const row = worksheet.getRow(rowNum);
+    for (let colNum = 1; colNum <= totalColumns; colNum++) {
+      const cell = row.getCell(colNum);
+  
+      // Borde básico interior (todos los lados thin por defecto)
+      cell.border = {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+  
+      // Borde exterior grueso (fila superior e inferior, columna izquierda y derecha)
+      if (rowNum === startRow) {
+        cell.border.top = { style: 'medium' };
+      }
+      if (rowNum === endRow) {
+        cell.border.bottom = { style: 'medium' };
+      }
+      if (colNum === 1) {
+        cell.border.left = { style: 'medium' };
+      }
+      if (colNum === totalColumns) {
+        cell.border.right = { style: 'medium' };
+      }
+  
+      // Línea divisoria gruesa entre encabezado y datos (solo fila 5 inferior)
+      if (rowNum === startRow) {
+        cell.border.bottom = { style: 'medium' };
+      }
+  
+      // Bordes verticales entre secciones
+      if ([4, 9, 17].includes(colNum)) {
+        cell.border.right = { style: 'medium' };
+      }
+    }
+  }
+}
+
+  // Guardar archivo
+  workbook.xlsx.writeBuffer().then(buffer => {
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    FileSaver.saveAs(blob, `InformeOperaciones_${fechaDesde}_a_${fechaHasta}.xlsx`);
+   
+  });
 }
 
 }
