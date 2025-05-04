@@ -106,14 +106,18 @@ getQuincena(fecha: any): string {
         return facturaOp.patente;
       };
       case 'Concepto':{
-        if (factura.hasOwnProperty('idFacturaCliente')) {            
+        /* if (factura.hasOwnProperty('idFacturaCliente')) {            
           return facturaOp.observaciones;
         } else if (factura.hasOwnProperty('idFacturaChofer')) {
           return this.getCategoria(facturaOp.patente, facturaOp.idChofer);
         } else if (factura.hasOwnProperty('idFacturaProveedor')) {
           return this.getCategoria(facturaOp.patente, facturaOp.idChofer);
         }
-        return "";
+        return ""; */
+        return this.getCategoria(facturaOp.patente, facturaOp.idChofer);
+      };
+      case 'Observaciones':{       
+        return facturaOp.observaciones;
       };
       case 'Hoja de Ruta':{          
         return facturaOp.hojaRuta;
