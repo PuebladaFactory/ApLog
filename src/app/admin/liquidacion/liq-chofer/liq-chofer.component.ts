@@ -651,7 +651,7 @@ buscarTarifa(i:number ) {
           origen: origen,
           componente:"liquidacion",  
         }; 
-        //console.log(info); 
+        console.log("3) info: ",info); 
         
         modalRef.componentInstance.fromParent = info;
         modalRef.result.then(
