@@ -7,7 +7,7 @@ import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
@@ -47,7 +47,7 @@ export class EditarTarifaOpComponent implements OnInit {
     }
     
     ngOnInit(): void {         
-      //console.log("fromParent: ",this.fromParent);    
+      console.log("4) fromParent: ",this.fromParent);    
       this.facOriginal = this.fromParent.factura;
       this.facDetallada = structuredClone(this.facOriginal);
       this.opOriginal = this.fromParent.op;
@@ -91,6 +91,7 @@ export class EditarTarifaOpComponent implements OnInit {
       //this.swich = this.facDetallada.operacion.tarifaEventual;        
       if(!this.facDetallada.tarifaTipo.personalizada){
         this.ultimaTarifa = this.fromParent.tarifaAplicada;
+        console.log("5) ultimaTarifa: ",this.ultimaTarifa);    
       } else {
         this.tarifaPersonalizada = this.fromParent.tarifaAplicada;
       }
@@ -102,14 +103,46 @@ export class EditarTarifaOpComponent implements OnInit {
       this.choferOp = this.$choferes.filter((chofer:Chofer)=>{
         return chofer.idChofer === this.facDetallada.idChofer;
       })
-      //console.log("this.choferOp: ", this.choferOp);
+      console.log("4.25)this.choferOp: ", this.choferOp);
       
       this.vehiculoOp = this.choferOp[0].vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === this.operacion.patenteChofer.toUpperCase()
       })
-      //console.log("vehiculoOp: ", this.vehiculoOp);
+      console.log("4.5)vehiculoOp: ", this.vehiculoOp);
       
   
+    }
+
+    getCategoriaNombre():string{
+      let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
+        return cat.orden === this.vehiculoOp[0].categoria.catOrden;
+      });
+      console.log("getCategoriaValor: catCg: ", catCg);
+      return catCg[0].nombre;            
+    }
+
+    getCategoriaValor():number{      
+      let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
+        return cat.orden === this.vehiculoOp[0].categoria.catOrden;
+      });
+      console.log("getCategoriaValor: catCg: ", catCg);
+      return catCg[0].valor;      
+    }
+
+    getKmPrimerSectorValor():number{
+      let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
+        return cat.orden === this.vehiculoOp[0].categoria.catOrden;
+      });
+      console.log("getCategoriaValor: catCg: ", catCg);
+      return catCg[0].adicionalKm.primerSector;        
+    }
+
+    getKmIntervalosSectorValor():number{
+      let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
+        return cat.orden === this.vehiculoOp[0].categoria.catOrden;
+      });
+      console.log("getCategoriaValor: catCg: ", catCg);
+      return catCg[0].adicionalKm.sectoresSiguientes;        
     }
 
    limpiarValorFormateado(valorFormateado: string): number {

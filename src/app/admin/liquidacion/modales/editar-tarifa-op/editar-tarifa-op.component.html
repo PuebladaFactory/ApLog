@@ -15,28 +15,32 @@
                                 <div class="form-group mb-2">
                                     <label for="Categoria" class="fs-5">Categoria</label>
                                     <div class="input-group">                                
-                                        <input class="w-100" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].nombre">
+                                        <!-- <input class="w-100" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].nombre"> -->
+                                        <input class="w-100" type="text" [value]="getCategoriaNombre()">
                                     </div>                                                        
                                 </div>
                                 <div class="form-group mb-2">
                                     <label for="km" class="fs-5">Valor</label>
                                     <div class="input-group">   
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                             
-                                        <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].valor | formatearValor">
+                                        <!-- <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].valor | formatearValor"> -->
+                                        <input class="form-control" type="text" [value]="getCategoriaValor() | formatearValor">
                                     </div>                                                        
                                 </div>
                                 <div class="form-group mb-2">
                                     <label for="km" class="fs-5">Km 1er Sector valor</label>
                                     <div class="input-group">   
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                             
-                                        <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].adicionalKm.primerSector | formatearValor">
+                                        <!-- <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].adicionalKm.primerSector | formatearValor"> -->
+                                        <input class="form-control" type="text" [value]="getKmPrimerSectorValor() | formatearValor">
                                     </div>                                                        
                                 </div>
                                 <div class="form-group mb-2">
                                     <label for="km" class="fs-5">Km Intervalos valor</label>
                                     <div class="input-group">  
                                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
-                                        <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].adicionalKm.sectoresSiguientes | formatearValor" >
+                                        <!-- <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].adicionalKm.sectoresSiguientes | formatearValor" > -->
+                                        <input class="form-control" type="text" [value]="getKmIntervalosSectorValor() | formatearValor">
                                     </div>                                                        
                                 </div>
                                 <div class="form-group mb-2">
