@@ -1,6 +1,6 @@
 <div class="d-flex justify-content-between mt-3">
   <!-- <h1>Choferes</h1> -->
-  <app-btn-leer *appRole="['god','admin', 'manager']" name="Chofer" (click)="openModal('alta')"></app-btn-leer>
+  <app-btn-leer name="Chofer" (click)="openModal('alta')"></app-btn-leer>
   <!-- <button (click)="legajo()">Legajo</button> -->
 </div>
 
@@ -59,7 +59,7 @@ class="dark"
 
         <app-btn-leer name="Detalle" class="me-2" (click)="abrirEdicion(row.idChofer, 'vista')" ></app-btn-leer>
                 
-        <app-btn-editar *appRole="['god','admin', 'manager']" class="me-2" name="Editar" (click)="abrirEdicion(row.idChofer, 'edicion')"></app-btn-editar>
+        <app-btn-editar  class="me-2" name="Editar" (click)="abrirEdicion(row.idChofer, 'edicion')"></app-btn-editar>
         
         <app-btn-eliminar *appRole="['god','admin', 'manager']" name="Eliminar" (click)="eliminarChofer(row.idChofer)"></app-btn-eliminar>
         <!-- <button (click)="legajoId(row.idChofer)">Legajo</button> -->
