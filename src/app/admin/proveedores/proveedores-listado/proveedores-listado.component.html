@@ -1,5 +1,5 @@
 <div class="d-flex justify-content-between mt-3">    
-    <app-btn-leer *appRole="['god','admin', 'manager']" name="Proveedor" (click)="openModal('alta')"></app-btn-leer>    
+    <app-btn-leer  name="Proveedor" (click)="openModal('alta')"></app-btn-leer>    
 </div>
 
 <div class="custom-datatable mt-3">
@@ -63,7 +63,7 @@
 
             <app-btn-leer name="Detalle" class="me-2" (click)="abrirVista(row)"></app-btn-leer>
                   
-            <app-btn-editar *appRole="['god','admin', 'manager']" class="me-2" name="Editar"  (click)="abrirEdicion(row)"></app-btn-editar>
+            <app-btn-editar  class="me-2" name="Editar"  (click)="abrirEdicion(row)"></app-btn-editar>
           
             <app-btn-eliminar *appRole="['god','admin', 'manager']" name="Eliminar" (click)="eliminarProveedor(row)"></app-btn-eliminar>
         </ng-template>
