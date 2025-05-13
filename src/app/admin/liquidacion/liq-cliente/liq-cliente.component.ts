@@ -126,7 +126,7 @@ export class LiqClienteComponent {
           if(this.$facturasOpCliente){
             ////console.log("?????????????");                   
             this.procesarDatosParaTabla();
-            //this.verificarDuplicados();
+            this.verificarDuplicados();
           } else {
             this.mensajesError("error: facturaOpCliente")
           }
@@ -156,12 +156,12 @@ export class LiqClienteComponent {
     });    
     console.log("this.$facturasOpChofer", this.$facturasOpCliente);
     console.log("duplicadas", this.$facturasOpDuplicadas);
-    this.verificarDuplicadosFacturadas()
+    //this.verificarDuplicadosFacturadas()
 }
 
 verificarDuplicadosFacturadas(){
   this.dbFirebase.getByDateValue("facOpLiqCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
-  .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+  .pipe(take(1)) // Detener la suscripción cuando sea necesario
   .subscribe(data=>{
     let $facturasLiqCliente: any [] = data;
     const idsLiqCliente = new Set($facturasLiqCliente.map(factura => factura.idOperacion));
@@ -176,6 +176,13 @@ verificarDuplicadosFacturadas(){
   console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
 
   })
+}
+
+deleteDuplicadas(){
+  console.log("cantidad facLiqOpDuplicadas", this.$facLiqOpDuplicadas.length);
+  this.$facLiqOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+    this.dbFirebase.delete(this.titulo, facDupli.id)
+})
 }
   
 

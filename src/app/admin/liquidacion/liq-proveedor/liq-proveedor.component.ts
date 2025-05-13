@@ -120,7 +120,7 @@ export class LiqProveedorComponent implements OnInit {
             if(this.$facturasOpProveedor){
               //console.log("?????????????");                
               this.procesarDatosParaTabla();
-              //this.verificarDuplicados();
+              this.verificarDuplicados();
             } else {
               this.mensajesError("error: facturaOpProveedor")         
             }
