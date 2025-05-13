@@ -235,7 +235,7 @@
     </ng-template>
 </table>
 
-
+<hr>
 <h1>DUPLICADAS</h1>
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
 <table class="table table-light table-striped table-bordered" >
@@ -288,7 +288,8 @@
         </tr>
     </tbody> 
 </table>
-
+<hr>
+<button class="btn btn-primary" (click)="verificarDuplicadosFacturadas()">Buscar</button>
 <h1>DUPLICADAS FACTURADAS</h1>
 <button class="btn btn-primary" (click)="deleteDuplicadas()">Borrar</button>
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText3" placeholder="Buscar por chofer">
@@ -297,7 +298,7 @@
         <tr>
             <th scope="col" class="" style="width: 8.5%;">Id Firebase</th>  
             <th scope="col" class="" style="width: 8.5%;">Id Objeto</th>                        
-            <th scope="col" class="" style="width: 8.5%;">Cliente</th>                        
+            <th scope="col" class="" style="width: 8.5%;">Chofer</th>                        
             <th scope="col" class="" style="width: 8.5%;">Fecha</th>
             <th scope="col" class="" style="width: 5.5%;">Quincena</th>                                
             <th scope="col" class="" style="width: 5.5%;">Id Op</th>
@@ -317,7 +318,7 @@
             <td>{{factura.id}}</td>
             <td>{{factura.idFacturaOp}}</td>
             <td >
-                {{getCliente(factura.idCliente)}}
+                {{getChofer(factura.idChofer)}}
             </td>
             <td>{{factura.fecha}}</td>
             <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>                                

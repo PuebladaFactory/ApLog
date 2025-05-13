@@ -37,6 +37,7 @@ export class LiqProveedorComponent implements OnInit {
   btnConsulta:boolean = false;
   searchText!:string;
   searchText2!:string;
+  searchText3!:string;
   componente: string = "facturaProveedor";
   $facturasOpProveedor!: ConId<FacturaOp>[];
   date:any = new Date();
@@ -74,6 +75,7 @@ export class LiqProveedorComponent implements OnInit {
   private destroy$ = new Subject<void>();
   opAbiertas!: ConId<Operacion>[];
   $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
+  $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -152,6 +154,32 @@ export class LiqProveedorComponent implements OnInit {
     console.log("this.$facturasOpChofer", this.$facturasOpProveedor);
     console.log("duplicadas", this.$facturasOpDuplicadas);
     
+}
+
+verificarDuplicadosFacturadas(){
+  this.dbFirebase.getByDateValue("facOpLiqProveedor", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
+  .pipe(take(1)) // Detener la suscripción cuando sea necesario
+  .subscribe(data=>{
+    let $facturasLiqProveedor: any [] = data;
+    const idsLiqProveedor = new Set($facturasLiqProveedor.map(factura => factura.idOperacion));
+
+  // Recorremos el array facturasOpCliente
+  this.$facLiqOpDuplicadas = this.$facturasOpProveedor.filter((facturaOp:FacturaOp) => {
+    // Verificamos si el idOperacion de la factura actual está en el Set
+    return idsLiqProveedor.has(facturaOp.idOperacion);
+  });
+
+  
+  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
+
+  })
+}
+
+deleteDuplicadas(){
+  console.log("cantidad facLiqOpDuplicadas", this.$facLiqOpDuplicadas.length);
+  this.$facLiqOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+    this.dbFirebase.delete(this.titulo, facDupli.id)
+})
 }
 
   
