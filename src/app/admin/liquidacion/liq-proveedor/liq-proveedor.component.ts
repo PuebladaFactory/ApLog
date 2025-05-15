@@ -157,22 +157,21 @@ export class LiqProveedorComponent implements OnInit {
 }
 
 verificarDuplicadosFacturadas(){
-  this.dbFirebase.getByDateValue("facOpLiqProveedor", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
-  .pipe(take(1)) // Detener la suscripción cuando sea necesario
-  .subscribe(data=>{
-    let $facturasLiqProveedor: any [] = data;
-    const idsLiqProveedor = new Set($facturasLiqProveedor.map(factura => factura.idOperacion));
 
-  // Recorremos el array facturasOpCliente
-  this.$facLiqOpDuplicadas = this.$facturasOpProveedor.filter((facturaOp:FacturaOp) => {
-    // Verificamos si el idOperacion de la factura actual está en el Set
-    return idsLiqProveedor.has(facturaOp.idOperacion);
-  });
-
-  
-  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
-
+  this.$facturasOpProveedor.forEach((facturaOp:FacturaOp) => {
+    this.dbFirebase.getMostRecentId("facOpLiqProveedor", "idFacturaOp", "idOperacion", facturaOp.idOperacion)
+    .pipe(take(1))
+    .subscribe(data=>{
+      if(data.length > 0){
+        console.log("hay data", data);
+        let facOp: any = data[0];
+        this.$facLiqOpDuplicadas.push(facOp)
+      } else {
+        console.log("no hay data", data);        
+      }
+    })
   })
+  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
 }
 
 deleteDuplicadas(){

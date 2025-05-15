@@ -160,7 +160,7 @@ export class LiqClienteComponent {
 }
 
 verificarDuplicadosFacturadas(){
-  this.dbFirebase.getByDateValue("facOpLiqCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
+  /* this.dbFirebase.getByDateValue("facOpLiqCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
   .pipe(take(1)) // Detener la suscripción cuando sea necesario
   .subscribe(data=>{
     let $facturasLiqCliente: any [] = data;
@@ -175,7 +175,21 @@ verificarDuplicadosFacturadas(){
   
   console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
 
+  }) */
+  this.$facturasOpCliente.forEach((facturaOp:FacturaOp) => {
+    this.dbFirebase.getMostRecentId("facOpLiqCliente", "idFacturaOp", "idOperacion", facturaOp.idOperacion)
+    .pipe(take(1))
+    .subscribe(data=>{
+      if(data.length > 0){
+        console.log("hay data", data);
+        let facOp: any = data[0];
+        this.$facLiqOpDuplicadas.push(facOp)
+      } else {
+        console.log("no hay data", data);        
+      }
+    })
   })
+  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
 }
 
 deleteDuplicadas(){

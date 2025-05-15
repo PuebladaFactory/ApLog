@@ -168,7 +168,7 @@ export class LiqChoferComponent implements OnInit {
 }
 
 verificarDuplicadosFacturadas(){
-  this.dbFirebase.getByDateValue("facOpLiqChofer", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
+  /* this.dbFirebase.getByDateValue("facOpLiqChofer", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
   .pipe(take(1)) // Detener la suscripción cuando sea necesario
   .subscribe(data=>{
     let $facturasLiqChofer: any [] = data;
@@ -183,7 +183,21 @@ verificarDuplicadosFacturadas(){
   
   console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
 
+  }) */
+  this.$facturasOpChofer.forEach((facturaOp:FacturaOp) => {
+    this.dbFirebase.getMostRecentId("facOpLiqChofer", "idFacturaOp", "idOperacion", facturaOp.idOperacion)
+    .pipe(take(1))
+    .subscribe(data=>{
+      if(data.length > 0){
+        console.log("hay data", data);
+        let facOp: any = data[0];
+        this.$facLiqOpDuplicadas.push(facOp)
+      } else {
+        console.log("no hay data", data);        
+      }
+    })
   })
+  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
 }
 
 deleteDuplicadas(){
