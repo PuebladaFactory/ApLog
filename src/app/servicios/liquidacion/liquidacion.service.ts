@@ -27,18 +27,25 @@ export class LiquidacionService {
       });
     }
     
-  liquidarFacOpClientes(factura: FacturaCliente, facturasOp: ConId<FacturaOp>[]){
-    this.addItem(factura, "facturaCliente", factura.idFacturaCliente, "ALTA")
-    this.editarOperacionesFac(facturasOp);
-    this.eliminarFacturasOp(facturasOp, "facOpLiqCliente", "facturaOpCliente")
+  liquidarFacOpCliente(factura: FacturaCliente, facturasOp: ConId<FacturaOp>[]){
+    console.log("liquidarFacOpClientes");
+    this.addItem(factura, "facturaCliente", factura.idFacturaCliente, "ALTA");
+    this.editarOperacionesFac(facturasOp, "clientes");
+    this.eliminarFacturasOp(facturasOp, "facOpLiqCliente", "facturaOpCliente");        
   }
 
-  liquidarFacOpChofer(factura: FacturaChofer, facturasOp: FacturaOp){
-    
+  liquidarFacOpChofer(factura: FacturaChofer, facturasOp: ConId<FacturaOp>[]){
+    console.log("liquidarFacOpChoferes");
+    this.addItem(factura, "facturaChofer", factura.idFacturaChofer, "ALTA");
+    this.editarOperacionesFac(facturasOp, "choferes");
+    this.eliminarFacturasOp(facturasOp, "facOpLiqChofer", "facturaOpChofer");
   }
 
-  liquidarFacOpProveedor(factura: FacturaProveedor, facturasOp: FacturaOp){
-    
+  liquidarFacOpProveedor(factura: FacturaProveedor, facturasOp: ConId<FacturaOp>[]){
+    console.log("liquidarFacOpProveedores");
+    this.addItem(factura, "facturaProveedor", factura.idFacturaProveedor, "ALTA");
+    this.editarOperacionesFac(facturasOp, "proveedores");
+    this.eliminarFacturasOp(facturasOp, "facOpLiqProveedor", "facturaOpProveedor");
   }
 
 
@@ -52,16 +59,16 @@ export class LiquidacionService {
   
     eliminarFacturasOp(facturasOp: ConId<FacturaOp>[], componenteAlta: string, componenteBaja: string){
       
-      facturasOp.forEach((facturaOp: ConId<FacturaOp>) => {  
-        console.log("llamada al storage desde liq-cliente, addItem");
+      facturasOp.forEach((facturaOp: ConId<FacturaOp>) => {          
         let{id, ...factura} = facturaOp;
         this.addItem(factura, componenteAlta, factura.idFacturaOp, "INTERNA");
-        this.removeItem(factura, componenteBaja);
+        this.removeItem(facturaOp, componenteBaja);
         
       }); 
+      console.log("eliminarFacturasOp");
     }
   
-    editarOperacionesFac(facturaOp:ConId<FacturaOp>[]){
+    editarOperacionesFac(facturaOp:ConId<FacturaOp>[], modo:string){
       //factura.idOperacion
       
       facturaOp.forEach((factura: ConId<FacturaOp>)=>{
@@ -75,9 +82,9 @@ export class LiquidacionService {
               op.estado = {
                 abierta: false,
                 cerrada: false,
-                facCliente: true,
-                facChofer: op.estado.facChofer,
-                facturada: op.estado.facChofer ? true : false,
+                facCliente: modo === 'clientes' ? true : op.estado.facCliente,
+                facChofer: modo === 'choferes' || modo === 'proveedores' ? true : op.estado.facChofer,
+                facturada: modo === 'clientes' && op.estado.facChofer ? true : modo === 'choferes' || modo === 'proveedores' && op.estado.facCliente ? true :  false,
               }
               if(op.estado.facturada){
                 op.estado.facCliente = false;  
@@ -88,15 +95,13 @@ export class LiquidacionService {
               //this.removeItem(factura);
           });
         })
-      
-
-      
+      console.log("editarOperacionesFac");      
     }
   
-    removeItem(item:FacturaOp, componente:string){
+    removeItem(item:ConId<FacturaOp>, componente:string){
   
       console.log("llamada al storage desde liq-cliente, deleteItem");
-      this.storageService.deleteItem("facturaOpCliente", item, item.idFacturaOp, "INTERNA", "");    
+      this.storageService.deleteItem(componente, item, item.idFacturaOp, "INTERNA", "");    
   
     }
   

@@ -20,6 +20,7 @@ import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.compone
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.service';
 
 @Component({
   selector: 'app-liq-proveedor',
@@ -77,7 +78,7 @@ export class LiqProveedorComponent implements OnInit {
   $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
   $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false);
    
@@ -544,7 +545,8 @@ deleteDuplicadas(){
             this.facturaProveedor = result.factura;
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
-              this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA" );
+              //this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA" );
+              this.liqService.liquidarFacOpProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
             }
 
             if(result.modo === "proforma"){
@@ -575,9 +577,9 @@ deleteDuplicadas(){
               });   
 
             
-              if(result.modo === "cerrar"){
+              /* if(result.modo === "cerrar"){
                 this.eliminarFacturasOp();
-              }
+              } */
               /* this.mostrarMasDatos(this.indiceSeleccionado);
               this.procesarDatosParaTabla() */
           }

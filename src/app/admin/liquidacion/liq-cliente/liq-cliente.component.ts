@@ -21,6 +21,7 @@ import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.service';
 
 
 @Component({
@@ -82,7 +83,7 @@ export class LiqClienteComponent {
   $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
 
 
-  constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
+  constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false);
    
@@ -546,7 +547,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
             this.facturaCliente = result.factura;            
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
-              this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
+              //this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
+              this.liqService.liquidarFacOpCliente(this.facturaCliente, this.facturasLiquidadasCliente);
             }
             if(result.modo === "proforma"){
               this.addItem(this.facturaCliente, "proforma", this.facturaCliente.idFacturaCliente, "ALTA");
@@ -574,9 +576,9 @@ selectAllCheckboxes(event: any, idCliente: number): void {
                   }
                 });   
 
-                if(result.modo === "cerrar"){
+                /* if(result.modo === "cerrar"){
                   this.eliminarFacturasOp();
-                }
+                } */
                 /* this.mostrarMasDatos(this.indiceSeleccionado);
                 this.procesarDatosParaTabla() */
           } 
