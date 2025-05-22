@@ -546,7 +546,7 @@ deleteDuplicadas(){
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
               //this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA" );
-              this.liqService.liquidarFacOpProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
+              //this.liqService.liquidarFacOpProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
             }
 
             if(result.modo === "proforma"){

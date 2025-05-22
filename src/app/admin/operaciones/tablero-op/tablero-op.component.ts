@@ -12,11 +12,12 @@ import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { ModalFacturacionComponent } from '../modal-facturacion/modal-facturacion.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
 
 
 
@@ -110,10 +111,12 @@ export class TableroOpComponent implements OnInit {
     facChofer: false,
     facturada: false
   };
- 
+  operacionesDemo!: ConId<Operacion>[];
 
   
-  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private el: ElementRef, private excelServ: ExcelService){}
+  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private el: ElementRef, private excelServ: ExcelService,
+  private facturacionOpServ: FacturacionOpService
+  ){}
   
   ngOnInit(): void {
    /*  this.storageService.opTarEve$
@@ -823,6 +826,77 @@ export class TableroOpComponent implements OnInit {
 
   descargarOp(){
     this.excelServ.generarInformeOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta,this.$opFiltradas)
+  }
+
+  restaurarOpAbiertas(){
+    
+    this.dbFirebase.getAll<Operacion>("operaciones")
+    .pipe(take(1))
+    .subscribe(data=>{
+      if(data){
+        
+        this.operacionesDemo = data
+        console.log("operaciones", this.operacionesDemo);
+        this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
+         op.estado ={
+            abierta: true,
+            cerrada: false,
+            facCliente: false,
+            facChofer: false,
+            facturada: false,
+          }
+         
+         //op.km = Math.floor(Math.random() * (150 - 1 + 1)) + 1
+         op.km = 0
+         console.log("op: ", op);
+         
+         /*  let {id, ...opAc} = op;
+          this.dbFirebase.update("operaciones", opAc, op.id); */
+
+        })
+        /* opActualizar.forEach(op =>{
+          this.dbFirebase.update("operaciones", op);
+        }) */
+      }
+    })
+  }
+  actualizarOperaciones(){
+   
+    this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
+     
+      //this.facturacionOpServ.facturarOperacion(op);
+      let {id, ...opAc} = op;
+      this.dbFirebase.update("operaciones", opAc, op.id);
+
+    })
+
+  }
+
+  
+  asignarKmOp(){
+    this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
+       
+         op.km = Math.floor(Math.random() * (150 - 1 + 1)) + 1
+         console.log("op: ", op);
+         
+
+        })
+  }
+
+  cerrarOperaciones(){
+     this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
+      /* op.estado ={
+        abierta: false,
+        cerrada: true,
+        facCliente: false,
+        facChofer: false,
+        facturada: false,
+      } */
+      this.facturacionOpServ.facturarOperacion(op);
+      //let {id, ...opAc} = op;
+      //this.dbFirebase.update("operaciones", opAc, op.id);
+
+    })
   }
   
 

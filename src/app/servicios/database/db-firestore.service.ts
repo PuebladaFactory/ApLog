@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, updateDoc } from '@angular/fire/firestore';
+import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, getDoc, getDocs, query, setDoc, updateDoc, where, writeBatch } from '@angular/fire/firestore';
+import { chunk } from 'lodash';
 import { firstValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
+import { Operacion } from 'src/app/interfaces/operacion';
+import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root'
@@ -505,4 +508,127 @@ getByFieldValue(componente:string, campo:string, value:any){
     const estacionamiento1DocumentReference = doc(this.firestore, `/users/${id}`);
     return deleteDoc(estacionamiento1DocumentReference);
   }
+
+async procesarLiquidacion(
+  informesSeleccionados: ConId<FacturaOp>[],
+  modo: string,
+  componenteAlta: string,
+  componenteBaja: string,
+  factura: any,
+  componenteFactura: string
+): Promise<{ exito: boolean; mensaje: string }> {
+  const colOps = 'operaciones';
+  const bloques = chunk(informesSeleccionados, 500);
+  const reversionData: {
+    docRef: ReturnType<typeof doc>,
+    prevData: any
+  }[] = [];
+
+  try {
+    for (let i = 0; i < bloques.length; i++) {
+      const batch = writeBatch(this.firestore);
+
+      for (const informe of bloques[i]) {
+        // 1. Buscar operación
+        const operacionesRef = collection(this.firestore, `/Vantruck/datos/${colOps}`);
+        const q = query(operacionesRef, where('idOperacion', '==', informe.idOperacion));
+        const querySnap = await getDocs(q);
+
+        if (querySnap.empty) {
+          throw new Error(`No se encontró operación con idOperacion ${informe.idOperacion}`);
+        }
+
+        const opDoc = querySnap.docs[0];
+        const operacion = opDoc.data() as Operacion;
+        const opDocRef = opDoc.ref;
+
+        // 2. Guardar datos para reversión
+        reversionData.push({
+          docRef: opDocRef,
+          prevData: { ...operacion }
+        });
+
+        // 3. Actualizar estado de la operación
+        const nuevoEstado = { ...operacion.estado };
+        if (modo === 'clientes') {
+          nuevoEstado.cerrada = false;
+          nuevoEstado.facCliente = true;
+        } else {
+          nuevoEstado.cerrada = false;
+          nuevoEstado.facChofer = true;
+        }
+        nuevoEstado.facturada = nuevoEstado.facCliente && nuevoEstado.facChofer;
+
+        batch.update(opDocRef, { estado: nuevoEstado });
+
+        // 4. Verificar duplicado en destino
+        const informeRefDestino = doc(this.firestore, `/Vantruck/datos/${componenteAlta}/${informe.id}`);
+        const destinoSnap = await getDoc(informeRefDestino);
+        if (destinoSnap.exists()) {
+          throw new Error(`Ya existe un informe con id ${informe.id} en ${componenteAlta}`);
+        }
+
+        // 5. Verificar que el origen existe
+        const informeRefOrigen = doc(this.firestore, `/Vantruck/datos/${componenteBaja}/${informe.id}`);
+        const origenSnap = await getDoc(informeRefOrigen);
+        if (!origenSnap.exists()) {
+          throw new Error(`No se encontró el informe con id ${informe.id} en ${componenteBaja}`);
+        }
+
+        // 6. Mover informe
+        const { id, ...inf } = informe;
+        batch.set(informeRefDestino, inf);
+        batch.delete(informeRefOrigen);
+      }
+
+      // 7. Ejecutar el batch
+      await batch.commit();
+      console.log(`Batch ${i + 1} procesado correctamente.`);
+    }
+
+    // 8. Verificar que no exista una factura con el mismo idFactura
+    const facturasRef = collection(this.firestore, `/Vantruck/datos/${componenteFactura}`);
+    const facturaQuery = query(facturasRef, where('idFactura', '==', factura.idFactura));
+    const facturaSnap = await getDocs(facturaQuery);
+
+    if (!facturaSnap.empty) {
+      throw new Error(`Ya existe una factura con idFactura ${factura.idFactura} en ${componenteFactura}`);
+    }
+
+    // 9. Guardar la factura (crear documento con ID automático o definido por vos)
+    await addDoc(facturasRef, factura); // o setDoc(...) si querés controlar el ID
+    console.log('Factura guardada correctamente.');
+
+    return {
+      exito: true,
+      mensaje: 'La liquidación y la factura se procesaron con éxito.'
+    };
+  } catch (error: any) {
+    console.error('Error durante la liquidación o el guardado de la factura:', error);
+
+    for (const { docRef, prevData } of reversionData) {
+      try {
+        await setDoc(docRef, prevData);
+      } catch (revertErr) {
+        console.error('Error al revertir operación:', revertErr);
+      }
+    }
+
+    return {
+      exito: false,
+      mensaje: `Ocurrió un error: ${error.message || 'Error desconocido'}. Se revirtieron los cambios previos.`
+    };
+  }
+}
+
+
+  mensajesError(msj:string, resultado:string){
+      Swal.fire({
+        icon: resultado === 'error' ? "error" : "success",
+        //title: "Oops...",
+        text: `${msj}`
+        //footer: `${msj}`
+      });
+      
+    }
 }

@@ -81,6 +81,7 @@ export class LiqClienteComponent {
   $facturasOpChoferDuplicadas: ConId<FacturaOp>[] = []; // Array para guardar facturas de choferes duplicadas
   $facturasOpProveedor: ConId<FacturaOp>[] = []; // Array de facturas de choferes
   $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
+  isLoading: boolean = false;
 
 
   constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
@@ -129,7 +130,7 @@ export class LiqClienteComponent {
             this.procesarDatosParaTabla();
             this.verificarDuplicados();
           } else {
-            this.mensajesError("error: facturaOpCliente")
+            this.mensajesError("error: facturaOpCliente", "error")
           }
           
       });
@@ -428,15 +429,15 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       //////console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
     } else {
-      this.mensajesError("Debe seleccionar una factura para liquidar")
+      this.mensajesError("Debe seleccionar una factura para liquidar", "error")
     }
 
    
   }
 
-  mensajesError(msj:string){
+  mensajesError(msj:string, resultado:string){
     Swal.fire({
-      icon: "error",
+      icon: resultado === 'error' ? "error" : "success",
       //title: "Oops...",
       text: `${msj}`
       //footer: `${msj}`
@@ -548,7 +549,9 @@ selectAllCheckboxes(event: any, idCliente: number): void {
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
               //this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
-              this.liqService.liquidarFacOpCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+              //this.liqService.liquidarFacOpCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+              this.procesarFacturacion(titulo, accion)
+              
             }
             if(result.modo === "proforma"){
               this.addItem(this.facturaCliente, "proforma", this.facturaCliente.idFacturaCliente, "ALTA");
@@ -557,7 +560,32 @@ selectAllCheckboxes(event: any, idCliente: number): void {
               })              
             }                       
 
-            Swal.fire({
+           
+
+                /* if(result.modo === "cerrar"){
+                  this.eliminarFacturasOp();
+                } */
+                /* this.mostrarMasDatos(this.indiceSeleccionado);
+                this.procesarDatosParaTabla() */
+          } 
+          this.mostrarMasDatos(this.indiceSeleccionado);
+          this.procesarDatosParaTabla()
+          },
+        (reason) => {}
+      );
+    }
+  }
+
+  procesarFacturacion(titulo:string, accion:string) {
+  this.isLoading = true;
+  
+  this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasCliente, "clientes", "facOpLiqCliente", "facturaOpCliente", this.facturaCliente, "facturaCliente")
+    .then((result) => {
+      this.isLoading = false;
+      console.log("resultado: ", result);
+      
+     /* 
+       Swal.fire({
                   title: `¿Desea imprimir el detalle del Cliente?`,
                   //text: "You won't be able to revert this!",
                   icon: "warning",
@@ -574,21 +602,14 @@ selectAllCheckboxes(event: any, idCliente: number): void {
                         this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);        
                       }      
                   }
-                });   
-
-                /* if(result.modo === "cerrar"){
-                  this.eliminarFacturasOp();
-                } */
-                /* this.mostrarMasDatos(this.indiceSeleccionado);
-                this.procesarDatosParaTabla() */
-          } 
-          this.mostrarMasDatos(this.indiceSeleccionado);
-          this.procesarDatosParaTabla()
-          },
-        (reason) => {}
-      );
-    }
-  }
+                });    */
+    })
+    .catch((error) => {
+      this.isLoading = false;
+      //console.error(error);
+      //this.mensajesError('Ocurrió un error al procesar la facturación.', "error");
+    });
+}
 
   buscarTarifa(i:number ) {
     

@@ -556,7 +556,7 @@ deleteDuplicadas(){
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
               //this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer, "ALTA");
-              this.liqService.liquidarFacOpChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+              //this.liqService.liquidarFacOpChofer(this.facturaChofer, this.facturasLiquidadasChofer);
             }
 
             if(result.modo === "proforma"){
