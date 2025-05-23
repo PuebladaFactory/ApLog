@@ -519,11 +519,9 @@ async procesarLiquidacion(
 ): Promise<{ exito: boolean; mensaje: string }> {
   const colOps = 'operaciones';
   const bloques = chunk(informesSeleccionados, 500);
-  const reversionData: {
-    docRef: ReturnType<typeof doc>,
-    prevData: any
-  }[] = [];
-
+  const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
+  const informesBackup: ConId<FacturaOp>[] = [...informesSeleccionados]; // Backup en memoria
+  informesSeleccionados[0].id= "A"
   try {
     for (let i = 0; i < bloques.length; i++) {
       const batch = writeBatch(this.firestore);
@@ -543,10 +541,7 @@ async procesarLiquidacion(
         const opDocRef = opDoc.ref;
 
         // 2. Guardar datos para reversión
-        reversionData.push({
-          docRef: opDocRef,
-          prevData: { ...operacion }
-        });
+        reversionData.push({ docRef: opDocRef, prevData: { ...operacion } });
 
         // 3. Actualizar estado de la operación
         const nuevoEstado = { ...operacion.estado };
@@ -575,28 +570,31 @@ async procesarLiquidacion(
           throw new Error(`No se encontró el informe con id ${informe.id} en ${componenteBaja}`);
         }
 
-        // 6. Mover informe
+        // 6. Mover informe (set en destino, delete en origen)
         const { id, ...inf } = informe;
         batch.set(informeRefDestino, inf);
         batch.delete(informeRefOrigen);
       }
 
-      // 7. Ejecutar el batch
+      // 7. Ejecutar batch
       await batch.commit();
       console.log(`Batch ${i + 1} procesado correctamente.`);
     }
 
-    // 8. Verificar que no exista una factura con el mismo idFactura
+    // 8. Verificar existencia de factura duplicada
     const facturasRef = collection(this.firestore, `/Vantruck/datos/${componenteFactura}`);
-    const facturaQuery = query(facturasRef, where('idFactura', '==', factura.idFactura));
-    const facturaSnap = await getDocs(facturaQuery);
+    const idFactura = modo === 'clientes' ? factura.idFacturaCliente
+                   : modo === 'choferes' ? factura.idFacturaChofer
+                   : factura.idFacturaProveedor;
 
+    const facturaQuery = query(facturasRef, where('idFactura', '==', idFactura));
+    const facturaSnap = await getDocs(facturaQuery);
     if (!facturaSnap.empty) {
-      throw new Error(`Ya existe una factura con idFactura ${factura.idFactura} en ${componenteFactura}`);
+      throw new Error(`Ya existe una factura con idFactura ${idFactura} en ${componenteFactura}`);
     }
 
-    // 9. Guardar la factura (crear documento con ID automático o definido por vos)
-    await addDoc(facturasRef, factura); // o setDoc(...) si querés controlar el ID
+    // 9. Guardar la factura
+    await addDoc(facturasRef, factura);
     console.log('Factura guardada correctamente.');
 
     return {
@@ -606,11 +604,22 @@ async procesarLiquidacion(
   } catch (error: any) {
     console.error('Error durante la liquidación o el guardado de la factura:', error);
 
+    // Restaurar operaciones modificadas
     for (const { docRef, prevData } of reversionData) {
       try {
         await setDoc(docRef, prevData);
       } catch (revertErr) {
         console.error('Error al revertir operación:', revertErr);
+      }
+    }
+
+    // Restaurar informes desde backup
+    for (const informe of informesBackup) {
+      try {
+        const informeRef = doc(this.firestore, `/Vantruck/datos/${componenteBaja}/${informe.id}`);
+        await setDoc(informeRef, informe); // reescribe el documento
+      } catch (revertInfErr) {
+        console.error('Error al restaurar informe:', revertInfErr);
       }
     }
 

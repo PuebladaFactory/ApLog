@@ -124,7 +124,7 @@ export class LiqClienteComponent {
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpCliente = data;
-          //console.log("1)", this.$facturasOpCliente );
+          console.log("1)", this.$facturasOpCliente );
           if(this.$facturasOpCliente){
             ////console.log("?????????????");                   
             this.procesarDatosParaTabla();
@@ -536,7 +536,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         total: this.totalFacturasLiquidadasCliente,
         //totalChofer: this.totalFacturasLiquidadasChofer,
       }; 
-      //////console.log()(info);
+      console.log("info: ",info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
@@ -548,7 +548,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
             this.facturaCliente = result.factura;            
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
-              //this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
+              
               //this.liqService.liquidarFacOpCliente(this.facturaCliente, this.facturasLiquidadasCliente);
               this.procesarFacturacion(titulo, accion)
               
@@ -583,6 +583,37 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     .then((result) => {
       this.isLoading = false;
       console.log("resultado: ", result);
+      if(result.exito){
+          Swal.fire({
+                icon: "success",
+                //title: "Oops...",
+                text: 'La liquidación se procesó con éxito.',
+                confirmButtonColor: "#3085d6",
+                confirmButtonText: "Confirmar",
+                //footer: `${msj}`
+              }).then(() => {
+                  Swal.fire({
+                    title: `¿Desea imprimir el detalle del Cliente?`,
+                    //text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Confirmar",
+                    cancelButtonText: "Cancelar"
+                  }).then((result) => {
+                    if (result.isConfirmed) {     
+                      if(titulo === "excel"){
+                          this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);
+                        }else if (titulo === "pdf"){
+                          this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);        
+                        }      
+                    }
+                  }); 
+              });
+      } else {
+        this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
+      }
       
      /* 
        Swal.fire({
