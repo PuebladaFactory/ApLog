@@ -44,6 +44,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
   tarifaEventual!: TarifaEventual;
   @ViewChild('kmInput') kmInputElement!: ElementRef;
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
+  isLoading: boolean = false;
 
   constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private facturacionOpServ: FacturacionOpService, private formNumServ: FormatoNumericoService, private dbFirebase: DbFirestoreService){
     this.form = this.fb.group({      
@@ -271,17 +272,39 @@ cerrarOp(){
     cancelButtonText: "Cancelar"
   }).then((result) => {
     if (result.isConfirmed) {
+      this.isLoading = true;
       console.log("op: ", this.op);
-      this.facturacionOpServ.facturarOperacion(this.op);
-      Swal.fire({
-        title: "Confirmado",
-        text: "La operación ha sido cerrada.",
-        icon: "success"
-      }).then((result)=>{
-        if (result.isConfirmed) {
-          this.activeModal.close();
+      this.facturacionOpServ.facturarOperacion(this.op).then(        
+        (result:any)=>{
+          this.isLoading = false;
+          console.log("modal facturacion: respuesta: ", result);
+          let idOp: number[] = [];
+          idOp.push(this.op.idOperacion)
+          if(result.exito){            
+            this.storageService.logMultiplesOp(idOp, "CERRAR", this.componente, "Cierre de Operación",result.exito )
+            Swal.fire({
+              title: "Confirmado",
+              text: "La operación ha sido cerrada.",
+              icon: "success"
+            }).then((result)=>{
+              if (result.isConfirmed) {
+                this.activeModal.close();
+              }
+            });
+          } else {
+            this.storageService.logMultiplesOp(idOp, "CERRAR", this.componente, "Cierre de Operación",result.exito )
+            Swal.fire({
+              title: "Error",
+              text: `Ha ocurrido un error: ${result.mensaje}`,
+              icon: "error"
+            }).then((result)=>{
+              if (result.isConfirmed) {
+                this.activeModal.close();
+              }
+            });
+          }
         }
-      });   
+      ); 
       
     }
   });   

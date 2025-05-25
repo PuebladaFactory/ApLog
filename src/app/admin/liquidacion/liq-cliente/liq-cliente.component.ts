@@ -200,6 +200,16 @@ deleteDuplicadas(){
     this.dbFirebase.delete(this.titulo, facDupli.id)
 })
 }
+
+borrarDuplicadasEnLiquidacion(){
+  console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
+  this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+    this.dbFirebase.delete(this.titulo, facDupli.id)
+})
+this.$facturasOpDuplicadas = []
+this.procesarDatosParaTabla();
+this.verificarDuplicados();
+}
   
 
   procesarDatosParaTabla() {
@@ -584,6 +594,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       this.isLoading = false;
       console.log("resultado: ", result);
       if(result.exito){
+          this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "LIQUIDAR", "operaciones", `Operación del Cliente ${this.facturaCliente.razonSocial} Liquidada`,result.exito)
+          this.storageService.logSimple(this.facturaCliente.idFacturaCliente,"ALTA", "facturaCliente", `Alta de Factura del Cliente ${this.facturaCliente.razonSocial}`, result.exito )
           Swal.fire({
                 icon: "success",
                 //title: "Oops...",
@@ -612,33 +624,17 @@ selectAllCheckboxes(event: any, idCliente: number): void {
                   }); 
               });
       } else {
+        this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "LIQUIDAR", "operaciones", `Operación del Cliente ${this.facturaCliente.razonSocial} Liquidada`,result.exito)
+        this.storageService.logSimple(this.facturaCliente.idFacturaCliente,"ALTA", "facturaCliente", `Alta de Factura del Cliente ${this.facturaCliente.razonSocial}`, result.exito )
         this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
       }
       
-     /* 
-       Swal.fire({
-                  title: `¿Desea imprimir el detalle del Cliente?`,
-                  //text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Confirmar",
-                  cancelButtonText: "Cancelar"
-                }).then((result) => {
-                  if (result.isConfirmed) {     
-                    if(titulo === "excel"){
-                        this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);
-                      }else if (titulo === "pdf"){
-                        this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);        
-                      }      
-                  }
-                });    */
+     
     })
     .catch((error) => {
       this.isLoading = false;
-      //console.error(error);
-      //this.mensajesError('Ocurrió un error al procesar la facturación.', "error");
+      console.error(error);
+      this.mensajesError('Ocurrió un error al procesar la facturación.', "error");
     });
 }
 

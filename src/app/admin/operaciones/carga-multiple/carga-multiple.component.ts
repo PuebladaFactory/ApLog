@@ -47,6 +47,7 @@ export class CargaMultipleComponent implements OnInit {
   $clientesNoEventuales!: Cliente[];
   today = new Date().toISOString().split('T')[0];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
+  isWaiting: boolean = false;
 
   constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, private dbFirebase: DbFirestoreService){
     this.operacionesForm = this.fb.group({
@@ -234,7 +235,7 @@ export class CargaMultipleComponent implements OnInit {
         this.choferesFormArray.at(index).patchValue({ seccion: seccionId, categoria: null });
         // Aquí puedes cargar las categorías correspondientes a la sección seleccionada si es necesario
       }else{
-        this.mensajesError("this.tarifaPersonalizada: seccion")
+        this.mensajesError("this.tarifaPersonalizada: seccion", "error")
       }
       
     }
@@ -263,23 +264,23 @@ onSubmit() {
     ////////console.log("1) choferes seleccionados: ", cliente);
     if (!fecha) {
       // Manejar errores de validación
-      this.mensajesError('Por favor, seleccione una fecha.');
+      this.mensajesError('Por favor, seleccione una fecha.', "error");
       return;
     }
     if (!cliente) {
       // Manejar errores de validación
-      this.mensajesError('Por favor, seleccione un cliente.');
+      this.mensajesError('Por favor, seleccione un cliente.', "error");
       return;
     }
 
-    if(!cliente.tarifaAsignada){return this.mensajesError(`El cliente ${this.clienteSeleccionado.razonSocial} aún no tiene una tarifa asignada`)};
+    if(!cliente.tarifaAsignada){return this.mensajesError(`El cliente ${this.clienteSeleccionado.razonSocial} aún no tiene una tarifa asignada`, "error")};
 
     // Filtrar los choferes seleccionados
     let choferesSeleccionados = formValue.choferes.filter((c: any) => c.seleccionado);
     console.log("2) choferes seleccionados: ", choferesSeleccionados);    
 
     if (choferesSeleccionados.length === 0) {
-      this.mensajesError('Por favor, selecciona al menos un chofer.');
+      this.mensajesError('Por favor, selecciona al menos un chofer.', "error");
       return;
     }
 
@@ -290,7 +291,7 @@ onSubmit() {
         
     // Si hay choferes sin sección o categoría seleccionadas
     if (choferesSinPatente.length > 0) {
-      this.mensajesError('Uno de los choferes seleccionados no tiene definido el vehiculo.');
+      this.mensajesError('Uno de los choferes seleccionados no tiene definido el vehiculo.', "error");
       return;
     }
     
@@ -305,7 +306,7 @@ onSubmit() {
       
       // Si hay choferes sin sección o categoría seleccionadas
       if (choferesSinSeccionOCategoria.length > 0) {
-        this.mensajesError('Por favor, seleccione una sección y una categoría para todos los choferes.');
+        this.mensajesError('Por favor, seleccione una sección y una categoría para todos los choferes.', "error");
         return;
       }
     }
@@ -315,7 +316,7 @@ onSubmit() {
     });
     console.log("choferesDirectos", choferesDirectos);
     let chofereSinTarifa = choferesDirectos.filter((choferForm:any) => !choferForm.chofer.tarifaAsignada);    
-    if(chofereSinTarifa.length > 0){return this.mensajesError(`Uno de los choferes de los choferes no tiene asignada una tarifa.`)};
+    if(chofereSinTarifa.length > 0){return this.mensajesError(`Uno de los choferes de los choferes no tiene asignada una tarifa.`, "error")};
     console.log("choferesSeleccionados", chofereSinTarifa);
     
     let choferesProveedores = choferesSeleccionados.filter((choferForm: any) => {      
@@ -341,7 +342,7 @@ onSubmit() {
     console.log("provedoresSeleccionados", proveedoresSeleccionados);
     let proveedoresSinTarifa = proveedoresSeleccionados.filter((p:Proveedor) => !p.tarifaAsignada)    
     
-    if(proveedoresSinTarifa.length > 0){return this.mensajesError(`Uno de los proveedores de los choferes no tiene asignada una tarifa`)};
+    if(proveedoresSinTarifa.length > 0){return this.mensajesError(`Uno de los proveedores de los choferes no tiene asignada una tarifa`, "error")};
 
     let baseTime = new Date().getTime(); // Obtén el timestamp base
     let increment = 0;
@@ -470,7 +471,7 @@ onSubmit() {
                         operacion.valores.cliente.tarifaBase = operacion.valores.cliente.aCobrar;
                       };
                     }else{
-                      this.mensajesError("ultTarifaEspCliente")
+                      this.mensajesError("ultTarifaEspCliente", "error")
                     }            
                   }          
               })
@@ -495,7 +496,7 @@ onSubmit() {
                       operacion.valores.chofer.aPagar = this.aPagarOp(chofer, patenteChofer, operacion);
                           operacion.valores.chofer.tarifaBase = operacion.valores.chofer.aPagar
                     }else{
-                      this.mensajesError("ultTarifaEspChofer")
+                      this.mensajesError("ultTarifaEspChofer", "error")
                     }            
                   }          
               });
@@ -518,7 +519,7 @@ onSubmit() {
                           operacion.valores.chofer.aPagar = this.aPagarOp(chofer, patenteChofer, operacion);                      
                           operacion.valores.chofer.tarifaBase = operacion.valores.chofer.aPagar;
                         }else{
-                          this.mensajesError("ultTarifaEspProveedor")
+                          this.mensajesError("ultTarifaEspProveedor", "error")
                         };    
 
                       }
@@ -600,14 +601,14 @@ aPagarOp(chofer: Chofer, patente: string, op: Operacion){
   
 
 }
-    mensajesError(msj:string){
-      Swal.fire({
-        icon: "error",
-        //title: "Oops...",
-        text: `${msj}`
-        //footer: `${msj}`
-      });
-    }
+    mensajesError(msj:string, resultado:string){
+        Swal.fire({
+          icon: resultado === 'error' ? "error" : "success",
+          //title: "Oops...",
+          text: `${msj}`
+          //footer: `${msj}`
+        });
+      }
 
     async addItem(): Promise<void> {
       
@@ -621,21 +622,40 @@ aPagarOp(chofer: Chofer, patente: string, op: Operacion){
           cancelButtonText: "Cancelar"
         });
          if (result.isConfirmed) {
-          for (const op of this.operaciones) {
+          this.isWaiting = true;
+          this.dbFirebase.guardarMultiple(this.operaciones,this.componente, "idOperacion", "operaciones").then(
+            (result:any)=>{
+              let arrayOp: number[] = [];
+              this.operaciones.map((op:Operacion)=>{
+                arrayOp.push(op.idOperacion);
+              })
+              if(result.exito){
+                  this.isWaiting = false;                  
+                  this.storageService.logMultiplesOp(arrayOp, "ALTA", "operaciones", `Alta de Operación`,result.exito)
+                  Swal.fire({
+                      title: "Confirmado",
+                      text: "Las operaciones han sido agregadas.",
+                      icon: "success"
+                    }).then((result)=>{
+                      if (result.isConfirmed) {
+                        this.activeModal.close();
+                      }
+                    });
+              } else {
+                this.isWaiting = false;                  
+                this.storageService.logMultiplesOp(arrayOp, "ALTA", "operaciones", `Alta de Operación`,result.exito)
+                this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
+              }
+            }
+          )
+
+          /* for (const op of this.operaciones) {
           // Guardar la operación en la base de datos
           await this.storageService.addItem(this.componente, op, op.idOperacion, "ALTA", "Alta de Operación");
           
          
-        }
-        await Swal.fire({
-          title: "Confirmado",
-          text: "Las operaciones han sido agregadas.",
-          icon: "success"
-        }).then((result)=>{
-          if (result.isConfirmed) {
-            this.activeModal.close();
-          }
-        });
+        } */
+        
          }
       //console.log("Todas las operaciones se han agregado.");
     }

@@ -79,6 +79,7 @@ export class LiqChoferComponent implements OnInit {
   opAbiertas!: ConId<Operacion>[];
   $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
   $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
+  isLoading: boolean = false;
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -94,7 +95,7 @@ export class LiqChoferComponent implements OnInit {
         this.$choferes = data;
         this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
       } else {
-        this.mensajesError("error: choferes");
+        this.mensajesError("error: choferes", "error");
       }
     });
     this.storageService.getObservable<ConIdType<Cliente>>("clientes")
@@ -104,7 +105,7 @@ export class LiqChoferComponent implements OnInit {
         this.$clientes = data;
         this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       } else {
-        this.mensajesError("error: clientes");
+        this.mensajesError("error: clientes", "error");
       }
     }); 
     this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
@@ -114,7 +115,7 @@ export class LiqChoferComponent implements OnInit {
         this.$proveedores = data;
         this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       } else {
-        this.mensajesError("error: proveedores");
+        this.mensajesError("error: proveedores", "error");
       }
       
     });
@@ -138,7 +139,7 @@ export class LiqChoferComponent implements OnInit {
             this.procesarDatosParaTabla();            
             this.verificarDuplicados();
           } else {
-            this.mensajesError("error: facturaOpChofer")            
+            this.mensajesError("error: facturaOpChofer", "error")            
           }
           
       });
@@ -206,6 +207,16 @@ deleteDuplicadas(){
   this.$facLiqOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
     this.dbFirebase.delete(this.titulo, facDupli.id)
 })
+}
+
+borrarDuplicadasEnLiquidacion(){
+  console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
+  this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+    this.dbFirebase.delete(this.titulo, facDupli.id)
+})
+this.$facturasOpDuplicadas = []
+this.procesarDatosParaTabla();
+this.verificarDuplicados();
 }
   
   procesarDatosParaTabla() {
@@ -438,13 +449,13 @@ deleteDuplicadas(){
       ////console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
     } else {
-      this.mensajesError("Debe seleccionar una factura para liquidar")
+      this.mensajesError("Debe seleccionar una factura para liquidar", "error")
     }
   }
 
-  mensajesError(msj:string){
+  mensajesError(msj:string, resultado:string){
     Swal.fire({
-      icon: "error",
+      icon: resultado === 'error' ? "error" : "success",
       //title: "Oops...",
       text: `${msj}`
       //footer: `${msj}`
@@ -557,6 +568,7 @@ deleteDuplicadas(){
             if(result.modo === "cerrar"){
               //this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer, "ALTA");
               //this.liqService.liquidarFacOpChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+              this.procesarFacturacion(titulo, accion);
             }
 
             if(result.modo === "proforma"){
@@ -567,7 +579,40 @@ deleteDuplicadas(){
             }     
             
             
+              /* if(result.modo === "cerrar"){
+                this.eliminarFacturasOp();
+              } */
+            
+              /* this.mostrarMasDatos(this.indiceSeleccionado);
+              this.procesarDatosParaTabla(); */
+          }
+          this.mostrarMasDatos(this.indiceSeleccionado);
+          this.procesarDatosParaTabla()
+        },
+        (reason) => {}
+      );
+    }
+  }
+
+  procesarFacturacion(titulo:string, accion:string) {
+    this.isLoading = true;
+    
+    this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasChofer, "choferes", "facOpLiqChofer", "facturaOpChofer", this.facturaChofer, "facturaChofer")
+      .then((result) => {
+        this.isLoading = false;
+        console.log("resultado: ", result);
+        if(result.exito){
+            this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre} Liquidada`,result.exito)
+            this.storageService.logSimple(this.facturaChofer.idFacturaChofer,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`, result.exito )
             Swal.fire({
+                  icon: "success",
+                  //title: "Oops...",
+                  text: 'La liquidación se procesó con éxito.',
+                  confirmButtonColor: "#3085d6",
+                  confirmButtonText: "Confirmar",
+                  //footer: `${msj}`
+                }).then(() => {
+                     Swal.fire({
                 title: `¿Desea imprimir el detalle del Chofer?`,
                 //text: "You won't be able to revert this!",
                 icon: "warning",
@@ -584,21 +629,21 @@ deleteDuplicadas(){
                       this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes, accion);        
                     } 
                 }
-              });   
-            
-              /* if(result.modo === "cerrar"){
-                this.eliminarFacturasOp();
-              } */
-            
-              /* this.mostrarMasDatos(this.indiceSeleccionado);
-              this.procesarDatosParaTabla(); */
-          }
-          this.mostrarMasDatos(this.indiceSeleccionado);
-          this.procesarDatosParaTabla()
-        },
-        (reason) => {}
-      );
-    }
+              }); 
+                });
+        } else {
+          this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre} Liquidada`,result.exito)
+            this.storageService.logSimple(this.facturaChofer.idFacturaChofer,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`, result.exito )
+          this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
+        }
+        
+       
+      })
+      .catch((error) => {
+        this.isLoading = false;
+        console.error(error);
+        this.mensajesError('Ocurrió un error al procesar la facturación.', "error");
+      });
   }
 
 buscarTarifa(i:number ) {

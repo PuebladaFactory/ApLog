@@ -8,6 +8,8 @@ import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { LogService } from '../log/log.service';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import * as _ from 'lodash';
+import { Operacion } from 'src/app/interfaces/operacion';
+import { LogEntry } from 'src/app/interfaces/log-entry';
 
 
 
@@ -1407,6 +1409,59 @@ export class StorageService {
           console.log(e.message)
         });
       }
+
+      guardadoMultiple(
+        objetos: any[], 
+        componenteAlta: string, 
+        idObjetoNombre: string, 
+        tipo: string,
+      ){       ///metodo para guardar multiples objetos en una misma coleccón
+        this.dbFirebase.guardarMultiple(objetos, componenteAlta, idObjetoNombre, tipo)
+      }
+
+      logMultiplesOp(
+        idOperaciones: number[],
+        accion: string,
+        coleccion: string,
+        detalle: string,        
+        resultado: boolean
+      ){        ///metodo para crear multiples LogEntry
+        let arryLog: LogEntry[] = [];
+        let user = this.loadInfo('usuario');
+        //let accion: string = "BAJA";
+        if (!user[0].roles.god) { 
+          let incremento = 0
+
+          idOperaciones.forEach((idOp: number)=>{
+          let logEntry: LogEntry = this.logService.createLogEntry(accion, coleccion, detalle, idOp, resultado, incremento);
+          incremento++
+          arryLog.push(logEntry)
+        })
+        console.log("Storage Service: arraLog: ", arryLog);        
+        this.guardadoMultiple(arryLog, "logs", "timestamp", "logs")
+        }
+        
+        
+        
+      }
+
+      logSimple(
+        idObjeto: number,
+        accion: string,
+        coleccion: string,
+        detalle: string,        
+        resultado: boolean
+      ){ ///metodo para guardar multiples LogEntry
+        let arryLog: LogEntry[] = [];
+        let user = this.loadInfo('usuario');
+        //let accion: string = "BAJA";
+        if (!user[0].roles.god) { 
+          let logEntry: LogEntry = this.logService.createLogEntry(accion, coleccion, detalle, idObjeto, resultado,0);
+          arryLog.push(logEntry)
+        console.log("Storage Service: arraLog: ", arryLog);        
+        this.guardadoMultiple(arryLog, "logs", "timestamp", "logs")
+      }
+    }
     
       private controlLog(componente: string, accion:string) {
         switch(componente){

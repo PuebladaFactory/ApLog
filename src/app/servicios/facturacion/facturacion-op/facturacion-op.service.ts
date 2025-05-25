@@ -14,6 +14,8 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Subject, take, takeUntil } from 'rxjs';
 import { TarifaEventual } from 'src/app/interfaces/tarifa-eventual';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { result } from 'lodash';
+import { ResourceLoader } from '@angular/compiler';
 
 @Injectable({
   providedIn: 'root'
@@ -31,9 +33,9 @@ export class FacturacionOpService {
   $ultTarifaGralProveedor!: ConIdType<TarifaGralCliente>;
   $ultTarifaEspProveedor!: ConIdType<TarifaGralCliente>;
   tarifaOpCliente!: ConIdType<TarifaGralCliente>;
-  facturaOpCliente!: FacturaOp | null;
-  facturaOpChofer!: FacturaOp | null;
-  facturaOpProveedor!: FacturaOp | null;
+  facturaOpCliente!: FacturaOp;
+  facturaOpChofer!: FacturaOp;
+  facturaOpProveedor!: FacturaOp;
   $proveedores!: ConIdType<Proveedor>[];
   clienteFacOp!: FacturaOp [];
   choferFacOp!: FacturaOp [];
@@ -44,10 +46,11 @@ export class FacturacionOpService {
   i:number=0
   a:number=0
   private destroy$ = new Subject<void>(); // Control de destrucción de suscripciones
+  respuesta:any
 
   constructor( private facturacionCliente: FacturacionClienteService, private facturacionChofer: FacturacionChoferService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
 
-  facturarOperacion(op: ConId<Operacion>){      
+  facturarOperacion(op: ConId<Operacion>):Promise<{ exito: boolean; mensaje: string }> {      
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralChofer', 'idTarifa');        
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa');    
     this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');
@@ -116,7 +119,9 @@ export class FacturacionOpService {
       }
     });
     this.operacion = op;
-    this.$facturarOpCliente(op);        
+    this.$facturarOpCliente(op);     
+    
+    return this.respuesta 
   }
 
   $facturarOpCliente(op: ConId<Operacion>){
@@ -557,32 +562,46 @@ export class FacturacionOpService {
     console.log("3) CHOFER: ", this.facturaOpChofer);    //
     console.log("4) PROVEEDOR: ", this.facturaOpProveedor);
     ////console.log("proveedores FINAL: ", this.$proveedores)
+    let respuesta: any
+
     
-      if(op.chofer.idProveedor === 0){
-      this.addItem("facturaOpCliente", this.facturaOpCliente);
-      this.addItem("facturaOpChofer", this.facturaOpChofer);
+    if(op.chofer.idProveedor === 0){
+      this.respuesta  = this.dbFirebase.guardarFacturasOp("facturaOpCliente", this.facturaOpCliente,"facturaOpChofer", this.facturaOpChofer,op) .then(
+        (result:any)=>{
+          return result
+        } 
+      )      
+      //this.addItem("facturaOpCliente", this.facturaOpCliente);
+      //this.addItem("facturaOpChofer", this.facturaOpChofer);
     } else {
-      this.addItem("facturaOpCliente", this.facturaOpCliente);
-      this.addItem("facturaOpProveedor", this.facturaOpProveedor);
+      this.respuesta  = this.dbFirebase.guardarFacturasOp("facturaOpCliente", this.facturaOpCliente,"facturaOpProveedor", this.facturaOpProveedor,op) .then(
+        (result:any)=>{
+          return result
+        } 
+      )
+      //this.addItem("facturaOpCliente", this.facturaOpCliente);
+      //this.addItem("facturaOpProveedor", this.facturaOpProveedor);
     }
-    this.updateItem("operaciones", op); 
-    //this.storageService.clearInfo("facturaOpCliente");
-    //this.storageService.clearInfo("facturaOpChofer");
-    //this.storageService.clearInfo("facturaOpProveedor");
     if(op.tarifaTipo.eventual){
       this.guardarTarifasEventuales(op);
     }
-    this.facturaOpCliente = null;
+    return this.respuesta 
+    //this.updateItem("operaciones", op); 
+    //this.storageService.clearInfo("facturaOpCliente");
+    //this.storageService.clearInfo("facturaOpChofer");
+    //this.storageService.clearInfo("facturaOpProveedor");
+    
+   /*  this.facturaOpCliente = null;
     this.facturaOpProveedor = null;
-    this.facturaOpChofer = null;
+    this.facturaOpChofer = null; */
     this.finalizarFacturacion();
   }
 
 
-  addItem(componente: string, item:any){
+/*   addItem(componente: string, item:any){
     //this.storageService.addItem(componente, item)
     this.dbFirebase.guardarFacturaOp(componente, item)
-  }
+  } */
 
   updateItem(componente: string, item: ConId<Operacion>){
     let {id, ...op } = item

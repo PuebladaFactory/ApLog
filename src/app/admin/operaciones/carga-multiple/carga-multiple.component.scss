@@ -16,3 +16,9 @@ label{
   .seleccionado{
     background-color: rgb(219, 241, 247);
   }
+
+  .isWaiting {
+    pointer-events: none;
+    cursor: not-allowed;    
+    opacity: 0.5; /* o cualquier otro estilo para indicar que está deshabilitado */
+}

@@ -1,242 +1,245 @@
-<input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
-<table class="table table-striped">
-    <thead >
-        <tr>
-            <th scope="col" style="width:3%" class=""></th>
-            <th scope="col" style="width:18%" class="" (click)="ordenar('apellido')">
-                <span type="button">Nombre</span>
-                <span *ngIf="ordenColumna === 'apellido'">
-                    <span *ngIf="ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-                        </svg>
-                    </span>
-                    <span *ngIf="!ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-                        </svg>
-                    </span>
-                </span>
-            </th>
-            <th scope="col" style="width:8%" class=""  (click)="ordenar('opCerradas')">
-                <span type="button">Op Cerradas</span>
-                <span *ngIf="ordenColumna === 'opCerradas'">
-                    <span *ngIf="ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-                        </svg>
-                    </span>
-                    <span *ngIf="!ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-                        </svg>
-                    </span>
-                </span>
-            </th>
-            <th scope="col" style="width:8%" class=""  (click)="ordenar('opAbiertas')">
-                <span type="button">Op Abiertas</span>
-                <span *ngIf="ordenColumna === 'opAbiertas'">
-                    <span *ngIf="ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-                        </svg>
-                    </span>
-                    <span *ngIf="!ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-                        </svg>
-                    </span>
-                </span>
-            </th>
-            <th scope="col" style="width:14.5%" class="" (click)="ordenar('opSinFacturar')">
-                <span type="button">Sin Facturar</span>
-                <span *ngIf="ordenColumna === 'opSinFacturar'">
-                    <span *ngIf="ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-                        </svg>
-                    </span>
-                    <span *ngIf="!ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-                        </svg>
-                    </span>
-                </span>
-            </th>  
-            <th scope="col" style="width:14.5%" class="" (click)="ordenar('opFacturadas')">
-                <span type="button">A Pagar</span>
-                <span *ngIf="ordenColumna === 'opFacturadas'">
-                    <span *ngIf="ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-                        </svg>
-                    </span>
-                    <span *ngIf="!ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-                        </svg>
-                    </span>
-                </span>
-            </th>                        
-            <th scope="col" style="width:14.5%" class="table-success" (click)="ordenar('total')">
-                <span type="button">Total</span>
-                <span *ngIf="ordenColumna === 'total'">
-                    <span *ngIf="ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-                        </svg>
-                    </span>
-                    <span *ngIf="!ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-                        </svg>
-                    </span>
-                </span>
-            </th>
-            <th scope="col" style="width:14.5%" class="" (click)="ordenar('aCobrar')">
-                <span type="button">Total a Cobrar</span>
-                <span *ngIf="ordenColumna === 'aCobrar'">
-                    <span *ngIf="ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-                        </svg>
-                    </span>
-                    <span *ngIf="!ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-                        </svg>
-                    </span>
-                </span>
-            </th>                        
-            <th scope="col" style="width:8%" class="table-warning" (click)="ordenar('ganancia')">
-                <span type="button">Ganancia</span>
-                <span *ngIf="ordenColumna === 'ganancia'">
-                    <span *ngIf="ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-                        </svg>
-                    </span>
-                    <span *ngIf="!ordenAscendente">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-                        </svg>
-                    </span>
-                </span>
-            </th>                        
-            <th scope="col" style="width:5%" class="">Facturar</th> 
-        </tr>
-    </thead>
-    <tbody *ngIf="datosTablaChofer.length > 0; else sinDatos">
-        <ng-container *ngFor="let chofer of datosTablaChofer | filter: searchText; let i = index">
+<div [ngClass]="{'isDisabled': isLoading}">
+    <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
+    <table class="table table-striped">
+        <thead >
             <tr>
-                <td>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i)">
-                    <ng-container *ngIf="!mostrarTablaChofer[i]">
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                    </ng-container>
-                    <ng-container *ngIf="mostrarTablaChofer[i]">
+                <th scope="col" style="width:3%" class=""></th>
+                <th scope="col" style="width:18%" class="" (click)="ordenar('apellido')">
+                    <span type="button">Nombre</span>
+                    <span *ngIf="ordenColumna === 'apellido'">
+                        <span *ngIf="ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                            </svg>
+                        </span>
+                        <span *ngIf="!ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                            </svg>
+                        </span>
+                    </span>
+                </th>
+                <th scope="col" style="width:8%" class=""  (click)="ordenar('opCerradas')">
+                    <span type="button">Op Cerradas</span>
+                    <span *ngIf="ordenColumna === 'opCerradas'">
+                        <span *ngIf="ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                            </svg>
+                        </span>
+                        <span *ngIf="!ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                            </svg>
+                        </span>
+                    </span>
+                </th>
+                <th scope="col" style="width:8%" class=""  (click)="ordenar('opAbiertas')">
+                    <span type="button">Op Abiertas</span>
+                    <span *ngIf="ordenColumna === 'opAbiertas'">
+                        <span *ngIf="ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                            </svg>
+                        </span>
+                        <span *ngIf="!ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                            </svg>
+                        </span>
+                    </span>
+                </th>
+                <th scope="col" style="width:14.5%" class="" (click)="ordenar('opSinFacturar')">
+                    <span type="button">Sin Facturar</span>
+                    <span *ngIf="ordenColumna === 'opSinFacturar'">
+                        <span *ngIf="ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                            </svg>
+                        </span>
+                        <span *ngIf="!ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                            </svg>
+                        </span>
+                    </span>
+                </th>  
+                <th scope="col" style="width:14.5%" class="" (click)="ordenar('opFacturadas')">
+                    <span type="button">A Pagar</span>
+                    <span *ngIf="ordenColumna === 'opFacturadas'">
+                        <span *ngIf="ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                            </svg>
+                        </span>
+                        <span *ngIf="!ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                            </svg>
+                        </span>
+                    </span>
+                </th>                        
+                <th scope="col" style="width:14.5%" class="table-success" (click)="ordenar('total')">
+                    <span type="button">Total</span>
+                    <span *ngIf="ordenColumna === 'total'">
+                        <span *ngIf="ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                            </svg>
+                        </span>
+                        <span *ngIf="!ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                            </svg>
+                        </span>
+                    </span>
+                </th>
+                <th scope="col" style="width:14.5%" class="" (click)="ordenar('aCobrar')">
+                    <span type="button">Total a Cobrar</span>
+                    <span *ngIf="ordenColumna === 'aCobrar'">
+                        <span *ngIf="ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                            </svg>
+                        </span>
+                        <span *ngIf="!ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                            </svg>
+                        </span>
+                    </span>
+                </th>                        
+                <th scope="col" style="width:8%" class="table-warning" (click)="ordenar('ganancia')">
+                    <span type="button">Ganancia</span>
+                    <span *ngIf="ordenColumna === 'ganancia'">
+                        <span *ngIf="ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                            </svg>
+                        </span>
+                        <span *ngIf="!ordenAscendente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                            </svg>
+                        </span>
+                    </span>
+                </th>                        
+                <th scope="col" style="width:5%" class="">Facturar</th> 
+            </tr>
+        </thead>
+        <tbody *ngIf="datosTablaChofer.length > 0; else sinDatos">
+            <ng-container *ngFor="let chofer of datosTablaChofer | filter: searchText; let i = index">
+                <tr>
+                    <td>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i)">
+                        <ng-container *ngIf="!mostrarTablaChofer[i]">
                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                        <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
-                    
-                    </ng-container>
-                </svg>
-                </td>
-                <td>{{ chofer.apellido }}</td>
-                <td class="text-center">{{ chofer.opCerradas }}</td>
-                <td class="text-center" [ngClass]="{'table-danger':chofer.opAbiertas !== 0}">{{ chofer.opAbiertas }}</td>
-                <td>{{chofer.opSinFacturar | formatearValor :"$"}}</td>
-                <td>{{chofer.opFacturadas | formatearValor :"$"}}</td>
-                <td class="table-success">{{chofer.total | formatearValor :"$"}}</td>
-                <td>{{chofer.aCobrar | formatearValor :"$"}}</td>
-                <!-- <td class="text-center table-warning">{{chofer.ganancia | formatearValor}} %</td> -->
-                <td class="text-center table-warning">{{ chofer.total | calcularPorcentaje:chofer.aCobrar:true }}</td>                               
-                <td class="text-center"> 
-                    <button class="btn btn-outline-secondary m-0 p-0" (click)="liquidarFacChofer(chofer, i)" [ngClass]="{'isDisabled': !mostrarTablaChofer[i]}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16">
-                            <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z"/>
-                        </svg>
-                    </button>                    
-                </td>
-            </tr>
-            <!-- Aquí agregamos la tabla adicional -->
-            <tr *ngIf="mostrarTablaChofer[i]" >
-                <td  [attr.colspan]="datosTablaChofer.length + 9">
-                    <!-- Aquí irían los datos adicionales del cliente --> 
-                    <input class="form-control mt-2" type="text" [(ngModel)]="searchText2" placeholder="Buscar por parámetro">                           
-                    <table class="table table-light table-striped table-bordered" >
-                        <thead class="sticky-top">
-                            <tr>
-                                <!-- <th><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th> -->
-                                <th style="width: 1.5%;"><input type="checkbox" (change)="selectAllCheckboxes($event, chofer.idChofer)"></th>  
-                                <th scope="col" class="" style="width: 8.5%;">Fecha</th>
-                                <th scope="col" class="" style="width: 5.5%;">Quincena</th>                                
-                                <th scope="col" class="" style="width: 5.5%;">Id Op</th>
-                                <th scope="col" class="" style="width: 12%;">Cliente</th>
-                                <th scope="col" class="" style="width: 4.5%;">Km</th>  
-                                <th scope="col" class="" style="width: 8%;">Km $</th>  
-                                <th scope="col" class="" style="width: 8%;">Acomp</th>                                    
-                                <th scope="col" class="" style="width: 11%;">Tarifa Base</th>                                      
-                                <th scope="col" class="" style="width: 11%;">Total a Pagar</th>                        
-                                <th scope="col" class="" style="width: 11%;">A Cobrar</th>
-                                <th scope="col" class="" style="width: 6%;">Ganancia</th>
-                                <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>  
-                                <th scope="col" class="" style="width: 4.5%;">Facturar</th>
-                                <th scope="col" *appRole="['god','admin', 'manager']" colspan="2" class="" style="width: 3%;"></th>                   
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let factura of facturasPorChofer.get(chofer.idChofer) | filter: searchText2;" [ngClass]="{'isDisabled':factura.proforma}">
-                                <td >
-                                    <input type="checkbox" [checked]="factura.liquidacion" (change)="liquidarFac(factura)">
-                                </td>
-                                <td>{{factura.fecha}}</td>
-                                <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>                                
-                                <td>{{factura.idOperacion}}</td>
-                                <td>{{getCliente(factura.idCliente)}}</td>                                
-                                <td>{{factura.km | formatearValor}}</td>
-                                <td>{{factura.valores.kmMonto | formatearValor :"$"}}</td>
-                                <td>{{factura.valores.acompaniante | formatearValor :"$"}}</td>                                    
-                                <td>{{factura.valores.tarifaBase | formatearValor :"$"}}</td>
-                                <td class="table-success">{{factura.valores.total | formatearValor :"$"}}</td>
-                                <td>{{factura.contraParteMonto | formatearValor :"$"}}</td>
-                                <!-- <td class="text-center table-warning">{{(100-((factura.valores.total*100)/factura.contraParteMonto)) | formatearValor}} %</td>                                    -->
-                                <td class="text-center table-warning">{{ factura.valores.total | calcularPorcentaje:factura.contraParteMonto:true }}</td>                                       
-                                <td>
-                                    <span [ngClass]="{'eventual':factura.tarifaTipo.eventual, 'personalizada':factura.tarifaTipo.personalizada}" >
-                                        {{factura.tarifaTipo.personalizada ? "Personalizada" : factura.tarifaTipo.eventual ? "Eventual" : factura.tarifaTipo.especial ? "Especial" : "General"}}
-                                    </span>
-                                </td>
-                                <td class="text-center" >
-                                      <span [ngClass]="{'op-facturada': factura.liquidacion, 'op-sinFacturar':!factura.liquidacion}">{{factura.liquidacion ? "Si" : "No"}}</span>    
-                                </td>                                    
-                                <td *appRole="['god','admin', 'manager']">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" type="button" (click)="editarFacturaOpCliente(factura, i)">
-                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
-                                    </svg>
-                                </td>
-                                <td *appRole="['god','admin', 'manager']">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16" type="button" (click)="bajaOp(factura, i)">
-                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                                    </svg>
-                                </td>
-                            </tr>
-                        </tbody> 
-                    </table>
-                </td>
-            </tr>
-        </ng-container>
-    </tbody> 
-    <ng-template #sinDatos>
-        <tbody>
-            <tr><td colspan="15">Sin Datos</td></tr>
-        </tbody>
-    </ng-template>
-</table>
-
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                        </ng-container>
+                        <ng-container *ngIf="mostrarTablaChofer[i]">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
+                        
+                        </ng-container>
+                    </svg>
+                    </td>
+                    <td>{{ chofer.apellido }}</td>
+                    <td class="text-center">{{ chofer.opCerradas }}</td>
+                    <td class="text-center" [ngClass]="{'table-danger':chofer.opAbiertas !== 0}">{{ chofer.opAbiertas }}</td>
+                    <td>{{chofer.opSinFacturar | formatearValor :"$"}}</td>
+                    <td>{{chofer.opFacturadas | formatearValor :"$"}}</td>
+                    <td class="table-success">{{chofer.total | formatearValor :"$"}}</td>
+                    <td>{{chofer.aCobrar | formatearValor :"$"}}</td>
+                    <!-- <td class="text-center table-warning">{{chofer.ganancia | formatearValor}} %</td> -->
+                    <td class="text-center table-warning">{{ chofer.total | calcularPorcentaje:chofer.aCobrar:true }}</td>                               
+                    <td class="text-center"> 
+                        <button class="btn btn-outline-secondary m-0 p-0" (click)="liquidarFacChofer(chofer, i)" [ngClass]="{'isDisabled': !mostrarTablaChofer[i]}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16">
+                                <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z"/>
+                            </svg>
+                        </button>                    
+                    </td>
+                </tr>
+                <!-- Aquí agregamos la tabla adicional -->
+                <tr *ngIf="mostrarTablaChofer[i]" >
+                    <td  [attr.colspan]="datosTablaChofer.length + 9">
+                        <!-- Aquí irían los datos adicionales del cliente --> 
+                        <input class="form-control mt-2" type="text" [(ngModel)]="searchText2" placeholder="Buscar por parámetro">                           
+                        <table class="table table-light table-striped table-bordered" >
+                            <thead class="sticky-top">
+                                <tr>
+                                    <!-- <th><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th> -->
+                                    <th style="width: 1.5%;"><input type="checkbox" (change)="selectAllCheckboxes($event, chofer.idChofer)"></th>  
+                                    <th scope="col" class="" style="width: 8.5%;">Fecha</th>
+                                    <th scope="col" class="" style="width: 5.5%;">Quincena</th>                                
+                                    <th scope="col" class="" style="width: 5.5%;">Id Op</th>
+                                    <th scope="col" class="" style="width: 12%;">Cliente</th>
+                                    <th scope="col" class="" style="width: 4.5%;">Km</th>  
+                                    <th scope="col" class="" style="width: 8%;">Km $</th>  
+                                    <th scope="col" class="" style="width: 8%;">Acomp</th>                                    
+                                    <th scope="col" class="" style="width: 11%;">Tarifa Base</th>                                      
+                                    <th scope="col" class="" style="width: 11%;">Total a Pagar</th>                        
+                                    <th scope="col" class="" style="width: 11%;">A Cobrar</th>
+                                    <th scope="col" class="" style="width: 6%;">Ganancia</th>
+                                    <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>  
+                                    <th scope="col" class="" style="width: 4.5%;">Facturar</th>
+                                    <th scope="col" *appRole="['god','admin', 'manager']" colspan="2" class="" style="width: 3%;"></th>                   
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let factura of facturasPorChofer.get(chofer.idChofer) | filter: searchText2;" [ngClass]="{'isDisabled':factura.proforma}">
+                                    <td >
+                                        <input type="checkbox" [checked]="factura.liquidacion" (change)="liquidarFac(factura)">
+                                    </td>
+                                    <td>{{factura.fecha}}</td>
+                                    <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>                                
+                                    <td>{{factura.idOperacion}}</td>
+                                    <td>{{getCliente(factura.idCliente)}}</td>                                
+                                    <td>{{factura.km | formatearValor}}</td>
+                                    <td>{{factura.valores.kmMonto | formatearValor :"$"}}</td>
+                                    <td>{{factura.valores.acompaniante | formatearValor :"$"}}</td>                                    
+                                    <td>{{factura.valores.tarifaBase | formatearValor :"$"}}</td>
+                                    <td class="table-success">{{factura.valores.total | formatearValor :"$"}}</td>
+                                    <td>{{factura.contraParteMonto | formatearValor :"$"}}</td>
+                                    <!-- <td class="text-center table-warning">{{(100-((factura.valores.total*100)/factura.contraParteMonto)) | formatearValor}} %</td>                                    -->
+                                    <td class="text-center table-warning">{{ factura.valores.total | calcularPorcentaje:factura.contraParteMonto:true }}</td>                                       
+                                    <td>
+                                        <span [ngClass]="{'eventual':factura.tarifaTipo.eventual, 'personalizada':factura.tarifaTipo.personalizada}" >
+                                            {{factura.tarifaTipo.personalizada ? "Personalizada" : factura.tarifaTipo.eventual ? "Eventual" : factura.tarifaTipo.especial ? "Especial" : "General"}}
+                                        </span>
+                                    </td>
+                                    <td class="text-center" >
+                                          <span [ngClass]="{'op-facturada': factura.liquidacion, 'op-sinFacturar':!factura.liquidacion}">{{factura.liquidacion ? "Si" : "No"}}</span>    
+                                    </td>                                    
+                                    <td *appRole="['god','admin', 'manager']">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" type="button" (click)="editarFacturaOpCliente(factura, i)">
+                                            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                                        </svg>
+                                    </td>
+                                    <td *appRole="['god','admin', 'manager']">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16" type="button" (click)="bajaOp(factura, i)">
+                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                        </svg>
+                                    </td>
+                                </tr>
+                            </tbody> 
+                        </table>
+                    </td>
+                </tr>
+            </ng-container>
+        </tbody> 
+        <ng-template #sinDatos>
+            <tbody>
+                <tr><td colspan="15">Sin Datos</td></tr>
+            </tbody>
+        </ng-template>
+    </table>
+</div> 
+<app-spinner *ngIf="isLoading"></app-spinner>
 <hr>
 <h1>DUPLICADAS</h1>
+<button class="btn btn-primary" (click)="borrarDuplicadasEnLiquidacion()">Borrar Duplicadas Liquidación</button>
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
 <table class="table table-light table-striped table-bordered" >
     <thead>
