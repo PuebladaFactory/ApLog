@@ -1,3 +1,4 @@
+<div [ngClass]="{'isDisabled': isLoading}">
 <h2>Proformas Activas</h2>
 <div class="mt-4">  
     <h4>Clientes</h4>
@@ -140,3 +141,6 @@
         <td colspan="8">No hay proformas cargadas</td>
     </tr>
 </ng-template>
+</div>
+
+<app-spinner *ngIf="isLoading"></app-spinner>

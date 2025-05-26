@@ -116,7 +116,8 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
        
     } else {
       this.armarForm();
-    }    
+    }      
+      
   }
 
   ngOnDestroy(): void {

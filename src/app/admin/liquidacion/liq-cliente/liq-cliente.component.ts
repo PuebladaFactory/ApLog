@@ -162,22 +162,7 @@ export class LiqClienteComponent {
 }
 
 verificarDuplicadosFacturadas(){
-  /* this.dbFirebase.getByDateValue("facOpLiqCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
-  .pipe(take(1)) // Detener la suscripción cuando sea necesario
-  .subscribe(data=>{
-    let $facturasLiqCliente: any [] = data;
-    const idsLiqCliente = new Set($facturasLiqCliente.map(factura => factura.idOperacion));
 
-  // Recorremos el array facturasOpCliente
-  this.$facLiqOpDuplicadas = this.$facturasOpCliente.filter((facturaOp:FacturaOp) => {
-    // Verificamos si el idOperacion de la factura actual está en el Set
-    return idsLiqCliente.has(facturaOp.idOperacion);
-  });
-
-  
-  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
-
-  }) */
   this.$facturasOpCliente.forEach((facturaOp:FacturaOp) => {
     this.dbFirebase.getMostRecentId("facOpLiqCliente", "idFacturaOp", "idOperacion", facturaOp.idOperacion)
     .pipe(take(1))

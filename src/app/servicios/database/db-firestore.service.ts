@@ -439,18 +439,18 @@ getByFieldValue(componente:string, campo:string, value:any){
     try {
       // Verificar que no exista informe de operación para cliente
       const refCliente = collection(this.firestore, `/Vantruck/datos/${compCliente}`);
-      const qCliente = query(refCliente, where('idFacturaOp', '==', infOpCliente.idFacturaOp));
+      const qCliente = query(refCliente, where('idOperacion', '==', infOpCliente.idOperacion));
       const snapCliente = await getDocs(qCliente);
       if (!snapCliente.empty) {
-        throw new Error(`Ya existe un informe para el cliente con idFacturaOp ${infOpCliente.idFacturaOp}`);
+        throw new Error(`Ya existe un informe para el cliente con idFacturaOp ${infOpCliente.idOperacion}`);
       }
   
       // Verificar que no exista informe de operación para chofer
       const refChofer = collection(this.firestore, `/Vantruck/datos/${compChofer}`);
-      const qChofer = query(refChofer, where('idFacturaOp', '==', infOpChofer.idFacturaOp));
+      const qChofer = query(refChofer, where('idOperacion', '==', infOpChofer.idOperacion));
       const snapChofer = await getDocs(qChofer);
       if (!snapChofer.empty) {
-        throw new Error(`Ya existe un informe para el chofer con idFacturaOp ${infOpChofer.idFacturaOp}`);
+        throw new Error(`Ya existe un informe para el chofer con idFacturaOp ${infOpChofer.idOperacion}`);
       }
   
       // Verificar que exista la operación
@@ -690,7 +690,9 @@ async guardarMultiple(
 
     // Ninguno existe => agregar todos al batch
     for (const obj of objetos) {
+      
       const docRef = doc(colRef); // genera un id automático
+      //let {id, type, ...objEdit} = obj
       batch.set(docRef, obj);
     }
 
@@ -715,7 +717,7 @@ async guardarMultiple(
       
     }
 
-    async actualizarMultiple(
+  async actualizarOperacionesBatch(
   operaciones: ConId<Operacion>[],
   componente: string
 ): Promise<{ exito: boolean; mensaje: string }> {
@@ -732,6 +734,14 @@ async guardarMultiple(
           mensaje: `No existe la operación con id: ${operacion.id}`
         };
       }
+      operacion.estado = {
+        abierta: true,
+        cerrada: false,
+        facCliente: false,
+        facChofer: false,
+        facturada: false,
+      };
+      operacion.km = 0; 
 
       // Si existe, la agregamos al batch para actualizar
       let {id, ...op} = operacion
@@ -752,5 +762,6 @@ async guardarMultiple(
     };
   }
 }
+
 
 }

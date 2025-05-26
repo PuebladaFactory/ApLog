@@ -158,6 +158,16 @@ export class LiqProveedorComponent implements OnInit {
     
 }
 
+borrarDuplicadasEnLiquidacion(){
+  console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
+  this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+    this.dbFirebase.delete(this.titulo, facDupli.id)
+})
+this.$facturasOpDuplicadas = []
+this.procesarDatosParaTabla();
+this.verificarDuplicados();
+}
+
 verificarDuplicadosFacturadas(){
 
   this.$facturasOpProveedor.forEach((facturaOp:FacturaOp) => {
