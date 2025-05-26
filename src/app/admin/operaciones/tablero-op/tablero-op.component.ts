@@ -12,11 +12,13 @@ import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { ModalFacturacionComponent } from '../modal-facturacion/modal-facturacion.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { FacturacionOpService } from 'src/app/servicios/facturacion/facturacion-op/facturacion-op.service';
+import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 
 
 
@@ -110,10 +112,18 @@ export class TableroOpComponent implements OnInit {
     facChofer: false,
     facturada: false
   };
- 
+  operacionesDemo!: ConId<Operacion>[];
+  opFiltradas!: ConId<Operacion>[];
+  isLoading: boolean = false;
+  tarifaDemo!:ConIdType<TarifaGralCliente>[];
+  tarifaPersDemo!:ConIdType<TarifaPersonalizadaCliente>[];
+  opDemo: ConIdType<any>[] = []
+  opDuplicadas: ConId<Operacion>[] = []
+  imTired: boolean = false;
 
-  
-  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private el: ElementRef, private excelServ: ExcelService){}
+  constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private el: ElementRef, private excelServ: ExcelService,
+  private facturacionOpServ: FacturacionOpService
+  ){}
   
   ngOnInit(): void {
    /*  this.storageService.opTarEve$
@@ -141,7 +151,7 @@ export class TableroOpComponent implements OnInit {
     let limite = this.storageService.loadInfo("pageLimitOp");
     this.limit = limite.length === 0 ? 1000 : limite[0];
     this.rango = this.storageService.loadInfo("formatoSeleccionado");
-    ////console.log("rango en tableroOp: ", this.rango);
+    //////console.log("rango en tableroOp: ", this.rango);
     
     
     
@@ -170,12 +180,12 @@ export class TableroOpComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if(data){
-        ////console.log("1)aca??: ");      
+        //////console.log("1)aca??: ");      
         this.$opActivas = data;
         //this.$opActivas = this.actualizarEstadoOp(data);
         //this.$opActivas = this.agregarMultiplicador(data);
         //this.$opActivas = this.$opActivas.sort((a, b) => a.fecha.getTime() - b.fecha.getTime()); // Ordena por el nombre del chofer
-        console.log("this.$opActivas", this.$opActivas);        
+        //console.log("this.$opActivas", this.$opActivas);        
         /* this.$opActivas.forEach(op=>{
               this.dbFirebase.update("operaciones", op)
         }) */
@@ -196,7 +206,7 @@ export class TableroOpComponent implements OnInit {
 
     
     
-     
+     console.log('tableroOp - ngOnInit');
   }
 
 
@@ -233,6 +243,7 @@ export class TableroOpComponent implements OnInit {
     // Completa el Subject para cancelar todas las suscripciones
     this.destroy$.next();
     this.destroy$.complete();
+    console.log('tableroOp - ngOnDestroy');
   }
 
 
@@ -250,11 +261,11 @@ export class TableroOpComponent implements OnInit {
 
   getMsg(e:any) {
     this.btnConsulta = e
-    ////console.log("getMsg: ", this.btnConsulta);
+    //////console.log("getMsg: ", this.btnConsulta);
     
       //this.btnConsulta = true;
     if(this.btnConsulta){
-      ////console.log("2)aca??: ");            
+      //////console.log("2)aca??: ");            
       this.consultarOp()
       
     }
@@ -263,7 +274,7 @@ export class TableroOpComponent implements OnInit {
 
   consultarOp(){
     const modoStorage = this.storageService.loadInfo("filtroOp");
-    console.log("ngOnInit: modoStorage ", modoStorage);
+    //console.log("ngOnInit: modoStorage ", modoStorage);
     
     if (modoStorage) {
       modoStorage.forEach((key: string) => {
@@ -272,23 +283,23 @@ export class TableroOpComponent implements OnInit {
     }
 
     //this.aplicarFiltros();
-    ////console.log("2)aca??: ");            
+    //////console.log("2)aca??: ");            
       this.storageService.respuestaOp$
         .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
         .subscribe(data => {
           if(data){
-            ////console.log("respuestaOp data: ", data);
+            //////console.log("respuestaOp data: ", data);
             
             this.respuestaOp = data
             this.fechasConsulta = this.respuestaOp[0].fechas;
-            //console.log("fechasConsulta: ", this.fechasConsulta);
+            ////console.log("fechasConsulta: ", this.fechasConsulta);
             this.rango = this.respuestaOp[0].rango
-            //console.log("rango: ", this.rango);
+            ////console.log("rango: ", this.rango);
             this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
             //this.storageService.listenForChangesDate<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
             this.aplicarFiltros()
           }
-          //////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
+          ////////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
           //this.getMsg()
       });
   }
@@ -319,9 +330,9 @@ export class TableroOpComponent implements OnInit {
       
     }));   
 
-    ////////////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
+    //////////////console.log("Rows: ", this.rows); // Verifica que `this.rows` tenga datos correctos
     let filtrosTabla = this.storageService.loadInfo('filtrosTabla')
-    //////console.log("filtrosTabla", filtrosTabla);    
+    ////////console.log("filtrosTabla", filtrosTabla);    
     if(filtrosTabla.length > 0){
       this.firstFilter = filtrosTabla[0];
       this.secondFilter = filtrosTabla[1];
@@ -342,10 +353,10 @@ export class TableroOpComponent implements OnInit {
 
  currencyComparator(a: string, b: string) {
   // Eliminar el símbolo de moneda y las comas, luego convertir a número
-  //console.log("a inicial:", a);
+  ////console.log("a inicial:", a);
   
   const valueA = parseFloat(a.replace(/[^0-9.-]+/g, ''));
-  //console.log("a final:", valueA);
+  ////console.log("a final:", valueA);
   const valueB = parseFloat(b.replace(/[^0-9.-]+/g, ''));
   
   // Comparar los valores numéricos
@@ -465,6 +476,7 @@ export class TableroOpComponent implements OnInit {
   }
 
   crearFacturaOp(op:any){
+    this.imTired = true;
     this.seleccionarOp(op)
     this.facturar = true;
     this.openModal("cerrar")
@@ -504,7 +516,7 @@ export class TableroOpComponent implements OnInit {
   }
 
   guardarFiltro(modo: string){
-    console.log("modo", modo);    
+    //console.log("modo", modo);    
     this.storageService.setInfo("filtroOp", [modo]);
     this.filtrarEstado()
   }
@@ -526,7 +538,7 @@ export class TableroOpComponent implements OnInit {
 
     switch(modo){
       case "Todo":{
-        ////console.log("ACCCAAA??");        
+        //////console.log("ACCCAAA??");        
         this.$opFiltradas = this.$opActivas;
         
         this.armarTabla();
@@ -609,7 +621,7 @@ export class TableroOpComponent implements OnInit {
   aplicarFiltros() {
     
     const seleccionados = Object.keys(this.estadoSeleccionado).filter(key => this.estadoSeleccionado[key]);
-    console.log("seleccionados", seleccionados);
+    //console.log("seleccionados", seleccionados);
     
     if (seleccionados.length === 0) {
       // Si no hay filtros activos, mostramos todo
@@ -697,17 +709,17 @@ export class TableroOpComponent implements OnInit {
         modo: "operaciones",
         item: operacion [0]
       }  
-      //////console.log()(info); */
+      ////////console.log()(info); */
       
       modalRef.componentInstance.fromParent = info;
     
       modalRef.result.then(
         (result) => {
-          console.log("result", result);
+          //console.log("result", result);
           if(result !== undefined){   
-            ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+            //////////console.log("llamada al storage desde op-abiertas, deleteItem");
             this.storageService.deleteItemPapelera(this.componente, this.opEditar, this.opEditar.idOperacion, "BAJA", "Baja de Operación", result);
-            ////////console.log("consultas Op: " , this.$consultasOp);
+            //////////console.log("consultas Op: " , this.$consultasOp);
             Swal.fire({
               title: "Confirmado",
               text: "La operación ha sido dada de baja",
@@ -745,7 +757,7 @@ export class TableroOpComponent implements OnInit {
     if(idCliente !== 0){
       this.filtrosClientes = idCliente.toString();      
       this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes])
-      //console.log("this.filtrosClientes", this.filtrosClientes);
+      ////console.log("this.filtrosClientes", this.filtrosClientes);
     }else {      
       this.filtrosClientes = "";
       this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes])
@@ -755,7 +767,7 @@ export class TableroOpComponent implements OnInit {
 
   getCliente(idCliente:string, modo:string){
     let id = Number(idCliente);  
-    //console.log("id", id);
+    ////console.log("id", id);
     let cliente = this.$clientes?.filter(c => c.idCliente === id);      
     if(id !== 0 && modo === "vista"){      
       return cliente[0].razonSocial;
@@ -773,7 +785,7 @@ export class TableroOpComponent implements OnInit {
     if(idChofer !== 0){      
       this.filtrosChoferes = idChofer.toString();
       this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes]);
-      //console.log("this.filtrosChoferes", this.filtrosChoferes);
+      ////console.log("this.filtrosChoferes", this.filtrosChoferes);
     }else {      
       this.filtrosChoferes = "";
       this.storageService.setInfo('filtrosTabla',[this.firstFilter, this.secondFilter, this.filtrosClientes, this.filtrosChoferes]);
@@ -786,7 +798,7 @@ export class TableroOpComponent implements OnInit {
 
   getChofer(idChofer:string, modo:string){
     let id = Number(idChofer);  
-    //console.log("id", id);
+    ////console.log("id", id);
     let chofer = this.$choferes?.filter(c => c.idChofer === id);      
     if(id !== 0 && modo === "vista"){      
       return chofer[0].apellido + " " + chofer[0].nombre;
@@ -805,13 +817,13 @@ export class TableroOpComponent implements OnInit {
       if(data){
         
         op = data
-        console.log("op", op);
+        //console.log("op", op);
         opActualizar = op.filter((op:Operacion)=>{ return !op.estado.cerrada && !op.estado.abierta})
         
         opActualizar.forEach(op =>{
           op.estado.facChofer = true
         })
-        console.log("opActualizar", opActualizar);
+        //console.log("opActualizar", opActualizar);
         /* opActualizar.forEach(op =>{
           this.dbFirebase.update("operaciones", op);
         }) */
@@ -823,6 +835,198 @@ export class TableroOpComponent implements OnInit {
 
   descargarOp(){
     this.excelServ.generarInformeOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta,this.$opFiltradas)
+  }
+
+/*   restaurarOpAbiertas(){
+    
+    this.dbFirebase.getAll<Operacion>("operaciones")
+    .pipe(take(1))
+    .subscribe(data=>{
+      if(data){
+        
+        this.operacionesDemo = data
+        //console.log("operaciones", this.operacionesDemo);
+        this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
+         op.estado ={
+            abierta: true,
+            cerrada: false,
+            facCliente: false,
+            facChofer: false,
+            facturada: false,
+          }
+         
+         //op.km = Math.floor(Math.random() * (150 - 1 + 1)) + 1
+         op.km = 0
+         //console.log("op: ", op);
+         
+          //let {id, ...opAc} = op;
+          //this.dbFirebase.update("operaciones", opAc, op.id);
+
+        })
+        //opActualizar.forEach(op =>{
+        //  this.dbFirebase.update("operaciones", op);
+        //})
+      }
+    })
+  }
+  actualizarOperaciones(){
+   
+    this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
+     
+      //this.facturacionOpServ.facturarOperacion(op);
+      let {id, ...opAc} = op;
+      this.dbFirebase.update("operaciones", opAc, op.id);
+
+    })
+
+  }
+
+  
+  asignarKmOp(){
+    this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
+       
+         op.km = Math.floor(Math.random() * (150 - 1 + 1)) + 1
+         //console.log("op: ", op);
+         
+
+        })
+  }
+
+  cerrarOperaciones(){
+     this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
+      op.estado ={
+        abierta: false,
+        cerrada: true,
+        facCliente: false,
+        facChofer: false,
+        facturada: false,
+      }
+      this.facturacionOpServ.facturarOperacion(op);
+      //let {id, ...opAc} = op;
+      //this.dbFirebase.update("operaciones", opAc, op.id);
+
+    })
+  }
+
+  borrarOperaciones(){
+     this.operacionesDemo = this.$opActivas;
+     //console.log("op demo: ", this.operacionesDemo);
+     
+     this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
+      
+      //let {id, ...opAc} = op;
+      this.dbFirebase.delete("operaciones", op.id)
+
+    })
+  }
+
+  buscarOp(){
+    this.operacionesDemo = this.$opActivas;
+    //console.log("op demo: ", this.operacionesDemo);
+  }
+
+  filtrarOp(){
+    
+    this.operacionesDemo = this.operacionesDemo.filter((op:ConId<Operacion>)=>{
+      return op.estado.abierta === false
+    })
+    
+    //console.log("op operacionesDemo: ", this.operacionesDemo);
+    
+    
+    
+  }
+
+  modificarOp(){
+    this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
+      op.estado = {
+        abierta: true,
+        cerrada: false,
+        facCliente: false,
+        facChofer: false,
+        facturada: false,
+      }
+    })
+    //console.log("op operacionesDemo: ", this.operacionesDemo);
+  }
+
+  guardarFacturadas(){
+    this.isLoading = true;
+    this.dbFirebase.actualizarMultiple(this.operacionesDemo, "operaciones").then(
+      (result:any)=>{
+        this.isLoading = false;
+        if(result.exito){
+          alert("se actualizaron correctamente")
+        } else {
+          alert(`error: ${result.mensaje}`)
+        }
+      }
+    )
+  }
+
+  operacionesPf(){
+    this.isLoading = true;
+  let pfOp: any = []
+
+//console.log("pfOp", pfOp)
+let opPrueba: ConId<Operacion>[] = [];
+opPrueba = pfOp.filter((op:ConId<Operacion>)=>{
+  return op.cliente.idCliente !== 1736356220300 && op.cliente.idCliente !== 1736356938304  
+})
+//console.log("opPrueba: ", opPrueba);
+ 
+this.dbFirebase.guardarMultiple(opPrueba,"operaciones","idOperacion","operaciones").then(
+  (result:any)=>{
+        this.isLoading = false;
+        if(result.exito){
+          alert("se actualizaron correctamente")
+        } else {
+          alert(`error: ${result.mensaje}`)
+        }
+      }
+)
+
+  
+  }
+*/
+  buscarObjetos(){
+  this.opDemo = this.$opActivas;
+
+
+  //console.log("$opDemo: ", this.opDemo);
+  
+  }
+
+  actualizarObj(){
+    this.isLoading = true;
+    this.dbFirebase.actualizarOperacionesBatch(this.opDemo, "operaciones").then(
+  (result:any)=>{    
+        this.isLoading = false;
+        if(result.exito){
+          alert("se actualizaron correctamente")
+        } else {
+          alert(`error: ${result.mensaje}`)
+        }
+      }
+)
+  } 
+
+  verificarDuplicados() {
+     this.opDuplicadas = []
+      const seenIds = new Set<number>();
+  
+      this.opDemo = this.opDemo.filter((op:ConId<Operacion>) => {
+          if (seenIds.has(op.idOperacion)) {
+              this.opDuplicadas.push(op);
+              return false; // Eliminar del array original
+          } else {
+              seenIds.add(op.idOperacion);
+              return true; // Mantener en el array original
+          }
+      });    
+      //console.log("this.opDemo", this.opDemo);
+      //console.log("duplicadas", this.opDuplicadas);
+      //this.verificarDuplicadosFacturadas()
   }
   
 

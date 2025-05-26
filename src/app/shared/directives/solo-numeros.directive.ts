@@ -1,12 +1,20 @@
-import { Directive, HostListener, ElementRef, Renderer2 } from '@angular/core';
+import { Directive, HostListener, ElementRef, Renderer2, OnInit } from '@angular/core';
 
 @Directive({
   selector: '[appSoloNumeros]',
 })
-export class SoloNumerosDirective {
+export class SoloNumerosDirective implements OnInit {
   private valorAnterior: string = '';
 
   constructor(private el: ElementRef, private renderer: Renderer2) {}
+
+  ngOnInit(): void {
+    console.log('appSoloNumeros - ngOnInit');
+  }
+
+  ngOnDestroy(): void {
+    console.log('appSoloNumeros - ngOnDestroy');
+  }
 
   @HostListener('input', ['$event'])
   onInput(event: Event): void {

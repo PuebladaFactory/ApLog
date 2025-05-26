@@ -21,6 +21,7 @@ import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.service';
 
 
 @Component({
@@ -80,9 +81,10 @@ export class LiqClienteComponent {
   $facturasOpChoferDuplicadas: ConId<FacturaOp>[] = []; // Array para guardar facturas de choferes duplicadas
   $facturasOpProveedor: ConId<FacturaOp>[] = []; // Array de facturas de choferes
   $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
+  isLoading: boolean = false;
 
 
-  constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
+  constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false);
    
@@ -122,13 +124,13 @@ export class LiqClienteComponent {
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpCliente = data;
-          //console.log("1)", this.$facturasOpCliente );
+          console.log("1)", this.$facturasOpCliente );
           if(this.$facturasOpCliente){
             ////console.log("?????????????");                   
             this.procesarDatosParaTabla();
-            //this.verificarDuplicados();
+            this.verificarDuplicados();
           } else {
-            this.mensajesError("error: facturaOpCliente")
+            this.mensajesError("error: facturaOpCliente", "error")
           }
           
       });
@@ -156,26 +158,42 @@ export class LiqClienteComponent {
     });    
     console.log("this.$facturasOpChofer", this.$facturasOpCliente);
     console.log("duplicadas", this.$facturasOpDuplicadas);
-    this.verificarDuplicadosFacturadas()
+    //this.verificarDuplicadosFacturadas()
 }
 
 verificarDuplicadosFacturadas(){
-  this.dbFirebase.getByDateValue("facOpLiqCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
-  .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-  .subscribe(data=>{
-    let $facturasLiqCliente: any [] = data;
-    const idsLiqCliente = new Set($facturasLiqCliente.map(factura => factura.idOperacion));
 
-  // Recorremos el array facturasOpCliente
-  this.$facLiqOpDuplicadas = this.$facturasOpCliente.filter((facturaOp:FacturaOp) => {
-    // Verificamos si el idOperacion de la factura actual está en el Set
-    return idsLiqCliente.has(facturaOp.idOperacion);
-  });
-
-  
-  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
-
+  this.$facturasOpCliente.forEach((facturaOp:FacturaOp) => {
+    this.dbFirebase.getMostRecentId("facOpLiqCliente", "idFacturaOp", "idOperacion", facturaOp.idOperacion)
+    .pipe(take(1))
+    .subscribe(data=>{
+      if(data.length > 0){
+        console.log("hay data", data);
+        let facOp: any = data[0];
+        this.$facLiqOpDuplicadas.push(facOp)
+      } else {
+        console.log("no hay data", data);        
+      }
+    })
   })
+  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
+}
+
+deleteDuplicadas(){
+  console.log("cantidad facLiqOpDuplicadas", this.$facLiqOpDuplicadas.length);
+  this.$facLiqOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+    this.dbFirebase.delete(this.titulo, facDupli.id)
+})
+}
+
+borrarDuplicadasEnLiquidacion(){
+  console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
+  this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+    this.dbFirebase.delete(this.titulo, facDupli.id)
+})
+this.$facturasOpDuplicadas = []
+this.procesarDatosParaTabla();
+this.verificarDuplicados();
 }
   
 
@@ -406,15 +424,15 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       //////console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
     } else {
-      this.mensajesError("Debe seleccionar una factura para liquidar")
+      this.mensajesError("Debe seleccionar una factura para liquidar", "error")
     }
 
    
   }
 
-  mensajesError(msj:string){
+  mensajesError(msj:string, resultado:string){
     Swal.fire({
-      icon: "error",
+      icon: resultado === 'error' ? "error" : "success",
       //title: "Oops...",
       text: `${msj}`
       //footer: `${msj}`
@@ -513,7 +531,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         total: this.totalFacturasLiquidadasCliente,
         //totalChofer: this.totalFacturasLiquidadasChofer,
       }; 
-      //////console.log()(info);
+      console.log("info: ",info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
@@ -525,7 +543,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
             this.facturaCliente = result.factura;            
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
-              this.addItem(this.facturaCliente, this.componente, this.facturaCliente.idFacturaCliente, "ALTA");        
+              
+              //this.liqService.liquidarFacOpCliente(this.facturaCliente, this.facturasLiquidadasCliente);
+              this.procesarFacturacion(titulo, accion)
+              
             }
             if(result.modo === "proforma"){
               this.addItem(this.facturaCliente, "proforma", this.facturaCliente.idFacturaCliente, "ALTA");
@@ -534,28 +555,11 @@ selectAllCheckboxes(event: any, idCliente: number): void {
               })              
             }                       
 
-            Swal.fire({
-                  title: `¿Desea imprimir el detalle del Cliente?`,
-                  //text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Confirmar",
-                  cancelButtonText: "Cancelar"
-                }).then((result) => {
-                  if (result.isConfirmed) {     
-                    if(titulo === "excel"){
-                        this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);
-                      }else if (titulo === "pdf"){
-                        this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);        
-                      }      
-                  }
-                });   
+           
 
-                if(result.modo === "cerrar"){
+                /* if(result.modo === "cerrar"){
                   this.eliminarFacturasOp();
-                }
+                } */
                 /* this.mostrarMasDatos(this.indiceSeleccionado);
                 this.procesarDatosParaTabla() */
           } 
@@ -566,6 +570,58 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       );
     }
   }
+
+  procesarFacturacion(titulo:string, accion:string) {
+  this.isLoading = true;
+  
+  this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasCliente, "clientes", "facOpLiqCliente", "facturaOpCliente", this.facturaCliente, "facturaCliente")
+    .then((result) => {
+      this.isLoading = false;
+      console.log("resultado: ", result);
+      if(result.exito){
+          this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "LIQUIDAR", "operaciones", `Operación del Cliente ${this.facturaCliente.razonSocial} Liquidada`,result.exito)
+          this.storageService.logSimple(this.facturaCliente.idFacturaCliente,"ALTA", "facturaCliente", `Alta de Factura del Cliente ${this.facturaCliente.razonSocial}`, result.exito )
+          Swal.fire({
+                icon: "success",
+                //title: "Oops...",
+                text: 'La liquidación se procesó con éxito.',
+                confirmButtonColor: "#3085d6",
+                confirmButtonText: "Confirmar",
+                //footer: `${msj}`
+              }).then(() => {
+                  Swal.fire({
+                    title: `¿Desea imprimir el detalle del Cliente?`,
+                    //text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Confirmar",
+                    cancelButtonText: "Cancelar"
+                  }).then((result) => {
+                    if (result.isConfirmed) {     
+                      if(titulo === "excel"){
+                          this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);
+                        }else if (titulo === "pdf"){
+                          this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);        
+                        }      
+                    }
+                  }); 
+              });
+      } else {
+        this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "LIQUIDAR", "operaciones", `Operación del Cliente ${this.facturaCliente.razonSocial} Liquidada`,result.exito)
+        this.storageService.logSimple(this.facturaCliente.idFacturaCliente,"ALTA", "facturaCliente", `Alta de Factura del Cliente ${this.facturaCliente.razonSocial}`, result.exito )
+        this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
+      }
+      
+     
+    })
+    .catch((error) => {
+      this.isLoading = false;
+      console.error(error);
+      this.mensajesError('Ocurrió un error al procesar la facturación.', "error");
+    });
+}
 
   buscarTarifa(i:number ) {
     

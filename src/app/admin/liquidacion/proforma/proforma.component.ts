@@ -33,6 +33,7 @@ export class ProformaComponent implements OnInit {
   filtroCliente:string = "";
   filtroChofer:string = "";
   filtroProveedor:string = "";
+  isLoading: boolean = false;
 
   constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private excelServ: ExcelService, private logService: LogService, private pdfServ: PdfService ){}
   
@@ -398,7 +399,8 @@ export class ProformaComponent implements OnInit {
     let facturaColeccion: string = origen === 'clientes' ? 'facturaCliente' : origen === 'choferes' ? 'facturaChofer' : origen === 'proveedores' ? 'facturaProveedor' : '';
     let msjAlta: string = origen === 'clientes' ? `Alta de Factura de Cliente ${prof.razonSocial}` : origen === 'choferes' ? `Alta de Factura de Chofer ${prof.apellido} ${prof.nombre}` : origen === 'proveedores' ? `Alta de Factura de Proveedor ${prof.razonSocial}` : '';
     let idFactura: number = origen === 'clientes' ? proforma.idFacturaCliente : origen === 'choferes' ? proforma.idFacturaChofer : origen === 'proveedores' ? proforma.idFacturaProveedor : 0;
-    Swal.fire({
+    this.procesarFacturacion(facturasOp, origen,facOpLiqColeccion,facOpColeccion,proforma,facturaColeccion, clientes, choferes)
+    /* Swal.fire({
       title: '¿Desea generar la liquidación de la proforma seleccionada?',
       text: "Esta acción no se podrá revertir",
       icon: "warning",
@@ -408,37 +410,15 @@ export class ProformaComponent implements OnInit {
       confirmButtonText: "Guardar",
       cancelButtonText: "Cancelar"
     }).then((result) => {
-      if (result.isConfirmed) {          
+      if (result.isConfirmed) {
+        
 
-        facturasOp.forEach((factura:ConIdType<FacturaOp>)=>{
-          factura.proforma = false;
-          factura.liquidacion = true;
-          let {id,type, ...fac} = factura;
-          //console.log("llamada al storage desde liq-cliente, addItem", fac);
-          //this.addItem(factura, "facOpLiqCliente", factura.idFacturaOp, "INTERNA");
-          this.storageService.addItem(facOpLiqColeccion,fac, fac.idFacturaOp, "INTERNA","");
-          this.editarOperacionesFac(factura, facOpColeccion);                  
-
-        });
         
-        this.storageService.addItem(facturaColeccion, prof, idFactura, "ALTA", msjAlta);        
-        
-        this.storageService.deleteItem("proforma", proforma, idFactura, "INTERNA", ``)
-        //////////console.log("op: ", this.op);
-        
-        
-        Swal.fire({
-          title: "Confirmado",
-          //text: "Los cambios se han guardado.",
-          icon: "success"
-        }).then((result) => {
-          this.descargarFactura(prof, facturasOp, origen, clientes, choferes)  
-        });        
       }
-    });  
+    });   */
    }
 
-   descargarFactura(proforma:any, facturasOp: ConIdType<FacturaOp>[], origen:string, clientes: any, choferes: any){
+   descargarFactura(proforma:any, facturasOp: ConId<FacturaOp>[], origen:string, clientes: any, choferes: any){
       let titulo:string = origen === 'clientes' ? 'Cliente' : origen === 'choferes' ? 'Chofer' : 'Proveedor'
       Swal.fire({
             title: `¿Desea imprimir el detalle del ${titulo}?`,
@@ -470,5 +450,53 @@ export class ProformaComponent implements OnInit {
 
                 
    }
+
+   procesarFacturacion(facturasOp: ConId<FacturaOp>[], modo:string, compAlta: string, compBaja:string, factura:any, compFactura:string, clientes: any, choferes: any) {
+     this.isLoading = true;
+     let detalleNombre: string = modo === "clientes" ? "Cliente" : modo === "choferes" ? "Chofer" : "Proveedor"
+     let detalleValor: string = modo === "clientes" ? factura.razonSocial : modo === "choferes" ? factura.apellido + " " + factura.nombre : factura.razonSocial;
+     let idFactura: number = modo === "clientes" ? factura.idFacturaCliente : modo === "choferes" ? factura.idFacturaChofer : factura.idFacturaProveedor;
+     this.dbFirebase.procesarLiquidacion(facturasOp, modo, compAlta, compBaja, factura, compFactura)
+       .then((result) => {
+         this.isLoading = false;
+         console.log("resultado: ", result);
+         if(result.exito){
+             this.storageService.logMultiplesOp(factura.operaciones, "LIQUIDAR", "operaciones", `Operación del ${detalleNombre} ${detalleValor} Liquidada`,result.exito)
+             this.storageService.logSimple(idFactura,"ALTA", compFactura, `Alta de Factura del ${detalleNombre} ${detalleValor}`, result.exito )
+             this.storageService.deleteItem("proforma", factura, idFactura, "INTERNA", ``)
+             Swal.fire({
+                   icon: "success",
+                   //title: "Oops...",
+                   text: 'La liquidación se procesó con éxito.',
+                   confirmButtonColor: "#3085d6",
+                   confirmButtonText: "Confirmar",
+                   //footer: `${msj}`
+                 }).then(() => {
+                     this.descargarFactura(factura, facturasOp, modo, clientes, choferes )  
+                 });
+         } else {
+            this.storageService.logMultiplesOp(factura.operaciones, "LIQUIDAR", "operaciones", `Operación del ${detalleNombre} ${detalleValor} Liquidada`,result.exito)
+            this.storageService.logSimple(idFactura,"ALTA", compFactura, `Alta de Factura del ${detalleNombre} ${detalleValor}`, result.exito )
+            this.storageService.deleteItem("proforma", factura, idFactura, "INTERNA", ``)
+           this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
+         }
+         
+        
+       })
+       .catch((error) => {
+         this.isLoading = false;
+         console.error(error);
+         this.mensajesError('Ocurrió un error al procesar la facturación.', "error");
+       });
+   }
+
+   mensajesError(msj:string, resultado:string){
+       Swal.fire({
+         icon: resultado === 'error' ? "error" : "success",
+         //title: "Oops...",
+         text: `${msj}`
+         //footer: `${msj}`
+       });
+     }
 
 }

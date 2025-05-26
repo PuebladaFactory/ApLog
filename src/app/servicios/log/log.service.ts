@@ -27,9 +27,9 @@ export class LogService {
   ): Promise<void> {
     try {
       const logId = this.afs.createId(); // Genera un ID único para el log
-      const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado);
+      const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado,0);
       await this.afs.collection('/Vantruck/datos/logs').doc(logId).set(logEntry);
-      console.log('Log registrado exitosamente:', logEntry);
+      //console.log('Log registrado exitosamente:', logEntry);
     } catch (error) {
       console.error('Error al registrar el log:', error);
     }
@@ -38,20 +38,21 @@ export class LogService {
   /**
    * Crea un objeto LogEntry con los datos proporcionados.
    */
-  private createLogEntry(
+  createLogEntry(
     accion: string,
     coleccion: string,
     detalle: string,
     idObjeto: number,
-    resultado: boolean
+    resultado: boolean, 
+    incremento:number,
   ): LogEntry {
     const jsonData = localStorage.getItem('usuario') || '';
     let usuarioLogueado = JSON.parse(jsonData)    
     this.usuario = structuredClone(usuarioLogueado[0]);
-    console.log("log: this.usuario", this.usuario);
+    //console.log("log: this.usuario", this.usuario);
     
     return {
-      timestamp: Date.now(),
+      timestamp: Date.now() + incremento,
       userId: this.usuario?.uid || 'Desconocido',
       userEmail: this.usuario?.email || 'Desconocido',
       action: accion,
@@ -74,12 +75,12 @@ export class LogService {
     try {
       const logId = this.afs.createId(); // Genera un ID único para el log
       const logDocId = this.afs.createId(); // Genera un ID único para el logDoc
-      const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado);
+      const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado,0);
       const logDoc : LogDoc = {idDoc: logEntry.timestamp, logEntry: logEntry, objeto: objeto, motivoBaja:motivo} 
       await this.afs.collection('/Vantruck/datos/logs').doc(logId).set(logEntry);
-      console.log('Log registrado exitosamente:', logEntry);
+      //console.log('Log registrado exitosamente:', logEntry);
       await this.afs.collection('/Vantruck/datos/papelera').doc(logDocId).set(logDoc);
-      console.log('Log registrado exitosamente:', logDoc);
+      //console.log('Log registrado exitosamente:', logDoc);
     } catch (error) {
       console.error('Error al registrar el log y el logDoc:', error);
     }

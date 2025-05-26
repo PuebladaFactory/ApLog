@@ -1,4 +1,4 @@
-<div class="modal-content">
+<div class="modal-content" [ngClass]="{'isWaiting': isLoading}">
     <div class="modal-header">
         <h1>Operación</h1>
         <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
@@ -367,3 +367,4 @@
         </button>    
     </div>
 </div>
+<app-spinner *ngIf="isLoading"></app-spinner>

@@ -30,6 +30,7 @@ import { ModalFacturaComponent } from './modal-factura/modal-factura.component';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
 import { CalcularPorcentajePipe } from './pipes/calcular-porcentaje.pipe';
+import { SpinnerComponent } from './spinner/spinner.component';
 
 
 
@@ -53,7 +54,7 @@ import { CalcularPorcentajePipe } from './pipes/calcular-porcentaje.pipe';
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,    
-    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent, ScrollToTopComponent, CalcularPorcentajePipe,
+    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent, ScrollToTopComponent, CalcularPorcentajePipe, SpinnerComponent,
     
     
   ],
@@ -91,7 +92,8 @@ import { CalcularPorcentajePipe } from './pipes/calcular-porcentaje.pipe';
     FechaValidaDirective,
     ModalFacturaComponent, 
     ScrollToTopComponent,
-    CalcularPorcentajePipe
+    CalcularPorcentajePipe,
+    SpinnerComponent
     
   ]
 })

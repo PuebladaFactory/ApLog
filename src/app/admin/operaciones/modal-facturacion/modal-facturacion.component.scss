@@ -1,7 +1,14 @@
+.isWaiting {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.5; /* o cualquier otro estilo para indicar que está deshabilitado */
+}
+
 .isDisabled {
     pointer-events: none;
     cursor: not-allowed;
   }
+
   
   .isDisabled:hover {
     cursor: not-allowed;

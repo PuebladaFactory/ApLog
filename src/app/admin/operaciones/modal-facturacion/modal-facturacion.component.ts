@@ -44,6 +44,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
   tarifaEventual!: TarifaEventual;
   @ViewChild('kmInput') kmInputElement!: ElementRef;
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
+  isLoading: boolean = false;
 
   constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private facturacionOpServ: FacturacionOpService, private formNumServ: FormatoNumericoService, private dbFirebase: DbFirestoreService){
     this.form = this.fb.group({      
@@ -62,9 +63,10 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
   
   ngOnInit(): void {   
     console.log(this.fromParent);    
-    //console.log("vista: ",this.vista);
-    //console.log("editar: ",this.editar);
-    //console.log("cerrar: ",this.cerrar);
+    console.log('ModalFacturacionComponent - ngOnInit');
+    ////console.log("vista: ",this.vista);
+    ////console.log("editar: ",this.editar);
+    ////console.log("cerrar: ",this.cerrar);
     this.opOriginal = this.fromParent.item;    
     this.op = structuredClone(this.opOriginal);
         
@@ -88,9 +90,9 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
       .subscribe(data=>{        
         if(data){
           let tarifas : any[] = data 
-          console.log("tarifas pers clientes", tarifas);
+          //console.log("tarifas pers clientes", tarifas);
           this.tarifaClienteSel = tarifas.find((tarifa: ConIdType<TarifaPersonalizadaCliente>)  => tarifa.idCliente === this.op.cliente.idCliente);            
-          console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
+          //console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
           //this.tarifaClienteSel.secciones = this.tarifaClienteSel.secciones || []; // Si secciones no está definido, lo inicializamos como array vacío  
           
           this.armarForm();   
@@ -99,10 +101,10 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
 
       
         let tarifas : ConIdType<TarifaPersonalizadaCliente>[] = this.storageService.loadInfo("tarifasPersCliente")
-        console.log("tarifas pers clientes", tarifas);
+        //console.log("tarifas pers clientes", tarifas);
         if(tarifas.length > 0){
           this.tarifaClienteSel = tarifas.find((tarifa: ConIdType<TarifaPersonalizadaCliente>)  => tarifa.idCliente === this.op.cliente.idCliente);            
-          console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
+          //console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
         } else {
           this.mensajesError("no hay tarifas personalizadas")
         }
@@ -115,7 +117,8 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
        
     } else {
       this.armarForm();
-    }    
+    }      
+      
   }
 
   ngOnDestroy(): void {
@@ -123,13 +126,17 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
     this.destroy$.next();
     this.destroy$.complete();
     this.storageService.clearInfo("tPersCliente");
+    console.log('ModalFacturacionComponent - ngOnDestroy');
   }
 
   ngAfterViewInit(): void {
+    console.log('ModalFacturacionComponent - ngAfterViewInit');
     // Establece el foco en el input de Km Recorridos al inicializar el componente
-    if(this.cerrar){
-      this.kmInputElement.nativeElement.focus();
-    }
+      if (this.cerrar) {
+          setTimeout(() => {
+            this.kmInputElement.nativeElement.focus();
+          }, 0);
+      }
     
   }
 
@@ -144,7 +151,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
     this.aCobrar = this.formatearValor(this.op.valores.cliente.aCobrar);
     this.aPagar = this.formatearValor(this.op.valores.chofer.aPagar);
     this.tarifaPersonalizada = this.op.tarifaPersonalizada;
-    //////console.log("1)", this.tarifaPersonalizada);
+    ////////console.log("1)", this.tarifaPersonalizada);
     if(this.op.tarifaTipo.personalizada && this.tarifaClienteSel){
       this.seccionElegida = this.tarifaClienteSel.secciones[this.op.tarifaPersonalizada.seccion - 1];
       //this.tPersonalizada = this.op.tPersonalizada;
@@ -160,7 +167,7 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
         minimumFractionDigits: 2, 
         maximumFractionDigits: 2 
     }).format(valor);
-   ////////console.log(nuevoValor);    
+   //////////console.log(nuevoValor);    
     //   `$${nuevoValor}`   
     return nuevoValor
  }
@@ -172,16 +179,16 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
 
 ///////ACOMPANIANTE///////
 changeAcompaniante(event: any) {
-  ////console.log(event.target.value);    
+  //////console.log(event.target.value);    
   this.acompaniante = event.target.value.toLowerCase() == 'true';
-  //console.log(this.acompaniante);
+  ////console.log(this.acompaniante);
   
 }
 
 
 ///////// TARIFA PERSONALIZADA /////////////
 changeSecion(e:any){
-  //////console.log("seccion: ", e.target.value);
+  ////////console.log("seccion: ", e.target.value);
   this.mostrarCategoria = true;
   if(this.tarifaEventual){
       this.formTarifaPersonalizada.patchValue({
@@ -207,7 +214,7 @@ changeSecion(e:any){
 }
 
 changeCategoria(e:any){
-  //////console.log("categoria: ", e.target.value);
+  ////////console.log("categoria: ", e.target.value);
   if(this.tarifaClienteSel){
     this.tarifaPersonalizada = {
       seccion : this.tarifaPersonalizada.seccion,
@@ -216,7 +223,7 @@ changeCategoria(e:any){
       aCobrar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aCobrar,
       aPagar: this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1].categorias[e.target.value-1].aPagar,
     }
-    //console.log("tarifa personalizada: ", this.tPersonalizada);
+    ////console.log("tarifa personalizada: ", this.tPersonalizada);
     this.op.tarifaPersonalizada = this.tarifaPersonalizada;
     this.aCobrar = this.formatearValor(this.tarifaPersonalizada.aCobrar);
     this.aPagar = this.formatearValor(this.tarifaPersonalizada.aPagar);  
@@ -271,21 +278,43 @@ cerrarOp(){
     cancelButtonText: "Cancelar"
   }).then((result) => {
     if (result.isConfirmed) {
-      console.log("op: ", this.op);
-      this.facturacionOpServ.facturarOperacion(this.op);
-      Swal.fire({
-        title: "Confirmado",
-        text: "La operación ha sido cerrada.",
-        icon: "success"
-      }).then((result)=>{
-        if (result.isConfirmed) {
-          this.activeModal.close();
+      this.isLoading = true;
+      //console.log("op: ", this.op);
+      this.facturacionOpServ.facturarOperacion(this.op).then(        
+        (result:any)=>{
+          this.isLoading = false;
+          //console.log("modal facturacion: respuesta: ", result);
+          let idOp: number[] = [];
+          idOp.push(this.op.idOperacion)
+          if(result.exito){            
+            this.storageService.logMultiplesOp(idOp, "CERRAR", this.componente, "Cierre de Operación",result.exito )
+            Swal.fire({
+              title: "Confirmado",
+              text: "La operación ha sido cerrada.",
+              icon: "success"
+            }).then((result)=>{
+              if (result.isConfirmed) {
+                this.activeModal.close();
+              }
+            });
+          } else {
+            this.storageService.logMultiplesOp(idOp, "CERRAR", this.componente, "Cierre de Operación",result.exito )
+            Swal.fire({
+              title: "Error",
+              text: `Ha ocurrido un error: ${result.mensaje}`,
+              icon: "error"
+            }).then((result)=>{
+              if (result.isConfirmed) {
+                this.activeModal.close();
+              }
+            });
+          }
         }
-      });   
+      ); 
       
     }
   });   
-  ////console.log("op editada: ", this.op);  
+  //////console.log("op editada: ", this.op);  
   
   //this.form.reset();     
   
@@ -294,11 +323,11 @@ cerrarOp(){
 }
 
 armarOp(){
-  //////////console.log()("armarOp. chofer: ", this.choferSeleccionado);
-  ////console.log("2)", this.tarifaPersonalizada);
+  ////////////console.log()("armarOp. chofer: ", this.choferSeleccionado);
+  //////console.log("2)", this.tarifaPersonalizada);
   // Extraer valores del formulario y otros datos
   const formValues = this.form.value;
-  console.log("tarifa eventual: ", this.tarifaEventual);
+  //console.log("tarifa eventual: ", this.tarifaEventual);
   this.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(this.tarifaEventual.chofer.valor);
   this.tarifaEventual.cliente.valor = this.formNumServ.convertirAValorNumerico(this.tarifaEventual.cliente.valor);
   
@@ -333,7 +362,7 @@ armarOp(){
     this.op.valores.chofer.aPagar = this.tarifaPersonalizada.aPagar;
     this.op.valores.chofer.tarifaBase = this.tarifaPersonalizada.aPagar;
  }
-  console.log("op: ", this.op);
+  //console.log("op: ", this.op);
   
   
   this.updateItem(); 
@@ -343,8 +372,8 @@ armarOp(){
 
  ////// ACTUALIZAR OBJETO /////////
  updateItem(): void {
-  ////////console.log("llamada al storage desde op-alta, addItem");
-  //////////console.log()("esta es la operacion: ", this.op);  
+  //////////console.log("llamada al storage desde op-alta, addItem");
+  ////////////console.log()("esta es la operacion: ", this.op);  
   Swal.fire({
     title: "¿Desea guardar los cambios en la operación?",
     //text: "You won't be able to revert this!",
@@ -356,7 +385,7 @@ armarOp(){
     cancelButtonText: "Cancelar"
   }).then((result) => {
     if (result.isConfirmed) {
-      ////////console.log("op: ", this.op);
+      //////////console.log("op: ", this.op);
       let {id, ...op } = this.op
       this.storageService.updateItem(this.componente, op, this.op.idOperacion,"EDITAR", "Edición de Operación", this.op.id);    
       Swal.fire({
@@ -371,28 +400,28 @@ armarOp(){
       
     }
   });   
-  console.log("op editada: ", this.op);  
+  //console.log("op editada: ", this.op);  
   
   this.form.reset();     
  
 } 
 
 changeMultiCliente(event: any) {
-  console.log("multi cliente: ", Number(event.target.value));    
+  //console.log("multi cliente: ", Number(event.target.value));    
   //this.acompaniante = event.target.value.toLowerCase() == 'true';
   this.op.multiplicadorCliente = Number(event.target.value);
   this.aCobrar = this.formatearValor(this.op.valores.cliente.aCobrar * this.op.multiplicadorCliente);
     
-  //console.log(this.acompaniante);
+  ////console.log(this.acompaniante);
   
 }
 
 changeMultiChofer(event: any) {
-  console.log("multi chofer: ", Number(event.target.value));    
+  //console.log("multi chofer: ", Number(event.target.value));    
   this.op.multiplicadorChofer = Number(event.target.value);
   this.aPagar = this.formatearValor(this.op.valores.chofer.aPagar * this.op.multiplicadorChofer);
   //this.acompaniante = event.target.value.toLowerCase() == 'true';
-  //console.log(this.acompaniante);
+  ////console.log(this.acompaniante);
   
 }
 

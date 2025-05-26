@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, updateDoc } from '@angular/fire/firestore';
+import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, getDoc, getDocs, query, setDoc, updateDoc, where, writeBatch } from '@angular/fire/firestore';
+import { chunk } from 'lodash';
 import { firstValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
+import { Operacion } from 'src/app/interfaces/operacion';
+import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root'
@@ -431,28 +434,61 @@ getByFieldValue(componente:string, campo:string, value:any){
     );
   }
 
-  async guardarFacturaOp(componente:string, facturaOp: FacturaOp) {
+  async guardarFacturasOp(compCliente:string, infOpCliente: FacturaOp, compChofer: string, infOpChofer: FacturaOp, op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {        
+    const batch = writeBatch(this.firestore);    
     try {
-        // Verificar si ya existe una factura con el mismo idOperacion
-        const query = this.firestore2.collection(`/Vantruck/datos/${componente}`, ref =>
-            ref.where('idOperacion', '==', facturaOp.idOperacion)
-        ).get();
-
-        const querySnapshot = await firstValueFrom(query); // Convertir el observable en una promesa
-
-        if (!querySnapshot.empty) {
-            // Si ya existe una factura con el mismo idOperacion
-            console.error("Ya existe una factura con el mismo idOperacion:", facturaOp.idOperacion);
-            throw new Error("Ya existe una factura con el mismo idOperacion.");
-        } else {
-            // Si no existe, guardar la nueva factura
-            await this.firestore2.collection(`/Vantruck/datos/${componente}`).add(facturaOp);
-            console.log("Factura guardada correctamente.");
-        }
-    } catch (error) {
-        console.error("Error al guardar la factura:", error);
+      // Verificar que no exista informe de operación para cliente
+      const refCliente = collection(this.firestore, `/Vantruck/datos/${compCliente}`);
+      const qCliente = query(refCliente, where('idOperacion', '==', infOpCliente.idOperacion));
+      const snapCliente = await getDocs(qCliente);
+      if (!snapCliente.empty) {
+        throw new Error(`Ya existe un informe para el cliente con idFacturaOp ${infOpCliente.idOperacion}`);
+      }
+  
+      // Verificar que no exista informe de operación para chofer
+      const refChofer = collection(this.firestore, `/Vantruck/datos/${compChofer}`);
+      const qChofer = query(refChofer, where('idOperacion', '==', infOpChofer.idOperacion));
+      const snapChofer = await getDocs(qChofer);
+      if (!snapChofer.empty) {
+        throw new Error(`Ya existe un informe para el chofer con idFacturaOp ${infOpChofer.idOperacion}`);
+      }
+  
+      // Verificar que exista la operación
+      const opRef = collection(this.firestore, `/Vantruck/datos/operaciones`);
+      const qOp = query(opRef, where('idOperacion', '==', op.idOperacion));
+      const snapOp = await getDocs(qOp);
+      if (snapOp.empty) {
+        throw new Error(`No se encontró operación con idOperacion ${op.idOperacion}`);
+      }
+  
+      const docOp = snapOp.docs[0];
+      const docOpRef = docOp.ref;
+  
+      // Agregar informes
+      const informeRefCliente = doc(collection(this.firestore, `/Vantruck/datos/${compCliente}`));
+      const informeRefChofer = doc(collection(this.firestore, `/Vantruck/datos/${compChofer}`));
+      batch.set(informeRefCliente, infOpCliente);
+      batch.set(informeRefChofer, infOpChofer);
+  
+      // Editar operación
+      const { id, ...opSinId } = op;
+      batch.update(docOpRef, opSinId);
+  
+      // Ejecutar el batch
+      await batch.commit();
+  
+      return {
+        exito: true,
+        mensaje: 'Se guardaron los informes y se actualizó la operación correctamente.'
+      };
+    } catch (error: any) {
+      console.error('Error al guardar facturas e informes de operación:', error);
+      return {
+        exito: false,
+        mensaje: `Error: ${error.message || 'Ocurrió un problema al procesar la operación.'}`
+      };
     }
-}
+  }
 
   update(componente: string, item: any, uid:any) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
@@ -505,4 +541,231 @@ getByFieldValue(componente:string, campo:string, value:any){
     const estacionamiento1DocumentReference = doc(this.firestore, `/users/${id}`);
     return deleteDoc(estacionamiento1DocumentReference);
   }
+
+async procesarLiquidacion(
+  informesSeleccionados: ConId<FacturaOp>[],
+  modo: string,
+  componenteAlta: string,
+  componenteBaja: string,
+  factura: any,
+  componenteFactura: string
+): Promise<{ exito: boolean; mensaje: string }> {
+  const colOps = 'operaciones';
+  const bloques = chunk(informesSeleccionados, 500);
+  const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
+  const informesBackup: ConId<FacturaOp>[] = [...informesSeleccionados]; // Backup en memoria  
+  try {
+    for (let i = 0; i < bloques.length; i++) {
+      const batch = writeBatch(this.firestore);
+
+      for (const informe of bloques[i]) {
+        // 1. Buscar operación
+        const operacionesRef = collection(this.firestore, `/Vantruck/datos/${colOps}`);
+        const q = query(operacionesRef, where('idOperacion', '==', informe.idOperacion));
+        const querySnap = await getDocs(q);
+
+        if (querySnap.empty) {
+          throw new Error(`No se encontró operación con idOperacion ${informe.idOperacion}`);
+        }
+
+        const opDoc = querySnap.docs[0];
+        const operacion = opDoc.data() as Operacion;
+        const opDocRef = opDoc.ref;
+
+        // 2. Guardar datos para reversión
+        reversionData.push({ docRef: opDocRef, prevData: { ...operacion } });
+
+        // 3. Actualizar estado de la operación
+        const nuevoEstado = { ...operacion.estado };
+        if (modo === 'clientes') {
+          nuevoEstado.cerrada = false;
+          nuevoEstado.facCliente = true;
+        } else {
+          nuevoEstado.cerrada = false;
+          nuevoEstado.facChofer = true;
+        }
+        nuevoEstado.facturada = nuevoEstado.facCliente && nuevoEstado.facChofer;
+        if(nuevoEstado.facturada){
+          nuevoEstado.facCliente = false;
+          nuevoEstado.facChofer = false;
+        }
+
+        batch.update(opDocRef, { estado: nuevoEstado });
+
+        // 4. Verificar duplicado en destino
+        const informeRefDestino = doc(this.firestore, `/Vantruck/datos/${componenteAlta}/${informe.id}`);
+        const destinoSnap = await getDoc(informeRefDestino);
+        if (destinoSnap.exists()) {
+          throw new Error(`Ya existe un informe con id ${informe.id} en ${componenteAlta}`);
+        }
+
+        // 5. Verificar que el origen existe
+        const informeRefOrigen = doc(this.firestore, `/Vantruck/datos/${componenteBaja}/${informe.id}`);
+        const origenSnap = await getDoc(informeRefOrigen);
+        if (!origenSnap.exists()) {
+          throw new Error(`No se encontró el informe con id ${informe.id} en ${componenteBaja}`);
+        }
+
+        // 6. Mover informe (set en destino, delete en origen)
+        const { id, ...inf } = informe;
+        batch.set(informeRefDestino, inf);
+        batch.delete(informeRefOrigen);
+      }
+
+      // 7. Ejecutar batch
+      await batch.commit();
+      console.log(`Batch ${i + 1} procesado correctamente.`);
+    }
+
+    // 8. Verificar existencia de factura duplicada
+    const facturasRef = collection(this.firestore, `/Vantruck/datos/${componenteFactura}`);
+    const idFactura = modo === 'clientes' ? factura.idFacturaCliente
+                   : modo === 'choferes' ? factura.idFacturaChofer
+                   : factura.idFacturaProveedor;
+
+    const facturaQuery = query(facturasRef, where('idFactura', '==', idFactura));
+    const facturaSnap = await getDocs(facturaQuery);
+    if (!facturaSnap.empty) {
+      throw new Error(`Ya existe una factura con idFactura ${idFactura} en ${componenteFactura}`);
+    }
+
+    // 9. Guardar la factura
+    await addDoc(facturasRef, factura);
+    console.log('Factura guardada correctamente.');
+
+    return {
+      exito: true,
+      mensaje: 'La liquidación y la factura se procesaron con éxito.'
+    };
+  } catch (error: any) {
+    console.error('Error durante la liquidación o el guardado de la factura:', error);
+
+    // Restaurar operaciones modificadas
+    for (const { docRef, prevData } of reversionData) {
+      try {
+        await setDoc(docRef, prevData);
+      } catch (revertErr) {
+        console.error('Error al revertir operación:', revertErr);
+      }
+    }
+
+    // Restaurar informes desde backup
+    for (const informe of informesBackup) {
+      try {
+        const informeRef = doc(this.firestore, `/Vantruck/datos/${componenteBaja}/${informe.id}`);
+        await setDoc(informeRef, informe); // reescribe el documento
+      } catch (revertInfErr) {
+        console.error('Error al restaurar informe:', revertInfErr);
+      }
+    }
+
+    return {
+      exito: false,
+      mensaje: `Ocurrió un error: ${error.message || 'Error desconocido'}. Se revirtieron los cambios previos.`
+    };
+  }
+}
+
+async guardarMultiple(
+  objetos: any[],
+  componenteAlta: string,
+  idObjetoNombre: string,
+  tipo: string
+): Promise<{ exito: boolean; mensaje: string }> {
+  const batch = writeBatch(this.firestore);
+  const colRef = collection(this.firestore, `/Vantruck/datos/${componenteAlta}`);
+  
+  try {
+    // Verificar que NINGUNO de los objetos exista ya en la colección
+    for (const obj of objetos) {
+      const idValor: number = tipo === "operaciones" ? obj.idOperacion : obj.timestamp;
+
+      const q = query(colRef, where(idObjetoNombre, "==", idValor));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // Encontró un objeto ya existente => no continúa
+        return {
+          exito: false,
+          mensaje: `Ya existe un documento con ${idObjetoNombre}: ${idValor}`
+        };
+      }
+    }
+
+    // Ninguno existe => agregar todos al batch
+    for (const obj of objetos) {
+      
+      const docRef = doc(colRef); // genera un id automático
+      //let {id, type, ...objEdit} = obj
+      batch.set(docRef, obj);
+    }
+
+    // Ejecutar el batch
+    await batch.commit();
+
+    return { exito: true, mensaje: "Todos los objetos fueron guardados correctamente." };
+  } catch (error: any) {
+    console.error(error);
+    return { exito: false, mensaje: `Error al guardar: ${error.message || error}` };
+  }
+}
+
+
+  mensajesError(msj:string, resultado:string){
+      Swal.fire({
+        icon: resultado === 'error' ? "error" : "success",
+        //title: "Oops...",
+        text: `${msj}`
+        //footer: `${msj}`
+      });
+      
+    }
+
+  async actualizarOperacionesBatch(
+  operaciones: ConId<Operacion>[],
+  componente: string
+): Promise<{ exito: boolean; mensaje: string }> {
+  const batch = writeBatch(this.firestore);
+  
+  try {
+    for (const operacion of operaciones) {
+      const docRef = doc(this.firestore, `/Vantruck/datos/${componente}/${operacion.id}`);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        return {
+          exito: false,
+          mensaje: `No existe la operación con id: ${operacion.id}`
+        };
+      }
+      operacion.estado = {
+        abierta: true,
+        cerrada: false,
+        facCliente: false,
+        facChofer: false,
+        facturada: false,
+      };
+      operacion.km = 0; 
+
+      // Si existe, la agregamos al batch para actualizar
+      let {id, ...op} = operacion
+      batch.update(docRef, op);
+    }
+
+    // Ejecutar el batch si todas las operaciones existen
+    await batch.commit();
+    return {
+      exito: true,
+      mensaje: "Las operaciones fueron actualizadas correctamente."
+    };
+  } catch (error: any) {
+    console.error(error);
+    return {
+      exito: false,
+      mensaje: `Error al actualizar: ${error.message || error}`
+    };
+  }
+}
+
+
 }

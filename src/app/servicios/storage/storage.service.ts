@@ -8,6 +8,8 @@ import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { LogService } from '../log/log.service';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import * as _ from 'lodash';
+import { Operacion } from 'src/app/interfaces/operacion';
+import { LogEntry } from 'src/app/interfaces/log-entry';
 
 
 
@@ -635,7 +637,7 @@ export class StorageService {
   // metodos del storage
 
   public setInfo(componente: string, data: any[]) {
-    //console.log(`Guardando datos en ${componente}:`, data);
+    ////console.log(`Guardando datos en ${componente}:`, data);
     const jsonData = JSON.stringify(data);
     localStorage.setItem(componente, jsonData);
     this.updateObservable(componente, data);
@@ -668,7 +670,7 @@ export class StorageService {
   public clearAllLocalStorage() {
     try {
       localStorage.clear();
-      //console.log('Local storage eliminado correctamente.');
+      ////console.log('Local storage eliminado correctamente.');
     } catch (error) {
       console.error('Error al limpiar el local storage:', error);
     }
@@ -683,7 +685,7 @@ export class StorageService {
 
   // metodo initializer si el rol es admin
   initializerAdmin() {
-    //console.log("me llamaron???");
+    ////console.log("me llamaron???");
     
     //this.getAll<Cliente>("clientes");
     //this.getAll<Chofer>("choferes");
@@ -714,10 +716,10 @@ export class StorageService {
           .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
           .subscribe(data => {
             if(data.length > 0){
-              console.log("todasTarifasEspCliente???", data);
+              //console.log("todasTarifasEspCliente???", data);
               
               tarfEspclientes.push(data[0])
-              //console.log("tarfEspclientes", tarfEspclientes);
+              ////console.log("tarfEspclientes", tarfEspclientes);
               this.setInfo("todasTarifasEspCliente", tarfEspclientes);
               this.updateObservable("todasTarifasEspCliente", tarfEspclientes);
             }
@@ -740,10 +742,10 @@ export class StorageService {
           .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
           .subscribe(data => {
             if(data){
-              console.log("data TARIFA PERSONALIZADA DE LOS CLIENTES?", data);
+              //console.log("data TARIFA PERSONALIZADA DE LOS CLIENTES?", data);
               if(data.length > 0){
                 tarfPersClientes.push(data[0])
-                //console.log("tarifasPersCliente", tarfPersClientes);
+                ////console.log("tarifasPersCliente", tarfPersClientes);
                 this.setInfo("tarifasPersCliente", tarfPersClientes)
               };
               
@@ -766,10 +768,10 @@ export class StorageService {
           .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
           .subscribe(data => {
             if(data){
-              //console.log("data tarifasEspChofer?", data);
+              ////console.log("data tarifasEspChofer?", data);
               
               tarfEspChoferes.push(data[0])
-              //console.log("tarifasEspChofer", tarfEspChoferes);
+              ////console.log("tarifasEspChofer", tarfEspChoferes);
               this.setInfo("tarifasEspChofer", tarfEspChoferes)
             }
           })      
@@ -790,10 +792,10 @@ export class StorageService {
           .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
           .subscribe(data => {
             if(data){
-              //console.log("data tarifasEspProveedor?", data);
+              ////console.log("data tarifasEspProveedor?", data);
               
               tarfEspProveedores.push(data[0])
-              //console.log("tarfEspProveedores", tarfEspProveedores);
+              ////console.log("tarfEspProveedores", tarfEspProveedores);
               this.setInfo("tarifasEspProveedor", tarfEspProveedores)
             }
           })      
@@ -807,15 +809,15 @@ export class StorageService {
   // METODOS CRUD
 
   getAllColection(componente: string){
-    //console.log("getAllUser componente: ", componente);
+    ////console.log("getAllUser componente: ", componente);
     const cachedData = this.loadInfo(componente); // Carga desde local storage
-    ////console.log("getAll cachedData: ", cachedData);
+    //////console.log("getAll cachedData: ", cachedData);
     
     if (cachedData.length > 0) {
-      ////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
+      //////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
       this.updateObservable(componente, cachedData);
     } else {
-      ////console.log(`Caché vacío, consultando Firestore para ${componente}`);
+      //////console.log(`Caché vacío, consultando Firestore para ${componente}`);
       this.dbFirebase.getAllColection(componente)
       .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
       .subscribe(data => {
@@ -828,15 +830,15 @@ export class StorageService {
 
 
   getAll<T>(componente: string): Observable<T[]> {
-    console.log("getAll componente: ", componente);
+    //console.log("getAll componente: ", componente);
     const cachedData = this.loadInfo(componente); // Carga desde local storage
-    ////console.log("getAll cachedData: ", cachedData);
+    //////console.log("getAll cachedData: ", cachedData);
     
     if (cachedData.length > 0) {
-      ////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
+      //////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
       this.updateObservable(componente, cachedData);
     } else {
-      ////console.log(`Caché vacío, consultando Firestore para ${componente}`);
+      //////console.log(`Caché vacío, consultando Firestore para ${componente}`);
       this.dbFirebase.getAll<T>(componente)
       .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
       .subscribe(data => {
@@ -848,16 +850,16 @@ export class StorageService {
   }
 
   getMostRecentItem<T>(componente: string, id: string): void {
-    //console.log("getMostRecentItem componente: ", componente);
+    ////console.log("getMostRecentItem componente: ", componente);
     const cachedData = this.loadInfo(componente); // Carga desde local storage
     if (cachedData.length > 0) {
-      ////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
+      //////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
       this.updateObservable(componente, cachedData[0]); // Usa directamente el objeto
     } else {
       this.dbFirebase.getMostRecent<T>(componente, id)
       .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
       .subscribe(item => {
-        ////console.log(`Elemento más reciente de ${componente}:`, item[0]);
+        //////console.log(`Elemento más reciente de ${componente}:`, item[0]);
         this.setInfo(componente, [item[0]]); // Guarda como un array por compatibilidad
         this.updateObservable(componente, item[0]); // Actualiza el observable con el objeto
       });
@@ -869,10 +871,10 @@ export class StorageService {
     .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
     .subscribe(item => {
       //const cachedData = this.loadInfo(componente);
-      //////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
-      ////console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item[0]);
+      ////////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
+      //////console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item[0]);
       if (item) {
-        //////console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item);
+        ////////console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, item);
         this.setInfo(componente, [item[0]]); // Actualiza el caché
         this.updateObservable(componente, item[0]); // Actualiza el observable con el objeto más reciente
       }
@@ -880,7 +882,7 @@ export class StorageService {
   }
 
   getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
-    console.log(" storage getAllByDateValue ", componente)
+    //console.log(" storage getAllByDateValue ", componente)
     this.dbFirebase
     .getAllByDateValue<T>(componente, campo, value1, value2, orden)
     .subscribe(data => {
@@ -893,14 +895,14 @@ export class StorageService {
     .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
     .subscribe(data => {
       const currentData = this.loadInfo(componente);
-      //////console.log("currentData", currentData);
-      //////console.log("data", data);
+      ////////console.log("currentData", currentData);
+      ////////console.log("data", data);
       if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
-        ////console.log(`Datos sincronizados para ${componente}`, data);
+        //////console.log(`Datos sincronizados para ${componente}`, data);
         this.setInfo(componente, data); // Actualiza el caché
         this.updateObservable(componente, data); // Actualiza el observable
       } else {
-        ////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+        //////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
       }
       
     });
@@ -912,9 +914,9 @@ export class StorageService {
       distinctUntilChanged((prev, curr) => _.isEqual(prev, curr)) // Comparación profunda
     )
     .subscribe(data => {
-      console.log(`${componente}: data: `, data);
+      //console.log(`${componente}: data: `, data);
       let currentData = this.loadInfo(componente);
-      console.log(`${componente}: local storage: `, currentData);
+      //console.log(`${componente}: local storage: `, currentData);
 
       // Comparación profunda con lodash
       if (_.isEqual(currentData, data)) {
@@ -933,9 +935,9 @@ export class StorageService {
       distinctUntilChanged((prev, curr) => _.isEqual(prev, curr)) // Comparación profunda
     )
     .subscribe(data => {
-      console.log(`${componente}: data`, data);
+      //console.log(`${componente}: data`, data);
       let currentData = this.loadInfo(`${componente}`);
-      console.log(`local storage: ${componente}`, currentData);
+      //console.log(`local storage: ${componente}`, currentData);
       this.updateObservable(componente,currentData)
            
     });
@@ -948,11 +950,11 @@ export class StorageService {
       const currentData = this.loadInfo(componente);
       
       if (!currentData || JSON.stringify(currentData[0]) !== JSON.stringify(data[0])) {
-        ////console.log(`Datos sincronizados para ${componente}`, data[0]);
+        //////console.log(`Datos sincronizados para ${componente}`, data[0]);
         this.setInfo(componente, [data[0]]); // Guarda en el caché
         this.updateObservable(componente, data[0]); // Actualiza el observable con el objeto
       } else {
-        ////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+        //////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
       }
     });
   }
@@ -963,25 +965,25 @@ export class StorageService {
     .subscribe((data:any) => {
       const currentData = this.loadInfo(componente);
       if (!currentData || JSON.stringify(currentData[0]) !== JSON.stringify(data[0])) {
-        ////console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, data);
+        //////console.log(`Elemento más reciente de ${componente} cuyo ${campo} es igual a ${value} es:`, data);
         this.setInfo(componente, [data[0]]); // Actualiza el caché
         this.updateObservable(componente, data[0]); // Actualiza el observable
       } else {
-        ////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+        //////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
       }      
     });
   }
 
   syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
-    console.log(" storage syncChangesDateValue ", componente)
+    //console.log(" storage syncChangesDateValue ", componente)
     this.dbFirebase.getAllByDateValue<T>(componente, campo, value1, value2, orden).subscribe(data => {
       const currentData = this.loadInfo(componente);
       if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
-        console.log(`Datos sincronizados para ${componente}`, data);
+        //console.log(`Datos sincronizados para ${componente}`, data);
         this.setInfo(componente, data); // Actualiza el caché
         this.updateObservable(componente, data); // Actualiza el observable
       } else {
-        console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+        //console.log(`Datos no modificados para ${componente}, no se actualiza.`);
       }      
     })
     }
@@ -991,14 +993,14 @@ export class StorageService {
     .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
     .subscribe(data => {
       const currentData = this.loadInfo(componente);
-      //////console.log("currentData", currentData);
-      //////console.log("data", data);
+      ////////console.log("currentData", currentData);
+      ////////console.log("data", data);
       if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
-        ////console.log(`Datos sincronizados para ${componente}`, data);
+        //////console.log(`Datos sincronizados para ${componente}`, data);
         this.setInfo(componente, data); // Actualiza el caché
         this.updateObservable(componente, data); // Actualiza el observable
       } else {
-        ////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+        //////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
       }
       
     });
@@ -1009,44 +1011,44 @@ export class StorageService {
     .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
     .subscribe(data => {
       //const currentData = this.loadInfo(componente);
-      //////console.log("currentData", currentData);
-      //////console.log("data", data);
+      ////////console.log("currentData", currentData);
+      ////////console.log("data", data);
       /* if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
-        ////console.log(`Datos sincronizados para ${componente}`, data);
+        //////console.log(`Datos sincronizados para ${componente}`, data);
         this.setInfo(componente, data); // Actualiza el caché
         this.updateObservable(componente, data); // Actualiza el observable
       } else {
-        ////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
+        //////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
       } */
       
     });
   }
 
   listenForChanges<T>(componente: string): void {
-    console.log("admin: ", componente);    
+    //console.log("admin: ", componente);    
     this.dbFirebase.getAllStateChanges<T>(componente)
       .subscribe(changes => {
         if (changes.length > 0) {
-          console.log(`${componente}: Cambios detectados`, changes);
+          //console.log(`${componente}: Cambios detectados`, changes);
           let currentData = this.loadInfo(componente) || [];          
           changes.forEach(change => {
             if (change.type === 'added') {
-              //console.log("change", change);
+              ////console.log("change", change);
               const existe = currentData.some(obj => obj.id === change.id);
 
               if (!existe) {
-                //console.log("El id no está en el array");
+                ////console.log("El id no está en el array");
                 currentData.push(change);
               } else {
-                console.log("sin cambios en el componente: ", componente);
+                //console.log("sin cambios en el componente: ", componente);
               }
               
               
             } else if (change.type === 'modified') {
-              console.log("editar!!!!");
+              //console.log("editar!!!!");
               currentData = currentData.map(item => item.id === change.id ? change : item);
             } else if (change.type === 'removed') {
-              console.log("DAAALEEE LOOOOCOOO!!!!");
+              //console.log("DAAALEEE LOOOOCOOO!!!!");
               
               currentData = currentData.filter(item => item.id !== change.id);
             }
@@ -1058,30 +1060,30 @@ export class StorageService {
   }
 
   listenForChangesLimit<T>(componente: string, campo:string, id:number, orden:string, limite:number): void {
-    console.log("admin: ", componente);    
+    //console.log("admin: ", componente);    
     this.dbFirebase.getAllStateChangesLimit<T>(componente, campo, id, orden, limite)
       .subscribe(changes => {
         if (changes.length > 0) {
-          console.log(`${componente}: Cambios detectados`, changes);
+          //console.log(`${componente}: Cambios detectados`, changes);
           let currentData = this.loadInfo(componente) || [];          
           changes.forEach(change => {
             if (change.type === 'added') {
-              //console.log("change", change);
+              ////console.log("change", change);
               const existe = currentData.some(obj => obj.id === change.id);
 
               if (!existe) {
-                //console.log("El id no está en el array");
+                ////console.log("El id no está en el array");
                 currentData.push(change);
               } else {
-                console.log("sin cambios en el componente: ", componente);
+                //console.log("sin cambios en el componente: ", componente);
               }
               
               
             } else if (change.type === 'modified') {
-              console.log("editar!!!!");
+              //console.log("editar!!!!");
               currentData = currentData.map(item => item.id === change.id ? change : item);
             } else if (change.type === 'removed') {
-              console.log("DAAALEEE LOOOOCOOO!!!!");
+              //console.log("DAAALEEE LOOOOCOOO!!!!");
               
               currentData = currentData.filter(item => item.id !== change.id);
             }
@@ -1093,30 +1095,30 @@ export class StorageService {
   }
 
   listenForChangesDate<T>(componente: string, campo:string, value1:any, value2:any, orden:string): void {
-    console.log("admin: ", componente);    
+    //console.log("admin: ", componente);    
     this.dbFirebase.getAllStateChangesByDate<T>(componente, campo, orden, value1, value2)
       .subscribe(changes => {
         if (changes.length > 0) {
-          console.log(`${componente}: Cambios detectados`, changes);
+          //console.log(`${componente}: Cambios detectados`, changes);
           let currentData = this.loadInfo(componente) || [];          
           changes.forEach(change => {
             if (change.type === 'added') {
-              //console.log("change", change);
+              ////console.log("change", change);
               const existe = currentData.some(obj => obj.id === change.id);
 
               if (!existe) {
-                //console.log("El id no está en el array");
+                ////console.log("El id no está en el array");
                 currentData.push(change);
               } else {
-                console.log("sin cambios en el componente: ", componente);
+                //console.log("sin cambios en el componente: ", componente);
               }
               
               
             } else if (change.type === 'modified') {
-              console.log("editar!!!!");
+              //console.log("editar!!!!");
               currentData = currentData.map(item => item.id === change.id ? change : item);
             } else if (change.type === 'removed') {
-              console.log("DAAALEEE LOOOOCOOO!!!!");
+              //console.log("DAAALEEE LOOOOCOOO!!!!");
               
               currentData = currentData.filter(item => item.id !== change.id);
             }
@@ -1184,8 +1186,8 @@ export class StorageService {
 
 
   getAllSorted(componente: any, campo: any, orden: any) {
-    //console.log("getAllSorted componente: ", componente);
-    ////console.log(` storage getAllSorted ${componente}`, componente, campo, orden)
+    ////console.log("getAllSorted componente: ", componente);
+    //////console.log(` storage getAllSorted ${componente}`, componente, campo, orden)
     // pasar campo y orden (asc o desc)
     this.dbFirebase
       .getAllSorted(componente, campo, orden)
@@ -1194,13 +1196,13 @@ export class StorageService {
 
         this.setInfo(componente, data)
         this.updateObservable(componente, data)
-        //////console.log("storage initializer ", componente, data);
+        ////////console.log("storage initializer ", componente, data);
       });
 
   }
 
   getAllSortedLimit(componente: any, campo: any, orden: any, limite: number, titulo: string) {
-    ////console.log(` storage getAllSortedLimit ${componente}`, componente, campo, orden, limite)
+    //////console.log(` storage getAllSortedLimit ${componente}`, componente, campo, orden, limite)
     // pasar campo y orden (asc o desc)
     this.dbFirebase
       .getAllSortedLimit(componente, campo, orden, limite)
@@ -1208,13 +1210,13 @@ export class StorageService {
 
         this.setInfo(titulo, data)
         this.updateObservable(componente, data)
-        //////console.log("storage initializer ", componente, data);
+        ////////console.log("storage initializer ", componente, data);
       });
       
   }
 
   getAllSortedIdLimit(componente: any, campo: any, id:number, campo2: any, orden: any, limite: number, titulo: string) {
-    ////console.log(` storage getAllSortedLimit ${componente}`, componente, campo, orden, limite)
+    //////console.log(` storage getAllSortedLimit ${componente}`, componente, campo, orden, limite)
     // pasar campo y orden (asc o desc)
     this.dbFirebase
       .getAllSortedIdLimit(componente, campo, id, campo2, orden, limite)
@@ -1222,13 +1224,13 @@ export class StorageService {
 
         this.setInfo(titulo, data)
         this.updateObservable(componente, data)
-        //////console.log("storage initializer ", componente, data);
+        ////////console.log("storage initializer ", componente, data);
       });
       
   }
   
   getByFieldValue(componente: any, campo:any, value:any){
-    ////console.log(" storage getByFieldValue ", componente, campo, value)
+    //////console.log(" storage getByFieldValue ", componente, campo, value)
     this.dbFirebase
       .getByFieldValue(componente, campo, value)
       .subscribe(data => {
@@ -1237,7 +1239,7 @@ export class StorageService {
   }
 
   getByFieldValueLimit(componente: any, campo:any, value:any, limit:number){
-    ////console.log(" storage getByFieldValue ", componente, campo, value)
+    //////console.log(" storage getByFieldValue ", componente, campo, value)
     this.dbFirebase
       .getByFieldValueLimit(componente, campo, value, limit)
       .subscribe(data => {
@@ -1246,7 +1248,7 @@ export class StorageService {
   }
 
   getByFieldValueLimitBuscarTarifa(componente: any, campo:any, value:any, limit:number){
-    ////console.log(" storage getByFieldValueLimitBuscarTarifa ", componente, campo, value)
+    //////console.log(" storage getByFieldValueLimitBuscarTarifa ", componente, campo, value)
     this.dbFirebase
       .getByFieldValueLimitBuscarTarifa(componente, campo, value, limit)
       .subscribe(data => {
@@ -1255,7 +1257,7 @@ export class StorageService {
   }
 
   getByDateValue(componente:string, campo:string, value1:any, value2:any, titulo:string){
-    //console.log(" storage getByDateValue ", componente, titulo)
+    ////console.log(" storage getByDateValue ", componente, titulo)
     this.dbFirebase
     .getByDateValue(componente, campo, value1, value2)
     .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
@@ -1265,18 +1267,18 @@ export class StorageService {
     }
 
     getByDateValueAndFieldValue(componente:string, campo:string, value1:any, value2:any, titulo:string, campo2:string, value3:any){
-      ////console.log(" storage getByDateValueAndFieldValue ", componente, titulo)
+      //////console.log(" storage getByDateValueAndFieldValue ", componente, titulo)
       this.dbFirebase
     .getByDateValueAndFieldValue(componente, campo, value1, value2, campo2, value3)
     .subscribe(data => {
       this.setInfo(titulo , data)
-      //////console.log("esta es la consulta por fechas y por id: ", data);
+      ////////console.log("esta es la consulta por fechas y por id: ", data);
       
     })
     }
     
     getByFieldValueTitle(componente:string, campo:string, value:any, titulo:string, ){
-      ////console.log(" storage getByFieldValueTitle ", componente, value, titulo)
+      //////console.log(" storage getByFieldValueTitle ", componente, value, titulo)
       this.dbFirebase
       .getByFieldValue(componente, campo, value)
       .subscribe(data => {
@@ -1286,23 +1288,23 @@ export class StorageService {
 
       ///buscar el ultimo elemento de la coleccion q corresponda a un id
       getElemntByIdLimit(componente:string, campo:string, orden:string, id:number, titulo:string){
-        ////console.log(" storage getElemntByIdLimit ", componente, campo, orden, id, titulo)
+        //////console.log(" storage getElemntByIdLimit ", componente, campo, orden, id, titulo)
         this.dbFirebase
         .obtenerTarifaMasReciente(componente,id,campo, orden)
         .subscribe(data => {
-          ////console.log("!!!! ESTA ES LA RESPUESTA DE LA BASE DE DATOS DE LA ULT TARIFA: ", data);
+          //////console.log("!!!! ESTA ES LA RESPUESTA DE LA BASE DE DATOS DE LA ULT TARIFA: ", data);
           
           this.setInfo(titulo , data)
         })
       }
 
       getUltElemColeccion(componente:string, campo:string, orden:string, id:number, titulo:string){
-        ////console.log(" storage getUltElemColeccion ", componente, campo, orden, id)
+        //////console.log(" storage getUltElemColeccion ", componente, campo, orden, id)
         this.dbFirebase
         .obtenerElementoMasReciente(componente,campo, id )
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
-            ////console.log(data);            
+            //////console.log(data);            
             this.setInfo(titulo , data)
         });            
       }
@@ -1326,7 +1328,7 @@ export class StorageService {
       }
     
       public deleteItem(componente: string, item: any,  idItem:number, accion:string, msj:string): void {
-        console.log(" storage deleteItem ", componente)
+        //console.log(" storage deleteItem ", componente)
         let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
@@ -1357,11 +1359,11 @@ export class StorageService {
       }
     
       public updateItem(componente: string, item: any, idItem:number, accion:string, msj: string, uid:any): void {
-        ////console.log("storage update item", componente, item);
+        //////console.log("storage update item", componente, item);
         let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
-        console.log("regLog", regLog);
+        //console.log("regLog", regLog);
         
         this.dbFirebase.update(componente, item, uid).then(() => {
           if (!user[0].roles.god && regLog) { 
@@ -1375,7 +1377,7 @@ export class StorageService {
       }
 
       public updateUser(componente: string, item: any, accion:string): void {
-        ////console.log("storage update item", componente, item);
+        //////console.log("storage update item", componente, item);
         let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
@@ -1387,12 +1389,12 @@ export class StorageService {
           if (!user[0].roles.god && regLog) { 
             this.logService.logEvent(accion, componente, `Edición de Usuario ${item.email}`, item.uid, false);
           }  
-          console.log(e.message)
+          //console.log(e.message)
         });
       }
 
       public deleteUser(componente: string, item: any, accion: string): void {
-        ////console.log("storage delete item", componente, item);
+        //////console.log("storage delete item", componente, item);
         let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
@@ -1404,9 +1406,62 @@ export class StorageService {
           if (!user[0].roles.god && regLog) { 
             this.logService.logEvent(accion, componente, `Baja de Usuario ${item.email}`, item.uid, false);
           }  
-          console.log(e.message)
+          //console.log(e.message)
         });
       }
+
+      guardadoMultiple(
+        objetos: any[], 
+        componenteAlta: string, 
+        idObjetoNombre: string, 
+        tipo: string,
+      ){       ///metodo para guardar multiples objetos en una misma coleccón
+        this.dbFirebase.guardarMultiple(objetos, componenteAlta, idObjetoNombre, tipo)
+      }
+
+      logMultiplesOp(
+        idOperaciones: number[],
+        accion: string,
+        coleccion: string,
+        detalle: string,        
+        resultado: boolean
+      ){        ///metodo para crear multiples LogEntry
+        let arryLog: LogEntry[] = [];
+        let user = this.loadInfo('usuario');
+        //let accion: string = "BAJA";
+        if (!user[0].roles.god) { 
+          let incremento = 0
+
+          idOperaciones.forEach((idOp: number)=>{
+          let logEntry: LogEntry = this.logService.createLogEntry(accion, coleccion, detalle, idOp, resultado, incremento);
+          incremento++
+          arryLog.push(logEntry)
+        })
+        //console.log("Storage Service: arraLog: ", arryLog);        
+        this.guardadoMultiple(arryLog, "logs", "timestamp", "logs")
+        }
+        
+        
+        
+      }
+
+      logSimple(
+        idObjeto: number,
+        accion: string,
+        coleccion: string,
+        detalle: string,        
+        resultado: boolean
+      ){ ///metodo para guardar multiples LogEntry
+        let arryLog: LogEntry[] = [];
+        let user = this.loadInfo('usuario');
+        //let accion: string = "BAJA";
+        if (!user[0].roles.god) { 
+          let logEntry: LogEntry = this.logService.createLogEntry(accion, coleccion, detalle, idObjeto, resultado,0);
+          arryLog.push(logEntry)
+        //console.log("Storage Service: arraLog: ", arryLog);        
+        this.guardadoMultiple(arryLog, "logs", "timestamp", "logs")
+      }
+    }
     
       private controlLog(componente: string, accion:string) {
         switch(componente){

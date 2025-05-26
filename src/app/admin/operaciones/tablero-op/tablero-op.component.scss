@@ -119,5 +119,18 @@ font-size: 1.3rem;
     cursor: not-allowed;
   }
 
+  .isWaiting {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.5; /* o cualquier otro estilo para indicar que está deshabilitado */
+}
+
+.imTired{
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.5; /* o cualquier otro estilo para indicar que está deshabilitado */
+  background-color: red;
+}
+
 
   

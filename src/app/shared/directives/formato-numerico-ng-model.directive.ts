@@ -1,4 +1,4 @@
-import { Directive, HostListener, ElementRef, Renderer2, AfterViewInit } from '@angular/core';
+import { Directive, HostListener, ElementRef, Renderer2, AfterViewInit, OnInit } from '@angular/core';
 import { NgModel } from '@angular/forms';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 
@@ -6,7 +6,7 @@ import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/forma
 @Directive({
   selector: '[appFormatoNumericoNgModel]',
 })
-export class FormatoNumericoNgModelDirective implements AfterViewInit {
+export class FormatoNumericoNgModelDirective implements AfterViewInit, OnInit {
 
   private puntoIngresadoPorUsuario = false; // Indicador para el punto del usuario
   private mensajeError: string | null = null; // Mensaje de error actual
@@ -17,11 +17,20 @@ export class FormatoNumericoNgModelDirective implements AfterViewInit {
     private ngModel: NgModel,
     private formatoNumericoService: FormatoNumericoService
   ) {}
+  
+   ngOnInit(): void {
+    console.log('FormatoNumericoNgModelDirective - ngOnInit');
+  }
+
+  ngOnDestroy(): void {
+    console.log('FormatoNumericoNgModelDirective - ngOnDestroy');
+  }
+
 
   @HostListener('keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
     const input = this.el.nativeElement as HTMLInputElement;
-    //console.log("input: ", input.value);
+    ////console.log("input: ", input.value);
     
     // Permitir teclas especiales: navegación, borrar, tab
     if (
@@ -61,13 +70,14 @@ export class FormatoNumericoNgModelDirective implements AfterViewInit {
    * Formatea el valor inicial del modelo después de que la vista se haya inicializado.
    */
   ngAfterViewInit(): void {
+     console.log('FormatoNumericoNgModelDirective - ngAfterViewInit');
     setTimeout(() => {
       const valorInicial = this.ngModel.model;
-      //console.log("1)valorInicial: ", valorInicial);
+      ////console.log("1)valorInicial: ", valorInicial);
 
       if (valorInicial !== undefined && valorInicial !== null) {
         const formateado = this.formatoNumericoService.convertirAValorFormateado(valorInicial);
-        //console.log("2)formateado: ", formateado);
+        ////console.log("2)formateado: ", formateado);
 
         // Actualizar el input y el modelo con el valor formateado
         this.renderer.setProperty(this.el.nativeElement, 'value', formateado);
@@ -83,15 +93,15 @@ export class FormatoNumericoNgModelDirective implements AfterViewInit {
   onModelChange(value: any): void {
     
     /* if (value) {
-      console.log("value: ", value);
+      //console.log("value: ", value);
       
       const formateado = this.formatoNumericoService.convertirAValorFormateado(value);
       this.renderer.setProperty(this.el.nativeElement, 'value', formateado);
     } */
       //const input = event.target as HTMLInputElement;
       let valor = value;
-      //console.log('1) valor inicial: ', valor);
-      //console.log('2) puntoIngresadoPorUsuario: ', this.puntoIngresadoPorUsuario);
+      ////console.log('1) valor inicial: ', valor);
+      ////console.log('2) puntoIngresadoPorUsuario: ', this.puntoIngresadoPorUsuario);
   
       // Verificar si el valor contiene una coma (separador decimal)
       if (valor.includes(',')) {

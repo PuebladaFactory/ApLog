@@ -20,6 +20,7 @@ import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.compone
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.service';
 
 @Component({
   selector: 'app-liq-proveedor',
@@ -37,6 +38,7 @@ export class LiqProveedorComponent implements OnInit {
   btnConsulta:boolean = false;
   searchText!:string;
   searchText2!:string;
+  searchText3!:string;
   componente: string = "facturaProveedor";
   $facturasOpProveedor!: ConId<FacturaOp>[];
   date:any = new Date();
@@ -74,8 +76,10 @@ export class LiqProveedorComponent implements OnInit {
   private destroy$ = new Subject<void>();
   opAbiertas!: ConId<Operacion>[];
   $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
+  $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
+  isLoading: boolean = false;
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false);
    
@@ -120,9 +124,9 @@ export class LiqProveedorComponent implements OnInit {
             if(this.$facturasOpProveedor){
               //console.log("?????????????");                
               this.procesarDatosParaTabla();
-              //this.verificarDuplicados();
+              this.verificarDuplicados();
             } else {
-              this.mensajesError("error: facturaOpProveedor")         
+              this.mensajesError("error: facturaOpProveedor", "error")         
             }
           }
           
@@ -152,6 +156,41 @@ export class LiqProveedorComponent implements OnInit {
     console.log("this.$facturasOpChofer", this.$facturasOpProveedor);
     console.log("duplicadas", this.$facturasOpDuplicadas);
     
+}
+
+borrarDuplicadasEnLiquidacion(){
+  console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
+  this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+    this.dbFirebase.delete(this.titulo, facDupli.id)
+})
+this.$facturasOpDuplicadas = []
+this.procesarDatosParaTabla();
+this.verificarDuplicados();
+}
+
+verificarDuplicadosFacturadas(){
+
+  this.$facturasOpProveedor.forEach((facturaOp:FacturaOp) => {
+    this.dbFirebase.getMostRecentId("facOpLiqProveedor", "idFacturaOp", "idOperacion", facturaOp.idOperacion)
+    .pipe(take(1))
+    .subscribe(data=>{
+      if(data.length > 0){
+        console.log("hay data", data);
+        let facOp: any = data[0];
+        this.$facLiqOpDuplicadas.push(facOp)
+      } else {
+        console.log("no hay data", data);        
+      }
+    })
+  })
+  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
+}
+
+deleteDuplicadas(){
+  console.log("cantidad facLiqOpDuplicadas", this.$facLiqOpDuplicadas.length);
+  this.$facLiqOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+    this.dbFirebase.delete(this.titulo, facDupli.id)
+})
 }
 
   
@@ -400,13 +439,13 @@ export class LiqProveedorComponent implements OnInit {
       ////console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
     } else {
-      this.mensajesError("Debe seleccionar una factura para liquidar")
+      this.mensajesError("Debe seleccionar una factura para liquidar", "error")
     }
   }
 
-  mensajesError(msj:string){
+  mensajesError(msj:string, resultado:string){
     Swal.fire({
-      icon: "error",
+      icon: resultado === 'error' ? "error" : "success",
       //title: "Oops...",
       text: `${msj}`
       //footer: `${msj}`
@@ -517,7 +556,9 @@ export class LiqProveedorComponent implements OnInit {
             this.facturaProveedor = result.factura;
             let accion: string = result.accion;
             if(result.modo === "cerrar"){
-              this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA" );
+              //this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA" );
+              //this.liqService.liquidarFacOpProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
+              this.procesarFacturacion(titulo, accion);
             }
 
             if(result.modo === "proforma"){
@@ -528,31 +569,7 @@ export class LiqProveedorComponent implements OnInit {
             }     
             
             
-            Swal.fire({
-                title: `¿Desea imprimir el detalle del Proveedor?`,
-                //text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Confirmar",
-                cancelButtonText: "Cancelar"
-              }).then((result) => {
-                if (result.isConfirmed) {     
-                  if(titulo === "excel"){
-                      this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
-                    }else if (titulo === "pdf"){          
-                      this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
-                  }
-                }
-              });   
-
-            
-              if(result.modo === "cerrar"){
-                this.eliminarFacturasOp();
-              }
-              /* this.mostrarMasDatos(this.indiceSeleccionado);
-              this.procesarDatosParaTabla() */
+           
           }
           this.mostrarMasDatos(this.indiceSeleccionado);
           this.procesarDatosParaTabla()
@@ -562,6 +579,58 @@ export class LiqProveedorComponent implements OnInit {
       );
     }
 
+  }
+
+  procesarFacturacion(titulo:string, accion:string) {
+    this.isLoading = true;
+    
+    this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasProveedor, "proveedores", "facOpLiqProveedor", "facturaOpProveedor", this.facturaProveedor, "facturaProveedor")
+      .then((result) => {
+        this.isLoading = false;
+        console.log("resultado: ", result);
+        if(result.exito){
+            this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "LIQUIDAR", "operaciones", `Operación del Proveedor ${this.facturaProveedor.razonSocial} Liquidada`,result.exito);
+            this.storageService.logSimple(this.facturaProveedor.idFacturaProveedor,"ALTA", "facturaProveedor", `Alta de Factura del Proveedor ${this.facturaProveedor.razonSocial}`, result.exito );
+            Swal.fire({
+                  icon: "success",
+                  //title: "Oops...",
+                  text: 'La liquidación se procesó con éxito.',
+                  confirmButtonColor: "#3085d6",
+                  confirmButtonText: "Confirmar",
+                  //footer: `${msj}`
+                }).then(() => {
+                  Swal.fire({
+                    title: `¿Desea imprimir el detalle del Proveedor?`,
+                    //text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Confirmar",
+                    cancelButtonText: "Cancelar"
+                  }).then((result) => {
+                    if (result.isConfirmed) {     
+                      if(titulo === "excel"){
+                          this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
+                        }else if (titulo === "pdf"){          
+                          this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
+                      }
+                    }
+                  });   
+                });
+        } else {
+          this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "LIQUIDAR", "operaciones", `Operación del Proveedor ${this.facturaProveedor.razonSocial} Liquidada`,result.exito);
+          this.storageService.logSimple(this.facturaProveedor.idFacturaProveedor,"ALTA", "facturaProveedor", `Alta de Factura del Proveedor ${this.facturaProveedor.razonSocial}`, result.exito );
+          this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
+        }
+        
+       
+      })
+      .catch((error) => {
+        this.isLoading = false;
+        console.error(error);
+        this.mensajesError('Ocurrió un error al procesar la facturación.', "error");
+      });
   }
 
   ////////////////////////////////////////////////ACA ESTA EL ERROR!!!!!!!!!!!!!!!!!!!!///////////////////////
