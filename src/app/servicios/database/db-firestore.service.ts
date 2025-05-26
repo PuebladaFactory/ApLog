@@ -585,6 +585,10 @@ async procesarLiquidacion(
           nuevoEstado.facChofer = true;
         }
         nuevoEstado.facturada = nuevoEstado.facCliente && nuevoEstado.facChofer;
+        if(nuevoEstado.facturada){
+          nuevoEstado.facCliente = false;
+          nuevoEstado.facChofer = false;
+        }
 
         batch.update(opDocRef, { estado: nuevoEstado });
 

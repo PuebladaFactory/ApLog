@@ -78,7 +78,7 @@ export class FacturacionOpService {
           this.$ultTarifaGralCliente = data;
           //console.log("1) ult tarifa GRAL CLIENTE: ", this.$ultTarifaGralCliente);              
         } else {
-          console.error("El valor obtenido no es un objeto, es un array, null o no es un objeto válido.");
+          //console.error("El valor obtenido no es un objeto, es un array, null o no es un objeto válido.");
           this.$ultTarifaGralCliente = data[0];
         }      
       }
@@ -93,7 +93,7 @@ export class FacturacionOpService {
           this.$ultTarifaGralChofer = data;        
           //console.log("2) ult tarifa GRAL CHOFER: ",this.$ultTarifaGralChofer);              
         } else {
-          console.error("El valor obtenido no es un objeto, es un array, null o no es un objeto válido.");
+          //console.error("El valor obtenido no es un objeto, es un array, null o no es un objeto válido.");
           this.$ultTarifaGralChofer = data[0];        
           //console.log("2) ult tarifa GRAL CHOFER: ",this.$ultTarifaGralChofer);              
         }      
@@ -111,7 +111,7 @@ export class FacturacionOpService {
           this.$ultTarifaGralProveedor = data;        
           //console.log("3) ult tarifa GRAL PROVEEDOR: ", this.$ultTarifaGralProveedor);              
         } else {
-          console.error("El valor obtenido no es un objeto, es un array, null o no es un objeto válido.");
+          //console.error("El valor obtenido no es un objeto, es un array, null o no es un objeto válido.");
           this.$ultTarifaGralProveedor = data[0];        
           //console.log("3) ult tarifa GRAL PROVEEDOR: ", this.$ultTarifaGralProveedor);              
         }    
