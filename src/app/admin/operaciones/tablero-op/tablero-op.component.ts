@@ -496,7 +496,7 @@ export class TableroOpComponent implements OnInit {
         windowClass: 'myCustomModalClass',
         centered: true,
         size: 'lg', 
-        backdrop:"static" 
+        //backdrop:"static" 
       });      
 
      let info = {
@@ -507,7 +507,7 @@ export class TableroOpComponent implements OnInit {
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-         this.imTired = false
+         
         },
         (reason) => {}
       );
