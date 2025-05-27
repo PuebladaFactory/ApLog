@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-proveedores-control',
-  template:  ` 
+    selector: 'app-proveedores-control',
+    template: ` 
   <div class="d-flex justify-content-between mt-3">
     <h1>Proveedores</h1>    
   </div>   
@@ -17,7 +17,8 @@ import { Router } from '@angular/router';
   </div>
   <router-outlet></router-outlet>
     `,
-  styleUrls: ['./proveedores-control.component.scss']
+    styleUrls: ['./proveedores-control.component.scss'],
+    standalone: false
 })
 export class ProveedoresControlComponent implements OnInit {
 

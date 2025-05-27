@@ -3,9 +3,10 @@ import { NgbCalendar, NgbDateAdapter } from '@ng-bootstrap/ng-bootstrap';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-facturacion-consulta',
-  templateUrl: './facturacion-consulta.component.html',
-  styleUrls: ['./facturacion-consulta.component.scss']
+    selector: 'app-facturacion-consulta',
+    templateUrl: './facturacion-consulta.component.html',
+    styleUrls: ['./facturacion-consulta.component.scss'],
+    standalone: false
 })
 export class FacturacionConsultaComponent implements OnInit {
 

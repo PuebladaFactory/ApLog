@@ -2,7 +2,8 @@ import { Directive, HostListener } from '@angular/core';
 import { NgControl } from '@angular/forms';
 
 @Directive({
-  selector: '[appCuitFormat]'
+    selector: '[appCuitFormat]',
+    standalone: false
 })
 export class CuitFormatDirective {
 constructor(private ngControl: NgControl) {}

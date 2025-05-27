@@ -23,9 +23,10 @@ import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personaliz
 import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.service';
 
 @Component({
-  selector: 'app-liq-proveedor',
-  templateUrl: './liq-proveedor.component.html',
-  styleUrls: ['./liq-proveedor.component.scss']
+    selector: 'app-liq-proveedor',
+    templateUrl: './liq-proveedor.component.html',
+    styleUrls: ['./liq-proveedor.component.scss'],
+    standalone: false
 })
 export class LiqProveedorComponent implements OnInit {
 

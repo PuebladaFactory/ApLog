@@ -1,9 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-btn-agregar',
-
-  template: `
+    selector: 'app-btn-agregar',
+    template: `
 <!-- <button class="btn btn-success"  style="border-radius: 10%;  margin: 10px;"
 [disabled]=disabled>
    <i *ngIf="name !== 'Vehiculo'" class="fa fa-plus" style=" vertical-align: middle;"></i>
@@ -69,8 +68,8 @@ import { Component, Input, OnInit } from '@angular/core';
 </svg>
 </button>
 `,
-  styles: [
-    `
+    styles: [
+        `
      .verde:hover{
         background-color: lightgreen;
         color: black;
@@ -91,10 +90,8 @@ import { Component, Input, OnInit } from '@angular/core';
 
 
   `
-  ]
-
-
-
+    ],
+    standalone: false
 })
 export class BtnAgregarComponent implements OnInit {
 

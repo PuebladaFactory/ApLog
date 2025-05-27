@@ -6,9 +6,10 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-cliente-tarifa-especial',
-  templateUrl: './cliente-tarifa-especial.component.html',
-  styleUrls: ['./cliente-tarifa-especial.component.scss']
+    selector: 'app-cliente-tarifa-especial',
+    templateUrl: './cliente-tarifa-especial.component.html',
+    styleUrls: ['./cliente-tarifa-especial.component.scss'],
+    standalone: false
 })
 export class ClienteTarifaEspecialComponent implements OnInit {
 

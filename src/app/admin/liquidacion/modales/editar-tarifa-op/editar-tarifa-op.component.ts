@@ -15,9 +15,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-editar-tarifa-op',
-  templateUrl: './editar-tarifa-op.component.html',
-  styleUrls: ['./editar-tarifa-op.component.scss']
+    selector: 'app-editar-tarifa-op',
+    templateUrl: './editar-tarifa-op.component.html',
+    styleUrls: ['./editar-tarifa-op.component.scss'],
+    standalone: false
 })
 export class EditarTarifaOpComponent implements OnInit {
 

@@ -8,9 +8,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-modal-baja',
-  templateUrl: './modal-baja.component.html',
-  styleUrls: ['./modal-baja.component.scss']
+    selector: 'app-modal-baja',
+    templateUrl: './modal-baja.component.html',
+    styleUrls: ['./modal-baja.component.scss'],
+    standalone: false
 })
 export class ModalBajaComponent implements OnInit {
   

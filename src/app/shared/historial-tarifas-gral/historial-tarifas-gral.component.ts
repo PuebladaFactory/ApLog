@@ -11,9 +11,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-historial-tarifas-gral',
-  templateUrl: './historial-tarifas-gral.component.html',
-  styleUrls: ['./historial-tarifas-gral.component.scss']
+    selector: 'app-historial-tarifas-gral',
+    templateUrl: './historial-tarifas-gral.component.html',
+    styleUrls: ['./historial-tarifas-gral.component.scss'],
+    standalone: false
 })
 export class HistorialTarifasGralComponent implements OnInit {
   

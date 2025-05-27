@@ -18,9 +18,10 @@ import { Subject, takeUntil } from 'rxjs';
 import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
-  selector: 'app-facturar-op',
-  templateUrl: './facturar-op.component.html',
-  styleUrls: ['./facturar-op.component.scss']
+    selector: 'app-facturar-op',
+    templateUrl: './facturar-op.component.html',
+    styleUrls: ['./facturar-op.component.scss'],
+    standalone: false
 })
 export class FacturarOpComponent implements OnInit {
 

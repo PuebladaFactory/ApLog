@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-op-control',
-  template: `     
+    selector: 'app-op-control',
+    template: `     
   <div class="d-flex justify-content-between mt-3">
     <h1 class="text-center w-100">Operaciones</h1>    
   </div>   
@@ -19,7 +19,7 @@ import { Router } from '@angular/router';
   <router-outlet></router-outlet>    
   
   `,
-  styles: [`
+    styles: [`
     .tab-container {
       display: flex;
       justify-content: flex-start;
@@ -48,7 +48,8 @@ import { Router } from '@angular/router';
     }
 
 
-  `]
+  `],
+    standalone: false
 })
 export class OpControlComponent implements OnInit {
 

@@ -1,7 +1,8 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'calcularPorcentaje'
+    name: 'calcularPorcentaje',
+    standalone: false
 })
 export class CalcularPorcentajePipe implements PipeTransform {
   transform(

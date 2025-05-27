@@ -9,9 +9,10 @@ import { TarifaEventual } from 'src/app/interfaces/tarifa-eventual';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-tarifas-eventuales',
-  templateUrl: './tarifas-eventuales.component.html',
-  styleUrls: ['./tarifas-eventuales.component.scss']
+    selector: 'app-tarifas-eventuales',
+    templateUrl: './tarifas-eventuales.component.html',
+    styleUrls: ['./tarifas-eventuales.component.scss'],
+    standalone: false
 })
 export class TarifasEventualesComponent implements OnInit {
   moduloOrigen: string | null = null;

@@ -12,9 +12,10 @@ import { Subject, takeUntil } from 'rxjs';
 import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
-  selector: 'app-choferes-tarifa-gral',
-  templateUrl: './choferes-tarifa-gral.component.html',
-  styleUrls: ['./choferes-tarifa-gral.component.scss']
+    selector: 'app-choferes-tarifa-gral',
+    templateUrl: './choferes-tarifa-gral.component.html',
+    styleUrls: ['./choferes-tarifa-gral.component.scss'],
+    standalone: false
 })
 export class ChoferesTarifaGralComponent implements OnInit {
 

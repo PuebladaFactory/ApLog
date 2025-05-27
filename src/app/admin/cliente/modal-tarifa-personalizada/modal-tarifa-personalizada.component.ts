@@ -9,9 +9,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-modal-tarifa-personalizada',
-  templateUrl: './modal-tarifa-personalizada.component.html',
-  styleUrls: ['./modal-tarifa-personalizada.component.scss']
+    selector: 'app-modal-tarifa-personalizada',
+    templateUrl: './modal-tarifa-personalizada.component.html',
+    styleUrls: ['./modal-tarifa-personalizada.component.scss'],
+    standalone: false
 })
 export class ModalTarifaPersonalizadaComponent implements OnInit {
   

@@ -12,9 +12,10 @@ import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.compone
 
 
 @Component({
-  selector: 'app-cliente-listado',
-  templateUrl: './cliente-listado.component.html',
-  styleUrls: ['./cliente-listado.component.scss']
+    selector: 'app-cliente-listado',
+    templateUrl: './cliente-listado.component.html',
+    styleUrls: ['./cliente-listado.component.scss'],
+    standalone: false
 })
 export class ClienteListadoComponent implements OnInit {
   

@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-ajustes-control',
-  template: `
+    selector: 'app-ajustes-control',
+    template: `
   <div class="d-flex justify-content-between mt-3">
     <h1>Configuración</h1>    
   </div>   
@@ -15,7 +15,8 @@ import { Router } from '@angular/router';
   </div>
   <router-outlet></router-outlet>
   `,
-  styleUrls: ['./ajustes-control.component.scss']
+    styleUrls: ['./ajustes-control.component.scss'],
+    standalone: false
 })
 export class AjustesControlComponent implements OnInit {
 

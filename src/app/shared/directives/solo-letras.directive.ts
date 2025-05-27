@@ -1,7 +1,8 @@
 import { Directive, HostListener, ElementRef, Renderer2 } from '@angular/core';
 
 @Directive({
-  selector: '[appSoloLetras]',
+    selector: '[appSoloLetras]',
+    standalone: false
 })
 export class SoloLetrasDirective {
   private valorAnterior: string = ''; // Guardar el último valor válido

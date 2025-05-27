@@ -4,7 +4,8 @@ import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/forma
 
 
 @Directive({
-  selector: '[appFormatoNumericoNgModel]',
+    selector: '[appFormatoNumericoNgModel]',
+    standalone: false
 })
 export class FormatoNumericoNgModelDirective implements AfterViewInit, OnInit {
 

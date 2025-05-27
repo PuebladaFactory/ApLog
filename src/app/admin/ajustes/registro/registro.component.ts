@@ -6,9 +6,10 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-registro',
-  templateUrl: './registro.component.html',
-  styleUrls: ['./registro.component.scss']
+    selector: 'app-registro',
+    templateUrl: './registro.component.html',
+    styleUrls: ['./registro.component.scss'],
+    standalone: false
 })
 export class RegistroComponent implements OnInit {
  

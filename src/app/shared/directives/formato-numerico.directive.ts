@@ -1,7 +1,8 @@
 import { Directive, HostListener, ElementRef, Renderer2 } from '@angular/core';
 
 @Directive({
-  selector: '[appFormatoNumerico]',
+    selector: '[appFormatoNumerico]',
+    standalone: false
 })
 export class FormatoNumericoDirective {
   private puntoIngresadoPorUsuario = false; // Indicador para el punto del usuario

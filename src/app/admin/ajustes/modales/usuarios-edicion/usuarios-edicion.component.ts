@@ -4,9 +4,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-usuarios-edicion',
-  templateUrl: './usuarios-edicion.component.html',
-  styleUrls: ['./usuarios-edicion.component.scss']
+    selector: 'app-usuarios-edicion',
+    templateUrl: './usuarios-edicion.component.html',
+    styleUrls: ['./usuarios-edicion.component.scss'],
+    standalone: false
 })
 export class UsuariosEdicionComponent implements OnInit {
  

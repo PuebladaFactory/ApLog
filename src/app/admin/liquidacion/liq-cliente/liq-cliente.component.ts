@@ -25,9 +25,10 @@ import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.se
 
 
 @Component({
-  selector: 'app-liq-cliente',
-  templateUrl: './liq-cliente.component.html',
-  styleUrls: ['./liq-cliente.component.scss']
+    selector: 'app-liq-cliente',
+    templateUrl: './liq-cliente.component.html',
+    styleUrls: ['./liq-cliente.component.scss'],
+    standalone: false
 })
 export class LiqClienteComponent {
 

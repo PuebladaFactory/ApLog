@@ -2,14 +2,15 @@ import { Directive } from '@angular/core';
 import { NG_VALIDATORS, Validator, AbstractControl, ValidationErrors } from '@angular/forms';
 
 @Directive({
-  selector: '[appFechaValida]',
-  providers: [
-    {
-      provide: NG_VALIDATORS,
-      useExisting: FechaValidaDirective,
-      multi: true,
-    },
-  ],
+    selector: '[appFechaValida]',
+    providers: [
+        {
+            provide: NG_VALIDATORS,
+            useExisting: FechaValidaDirective,
+            multi: true,
+        },
+    ],
+    standalone: false
 })
 export class FechaValidaDirective implements Validator {
   validate(control: AbstractControl): ValidationErrors | null {

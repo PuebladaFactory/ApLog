@@ -3,7 +3,8 @@ import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
 
 
 @Directive({
-  selector: '[appRole]',
+    selector: '[appRole]',
+    standalone: false
 })
 export class RoleDirective {
   private currentRoles: any;

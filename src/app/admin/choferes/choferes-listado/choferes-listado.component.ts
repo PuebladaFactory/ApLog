@@ -13,9 +13,10 @@ import { ConIdType } from 'src/app/interfaces/conId';
 
 
 @Component({
-  selector: 'app-choferes-listado',
-  templateUrl: './choferes-listado.component.html',
-  styleUrls: ['./choferes-listado.component.scss']
+    selector: 'app-choferes-listado',
+    templateUrl: './choferes-listado.component.html',
+    styleUrls: ['./choferes-listado.component.scss'],
+    standalone: false
 })
 export class ChoferesListadoComponent implements OnInit {
   

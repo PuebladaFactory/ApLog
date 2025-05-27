@@ -1,8 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-btn-leer',
-  template: `
+    selector: 'app-btn-leer',
+    template: `
   <button *ngIf="name === 'excel'" class="btn btn-outline-primary">
       Excel
   </button>
@@ -61,7 +61,7 @@ import { Component, Input, OnInit } from '@angular/core';
    <!--  {{name || "Editar"}} -->
 </button> 
 `,
-  styles: [`
+    styles: [`
     button:hover{
         background-color: lightblue;
         color: black;
@@ -79,7 +79,8 @@ import { Component, Input, OnInit } from '@angular/core';
     .boton-alta:hover{
         background: #0d6efd;        
     }
-    `]
+    `],
+    standalone: false
 })
 export class BtnLeerComponent implements OnInit {
   @Input() name?: string;

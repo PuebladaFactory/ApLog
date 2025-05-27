@@ -8,9 +8,10 @@ import { ModalObjetoComponent } from 'src/app/shared/modal-objeto/modal-objeto.c
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-papelera',
-  templateUrl: './papelera.component.html',
-  styleUrls: ['./papelera.component.scss']
+    selector: 'app-papelera',
+    templateUrl: './papelera.component.html',
+    styleUrls: ['./papelera.component.scss'],
+    standalone: false
 })
 export class PapeleraComponent implements OnInit {
   

@@ -23,9 +23,10 @@ import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personaliz
 
 
 @Component({
-  selector: 'app-tablero-op',
-  templateUrl: './tablero-op.component.html',
-  styleUrls: ['./tablero-op.component.scss']
+    selector: 'app-tablero-op',
+    templateUrl: './tablero-op.component.html',
+    styleUrls: ['./tablero-op.component.scss'],
+    standalone: false
 })
 export class TableroOpComponent implements OnInit {
 

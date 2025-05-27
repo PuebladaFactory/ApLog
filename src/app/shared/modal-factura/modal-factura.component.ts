@@ -16,9 +16,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 
 @Component({
-  selector: 'app-modal-factura',
-  templateUrl: './modal-factura.component.html',
-  styleUrls: ['./modal-factura.component.scss']
+    selector: 'app-modal-factura',
+    templateUrl: './modal-factura.component.html',
+    styleUrls: ['./modal-factura.component.scss'],
+    standalone: false
 })
 export class ModalFacturaComponent implements OnInit {
   

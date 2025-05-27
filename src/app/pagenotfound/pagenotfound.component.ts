@@ -3,9 +3,10 @@ import { Router } from '@angular/router';
 import { StorageService } from '../servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-pagenotfound',
-  templateUrl: './pagenotfound.component.html',
-  styleUrls: ['./pagenotfound.component.scss']
+    selector: 'app-pagenotfound',
+    templateUrl: './pagenotfound.component.html',
+    styleUrls: ['./pagenotfound.component.scss'],
+    standalone: false
 })
 export class PagenotfoundComponent implements OnInit {
 

@@ -13,9 +13,10 @@ import { LogService } from 'src/app/servicios/log/log.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-modal-objeto',
-  templateUrl: './modal-objeto.component.html',
-  styleUrls: ['./modal-objeto.component.scss']
+    selector: 'app-modal-objeto',
+    templateUrl: './modal-objeto.component.html',
+    styleUrls: ['./modal-objeto.component.scss'],
+    standalone: false
 })
 
 export class ModalObjetoComponent implements OnInit {

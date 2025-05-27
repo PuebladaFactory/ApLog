@@ -11,9 +11,10 @@ import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
 
 @Component({
-  selector: 'app-cliente-alta',
-  templateUrl: './cliente-alta.component.html',
-  styleUrls: ['./cliente-alta.component.scss']
+    selector: 'app-cliente-alta',
+    templateUrl: './cliente-alta.component.html',
+    styleUrls: ['./cliente-alta.component.scss'],
+    standalone: false
 })
 export class ClienteAltaComponent implements OnInit {
 

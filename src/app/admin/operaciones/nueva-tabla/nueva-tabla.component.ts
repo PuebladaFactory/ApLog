@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 
 @Component({
-  selector: 'app-nueva-tabla',
-  templateUrl: './nueva-tabla.component.html',
-  styleUrls: ['./nueva-tabla.component.scss']
+    selector: 'app-nueva-tabla',
+    templateUrl: './nueva-tabla.component.html',
+    styleUrls: ['./nueva-tabla.component.scss'],
+    standalone: false
 })
 export class NuevaTablaComponent implements OnInit {
 

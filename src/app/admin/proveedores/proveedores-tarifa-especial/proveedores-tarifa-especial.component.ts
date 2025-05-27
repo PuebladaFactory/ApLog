@@ -7,9 +7,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-proveedores-tarifa-especial',
-  templateUrl: './proveedores-tarifa-especial.component.html',
-  styleUrls: ['./proveedores-tarifa-especial.component.scss']
+    selector: 'app-proveedores-tarifa-especial',
+    templateUrl: './proveedores-tarifa-especial.component.html',
+    styleUrls: ['./proveedores-tarifa-especial.component.scss'],
+    standalone: false
 })
 export class ProveedoresTarifaEspecialComponent implements OnInit {
 

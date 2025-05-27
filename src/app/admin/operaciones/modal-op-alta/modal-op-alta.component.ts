@@ -18,9 +18,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-modal-op-alta',
-  templateUrl: './modal-op-alta.component.html',
-  styleUrls: ['./modal-op-alta.component.scss']
+    selector: 'app-modal-op-alta',
+    templateUrl: './modal-op-alta.component.html',
+    styleUrls: ['./modal-op-alta.component.scss'],
+    standalone: false
 })
 export class ModalOpAltaComponent implements OnInit {
 

@@ -3,9 +3,10 @@ import { NgbCalendar, NgbDateAdapter } from '@ng-bootstrap/ng-bootstrap';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-consulta-op',
-  templateUrl: './consulta-op.component.html',
-  styleUrls: ['./consulta-op.component.scss']
+    selector: 'app-consulta-op',
+    templateUrl: './consulta-op.component.html',
+    styleUrls: ['./consulta-op.component.scss'],
+    standalone: false
 })
 export class ConsultaOpComponent implements OnInit {
 

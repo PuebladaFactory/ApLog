@@ -3,7 +3,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Pipe, PipeTransform } from '@angular/core';
 import { Legajo } from 'src/app/interfaces/legajo';
 
-@Pipe({ name: 'safeUrl' })
+@Pipe({
+    name: 'safeUrl',
+    standalone: false
+})
 export class SafeUrlPipe implements PipeTransform {
   constructor(private sanitizer: DomSanitizer) {}
 
@@ -13,9 +16,10 @@ export class SafeUrlPipe implements PipeTransform {
 }
 
 @Component({
-  selector: 'app-carrusel',
-  templateUrl: './carrusel.component.html',
-  styleUrls: ['./carrusel.component.scss'],
+    selector: 'app-carrusel',
+    templateUrl: './carrusel.component.html',
+    styleUrls: ['./carrusel.component.scss'],
+    standalone: false
 })
 export class CarruselComponent implements OnInit {
   @Input() fromParent: any;

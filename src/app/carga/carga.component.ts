@@ -7,9 +7,10 @@ import { ConId } from '../interfaces/conId';
 import { DbFirestoreService } from '../servicios/database/db-firestore.service';
 
 @Component({
-  selector: 'app-carga',
-  templateUrl: './carga.component.html',
-  styleUrls: ['./carga.component.scss']
+    selector: 'app-carga',
+    templateUrl: './carga.component.html',
+    styleUrls: ['./carga.component.scss'],
+    standalone: false
 })
 export class CargaComponent implements OnInit {
   
