@@ -54,6 +54,7 @@ export class OpControlComponent implements OnInit {
 
   tabs = [
     { id: 'tab1', name: 'Tablero de Operaciones', route: 'op/tablero' },    
+    { id: 'tab2', name: 'Nueva Tabla', route: 'op/nuevaTabla' },    
   ];
 
   selectedTab: string = 'tab1';

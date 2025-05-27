@@ -65,6 +65,7 @@ import { FacturacionModule } from './admin/facturacion/facturacion.module';
 import { CargaComponent } from './carga/carga.component';
 import { CloudinaryModule } from '@cloudinary/ng';
 import { LimboComponent } from './limbo/limbo.component';
+import { AgGridModule } from 'ag-grid-angular';
 
 
 
@@ -109,7 +110,7 @@ import { LimboComponent } from './limbo/limbo.component';
   imports: [
     BrowserModule,
     FormsModule,
-
+    AgGridModule,
     AppRoutingModule,
     NgbModule, //se importa la clase RouterModule y se le indica la const donde estan las rutas
     ReactiveFormsModule,
@@ -124,6 +125,7 @@ import { LimboComponent } from './limbo/limbo.component';
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),
+    
 
   ],
 

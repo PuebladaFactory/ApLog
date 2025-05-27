@@ -1,0 +1,14 @@
+<div>
+        <ag-grid-angular
+        style="width: 100%; height: 500px;"
+        class="ag-theme-alpine" 
+        [rowData]="rowData"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [animateRows]="true"
+        [rowSelection]="'multiple'"
+        [suppressRowClickSelection]="true"
+        (gridReady)="onGridReady($event)"
+        [sideBar]="true">
+        </ag-grid-angular>
+</div>

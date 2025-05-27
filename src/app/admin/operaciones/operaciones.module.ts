@@ -15,6 +15,10 @@ import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { ModalFacturacionComponent } from './modal-facturacion/modal-facturacion.component';
 import { CargaMultipleComponent } from './carga-multiple/carga-multiple.component';
 import { ModalOpAltaComponent } from './modal-op-alta/modal-op-alta.component';
+import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
+import { AgGridModule } from 'ag-grid-angular';
+
+
 
 
 
@@ -23,7 +27,7 @@ import { ModalOpAltaComponent } from './modal-op-alta/modal-op-alta.component';
     OpControlComponent,      
     ConsultaOpComponent,           
     TableroOpComponent,     
-    ModalFacturacionComponent, CargaMultipleComponent, ModalOpAltaComponent,
+    ModalFacturacionComponent, CargaMultipleComponent, ModalOpAltaComponent, NuevaTablaComponent,
   ],
   imports: [
     CommonModule,
@@ -33,7 +37,8 @@ import { ModalOpAltaComponent } from './modal-op-alta/modal-op-alta.component';
     SharedModule,
     Ng2SearchPipeModule,
     NgbModule,
-    NgxDatatableModule
+    NgxDatatableModule,
+    AgGridModule
   ]
 })
 export class OperacionesModule { }

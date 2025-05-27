@@ -11,6 +11,9 @@ import { ProveedoresModule } from './proveedores/proveedores.module';
 import { FacturacionModule } from './facturacion/facturacion.module';
 import { LiquidacionModule } from './liquidacion/liquidacion.module';
 import { SharedModule } from "../shared/shared.module";
+import { AgGridModule } from 'ag-grid-angular';
+
+
 
 
 @NgModule({
@@ -30,7 +33,9 @@ import { SharedModule } from "../shared/shared.module";
         ProveedoresModule,
         FacturacionModule,
         LiquidacionModule,
-        SharedModule
+        SharedModule,
+        AgGridModule,
+        
     ]
 })
 export class AdminModule { }
