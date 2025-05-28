@@ -10,7 +10,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 
 
@@ -72,68 +72,35 @@ import { LimboComponent } from './limbo/limbo.component';
 
 
 
-@NgModule({
-  declarations: [
-    AppComponent,
-   
-    LoginComponent,
-   
-   
-
-
-    PagenotfoundComponent,
-
-   
-
-
-
-
-
-    LogoutComponent,
-    ForgotPasswordComponent,
-    VerifyEmailComponent,
-    SignUpComponent,
-    LoginHeaderComponent,
-    CargaComponent,
-    LimboComponent,
-    
-    
-
-   
-   
-  
-
-    
-
-  ],
-  imports: [
-    BrowserModule,
-    FormsModule,
-
-    AppRoutingModule,
-    NgbModule, //se importa la clase RouterModule y se le indica la const donde estan las rutas
-    ReactiveFormsModule,
-    HttpClientModule,
-    CloudinaryModule,
-    ChoferesModule,
-    AdminModule,
-    OperacionesModule,
-    SharedModule,
-    ProveedoresModule,
-    FacturacionModule,
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideFirestore(() => getFirestore()),
-    provideAuth(() => getAuth()),
-
-  ],
-
-  providers: [
-
-    AuthService,
-    { provide: FIREBASE_OPTIONS, useValue: environment.firebase },
-
-  ],
-
-  bootstrap: [AppComponent],
-})
+@NgModule({ declarations: [
+        AppComponent,
+        LoginComponent,
+        PagenotfoundComponent,
+        LogoutComponent,
+        ForgotPasswordComponent,
+        VerifyEmailComponent,
+        SignUpComponent,
+        LoginHeaderComponent,
+        CargaComponent,
+        LimboComponent,
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        FormsModule,
+        AppRoutingModule,
+        NgbModule, //se importa la clase RouterModule y se le indica la const donde estan las rutas
+        ReactiveFormsModule,
+        CloudinaryModule,
+        ChoferesModule,
+        AdminModule,
+        OperacionesModule,
+        SharedModule,
+        ProveedoresModule,
+        FacturacionModule,
+        provideFirebaseApp(() => initializeApp(environment.firebase)),
+        provideFirestore(() => getFirestore()),
+        provideAuth(() => getAuth())], providers: [
+        AuthService,
+        { provide: FIREBASE_OPTIONS, useValue: environment.firebase },
+        provideHttpClient(withInterceptorsFromDi()),
+    ] })
 export class AppModule {}
