@@ -6,9 +6,10 @@ import { Legajo } from 'src/app/interfaces/legajo';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-modal-choferes',
-  templateUrl: './modal-choferes.component.html',
-  styleUrls: ['./modal-choferes.component.scss']
+    selector: 'app-modal-choferes',
+    templateUrl: './modal-choferes.component.html',
+    styleUrls: ['./modal-choferes.component.scss'],
+    standalone: false
 })
 export class ModalChoferesComponent implements OnInit {
   

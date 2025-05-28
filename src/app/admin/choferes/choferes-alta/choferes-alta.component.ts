@@ -16,9 +16,10 @@ import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service'
 
 
 @Component({
-  selector: 'app-choferes-alta',
-  templateUrl: './choferes-alta.component.html',
-  styleUrls: ['./choferes-alta.component.scss']
+    selector: 'app-choferes-alta',
+    templateUrl: './choferes-alta.component.html',
+    styleUrls: ['./choferes-alta.component.scss'],
+    standalone: false
 })
 
 export class ChoferesAltaComponent implements OnInit {

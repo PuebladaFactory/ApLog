@@ -19,9 +19,10 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 
 @Component({
-  selector: 'app-proforma',
-  templateUrl: './proforma.component.html',
-  styleUrls: ['./proforma.component.scss']
+    selector: 'app-proforma',
+    templateUrl: './proforma.component.html',
+    styleUrls: ['./proforma.component.scss'],
+    standalone: false
 })
 export class ProformaComponent implements OnInit {
   

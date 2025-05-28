@@ -9,9 +9,10 @@ import { ModalChoferesComponent } from '../modal-choferes/modal-choferes.compone
 import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
-  selector: 'app-tablero-legajos',
-  templateUrl: './tablero-legajos.component.html',
-  styleUrls: ['./tablero-legajos.component.scss']
+    selector: 'app-tablero-legajos',
+    templateUrl: './tablero-legajos.component.html',
+    styleUrls: ['./tablero-legajos.component.scss'],
+    standalone: false
 })
 export class TableroLegajosComponent implements OnInit {
   $choferes!: ConIdType<Chofer>[];

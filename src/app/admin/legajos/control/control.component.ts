@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-control',
-  template: ` 
+    selector: 'app-control',
+    template: ` 
   <div class="d-flex justify-content-between mt-3">
     <h1>Legajos</h1>    
   </div>   
@@ -15,7 +15,8 @@ import { Router } from '@angular/router';
   </div>
   <router-outlet></router-outlet>
     `,
-  styleUrls: ['./control.component.scss']
+    styleUrls: ['./control.component.scss'],
+    standalone: false
 })
 export class ControlComponent implements OnInit {
   selectedTab: string = 'tab1';

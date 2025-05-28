@@ -12,9 +12,10 @@ import Swal from 'sweetalert2';
 
 
 @Component({
-  selector: 'app-modal-vehiculo',
-  templateUrl: './modal-vehiculo.component.html',
-  styleUrls: ['./modal-vehiculo.component.scss']
+    selector: 'app-modal-vehiculo',
+    templateUrl: './modal-vehiculo.component.html',
+    styleUrls: ['./modal-vehiculo.component.scss'],
+    standalone: false
 })
 export class ModalVehiculoComponent implements OnInit {
   

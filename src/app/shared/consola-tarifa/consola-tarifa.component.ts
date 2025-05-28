@@ -4,9 +4,10 @@ import { Subject, takeUntil } from 'rxjs';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-consola-tarifa',
-  templateUrl: './consola-tarifa.component.html',
-  styleUrls: ['./consola-tarifa.component.scss']
+    selector: 'app-consola-tarifa',
+    templateUrl: './consola-tarifa.component.html',
+    styleUrls: ['./consola-tarifa.component.scss'],
+    standalone: false
 })
 export class ConsolaTarifaComponent implements OnInit {
   

@@ -14,9 +14,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-modal-facturacion',
-  templateUrl: './modal-facturacion.component.html',
-  styleUrls: ['./modal-facturacion.component.scss']
+    selector: 'app-modal-facturacion',
+    templateUrl: './modal-facturacion.component.html',
+    styleUrls: ['./modal-facturacion.component.scss'],
+    standalone: false
 })
 export class ModalFacturacionComponent implements OnInit, AfterViewInit {
   

@@ -6,9 +6,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-choferes-tarifa-especial',
-  templateUrl: './choferes-tarifa-especial.component.html',
-  styleUrls: ['./choferes-tarifa-especial.component.scss']
+    selector: 'app-choferes-tarifa-especial',
+    templateUrl: './choferes-tarifa-especial.component.html',
+    styleUrls: ['./choferes-tarifa-especial.component.scss'],
+    standalone: false
 })
 export class ChoferesTarifaEspecialComponent implements OnInit {
 

@@ -14,9 +14,10 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
-  selector: 'app-cliente-tarifa-personalizada',
-  templateUrl: './cliente-tarifa-personalizada.component.html',
-  styleUrls: ['./cliente-tarifa-personalizada.component.scss']
+    selector: 'app-cliente-tarifa-personalizada',
+    templateUrl: './cliente-tarifa-personalizada.component.html',
+    styleUrls: ['./cliente-tarifa-personalizada.component.scss'],
+    standalone: false
 })
 export class ClienteTarifaPersonalizadaComponent implements OnInit {
 

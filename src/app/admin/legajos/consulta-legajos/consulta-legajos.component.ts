@@ -11,7 +11,10 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { ConIdType } from 'src/app/interfaces/conId';
 
-@Pipe({ name: 'safeUrl' })
+@Pipe({
+    name: 'safeUrl',
+    standalone: false
+})
 export class SafeUrlPipe implements PipeTransform {
   constructor(private sanitizer: DomSanitizer) {}
 
@@ -22,9 +25,10 @@ export class SafeUrlPipe implements PipeTransform {
 
 
 @Component({
-  selector: 'app-consulta-legajos',
-  templateUrl: './consulta-legajos.component.html',
-  styleUrls: ['./consulta-legajos.component.scss']
+    selector: 'app-consulta-legajos',
+    templateUrl: './consulta-legajos.component.html',
+    styleUrls: ['./consulta-legajos.component.scss'],
+    standalone: false
 })
 export class ConsultaLegajosComponent implements OnInit {
 

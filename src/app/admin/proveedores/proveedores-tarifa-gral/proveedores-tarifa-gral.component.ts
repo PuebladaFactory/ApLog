@@ -13,9 +13,10 @@ import { ConIdType } from 'src/app/interfaces/conId';
 import { Chofer } from 'src/app/interfaces/chofer';
 
 @Component({
-  selector: 'app-proveedores-tarifa-gral',
-  templateUrl: './proveedores-tarifa-gral.component.html',
-  styleUrls: ['./proveedores-tarifa-gral.component.scss']
+    selector: 'app-proveedores-tarifa-gral',
+    templateUrl: './proveedores-tarifa-gral.component.html',
+    styleUrls: ['./proveedores-tarifa-gral.component.scss'],
+    standalone: false
 })
 export class ProveedoresTarifaGralComponent implements OnInit {
 

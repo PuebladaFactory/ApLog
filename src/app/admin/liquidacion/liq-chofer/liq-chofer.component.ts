@@ -25,9 +25,10 @@ import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.se
 
 
 @Component({
-  selector: 'app-liq-chofer',
-  templateUrl: './liq-chofer.component.html',
-  styleUrls: ['./liq-chofer.component.scss']
+    selector: 'app-liq-chofer',
+    templateUrl: './liq-chofer.component.html',
+    styleUrls: ['./liq-chofer.component.scss'],
+    standalone: false
 })
 export class LiqChoferComponent implements OnInit {
 

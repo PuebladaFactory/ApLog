@@ -15,9 +15,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-carga-multiple',
-  templateUrl: './carga-multiple.component.html',
-  styleUrls: ['./carga-multiple.component.scss']
+    selector: 'app-carga-multiple',
+    templateUrl: './carga-multiple.component.html',
+    styleUrls: ['./carga-multiple.component.scss'],
+    standalone: false
 })
 export class CargaMultipleComponent implements OnInit {
 

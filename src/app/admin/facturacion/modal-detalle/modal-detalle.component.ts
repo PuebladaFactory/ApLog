@@ -21,9 +21,10 @@ import { ModalFacturaComponent } from 'src/app/shared/modal-factura/modal-factur
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-modal-detalle',
-  templateUrl: './modal-detalle.component.html',
-  styleUrls: ['./modal-detalle.component.scss']
+    selector: 'app-modal-detalle',
+    templateUrl: './modal-detalle.component.html',
+    styleUrls: ['./modal-detalle.component.scss'],
+    standalone: false
 })
 export class ModalDetalleComponent implements OnInit {
 

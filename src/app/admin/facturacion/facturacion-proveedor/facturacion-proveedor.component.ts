@@ -9,9 +9,10 @@ import { Subject, takeUntil } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
 
 @Component({
-  selector: 'app-facturacion-proveedor',
-  templateUrl: './facturacion-proveedor.component.html',
-  styleUrls: ['./facturacion-proveedor.component.scss']
+    selector: 'app-facturacion-proveedor',
+    templateUrl: './facturacion-proveedor.component.html',
+    styleUrls: ['./facturacion-proveedor.component.scss'],
+    standalone: false
 })
 export class FacturacionProveedorComponent implements OnInit {
     

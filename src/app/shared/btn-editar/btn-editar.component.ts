@@ -1,8 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-btn-editar',
-  template: `
+    selector: 'app-btn-editar',
+    template: `
 <!-- <button *ngIf="name !== 'Detalle'"  class="btn btn-primary" style="border-radius: 10%;  margin: 10px;" >
      <i class="bi bi-pencil"></i>
 
@@ -60,8 +60,8 @@ import { Component, Input, OnInit } from '@angular/core';
   </button>
 
   `,
-  styles: [
-    `
+    styles: [
+        `
      .celeste:hover{
         background-color: lightblue;
         color: black;
@@ -96,7 +96,8 @@ import { Component, Input, OnInit } from '@angular/core';
 
 
     `
-  ]
+    ],
+    standalone: false
 })
 export class BtnEditarComponent implements OnInit {
 

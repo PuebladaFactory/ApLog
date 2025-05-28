@@ -8,9 +8,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-facturacion-general',
-  templateUrl: './facturacion-general.component.html',
-  styleUrls: ['./facturacion-general.component.scss']
+    selector: 'app-facturacion-general',
+    templateUrl: './facturacion-general.component.html',
+    styleUrls: ['./facturacion-general.component.scss'],
+    standalone: false
 })
 export class FacturacionGeneralComponent implements OnInit {
 

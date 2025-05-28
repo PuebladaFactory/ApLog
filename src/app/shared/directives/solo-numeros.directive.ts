@@ -1,7 +1,8 @@
 import { Directive, HostListener, ElementRef, Renderer2, OnInit } from '@angular/core';
 
 @Directive({
-  selector: '[appSoloNumeros]',
+    selector: '[appSoloNumeros]',
+    standalone: false
 })
 export class SoloNumerosDirective implements OnInit {
   private valorAnterior: string = '';

@@ -3,8 +3,8 @@ import { Router } from '@angular/router';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 @Component({
-  selector: 'app-choferes-control',
-  template: `     
+    selector: 'app-choferes-control',
+    template: `     
   <div class="d-flex justify-content-between mt-3">
     <h1>Choferes</h1>    
   </div>   
@@ -18,7 +18,7 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
   </div>
   <router-outlet></router-outlet>    
     `,
-  styles: [`
+    styles: [`
     .tab-container {
     display: flex;
     justify-content: flex-start;
@@ -49,7 +49,8 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
     color: #007bff;
     font-size: 1.5rem;
   }
-    `]
+    `],
+    standalone: false
 })
 export class ChoferesControlComponent implements OnInit {
 

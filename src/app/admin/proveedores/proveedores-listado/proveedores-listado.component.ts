@@ -13,9 +13,10 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
-  selector: 'app-proveedores-listado',
-  templateUrl: './proveedores-listado.component.html',
-  styleUrls: ['./proveedores-listado.component.scss']
+    selector: 'app-proveedores-listado',
+    templateUrl: './proveedores-listado.component.html',
+    styleUrls: ['./proveedores-listado.component.scss'],
+    standalone: false
 })
 export class ProveedoresListadoComponent implements OnInit {
   

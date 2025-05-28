@@ -12,9 +12,10 @@ import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
 
 @Component({
-  selector: 'app-proveedores-alta',
-  templateUrl: './proveedores-alta.component.html',
-  styleUrls: ['./proveedores-alta.component.scss']
+    selector: 'app-proveedores-alta',
+    templateUrl: './proveedores-alta.component.html',
+    styleUrls: ['./proveedores-alta.component.scss'],
+    standalone: false
 })
 export class ProveedoresAltaComponent implements OnInit {
   @Input() fromParent:any

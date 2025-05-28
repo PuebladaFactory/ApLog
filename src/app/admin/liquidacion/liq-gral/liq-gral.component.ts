@@ -3,9 +3,10 @@ import { Router } from '@angular/router';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-liq-gral',
-  templateUrl: './liq-gral.component.html',
-  styleUrls: ['./liq-gral.component.scss']
+    selector: 'app-liq-gral',
+    templateUrl: './liq-gral.component.html',
+    styleUrls: ['./liq-gral.component.scss'],
+    standalone: false
 })
 export class LiqGralComponent implements OnInit {
   

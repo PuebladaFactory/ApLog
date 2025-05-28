@@ -7,9 +7,10 @@ import Swal from 'sweetalert2';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
-  selector: 'app-ajustes-usuarios',
-  templateUrl: './ajustes-usuarios.component.html',
-  styleUrls: ['./ajustes-usuarios.component.scss']
+    selector: 'app-ajustes-usuarios',
+    templateUrl: './ajustes-usuarios.component.html',
+    styleUrls: ['./ajustes-usuarios.component.scss'],
+    standalone: false
 })
 export class AjustesUsuariosComponent implements OnInit {
   

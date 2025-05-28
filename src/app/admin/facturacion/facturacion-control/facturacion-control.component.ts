@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-facturacion-control',
-  template: ` 
+    selector: 'app-facturacion-control',
+    template: ` 
   <div class="d-flex justify-content-between mt-3">
     <h1>Facturacion</h1>    
   </div>   
@@ -16,7 +16,8 @@ import { Router } from '@angular/router';
   </div>
   <router-outlet></router-outlet>
     `,
-  styleUrls: ['./facturacion-control.component.scss']
+    styleUrls: ['./facturacion-control.component.scss'],
+    standalone: false
 })
 export class FacturacionControlComponent implements OnInit {
 

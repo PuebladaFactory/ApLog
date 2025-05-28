@@ -5,9 +5,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-tablero-calendario',
-  templateUrl: './tablero-calendario.component.html',
-  styleUrls: ['./tablero-calendario.component.scss']
+    selector: 'app-tablero-calendario',
+    templateUrl: './tablero-calendario.component.html',
+    styleUrls: ['./tablero-calendario.component.scss'],
+    standalone: false
 })
 export class TableroCalendarioComponent implements OnInit {
    // Objeto de consulta de fechas

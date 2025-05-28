@@ -9,9 +9,10 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-tariga-gral-edicion',
-  templateUrl: './tariga-gral-edicion.component.html',
-  styleUrls: ['./tariga-gral-edicion.component.scss']
+    selector: 'app-tariga-gral-edicion',
+    templateUrl: './tariga-gral-edicion.component.html',
+    styleUrls: ['./tariga-gral-edicion.component.scss'],
+    standalone: false
 })
 export class TarigaGralEdicionComponent implements OnInit {
 

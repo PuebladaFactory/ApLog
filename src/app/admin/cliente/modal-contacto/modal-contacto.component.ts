@@ -6,9 +6,10 @@ import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-modal-contacto',
-  templateUrl: './modal-contacto.component.html',
-  styleUrls: ['./modal-contacto.component.scss']
+    selector: 'app-modal-contacto',
+    templateUrl: './modal-contacto.component.html',
+    styleUrls: ['./modal-contacto.component.scss'],
+    standalone: false
 })
 export class ModalContactoComponent implements OnInit {
   

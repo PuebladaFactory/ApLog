@@ -1,9 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-btn-eliminar',
-
-  template: `
+    selector: 'app-btn-eliminar',
+    template: `
 <!-- <button *ngIf="name !== 'Factura'" class="btn btn-primary" style="border-radius: 10%; margin: 10px ; " 
 [disabled]=disabled>
   
@@ -50,9 +49,8 @@ import { Component, Input, OnInit } from '@angular/core';
 </button>
 
   `,
-
-  styles: [
-    `
+    styles: [
+        `
       button:hover{
         background-color: red;
         color: white;
@@ -60,7 +58,8 @@ import { Component, Input, OnInit } from '@angular/core';
       }
 
     `
-  ]
+    ],
+    standalone: false
 })
 
 export class BtnEliminarComponent implements OnInit {

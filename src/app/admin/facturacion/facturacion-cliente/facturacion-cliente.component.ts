@@ -9,9 +9,10 @@ import { ConId } from 'src/app/interfaces/conId';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-facturacion-cliente',
-  templateUrl: './facturacion-cliente.component.html',
-  styleUrls: ['./facturacion-cliente.component.scss']
+    selector: 'app-facturacion-cliente',
+    templateUrl: './facturacion-cliente.component.html',
+    styleUrls: ['./facturacion-cliente.component.scss'],
+    standalone: false
 })
 export class FacturacionClienteComponent implements OnInit {
   

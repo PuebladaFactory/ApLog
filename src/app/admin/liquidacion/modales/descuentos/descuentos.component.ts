@@ -4,9 +4,10 @@ import { Descuento } from 'src/app/interfaces/factura-chofer';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 
 @Component({
-  selector: 'app-descuentos',
-  templateUrl: './descuentos.component.html',
-  styleUrls: ['./descuentos.component.scss']
+    selector: 'app-descuentos',
+    templateUrl: './descuentos.component.html',
+    styleUrls: ['./descuentos.component.scss'],
+    standalone: false
 })
 export class DescuentosComponent implements OnInit{
   

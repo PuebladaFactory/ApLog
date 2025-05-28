@@ -3,8 +3,8 @@ import { Router } from '@angular/router';
 
 
 @Component({
-  selector: 'app-cliente-control',
-  template: ` 
+    selector: 'app-cliente-control',
+    template: ` 
   <div class="d-flex justify-content-between mt-3">
     <h1>Clientes</h1>    
   </div>   
@@ -19,7 +19,8 @@ import { Router } from '@angular/router';
   </div>
   <router-outlet></router-outlet>
     `,
-  styleUrls: ['./cliente-control.component.scss']
+    styleUrls: ['./cliente-control.component.scss'],
+    standalone: false
 })
 export class ClienteControlComponent implements OnInit {
 

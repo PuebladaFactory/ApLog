@@ -6,9 +6,10 @@ import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-modal-contacto-proveedores',
-  templateUrl: './modal-contacto-proveedores.component.html',
-  styleUrls: ['./modal-contacto-proveedores.component.scss']
+    selector: 'app-modal-contacto-proveedores',
+    templateUrl: './modal-contacto-proveedores.component.html',
+    styleUrls: ['./modal-contacto-proveedores.component.scss'],
+    standalone: false
 })
 export class ModalContactoProveedoresComponent implements OnInit {
 

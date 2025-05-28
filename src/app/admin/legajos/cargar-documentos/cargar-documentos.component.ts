@@ -12,9 +12,10 @@ import { Subject, takeUntil } from 'rxjs';
 import { ConIdType } from 'src/app/interfaces/conId';
 
 @Component({
-  selector: 'app-cargar-documentos',
-  templateUrl: './cargar-documentos.component.html',
-  styleUrls: ['./cargar-documentos.component.scss']
+    selector: 'app-cargar-documentos',
+    templateUrl: './cargar-documentos.component.html',
+    styleUrls: ['./cargar-documentos.component.scss'],
+    standalone: false
 })
 export class CargarDocumentosComponent implements OnInit {
   

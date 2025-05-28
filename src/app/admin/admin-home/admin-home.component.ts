@@ -10,9 +10,10 @@ import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
-  selector: 'app-admin-home',
-  templateUrl: './admin-home.component.html',
-  styleUrls: ['./admin-home.component.css']
+    selector: 'app-admin-home',
+    templateUrl: './admin-home.component.html',
+    styleUrls: ['./admin-home.component.css'],
+    standalone: false
 })
 export class AdminHomeComponent implements OnInit {
 
