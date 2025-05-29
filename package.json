@@ -43,7 +43,7 @@
     "lodash": "^4.17.21",
     "ng2-search-filter": "^0.5.1",
     "pdfmake": "^0.2.10",
-    "rxjs": "~7.5.0",
+    "rxjs": "~7.8.2",
     "sweetalert2": "^11.11.1",
     "tslib": "^2.3.0",
     "xlsx": "^0.18.5",
