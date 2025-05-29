@@ -1,103 +1,109 @@
 <div class="modal-content">
-    <div class="modal-header pb-0">
-        <div>
-            <h2>{{titulo}}</h2>
-            <h4>Detalle de la facturas generadas:</h4>
-        </div>          
-        <button type="button" class="btn-close btn btn-outline-secondary" (click)="activeModal.close()"></button>
+  <div class="modal-header pb-0">
+    <div>
+      <h2>{{titulo}}</h2>
+      <h4>Detalle de la facturas generadas:</h4>
     </div>
+    <button type="button" class="btn-close btn btn-outline-secondary" (click)="activeModal.close()"></button>
+  </div>
   <!--   <div class="modal-body">
-      <ngx-datatable
-      class="dark"
-      [rows]="paginatedRows"
-      [columns]="visibleColumns"
-      [columnMode]="ColumnMode.flex"
-      [headerHeight]="50"
-      [footerHeight]="50"
-      [rowHeight]="'auto'"
-      [sortType]="sortType"
-      
-      [externalPaging]="true"
-      [count]="count"
-      [limit]="limit"
-      [offset]="offset"
-      (sort)="onSort($event)"
-      (activate)="onActivate($event)"
-      (select)="onSelect($event)"
-      (page)="setPage($event)">
-      
-      <ngx-datatable-column *ngFor="let column of visibleColumns" [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow">
-          <ng-template ngx-datatable-cell-template let-row="row">
-              {{ row[column.prop] }}
-          </ng-template>
-      </ngx-datatable-column>
-      <ngx-datatable-column name="Cobrado" prop="cobrado" [flexGrow]="2">          
-        <ng-template ngx-datatable-cell-template let-row="row">
-          <div class="form-check form-switch" (click)="facturaCobrada(row)">
-            <input *ngIf="!row.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">                                
-            <input *ngIf="row.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked>                                
-          </div>
-        </ng-template>
-     </ngx-datatable-column>
-     <ngx-datatable-column name="Imprimir" prop="imprimir" [flexGrow]="2">
+  <ngx-datatable
+    class="dark"
+    [rows]="paginatedRows"
+    [columns]="visibleColumns"
+    [columnMode]="ColumnMode.flex"
+    [headerHeight]="50"
+    [footerHeight]="50"
+    [rowHeight]="'auto'"
+    [sortType]="sortType"
+
+    [externalPaging]="true"
+    [count]="count"
+    [limit]="limit"
+    [offset]="offset"
+    (sort)="onSort($event)"
+    (activate)="onActivate($event)"
+    (select)="onSelect($event)"
+    (page)="setPage($event)">
+
+    <ngx-datatable-column *ngFor="let column of visibleColumns" [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow">
+      <ng-template ngx-datatable-cell-template let-row="row">
+        {{ row[column.prop] }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Cobrado" prop="cobrado" [flexGrow]="2">
+      <ng-template ngx-datatable-cell-template let-row="row">
+        <div class="form-check form-switch" (click)="facturaCobrada(row)">
+          <input *ngIf="!row.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+          <input *ngIf="row.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked>
+        </div>
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Imprimir" prop="imprimir" [flexGrow]="2">
       <ng-template ngx-datatable-cell-template let-row="row">
         <td >
-          <app-btn-leer name="excel" data-bs-toggle="collapse" data-bs-target="#reimpresionCliente" aria-expanded="false" aria-controls="reimpresionCliente" (click)="reimprimirFac(row, 'excel')" class="me-2"></app-btn-leer>   
-          <app-btn-leer name="pdf" data-bs-toggle="collapse" data-bs-target="#reimpresionCliente" aria-expanded="false" aria-controls="reimpresionCliente" (click)="reimprimirFac(row, 'pdf')"></app-btn-leer>   
-        </td> 
+          <app-btn-leer name="excel" data-bs-toggle="collapse" data-bs-target="#reimpresionCliente" aria-expanded="false" aria-controls="reimpresionCliente" (click)="reimprimirFac(row, 'excel')" class="me-2"></app-btn-leer>
+          <app-btn-leer name="pdf" data-bs-toggle="collapse" data-bs-target="#reimpresionCliente" aria-expanded="false" aria-controls="reimpresionCliente" (click)="reimprimirFac(row, 'pdf')"></app-btn-leer>
+        </td>
       </ng-template>
-     </ngx-datatable-column>   
-      </ngx-datatable>
-    </div> -->
-    <div class="modal-body">
-        <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por parámetro">
-        <table class="table table-light table-striped table-bordered">
-            <thead class="sticky-top">
-                <th scope="col">Fecha</th>
-                <th scope="col">Quincena</th>
-                <th scope="col">Id Factura</th>
-                <th scope="col">Cant Op</th>        
-                <th scope="col">Suma a Cobrar</th>
-                <th scope="col">Suma a Pagar</th>
-                <th scope="col">Ganancia Neta</th>
-                <th scope="col">Porcentaje</th>
-                <th scope="col">{{fromParent.modo === 'clientes' ? 'Cobrado' : 'Pagado'}}</th>
-                <th scope="col">Reimpresión </th>
-                <th scope="col" class="text-center">Detalle </th>
-                <th scope="col">Anular </th>
-            </thead>
-            <tbody>
-                <tr *ngFor="let fila of rows | filter: searchText; let i = index">
-                    <td>{{fila.fecha}}</td>
-                    <td>{{fila.quincena}}</td>
-                    <td>{{fila.idFactura}}</td>
-                    <td class="text-center">{{fila.cant}}</td>        
-                    <td [ngClass]="{'table-success' : fromParent.modo === 'clientes'}">{{fila.sumaCobrar}}</td>
-                    <td [ngClass]="{'table-danger' : fromParent.modo === 'choferes' || fromParent.modo === 'proveedores'}">{{fila.sumaPagar}}</td>                    
-                    <td>{{fila.neta}}</td>
-                    <td>{{fila.porcentaje}}</td>
-                    <td>
-                      <div class="form-check form-switch" (click)="facturaCobrada(fila)">
-                        <input *ngIf="!fila.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">                                
-                        <input *ngIf="fila.cobrado" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked>                                
-                      </div>
-                    </td>
-                    <td >
-                      <app-btn-leer name="excel" (click)="obtenerFacturas(fila, 'reimpresion', 'excel')" class="me-2"></app-btn-leer>   
-                      <app-btn-leer name="pdf"(click)="obtenerFacturas(fila,'reimpresion', 'pdf')"></app-btn-leer>   
-                    </td>
-                    <td class="text-center" >
-                      <app-btn-leer name="Detalle"(click)="obtenerFacturas(fila, 'detalle', '')" class="me-2"></app-btn-leer>                         
-                    </td>  
-                    <td>
-                      <app-btn-eliminar *appRole="['god','admin', 'manager']"  name="Eliminar" (click)="bajaOp(fila)"></app-btn-eliminar>
-                    </td>
-                </tr>
-            </tbody>           
-        </table>
-    </div>
-    
-</div>     
+    </ngx-datatable-column>
+  </ngx-datatable>
+</div> -->
+<div class="modal-body">
+  <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por parámetro">
+  <table class="table table-light table-striped table-bordered">
+    <thead class="sticky-top">
+      <th scope="col">Fecha</th>
+      <th scope="col">Quincena</th>
+      <th scope="col">Id Factura</th>
+      <th scope="col">Cant Op</th>
+      <th scope="col">Suma a Cobrar</th>
+      <th scope="col">Suma a Pagar</th>
+      <th scope="col">Ganancia Neta</th>
+      <th scope="col">Porcentaje</th>
+      <th scope="col">{{fromParent.modo === 'clientes' ? 'Cobrado' : 'Pagado'}}</th>
+      <th scope="col">Reimpresión </th>
+      <th scope="col" class="text-center">Detalle </th>
+      <th scope="col">Anular </th>
+    </thead>
+    <tbody>
+      @for (fila of rows | filter: searchText; track fila; let i = $index) {
+        <tr>
+          <td>{{fila.fecha}}</td>
+          <td>{{fila.quincena}}</td>
+          <td>{{fila.idFactura}}</td>
+          <td class="text-center">{{fila.cant}}</td>
+          <td [ngClass]="{'table-success' : fromParent.modo === 'clientes'}">{{fila.sumaCobrar}}</td>
+          <td [ngClass]="{'table-danger' : fromParent.modo === 'choferes' || fromParent.modo === 'proveedores'}">{{fila.sumaPagar}}</td>
+          <td>{{fila.neta}}</td>
+          <td>{{fila.porcentaje}}</td>
+          <td>
+            <div class="form-check form-switch" (click)="facturaCobrada(fila)">
+              @if (!fila.cobrado) {
+                <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+              }
+              @if (fila.cobrado) {
+                <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked>
+              }
+            </div>
+          </td>
+          <td >
+            <app-btn-leer name="excel" (click)="obtenerFacturas(fila, 'reimpresion', 'excel')" class="me-2"></app-btn-leer>
+            <app-btn-leer name="pdf"(click)="obtenerFacturas(fila,'reimpresion', 'pdf')"></app-btn-leer>
+          </td>
+          <td class="text-center" >
+            <app-btn-leer name="Detalle"(click)="obtenerFacturas(fila, 'detalle', '')" class="me-2"></app-btn-leer>
+          </td>
+          <td>
+            <app-btn-eliminar *appRole="['god','admin', 'manager']"  name="Eliminar" (click)="bajaOp(fila)"></app-btn-eliminar>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+</div>
 
 
 <!-- Modal -->
@@ -109,11 +115,13 @@
         <button type="button" class="btn-close btn " id="cerrar" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-          <ul>
-            <li>Id Operacion</li>
-            <li *ngFor="let idOp of operacionFac">{{idOp}}</li>
-          </ul>
-      </div>      
+        <ul>
+          <li>Id Operacion</li>
+          @for (idOp of operacionFac; track idOp) {
+            <li>{{idOp}}</li>
+          }
+        </ul>
+      </div>
     </div>
   </div>
 </div>

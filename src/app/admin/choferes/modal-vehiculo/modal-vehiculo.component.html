@@ -1,142 +1,165 @@
 <div class="container">
-    <div class="modal-header">
-        <h2>Datos Vehiculo</h2>
-        <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
-    </div>    
-    
-    <form [formGroup]="vehiculoForm">
-        <div class="form-group">
-            <label for="dominio">Dominio</label>
-            <div class="input-group">
-                <input
-                  formControlName="dominio"
-                  class="form-control"
-                  type="text"
-                  placeholder="Ingrese el dominio"
-                  [ngClass]="{ 'is-invalid': vehiculoForm.get('dominio').invalid && (vehiculoForm.get('dominio').dirty || vehiculoForm.get('dominio').touched) }"
-                />
-            </div>
-            <div *ngIf="hasError('dominio', 'required')">El dominio es obligatorio.</div>
-            <div *ngIf="hasError('dominio', 'minlength')">El dominio debe tener al menos 6 caracteres.</div>
-            <div *ngIf="hasError('dominio', 'maxlength')">El dominio no debe superar los 8 caracteres.</div>
-            <div *ngIf="hasError('dominio', 'dominioInvalido')">El formato del dominio no es válido. Ej: AAA111 o AA111AA.</div>
-        </div>
-        <div class="form-group">
-          <label for="Marca">Marca</label>
-          <div class="input-group">
-            <input formControlName="marca" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('marca').invalid && (vehiculoForm.get('marca').dirty || vehiculoForm.get('marca').touched) }" [ngClass]="{'isDisabled': soloVista}"> 
-          </div>
-          <div *ngIf="hasError('marca', 'required')">La marca es obligatorio.</div>          
-          <div *ngIf="hasError('marca', 'maxlength')">La marca no debe superar los 50 caracteres.</div>
-        </div> 
-        <div class="form-group">
-            <label for="Modelo">Modelo</label>
-            <div class="input-group">
-              <input formControlName="modelo" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('modelo').invalid && (vehiculoForm.get('modelo').dirty || vehiculoForm.get('modelo').touched) }" [ngClass]="{'isDisabled': soloVista}">
-            </div>
-            <div *ngIf="hasError('modelo', 'required')">El modelo es obligatorio.</div>          
-            <div *ngIf="hasError('modelo', 'maxlength')">El modelo no debe superar los 30 caracteres.</div>
-        </div>   
-        <div class="form-group">
-            <label for="Modelo">Categoria Nombre</label>
-            <div class="input-group">
-                <input formControlName="categoria" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('modelo').invalid && (vehiculoForm.get('modelo').dirty || vehiculoForm.get('modelo').touched) }" [ngClass]="{'isDisabled': soloVista}">
-            </div>
-            <div *ngIf="hasError('categoria', 'required')">La categoria es obligatorio.</div>          
-            <div *ngIf="hasError('categoria', 'maxlength')">La categoria no debe superar los 50 caracteres.</div>
-        </div>                
-        <div class="form-group mt-1">
-          <label for="Categoria">Categoria Tipo</label>
-          <select class="form-select" (change)="changeCategoria($event)" required [ngClass]="{'isDisabled': soloVista}">
-              <option>{{edicion? tarifaGralCliente.cargasGenerales[vehiculo.categoria.catOrden - 1].nombre : "Seleccione"}}</option>
-              <option *ngFor="let categoria of tarifaGralCliente.cargasGenerales" required [value]="categoria.orden">
-                {{categoria.nombre}}
-              </option>
-          </select>
-        </div> 
-        <div class="form-group mt-1">
-            <label for="Categoria">Tipo de Combustible</label>
-            <!-- <select class="form-select" (change)="changeTipoCombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
-              <option>{{edicion? tipoCombustible : "Seleccione"}}</option>
-              <option value="gas">Gas</option>
-              <option value="nafta">Nafta</option>                        
-            </select> -->
-            <button 
-              id="botonCollapse"
-              class="btn w-100 mt-2 text-start ms-0 border-light-subtle border-opacity-25"
-              type="button" 
-              data-bs-toggle="collapse" 
-              data-bs-target="#combustibleOptions" 
-              aria-expanded="false" 
-              aria-controls="combustibleOptions">
-              Seleccionar Tipo de Combustible
-            </button>
+  <div class="modal-header">
+    <h2>Datos Vehiculo</h2>
+    <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
+  </div>
 
-            <!-- Contenedor colapsable -->
-            <div class="collapse mt-2" id="combustibleOptions">
-              <div class="card card-body">
-                <!-- Checkboxes para selección -->
-                <div class="form-check">
-                  <input 
-                    class="form-check-input" 
-                    type="checkbox" 
-                    id="gas" 
-                    value="Gas" 
-                    (change)="changeTipoCombustible($event)" 
-                    [checked]="tipoCombustible.includes('Gas')">
-                  <label class="form-check-label" for="gas">Gas</label>
-                </div>
-                <div class="form-check">
-                  <input 
-                    class="form-check-input" 
-                    type="checkbox" 
-                    id="nafta" 
-                    value="Nafta" 
-                    (change)="changeTipoCombustible($event)" 
-                    [checked]="tipoCombustible.includes('Nafta')">
-                  <label class="form-check-label" for="nafta">Nafta</label>
-                </div>
-                <div class="form-check">
-                  <input 
-                    class="form-check-input" 
-                    type="checkbox" 
-                    id="diesel" 
-                    value="Diesel" 
-                    (change)="changeTipoCombustible($event)" 
-                    [checked]="tipoCombustible.includes('Diesel')">
+  <form [formGroup]="vehiculoForm">
+    <div class="form-group">
+      <label for="dominio">Dominio</label>
+      <div class="input-group">
+        <input
+          formControlName="dominio"
+          class="form-control"
+          type="text"
+          placeholder="Ingrese el dominio"
+          [ngClass]="{ 'is-invalid': vehiculoForm.get('dominio').invalid && (vehiculoForm.get('dominio').dirty || vehiculoForm.get('dominio').touched) }"
+          />
+        </div>
+        @if (hasError('dominio', 'required')) {
+          <div>El dominio es obligatorio.</div>
+        }
+        @if (hasError('dominio', 'minlength')) {
+          <div>El dominio debe tener al menos 6 caracteres.</div>
+        }
+        @if (hasError('dominio', 'maxlength')) {
+          <div>El dominio no debe superar los 8 caracteres.</div>
+        }
+        @if (hasError('dominio', 'dominioInvalido')) {
+          <div>El formato del dominio no es válido. Ej: AAA111 o AA111AA.</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="Marca">Marca</label>
+        <div class="input-group">
+          <input formControlName="marca" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('marca').invalid && (vehiculoForm.get('marca').dirty || vehiculoForm.get('marca').touched) }" [ngClass]="{'isDisabled': soloVista}">
+        </div>
+        @if (hasError('marca', 'required')) {
+          <div>La marca es obligatorio.</div>
+        }
+        @if (hasError('marca', 'maxlength')) {
+          <div>La marca no debe superar los 50 caracteres.</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="Modelo">Modelo</label>
+        <div class="input-group">
+          <input formControlName="modelo" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('modelo').invalid && (vehiculoForm.get('modelo').dirty || vehiculoForm.get('modelo').touched) }" [ngClass]="{'isDisabled': soloVista}">
+        </div>
+        @if (hasError('modelo', 'required')) {
+          <div>El modelo es obligatorio.</div>
+        }
+        @if (hasError('modelo', 'maxlength')) {
+          <div>El modelo no debe superar los 30 caracteres.</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="Modelo">Categoria Nombre</label>
+        <div class="input-group">
+          <input formControlName="categoria" class="form-control" required type="text" [ngClass]="{ 'is-invalid': vehiculoForm.get('modelo').invalid && (vehiculoForm.get('modelo').dirty || vehiculoForm.get('modelo').touched) }" [ngClass]="{'isDisabled': soloVista}">
+        </div>
+        @if (hasError('categoria', 'required')) {
+          <div>La categoria es obligatorio.</div>
+        }
+        @if (hasError('categoria', 'maxlength')) {
+          <div>La categoria no debe superar los 50 caracteres.</div>
+        }
+      </div>
+      <div class="form-group mt-1">
+        <label for="Categoria">Categoria Tipo</label>
+        <select class="form-select" (change)="changeCategoria($event)" required [ngClass]="{'isDisabled': soloVista}">
+          <option>{{edicion? tarifaGralCliente.cargasGenerales[vehiculo.categoria.catOrden - 1].nombre : "Seleccione"}}</option>
+          @for (categoria of tarifaGralCliente.cargasGenerales; track categoria) {
+            <option required [value]="categoria.orden">
+              {{categoria.nombre}}
+            </option>
+          }
+        </select>
+      </div>
+      <div class="form-group mt-1">
+        <label for="Categoria">Tipo de Combustible</label>
+        <!-- <select class="form-select" (change)="changeTipoCombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
+        <option>{{edicion? tipoCombustible : "Seleccione"}}</option>
+        <option value="gas">Gas</option>
+        <option value="nafta">Nafta</option>
+      </select> -->
+      <button
+        id="botonCollapse"
+        class="btn w-100 mt-2 text-start ms-0 border-light-subtle border-opacity-25"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#combustibleOptions"
+        aria-expanded="false"
+        aria-controls="combustibleOptions">
+        Seleccionar Tipo de Combustible
+      </button>
+
+      <!-- Contenedor colapsable -->
+      <div class="collapse mt-2" id="combustibleOptions">
+        <div class="card card-body">
+          <!-- Checkboxes para selección -->
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="gas"
+              value="Gas"
+              (change)="changeTipoCombustible($event)"
+              [checked]="tipoCombustible.includes('Gas')">
+              <label class="form-check-label" for="gas">Gas</label>
+            </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="nafta"
+                value="Nafta"
+                (change)="changeTipoCombustible($event)"
+                [checked]="tipoCombustible.includes('Nafta')">
+                <label class="form-check-label" for="nafta">Nafta</label>
+              </div>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="diesel"
+                  value="Diesel"
+                  (change)="changeTipoCombustible($event)"
+                  [checked]="tipoCombustible.includes('Diesel')">
                   <label class="form-check-label" for="diesel">Diesel</label>
                 </div>
               </div>
             </div>
-        </div> 
-        <div class="form-group mt-1">
+          </div>
+          <div class="form-group mt-1">
             <label for="Categoria">Tarjeta de Combustible</label>
             <select class="form-select" (change)="changeTarjetaombustible($event)" required [ngClass]="{'isDisabled': soloVista}">
               <option>{{edicion? tarjetaCombustible? "Si" : "No" : "Seleccione"}}</option>
               <option value="si">si</option>
-              <option value="no">no</option>                        
+              <option value="no">no</option>
             </select>
-        </div> 
-        <div class="form-group mt-1">
-          <label for="Categoria">Publicidad</label>
-          <select class="form-select" (change)="changePublicidad($event)" required [ngClass]="{'isDisabled': soloVista}">
-            <option>{{edicion? publicidad? "Si" : "No" : "Seleccione"}}</option>
-            <option value="si">si</option>
-            <option value="no">no</option>                        
-          </select>
-        </div>                         
+          </div>
+          <div class="form-group mt-1">
+            <label for="Categoria">Publicidad</label>
+            <select class="form-select" (change)="changePublicidad($event)" required [ngClass]="{'isDisabled': soloVista}">
+              <option>{{edicion? publicidad? "Si" : "No" : "Seleccione"}}</option>
+              <option value="si">si</option>
+              <option value="no">no</option>
+            </select>
+          </div>
 
-        <div class="form-group mt-1">
-          <label for="Categoria">Seguimiento Satelital</label>                
-            <select class="form-select" (change)="seguimientoSatelital($event)" required [ngClass]="{'isDisabled': soloVista}">              
-                <option>{{edicion? seguimiento? "Si" : "No" : "Seleccione"}}</option>              
-                <option value="si">si</option>   
-                <option value="no">no</option>                        
+          <div class="form-group mt-1">
+            <label for="Categoria">Seguimiento Satelital</label>
+            <select class="form-select" (change)="seguimientoSatelital($event)" required [ngClass]="{'isDisabled': soloVista}">
+              <option>{{edicion? seguimiento? "Si" : "No" : "Seleccione"}}</option>
+              <option value="si">si</option>
+              <option value="no">no</option>
             </select>
 
-        </div> 
-        <div *ngIf="seguimiento" class="mt-2">
-            <form [formGroup]="seguimientoForm">
+          </div>
+          @if (seguimiento) {
+            <div class="mt-2">
+              <form [formGroup]="seguimientoForm">
                 <h5 for="Categoria">Detalle Seguimiento Satelital</h5>
                 <label for="proveedor">Proveedor</label>
                 <div class="input-group">
@@ -146,10 +169,11 @@
                 <div class="input-group">
                   <input formControlName="marcaGps" class="form-control" required type="text" [ngClass]="{'isDisabled': soloVista}">
                 </div> -->
-            </form>  
-        </div>                    
-    </form>
-    <div class="mb-3" [ngClass]="{'isDisabled': vehiculoForm.invalid}">
-      <app-btn-agregar name="Agregar" type="submit" (click)="guardarVehiculo()"></app-btn-agregar>
-    </div>
-</div>
+              </form>
+            </div>
+          }
+        </form>
+        <div class="mb-3" [ngClass]="{'isDisabled': vehiculoForm.invalid}">
+          <app-btn-agregar name="Agregar" type="submit" (click)="guardarVehiculo()"></app-btn-agregar>
+        </div>
+      </div>

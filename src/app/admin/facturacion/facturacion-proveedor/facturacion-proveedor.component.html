@@ -1,104 +1,134 @@
 
 
-<h2 class="mt-3">Proveedores</h2>   
+<h2 class="mt-3">Proveedores</h2>
 <input type="text" placeholder="Buscar proveedor..." [(ngModel)]="filtroBusqueda" (input)="filtrarTabla()" class="form-control mb-2" />
 <table class="table table-light table-striped table-bordered">
-    <thead class="sticky-top">
-        <th (click)="ordenar('proveedor')" style="cursor: pointer; width: 19%">
-            Proveedor 
-            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-            </svg>
-            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-            </svg>
-        </th>
-        <th (click)="ordenar('cant')" style="cursor: pointer; width: 6%">
-            Cant Op 
-            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-            </svg>
-            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-            </svg>
-        </th>
-        <th (click)="ordenar('sumaACobrar')" style="cursor: pointer; width: 15%">
-            Suma a Cobrar 
-            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-            </svg>
-            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-            </svg>
-        </th>
-        <th (click)="ordenar('sumaAPagar')" style="cursor: pointer; width: 15%">
-            Suma a Pagar 
-            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-            </svg>
-            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-            </svg>
-        </th>
-        <th (click)="ordenar('neta')" style="cursor: pointer; width: 15%">
-            Ganancia Neta
-            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-            </svg>
-            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-            </svg>
-        </th>
-        <th (click)="ordenar('porcentaje')" style="cursor: pointer; width: 9%">
-            % Ganancia
-            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-            </svg>
-            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-            </svg>
-        </th>
-        <th (click)="ordenar('faltaPagar')" style="cursor: pointer; width: 15%">
-            Falta Pagar 
-            <svg *ngIf="ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
-            </svg>
-            <svg *ngIf="!ordenAscendente" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
-              <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-            </svg>
-        </th>
-        <th style="width: 6%" class="text-center">Acciones</th>
-    </thead>
-    <tbody>
-      <tr *ngFor="let proveedor of datosFiltrados; let i = index">
+  <thead class="sticky-top">
+    <th (click)="ordenar('proveedor')" style="cursor: pointer; width: 19%">
+      Proveedor
+      @if (ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+        </svg>
+      }
+      @if (!ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+        </svg>
+      }
+    </th>
+    <th (click)="ordenar('cant')" style="cursor: pointer; width: 6%">
+      Cant Op
+      @if (ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+        </svg>
+      }
+      @if (!ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+        </svg>
+      }
+    </th>
+    <th (click)="ordenar('sumaACobrar')" style="cursor: pointer; width: 15%">
+      Suma a Cobrar
+      @if (ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+        </svg>
+      }
+      @if (!ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+        </svg>
+      }
+    </th>
+    <th (click)="ordenar('sumaAPagar')" style="cursor: pointer; width: 15%">
+      Suma a Pagar
+      @if (ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+        </svg>
+      }
+      @if (!ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+        </svg>
+      }
+    </th>
+    <th (click)="ordenar('neta')" style="cursor: pointer; width: 15%">
+      Ganancia Neta
+      @if (ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+        </svg>
+      }
+      @if (!ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+        </svg>
+      }
+    </th>
+    <th (click)="ordenar('porcentaje')" style="cursor: pointer; width: 9%">
+      % Ganancia
+      @if (ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+        </svg>
+      }
+      @if (!ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+        </svg>
+      }
+    </th>
+    <th (click)="ordenar('faltaPagar')" style="cursor: pointer; width: 15%">
+      Falta Pagar
+      @if (ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+        </svg>
+      }
+      @if (!ordenAscendente) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill bg-transparent" viewBox="0 0 16 16">
+          <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+        </svg>
+      }
+    </th>
+    <th style="width: 6%" class="text-center">Acciones</th>
+  </thead>
+  <tbody>
+    @for (proveedor of datosFiltrados; track proveedor; let i = $index) {
+      <tr>
         <td>{{proveedor.proveedor}}</td>
         <td class="text-center">{{proveedor.cant}}</td>
         <td>{{proveedor.sumaACobrar | formatearValor : '$'}}</td>
-        <td class="table-danger">{{proveedor.sumaAPagar | formatearValor : '$'}}</td>        
+        <td class="table-danger">{{proveedor.sumaAPagar | formatearValor : '$'}}</td>
         <td>{{proveedor.neta | formatearValor : '$'}}</td>
         <!-- <td>{{proveedor.porcentaje | formatearValor}} %</td> -->
         <td>{{ proveedor.sumaAPagar | calcularPorcentaje:proveedor.sumaACobrar:true }}</td>
         <td class="table-warning">{{proveedor.faltaPagar | formatearValor : '$'}}</td>
         <td class="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, proveedor)">   
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>   
-            </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i, proveedor)">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+          </svg>
         </td>
       </tr>
-    </tbody>
-    <tfoot class="table-group-divider">
-        <tr>
-            <th>Total</th>
-            <th class="text-center">{{ totalCant }}</th>
-            <th>{{totalSumaACobrar | formatearValor : '$'}}</th>
-            <th class="table-danger">{{totalSumaAPagar | formatearValor : '$'}}</th>            
-            <th>{{totalGanancia | formatearValor : '$'}}</th>
-            <!-- <th>{{totalPorcentajeGanancia | formatearValor }} %</th> -->
-            <td>{{ totalSumaAPagar | calcularPorcentaje:totalSumaACobrar:true }}</td>
-            <th class="table-warning">{{totalFaltaPagar | formatearValor : '$'}}</th>
-            <th></th>
-        </tr>
-    </tfoot>
+    }
+  </tbody>
+  <tfoot class="table-group-divider">
+    <tr>
+      <th>Total</th>
+      <th class="text-center">{{ totalCant }}</th>
+      <th>{{totalSumaACobrar | formatearValor : '$'}}</th>
+      <th class="table-danger">{{totalSumaAPagar | formatearValor : '$'}}</th>
+      <th>{{totalGanancia | formatearValor : '$'}}</th>
+      <!-- <th>{{totalPorcentajeGanancia | formatearValor }} %</th> -->
+      <td>{{ totalSumaAPagar | calcularPorcentaje:totalSumaACobrar:true }}</td>
+      <th class="table-warning">{{totalFaltaPagar | formatearValor : '$'}}</th>
+      <th></th>
+    </tr>
+  </tfoot>
 </table>
 

@@ -1,130 +1,137 @@
 
 <div class="modal-content">
-    <div class="modal-header">
-      <h1>Tarifa Personalizada</h1>
-      <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
-    </div>
-    <div class="modal-body" *ngIf="fromParent.modo === 'aumentar' else editarTarifa">
-        <h2>Generar Nueva Tarifa:</h2>
-        <div class="row mt-3">
-            <div class="col-3">                
-                <button type="button" class="btn border border-1" style="font-size:1.25rem" [class.btn-primary]="!modoAutomatico" (click)="cambiarModo('manual')">Manual</button>
-                <button type="button" class="btn border border-1" style="font-size:1.25rem" [class.btn-primary]="modoAutomatico" (click)="cambiarModo('automatico')">Automática</button>
-            </div>
-            <div *ngIf="modoAutomatico" class="col-5 d-flex justify-content-start">
-                <div class="input-group flex-shrink-1" style="width: 30%">
-                    <span class="input-group-text" id="basic-addon1">%</span>
-                    <input type="text" inputmode="numeric" class="w-75" [(ngModel)]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento" (keydown.enter)="aplicarPorcentaje()" appSoloNumeros>
-                </div>                
-                <button type="button" class="btn btn-outline-primary ms-2" style="font-size:1.25rem" (click)="aplicarPorcentaje()">Aplicar Porcentaje</button>
-            </div>
-        </div>   
-        <ng-container *ngFor="let seccion of $ultimaTarifa.secciones">
-            <h4 class="mt-3">Seccion {{seccion.orden}}: {{seccion.descripcion ? seccion.descripcion : ""}}</h4>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th class="encabezado" colspan="4">Tarifa Actual</th>
-                        <th class="encabezado" colspan="2">Diferencia</th>
-                        <th class="encabezado" colspan="2">Nueva tarifa</th>
-                    </tr>
-                    <tr>
-                        <th style="width: 10%;">Categoria</th>
-                        <th style="width: 20%;">Nombre</th>
-                        <th style="width: 10%;">A Cobrar</th>
-                        <th style="width: 10%;">A Pagar</th>
-                        <th style="border-left: black 2px solid; width: 10%">A Cobrar</th>
-                        <th style="width: 10%;">A Pagar</th>
-                        <th style="border-left: black 2px solid; width: 15%">A Cobrar</th>
-                        <th style="width: 15%;">A Pagar</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let categoria of seccion.categorias">
-                        <td class="align-middle">Categoria {{categoria.orden}}</td>
-                        <td class="align-middle">{{categoria.nombre}}</td>
-                        <!-- Valores originales -->
-                        <td class="align-middle">{{categoria.aCobrar | formatearValor:'$' }}</td>
-                        <td class="align-middle">{{categoria.aPagar | formatearValor:'$' }}</td>
-                        <!-- Diferencias calculadas (mostrando 0 inicialmente) -->
-                        <td class="align-middle" style="border-left: black 2px solid">{{calcularDiferencia(categoria.aCobrar, categoria.nuevoACobrar) | formatearValor:'$' }}</td>
-                        <td class="align-middle">{{calcularDiferencia(categoria.aPagar, categoria.nuevoAPagar) | formatearValor:'$' }}</td>
-                        <!-- Nuevos valores calculados -->
-                        <td style="border-left: black 2px solid" class="align-middle">
-                            <div class="input-group">
-                                <span class="input-group-text" id="basic-addon1">$</span>
-                                <input type="text" class="form-control" inputmode="numeric" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoACobrar" appFormatoNumericoNgModel>
-                            </div>                          
-                        </td>
-                        <td class="align-middle">
-                            <div class="input-group">
-                                <span class="input-group-text" id="basic-addon1">$</span>
-                                <input type="text" class="form-control" inputmode="numeric" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoAPagar" appFormatoNumericoNgModel>
-                            </div>            
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </ng-container>
-    </div>
-    <ng-template #editarTarifa>
-        <div class="modal-body">
-            <h2>Editar Tarifa:</h2>            
-            <ng-container *ngFor="let seccion of $ultimaTarifa.secciones">
-                <div class="d-flex justify-content-between border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded">
-                    <div class="d-flex align-items-center">
-                        <h4 class="mb-0">Seccion {{seccion.orden}}</h4>    
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <h5 class="mb-0 me-2">Descripcion:</h5>                                                    
-                        <div class="input-group ">
-                            <input type="text" [(ngModel)]="seccion.descripcion">
-                        </div>                        
-                    </div>
-                </div>                
-                <table class="table table-striped ">
-                    <thead>                      
-                        <tr>
-                            <th>Categoria</th>
-                            <th>Nombre</th>
-                            <th>A Cobrar</th>
-                            <th>A Pagar</th>                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let categoria of seccion.categorias">
-                            <td class="align-middle">Categoria {{categoria.orden}}</td>
-                            <td class="align-middle">
-                                <div class="form-group">                                    
-                                    <div class="input-group ">
-                                        <input type="text" [(ngModel)]="categoria.nombre">
-                                    </div>
-                                </div>                                     
-                            </td>
-                            <!-- Valores originales -->
-                            <td class="align-middle">
-                                <div class="form-group" >                                                                        
-                                    <div class="input-group">
-                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input type="text" inputmode="numeric" appFormatoNumericoNgModel [(ngModel)]="categoria.aCobrar">
-                                    </div>                        
-                                </div>                                
-                            <td class="align-middle">
-                                <div class="form-group" >                                                                        
-                                    <div class="input-group">
-                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                        <input type="text" inputmode="numeric" appFormatoNumericoNgModel [(ngModel)]="categoria.aPagar">
-                                    </div>                        
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </ng-container>
+  <div class="modal-header">
+    <h1>Tarifa Personalizada</h1>
+    <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
+  </div>
+  @if (fromParent.modo === 'aumentar') {
+    <div class="modal-body">
+      <h2>Generar Nueva Tarifa:</h2>
+      <div class="row mt-3">
+        <div class="col-3">
+          <button type="button" class="btn border border-1" style="font-size:1.25rem" [class.btn-primary]="!modoAutomatico" (click)="cambiarModo('manual')">Manual</button>
+          <button type="button" class="btn border border-1" style="font-size:1.25rem" [class.btn-primary]="modoAutomatico" (click)="cambiarModo('automatico')">Automática</button>
         </div>
-    </ng-template>
+        @if (modoAutomatico) {
+          <div class="col-5 d-flex justify-content-start">
+            <div class="input-group flex-shrink-1" style="width: 30%">
+              <span class="input-group-text" id="basic-addon1">%</span>
+              <input type="text" inputmode="numeric" class="w-75" [(ngModel)]="porcentajeAumento" placeholder="Ingrese porcentaje de aumento" (keydown.enter)="aplicarPorcentaje()" appSoloNumeros>
+            </div>
+            <button type="button" class="btn btn-outline-primary ms-2" style="font-size:1.25rem" (click)="aplicarPorcentaje()">Aplicar Porcentaje</button>
+          </div>
+        }
+      </div>
+      @for (seccion of $ultimaTarifa.secciones; track seccion) {
+        <h4 class="mt-3">Seccion {{seccion.orden}}: {{seccion.descripcion ? seccion.descripcion : ""}}</h4>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th class="encabezado" colspan="4">Tarifa Actual</th>
+              <th class="encabezado" colspan="2">Diferencia</th>
+              <th class="encabezado" colspan="2">Nueva tarifa</th>
+            </tr>
+            <tr>
+              <th style="width: 10%;">Categoria</th>
+              <th style="width: 20%;">Nombre</th>
+              <th style="width: 10%;">A Cobrar</th>
+              <th style="width: 10%;">A Pagar</th>
+              <th style="border-left: black 2px solid; width: 10%">A Cobrar</th>
+              <th style="width: 10%;">A Pagar</th>
+              <th style="border-left: black 2px solid; width: 15%">A Cobrar</th>
+              <th style="width: 15%;">A Pagar</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (categoria of seccion.categorias; track categoria) {
+              <tr>
+                <td class="align-middle">Categoria {{categoria.orden}}</td>
+                <td class="align-middle">{{categoria.nombre}}</td>
+                <!-- Valores originales -->
+                <td class="align-middle">{{categoria.aCobrar | formatearValor:'$' }}</td>
+                <td class="align-middle">{{categoria.aPagar | formatearValor:'$' }}</td>
+                <!-- Diferencias calculadas (mostrando 0 inicialmente) -->
+                <td class="align-middle" style="border-left: black 2px solid">{{calcularDiferencia(categoria.aCobrar, categoria.nuevoACobrar) | formatearValor:'$' }}</td>
+                <td class="align-middle">{{calcularDiferencia(categoria.aPagar, categoria.nuevoAPagar) | formatearValor:'$' }}</td>
+                <!-- Nuevos valores calculados -->
+                <td style="border-left: black 2px solid" class="align-middle">
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1">$</span>
+                    <input type="text" class="form-control" inputmode="numeric" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoACobrar" appFormatoNumericoNgModel>
+                  </div>
+                </td>
+                <td class="align-middle">
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1">$</span>
+                    <input type="text" class="form-control" inputmode="numeric" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoAPagar" appFormatoNumericoNgModel>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  } @else {
+    <div class="modal-body">
+      <h2>Editar Tarifa:</h2>
+      @for (seccion of $ultimaTarifa.secciones; track seccion) {
+        <div class="d-flex justify-content-between border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded">
+          <div class="d-flex align-items-center">
+            <h4 class="mb-0">Seccion {{seccion.orden}}</h4>
+          </div>
+          <div class="d-flex align-items-center">
+            <h5 class="mb-0 me-2">Descripcion:</h5>
+            <div class="input-group ">
+              <input type="text" [(ngModel)]="seccion.descripcion">
+            </div>
+          </div>
+        </div>
+        <table class="table table-striped ">
+          <thead>
+            <tr>
+              <th>Categoria</th>
+              <th>Nombre</th>
+              <th>A Cobrar</th>
+              <th>A Pagar</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (categoria of seccion.categorias; track categoria) {
+              <tr>
+                <td class="align-middle">Categoria {{categoria.orden}}</td>
+                <td class="align-middle">
+                  <div class="form-group">
+                    <div class="input-group ">
+                      <input type="text" [(ngModel)]="categoria.nombre">
+                    </div>
+                  </div>
+                </td>
+                <!-- Valores originales -->
+                <td class="align-middle">
+                  <div class="form-group" >
+                    <div class="input-group">
+                      <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                      <input type="text" inputmode="numeric" appFormatoNumericoNgModel [(ngModel)]="categoria.aCobrar">
+                    </div>
+                  </div>
+                  <td class="align-middle">
+                    <div class="form-group" >
+                      <div class="input-group">
+                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                        <input type="text" inputmode="numeric" appFormatoNumericoNgModel [(ngModel)]="categoria.aPagar">
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    }
     <div class="modal-footer">
-        <app-btn-eliminar name="Eliminar" (click)="borrarTarifa()"></app-btn-eliminar>
-        <app-btn-agregar name="Guardar" type="button" (click)="onSubmit()"></app-btn-agregar>
-    </div>    
-</div>
+      <app-btn-eliminar name="Eliminar" (click)="borrarTarifa()"></app-btn-eliminar>
+      <app-btn-agregar name="Guardar" type="button" (click)="onSubmit()"></app-btn-agregar>
+    </div>
+  </div>

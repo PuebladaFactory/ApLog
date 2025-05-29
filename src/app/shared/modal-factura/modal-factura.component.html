@@ -1,68 +1,91 @@
 
 <div class="modal-content">
-    <div class="modal-header">
-        <h1 class="modal-title fs-2" id="exampleModalToggleLabel2">Liquidación de Servicios</h1>
-                
-        <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
-    </div>        
-    <div class="modal-body">
-        <div>
-            <h3>Detalle de Operaciones de {{titulo}} </h3>       
-        </div>
-        
-        <div class="">
-            <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por parámetro">                           
-            <table class="table table-bordered table-striped">
-                <thead class="sticky-top">
-                <tr>
-                    <th class="text-center">Fecha</th>
-                    <th class="text-center">idOperación</th>
-                    <th *ngIf="fromParent.tipo === 'proveedores'" class="text-center">Chofer</th>                                            
-                    <th class="text-center">{{fromParent.tipo === 'clientes' ? 'Chofer' : 'Cliente'}}</th>                                            
-                    <th class="text-center">{{fromParent.tipo === 'clientes' ? 'A Pagar' : 'A Cobrar'}}</th>
-                    <th class="text-center">Porcentaje</th>
-                    <th class="text-end">{{fromParent.tipo === 'clientes' ? 'A Cobrar' : 'A Pagar'}}</th>
-                    <th *ngIf="fromParent.modo === 'proforma'" class="text-end"></th>
-                </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let fac of facOp | filter: searchText;">
-                        <td>{{fac.fecha}}</td>
-                        <td>{{fac.idOperacion}}</td>
-                        <td *ngIf="fromParent.tipo === 'proveedores'" class="text-center">{{getChofer(fac.idChofer)}}</td>
-                        <td>{{fromParent.tipo === 'clientes' ? getChofer(fac.idChofer) : getCliente(fac.idCliente)}}</td>
-                        <td class="text-end">{{fac.contraParteMonto | formatearValor : "$"}}</td>
-                        <!-- <td class="text-end">{{fromParent.tipo === 'clientes' ? ((fac.valores.total - fac.contraParteMonto)*100/fac.valores.total | formatearValor) : (fac.contraParteMonto - fac.valores.total)*100/fac.contraParteMonto | formatearValor }} %</td> -->
-                        <td class="text-end">{{fromParent.tipo === 'clientes' ? (fac.contraParteMonto | calcularPorcentaje:fac.valores.total:true) : (fac.valores.total | calcularPorcentaje:fac.contraParteMonto:true) }}</td>
-                        
-                        <td class="text-end">{{fac.valores.total | formatearValor : "$"}}</td>
-                        <td *ngIf="fromParent.modo === 'proforma'" class="text-end"><app-btn-editar name="Editar" (click)="editarFacOp(fac)"></app-btn-editar> </td>
-                    </tr>                   
-                    <ng-container *ngIf="factura.descuentos.length > 0">
-                        <tr class="table-group-divider" >
-                            <td *ngIf="fromParent.tipo === 'proveedores'" colspan="6">Sub Total</td>
-                            <td *ngIf="fromParent.tipo !== 'proveedores'" colspan="5">Sub Total</td>
-                            <td class="text-end">{{factura.valores.totalTarifaBase + factura.valores.totalAcompaniante + factura.valores.totalkmMonto | formatearValor : "$"}}</td>
-                        </tr>
-                        <tr><th>Descuentos</th></tr>
-                        <tr *ngFor="let desc of factura.descuentos">
-                            <td *ngIf="fromParent.tipo === 'proveedores'" colspan="6"><span class="ms-3">{{desc.concepto}}</span></td>
-                            <td *ngIf="fromParent.tipo !== 'proveedores'" colspan="5"><span class="ms-3">{{desc.concepto}}</span></td>     
-                            <td class="text-end"> - {{desc.valor | formatearValor : "$"}}</td>                   
-                        </tr>                   
-                    </ng-container>                     
-                </tbody> 
-                
-                    
-                                                       
-                <tfoot class="table-group-divider">                  
-                    <tr>
-                        <th *ngIf="fromParent.tipo === 'proveedores'" colspan="6"><span class="ms-3">Total</span></th>
-                        <th *ngIf="fromParent.tipo !== 'proveedores'" colspan="5"><span class="ms-3">Total</span></th>
-                        <th class="text-center">{{factura.valores.total | formatearValor : "$"}}</th>
-                    </tr>
-                </tfoot>                                       
-            </table>            
-        </div>
-    </div>      
+  <div class="modal-header">
+    <h1 class="modal-title fs-2" id="exampleModalToggleLabel2">Liquidación de Servicios</h1>
+
+    <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
+  </div>
+  <div class="modal-body">
+    <div>
+      <h3>Detalle de Operaciones de {{titulo}} </h3>
+    </div>
+
+    <div class="">
+      <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por parámetro">
+      <table class="table table-bordered table-striped">
+        <thead class="sticky-top">
+          <tr>
+            <th class="text-center">Fecha</th>
+            <th class="text-center">idOperación</th>
+            @if (fromParent.tipo === 'proveedores') {
+              <th class="text-center">Chofer</th>
+            }
+            <th class="text-center">{{fromParent.tipo === 'clientes' ? 'Chofer' : 'Cliente'}}</th>
+            <th class="text-center">{{fromParent.tipo === 'clientes' ? 'A Pagar' : 'A Cobrar'}}</th>
+            <th class="text-center">Porcentaje</th>
+            <th class="text-end">{{fromParent.tipo === 'clientes' ? 'A Cobrar' : 'A Pagar'}}</th>
+            @if (fromParent.modo === 'proforma') {
+              <th class="text-end"></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (fac of facOp | filter: searchText; track fac) {
+            <tr>
+              <td>{{fac.fecha}}</td>
+              <td>{{fac.idOperacion}}</td>
+              @if (fromParent.tipo === 'proveedores') {
+                <td class="text-center">{{getChofer(fac.idChofer)}}</td>
+              }
+              <td>{{fromParent.tipo === 'clientes' ? getChofer(fac.idChofer) : getCliente(fac.idCliente)}}</td>
+              <td class="text-end">{{fac.contraParteMonto | formatearValor : "$"}}</td>
+              <!-- <td class="text-end">{{fromParent.tipo === 'clientes' ? ((fac.valores.total - fac.contraParteMonto)*100/fac.valores.total | formatearValor) : (fac.contraParteMonto - fac.valores.total)*100/fac.contraParteMonto | formatearValor }} %</td> -->
+              <td class="text-end">{{fromParent.tipo === 'clientes' ? (fac.contraParteMonto | calcularPorcentaje:fac.valores.total:true) : (fac.valores.total | calcularPorcentaje:fac.contraParteMonto:true) }}</td>
+              <td class="text-end">{{fac.valores.total | formatearValor : "$"}}</td>
+              @if (fromParent.modo === 'proforma') {
+                <td class="text-end"><app-btn-editar name="Editar" (click)="editarFacOp(fac)"></app-btn-editar> </td>
+              }
+            </tr>
+          }
+          @if (factura.descuentos.length > 0) {
+            <tr class="table-group-divider" >
+              @if (fromParent.tipo === 'proveedores') {
+                <td colspan="6">Sub Total</td>
+              }
+              @if (fromParent.tipo !== 'proveedores') {
+                <td colspan="5">Sub Total</td>
+              }
+              <td class="text-end">{{factura.valores.totalTarifaBase + factura.valores.totalAcompaniante + factura.valores.totalkmMonto | formatearValor : "$"}}</td>
+            </tr>
+            <tr><th>Descuentos</th></tr>
+            @for (desc of factura.descuentos; track desc) {
+              <tr>
+                @if (fromParent.tipo === 'proveedores') {
+                  <td colspan="6"><span class="ms-3">{{desc.concepto}}</span></td>
+                }
+                @if (fromParent.tipo !== 'proveedores') {
+                  <td colspan="5"><span class="ms-3">{{desc.concepto}}</span></td>
+                }
+                <td class="text-end"> - {{desc.valor | formatearValor : "$"}}</td>
+              </tr>
+            }
+          }
+        </tbody>
+
+
+
+        <tfoot class="table-group-divider">
+          <tr>
+            @if (fromParent.tipo === 'proveedores') {
+              <th colspan="6"><span class="ms-3">Total</span></th>
+            }
+            @if (fromParent.tipo !== 'proveedores') {
+              <th colspan="5"><span class="ms-3">Total</span></th>
+            }
+            <th class="text-center">{{factura.valores.total | formatearValor : "$"}}</th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
 </div>

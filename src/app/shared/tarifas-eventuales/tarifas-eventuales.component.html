@@ -1,70 +1,86 @@
 <div class="d-flex justify-content-between mt-5">
-    <div class="d-flex w-50">
-        <h2 class="d-flex align-items-center">Consultar tarifas por {{moduloFormateado()}}: </h2>
-        <div class="ms-3 w-25 d-flex align-items-center">
-            <select class="form-select form-select-md" (change)="selectObjeto($event)">
-                <option selected>Seleccione</option>
-                <option *ngFor="let objeto of objetos" [value]="objeto.id">
-                  {{moduloOrigen === "clientes" ? objeto.razonSocial : moduloOrigen === "proveedores" ? objeto.razonSocial : objeto.apellido + " " + objeto.nombre}} 
-                </option>
-            </select>
-        </div>            
+  <div class="d-flex w-50">
+    <h2 class="d-flex align-items-center">Consultar tarifas por {{moduloFormateado()}}: </h2>
+    <div class="ms-3 w-25 d-flex align-items-center">
+      <select class="form-select form-select-md" (change)="selectObjeto($event)">
+        <option selected>Seleccione</option>
+        @for (objeto of objetos; track objeto) {
+          <option [value]="objeto.id">
+            {{moduloOrigen === "clientes" ? objeto.razonSocial : moduloOrigen === "proveedores" ? objeto.razonSocial : objeto.apellido + " " + objeto.nombre}}
+          </option>
+        }
+      </select>
     </div>
-    <div *ngIf="tarifasEventuales && tarifasEventuales.length > 0"  style="width:100px;">
-        <label for="">Cantidad de Tarifas</label>
-        <div class="input-group">                    
-            <input type="text" inputmode="numeric" class="form-control"  placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarTarifasEventuales()" appSoloNumeros>
-            <button class="btn btn-secondary " type="button" id="button-addon2"  (click)="consultarTarifasEventuales()">Consultar</button>
-        </div>                  
+  </div>
+  @if (tarifasEventuales && tarifasEventuales.length > 0) {
+    <div  style="width:100px;">
+      <label for="">Cantidad de Tarifas</label>
+      <div class="input-group">
+        <input type="text" inputmode="numeric" class="form-control"  placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarTarifasEventuales()" appSoloNumeros>
+        <button class="btn btn-secondary " type="button" id="button-addon2"  (click)="consultarTarifasEventuales()">Consultar</button>
+      </div>
     </div>
+  }
 </div>
 
 <hr class="mt-5">
-<div *ngIf="tarifasEventuales && tarifasEventuales.length > 0 else sinTarifas" class="mt-5">
+@if (tarifasEventuales && tarifasEventuales.length > 0) {
+  <div class="mt-5">
     <h1>Historial de Tarifas</h1>
     <table class="table table-light table-striped table-bordered" >
-        <thead class="sticky-top">
-            <tr>
-                <th>Fecha</th>
-                <th>IdTarifa</th>
-                <th>IdOperacion</th>
-                <th *ngIf="moduloOrigen !== 'clientes'">Cliente</th>
-                <th>Concepto Cliente</th>
-                <th>Valor Cliente</th>
-                <th *ngIf="moduloOrigen !== 'choferes'">Chofer</th>
-                <th>Concepto Chofer</th>
-                <th>Valor Chofer</th>
-                <th *ngIf="moduloOrigen !== 'proveedores'">Proveedor</th>
-                <th>Km</th>
-                <th>Ganancia</th>
-            </tr>            
-        </thead>
-        <tbody>
-            <tr *ngFor="let tarifa of tarifasEventuales">
-                <td>{{tarifa.fecha}}</td>
-                <td>{{tarifa.idTarifa}}</td>
-                <td>{{tarifa.idOperacion}}</td>
-                <td *ngIf="moduloOrigen !== 'clientes'">{{getCliente(tarifa.idCliente)}}</td>
-                <td>{{tarifa.cliente.concepto}}</td>
-                <td class="table-success" >$ {{formatearValor(tarifa.cliente.valor)}}</td>
-                <td *ngIf="moduloOrigen !== 'choferes'">{{getChofer(tarifa.idChofer)}}</td>
-                <td>{{tarifa.chofer.concepto}}</td>
-                <td class="table-danger">$ {{formatearValor(tarifa.chofer.valor)}}</td>
-                <td *ngIf="moduloOrigen !== 'proveedores'">{{tarifa.idProveedor === 0 ? "-" : getProveedor(tarifa.idProveedor)}}</td>
-                <td>{{tarifa.km}}</td>
-                <td class="table-warning">{{(formatearValor(100-((tarifa.chofer.valor*100)/tarifa.cliente.valor)))}} %</td>
-            </tr>
-
-        </tbody>
+      <thead class="sticky-top">
+        <tr>
+          <th>Fecha</th>
+          <th>IdTarifa</th>
+          <th>IdOperacion</th>
+          @if (moduloOrigen !== 'clientes') {
+            <th>Cliente</th>
+          }
+          <th>Concepto Cliente</th>
+          <th>Valor Cliente</th>
+          @if (moduloOrigen !== 'choferes') {
+            <th>Chofer</th>
+          }
+          <th>Concepto Chofer</th>
+          <th>Valor Chofer</th>
+          @if (moduloOrigen !== 'proveedores') {
+            <th>Proveedor</th>
+          }
+          <th>Km</th>
+          <th>Ganancia</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (tarifa of tarifasEventuales; track tarifa) {
+          <tr>
+            <td>{{tarifa.fecha}}</td>
+            <td>{{tarifa.idTarifa}}</td>
+            <td>{{tarifa.idOperacion}}</td>
+            @if (moduloOrigen !== 'clientes') {
+              <td>{{getCliente(tarifa.idCliente)}}</td>
+            }
+            <td>{{tarifa.cliente.concepto}}</td>
+            <td class="table-success" >$ {{formatearValor(tarifa.cliente.valor)}}</td>
+            @if (moduloOrigen !== 'choferes') {
+              <td>{{getChofer(tarifa.idChofer)}}</td>
+            }
+            <td>{{tarifa.chofer.concepto}}</td>
+            <td class="table-danger">$ {{formatearValor(tarifa.chofer.valor)}}</td>
+            @if (moduloOrigen !== 'proveedores') {
+              <td>{{tarifa.idProveedor === 0 ? "-" : getProveedor(tarifa.idProveedor)}}</td>
+            }
+            <td>{{tarifa.km}}</td>
+            <td class="table-warning">{{(formatearValor(100-((tarifa.chofer.valor*100)/tarifa.cliente.valor)))}} %</td>
+          </tr>
+        }
+      </tbody>
     </table>
+  </div>
+} @else {
+  <div class="mt-5">
+    <h3>No se registran Tarifas Eventuales</h3>
+  </div>
+}
 
-
-</div>
-
-<ng-template #sinTarifas>
-    <div class="mt-5">
-        <h3>No se registran Tarifas Eventuales</h3> 
-    </div>  
-</ng-template>
 
 

@@ -1,117 +1,124 @@
-<!-- 
+<!--
 <div>
-    <button class="btn btn-primary ms-3" (click)="actProveedores()">Actualizar Proveedores</button>
-    <button class="btn btn-primary ms-3" (click)="actProveedorGral()">Actualizar Proveedores Generales</button>
-    <button class="btn btn-primary ms-3" (click)="actProveedorEsp()">Actualizar Proveedores Especiales</button>        
+  <button class="btn btn-primary ms-3" (click)="actProveedores()">Actualizar Proveedores</button>
+  <button class="btn btn-primary ms-3" (click)="actProveedorGral()">Actualizar Proveedores Generales</button>
+  <button class="btn btn-primary ms-3" (click)="actProveedorEsp()">Actualizar Proveedores Especiales</button>
 </div> -->
 <div class="row mt-3" [ngClass]="{'invisible': tEspecial}" >
-    <div class="col-4">
-        <h1 class="mt-2">Tarifa General</h1>        
-    </div>
-    <div class="col-4">
+  <div class="col-4">
+    <h1 class="mt-2">Tarifa General</h1>
+  </div>
+  <div class="col-4">
 
-    </div>
-    <ng-container *appRole="['god','admin', 'manager']">
-        <app-consola-tarifa  class="col-4 "></app-consola-tarifa>
-    </ng-container>
-    
+  </div>
+  <ng-container *appRole="['god','admin', 'manager']">
+    <app-consola-tarifa  class="col-4 "></app-consola-tarifa>
+  </ng-container>
+
 
 </div>
 <div>
-    
-    
-    <ng-container *ngIf="tEspecial">
-        <ng-container *ngIf="!ultTarifaEspecial || ultTarifaEspecial.cargasGenerales.length === 0 else conTarifa">
-            <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
-                <p class="mb-0 fs-5">El Proveedor aun no tiene asignada una tarifa</p>        
-            </div>                
-        </ng-container>
-        <ng-template #conTarifa>
-            <div *ngIf="ultTarifaEspecial !== null && ultTarifaEspecial.cargasGenerales.length > 0" class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
-                <p *ngIf="ultTarifaEspecial.idCliente === 0 else clienteEsp" class="mb-0 fs-5">La última tarifa aplica para todos los clientes</p>        
-            </div>
-            <ng-template #clienteEsp>
-                <p *ngIf="ultTarifaEspecial !== null" class="mb-0 fs-5">La última tarifa aplica para el cliente: {{getCliente(ultTarifaEspecial.idCliente)}} </p>
-            </ng-template>
-        </ng-template>            
-    </ng-container>
 
-    <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
-        <table class="table table-bordered">
-            <thead class="sticky-top">
-              <tr>
-                  <th style="width: 2%"><input type="checkbox" (change)="onSeleccionarTodosChange($event)" formControlName="seleccionarTodos"></th>
-                  <th style="width: 12%">Categoria Tarifa Gral</th>
-                  <th style="width: 26%" class="">
-                    Nombre  
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle ms-2" viewBox="0 0 16 16" type="button" (click)="mostrarInfo()">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                        <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
-                    </svg>
-                    
-                    </th>
-                  <th style="width: 20%">Ultima Tarifa {{tEspecial? ultTarifaEspecial?.fecha: ultTarifaGralProveedor? ultTarifaGralProveedor.fecha : ""}}</th>
-                  <th style="width: 20%">Diferencia</th>
-                  <th style="width: 20%">Nueva Tarifa</th>
-              </tr>
-            </thead>
-            <tbody *ngIf="ultTarifaCliente.cargasGenerales.length > 0 else sinTarifaGral" formArrayName="filas" >
-                <tr *ngFor="let fila of filas.controls; let i = index" [formGroupName]="i">
-                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}"><input type="checkbox" formControlName="seleccionado"></td>
-                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">{{ fila.get('categoria')?.value }}</td>
-                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}"><input type="text" formControlName="nombre"></td>
-                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1" style="width:30px">
-                                {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
-                            </span>
-                            <input type="text" class="form-control" formControlName="ultimaTarifa">
-                        </div>                                
-                    </td>
-                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1" style="width:30px">
-                                {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
-                            </span>
-                            <input type="text" class="form-control" formControlName="diferencia">
-                        </div>                                                        
-                    </td>
-                    <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1" style="width:30px">
-                                {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
-                            </span>
-                            <input type="text" class="form-control" formControlName="nuevaTarifa" appFormatoNumerico>
-                        </div>                                                        
-                    </td>
-                </tr>
-            </tbody>
-            <ng-template #sinTarifaGral>
-                <tr>
-                    <td colspan="6"  class="align-middle">                        
-                        <h2 class="mb-0">
-                            Primero debe generar la Tarifa General de los Clientes.
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle mb-2" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
-                            </svg>
-                        </h2>
-                    </td>
-                </tr>
-            </ng-template>
-        </table>        
-        <app-btn-editar *appRole="['god','admin', 'manager']" name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
-        <app-btn-agregar *appRole="['god','admin', 'manager']" name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
-    </form>
-    <hr class="mt-4">
-    <div class="mt-4">
-        <h1>
-          Historial de tarifas
-          <svg type="button" (click)="abrirHistorialTarifas()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle mb-1" viewBox="0 0 16 16">
-            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-          </svg>
-        </h1>
-    </div>
+
+  @if (tEspecial) {
+    @if (!ultTarifaEspecial || ultTarifaEspecial.cargasGenerales.length === 0) {
+      <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
+        <p class="mb-0 fs-5">El Proveedor aun no tiene asignada una tarifa</p>
+      </div>
+    } @else {
+      @if (ultTarifaEspecial !== null && ultTarifaEspecial.cargasGenerales.length > 0) {
+        <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded w-25">
+          @if (ultTarifaEspecial.idCliente === 0) {
+            <p class="mb-0 fs-5">La última tarifa aplica para todos los clientes</p>
+          } @else {
+            @if (ultTarifaEspecial !== null) {
+              <p class="mb-0 fs-5">La última tarifa aplica para el cliente: {{getCliente(ultTarifaEspecial.idCliente)}} </p>
+            }
+          }
+        </div>
+      }
+    }
+  }
+
+  <form [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
+    <table class="table table-bordered">
+      <thead class="sticky-top">
+        <tr>
+          <th style="width: 2%"><input type="checkbox" (change)="onSeleccionarTodosChange($event)" formControlName="seleccionarTodos"></th>
+          <th style="width: 12%">Categoria Tarifa Gral</th>
+          <th style="width: 26%" class="">
+            Nombre
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle ms-2" viewBox="0 0 16 16" type="button" (click)="mostrarInfo()">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+              <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
+            </svg>
+
+          </th>
+          <th style="width: 20%">Ultima Tarifa {{tEspecial? ultTarifaEspecial?.fecha: ultTarifaGralProveedor? ultTarifaGralProveedor.fecha : ""}}</th>
+          <th style="width: 20%">Diferencia</th>
+          <th style="width: 20%">Nueva Tarifa</th>
+        </tr>
+      </thead>
+      @if (ultTarifaCliente.cargasGenerales.length > 0) {
+        <tbody formArrayName="filas" >
+          @for (fila of filas.controls; track fila; let i = $index) {
+            <tr [formGroupName]="i">
+              <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}"><input type="checkbox" formControlName="seleccionado"></td>
+              <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">{{ fila.get('categoria')?.value }}</td>
+              <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}"><input type="text" formControlName="nombre"></td>
+              <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">
+                    {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                  </span>
+                  <input type="text" class="form-control" formControlName="ultimaTarifa">
+                </div>
+              </td>
+              <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">
+                    {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                  </span>
+                  <input type="text" class="form-control" formControlName="diferencia">
+                </div>
+              </td>
+              <td class="align-middle" [ngClass]="{'catColor': i % 3 === 0, 'adicColor': i % 3 !== 0}">
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">
+                    {{ (fila.get('categoria')?.value === 'Km 1er Sector distancia' || fila.get('categoria')?.value === 'Km Intervalos distancia') ? 'Km' : '$' }}
+                  </span>
+                  <input type="text" class="form-control" formControlName="nuevaTarifa" appFormatoNumerico>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      } @else {
+        <tr>
+          <td colspan="6"  class="align-middle">
+            <h2 class="mb-0">
+              Primero debe generar la Tarifa General de los Clientes.
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle mb-2" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+              </svg>
+            </h2>
+          </td>
+        </tr>
+      }
+    </table>
+    <app-btn-editar *appRole="['god','admin', 'manager']" name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
+    <app-btn-agregar *appRole="['god','admin', 'manager']" name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
+  </form>
+  <hr class="mt-4">
+  <div class="mt-4">
+    <h1>
+      Historial de tarifas
+      <svg type="button" (click)="abrirHistorialTarifas()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle mb-1" viewBox="0 0 16 16">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+      </svg>
+    </h1>
+  </div>
 </div>
 

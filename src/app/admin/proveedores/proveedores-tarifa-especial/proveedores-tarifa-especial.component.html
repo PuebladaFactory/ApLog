@@ -1,51 +1,59 @@
 <div class="row mt-4">
-    <div class="col-8 row">
-        <div class="col-4" >      
-            <h1 class="mt-2">Tarifa Especial</h1>
-        </div>          
-        <div class="col-4">
-            <h2>Seleccionar Proveedor</h2>
-            <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)">
-                <option selected>Seleccione</option>
-                <option *ngFor="let proveedor of $proveedoresEsp" [value]="proveedor.idProveedor">
-                    {{proveedor.razonSocial}} 
-                </option>
-            </select>
-        </div>                 
-        <div class="col-4" [ngClass]="{'invisible': proveedorSeleccionado === undefined}">
-            <div class="d-flex">
-                <h2>Seleccionar Cliente</h2>
-                <div class="ms-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle mt-2" viewBox="0 0 16 16" type="button" (click)="mostrarInfo()">
-                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                      <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
-                  </svg>
-                </div>
-            </div>        
-            <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
-                <option selected>Seleccione</option>
-                <option [value]="'todos'">Todos</option>
-                <option *ngFor="let cliente of $clientes" [value]="cliente.idCliente">
-                  {{cliente.razonSocial}} 
-                </option>
-              </select>
-        </div>  
+  <div class="col-8 row">
+    <div class="col-4" >
+      <h1 class="mt-2">Tarifa Especial</h1>
     </div>
-    <ng-container *appRole="['god','admin', 'manager']">
-        <app-consola-tarifa class="col-4 " *ngIf="tEspecial"></app-consola-tarifa>
-    </ng-container>
-         
+    <div class="col-4">
+      <h2>Seleccionar Proveedor</h2>
+      <select class="form-select form-select-md mb-3" (change)="changeProveedor($event)">
+        <option selected>Seleccione</option>
+        @for (proveedor of $proveedoresEsp; track proveedor) {
+          <option [value]="proveedor.idProveedor">
+            {{proveedor.razonSocial}}
+          </option>
+        }
+      </select>
+    </div>
+    <div class="col-4" [ngClass]="{'invisible': proveedorSeleccionado === undefined}">
+      <div class="d-flex">
+        <h2>Seleccionar Cliente</h2>
+        <div class="ms-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle mt-2" viewBox="0 0 16 16" type="button" (click)="mostrarInfo()">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+            <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
+          </svg>
+        </div>
+      </div>
+      <select class="form-select form-select-md mb-3" (change)="changeCliente($event)">
+        <option selected>Seleccione</option>
+        <option [value]="'todos'">Todos</option>
+        @for (cliente of $clientes; track cliente) {
+          <option [value]="cliente.idCliente">
+            {{cliente.razonSocial}}
+          </option>
+        }
+      </select>
+    </div>
+  </div>
+  <ng-container *appRole="['god','admin', 'manager']">
+    @if (tEspecial) {
+      <app-consola-tarifa class="col-4 "></app-consola-tarifa>
+    }
+  </ng-container>
+
 </div>
 
 <div>
-<ng-template #sinSeleccion>
+  <ng-template #sinSeleccion>
     <h4>Seleccione Chofer</h4>
-</ng-template>
-<ng-template #sinTarifas>
-  <h4>El Chofer aun no tiene tarifas asignadas</h4>
-</ng-template>
-</div> 
-
-<div *ngIf="proveedorSeleccionado !== undefined && idClienteEsp !== undefined">
-    <app-proveedores-tarifa-gral [tEspecial]="tEspecial"></app-proveedores-tarifa-gral>
+  </ng-template>
+  <ng-template #sinTarifas>
+    <h4>El Chofer aun no tiene tarifas asignadas</h4>
+  </ng-template>
 </div>
+
+@if (proveedorSeleccionado !== undefined && idClienteEsp !== undefined) {
+  <div>
+    <app-proveedores-tarifa-gral [tEspecial]="tEspecial"></app-proveedores-tarifa-gral>
+  </div>
+}

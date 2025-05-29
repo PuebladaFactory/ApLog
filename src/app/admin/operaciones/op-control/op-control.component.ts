@@ -3,20 +3,21 @@ import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-op-control',
-    template: `     
+    template: `
   <div class="d-flex justify-content-between mt-3">
-    <h1 class="text-center w-100">Operaciones</h1>    
-  </div>   
-  <div class="tab-container">
-    <div 
-      *ngFor="let tab of tabs"
-      class="tab" 
-      [class.active]="selectedTab === tab.id" 
-      (click)="selectTab(tab.id)">
-      {{ tab.name }}
-    </div>         
+    <h1 class="text-center w-100">Operaciones</h1>
   </div>
-  <router-outlet></router-outlet>    
+  <div class="tab-container">
+    @for (tab of tabs; track tab) {
+      <div
+        class="tab"
+        [class.active]="selectedTab === tab.id"
+        (click)="selectTab(tab.id)">
+        {{ tab.name }}
+      </div>
+    }
+  </div>
+  <router-outlet></router-outlet>
   
   `,
     styles: [`

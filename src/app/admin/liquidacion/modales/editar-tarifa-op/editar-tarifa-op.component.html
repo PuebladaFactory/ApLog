@@ -1,234 +1,233 @@
-    
-    <div class="modal-dialog modal-dialog-centered">      
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-2">Editar</h1>                        
-                <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close(false)"></button>
+
+<div class="modal-dialog modal-dialog-centered">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h1 class="modal-title fs-2">Editar</h1>
+      <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close(false)"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row h-100">
+        <div class="col-4 isDisabled h-100">
+          <h3>Tarifa Aplicada: {{facDetallada.tarifaTipo.personalizada ? "Personalizada" : facDetallada.tarifaTipo.eventual ? "Eventual" : facDetallada.tarifaTipo.especial ? "Especial" : "General"}}</h3>
+          <!-- GENERAL/ESPECIAL -->
+          @if (operacion.tarifaTipo.general || operacion.tarifaTipo.especial) {
+            <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
+              <div class="form-group mb-2">
+                <label for="Categoria" class="fs-5">Categoria</label>
+                <div class="input-group">
+                  <!-- <input class="w-100" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].nombre"> -->
+                  <input class="w-100" type="text" [value]="getCategoriaNombre()">
+                </div>
+              </div>
+              <div class="form-group mb-2">
+                <label for="km" class="fs-5">Valor</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                  <!-- <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].valor | formatearValor"> -->
+                  <input class="form-control" type="text" [value]="getCategoriaValor() | formatearValor">
+                </div>
+              </div>
+              <div class="form-group mb-2">
+                <label for="km" class="fs-5">Km 1er Sector valor</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                  <!-- <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].adicionalKm.primerSector | formatearValor"> -->
+                  <input class="form-control" type="text" [value]="getKmPrimerSectorValor() | formatearValor">
+                </div>
+              </div>
+              <div class="form-group mb-2">
+                <label for="km" class="fs-5">Km Intervalos valor</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                  <!-- <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].adicionalKm.sectoresSiguientes | formatearValor" > -->
+                  <input class="form-control" type="text" [value]="getKmIntervalosSectorValor() | formatearValor">
+                </div>
+              </div>
+              <div class="form-group mb-2">
+                <label for="km" class="fs-5">Acompañante</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                  <input class="form-control" type="text" [value]="ultimaTarifa.adicionales.acompaniante | formatearValor">
+                </div>
+              </div>
+              <div class="form-group mb-2">
+                <label for="km" class="fs-5">Km 1er Sector distancia</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
+                  <input class="form-control" type="text" [value]="ultimaTarifa.adicionales.KmDistancia.primerSector | formatearValor">
+                </div>
+              </div>
+              <div class="form-group mb-2">
+                <label for="km" class="fs-5">Km Intervalos distancia</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
+                  <input class="form-control" type="text" [value]="ultimaTarifa.adicionales.KmDistancia.sectoresSiguientes | formatearValor">
+                </div>
+              </div>
             </div>
-            <div class="modal-body">                          
-                <div class="row h-100">
-                    <div class="col-4 isDisabled h-100">
-                        <h3>Tarifa Aplicada: {{facDetallada.tarifaTipo.personalizada ? "Personalizada" : facDetallada.tarifaTipo.eventual ? "Eventual" : facDetallada.tarifaTipo.especial ? "Especial" : "General"}}</h3>
-                        <!-- GENERAL/ESPECIAL --> 
-                        <ng-container *ngIf="operacion.tarifaTipo.general || operacion.tarifaTipo.especial">
-                            <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
-                                <div class="form-group mb-2">
-                                    <label for="Categoria" class="fs-5">Categoria</label>
-                                    <div class="input-group">                                
-                                        <!-- <input class="w-100" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].nombre"> -->
-                                        <input class="w-100" type="text" [value]="getCategoriaNombre()">
-                                    </div>                                                        
-                                </div>
-                                <div class="form-group mb-2">
-                                    <label for="km" class="fs-5">Valor</label>
-                                    <div class="input-group">   
-                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                             
-                                        <!-- <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].valor | formatearValor"> -->
-                                        <input class="form-control" type="text" [value]="getCategoriaValor() | formatearValor">
-                                    </div>                                                        
-                                </div>
-                                <div class="form-group mb-2">
-                                    <label for="km" class="fs-5">Km 1er Sector valor</label>
-                                    <div class="input-group">   
-                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                             
-                                        <!-- <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].adicionalKm.primerSector | formatearValor"> -->
-                                        <input class="form-control" type="text" [value]="getKmPrimerSectorValor() | formatearValor">
-                                    </div>                                                        
-                                </div>
-                                <div class="form-group mb-2">
-                                    <label for="km" class="fs-5">Km Intervalos valor</label>
-                                    <div class="input-group">  
-                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
-                                        <!-- <input class="form-control" type="text" [value]="ultimaTarifa.cargasGenerales[vehiculoOp[0].categoria.catOrden - 1].adicionalKm.sectoresSiguientes | formatearValor" > -->
-                                        <input class="form-control" type="text" [value]="getKmIntervalosSectorValor() | formatearValor">
-                                    </div>                                                        
-                                </div>
-                                <div class="form-group mb-2">
-                                    <label for="km" class="fs-5">Acompañante</label>
-                                    <div class="input-group"> 
-                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
-                                        <input class="form-control" type="text" [value]="ultimaTarifa.adicionales.acompaniante | formatearValor">
-                                    </div>                                                        
-                                </div>
-                                <div class="form-group mb-2">
-                                    <label for="km" class="fs-5">Km 1er Sector distancia</label>
-                                    <div class="input-group">  
-                                        <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>                              
-                                        <input class="form-control" type="text" [value]="ultimaTarifa.adicionales.KmDistancia.primerSector | formatearValor">
-                                    </div>                                                        
-                                </div>
-                                <div class="form-group mb-2">
-                                    <label for="km" class="fs-5">Km Intervalos distancia</label>
-                                    <div class="input-group">  
-                                        <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>                              
-                                        <input class="form-control" type="text" [value]="ultimaTarifa.adicionales.KmDistancia.sectoresSiguientes | formatearValor">
-                                    </div>                                                        
-                                </div>
-                            </div>                    
-                        </ng-container>  
-                        <!-- EVENTUAL -->
-                        <ng-container *ngIf="facDetallada.tarifaTipo.eventual">
-                            <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
-                                <h4>Cliente: </h4>
-                                <div class="form-group mb-2">
-                                    <label for="Categoria" class="fs-5">Concepto</label>
-                                    <div class="input-group">                                
-                                        <input class="w-100" type="text" [value]="operacion.tarifaEventual.cliente.concepto">
-                                    </div>                                                        
-                                </div>
-                                <div class="form-group mb-2">
-                                    <label for="km" class="fs-5">Valor</label>
-                                    <div class="input-group">   
-                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                             
-                                        <input class="form-control" type="text" [value]="operacion.tarifaEventual.cliente.valor | formatearValor">
-                                    </div>                                                        
-                                </div>
-                                <h4 class="mt-4">Chofer: </h4>
-                                <div class="form-group mb-2">
-                                    <label for="km" class="fs-5">Concepto</label>
-                                    <div class="input-group">                                       
-                                        <input class="w-100" type="text" [value]="operacion.tarifaEventual.chofer.concepto">
-                                    </div>                                                        
-                                </div>
-                                <div class="form-group mb-2">
-                                    <label for="km" class="fs-5">Valor</label>
-                                    <div class="input-group">  
-                                        <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
-                                        <input class="form-control" type="text" [value]="operacion.tarifaEventual.chofer.valor | formatearValor">
-                                    </div>                                                        
-                                </div>                            
-                            </div>                    
-                        </ng-container>  
-                        <!-- PERSONALIZADA -->
-                        <ng-container *ngIf="facDetallada.tarifaTipo.personalizada">
-                            <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
-                                <div class="form-group mt-3 mb-2">
-                                    <label for="Seccion" class="fs-5">Sección: {{tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].descripcion}}</label>
-                                    <div class="input-group">                                
-                                        <input class="w-100" type="text" [value]="'Seccion ' +  tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].orden">
-                                    </div>                                                        
-                                    <div class="form-group mt-2 mb-2">
-                                        <label for="Categoria" class="fs-5">Categoria : {{tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].orden}}</label>
-                                        <div class="input-group">                                
-                                            <input class="w-100" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].nombre">
-                                        </div>                                                        
-                                    </div>
-                                    <div class="form-group mt-2 mb-2">
-                                        <label for="aCobrar" class="fs-5">A Cobrar</label>
-                                        <div class="input-group">  
-                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                               
-                                            <input class="form-control" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].aCobrar | formatearValor">
-                                        </div>                                                        
-                                    </div>
-                                    <div class="form-group mt-2 mb-2">
-                                        <label for="aPagar" class="fs-5">A Pagar</label>
-                                        <div class="input-group">                    
-                                            <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>             
-                                            <input class="form-control" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].aPagar | formatearValor">
-                                        </div>                                                        
-                                    </div>
-                                </div>
-                            </div>
-                        </ng-container>
-                    </div>
-                    <div class="col-8 h-100">
-                        <h3>Operacion N°: {{operacion.idOperacion}}</h3>
-                        <div class="row border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
-                            <div class="col">
-                                <h4 class="">Detalle</h4>
-                                <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded" >
-                                    <div class="form-group mb-2 isDisabled">
-                                        <label for="Fecha" class="fs-5">Fecha</label>
-                                        <div class="input-group">                                
-                                            <input class="w-100" type="text" [value]="operacion.fecha">
-                                        </div>                                                        
-                                    </div>
-                                    <div class="form-group mb-2 isDisabled">
-                                        <label for="Chofer" class="fs-5">Chofer</label>
-                                        <div class="input-group">                                
-                                            <input class="w-100" type="text" [value]="operacion.chofer.apellido + ' ' + operacion.chofer.nombre ">
-                                        </div>                                                        
-                                    </div>
-                                    <div class="form-group mb-2 isDisabled">
-                                        <label for="Acompaniante" class="fs-5">Acompañante</label>
-                                        <div class="input-group">                                
-                                            <input class="w-100" type="text" [value]="operacion.acompaniante ? 'Si' : 'No'">
-                                        </div>                                                        
-                                    </div>
-                                    <div class="form-group mb-2">
-                                        <label for="km" class="fs-5">Km recorridos</label>
-                                        <div class="input-group">  
-                                            <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>                              
-                                            <input class="form-control" type="text" inputmode="number" [(ngModel)]="facDetallada.km" appFormatoNumericoNgModel>
-                                        </div>                                                  
-                                    </div>
-                                    <div class="form-group mb-2 " >
-                                        <label for="hojaRuta" class="fs-5">Hoja de Ruta</label>
-                                        <div class="input-group">    
-                                            <input class="w-100" type="text" [(ngModel)]="facDetallada.hojaRuta">                                        
-                                        </div>                                                        
-                                    </div>
-                                    <div class="form-group mb-2 " >
-                                        <label for="observaciones" class="fs-5">Observaciones</label>
-                                        <div class="input-group">    
-                                            <textarea class="w-100" type="text" [(ngModel)]="facDetallada.observaciones"></textarea>                                        
-                                        </div>                                                        
-                                    </div>
-                                    
-                                </div>    
-                            </div>
-                            <div class="col">
-                                <h4 class="">Valores</h4>
-                                
-                                    <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
-                                        <div class="form-group mb-3" >
-                                            <label for="Base" class="fs-5">Tarifa Base</label>
-                                            <div class="input-group">       
-                                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                              
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.tarifaBase" appFormatoNumericoNgModel (change)="actualizarTotal()">
-                                            </div>                                                        
-                                        </div>                                
-                                        <div class="form-group mb-3">
-                                            <label for="adiconalAcompaniante" class="fs-5">Adicional Acompañante</label>
-                                            <div class="input-group">     
-                                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.acompaniante" appFormatoNumericoNgModel (change)="actualizarTotal()">
-                                            </div>                                                        
-                                        </div>
-                                        <div class="form-group mb-3">
-                                            <label for="adiconalKm" class="fs-5">Adicional Km</label>
-                                            <div class="input-group">   
-                                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                  
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.kmMonto" appFormatoNumericoNgModel (change)="actualizarTotal()">
-                                            </div>                                                        
-                                        </div>
-                                        <div class="form-group mb-3 isDisabled">
-                                            <label for="total" class="fs-5">Total</label>
-                                            <div class="input-group">    
-                                                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>                                 
-                                                <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.total" appFormatoNumericoNgModel>
-                                            </div>                                                        
-                                        </div>                               
-                                    </div>    
-                                    <ng-container *ngIf="facDetallada.tarifaTipo.general || facDetallada.tarifaTipo.especial">
-                                        <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded">
-                                            <p class="fs-5">Los cambios en los montos no se verán reflejados en la tarfia, solo se aplicarán a esta factura.</p>
-                                        </div>                       
-                                    </ng-container>                            
-                                    <ng-container *ngIf="facDetallada.tarifaTipo.eventual || facDetallada.tarifaTipo.personalizada">
-                                        <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded">
-                                            <p class="fs-5">En la Tarifa Eventual el único valor modificable de la factura es el Total.</p>
-                                        </div>                       
-                                    </ng-container>
-                                                         
-                            </div>
-                        </div>
-                    </div>               
-                </div>      
-            </div>    
-            <div class="modal-footer">
-                <app-btn-agregar name="Guardar" (click)="onSubmit()"></app-btn-agregar>        
-            </div>    
+          }
+          <!-- EVENTUAL -->
+          @if (facDetallada.tarifaTipo.eventual) {
+            <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
+              <h4>Cliente: </h4>
+              <div class="form-group mb-2">
+                <label for="Categoria" class="fs-5">Concepto</label>
+                <div class="input-group">
+                  <input class="w-100" type="text" [value]="operacion.tarifaEventual.cliente.concepto">
+                </div>
+              </div>
+              <div class="form-group mb-2">
+                <label for="km" class="fs-5">Valor</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                  <input class="form-control" type="text" [value]="operacion.tarifaEventual.cliente.valor | formatearValor">
+                </div>
+              </div>
+              <h4 class="mt-4">Chofer: </h4>
+              <div class="form-group mb-2">
+                <label for="km" class="fs-5">Concepto</label>
+                <div class="input-group">
+                  <input class="w-100" type="text" [value]="operacion.tarifaEventual.chofer.concepto">
+                </div>
+              </div>
+              <div class="form-group mb-2">
+                <label for="km" class="fs-5">Valor</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                  <input class="form-control" type="text" [value]="operacion.tarifaEventual.chofer.valor | formatearValor">
+                </div>
+              </div>
+            </div>
+          }
+          <!-- PERSONALIZADA -->
+          @if (facDetallada.tarifaTipo.personalizada) {
+            <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
+              <div class="form-group mt-3 mb-2">
+                <label for="Seccion" class="fs-5">Sección: {{tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].descripcion}}</label>
+                <div class="input-group">
+                  <input class="w-100" type="text" [value]="'Seccion ' +  tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].orden">
+                </div>
+                <div class="form-group mt-2 mb-2">
+                  <label for="Categoria" class="fs-5">Categoria : {{tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].orden}}</label>
+                  <div class="input-group">
+                    <input class="w-100" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].nombre">
+                  </div>
+                </div>
+                <div class="form-group mt-2 mb-2">
+                  <label for="aCobrar" class="fs-5">A Cobrar</label>
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                    <input class="form-control" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].aCobrar | formatearValor">
+                  </div>
+                </div>
+                <div class="form-group mt-2 mb-2">
+                  <label for="aPagar" class="fs-5">A Pagar</label>
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                    <input class="form-control" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].aPagar | formatearValor">
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
         </div>
-    
-  
+        <div class="col-8 h-100">
+          <h3>Operacion N°: {{operacion.idOperacion}}</h3>
+          <div class="row border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
+            <div class="col">
+              <h4 class="">Detalle</h4>
+              <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded" >
+                <div class="form-group mb-2 isDisabled">
+                  <label for="Fecha" class="fs-5">Fecha</label>
+                  <div class="input-group">
+                    <input class="w-100" type="text" [value]="operacion.fecha">
+                  </div>
+                </div>
+                <div class="form-group mb-2 isDisabled">
+                  <label for="Chofer" class="fs-5">Chofer</label>
+                  <div class="input-group">
+                    <input class="w-100" type="text" [value]="operacion.chofer.apellido + ' ' + operacion.chofer.nombre ">
+                  </div>
+                </div>
+                <div class="form-group mb-2 isDisabled">
+                  <label for="Acompaniante" class="fs-5">Acompañante</label>
+                  <div class="input-group">
+                    <input class="w-100" type="text" [value]="operacion.acompaniante ? 'Si' : 'No'">
+                  </div>
+                </div>
+                <div class="form-group mb-2">
+                  <label for="km" class="fs-5">Km recorridos</label>
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
+                    <input class="form-control" type="text" inputmode="number" [(ngModel)]="facDetallada.km" appFormatoNumericoNgModel>
+                  </div>
+                </div>
+                <div class="form-group mb-2 " >
+                  <label for="hojaRuta" class="fs-5">Hoja de Ruta</label>
+                  <div class="input-group">
+                    <input class="w-100" type="text" [(ngModel)]="facDetallada.hojaRuta">
+                  </div>
+                </div>
+                <div class="form-group mb-2 " >
+                  <label for="observaciones" class="fs-5">Observaciones</label>
+                  <div class="input-group">
+                    <textarea class="w-100" type="text" [(ngModel)]="facDetallada.observaciones"></textarea>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+            <div class="col">
+              <h4 class="">Valores</h4>
+
+              <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
+                <div class="form-group mb-3" >
+                  <label for="Base" class="fs-5">Tarifa Base</label>
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.tarifaBase" appFormatoNumericoNgModel (change)="actualizarTotal()">
+                  </div>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="adiconalAcompaniante" class="fs-5">Adicional Acompañante</label>
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.acompaniante" appFormatoNumericoNgModel (change)="actualizarTotal()">
+                  </div>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="adiconalKm" class="fs-5">Adicional Km</label>
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.kmMonto" appFormatoNumericoNgModel (change)="actualizarTotal()">
+                  </div>
+                </div>
+                <div class="form-group mb-3 isDisabled">
+                  <label for="total" class="fs-5">Total</label>
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.total" appFormatoNumericoNgModel>
+                  </div>
+                </div>
+              </div>
+              @if (facDetallada.tarifaTipo.general || facDetallada.tarifaTipo.especial) {
+                <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded">
+                  <p class="fs-5">Los cambios en los montos no se verán reflejados en la tarfia, solo se aplicarán a esta factura.</p>
+                </div>
+              }
+              @if (facDetallada.tarifaTipo.eventual || facDetallada.tarifaTipo.personalizada) {
+                <div class="border border-dark border-1 rounded-4 shadow p-2 mb-1 bg-body-tertiary rounded">
+                  <p class="fs-5">En la Tarifa Eventual el único valor modificable de la factura es el Total.</p>
+                </div>
+              }
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <app-btn-agregar name="Guardar" (click)="onSubmit()"></app-btn-agregar>
+    </div>
+  </div>
+

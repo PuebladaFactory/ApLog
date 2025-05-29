@@ -5,118 +5,125 @@
 </div>
 
 <div class="custom-datatable mt-3">
-  
+
   <div class="row w-100">
-      <div class="col-4 d-flex align-items-end">          
-          <input class="w-75" type="text" placeholder="Buscar por primer criterio..." (input)="updateFilter($event, 'first')" />
-          <span class="mx-2"> y </span>
-          <input class="w-75" type="text" placeholder="Buscar por segundo criterio..." (input)="updateFilter($event, 'second')" />
+    <div class="col-4 d-flex align-items-end">
+      <input class="w-75" type="text" placeholder="Buscar por primer criterio..." (input)="updateFilter($event, 'first')" />
+      <span class="mx-2"> y </span>
+      <input class="w-75" type="text" placeholder="Buscar por segundo criterio..." (input)="updateFilter($event, 'second')" />
+    </div>
+    <div class="col-8 d-flex justify-content-between">
+      <div [ngClass]="{'isDisabledAjustes': !ajustes}" class="w-100" >
+        @for (column of allColumns; track column) {
+          <label class="me-2">
+            <input type="checkbox" [checked]="column.selected" (change)="toggleColumn(column)"  />
+            {{ column.name }}
+          </label>
+        }
       </div>
-      <div class="col-8 d-flex justify-content-between">                 
-          <div [ngClass]="{'isDisabledAjustes': !ajustes}" class="w-100" >
-              <label *ngFor="let column of allColumns" class="me-2">
-                <input type="checkbox" [checked]="column.selected" (change)="toggleColumn(column)"  />
-                {{ column.name }}
-              </label>
-          </div>       
-          <div class="text-end flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16"  type="button" (click)="toogleAjustes()">
-              <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/>
-              <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/>
-            </svg>  
-        </div>
-      </div>        
+      <div class="text-end flex-shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16"  type="button" (click)="toogleAjustes()">
+          <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/>
+          <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/>
+        </svg>
+      </div>
+    </div>
   </div>
 
-<ngx-datatable
-class="dark"
-[rows]="paginatedRows"
-[columns]="visibleColumns"
-[columnMode]="ColumnMode.flex"
-[headerHeight]="50"
-[footerHeight]="50"
-[rowHeight]="'auto'"
-[sortType]="sortType"
+  <ngx-datatable
+    class="dark"
+    [rows]="paginatedRows"
+    [columns]="visibleColumns"
+    [columnMode]="ColumnMode.flex"
+    [headerHeight]="50"
+    [footerHeight]="50"
+    [rowHeight]="'auto'"
+    [sortType]="sortType"
 
-[externalPaging]="true"
-[count]="count"
-[limit]="limit"
-[offset]="offset"
-(sort)="onSort($event)"
-(activate)="onActivate($event)"
-(select)="onSelect($event)"
-(page)="setPage($event)">
+    [externalPaging]="true"
+    [count]="count"
+    [limit]="limit"
+    [offset]="offset"
+    (sort)="onSort($event)"
+    (activate)="onActivate($event)"
+    (select)="onSelect($event)"
+    (page)="setPage($event)">
 
-<ngx-datatable-column *ngFor="let column of visibleColumns" [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow">
-    <ng-template ngx-datatable-cell-template let-row="row">
-        {{ row[column.prop] }}
-    </ng-template>
-</ngx-datatable-column>
-<ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="3">          
-    <ng-template ngx-datatable-cell-template let-row="row">
-        
-        <app-btn-leer name="Vehiculos" class="me-2" (click)="mostrarVehiculos(row.idChofer)" data-bs-toggle="modal" data-bs-target="#modalVehiculos"></app-btn-leer>  
+    @for (column of visibleColumns; track column) {
+      <ngx-datatable-column [name]="column.name" [prop]="column.prop" [flexGrow]="column.flexGrow">
+        <ng-template ngx-datatable-cell-template let-row="row">
+          {{ row[column.prop] }}
+        </ng-template>
+      </ngx-datatable-column>
+    }
+    <ngx-datatable-column name="Acciones" prop="acciones" [flexGrow]="3">
+      <ng-template ngx-datatable-cell-template let-row="row">
+
+        <app-btn-leer name="Vehiculos" class="me-2" (click)="mostrarVehiculos(row.idChofer)" data-bs-toggle="modal" data-bs-target="#modalVehiculos"></app-btn-leer>
 
         <app-btn-leer name="Detalle" class="me-2" (click)="abrirEdicion(row.idChofer, 'vista')" ></app-btn-leer>
-                
+
         <app-btn-editar  class="me-2" name="Editar" (click)="abrirEdicion(row.idChofer, 'edicion')"></app-btn-editar>
-        
+
         <app-btn-eliminar *appRole="['god','admin', 'manager']" name="Eliminar" (click)="eliminarChofer(row.idChofer)"></app-btn-eliminar>
         <!-- <button (click)="legajoId(row.idChofer)">Legajo</button> -->
-    </ng-template>
-</ngx-datatable-column>
+      </ng-template>
+    </ngx-datatable-column>
 
-</ngx-datatable>
+  </ngx-datatable>
 </div>
 
 <div class="modal fade modal-lg" id="modalVehiculos" tabindex="-1" aria-labelledby="modalVehiculos" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content m-2">
-            <div class="modal-header">
-                <h3>Vehiculos de: <strong>{{choferVehiculos? choferVehiculos.apellido + " " + choferVehiculos.nombre :  ""}}</strong></h3>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr class="table table-light table-group-divider">
-                            <th>Dominio</th>
-                            <th>Marca</th>
-                            <th>Modelo</th>
-                            <th>Tipo Comb.</th>
-                            <th>Categoria</th>
-                            <th>Seguimiento</th>
-                            <th>Tarj. Comb.</th>
-                            <th>Publicidad</th>                   
-                        </tr>
-                    </thead>
-                    <tbody *ngIf="vehiculos.length > 0 else SinVehiculos">
-                        <tr *ngFor="let vehiculo of vehiculos" class="table-light w-100">
-                            <td>{{vehiculo.dominio}}</td>   
-                            <td>{{vehiculo.marca}}</td>   
-                            <td>{{vehiculo.modelo}}</td>   
-                            <td>{{vehiculo.tipoCombustible}}</td>   
-                            <td>{{vehiculo.categoria.nombre}}</td>   
-                            <td>{{!vehiculo.segSat ? "No" : vehiculo.satelital}}</td>   
-                            <td>{{vehiculo.tarjetaCombustible ? "Si" : "No"}}</td>   
-                            <td>{{vehiculo.publicidad ? "Si" : "No"}}</td>   
-                        </tr>       
-                    </tbody>
-                    <ng-template #SinVehiculos>
-                        <tbody>
-                            <tr>
-                                <td colspan="8">
-                                    Sin vehiculos cargados
-                                </td>
-                            </tr>
-                        </tbody>
-                    </ng-template>
-                </table>
-            </div>
-        </div>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content m-2">
+      <div class="modal-header">
+        <h3>Vehiculos de: <strong>{{choferVehiculos? choferVehiculos.apellido + " " + choferVehiculos.nombre :  ""}}</strong></h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped">
+          <thead>
+            <tr class="table table-light table-group-divider">
+              <th>Dominio</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>Tipo Comb.</th>
+              <th>Categoria</th>
+              <th>Seguimiento</th>
+              <th>Tarj. Comb.</th>
+              <th>Publicidad</th>
+            </tr>
+          </thead>
+          @if (vehiculos.length > 0) {
+            <tbody>
+              @for (vehiculo of vehiculos; track vehiculo) {
+                <tr class="table-light w-100">
+                  <td>{{vehiculo.dominio}}</td>
+                  <td>{{vehiculo.marca}}</td>
+                  <td>{{vehiculo.modelo}}</td>
+                  <td>{{vehiculo.tipoCombustible}}</td>
+                  <td>{{vehiculo.categoria.nombre}}</td>
+                  <td>{{!vehiculo.segSat ? "No" : vehiculo.satelital}}</td>
+                  <td>{{vehiculo.tarjetaCombustible ? "Si" : "No"}}</td>
+                  <td>{{vehiculo.publicidad ? "Si" : "No"}}</td>
+                </tr>
+              }
+            </tbody>
+          } @else {
+            <tbody>
+              <tr>
+                <td colspan="8">
+                  Sin vehiculos cargados
+                </td>
+              </tr>
+            </tbody>
+          }
+        </table>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- <div>
-    <button (click)="convertirPatente()">Patente</button>
+<button (click)="convertirPatente()">Patente</button>
 </div> -->
