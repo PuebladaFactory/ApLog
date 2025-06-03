@@ -193,7 +193,7 @@
                         <label for="Cliente">Sección</label>
                         <select class="form-select mb-3" (change)="changeSecion($event)">
                           <option [value]="op.tarifaPersonalizada.seccion" selected >{{op.tarifaTipo.personalizada ? 'Seccion ' + op.tarifaPersonalizada.seccion + " : " + tarifaClienteSel.secciones[op.tarifaPersonalizada.seccion - 1].descripcion : 'Sin datos'}}</option>
-                          @for (seccion of tarifaClienteSel?.secciones; track seccion) {
+                          @for (seccion of tarifaClienteSel.secciones; track seccion) {
                             <option [value]="seccion?.orden">
                               Seccion {{seccion?.orden}}: {{seccion?.descripcion? seccion.descripcion : ""}}
                             </option>
@@ -209,7 +209,7 @@
                       <label for="Categoria">Categoria</label>
                       <select class="form-select mb-3" (change)="changeCategoria($event)" >
                         <option selected>{{op.tarifaTipo.personalizada ? 'Categoria ' + op.tarifaPersonalizada.categoria + " : " + op.tarifaPersonalizada.nombre : 'Sin datos'}}</option>
-                        @for (categoria of seccionElegida?.categorias; track categoria) {
+                        @for (categoria of seccionElegida.categorias; track categoria) {
                           <option [value]="categoria.orden">
                             Categoria {{categoria.orden}}: {{categoria.nombre}}
                           </option>

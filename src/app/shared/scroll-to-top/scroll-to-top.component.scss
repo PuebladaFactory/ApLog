@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 .scroll-to-top {
     position: fixed;
     bottom: 20px;
@@ -18,7 +20,7 @@
     transition: all 0.3s ease;
     
     &:hover {
-      background: darken(#3f51b5, 10%);
+      background: color.adjust(#3f51b5, $lightness: 10%);
     }
   
     &.visible {

@@ -86,7 +86,7 @@ export class ChoferesListadoComponent implements OnInit {
         this.armarTabla();
       }
     });        
-    this.storageService.syncChanges<Proveedor>('proveedores');
+    //this.storageService.syncChanges<Proveedor>('proveedores');
   }
 
   ngOnDestroy(): void {
@@ -145,7 +145,7 @@ export class ChoferesListadoComponent implements OnInit {
       modalRef.result.then(
         (result) => {
           ////console.log()("ROOWW:" ,row);
-          this.storageService.getAllSorted("choferes", 'idChofer', 'asc');
+          //this.storageService.getAllSorted("choferes", 'idChofer', 'asc');
         },
         (reason) => {}
       );

@@ -15,12 +15,11 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular/build:application",
+          "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": {
-              "base": "dist/ap-log"
-            },
+            "outputPath": "dist/ap-log",
             "index": "src/index.html",
+            "main": "src/main.ts",
             "polyfills": [
               "zone.js"
             ],
@@ -43,12 +42,27 @@
               
             ],
             "scripts": [
-              "node_modules/jquery/dist/jquery.min.js",
-              "node_modules/@popperjs/core/dist/umd/popper.min.js",
-              "node_modules/bootstrap/dist/js/bootstrap.min.js"
-
-            ],
-            "browser": "src/main.ts"
+                "node_modules/jquery/dist/jquery.min.js",
+                "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
+                "node_modules/datatables.net/js/dataTables.min.js",
+                "node_modules/datatables.net-bs5/js/dataTables.bootstrap5.js",
+                "node_modules/datatables.net-responsive/js/dataTables.responsive.js",
+                "node_modules/datatables.net-responsive-bs5/js/responsive.bootstrap5.js"
+              ],
+             "allowedCommonJsDependencies": [
+                "lodash",
+                "sweetalert2",
+                "core-js",
+                "jszip",
+                "exceljs",
+                "canvg",
+                "raf",
+                "rgbcolor",
+                "file-saver",
+                "pdfmake" 
+              ]
+           
+            
           },
           "configurations": {
             "production": {
@@ -99,7 +113,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular/build:dev-server",
+          "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
               "buildTarget": "ApLog:build:production"
@@ -111,13 +125,13 @@
           "defaultConfiguration": "development"
         },
         "extract-i18n": {
-          "builder": "@angular/build:extract-i18n",
+          "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
             "buildTarget": "ApLog:build"
           }
         },
         "test": {
-          "builder": "@angular/build:karma",
+          "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "polyfills": [
               "zone.js",

@@ -16,7 +16,7 @@
       </thead>
       <tbody>
         @if (proformasClientes.length > 0) {
-          @for (cliente of proformasClientes | filter:filtroCliente; track cliente; let i = $index) {
+          @for (cliente of proformasClientes | filterBy:filtroCliente; track cliente; let i = $index) {
             <tr>
               <td>{{cliente.razonSocial}}</td>
               <td class="text-center">{{cliente.idFacturaCliente}}</td>
@@ -69,7 +69,7 @@
       </thead>
       <tbody>
         @if (proformasChoferes.length > 0) {
-          @for (chofer of proformasChoferes | filter:filtroChofer; track chofer; let i = $index) {
+          @for (chofer of proformasChoferes | filterBy:filtroChofer; track chofer; let i = $index) {
             <tr>
               <td>{{chofer.apellido + " " + chofer.nombre}}</td>
               <td class="text-center">{{chofer.idFacturaChofer}}</td>
@@ -120,7 +120,7 @@
       </thead>
       <tbody>
         @if (proformasProveedores.length > 0) {
-          @for (prov of proformasProveedores | filter:filtroProveedor; track prov; let i = $index) {
+          @for (prov of proformasProveedores | filterBy:filtroProveedor; track prov; let i = $index) {
             <tr>
               <td>{{prov.razonSocial}}</td>
               <td class="text-center">{{prov.idFacturaProveedor}}</td>

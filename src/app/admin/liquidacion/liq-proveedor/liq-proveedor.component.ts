@@ -4,7 +4,6 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, take, takeUntil } from 'rxjs';
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { FacturacionProveedorService } from 'src/app/servicios/facturacion/facturacion-proveedor/facturacion-proveedor.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -80,7 +79,7 @@ export class LiqProveedorComponent implements OnInit {
   $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
   isLoading: boolean = false;
   
-  constructor(private storageService: StorageService, private fb: FormBuilder, private facOpProveedorService: FacturacionProveedorService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
+  constructor(private storageService: StorageService, private fb: FormBuilder, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
     this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false);
    
@@ -497,6 +496,7 @@ deleteDuplicadas(){
           facCliente: op.estado.facCliente,
           facChofer: true,
           facturada: op.estado.facChofer ? true : false,
+          proforma: false,
         }
         if(op.estado.facturada){
           op.estado.facCliente = false;  
@@ -566,7 +566,25 @@ deleteDuplicadas(){
               this.addItem(this.facturaProveedor, "proforma", this.facturaProveedor.idFacturaProveedor, "ALTA");
               this.facturasLiquidadasProveedor.forEach((factura:FacturaOp)=>{
                 this.actualizarFacOp(factura);        
-              })              
+              });
+              Swal.fire({
+                    title: `¿Desea imprimir la proforma del Proveedor?`,
+                    //text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Confirmar",
+                    cancelButtonText: "Cancelar"
+                  }).then((result) => {
+                    if (result.isConfirmed) {     
+                      if(titulo === "excel"){
+                          this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
+                        }else if (titulo === "pdf"){          
+                          this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
+                      }
+                    }
+                  });                
             }     
             
             
@@ -859,7 +877,7 @@ deleteDuplicadas(){
                 facOp = data;
                 console.log("facOp: ", facOp);
                 facOp.proforma = true;
-                facOp.liquidacion = true;
+                facOp.liquidacion = false;
                 let {id, ...fac} = facOp
                 let proveedor = this.getProveedor(fac.idProveedor)
                 this.storageService.updateItem("facturaOpProveedor", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${proveedor} `, facOp.id);

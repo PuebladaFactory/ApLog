@@ -486,6 +486,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           facCliente: true,
           facChofer: op.estado.facChofer,
           facturada: op.estado.facChofer ? true : false,
+          proforma: false,
         }
         if(op.estado.facturada){
           op.estado.facCliente = false;  
@@ -550,10 +551,29 @@ selectAllCheckboxes(event: any, idCliente: number): void {
               
             }
             if(result.modo === "proforma"){
-              this.addItem(this.facturaCliente, "proforma", this.facturaCliente.idFacturaCliente, "ALTA");
+              this.procesarProforma(titulo, accion);
+              /* this.addItem(this.facturaCliente, "proforma", this.facturaCliente.idFacturaCliente, "ALTA");
               this.facturasLiquidadasCliente.forEach((factura:FacturaOp)=>{
-                this.actualizarFacOp(factura);        
-              })              
+                        
+              });
+              Swal.fire({
+                    title: `¿Desea imprimir la proforma del Cliente?`,
+                    //text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Confirmar",
+                    cancelButtonText: "Cancelar"
+                  }).then((result) => {
+                    if (result.isConfirmed) {     
+                      if(titulo === "excel"){
+                          this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);
+                        }else if (titulo === "pdf"){
+                          this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);        
+                        }      
+                    }
+                  });   */             
             }                       
 
            
@@ -846,9 +866,9 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     }
   }
 
-  actualizarFacOp(factura: FacturaOp){
-    
-    let facOp:ConId<FacturaOp>;
+  procesarProforma(titulo:string, accion:string){
+    this.isLoading = true;
+    /* let facOp:ConId<FacturaOp>;
     this.dbFirebase
     .obtenerTarifaIdTarifa("facturaOpCliente",factura.idOperacion, "idOperacion")
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
@@ -856,13 +876,59 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         facOp = data;
         console.log("facOp: ", facOp);
         facOp.proforma = true;
-        facOp.liquidacion = true;
+        facOp.liquidacion = false;
         let {id, ...fac} = facOp
         let cliente = this.getCliente(fac.idCliente)
         this.storageService.updateItem("facturaOpCliente", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${cliente} `, facOp.id);
         //this.removeItem(factura);
+    }); */
+      this.dbFirebase.procesarProforma(this.facturasLiquidadasCliente, "clientes", this.titulo,this.facturaCliente,"proforma")
+    .then((result) => {
+      this.isLoading = false;
+      console.log("resultado: ", result);
+      if(result.exito){
+          this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Cliente ${this.facturaCliente.razonSocial}`,result.exito)
+          this.storageService.logSimple(this.facturaCliente.idFacturaCliente,"ALTA", "facturaCliente", `Alta de Proforma del Cliente ${this.facturaCliente.razonSocial}`, result.exito )
+          Swal.fire({
+                icon: "success",
+                //title: "Oops...",
+                text: 'La proforma generó con éxito.',
+                confirmButtonColor: "#3085d6",
+                confirmButtonText: "Confirmar",
+                //footer: `${msj}`
+              }).then(() => {
+                  Swal.fire({
+                    title: `¿Desea imprimir la proforma del Cliente?`,
+                    //text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Confirmar",
+                    cancelButtonText: "Cancelar"
+                  }).then((result) => {
+                    if (result.isConfirmed) {     
+                      if(titulo === "excel"){
+                          this.excelServ.exportToExcelCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);
+                        }else if (titulo === "pdf"){
+                          this.pdfServ.exportToPdfCliente(this.facturaCliente, this.facturasLiquidadasCliente, this.$clientes, this.$choferes, accion);        
+                        }      
+                    }
+                  }); 
+              });
+      } else {
+        this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "PROFORMA", "operaciones", `Proforma de la operación del Cliente ${this.facturaCliente.razonSocial} Liquidada`,result.exito)
+        this.storageService.logSimple(this.facturaCliente.idFacturaCliente,"ALTA", "facturaCliente", `Alta de Proforma del Cliente ${this.facturaCliente.razonSocial}`, result.exito )
+        this.mensajesError(`Ocurrió un error al procesar la proforma: ${result.mensaje}`, "error");
+      }
+      
+     
+    })
+    .catch((error) => {
+      this.isLoading = false;
+      console.error(error);
+      this.mensajesError('Ocurrió un error al procesar la proforma.', "error");
     });
-    
   }
 
    getTarifaGral(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{

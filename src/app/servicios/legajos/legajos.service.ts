@@ -156,7 +156,7 @@ export class LegajosService {
   eliminarLegajo(idChofer:number, motivo: string){
     
     let legajo: Legajo[];
-    this.dbFirebase.getByFieldValue("legajos", "idChofer", idChofer)
+    this.dbFirebase.getByFieldValue<Legajo>("legajos", "idChofer", idChofer)
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .pipe(take(1))
     .subscribe(data=>{

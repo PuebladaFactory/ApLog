@@ -104,14 +104,7 @@ export class ModalDetalleComponent implements OnInit {
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "clientes":
-         /*  const resultado = this.encontrarMaximoYMinimo(this.data[0].operaciones);
-          this.storageService.getByFieldValue("facOpLiqCliente", "idCliente", this.data[0].idCliente);
-          this.storageService.facOpLiqCliente$
-          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-          .subscribe(data=>{
-            this.$facturasOpCliente = data;
-            console.log("1) ngOnInit facOpCliente:",this.$facturasOpCliente);      
-          }); */
+        
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
           //this.idFactura = this.data[0].idFacturaCliente;
@@ -120,13 +113,7 @@ export class ModalDetalleComponent implements OnInit {
           break;
       //////////////CHOFERES///////////////////////
       case "choferes":
-          /* this.storageService.getByFieldValue("facOpLiqChofer", "idChofer", this.data[0].idChofer);
-          this.storageService.facOpLiqChofer$
-          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-          .subscribe(data=>{
-            this.$facturasOpChofer = data;
-            console.log("1) ngOnInit facOpChofer:",this.$facturasOpChofer);      
-          }); */
+          
           //console.log("data: ", this.data);
           this.titulo = `${this.data[0].apellido} ${this.data[0].nombre}`
           //this.idFactura = this.data[0].idFacturaChofer;
@@ -135,13 +122,7 @@ export class ModalDetalleComponent implements OnInit {
           break;
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
-          /* this.storageService.getByFieldValue("facOpLiqProveedor", "idProveedor", this.data[0].idProveedor);
-          this.storageService.facOpLiqProveedor$
-          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-          .subscribe(data=>{
-            this.$facturasOpProveedor = data;
-            console.log("1) ngOnInit facOpProveedor:",this.$facturasOpProveedor);      
-          }); */
+          
           //console.log("data: ", this.data);
           this.titulo = this.data[0].razonSocial
           //this.idFactura = this.data[0].idFacturaProveedor;

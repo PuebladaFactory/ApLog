@@ -104,14 +104,16 @@ export class TableroOpComponent implements OnInit {
     { key: 'cerrada', label: 'Cerrada' },
     { key: 'facCliente', label: 'Cliente Facturado' },
     { key: 'facChofer', label: 'Chofer Facturado' },
-    { key: 'facturada', label: 'Facturada' }
+    { key: 'facturada', label: 'Facturada' },
+    { key: 'proforma', label: 'Proforma' },   
   ];
   estadoSeleccionado: { [key: string]: boolean } = {
     abierta: false,
     cerrada: false,
     facCliente: false,
     facChofer: false,
-    facturada: false
+    facturada: false,
+    proforma: false,
   };
   operacionesDemo!: ConId<Operacion>[];
   opFiltradas!: ConId<Operacion>[];
@@ -313,7 +315,7 @@ export class TableroOpComponent implements OnInit {
     this.rows = operaciones.map((op) => ({
       indice: indice ++,
       fecha: op.fecha,
-      estado: op.estado.abierta ? "Abierta" : op.estado.cerrada ? "Cerrada" : op.estado.facturada  ? "Facturada" : op.estado.facCliente  ? "Cliente Fac" :  op.estado.facChofer  ? "Chofer Fac" : "Sin Datos",
+      estado: op.estado.abierta ? "Abierta" : op.estado.cerrada ? "Cerrada" : op.estado.facturada  ? "Facturada" : op.estado.facCliente  ? "Cliente Fac" :  op.estado.facChofer  ? "Chofer Fac" : (op.estado.proforma && op.estado.facCliente) ? "Proforma-CF" :  op.estado.proforma  ? "Proforma" : "Sin Datos",
       idOperacion: op.idOperacion,
       cliente: op.cliente.razonSocial,
       idCliente: op.cliente.idCliente,
@@ -585,6 +587,15 @@ export class TableroOpComponent implements OnInit {
         this.armarTabla();
         break;
       }
+      case "Proforma":{
+        this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
+          return op.estado.proforma === true; 
+        });
+        
+        this.armarTabla();
+        break;
+      }
+
       default:{
           alert("error filtrado");
         break
@@ -609,7 +620,8 @@ export class TableroOpComponent implements OnInit {
       cerrada: false,
       facCliente: false,
       facChofer: false,
-      facturada: false,      
+      facturada: false,    
+      proforma: false,  
     };
 
     this.storageService.setInfo("filtroOp", []);
@@ -810,226 +822,34 @@ export class TableroOpComponent implements OnInit {
     }
   }
 
-  actualizarOp(){
-    let id = 1736794593418
-    let op: any[]
-    let opActualizar: Operacion[]
-    this.dbFirebase.getByFieldValue("operaciones","chofer.idProveedor", id ).subscribe(data=>{
-      if(data){
-        
-        op = data
-        //console.log("op", op);
-        opActualizar = op.filter((op:Operacion)=>{ return !op.estado.cerrada && !op.estado.abierta})
-        
-        opActualizar.forEach(op =>{
-          op.estado.facChofer = true
-        })
-        //console.log("opActualizar", opActualizar);
-        /* opActualizar.forEach(op =>{
-          this.dbFirebase.update("operaciones", op);
-        }) */
-      }
-    })
-    
-    
-  }
+  
 
   descargarOp(){
     this.excelServ.generarInformeOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta,this.$opFiltradas)
   }
 
-/*   restaurarOpAbiertas(){
-    
-    this.dbFirebase.getAll<Operacion>("operaciones")
-    .pipe(take(1))
-    .subscribe(data=>{
-      if(data){
-        
-        this.operacionesDemo = data
-        //console.log("operaciones", this.operacionesDemo);
-        this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
-         op.estado ={
-            abierta: true,
-            cerrada: false,
-            facCliente: false,
-            facChofer: false,
-            facturada: false,
-          }
-         
-         //op.km = Math.floor(Math.random() * (150 - 1 + 1)) + 1
-         op.km = 0
-         //console.log("op: ", op);
-         
-          //let {id, ...opAc} = op;
-          //this.dbFirebase.update("operaciones", opAc, op.id);
-
-        })
-        //opActualizar.forEach(op =>{
-        //  this.dbFirebase.update("operaciones", op);
-        //})
-      }
-    })
-  }
-  actualizarOperaciones(){
-   
-    this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
-     
-      //this.facturacionOpServ.facturarOperacion(op);
-      let {id, ...opAc} = op;
-      this.dbFirebase.update("operaciones", opAc, op.id);
-
-    })
-
-  }
-
-  
-  asignarKmOp(){
-    this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
-       
-         op.km = Math.floor(Math.random() * (150 - 1 + 1)) + 1
-         //console.log("op: ", op);
-         
-
-        })
-  }
-
-  cerrarOperaciones(){
-     this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
-      op.estado ={
-        abierta: false,
-        cerrada: true,
-        facCliente: false,
-        facChofer: false,
-        facturada: false,
-      }
-      this.facturacionOpServ.facturarOperacion(op);
-      //let {id, ...opAc} = op;
-      //this.dbFirebase.update("operaciones", opAc, op.id);
-
-    })
-  }
-
-  borrarOperaciones(){
-     this.operacionesDemo = this.$opActivas;
-     //console.log("op demo: ", this.operacionesDemo);
-     
-     this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
-      
-      //let {id, ...opAc} = op;
-      this.dbFirebase.delete("operaciones", op.id)
-
-    })
-  }
-
   buscarOp(){
-    this.operacionesDemo = this.$opActivas;
-    //console.log("op demo: ", this.operacionesDemo);
+    this.opDemo = this.$opActivas
+    console.log("this.opDemo: ",  this.opDemo);
+    
   }
 
   filtrarOp(){
-    
-    this.operacionesDemo = this.operacionesDemo.filter((op:ConId<Operacion>)=>{
-      return op.estado.abierta === false
+    this.opDuplicadas = this.opDemo.filter((op:ConId<Operacion>)=>{
+      return op.estado.facChofer && op.estado.facCliente
+    });
+
+    console.log("opFiltradas: ", this.opDuplicadas);
+    this.opDuplicadas.forEach((op:ConId<Operacion>)=>{
+      op.estado.facChofer = false;
+      op.estado.facCliente = false;
+      op.estado.facturada = true;
     })
-    
-    //console.log("op operacionesDemo: ", this.operacionesDemo);
-    
-    
-    
+    console.log("opFiltradas desp: ", this.opDuplicadas);
   }
 
-  modificarOp(){
-    this.operacionesDemo.forEach((op:ConId<Operacion>)=>{
-      op.estado = {
-        abierta: true,
-        cerrada: false,
-        facCliente: false,
-        facChofer: false,
-        facturada: false,
-      }
-    })
-    //console.log("op operacionesDemo: ", this.operacionesDemo);
+    actualizarOp(){
+    this.dbFirebase.actualizarOperacionesBatch(this.opDuplicadas,"operaciones")
   }
-
-  guardarFacturadas(){
-    this.isLoading = true;
-    this.dbFirebase.actualizarMultiple(this.operacionesDemo, "operaciones").then(
-      (result:any)=>{
-        this.isLoading = false;
-        if(result.exito){
-          alert("se actualizaron correctamente")
-        } else {
-          alert(`error: ${result.mensaje}`)
-        }
-      }
-    )
-  }
-
-  operacionesPf(){
-    this.isLoading = true;
-  let pfOp: any = []
-
-//console.log("pfOp", pfOp)
-let opPrueba: ConId<Operacion>[] = [];
-opPrueba = pfOp.filter((op:ConId<Operacion>)=>{
-  return op.cliente.idCliente !== 1736356220300 && op.cliente.idCliente !== 1736356938304  
-})
-//console.log("opPrueba: ", opPrueba);
- 
-this.dbFirebase.guardarMultiple(opPrueba,"operaciones","idOperacion","operaciones").then(
-  (result:any)=>{
-        this.isLoading = false;
-        if(result.exito){
-          alert("se actualizaron correctamente")
-        } else {
-          alert(`error: ${result.mensaje}`)
-        }
-      }
-)
-
-  
-  }
-*/
-  buscarObjetos(){
-  this.opDemo = this.$opActivas;
-
-
-  //console.log("$opDemo: ", this.opDemo);
-  
-  }
-
-  actualizarObj(){
-    this.isLoading = true;
-    this.dbFirebase.actualizarOperacionesBatch(this.opDemo, "operaciones").then(
-  (result:any)=>{    
-        this.isLoading = false;
-        if(result.exito){
-          alert("se actualizaron correctamente")
-        } else {
-          alert(`error: ${result.mensaje}`)
-        }
-      }
-)
-  } 
-
-  verificarDuplicados() {
-     this.opDuplicadas = []
-      const seenIds = new Set<number>();
-  
-      this.opDemo = this.opDemo.filter((op:ConId<Operacion>) => {
-          if (seenIds.has(op.idOperacion)) {
-              this.opDuplicadas.push(op);
-              return false; // Eliminar del array original
-          } else {
-              seenIds.add(op.idOperacion);
-              return true; // Mantener en el array original
-          }
-      });    
-      //console.log("this.opDemo", this.opDemo);
-      //console.log("duplicadas", this.opDuplicadas);
-      //this.verificarDuplicadosFacturadas()
-  }
-  
-
   
 }

@@ -11,6 +11,7 @@ import { ProveedoresModule } from './proveedores/proveedores.module';
 import { FacturacionModule } from './facturacion/facturacion.module';
 import { LiquidacionModule } from './liquidacion/liquidacion.module';
 import { SharedModule } from "../shared/shared.module";
+import { FilterPipeModule } from 'ngx-filter-pipe';
 
 
 @NgModule({
@@ -30,7 +31,8 @@ import { SharedModule } from "../shared/shared.module";
         ProveedoresModule,
         FacturacionModule,
         LiquidacionModule,
-        SharedModule
+        SharedModule,
+        FilterPipeModule,
     ]
 })
 export class AdminModule { }

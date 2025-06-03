@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, Firestore, getDoc, getDocs, query, setDoc, updateDoc, where, writeBatch } from '@angular/fire/firestore';
+/* import { AngularFirestore } from '@angular/fire/compat/firestore'; */
+import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, getDoc, getDocs, limit, onSnapshot, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@angular/fire/firestore';
 import { chunk } from 'lodash';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
+import { Firestore } from '@angular/fire/firestore';
+import { inject } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
@@ -16,9 +18,9 @@ export class DbFirestoreService {
 
   coleccion: string = '';
   componente: string = '';
+  private firestore = inject(Firestore);
 
-
-  constructor(private readonly firestore: Firestore, private firestore2: AngularFirestore) {
+  constructor() {
 
   }
 
@@ -33,14 +35,29 @@ export class DbFirestoreService {
     
 
     ////////////////////////////////////////////////////////////////////////////////////
-    getAllColection(coleccion:string) {
-      const dataCollection = `/${coleccion}`;
-      return this.firestore2.collection(dataCollection, (ref) => ref.where('roles.god', '==', false)).snapshotChanges().pipe(
-        map(snapshot => snapshot.map(change => ({
-          id: change.payload.doc.id,
-          ...change.payload.doc.data() as any,
-        })))
+    getAllColectionUsers<T>(coleccion:string): Observable<ConIdType<T>[]> {
+      const dataCollectionPath = `${coleccion}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+      const q = query(
+        colRef,        
+        where('roles.god', '==', false),
       );
+
+
+       return new Observable<ConIdType<T>[]>(observer => {
+          const unsubscribe = onSnapshot(q, snapshot => {
+            const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+              id: change.doc.id,
+              ...change.doc.data() as T,
+              type: change.type // 'added', 'modified', 'removed'
+            }));
+            observer.next(changes);
+          }, error => observer.error(error));
+
+          // Cleanup
+          return { unsubscribe };
+        });
+    
     }
 
 /*     getAllColectionLimit<T>(coleccion:string, limite:number) {
@@ -53,19 +70,38 @@ export class DbFirestoreService {
       );
     } */
 
-    getAllColectionRangeLimit<T>(coleccion:string, range1: any, range2:any,  limite:number) {
-      const dataCollection = `/Vantruck/datos/${coleccion}`;
-      return this.firestore2.collection(dataCollection, (ref) =>
-        ref.orderBy('timestamp', 'desc').where("timestamp", ">=", range1).where("timestamp", "<=", range2).limit(limite)).snapshotChanges().pipe(
-        map(snapshot => snapshot.map(change => ({
-          id: change.payload.doc.id,
-          ...change.payload.doc.data() as T,
-        })))
+    getAllColectionRangeLimit<T>(coleccion:string, range1: any, range2:any,  limite:number): Observable<ConIdType<T>[]>  {
+
+      const dataCollectionPath = `/Vantruck/datos/${coleccion}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+      const q = query(
+        colRef,        
+        orderBy('timestamp', 'desc'),
+        where("timestamp", ">=", range1),
+        where("timestamp", "<=", range2),
+        limit(limite)
       );
+
+      return new Observable<ConIdType<T>[]>(observer => {
+          const unsubscribe = onSnapshot(q, snapshot => {
+            const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+              id: change.doc.id,
+              ...change.doc.data() as T,
+              type: change.type // 'added', 'modified', 'removed'
+            }));
+            observer.next(changes);
+          }, error => observer.error(error));
+
+          // Cleanup
+          return { unsubscribe };
+        });
+
+
     }
    
    
-    getAll<T>(componente: string): Observable<ConId<T>[]> {
+    //////////NO BORRAARRR!!!!!!!!!!!
+/*     getAll<T>(componente: string): Observable<ConId<T>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection).snapshotChanges().pipe(
         map(snapshot => snapshot.map(change => ({
@@ -73,128 +109,236 @@ export class DbFirestoreService {
           ...change.payload.doc.data() as T,
         })))
       );
-    }
-
-
-    getMostRecent<T>(componente: string, field: string): Observable<ConId<any>[]> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.orderBy(field, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
-      ).snapshotChanges().pipe(
-        map(snapshot => snapshot.map(change => ({
-          id: change.payload.doc.id,
-          ...change.payload.doc.data() as T,
-        })))
-      );
-    }
-
-    /* getMostRecentId<T>(componente: string, idField: string, campo:string, id:number): Observable<T | undefined> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.orderBy(idField, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
-        .where(campo, "==" ,id)
-      ).valueChanges().pipe(
-        map(data => data[0]) // Retorna el primer (y único) elemento del array
-      );
     } */
 
+
+/*     getMostRecent<T>(componente: string, field: string): Observable<ConId<any>[]> {
+
+      const dataCollectionPath = `/Vantruck/datos/${componente}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+      const q = query(
+        colRef,        
+        orderBy(field, 'desc'),
+        limit(1) // Ordenar por id descendente y limitar a 1
+      );
+
+      return new Observable<ConIdType<T>[]>(observer => {
+          const unsubscribe = onSnapshot(q, snapshot => {
+            const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+              id: change.doc.id,
+              ...change.doc.data() as T,
+              type: change.type // 'added', 'modified', 'removed'
+            }));
+            observer.next(changes);
+          }, error => observer.error(error));
+
+          // Cleanup
+          return { unsubscribe };
+        }); 
+      
+    } */
+
+
+    //BUSCAR ELEMENTOS PARA VERIFICAR SI ESTAN DUPLICADOS
     getMostRecentId<T>(componente: string, field: string, campo:string, id:number): Observable<ConId<T>[]> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.orderBy(field, 'desc').limit(1) // Ordenar por id descendente y limitar a 1
-        .where(campo, "==" ,id)
-      ).snapshotChanges().pipe(
-        map(snapshot => snapshot.map(change => ({
-          id: change.payload.doc.id,
-          ...change.payload.doc.data() as T,
-        })))
+      const dataCollectionPath = `/Vantruck/datos/${componente}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+      const q = query(
+        colRef,        
+        orderBy(field, 'desc'),
+        limit(1), // Ordenar por id descendente y limitar a 1
+        where(campo, "==" ,id)
       );
+
+      return from(getDocs(q)).pipe(
+        map(snapshot =>
+          snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...(doc.data() as T)
+          }))
+        )
+      );
+
+
     }
 
-    getMostRecentLimit<T>(componente: string, field: string, limit:number): Observable<ConId<T>[]> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.orderBy(field, 'desc').limit(limit) // Ordenar por id descendente y limitar a 1        
-      ).snapshotChanges().pipe(
-        map(snapshot => snapshot.map(change => ({
-          id: change.payload.doc.id,
-          ...change.payload.doc.data() as T,
-        })))
+    getMostRecentLimit<T>(componente: string, field: string, limite:number): Observable<ConId<T>[]> {
+
+      const dataCollectionPath = `/Vantruck/datos/${componente}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+      const q = query(
+        colRef,        
+        orderBy(field, 'desc'),
+        limit(limite), // Ordenar por id descendente y limitar a 1        
       );
+      
+      return new Observable<ConIdType<T>[]>(observer => {
+          const unsubscribe = onSnapshot(q, snapshot => {
+            const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+              id: change.doc.id,
+              ...change.doc.data() as T,
+              type: change.type // 'added', 'modified', 'removed'
+            }));
+            observer.next(changes);
+          }, error => observer.error(error));
+
+          // Cleanup
+          return { unsubscribe };
+        });
+
     }
 
-    getMostRecentLimitId<T>(componente: string, field: string, campo:string, id:number, limit:number): Observable<ConId<T>[]> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.orderBy(field, 'desc').limit(limit) // Ordenar por id descendente y limitar a 1        
-        .where(campo, "==" ,id)
-      ).snapshotChanges().pipe(
-        map(snapshot => snapshot.map(change => ({
-          id: change.payload.doc.id,
-          ...change.payload.doc.data() as T,
-        })))
+    getMostRecentLimitId<T>(componente: string, field: string, campo:string, id:number, limite:number): Observable<ConId<T>[]> {
+      
+      const dataCollectionPath = `/Vantruck/datos/${componente}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+      const q = query(
+        colRef,        
+        orderBy(field, 'desc'),
+        limit(limite), // Ordenar por id descendente y limitar a 1        
+        where(campo, "==" ,id) 
       );
+      
+       return from(getDocs(q)).pipe(
+        map(snapshot =>
+          snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...(doc.data() as T)
+          }))
+        )
+      );
+
     }
     
-    getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:any): Observable<ConId<T>[]>{
-      // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
-      // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
-      // orden solo asc o desc
-    
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.orderBy(campo, orden)
-        .where(campo, ">=", value1).where(campo, "<=", value2)
-      ).snapshotChanges().pipe(
-        map(snapshot => snapshot.map(change => ({
-          id: change.payload.doc.id,
-          ...change.payload.doc.data() as T,
-        })))
-      );
+   getAllByDateValue<T>(
+  componente: string,
+  campo: string,
+  value1: any,
+  value2: any,
+  orden: any
+): Observable<ConId<T>[]> {
+  const dataCollectionPath = `/Vantruck/datos/${componente}`;
+  const colRef = collection(this.firestore, dataCollectionPath);
+
+  const q = query(
+    colRef,
+    orderBy(campo, orden),
+    where(campo, '>=', value1),
+    where(campo, '<=', value2)
+  );
+
+ return new Observable<ConIdType<T>[]>(observer => {
+          const unsubscribe = onSnapshot(q, snapshot => {
+            const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+              id: change.doc.id,
+              ...change.doc.data() as T,
+              type: change.type // 'added', 'modified', 'removed'
+            }));
+            observer.next(changes);
+          }, error => observer.error(error));
+
+          // Cleanup
+          return { unsubscribe };
+        });
+
+
       }
 
       getAllByDateValueField<T>(componente:string, campo:string, value1:any, value2:any, field:string, value3:any){
         // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
         // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
-        // orden solo asc o desc
-      
-        const dataCollection = `/Vantruck/datos/${componente}`;
-        return this.firestore2.collection<T>(dataCollection, ref =>
-          ref.orderBy(campo, 'asc')
-          .where(campo, ">=", value1).where(campo, "<=", value2).where(field, "==", value3)
-        ).snapshotChanges().pipe(
-          map(snapshot => snapshot.map(change => ({
-            id: change.payload.doc.id,
-            ...change.payload.doc.data() as T,
-          })))
-        );
+
+          const dataCollectionPath = `/Vantruck/datos/${componente}`;
+          const colRef = collection(this.firestore, dataCollectionPath);
+          const q = query(
+            colRef,        
+            orderBy(campo, 'desc'),
+            where(campo, ">=", value1),
+            where(campo, "<=", value2),
+            where(field, "==", value3)
+          );
+
+        return from(getDocs(q)).pipe(
+        map(snapshot =>
+          snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...(doc.data() as T)
+          }))
+        )
+      );
+        
+/*         return new Observable<ConIdType<T>[]>(observer => {
+          const unsubscribe = onSnapshot(q, snapshot => {
+            const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+              id: change.doc.id,
+              ...change.doc.data() as T,
+              type: change.type // 'added', 'modified', 'removed'
+            }));
+            observer.next(changes);
+          }, error => observer.error(error));
+
+          // Cleanup
+          return { unsubscribe };
+        });
+ */
+
         }
 
     getAllColectionRangeIdValue<T>(componente:string, range1: any, range2:any,  campo:string, filtro:string, valor:number) : Observable<ConId<T>[]> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.where(filtro, "==", valor).where(campo, ">=", range1).where(campo, "<=", range2)).snapshotChanges().pipe(
-        map(snapshot => snapshot.map(change => ({
-          id: change.payload.doc.id,
-          ...change.payload.doc.data() as T,
-        })))
+      
+      const dataCollectionPath = `/Vantruck/datos/${componente}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+      const q = query(
+        colRef,        
+        where(filtro, "==", valor),
+        where(campo, ">=", range1),
+        where(campo, "<=", range2)
       );
+
+      return from(getDocs(q)).pipe(
+          map(snapshot =>
+            snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...(doc.data() as T)
+            }))
+          )
+        );
+      /* return new Observable<ConIdType<T>[]>(observer => {
+          const unsubscribe = onSnapshot(q, snapshot => {
+            const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+              id: change.doc.id,
+              ...change.doc.data() as T,
+              type: change.type // 'added', 'modified', 'removed'
+            }));
+            observer.next(changes);
+          }, error => observer.error(error));
+
+          // Cleanup
+          return { unsubscribe };
+        }); */
+           
     }
 
     getAllStateChanges<T>(componente: string): Observable<ConIdType<T>[]> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection).stateChanges().pipe(
-        map(changes =>
-          changes.map(change => ({
-            id: change.payload.doc.id,
-            ...change.payload.doc.data() as T,
+      const dataCollectionPath = `/Vantruck/datos/${componente}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+
+      return new Observable<ConIdType<T>[]>(observer => {
+        const unsubscribe = onSnapshot(colRef, snapshot => {
+          const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+            id: change.doc.id,
+            ...change.doc.data() as T,
             type: change.type // 'added', 'modified', 'removed'
-          } as ConIdType<T> ) )
-        )
-      );
+          }));
+          observer.next(changes);
+        }, error => observer.error(error));
+
+        // Cleanup callback
+        return { unsubscribe };
+      });
     }
 
-    getAllStateChangesLimit<T>(componente: string, campo:string, id:number, orden:string, limit:number): Observable<ConIdType<T>[]> {
+/*     getAllStateChangesLimit<T>(componente: string, campo:string, id:number, orden:string, limit:number): Observable<ConIdType<T>[]> {
       const dataCollection = `/Vantruck/datos/${componente}`;
       return this.firestore2.collection<T>(dataCollection, ref => ref.where(campo, '==', id ).orderBy(orden, "desc").limit(limit)).stateChanges().pipe(
         map(changes =>
@@ -205,209 +349,179 @@ export class DbFirestoreService {
           } as ConIdType<T> ) )
         )
       );
-    }
+    } */
 
-    getAllStateChangesByDate<T>(componente: string, campo:string, orden:any, value1:any, value2:any): Observable<ConIdType<T>[]> {
-      const dataCollection = `/Vantruck/datos/${componente}`;
-      return this.firestore2.collection<T>(dataCollection, ref =>
-        ref.orderBy(campo, orden)
-        .where(campo, ">=", value1).where(campo, "<=", value2)).stateChanges().pipe(
-        map(changes =>
-          changes.map(change => ({
-            id: change.payload.doc.id,
-            ...change.payload.doc.data() as T,
-            type: change.type // 'added', 'modified', 'removed'
-          } as ConIdType<T> ) )
-        )
-      );
-    }
+/* getAllStateChangesByDate<T>(
+  componente: string,
+  campo: string,
+  orden: any,
+  value1: any,
+  value2: any
+): Observable<ConIdType<T>[]> {
+  const dataCollectionPath = `/Vantruck/datos/${componente}`;
+  const colRef = collection(this.firestore, dataCollectionPath);
+
+  const q = query(
+    colRef,
+    orderBy(campo, orden),
+    where(campo, '>=', value1),
+    where(campo, '<=', value2)
+  );
+
+  return new Observable<ConIdType<T>[]>(observer => {
+    const unsubscribe = onSnapshot(q, snapshot => {
+      const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+        id: change.doc.id,
+        ...change.doc.data() as T,
+        type: change.type // 'added', 'modified', 'removed'
+      }));
+      observer.next(changes);
+    }, error => observer.error(error));
+
+    // Cleanup
+    return { unsubscribe };
+  });
+} */
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// GET ALL ORDENADO POR CAMPO Y ORDEN
-getAllSorted(componente:string, campo:string, orden:any) {
+
+
+getAllSortedIdLimit<T>(componente:string, campo:string, id:number, campo2:string, orden:any, limite:number) : Observable<ConId<T>[]> {
   // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
   // orden solo asc o desc
 
-  let dataCollection = `/Vantruck/datos/${componente}`;
+  const dataCollectionPath = `/Vantruck/datos/${componente}`;
+  const colRef = collection(this.firestore, dataCollectionPath);
 
-  return this.firestore2.collection(dataCollection, ref => ref
-    .orderBy(campo, orden))
-    .valueChanges(({  idField: 'id' })); }
+  const q = query(
+    colRef,
+    where(campo, '==', id ),
+    orderBy(campo2, orden),
+    limit(limite)
+  );
 
-  // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
-// this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
+   return from(getDocs(q)).pipe(
+      map(snapshot =>
+        snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...(doc.data() as T)
+        }))
+      )
+    );
 
-getAllSortedLimit(componente:string, campo:string, orden:any, limite:number) {
-  // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
-  // orden solo asc o desc
-
-  let dataCollection = `/Vantruck/datos/${componente}`;
-
-  return this.firestore2.collection(dataCollection, ref => ref
-    .orderBy(campo, orden)
-    .limit(limite))
-    .valueChanges(({  idField: 'id' }))
-    ; }
-
-  // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
-// this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
-
-getAllSortedIdLimit(componente:string, campo:string, id:number, campo2:string, orden:any, limite:number) {
-  // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
-  // orden solo asc o desc
-
-  let dataCollection = `/Vantruck/datos/${componente}`;
-
-  return this.firestore2.collection(dataCollection, ref => ref
-    .where(campo, '==', id )
-    .orderBy(campo2, orden)
-    .limit(limite))
-    .valueChanges(({  idField: 'id' }))
-    ; }
+  }
 
   // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
 // this.firestore.collection('Employees', ref => ref.orderBy('name', 'desc'))
 
 
-getByFieldValue(componente:string, campo:string, value:any){
+getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId<T>[]>{
   // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
   // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
   // orden solo asc o desc
 
-  let dataCollection = `/Vantruck/datos/${componente}`;
-  return this.firestore2.collection(dataCollection, ref => ref
-    .where(campo, '==', value))
-    .valueChanges(({  idField: 'id' })); 
-  }
+  const dataCollectionPath = `/Vantruck/datos/${componente}`;
+  const colRef = collection(this.firestore, dataCollectionPath);
 
-  getByFieldValueLimit(componente: string, campo: string, value: any, limite: number) {
-    // Devuelve los docs de la colección que tengan un campo con un valor determinado
-    // Campo debe existir en la colección, si está anidado pasar ruta separada por puntos (field.subfield)
-    // Orden solo asc o desc
+  const q = query(
+    colRef,
+    where(campo, '==', value ),   
+  );
+
+  return from(getDocs(q)).pipe(
+      map(snapshot =>
+        snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...(doc.data() as T)
+        }))
+      )
+    );
   
-    let dataCollection = `/Vantruck/datos/${componente}`;
-    return this.firestore2.collection(dataCollection, ref => ref
-      .where(campo, '==', value)
-      .orderBy('fecha', 'desc')
-      .limit(limite))
-      .valueChanges({ idField: 'id' });
   }
 
-  getByFieldValueLimitBuscarTarifa(componente: string, campo: string, value: any, limite: number) {
-    // Devuelve los docs de la colección que tengan un campo con un valor determinado
-    // Campo debe existir en la colección, si está anidado pasar ruta separada por puntos (field.subfield)
-    // Orden solo asc o desc
-  
-    let dataCollection = `/Vantruck/datos/${componente}`;
-    return this.firestore2.collection(dataCollection, ref => ref
-      .where(campo, '==', value)
-      .orderBy('idTarifa', 'desc')
-      .limit(limite))
-      .valueChanges({ idField: 'id' });
-  }
 
-  getByDateValue(componente:string, campo:string, value1:any, value2:any){
+
+  getByDateValue<T>(componente:string, campo:string, value1:any, value2:any): Observable<ConIdType<T>[]>{
     // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
     // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
     // orden solo asc o desc
+
+    const dataCollectionPath = `/Vantruck/datos/${componente}`;
+    const colRef = collection(this.firestore, dataCollectionPath);
+
+    const q = query(
+      colRef,
+      where(campo, ">=", value1),
+      where(campo, "<=", value2)
+      
+    );
   
-    let dataCollection = `/Vantruck/datos/${componente}`;
-    return this.firestore2.collection(dataCollection, ref => ref
-      .where(campo, ">=", value1).where(campo, "<=", value2))
-      .valueChanges(({  idField: 'id' })); 
+    return new Observable<ConIdType<T>[]>(observer => {
+    const unsubscribe = onSnapshot(q, snapshot => {
+      const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+        id: change.doc.id,
+        ...change.doc.data() as T,
+        type: change.type // 'added', 'modified', 'removed'
+      }));
+      observer.next(changes);
+    }, error => observer.error(error));
+
+    // Cleanup
+    return { unsubscribe };
+  }); 
     }
 
-  getByDateValueAndFieldValue(componente:string, campo:string, value1:any, value2:any, campo2:string, value3:any){
-    // devuelve los docs  de la coleccion que tengan un campo con un valor determinado
-    // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
-    // orden solo asc o desc
-  
-    let dataCollection = `/Vantruck/datos/${componente}`;
-    return this.firestore2.collection(dataCollection, ref => ref
-      .where(campo, ">=", value1).where(campo, "<=", value2).where(campo2, '==', value3))
-      .valueChanges(({  idField: 'id' })); 
-    }
 
-    getByDoubleValue(componente:string, campo1:string, campo2:string, value1:any, orden:any) {
-      // campo debe existir en la coleccion, si esta anidado pasar ruta separada por puntso (field.subfield)
-      // orden solo asc o desc
-    
-      let dataCollection = `/Vantruck/datos/${componente}`;
-    
-      return this.firestore2.collection(dataCollection, ref => ref
-        .where(campo1, "==", value1).orderBy(campo2, orden))
-        .valueChanges(({  idField: 'id' })); 
-      }
-     // Método para verificar si existen tarifas para un idChofer específico
-      existeTarifa(componente:string, id: number, campo:string): Observable<boolean> {
-        let dataCollection = `/Vantruck/datos/${componente}`;
-        return this.firestore2.collection(dataCollection, ref => ref.where(campo, '==', id))
-          .snapshotChanges()
-          .pipe(
-            map(actions => {
-              return actions.length > 0;
-            })
-          );
-      }
 
       // Método para obtener una tarifa específica
-      obtenerTarifaIdTarifa(componente:string, id: number, campo:string): Observable<any | null> {
-        let dataCollection = `/Vantruck/datos/${componente}`;
-        return this.firestore2.collection(dataCollection, ref => ref
-          .where(campo, '==', id))
-          .snapshotChanges()
-          .pipe(
-            map(actions => {
-              if (actions.length === 0) {
-                return null;
-              } else {
-                const data = actions[0].payload.doc.data() as any;
-                data.id = actions[0].payload.doc.id;
-                return data;
-              }
-            })
-          );
-      }
+    obtenerTarifaIdTarifa(
+      componente: string,
+      id: number,
+      campo: string
+    ): Observable<any | null> {
+      const dataCollectionPath = `/Vantruck/datos/${componente}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+      const q = query(colRef, where(campo, '==', id));
+
+      return from(getDocs(q)).pipe(
+        map(snapshot => {
+          if (snapshot.empty) {
+            return null;
+          } else {
+            const doc = snapshot.docs[0];
+            const data = doc.data() as any;
+            data.id = doc.id;
+            return data;
+          }
+        })
+      );
+    }
 
       obtenerTarifaMasReciente(componente:string, id: number, campo:string, orden:string): Observable<any | null> {
-        let dataCollection = `/Vantruck/datos/${componente}`;
-        return this.firestore2.collection(dataCollection, ref => ref
-          .where(campo, '==', id)
-          .orderBy(orden, 'desc')
-          .limit(1))
-          .snapshotChanges()
-          .pipe(
-            map(actions => {
-              if (actions.length === 0) {
-                return null;
-              } else {
-                const data = actions[0].payload.doc.data() as any;
-                data.id = actions[0].payload.doc.id;
-                return data;
-              }
-            })
-          );
+        const dataCollectionPath = `/Vantruck/datos/${componente}`;
+        const colRef = collection(this.firestore, dataCollectionPath);
+        const q = query(
+          colRef, 
+          where(campo, '==', id),
+          orderBy(orden, 'desc'),
+          limit(1),
+        );
+
+        return from(getDocs(q)).pipe(
+        map(snapshot => {
+          if (snapshot.empty) {
+            return null;
+          } else {
+            const doc = snapshot.docs[0];
+            const data = doc.data() as any;
+            data.id = doc.id;
+            return data;
+          }
+        })
+      );
+ 
       }
       
-      obtenerElementoMasReciente(componente:string, orden:string, limite:number): Observable<any | null> {
-        let dataCollection = `/Vantruck/datos/${componente}`;
-        return this.firestore2.collection(dataCollection, ref => ref          
-          .orderBy(orden, 'desc')
-          .limit(limite))
-          .snapshotChanges()
-          .pipe(
-            map(actions => {
-              if (actions.length === 0) {
-                return null;
-              } else {
-                const data = actions[0].payload.doc.data() as any;
-                data.id = actions[0].payload.doc.id;
-                return data;
-              }
-            })
-          );
-      }
-  
 
 
 
@@ -422,15 +536,6 @@ getByFieldValue(componente:string, campo:string, value:any){
     let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
     return addDoc(dataCollection, item).then(() =>
       console.log('Create. Escritura en la base de datos en: ', componente)
-    );
-  }
-
-  createTarifasEspClientes(componente:string, item: any) {
-    //console.log("db.service, metodo create: ",this.coleccion);
-    
-    let dataCollection = collection(this.firestore, `/Vantruck/datos/tarifasEspCliente/${componente}`);
-    return addDoc(dataCollection, item).then(() =>
-      console.log('Create. Escritura en la base de datos en: tarifasEspCliente/', componente)
     );
   }
 
@@ -508,24 +613,6 @@ getByFieldValue(componente:string, campo:string, value:any){
       console.log('Delete. borrado en la base de datos en: ', componente));
   }
 
-  getUsuarioUid(id:string) {
-    const estacionamiento1DocumentReference = doc(this.firestore, `/users/${id}`);    
-    return docData(estacionamiento1DocumentReference, { idField: 'id' });
-  }
-
-  setearColeccion(coleccion:string) {
-    this.coleccion = coleccion;
-    console.log("esto es el servicio db. coleccion: ", this.coleccion);
-    
-  }
-
-  getTodo(){
-    let dataCollection = collection(this.firestore, `/datos/`);
-    
-    return collectionData(dataCollection, {
-      idField: 'id',
-    }) as Observable<any[]>
-  }
 
   updateUser(item: any) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
@@ -738,14 +825,15 @@ async guardarMultiple(
           mensaje: `No existe la operación con id: ${operacion.id}`
         };
       }
-      operacion.estado = {
+     /*  operacion.estado = {
         abierta: true,
         cerrada: false,
         facCliente: false,
         facChofer: false,
         facturada: false,
+        proforma: false,
       };
-      operacion.km = 0; 
+      operacion.km = 0;  */
 
       // Si existe, la agregamos al batch para actualizar
       let {id, ...op} = operacion
@@ -763,6 +851,126 @@ async guardarMultiple(
     return {
       exito: false,
       mensaje: `Error al actualizar: ${error.message || error}`
+    };
+  }
+}
+
+async procesarProforma(
+  informesSeleccionados: ConIdType<FacturaOp>[],
+  modo: string,
+  componenteInformes: string,
+  
+  factura: any,
+  componenteProforma: string
+): Promise<{ exito: boolean; mensaje: string }> {
+  const colOps = 'operaciones';
+  const bloques = chunk(informesSeleccionados, 500);
+  const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
+  const informesBackup: ConId<FacturaOp>[] = [...informesSeleccionados]; // Backup en memoria  
+  try {
+    for (let i = 0; i < bloques.length; i++) {
+      const batch = writeBatch(this.firestore);
+
+      for (const informe of bloques[i]) {
+        // 1. Buscar operación
+        const operacionesRef = collection(this.firestore, `/Vantruck/datos/${colOps}`);
+        const q = query(operacionesRef, where('idOperacion', '==', informe.idOperacion));
+        const querySnap = await getDocs(q);
+
+        if (querySnap.empty) {
+          throw new Error(`No se encontró operación con idOperacion ${informe.idOperacion}`);
+        }
+
+        const opDoc = querySnap.docs[0];
+        const operacion = opDoc.data() as Operacion;
+        const opDocRef = opDoc.ref;
+
+        // 2. Guardar datos para reversión
+        reversionData.push({ docRef: opDocRef, prevData: { ...operacion } });
+
+        // 3. Actualizar estado de la operación
+        const nuevoEstado = { ...operacion.estado };
+        if (modo === 'clientes') {
+          nuevoEstado.cerrada = false;
+          nuevoEstado.proforma = true;
+        } else {
+          nuevoEstado.cerrada = false;
+          nuevoEstado.proforma = true;
+        }
+
+        batch.update(opDocRef, { estado: nuevoEstado });
+
+        // 4. Verificar duplicado en destino
+        /* const informeRefDestino = doc(this.firestore, `/Vantruck/datos/${componenteAlta}/${informe.id}`);
+        const destinoSnap = await getDoc(informeRefDestino);
+        if (destinoSnap.exists()) {
+          throw new Error(`Ya existe un informe con id ${informe.id} en ${componenteAlta}`);
+        } */
+
+        // 5. Verificar que el origen existe
+        const informeRefOrigen = doc(this.firestore, `/Vantruck/datos/${componenteInformes}/${informe.id}`);
+        const origenSnap = await getDoc(informeRefOrigen);
+        if (!origenSnap.exists()) {
+          throw new Error(`No se encontró el informe con id ${informe.id} en ${componenteInformes}`);
+        }
+
+        // 6. Mover informe (set en destino, delete en origen)
+        informe.proforma = true;
+        const { id, type,...inf } = informe;
+        batch.update(informeRefOrigen, inf);
+        
+      }
+
+      // 7. Ejecutar batch
+      await batch.commit();
+      console.log(`Batch ${i + 1} procesado correctamente.`);
+    }
+
+    // 8. Verificar existencia de factura duplicada
+    const facturasRef = collection(this.firestore, `/Vantruck/datos/${componenteProforma}`);
+    const idFactura = modo === 'clientes' ? factura.idFacturaCliente
+                   : modo === 'choferes' ? factura.idFacturaChofer
+                   : factura.idFacturaProveedor;
+
+    const facturaQuery = query(facturasRef, where('idFactura', '==', idFactura));
+    const facturaSnap = await getDocs(facturaQuery);
+    if (!facturaSnap.empty) {
+      throw new Error(`Ya existe una factura con idFactura ${idFactura} en ${componenteProforma}`);
+    }
+
+    // 9. Guardar la factura
+    await addDoc(facturasRef, factura);
+    console.log('Factura guardada correctamente.');
+
+    return {
+      exito: true,
+      mensaje: 'La liquidación y la factura se procesaron con éxito.'
+    };
+  } catch (error: any) {
+    console.error('Error durante la liquidación o el guardado de la factura:', error);
+
+    // Restaurar operaciones modificadas
+    for (const { docRef, prevData } of reversionData) {
+      try {
+        await setDoc(docRef, prevData);
+      } catch (revertErr) {
+        console.error('Error al revertir operación:', revertErr);
+      }
+    }
+
+    // Restaurar informes desde backup
+    for (const informe of informesBackup) {
+      try {
+        const informeRef = doc(this.firestore, `/Vantruck/datos/${componenteInformes}/${informe.id}`);
+        await setDoc(informeRef, informe); // reescribe el documento
+      } catch (revertInfErr) {
+        console.error('Error al restaurar informe:', revertInfErr);
+      }
+    }
+
+    return {
+      exito: false,
+      mensaje: `Ocurrió un error: ${error.message || 'Error desconocido'}. Se revirtieron los cambios previos.`
     };
   }
 }

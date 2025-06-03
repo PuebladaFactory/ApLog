@@ -759,35 +759,7 @@ onGenerarNuevaTarifaAutomatica() {
     
         
         if(clientes.length > 0){
-            /* clientes.forEach((c:Cliente)=>{
-              if(c.tarifaTipo.especial  && c.idCliente === this.idClienteEsp[0] && this.ultTarifaEspecial){
-                c.tarifaAsignada = true;
-                c.idTarifa = this.ultTarifaEspecial.idTarifa;
-                this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
-              }
-            }) */
-            /* clientes.forEach((c:Cliente)=>{
-              if(c.tarifaTipo.especial){
-                let sinEspacios = c.razonSocial.replace(/\s/g, "");
-                console.log(sinEspacios);
-                
-                this.dbFirebase.getMostRecentLimitId<TarifaGralCliente>('tarifasEspCliente', 'idTarifa', 'idCliente', c.idCliente,  100)
-                .pipe(
-                  takeUntil(this.destroy$),
-                  //distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
-                )
-                .subscribe(data => { 
-                  console.log("data", data);
-                                      
-                  let tarifas = data;
-                  console.log("Historial de tarifas: ", tarifas);
-                  tarifas.forEach((t:TarifaGralCliente)=>{
-                    this.dbFirebase.create(`tarifasEspCliente/tarifas/${sinEspacios}`, t)
-                  })
-                  
-                });
-              }
-            }) */
+          
             
         }      
 

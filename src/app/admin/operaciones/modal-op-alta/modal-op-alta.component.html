@@ -41,7 +41,7 @@
           </div>
           @if (clienteSeleccionado !== undefined && clienteSeleccionado.tarifaTipo.eventual && tEventual) {
             <div>
-              @if (clienteSeleccionado.tarifaTipo?.eventual) {
+              @if (clienteSeleccionado.tarifaTipo.eventual) {
                 <p class="my-3 border-bottom border-top">El Cliente seleccionado solo opera bajo una tarifa eventual</p>
               }
             </div>
@@ -62,7 +62,7 @@
           </div>
           @if (choferSeleccionado !== undefined  && choferSeleccionado.tarifaTipo.eventual && tEventual) {
             <div>
-              @if (choferSeleccionado.tarifaTipo?.eventual) {
+              @if (choferSeleccionado.tarifaTipo.eventual) {
                 <p class="my-3 border-bottom border-top">El Chofer seleccionado solo opera bajo una tarifa eventual</p>
               }
             </div>
@@ -141,7 +141,7 @@
                 <label for="Cliente">Secciion</label>
                 <select formControlName="seccion" class="form-select mb-3" (change)="changeSecion($event)">
                   <option selected >Elija la sección</option>
-                  @for (seccion of tarifaClienteSel?.secciones; track seccion) {
+                  @for (seccion of tarifaClienteSel.secciones; track seccion) {
                     <option [value]="seccion.orden">
                       Seccion {{seccion.orden}}: {{seccion.descripcion? seccion.descripcion : ""}}
                     </option>
@@ -153,7 +153,7 @@
                   <label for="Categoria">Categoria</label>
                   <select formControlName="categoria" class="form-select mb-3" (change)="changeCategoria($event)">
                     <option selected >Elija la categoria</option>
-                    @for (categoria of seccionElegida?.categorias; track categoria) {
+                    @for (categoria of seccionElegida.categorias ; track categoria) {
                       <option [value]="categoria.orden">
                         Categoria {{categoria.orden}}: {{categoria.nombre}}
                       </option>

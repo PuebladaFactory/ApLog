@@ -48,7 +48,7 @@ export class EditarTarifaOpComponent implements OnInit {
     }
     
     ngOnInit(): void {         
-      console.log("4) fromParent: ",this.fromParent);    
+      //console.log("4) fromParent: ",this.fromParent);    
       this.facOriginal = this.fromParent.factura;
       this.facDetallada = structuredClone(this.facOriginal);
       this.opOriginal = this.fromParent.op;
@@ -83,7 +83,7 @@ export class EditarTarifaOpComponent implements OnInit {
           break;
         }
         default:{
-          //console.log("error en fromParent.origen")
+          ////console.log("error en fromParent.origen")
           break
         }
       } 
@@ -92,7 +92,7 @@ export class EditarTarifaOpComponent implements OnInit {
       //this.swich = this.facDetallada.operacion.tarifaEventual;        
       if(!this.facDetallada.tarifaTipo.personalizada){
         this.ultimaTarifa = this.fromParent.tarifaAplicada;
-        console.log("5) ultimaTarifa: ",this.ultimaTarifa);    
+        //console.log("5) ultimaTarifa: ",this.ultimaTarifa);    
       } else {
         this.tarifaPersonalizada = this.fromParent.tarifaAplicada;
       }
@@ -104,12 +104,12 @@ export class EditarTarifaOpComponent implements OnInit {
       this.choferOp = this.$choferes.filter((chofer:Chofer)=>{
         return chofer.idChofer === this.facDetallada.idChofer;
       })
-      console.log("4.25)this.choferOp: ", this.choferOp);
+      //console.log("4.25)this.choferOp: ", this.choferOp);
       
       this.vehiculoOp = this.choferOp[0].vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === this.operacion.patenteChofer.toUpperCase()
       })
-      console.log("4.5)vehiculoOp: ", this.vehiculoOp);
+      //console.log("4.5)vehiculoOp: ", this.vehiculoOp);
       
   
     }
@@ -118,7 +118,7 @@ export class EditarTarifaOpComponent implements OnInit {
       let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
         return cat.orden === this.vehiculoOp[0].categoria.catOrden;
       });
-      console.log("getCategoriaValor: catCg: ", catCg);
+      //console.log("getCategoriaValor: catCg: ", catCg);
       return catCg[0].nombre;            
     }
 
@@ -126,7 +126,7 @@ export class EditarTarifaOpComponent implements OnInit {
       let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
         return cat.orden === this.vehiculoOp[0].categoria.catOrden;
       });
-      console.log("getCategoriaValor: catCg: ", catCg);
+      //console.log("getCategoriaValor: catCg: ", catCg);
       return catCg[0].valor;      
     }
 
@@ -134,7 +134,7 @@ export class EditarTarifaOpComponent implements OnInit {
       let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
         return cat.orden === this.vehiculoOp[0].categoria.catOrden;
       });
-      console.log("getCategoriaValor: catCg: ", catCg);
+      //console.log("getCategoriaValor: catCg: ", catCg);
       return catCg[0].adicionalKm.primerSector;        
     }
 
@@ -142,7 +142,7 @@ export class EditarTarifaOpComponent implements OnInit {
       let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
         return cat.orden === this.vehiculoOp[0].categoria.catOrden;
       });
-      console.log("getCategoriaValor: catCg: ", catCg);
+      //console.log("getCategoriaValor: catCg: ", catCg);
       return catCg[0].adicionalKm.sectoresSiguientes;        
     }
 
@@ -164,7 +164,7 @@ export class EditarTarifaOpComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          //////////console.log("op: ", this.op);
+          ////////////console.log("op: ", this.op);
           this.formatearDatos();
           cambios = true;
           Swal.fire({
@@ -189,7 +189,7 @@ export class EditarTarifaOpComponent implements OnInit {
           
         }
       });   
-      //console.log("factura EDITADA: ", this.facDetallada);      
+      ////console.log("factura EDITADA: ", this.facDetallada);      
     
      }
 
@@ -235,7 +235,7 @@ export class EditarTarifaOpComponent implements OnInit {
           break;
         }
         default:{
-          //console.log("error en fromParent.origen")
+          ////console.log("error en fromParent.origen")
           break
         }
       }
@@ -243,8 +243,8 @@ export class EditarTarifaOpComponent implements OnInit {
   
      updateItem(){
 
-      //console.log("this.facDetallada: ", this.facDetallada);
-      //console.log("this.operacion: ", this.operacion);      
+      ////console.log("this.facDetallada: ", this.facDetallada);
+      ////console.log("this.operacion: ", this.operacion);      
       let {id, ...facDet} = this.facDetallada;
       this.storageService.updateItem(
         this.componente, 
@@ -279,7 +279,7 @@ export class EditarTarifaOpComponent implements OnInit {
           break;
         }
         default:{
-          //console.log("error en fromParent.origen")
+          ////console.log("error en fromParent.origen")
           break
         }
       } 
@@ -296,7 +296,7 @@ export class EditarTarifaOpComponent implements OnInit {
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      //console.log("factura contraparte: ", this.facContraParte);
+                      ////console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -308,7 +308,7 @@ export class EditarTarifaOpComponent implements OnInit {
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      //console.log("factura contraparte: ", this.facContraParte);
+                      ////console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -324,7 +324,7 @@ export class EditarTarifaOpComponent implements OnInit {
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      //console.log("factura contraparte: ", this.facContraParte);
+                      ////console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -339,7 +339,7 @@ export class EditarTarifaOpComponent implements OnInit {
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      //console.log("factura contraparte: ", this.facContraParte);
+                      ////console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -349,7 +349,7 @@ export class EditarTarifaOpComponent implements OnInit {
           break;
         }
         default:{
-          //console.log("error en fromParent.origen")
+          ////console.log("error en fromParent.origen")
           break
         }
       }
@@ -378,7 +378,7 @@ export class EditarTarifaOpComponent implements OnInit {
       
       this.facDetallada.valores.total = this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.tarifaBase) + this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.acompaniante) + this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.kmMonto)
       this.facDetallada.valores.total = this.formatearValor(this.facDetallada.valores.total)
-      console.log("facDetallada.valores.tarifaBase: ", this.facDetallada.valores.total);
+      //console.log("facDetallada.valores.tarifaBase: ", this.facDetallada.valores.total);
     }
 
     formatearValor(valor: number) : any{
@@ -386,7 +386,7 @@ export class EditarTarifaOpComponent implements OnInit {
        minimumFractionDigits: 2, 
        maximumFractionDigits: 2 
      }).format(valor);
-     //////////////////console.log(nuevoValor);    
+     ////////////////////console.log(nuevoValor);    
      return nuevoValor
    }
 

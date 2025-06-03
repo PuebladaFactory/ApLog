@@ -14,12 +14,11 @@ import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as pdfMake from 'pdfmake/build/pdfmake';
+import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 
 
-const pdfMake = require('pdfmake/build/pdfmake');
-const pdfFonts = require('pdfmake/build/vfs_fonts');
-
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+(pdfMake as any).vfs = (pdfFonts as any).vfs;
 
 @Injectable({
   providedIn: 'root'

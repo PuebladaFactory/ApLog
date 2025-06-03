@@ -54,6 +54,7 @@ export interface EstadoOp {
     facCliente: boolean;
     facChofer: boolean;
     facturada: boolean;
+    proforma: boolean;
 }
 
 export interface Valores{    

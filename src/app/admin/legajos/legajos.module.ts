@@ -8,9 +8,10 @@ import { ConsultaLegajosComponent, SafeUrlPipe } from './consulta-legajos/consul
 import { CargarDocumentosComponent } from './cargar-documentos/cargar-documentos.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
-import { Ng2SearchPipeModule } from 'ng2-search-filter';
+
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ModalChoferesComponent } from './modal-choferes/modal-choferes.component';
+import { FilterPipeModule } from 'ngx-filter-pipe';
 
 
 @NgModule({
@@ -28,7 +29,7 @@ import { ModalChoferesComponent } from './modal-choferes/modal-choferes.componen
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    Ng2SearchPipeModule,
+    FilterPipeModule,
     NgbModule,    
   ]
 })

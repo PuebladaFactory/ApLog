@@ -11,13 +11,16 @@
         <app-btn-editar name="cargaMultiple" class="ms-3" (click)="modalCargaMultiple()" ></app-btn-editar>
       </div>
       <div>
-        <!-- <button  class="btn btn-primary boton-alta mt-2 btn-sm" type="button" id="" (click)="buscarOp()">
+        <button  class="btn btn-primary boton-alta mt-2 btn-sm" type="button" id="" (click)="buscarOp()">
         Buscar Op
       </button>
       <button  class="btn btn-primary boton-alta mt-2 btn-sm" type="button" id="" (click)="filtrarOp()">
         Filtrar Op
       </button>
-      <button  class="btn btn-primary boton-alta mt-2 btn-sm" type="button" id="" (click)="modificarOp()">
+      <button  class="btn btn-primary boton-alta mt-2 btn-sm" type="button" id="" (click)="actualizarOp()">
+      Actualizar Op
+    </button>
+     <!--  <button  class="btn btn-primary boton-alta mt-2 btn-sm" type="button" id="" (click)="modificarOp()">
         Modificar Op
       </button>
       <button  class="btn btn-primary boton-alta mt-2 btn-sm" type="button" id="" (click)="guardarFacturadas()">
@@ -27,9 +30,7 @@
       <!-- <button  class="btn btn-primary boton-alta mt-2 btn-sm" type="button" id="" (click)="restaurarOpAbiertas()">
       Restaurar Op Abiertas
     </button>
-    <button  class="btn btn-primary boton-alta mt-2 btn-sm" type="button" id="" (click)="actualizarOperaciones()">
-      Actualizar Op
-    </button>
+    
     <button  class="btn btn-primary boton-alta mt-2 btn-sm" type="button" id="" (click)="asignarKmOp()">
       Asignar Km Op
     </button>
@@ -232,7 +233,10 @@
                         'estado-cerrada': row.estado === 'Cerrada',
                         'estado-facCliente': row.estado === 'Cliente Fac',
                         'estado-facChofer': row.estado === 'Chofer Fac',
-                        'estado-facturada': row.estado === 'Facturada'
+                        'estado-facturada': row.estado === 'Facturada',
+                        'estado-proforma': row.estado === 'Proforma',
+                        'estado-proforma-facCli': row.estado === 'Proforma-CF',
+                        
                         }">
               {{ row.estado }}
             </span>

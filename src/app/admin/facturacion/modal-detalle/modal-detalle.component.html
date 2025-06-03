@@ -67,7 +67,7 @@
       <th scope="col">Anular </th>
     </thead>
     <tbody>
-      @for (fila of rows | filter: searchText; track fila; let i = $index) {
+      @for (fila of rows | filterBy: searchText; track fila; let i = $index) {
         <tr>
           <td>{{fila.fecha}}</td>
           <td>{{fila.quincena}}</td>

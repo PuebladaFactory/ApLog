@@ -142,15 +142,15 @@ export class TarifasEventualesComponent implements OnInit {
   consultarTarifasEventuales(){
     switch(this.moduloOrigen){
       case "clientes":{
-          this.storageService.getAllSortedIdLimit("tarifasEventuales", "idCliente", this.idConsulta, "idTarifa", "desc", this.limite,"tarifasEventuales");          
+          this.storageService.getAllSortedIdLimit<TarifaEventual>("tarifasEventuales", "idCliente", this.idConsulta, "idTarifa", "desc", this.limite,"tarifasEventuales");          
         break;        
       }
       case "choferes":{
-        this.storageService.getAllSortedIdLimit("tarifasEventuales", "idChofer", this.idConsulta, "idTarifa", "desc", this.limite,"tarifasEventuales");
+        this.storageService.getAllSortedIdLimit<TarifaEventual>("tarifasEventuales", "idChofer", this.idConsulta, "idTarifa", "desc", this.limite,"tarifasEventuales");
         break;        
       }
       case "proveedores":{
-        this.storageService.getAllSortedIdLimit("tarifasEventuales", "idProveedor", this.idConsulta, "idTarifa", "desc", this.limite,"tarifasEventuales");
+        this.storageService.getAllSortedIdLimit<TarifaEventual>("tarifasEventuales", "idProveedor", this.idConsulta, "idTarifa", "desc", this.limite,"tarifasEventuales");
         break;        
       }
       default:{

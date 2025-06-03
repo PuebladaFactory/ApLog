@@ -23,15 +23,20 @@
     "@angular/platform-browser": "^20.0.0",
     "@angular/platform-browser-dynamic": "^20.0.0",
     "@angular/router": "^20.0.0",
+    "@babel/runtime": "^7.27.4",
     "@cloudinary/ng": "^2.1.1",
     "@cloudinary/url-gen": "^1.21.0",
-    "@ng-bootstrap/ng-bootstrap": "^18.0.0",
+    "@ng-bootstrap/ng-bootstrap": "^15.1.2",
     "@popperjs/core": "^2.11.8",
     "@swimlane/ngx-datatable": "^21.0.0",
     "@types/pdfmake": "^0.2.9",
     "ap-log": "file:",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
+    "datatables.net": "^2.3.1",
+    "datatables.net-bs5": "^2.3.1",
+    "datatables.net-responsive": "^3.0.4",
+    "datatables.net-responsive-bs5": "^3.0.4",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "firebase": "^11.8.1",
@@ -41,9 +46,9 @@
     "jspdf-autotable": "^5.0.2",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
-    "ng2-search-filter": "^0.5.1",
-    "pdfmake": "^0.2.10",
-    "rxjs": "~7.8.2",
+    "ngx-filter-pipe": "^3.0.1",
+    "pdfmake": "^0.2.20",
+    "rxjs": "7.8.2",
     "sweetalert2": "^11.11.1",
     "tslib": "^2.3.0",
     "xlsx": "^0.18.5",
@@ -51,6 +56,7 @@
     "zone.js": "~0.15.1"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "^20.0.0",
     "@angular/build": "^20.0.0",
     "@angular/cli": "^20.0.0",
     "@angular/compiler-cli": "^20.0.0",
@@ -66,5 +72,11 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "^2.1.0",
     "typescript": "^5.8.3"
+  },
+  "resolutions": {
+    "rxjs": "^7.8.2"
+  },
+  "overrides": {
+    "rxjs": "7.8.2"
   }
 }

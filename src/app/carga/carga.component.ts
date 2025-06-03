@@ -35,34 +35,5 @@ export class CargaComponent implements OnInit {
       
   }   
 
-  buscarOp(){
-    this.dbFirebase.getAll<ConId<Operacion>>("operaciones")
-      .pipe(take(1))
-      .subscribe(data=>{
-        if(data){
-          console.log("data", data);          
-          this.operaciones = data;
-          this.filtrarOp()
-        }
-      })
-  }
-
-  filtrarOp(){
-    this.opFacturadas = this.operaciones.filter((op:ConId<Operacion>)=>{return op.estado.facturada})
-    console.log("1)this.opFacturadas", this.opFacturadas);
-    
-  }
-
-  actualizarOp(){
-    this.opFacturadas.forEach((op:ConId<Operacion>)=>{
-      op.estado.facChofer = false;
-      op.estado.facCliente = false;
-      let {id, ...opEditada} = op;
-      this.dbFirebase.update("operaciones", opEditada, op.id)
-    })
-
-    console.log("2)this.opFacturadas: ", this.opFacturadas);
-    
-  }
 
 }

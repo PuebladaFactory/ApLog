@@ -507,6 +507,7 @@ this.verificarDuplicados();
           facCliente: op.estado.facCliente,
           facChofer: true,
           facturada: op.estado.facCliente ? true : false,
+          proforma: false,
         }
         if(op.estado.facturada){
           op.estado.facCliente = false;  
@@ -576,7 +577,26 @@ this.verificarDuplicados();
               this.addItem(this.facturaChofer, "proforma", this.facturaChofer.idFacturaChofer, "ALTA");
               this.facturasLiquidadasChofer.forEach((factura:FacturaOp)=>{
                 this.actualizarFacOp(factura);        
-              })              
+              });
+              Swal.fire({
+                title: `¿Desea imprimir la proforma del Chofer?`,
+                //text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Confirmar",
+                cancelButtonText: "Cancelar"
+              }).then((result) => {
+                if (result.isConfirmed) {     
+                  if(titulo === "excel"){
+                      this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes, accion);
+                    }else if (titulo === "pdf"){
+                      this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes, accion);        
+                    } 
+                }
+              });
+                            
             }     
             
             
@@ -868,7 +888,7 @@ buscarTarifa(i:number ) {
             facOp = data;
             console.log("facOp: ", facOp);
             facOp.proforma = true;
-            facOp.liquidacion = true;
+            facOp.liquidacion = false;
             let {id, ...fac} = facOp
             let chofer = this.getChofer(fac.idChofer)
             this.storageService.updateItem("facturaOpChofer", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${chofer} `, facOp.id);

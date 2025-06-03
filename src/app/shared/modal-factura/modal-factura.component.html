@@ -30,7 +30,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (fac of facOp | filter: searchText; track fac) {
+          @for (fac of facOp | filterBy: searchText; track fac) {
             <tr>
               <td>{{fac.fecha}}</td>
               <td>{{fac.idOperacion}}</td>

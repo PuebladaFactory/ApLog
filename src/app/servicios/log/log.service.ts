@@ -1,19 +1,14 @@
-import { Injectable } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { inject, Injectable } from '@angular/core';
+import { Firestore, collection, doc, setDoc } from '@angular/fire/firestore';
 import { LogEntry } from 'src/app/interfaces/log-entry';
-import { StorageService } from '../storage/storage.service';
 import { LogDoc } from 'src/app/interfaces/log-doc';
-
 
 @Injectable({
   providedIn: 'root',
 })
 export class LogService {
+  private firestore = inject(Firestore);
   private usuario: any;
-
-  constructor(private afs: AngularFirestore) {
-        
-  }
 
   /**
    * Registra un evento en la colección `logs`.
@@ -26,10 +21,9 @@ export class LogService {
     resultado: boolean
   ): Promise<void> {
     try {
-      const logId = this.afs.createId(); // Genera un ID único para el log
-      const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado,0);
-      await this.afs.collection('/Vantruck/datos/logs').doc(logId).set(logEntry);
-      //console.log('Log registrado exitosamente:', logEntry);
+      const logId = doc(collection(this.firestore, '/Vantruck/datos/logs')).id; // Genera un ID único
+      const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado, 0);
+      await setDoc(doc(this.firestore, '/Vantruck/datos/logs', logId), logEntry);
     } catch (error) {
       console.error('Error al registrar el log:', error);
     }
@@ -43,49 +37,53 @@ export class LogService {
     coleccion: string,
     detalle: string,
     idObjeto: number,
-    resultado: boolean, 
-    incremento:number,
+    resultado: boolean,
+    incremento: number
   ): LogEntry {
     const jsonData = localStorage.getItem('usuario') || '';
-    let usuarioLogueado = JSON.parse(jsonData)    
+    let usuarioLogueado = JSON.parse(jsonData);
     this.usuario = structuredClone(usuarioLogueado[0]);
-    //console.log("log: this.usuario", this.usuario);
-    
+
     return {
       timestamp: Date.now() + incremento,
       userId: this.usuario?.uid || 'Desconocido',
       userEmail: this.usuario?.email || 'Desconocido',
       action: accion,
-      coleccion:coleccion,
+      coleccion: coleccion,
       details: detalle,
-      idObjet: idObjeto,      
+      idObjet: idObjeto,
       status: resultado ? 'SUCCESS' : 'ERROR',
     };
   }
 
+  /**
+   * Registra un evento y un objeto completo (como "papelera") en Firestore.
+   */
   async logEventDoc(
     accion: string,
     coleccion: string,
     detalle: string,
     idObjeto: number,
-    objeto:any,
+    objeto: any,
     resultado: boolean,
-    motivo:string,
+    motivo: string
   ): Promise<void> {
     try {
-      const logId = this.afs.createId(); // Genera un ID único para el log
-      const logDocId = this.afs.createId(); // Genera un ID único para el logDoc
-      const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado,0);
-      const logDoc : LogDoc = {idDoc: logEntry.timestamp, logEntry: logEntry, objeto: objeto, motivoBaja:motivo} 
-      await this.afs.collection('/Vantruck/datos/logs').doc(logId).set(logEntry);
-      //console.log('Log registrado exitosamente:', logEntry);
-      await this.afs.collection('/Vantruck/datos/papelera').doc(logDocId).set(logDoc);
-      //console.log('Log registrado exitosamente:', logDoc);
+      const logId = doc(collection(this.firestore, '/Vantruck/datos/logs')).id;
+      const logDocId = doc(collection(this.firestore, '/Vantruck/datos/papelera')).id;
+      const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado, 0);
+
+      const logDoc: LogDoc = {
+        idDoc: logEntry.timestamp,
+        logEntry: logEntry,
+        objeto: objeto,
+        motivoBaja: motivo,
+      };
+
+      await setDoc(doc(this.firestore, '/Vantruck/datos/logs', logId), logEntry);
+      await setDoc(doc(this.firestore, '/Vantruck/datos/papelera', logDocId), logDoc);
     } catch (error) {
       console.error('Error al registrar el log y el logDoc:', error);
     }
   }
-
-  
 }
-

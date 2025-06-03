@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { NgbCalendar, NgbDateAdapter } from '@ng-bootstrap/ng-bootstrap';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -77,9 +78,9 @@ export class FacturacionConsultaComponent implements OnInit {
     console.log("consultaOperaciones, titulo", this.titulo);
     
     if(this.titulo === "liquidacion" ){
-      this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
-      this.storageService.getByDateValue("facturaOpChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpChofer");
-      this.storageService.getByDateValue("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor");
+      this.storageService.getByDateValue<FacturaOp>("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
+      this.storageService.getByDateValue<FacturaOp>("facturaOpChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpChofer");
+      this.storageService.getByDateValue<FacturaOp>("facturaOpProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpProveedor");
       /* switch(this.consulta){
         case "cliente":
           this.storageService.getByDateValue("facturaOpCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpCliente");
@@ -100,9 +101,9 @@ export class FacturacionConsultaComponent implements OnInit {
     }
 
     if(this.titulo === "facturacion"){
-      this.storageService.getByDateValue("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
-      this.storageService.getByDateValue("facturaChofer", "fecha", fechaDesde, fechaHasta, "consultasFacChofer");
-      this.storageService.getByDateValue("facturaProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacProveedor");
+      this.storageService.getByDateValue<FacturaOp>("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
+      this.storageService.getByDateValue<FacturaOp>("facturaChofer", "fecha", fechaDesde, fechaHasta, "consultasFacChofer");
+      this.storageService.getByDateValue<FacturaOp>("facturaProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacProveedor");
       /* switch(this.consulta){
         case "cliente":          
           this.storageService.getByDateValue("facturaCliente", "fecha", fechaDesde, fechaHasta, "consultasFacCliente");
@@ -126,15 +127,15 @@ export class FacturacionConsultaComponent implements OnInit {
       
       switch(this.consulta){
         case "cliente":
-          this.storageService.getByDateValue("facOpLiqCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqCliente");
+          this.storageService.getByDateValue<FacturaOp>("facOpLiqCliente", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqCliente");
           break;
         
         case "chofer":
-          this.storageService.getByDateValue("facOpLiqChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqChofer");
+          this.storageService.getByDateValue<FacturaOp>("facOpLiqChofer", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqChofer");
           break;
         
         case "proveedor":
-          this.storageService.getByDateValue("facOpLiqProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqProveedor");
+          this.storageService.getByDateValue<FacturaOp>("facOpLiqProveedor", "fecha", fechaDesde, fechaHasta, "consultasFacOpLiqProveedor");
           break;
 
         default:

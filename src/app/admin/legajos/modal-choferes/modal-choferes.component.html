@@ -13,7 +13,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (chofer of choferes | filter: searchText; track chofer) {
+        @for (chofer of choferes | filterBy: searchText; track chofer) {
           <tr>
             <td>{{chofer.apellido + " " + chofer.nombre}}</td>
             <td >

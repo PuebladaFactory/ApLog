@@ -8,7 +8,7 @@ import { LiqGralComponent } from './liq-gral/liq-gral.component';
 import { LiqClienteComponent } from './liq-cliente/liq-cliente.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
-import { Ng2SearchPipeModule } from 'ng2-search-filter';
+
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FacturacionModule } from '../facturacion/facturacion.module';
 
@@ -16,6 +16,7 @@ import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { FacturarOpComponent } from './modales/facturar-op/facturar-op.component';
 import { EditarTarifaOpComponent } from './modales/editar-tarifa-op/editar-tarifa-op.component';
 import { ProformaComponent } from './proforma/proforma.component';
+import { FilterPipeModule } from 'ngx-filter-pipe';
 
 
 
@@ -40,7 +41,7 @@ import { ProformaComponent } from './proforma/proforma.component';
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    Ng2SearchPipeModule, 
+    FilterPipeModule,
     FacturacionModule
   ]
 })

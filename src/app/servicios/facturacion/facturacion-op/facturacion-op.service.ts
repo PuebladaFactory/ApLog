@@ -51,9 +51,9 @@ export class FacturacionOpService {
   constructor( private facturacionCliente: FacturacionClienteService, private facturacionChofer: FacturacionChoferService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
 
   facturarOperacion(op: ConId<Operacion>):Promise<{ exito: boolean; mensaje: string }> {      
-    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralChofer', 'idTarifa');        
-    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa');    
-    this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');
+    //this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralChofer', 'idTarifa');        
+    //this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralProveedor', 'idTarifa');    
+    //this.storageService.syncChangesByOneElem<TarifaGralCliente>('tarifasGralCliente', 'idTarifa');
      
     /////////PROVEEDORES /////////////////////////
      this.storageService.getObservable<ConIdType<Proveedor>>('proveedores').subscribe(data => {
@@ -525,6 +525,7 @@ export class FacturacionOpService {
               facCliente: false,
               facChofer: false,
               facturada : false,
+              proforma: false,
             };
             op.facturaCliente = this.facturaOpCliente.idFacturaOp;
             op.facturaChofer = this.facturaOpChofer.idFacturaOp;
@@ -544,6 +545,7 @@ export class FacturacionOpService {
           facCliente: false,
           facChofer: false,
           facturada : false,
+          proforma: false,
         };
         op.facturaCliente = this.facturaOpCliente.idFacturaOp;
         op.facturaChofer = this.facturaOpProveedor.idFacturaOp;
@@ -586,15 +588,7 @@ export class FacturacionOpService {
       this.guardarTarifasEventuales(op);
     }
     return this.respuesta 
-    //this.updateItem("operaciones", op); 
-    //this.storageService.clearInfo("facturaOpCliente");
-    //this.storageService.clearInfo("facturaOpChofer");
-    //this.storageService.clearInfo("facturaOpProveedor");
-    
-   /*  this.facturaOpCliente = null;
-    this.facturaOpProveedor = null;
-    this.facturaOpChofer = null; */
-    this.finalizarFacturacion();
+
   }
 
 

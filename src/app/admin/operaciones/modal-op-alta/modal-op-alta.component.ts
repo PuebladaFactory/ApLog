@@ -544,6 +544,7 @@ export class ModalOpAltaComponent implements OnInit {
         facCliente: false,
         facChofer: false,
         facturada: false,
+        proforma: false,
       },        
       tarifaTipo: this.tEventual ? {
         general: false,

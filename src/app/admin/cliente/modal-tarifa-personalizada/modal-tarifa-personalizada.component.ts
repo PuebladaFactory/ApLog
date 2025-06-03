@@ -56,6 +56,8 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
     if (nuevoValor === null || nuevoValor === undefined || this.formNumServ.convertirAValorNumerico(nuevoValor) === 0) {
       return 0;  // Devuelve 0 si no hay nuevo valor calculado
     }
+    //console.log("nuevoValor: ", nuevoValor, " valorOriginal: ", valorOriginal );
+    
     return this.formNumServ.convertirAValorNumerico(nuevoValor) - valorOriginal;
   }
 

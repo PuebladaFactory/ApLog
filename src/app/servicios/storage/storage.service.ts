@@ -694,121 +694,15 @@ export class StorageService {
     //this.getMostRecentItem<TarifaGralCliente>("tarifasGralCliente", "idTarifa");
     //this.getMostRecentItem<TarifaGralCliente>("tarifasGralChofer", "idTarifa");
     //this.getMostRecentItem<TarifaGralCliente>("tarifasGralProveedor", "idTarifa");
-    this.getAllColection("users");    
+    this.getAllColection<any>("users");    
     //this.getAllSorted("legajos", 'idLegajo', 'asc');    
   }
 
-  getTarifasEsp(){
-    this.getTarifasEspClientes();    
-    this.getTarifasPersClientes();
-    this.getTarifasEspChoferes();    
-    this.getTarifasEspsProveedores();    
-  }
- 
-  getTarifasEspClientes(){
-    
-    let clientes: Cliente [] = this.loadInfo("clientes");
-    let tarfEspclientes: TarifaGralCliente [] = this.loadInfo("todasTarifasEspCliente");    
-    if(clientes.length > 0){
-      clientes.forEach((c:Cliente)=>{
-        if(c.tarifaTipo.especial){
-          this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspCliente", "idTarifa", "idCliente", c.idCliente)
-          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-          .subscribe(data => {
-            if(data.length > 0){
-              //console.log("todasTarifasEspCliente???", data);
-              
-              tarfEspclientes.push(data[0])
-              ////console.log("tarfEspclientes", tarfEspclientes);
-              this.setInfo("todasTarifasEspCliente", tarfEspclientes);
-              this.updateObservable("todasTarifasEspCliente", tarfEspclientes);
-            }
-          })      
-          
-        }
-      })
-    }
-    
-  }
 
-  getTarifasPersClientes(){
-       
-    let clientes: Cliente [] = this.loadInfo("clientes");
-    let tarfPersClientes: TarifaPersonalizadaCliente [] = this.loadInfo("tarifasPersCliente");    
-    if(clientes.length > 0){
-      clientes.forEach((c:Cliente)=>{
-        if(c.tarifaTipo.personalizada){
-          this.dbFirebase.getMostRecentId<TarifaPersonalizadaCliente>("tarifasPersCliente", "idTarifa", "idCliente", c.idCliente)
-          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-          .subscribe(data => {
-            if(data){
-              //console.log("data TARIFA PERSONALIZADA DE LOS CLIENTES?", data);
-              if(data.length > 0){
-                tarfPersClientes.push(data[0])
-                ////console.log("tarifasPersCliente", tarfPersClientes);
-                this.setInfo("tarifasPersCliente", tarfPersClientes)
-              };
-              
-            }
-          })      
-          
-        }
-      })
-  }
-    
-  }
-
-  getTarifasEspChoferes(){
-    let choferes: Chofer [] = this.loadInfo("choferes");
-    let tarfEspChoferes: TarifaGralCliente [] = this.loadInfo("tarifasEspChofer");    
-    if(choferes.length > 0){
-      choferes.forEach((c:Chofer)=>{
-        if(c.tarifaTipo.especial){
-          this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspChofer", "idTarifa", "idChofer", c.idChofer)
-          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-          .subscribe(data => {
-            if(data){
-              ////console.log("data tarifasEspChofer?", data);
-              
-              tarfEspChoferes.push(data[0])
-              ////console.log("tarifasEspChofer", tarfEspChoferes);
-              this.setInfo("tarifasEspChofer", tarfEspChoferes)
-            }
-          })      
-          
-        }
-      })
-    }
-    
-  }
-
-  getTarifasEspsProveedores(){
-    let proveedores: Proveedor [] = this.loadInfo("proveedores");
-    let tarfEspProveedores: TarifaGralCliente [] = this.loadInfo("tarifasEspProveedor");    
-    if(proveedores.length > 0){
-      proveedores.forEach((p:Proveedor)=>{
-        if(p.tarifaTipo.especial){
-          this.dbFirebase.getMostRecentId<TarifaGralCliente>("tarifasEspProveedor", "idTarifa", "idProveedor", p.idProveedor)
-          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-          .subscribe(data => {
-            if(data){
-              ////console.log("data tarifasEspProveedor?", data);
-              
-              tarfEspProveedores.push(data[0])
-              ////console.log("tarfEspProveedores", tarfEspProveedores);
-              this.setInfo("tarifasEspProveedor", tarfEspProveedores)
-            }
-          })      
-          
-        }
-      })
-    }
-    
-  }
 
   // METODOS CRUD
 
-  getAllColection(componente: string){
+  getAllColection<T>(componente: string){
     ////console.log("getAllUser componente: ", componente);
     const cachedData = this.loadInfo(componente); // Carga desde local storage
     //////console.log("getAll cachedData: ", cachedData);
@@ -818,7 +712,7 @@ export class StorageService {
       this.updateObservable(componente, cachedData);
     } else {
       //////console.log(`Caché vacío, consultando Firestore para ${componente}`);
-      this.dbFirebase.getAllColection(componente)
+      this.dbFirebase.getAllColectionUsers<T>(componente)
       .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
       .subscribe(data => {
         this.setInfo(componente, data); // Guarda en el caché
@@ -828,43 +722,6 @@ export class StorageService {
     return this.getObservable(componente); // Devuelve el observable
   }
 
-
-  getAll<T>(componente: string): Observable<T[]> {
-    //console.log("getAll componente: ", componente);
-    const cachedData = this.loadInfo(componente); // Carga desde local storage
-    //////console.log("getAll cachedData: ", cachedData);
-    
-    if (cachedData.length > 0) {
-      //////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
-      this.updateObservable(componente, cachedData);
-    } else {
-      //////console.log(`Caché vacío, consultando Firestore para ${componente}`);
-      this.dbFirebase.getAll<T>(componente)
-      .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
-      .subscribe(data => {
-        this.setInfo(componente, data); // Guarda en el caché
-        this.updateObservable(componente, data); // Actualiza el observable
-      });
-    }
-    return this.getObservable(componente); // Devuelve el observable
-  }
-
-  getMostRecentItem<T>(componente: string, id: string): void {
-    ////console.log("getMostRecentItem componente: ", componente);
-    const cachedData = this.loadInfo(componente); // Carga desde local storage
-    if (cachedData.length > 0) {
-      //////console.log(`Datos cargados desde el caché para ${componente}`, cachedData);
-      this.updateObservable(componente, cachedData[0]); // Usa directamente el objeto
-    } else {
-      this.dbFirebase.getMostRecent<T>(componente, id)
-      .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
-      .subscribe(item => {
-        //////console.log(`Elemento más reciente de ${componente}:`, item[0]);
-        this.setInfo(componente, [item[0]]); // Guarda como un array por compatibilidad
-        this.updateObservable(componente, item[0]); // Actualiza el observable con el objeto
-      });
-    }
-  }
 
   getMostRecentItemId<T>(componente: string, id:string, campo:string, value:number): void {
     this.dbFirebase.getMostRecentId<T>(componente, id, campo, value)
@@ -881,85 +738,9 @@ export class StorageService {
     });
   }
 
-  getAllByDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
-    //console.log(" storage getAllByDateValue ", componente)
-    this.dbFirebase
-    .getAllByDateValue<T>(componente, campo, value1, value2, orden)
-    .subscribe(data => {
-      this.setInfo(componente , data)
-    })
-    }
 
-  syncChanges<T>(componente: string): void {    
-    this.dbFirebase.getAll<T>(componente)
-    .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
-    .subscribe(data => {
-      const currentData = this.loadInfo(componente);
-      ////////console.log("currentData", currentData);
-      ////////console.log("data", data);
-      if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
-        //////console.log(`Datos sincronizados para ${componente}`, data);
-        this.setInfo(componente, data); // Actualiza el caché
-        this.updateObservable(componente, data); // Actualiza el observable
-      } else {
-        //////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
-      }
-      
-    });
-  }
 
-  syncChangesTarifasGral<T>(componente:string): void {
-    this.dbFirebase.getAll<T>(componente)
-    .pipe(
-      distinctUntilChanged((prev, curr) => _.isEqual(prev, curr)) // Comparación profunda
-    )
-    .subscribe(data => {
-      //console.log(`${componente}: data: `, data);
-      let currentData = this.loadInfo(componente);
-      //console.log(`${componente}: local storage: `, currentData);
-
-      // Comparación profunda con lodash
-      if (_.isEqual(currentData, data)) {
-        console.error(`1) EL MISMO OBJETO)${componente}`);
-      } else {
-        console.error(`2) NO ES EL MISMO OBJETO)${componente}`);
-        this.setInfo(componente, data); // Actualiza el caché
-        this.updateObservable(componente, data)
-      }
-    });
-  }
-
-  syncChangesTarifasPersCliente<T>(componente:string): void {
-    this.dbFirebase.getAll<T>(componente)
-    .pipe(
-      distinctUntilChanged((prev, curr) => _.isEqual(prev, curr)) // Comparación profunda
-    )
-    .subscribe(data => {
-      //console.log(`${componente}: data`, data);
-      let currentData = this.loadInfo(`${componente}`);
-      //console.log(`local storage: ${componente}`, currentData);
-      this.updateObservable(componente,currentData)
-           
-    });
-  }
-
-  syncChangesByOneElem<T>(componente: string, id: string): void {
-    this.dbFirebase.getMostRecent<T>(componente, id)
-    .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
-    .subscribe((data: any) => {
-      const currentData = this.loadInfo(componente);
-      
-      if (!currentData || JSON.stringify(currentData[0]) !== JSON.stringify(data[0])) {
-        //////console.log(`Datos sincronizados para ${componente}`, data[0]);
-        this.setInfo(componente, [data[0]]); // Guarda en el caché
-        this.updateObservable(componente, data[0]); // Actualiza el observable con el objeto
-      } else {
-        //////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
-      }
-    });
-  }
-
-  syncChangesByOneElemId<T>(componente: string, id:string, campo:string, value:number): void {
+/*   syncChangesByOneElemId<T>(componente: string, id:string, campo:string, value:number): void {
     this.dbFirebase.getMostRecentId<T>(componente, id, campo, value)
     .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
     .subscribe((data:any) => {
@@ -972,7 +753,7 @@ export class StorageService {
         //////console.log(`Datos no modificados para ${componente}, no se actualiza.`);
       }      
     });
-  }
+  } */
 
   syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
     //console.log(" storage syncChangesDateValue ", componente)
@@ -989,7 +770,7 @@ export class StorageService {
     }
 
   syncChangesUsers<T>(componente: string): void {    
-    this.dbFirebase.getAllColection(componente)
+    this.dbFirebase.getAllColectionUsers(componente)
     .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
     .subscribe(data => {
       const currentData = this.loadInfo(componente);
@@ -1027,76 +808,6 @@ export class StorageService {
   listenForChanges<T>(componente: string): void {
     //console.log("admin: ", componente);    
     this.dbFirebase.getAllStateChanges<T>(componente)
-      .subscribe(changes => {
-        if (changes.length > 0) {
-          //console.log(`${componente}: Cambios detectados`, changes);
-          let currentData = this.loadInfo(componente) || [];          
-          changes.forEach(change => {
-            if (change.type === 'added') {
-              ////console.log("change", change);
-              const existe = currentData.some(obj => obj.id === change.id);
-
-              if (!existe) {
-                ////console.log("El id no está en el array");
-                currentData.push(change);
-              } else {
-                //console.log("sin cambios en el componente: ", componente);
-              }
-              
-              
-            } else if (change.type === 'modified') {
-              //console.log("editar!!!!");
-              currentData = currentData.map(item => item.id === change.id ? change : item);
-            } else if (change.type === 'removed') {
-              //console.log("DAAALEEE LOOOOCOOO!!!!");
-              
-              currentData = currentData.filter(item => item.id !== change.id);
-            }
-          });
-  
-          this.setInfo(componente, currentData); // Actualiza caché          
-        }
-      });
-  }
-
-  listenForChangesLimit<T>(componente: string, campo:string, id:number, orden:string, limite:number): void {
-    //console.log("admin: ", componente);    
-    this.dbFirebase.getAllStateChangesLimit<T>(componente, campo, id, orden, limite)
-      .subscribe(changes => {
-        if (changes.length > 0) {
-          //console.log(`${componente}: Cambios detectados`, changes);
-          let currentData = this.loadInfo(componente) || [];          
-          changes.forEach(change => {
-            if (change.type === 'added') {
-              ////console.log("change", change);
-              const existe = currentData.some(obj => obj.id === change.id);
-
-              if (!existe) {
-                ////console.log("El id no está en el array");
-                currentData.push(change);
-              } else {
-                //console.log("sin cambios en el componente: ", componente);
-              }
-              
-              
-            } else if (change.type === 'modified') {
-              //console.log("editar!!!!");
-              currentData = currentData.map(item => item.id === change.id ? change : item);
-            } else if (change.type === 'removed') {
-              //console.log("DAAALEEE LOOOOCOOO!!!!");
-              
-              currentData = currentData.filter(item => item.id !== change.id);
-            }
-          });
-  
-          this.setInfo(componente, currentData); // Actualiza caché          
-        }
-      });
-  }
-
-  listenForChangesDate<T>(componente: string, campo:string, value1:any, value2:any, orden:string): void {
-    //console.log("admin: ", componente);    
-    this.dbFirebase.getAllStateChangesByDate<T>(componente, campo, orden, value1, value2)
       .subscribe(changes => {
         if (changes.length > 0) {
           //console.log(`${componente}: Cambios detectados`, changes);
@@ -1185,41 +896,11 @@ export class StorageService {
   }
 
 
-  getAllSorted(componente: any, campo: any, orden: any) {
-    ////console.log("getAllSorted componente: ", componente);
-    //////console.log(` storage getAllSorted ${componente}`, componente, campo, orden)
-    // pasar campo y orden (asc o desc)
-    this.dbFirebase
-      .getAllSorted(componente, campo, orden)
-      .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
-      .subscribe(data => {
-
-        this.setInfo(componente, data)
-        this.updateObservable(componente, data)
-        ////////console.log("storage initializer ", componente, data);
-      });
-
-  }
-
-  getAllSortedLimit(componente: any, campo: any, orden: any, limite: number, titulo: string) {
+  getAllSortedIdLimit<T>(componente: any, campo: any, id:number, campo2: any, orden: any, limite: number, titulo: string) {
     //////console.log(` storage getAllSortedLimit ${componente}`, componente, campo, orden, limite)
     // pasar campo y orden (asc o desc)
     this.dbFirebase
-      .getAllSortedLimit(componente, campo, orden, limite)
-      .subscribe(data => {
-
-        this.setInfo(titulo, data)
-        this.updateObservable(componente, data)
-        ////////console.log("storage initializer ", componente, data);
-      });
-      
-  }
-
-  getAllSortedIdLimit(componente: any, campo: any, id:number, campo2: any, orden: any, limite: number, titulo: string) {
-    //////console.log(` storage getAllSortedLimit ${componente}`, componente, campo, orden, limite)
-    // pasar campo y orden (asc o desc)
-    this.dbFirebase
-      .getAllSortedIdLimit(componente, campo, id, campo2, orden, limite)
+      .getAllSortedIdLimit<T>(componente, campo, id, campo2, orden, limite)
       .subscribe(data => {
 
         this.setInfo(titulo, data)
@@ -1229,85 +910,29 @@ export class StorageService {
       
   }
   
-  getByFieldValue(componente: any, campo:any, value:any){
+  getByFieldValue<T>(componente: any, campo:any, value:any){
     //////console.log(" storage getByFieldValue ", componente, campo, value)
     this.dbFirebase
-      .getByFieldValue(componente, campo, value)
+      .getByFieldValue<T>(componente, campo, value)
       .subscribe(data => {
         this.setInfo(componente, data)
       })
   }
 
-  getByFieldValueLimit(componente: any, campo:any, value:any, limit:number){
-    //////console.log(" storage getByFieldValue ", componente, campo, value)
-    this.dbFirebase
-      .getByFieldValueLimit(componente, campo, value, limit)
-      .subscribe(data => {
-        this.setInfo(componente, data)
-      })
-  }
 
-  getByFieldValueLimitBuscarTarifa(componente: any, campo:any, value:any, limit:number){
-    //////console.log(" storage getByFieldValueLimitBuscarTarifa ", componente, campo, value)
-    this.dbFirebase
-      .getByFieldValueLimitBuscarTarifa(componente, campo, value, limit)
-      .subscribe(data => {
-        this.setInfo(componente, data)
-      })
-  }
 
-  getByDateValue(componente:string, campo:string, value1:any, value2:any, titulo:string){
+
+  getByDateValue<T>(componente:string, campo:string, value1:any, value2:any, titulo:string){
     ////console.log(" storage getByDateValue ", componente, titulo)
     this.dbFirebase
-    .getByDateValue(componente, campo, value1, value2)
+    .getByDateValue<T>(componente, campo, value1, value2)
     .pipe(distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)))
     .subscribe(data => {
       this.setInfo(titulo , data)
     })
     }
 
-    getByDateValueAndFieldValue(componente:string, campo:string, value1:any, value2:any, titulo:string, campo2:string, value3:any){
-      //////console.log(" storage getByDateValueAndFieldValue ", componente, titulo)
-      this.dbFirebase
-    .getByDateValueAndFieldValue(componente, campo, value1, value2, campo2, value3)
-    .subscribe(data => {
-      this.setInfo(titulo , data)
-      ////////console.log("esta es la consulta por fechas y por id: ", data);
-      
-    })
-    }
-    
-    getByFieldValueTitle(componente:string, campo:string, value:any, titulo:string, ){
-      //////console.log(" storage getByFieldValueTitle ", componente, value, titulo)
-      this.dbFirebase
-      .getByFieldValue(componente, campo, value)
-      .subscribe(data => {
-        this.setInfo(titulo , data)
-      })
-      }
 
-      ///buscar el ultimo elemento de la coleccion q corresponda a un id
-      getElemntByIdLimit(componente:string, campo:string, orden:string, id:number, titulo:string){
-        //////console.log(" storage getElemntByIdLimit ", componente, campo, orden, id, titulo)
-        this.dbFirebase
-        .obtenerTarifaMasReciente(componente,id,campo, orden)
-        .subscribe(data => {
-          //////console.log("!!!! ESTA ES LA RESPUESTA DE LA BASE DE DATOS DE LA ULT TARIFA: ", data);
-          
-          this.setInfo(titulo , data)
-        })
-      }
-
-      getUltElemColeccion(componente:string, campo:string, orden:string, id:number, titulo:string){
-        //////console.log(" storage getUltElemColeccion ", componente, campo, orden, id)
-        this.dbFirebase
-        .obtenerElementoMasReciente(componente,campo, id )
-        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-        .subscribe(data => {      
-            //////console.log(data);            
-            this.setInfo(titulo , data)
-        });            
-      }
 
 
      
@@ -1548,21 +1173,6 @@ export class StorageService {
         }
         
       }
-
-      signOut(): void {
-        this._usuario$.next(null); // Limpia el estado del usuario
-        this._users$.next(null); // Limpia el estado del usuario
-        this._clientes$.next(null); // Limpia el estado del usuario
-      }
-      
-      
-      
-      //this.getAllSorted("facturaOpCliente", 'fecha', 'desc')
-  //    this.getAllSorted("operacionesCerradas", 'fecha', 'desc')
-      //this.getAllSorted("operacionesCerradas", 'idOperacion', 'asc')
-      //this.getAllSorted("jornadas", 'idChofer', 'asc')
-      
-      
       
      
     }

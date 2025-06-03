@@ -72,7 +72,7 @@
       </tr>
     </thead>
     <tbody>
-      @for (r of registros | filter: searchText; track r) {
+      @for (r of registros | filterBy: searchText; track r) {
         <tr>
           <td>{{getFecha(r.timestamp)}}</td>
           <td>{{getUsuario(r.userEmail)}}</td>

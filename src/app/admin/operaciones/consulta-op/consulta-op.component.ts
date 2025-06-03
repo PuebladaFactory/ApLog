@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { NgbCalendar, NgbDateAdapter } from '@ng-bootstrap/ng-bootstrap';
+import { Operacion } from 'src/app/interfaces/operacion';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -75,7 +76,7 @@ export class ConsultaOpComponent implements OnInit {
    console.log();
    
     if(this.titulo === "operaciones"){
-    this.storageService.getByDateValue(this.titulo, "fecha", fechaDesde, fechaHasta, "consultasOp");
+    this.storageService.getByDateValue<Operacion>(this.titulo, "fecha", fechaDesde, fechaHasta, "consultasOp");
     }
   }
 

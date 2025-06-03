@@ -27,10 +27,11 @@ import { ModalBajaComponent } from './modal-baja/modal-baja.component';
 import { ModalObjetoComponent } from './modal-objeto/modal-objeto.component';
 import { FechaValidaDirective } from './directives/fecha-valida.directive';
 import { ModalFacturaComponent } from './modal-factura/modal-factura.component';
-import { Ng2SearchPipeModule } from 'ng2-search-filter';
+
 import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
 import { CalcularPorcentajePipe } from './pipes/calcular-porcentaje.pipe';
 import { SpinnerComponent } from './spinner/spinner.component';
+import { FilterPipeModule } from 'ngx-filter-pipe';
 
 
 
@@ -67,7 +68,7 @@ import { SpinnerComponent } from './spinner/spinner.component';
     JsonPipe,
     NgbDatepickerModule,
     NgbModule,
-    Ng2SearchPipeModule, 
+    FilterPipeModule
   ],
   exports:[
     BtnAgregarComponent,

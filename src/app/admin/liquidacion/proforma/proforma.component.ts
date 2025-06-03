@@ -378,6 +378,7 @@ export class ProformaComponent implements OnInit {
            facCliente: componente === "facturaOpCliente" ? true : op.estado.facCliente,
            facChofer: componente === "facturaOpChofer" || componente === "facturaOpProveedor" ? true : op.estado.facChofer,
            facturada: componente === "facturaOpCliente" && op.estado.facChofer ? true : componente === "facturaOpChofer" && op.estado.facCliente ? true : componente === "facturaOpProveedor" && op.estado.facCliente ? true : false,
+           proforma: true,
          }
          let {id, ...opp} = op
          this.storageService.updateItem("operaciones", opp, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`, op.id);
