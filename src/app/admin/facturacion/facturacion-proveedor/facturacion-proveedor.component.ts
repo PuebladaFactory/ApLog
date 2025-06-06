@@ -7,6 +7,7 @@ import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component'
 import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Subject, takeUntil } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
+import Swal from 'sweetalert2';
 
 @Component({
     selector: 'app-facturacion-proveedor',
@@ -45,10 +46,17 @@ export class FacturacionProveedorComponent implements OnInit {
       this.storageService.getObservable<ConId<FacturaProveedor>>("facturaProveedor")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
-        this.$facturasProveedor = data;
-        this.$facturasProveedor = this.$facturasProveedor.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-        this.procesarDatosParaTabla();
-        this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false); // Mueve esta línea aquí
+        console.log("facturas proveedores: ",data);
+        if(data){
+          
+          this.$facturasProveedor = data;
+          this.$facturasProveedor = this.$facturasProveedor.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+          this.procesarDatosParaTabla();
+          this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false); // Mueve esta línea aquí
+        }else {
+          this.mensajesError("error facturacion-proveedor: facturaProveedor")
+        }
+       
       });
     
       /* this.storageService.consultasFacOpLiqProveedor$
@@ -66,7 +74,7 @@ export class FacturacionProveedorComponent implements OnInit {
 
     procesarDatosParaTabla() {
       const proveedoresMap = new Map<number, any>();
-      ////console.log()(this.$facturasProveedor);
+      console.log("procesarDatosParaTabla", this.$facturasProveedor);
       
       if(this.$facturasProveedor !== null){
         this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
@@ -126,7 +134,7 @@ export class FacturacionProveedorComponent implements OnInit {
         }
       }
       this.datosFiltrados = this.datosTablaProveedor;
-
+      console.log("datos filtrados", this.datosFiltrados)
     }
   
 
@@ -226,5 +234,14 @@ export class FacturacionProveedorComponent implements OnInit {
             }
           });
         }
+
+          mensajesError(msj:string){
+            Swal.fire({
+              icon: "error",
+              //title: "Oops...",
+              text: `${msj}`
+              //footer: `${msj}`
+            });
+          }
 
 }

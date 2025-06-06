@@ -224,6 +224,7 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
     hojaRuta: op.hojaRuta,
     patente: op.patenteChofer,
     proforma: false,
+    contraParteProforma: false,
   }  
 }
 

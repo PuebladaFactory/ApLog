@@ -96,7 +96,7 @@
     <th style="width: 6%" class="text-center">Acciones</th>
   </thead>
   <tbody>
-    @for (cliente of datosFiltrados; track cliente; let i = $index) {
+    @for (cliente of datosFiltrados | globalFilter:filtroBusqueda:['razonSocial','cant', 'sumaACobrar', 'sumaAPagar', 'neta','faltaCobrar']; track cliente; let i = $index) {
       <tr>
         <td>{{cliente.razonSocial}}</td>
         <td class="text-center">{{cliente.cant}}</td>

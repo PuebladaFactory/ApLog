@@ -19,6 +19,7 @@ export interface FacturaOp {
     hojaRuta: string;
     patente: string;
     proforma: boolean;
+    contraParteProforma: boolean;
 
 }
 

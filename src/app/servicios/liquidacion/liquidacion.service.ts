@@ -88,7 +88,8 @@ export class LiquidacionService {
               facCliente: modo === 'clientes' ? true : op.estado.facCliente,
               facChofer: modo === 'choferes' || modo === 'proveedores' ? true : op.estado.facChofer,
               facturada: modo === 'clientes' && op.estado.facChofer ? true : modo === 'choferes' || modo === 'proveedores' && op.estado.facCliente ? true :  false,
-              proforma: false,
+              proformaCl: false,
+              proformaCh: false,
             }
             if(op.estado.facturada){
               op.estado.facCliente = false;  

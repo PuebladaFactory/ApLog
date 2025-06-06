@@ -211,6 +211,7 @@ $crearFacturaOpChofer(op:Operacion, idTarifa: number, idProveedor: number){
     hojaRuta: op.hojaRuta,
     patente: op.patenteChofer,
     proforma: false,
+    contraParteProforma: false,
   }  
 }
 

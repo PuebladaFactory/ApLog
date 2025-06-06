@@ -525,7 +525,8 @@ export class FacturacionOpService {
               facCliente: false,
               facChofer: false,
               facturada : false,
-              proforma: false,
+              proformaCl: false,
+              proformaCh: false,
             };
             op.facturaCliente = this.facturaOpCliente.idFacturaOp;
             op.facturaChofer = this.facturaOpChofer.idFacturaOp;
@@ -545,7 +546,8 @@ export class FacturacionOpService {
           facCliente: false,
           facChofer: false,
           facturada : false,
-          proforma: false,
+          proformaCl: false,
+          proformaCh: false,
         };
         op.facturaCliente = this.facturaOpCliente.idFacturaOp;
         op.facturaChofer = this.facturaOpProveedor.idFacturaOp;

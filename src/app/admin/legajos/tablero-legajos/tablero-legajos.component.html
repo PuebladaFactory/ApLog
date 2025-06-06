@@ -43,7 +43,7 @@
       <tbody>
         @for (chofer of $choferesFiltrados | filterBy: searchText; track chofer) {
           <tr>
-            @if (getLegajo(chofer.idChofer).visible) {
+            @if (getLegajo(chofer.idChofer)?.visible) {
               <td>{{getChofer(chofer.idChofer)}}</td>
               <td
                   [ngClass]="{

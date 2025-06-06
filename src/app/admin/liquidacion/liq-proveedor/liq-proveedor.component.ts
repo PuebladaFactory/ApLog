@@ -496,7 +496,8 @@ deleteDuplicadas(){
           facCliente: op.estado.facCliente,
           facChofer: true,
           facturada: op.estado.facChofer ? true : false,
-          proforma: false,
+          proformaCl: false,
+          proformaCh: false,
         }
         if(op.estado.facturada){
           op.estado.facCliente = false;  
@@ -556,42 +557,15 @@ deleteDuplicadas(){
             let titulo = result.titulo
             this.facturaProveedor = result.factura;
             let accion: string = result.accion;
-            if(result.modo === "cerrar"){
-              //this.addItem(this.facturaProveedor, this.componente, this.facturaProveedor.idFacturaProveedor, "ALTA" );
-              //this.liqService.liquidarFacOpProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor);
+            if(result.modo === "cerrar"){              
               this.procesarFacturacion(titulo, accion);
             }
 
             if(result.modo === "proforma"){
-              this.addItem(this.facturaProveedor, "proforma", this.facturaProveedor.idFacturaProveedor, "ALTA");
-              this.facturasLiquidadasProveedor.forEach((factura:FacturaOp)=>{
-                this.actualizarFacOp(factura);        
-              });
-              Swal.fire({
-                    title: `¿Desea imprimir la proforma del Proveedor?`,
-                    //text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Confirmar",
-                    cancelButtonText: "Cancelar"
-                  }).then((result) => {
-                    if (result.isConfirmed) {     
-                      if(titulo === "excel"){
-                          this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
-                        }else if (titulo === "pdf"){          
-                          this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
-                      }
-                    }
-                  });                
-            }     
-            
-            
-           
+              this.procesarProforma(titulo, accion);              
+            }                
           }
-          this.mostrarMasDatos(this.indiceSeleccionado);
-          this.procesarDatosParaTabla()
+          
         },
         (reason) => {}
         
@@ -637,6 +611,8 @@ deleteDuplicadas(){
                     }
                   });   
                 });
+                this.mostrarMasDatos(this.indiceSeleccionado);
+                this.procesarDatosParaTabla()
         } else {
           this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "LIQUIDAR", "operaciones", `Operación del Proveedor ${this.facturaProveedor.razonSocial} Liquidada`,result.exito);
           this.storageService.logSimple(this.facturaProveedor.idFacturaProveedor,"ALTA", "facturaProveedor", `Alta de Factura del Proveedor ${this.facturaProveedor.razonSocial}`, result.exito );
@@ -652,7 +628,63 @@ deleteDuplicadas(){
       });
   }
 
-  ////////////////////////////////////////////////ACA ESTA EL ERROR!!!!!!!!!!!!!!!!!!!!///////////////////////
+  procesarProforma(titulo:string, accion:string){
+        this.isLoading = true;
+       
+          this.dbFirebase.procesarProforma(this.facturasLiquidadasProveedor, "proveedores", this.titulo, "facturaOpCliente", this.facturaProveedor, "proforma")
+          .then((result) => {
+            this.isLoading = false;
+            //console.log("resultado: ", result);
+            if(result.exito){
+                this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Proveedor ${this.facturaProveedor.razonSocial}`,result.exito);
+                this.storageService.logSimple(this.facturaProveedor.idFacturaProveedor,"ALTA", "facturaProveedor", `Alta de Proforma del Proveedor ${this.facturaProveedor.razonSocial}`, result.exito );
+                Swal.fire({
+                      icon: "success",
+                      //title: "Oops...",
+                      text: 'La proforma se generó con éxito.',
+                      confirmButtonColor: "#3085d6",
+                      confirmButtonText: "Confirmar",
+                      //footer: `${msj}`
+                    }).then(() => {
+                       Swal.fire({
+                          title: `¿Desea imprimir la proforma del Proveedor?`,
+                          //text: "You won't be able to revert this!",
+                          icon: "warning",
+                          showCancelButton: true,
+                          confirmButtonColor: "#3085d6",
+                          cancelButtonColor: "#d33",
+                          confirmButtonText: "Confirmar",
+                          cancelButtonText: "Cancelar"
+                        }).then((result) => {
+                          if (result.isConfirmed) {     
+                            if(titulo === "excel"){
+                                this.excelServ.exportToExcelProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
+                              }else if (titulo === "pdf"){          
+                                this.pdfServ.exportToPdfProveedor(this.facturaProveedor, this.facturasLiquidadasProveedor, this.$clientes, this.$choferes, accion);
+                            }
+                          }
+                        });                
+                    });
+                    //this.mostrarMasDatos(this.indiceSeleccionado);
+                    //this.procesarDatosParaTabla()
+            } else {
+              this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Proveedor ${this.facturaProveedor.razonSocial}`,result.exito);
+                this.storageService.logSimple(this.facturaProveedor.idFacturaProveedor,"ALTA", "facturaProveedor", `Alta de Proforma del Proveedor ${this.facturaProveedor.razonSocial}`, result.exito );
+              this.mensajesError(`Ocurrió un error al procesar la proforma: ${result.mensaje}`, "error");
+              //this.mostrarMasDatos(this.indiceSeleccionado);
+              //this.procesarDatosParaTabla()
+            }
+            
+          
+          })
+          .catch((error) => {
+            this.isLoading = false;
+            console.error(error);
+            this.mensajesError('Ocurrió un error al procesar la proforma.', "error");
+          });
+      }
+
+ 
   buscarTarifa(i:number ) {
     
     let coleccionHistorialTarfGral: string = 'historialTarifasGralProveedor';
@@ -721,14 +753,7 @@ deleteDuplicadas(){
     }
 
     openModalTarifa(i:number): void {   
-      //this.facturasLiquidadasCliente
-      //this.totalFacturasLiquidadasChofer
-      //this.totalFacturasLiquidadasCliente
-  /*     this.storageService.historialTarifasClientes$.subscribe(data => {      
-        this.ultimaTarifa = data;
-        //this.openModalTarifa();
-      }) */
-      //this.facOpClienteService.obtenerTarifaCliente(this.facDetallada)
+      
       this.indiceSeleccionado
       {
         const modalRef = this.modalService.open(EditarTarifaOpComponent, {
@@ -806,125 +831,125 @@ deleteDuplicadas(){
                 });
             
           }
-        
-          openModalBaja(factura:FacturaOp, indice:number){
-            {
-              const modalRef = this.modalService.open(ModalBajaComponent, {
-                windowClass: 'myCustomModalClass',
-                centered: true,
-                scrollable: true, 
-                size: 'sm',     
-              });       
-              console.log("factura",factura);
-              let info = {
-                modo: "liquidaciones",
-                item: this.operacion,
-              }  
-              
-              
-              modalRef.componentInstance.fromParent = info;
-            
-              modalRef.result.then(
-                (result) => {
-                  console.log("result", result);
-                  if(result !== undefined){   
-                      //BAJA DE FACTURA OP CHOFER
-                      this.removeItem(factura);              
-                     
-                      //BAJA DE FACTURA OP CLIENTE
-                      this.dbFirebase.obtenerTarifaMasReciente("facturaOpCliente", factura.contraParteId, "idFacturaOp", "idFacturaOp").subscribe(data => {
-                        if(data){
-                          let facturaContraParte = data
-                          console.log("facturaContraParte: ", factura);
-                          this.storageService.deleteItem("facturaOpCliente", facturaContraParte, factura.contraParteId, "INTERNA", "");        
-                        }
-                        
-                      })
-                      
-                      //BAJA DE OP
-                      this.storageService.deleteItemPapelera("operaciones", this.operacion, this.operacion.idOperacion, "Baja", `Baja de operacion ${this.operacion.idOperacion} desde Liquidaciones`, result);    
-                      
-                      this.cerrarTabla(indice)
-                      this.ngOnInit(); 
-                      //////////////////
+  
+    openModalBaja(factura:FacturaOp, indice:number){
+      {
+        const modalRef = this.modalService.open(ModalBajaComponent, {
+          windowClass: 'myCustomModalClass',
+          centered: true,
+          scrollable: true, 
+          size: 'sm',     
+        });       
+        console.log("factura",factura);
+        let info = {
+          modo: "liquidaciones",
+          item: this.operacion,
+        }  
         
         
-                      ////////console.log("llamada al storage desde op-abiertas, deleteItem");
-        
-                      ////////console.log("consultas Op: " , this.$consultasOp);
-                      Swal.fire({
-                      title: "Confirmado",
-                      text: "La operación ha sido dada de baja",
-                      icon: "success"
-                      });
+        modalRef.componentInstance.fromParent = info;
+      
+        modalRef.result.then(
+          (result) => {
+            console.log("result", result);
+            if(result !== undefined){   
+                //BAJA DE FACTURA OP CHOFER
+                this.removeItem(factura);              
+                
+                //BAJA DE FACTURA OP CLIENTE
+                this.dbFirebase.obtenerTarifaMasReciente("facturaOpCliente", factura.contraParteId, "idFacturaOp", "idFacturaOp").subscribe(data => {
+                  if(data){
+                    let facturaContraParte = data
+                    console.log("facturaContraParte: ", factura);
+                    this.storageService.deleteItem("facturaOpCliente", facturaContraParte, factura.contraParteId, "INTERNA", "");        
                   }
                   
-                },
-                (reason) => {}
-              );
+                })
+                
+                //BAJA DE OP
+                this.storageService.deleteItemPapelera("operaciones", this.operacion, this.operacion.idOperacion, "Baja", `Baja de operacion ${this.operacion.idOperacion} desde Liquidaciones`, result);    
+                
+                this.cerrarTabla(indice)
+                this.ngOnInit(); 
+                //////////////////
+  
+  
+                ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+  
+                ////////console.log("consultas Op: " , this.$consultasOp);
+                Swal.fire({
+                title: "Confirmado",
+                text: "La operación ha sido dada de baja",
+                icon: "success"
+                });
             }
+            
+          },
+          (reason) => {}
+        );
+      }
 
-            
-          }
+      
+    }
 
-          actualizarFacOp(factura: FacturaOp){
-    
-            let facOp:ConId<FacturaOp>;
-            this.dbFirebase
-            .obtenerTarifaIdTarifa("facturaOpProveedor",factura.idOperacion, "idOperacion")
-            .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-            .subscribe(data => {      
-                facOp = data;
-                console.log("facOp: ", facOp);
-                facOp.proforma = true;
-                facOp.liquidacion = false;
-                let {id, ...fac} = facOp
-                let proveedor = this.getProveedor(fac.idProveedor)
-                this.storageService.updateItem("facturaOpProveedor", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${proveedor} `, facOp.id);
-                //this.removeItem(factura);
-            });
-            
-          }
+    actualizarFacOp(factura: FacturaOp){
 
-          getTarifaGral(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
-            let tarifasGral: ConIdType<TarifaGralCliente>[];
-            let tarifa: ConIdType<TarifaGralCliente> | undefined;
-            let coleccion: string = 'tarifasGralProveedor';
-            
-            tarifasGral = this.storageService.loadInfo(coleccion);
-            tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
-            return tarifa;      
-          }
+      let facOp:ConId<FacturaOp>;
+      this.dbFirebase
+      .obtenerTarifaIdTarifa("facturaOpProveedor",factura.idOperacion, "idOperacion")
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data => {      
+          facOp = data;
+          console.log("facOp: ", facOp);
+          facOp.proforma = true;
+          facOp.liquidacion = false;
+          let {id, ...fac} = facOp
+          let proveedor = this.getProveedor(fac.idProveedor)
+          this.storageService.updateItem("facturaOpProveedor", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${proveedor} `, facOp.id);
+          //this.removeItem(factura);
+      });
       
-          getTarifaEsp(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
-            let tarifasGral: ConIdType<TarifaGralCliente>[];
-            let tarifa: ConIdType<TarifaGralCliente> | undefined;
-            let coleccion: string = 'tarifasEspProveedor';
+    }
+
+    getTarifaGral(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
+      let tarifasGral: ConIdType<TarifaGralCliente>[];
+      let tarifa: ConIdType<TarifaGralCliente> | undefined;
+      let coleccion: string = 'tarifasGralProveedor';
       
-            tarifasGral = this.storageService.loadInfo(coleccion);
-            tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
-            return tarifa;                
-          }
+      tarifasGral = this.storageService.loadInfo(coleccion);
+      tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
+      return tarifa;      
+    }
+
+    getTarifaEsp(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
+      let tarifasGral: ConIdType<TarifaGralCliente>[];
+      let tarifa: ConIdType<TarifaGralCliente> | undefined;
+      let coleccion: string = 'tarifasEspProveedor';
+
+      tarifasGral = this.storageService.loadInfo(coleccion);
+      tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
+      return tarifa;                
+    }
+
+    getTarifaPers(idTarifa: number):ConIdType<TarifaPersonalizadaCliente> | undefined{
+      let tarifasPersonalizada: ConIdType<TarifaPersonalizadaCliente>[];
+      let tarifa: ConIdType<TarifaPersonalizadaCliente> | undefined;
       
-          getTarifaPers(idTarifa: number):ConIdType<TarifaPersonalizadaCliente> | undefined{
-            let tarifasPersonalizada: ConIdType<TarifaPersonalizadaCliente>[];
-            let tarifa: ConIdType<TarifaPersonalizadaCliente> | undefined;
-            
-      
-            tarifasPersonalizada = this.storageService.loadInfo('tarifasPersCliente');
-            tarifa = tarifasPersonalizada.find((tarf:ConIdType<TarifaPersonalizadaCliente>)=> {return tarf.idTarifa === idTarifa});
-            return tarifa;                
-          }
-      
-          buscarOperacion(i:number){
-            this.dbFirebase
-            .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
-            .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-            .subscribe(data => {      
-                this.operacion = data;
-                console.log("2) OPERACION: ", this.operacion);
-                this.openModalTarifa(i)
-            });    
-          }
+
+      tarifasPersonalizada = this.storageService.loadInfo('tarifasPersCliente');
+      tarifa = tarifasPersonalizada.find((tarf:ConIdType<TarifaPersonalizadaCliente>)=> {return tarf.idTarifa === idTarifa});
+      return tarifa;                
+    }
+
+    buscarOperacion(i:number){
+      this.dbFirebase
+      .obtenerTarifaIdTarifa("operaciones",this.facDetallada.idOperacion, "idOperacion")
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe(data => {      
+          this.operacion = data;
+          console.log("2) OPERACION: ", this.operacion);
+          this.openModalTarifa(i)
+      });    
+    }
 
 }

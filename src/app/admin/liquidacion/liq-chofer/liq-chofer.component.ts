@@ -125,7 +125,7 @@ export class LiqChoferComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.fechasConsulta = data;
-      //console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
+      ////console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
       //his.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpChofer");
       this.storageService.syncChangesDateValue<FacturaOp>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");
       this.btnConsulta = true;
@@ -134,9 +134,9 @@ export class LiqChoferComponent implements OnInit {
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpChofer = data;
-          console.log("1)", this.$facturasOpChofer );
+          //console.log("1)", this.$facturasOpChofer );
           if(this.$facturasOpChofer){
-            //console.log("?????????????");            
+            ////console.log("?????????????");            
             this.procesarDatosParaTabla();            
             this.verificarDuplicados();
           } else {
@@ -165,8 +165,8 @@ export class LiqChoferComponent implements OnInit {
             return true; // Mantener en el array original
         }
     });
-    console.log("this.$facturasOpChofer", this.$facturasOpChofer);
-    console.log("duplicadas", this.$facturasOpDuplicadas);
+    //console.log("this.$facturasOpChofer", this.$facturasOpChofer);
+    //console.log("duplicadas", this.$facturasOpDuplicadas);
     //this.verificarDuplicadosFacturadas()
 }
 
@@ -184,7 +184,7 @@ verificarDuplicadosFacturadas(){
   });
 
   
-  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
+  //console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
 
   }) */
   this.$facturasOpChofer.forEach((facturaOp:FacturaOp) => {
@@ -192,26 +192,26 @@ verificarDuplicadosFacturadas(){
     .pipe(take(1))
     .subscribe(data=>{
       if(data.length > 0){
-        console.log("hay data", data);
+        //console.log("hay data", data);
         let facOp: any = data[0];
         this.$facLiqOpDuplicadas.push(facOp)
       } else {
-        console.log("no hay data", data);        
+        //console.log("no hay data", data);        
       }
     })
   })
-  console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
+  //console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
 }
 
 deleteDuplicadas(){
-  console.log("cantidad facLiqOpDuplicadas", this.$facLiqOpDuplicadas.length);
+  //console.log("cantidad facLiqOpDuplicadas", this.$facLiqOpDuplicadas.length);
   this.$facLiqOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
     this.dbFirebase.delete(this.titulo, facDupli.id)
 })
 }
 
 borrarDuplicadasEnLiquidacion(){
-  console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
+  //console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
   this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
     this.dbFirebase.delete(this.titulo, facDupli.id)
 })
@@ -224,7 +224,7 @@ this.verificarDuplicados();
     const choferesMap = new Map<number, any>();
 
     if(this.$facturasOpChofer !== null){
-      //////console.log()("Facturas OP Chofer: ", this.$facturasOpChofer);
+      ////////console.log()("Facturas OP Chofer: ", this.$facturasOpChofer);
       
       this.$facturasOpChofer.forEach((factura: FacturaOp) => {
         if (!choferesMap.has(factura.idChofer)) {
@@ -260,13 +260,13 @@ this.verificarDuplicados();
         if(data){
           this.opAbiertas = data;
           this.opAbiertas = this.opAbiertas.filter((op:Operacion)=> op.estado.abierta)
-          //console.log("this.opAbiertas", this.opAbiertas.length);    
+          ////console.log("this.opAbiertas", this.opAbiertas.length);    
           this.datosTablaChofer.forEach(c=>{
             c.opAbiertas = this.getOpAbiertas(c.idChofer)
           })        
         }      
       });    
-      //////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
+      ////////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
     }
     
   }
@@ -317,7 +317,7 @@ this.verificarDuplicados();
 
   liquidarFac(factura: FacturaOp) {
     factura.liquidacion = !factura.liquidacion;
-    ////console.log("Estado de liquidación cambiado:", factura.liquidacion);
+    //////console.log("Estado de liquidación cambiado:", factura.liquidacion);
     //this.storageService.updateItem(this.tituloFacOpCliente, factura);
     this.procesarDatosParaTabla();
   }
@@ -325,22 +325,22 @@ this.verificarDuplicados();
   selectAllCheckboxes(event: any, idChofer: number): void {
     //let isChecked = (event.target as HTMLInputElement).checked;
     const seleccion = event.target.checked;
-    //console.log("1)", seleccion); 
+    ////console.log("1)", seleccion); 
     let facturasChofer = this.facturasPorChofer.get(idChofer);
-    //console.log("2)", facturasChofer);
+    ////console.log("2)", facturasChofer);
       facturasChofer?.forEach((factura: FacturaOp) => {
         if(!factura.proforma){
           factura.liquidacion = seleccion;
         }
         
-        //console.log("3)", factura.liquidacion);
+        ////console.log("3)", factura.liquidacion);
        
       });   
-      //console.log("primera tabla: ", this.datosTablaChofer);
+      ////console.log("primera tabla: ", this.datosTablaChofer);
       let chofer = this.datosTablaChofer.find((chofer:any)=>{
         return chofer.idChofer === idChofer
       });
-      //console.log("1) cliente: ", chofer);
+      ////console.log("1) cliente: ", chofer);
       if(seleccion){
         chofer.opFacturadas = 0
         facturasChofer?.forEach((factura: FacturaOp) => {                  
@@ -366,14 +366,14 @@ this.verificarDuplicados();
         }
        
       });    */
-      //console.log("2) cliente: ", chofer);
+      ////console.log("2) cliente: ", chofer);
      
   }
 
   mostrarMasDatos(index: number) {   
    // Cambiar el estado del botón en la posición indicada
    this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
-   ////////console.log()("Chofer: ", chofer);
+   //////////console.log()("Chofer: ", chofer);
 
    // Obtener el id del cliente utilizando el índice proporcionado
    let choferId = this.datosTablaChofer[index].idChofer;
@@ -384,7 +384,7 @@ this.verificarDuplicados();
    });
    this.facturasPorChofer.set(choferId, facturasChofer);
 
-   //console.log("FACTURAS DEL CHOFER: ", facturasChofer);  
+   ////console.log("FACTURAS DEL CHOFER: ", facturasChofer);  
 
   }
 
@@ -411,7 +411,7 @@ this.verificarDuplicados();
 
   liquidarFacChofer(chofer: any, index: number){
     // Obtener las facturas del cliente
-    ////console.log("IDCHOFER: ", chofer.idChofer);
+    //////console.log("IDCHOFER: ", chofer.idChofer);
 
     if(chofer.opAbiertas > 0){
        Swal.fire({
@@ -423,9 +423,9 @@ this.verificarDuplicados();
     }
     
     let facturasIdChofer:any = this.facturasPorChofer.get(chofer.idChofer);    
-    //////////console.log()("FACTURAS POR CHOFER: ", facturasIdChofer );
+    ////////////console.log()("FACTURAS POR CHOFER: ", facturasIdChofer );
     this.apellido = chofer.apellido;
-    ////////console.log()("APELLIDO: ", this.apellido);
+    //////////console.log()("APELLIDO: ", this.apellido);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.facturasLiquidadasChofer = facturasIdChofer.filter((factura: FacturaOp) => {
@@ -437,7 +437,7 @@ this.verificarDuplicados();
     this.indiceSeleccionado = index;   
  
     if(this.facturasLiquidadasChofer.length > 0){
-      //console.log("1: ",this.facturasLiquidadasChofer);
+      ////console.log("1: ",this.facturasLiquidadasChofer);
       // Calcular el total sumando los montos de las facturas liquidadas
       this.totalFacturasLiquidadasChofer = 0;
       this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
@@ -445,9 +445,9 @@ this.verificarDuplicados();
       });
   
       this.indiceSeleccionado = index;
-      //console.log("3) Facturas liquidadas del cliente", chofer.apellido + ":", this.facturasLiquidadasChofer);
-      //console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasChofer);
-      ////console.log("indice: ", this.indiceSeleccionado);
+      ////console.log("3) Facturas liquidadas del cliente", chofer.apellido + ":", this.facturasLiquidadasChofer);
+      ////console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasChofer);
+      //////console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
     } else {
       this.mensajesError("Debe seleccionar una factura para liquidar", "error")
@@ -465,7 +465,7 @@ this.verificarDuplicados();
 
 
   addItem(item:any, componente:string, idItem:number, accion:string): void {   
-    console.log("llamada al storage desde liq-cliente, addItem");
+    //console.log("llamada al storage desde liq-cliente, addItem");
     this.storageService.addItem(componente, item, idItem, accion, accion === "INTERNA" ? "" : `Alta de Factura de Chofer ${item.apellido} ${item.nombre}`);        
 
   } 
@@ -474,7 +474,7 @@ this.verificarDuplicados();
     this.idOperaciones = [];
     this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
 
-      console.log("llamada al storage desde liq-chofer, addItem");
+      //console.log("llamada al storage desde liq-chofer, addItem");
       this.addItem(factura, "facOpLiqChofer", factura.idFacturaOp, "INTERNA");
 
       this.editarOperacionesFac(factura)
@@ -500,14 +500,15 @@ this.verificarDuplicados();
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         op = data;
-        console.log("OP LIQUIDADA: ", op);
+        //console.log("OP LIQUIDADA: ", op);
         op.estado = {
           abierta: false,
           cerrada: false,
           facCliente: op.estado.facCliente,
           facChofer: true,
           facturada: op.estado.facCliente ? true : false,
-          proforma: false,
+          proformaCl: false,
+          proformaCh: false,
         }
         if(op.estado.facturada){
           op.estado.facCliente = false;  
@@ -521,7 +522,7 @@ this.verificarDuplicados();
   }
 
   removeItem(item:any){
-    console.log("llamada al storage desde liq-chofer, deleteItem");
+    //console.log("llamada al storage desde liq-chofer, deleteItem");
     this.storageService.deleteItem("facturaOpChofer", item, item.idFacturaOp, "INTERNA", "");    
   }
 
@@ -556,59 +557,26 @@ this.verificarDuplicados();
         total: this.totalFacturasLiquidadasChofer,
         //totalChofer: this.totalFacturasLiquidadasChofer,
       }; 
-      ////console.log()(info);
+      //////console.log()(info);
       
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          //console.log(result);
+          ////console.log(result);
 
           if(result.modo === "cerrar" || result.modo === "proforma"){
             let titulo = result.titulo
             this.facturaChofer = result.factura;
             let accion: string = result.accion;
-            if(result.modo === "cerrar"){
-              //this.addItem(this.facturaChofer, this.componente, this.facturaChofer.idFacturaChofer, "ALTA");
-              //this.liqService.liquidarFacOpChofer(this.facturaChofer, this.facturasLiquidadasChofer);
+            if(result.modo === "cerrar"){              
               this.procesarFacturacion(titulo, accion);
             }
 
             if(result.modo === "proforma"){
-              this.addItem(this.facturaChofer, "proforma", this.facturaChofer.idFacturaChofer, "ALTA");
-              this.facturasLiquidadasChofer.forEach((factura:FacturaOp)=>{
-                this.actualizarFacOp(factura);        
-              });
-              Swal.fire({
-                title: `¿Desea imprimir la proforma del Chofer?`,
-                //text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Confirmar",
-                cancelButtonText: "Cancelar"
-              }).then((result) => {
-                if (result.isConfirmed) {     
-                  if(titulo === "excel"){
-                      this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes, accion);
-                    }else if (titulo === "pdf"){
-                      this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes, accion);        
-                    } 
-                }
-              });
-                            
-            }     
+              this.procesarProforma(titulo, accion);              
+            }                
             
-            
-              /* if(result.modo === "cerrar"){
-                this.eliminarFacturasOp();
-              } */
-            
-              /* this.mostrarMasDatos(this.indiceSeleccionado);
-              this.procesarDatosParaTabla(); */
-          }
-          this.mostrarMasDatos(this.indiceSeleccionado);
-          this.procesarDatosParaTabla()
+          }          
         },
         (reason) => {}
       );
@@ -621,7 +589,7 @@ this.verificarDuplicados();
     this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasChofer, "choferes", "facOpLiqChofer", "facturaOpChofer", this.facturaChofer, "facturaChofer")
       .then((result) => {
         this.isLoading = false;
-        console.log("resultado: ", result);
+        //console.log("resultado: ", result);
         if(result.exito){
             this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre} Liquidada`,result.exito)
             this.storageService.logSimple(this.facturaChofer.idFacturaChofer,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`, result.exito )
@@ -652,6 +620,8 @@ this.verificarDuplicados();
                 }
               }); 
                 });
+            this.mostrarMasDatos(this.indiceSeleccionado);
+            this.procesarDatosParaTabla();
         } else {
           this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre} Liquidada`,result.exito)
             this.storageService.logSimple(this.facturaChofer.idFacturaChofer,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`, result.exito )
@@ -667,6 +637,62 @@ this.verificarDuplicados();
       });
   }
 
+   procesarProforma(titulo:string, accion:string){
+      this.isLoading = true;
+     
+        this.dbFirebase.procesarProforma(this.facturasLiquidadasChofer, "choferes", this.titulo, "facturaOpCliente",  this.facturaChofer, "proforma")
+        .then((result) => {
+          this.isLoading = false;
+          ////console.log("resultado: ", result);
+          if(result.exito){
+              this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`,result.exito);
+              this.storageService.logSimple(this.facturaChofer.idFacturaChofer,"ALTA", "facturaChofer", `Alta de Proforma del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`, result.exito );
+              Swal.fire({
+                    icon: "success",
+                    //title: "Oops...",
+                    text: 'La proforma se generó con éxito.',
+                    confirmButtonColor: "#3085d6",
+                    confirmButtonText: "Confirmar",
+                    //footer: `${msj}`
+                  }).then(() => {
+                      Swal.fire({
+                        title: `¿Desea imprimir la proforma del Chofer?`,
+                        //text: "You won't be able to revert this!",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Confirmar",
+                        cancelButtonText: "Cancelar"
+                      }).then((result) => {
+                        if (result.isConfirmed) {     
+                          if(titulo === "excel"){
+                              this.excelServ.exportToExcelChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes, accion);
+                            }else if (titulo === "pdf"){
+                              this.pdfServ.exportToPdfChofer(this.facturaChofer, this.facturasLiquidadasChofer, this.$clientes, this.$choferes, accion);        
+                            } 
+                        }
+                      });
+                  });
+                  //this.mostrarMasDatos(this.indiceSeleccionado);
+                  //this.procesarDatosParaTabla()
+          } else {
+            this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`,result.exito);
+            this.storageService.logSimple(this.facturaChofer.idFacturaChofer,"ALTA", "facturaChofer", `Alta de Proforma del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`, result.exito );
+            this.mensajesError(`Ocurrió un error al procesar la proforma: ${result.mensaje}`, "error");
+            //this.mostrarMasDatos(this.indiceSeleccionado);
+            //this.procesarDatosParaTabla()
+          }
+          
+        
+        })
+        .catch((error) => {
+          this.isLoading = false;
+          console.error(error);
+          this.mensajesError('Ocurrió un error al procesar la proforma.', "error");
+        });
+    }
+
 buscarTarifa(i:number ) {
     
     let coleccionHistorialTarfGral: string = 'historialTarifasGralChofer';
@@ -676,14 +702,14 @@ buscarTarifa(i:number ) {
     let tarifaPers:ConIdType<TarifaPersonalizadaCliente> | undefined;
     if(this.facDetallada.tarifaTipo.general){
       tarifaGral = this.getTarifaGral(this.facDetallada.idTarifa);
-      console.log("1)this.tarifaGral", tarifaGral);      
+      //console.log("1)this.tarifaGral", tarifaGral);      
       if(tarifaGral === undefined){
         this.dbFirebase
         .obtenerTarifaIdTarifa(coleccionHistorialTarfGral,this.facDetallada.idTarifa, "idTarifa")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             this.tarifaAplicada = data;
-           console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
+           //console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
         });
       } else {
         this.tarifaAplicada = tarifaGral;        
@@ -693,14 +719,14 @@ buscarTarifa(i:number ) {
     }
   if(this.facDetallada.tarifaTipo.especial){
     tarifaEsp = this.getTarifaEsp(this.facDetallada.idTarifa);
-    console.log("1)this.tarifaEsp", tarifaEsp);      
+    //console.log("1)this.tarifaEsp", tarifaEsp);      
     if(tarifaEsp === undefined){
       this.dbFirebase
       .obtenerTarifaIdTarifa(coleccionHistorialTarfEsp,this.facDetallada.idTarifa, "idTarifa")
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe(data => {      
           this.tarifaAplicada = data;
-         console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
+         //console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
       });
     } else {
       this.tarifaAplicada = tarifaEsp;        
@@ -710,20 +736,20 @@ buscarTarifa(i:number ) {
     }
     if(this.facDetallada.tarifaTipo.eventual){
       this.tarifaAplicada = {};
-      console.log("1)TARIFA APLICADA: ", this.tarifaAplicada);
+      //console.log("1)TARIFA APLICADA: ", this.tarifaAplicada);
       this.buscarOperacion(i);
       
     }
     if(this.facDetallada.tarifaTipo.personalizada){
       tarifaPers = this.getTarifaPers(this.facDetallada.idTarifa);
-      console.log("1)this.tarifaPers", tarifaPers);
+      //console.log("1)this.tarifaPers", tarifaPers);
       if(tarifaPers === undefined){
         this.dbFirebase
         .obtenerTarifaIdTarifa('tarifasPersCliente',this.facDetallada.idTarifa, "idTarifa")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             this.tarifaAplicada = data;
-           console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
+           //console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
         });
       } else {
         this.tarifaAplicada = tarifaPers;        
@@ -761,7 +787,7 @@ buscarTarifa(i:number ) {
           origen: origen,
           componente:"liquidacion",  
         }; 
-        console.log("3) info: ",info); 
+        //console.log("3) info: ",info); 
         
         modalRef.componentInstance.fromParent = info;
         modalRef.result.then(
@@ -812,7 +838,7 @@ buscarTarifa(i:number ) {
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.operacion = data;
-                      //console.log("OPERACION: ", this.operacion);
+                      ////console.log("OPERACION: ", this.operacion);
                       this.openModalBaja(factura, indice)
                   });               
               }
@@ -828,7 +854,7 @@ buscarTarifa(i:number ) {
             scrollable: true, 
             size: 'sm',     
           });       
-          console.log("factura",factura);
+          //console.log("factura",factura);
           let info = {
             modo: "liquidaciones",
             item: this.operacion,
@@ -839,7 +865,7 @@ buscarTarifa(i:number ) {
         
           modalRef.result.then(
             (result) => {
-              console.log("result", result);
+              //console.log("result", result);
               if(result !== undefined){   
                   //BAJA DE FACTURA OP CHOFER
                   this.removeItem(factura);              
@@ -848,7 +874,7 @@ buscarTarifa(i:number ) {
                   this.dbFirebase.obtenerTarifaMasReciente("facturaOpCliente", factura.contraParteId, "idFacturaOp", "idFacturaOp").subscribe(data => {
                     if(data){
                       let facturaContraParte = data
-                      console.log("facturaContraParte: ", factura);
+                      //console.log("facturaContraParte: ", factura);
                       this.storageService.deleteItem("facturaOpCliente", facturaContraParte, factura.contraParteId, "INTERNA", "");        
                     }
                     
@@ -862,9 +888,9 @@ buscarTarifa(i:number ) {
                   //////////////////
     
     
-                  ////////console.log("llamada al storage desde op-abiertas, deleteItem");
+                  //////////console.log("llamada al storage desde op-abiertas, deleteItem");
     
-                  ////////console.log("consultas Op: " , this.$consultasOp);
+                  //////////console.log("consultas Op: " , this.$consultasOp);
                   Swal.fire({
                   title: "Confirmado",
                   text: "La operación ha sido dada de baja",
@@ -886,7 +912,7 @@ buscarTarifa(i:number ) {
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             facOp = data;
-            console.log("facOp: ", facOp);
+            //console.log("facOp: ", facOp);
             facOp.proforma = true;
             facOp.liquidacion = false;
             let {id, ...fac} = facOp
@@ -933,7 +959,7 @@ buscarTarifa(i:number ) {
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             this.operacion = data;
-            console.log("2) OPERACION: ", this.operacion);
+            //console.log("2) OPERACION: ", this.operacion);
             this.openModalTarifa(i)
         });    
       }

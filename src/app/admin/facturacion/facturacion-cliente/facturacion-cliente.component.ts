@@ -48,6 +48,8 @@ export class FacturacionClienteComponent implements OnInit {
       .subscribe(data => {
         
         if(data){
+          //console.log("facturas clientes: ",data);
+          
           this.$facturasCliente = data;
           this.$facturasCliente = this.$facturasCliente.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
           this.procesarDatosParaTabla();
@@ -133,7 +135,7 @@ export class FacturacionClienteComponent implements OnInit {
         }
       }
       this.datosFiltrados = this.datosTablaCliente;
-      console.log("datos filtrados", this.datosFiltrados)
+      //console.log("datos filtrados", this.datosFiltrados)
     }
 
 
@@ -152,15 +154,15 @@ export class FacturacionClienteComponent implements OnInit {
   }
   
     mostrarMasDatos(index: number, cliente: any) {
-      //console.log("index: ", index, " cliente: ", cliente);
+      ////console.log("index: ", index, " cliente: ", cliente);
       
       if (this.datosTablaCliente && this.datosTablaCliente[index]) {
         this.mostrarTablaCliente[index] = !this.mostrarTablaCliente[index];
         const clienteId = this.datosTablaCliente[index].idCliente;
         const facturasCliente = this.$facturasCliente.filter((factura: any) => factura.idCliente === clienteId);
         this.facturasPorCliente.set(clienteId, facturasCliente);        
-        //console.log("1) facturasCliente: ", facturasCliente);
-        //console.log("2) facturas por cliente: ", this.facturasPorCliente);
+        ////console.log("1) facturasCliente: ", facturasCliente);
+        ////console.log("2) facturas por cliente: ", this.facturasPorCliente);
         this.openModal(facturasCliente, index);          
       } else {
         console.error('Elemento en datosTablaCliente no encontrado en el índice:', index);
@@ -181,12 +183,12 @@ export class FacturacionClienteComponent implements OnInit {
           modo: "clientes",
           item: factura,
         }; 
-        ////console.log()(info);
+        //////console.log()(info);
         
         modalRef.componentInstance.fromParent = info;
         modalRef.result.then(
           (result) => {
-            //////console.log()("ROOWW:" ,row);
+            ////////console.log()("ROOWW:" ,row);
             
   //        this.selectCrudOp(result.op, result.item);
          

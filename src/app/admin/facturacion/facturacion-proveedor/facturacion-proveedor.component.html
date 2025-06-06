@@ -98,7 +98,7 @@
     <th style="width: 6%" class="text-center">Acciones</th>
   </thead>
   <tbody>
-    @for (proveedor of datosFiltrados; track proveedor; let i = $index) {
+    @for (proveedor of datosFiltrados | globalFilter:filtroBusqueda:['proveedor','cant', 'sumaACobrar', 'sumaAPagar', 'neta','faltaPagar']; track proveedor; let i = $index) {
       <tr>
         <td>{{proveedor.proveedor}}</td>
         <td class="text-center">{{proveedor.cant}}</td>

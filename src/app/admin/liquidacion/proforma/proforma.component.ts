@@ -138,15 +138,22 @@ export class ProformaComponent implements OnInit {
               if(accion === "vista"){
                   this.openModalDetalleFactura(proforma, facturasOp, origen);
               } else if (accion === "baja"){
-                facturasOp.forEach((factura:ConIdType<FacturaOp>)=>{
-                  factura.proforma = false;
-                  factura.liquidacion = false;
-                  let {id,type, ...fac} = factura;
-                  this.storageService.updateItem("facturaOpCliente",fac, fac.idFacturaOp, "INTERNA","",factura.id);
+                this.isLoading = true;
+                this.dbFirebase.anularProforma(facturasOp, "clientes", "facturaOpCliente", proforma, "proforma").then((result)=>{
+                  this.isLoading = false;
+                    console.log("resultado: ", result);
+                    if(result.exito){
+                      this.storageService.logSimple(proforma.idFacturaCliente,"BAJA", "proforma", `Baja de proforma N° ${proforma.idFacturaCliente} del Cliente ${this.getCliente(proforma.idCliente)}`, result.exito )
+                      Swal.fire({
+                        icon: "success",
+                        //title: "Oops...",
+                        text: 'La proforma se anuló con éxito.',
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "Confirmar",
+                        //footer: `${msj}`
+                      })
+                    }
                 });
-                this.storageService.deleteItem("proforma", proforma, proforma.idFacturaCliente, "BAJA", `Baja de proforma N° ${proforma.idFacturaCliente} del Cliente ${this.getCliente(proforma.idCliente)}`)
-                
-                  
               } else if (accion === "reimpresion"){
                 if(tipo === 'excel'){
                     this.excelServ.exportToExcelCliente(proforma, facturasOp, clientes, choferes, 'proforma');
@@ -183,14 +190,22 @@ export class ProformaComponent implements OnInit {
               if(accion === "vista"){
                   this.openModalDetalleFactura(proforma, facturasOp, origen);
               } else if (accion === "baja"){
-                facturasOp.forEach((factura:ConIdType<FacturaOp>)=>{
-                  factura.proforma = false;
-                  factura.liquidacion = false;
-                  let {id,type, ...fac} = factura;
-                  this.storageService.updateItem("facturaOpChofer",fac, fac.idFacturaOp, "INTERNA","",factura.id);
-                });
-                this.storageService.deleteItem("proforma", proforma, proforma.idFacturaChofer, "BAJA", `Baja de proforma N° ${proforma.idFacturaChofer} del Chofer ${this.getChofer(proforma.idChofer)}`)
-
+                this.isLoading = true;   
+                this.dbFirebase.anularProforma(facturasOp, "choferes", "facturaOpChofer", proforma, "proforma").then((result)=>{
+                  this.isLoading = false;
+                    console.log("resultado: ", result);
+                    if(result.exito){
+                      this.storageService.logSimple(proforma.idFacturaChofer,"BAJA", "proforma", `Baja de proforma N° ${proforma.idFacturaChofer} del Chofer ${this.getChofer(proforma.idChofer)}`, result.exito )
+                      Swal.fire({
+                        icon: "success",
+                        //title: "Oops...",
+                        text: 'La proforma se anuló con éxito.',
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "Confirmar",
+                        //footer: `${msj}`
+                      })
+                    }
+                });                             
               } else if (accion === "reimpresion"){
                 if(tipo === 'excel'){
                   this.excelServ.exportToExcelChofer(proforma, facturasOp, clientes, choferes, 'proforma');
@@ -229,15 +244,23 @@ export class ProformaComponent implements OnInit {
             //console.log("3) operacionFac!!!!: ", facturasOp);          
             if(accion === "vista"){
                 this.openModalDetalleFactura(proforma, facturasOp, origen);
-            } else if (accion === "baja"){
-              facturasOp.forEach((factura:ConIdType<FacturaOp>)=>{
-                factura.proforma = false;
-                factura.liquidacion = false;
-                let {id,type, ...fac} = factura;
-                this.storageService.updateItem("facturaOpProveedor",fac, fac.idFacturaOp, "INTERNA","",factura.id);
-              });
-              this.storageService.deleteItem("proforma", proforma, proforma.idFacturaProveedor, "BAJA", `Baja de proforma N° ${proforma.idFacturaProveedor} del Proveedor ${this.getProveedor(proforma.idProveedor)}`)
-                
+            } else if (accion === "baja"){  
+              this.isLoading = true;   
+                this.dbFirebase.anularProforma(facturasOp, "proveedores", "facturaOpProveedor", proforma, "proforma").then((result)=>{
+                  this.isLoading = false;
+                    console.log("resultado: ", result);
+                    if(result.exito){
+                      this.storageService.logSimple(proforma.idFacturaProveedor,"BAJA", "proforma", `Baja de proforma N° ${proforma.idFacturaProveedor} del Proveedor ${this.getProveedor(proforma.idProveedor)}`, result.exito )
+                      Swal.fire({
+                        icon: "success",
+                        //title: "Oops...",
+                        text: 'La proforma se anuló con éxito.',
+                        confirmButtonColor: "#3085d6",
+                        confirmButtonText: "Confirmar",
+                        //footer: `${msj}`
+                      })
+                    }
+                });      
             } else if (accion === "reimpresion"){
               if(tipo === 'excel'){
                 this.excelServ.exportToExcelProveedor(proforma, facturasOp, clientes, choferes, 'proforma');              
@@ -378,7 +401,8 @@ export class ProformaComponent implements OnInit {
            facCliente: componente === "facturaOpCliente" ? true : op.estado.facCliente,
            facChofer: componente === "facturaOpChofer" || componente === "facturaOpProveedor" ? true : op.estado.facChofer,
            facturada: componente === "facturaOpCliente" && op.estado.facChofer ? true : componente === "facturaOpChofer" && op.estado.facCliente ? true : componente === "facturaOpProveedor" && op.estado.facCliente ? true : false,
-           proforma: true,
+           proformaCl: op.estado.proformaCl,
+           proformaCh: op.estado.proformaCh,
          }
          let {id, ...opp} = op
          this.storageService.updateItem("operaciones", opp, op.idOperacion, "LIQUIDAR", `Operación de Cliente ${op.cliente.razonSocial} Liquidada`, op.id);

@@ -758,6 +758,8 @@ export class StorageService {
   syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
     //console.log(" storage syncChangesDateValue ", componente)
     this.dbFirebase.getAllByDateValue<T>(componente, campo, value1, value2, orden).subscribe(data => {
+      //console.log("syncChangesDateValue/componente: ", componente, " data: ", data);
+      
       const currentData = this.loadInfo(componente);
       if (!currentData || JSON.stringify(currentData) !== JSON.stringify(data)) {
         //console.log(`Datos sincronizados para ${componente}`, data);

@@ -97,7 +97,7 @@ font-size: 1.3rem;
   }
 
   .estado-facCliente {
-    color: rgb(252, 250, 132);
+    color:#A7F432;
     font-weight: bold;
   }
 
@@ -112,14 +112,11 @@ font-size: 1.3rem;
   }
 
    .estado-proforma {
-    color: rgb(247, 181, 247);
-    font-weight: bold;
+    color: #FFFF66;
+    font-weight: bold;    
   }
+  
 
-   .estado-proforma-facCli {
-    color: rgb(163, 250, 2);
-    font-weight: bold;
-  }
   .isDisabled {
     pointer-events: none;
     cursor: not-allowed;

@@ -2,7 +2,7 @@ import { Component, ElementRef, HostListener, Input, OnInit, ViewEncapsulation }
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { Operacion } from 'src/app/interfaces/operacion';
+import { EstadoOp, Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -105,7 +105,7 @@ export class TableroOpComponent implements OnInit {
     { key: 'facCliente', label: 'Cliente Facturado' },
     { key: 'facChofer', label: 'Chofer Facturado' },
     { key: 'facturada', label: 'Facturada' },
-    { key: 'proforma', label: 'Proforma' },   
+    { key: 'proforma', label: 'Proforma' },       
   ];
   estadoSeleccionado: { [key: string]: boolean } = {
     abierta: false,
@@ -113,7 +113,7 @@ export class TableroOpComponent implements OnInit {
     facCliente: false,
     facChofer: false,
     facturada: false,
-    proforma: false,
+    proforma: false,    
   };
   operacionesDemo!: ConId<Operacion>[];
   opFiltradas!: ConId<Operacion>[];
@@ -312,10 +312,10 @@ export class TableroOpComponent implements OnInit {
     let indice = 0
     let operaciones: Operacion [];    
     operaciones = this.$opFiltradas;
-    this.rows = operaciones.map((op) => ({
+    this.rows = operaciones.map((op) => ({      
       indice: indice ++,
       fecha: op.fecha,
-      estado: op.estado.abierta ? "Abierta" : op.estado.cerrada ? "Cerrada" : op.estado.facturada  ? "Facturada" : op.estado.facCliente  ? "Cliente Fac" :  op.estado.facChofer  ? "Chofer Fac" : (op.estado.proforma && op.estado.facCliente) ? "Proforma-CF" :  op.estado.proforma  ? "Proforma" : "Sin Datos",
+      estado: op.estado.abierta ? "Abierta" : op.estado.cerrada ? "Cerrada"  : op.estado.proformaCh || op.estado.proformaCl  ? "Proforma" : op.estado.facCliente  ? "Cliente Fac" :  op.estado.facChofer  ? "Chofer Fac" : op.estado.facturada  ? "Facturada" : "Sin Datos",
       idOperacion: op.idOperacion,
       cliente: op.cliente.razonSocial,
       idCliente: op.cliente.idCliente,
@@ -589,11 +589,19 @@ export class TableroOpComponent implements OnInit {
       }
       case "Proforma":{
         this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
-          return op.estado.proforma === true; 
+          return op.estado.proformaCl === true; 
         });
-        
         this.armarTabla();
         break;
+      }  
+      case "Proforma Chofer":{
+          this.$opFiltradas = this.$opActivas.filter((op:Operacion)=>{
+          return op.estado.proformaCh === true; 
+        });
+        this.armarTabla();
+        break;
+        
+        
       }
 
       default:{
@@ -634,16 +642,21 @@ export class TableroOpComponent implements OnInit {
   aplicarFiltros() {
     
     const seleccionados = Object.keys(this.estadoSeleccionado).filter(key => this.estadoSeleccionado[key]);
-    //console.log("seleccionados", seleccionados);
+    console.log("seleccionados", seleccionados);
     
     if (seleccionados.length === 0) {
       // Si no hay filtros activos, mostramos todo
       this.$opFiltradas = this.$opActivas;
-    } else {
+    } else {      
       this.$opFiltradas = this.$opActivas.filter((op: Operacion) => {
-        // Una operación pasa el filtro si cumple con **todos** los estados seleccionados
-        return seleccionados.some(key => (op.estado as any)[key]);
+      return seleccionados.some(key => {
+        if (key === 'proforma') {
+          // Filtra si alguno de los dos es true
+          return op.estado.proformaCl || op.estado.proformaCh;
+        }
+        return (op.estado as any)[key];
       });
+    });
     }
   
     // Guardamos el estado en localStorage para persistir
@@ -835,21 +848,40 @@ export class TableroOpComponent implements OnInit {
   }
 
   filtrarOp(){
-    this.opDuplicadas = this.opDemo.filter((op:ConId<Operacion>)=>{
-      return op.estado.facChofer && op.estado.facCliente
-    });
+    this.opDuplicadas = this.migrarEstadoOperacion(this.opDemo);
 
-    console.log("opFiltradas: ", this.opDuplicadas);
-    this.opDuplicadas.forEach((op:ConId<Operacion>)=>{
-      op.estado.facChofer = false;
-      op.estado.facCliente = false;
-      op.estado.facturada = true;
-    })
     console.log("opFiltradas desp: ", this.opDuplicadas);
   }
 
     actualizarOp(){
-    this.dbFirebase.actualizarOperacionesBatch(this.opDuplicadas,"operaciones")
+      this.isLoading = true;
+    this.dbFirebase.actualizarOperacionesBatch(this.opDuplicadas,"operaciones").then((result)=>{
+      this.isLoading = false;
+      if(result.exito){
+        alert("funciono");
+      } else{
+        alert(`no funciono. error: ${result.mensaje}`)
+      }
+    })
   }
+
+  migrarEstadoOperacion(operaciones: any[]): ConId<Operacion>[] {
+  return operaciones.map(op => {
+    const nuevoEstado: EstadoOp = {
+      abierta: true,
+      cerrada: false,
+      facCliente: false,
+      facChofer: false,
+      facturada: false,
+      proformaCl: false,
+      proformaCh: false
+    };
+
+    return {
+      ...op,
+      estado: nuevoEstado
+    };
+  });
+}
   
 }

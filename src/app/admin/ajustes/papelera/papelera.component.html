@@ -36,7 +36,7 @@
     </thead>
     <tbody>
       @if (papelera && papelera.length > 0) {
-        @for (p of papelera | filterBy: searchText; track p) {
+        @for (p of papelera | globalFilter:searchText:['logEntry.timestamp','logEntry.userEmail', 'motivoBaja', 'logEntry.coleccion']; track p) {
           <tr>
             <td>{{getFecha(p.logEntry.timestamp)}}</td>
             <td>{{getUsuario(p.logEntry.userEmail)}}</td>

@@ -418,7 +418,8 @@ onSubmit() {
               facCliente: false,
               facChofer: false,
               facturada: false,
-              proforma: false,
+              proformaCl: false,
+              proformaCh: false,
             },            
             tarifaTipo: this.tPersonalizada ? {
               general: false,

@@ -32,6 +32,7 @@ import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
 import { CalcularPorcentajePipe } from './pipes/calcular-porcentaje.pipe';
 import { SpinnerComponent } from './spinner/spinner.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
+import { GlobalFilterPipe } from './pipes/global-filter.pipe';
 
 
 
@@ -55,8 +56,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,    
-    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent, ScrollToTopComponent, CalcularPorcentajePipe, SpinnerComponent,
-    
+    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent, ScrollToTopComponent, CalcularPorcentajePipe, SpinnerComponent, GlobalFilterPipe
     
   ],
   imports: [
@@ -94,7 +94,8 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ModalFacturaComponent, 
     ScrollToTopComponent,
     CalcularPorcentajePipe,
-    SpinnerComponent
+    SpinnerComponent,
+    GlobalFilterPipe
     
   ]
 })

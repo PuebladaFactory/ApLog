@@ -177,7 +177,7 @@
     </thead>
     @if (datosTablaProveedor.length > 0) {
       <tbody>
-        @for (proveedor of datosTablaProveedor | filterBy: searchText; track proveedor; let i = $index) {
+        @for (proveedor of datosTablaProveedor | globalFilter:searchText:['razonSocial','opCerradas', 'opAbiertas', 'opSinFacturar', 'opFacturadas','total','aCobrar']; track proveedor; let i = $index) {
           <tr>
             <td>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i)">
@@ -241,7 +241,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (factura of facturasPorProveedor.get(proveedor.idProveedor)  ?? [] | filterBy: searchText2; track factura) {
+                    @for (factura of facturasPorProveedor.get(proveedor.idProveedor)  ?? [] |globalFilter:searchText2:['Fecha','Quincena', 'idOperacion', 'Cliente', 'km','valores.kmMonto','valores.acompaniante','valores.tarifaBase', 'valores.total', 'contraParteMonto']; track factura) {
                       <tr [ngClass]="{'isDisabled':factura.proforma}">
                         <td >
                           <input type="checkbox" [checked]="factura.liquidacion" (change)="liquidarFac(factura)">
@@ -297,7 +297,7 @@
 @if (isLoading) {
   <app-spinner></app-spinner>
 }
-<hr>
+<!-- <hr>
 <h1>DUPLICADAS</h1>
 <button class="btn btn-primary" (click)="borrarDuplicadasEnLiquidacion()">Borrar Duplicadas Liquidación</button>
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText2" placeholder="Buscar por chofer">
@@ -405,4 +405,4 @@
 
       </tr>
     </tbody>
-  </table>
+  </table> -->

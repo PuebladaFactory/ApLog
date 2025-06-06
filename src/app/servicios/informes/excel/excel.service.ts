@@ -105,15 +105,7 @@ getQuincena(fecha: any): string {
       case 'Patente':{          
         return facturaOp.patente;
       };
-      case 'Concepto':{
-        /* if (factura.hasOwnProperty('idFacturaCliente')) {            
-          return facturaOp.observaciones;
-        } else if (factura.hasOwnProperty('idFacturaChofer')) {
-          return this.getCategoria(facturaOp.patente, facturaOp.idChofer);
-        } else if (factura.hasOwnProperty('idFacturaProveedor')) {
-          return this.getCategoria(facturaOp.patente, facturaOp.idChofer);
-        }
-        return ""; */
+      case 'Concepto':{       
         return this.getCategoria(facturaOp.patente, facturaOp.idChofer);
       };
       case 'Observaciones':{       
@@ -126,16 +118,16 @@ getQuincena(fecha: any): string {
         return facturaOp.km;
       };
       case "Jornada":{          
-        return this.formatearValor(facturaOp.valores.tarifaBase);
+        return facturaOp.valores.tarifaBase;
       };
       case "Ad Km":{          
-        return this.formatearValor(facturaOp.valores.kmMonto);
+        return facturaOp.valores.kmMonto;
       };
       case "Acomp":{          
-        return this.formatearValor(facturaOp.valores.acompaniante);
+        return facturaOp.valores.acompaniante;
       };
       case "A Cobrar":{          
-        return this.formatearValor(facturaOp.valores.total);
+        return facturaOp.valores.total;
       };
       default:{
         return ''
@@ -196,20 +188,33 @@ async exportToExcelCliente(
 
   // Filas dinámicas
   facturasOp.forEach((facturaOp) => {
-    const rowData = factura.columnas.map((columna) =>
-      this.obtenerDatos(factura, facturaOp, clientes, columna, choferes)
-    );
-    worksheet.addRow(rowData).eachCell((cell) => {
-      cell.font = { size: 12 };
-      cell.alignment = { horizontal: 'center', vertical: 'top' };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
-      cell.border = {
-        top: { style: 'thin' },
-        bottom: { style: 'thin' },
-        left: { style: 'thin' },
-        right: { style: 'thin' },
-      };
-    });
+    const row = worksheet.addRow(
+  factura.columnas.map((columna) => {
+    if (['Jornada', 'Ad Km', 'Acomp', 'A Cobrar'].includes(columna)) {
+      return this.obtenerDatos(factura, facturaOp, clientes, columna, choferes); // true = retorno numérico
+    }
+    return this.obtenerDatos(factura, facturaOp, clientes, columna, choferes);
+  })
+);
+
+// Aplicar estilo + formato contable para columnas numéricas
+row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+  const columnaNombre = factura.columnas[colNumber - 1]; // -1 porque colNumber es 1-based
+  cell.font = { size: 12 };
+  cell.alignment = { horizontal: 'center', vertical: 'top' };
+  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
+  cell.border = {
+    top: { style: 'thin' },
+    bottom: { style: 'thin' },
+    left: { style: 'thin' },
+    right: { style: 'thin' },
+  };
+
+  if (['Jornada', 'Ad Km', 'Acomp', 'A Cobrar'].includes(columnaNombre)) {
+    cell.numFmt = '"$"#,##0.00'; // formato contable en Excel
+  }
+});
+
   });
 
   // Pie de tabla (Footer)
@@ -223,10 +228,12 @@ async exportToExcelCliente(
     worksheet.mergeCells(`A${subtotalRow.number}:${String.fromCharCode(64 + factura.columnas.length - 1)}${subtotalRow.number}`);
     subtotalRow.getCell(1).value = 'Sub Total';
     subtotalRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-    subtotalRow.getCell(factura.columnas.length).value = this.formatearValor(
-      factura.valores.totalTarifaBase + factura.valores.totalAcompaniante + factura.valores.totalkmMonto
-    );
+    //
+    const subtotalValor = factura.valores.totalTarifaBase + factura.valores.totalAcompaniante + factura.valores.totalkmMonto;
+    subtotalRow.getCell(factura.columnas.length).value = subtotalValor;
+    subtotalRow.getCell(factura.columnas.length).numFmt = '"$"#,##0.00';
     subtotalRow.getCell(factura.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
+    //
   
     subtotalRow.eachCell((cell) => {
       cell.font = { size: 12, bold: true };
@@ -245,7 +252,11 @@ async exportToExcelCliente(
       worksheet.mergeCells(`A${descuentoRow.number}:${String.fromCharCode(64 + factura.columnas.length - 1)}${descuentoRow.number}`);
       descuentoRow.getCell(1).value = descuento.concepto;
       descuentoRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-      descuentoRow.getCell(factura.columnas.length).value = `-${this.formatearValor(descuento.valor)}`;
+      //
+      descuentoRow.getCell(factura.columnas.length).value = -descuento.valor;
+      descuentoRow.getCell(factura.columnas.length).numFmt = '"$"#,##0.00';
+      //
+
       descuentoRow.getCell(factura.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
   
       descuentoRow.eachCell((cell) => {
@@ -266,7 +277,11 @@ async exportToExcelCliente(
   worksheet.mergeCells(`A${totalRow.number}:${String.fromCharCode(64 + factura.columnas.length - 1)}${totalRow.number}`);
   totalRow.getCell(1).value = 'Total';
   totalRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-  totalRow.getCell(factura.columnas.length).value = this.formatearValor(factura.valores.total);
+  //
+  totalRow.getCell(factura.columnas.length).value = factura.valores.total;
+  totalRow.getCell(factura.columnas.length).numFmt = '"$"#,##0.00';
+  //
+
   totalRow.getCell(factura.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
   
   totalRow.eachCell((cell) => {
@@ -372,20 +387,33 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
 
   // Filas dinámicas
   facturasOp.forEach((facturaOp) => {
-    const rowData = factura.columnas.map((columna) =>
-      this.obtenerDatos(factura, facturaOp, clientes, columna, choferes)
-    );
-    worksheet.addRow(rowData).eachCell((cell) => {
-      cell.font = { size: 12 };
-      cell.alignment = { horizontal: 'center', vertical: 'top' };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
-      cell.border = {
-        top: { style: 'thin' },
-        bottom: { style: 'thin' },
-        left: { style: 'thin' },
-        right: { style: 'thin' },
-      };
-    });
+    const row = worksheet.addRow(
+  factura.columnas.map((columna) => {
+    if (['Jornada', 'Ad Km', 'Acomp', 'A Cobrar'].includes(columna)) {
+      return this.obtenerDatos(factura, facturaOp, clientes, columna, choferes); // true = retorno numérico
+    }
+    return this.obtenerDatos(factura, facturaOp, clientes, columna, choferes);
+  })
+);
+
+// Aplicar estilo + formato contable para columnas numéricas
+row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+  const columnaNombre = factura.columnas[colNumber - 1]; // -1 porque colNumber es 1-based
+  cell.font = { size: 12 };
+  cell.alignment = { horizontal: 'center', vertical: 'top' };
+  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
+  cell.border = {
+    top: { style: 'thin' },
+    bottom: { style: 'thin' },
+    left: { style: 'thin' },
+    right: { style: 'thin' },
+  };
+
+  if (['Jornada', 'Ad Km', 'Acomp', 'A Cobrar'].includes(columnaNombre)) {
+    cell.numFmt = '"$"#,##0.00'; // formato contable en Excel
+  }
+});
+
   });
 
   // Pie de tabla (Footer)
@@ -399,10 +427,11 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
     worksheet.mergeCells(`A${subtotalRow.number}:${String.fromCharCode(64 + factura.columnas.length - 1)}${subtotalRow.number}`);
     subtotalRow.getCell(1).value = 'Sub Total';
     subtotalRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-    subtotalRow.getCell(factura.columnas.length).value = this.formatearValor(
-      factura.valores.totalTarifaBase + factura.valores.totalAcompaniante + factura.valores.totalkmMonto
-    );
+    const subtotalValor = factura.valores.totalTarifaBase + factura.valores.totalAcompaniante + factura.valores.totalkmMonto;
+    subtotalRow.getCell(factura.columnas.length).value = subtotalValor;
+    subtotalRow.getCell(factura.columnas.length).numFmt = '"$"#,##0.00';
     subtotalRow.getCell(factura.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
+
   
     subtotalRow.eachCell((cell) => {
       cell.font = { size: 12, bold: true };
@@ -421,7 +450,9 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
       worksheet.mergeCells(`A${descuentoRow.number}:${String.fromCharCode(64 + factura.columnas.length - 1)}${descuentoRow.number}`);
       descuentoRow.getCell(1).value = descuento.concepto;
       descuentoRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-      descuentoRow.getCell(factura.columnas.length).value = `-${this.formatearValor(descuento.valor)}`;
+      descuentoRow.getCell(factura.columnas.length).value = -descuento.valor;
+      descuentoRow.getCell(factura.columnas.length).numFmt = '"$"#,##0.00';
+
       descuentoRow.getCell(factura.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
   
       descuentoRow.eachCell((cell) => {
@@ -442,7 +473,9 @@ async exportToExcelChofer(factura: FacturaChofer, facturasOp: FacturaOp[], clien
   worksheet.mergeCells(`A${totalRow.number}:${String.fromCharCode(64 + factura.columnas.length - 1)}${totalRow.number}`);
   totalRow.getCell(1).value = 'Total';
   totalRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-  totalRow.getCell(factura.columnas.length).value = this.formatearValor(factura.valores.total);
+  totalRow.getCell(factura.columnas.length).value = factura.valores.total;
+  totalRow.getCell(factura.columnas.length).numFmt = '"$"#,##0.00';
+
   totalRow.getCell(factura.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
   
   totalRow.eachCell((cell) => {
@@ -550,20 +583,33 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
 
   // Filas dinámicas
   facturasOp.forEach((facturaOp) => {
-    const rowData = factura.columnas.map((columna) =>
-      this.obtenerDatos(factura, facturaOp, clientes, columna, choferes)
-    );
-    worksheet.addRow(rowData).eachCell((cell) => {
-      cell.font = { size: 12 };
-      cell.alignment = { horizontal: 'center', vertical: 'top' };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
-      cell.border = {
-        top: { style: 'thin' },
-        bottom: { style: 'thin' },
-        left: { style: 'thin' },
-        right: { style: 'thin' },
-      };
-    });
+    const row = worksheet.addRow(
+  factura.columnas.map((columna) => {
+    if (['Jornada', 'Ad Km', 'Acomp', 'A Cobrar'].includes(columna)) {
+      return this.obtenerDatos(factura, facturaOp, clientes, columna, choferes); // true = retorno numérico
+    }
+    return this.obtenerDatos(factura, facturaOp, clientes, columna, choferes);
+  })
+);
+
+// Aplicar estilo + formato contable para columnas numéricas
+row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+  const columnaNombre = factura.columnas[colNumber - 1]; // -1 porque colNumber es 1-based
+  cell.font = { size: 12 };
+  cell.alignment = { horizontal: 'center', vertical: 'top' };
+  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
+  cell.border = {
+    top: { style: 'thin' },
+    bottom: { style: 'thin' },
+    left: { style: 'thin' },
+    right: { style: 'thin' },
+  };
+
+  if (['Jornada', 'Ad Km', 'Acomp', 'A Cobrar'].includes(columnaNombre)) {
+    cell.numFmt = '"$"#,##0.00'; // formato contable en Excel
+  }
+});
+
   });
 
   // Pie de tabla (Footer)
@@ -577,10 +623,11 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
     worksheet.mergeCells(`A${subtotalRow.number}:${String.fromCharCode(64 + factura.columnas.length - 1)}${subtotalRow.number}`);
     subtotalRow.getCell(1).value = 'Sub Total';
     subtotalRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-    subtotalRow.getCell(factura.columnas.length).value = this.formatearValor(
-      factura.valores.totalTarifaBase + factura.valores.totalAcompaniante + factura.valores.totalkmMonto
-    );
+    const subtotalValor = factura.valores.totalTarifaBase + factura.valores.totalAcompaniante + factura.valores.totalkmMonto;
+    subtotalRow.getCell(factura.columnas.length).value = subtotalValor;
+    subtotalRow.getCell(factura.columnas.length).numFmt = '"$"#,##0.00';
     subtotalRow.getCell(factura.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
+
   
     subtotalRow.eachCell((cell) => {
       cell.font = { size: 12, bold: true };
@@ -599,7 +646,9 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
       worksheet.mergeCells(`A${descuentoRow.number}:${String.fromCharCode(64 + factura.columnas.length - 1)}${descuentoRow.number}`);
       descuentoRow.getCell(1).value = descuento.concepto;
       descuentoRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-      descuentoRow.getCell(factura.columnas.length).value = `-${this.formatearValor(descuento.valor)}`;
+      descuentoRow.getCell(factura.columnas.length).value = -descuento.valor;
+      descuentoRow.getCell(factura.columnas.length).numFmt = '"$"#,##0.00';
+
       descuentoRow.getCell(factura.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
   
       descuentoRow.eachCell((cell) => {
@@ -620,7 +669,9 @@ async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[],
   worksheet.mergeCells(`A${totalRow.number}:${String.fromCharCode(64 + factura.columnas.length - 1)}${totalRow.number}`);
   totalRow.getCell(1).value = 'Total';
   totalRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-  totalRow.getCell(factura.columnas.length).value = this.formatearValor(factura.valores.total);
+  totalRow.getCell(factura.columnas.length).value = factura.valores.total;
+   totalRow.getCell(factura.columnas.length).numFmt = '"$"#,##0.00';
+
   totalRow.getCell(factura.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
   
   totalRow.eachCell((cell) => {

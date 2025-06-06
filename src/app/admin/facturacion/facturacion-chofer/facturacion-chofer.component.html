@@ -98,7 +98,7 @@
     <th style="width: 6%" class="text-center">Acciones</th>
   </thead>
   <tbody>
-    @for (chofer of datosFiltrados; track chofer; let i = $index) {
+    @for (chofer of datosFiltrados | globalFilter:filtroBusqueda:['chofer','cant', 'sumaACobrar', 'sumaAPagar', 'neta','faltaPagar']; track chofer; let i = $index) {
       <tr>
         <td>{{chofer.chofer}}</td>
         <td class="text-center">{{chofer.cant}}</td>

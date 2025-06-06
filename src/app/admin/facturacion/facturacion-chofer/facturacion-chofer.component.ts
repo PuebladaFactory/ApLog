@@ -69,7 +69,7 @@ export class FacturacionChoferComponent implements OnInit {
 
     procesarDatosParaTabla() {
       const choferesMap = new Map<number, any>();
-      ////console.log()(this.$facturasChofer);
+      //////console.log()(this.$facturasChofer);
       
       if(this.$facturasChofer !== null){
         // Inicializar los totales a cero
@@ -112,7 +112,7 @@ export class FacturacionChoferComponent implements OnInit {
         });
     
         this.datosTablaChofer = Array.from(choferesMap.values());
-        ////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
+        //////console.log()("Datos para la tabla: ", this.datosTablaChofer); 
         
         this.datosTablaChofer.forEach(chofer => {
           this.totalCant += chofer.cant;
@@ -153,8 +153,8 @@ export class FacturacionChoferComponent implements OnInit {
         const choferId = this.datosTablaChofer[index].idChofer;
         const facturasChofer = this.$facturasChofer.filter((factura: any) => factura.idChofer === choferId);
         this.facturasPorChofer.set(choferId, facturasChofer);        
-        //console.log("1) facturasCliente: ", facturasCliente);
-        //console.log("2) facturas por cliente: ", this.facturasPorCliente);
+        ////console.log("1) facturasCliente: ", facturasCliente);
+        ////console.log("2) facturas por cliente: ", this.facturasPorCliente);
         this.openModal(facturasChofer, index)  
         
       } else {
@@ -179,12 +179,12 @@ export class FacturacionChoferComponent implements OnInit {
           modo: "choferes",
           item: factura,
         }; 
-        //console.log()(info);
+        ////console.log()(info);
         
         modalRef.componentInstance.fromParent = info;
         modalRef.result.then(
           (result) => {
-            ////console.log()("ROOWW:" ,row);
+            //////console.log()("ROOWW:" ,row);
             
           //this.selectCrudOp(result.op, result.item);
         
