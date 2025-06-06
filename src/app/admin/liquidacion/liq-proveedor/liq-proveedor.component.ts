@@ -952,4 +952,17 @@ deleteDuplicadas(){
       });    
     }
 
+      borrarLiquidaciones(){
+        this.isLoading = true;
+        console.log("this.$facturasOpCliente", this.$facturasOpProveedor);
+        this.dbFirebase.eliminarMultiple(this.$facturasOpProveedor, "facturaOpProveedor").then((result)=>{
+          this.isLoading = false;
+          if(result.exito){
+            alert("se eliminaron correctamente")
+          } else {
+            alert(`error en la eliminación: ${result.mensaje}` )
+          }
+        })
+      }
+
 }

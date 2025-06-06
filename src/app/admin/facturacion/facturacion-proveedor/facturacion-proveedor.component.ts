@@ -8,6 +8,7 @@ import { FacturaOp } from 'src/app/interfaces/factura-op';
 import { Subject, takeUntil } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
 import Swal from 'sweetalert2';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 @Component({
     selector: 'app-facturacion-proveedor',
@@ -36,10 +37,12 @@ export class FacturacionProveedorComponent implements OnInit {
   ordenAscendente: boolean = true;
   ///////////////////////////////////////////////////
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
+  isLoading: boolean = false;
     
     constructor(
       private storageService: StorageService,
-      private modalService: NgbModal
+      private modalService: NgbModal,
+      private dbFirebase: DbFirestoreService,
     ) {}
 
     ngOnInit(): void {
@@ -243,5 +246,19 @@ export class FacturacionProveedorComponent implements OnInit {
               //footer: `${msj}`
             });
           }
+
+          
+        borrarLiquidaciones(){
+        this.isLoading = true;
+        console.log("this.$facturasProveedor", this.$facturasProveedor);
+        this.dbFirebase.eliminarMultiple(this.$facturasProveedor, "facturaProveedor").then((result)=>{
+          this.isLoading = false;
+          if(result.exito){
+            alert("se eliminaron correctamente")
+          } else {
+            alert(`error en la eliminación: ${result.mensaje}` )
+          }
+        })
+      }
 
 }

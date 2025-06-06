@@ -946,5 +946,19 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         });    
       }
 
+  
+      borrarLiquidaciones(){
+        this.isLoading = true;
+        console.log("this.$facturasOpCliente", this.$facturasOpCliente);
+        this.dbFirebase.eliminarMultiple(this.$facturasOpCliente, "facturaOpCliente").then((result)=>{
+          this.isLoading = false;
+          if(result.exito){
+            alert("se eliminaron correctamente")
+          } else {
+            alert(`error en la eliminación: ${result.mensaje}` )
+          }
+        })
+      }
+
 
 }

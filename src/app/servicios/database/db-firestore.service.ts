@@ -1189,5 +1189,43 @@ async anularProforma(
   }
 }
 
+async eliminarMultiple(
+  objetos: ConIdType<any>[],
+  coleccion: string,  
+): Promise<{ exito: boolean; mensaje: string }> {
+  const batch = writeBatch(this.firestore);
+  
+  try {
+    for (const obj of objetos) {
+      const docRef = doc(this.firestore, `/Vantruck/datos/${coleccion}/${obj.id}`);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        return {
+          exito: false,
+          mensaje: `No existe la operación con id: ${obj.id}`
+        };
+      }
+    
+      // Si existe, la agregamos al batch para actualizar
+      let {id, type, ...objEdit} = obj
+      batch.delete(docRef);
+    }
+
+    // Ejecutar el batch si todas las operaciones existen
+    await batch.commit();
+    return {
+      exito: true,
+      mensaje: "Las objetos fueron eliminados correctamente."
+    };
+  } catch (error: any) {
+    console.error(error);
+    return {
+      exito: false,
+      mensaje: `Error al actualizar: ${error.message || error}`
+    };
+  }
+}
+
 
 }
