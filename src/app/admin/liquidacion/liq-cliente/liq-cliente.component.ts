@@ -310,7 +310,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   let facturasCliente = this.facturasPorCliente.get(idCliente);
   ////////console.log("2)", facturasCliente);
     facturasCliente?.forEach((factura: FacturaOp) => {
-      if(!factura.proforma){
+      if(!factura.proforma && !factura.contraParteProforma){
         factura.liquidacion = seleccion;
       }
       
