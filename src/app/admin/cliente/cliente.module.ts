@@ -15,7 +15,8 @@ import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/client
 import { ModalContactoComponent } from './modal-contacto/modal-contacto.component';
 import { ModalTarifaPersonalizadaComponent } from './modal-tarifa-personalizada/modal-tarifa-personalizada.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
-
+import { ListadoNuevoComponent } from './listado-nuevo/listado-nuevo.component';
+import { AgGridModule } from 'ag-grid-angular';
 
 
 
@@ -35,7 +36,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ClienteTarifaEspecialComponent, 
     ModalContactoComponent, 
     ModalTarifaPersonalizadaComponent, 
-    
+    ListadoNuevoComponent
     
   ],
   imports: [
@@ -45,7 +46,8 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ReactiveFormsModule,
     SharedModule,
     FilterPipeModule,
-    NgxDatatableModule,    
+    NgxDatatableModule,   
+    AgGridModule 
   ]
 })
 export class ClienteModule { }

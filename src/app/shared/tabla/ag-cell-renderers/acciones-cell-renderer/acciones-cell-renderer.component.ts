@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
-import { SharedModule } from "../../../shared.module";
+import { SharedModule } from '../../../shared.module';
 
 @Component({
   selector: 'app-acciones-cell-renderer',
@@ -10,38 +10,36 @@ import { SharedModule } from "../../../shared.module";
   styleUrl: './acciones-cell-renderer.component.scss',
   imports: [CommonModule, SharedModule],
 })
-export class AccionesCellRendererComponent implements ICellRendererAngularComp  {
-public params: any;
+export class AccionesCellRendererComponent implements ICellRendererAngularComp {
+  public params: any;
   estado: string = '';
+  botones: string[] = [];
+  disableOn: { [key: string]: string } = {};
 
   agInit(params: any): void {
     this.params = params;
-    this.estado = params.data.estado;
+    this.estado = params.data.estado || '';
+    this.botones = params.buttons || [];
+    this.disableOn = params.disableOn || {};
   }
 
   refresh(): boolean {
     return false;
   }
 
-  abrirVista() {
-    this.params.context.componentParent.abrirVista(this.params.data);
+  isDisabled(button: string): boolean {
+    const requiredEstado = this.disableOn[button];
+    return requiredEstado ? this.estado !== requiredEstado : false;
   }
 
-  abrirEdicion() {
-    if (this.estado === 'Abierta') {
-      this.params.context.componentParent.abrirEdicion(this.params.data);
+  callHandler(action: string): void {
+    const handler = this.params[`on${this.capitalize(action)}`];
+    if (typeof handler === 'function') {
+      handler(this.params.data);
     }
   }
 
-  eliminarOperacion() {
-    if (this.estado === 'Abierta') {
-      this.params.context.componentParent.eliminarOperacion(this.params.data);
-    }
-  }
-
-  crearFactura() {
-    if (this.estado === 'Abierta') {
-      this.params.context.componentParent.crearFacturaOp(this.params.data);
-    }
+  private capitalize(text: string): string {
+    return text.charAt(0).toUpperCase() + text.slice(1);
   }
 }

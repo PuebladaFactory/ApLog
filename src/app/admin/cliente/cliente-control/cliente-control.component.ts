@@ -9,13 +9,14 @@ import { Router } from '@angular/router';
     <h1>Clientes</h1>    
   </div>   
   <div class="tab-container">
-  <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab1')">Alta / Listado</div>
-      <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Tarifa General</div>
-      <div class="tab" [class.active]="selectedTab === 'tab3'" (click)="selectTab('tab3')">Tarifa Especial</div>  
-      <div class="tab" [class.active]="selectedTab === 'tab4'" (click)="selectTab('tab4')">Tarifa Personalizada</div>      
-      <div class="tab" [class.active]="selectedTab === 'tab5'" (click)="selectTab('tab5')">Tarifa Eventual</div>      
-      
-      
+    @for (tab of tabs; track tab) {
+      <div
+        class="tab"
+        [class.active]="selectedTab === tab.id"
+        (click)="selectTab(tab.id)">
+        {{ tab.name }}
+      </div>
+    }
   </div>
   <router-outlet></router-outlet>
     `,
@@ -25,6 +26,14 @@ import { Router } from '@angular/router';
 export class ClienteControlComponent implements OnInit {
 
   selectedTab: string = 'tab1';
+  tabs = [
+    { id: 'tab1', name: 'Alta/Listado', route: 'clientes/listado' },    
+    { id: 'tab2', name: 'Tarifa General', route: 'clientes/general' }, 
+    { id: 'tab3', name: 'Tarifa Especial', route: 'clientes/especial' }, 
+    { id: 'tab4', name: 'Tarifa Personalizada', route: 'clientes/personalizada' },
+    { id: 'tab5', name: 'Tarifa Eventual', route: 'clientes/eventual' },
+    { id: 'tab6', name: 'Prueba', route: 'clientes/prueba' },
+  ];
 
   constructor(private router: Router) {}
 
@@ -32,19 +41,12 @@ export class ClienteControlComponent implements OnInit {
     this.selectTab("tab1");
   }
 
-  selectTab(tab: string) {
-    this.selectedTab = tab;
-    if (tab === 'tab1') {
-      this.router.navigate(['clientes/listado']);
-    } else if (tab === 'tab2') {
-      this.router.navigate(['clientes/general']);
-    } else if (tab === 'tab3') {
-      this.router.navigate(['clientes/especial']);
-    } else if (tab === 'tab4') {
-      this.router.navigate(['clientes/personalizada']);
-    } else if (tab === 'tab5') {
-      this.router.navigate(['clientes/eventual']);
-    } 
+  selectTab(tabId: string) {
+    this.selectedTab = tabId;
+    const tab = this.tabs.find(t => t.id === tabId);
+    if (tab) {
+      this.router.navigate([tab.route]);
+    }
   }
 
 }

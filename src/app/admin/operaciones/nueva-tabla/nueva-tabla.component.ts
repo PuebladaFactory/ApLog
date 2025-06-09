@@ -5,7 +5,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { Subject, takeUntil } from 'rxjs';
-import { Vehiculo } from 'src/app/interfaces/chofer';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { EstadoCellRendererComponent } from 'src/app/shared/estado-cell-renderer/estado-cell-renderer.component';
 import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-renderers/acciones-cell-renderer/acciones-cell-renderer.component';
@@ -16,6 +16,7 @@ import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.compone
 import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { Cliente } from 'src/app/interfaces/cliente';
 
 @Component({
   selector: 'app-nueva-tabla',
@@ -58,8 +59,7 @@ export class NuevaTablaComponent implements OnInit, OnDestroy {
   opEditar!: ConId<Operacion>;
   componente:string = "operaciones";
   $opActivas: ConId<Operacion>[] = [];
-  $opFiltradas: ConId<Operacion>[] = [];
-  $proveedores!: ConIdType<Proveedor>[];
+  $opFiltradas: ConId<Operacion>[] = [];  
   isLoading: boolean = false;
   fechasConsulta!: any;
   modo : string = "operaciones";
@@ -68,7 +68,9 @@ export class NuevaTablaComponent implements OnInit, OnDestroy {
   titulo: string = "operaciones";
   ajustes: boolean = false;
   cantPorPagina: boolean = false; ////  ESTO  NO SE SI SIGUE APLICANDO
-
+  $clientes!: ConIdType<Cliente>[];
+  $choferes!: ConIdType<Chofer>[];
+  $proveedores!: ConIdType<Proveedor>[];
 
   constructor(
     private storageService: StorageService,
@@ -78,6 +80,25 @@ export class NuevaTablaComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+      this.storageService.getObservable<ConIdType<Chofer>>("choferes")
+        .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+        .subscribe(data => {
+          this.$choferes = data;
+          this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+      });
+      
+      this.storageService.getObservable<ConIdType<Cliente>>("clientes")
+        .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+        .subscribe(data => {
+          this.$clientes = data;
+          this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+      });   
+        
+      this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
+        .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+        .subscribe(data => {
+          this.$proveedores = data;
+      });
       this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
       this.construirColumnDefs();         // Ahora sí, construye columnas visibles
       this.cargarDatos();
@@ -147,6 +168,18 @@ private cargarConfiguracionColumnas(): void {
       headerName: 'Acciones',
       field: 'acciones',
       cellRenderer: AccionesCellRendererComponent,
+      cellRendererParams: {
+        buttons: ['detalle', 'editar', 'eliminar', 'factura'],
+        disableOn: {
+          editar: 'Abierta',
+          eliminar: 'Abierta',
+          factura: 'Abierta',
+        },
+        onDetalle: (row: any) => this.abrirVista(row),
+        onEditar: (row: any) => this.abrirEdicion(row),
+        onEliminar: (row: any) => this.eliminarOperacion(row),
+        onFactura: (row: any) => this.crearFacturaOp(row),
+      },
       flex: 3,
       filter: false,
     });

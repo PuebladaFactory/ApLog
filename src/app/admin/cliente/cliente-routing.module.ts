@@ -9,6 +9,7 @@ import { ClienteTarifaGralComponent } from './cliente-tarifa-gral/cliente-tarifa
 import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/cliente-tarifa-especial.component';
 import { TarifasEventualesComponent } from 'src/app/shared/tarifas-eventuales/tarifas-eventuales.component';
 import { RoleGuard } from 'src/app/guards/role.guard';
+import { ListadoNuevoComponent } from './listado-nuevo/listado-nuevo.component';
 
 const routes: Routes = [
   {path: '', component:ClienteControlComponent,
@@ -22,6 +23,7 @@ const routes: Routes = [
     {path: 'especial', component:ClienteTarifaEspecialComponent},
     {path: 'personalizada', component:ClienteTarifaPersonalizadaComponent},
     {path: 'eventual', component:TarifasEventualesComponent},
+    {path: 'prueba', component:ListadoNuevoComponent},
 ]  },
   
 ];
