@@ -1,0 +1,18 @@
+<app-btn-leer name="DetalleColor" (click)="abrirVista()" class="me-1"></app-btn-leer>
+    <app-btn-editar
+      name="EditarColor"
+      [ngClass]="{ isDisabled: estado !== 'Abierta' }"
+      (click)="abrirEdicion()"
+      class="me-1"
+    ></app-btn-editar>
+    <app-btn-eliminar
+      name="EliminarColor"
+      [ngClass]="{ isDisabled: estado !== 'Abierta' }"
+      (click)="eliminarOperacion()"
+      class="me-1"
+    ></app-btn-eliminar>
+    <app-btn-agregar
+      name="FacturaColor"
+      [ngClass]="{ isDisabled: estado !== 'Abierta' }"
+      (click)="crearFactura()"
+    ></app-btn-agregar>

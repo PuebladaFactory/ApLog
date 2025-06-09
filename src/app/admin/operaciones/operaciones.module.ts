@@ -16,6 +16,9 @@ import { ModalFacturacionComponent } from './modal-facturacion/modal-facturacion
 import { CargaMultipleComponent } from './carga-multiple/carga-multiple.component';
 import { ModalOpAltaComponent } from './modal-op-alta/modal-op-alta.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
+import { AgGridModule } from 'ag-grid-angular';
+import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
+
 
 
 
@@ -25,6 +28,8 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ConsultaOpComponent,           
     TableroOpComponent,     
     ModalFacturacionComponent, CargaMultipleComponent, ModalOpAltaComponent,
+    NuevaTablaComponent,
+    
   ],
   imports: [
     CommonModule,
@@ -34,7 +39,8 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     SharedModule,
     FilterPipeModule,
     NgbModule,
-    NgxDatatableModule
-  ]
+    NgxDatatableModule,
+    AgGridModule,
+  ],
 })
 export class OperacionesModule { }

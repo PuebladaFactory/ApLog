@@ -12,6 +12,7 @@ import { FacturacionModule } from './facturacion/facturacion.module';
 import { LiquidacionModule } from './liquidacion/liquidacion.module';
 import { SharedModule } from "../shared/shared.module";
 import { FilterPipeModule } from 'ngx-filter-pipe';
+import { AgGridModule } from 'ag-grid-angular';
 
 
 @NgModule({
@@ -33,6 +34,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
         LiquidacionModule,
         SharedModule,
         FilterPipeModule,
-    ]
+        AgGridModule
+    ],
 })
 export class AdminModule { }

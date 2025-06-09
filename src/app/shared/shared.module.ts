@@ -33,6 +33,8 @@ import { CalcularPorcentajePipe } from './pipes/calcular-porcentaje.pipe';
 import { SpinnerComponent } from './spinner/spinner.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { GlobalFilterPipe } from './pipes/global-filter.pipe';
+import { EstadoCellRendererComponent } from './estado-cell-renderer/estado-cell-renderer.component';
+import { AccionesCellRendererComponent } from './tabla/ag-cell-renderers/acciones-cell-renderer/acciones-cell-renderer.component';
 
 
 
@@ -56,7 +58,9 @@ import { GlobalFilterPipe } from './pipes/global-filter.pipe';
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,    
-    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent, ScrollToTopComponent, CalcularPorcentajePipe, SpinnerComponent, GlobalFilterPipe
+    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent, ScrollToTopComponent, CalcularPorcentajePipe, SpinnerComponent, GlobalFilterPipe,
+    EstadoCellRendererComponent,
+    
     
   ],
   imports: [
@@ -95,7 +99,8 @@ import { GlobalFilterPipe } from './pipes/global-filter.pipe';
     ScrollToTopComponent,
     CalcularPorcentajePipe,
     SpinnerComponent,
-    GlobalFilterPipe
+    GlobalFilterPipe,
+    EstadoCellRendererComponent,
     
   ]
 })

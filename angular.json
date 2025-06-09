@@ -38,7 +38,12 @@
               "node_modules/@swimlane/ngx-datatable/assets/icons.css", 
               "node_modules/@swimlane/ngx-datatable/themes/material.css",
               "node_modules/@swimlane/ngx-datatable/themes/dark.css", 
-              "node_modules/@swimlane/ngx-datatable/themes/bootstrap.css"
+              "node_modules/@swimlane/ngx-datatable/themes/bootstrap.css",
+              "node_modules/ag-grid-community/styles/ag-grid.css",
+              "node_modules/ag-grid-community/styles/ag-theme-alpine.css"
+              
+              
+              
               
             ],
             "scripts": [

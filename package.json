@@ -30,6 +30,8 @@
     "@popperjs/core": "^2.11.8",
     "@swimlane/ngx-datatable": "^21.0.0",
     "@types/pdfmake": "^0.2.9",
+    "ag-grid-angular": "^33.3.2",
+    "ag-grid-community": "^33.3.2",
     "ap-log": "file:",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",

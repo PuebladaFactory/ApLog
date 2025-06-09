@@ -1,0 +1,55 @@
+.estado-abierta {
+  background-color: #d4edda;
+  color: #155724;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.estado-cerrada {
+  background-color: #f8d7da;
+  color: #721c24;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.estado-facCliente {
+  background-color: #cce5ff;
+  color: #004085;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.estado-facChofer {
+  background-color: #fff3cd;
+  color: #856404;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.estado-facturada {
+  background-color: #e2e3e5;
+  color: #383d41;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* .estado-proforma {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+} */
+
+.estado-proforma {
+  background-color: rgb(253, 253, 127);
+  color: yellowgreen;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
