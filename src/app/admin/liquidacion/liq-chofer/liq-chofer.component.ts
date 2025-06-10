@@ -697,6 +697,7 @@ buscarTarifa(i:number ) {
     
     let coleccionHistorialTarfGral: string = 'historialTarifasGralChofer';
     let coleccionHistorialTarfEsp: string = 'historialTarifasEspChofer';
+    let coleccionHistorialTarfPers: string = 'historialTarifasPersCliente';
     let tarifaGral:ConIdType<TarifaGralCliente> | undefined;
     let tarifaEsp:ConIdType<TarifaGralCliente> | undefined;
     let tarifaPers:ConIdType<TarifaPersonalizadaCliente> | undefined;
@@ -745,7 +746,7 @@ buscarTarifa(i:number ) {
       //console.log("1)this.tarifaPers", tarifaPers);
       if(tarifaPers === undefined){
         this.dbFirebase
-        .obtenerTarifaIdTarifa('tarifasPersCliente',this.facDetallada.idTarifa, "idTarifa")
+        .obtenerTarifaIdTarifa(coleccionHistorialTarfPers,this.facDetallada.idTarifa, "idTarifa")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             this.tarifaAplicada = data;

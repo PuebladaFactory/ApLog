@@ -115,6 +115,12 @@ export class NuevaTablaComponent implements OnInit, OnDestroy {
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
+
+    const savedFilters = localStorage.getItem('filtrosTableroOp');
+    if (savedFilters) {
+      const parsedModel = JSON.parse(savedFilters);
+      this.gridApi.setFilterModel(parsedModel);
+    }
   }
 
   toggleColumnVisibility(colId: string): void {
@@ -467,10 +473,19 @@ private cargarConfiguracionColumnas(): void {
       this.ajustes = !this.ajustes;
     }
 
+ // NUEVO: Guarda el filtro en localStorage
+    onFilterChanged(): void {
+      if (this.gridApi) {
+        const model = this.gridApi.getFilterModel();
+        localStorage.setItem('filtrosTableroOp', JSON.stringify(model));
+      }
+    }
+
     limpiarFiltros(): void {
       if (this.gridApi) {
-        this.gridApi.setFilterModel(null);       // Limpia todos los filtros aplicados
-        this.gridApi.onFilterChanged();          // Fuerza actualización del grid
+        this.gridApi.setFilterModel(null);
+        this.gridApi.onFilterChanged();
+        localStorage.removeItem('filtrosTableroOp');
       }
     }
 

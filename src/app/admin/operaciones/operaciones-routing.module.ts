@@ -8,8 +8,8 @@ import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
 const routes: Routes = [
     {path: '', component:OpControlComponent,
       children: [       
-        {path: 'tablero', component:TableroOpComponent},             
-        {path: 'nuevo', component:NuevaTablaComponent},             
+        {path: 'nuevo', component:TableroOpComponent},             
+        {path: 'tablero', component:NuevaTablaComponent},             
     ]  },
   
     

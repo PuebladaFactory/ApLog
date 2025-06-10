@@ -20,18 +20,18 @@ export class FormatoNumericoNgModelDirective implements AfterViewInit, OnInit {
   ) {}
   
    ngOnInit(): void {
-    console.log('FormatoNumericoNgModelDirective - ngOnInit');
+    //console.log('FormatoNumericoNgModelDirective - ngOnInit');
   }
 
   ngOnDestroy(): void {
-    console.log('FormatoNumericoNgModelDirective - ngOnDestroy');
+    //console.log('FormatoNumericoNgModelDirective - ngOnDestroy');
   }
 
 
   @HostListener('keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
     const input = this.el.nativeElement as HTMLInputElement;
-    ////console.log("input: ", input.value);
+    //////console.log("input: ", input.value);
     
     // Permitir teclas especiales: navegación, borrar, tab
     if (
@@ -71,14 +71,14 @@ export class FormatoNumericoNgModelDirective implements AfterViewInit, OnInit {
    * Formatea el valor inicial del modelo después de que la vista se haya inicializado.
    */
   ngAfterViewInit(): void {
-     console.log('FormatoNumericoNgModelDirective - ngAfterViewInit');
+     //console.log('FormatoNumericoNgModelDirective - ngAfterViewInit');
     setTimeout(() => {
       const valorInicial = this.ngModel.model;
-      ////console.log("1)valorInicial: ", valorInicial);
+      //////console.log("1)valorInicial: ", valorInicial);
 
       if (valorInicial !== undefined && valorInicial !== null) {
         const formateado = this.formatoNumericoService.convertirAValorFormateado(valorInicial);
-        ////console.log("2)formateado: ", formateado);
+        //////console.log("2)formateado: ", formateado);
 
         // Actualizar el input y el modelo con el valor formateado
         this.renderer.setProperty(this.el.nativeElement, 'value', formateado);
@@ -94,15 +94,15 @@ export class FormatoNumericoNgModelDirective implements AfterViewInit, OnInit {
   onModelChange(value: any): void {
     
     /* if (value) {
-      //console.log("value: ", value);
+      ////console.log("value: ", value);
       
       const formateado = this.formatoNumericoService.convertirAValorFormateado(value);
       this.renderer.setProperty(this.el.nativeElement, 'value', formateado);
     } */
       //const input = event.target as HTMLInputElement;
       let valor = value;
-      ////console.log('1) valor inicial: ', valor);
-      ////console.log('2) puntoIngresadoPorUsuario: ', this.puntoIngresadoPorUsuario);
+      //////console.log('1) valor inicial: ', valor);
+      //////console.log('2) puntoIngresadoPorUsuario: ', this.puntoIngresadoPorUsuario);
   
       // Verificar si el valor contiene una coma (separador decimal)
       if (valor.includes(',')) {

@@ -118,6 +118,7 @@
         [rowSelection]="'multiple'"
         [suppressRowClickSelection]="true"
         (gridReady)="onGridReady($event)"
+        (filterChanged)="onFilterChanged()"
         (firstDataRendered)="onFirstDataRendered()"
         theme="legacy"
         [context]="{ componentParent: this }"

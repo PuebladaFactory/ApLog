@@ -21,6 +21,7 @@
     [ngClass]="{ isDisabled: isDisabled('eliminar') }"
     (click)="callHandler('eliminar')"
     class="me-1"
+    *appRole="['god','admin', 'manager']" 
   ></app-btn-eliminar>
 </ng-container>
 
