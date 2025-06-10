@@ -36,7 +36,7 @@ import { AgGridModule } from 'ag-grid-angular';
     ClienteTarifaEspecialComponent, 
     ModalContactoComponent, 
     ModalTarifaPersonalizadaComponent, 
-    ListadoNuevoComponent
+    ListadoNuevoComponent,
     
   ],
   imports: [

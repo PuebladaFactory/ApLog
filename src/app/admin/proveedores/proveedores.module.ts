@@ -13,7 +13,8 @@ import { ProveedoresTarifaGralComponent } from './proveedores-tarifa-gral/provee
 import { ProveedoresTarifaEspecialComponent } from './proveedores-tarifa-especial/proveedores-tarifa-especial.component';
 import { ModalContactoProveedoresComponent } from './modal-contacto-proveedores/modal-contacto-proveedores.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
-
+import { ListadoNuevoProveedorComponent } from './listado-nuevo-proveedor/listado-nuevo-proveedor.component';
+import { AgGridModule } from 'ag-grid-angular';
 
 
 @NgModule({
@@ -23,7 +24,8 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ProveedoresControlComponent,
     ProveedoresTarifaGralComponent,
     ProveedoresTarifaEspecialComponent,
-    ModalContactoProveedoresComponent,    
+    ModalContactoProveedoresComponent,
+    ListadoNuevoProveedorComponent    
   ],
   imports: [
     CommonModule,
@@ -32,7 +34,8 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ProveedoresRoutingModule,
     SharedModule,
     FilterPipeModule,
-    NgxDatatableModule
+    NgxDatatableModule,
+    AgGridModule
   ]
 })
 export class ProveedoresModule { }
