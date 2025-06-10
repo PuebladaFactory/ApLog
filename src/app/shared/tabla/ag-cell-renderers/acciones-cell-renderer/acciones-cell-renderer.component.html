@@ -25,12 +25,10 @@
 
 <ng-container *ngIf="botones.includes('eliminar')">
   <app-btn-eliminar
-    name="EliminarColor"
-    *appRole="['god','admin', 'manager']"
+    name="EliminarColor"    
     [ngClass]="{ isDisabled: isDisabled('eliminar') }"
     (click)="callHandler('eliminar')"
-    class="me-1"
-    *appRole="['god','admin', 'manager']" 
+    class="me-1"    
   ></app-btn-eliminar>
 </ng-container>
 

@@ -31,7 +31,7 @@ export class ProveedoresControlComponent implements OnInit {
     { id: 'tab3', name: 'Tarifa Especial', route: 'proveedores/especial' }, 
     { id: 'tab4', name: 'Tarifa Personalizada', route: 'proveedores/personalizada' },
     { id: 'tab5', name: 'Tarifa Eventual', route: 'proveedores/eventual' },
-    { id: 'tab6', name: 'Prueba', route: 'proveedores/prueba' },
+    
   ];
 
   constructor(private router: Router) {}

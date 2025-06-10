@@ -17,11 +17,11 @@ const routes: Routes = [
           canActivate: [RoleGuard],
           data: { roles: ['god', 'admin', 'manager'] }, // no se permiten usuarios
     },    
-    {path: 'listado', component:ChoferesListadoComponent},    
+    {path: 'prueba', component:ChoferesListadoComponent},    
     {path: 'general', component:ChoferesTarifaGralComponent},
     {path: 'especial', component:ChoferesTarifaEspecialComponent},
     {path: 'eventual', component:TarifasEventualesComponent},    
-    {path: 'prueba', component:ListadoNuevoChoferComponent},
+    {path: 'listado', component:ListadoNuevoChoferComponent},
 ]  },
   
 ];
