@@ -7,6 +7,7 @@ import { ProveedoresTarifaGralComponent } from './proveedores-tarifa-gral/provee
 import { ProveedoresTarifaEspecialComponent } from './proveedores-tarifa-especial/proveedores-tarifa-especial.component';
 import { TarifasEventualesComponent } from 'src/app/shared/tarifas-eventuales/tarifas-eventuales.component';
 import { RoleGuard } from 'src/app/guards/role.guard';
+import { ListadoNuevoProveedorComponent } from './listado-nuevo-proveedor/listado-nuevo-proveedor.component';
 
 const routes: Routes = [
   {path: '', component:ProveedoresControlComponent,
@@ -19,6 +20,7 @@ const routes: Routes = [
       {path: 'general', component:ProveedoresTarifaGralComponent},
       {path: 'especial', component:ProveedoresTarifaEspecialComponent},      
       {path: 'eventual', component:TarifasEventualesComponent},
+      {path: 'prueba', component:ListadoNuevoProveedorComponent},
      ]},
  
 ]; 
