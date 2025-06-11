@@ -48,7 +48,7 @@ export class EditarTarifaOpComponent implements OnInit {
     }
     
     ngOnInit(): void {         
-      //console.log("4) fromParent: ",this.fromParent);    
+      console.log("4) fromParent: ",this.fromParent);    
       this.facOriginal = this.fromParent.factura;
       this.facDetallada = structuredClone(this.facOriginal);
       this.opOriginal = this.fromParent.op;

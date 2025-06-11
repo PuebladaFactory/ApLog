@@ -1,0 +1,43 @@
+<ng-container *ngIf="botones.includes('vehiculos')">
+  <app-btn-leer    
+    name="Vehiculos"
+    [ngClass]="{ isDisabled: isDisabled('vehiculos') }"
+    (click)="callHandler('vehiculos')"
+  ></app-btn-leer>
+</ng-container>
+
+<ng-container *ngIf="botones.includes('detalle')">
+  <app-btn-leer
+    name="DetalleColor"
+    (click)="callHandler('detalle')"
+    class="me-1"
+  ></app-btn-leer>
+</ng-container>
+
+<ng-container *ngIf="botones.includes('editar')">
+  <app-btn-editar
+    name="EditarColor"
+    [ngClass]="{ isDisabled: isDisabled('editar') }"
+    (click)="callHandler('editar')"
+    class="me-1"
+  ></app-btn-editar>
+</ng-container>
+
+<ng-container *ngIf="botones.includes('eliminar')">
+  <app-btn-eliminar
+    name="EliminarColor"    
+    [ngClass]="{ isDisabled: isDisabled('eliminar') }"
+    (click)="callHandler('eliminar')"
+    class="me-1"    
+  ></app-btn-eliminar>
+</ng-container>
+
+<ng-container *ngIf="botones.includes('factura')">
+  <app-btn-agregar
+    *appRole="['god','admin', 'manager']"
+    name="FacturaColor"
+    [ngClass]="{ isDisabled: isDisabled('factura') }"
+    (click)="callHandler('factura')"
+  ></app-btn-agregar>
+</ng-container>
+

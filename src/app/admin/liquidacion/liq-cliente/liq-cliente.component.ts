@@ -628,9 +628,11 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   }
 
   buscarTarifa(i:number ) {
+    console.log("facDetallada: ", this.facDetallada);
     
     let coleccionHistorialTarfGral: string = 'historialTarifasGralCliente';
     let coleccionHistorialTarfEsp: string = 'historialTarifasEspCliente';
+    let coleccionHistorialTarfPers: string = 'historialTarifasPersCliente';
     let tarifaGral:ConIdType<TarifaGralCliente> | undefined;
     let tarifaEsp:ConIdType<TarifaGralCliente> | undefined;
     let tarifaPers:ConIdType<TarifaPersonalizadaCliente> | undefined;
@@ -676,10 +678,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     }
     if(this.facDetallada.tarifaTipo.personalizada){
       tarifaPers = this.getTarifaPers(this.facDetallada.idTarifa);
-      ////console.log("1)this.tarifaPers", tarifaPers);
+      console.log("buscarTarifa) this.tarifaPers", tarifaPers);
       if(tarifaPers === undefined){
         this.dbFirebase
-        .obtenerTarifaIdTarifa('tarifasPersCliente',this.facDetallada.idTarifa, "idTarifa")
+        .obtenerTarifaIdTarifa(coleccionHistorialTarfPers,this.facDetallada.idTarifa, "idTarifa")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             this.tarifaAplicada = data;
@@ -926,12 +928,15 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       }
   
       getTarifaPers(idTarifa: number):ConIdType<TarifaPersonalizadaCliente> | undefined{
+        console.log("getTarifaPers) idTarifa", idTarifa);        
         let tarifasPersonalizada: ConIdType<TarifaPersonalizadaCliente>[];
         let tarifa: ConIdType<TarifaPersonalizadaCliente> | undefined;
         
   
         tarifasPersonalizada = this.storageService.loadInfo('tarifasPersCliente');
+        console.log("getTarifaPers) tarifasPersonalizada", tarifasPersonalizada);        
         tarifa = tarifasPersonalizada.find((tarf:ConIdType<TarifaPersonalizadaCliente>)=> {return tarf.idTarifa === idTarifa});
+        console.log("getTarifaPers) tarifa", tarifa);    
         return tarifa;                
       }
   

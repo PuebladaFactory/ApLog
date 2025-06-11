@@ -8,12 +8,14 @@ import { Router } from '@angular/router';
     <h1>Proveedores</h1>    
   </div>   
   <div class="tab-container">
-      <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab1')">Alta / Listado</div>
-      <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Tarifa General</div>
-      <div class="tab" [class.active]="selectedTab === 'tab3'" (click)="selectTab('tab3')">Tarifa Especial</div>    
-      <div class="tab" [class.active]="selectedTab === 'tab4'" (click)="selectTab('tab4')">Tarifa Eventual</div>    
-      
-      
+      @for (tab of tabs; track tab) {
+      <div
+        class="tab"
+        [class.active]="selectedTab === tab.id"
+        (click)="selectTab(tab.id)">
+        {{ tab.name }}
+      </div>
+    }
   </div>
   <router-outlet></router-outlet>
     `,
@@ -23,6 +25,14 @@ import { Router } from '@angular/router';
 export class ProveedoresControlComponent implements OnInit {
 
   selectedTab: string = 'tab1';
+  tabs = [
+    { id: 'tab1', name: 'Alta/Listado', route: 'proveedores/listado' },    
+    { id: 'tab2', name: 'Tarifa General', route: 'proveedores/general' }, 
+    { id: 'tab3', name: 'Tarifa Especial', route: 'proveedores/especial' }, 
+    { id: 'tab4', name: 'Tarifa Personalizada', route: 'proveedores/personalizada' },
+    { id: 'tab5', name: 'Tarifa Eventual', route: 'proveedores/eventual' },
+    
+  ];
 
   constructor(private router: Router) {}
 
@@ -30,17 +40,12 @@ export class ProveedoresControlComponent implements OnInit {
     this.selectTab("tab1");
   }
 
-  selectTab(tab: string) {
-    this.selectedTab = tab;
-    if (tab === 'tab1') {
-      this.router.navigate(['proveedores/listado']);
-    } else if (tab === 'tab2') {
-      this.router.navigate(['proveedores/general']);
-    } else if (tab === 'tab3') {
-      this.router.navigate(['proveedores/especial']);
-    } else if (tab === 'tab4') {
-      this.router.navigate(['proveedores/eventual']);
-    } 
+selectTab(tabId: string) {
+    this.selectedTab = tabId;
+    const tab = this.tabs.find(t => t.id === tabId);
+    if (tab) {
+      this.router.navigate([tab.route]);
+    }
   }
 
 }

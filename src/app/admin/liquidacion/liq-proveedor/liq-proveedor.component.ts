@@ -689,6 +689,7 @@ deleteDuplicadas(){
     
     let coleccionHistorialTarfGral: string = 'historialTarifasGralProveedor';
     let coleccionHistorialTarfEsp: string = 'historialTarifasEspProveedor';
+    let coleccionHistorialTarfPers: string = 'historialTarifasPersCliente';
     let tarifaGral:ConIdType<TarifaGralCliente> | undefined;
     let tarifaEsp:ConIdType<TarifaGralCliente> | undefined;
     let tarifaPers:ConIdType<TarifaPersonalizadaCliente> | undefined;
@@ -737,7 +738,7 @@ deleteDuplicadas(){
       console.log("1)this.tarifaPers", tarifaPers);
       if(tarifaPers === undefined){
         this.dbFirebase
-        .obtenerTarifaIdTarifa('tarifasPersCliente',this.facDetallada.idTarifa, "idTarifa")
+        .obtenerTarifaIdTarifa(coleccionHistorialTarfPers,this.facDetallada.idTarifa, "idTarifa")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
         .subscribe(data => {      
             this.tarifaAplicada = data;

@@ -47,7 +47,7 @@ import { Component, Input, OnInit } from '@angular/core';
   }
   
   @if (name === 'Vehiculos') {
-    <button  class="btn btn-light m-0" style="border-radius: 10%;  margin: 10px;" >
+    <button  class="btn btn-secondary secondary m-0" style="border-radius: 10%;  margin: 10px;" >
       <!-- <i class="bi bi-pencil"></i> -->
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-car-front-fill" viewBox="0 0 16 16">
         <path d="M2.52 3.515A2.5 2.5 0 0 1 4.82 2h6.362c1 0 1.904.596 2.298 1.515l.792 1.848c.075.175.21.319.38.404.5.25.855.715.965 1.262l.335 1.679q.05.242.049.49v.413c0 .814-.39 1.543-1 1.997V13.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-1.338c-1.292.048-2.745.088-4 .088s-2.708-.04-4-.088V13.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-1.892c-.61-.454-1-1.183-1-1.997v-.413a2.5 2.5 0 0 1 .049-.49l.335-1.68c.11-.546.465-1.012.964-1.261a.8.8 0 0 0 .381-.404l.792-1.848ZM3 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2m10 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2M6 8a1 1 0 0 0 0 2h4a1 1 0 1 0 0-2zM2.906 5.189a.51.51 0 0 0 .497.731c.91-.073 3.35-.17 4.597-.17s3.688.097 4.597.17a.51.51 0 0 0 .497-.731l-.956-1.913A.5.5 0 0 0 11.691 3H4.309a.5.5 0 0 0-.447.276L2.906 5.19Z"/>
@@ -75,6 +75,16 @@ import { Component, Input, OnInit } from '@angular/core';
       <!--  {{name || "Editar"}} -->
     </button>
   }
+    @if (name === 'DetalleColor') {
+    <button  class="btn btn-info info m-0" style="border-radius: 10%;  margin: 10px;" >
+      <!-- <i class="bi bi-pencil"></i> -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+      </svg>
+      <!--  {{name || "Editar"}} -->
+    </button>
+  }
   `,
     styles: [`
     button:hover{
@@ -93,6 +103,18 @@ import { Component, Input, OnInit } from '@angular/core';
 
     .boton-alta:hover{
         background: #0d6efd;        
+    }
+
+    .info:hover{
+        background-color: #f8f9fa;
+        color: #0dcaf0  ;
+        border-color: #0dcaf0;  
+    }
+
+    .secondary:hover{
+      background-color: #f8f9fa;
+      color: #adb5bd  ;
+      border-color: #adb5bd;  
     }
     `],
     standalone: false

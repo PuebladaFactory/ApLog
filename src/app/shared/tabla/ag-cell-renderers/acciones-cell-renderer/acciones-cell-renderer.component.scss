@@ -1,0 +1,10 @@
+.isDisabled {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.isDisabled:hover {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

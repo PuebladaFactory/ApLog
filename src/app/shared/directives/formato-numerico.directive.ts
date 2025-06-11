@@ -58,8 +58,8 @@ export class FormatoNumericoDirective {
   onInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     let valor = input.value;
-    console.log('1) valor inicial: ', valor);
-    console.log('2) puntoIngresadoPorUsuario: ', this.puntoIngresadoPorUsuario);
+    //console.log('1) valor inicial: ', valor);
+    //console.log('2) puntoIngresadoPorUsuario: ', this.puntoIngresadoPorUsuario);
 
     // Verificar si el valor contiene una coma (separador decimal)
     if (valor.includes(',')) {
@@ -109,7 +109,7 @@ export class FormatoNumericoDirective {
       }
     }
 
-    console.log('Final valor al perder foco: ', valor);
+    //console.log('Final valor al perder foco: ', valor);
 
     // Actualizar el input con el valor formateado
     this.renderer.setProperty(input, 'value', valor);

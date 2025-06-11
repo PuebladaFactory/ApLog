@@ -13,7 +13,8 @@ import { ChoferesTarifaGralComponent } from './choferes-tarifa-gral/choferes-tar
 import { ChoferesTarifaEspecialComponent } from './choferes-tarifa-especial/choferes-tarifa-especial.component';
 import { ModalVehiculoComponent } from './modal-vehiculo/modal-vehiculo.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
-
+import { ListadoNuevoChoferComponent } from './listado-nuevo-chofer/listado-nuevo-chofer.component';
+import { AgGridModule } from 'ag-grid-angular';
 
 
 
@@ -28,7 +29,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ChoferesTarifaGralComponent,
     ChoferesTarifaEspecialComponent,    
     ModalVehiculoComponent,
-    
+    ListadoNuevoChoferComponent
     
   ],
   imports: [
@@ -39,7 +40,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     SharedModule,
     FilterPipeModule,
     NgxDatatableModule, 
-    
+    AgGridModule
   ]
 })
 export class ChoferesModule { }

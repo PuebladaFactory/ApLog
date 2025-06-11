@@ -10,11 +10,11 @@ export class SoloNumerosDirective implements OnInit {
   constructor(private el: ElementRef, private renderer: Renderer2) {}
 
   ngOnInit(): void {
-    console.log('appSoloNumeros - ngOnInit');
+    //console.log('appSoloNumeros - ngOnInit');
   }
 
   ngOnDestroy(): void {
-    console.log('appSoloNumeros - ngOnDestroy');
+    //console.log('appSoloNumeros - ngOnDestroy');
   }
 
   @HostListener('input', ['$event'])

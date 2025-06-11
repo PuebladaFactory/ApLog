@@ -42,6 +42,7 @@ import { CloudinaryModule } from '@cloudinary/ng';
 import { LimboComponent } from './limbo/limbo.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AppRoutingModule } from './app-routing.module';
+import { AgGridModule } from 'ag-grid-angular';
 
 @NgModule({
   declarations: [
@@ -70,6 +71,7 @@ import { AppRoutingModule } from './app-routing.module';
     ProveedoresModule,
     FacturacionModule,
     FilterPipeModule,
+    AgGridModule,
     
   ],
   providers: [
