@@ -1,21 +1,5 @@
 
 <div [ngClass]="{'isWaiting': isLoading}">
-    <!-- <div class="mt-2">
-        <div class="d-flex justify-content-between w-100">
-            <div>
-                <button  class="btn btn-primary boton-alta mt-2" type="button" id="" (click)="modalAltaOp()">
-                  Alta de Operación
-                </button>
-                <app-btn-editar name="cargaMultiple" class="ms-3" (click)="modalCargaMultiple()" ></app-btn-editar>
-            </div>
-            <div></div>
-            <button  class="btn btn-primary boton-alta mt-2" type="button" id="" (click)="descargarOp()">
-                Descargar Op
-            </button>
-        </div>
-        
-    </div> -->
-<!-- ///////////////////////////////////////////////////////////////////////////////////////// -->
     <div>
         <div class="custom-datatable">
             <div class="row w-100">
@@ -63,72 +47,46 @@
                     </div>
                 </div>
             </div> 
+            @if (ajustes) {
+              <div >             
+                  <div class="d-flex flex-wrap gap-2 mt-2">
+                      <ng-container *ngFor="let col of allColumnDefs">
+                          <label class="form-check-label me-3">
+                              <input
+                                type="checkbox"
+                                class="form-check-input me-1"
+                                [checked]="visibleColumns.includes(col.field!)"
+                                (change)="toggleColumnVisibility(col.field!)"
+                              />
+                            {{ col.headerName }}
+                          </label>
+                      </ng-container>
+                  </div>
+              </div>
+            } 
 
-
-      <!-- Botones de control -->
-      <!-- 🔧 Controles de visibilidad de columnas -->
-       <!--  <div class="mb-3">
-          <strong>Mostrar/Ocultar columnas:</strong>
-          <div class="d-flex flex-wrap gap-2 mt-2">
-            <ng-container *ngFor="let col of allColumnDefs">
-              <label class="form-check-label me-3">
-                <input
-                  type="checkbox"
-                  class="form-check-input me-1"
-                  [checked]="visibleColumns.includes(col.field!)"
-                  (change)="toggleColumnVisibility(col.field!)"
-                />
-                {{ col.headerName }}
-              </label>
-            </ng-container>
-          </div>
-        </div> -->
-        @if (ajustes) {
-            <div >
-              <!-- @for (column of allColumns; track column) {
-                <label class="me-2" [ngClass]="{'invicible':column.prop === 'estado'}">
-                  <input type="checkbox" [checked]="column.selected" (change)="toggleColumn(column)"  />
-                  {{ column.name }}
-                </label>
-              } -->
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                    <ng-container *ngFor="let col of allColumnDefs">
-                        <label class="form-check-label me-3">
-                            <input
-                              type="checkbox"
-                              class="form-check-input me-1"
-                              [checked]="visibleColumns.includes(col.field!)"
-                              (change)="toggleColumnVisibility(col.field!)"
-                            />
-                          {{ col.headerName }}
-                        </label>
-                    </ng-container>
-                </div>
-            </div>
-          } 
-
-      <!-- 📊 Tabla AG Grid -->
-      <ag-grid-angular
-        style="width: 100%; height: 78vh;"
-        class="ag-theme-alpine"
-        [rowData]="paginatedRows"
-        [columnDefs]="agColumnDefs"
-        [defaultColDef]="defaultColDef"
-        [animateRows]="true"
-        [rowSelection]="'multiple'"
-        [suppressRowClickSelection]="true"
-        (gridReady)="onGridReady($event)"
-        (filterChanged)="onFilterChanged()"
-        (firstDataRendered)="onFirstDataRendered()"
-        theme="legacy"
-        [context]="{ componentParent: this }"
-      ></ag-grid-angular>
+            <!-- 📊 Tabla AG Grid -->
+            <ag-grid-angular
+              style="width: 100%; height: 78vh;"
+              class="ag-theme-alpine"
+              [rowData]="paginatedRows"
+              [columnDefs]="agColumnDefs"
+              [defaultColDef]="defaultColDef"
+              [animateRows]="true"
+              [rowSelection]="'multiple'"
+              [suppressRowClickSelection]="true"
+              (gridReady)="onGridReady($event)"
+              (filterChanged)="onFilterChanged()"
+              (firstDataRendered)="onFirstDataRendered()"
+              theme="legacy"
+              [context]="{ componentParent: this }"
+            ></ag-grid-angular>
 
         </div>
     </div>
 </div>
 
 <app-scroll-to-top></app-scroll-to-top>
-<!-- @if (isLoading) {
+@if (isLoading) {
   <app-spinner></app-spinner>
-} -->
+}

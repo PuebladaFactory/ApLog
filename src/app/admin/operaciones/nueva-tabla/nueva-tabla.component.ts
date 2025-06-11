@@ -304,9 +304,9 @@ private cargarConfiguracionColumnas(): void {
   onFirstDataRendered(): void {
   // Opcional: aplicar estilos adicionales al header si querés
   const header = document.querySelector('.ag-header') as HTMLElement;
-  if (header) {
+  /* if (header) {
     header.classList.add('sticky-top'); // Solo si usás Bootstrap
-  }
+  } */
 }
 
   seleccionarOp(op:any){    
