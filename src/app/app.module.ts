@@ -43,6 +43,7 @@ import { LimboComponent } from './limbo/limbo.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AppRoutingModule } from './app-routing.module';
 import { AgGridModule } from 'ag-grid-angular';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
   declarations: [
@@ -72,6 +73,7 @@ import { AgGridModule } from 'ag-grid-angular';
     FacturacionModule,
     FilterPipeModule,
     AgGridModule,
+    DragDropModule
     
   ],
   providers: [
