@@ -1,6 +1,8 @@
-*{
-  font-size:1.3rem;
+
+label, input, .chofer-item, .chofer-ubicado{
+  font-size: 1.25rem;
 }
+
 .fecha{
   max-width:150px;
 }
@@ -13,9 +15,8 @@
   min-height: 50px;
 }
 
-
 .choferes-scroll-container {
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 150px);
   overflow-y: hidden;  /* Oculta scrollbar por defecto */
   padding-right: 5px;
   transition: overflow-y 0.3s ease;
@@ -63,5 +64,17 @@
 
   &:active {
     cursor: grabbing; /* Mientras se está arrastrando */
+  }
+}
+
+nav.navbar {
+  font-size: 1rem;
+
+  .form-control-sm {
+    width: 160px;
+  }
+
+  .dropdown-menu {
+    font-size: 0.95rem;
   }
 }

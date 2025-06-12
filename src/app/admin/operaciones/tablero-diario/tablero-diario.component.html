@@ -1,72 +1,127 @@
-<!-- Fecha -->
-<div class="mb-3 fecha">
-    <label>Seleccionar fecha:</label>
-    <input type="date" [(ngModel)]="fechaSeleccionada" class="form-control" />
-</div>
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-3 mb-4 rounded shadow-sm d-flex justify-content-between">
+  <!-- Fecha -->
+  <div class="me-3">
+    <label for="fechaSeleccionada" class="form-label mb-0 me-2 fw-bold">📅 Fecha:</label>
+    <input id="fechaSeleccionada" type="date" [(ngModel)]="fechaSeleccionada" class="form-control form-control-sm" />
+  </div>
+
+  <!-- Dropdowns Centrales -->
+  <div class="d-flex">
+    <!-- Choferes Activos -->
+    <div class="dropdown">
+      <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        Choferes Activos
+      </button>
+      <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
+        <li *ngFor="let chofer of choferes">
+          <div class="form-check ms-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              [checked]="chofer.activo"
+              (change)="toggleActivo(chofer)"
+              id="chofer-activo-{{chofer.idChofer}}"
+            />
+            <label class="form-check-label" [for]="'chofer-activo-' + chofer.idChofer">
+              {{ chofer.apellido }}, {{ chofer.nombre }}
+            </label>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Choferes Inactivos -->
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        Choferes Inactivos
+      </button>
+      <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
+        <li *ngFor="let chofer of choferesInactivos">
+          <span style="font-size: 1.25rem;">{{ chofer.apellido }}, {{ chofer.nombre }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Botones derechos -->
+  <div class="">
+    <button class="btn btn-success" (click)="guardarAsignaciones()">💾 Guardar</button>
+    <button class="btn btn-danger" (click)="limpiarAsignaciones()">🧹 Limpiar</button>
+  </div>
+</nav>
+
 <div *ngIf="connectedDropListsIds?.length">
-  <div class="row">
-    <!-- <div class="drag-boundary d-flex"> -->
-        <!-- Lista de Choferes -->
-        <div class="col-2 mt-3">      
-            <h3>Choferes Activos</h3>
-            <div class="choferes-scroll-container"
-              [class.hovered]="hovering"
-              (mouseenter)="hovering = true"
-              (mouseleave)="hovering = false"
-            >
-                <div              
-                  cdkDropList
-                  id="choferes"
-                  [cdkDropListData]="choferes"
-                  [cdkDropListConnectedTo]="connectedDropListsIds"
-                  (cdkDropListDropped)="onDropEnListaChoferes($event)"
-                  class="border p-3 rounded bg-light"           
-                >
-                <div
-                  *ngFor="let chofer of choferes"
-                  cdkDrag                  
-                  [cdkDragData]="chofer"
-                  class="border p-2 mb-2 rounded chofer-item"
-                  [cdkDragBoundary]="'.drag-boundary'"
-                  [ngClass]="{ 'bg-light text-muted opacity-50': estaAsignado(chofer), 'bg-white': !estaAsignado(chofer) }"
-                >
-                  {{chofer.apellido}} {{chofer.nombre}}
+    <div class="row">
+      <!-- <div class="drag-boundary d-flex"> -->
+          <!-- Lista de Choferes -->
+          <div class="col-2 mt-3">      
+              <h3>Choferes Activos</h3>
+              <div class="choferes-scroll-container"
+                [class.hovered]="hovering"
+                (mouseenter)="hovering = true"
+                (mouseleave)="hovering = false"
+              >
+                  <div              
+                    cdkDropList
+                    id="choferes"
+                    [cdkDropListData]="choferes"
+                    [cdkDropListConnectedTo]="connectedDropListsIds"
+                    (cdkDropListDropped)="onDropEnListaChoferes($event)"
+                    class="border p-3 rounded bg-light"           
+                  >
+                  <div
+                    *ngFor="let chofer of choferesActivos"
+                    cdkDrag                  
+                    [cdkDragData]="chofer"
+                    class="border p-2 mb-2 rounded chofer-item"
+                    [cdkDragBoundary]="'.drag-boundary'"
+                    [ngClass]="{ 'bg-light text-muted opacity-50': estaAsignado(chofer), 'bg-white': !estaAsignado(chofer) }"
+                    [title]="clientesAsignados(chofer).join(', ')"
+                  >
+                    {{chofer.apellido}} {{chofer.nombre}}
+                    <span *ngIf="asignacionesMultiples(chofer) > 1" class="badge bg-secondary ms-1">
+                      x{{ asignacionesMultiples(chofer) }}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+              
+
             
+          </div>
 
-          
-        </div>
-
-        <!-- Columnas de Clientes -->
-        <div class="col-10 mt-3">
-          <div class="row">
-            <div
-              class="col-3 mb-4"
-              *ngFor="let cliente of clientes"
-            >
-              <h3 class="text-center">{{ cliente.razonSocial }}</h3>
+          <!-- Columnas de Clientes -->
+          <div class="col-10 mt-3">
+            <div class="row">
               <div
-                cdkDropList
-                [id]="'cliente-drop-' + cliente.idCliente"
-                [cdkDropListData]="asignaciones[cliente.idCliente]"
-                [cdkDropListConnectedTo]="dropListConnections"
-                (cdkDropListDropped)="onDropChoferEnCliente($event, cliente.idCliente)"
-                class="p-2 border rounded min-vh-25 bg-light caja-cliente"
+                class="col-2 mb-4"
+                *ngFor="let cliente of clientes"
               >
+                <h3 class="text-center" style="min-height: 40px;">{{ cliente.razonSocial }}</h3>
                 <div
-                  *ngFor="let chofer of asignaciones[cliente.idCliente]"
-                  cdkDrag
-                  [cdkDragData]="chofer"
-                  class="mb-2 p-2 alert alert-success rounded"
+                  cdkDropList
+                  [id]="'cliente-drop-' + cliente.idCliente"
+                  [cdkDropListData]="asignaciones[cliente.idCliente]"
+                  [cdkDropListConnectedTo]="dropListConnections"
+                  (cdkDropListDropped)="onDropChoferEnCliente($event, cliente.idCliente)"
+                  class="p-2 border rounded min-vh-25 bg-light caja-cliente"
                 >
-                  {{chofer.apellido}} {{chofer.nombre}} 
+                  <div
+                    *ngFor="let chofer of asignaciones[cliente.idCliente]; let i = index"
+                    cdkDrag
+                    [cdkDragData]="chofer"
+                    class="mb-2 p-2 alert alert-success rounded chofer-ubicado d-flex justify-content-between fw-bold text-success"
+                  >                  
+                      <span>{{chofer.apellido}} {{chofer.nombre}}</span>
+                      <button class="btn btn-sm btn-outline-danger ms-2" (click)="quitarChoferDeCliente(cliente.idCliente, i)" title="Quitar chofer">
+                        ❌
+                      </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-    <!-- </div> -->
-  </div>
+      <!-- </div> -->
+    </div>  
 </div>
+
