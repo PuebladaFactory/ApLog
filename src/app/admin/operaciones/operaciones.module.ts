@@ -18,6 +18,8 @@ import { ModalOpAltaComponent } from './modal-op-alta/modal-op-alta.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AgGridModule } from 'ag-grid-angular';
 import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { TableroDiarioComponent } from './tablero-diario/tablero-diario.component';
 
 
 
@@ -29,6 +31,7 @@ import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
     TableroOpComponent,     
     ModalFacturacionComponent, CargaMultipleComponent, ModalOpAltaComponent,
     NuevaTablaComponent,
+    TableroDiarioComponent
     
   ],
   imports: [
@@ -41,6 +44,7 @@ import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
     NgbModule,
     NgxDatatableModule,
     AgGridModule,
+    DragDropModule
   ],
 })
 export class OperacionesModule { }

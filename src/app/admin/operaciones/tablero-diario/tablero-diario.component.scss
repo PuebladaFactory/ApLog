@@ -1,0 +1,67 @@
+*{
+  font-size:1.3rem;
+}
+.fecha{
+  max-width:150px;
+}
+
+.opacity-50 {
+  opacity: 0.5;
+}
+
+.caja-cliente{
+  min-height: 50px;
+}
+
+
+.choferes-scroll-container {
+  max-height: calc(100vh - 100px);
+  overflow-y: hidden;  /* Oculta scrollbar por defecto */
+  padding-right: 5px;
+  transition: overflow-y 0.3s ease;
+
+  &:hover {
+    overflow-y: auto;  /* Muestra scrollbar al hacer hover */
+  }
+
+  /* Scrollbar WebKit (Chrome, Safari, Edge) */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+
+  /* Para Firefox, que no soporta overflow-y toggle suave,
+     podemos hacer que siempre tenga espacio para el scrollbar para evitar "saltos" */
+  &.hovered {
+    overflow-y: auto;
+  }
+
+  
+}
+
+.chofer-item { 
+  cursor: grab; /* Cambia el cursor por una mano */
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #e2e6ea;
+  }
+
+  &:active {
+    cursor: grabbing; /* Mientras se está arrastrando */
+  }
+}

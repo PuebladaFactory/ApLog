@@ -1,0 +1,72 @@
+<!-- Fecha -->
+<div class="mb-3 fecha">
+    <label>Seleccionar fecha:</label>
+    <input type="date" [(ngModel)]="fechaSeleccionada" class="form-control" />
+</div>
+<div *ngIf="connectedDropListsIds?.length">
+  <div class="row">
+    <!-- <div class="drag-boundary d-flex"> -->
+        <!-- Lista de Choferes -->
+        <div class="col-2 mt-3">      
+            <h3>Choferes Activos</h3>
+            <div class="choferes-scroll-container"
+              [class.hovered]="hovering"
+              (mouseenter)="hovering = true"
+              (mouseleave)="hovering = false"
+            >
+                <div              
+                  cdkDropList
+                  id="choferes"
+                  [cdkDropListData]="choferes"
+                  [cdkDropListConnectedTo]="connectedDropListsIds"
+                  (cdkDropListDropped)="onDropEnListaChoferes($event)"
+                  class="border p-3 rounded bg-light"           
+                >
+                <div
+                  *ngFor="let chofer of choferes"
+                  cdkDrag                  
+                  [cdkDragData]="chofer"
+                  class="border p-2 mb-2 rounded chofer-item"
+                  [cdkDragBoundary]="'.drag-boundary'"
+                  [ngClass]="{ 'bg-light text-muted opacity-50': estaAsignado(chofer), 'bg-white': !estaAsignado(chofer) }"
+                >
+                  {{chofer.apellido}} {{chofer.nombre}}
+                </div>
+              </div>
+            </div>
+            
+
+          
+        </div>
+
+        <!-- Columnas de Clientes -->
+        <div class="col-10 mt-3">
+          <div class="row">
+            <div
+              class="col-3 mb-4"
+              *ngFor="let cliente of clientes"
+            >
+              <h3 class="text-center">{{ cliente.razonSocial }}</h3>
+              <div
+                cdkDropList
+                [id]="'cliente-drop-' + cliente.idCliente"
+                [cdkDropListData]="asignaciones[cliente.idCliente]"
+                [cdkDropListConnectedTo]="dropListConnections"
+                (cdkDropListDropped)="onDropChoferEnCliente($event, cliente.idCliente)"
+                class="p-2 border rounded min-vh-25 bg-light caja-cliente"
+              >
+                <div
+                  *ngFor="let chofer of asignaciones[cliente.idCliente]"
+                  cdkDrag
+                  [cdkDragData]="chofer"
+                  class="mb-2 p-2 alert alert-success rounded"
+                >
+                  {{chofer.apellido}} {{chofer.nombre}} 
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    <!-- </div> -->
+  </div>
+</div>
