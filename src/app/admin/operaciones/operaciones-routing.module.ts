@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { OpControlComponent } from './op-control/op-control.component';
 import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
+import { TableroDiarioComponent } from './tablero-diario/tablero-diario.component';
 
 
 const routes: Routes = [
@@ -10,6 +11,7 @@ const routes: Routes = [
       children: [       
         {path: 'nuevo', component:TableroOpComponent},             
         {path: 'tablero', component:NuevaTablaComponent},             
+        {path: 'diario', component:TableroDiarioComponent},             
     ]  },
   
     
