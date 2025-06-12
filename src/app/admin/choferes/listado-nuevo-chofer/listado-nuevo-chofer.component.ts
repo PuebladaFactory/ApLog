@@ -11,6 +11,7 @@ import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-rend
 import Swal from 'sweetalert2';
 import { ChoferesAltaComponent } from '../choferes-alta/choferes-alta.component';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 @Component({
   selector: 'app-listado-nuevo-chofer',
@@ -53,11 +54,10 @@ export class ListadoNuevoChoferComponent implements OnInit, OnDestroy {
     $choferes!: ConIdType<Chofer>[] ;
     $proveedores!: ConId<Proveedor>[];    
     choferEditar!: ConIdType<Chofer>;
-    //firstFilter: string = '';
-    //secondFilter: string = '';
+    choferesActualizados: any[] = [];
     private destroy$ = new Subject<void>();
   
-    constructor(private storageService: StorageService, private modalService: NgbModal) {}
+    constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService) {}
   
     ngOnInit(): void {
       this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
@@ -278,6 +278,26 @@ export class ListadoNuevoChoferComponent implements OnInit, OnDestroy {
     ngOnDestroy(): void {
       this.destroy$.next();
       this.destroy$.complete();
+    }
+
+    editarChoferes(){
+      
+      this.choferesActualizados = this.agregarCampoActivo(this.$choferes);
+      console.log("choferesActualizados", this.choferesActualizados);
+      
+    }
+
+    agregarCampoActivo(choferes: any): ConIdType<Chofer>[] {
+      return choferes.map((chofer:any) => {
+        return {
+          ...chofer,
+          activo: true
+        };
+      });
+    }
+
+    actualizarChoferes(){
+      this.dbFirebase.actualizarMultiple(this.choferesActualizados, "choferes")
     }
 
 }

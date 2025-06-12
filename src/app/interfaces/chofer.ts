@@ -18,7 +18,7 @@ export interface Chofer {
     tarifaTipo: TarifaTipo;
     tarifaAsignada: boolean;
     idTarifa:number;
-    
+    activo:boolean;
 }
 
 export interface Vehiculo {
