@@ -802,9 +802,6 @@ export class TableroOpComponent implements OnInit {
     } else{
       return "";
     }
-
-
-    
   }
 
   filtrarChoferes(idChofer: number){    

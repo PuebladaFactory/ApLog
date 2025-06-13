@@ -12,7 +12,44 @@
                             <app-btn-editar name="cargaMultiple" class="ms-3" (click)="modalCargaMultiple()" ></app-btn-editar>
                         </div>
                     </div>
-                    <div class="row"></div>                    
+                    <div class="row">
+                        <!-- ACA IRIAN LOS FILTROS DE CLIENTES Y CHOFERES -->
+                         <div class="d-flex gap-2 mt-3">
+                            <!-- Dropdown Clientes -->
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    Cliente: {{ clienteSeleccionado?.razonSocial || 'Todos' }}
+                                </button>
+                                <ul class="dropdown-menu">
+                                <li *ngFor="let cliente of clientesEnPeriodo">
+                                    <a class="dropdown-item" (click)="filtrarPorCliente(cliente)">
+                                    {{ cliente.razonSocial }}
+                                    </a>
+                                </li>
+                                </ul>
+                            </div>
+
+                            <!-- Dropdown Choferes -->
+                            <div class="dropdown">
+                                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    Chofer: {{ choferSeleccionado?.apellido || 'Todos' }}
+                                </button>
+                                <ul class="dropdown-menu">
+                                <li *ngFor="let chofer of choferesEnPeriodo">
+                                    <a class="dropdown-item" (click)="filtrarPorChofer(chofer)">
+                                    {{ chofer.apellido }} {{ chofer.nombre }}
+                                    </a>
+                                </li>
+                                </ul>
+                            </div>
+
+                            <!-- Botón limpiar -->
+                            <button class="btn btn-outline-secondary limpiar" (click)="limpiarFiltrosCruzados()">
+                                Limpiar filtros
+                            </button>
+                            </div>
+
+                    </div>                    
                 </div>
                 <div class="col-4">
                     <div class="mt-2">

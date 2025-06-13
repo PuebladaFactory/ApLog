@@ -404,7 +404,23 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
    liquidarFacCliente(cliente: any, index: number){
     // Obtener las facturas del cliente
-    //////////console.log("1: ",this.facturasLiquidadasCliente);
+    console.log("cliente: ", cliente);
+    let facturasCliente = this.$facturasOpCliente.filter((factura: FacturaOp) => {
+       return factura.idCliente === cliente.idCliente;
+    });
+
+    let alertaProforma = facturasCliente.some((f: ConId<FacturaOp>)=>{ return f.contraParteProforma})
+    console.log("alertaProforma", alertaProforma);
+    if(alertaProforma){
+      Swal.fire({
+          icon: "warning",
+          title: "¡Atención!",
+          text: "El cliente tiene operaciones asignadas a una proforma de Chofer. Las mismas no se incluyen en la liquidación",
+          //footer: '<a href="#">Why do I have this issue?</a>'
+        });
+    }
+
+    console.log("facturasCliente: ", facturasCliente);
 
     if(cliente.opAbiertas > 0){
         Swal.fire({
@@ -414,6 +430,9 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           //footer: '<a href="#">Why do I have this issue?</a>'
         });
     }
+
+    
+    
     
     let facturasIdCliente:any = this.facturasPorCliente.get(cliente.idCliente);
     this.razonSocFac = cliente.razonSocial;
@@ -724,7 +743,11 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       modalRef.result.then(
         (result) => {
           this.procesarDatosParaTabla();
-          this.cerrarTabla(i)
+          //this.cerrarTabla(i)
+          let facturasCliente = this.$facturasOpCliente.filter((factura: FacturaOp) => {
+              return factura.idCliente === this.facDetallada.idCliente;
+          });
+          this.facturasPorCliente.set(this.facDetallada.idCliente, facturasCliente);
         },
         (reason) => {}
       );

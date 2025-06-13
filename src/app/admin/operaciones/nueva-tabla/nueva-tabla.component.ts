@@ -71,6 +71,11 @@ export class NuevaTablaComponent implements OnInit, OnDestroy {
   $clientes!: ConIdType<Cliente>[];
   $choferes!: ConIdType<Chofer>[];
   $proveedores!: ConIdType<Proveedor>[];
+  clientesEnPeriodo: ConIdType<Cliente>[] = [];
+  choferesEnPeriodo: ConIdType<Chofer>[] = [];
+
+  clienteSeleccionado: ConIdType<Cliente> | null = null;
+  choferSeleccionado: ConIdType<Chofer> | null = null;
 
   constructor(
     private storageService: StorageService,
@@ -242,8 +247,61 @@ private cargarConfiguracionColumnas(): void {
       proveedor: this.getProveedor(op.chofer.idProveedor),
       observaciones: op.observaciones,
     }));
+
+    this.clientesEnPeriodo = this.obtenerClientesFiltrados();
+    this.choferesEnPeriodo = this.obtenerChoferesFiltrados();
   }
 
+  private obtenerClientesFiltrados(): ConIdType<Cliente>[] {
+    const idsClientes = new Set(this.$opFiltradas.map(op => op.cliente.idCliente));
+    return this.$clientes.filter(c => idsClientes.has(c.idCliente));
+  }
+
+  private obtenerChoferesFiltrados(): ConIdType<Chofer>[] {
+    const idsChoferes = new Set(this.$opFiltradas.map(op => op.chofer.idChofer));
+    return this.$choferes.filter(c => idsChoferes.has(c.idChofer));
+  }
+
+
+  filtrarPorCliente(cliente: ConIdType<Cliente>) {
+    this.clienteSeleccionado = cliente;
+
+    this.$opFiltradas = this.$opActivas.filter(op => op.cliente.idCliente === cliente.idCliente);
+
+    if (this.choferSeleccionado) {
+      this.$opFiltradas = this.$opFiltradas.filter(op => op.chofer.idChofer === this.choferSeleccionado!.idChofer);
+    }
+
+    this.actualizarOpcionesDropdown();
+    this.armarTabla();
+  }
+
+  filtrarPorChofer(chofer: ConIdType<Chofer>) {
+    this.choferSeleccionado = chofer;
+
+    this.$opFiltradas = this.$opActivas.filter(op => op.chofer.idChofer === chofer.idChofer);
+
+    if (this.clienteSeleccionado) {
+      this.$opFiltradas = this.$opFiltradas.filter(op => op.cliente.idCliente === this.clienteSeleccionado!.idCliente);
+    }
+
+    this.actualizarOpcionesDropdown();
+    this.armarTabla();
+  }
+
+  private actualizarOpcionesDropdown(): void {
+    this.clientesEnPeriodo = this.obtenerClientesFiltrados();
+    this.choferesEnPeriodo = this.obtenerChoferesFiltrados();
+  }
+
+  limpiarFiltrosCruzados() {
+    this.clienteSeleccionado = null;
+    this.choferSeleccionado = null;
+    this.$opFiltradas = [...this.$opActivas];
+    this.actualizarOpcionesDropdown();
+    this.armarTabla();
+  }
+  
   getCategoria(op: Operacion): string {
     const vehiculo = op.chofer.vehiculo.find(v => v.dominio === op.patenteChofer);
     return vehiculo?.categoria.nombre ?? 'Sin categoría';

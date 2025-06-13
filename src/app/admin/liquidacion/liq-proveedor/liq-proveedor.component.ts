@@ -780,7 +780,11 @@ deleteDuplicadas(){
         modalRef.result.then(
           (result) => {
             this.procesarDatosParaTabla();
-            this.cerrarTabla(i);
+             // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
+            let facturasProveedor = this.$facturasOpProveedor.filter((factura: FacturaOp) => {
+                return factura.idProveedor === this.facDetallada.idProveedor;
+            });
+            this.facturasPorProveedor.set(this.facDetallada.idProveedor, facturasProveedor);
   
           },
           (reason) => {}
