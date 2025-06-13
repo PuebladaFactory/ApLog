@@ -794,7 +794,10 @@ buscarTarifa(i:number ) {
         modalRef.result.then(
           (result) => {
             this.procesarDatosParaTabla();
-            this.cerrarTabla(i)
+            let facturasChofer = this.$facturasOpChofer.filter((factura: FacturaOp) => {
+                return factura.idChofer === this.facDetallada.idChofer;
+            });
+            this.facturasPorChofer.set(this.facDetallada.idChofer, facturasChofer);
   
           },
           (reason) => {}
