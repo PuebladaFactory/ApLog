@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 @Component({
     selector: 'app-op-control',
     template: `
-  <div class="d-flex justify-content-between mt-3">
+  <div class="mt-3">
     <h1 class="text-center w-100">Operaciones</h1>
   </div>
   <div class="tab-container">
