@@ -6,10 +6,10 @@
   </div>
 
   <!-- Dropdowns Centrales -->
-  <div class="d-flex">
+  <div class=" mx-auto d-flex align-items-center">
     <!-- Choferes Activos -->
     <div class="dropdown">
-      <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+      <button class="btn btn-primary boton-choferes dropdown-toggle me-1" type="button" data-bs-toggle="dropdown">
         Choferes Activos
       </button>
       <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
@@ -32,7 +32,7 @@
 
     <!-- Choferes Inactivos -->
     <div class="dropdown">
-      <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+      <button class="btn celeste-fijo dropdown-toggle" type="button" data-bs-toggle="dropdown">
         Choferes Inactivos
       </button>
       <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
@@ -44,9 +44,12 @@
   </div>
 
   <!-- Botones derechos -->
-  <div class="">
-    <button class="btn btn-success" (click)="guardarAsignaciones()">💾 Guardar</button>
-    <button class="btn btn-danger" (click)="limpiarAsignaciones()">🧹 Limpiar</button>
+  <div class="d-flex">
+    <!-- <button class="btn btn-success" (click)="guardarAsignaciones()">💾 Guardar</button> -->
+      <button  class="btn btn-primary boton-choferes me-1" type="button" id="" (click)="descargarOp()">
+          Descargar Op
+      </button>
+      <button class="btn btn-danger boton-baja" (click)="limpiarAsignaciones()">🧹 Limpiar Tablero</button>
   </div>
 </nav>
 
@@ -68,21 +71,34 @@
                     [cdkDropListConnectedTo]="connectedDropListsIds"
                     (cdkDropListDropped)="onDropEnListaChoferes($event)"
                     class="border p-3 rounded bg-light"           
-                  >
-                  <div
-                    *ngFor="let chofer of choferesActivos"
-                    cdkDrag                  
-                    [cdkDragData]="chofer"
-                    class="border p-2 mb-2 rounded chofer-item"
-                    [cdkDragBoundary]="'.drag-boundary'"
-                    [ngClass]="{ 'bg-light text-muted opacity-50': estaAsignado(chofer), 'bg-white': !estaAsignado(chofer) }"
-                    [title]="clientesAsignados(chofer).join(', ')"
-                  >
-                    {{chofer.apellido}} {{chofer.nombre}}
-                    <span *ngIf="asignacionesMultiples(chofer) > 1" class="badge bg-secondary ms-1">
-                      x{{ asignacionesMultiples(chofer) }}
-                    </span>
+                  >                  
+                  <div *ngFor="let categoria of choferesAgrupadosPorCategoria; let i = index" class="mb-3 border rounded p-2 shadow-sm">
+                      <h5 class="p-2 rounded">{{ categoria.nombre }}</h5>
+                      <div class="d-flex flex-wrap gap-2">
+                        <div
+                          *ngFor="let chofer of categoria.choferes"
+                          class="chofer-card"
+                          [ngClass]="[
+                            sectionColorClasses[i % sectionColorClasses.length],
+                            estaAsignado(chofer) ? 'opacity-50' : ''
+                          ]"
+                          [cdkDragData]="{ chofer: chofer, categoria: categoria }"
+                          cdkDrag
+                          [cdkDragBoundary]="'.drag-boundary'"
+                          
+                          [title]="clientesAsignados(chofer).join(', ')"
+                        >
+                          {{ chofer.apellido }}, {{ chofer.nombre }}
+                          <span *ngIf="asignacionesMultiples(chofer) > 1" class="badge bg-secondary ms-1">
+                            x{{ asignacionesMultiples(chofer) }}
+                          </span>
+                        </div>
+                      </div>
                   </div>
+                  <!-- nuevo -->
+
+
+
                 </div>
               </div>
               
@@ -110,10 +126,14 @@
                     *ngFor="let chofer of asignaciones[cliente.idCliente]; let i = index"
                     cdkDrag
                     [cdkDragData]="chofer"
-                    class="mb-2 p-2 alert alert-success rounded chofer-ubicado d-flex justify-content-between fw-bold text-success"
+                    class="mb-2 p-2 rounded chofer-ubicado d-flex justify-content-between fw-bold"
+                    [ngClass]="getColorClassForChoferAsignado(chofer)"
                   >                  
                       <span>{{chofer.apellido}} {{chofer.nombre}}</span>
-                      <button class="btn btn-sm btn-outline-danger ms-2" (click)="quitarChoferDeCliente(cliente.idCliente, i)" title="Quitar chofer">
+                      <button class="btn btn-sm ms-2"
+                        [ngClass]="getButtonClassForChofer(chofer)"
+                        (click)="quitarChoferDeCliente(cliente.idCliente, i)"
+                        title="Quitar chofer">
                         ❌
                       </button>
                   </div>

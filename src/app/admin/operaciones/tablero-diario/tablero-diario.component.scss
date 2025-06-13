@@ -15,6 +15,45 @@ label, input, .chofer-item, .chofer-ubicado{
   min-height: 50px;
 }
 
+.boton-choferes{
+  width: 15rem;
+  background: #002b5c;
+  color: white;
+  opacity: 0.8;
+  font-size: 1.3rem;
+}
+
+.boton-choferes:hover{
+  background: #0d6efd;    
+}
+
+.celeste-fijo{
+  background-color: lightblue;
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
+.celeste-fijo:hover{
+  background-color: rgb(121, 174, 192);;
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
+.boton-baja{
+  width: 15rem;
+  background: #dc3545 ;
+  color: white;
+  opacity: 0.8;
+  font-size: 1.3rem;
+}
+
+.boton-baja:hover{
+  background: #e35d6a;    
+}
+
+
 .choferes-scroll-container {
   max-height: calc(100vh - 150px);
   overflow-y: hidden;  /* Oculta scrollbar por defecto */
@@ -77,4 +116,20 @@ nav.navbar {
   .dropdown-menu {
     font-size: 0.95rem;
   }
+}
+
+.chofer-card {
+  width: 180px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 500;
+  text-align: center;
+  cursor: move;
+  user-select: none;
+  transition: box-shadow 0.2s ease;
+  border: 1px solid #ddd;
+}
+
+.chofer-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
