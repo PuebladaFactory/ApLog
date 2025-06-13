@@ -1,56 +1,60 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light px-3 mb-4 rounded shadow-sm d-flex justify-content-between">
-  <!-- Fecha -->
-  <div class="me-3">
-    <label for="fechaSeleccionada" class="form-label mb-0 me-2 fw-bold">📅 Fecha:</label>
-    <input id="fechaSeleccionada" type="date" [(ngModel)]="fechaSeleccionada" class="form-control form-control-sm" />
-  </div>
-
-  <!-- Dropdowns Centrales -->
-  <div class=" mx-auto d-flex align-items-center">
-    <!-- Choferes Activos -->
-    <div class="dropdown">
-      <button class="btn btn-primary boton-choferes dropdown-toggle me-1" type="button" data-bs-toggle="dropdown">
-        Choferes Activos
-      </button>
-      <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
-        <li *ngFor="let chofer of choferes">
-          <div class="form-check ms-2">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              [checked]="chofer.activo"
-              (change)="toggleActivo(chofer)"
-              id="chofer-activo-{{chofer.idChofer}}"
-            />
-            <label class="form-check-label" [for]="'chofer-activo-' + chofer.idChofer">
-              {{ chofer.apellido }}, {{ chofer.nombre }}
-            </label>
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-3 mb-4 rounded shadow-sm row w-100 ms-1">  
+    <div class="col-4">
+        <!-- Fecha -->
+        <div class="">
+          <label for="fechaSeleccionada" class="form-label mb-0 me-2 fw-bold">📅 Fecha:</label>
+          <input id="fechaSeleccionada" type="date" [(ngModel)]="fechaSeleccionada" class="form-control form-control-sm" />
+        </div>
+    </div>
+    <div class="col-4">
+        <!-- Dropdowns Centrales -->
+        <div class="d-flex align-items-center justify-content-center">
+          <!-- Choferes Activos -->
+          <div class="dropdown">
+            <button class="btn btn-primary boton-choferes dropdown-toggle me-1" type="button" data-bs-toggle="dropdown">
+              Choferes Activos
+            </button>
+            <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
+              <li *ngFor="let chofer of choferes">
+                <div class="form-check ms-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    [checked]="chofer.activo"
+                    (change)="toggleActivo(chofer)"
+                    id="chofer-activo-{{chofer.idChofer}}"
+                  />
+                  <label class="form-check-label" [for]="'chofer-activo-' + chofer.idChofer">
+                    {{ chofer.apellido }}, {{ chofer.nombre }}
+                  </label>
+                </div>
+              </li>
+            </ul>
           </div>
-        </li>
-      </ul>
-    </div>
 
-    <!-- Choferes Inactivos -->
-    <div class="dropdown">
-      <button class="btn celeste-fijo dropdown-toggle" type="button" data-bs-toggle="dropdown">
-        Choferes Inactivos
-      </button>
-      <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
-        <li *ngFor="let chofer of choferesInactivos">
-          <span style="font-size: 1.25rem;">{{ chofer.apellido }}, {{ chofer.nombre }}</span>
-        </li>
-      </ul>
+          <!-- Choferes Inactivos -->
+          <div class="dropdown">
+            <button class="btn celeste-fijo dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              Choferes Inactivos
+            </button>
+            <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
+              <li *ngFor="let chofer of choferesInactivos">
+                <span style="font-size: 1.25rem;">{{ chofer.apellido }}, {{ chofer.nombre }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
     </div>
-  </div>
-
-  <!-- Botones derechos -->
-  <div class="d-flex">
-    <!-- <button class="btn btn-success" (click)="guardarAsignaciones()">💾 Guardar</button> -->
-      <button  class="btn btn-primary boton-choferes me-1" type="button" id="" (click)="descargarOp()">
-          Descargar Op
-      </button>
-      <button class="btn btn-danger boton-baja" (click)="limpiarAsignaciones()">🧹 Limpiar Tablero</button>
-  </div>
+    <div class="col-4">
+        <!-- Botones derechos -->
+        <div class="d-flex justify-content-end">
+          <!-- <button class="btn btn-success" (click)="guardarAsignaciones()">💾 Guardar</button> -->
+            <button  class="btn btn-primary boton-choferes me-1" type="button" id="" (click)="descargarOp()">
+                Descargar Op
+            </button>
+            <button class="btn btn-danger boton-baja" (click)="limpiarAsignaciones()">🧹 Limpiar Tablero</button>
+        </div>
+    </div>
 </nav>
 
 <div *ngIf="connectedDropListsIds?.length">

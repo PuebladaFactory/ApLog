@@ -55,7 +55,8 @@ label, input, .chofer-item, .chofer-ubicado{
 
 
 .choferes-scroll-container {
-  max-height: calc(100vh - 150px);
+  min-height: calc(100vh - 150px);
+  max-height: 100vh;
   overflow-y: hidden;  /* Oculta scrollbar por defecto */
   padding-right: 5px;
   transition: overflow-y 0.3s ease;
