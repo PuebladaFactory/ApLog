@@ -78,6 +78,7 @@ export class LiqProveedorComponent implements OnInit {
   $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
   $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
   isLoading: boolean = false;
+  objetoEditado: ConId<FacturaOp>[] = [];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -966,6 +967,34 @@ deleteDuplicadas(){
             alert("se eliminaron correctamente")
           } else {
             alert(`error en la eliminación: ${result.mensaje}` )
+          }
+        })
+      }
+
+      editarObjeto(){
+        console.log("1)this.facturasOpEditadas", this.$facturasOpProveedor);
+        this.objetoEditado= this.agregarCampo(this.$facturasOpProveedor)
+        console.log("2)this.objetoEditado", this.objetoEditado);
+        
+      }
+
+      agregarCampo(facturaOp: any[]): ConId<FacturaOp>[] {
+        return facturaOp.map(facOp => {
+          return {
+            ...facOp,
+            contraParteProforma: false,
+          };
+        });
+      }
+
+      actualizarObjeto(){
+        this.isLoading = true
+        this.dbFirebase.actualizarMultiple(this.objetoEditado, "facturaOpProveedor").then((result)=>{
+          this.isLoading = false
+          if(result.exito){
+            alert("actualizado correctamente")
+          } else {
+            alert(`error actualizando. errr: ${result.mensaje}`)
           }
         })
       }
