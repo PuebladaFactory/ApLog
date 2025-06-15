@@ -48,7 +48,7 @@
     <div class="col-4">
         <!-- Botones derechos -->
         <div class="d-flex justify-content-end">
-          <!-- <button class="btn btn-success" (click)="guardarAsignaciones()">💾 Guardar</button> -->
+            <button class="btn btn-success boton-alta me-1" (click)="guardarAsignaciones()">Guardar Op</button>
             <button  class="btn btn-primary boton-choferes me-1" type="button" id="" (click)="descargarOp()">
                 Descargar Op
             </button>
@@ -132,8 +132,13 @@
                     [cdkDragData]="chofer"
                     class="mb-2 p-2 rounded chofer-ubicado d-flex justify-content-between fw-bold"
                     [ngClass]="getColorClassForChoferAsignado(chofer)"
+                    style="cursor: pointer"
+                    (dblclick)="abrirEdicionChofer(chofer, modalEditarChofer)"
                   >                  
                       <span>{{chofer.apellido}} {{chofer.nombre}}</span>
+                      <span *ngIf="chofer.observaciones || chofer.hojaDeRuta" class="ms-2 text-info" title="Tiene información">
+                        📝
+                      </span>
                       <button class="btn btn-sm ms-2"
                         [ngClass]="getButtonClassForChofer(chofer)"
                         (click)="quitarChoferDeCliente(cliente.idCliente, i)"
@@ -148,4 +153,41 @@
       <!-- </div> -->
     </div>  
 </div>
+
+<!-- MODAL -->
+<ng-template #modalEditarChofer let-modal>
+    <div *ngIf="choferEditable">
+        <div class="modal-header">
+            <h3 class="modal-title">
+              {{ choferEditable.apellido }}, {{ choferEditable.nombre }}
+            </h3>
+            <button type="button" class="btn-close" aria-label="Cerrar" (click)="modal.dismiss()"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Observaciones</label>
+                <textarea
+                  class="form-control"
+                  [(ngModel)]="choferEditable!.observaciones"
+                  rows="3"
+                ></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Hoja de Ruta</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="choferEditable!.hojaDeRuta"
+                />
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+            <button type="button" class="btn btn-primary" (click)="guardarCambiosChofer(modal)">Guardar</button>
+        </div>    
+    </div>
+  
+</ng-template>
+
+
 
