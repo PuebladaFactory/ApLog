@@ -295,9 +295,13 @@
 @if (isLoading) {
   <app-spinner></app-spinner>
 }
-<!-- <hr>
+<!-- 
+<button class="btn btn-outline-secondary" (click)="editarObjeto()">Editar informes</button>
+<button class="btn btn-outline-secondary" (click)="actualizarObjeto()">Actualizar informes</button>
+<hr>
 <h1>DUPLICADAS</h1>
-<button class="btn btn-primary" (click)="borrarDuplicadasEnLiquidacion()">Borrar Duplicadas Liquidación</button>
+<button class="btn btn-outline-danger" (click)="mostrarDuplicadasEnLiquidacion()">mostrar Duplicadas Liquidación</button>
+<button class="btn btn-danger" (click)="borrarDuplicadasEnLiquidacion()">Borrar Duplicadas Liquidación</button>
 <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
 <table class="table table-light table-striped table-bordered" >
   <thead>
@@ -352,7 +356,7 @@
 <hr>
   <button class="btn btn-primary" (click)="verificarDuplicadosFacturadas()">Buscar</button>
   <h1>DUPLICADAS FACTURADAS</h1>
-  <button class="btn btn-primary" (click)="deleteDuplicadas()">Borrar</button>
+  <button class="btn btn-danger" (click)="deleteDuplicadas()">Borrar</button>
   <input class="form-control mt-2" type="text" [(ngModel)]="searchText3" placeholder="Buscar por chofer">
   <table class="table table-light table-striped table-bordered" >
     <thead>
@@ -403,8 +407,8 @@
 
       </tr>
     </tbody>
-  </table> -->
+  </table>
 
-<!--   <div>
+<div>
   <button class="btn btn-primary" (click)="borrarLiquidaciones()">Borrar </button>
 </div> -->

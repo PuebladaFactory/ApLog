@@ -22,6 +22,7 @@ import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.compone
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.service';
+import { result } from 'lodash';
 
 
 @Component({
@@ -83,7 +84,7 @@ export class LiqClienteComponent {
   $facturasOpProveedor: ConId<FacturaOp>[] = []; // Array de facturas de choferes
   $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
   isLoading: boolean = false;
-
+  objetoEditado: ConId<FacturaOp>[] = [];
 
   constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -169,11 +170,11 @@ verificarDuplicadosFacturadas(){
     .pipe(take(1))
     .subscribe(data=>{
       if(data.length > 0){
-        ////console.log("hay data", data);
+        console.log("hay data", data);
         let facOp: any = data[0];
         this.$facLiqOpDuplicadas.push(facOp)
       } else {
-        ////console.log("no hay data", data);        
+        console.log("no hay data", data);        
       }
     })
   })
@@ -189,12 +190,27 @@ deleteDuplicadas(){
 
 borrarDuplicadasEnLiquidacion(){
   ////console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
-  this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+  /* this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
     this.dbFirebase.delete(this.titulo, facDupli.id)
+}) */
+this.isLoading = true;
+this.dbFirebase.eliminarMultiple(this.$facturasOpDuplicadas, this.titulo).then(result=>{
+  this.isLoading = false;
+  if(result.exito){
+    this.$facturasOpDuplicadas = []
+    this.procesarDatosParaTabla();
+    this.verificarDuplicados();
+    alert("se eliminaron correctamente")
+  }else {
+    alert("error en la eliminacion")
+  }
 })
-this.$facturasOpDuplicadas = []
-this.procesarDatosParaTabla();
-this.verificarDuplicados();
+
+}
+
+mostrarDuplicadasEnLiquidacion(){
+  console.log("this.$facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
+  
 }
   
 
@@ -988,5 +1004,32 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         })
       }
 
+      editarObjeto(){
+        console.log("1)this.facturasOpEditadas", this.$facturasOpCliente);
+        this.objetoEditado= this.agregarCampo(this.$facturasOpCliente)
+        console.log("2)this.objetoEditado", this.objetoEditado);
+        
+      }
+
+      agregarCampo(facturaOp: any[]): ConId<FacturaOp>[] {
+        return facturaOp.map(facOp => {
+          return {
+            ...facOp,
+            contraParteProforma: false,
+          };
+        });
+      }
+
+      actualizarObjeto(){
+        this.isLoading = true
+        this.dbFirebase.actualizarMultiple(this.objetoEditado, "facturaOpCliente").then((result)=>{
+          this.isLoading = false
+          if(result.exito){
+            alert("actualizado correctamente")
+          } else {
+            alert(`error actualizando. errr: ${result.mensaje}`)
+          }
+        })
+      }
 
 }

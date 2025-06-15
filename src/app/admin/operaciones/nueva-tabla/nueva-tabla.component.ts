@@ -17,6 +17,7 @@ import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { FacturaOp } from 'src/app/interfaces/factura-op';
 
 @Component({
   selector: 'app-nueva-tabla',
@@ -72,14 +73,14 @@ export class NuevaTablaComponent implements OnInit, OnDestroy {
   $choferes!: ConIdType<Chofer>[];
   $proveedores!: ConIdType<Proveedor>[];
   clientesEnPeriodo: ConIdType<Cliente>[] = [];
-  choferesEnPeriodo: ConIdType<Chofer>[] = [];
-
+  choferesEnPeriodo: ConIdType<Chofer>[] = [];  
   clienteSeleccionado: ConIdType<Cliente> | null = null;
   choferSeleccionado: ConIdType<Chofer> | null = null;
+  objetoEditado: ConId<Operacion>[] = [];
 
   constructor(
     private storageService: StorageService,
-    private dbFirestore: DbFirestoreService,
+    private dbFirebase: DbFirestoreService,
     private modalService: NgbModal,
     private excelServ: ExcelService
   ) {}
@@ -577,6 +578,38 @@ private cargarConfiguracionColumnas(): void {
         ////////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
         //this.getMsg()
     });
+  }
+
+  editarObjeto(){
+    console.log("1)this.opActivas", this.$opActivas);
+    this.objetoEditado= this.agregarCampo(this.$opActivas)
+    console.log("2)this.objetoEditado", this.objetoEditado);
+    
+  }
+
+  agregarCampo(operaciones: any[]): ConId<Operacion>[] {
+   return operaciones.map(operacion => {
+        return {
+            ...operacion,
+            estado: {
+                ...operacion.estado, // Mantiene todos los valores existentes
+                proformaCl: false,   // Agrega nuevo campo con valor por defecto
+                proformaCh: false    // Agrega nuevo campo con valor por defecto
+            }
+        };
+    });
+  }
+
+  actualizarObjeto(){
+    this.isLoading = true
+    this.dbFirebase.actualizarMultiple(this.objetoEditado, "operaciones").then((result)=>{
+      this.isLoading = false
+      if(result.exito){
+        alert("actualizado correctamente")
+      } else {
+        alert(`error actualizando. errr: ${result.mensaje}`)
+      }
+    })
   }
 
 }
