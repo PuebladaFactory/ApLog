@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, TemplateRef } from '@angular/core';
 import { CdkDragDrop, transferArrayItem } from '@angular/cdk/drag-drop';
 import { Subject, takeUntil } from 'rxjs';
 import { Categoria, Chofer } from 'src/app/interfaces/chofer';
@@ -7,7 +7,20 @@ import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
-type ChoferAsignado = ConIdType<Chofer> & { categoriaAsignada: Categoria };
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { CargaTableroDiarioComponent } from '../carga-tablero-diario/carga-tablero-diario.component';
+type complementoChofer =  {
+  categoriaAsignada: Categoria;
+  observaciones: string;
+  hojaDeRuta: string;
+  tEventual:boolean;
+};
+type ChoferAsignado = ConIdType<Chofer> & {
+  categoriaAsignada: Categoria;
+  observaciones: string;
+  hojaDeRuta: string;
+  tEventual:boolean;
+};
 
 @Component({
   selector: 'app-tablero-diario',
@@ -36,14 +49,21 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     'bg-secondary text-white',
     'bg-dark text-white'
   ];
+  choferSeleccionadoParaEditar: ChoferAsignado | null = null;
+  choferSeleccionadoOriginal: ChoferAsignado | null = null;
+  choferEditable: ChoferAsignado | null = null;
 
-  constructor(private storageService: StorageService) {}
+
+  constructor(
+    private storageService: StorageService,
+    private modalService: NgbModal
+  ) {}
 
   ngOnInit(): void {
     // 1. Obtener tarifa general del localStorage
     const storedTarifa = this.storageService.loadInfo("tarifasGralCliente")
     this.tarifaGeneral = storedTarifa[0];
-    console.log("tarifaGeneral", this.tarifaGeneral );
+    //console.log("tarifaGeneral", this.tarifaGeneral );
 
 
     // 2. Obtener choferes
@@ -128,38 +148,50 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
 
   onDropChoferEnCliente(event: CdkDragDrop<any>, clienteId: number): void {
     const data = event.item.data;
+    const choferBase: ConIdType<Chofer> = data.chofer;
 
-    const chofer: ChoferAsignado = data.chofer;
-    const categoria: CategoriaTarifa = data.categoria;
+    const chofer: ChoferAsignado = {
+      ...choferBase,
+      categoriaAsignada: data.categoria, // o undefined, según tu lógica
+      tEventual: !!choferBase.tarifaTipo?.eventual,
+      observaciones:"",
+      hojaDeRuta:""
+    };
+    console.log("1)chofer: ", chofer);
 
     if (!this.asignaciones[clienteId].some(c => c.idChofer === chofer.idChofer)) {
       // Guardamos la categoría con la que fue asignado
-      this.asignaciones[clienteId].push({ ...(chofer as any), categoriaAsignada: categoria });
+      this.asignaciones[clienteId].push(chofer);
     }
 
     
   }
 
   getColorClassForChoferAsignado(chofer: ChoferAsignado): string {
-    console.log("chofer: ",chofer);
-    console.log("this.asignaciones", this.asignaciones);
-    
-    const orden = chofer.categoriaAsignada?.catOrden ?? null;
-    console.log("orden: ", orden);
+        
+    const orden = chofer.categoriaAsignada?.catOrden ?? null;   
     
     if (orden === null) return 'bg-light text-dark';
 
     const index = this.tarifaGeneral.cargasGenerales.findIndex(cat => cat.orden === orden);
-    console.log("respuesta: ", this.sectionColorClasses[index % this.sectionColorClasses.length])
+    
     return this.sectionColorClasses[index % this.sectionColorClasses.length] || 'bg-light text-dark';
   }
 
 
   onDropEnListaChoferes(event: CdkDragDrop<ConIdType<Chofer>[]>) {
     const data = event.item.data;
+    const choferBase: ConIdType<Chofer> = data.chofer;
 
-    const chofer: ChoferAsignado = data.chofer;
-
+    const chofer: ChoferAsignado = {
+      ...choferBase,
+      categoriaAsignada: data.categoria, // o undefined, según tu lógica
+      tEventual: !!choferBase.tarifaTipo?.eventual,
+      observaciones:"",
+      hojaDeRuta:""
+    };
+    console.log("1)chofer: ", chofer);
+    
     if (event.previousContainer !== event.container) {
       const clienteId = +event.previousContainer.id.replace('cliente-drop-', '');
 
@@ -209,13 +241,18 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   }
 
   guardarAsignaciones() {
+    console.log("this.asignaciones", this.asignaciones);
+    
     if(this.fechaSeleccionada){
       const resultadoFinal = Object.entries(this.asignaciones)
       .filter(([_, choferes]) => choferes.length > 0)
       .map(([clienteId, choferes]) => ({
         fecha: this.fechaSeleccionada,
         clienteId: +clienteId,
-        choferes: choferes.map(c => c.idChofer)
+        choferes: choferes.map(c => {
+          let {categoriaAsignada, ...ch} = c;
+          return ch
+        })
       }))
 
       console.log('Asignaciones a guardar:', resultadoFinal);
@@ -223,13 +260,37 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       // Acá podrías guardar en Firebase o backend si querés
       // console.log('Asignaciones guardadas:', this.asignaciones);
 
-      // Luego de guardar, limpiamos el tablero
-      this.limpiarAsignaciones();
-      localStorage.removeItem('asignacionesTemporal');
+      
+      this.openModal(resultadoFinal);
+      
     } else {
       this.mensajesError("Debe seleccionar una fecha")
     }
     
+  }
+
+  openModal(opMultiples:any[]) {
+    {
+    const modalRef = this.modalService.open(CargaTableroDiarioComponent, {
+      windowClass: 'myCustomModalClass',
+      centered: true,
+      size: 'xl', 
+      //backdrop:"static"
+    });
+    
+    let info = {
+      item: opMultiples,
+    } 
+    modalRef.componentInstance.fromParent = info;
+    modalRef.result.then(      
+        (result) => {  
+          // Luego de guardar, limpiamos el tablero
+          this.limpiarAsignaciones();
+          localStorage.removeItem('asignacionesTemporal'); 
+        },
+        (reason) => {}
+      );
+    }
   }
 
   limpiarAsignaciones() {
@@ -288,4 +349,29 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   descargarOp(){
       //this.excelServ.generarInformeOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta,this.$opFiltradas)
   }
+
+  abrirEdicionChofer(chofer: ChoferAsignado, modalRef: TemplateRef<any>) {
+    this.choferSeleccionadoOriginal = chofer;
+    this.choferEditable = { ...chofer };
+
+    const modal = this.modalService.open(modalRef, { centered: true });
+
+    // Limpiar referencias al cerrar o cancelar el modal
+    modal.result.finally(() => {
+      this.choferEditable = null;
+      this.choferSeleccionadoOriginal = null;
+    });
+  }
+
+
+  guardarCambiosChofer(modal: any) {
+    if (this.choferSeleccionadoOriginal && this.choferEditable) {
+      this.choferSeleccionadoOriginal.observaciones = this.choferEditable.observaciones;
+      this.choferSeleccionadoOriginal.hojaDeRuta = this.choferEditable.hojaDeRuta;
+    }
+
+    modal.close(); // El finally del modal se encarga de limpiar
+  }
+
+
 }

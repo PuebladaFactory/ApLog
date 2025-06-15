@@ -1,5 +1,5 @@
 
-label, input, .chofer-item, .chofer-ubicado{
+label, input, textarea, .chofer-item, .chofer-ubicado{
   font-size: 1.25rem;
 }
 
@@ -51,6 +51,18 @@ label, input, .chofer-item, .chofer-ubicado{
 
 .boton-baja:hover{
   background: #e35d6a;    
+}
+
+.boton-alta{
+  width: 15rem;
+  background: #14A44D ;
+  color: white;
+  opacity: 0.8;
+  font-size: 1.3rem;
+}
+
+.boton-alta:hover{
+  background: #3be07d ;    
 }
 
 

@@ -20,6 +20,7 @@ import { AgGridModule } from 'ag-grid-angular';
 import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TableroDiarioComponent } from './tablero-diario/tablero-diario.component';
+import { CargaTableroDiarioComponent } from './carga-tablero-diario/carga-tablero-diario.component';
 
 
 
@@ -31,7 +32,8 @@ import { TableroDiarioComponent } from './tablero-diario/tablero-diario.componen
     TableroOpComponent,     
     ModalFacturacionComponent, CargaMultipleComponent, ModalOpAltaComponent,
     NuevaTablaComponent,
-    TableroDiarioComponent
+    TableroDiarioComponent,
+    CargaTableroDiarioComponent
     
   ],
   imports: [
