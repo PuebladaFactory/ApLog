@@ -212,13 +212,28 @@ deleteDuplicadas(){
 }
 
 borrarDuplicadasEnLiquidacion(){
-  //console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
-  this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+  ////console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
+  /* this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
     this.dbFirebase.delete(this.titulo, facDupli.id)
+}) */
+this.isLoading = true;
+this.dbFirebase.eliminarMultiple(this.$facturasOpDuplicadas, this.titulo).then(result=>{
+  this.isLoading = false;
+  if(result.exito){
+    this.$facturasOpDuplicadas = []
+    this.procesarDatosParaTabla();
+    this.verificarDuplicados();
+    alert("se eliminaron correctamente")
+  }else {
+    alert("error en la eliminacion")
+  }
 })
-this.$facturasOpDuplicadas = []
-this.procesarDatosParaTabla();
-this.verificarDuplicados();
+
+}
+
+mostrarDuplicadasEnLiquidacion(){
+  console.log("this.$facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
+  
 }
   
   procesarDatosParaTabla() {
