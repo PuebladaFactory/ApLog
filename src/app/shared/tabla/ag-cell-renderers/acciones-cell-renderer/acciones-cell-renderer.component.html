@@ -26,6 +26,7 @@
 <ng-container *ngIf="botones.includes('eliminar')">
   <app-btn-eliminar
     name="EliminarColor"    
+    *appRole="['god','admin', 'manager']"
     [ngClass]="{ isDisabled: isDisabled('eliminar') }"
     (click)="callHandler('eliminar')"
     class="me-1"    
@@ -33,8 +34,7 @@
 </ng-container>
 
 <ng-container *ngIf="botones.includes('factura')">
-  <app-btn-agregar
-    *appRole="['god','admin', 'manager']"
+  <app-btn-agregar    
     name="FacturaColor"
     [ngClass]="{ isDisabled: isDisabled('factura') }"
     (click)="callHandler('factura')"
