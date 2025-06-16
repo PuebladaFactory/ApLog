@@ -67,6 +67,11 @@ body.modal-open {
   margin-left: 200px; /* Igual al ancho del offcanvas */
 }
 
+.ag-cell {
+  user-select: text !important;
+}
+
+
 
 
 /* Importing Bootstrap SCSS file. */
