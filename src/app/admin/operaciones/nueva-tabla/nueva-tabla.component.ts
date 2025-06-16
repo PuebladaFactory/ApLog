@@ -77,6 +77,7 @@ export class NuevaTablaComponent implements OnInit, OnDestroy {
   clienteSeleccionado: ConIdType<Cliente> | null = null;
   choferSeleccionado: ConIdType<Chofer> | null = null;
   objetoEditado: ConId<Operacion>[] = [];
+  totalFiltrado: number = 0;
 
   constructor(
     private storageService: StorageService,
@@ -127,6 +128,9 @@ export class NuevaTablaComponent implements OnInit, OnDestroy {
       const parsedModel = JSON.parse(savedFilters);
       this.gridApi.setFilterModel(parsedModel);
     }
+
+    // Actualizar cantidad y dropdowns iniciales
+    this.actualizarEstadoFiltrado();
   }
 
   toggleColumnVisibility(colId: string): void {
@@ -207,6 +211,7 @@ private cargarConfiguracionColumnas(): void {
         this.$opActivas = ops;
         this.$opFiltradas = ops;
         this.armarTabla();
+        setTimeout(() => this.actualizarEstadoFiltrado(), 0);
       });
   }
 
@@ -267,27 +272,43 @@ private cargarConfiguracionColumnas(): void {
   filtrarPorCliente(cliente: ConIdType<Cliente>) {
     this.clienteSeleccionado = cliente;
 
-    this.$opFiltradas = this.$opActivas.filter(op => op.cliente.idCliente === cliente.idCliente);
+    const filtro = {
+      ...this.gridApi.getFilterModel(),
+      cliente: { type: 'equals', filter: cliente.razonSocial }
+    };
 
-    if (this.choferSeleccionado) {
-      this.$opFiltradas = this.$opFiltradas.filter(op => op.chofer.idChofer === this.choferSeleccionado!.idChofer);
-    }
+    this.gridApi.setFilterModel(filtro);
+    this.gridApi.onFilterChanged();
 
-    this.actualizarOpcionesDropdown();
-    this.armarTabla();
+    this.actualizarEstadoFiltrado();
   }
 
   filtrarPorChofer(chofer: ConIdType<Chofer>) {
     this.choferSeleccionado = chofer;
 
-    this.$opFiltradas = this.$opActivas.filter(op => op.chofer.idChofer === chofer.idChofer);
+    const filtro = {
+      ...this.gridApi.getFilterModel(),
+      chofer: { type: 'equals', filter: `${chofer.apellido} ${chofer.nombre}` }
+    };
 
-    if (this.clienteSeleccionado) {
-      this.$opFiltradas = this.$opFiltradas.filter(op => op.cliente.idCliente === this.clienteSeleccionado!.idCliente);
+    this.gridApi.setFilterModel(filtro);
+    this.gridApi.onFilterChanged();
+
+    this.actualizarEstadoFiltrado();
+  }
+
+  private actualizarEstadoFiltrado(): void {
+    this.totalFiltrado = this.gridApi.getDisplayedRowCount();
+    const visibleRows: any[] = [];
+
+    for (let i = 0; i < this.gridApi.getDisplayedRowCount(); i++) {
+      const rowNode = this.gridApi.getDisplayedRowAtIndex(i);
+      if (rowNode?.data) {
+        visibleRows.push(rowNode.data);
+      }
     }
-
-    this.actualizarOpcionesDropdown();
-    this.armarTabla();
+    this.clientesEnPeriodo = this.filtrarClientesDesdeFilas(visibleRows);
+    this.choferesEnPeriodo = this.filtrarChoferesDesdeFilas(visibleRows);
   }
 
   private actualizarOpcionesDropdown(): void {
@@ -298,9 +319,12 @@ private cargarConfiguracionColumnas(): void {
   limpiarFiltrosCruzados() {
     this.clienteSeleccionado = null;
     this.choferSeleccionado = null;
-    this.$opFiltradas = [...this.$opActivas];
-    this.actualizarOpcionesDropdown();
-    this.armarTabla();
+
+    this.gridApi.setFilterModel(null);
+    this.gridApi.onFilterChanged();
+    localStorage.removeItem('filtrosTableroOp');
+
+    this.actualizarEstadoFiltrado();
   }
   
   getCategoria(op: Operacion): string {
@@ -533,12 +557,40 @@ private cargarConfiguracionColumnas(): void {
     }
 
  // NUEVO: Guarda el filtro en localStorage
-    onFilterChanged(): void {
-      if (this.gridApi) {
-        const model = this.gridApi.getFilterModel();
-        localStorage.setItem('filtrosTableroOp', JSON.stringify(model));
+  onFilterChanged(): void {
+    if (!this.gridApi) return;
+
+    // ✅ Actualiza el contador
+    this.totalFiltrado = this.gridApi.getDisplayedRowCount();
+
+    // ✅ Extrae filas filtradas actualmente visibles
+    const visibleRows: any[] = [];
+
+    for (let i = 0; i < this.gridApi.getDisplayedRowCount(); i++) {
+      const rowNode = this.gridApi.getDisplayedRowAtIndex(i);
+      if (rowNode?.data) {
+        visibleRows.push(rowNode.data);
       }
     }
+
+    // ✅ Regenera dropdowns dinámicamente
+    this.clientesEnPeriodo = this.filtrarClientesDesdeFilas(visibleRows);
+    this.choferesEnPeriodo = this.filtrarChoferesDesdeFilas(visibleRows);
+
+    // ✅ Guarda el filtro actual para persistencia
+    const model = this.gridApi.getFilterModel();
+    localStorage.setItem('filtrosTableroOp', JSON.stringify(model));
+  }
+
+  private filtrarClientesDesdeFilas(filas: any[]): ConIdType<Cliente>[] {
+    const idsClientes = new Set(filas.map(f => f.idCliente));
+    return this.$clientes.filter(c => idsClientes.has(c.idCliente));
+  }
+
+  private filtrarChoferesDesdeFilas(filas: any[]): ConIdType<Chofer>[] {
+    const idsChoferes = new Set(filas.map(f => f.idChofer));
+    return this.$choferes.filter(c => idsChoferes.has(c.idChofer));
+  }
 
     limpiarFiltros(): void {
       if (this.gridApi) {
