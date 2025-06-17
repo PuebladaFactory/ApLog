@@ -5,6 +5,8 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { CategoriaTarifa, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import Swal from 'sweetalert2';
 
 type ChoferAsignado = ConId<Chofer> & {
   hojaDeRuta?: string;
@@ -30,8 +32,11 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
   operacionesAgrupadas: { clienteId: number; razonSocial: string; tipo: 'eventual' | 'personalizada' | 'especial' | 'general'; operaciones: Operacion[] }[] = [];
   clientes: Cliente[] = [];
   fecha: string = '';
+  tarifasPersonalizadas: TarifaPersonalizadaCliente[] = []
 
-  constructor(public activeModal: NgbActiveModal) {}
+  constructor(
+    public activeModal: NgbActiveModal,
+    private storageService: StorageService,) {}
   ngOnDestroy(): void {
     throw new Error('Method not implemented.');
   }
@@ -42,6 +47,8 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
 
     const entradas = this.fromParent.item;
     this.fecha = entradas[0]?.fecha || '';
+    this.tarifasPersonalizadas = this.storageService.loadInfo('tarifasPersCliente') || [];
+
 
     for (const entrada of entradas) {
       const cliente = this.clientes.find(c => c.idCliente === entrada.clienteId);
@@ -54,9 +61,8 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
           idOperacion: new Date().getTime() + Math.floor(Math.random() * 1000),
           fecha: entrada.fecha,
           km: 0,
-          cliente: cliente,
-          chofer: chofer,
-          documentacion:"",
+          cliente,
+          chofer,
           observaciones: chofer.observaciones || '',
           hojaRuta: chofer.hojaDeRuta || '',
           acompaniante: false,
@@ -73,7 +79,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
             aCobrar: 0,
             aPagar: 0
           },
-          patenteChofer: '',
+          patenteChofer: chofer.vehiculo.length === 1 ? chofer.vehiculo[0].dominio : "",
           estado: {
             abierta: true,
             cerrada: false,
@@ -100,7 +106,10 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
           },
           multiplicadorCliente: 1,
           multiplicadorChofer: 1
-        };
+        } as any;
+
+        (op as any).tarifaTipoOriginal = { ...op.tarifaTipo };
+        (op as any).originalEventual = tarifaTipo.eventual; // Propiedad temporal
 
         this.operaciones.push(op);
       }
@@ -149,9 +158,156 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     });
   }
 
-  guardar() {
-    console.log('Operaciones finalizadas:', this.operaciones);
-    this.activeModal.close(this.operaciones);
+  revertirEstadoEventual(op: any): void {
+    if (op.tarifaTipo.eventual) {
+      // Usuario eligió hacerla eventual: desactivar todo excepto eventual
+      op.tarifaTipo = {
+        general: false,
+        especial: false,
+        personalizada: false,
+        eventual: true
+      };
+    } else {
+      // Usuario volvió a “No”: restauramos el estado original
+      op.tarifaTipo = { ...op.tarifaTipoOriginal };
+    }
   }
+
+  guardar(): void {
+    const errores: string[] = [];
+
+    for (const grupo of this.operacionesAgrupadas) {
+      for (const op of grupo.operaciones) {
+        errores.push(...this.validarOperacion(op));
+      }
+    }
+
+    if (errores.length > 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Validación fallida',
+        html: '<ul class="text-start">' + errores.map(e => `<li>${e}</li>`).join('') + '</ul>'
+      });
+      return;
+    }
+
+    // Si no hay errores, se puede proceder
+    console.log('✅ Validación OK. Guardando operaciones...');
+    console.log(this.operacionesAgrupadas);
+
+    this.activeModal.close(this.operacionesAgrupadas);
+  }
+
+  esOriginalEventual(op: any): boolean {
+    return !!op.originalEventual;
+  }
+
+  esEditableEventual(op: any): boolean {
+    return !op.originalEventual;
+  }
+
+  esHabilitadoTarifaEventual(op: any): boolean {
+    return op.tarifaTipo.eventual;
+  }
+
+  esHabilitadoTarifaPersonalizada(op: any): boolean {
+    return op.tarifaTipo.personalizada;
+  }
+
+  getChoferTarifaTipo(op:any){
+    const tipo = op.chofer.tarifaTipo.eventual
+            ? 'Eventual'
+            : op.chofer.tarifaTipo.especial
+            ? 'Especial'
+            : 'General';
+
+      return tipo;
+    
+  }
+
+  getTarifaPersonalizada(idCliente: number): TarifaPersonalizadaCliente | null {
+    return this.tarifasPersonalizadas.find(t => t.idCliente === idCliente) || null;
+  }
+
+  getCategoriasDisponibles(op: Operacion): CategoriaTarifa[] {
+    if (!op.tarifaTipo.personalizada || !op.tarifaPersonalizada?.seccion || !op.cliente) return [];
+
+    const tarifa = this.getTarifaPersonalizada(op.cliente.idCliente);
+    const seccion = tarifa?.secciones.find(s => s.orden === +op.tarifaPersonalizada.seccion);
+    return seccion?.categorias || [];
+  }
+
+  onSeccionChange(op: Operacion): void {
+    op.tarifaPersonalizada.seccion = Number(op.tarifaPersonalizada.seccion);
+    op.tarifaPersonalizada.categoria = -1;
+    op.tarifaPersonalizada.nombre = '';
+    op.tarifaPersonalizada.aCobrar = 0;
+    op.tarifaPersonalizada.aPagar = 0;
+  }
+
+  onCategoriaChange(op: Operacion): void {
+    op.tarifaPersonalizada.categoria = Number(op.tarifaPersonalizada.categoria);
+    const tarifa = this.getTarifaPersonalizada(op.cliente.idCliente);
+    if (!tarifa) return;
+
+    const seccion = tarifa.secciones.find(s => s.orden === +op.tarifaPersonalizada.seccion);
+    const categoria = seccion?.categorias.find(c => c.orden === +op.tarifaPersonalizada.categoria);
+
+    if (categoria) {
+      op.tarifaPersonalizada.nombre = categoria.nombre;
+      op.tarifaPersonalizada.aCobrar = categoria.aCobrar;
+      op.tarifaPersonalizada.aPagar = categoria.aPagar;
+    }
+  }
+
+  validarOperacion(op: Operacion): string[] {
+    const errores: string[] = [];
+
+    // 🔹 Validar Patente
+    if (!op.patenteChofer || op.patenteChofer.trim() === '') {
+      errores.push('Debe seleccionar una patente para el chofer ' + op.chofer.apellido + ', ' + op.chofer.nombre);
+    }
+
+    // 🔹 Validar Tarifa Eventual
+    if (op.tarifaTipo.eventual) {
+      const t = op.tarifaEventual;
+      if (!t.chofer.concepto || t.chofer.concepto.trim() === '') {
+        errores.push(`Falta concepto del chofer en tarifa eventual para ${op.chofer.apellido}, ${op.chofer.nombre}`);
+      }
+      if (t.chofer.valor <= 0) {
+        errores.push(`El valor del chofer en tarifa eventual debe ser mayor a 0 para ${op.chofer.apellido}, ${op.chofer.nombre}`);
+      }
+      if (!t.cliente.concepto || t.cliente.concepto.trim() === '') {
+        errores.push(`Falta concepto del cliente en tarifa eventual para ${op.chofer.apellido}, ${op.chofer.nombre}`);
+      }
+      if (t.cliente.valor <= 0) {
+        errores.push(`El valor del cliente en tarifa eventual debe ser mayor a 0 para ${op.chofer.apellido}, ${op.chofer.nombre}`);
+      }
+    }
+
+    // 🔹 Validar Tarifa Personalizada
+    if (op.tarifaTipo.personalizada) {
+      const tp = op.tarifaPersonalizada;
+      if (tp.seccion <= 0) {
+        errores.push(`Debe seleccionar una sección válida para ${op.chofer.apellido}, ${op.chofer.nombre}`);
+      }
+      if (tp.categoria <= 0) {
+        errores.push(`Debe seleccionar una categoría válida para ${op.chofer.apellido}, ${op.chofer.nombre}`);
+      }
+      /* if (!tp.nombre || tp.nombre.trim() === '') {
+        errores.push(`Debe establecer un nombre de categoría para ${op.chofer.apellido}, ${op.chofer.nombre}`);
+      }
+      if (tp.aCobrar <= 0) {
+        errores.push(`El valor a cobrar debe ser mayor a 0 para ${op.chofer.apellido}, ${op.chofer.nombre}`);
+      }
+      if (tp.aPagar <= 0) {
+        errores.push(`El valor a pagar debe ser mayor a 0 para ${op.chofer.apellido}, ${op.chofer.nombre}`);
+      } */
+    }
+
+    return errores;
+  }
+
+
 
 }
