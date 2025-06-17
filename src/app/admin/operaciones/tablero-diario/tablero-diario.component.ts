@@ -272,7 +272,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   openModal(opMultiples:any[]) {
     {
     const modalRef = this.modalService.open(CargaTableroDiarioComponent, {
-      windowClass: 'myCustomModalClass',
+      windowClass: 'modal-super-xl',
       centered: true,
       size: 'xl', 
       //backdrop:"static"
