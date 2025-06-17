@@ -146,3 +146,13 @@ nav.navbar {
 .chofer-card:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
+
+::ng-deep .modal-super-xl .modal-dialog {
+  max-width: 98vw;     // Casi ancho total del viewport
+  width: 98vw;
+}
+
+::ng-deep .modal-super-xl .modal-content {
+  height: 90vh;         // Alto del 90% de la ventana
+  overflow-y: auto;     // Scrolleable si se necesita
+}
