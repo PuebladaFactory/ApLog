@@ -34,7 +34,7 @@
             </thead>
 
             <tbody>
-                <tr *ngFor="let op of grupo.operaciones">
+                <tr *ngFor="let op of grupo.operaciones"  class="op-row">
                     <td class="align-middle">{{ op.chofer.apellido }}, {{ op.chofer.nombre }}</td>
                     <td class="align-middle">
                         @if(op.chofer.vehiculo.length === 1){
@@ -82,10 +82,12 @@
                               [(ngModel)]="op.tarifaEventual.chofer.concepto" />
                     </td>
                     <td class="align-middle" [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }">
-                        <input type="number"
+                        <input type="text" inputmode="number"
                               class="form-control form-control-sm"
                               [ngClass]="{ 'isDisabled': !esHabilitadoTarifaEventual(op) }"
-                              [(ngModel)]="op.tarifaEventual.chofer.valor" />
+                              [(ngModel)]="op.tarifaEventual.chofer.valor"
+                              appFormatoNumerico
+                              />
                     </td>
                     <td class="align-middle" [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }">
                         <input type="text"
@@ -94,10 +96,12 @@
                               [(ngModel)]="op.tarifaEventual.cliente.concepto" />
                     </td>
                     <td [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }"class="col-eventual-border-right align-middle">
-                        <input type="number"
+                        <input type="text" inputmode="number"
                               class="form-control form-control-sm"
                               [ngClass]="{ 'isDisabled': !esHabilitadoTarifaEventual(op) }"
-                              [(ngModel)]="op.tarifaEventual.cliente.valor" />
+                              [(ngModel)]="op.tarifaEventual.cliente.valor"
+                              appFormatoNumerico
+                              />
                     </td>
                     <!-- Sección -->
                     <td [ngClass]="{ 'bg-personalizada-cell': op.tarifaTipo.personalizada }" class="col-personalizada-border-left align-middle">
@@ -139,7 +143,7 @@
                         </ng-template>
                     </td>
                     <td class="text-center align-middle">
-                        <app-btn-eliminar name="Eliminar" (click)="eliminarOperacion(grupo, op)" title="Eliminar operación"></app-btn-eliminar>                        
+                        <app-btn-eliminar name="Eliminar" (click)="eliminarOperacion(grupo, op)" title="Eliminar operación" class="btn-delete"></app-btn-eliminar>                        
                     </td>
                 </tr>
             </tbody>

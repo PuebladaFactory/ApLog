@@ -51,3 +51,15 @@ label, input, textarea, select, td, th{
   border: 2px solid #9df395;
 }
 
+/* 🔸 Oculta los botones por defecto */
+.op-row:hover .btn-delete {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.btn-delete {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
