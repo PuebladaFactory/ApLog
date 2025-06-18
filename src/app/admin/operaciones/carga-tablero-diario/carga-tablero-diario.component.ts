@@ -4,9 +4,10 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { Operacion } from 'src/app/interfaces/operacion';
+import { Operacion, TarifaEventual } from 'src/app/interfaces/operacion';
 import { CategoriaTarifa, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import Swal from 'sweetalert2';
+import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 
 type ChoferAsignado = ConId<Chofer> & {
   hojaDeRuta?: string;
@@ -36,7 +37,9 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
 
   constructor(
     public activeModal: NgbActiveModal,
-    private storageService: StorageService,) {}
+    private storageService: StorageService,
+    private formNumServ: FormatoNumericoService,
+  ) {}
   ngOnDestroy(): void {
     throw new Error('Method not implemented.');
   }
@@ -173,7 +176,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     }
   }
 
-  guardar(): void {
+  guardar(): void {        
     const errores: string[] = [];
 
     for (const grupo of this.operacionesAgrupadas) {
@@ -193,9 +196,31 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
 
     // Si no hay errores, se puede proceder
     console.log('✅ Validación OK. Guardando operaciones...');
-    console.log(this.operacionesAgrupadas);
 
-    this.activeModal.close(this.operacionesAgrupadas);
+    this.operaciones.map(op=>{
+      if(op.tarifaTipo.eventual){
+        op.tarifaEventual = this.formatoEventual(op);
+      }
+    })
+
+
+    console.log(this.operaciones);
+
+    this.activeModal.close(this.operaciones);
+  }
+
+  formatoEventual(op:any):TarifaEventual{
+    op.tarifaEventual = {
+      chofer:{
+          concepto: op.tarifaEventual.chofer.concepto,
+          valor: this.formNumServ.convertirAValorNumerico(op.tarifaEventual.chofer.valor),    
+      },
+      cliente:{
+          concepto: op.tarifaEventual.cliente.concepto,
+          valor: this.formNumServ.convertirAValorNumerico(op.tarifaEventual.cliente.valor),   
+      },
+    }
+    return op.tarifaEventual;
   }
 
   esOriginalEventual(op: any): boolean {
