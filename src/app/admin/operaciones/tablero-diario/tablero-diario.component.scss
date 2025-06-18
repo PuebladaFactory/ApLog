@@ -148,11 +148,23 @@ nav.navbar {
 }
 
 ::ng-deep .modal-super-xl .modal-dialog {
-  max-width: 98vw;     // Casi ancho total del viewport
-  width: 98vw;
+  max-width: 80vw;     // Casi ancho total del viewport
+  width: 80vw;
 }
 
 ::ng-deep .modal-super-xl .modal-content {
-  height: 90vh;         // Alto del 90% de la ventana
+  height: 80vh;         // Alto del 90% de la ventana
   overflow-y: auto;     // Scrolleable si se necesita
+}
+
+/* Scroll suave y elegante */
+::ng-deep .modal-super-xl .modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+::ng-deep .modal-super-xl .modal-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+::ng-deep .modal-super-xl .modal-content:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.4);
 }

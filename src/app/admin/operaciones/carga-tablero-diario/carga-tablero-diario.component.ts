@@ -308,6 +308,45 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     return errores;
   }
 
+  getClienteEventual(idCliente:number){
+    const cliente = this.clientes.find(c => c.idCliente === idCliente);
+    if(cliente?.tarifaTipo.eventual){
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  getClientePersonalizada(idCliente:number){
+    const cliente = this.clientes.find(c => c.idCliente === idCliente);
+    if(cliente?.tarifaTipo.personalizada){
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  eliminarOperacion(grupo: any, op: Operacion): void {
+    Swal.fire({
+      title: '¿Eliminar operación?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (result.isConfirmed) {
+        const index = grupo.operaciones.indexOf(op);
+        if (index > -1) {
+          grupo.operaciones.splice(index, 1);
+          Swal.fire('Eliminada', 'La operación fue eliminada correctamente.', 'success');
+        }
+      }
+    });
+  }
+
+
+
 
 
 }
