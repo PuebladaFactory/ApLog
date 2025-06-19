@@ -102,10 +102,10 @@ export class ModalFacturacionComponent implements OnInit, AfterViewInit {
 
       
         let tarifas : ConIdType<TarifaPersonalizadaCliente>[] = this.storageService.loadInfo("tarifasPersCliente")
-        //console.log("tarifas pers clientes", tarifas);
+        console.log("tarifas pers clientes", tarifas);
         if(tarifas.length > 0){
           this.tarifaClienteSel = tarifas.find((tarifa: ConIdType<TarifaPersonalizadaCliente>)  => tarifa.idCliente === this.op.cliente.idCliente);            
-          //console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
+          console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);   
         } else {
           this.mensajesError("no hay tarifas personalizadas")
         }
@@ -281,10 +281,10 @@ cerrarOp(){
     if (result.isConfirmed) {
       this.isLoading = true;
       //console.log("op: ", this.op);
-      this.facturacionOpServ.facturarOperacion(this.op).then(        
+      this.facturacionOpServ.facturarOperacion(this.op).then(                        
         (result:any)=>{
           this.isLoading = false;
-          //console.log("modal facturacion: respuesta: ", result);
+          console.log("modal facturacion: respuesta: ", result);
           let idOp: number[] = [];
           idOp.push(this.op.idOperacion)
           if(result.exito){            

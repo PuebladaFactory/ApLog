@@ -634,19 +634,23 @@ private cargarConfiguracionColumnas(): void {
 
   editarObjeto(){
     console.log("1)this.opActivas", this.$opActivas);
-    this.objetoEditado= this.agregarCampo(this.$opActivas)
+    this.objetoEditado= this.editarCampo(this.$opActivas)
     console.log("2)this.objetoEditado", this.objetoEditado);
     
   }
 
-  agregarCampo(operaciones: any[]): ConId<Operacion>[] {
+  editarCampo(operaciones: any[]): ConId<Operacion>[] {
    return operaciones.map(operacion => {
         return {
             ...operacion,
             estado: {
-                ...operacion.estado, // Mantiene todos los valores existentes
-                proformaCl: false,   // Agrega nuevo campo con valor por defecto
-                proformaCh: false    // Agrega nuevo campo con valor por defecto
+                abierta:true,
+                cerrada:false,
+                facCliente: false,
+                facChofer: false,
+                facturada: false,
+                proformaCl: false,
+                proformaCh: false,
             }
         };
     });

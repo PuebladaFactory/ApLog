@@ -573,6 +573,8 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
 
   async guardarFacturasOp(compCliente:string, infOpCliente: FacturaOp, compChofer: string, infOpChofer: FacturaOp, op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {        
     const batch = writeBatch(this.firestore);    
+    console.log("guardarFacturasOp: llegó");
+    
     try {
       // Verificar que no exista informe de operación para cliente
       const refCliente = collection(this.firestore, `/Vantruck/datos/${compCliente}`);

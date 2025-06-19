@@ -59,8 +59,11 @@ export class FacturacionClienteService {
   $facturarOpCliente(op: Operacion, tarifa: TarifaGralCliente){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp
+      factura: FacturaOp,
+      resultado: boolean,
+      msj: string,
     }
+
     //console.log("$facturarOpCliente) op: ", op, " tarifa: ", tarifa);
     let vehiculo = op.chofer.vehiculo.filter(vehiculo => vehiculo.dominio === op.patenteChofer)
     ////console.log("1c) vehiculo: ", vehiculo);    
@@ -93,6 +96,8 @@ export class FacturacionClienteService {
     respuesta = {
       op: op,
       factura: this.facturaOpCliente,
+      resultado: true,
+      msj:"",
     }
     ////console.log("Factura OP cliente ", this.facturaOpCliente)
     return respuesta
@@ -102,8 +107,11 @@ export class FacturacionClienteService {
     //console.log("!!!!!!!!!!!)op: ", op, " y tarifa: ",tarifa);
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp
+      factura: FacturaOp,
+      resultado: boolean,
+      msj: string,
     }
+
     
     this.tarifaBase = this.$calcularCGPersonalizada(tarifa, op)*op.multiplicadorCliente;
     op.valores.cliente.tarifaBase = this.tarifaBase;  
@@ -116,6 +124,8 @@ export class FacturacionClienteService {
     respuesta = {
       op: op,
       factura: this.facturaOpCliente,
+      resultado:true,
+      msj:"",
     }
     ////console.log("Factura OP cliente ", this.facturaOpCliente)
     return respuesta
@@ -125,8 +135,11 @@ export class FacturacionClienteService {
   $facturarOpEveCliente(op: Operacion, tGeneral: TarifaGralCliente){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp
+      factura: FacturaOp,
+      resultado: boolean,
+      msj: string,
     }
+
     this.tarifaBase = op.tarifaEventual.cliente.valor*op.multiplicadorCliente;
     op.valores.cliente.tarifaBase = this.tarifaBase;
     this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
@@ -136,6 +149,8 @@ export class FacturacionClienteService {
     respuesta = {
       op: op,
       factura: this.facturaOpCliente,
+      resultado:true,
+      msj:"",
     }
     return respuesta
     //return this.facturaOpCliente
