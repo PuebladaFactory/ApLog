@@ -988,7 +988,8 @@ deleteDuplicadas(){
 
       editarObjeto(){
         console.log("1)this.facturasOpEditadas", this.$facturasOpProveedor);
-        this.objetoEditado= this.agregarCampo(this.$facturasOpProveedor)
+        //this.objetoEditado= this.agregarCampo(this.$facturasOpProveedor)
+        this.objetoEditado= this.$facturasOpProveedor
         console.log("2)this.objetoEditado", this.objetoEditado);
         
       }
@@ -1004,7 +1005,7 @@ deleteDuplicadas(){
 
       actualizarObjeto(){
         this.isLoading = true
-        this.dbFirebase.actualizarMultiple(this.objetoEditado, "facturaOpProveedor").then((result)=>{
+        this.dbFirebase.eliminarMultiple(this.objetoEditado, "facturaOpProveedor").then((result)=>{
           this.isLoading = false
           if(result.exito){
             alert("actualizado correctamente")

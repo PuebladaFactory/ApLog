@@ -1000,7 +1000,8 @@ buscarTarifa(i:number ) {
 
       editarObjeto(){
         console.log("1)this.facturasOpEditadas", this.$facturasOpChofer);
-        this.objetoEditado= this.agregarCampo(this.$facturasOpChofer)
+        //this.objetoEditado= this.agregarCampo(this.$facturasOpChofer)
+        this.objetoEditado= this.$facturasOpChofer
         console.log("2)this.objetoEditado", this.objetoEditado);
         
       }
@@ -1016,7 +1017,7 @@ buscarTarifa(i:number ) {
 
       actualizarObjeto(){
         this.isLoading = true
-        this.dbFirebase.actualizarMultiple(this.objetoEditado, "facturaOpChofer").then((result)=>{
+        this.dbFirebase.eliminarMultiple(this.objetoEditado, "facturaOpChofer").then((result)=>{
           this.isLoading = false
           if(result.exito){
             alert("actualizado correctamente")
