@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Chofer } from 'src/app/interfaces/chofer';
@@ -184,7 +184,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
         errores.push(...this.validarOperacion(op));
       }
     }
-
+  
     if (errores.length > 0) {
       Swal.fire({
         icon: 'error',
@@ -368,6 +368,10 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  tieneErrores(op: Operacion): boolean {
+    return this.validarOperacion(op).length > 0;
   }
 
 
