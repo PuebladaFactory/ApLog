@@ -572,13 +572,13 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
   }
 
   async guardarFacturasOp(compCliente:string, infOpCliente: FacturaOp, compChofer: string, infOpChofer: FacturaOp, op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {        
-    const batch = writeBatch(this.firestore);    
-    console.log("guardarFacturasOp: llegó");
+    const batch = writeBatch(this.firestore);        
     
     try {
       // Verificar que no exista informe de operación para cliente
       const refCliente = collection(this.firestore, `/Vantruck/datos/${compCliente}`);
       const qCliente = query(refCliente, where('idOperacion', '==', infOpCliente.idOperacion));
+      //console.log(`[${Date.now()}] Verificando existencia cliente...`);
       const snapCliente = await getDocs(qCliente);
       if (!snapCliente.empty) {
         throw new Error(`Ya existe un informe para el cliente con idFacturaOp ${infOpCliente.idOperacion}`);
@@ -587,6 +587,7 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
       // Verificar que no exista informe de operación para chofer
       const refChofer = collection(this.firestore, `/Vantruck/datos/${compChofer}`);
       const qChofer = query(refChofer, where('idOperacion', '==', infOpChofer.idOperacion));
+      //console.log(`[${Date.now()}] Verificando existencia chofer...`);
       const snapChofer = await getDocs(qChofer);
       if (!snapChofer.empty) {
         throw new Error(`Ya existe un informe para el chofer con idFacturaOp ${infOpChofer.idOperacion}`);
@@ -595,6 +596,7 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
       // Verificar que exista la operación
       const opRef = collection(this.firestore, `/Vantruck/datos/operaciones`);
       const qOp = query(opRef, where('idOperacion', '==', op.idOperacion));
+      //console.log(`[${Date.now()}] Verificando existencia operacion...`);
       const snapOp = await getDocs(qOp);
       if (snapOp.empty) {
         throw new Error(`No se encontró operación con idOperacion ${op.idOperacion}`);
@@ -614,6 +616,7 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
       batch.update(docOpRef, opSinId);
   
       // Ejecutar el batch
+      console.log(`[${Date.now()}] Ejecutando batch commit...`);
       await batch.commit();
   
       return {

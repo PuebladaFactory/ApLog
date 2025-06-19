@@ -1006,7 +1006,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
       editarObjeto(){
         console.log("1)this.facturasOpEditadas", this.$facturasOpCliente);
-        this.objetoEditado= this.agregarCampo(this.$facturasOpCliente)
+        //this.objetoEditado= this.agregarCampo(this.$facturasOpCliente)
+        this.objetoEditado= this.$facturasOpCliente
         console.log("2)this.objetoEditado", this.objetoEditado);
         
       }
@@ -1022,7 +1023,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
       actualizarObjeto(){
         this.isLoading = true
-        this.dbFirebase.actualizarMultiple(this.objetoEditado, "facturaOpCliente").then((result)=>{
+        this.dbFirebase.eliminarMultiple(this.objetoEditado, "facturaOpCliente").then((result)=>{
           this.isLoading = false
           if(result.exito){
             alert("actualizado correctamente")

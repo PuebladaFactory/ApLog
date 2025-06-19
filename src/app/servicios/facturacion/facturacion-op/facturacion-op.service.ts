@@ -244,31 +244,10 @@ async $facturarOpProveedor(op: ConId<Operacion>) {
   async $armarFacturasOp(op: ConId<Operacion>) {
     try {
       // lógica de armado
-          if(op.chofer.idProveedor === 0){
-          if(this.facturaOpCliente !== null && this.facturaOpChofer !== null){
-            op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
-            op.valores.chofer.aPagar = this.facturaOpChofer.valores.total;
-            op.estado = {
-              abierta : false,
-              cerrada : true,
-              facCliente: false,
-              facChofer: false,
-              facturada : false,
-              proformaCl: false,
-              proformaCh: false,
-            };
-            op.facturaCliente = this.facturaOpCliente.idFacturaOp;
-            op.facturaChofer = this.facturaOpChofer.idFacturaOp;
-            this.facturaOpCliente.contraParteMonto = this.facturaOpChofer.valores.total;
-            this.facturaOpChofer.contraParteMonto = this.facturaOpCliente.valores.total;
-            this.facturaOpCliente.contraParteId = this.facturaOpChofer.idFacturaOp;
-            this.facturaOpChofer.contraParteId = this.facturaOpCliente.idFacturaOp;
-            this.$guardarFacturas(op);
-          }
-    } else {
-      if(this.facturaOpCliente !== null && this.facturaOpProveedor !== null){
+      if(op.chofer.idProveedor === 0){
+      if(this.facturaOpCliente !== null && this.facturaOpChofer !== null){
         op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
-        op.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
+        op.valores.chofer.aPagar = this.facturaOpChofer.valores.total;
         op.estado = {
           abierta : false,
           cerrada : true,
@@ -279,14 +258,35 @@ async $facturarOpProveedor(op: ConId<Operacion>) {
           proformaCh: false,
         };
         op.facturaCliente = this.facturaOpCliente.idFacturaOp;
-        op.facturaChofer = this.facturaOpProveedor.idFacturaOp;
-        this.facturaOpCliente.contraParteMonto = this.facturaOpProveedor.valores.total;
-        this.facturaOpProveedor.contraParteMonto = this.facturaOpCliente.valores.total;
-        this.facturaOpCliente.contraParteId = this.facturaOpProveedor.idFacturaOp;
-        this.facturaOpProveedor.contraParteId = this.facturaOpCliente.idFacturaOp;
-        this.$guardarFacturas(op);
+        op.facturaChofer = this.facturaOpChofer.idFacturaOp;
+        this.facturaOpCliente.contraParteMonto = this.facturaOpChofer.valores.total;
+        this.facturaOpChofer.contraParteMonto = this.facturaOpCliente.valores.total;
+        this.facturaOpCliente.contraParteId = this.facturaOpChofer.idFacturaOp;
+        this.facturaOpChofer.contraParteId = this.facturaOpCliente.idFacturaOp;
+        //this.$guardarFacturas(op);
       }
-    }
+      } else {
+        if(this.facturaOpCliente !== null && this.facturaOpProveedor !== null){
+          op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
+          op.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
+          op.estado = {
+            abierta : false,
+            cerrada : true,
+            facCliente: false,
+            facChofer: false,
+            facturada : false,
+            proformaCl: false,
+            proformaCh: false,
+          };
+          op.facturaCliente = this.facturaOpCliente.idFacturaOp;
+          op.facturaChofer = this.facturaOpProveedor.idFacturaOp;
+          this.facturaOpCliente.contraParteMonto = this.facturaOpProveedor.valores.total;
+          this.facturaOpProveedor.contraParteMonto = this.facturaOpCliente.valores.total;
+          this.facturaOpCliente.contraParteId = this.facturaOpProveedor.idFacturaOp;
+          this.facturaOpProveedor.contraParteId = this.facturaOpCliente.idFacturaOp;
+          //this.$guardarFacturas(op);
+        }
+      }
       return; // opcionalmente devolver algún dato
     } catch (error: any) {
       throw new Error("Error al armar facturas: " + error?.message);
