@@ -48,7 +48,9 @@ export class FacturacionChoferService {
   $facturarOpChofer(op:Operacion, tarifa: TarifaGralCliente){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp
+      factura: FacturaOp,
+      resultado: boolean,
+      msj: string,
     }
     ////console.log("1)Chofer Serv:  op: ", op, " tarifa: ", tarifa);
     let vehiculo = op.chofer.vehiculo.filter(vehiculo => vehiculo.dominio === op.patenteChofer);
@@ -82,6 +84,8 @@ export class FacturacionChoferService {
     respuesta = {
       op: op,
       factura: this.facturaOpChofer,
+      resultado:true,
+      msj:"",
     }
     ////////console.log("Factura OP cliente ", this.facturaOpCliente)
     return respuesta;
@@ -90,7 +94,9 @@ export class FacturacionChoferService {
   $facturarOpPersChofer(op: Operacion, tarifa: TarifaPersonalizadaCliente, idProveedor: number, tGeneral:TarifaGralCliente){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp
+      factura: FacturaOp,
+      resultado: boolean,
+      msj: string,
     }
     this.tarifaBase = this.$calcularCGPersonalizada(tarifa, op)*op.multiplicadorChofer;
     op.valores.chofer.tarifaBase = this.tarifaBase;
@@ -102,6 +108,8 @@ export class FacturacionChoferService {
     respuesta = {
       op: op,
       factura: this.facturaOpChofer,
+      resultado:true,
+      msj:""
     }
     ////////console.log("Factura OP cliente ", this.facturaOpCliente)
     return respuesta;
@@ -112,7 +120,9 @@ export class FacturacionChoferService {
   $facturarOpEveChofer(op: Operacion, idProveedor: number, tGeneral:TarifaGralCliente){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp
+      factura: FacturaOp,
+      resultado: boolean,
+      msj: string,
     }
     this.tarifaBase = op.tarifaEventual.chofer.valor*op.multiplicadorChofer;
     op.valores.chofer.tarifaBase = this.tarifaBase;
@@ -123,6 +133,8 @@ export class FacturacionChoferService {
     respuesta = {
       op: op,
       factura: this.facturaOpChofer,
+      resultado:true,
+      msj:"",
     }
     ////////console.log("Factura OP cliente ", this.facturaOpCliente)
     return respuesta;
@@ -224,10 +236,12 @@ $getTarifaTipoChofer(op:Operacion){
 }
 
 $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: number){
-  let respuesta : {
-    op: Operacion,
-    factura: FacturaOp
-  }
+    let respuesta : {
+      op: Operacion,
+      factura: FacturaOp,
+      resultado: boolean,
+      msj: string,
+    }
   ////console.log("1)Proveedor Serv:  op: ", op, " tarifa: ", tarifa);
   let vehiculo = op.chofer.vehiculo.filter(vehiculo => vehiculo.dominio === op.patenteChofer)
   ////////console.log("1c) vehiculo: ", vehiculo); 
@@ -260,6 +274,8 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
   respuesta = {
     op: op,
     factura: this.facturaOpChofer,
+    resultado: true,
+    msj:"",
   }
   ////////console.log("Factura OP cliente ", this.facturaOpCliente)
   return respuesta;
