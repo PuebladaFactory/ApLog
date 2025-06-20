@@ -1,18 +1,28 @@
 import { Injectable } from '@angular/core';
 import * as ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
-import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { Categoria, Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
 import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
 import { FacturaOp } from 'src/app/interfaces/factura-op';
-
+import { CellValue } from 'exceljs';
 
 
 import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from '../../storage/storage.service';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { Borders, Fill, Workbook } from 'exceljs';
+import saveAs from 'file-saver';
+
+type ChoferAsignado = ConIdType<Chofer> & {
+  categoriaAsignada: Categoria;
+  observaciones: string;
+  hojaDeRuta: string;
+  tEventual:boolean;
+};
 
 @Injectable({
   providedIn: 'root'
@@ -938,5 +948,216 @@ if(endRow){
    
   });
 }
+
+ /** Crea y descarga el tablero en Excel */
+  async generarInformeAsignaciones(
+    asignaciones: { [idCliente: number]: ChoferAsignado[] },
+    todosClientes: ConIdType<Cliente>[],
+    choferesAgrupadosPorCategoria: { nombre: string; catOrden: number; choferes: ConId<Chofer>[] }[],
+    choferesInactivos: ConIdType<Chofer>[],
+    fechaSeleccionada: string,
+    sectionColorClasses: string[]
+  ): Promise<void> {
+    // Crear un nuevo workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Asignaciones');
+
+    // 1. Configuración inicial
+    worksheet.properties.defaultColWidth = 15;
+    
+    // 2. Fila 1: Operaciones del día
+    const fechaRow = worksheet.getRow(1);
+    fechaRow.getCell(1).value = 'Operaciones del dia:';
+    fechaRow.getCell(2).value = fechaSeleccionada;
+    fechaRow.getCell(1).font = { bold: true };
+    
+    // Combinar celdas para el título de fecha
+    worksheet.mergeCells('A1:B1');
+
+    // 3. Fila 2: Títulos
+    const titulosRow = worksheet.getRow(2);
+    titulosRow.getCell(1).value = 'Clientes Asignados:';
+    
+    // Obtener clientes con asignaciones (eliminamos duplicados)
+    const clientesConAsignaciones = Object.keys(asignaciones)
+      .map(idCliente => todosClientes.find(c => c.idCliente === Number(idCliente)))
+      .filter(Boolean) as ConIdType<Cliente>[];
+    
+    // 4. Tabla de clientes asignados (desde fila 3)
+    // Encabezados de clientes asignados
+    clientesConAsignaciones.forEach((cliente, index) => {
+      const headerCell = worksheet.getCell(3, index + 1);
+      headerCell.value = cliente.razonSocial;
+      headerCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFD3D3D3' } // Gris claro
+      };
+      headerCell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+      headerCell.font = { bold: true };
+    });
+
+    // Asignaciones para cada cliente (hasta 15 filas)
+    for (let i = 0; i < 15; i++) {
+      const dataRow = worksheet.getRow(4 + i);
+      
+      clientesConAsignaciones.forEach((cliente, colIndex) => {
+        const asignacionesCliente = asignaciones[cliente.idCliente] || [];
+        const choferAsignado = asignacionesCliente[i];
+        const cell = dataRow.getCell(colIndex + 1);
+        
+        if (choferAsignado) {
+          cell.value = choferAsignado.nombre;
+          
+          // Aplicar color según categoría
+          const categoriaIndex = choferesAgrupadosPorCategoria.findIndex(
+            cat => cat.nombre === choferAsignado.categoriaAsignada.nombre
+          );
+          
+          if (categoriaIndex >= 0 && categoriaIndex < sectionColorClasses.length) {
+            // Extraer color hexadecimal de la clase (ejemplo simplificado)
+            const bgColor = this.mapColorClassToExcelColor(sectionColorClasses[categoriaIndex]);
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: bgColor }
+            };
+          }
+        }
+        
+        // Bordes para todas las celdas
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    }
+
+    // 5. Clientes sin asignaciones (a la derecha, con columna en blanco)
+    const columnaInicioSinAsignaciones = clientesConAsignaciones.length + 2;
+    
+    // Título
+    worksheet.getCell(2, columnaInicioSinAsignaciones).value = 'Clientes sin Asignaciones:';
+    worksheet.getCell(2, columnaInicioSinAsignaciones).font = { bold: true };
+    
+    // Obtener clientes sin asignaciones
+    const clientesSinAsignaciones = todosClientes.filter(
+      cliente => !Object.keys(asignaciones).includes(cliente.id.toString())
+    );
+    
+    // Listado de clientes sin asignaciones
+    clientesSinAsignaciones.forEach((cliente, index) => {
+      const cell = worksheet.getCell(3 + index, columnaInicioSinAsignaciones);
+      cell.value = cliente.razonSocial;
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFD3D3D3' } // Gris claro
+      };
+    });
+
+    // 6. Choferes por categoría (dejando una fila en blanco)
+    const filaInicioCategorias = 20; // Después de las 15 filas de asignaciones + espacio
+    
+    choferesAgrupadosPorCategoria
+      .sort((a, b) => a.catOrden - b.catOrden)
+      .forEach((categoria, catIndex) => {
+        // Encabezado de categoría
+        const headerCell = worksheet.getCell(filaInicioCategorias, catIndex + 1);
+        headerCell.value = categoria.nombre;
+        headerCell.font = { bold: true };
+        
+        // Aplicar color de fondo según sectionColorClasses
+        if (catIndex < sectionColorClasses.length) {
+          const bgColor = this.mapColorClassToExcelColor(sectionColorClasses[catIndex]);
+          headerCell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: bgColor }
+          };
+        }
+        
+        // Choferes de esta categoría
+        categoria.choferes.forEach((chofer, choferIndex) => {
+          const cell = worksheet.getCell(filaInicioCategorias + 1 + choferIndex, catIndex + 1);
+          cell.value = chofer.nombre;
+          
+          // Mismo color que la categoría
+          if (catIndex < sectionColorClasses.length) {
+            const bgColor = this.mapColorClassToExcelColor(sectionColorClasses[catIndex]);
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: bgColor }
+            };
+          }
+        });
+      });
+
+    // 7. Choferes inactivos (banco de suplentes)
+    const columnaInicioInactivos = choferesAgrupadosPorCategoria.length + 2;
+    
+    // Título
+    worksheet.getCell(filaInicioCategorias, columnaInicioInactivos).value = 'Banco de suplentes';
+    worksheet.getCell(filaInicioCategorias, columnaInicioInactivos).font = { bold: true };
+    
+    // Listado de choferes inactivos
+    choferesInactivos.forEach((chofer, index) => {
+      worksheet.getCell(filaInicioCategorias + 1 + index, columnaInicioInactivos).value = chofer.nombre;
+    });
+
+    // Ajustar anchos de columnas
+worksheet.columns.forEach(column => {
+  if (!column.values) return;
+  
+  const maxLength = column.values.reduce((acc: number, cellValue: ExcelJS.CellValue) => {
+    if (cellValue === null || cellValue === undefined) return acc;
+    
+    let strValue: string;
+    
+    try {
+      // Intenta convertir cualquier tipo de valor a string
+      strValue = cellValue.toString();
+    } catch (e) {
+      // Si falla, usa un valor por defecto
+      strValue = '';
+    }
+    
+    return Math.max(acc, strValue.length);
+  }, 0);
+  
+  column.width = Math.min(Math.max(maxLength + 2, 10), 30);
+});
+
+    // Generar el archivo Excel
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `Asignaciones_${fechaSeleccionada.replace(/\//g, '-')}.xlsx`);
+  }
+
+  // Método auxiliar para mapear clases de color a colores de Excel
+  private mapColorClassToExcelColor(colorClass: string): string {
+    // Esto es un mapeo simplificado - ajusta según tus colores reales
+    const colorMap: Record<string, string> = {
+      'bg-primary': 'FF007BFF', // Azul
+      'bg-success': 'FF28A745', // Verde
+      'bg-warning': 'FFFFC107', // Amarillo
+      'bg-info': 'FF17A2B8',    // Cyan
+      'bg-danger': 'FFDC3545',  // Rojo
+      'bg-secondary': 'FF6C757D', // Gris
+      'bg-dark': 'FF343A40'      // Negro
+    };
+    
+    const foundKey = Object.keys(colorMap).find(key => colorClass.includes(key));
+    return foundKey ? colorMap[foundKey] : 'FFFFFFFF'; // Blanco por defecto
+  }
+
 
 }

@@ -193,20 +193,32 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
       });
       return;
     }
-
+    //console.log('✅ Validación OK. Guardando operaciones...');
     // Si no hay errores, se puede proceder
-    console.log('✅ Validación OK. Guardando operaciones...');
+    Swal.fire({
+        title: `¿Desea agregar las operación con fecha ${this.fecha}?`,
+        //text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Agregar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.operaciones.map(op=>{
+            if(op.tarifaTipo.eventual){
+              op.tarifaEventual = this.formatoEventual(op);
+            }
+          })
+          console.log(this.operaciones);
+          this.activeModal.close(this.operaciones);          
+        }else{
+          // Si el usuario cancela, realiza la acción correspondiente
+         
+        }
+      });   
 
-    this.operaciones.map(op=>{
-      if(op.tarifaTipo.eventual){
-        op.tarifaEventual = this.formatoEventual(op);
-      }
-    })
-
-
-    console.log(this.operaciones);
-
-    this.activeModal.close(this.operaciones);
   }
 
   formatoEventual(op:any):TarifaEventual{

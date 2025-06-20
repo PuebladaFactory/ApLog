@@ -9,6 +9,9 @@ import Swal from 'sweetalert2';
 import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CargaTableroDiarioComponent } from '../carga-tablero-diario/carga-tablero-diario.component';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { Operacion } from 'src/app/interfaces/operacion';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 type complementoChofer =  {
   categoriaAsignada: Categoria;
   observaciones: string;
@@ -52,11 +55,13 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   choferSeleccionadoParaEditar: ChoferAsignado | null = null;
   choferSeleccionadoOriginal: ChoferAsignado | null = null;
   choferEditable: ChoferAsignado | null = null;
-
+  isLoading: boolean = false;
 
   constructor(
     private storageService: StorageService,
-    private modalService: NgbModal
+    private modalService: NgbModal, 
+    private dbFirestore: DbFirestoreService,
+    private excelServ: ExcelService
   ) {}
 
   ngOnInit(): void {
@@ -269,29 +274,50 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     
   }
 
-  openModal(opMultiples:any[]) {
-    {
-    const modalRef = this.modalService.open(CargaTableroDiarioComponent, {
-      windowClass: 'modal-super-xl',
-      centered: true,
-      size: 'xl', 
-      //backdrop:"static"
-    });
-    
-    let info = {
-      item: opMultiples,
-    } 
-    modalRef.componentInstance.fromParent = info;
-    modalRef.result.then(      
-        (result) => {  
-          // Luego de guardar, limpiamos el tablero
-          this.limpiarAsignaciones();
-          localStorage.removeItem('asignacionesTemporal'); 
-        },
-        (reason) => {}
-      );
+openModal(opMultiples: any[]): void {
+  const modalRef = this.modalService.open(CargaTableroDiarioComponent, {
+    windowClass: 'modal-super-xl',
+    centered: true,
+    size: 'xl',
+  });
+
+  const info = {
+    item: opMultiples,
+  };
+  modalRef.componentInstance.fromParent = info;
+
+  modalRef.result.then(
+    async (result: Operacion[]) => {
+      if (!result || result.length === 0) return;
+
+      this.isLoading = true;
+
+      const res = await this.dbFirestore.guardarOpMultiple(result);
+
+      this.isLoading = false;
+
+      if (res.exito) {
+        this.limpiarAsignaciones();
+        localStorage.removeItem('asignacionesTemporal');
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Operaciones guardadas',
+          text: res.mensaje,
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al guardar',
+          text: res.mensaje,
+        });
+      }
+    },
+    (reason) => {
+      // Usuario canceló o cerró el modal → no hacemos nada
     }
-  }
+  );
+}
 
   limpiarAsignaciones() {
     for (const key of Object.keys(this.asignaciones)) {
@@ -346,9 +372,21 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     }
   }
 
-  descargarOp(){
-      //this.excelServ.generarInformeOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta,this.$opFiltradas)
-  }
+async descargarOp() {
+  // Obtener clientes sin asignaciones
+  const clientesSinAsignaciones = this.clientes.filter(
+    cliente => !Object.keys(this.asignaciones).includes(cliente.id.toString())
+  );
+
+  await this.excelServ.generarInformeAsignaciones(
+    this.asignaciones,
+    this.clientes,
+    this.choferesAgrupadosPorCategoria,
+    this.choferesInactivos,
+    this.fechaSeleccionada,
+    this.sectionColorClasses
+  );
+}
 
   abrirEdicionChofer(chofer: ChoferAsignado, modalRef: TemplateRef<any>) {
     this.choferSeleccionadoOriginal = chofer;

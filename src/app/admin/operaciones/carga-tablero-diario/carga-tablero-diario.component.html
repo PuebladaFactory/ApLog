@@ -14,22 +14,22 @@
                 <thead class="table-light text-center align-middle">
                   <tr>
                     <th rowspan="2" style="width: 15%;">Chofer</th>
-                    <th rowspan="2" style="width: 6%;">Vehículo</th>
+                    <th rowspan="2" style="width: 7%;">Vehículo</th>
                     <th rowspan="2" style="width: 4%;">Acomp</th>   
                     <th rowspan="2" style="width: 4%;">Tarifa Tipo</th>   
                     <th rowspan="2" style="width: 8%;">Hoja de Ruta</th>
                     <th rowspan="2" style="width: 10%;">Observaciones</th>
                     <th rowspan="2" style="width: 3%;">Eventual</th>
-                    <th colspan="4" [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="text-center col-eventual-border-right col-eventual-border-left">Tarifa Eventual</th>
-                    <th colspan="2" [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }" class="text-center col-personalizada-border-right col-personalizada-border-left">Tarifa Personalizada</th>
-                    <th rowspan="2" style="width: 3%;">Eliminar</th>
+                    <th colspan="4" [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="text-center col-eventual-border-right col-eventual-border-left" style="width: 22%;">Tarifa Eventual</th>
+                    <th colspan="2" [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }" class="text-center col-personalizada-border-right col-personalizada-border-left" style="width: 22%;">Tarifa Personalizada</th>
+                    <th rowspan="2" style="width: 3%;">Anular</th>
                   </tr>
                   <tr>
-                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="col-eventual-border-left">Concepto Chofer</th>
-                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }">Valor Chofer</th>
-                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }">Concepto Cliente</th>
-                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="col-eventual-border-right">Valor Cliente</th>
-                    <th [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }"class="col-personalizada-border-left" style="width: 6%;">Sección</th>
+                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="col-eventual-border-left" style="width: 5%;">Concepto Chofer</th>
+                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" style="width: 5%;">Valor Chofer</th>
+                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" style="width: 5%;">Concepto Cliente</th>
+                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="col-eventual-border-right" style="width: 5%;">Valor Cliente</th>
+                    <th [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }"class="col-personalizada-border-left" style="width: 7%;">Sección</th>
                     <th [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }"class="col-personalizada-border-right" style="width: 10%;">Categoría</th>
                   </tr>
                 </thead>
@@ -55,7 +55,7 @@
                               <option [ngValue]="false">No</option>
                             </select>
                         </td>   
-                        <td class="align-middle">
+                        <td class="text-center align-middle">
                             <span class="badge"
                                   [ngClass]="{
                                     'bg-secondary': getChoferTarifaTipo(op) === 'General',
