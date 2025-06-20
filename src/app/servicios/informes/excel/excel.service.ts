@@ -30,7 +30,9 @@ type ChoferAsignado = ConIdType<Chofer> & {
 export class ExcelService {
 
   factura!: FacturaChofer|FacturaCliente| FacturaProveedor
-  
+  private readonly CATEGORIAS_TEXTO_CLARO = [
+    'bg-dark', 'bg-secondary', 'bg-danger', 'bg-primary'
+  ];
 
   constructor(private storageService: StorageService) { }
 
@@ -971,146 +973,192 @@ if(endRow){
     fechaRow.getCell(2).value = fechaSeleccionada;
     fechaRow.getCell(1).font = { bold: true };
     
+    
     // Combinar celdas para el título de fecha
-    worksheet.mergeCells('A1:B1');
+    //worksheet.mergeCells('A1:B1');
 
-    // 3. Fila 2: Títulos
-    const titulosRow = worksheet.getRow(2);
-    titulosRow.getCell(1).value = 'Clientes Asignados:';
+// 3. Fila 2: Títulos
+  const titulosRow = worksheet.getRow(2);
+  titulosRow.getCell(1).value = 'Clientes Asignados';
+  
+  // Obtener clientes CON asignaciones (array no vacío)
+  const clientesConAsignaciones = todosClientes.filter(cliente => {
+    const asignacionesCliente = asignaciones[cliente.idCliente];
+    return asignacionesCliente && asignacionesCliente.length > 0;
+  });
+
+  // 4. Tabla de clientes asignados (desde fila 3)
+  // Encabezados solo para clientes con asignaciones
+  clientesConAsignaciones.forEach((cliente, index) => {
+    const headerCell = worksheet.getCell(3, index + 1);
+    headerCell.value = cliente.razonSocial;
+    headerCell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD3D3D3' } // Gris claro
+    };
+    headerCell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+    headerCell.font = { bold: true };
+  });
+
+  // Asignaciones para cada cliente (hasta 15 filas)
+  for (let i = 0; i < 15; i++) {
+    const dataRow = worksheet.getRow(4 + i);
     
-    // Obtener clientes con asignaciones (eliminamos duplicados)
-    const clientesConAsignaciones = Object.keys(asignaciones)
-      .map(idCliente => todosClientes.find(c => c.idCliente === Number(idCliente)))
-      .filter(Boolean) as ConIdType<Cliente>[];
-    
-    // 4. Tabla de clientes asignados (desde fila 3)
-    // Encabezados de clientes asignados
-    clientesConAsignaciones.forEach((cliente, index) => {
-      const headerCell = worksheet.getCell(3, index + 1);
-      headerCell.value = cliente.razonSocial;
-      headerCell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FFD3D3D3' } // Gris claro
-      };
-      headerCell.border = {
+    clientesConAsignaciones.forEach((cliente, colIndex) => {
+      const asignacionesCliente = asignaciones[cliente.idCliente] || [];
+      const choferAsignado = asignacionesCliente[i];
+      const cell = dataRow.getCell(colIndex + 1);
+      
+if (choferAsignado) {
+  cell.value = choferAsignado.apellido + " " + choferAsignado.nombre;
+  
+  const categoriaIndex = choferesAgrupadosPorCategoria.findIndex(
+    cat => cat.nombre === choferAsignado.categoriaAsignada.nombre
+  );
+  
+        if (categoriaIndex >= 0 && categoriaIndex < sectionColorClasses.length) {
+          const bgColor = this.mapColorClassToExcelColor(sectionColorClasses[categoriaIndex]);
+          const textColor = this.shouldUseWhiteText(sectionColorClasses[categoriaIndex]) ? 'FFFFFFFF' : 'FF000000';
+          
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: bgColor }
+          };
+          cell.font = {
+            color: { argb: textColor }
+          };
+        }
+      }
+      
+      cell.border = {
         top: { style: 'thin' },
         left: { style: 'thin' },
         bottom: { style: 'thin' },
         right: { style: 'thin' }
       };
-      headerCell.font = { bold: true };
     });
+  }
 
-    // Asignaciones para cada cliente (hasta 15 filas)
-    for (let i = 0; i < 15; i++) {
-      const dataRow = worksheet.getRow(4 + i);
-      
-      clientesConAsignaciones.forEach((cliente, colIndex) => {
-        const asignacionesCliente = asignaciones[cliente.idCliente] || [];
-        const choferAsignado = asignacionesCliente[i];
-        const cell = dataRow.getCell(colIndex + 1);
-        
-        if (choferAsignado) {
-          cell.value = choferAsignado.nombre;
-          
-          // Aplicar color según categoría
-          const categoriaIndex = choferesAgrupadosPorCategoria.findIndex(
-            cat => cat.nombre === choferAsignado.categoriaAsignada.nombre
-          );
-          
-          if (categoriaIndex >= 0 && categoriaIndex < sectionColorClasses.length) {
-            // Extraer color hexadecimal de la clase (ejemplo simplificado)
-            const bgColor = this.mapColorClassToExcelColor(sectionColorClasses[categoriaIndex]);
-            cell.fill = {
-              type: 'pattern',
-              pattern: 'solid',
-              fgColor: { argb: bgColor }
-            };
-          }
-        }
-        
-        // Bordes para todas las celdas
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
-        };
-      });
-    }
+  // 5. Clientes SIN asignaciones (a la derecha, con columna en blanco)
+  const clientesSinAsignaciones = todosClientes.filter(cliente => {
+    const asignacionesCliente = asignaciones[cliente.idCliente];
+    return !asignacionesCliente || asignacionesCliente.length === 0;
+  });
+  // 5. Clientes SIN asignaciones (organizados en columnas según espacio)
+const columnaInicioSinAsignaciones = clientesConAsignaciones.length + 2;
+const filaInicioSinAsignaciones = 3;
+const maxFilasTablaAsignaciones = 15; // Altura de la tabla de asignaciones
 
-    // 5. Clientes sin asignaciones (a la derecha, con columna en blanco)
-    const columnaInicioSinAsignaciones = clientesConAsignaciones.length + 2;
+// Título (combinado para todas las columnas de sin asignaciones)
+worksheet.getCell(2, columnaInicioSinAsignaciones).value = 'Clientes sin Asignaciones';
+worksheet.getCell(2, columnaInicioSinAsignaciones).font = { bold: true };
+worksheet.mergeCells(
+  2, columnaInicioSinAsignaciones, 
+  2, columnaInicioSinAsignaciones + Math.ceil(clientesSinAsignaciones.length / maxFilasTablaAsignaciones) - 1
+);
+
+// Dividir clientes sin asignaciones en grupos para cada columna
+const gruposSinAsignaciones = this.chunkArray(clientesSinAsignaciones, maxFilasTablaAsignaciones);
+
+gruposSinAsignaciones.forEach((grupo, grupoIndex) => {
+  const columnaActual = columnaInicioSinAsignaciones + grupoIndex;
+  
+  grupo.forEach((cliente, index) => {
+    const filaActual = filaInicioSinAsignaciones + index;
+    const cell = worksheet.getCell(filaActual, columnaActual);
     
-    // Título
-    worksheet.getCell(2, columnaInicioSinAsignaciones).value = 'Clientes sin Asignaciones:';
-    worksheet.getCell(2, columnaInicioSinAsignaciones).font = { bold: true };
-    
-    // Obtener clientes sin asignaciones
-    const clientesSinAsignaciones = todosClientes.filter(
-      cliente => !Object.keys(asignaciones).includes(cliente.id.toString())
-    );
-    
-    // Listado de clientes sin asignaciones
-    clientesSinAsignaciones.forEach((cliente, index) => {
-      const cell = worksheet.getCell(3 + index, columnaInicioSinAsignaciones);
-      cell.value = cliente.razonSocial;
+    cell.value = cliente.razonSocial;
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD3D3D3' } // Gris claro
+    };
+    cell.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' }
+    };
+  });
+  
+  // Aplicar bordes a celdas vacías si el grupo no llega al máximo
+  if (grupo.length < maxFilasTablaAsignaciones) {
+    for (let i = grupo.length; i < maxFilasTablaAsignaciones; i++) {
+      const cell = worksheet.getCell(filaInicioSinAsignaciones + i, columnaActual);
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FFD3D3D3' } // Gris claro
+        fgColor: { argb: 'FFFFFFFF' } // Blanco
       };
-    });
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    }
+  }
+});
 
     // 6. Choferes por categoría (dejando una fila en blanco)
     const filaInicioCategorias = 20; // Después de las 15 filas de asignaciones + espacio
     
-    choferesAgrupadosPorCategoria
-      .sort((a, b) => a.catOrden - b.catOrden)
-      .forEach((categoria, catIndex) => {
-        // Encabezado de categoría
-        const headerCell = worksheet.getCell(filaInicioCategorias, catIndex + 1);
-        headerCell.value = categoria.nombre;
-        headerCell.font = { bold: true };
-        
-        // Aplicar color de fondo según sectionColorClasses
-        if (catIndex < sectionColorClasses.length) {
-          const bgColor = this.mapColorClassToExcelColor(sectionColorClasses[catIndex]);
-          headerCell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: bgColor }
-          };
-        }
-        
-        // Choferes de esta categoría
-        categoria.choferes.forEach((chofer, choferIndex) => {
-          const cell = worksheet.getCell(filaInicioCategorias + 1 + choferIndex, catIndex + 1);
-          cell.value = chofer.nombre;
-          
-          // Mismo color que la categoría
-          if (catIndex < sectionColorClasses.length) {
-            const bgColor = this.mapColorClassToExcelColor(sectionColorClasses[catIndex]);
-            cell.fill = {
-              type: 'pattern',
-              pattern: 'solid',
-              fgColor: { argb: bgColor }
-            };
-          }
-        });
-      });
+choferesAgrupadosPorCategoria
+  .sort((a, b) => a.catOrden - b.catOrden)
+  .forEach((categoria, catIndex) => {
+    // Obtener color de fondo y determinar color de texto
+    const bgColor = this.mapColorClassToExcelColor(sectionColorClasses[catIndex]);
+    const textColor = this.shouldUseWhiteText(sectionColorClasses[catIndex]) ? 'FFFFFFFF' : 'FF000000';
+
+    // Encabezado de categoría (solo color de texto, fondo blanco)
+    const headerCell = worksheet.getCell(filaInicioCategorias, catIndex + 1);
+    headerCell.value = categoria.nombre;
+    headerCell.font = { 
+      bold: true,
+      color: { argb: this.mapColorClassToExcelColor(sectionColorClasses[catIndex]) }
+    };
+    headerCell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFFFFFFF' } // Fondo blanco
+    };
+    
+    // Choferes de esta categoría (fondo color categoría + texto blanco/negro según corresponda)
+    categoria.choferes.forEach((chofer, choferIndex) => {
+      const cell = worksheet.getCell(filaInicioCategorias + 1 + choferIndex, catIndex + 1);
+      cell.value = chofer.apellido + " " + chofer.nombre;
+      
+      // Fondo de la categoría
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: bgColor }
+      };
+      
+      // Color de texto según contraste
+      cell.font = {
+        color: { argb: textColor }
+      };
+    });
+  });
 
     // 7. Choferes inactivos (banco de suplentes)
     const columnaInicioInactivos = choferesAgrupadosPorCategoria.length + 2;
     
     // Título
     worksheet.getCell(filaInicioCategorias, columnaInicioInactivos).value = 'Banco de suplentes';
-    worksheet.getCell(filaInicioCategorias, columnaInicioInactivos).font = { bold: true };
+    worksheet.getCell(filaInicioCategorias, columnaInicioInactivos).font = { bold: true, color: { argb: 'FFFFC107' } };
     
     // Listado de choferes inactivos
     choferesInactivos.forEach((chofer, index) => {
-      worksheet.getCell(filaInicioCategorias + 1 + index, columnaInicioInactivos).value = chofer.nombre;
+      worksheet.getCell(filaInicioCategorias + 1 + index, columnaInicioInactivos).value = chofer.apellido + " " + chofer.nombre;
     });
 
     // Ajustar anchos de columnas
@@ -1158,6 +1206,49 @@ worksheet.columns.forEach(column => {
     const foundKey = Object.keys(colorMap).find(key => colorClass.includes(key));
     return foundKey ? colorMap[foundKey] : 'FFFFFFFF'; // Blanco por defecto
   }
+
+  private chunkArray<T>(array: T[], size: number): T[][] {
+    const result = [];
+    for (let i = 0; i < array.length; i += size) {
+      result.push(array.slice(i, i + size));
+    }
+    return result;
+  }
+
+  private getColorTextForCategory(colorClass: string): string {
+  // Mapeo de colores de texto basado en la clase de fondo
+  const colorMap: Record<string, string> = {
+    'bg-primary': 'FF007BFF', // Azul
+    'bg-success': 'FF28A745', // Verde
+    'bg-warning': 'FF6C757D', // Gris (para amarillo)
+    'bg-info': 'FF17A2B8',    // Cyan
+    'bg-danger': 'FFDC3545',  // Rojo
+    'bg-secondary': 'FF6C757D', // Gris
+    'bg-dark': 'FF343A40'      // Negro
+  };
+  
+  const foundKey = Object.keys(colorMap).find(key => colorClass.includes(key));
+  return foundKey ? colorMap[foundKey] : 'FF000000'; // Negro por defecto
+}
+
+private getTextColorForCategory(colorClass: string): string {
+  // Determina si el texto debe ser blanco (para fondos oscuros)
+  const categoriasTextoBlanco = [
+    'bg-dark', 'bg-secondary', 'bg-danger', 'bg-primary'
+  ];
+  
+  const necesitaTextoBlanco = categoriasTextoBlanco.some(cat => colorClass.includes(cat));
+  return necesitaTextoBlanco ? 'FFFFFFFF' : 'FF000000'; // Blanco o negro
+}
+
+private shouldUseWhiteText(colorClass: string): boolean {
+  // Categorías que requieren texto blanco (fondos oscuros)
+  const categoriasTextoBlanco = [
+    'bg-dark', 'bg-secondary', 'bg-danger', 'bg-primary'
+  ];
+  
+  return categoriasTextoBlanco.some(cat => colorClass.includes(cat));
+}
 
 
 }
