@@ -373,6 +373,18 @@ openModal(opMultiples: any[]): void {
   }
 
 async descargarOp() {
+  console.log("this.fechaSeleccionada", this.fechaSeleccionada);
+  console.log("this.asignaciones", this.asignaciones);
+  const resulclientesAsignados = Object.entries(this.asignaciones)
+      .filter(([_, choferes]) => choferes.length > 0)
+      .map(([clienteId, choferes]) => ({
+        fecha: this.fechaSeleccionada,
+        clienteId: +clienteId,
+        choferes: choferes.map(c => {
+          let {categoriaAsignada, ...ch} = c;
+          return ch
+        })
+      }))
   // Obtener clientes sin asignaciones
   const clientesSinAsignaciones = this.clientes.filter(
     cliente => !Object.keys(this.asignaciones).includes(cliente.id.toString())
