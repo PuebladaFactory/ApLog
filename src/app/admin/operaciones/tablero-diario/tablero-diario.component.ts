@@ -246,7 +246,14 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   }
 
   guardarAsignaciones() {
-    console.log("this.asignaciones", this.asignaciones);
+    //console.log("this.asignaciones", this.asignaciones);
+    const hayAsignaciones = Object.entries(this.asignaciones).filter(([_, choferes]) => choferes.length > 0)
+    console.log("hayAsignaciones: ", hayAsignaciones);
+    if(hayAsignaciones.length === 0){
+      this.mensajesError("Debe asignar algun chofer para crear operaciones")
+      return
+    }
+    
     
     if(this.fechaSeleccionada){
       const resultadoFinal = Object.entries(this.asignaciones)
@@ -375,20 +382,7 @@ openModal(opMultiples: any[]): void {
 async descargarOp() {
   console.log("this.fechaSeleccionada", this.fechaSeleccionada);
   console.log("this.asignaciones", this.asignaciones);
-  const resulclientesAsignados = Object.entries(this.asignaciones)
-      .filter(([_, choferes]) => choferes.length > 0)
-      .map(([clienteId, choferes]) => ({
-        fecha: this.fechaSeleccionada,
-        clienteId: +clienteId,
-        choferes: choferes.map(c => {
-          let {categoriaAsignada, ...ch} = c;
-          return ch
-        })
-      }))
-  // Obtener clientes sin asignaciones
-  const clientesSinAsignaciones = this.clientes.filter(
-    cliente => !Object.keys(this.asignaciones).includes(cliente.id.toString())
-  );
+
 
   await this.excelServ.generarInformeAsignaciones(
     this.asignaciones,
