@@ -65,45 +65,40 @@ label, input, textarea, .chofer-item, .chofer-ubicado{
   background: #3be07d ;    
 }
 
+.titulo-choferes{
+  position: sticky;
+  top: 10px;
+}
 
 .choferes-scroll-container {
-  min-height: calc(100vh - 150px);
-  max-height: 100vh;
-  overflow-y: hidden;  /* Oculta scrollbar por defecto */
+  position: sticky;
+  top: 35px; // ajustá según altura de tu navbar
+  max-height: calc(100vh - 100px);
+  max-height: 90vh;
+  overflow-y: auto;
   padding-right: 5px;
-  transition: overflow-y 0.3s ease;
+  z-index: 2;
 
-  &:hover {
-    overflow-y: auto;  /* Muestra scrollbar al hacer hover */
-  }
+  background-color: #f8f9fa; // Fondo claro para destacarlo
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); // Sombra sutil
+  padding: 10px;
 
-  /* Scrollbar WebKit (Chrome, Safari, Edge) */
+  // Scrollbars modernos
   &::-webkit-scrollbar {
     width: 8px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
   }
   &::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
-    transition: background-color 0.2s ease;
   }
   &::-webkit-scrollbar-thumb:hover {
     background-color: rgba(0, 0, 0, 0.4);
   }
 
-  /* Firefox */
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-
-  /* Para Firefox, que no soporta overflow-y toggle suave,
-     podemos hacer que siempre tenga espacio para el scrollbar para evitar "saltos" */
-  &.hovered {
-    overflow-y: auto;
-  }
-
-  
 }
 
 .chofer-item { 

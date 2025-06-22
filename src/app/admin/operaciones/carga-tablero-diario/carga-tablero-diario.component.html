@@ -13,49 +13,49 @@
             <table class="table table-bordered table-sm mt-2">
                 <thead class="table-light text-center align-middle">
                   <tr>
-                    <th rowspan="2" style="width: 15%;">Chofer</th>
-                    <th rowspan="2" style="width: 7%;">Vehículo</th>
-                    <th rowspan="2" style="width: 4%;">Acomp</th>   
-                    <th rowspan="2" style="width: 4%;">Tarifa Tipo</th>   
-                    <th rowspan="2" style="width: 8%;">Hoja de Ruta</th>
-                    <th rowspan="2" style="width: 10%;">Observaciones</th>
-                    <th rowspan="2" style="width: 3%;">Eventual</th>
-                    <th colspan="4" [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="text-center col-eventual-border-right col-eventual-border-left" style="width: 22%;">Tarifa Eventual</th>
-                    <th colspan="2" [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }" class="text-center col-personalizada-border-right col-personalizada-border-left" style="width: 22%;">Tarifa Personalizada</th>
-                    <th rowspan="2" style="width: 3%;">Anular</th>
+                    <th rowspan="2" class="col-chofer">Chofer</th>
+                    <th rowspan="2" class="col-vehiculo">Vehículo</th>
+                    <th rowspan="2" class="col-acomp">Acomp</th>   
+                    <th rowspan="2" class="col-tarifa">Tarifa Tipo</th>   
+                    <th rowspan="2" class="col-hojaRuta">Hoja de Ruta</th>
+                    <th rowspan="2" class="col-obs">Observaciones</th>
+                    <th rowspan="2" class="col-eventual-toogle">Eventual</th>
+                    <th colspan="4" [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="text-center col-eventual-border-right col-eventual-border-left">Tarifa Eventual</th>
+                    <th colspan="2" [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }" class="text-center col-personalizada-border-right col-personalizada-border-left">Tarifa Personalizada</th>
+                    <th rowspan="2" class="col-anular">Anular</th>
                   </tr>
                   <tr>
-                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="col-eventual-border-left" style="width: 5%;">Concepto Chofer</th>
-                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" style="width: 5%;">Valor Chofer</th>
-                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" style="width: 5%;">Concepto Cliente</th>
-                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="col-eventual-border-right" style="width: 5%;">Valor Cliente</th>
-                    <th [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }"class="col-personalizada-border-left" style="width: 7%;">Sección</th>
-                    <th [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }"class="col-personalizada-border-right" style="width: 10%;">Categoría</th>
+                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="col-eventual-border-left col-eventual-concepto">Concepto Ch</th>
+                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="col-eventual-valor" >Valor Ch</th>
+                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="col-eventual-concepto" >Concepto Cl</th>
+                    <th [ngClass]="{ 'bg-eventual-header': getClienteEventual(grupo.clienteId) }" class="col-eventual-border-right col-eventual-valor">Valor Cl</th>
+                    <th [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }" class="col-personalizada-border-left col-seccion">Sección</th>
+                    <th [ngClass]="{ 'bg-personalizada-header': getClientePersonalizada(grupo.clienteId) }" class="col-personalizada-border-right col-categoria">Categoría</th>
                   </tr>
                 </thead>
 
                 <tbody>
                     <tr *ngFor="let op of grupo.operaciones"  class="op-row" [ngClass]="{ 'fila-error': tieneErrores(op) }">
-                        <td class="align-middle">{{ op.chofer.apellido }}, {{ op.chofer.nombre }}</td>
-                        <td class="align-middle">
+                        <td class="align-middle col-chofer" title="{{ op.chofer.apellido }}, {{ op.chofer.nombre }}">{{ op.chofer.apellido }}, {{ op.chofer.nombre }}</td>
+                        <td class="align-middle col-vehiculo">
                             @if(op.chofer.vehiculo.length === 1){
                               <input type="text" class="form-control form-control-sm isDisabled" [value]="op.chofer.vehiculo[0].dominio">
                             }@else {
-                              <select [(ngModel)]="op.patenteChofer" class="form-select form-select-sm vehiculos">
+                              <select [(ngModel)]="op.patenteChofer" class="form-select form-select-sm vehiculos" [title]="op.patenteChofer || 'Seleccione'">
                                 <option value="">Seleccione</option>
-                                <option *ngFor="let v of op.chofer.vehiculo" [value]="v.dominio">
+                                <option *ngFor="let v of op.chofer.vehiculo" [value]="v.dominio" title="{{v.dominio}}">
                                   {{ v.categoria.nombre }}: {{ v.dominio }}
                                 </option>
                               </select>
                             }
                         </td>
-                        <td class="align-middle">
+                        <td class="align-middle col-acomp">
                             <select [(ngModel)]="op.acompaniante" class="form-select form-select-sm">
                               <option [ngValue]="true">Sí</option>
                               <option [ngValue]="false">No</option>
                             </select>
                         </td>   
-                        <td class="text-center align-middle">
+                        <td class="text-center align-middle col-tarifa">
                             <span class="badge"
                                   [ngClass]="{
                                     'bg-secondary': getChoferTarifaTipo(op) === 'General',
@@ -65,14 +65,14 @@
                               {{ getChoferTarifaTipo(op) }}
                             </span>
                         </td>
-                        <td class="align-middle">
-                          <input type="text" class="form-control form-control-sm" [(ngModel)]="op.hojaRuta">
+                        <td class="align-middle col-hojaRuta">
+                          <input type="text" class="form-control form-control-sm" [(ngModel)]="op.hojaRuta" title="{{op.hojaRuta}}" >
                         </td>
-                        <td class="align-middle">
-                          <textarea class="form-control form-control-sm" rows="1" [(ngModel)]="op.observaciones"></textarea>
+                        <td class="align-middle col-obs">
+                          <textarea class="form-control form-control-sm" rows="1" [(ngModel)]="op.observaciones" title="{{op.observaciones}}"></textarea>
                         </td>
                         <!-- Eventual: con badge o select -->
-                        <td class="text-center align-middle">
+                        <td class="text-center align-middle col-eventual-toogle">
                             <ng-container *ngIf="esOriginalEventual(op); else editableSelect">
                                 <span class="badge bg-success">Sí</span>
                             </ng-container>
@@ -85,42 +85,48 @@
                                 </select>
                             </ng-template>
                         </td>
-                        <td [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }" class="col-eventual-border-left align-middle">
+                        <td [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }" class="col-eventual-border-left align-middle col-eventual-concepto">
                             <input type="text"
                                   class="form-control form-control-sm"
                                   [ngClass]="{ 'isDisabled': !esHabilitadoTarifaEventual(op) }"
-                                  [(ngModel)]="op.tarifaEventual.chofer.concepto" />
+                                  [(ngModel)]="op.tarifaEventual.chofer.concepto"
+                                   title="{{op.tarifaEventual.chofer.concepto}}"
+                                   />
                         </td>
-                        <td class="align-middle" [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }">
+                        <td class="align-middle col-eventual-valor" [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }">
                             <input type="text" inputmode="number"
                                   class="form-control form-control-sm"
                                   [ngClass]="{ 'isDisabled': !esHabilitadoTarifaEventual(op) }"
                                   [(ngModel)]="op.tarifaEventual.chofer.valor"
                                   appFormatoNumerico
+                                  title="{{op.tarifaEventual.chofer.valor}}"
                                   />
                         </td>
-                        <td class="align-middle" [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }">
+                        <td class="align-middle col-eventual-concepto" [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }">
                             <input type="text"
                                   class="form-control form-control-sm"
                                   [ngClass]="{ 'isDisabled': !esHabilitadoTarifaEventual(op) }"
-                                  [(ngModel)]="op.tarifaEventual.cliente.concepto" />
+                                  [(ngModel)]="op.tarifaEventual.cliente.concepto"
+                                  title="{{op.tarifaEventual.cliente.concepto}}"
+                                  />
                         </td>
-                        <td [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }"class="col-eventual-border-right align-middle">
+                        <td [ngClass]="{ 'bg-eventual-cell': op.tarifaTipo.eventual }"class="col-eventual-border-right align-middle col-eventual-valor">
                             <input type="text" inputmode="number"
                                   class="form-control form-control-sm"
                                   [ngClass]="{ 'isDisabled': !esHabilitadoTarifaEventual(op) }"
                                   [(ngModel)]="op.tarifaEventual.cliente.valor"
                                   appFormatoNumerico
+                                  title="{{op.tarifaEventual.cliente.valor}}"
                                   />
                         </td>
                         <!-- Sección -->
-                        <td [ngClass]="{ 'bg-personalizada-cell': op.tarifaTipo.personalizada }" class="col-personalizada-border-left align-middle">
+                        <td [ngClass]="{ 'bg-personalizada-cell': op.tarifaTipo.personalizada }" class="col-personalizada-border-left align-middle col-seccion">
                             <ng-container *ngIf="op.tarifaTipo.personalizada; else sinDatos">
                                 <select [(ngModel)]="op.tarifaPersonalizada.seccion"
                                       (ngModelChange)="onSeccionChange(op)"
                                       class="form-select form-select-sm">
                                     <option value="">Seleccione</option>
-                                    <option *ngFor="let sec of getTarifaPersonalizada(op.cliente.idCliente)?.secciones"
+                                    <option *ngFor="let sec of getTarifaPersonalizada(op.cliente.idCliente)?.secciones" title="Sección {{ sec.orden }}"
                                             [ngValue]="sec.orden">
                                       Sección {{ sec.orden }}
                                     </option>
@@ -132,17 +138,18 @@
                         </td>
 
                         <!-- Categoría -->
-                        <td [ngClass]="{ 'bg-personalizada-cell': op.tarifaTipo.personalizada }" class="col-personalizada-border-right align-middle">
+                        <td [ngClass]="{ 'bg-personalizada-cell': op.tarifaTipo.personalizada }" class="col-personalizada-border-right align-middle col-categoria">
                             <ng-container *ngIf="op.tarifaTipo.personalizada; else sinDatos">
                                 <ng-container *ngIf="op.tarifaPersonalizada.seccion; else sinSeccion">
                                     <select [(ngModel)]="op.tarifaPersonalizada.categoria"
                                           (ngModelChange)="onCategoriaChange(op)"
-                                          class="form-select form-select-sm">
+                                          class="form-select form-select-sm"
+                                          [title]="getCategoriaSeleccionadaLabel(op)">
                                         <option value="-1">Seleccione</option>
-                                        <option *ngFor="let cat of getCategoriasDisponibles(op)" [ngValue]="cat.orden">
+                                        <option *ngFor="let cat of getCategoriasDisponibles(op)" [ngValue]="cat.orden" title="Categoría {{ cat.orden }}: {{ cat.nombre }}">
                                           Categoría {{ cat.orden }}: {{ cat.nombre }}
                                         </option>
-                                    </select>
+                                    </select>                                    
                                 </ng-container>
                                 <ng-template #sinSeccion>
                                     <span class="text-muted">Primero seleccione sección</span>
