@@ -1,8 +1,11 @@
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
 label, input, textarea, select, td{
   font-size: 1.25rem;
 }
-
-
 
 td, th {
   //padding: 0.75rem !important;
@@ -18,8 +21,83 @@ thead th {
   font-size: 1.35rem;
 }
 
+
 .grupo-container {
   background-color: #fdfdfd;
+}
+
+/* 🔷 Anchos consistentes */
+.col-chofer {
+  width: 14.37%;
+  max-width: 14.37%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-vehiculo {
+  width: 7.26%;
+  max-width: 7.26%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-acomp,
+.col-eventual-toogle {
+  width: 4.5%;
+  max-width: 4.5%;
+}
+
+.col-tarifa{
+  width: 5.41%;
+  max-width: 5.41%;
+}
+
+.col-hojaRuta{
+  width: 6.63%;
+  max-width: 6.63%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-obs{
+  width: 7.67%;
+  max-width: 7.67%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-eventual-concepto{
+  width: 6.36%;
+  max-width: 6.36%;
+}
+
+.col-eventual-valor{
+  width: 6.46%;
+  max-width: 6.46%;
+}
+.col-seccion {
+  width: 7.26%;
+  max-width: 7.26%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-categoria {
+  width: 13.2%;
+  max-width: 13.2%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-anular{
+  width: 3.55%;
+  max-width: 3.55%;
 }
 
 .isDisabled {

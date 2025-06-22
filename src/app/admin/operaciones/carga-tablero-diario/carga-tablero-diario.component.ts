@@ -386,7 +386,11 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     return this.validarOperacion(op).length > 0;
   }
 
-
+  getCategoriaSeleccionadaLabel(op: Operacion): string {
+    const cats = this.getCategoriasDisponibles(op);
+    const cat = cats.find(c => c.orden === op.tarifaPersonalizada.categoria);
+    return cat ? `Categoría ${cat.orden}: ${cat.nombre}` : '';
+  }
 
 
 
