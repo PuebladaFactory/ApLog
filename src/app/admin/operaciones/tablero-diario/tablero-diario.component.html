@@ -72,7 +72,7 @@
                     [cdkDropListData]="choferes"
                     [cdkDropListConnectedTo]="connectedDropListsIds"
                     (cdkDropListDropped)="onDropEnListaChoferes($event)"
-                    class="border p-3 rounded bg-light"           
+                            
                   >                  
                       <div *ngFor="let categoria of choferesAgrupadosPorCategoria; let i = index" class="mb-3 border rounded p-2 shadow-sm">
                           <h5 class="p-2 rounded">{{ categoria.nombre }}</h5>
