@@ -737,6 +737,21 @@ async procesarLiquidacion(
         const { id, ...inf } = informe;
         batch.set(informeRefDestino, inf);
         batch.delete(informeRefOrigen);
+
+        // 8. (NUEVO) Si modo !== 'clientes', buscar contra parte y marcarla
+        if (modo !== 'clientes') {
+          const contraParteRef = collection(this.firestore, `/Vantruck/datos/facturaOpCliente`);
+          const contraParteQuery = query(contraParteRef, where('idOperacion', '==', informe.idOperacion));
+          const contraParteSnap = await getDocs(contraParteQuery);
+
+          if (!contraParteSnap.empty) {
+            const contraDoc = contraParteSnap.docs[0];
+            const contraRef = contraDoc.ref;
+            batch.update(contraRef, { contraParteProforma: false });
+          } else {
+            console.warn(`No se encontró contra parte con idOperacion ${informe.idOperacion} en facturaOpCliente`);
+          }
+        }
       }
 
       // 7. Ejecutar batch
