@@ -378,21 +378,47 @@ openModal(opMultiples: any[]): void {
       return 'btn-outline-dark';
     }
   }
+  
 
-async descargarOp() {
-  console.log("this.fechaSeleccionada", this.fechaSeleccionada);
-  console.log("this.asignaciones", this.asignaciones);
+  descargarOp() {
+    //console.log("this.fechaSeleccionada", this.fechaSeleccionada);
+    //console.log("this.asignaciones", this.asignaciones);
+    const hayAsignaciones = Object.entries(this.asignaciones).filter(([_, choferes]) => choferes.length > 0)
+    console.log("hayAsignaciones: ", hayAsignaciones);
+    if(!this.fechaSeleccionada){      
+      return this.mensajesError("Debe seleccionar una fecha")
+    }
+    if(hayAsignaciones.length === 0){
+      this.mensajesError("Debe asignar algun chofer para poder descargar las asignaciones diarias")
+      return
+    }
 
+    Swal.fire({
+      title: `¿Desea generar el informer de asignaciones del dia ${this.fechaSeleccionada}?`,
+      //text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.generarInfDiario()    
+      }
+    });  
+  }
 
-  await this.excelServ.generarInformeAsignaciones(
-    this.asignaciones,
-    this.clientes,
-    this.choferesAgrupadosPorCategoria,
-    this.choferesInactivos,
-    this.fechaSeleccionada,
-    this.sectionColorClasses
-  );
-}
+  async generarInfDiario(){
+    await this.excelServ.generarInformeAsignaciones(
+      this.asignaciones,
+      this.clientes,
+      this.choferesAgrupadosPorCategoria,
+      this.choferesInactivos,
+      this.fechaSeleccionada,
+      this.sectionColorClasses
+    );
+  }
 
   abrirEdicionChofer(chofer: ChoferAsignado, modalRef: TemplateRef<any>) {
     this.choferSeleccionadoOriginal = chofer;

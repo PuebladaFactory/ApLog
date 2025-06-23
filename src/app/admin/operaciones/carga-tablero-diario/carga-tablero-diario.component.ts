@@ -8,6 +8,8 @@ import { Operacion, TarifaEventual } from 'src/app/interfaces/operacion';
 import { CategoriaTarifa, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 
 type ChoferAsignado = ConId<Chofer> & {
   hojaDeRuta?: string;
@@ -17,7 +19,7 @@ type ChoferAsignado = ConId<Chofer> & {
   conceptoChofer?: string;
   valorChofer?: number;
   conceptoCliente?: string;
-  valorCliente?: number;
+  valorCliente?: number;  
 };
 
 @Component({
@@ -34,11 +36,19 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
   clientes: Cliente[] = [];
   fecha: string = '';
   tarifasPersonalizadas: TarifaPersonalizadaCliente[] = []
+  tarifaGralCliente!: ConId<TarifaGralCliente>;
+  tarifaEspCliente!: ConId<TarifaGralCliente>;
+  tarifaPersCliente!: ConId<TarifaPersonalizadaCliente>;
+  tarifaGralChofer!: ConId<TarifaGralCliente>;
+  tarifaEspChofer!: ConId<TarifaGralCliente>;
+  tarifaGralProveedor!: ConId<TarifaGralCliente>;
+  tarifaEspProveedor!: ConId<TarifaGralCliente>;
 
   constructor(
     public activeModal: NgbActiveModal,
     private storageService: StorageService,
     private formNumServ: FormatoNumericoService,
+    private buscarTarifaServ: BuscarTarifaService
   ) {}
   ngOnDestroy(): void {
     throw new Error('Method not implemented.');
@@ -193,6 +203,19 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
       });
       return;
     }
+    let tGralClientes = this.storageService.loadInfo("tarifasGralCliente");
+    this.tarifaGralCliente = tGralClientes[0]; 
+    let tGralChoferes = this.storageService.loadInfo("tarifasGralChofer");
+    this.tarifaGralChofer = tGralChoferes[0];    
+    let tGralProveedor = this.storageService.loadInfo("tarifasGralProveedor");
+    this.tarifaGralProveedor = tGralProveedor[0];
+
+    for (const grupo of this.operacionesAgrupadas) {
+      for (const op of grupo.operaciones) {
+        this.valoresPrevios(op)
+      }
+    }
+
     //console.log('✅ Validación OK. Guardando operaciones...');
     // Si no hay errores, se puede proceder
     Swal.fire({
@@ -390,6 +413,78 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     const cats = this.getCategoriasDisponibles(op);
     const cat = cats.find(c => c.orden === op.tarifaPersonalizada.categoria);
     return cat ? `Categoría ${cat.orden}: ${cat.nombre}` : '';
+  }
+
+  valoresPrevios(op:Operacion){
+   
+    if(op.tarifaTipo.general || op.tarifaTipo.especial){
+      op.valores.cliente.aCobrar = this.aCobrarOp(op.cliente, op.chofer, op.patenteChofer);      
+      op.valores.chofer.aPagar = this.aPagarOp(op.chofer, op.patenteChofer, op);
+    }
+    if(op.tarifaTipo.personalizada){
+      op.valores.cliente.aCobrar = op.tarifaPersonalizada.aCobrar;
+      op.valores.chofer.aPagar = op.tarifaPersonalizada.aPagar;
+    }
+    if(op.tarifaTipo.eventual){
+      op.valores.cliente.aCobrar = op.tarifaEventual.cliente.valor;
+      op.valores.chofer.aPagar = op.tarifaEventual.chofer.valor;
+    }
+    op.valores.cliente.tarifaBase = op.valores.cliente.aCobrar;
+    op.valores.chofer.tarifaBase = op.valores.chofer.aPagar;
+  }
+
+  aCobrarOp(cliente: Cliente, chofer: Chofer, patente:string ){  
+    let tarifa
+    if(cliente.tarifaTipo.especial){
+      let tEspClientes = this.storageService.loadInfo("tarifasEspCliente");
+      this.tarifaEspCliente = tEspClientes.find((t:TarifaGralCliente)=>{return t.idCliente === cliente.idCliente} );
+      tarifa = this.tarifaEspCliente;
+      //console.log("1A) tarifa esp cobrar: ", tarifa);    
+    } else {
+      tarifa = this.tarifaGralCliente;
+      //console.log("1B) tarifa gral cobrar: ", tarifa);    
+    }
+    return this.buscarTarifaServ.$getACobrar(tarifa, chofer, patente);  
+  }
+
+  aPagarOp(chofer: Chofer, patente: string, op: Operacion){
+
+    let tarifa;  
+    if(chofer.tarifaTipo.especial){
+      if(chofer.idProveedor === 0){
+        let tEspChoferes = this.storageService.loadInfo("tarifasEspChofer");
+        this.tarifaEspChofer = tEspChoferes.find((t:TarifaGralCliente)=>{return t.idChofer === chofer.idChofer} );
+        if(this.tarifaEspChofer.idCliente === 0 || this.tarifaEspChofer.idCliente === op.cliente.idCliente){
+          tarifa = this.tarifaEspChofer; 
+          //console.log("2A) tarifa esp chofer a pagar: ", tarifa);        
+        } else {
+          tarifa = this.tarifaGralChofer;
+          //console.log("2B) tarifa gral chofer a pagar: ", tarifa);  
+        }      
+      } else {
+        let tEspProveedores = this.storageService.loadInfo("tarifasEspProveedor");
+        this.tarifaEspProveedor = tEspProveedores.find((t:TarifaGralCliente)=>{return t.idProveedor === chofer.idProveedor} );
+        if(this.tarifaEspProveedor.idCliente === 0 || this.tarifaEspProveedor.idCliente === op.cliente.idCliente){
+          tarifa = this.tarifaEspProveedor;
+          //console.log("2B) tarifa esp proveedor a pagar: ", tarifa);       
+        } else {
+          tarifa = this.tarifaGralProveedor;
+          //console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
+        }      
+      }
+
+    }else{
+      if(chofer.idProveedor === 0){
+        tarifa = this.tarifaGralChofer;
+        //console.log("2B) tarifa gral chofer a pagar: ", tarifa);   
+      } else {
+        tarifa = this.tarifaGralProveedor;
+        //console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
+      }    
+    }
+    return this.buscarTarifaServ.$getAPagar(tarifa, chofer, patente);  
+    
+
   }
 
 
