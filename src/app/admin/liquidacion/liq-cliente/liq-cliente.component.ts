@@ -85,6 +85,8 @@ export class LiqClienteComponent {
   $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
   isLoading: boolean = false;
   objetoEditado: ConId<FacturaOp>[] = [];
+  proformas: ConId<any> [] = [];
+  facturaOpsNoAsignadas: any[] = []
 
   constructor(private storageService: StorageService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -1004,12 +1006,48 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         })
       }
 
-      editarObjeto(){
+      filtrarObjeto(){
         console.log("1)this.facturasOpEditadas", this.$facturasOpCliente);
         //this.objetoEditado= this.agregarCampo(this.$facturasOpCliente)
-        this.objetoEditado= this.$facturasOpCliente
+        this.objetoEditado= this.$facturasOpCliente.filter((fac:FacturaOp)=> {return fac.contraParteProforma})
         console.log("2)this.objetoEditado", this.objetoEditado);
         
+      }
+
+      editarObjeto(){
+        this.facturaOpsNoAsignadas.map((fac:any)=>{
+          fac.contraParteProforma = false;
+        })
+        console.log("facturaOpsNoAsignadas", this.facturaOpsNoAsignadas);
+        
+        
+      }
+
+      traerProformas(){
+        this.dbFirebase.getAllStateChanges("proforma").subscribe(data=>{
+          if(data){
+            this.proformas = data;
+            console.log("proformas: ", this.proformas)
+          }
+        })
+      }
+
+      proformasCongeladas(){
+        const facturaOps: FacturaOp[] = [...this.objetoEditado]; // tu array original
+        const facturas: any[] = [...this.proformas];     // tu otro array original
+
+        // 1. Crear un Set con todos los idOperacion usados en alguna factura
+        const operacionesUsadas = new Set<number>(
+          facturas.flatMap(factura => factura.operaciones)
+        );
+
+        // 2. Filtrar las FacturaOp que no estén en el set de operaciones usadas
+        this.facturaOpsNoAsignadas = facturaOps.filter(
+          op => !operacionesUsadas.has(op.idOperacion)
+        );
+
+        // Ahora tenés una copia de los FacturaOp que no están asignados a ninguna factura
+        console.log("facturaOpsNoAsignadas",this.facturaOpsNoAsignadas );
       }
 
       agregarCampo(facturaOp: any[]): ConId<FacturaOp>[] {
@@ -1023,7 +1061,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
       actualizarObjeto(){
         this.isLoading = true
-        this.dbFirebase.eliminarMultiple(this.objetoEditado, "facturaOpCliente").then((result)=>{
+        this.dbFirebase.actualizarMultiple(this.facturaOpsNoAsignadas, "facturaOpCliente").then((result)=>{
           this.isLoading = false
           if(result.exito){
             alert("actualizado correctamente")
