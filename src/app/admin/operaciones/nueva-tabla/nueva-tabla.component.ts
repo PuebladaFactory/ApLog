@@ -658,7 +658,7 @@ private cargarConfiguracionColumnas(): void {
 
   actualizarObjeto(){
     this.isLoading = true
-    this.dbFirebase.actualizarMultiple(this.objetoEditado, "operaciones").then((result)=>{
+    this.dbFirebase.eliminarMultiple(this.objetoEditado, "operaciones").then((result)=>{
       this.isLoading = false
       if(result.exito){
         alert("actualizado correctamente")
