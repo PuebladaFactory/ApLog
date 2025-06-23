@@ -212,7 +212,8 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
 
     for (const grupo of this.operacionesAgrupadas) {
       for (const op of grupo.operaciones) {
-        this.valoresPrevios(op)
+        console.log("op: ", op);        
+        this.valoresIniciales(op)
       }
     }
 
@@ -229,13 +230,19 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          this.operaciones.map(op=>{
-            if(op.tarifaTipo.eventual){
+          // Aplicar formato especial a tarifa eventual si corresponde
+          this.operaciones.forEach(op => {
+            if (op.tarifaTipo.eventual) {
               op.tarifaEventual = this.formatoEventual(op);
             }
-          })
+
+            // 🔸 Eliminar propiedades temporales
+            delete (op as any).tarifaTipoOriginal;
+            delete (op as any).originalEventual;
+          });
+
           console.log(this.operaciones);
-          this.activeModal.close(this.operaciones);          
+          this.activeModal.close(this.operaciones);
         }else{
           // Si el usuario cancela, realiza la acción correspondiente
          
@@ -415,7 +422,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     return cat ? `Categoría ${cat.orden}: ${cat.nombre}` : '';
   }
 
-  valoresPrevios(op:Operacion){
+  valoresIniciales(op:Operacion){
    
     if(op.tarifaTipo.general || op.tarifaTipo.especial){
       op.valores.cliente.aCobrar = this.aCobrarOp(op.cliente, op.chofer, op.patenteChofer);      
