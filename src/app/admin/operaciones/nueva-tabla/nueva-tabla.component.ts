@@ -634,9 +634,9 @@ private cargarConfiguracionColumnas(): void {
 
   editarObjeto(){
     console.log("1)this.opActivas", this.$opActivas);
-    this.objetoEditado= this.editarCampo(this.$opActivas)
+    //this.objetoEditado= this.editarCampo(this.$opActivas)    
+    this.objetoEditado= this.$opActivas
     console.log("2)this.objetoEditado", this.objetoEditado);
-    
   }
 
   editarCampo(operaciones: any[]): ConId<Operacion>[] {
