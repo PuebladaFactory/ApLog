@@ -10,6 +10,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
 import { Firestore } from '@angular/fire/firestore';
 import { inject } from '@angular/core';
+import { TableroDiario } from 'src/app/admin/operaciones/tablero-diario/tablero-diario.component';
 
 @Injectable({
   providedIn: 'root'
@@ -1285,6 +1286,26 @@ async guardarOpMultiple(
     console.error(error);
     return { exito: false, mensaje: `Error al guardar: ${error.message || error}` };
   }
+}
+
+// 🔹 Guarda o reemplaza el tablero diario
+setItem<T extends { [key: string]: any }>(coleccion: string, id: string, data: T): Promise<void> {
+  const docRef = doc(this.firestore, `${coleccion}/${id}`);
+  return setDoc(docRef, data);
+}
+
+// 🔹 Obtiene el tablero diario guardado (por ID fijo: 'tablero-actual')
+async getTableroDiario(): Promise<TableroDiario | null> {
+  const docRef = doc(this.firestore, 'tableroDiario/tablero-actual');
+  const snapshot = await getDoc(docRef);
+  if (!snapshot.exists()) return null;
+  return snapshot.data() as TableroDiario;
+}
+
+// 🔹 Elimina el tablero diario almacenado
+async deleteTableroDiario(): Promise<void> {
+  const docRef = doc(this.firestore, 'tableroDiario/tablero-actual');
+  return deleteDoc(docRef);
 }
 
 

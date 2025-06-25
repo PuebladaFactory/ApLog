@@ -1071,4 +1071,21 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         })
       }
 
+      buscarObjetos(){
+        this.objetoEditado= this.$facturasOpCliente;
+        console.log("objetoEditado",this.objetoEditado );
+      }
+
+      eliminarObjetos(){
+        this.isLoading = true
+        this.dbFirebase.eliminarMultiple(this.objetoEditado, "facturaOpCliente").then((result)=>{
+          this.isLoading = false
+          if(result.exito){
+            alert("eliminado correctamente")
+          } else {
+            alert(`error actualizando. errr: ${result.mensaje}`)
+          }
+        })
+      }
+
 }

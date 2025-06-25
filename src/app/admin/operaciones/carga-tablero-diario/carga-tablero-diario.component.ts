@@ -341,15 +341,15 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
       if (!t.chofer.concepto || t.chofer.concepto.trim() === '') {
         errores.push(`Falta concepto del chofer en tarifa eventual para ${op.chofer.apellido}, ${op.chofer.nombre}`);
       }
-      if (t.chofer.valor <= 0) {
+      /* if (t.chofer.valor <= 0) {
         errores.push(`El valor del chofer en tarifa eventual debe ser mayor a 0 para ${op.chofer.apellido}, ${op.chofer.nombre}`);
-      }
+      } */
       if (!t.cliente.concepto || t.cliente.concepto.trim() === '') {
         errores.push(`Falta concepto del cliente en tarifa eventual para ${op.chofer.apellido}, ${op.chofer.nombre}`);
       }
-      if (t.cliente.valor <= 0) {
+      /* if (t.cliente.valor <= 0) {
         errores.push(`El valor del cliente en tarifa eventual debe ser mayor a 0 para ${op.chofer.apellido}, ${op.chofer.nombre}`);
-      }
+      } */
     }
 
     // 🔹 Validar Tarifa Personalizada
@@ -420,6 +420,12 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     const cats = this.getCategoriasDisponibles(op);
     const cat = cats.find(c => c.orden === op.tarifaPersonalizada.categoria);
     return cat ? `Categoría ${cat.orden}: ${cat.nombre}` : '';
+  }
+
+  getSeccionSeleccionadaLabel(op: Operacion): string {
+    const tPers = this.getTarifaPersonalizada(op.cliente.idCliente);
+    const sec = tPers?.secciones.find(s => s.orden === op.tarifaPersonalizada.seccion);
+    return sec ? `Sección ${sec.orden}: ${sec.descripcion}` : '';
   }
 
   valoresIniciales(op:Operacion){

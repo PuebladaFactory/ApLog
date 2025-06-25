@@ -124,7 +124,8 @@
                             <ng-container *ngIf="op.tarifaTipo.personalizada; else sinDatos">
                                 <select [(ngModel)]="op.tarifaPersonalizada.seccion"
                                       (ngModelChange)="onSeccionChange(op)"
-                                      class="form-select form-select-sm">
+                                      class="form-select form-select-sm"
+                                      [title]="getSeccionSeleccionadaLabel(op)">
                                     <option value="">Seleccione</option>
                                     <option *ngFor="let sec of getTarifaPersonalizada(op.cliente.idCliente)?.secciones" title="Sección {{ sec.orden }}"
                                             [ngValue]="sec.orden">
