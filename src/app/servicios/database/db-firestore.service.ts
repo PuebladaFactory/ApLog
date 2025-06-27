@@ -1290,13 +1290,13 @@ async guardarOpMultiple(
 
 // 🔹 Guarda o reemplaza el tablero diario
 setItem<T extends { [key: string]: any }>(coleccion: string, id: string, data: T): Promise<void> {
-  const docRef = doc(this.firestore, `${coleccion}/${id}`);
+  const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
   return setDoc(docRef, data);
 }
 
 // 🔹 Obtiene el tablero diario guardado (por ID fijo: 'tablero-actual')
 async getTableroDiario(): Promise<TableroDiario | null> {
-  const docRef = doc(this.firestore, 'tableroDiario/tablero-actual');
+  const docRef = doc(this.firestore, 'Vantruck/datos/tableroDiario/tablero-del-dia');
   const snapshot = await getDoc(docRef);
   if (!snapshot.exists()) return null;
   return snapshot.data() as TableroDiario;
@@ -1304,7 +1304,7 @@ async getTableroDiario(): Promise<TableroDiario | null> {
 
 // 🔹 Elimina el tablero diario almacenado
 async deleteTableroDiario(): Promise<void> {
-  const docRef = doc(this.firestore, 'tableroDiario/tablero-actual');
+  const docRef = doc(this.firestore, 'Vantruck/datos/tableroDiario/tablero-del-dia');
   return deleteDoc(docRef);
 }
 

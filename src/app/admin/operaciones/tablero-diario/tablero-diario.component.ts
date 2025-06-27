@@ -35,8 +35,9 @@ export interface ChoferAsignadoBase {
 
 export interface TableroDiario {
   id: string;
-  fecha: string;
+  fecha: string; // formato "YYYY-MM-DD"
   asignaciones: { [idCliente: number]: ChoferAsignadoBase[] };
+  timestamp: number; // nuevo: guarda el momento exacto del guardado
 }
 
 @Component({
@@ -336,6 +337,7 @@ openModal(opMultiples: any[]): void {
 
         this.limpiarAsignaciones();
         localStorage.removeItem('asignacionesTemporal');
+        localStorage.removeItem('tableroDiarioFirestore');
 
         Swal.fire({
           icon: 'success',
@@ -473,107 +475,137 @@ openModal(opMultiples: any[]): void {
     modal.close(); // El finally del modal se encarga de limpiar
   }
 
-  async guardarTablero(): Promise<void> {
-    const hayAsignaciones = Object.values(this.asignaciones).some(lista => lista.length > 0);
+async guardarTableroDiario(): Promise<void> {
+  const hayAsignaciones = Object.entries(this.asignaciones).filter(([_, choferes]) => choferes.length > 0)
+  if(!this.fechaSeleccionada){      
+    return this.mensajesError("Debe seleccionar una fecha")
+  }
+  if(hayAsignaciones.length === 0){
+    this.mensajesError("Debe asignar algun chofer para poder descargar las asignaciones diarias")
+    return
+  }
+  const { isConfirmed } = await Swal.fire({
+    title: 'Guardar tablero actual',
+    text: '¿Desea guardar este tablero para continuar luego?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Guardar',
+    cancelButtonText: 'Cancelar'
+  });
 
-    if (!this.fechaSeleccionada) {
-      return this.mensajesError("Debe seleccionar una fecha");
-    }
+  if (!isConfirmed) return;  
+  this.isLoading = true; // Activar spinner  
 
-    if (!hayAsignaciones) {
-      return this.mensajesError("Debe asignar al menos un chofer");
-    }
+  const tablero: TableroDiario = {
+    id: 'tablero-del-dia', // clave fija por ahora
+    fecha: this.fechaSeleccionada,
+    asignaciones: {},
+    timestamp: Date.now() // nuevo
+  };
 
-    const confirm = await Swal.fire({
-      title: '¿Guardar tablero diario?',
-      text: 'Esto permitirá continuar más tarde con las asignaciones actuales.',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, guardar',
-      cancelButtonText: 'Cancelar'
+  // Guardar solo clientes con choferes asignados
+  for (const [idStr, lista] of Object.entries(this.asignaciones)) {
+    if (lista.length === 0) continue;
+
+    tablero.asignaciones[+idStr] = lista.map((c): ChoferAsignadoBase => ({
+      idChofer: c.idChofer,
+      categoriaAsignada: c.categoriaAsignada,
+      tEventual: c.tEventual,
+      observaciones: c.observaciones,
+      hojaDeRuta: c.hojaDeRuta
+    }));
+  }
+
+  try {
+    await this.dbFirestore.setItem<TableroDiario>('tableroDiario', tablero.id, tablero);
+
+    localStorage.setItem('tableroDiarioFirestore', JSON.stringify(tablero));
+    localStorage.setItem('asignacionesTemporal', JSON.stringify(this.asignaciones));
+    this.isLoading = false; // Desactivar spinner
+    Swal.fire({
+      icon: 'success',
+      title: 'Tablero guardado',
+      text: 'Podrá retomarlo más adelante desde esta misma pantalla.'
     });
 
-    if (!confirm.isConfirmed) return;
-
-    // Filtrar solo asignaciones con choferes asignados
-    const asignacionesFiltradas: { [idCliente: number]: ChoferAsignadoBase[] } = {};
-    for (const [id, choferes] of Object.entries(this.asignaciones)) {
-      if (choferes.length > 0) {
-        asignacionesFiltradas[+id] = choferes.map(c => ({
-          idChofer: c.idChofer,
-          tEventual: c.tEventual,
-          categoriaAsignada: c.categoriaAsignada,
-          observaciones: c.observaciones || '',
-          hojaDeRuta: c.hojaDeRuta || ''
-        }));
-      }
-    }
-
-    const data: TableroDiario = {
-      id: 'tablero-actual',
-      fecha: this.fechaSeleccionada,
-      asignaciones: asignacionesFiltradas
-    };
-
-    try {
-      await this.dbFirestore.setItem('tableroDiario', data.id, data);
-      Swal.fire({
-        icon: 'success',
-        title: 'Tablero guardado',
-        text: 'Podrá retomarlo más tarde desde este dispositivo.'
-      });
-    } catch (error) {
-      console.error(error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al guardar',
-        text: 'No se pudo guardar el tablero.'
-      });
-    }
+  } catch (error) {
+    console.error(error);
+    this.isLoading = false; // Desactivar spinner
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al guardar',
+      text: 'Ocurrió un problema al guardar el tablero.'
+    });
   }
+}
 
-  async cargarTableroDiario(): Promise<void> {
-    try {
-      const tablero = await this.dbFirestore.getTableroDiario();
-      if (!tablero) return;
 
-      this.fechaSeleccionada = tablero.fecha;
+async cargarTableroDiario(): Promise<void> {
+  this.isLoading = true; // Activar spinner
+  try {
+    const tablero = await this.dbFirestore.getTableroDiario();
+    if (!tablero) {
+      this.isLoading = false;
+      return;
+    }
+    console.log("tablero online: ", tablero);
+    
+    const tableroLocalStr = localStorage.getItem('tableroDiarioFirestore');
+    const tableroLocal = tableroLocalStr ? JSON.parse(tableroLocalStr) as TableroDiario : null;
+    console.log("tablero online local: ", tableroLocal);
+    // ⚠️ Comparamos por timestamp
+    if (tableroLocal && tableroLocal.timestamp === tablero.timestamp) {
+      this.isLoading = false;
+      return; // Ya estaba cargado, no hacer nada
+    }
 
-      // Reconstruir las asignaciones usando los choferes cargados en el componente
-      for (const [idStr, choferesBase] of Object.entries(tablero.asignaciones)) {
-        const idCliente = +idStr;
-        const choferesCompletos: ChoferAsignado[] = [];
+    // ✅ Guardamos el nuevo tablero en localStorage
+    localStorage.setItem('tableroDiarioFirestore', JSON.stringify(tablero));
 
-        for (const base of choferesBase) {
-          const choferCompleto = this.choferes.find(c => c.idChofer === base.idChofer);
-          if (!choferCompleto) continue;
+    // Cargar fecha
+    this.fechaSeleccionada = tablero.fecha;
 
-          choferesCompletos.push({
-            ...choferCompleto,
-            categoriaAsignada: base.categoriaAsignada ?? { catOrden: 0, nombre: 'Sin categoría' },
-            tEventual: base.tEventual,
-            observaciones: base.observaciones ?? '',
-            hojaDeRuta: base.hojaDeRuta ?? ''
-          });
-        }
+    // Reconstruir asignaciones con datos completos de choferes
+    for (const [idStr, choferesBase] of Object.entries(tablero.asignaciones)) {
+      const idCliente = +idStr;
+      const choferesCompletos: ChoferAsignado[] = [];
 
-        this.asignaciones[idCliente] = choferesCompletos;
+      for (const base of choferesBase) {
+        const choferCompleto = this.choferes.find(c => c.idChofer === base.idChofer);
+        if (!choferCompleto) continue;
+
+        choferesCompletos.push({
+          ...choferCompleto,
+          categoriaAsignada: base.categoriaAsignada ?? { catOrden: 0, nombre: 'Sin categoría' },
+          tEventual: base.tEventual,
+          observaciones: base.observaciones ?? '',
+          hojaDeRuta: base.hojaDeRuta ?? ''
+        });
       }
 
-      Swal.fire({
-        icon: 'info',
-        title: 'Tablero cargado',
-        text: 'Se ha restaurado el tablero guardado anteriormente.'
-      });
-    } catch (error) {
-      console.error(error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al cargar',
-        text: 'No se pudo recuperar el tablero.'
-      });
+      this.asignaciones[idCliente] = choferesCompletos;
     }
+
+    Swal.fire({
+      icon: 'info',
+      title: 'Tablero cargado',
+      text: 'Se restauró un tablero guardado anteriormente.'
+    });
+
+  } catch (error) {
+    console.error(error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al cargar',
+      text: 'No se pudo recuperar el tablero.'
+    });
+  } finally {
+    this.isLoading = false; // Desactivar spinner
   }
+}
+
+
+
 
 
 
