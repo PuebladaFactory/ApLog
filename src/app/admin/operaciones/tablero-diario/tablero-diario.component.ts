@@ -410,7 +410,7 @@ openModal(opMultiples: any[]): void {
   }
   
 
-  descargarOp() {
+/*   descargarOp() {
     //console.log("this.fechaSeleccionada", this.fechaSeleccionada);
     //console.log("this.asignaciones", this.asignaciones);
     const hayAsignaciones = Object.entries(this.asignaciones).filter(([_, choferes]) => choferes.length > 0)
@@ -437,7 +437,7 @@ openModal(opMultiples: any[]): void {
         this.generarInfDiario()    
       }
     });  
-  }
+  } */
 
   async generarInfDiario(){
     await this.excelServ.generarInformeAsignaciones(
