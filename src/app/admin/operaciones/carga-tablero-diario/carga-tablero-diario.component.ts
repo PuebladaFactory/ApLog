@@ -4,7 +4,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { Operacion, TarifaEventual } from 'src/app/interfaces/operacion';
+import { Operacion, TarifaEventual, Valores } from 'src/app/interfaces/operacion';
 import { CategoriaTarifa, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
@@ -234,6 +234,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
           this.operaciones.forEach(op => {
             if (op.tarifaTipo.eventual) {
               op.tarifaEventual = this.formatoEventual(op);
+              op.valores = this.formatoValoresOpEventual(op)
             }
 
             // 🔸 Eliminar propiedades temporales
@@ -261,8 +262,26 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
           concepto: op.tarifaEventual.cliente.concepto,
           valor: this.formNumServ.convertirAValorNumerico(op.tarifaEventual.cliente.valor),   
       },
-    }
+    }    
     return op.tarifaEventual;
+  }
+
+  formatoValoresOpEventual(op:any):Valores{
+    op.valores = {
+      cliente:{
+        acompValor: 0,
+        kmAdicional: 0,
+        tarifaBase: this.formNumServ.convertirAValorNumerico(op.valores.cliente.tarifaBase),
+        aCobrar: this.formNumServ.convertirAValorNumerico(op.valores.cliente.aCobrar),    
+    },
+    chofer: {
+        acompValor: 0,
+        kmAdicional: 0,
+        tarifaBase: this.formNumServ.convertirAValorNumerico(op.valores.chofer.tarifaBase),
+        aPagar: this.formNumServ.convertirAValorNumerico(op.valores.chofer.aPagar),
+    }
+    }    
+    return op.valores;
   }
 
   esOriginalEventual(op: any): boolean {
