@@ -1,4 +1,4 @@
-// ENVIRONMENT PARA DEMO
+// ENVIRONMENT PARA VANTRUCK
 export const environment = {
     production: true,
     firebase: {

@@ -32,7 +32,6 @@ export class ClienteControlComponent implements OnInit {
     { id: 'tab3', name: 'Tarifa Especial', route: 'clientes/especial' }, 
     { id: 'tab4', name: 'Tarifa Personalizada', route: 'clientes/personalizada' },
     { id: 'tab5', name: 'Tarifa Eventual', route: 'clientes/eventual' },
-    /* { id: 'tab6', name: 'Prueba', route: 'clientes/prueba' }, */
   ];
 
   constructor(private router: Router) {}

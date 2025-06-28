@@ -28,9 +28,8 @@ export class ProveedoresControlComponent implements OnInit {
   tabs = [
     { id: 'tab1', name: 'Alta/Listado', route: 'proveedores/listado' },    
     { id: 'tab2', name: 'Tarifa General', route: 'proveedores/general' }, 
-    { id: 'tab3', name: 'Tarifa Especial', route: 'proveedores/especial' }, 
-    /* { id: 'tab4', name: 'Tarifa Personalizada', route: 'proveedores/personalizada' }, */
-    { id: 'tab5', name: 'Tarifa Eventual', route: 'proveedores/eventual' },
+    { id: 'tab3', name: 'Tarifa Especial', route: 'proveedores/especial' },     
+    { id: 'tab4', name: 'Tarifa Eventual', route: 'proveedores/eventual' },
     
   ];
 

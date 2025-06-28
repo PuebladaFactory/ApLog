@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
+
 import { FacturacionRoutingModule } from './facturacion-routing.module';
 import { FacturacionClienteComponent } from './facturacion-cliente/facturacion-cliente.component';
 import { FacturacionChoferComponent } from './facturacion-chofer/facturacion-chofer.component';
@@ -37,7 +37,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ReactiveFormsModule,
     SharedModule,
     FilterPipeModule,
-    NgxDatatableModule,
+    
 
   ],
   exports:[

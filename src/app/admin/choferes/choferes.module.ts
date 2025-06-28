@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 
 import { ChoferesRoutingModule } from './choferes-routing.module';
 import { ChoferesControlComponent } from './choferes-control/choferes-control.component';
-import { ChoferesListadoComponent } from './choferes-listado/choferes-listado.component';
+
 import { ChoferesAltaComponent } from './choferes-alta/choferes-alta.component';
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
+
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 
@@ -22,15 +22,12 @@ import { AgGridModule } from 'ag-grid-angular';
 
 @NgModule({
   declarations: [
-    ChoferesControlComponent,
-    ChoferesListadoComponent,
-    ChoferesAltaComponent,    
-         
+    ChoferesControlComponent,    
+    ChoferesAltaComponent,   
     ChoferesTarifaGralComponent,
     ChoferesTarifaEspecialComponent,    
     ModalVehiculoComponent,
-    ListadoNuevoChoferComponent
-    
+    ListadoNuevoChoferComponent    
   ],
   imports: [
     CommonModule,
@@ -39,7 +36,7 @@ import { AgGridModule } from 'ag-grid-angular';
     ReactiveFormsModule,
     SharedModule,
     FilterPipeModule,
-    NgxDatatableModule, 
+    
     AgGridModule
   ]
 })

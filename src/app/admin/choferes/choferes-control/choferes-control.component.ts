@@ -29,10 +29,9 @@ export class ChoferesControlComponent implements OnInit {
   tabs = [
     { id: 'tab1', name: 'Alta/Listado', route: 'choferes/listado' },    
     { id: 'tab2', name: 'Tarifa General', route: 'choferes/general' }, 
-    { id: 'tab3', name: 'Tarifa Especial', route: 'choferes/especial' }, 
-    /* { id: 'tab4', name: 'Tarifa Personalizada', route: 'choferes/personalizada' }, */
-    { id: 'tab5', name: 'Tarifa Eventual', route: 'choferes/eventual' },
-    /* { id: 'tab6', name: 'Prueba', route: 'choferes/prueba' }, */
+    { id: 'tab3', name: 'Tarifa Especial', route: 'choferes/especial' },     
+    { id: 'tab4', name: 'Tarifa Eventual', route: 'choferes/eventual' },
+    
   ];
 
   constructor(private router: Router) {}

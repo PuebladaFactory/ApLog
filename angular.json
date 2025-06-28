@@ -33,12 +33,7 @@
               "node_modules/bootstrap/scss/bootstrap.scss",
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/bootstrap-icons/font/bootstrap-icons.css",
-              "src/styles.scss",
-              "node_modules/@swimlane/ngx-datatable/index.scss",
-              "node_modules/@swimlane/ngx-datatable/assets/icons.css", 
-              "node_modules/@swimlane/ngx-datatable/themes/material.css",
-              "node_modules/@swimlane/ngx-datatable/themes/dark.css", 
-              "node_modules/@swimlane/ngx-datatable/themes/bootstrap.css",
+              "src/styles.scss",              
               "node_modules/ag-grid-community/styles/ag-grid.css",
               "node_modules/ag-grid-community/styles/ag-theme-alpine.css"
               
