@@ -5,6 +5,15 @@ import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
+let version = 'v0.0.0'; // fallback por defecto
+
+try {
+  version = require('src/environments/version').appVersion;
+} catch (e) {
+  console.warn('⚠️ version.ts no encontrado, usando versión por defecto.');
+}
+
+
 @Component({
     selector: 'app-admin-sidebar',
     templateUrl: './admin-sidebar.component.html',
@@ -17,6 +26,7 @@ export class AdminSidebarComponent implements OnInit {
   alertaRoja: boolean = false;
   alertaAmarilla: boolean = false;
   $usuario!: any;
+  appVersion = version;
 
   constructor(private router: Router, private authService: AuthService, private storageService: StorageService) { }
 

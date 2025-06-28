@@ -3,9 +3,15 @@ import { Router } from '@angular/router';
 import { AuthService } from './servicios/autentificacion/auth.service';
 import { SwUpdate } from '@angular/service-worker';
 import Swal from 'sweetalert2';
+import { appVersion } from 'src/environments/version';
 
+let version = 'v0.0.0'; // fallback por defecto
 
-
+try {
+  version = require('src/environments/version').appVersion;
+} catch (e) {
+  console.warn('⚠️ version.ts no encontrado, usando versión por defecto.');
+}
 
 @Component({
     selector: 'app-root',
@@ -16,7 +22,7 @@ import Swal from 'sweetalert2';
 export class AppComponent implements OnInit {
   title = 'ApLog';
   // $estado;
-
+  appVersion = version;
 
 
   constructor(private swUpdate: SwUpdate) {
