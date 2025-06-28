@@ -220,7 +220,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     //console.log('✅ Validación OK. Guardando operaciones...');
     // Si no hay errores, se puede proceder
     Swal.fire({
-        title: `¿Desea agregar las operación con fecha ${this.fecha}?`,
+        title: `¿Desea dar de alta las operaciones con fecha ${this.fecha}?`,
         //text: "You won't be able to revert this!",
         icon: "warning",
         showCancelButton: true,
