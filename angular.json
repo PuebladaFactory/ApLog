@@ -60,7 +60,9 @@
                 "rgbcolor",
                 "file-saver",
                 "pdfmake" 
-              ]
+              ],
+              "serviceWorker": true,
+              "ngswConfigPath": "ngsw-config.json"
            
             
           },
