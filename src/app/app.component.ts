@@ -19,11 +19,10 @@ export class AppComponent implements OnInit {
 
 
 
-constructor(private swUpdate: SwUpdate) {
+  constructor(private swUpdate: SwUpdate) {
     if (this.swUpdate.isEnabled) {
-      this.swUpdate.versionUpdates.subscribe(event => {
+      this.swUpdate.versionUpdates.subscribe((event) => {
         if (event.type === 'VERSION_READY') {
-          // Hay una nueva versión disponible
           Swal.fire({
             title: '¡Nueva versión disponible!',
             text: '¿Querés actualizar para ver los últimos cambios?',
@@ -37,8 +36,23 @@ constructor(private swUpdate: SwUpdate) {
             }
           });
         }
-        
       });
+    }
+  }
+
+  verificarActualizaciones() {
+    if (this.swUpdate.isEnabled) {
+      this.swUpdate.checkForUpdate().then((hasUpdate) => {
+        if (hasUpdate) {
+          Swal.fire('✅ Hay una nueva versión disponible.');
+        } else {
+          Swal.fire('👍 Estás usando la última versión.');
+        }
+      }).catch((err) => {
+        Swal.fire('❌ Error al verificar actualizaciones.', err.message, 'error');
+      });
+    } else {
+      Swal.fire('ℹ️ El Service Worker no está habilitado.');
     }
   }
   ngOnInit(): void {
