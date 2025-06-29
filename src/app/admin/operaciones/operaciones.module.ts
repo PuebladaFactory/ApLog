@@ -4,20 +4,23 @@ import { CommonModule } from '@angular/common';
 import { OperacionesRoutingModule } from './operaciones-routing.module';
 import { OpControlComponent } from './op-control/op-control.component';
 
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
+
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 
 import { ConsultaOpComponent } from './consulta-op/consulta-op.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { TableroOpComponent } from './tablero-op/tablero-op.component';
+
 import { ModalFacturacionComponent } from './modal-facturacion/modal-facturacion.component';
 import { CargaMultipleComponent } from './carga-multiple/carga-multiple.component';
 import { ModalOpAltaComponent } from './modal-op-alta/modal-op-alta.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AgGridModule } from 'ag-grid-angular';
 import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { TableroDiarioComponent } from './tablero-diario/tablero-diario.component';
+import { CargaTableroDiarioComponent } from './carga-tablero-diario/carga-tablero-diario.component';
 
 
 
@@ -25,10 +28,13 @@ import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
 @NgModule({
   declarations: [
     OpControlComponent,      
-    ConsultaOpComponent,           
-    TableroOpComponent,     
-    ModalFacturacionComponent, CargaMultipleComponent, ModalOpAltaComponent,
+    ConsultaOpComponent,               
+    ModalFacturacionComponent, 
+    CargaMultipleComponent, 
+    ModalOpAltaComponent,
     NuevaTablaComponent,
+    TableroDiarioComponent,
+    CargaTableroDiarioComponent
     
   ],
   imports: [
@@ -39,8 +45,9 @@ import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
     SharedModule,
     FilterPipeModule,
     NgbModule,
-    NgxDatatableModule,
+    
     AgGridModule,
+    DragDropModule
   ],
 })
 export class OperacionesModule { }

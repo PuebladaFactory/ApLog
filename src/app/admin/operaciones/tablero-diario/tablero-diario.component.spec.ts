@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TableroOpComponent } from './tablero-op.component';
+import { TableroDiarioComponent } from './tablero-diario.component';
 
-describe('TableroOpComponent', () => {
-  let component: TableroOpComponent;
-  let fixture: ComponentFixture<TableroOpComponent>;
+describe('TableroDiarioComponent', () => {
+  let component: TableroDiarioComponent;
+  let fixture: ComponentFixture<TableroDiarioComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ TableroOpComponent ]
+      imports: [TableroDiarioComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(TableroOpComponent);
+    fixture = TestBed.createComponent(TableroDiarioComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

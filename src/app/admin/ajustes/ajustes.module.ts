@@ -1,10 +1,8 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { AjustesRoutingModule } from './ajustes-routing.module';
 import { AjustesControlComponent } from './ajustes-control/ajustes-control.component';
 import { AjustesUsuariosComponent } from './ajustes-usuarios/ajustes-usuarios.component';
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { UsuariosEdicionComponent } from './modales/usuarios-edicion/usuarios-edicion.component';
@@ -29,8 +27,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     FormsModule,
     ReactiveFormsModule,
     SharedModule,
-    FilterPipeModule,
-    NgxDatatableModule, 
+    FilterPipeModule,    
     NgbDatepickerModule,
   ]
 })

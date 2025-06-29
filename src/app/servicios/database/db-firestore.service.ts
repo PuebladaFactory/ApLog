@@ -10,6 +10,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
 import { Firestore } from '@angular/fire/firestore';
 import { inject } from '@angular/core';
+import { TableroDiario } from 'src/app/admin/operaciones/tablero-diario/tablero-diario.component';
 
 @Injectable({
   providedIn: 'root'
@@ -1245,6 +1246,66 @@ async eliminarMultiple(
       mensaje: `Error al actualizar: ${error.message || error}`
     };
   }
+}
+
+async guardarOpMultiple(
+  operaciones: Operacion[],  
+): Promise<{ exito: boolean; mensaje: string }> {
+  const batch = writeBatch(this.firestore);
+  const colRef = collection(this.firestore, `/Vantruck/datos/operaciones`);
+  
+  try {
+    // Verificar que NINGUNO de los objetos exista ya en la colección
+    for (const op of operaciones) {      
+
+      const q = query(colRef, where("idOperacion", "==", op.idOperacion));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // Encontró un objeto ya existente => no continúa
+        return {
+          exito: false,
+          mensaje: `Ya existe un documento con idOperacion: ${op.idOperacion}`
+        };
+      }
+    }
+
+    // Ninguno existe => agregar todos al batch
+    for (const op of operaciones) {
+      
+      const docRef = doc(colRef); // genera un id automático
+      //let {id, type, ...objEdit} = obj
+      batch.set(docRef, op);
+    }
+
+    // Ejecutar el batch
+    await batch.commit();
+
+    return { exito: true, mensaje: "Todos los objetos fueron guardados correctamente." };
+  } catch (error: any) {
+    console.error(error);
+    return { exito: false, mensaje: `Error al guardar: ${error.message || error}` };
+  }
+}
+
+// 🔹 Guarda o reemplaza el tablero diario
+setItem<T extends { [key: string]: any }>(coleccion: string, id: string, data: T): Promise<void> {
+  const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
+  return setDoc(docRef, data);
+}
+
+// 🔹 Obtiene el tablero diario guardado (por ID fijo: 'tablero-actual')
+async getTableroDiario(): Promise<TableroDiario | null> {
+  const docRef = doc(this.firestore, 'Vantruck/datos/tableroDiario/tablero-del-dia');
+  const snapshot = await getDoc(docRef);
+  if (!snapshot.exists()) return null;
+  return snapshot.data() as TableroDiario;
+}
+
+// 🔹 Elimina el tablero diario almacenado
+async deleteTableroDiario(): Promise<void> {
+  const docRef = doc(this.firestore, 'Vantruck/datos/tableroDiario/tablero-del-dia');
+  return deleteDoc(docRef);
 }
 
 

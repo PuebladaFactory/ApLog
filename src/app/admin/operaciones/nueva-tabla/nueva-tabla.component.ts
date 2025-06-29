@@ -634,9 +634,9 @@ private cargarConfiguracionColumnas(): void {
 
   editarObjeto(){
     console.log("1)this.opActivas", this.$opActivas);
-    this.objetoEditado= this.editarCampo(this.$opActivas)
+    //this.objetoEditado= this.editarCampo(this.$opActivas)    
+    this.objetoEditado= this.$opActivas
     console.log("2)this.objetoEditado", this.objetoEditado);
-    
   }
 
   editarCampo(operaciones: any[]): ConId<Operacion>[] {
@@ -658,7 +658,7 @@ private cargarConfiguracionColumnas(): void {
 
   actualizarObjeto(){
     this.isLoading = true
-    this.dbFirebase.actualizarMultiple(this.objetoEditado, "operaciones").then((result)=>{
+    this.dbFirebase.eliminarMultiple(this.objetoEditado, "operaciones").then((result)=>{
       this.isLoading = false
       if(result.exito){
         alert("actualizado correctamente")

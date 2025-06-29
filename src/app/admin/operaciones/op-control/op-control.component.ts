@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 @Component({
     selector: 'app-op-control',
     template: `
-  <div class="d-flex justify-content-between mt-3">
+  <div class="mt-3">
     <h1 class="text-center w-100">Operaciones</h1>
   </div>
   <div class="tab-container">
@@ -55,8 +55,8 @@ import { Router } from '@angular/router';
 export class OpControlComponent implements OnInit {
 
   tabs = [
-    { id: 'tab1', name: 'Tablero de Operaciones', route: 'op/tablero' },    
-    /* { id: 'tab2', name: 'Prueba', route: 'op/nuevo' },     */
+    { id: 'tab1', name: 'Tablero de Operaciones', route: 'op/tablero' },        
+    { id: 'tab2', name: 'Tablero Diario', route: 'op/diario' },     
   ];
 
   selectedTab: string = 'tab1';

@@ -225,6 +225,7 @@ export class ChoferesAltaComponent implements OnInit {
         let formValue = this.form.value;
         let id = this.chofer.id;
         let idTarifa = this.chofer.idTarifa;
+        let activo = this.chofer.activo;
         // Eliminar los guiones del CUIT
         let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));        
         this.direccionCompleta = {provincia: this.$provinciaSeleccionada, municipio: this.$municipioSeleccionado, localidad: this.$localidadSeleccionada, domicilio: this.form.value.direccion}        
@@ -243,10 +244,11 @@ export class ChoferesAltaComponent implements OnInit {
         this.chofer.tarifaAsignada = this.tarifaAsignada;
         this.chofer.idTarifa = idTarifa;
         console.log("este es el chofer EDITADO: ",this.chofer);     
+        this.chofer.activo = activo
     } else {
         let formValue = this.form.value;
         // Eliminar los guiones del CUIT
-        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));   
+        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));           
         this.direccionCompleta = {provincia: this.$provinciaSeleccionada, municipio: this.$municipioSeleccionado, localidad: this.$localidadSeleccionada, domicilio: this.form.value.direccion}
 
         this.chofer = {
@@ -263,6 +265,7 @@ export class ChoferesAltaComponent implements OnInit {
         this.chofer.tarifaAsignada = this.idProveedor === 0 ? tarifaSeleccionada.general ? tarifaGeneral[0] === null ? false : true : false : false;
         this.chofer.idTarifa = this.idProveedor === 0 ? tarifaSeleccionada.general ? tarifaGeneral[0] === null ? 0 : tarifaGeneral[0].idTarifa : 0 : 0;
         console.log("este es el chofer NUEVO: ",this.chofer);     
+        this.chofer.activo = true;
     }
    }
 

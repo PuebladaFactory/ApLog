@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { ProveedoresAltaComponent } from './proveedores-alta/proveedores-alta.component';
-import { ProveedoresListadoComponent } from './proveedores-listado/proveedores-listado.component';
 import { ProveedoresControlComponent } from './proveedores-control/proveedores-control.component';
 import { ProveedoresTarifaGralComponent } from './proveedores-tarifa-gral/proveedores-tarifa-gral.component';
 import { ProveedoresTarifaEspecialComponent } from './proveedores-tarifa-especial/proveedores-tarifa-especial.component';
@@ -15,8 +14,7 @@ const routes: Routes = [
       {path: 'alta', component:ProveedoresAltaComponent,
             canActivate: [RoleGuard],
             data: { roles: ['god', 'admin', 'manager'] }, // no se permiten usuarios
-      },      
-      {path: 'prueba', component:ProveedoresListadoComponent},
+      },            
       {path: 'general', component:ProveedoresTarifaGralComponent},
       {path: 'especial', component:ProveedoresTarifaEspecialComponent},      
       {path: 'eventual', component:TarifasEventualesComponent},

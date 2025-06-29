@@ -1,0 +1,178 @@
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+label, input, textarea, select, td{
+  font-size: 1.25rem;
+}
+
+td, th {
+  //padding: 0.75rem !important;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+thead th {
+  //text-transform: uppercase;
+  font-weight: 600;
+  //letter-spacing: 0.5px;
+  background-color: #f1f1f1;  
+  font-size: 1.35rem;
+}
+
+
+.grupo-container {
+  background-color: #fdfdfd;
+}
+
+/* 🔷 Anchos consistentes */
+.col-chofer {
+  width: 14.37%;
+  max-width: 14.37%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-vehiculo {
+  width: 7.26%;
+  max-width: 7.26%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-acomp,
+.col-eventual-toogle {
+  width: 4.5%;
+  max-width: 4.5%;
+}
+
+.col-tarifa{
+  width: 5.41%;
+  max-width: 5.41%;
+}
+
+.col-hojaRuta{
+  width: 6.63%;
+  max-width: 6.63%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-obs{
+  width: 7.67%;
+  max-width: 7.67%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-eventual-concepto{
+  width: 6.36%;
+  max-width: 6.36%;
+}
+
+.col-eventual-valor{
+  width: 6.46%;
+  max-width: 6.46%;
+}
+.col-seccion {
+  width: 7.26%;
+  max-width: 7.26%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-categoria {
+  width: 13.2%;
+  max-width: 13.2%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-anular{
+  width: 3.55%;
+  max-width: 3.55%;
+}
+
+.isDisabled {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity:0.5;
+}
+  
+.isDisabled:hover {
+  cursor: not-allowed;
+  opacity:0.5;
+}
+
+/* 🔹 Colores suaves para columnas activas */
+.bg-eventual-header {
+  background-color: #cfe2ff;
+  font-weight: bold;
+}
+.bg-eventual-cell {
+  background-color: #e3f2fd;
+}
+
+.bg-personalizada-header {
+  background-color: #ffeeba;
+  font-weight: bold;
+}
+.bg-personalizada-cell {
+  background-color: #fff9e6;
+}
+
+/* 🔹 Bordes constantes */
+.col-eventual-border-left {
+  border-left: 2px solid #0d6efd;  
+}
+
+.col-eventual-border-right {  
+  border-right: 2px solid #0d6efd;
+}
+
+.col-personalizada-border-left {
+  border-left: 2px solid #ff9800;  
+}
+
+.col-personalizada-border-right {  
+  border-right: 2px solid #ff9800;
+}
+
+.vehiculos{  
+  border: 2px solid #9df395;
+}
+
+.op-row:hover {
+  background-color: #f7f7f7;
+}
+
+/* 🔸 Oculta los botones por defecto */
+.op-row:hover .btn-delete {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.btn-delete {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.fila-error {
+  background-color: rgba(255, 0, 0, 0.05) !important;
+  border-left: 4px solid #dc3545;
+}
+
+.fila-error td {
+  border-top: 1px solid #f5c6cb;
+}
+
+
+

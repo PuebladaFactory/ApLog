@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+
 import { error } from 'jquery';
 import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
@@ -53,9 +53,9 @@ export class ModalDetalleComponent implements OnInit {
   count = 0;
   limit = 20;
   offset = 0;
-  sortType = SortType.multi; // Aquí usamos la enumeración SortType
-  selectionType = SelectionType.checkbox; // Aquí usamos la enumeración SelectionType
-  ColumnMode = ColumnMode;  
+  
+  
+  
   encapsulation!: ViewEncapsulation.None;
   ajustes: boolean = false;
   firstFilter = '';

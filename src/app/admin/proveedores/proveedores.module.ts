@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { ProveedoresRoutingModule } from './proveedores-routing.module';
 import { ProveedoresAltaComponent } from './proveedores-alta/proveedores-alta.component';
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
-import { ProveedoresListadoComponent } from './proveedores-listado/proveedores-listado.component';
+
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 
@@ -19,8 +18,7 @@ import { AgGridModule } from 'ag-grid-angular';
 
 @NgModule({
   declarations: [
-    ProveedoresAltaComponent,    
-    ProveedoresListadoComponent,        
+    ProveedoresAltaComponent,        
     ProveedoresControlComponent,
     ProveedoresTarifaGralComponent,
     ProveedoresTarifaEspecialComponent,
@@ -34,7 +32,7 @@ import { AgGridModule } from 'ag-grid-angular';
     ProveedoresRoutingModule,
     SharedModule,
     FilterPipeModule,
-    NgxDatatableModule,
+    
     AgGridModule
   ]
 })

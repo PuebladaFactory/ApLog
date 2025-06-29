@@ -13,6 +13,7 @@ import { LiquidacionModule } from './liquidacion/liquidacion.module';
 import { SharedModule } from "../shared/shared.module";
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AgGridModule } from 'ag-grid-angular';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 
 @NgModule({
@@ -34,7 +35,8 @@ import { AgGridModule } from 'ag-grid-angular';
         LiquidacionModule,
         SharedModule,
         FilterPipeModule,
-        AgGridModule
+        AgGridModule,
+        DragDropModule
     ],
 })
 export class AdminModule { }

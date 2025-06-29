@@ -9,6 +9,15 @@ import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personaliz
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
+let version = 'v0.0.0'; // fallback por defecto
+
+try {
+  version = require('src/environments/version').appVersion;
+} catch (e) {
+  console.warn('⚠️ version.ts no encontrado, usando versión por defecto.');
+}
+
+
 @Component({
     selector: 'app-admin-home',
     templateUrl: './admin-home.component.html',
@@ -17,7 +26,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 })
 export class AdminHomeComponent implements OnInit {
 
-  
+  appVersion = version;
   activo!:boolean;
   $legajos!:Legajo[];
   $usuario!: any;
