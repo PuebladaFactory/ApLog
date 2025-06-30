@@ -171,7 +171,7 @@ nav.navbar {
   }
 
   ::ng-deep .modal-super-xl .modal-content {
-    height: 800vh;         // Alto del 90% de la ventana
+    min-height: 80vh;         // Alto del 90% de la ventana
     overflow-y: auto;     // Scrolleable si se necesita
   }
 }
