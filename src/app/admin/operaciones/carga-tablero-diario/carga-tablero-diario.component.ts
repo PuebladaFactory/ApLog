@@ -230,6 +230,8 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
+          console.log("this.operaciones: ", this.operaciones);
+          
           // Aplicar formato especial a tarifa eventual si corresponde
           this.operaciones.forEach(op => {
             if (op.tarifaTipo.eventual) {
@@ -422,11 +424,19 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
       cancelButtonText: 'Cancelar'
     }).then(result => {
       if (result.isConfirmed) {
-        const index = grupo.operaciones.indexOf(op);
-        if (index > -1) {
-          grupo.operaciones.splice(index, 1);
-          Swal.fire('Eliminada', 'La operación fue eliminada correctamente.', 'success');
+        // Quitar de grupo
+        const indexGrupo = grupo.operaciones.indexOf(op);
+        if (indexGrupo > -1) {
+          grupo.operaciones.splice(indexGrupo, 1);
         }
+
+        // Quitar también del array global
+        const indexGlobal = this.operaciones.findIndex(o => o.idOperacion === op.idOperacion);
+        if (indexGlobal > -1) {
+          this.operaciones.splice(indexGlobal, 1);
+        }
+
+        Swal.fire('Eliminada', 'La operación fue eliminada correctamente.', 'success');
       }
     });
   }

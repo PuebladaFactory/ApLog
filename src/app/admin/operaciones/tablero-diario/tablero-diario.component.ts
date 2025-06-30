@@ -125,6 +125,12 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
         }
       }
 
+      const fechaGuardada = localStorage.getItem('fechaTableroDiario');
+      if (fechaGuardada) {
+        const parsed = JSON.parse(fechaGuardada);
+        this.fechaSeleccionada = parsed;
+      }
+
       // 👇 Buscar tablero existente en base de datos
      this.cargarTableroDiario();
   }
@@ -132,7 +138,8 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
      // Guardar las asignaciones en localStorage
-    localStorage.setItem('asignacionesTemporal', JSON.stringify(this.asignaciones));
+    localStorage.setItem('asignacionesTemporal', JSON.stringify(this.asignaciones));  
+    localStorage.setItem('fechaTableroDiario', JSON.stringify(this.fechaSeleccionada))
   }
 
   agruparChoferesPorCategoria() {
@@ -334,7 +341,11 @@ openModal(opMultiples: any[]): void {
         await this.generarInfDiario(); // ✅ Generar informe automáticamente
 
         await this.dbFirestore.deleteTableroDiario(); // ✅ Borrar tablero de BD
-
+        let arrayOp: number[] = [];
+        result.map((op:Operacion)=>{
+          arrayOp.push(op.idOperacion);
+        })
+        this.storageService.logMultiplesOp(arrayOp, "ALTA", "operaciones", `Alta de Operación`,true)
         this.limpiarAsignaciones();
         localStorage.removeItem('asignacionesTemporal');
         localStorage.removeItem('tableroDiarioFirestore');
@@ -521,6 +532,7 @@ async guardarTableroDiario(): Promise<void> {
 
     localStorage.setItem('tableroDiarioFirestore', JSON.stringify(tablero));
     localStorage.setItem('asignacionesTemporal', JSON.stringify(this.asignaciones));
+    this.storageService.addLogItem('tableroDiario', tablero, tablero.timestamp, "ALTA", `Tablero Diario del dia ${tablero.fecha}, guardado`)
     this.isLoading = false; // Desactivar spinner
     Swal.fire({
       icon: 'success',

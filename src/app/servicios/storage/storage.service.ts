@@ -953,6 +953,22 @@ export class StorageService {
           }
           console.log(e.message)});
       }
+
+      public addLogItem(componente: string, item: any, idItem:number, accion:string, msj: string): void {
+        let user = this.loadInfo('usuario');
+        //let accion: string = "ALTA";
+        let regLog:boolean = this.controlLog(componente, accion);
+        this.dbFirebase.create(componente, item).then(() => {        
+          if (!user[0].roles.god && regLog){            
+            this.logService.logEvent(accion, componente, msj, idItem, true);           
+          }          
+          
+        }).catch((e) => {          
+          if (!user[0].roles.god && regLog){
+            this.logService.logEvent(accion, componente, msj, idItem, false);
+          }
+          console.log(e.message)});
+      }
     
       public deleteItem(componente: string, item: any,  idItem:number, accion:string, msj:string): void {
         //console.log(" storage deleteItem ", componente)
@@ -1110,6 +1126,7 @@ export class StorageService {
           case "facturaChofer":
           case "facturaProveedor":
           case "proforma":
+          case "tableroDiario":
             if(accion === "INTERNA"){
               return false;
             } else{
