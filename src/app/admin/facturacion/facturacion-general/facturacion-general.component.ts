@@ -1,9 +1,9 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+
+
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -21,9 +21,9 @@ export class FacturacionGeneralComponent implements OnInit {
     fechaDesde: 0,
     fechaHasta: 0,
   };
-  $facturasCliente!: ConId<FacturaCliente>[];
-  $facturasChofer!:  ConId<FacturaChofer>[];
-  $facturasProveedor!: ConId<FacturaProveedor>[];
+  $facturasCliente!: ConId<InformeLiq>[];
+  $facturasChofer!:  ConId<InformeLiq>[];
+  $facturasProveedor!: ConId<InformeLiq>[];
   titulo: string = "facturacion"
   btnConsulta:boolean = false;
   date:any = new Date();
@@ -44,15 +44,15 @@ export class FacturacionGeneralComponent implements OnInit {
 
   ngOnInit(): void {    
     //this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
-    this.storageService.syncChangesDateValue<FacturaCliente>("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
-    this.storageService.getObservable<ConId<FacturaCliente>>("facturaCliente")
+    this.storageService.syncChangesDateValue<InformeLiq>("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
+    this.storageService.getObservable<ConId<InformeLiq>>("facturaCliente")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if(data){
         //console.log("data factura clientes: ", data);
         
         this.$facturasCliente = data; 
-        this.$facturasCliente = this.$facturasCliente.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+        this.$facturasCliente = this.$facturasCliente.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
         this.calcularIngresos();     
       } else {
         this.mensajesError("error: facturaCliente")
@@ -61,14 +61,14 @@ export class FacturacionGeneralComponent implements OnInit {
     });
 
     //his.storageService.getByDateValue("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacChofer");
-    this.storageService.syncChangesDateValue<FacturaChofer>("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
-    this.storageService.getObservable<ConId<FacturaChofer>>("facturaChofer")
+    this.storageService.syncChangesDateValue<InformeLiq>("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
+    this.storageService.getObservable<ConId<InformeLiq>>("facturaChofer")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       //console.log("data factura choferes: ", data);
       if(data){
         this.$facturasChofer = data; 
-        this.$facturasChofer = this.$facturasChofer.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+        this.$facturasChofer = this.$facturasChofer.sort((a, b) => a.entidad.apellido.localeCompare(b.entidad.apellido)); // Ordena por el nombre del chofer
         this.calcularPagos();     
       } else {
         this.mensajesError("error: facturaChofer")
@@ -77,8 +77,8 @@ export class FacturacionGeneralComponent implements OnInit {
     });
 
     //this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacProveedor");
-    this.storageService.syncChangesDateValue<FacturaProveedor>("facturaProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
-    this.storageService.getObservable<ConId<FacturaProveedor>>("facturaProveedor")
+    this.storageService.syncChangesDateValue<InformeLiq>("facturaProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
+    this.storageService.getObservable<ConId<InformeLiq>>("facturaProveedor")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       console.log("data factura proveedores: ", data);
@@ -86,7 +86,7 @@ export class FacturacionGeneralComponent implements OnInit {
         this.$facturasProveedor = data; 
         console.log("facturacion gral: facturas proveedor",this.$facturasProveedor );
         
-        this.$facturasProveedor = this.$facturasProveedor.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+        this.$facturasProveedor = this.$facturasProveedor.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
         this.calcularPagos();     
       } else {
         this.mensajesError("error: facturaChofer")
@@ -112,9 +112,9 @@ export class FacturacionGeneralComponent implements OnInit {
   }
 
   consultasFacturas(fechaDesde:string, fechaHasta:string){
-    this.storageService.syncChangesDateValue<FacturaCliente>("facturaCliente", "fecha", fechaDesde, fechaHasta, "desc");
-    this.storageService.syncChangesDateValue<FacturaChofer>("facturaChofer", "fecha", fechaDesde, fechaHasta, "desc");
-    this.storageService.syncChangesDateValue<FacturaProveedor>("facturaProveedor", "fecha", fechaDesde, fechaHasta, "desc");
+    this.storageService.syncChangesDateValue<InformeLiq>("facturaCliente", "fecha", fechaDesde, fechaHasta, "desc");
+    this.storageService.syncChangesDateValue<InformeLiq>("facturaChofer", "fecha", fechaDesde, fechaHasta, "desc");
+    this.storageService.syncChangesDateValue<InformeLiq>("facturaProveedor", "fecha", fechaDesde, fechaHasta, "desc");
     //this.storageService.getByDateValue("facturaCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacCliente");
     //this.storageService.getByDateValue("facturaChofer", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacChofer");
     //this.storageService.getByDateValue("facturaProveedor", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacProveedor");
@@ -125,7 +125,7 @@ export class FacturacionGeneralComponent implements OnInit {
     this.totalFaltaCobrar = 0;     
 
     if(this.$facturasCliente !== null && this.$facturasCliente !== undefined){
-      this.$facturasCliente.forEach((factura: FacturaCliente) => {
+      this.$facturasCliente.forEach((factura: InformeLiq) => {
         this.totalIngresosOp += Number(factura.valores.total);
         if(!factura.cobrado){
           this.totalFaltaCobrar += Number(factura.valores.total);        
@@ -139,7 +139,7 @@ export class FacturacionGeneralComponent implements OnInit {
     this.totalFaltaPagar = 0;
 
     if(this.$facturasChofer !== null && this.$facturasChofer !== undefined){
-      this.$facturasChofer.forEach((factura: FacturaChofer) => {
+      this.$facturasChofer.forEach((factura: InformeLiq) => {
         this.totalPagosOp += Number(factura.valores.total);
         if(!factura.cobrado){
           this.totalFaltaPagar += Number(factura.valores.total);        
@@ -147,7 +147,7 @@ export class FacturacionGeneralComponent implements OnInit {
       });      
     }
     if(this.$facturasProveedor !== null && this.$facturasProveedor !== undefined){
-      this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
+      this.$facturasProveedor.forEach((factura: InformeLiq) => {
         this.totalPagosOp += Number(factura.valores.total);
         if(!factura.cobrado){
           this.totalFaltaPagar += Number(factura.valores.total);        
@@ -209,9 +209,9 @@ export class FacturacionGeneralComponent implements OnInit {
       //this.storageService.getByDateValue("facturaChofer", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
       //this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
       //this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
-      this.storageService.syncChangesDateValue<FacturaCliente>("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
-      this.storageService.syncChangesDateValue<FacturaChofer>("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
-      this.storageService.syncChangesDateValue<FacturaProveedor>("facturaProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
+      this.storageService.syncChangesDateValue<InformeLiq>("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
+      this.storageService.syncChangesDateValue<InformeLiq>("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
+      this.storageService.syncChangesDateValue<InformeLiq>("facturaProveedor", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
     }     
   
   }

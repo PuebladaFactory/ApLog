@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
+
 
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { Subject, takeUntil } from 'rxjs';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import Swal from 'sweetalert2';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 @Component({
     selector: 'app-facturacion-chofer',
@@ -19,12 +21,12 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 export class FacturacionChoferComponent implements OnInit {
   
   searchText!:string;  
-  $facturasChofer!: ConId<FacturaChofer>[];    
+  $facturasChofer!: ConId<InformeLiq>[];    
   datosTablaChofer: any[] = [];
   mostrarTablaChofer: boolean[] = [];    
-  facturaChofer!: ConId<FacturaChofer>;  
-  $facturaOpChofer: ConId<FacturaOp>[] = [];
-  facturasPorChofer: Map<number, FacturaChofer[]> = new Map<number, FacturaChofer[]>();
+  facturaChofer!: ConId<InformeLiq>;  
+  $facturaOpChofer: ConId<InformeOp>[] = [];
+  facturasPorChofer: Map<number, InformeLiq[]> = new Map<number, InformeLiq[]>();
   
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
@@ -47,20 +49,16 @@ export class FacturacionChoferComponent implements OnInit {
     ) {}
   
     ngOnInit(): void {
-      this.storageService.getObservable<ConId<FacturaChofer>>("facturaChofer")
+      this.storageService.getObservable<ConId<InformeLiq>>("facturaChofer")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         this.$facturasChofer = data;
-        this.$facturasChofer = this.$facturasChofer.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+        this.$facturasChofer = this.$facturasChofer.sort((a, b) => a.entidad.apellido.localeCompare(b.entidad.apellido)); // Ordena por el nombre del chofer
         this.procesarDatosParaTabla();
         this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false); // Mueve esta línea aquí
       });
     
-      /* this.storageService.consultasFacOpLiqChofer$
-      .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-      .subscribe(data => {
-        this.$facturaOpChofer = data;
-      }); */
+
     }
 
     ngOnDestroy(): void {
@@ -84,11 +82,11 @@ export class FacturacionChoferComponent implements OnInit {
         this.totalFaltaPagar = 0;
     
         // Procesar cada factura y actualizar los datos del cliente
-        this.$facturasChofer.forEach((factura: FacturaChofer) => {
-          if (!choferesMap.has(factura.idChofer)) {
-            choferesMap.set(factura.idChofer, {
-              idChofer: factura.idChofer,            
-              chofer: factura.apellido + " " + factura.nombre,            
+        this.$facturasChofer.forEach((factura: InformeLiq) => {
+          if (!choferesMap.has(factura.entidad.id)) {
+            choferesMap.set(factura.entidad.id, {
+              idChofer: factura.entidad.id,            
+              chofer: factura.entidad.apellido + " " + factura.entidad.nombre,            
               sumaAPagar: 0,
               sumaACobrar: 0,
               faltaPagar: 0,
@@ -99,7 +97,7 @@ export class FacturacionChoferComponent implements OnInit {
             });
           }
     
-          const chofer = choferesMap.get(factura.idChofer);
+          const chofer = choferesMap.get(factura.entidad.id);
           //cliente.sumaACobrar++;
           if (factura.cobrado) {
             chofer.sumaAPagar += Number(factura.valores.total);
@@ -108,7 +106,7 @@ export class FacturacionChoferComponent implements OnInit {
             chofer.faltaPagar += Number(factura.valores.total);
           }
           chofer.total += Number(factura.valores.total);
-          chofer.sumaACobrar += Number(factura.montoFacturaCliente);  
+          chofer.sumaACobrar += Number(factura.valores.totalContraParte);  
           chofer.cant += Number(factura.operaciones.length);    
           chofer.neta = chofer.sumaACobrar - chofer.sumaAPagar
           chofer.porcentaje = (chofer.neta * 100) / chofer.sumaACobrar  

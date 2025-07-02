@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Descuento } from 'src/app/interfaces/factura-chofer';
+import { Descuento } from 'src/app/interfaces/informe-liq';
+
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 
 @Component({

@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
+
 
 import { Operacion } from 'src/app/interfaces/operacion';
 import { FacturacionChoferService } from 'src/app/servicios/facturacion/facturacion-chofer/facturacion-chofer.service';
@@ -13,7 +13,7 @@ import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import Swal from 'sweetalert2';
 import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
@@ -22,6 +22,8 @@ import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.service';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 
 @Component({
@@ -57,9 +59,9 @@ export class LiqChoferComponent implements OnInit {
   totalFacturasLiquidadasCliente: number = 0; // Variable para almacenar el total de las facturas liquidadas
   apellido!: string ;
   form!: any;
-  facturaChofer!: FacturaChofer;  
+  facturaChofer!: InformeLiq;  
   tarifaAplicada!: any;
-  facturasPorChofer: Map<number, FacturaOp[]> = new Map<number, FacturaOp[]>();
+  facturasPorChofer: Map<number, InformeOp[]> = new Map<number, InformeOp[]>();
   indiceSeleccionado!:number
   ultimaTarifa!:any;
   tarifaEditForm: any;
@@ -67,7 +69,7 @@ export class LiqChoferComponent implements OnInit {
   edicion:boolean = false;
   tarifaEspecial: boolean = false;
   idOperaciones: number [] = [];
-  facDetallada!: ConId<FacturaOp>;
+  facDetallada!: ConId<InformeOp>;
   $choferes!: ConIdType<Chofer>[];
   $clientes!: ConIdType<Cliente>[];
   $proveedores!: ConIdType<Proveedor>[]; 
@@ -78,10 +80,10 @@ export class LiqChoferComponent implements OnInit {
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>();
   opAbiertas!: ConId<Operacion>[];
-  $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
-  $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
+  $facturasOpDuplicadas: ConId<InformeOp>[] = [];
+  $facLiqOpDuplicadas: ConId<InformeOp>[] = [];
   isLoading: boolean = false;
-  objetoEditado: ConId<FacturaOp>[] = [];
+  objetoEditado: ConId<InformeOp>[] = [];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private facOpChoferService: FacturacionChoferService, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -128,10 +130,10 @@ export class LiqChoferComponent implements OnInit {
       this.fechasConsulta = data;
       ////console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
       //his.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpChofer");
-      this.storageService.syncChangesDateValue<FacturaOp>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");
+      this.storageService.syncChangesDateValue<InformeOp>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
-      this.storageService.getObservable<ConId<FacturaOp>>("facturaOpChofer")
+      this.storageService.getObservable<ConId<InformeOp>>("facturaOpChofer")
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpChofer = data;
@@ -157,7 +159,7 @@ export class LiqChoferComponent implements OnInit {
   verificarDuplicados() {
     const seenIds = new Set<number>();
 
-    this.$facturasOpChofer = this.$facturasOpChofer.filter((factura:ConId<FacturaOp>) => {
+    this.$facturasOpChofer = this.$facturasOpChofer.filter((factura:ConId<InformeOp>) => {
         if (seenIds.has(factura.idOperacion)) {
             this.$facturasOpDuplicadas.push(factura);
             return false; // Eliminar del array original
@@ -172,23 +174,8 @@ export class LiqChoferComponent implements OnInit {
 }
 
 verificarDuplicadosFacturadas(){
-  /* this.dbFirebase.getByDateValue("facOpLiqChofer", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta)
-  .pipe(take(1)) // Detener la suscripción cuando sea necesario
-  .subscribe(data=>{
-    let $facturasLiqChofer: any [] = data;
-    const idsLiqChofer = new Set($facturasLiqChofer.map(factura => factura.idOperacion));
 
-  // Recorremos el array facturasOpCliente
-  this.$facLiqOpDuplicadas = this.$facturasOpChofer.filter((facturaOp:FacturaOp) => {
-    // Verificamos si el idOperacion de la factura actual está en el Set
-    return idsLiqChofer.has(facturaOp.idOperacion);
-  });
-
-  
-  //console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
-
-  }) */
-  this.$facturasOpChofer.forEach((facturaOp:FacturaOp) => {
+  this.$facturasOpChofer.forEach((facturaOp:InformeOp) => {
     this.dbFirebase.getMostRecentId("facOpLiqChofer", "idFacturaOp", "idOperacion", facturaOp.idOperacion)
     .pipe(take(1))
     .subscribe(data=>{
@@ -206,16 +193,13 @@ verificarDuplicadosFacturadas(){
 
 deleteDuplicadas(){
   //console.log("cantidad facLiqOpDuplicadas", this.$facLiqOpDuplicadas.length);
-  this.$facLiqOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+  this.$facLiqOpDuplicadas.forEach((facDupli: ConId<InformeOp>)=>{    
     this.dbFirebase.delete(this.titulo, facDupli.id)
 })
 }
 
 borrarDuplicadasEnLiquidacion(){
-  ////console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
-  /* this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
-    this.dbFirebase.delete(this.titulo, facDupli.id)
-}) */
+
 this.isLoading = true;
 this.dbFirebase.eliminarMultiple(this.$facturasOpDuplicadas, this.titulo).then(result=>{
   this.isLoading = false;
@@ -242,7 +226,7 @@ mostrarDuplicadasEnLiquidacion(){
     if(this.$facturasOpChofer !== null){
       ////////console.log()("Facturas OP Chofer: ", this.$facturasOpChofer);
       
-      this.$facturasOpChofer.forEach((factura: FacturaOp) => {
+      this.$facturasOpChofer.forEach((factura: InformeOp) => {
         if (!choferesMap.has(factura.idChofer)) {
           choferesMap.set(factura.idChofer, {
             idChofer: factura.idChofer,
@@ -331,7 +315,7 @@ mostrarDuplicadasEnLiquidacion(){
     return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
   }
 
-  liquidarFac(factura: FacturaOp) {
+  liquidarFac(factura: InformeOp) {
     factura.liquidacion = !factura.liquidacion;
     //////console.log("Estado de liquidación cambiado:", factura.liquidacion);
     //this.storageService.updateItem(this.tituloFacOpCliente, factura);
@@ -344,7 +328,7 @@ mostrarDuplicadasEnLiquidacion(){
     ////console.log("1)", seleccion); 
     let facturasChofer = this.facturasPorChofer.get(idChofer);
     ////console.log("2)", facturasChofer);
-      facturasChofer?.forEach((factura: FacturaOp) => {
+      facturasChofer?.forEach((factura: InformeOp) => {
         if(!factura.proforma){
           factura.liquidacion = seleccion;
         }
@@ -359,30 +343,19 @@ mostrarDuplicadasEnLiquidacion(){
       ////console.log("1) cliente: ", chofer);
       if(seleccion){
         chofer.opFacturadas = 0
-        facturasChofer?.forEach((factura: FacturaOp) => {                  
+        facturasChofer?.forEach((factura: InformeOp) => {                  
             chofer.opFacturadas += factura.valores.total;
             chofer.opSinFacturar = 0;
           });   
       } else {
         chofer.opSinFacturar = 0;
         chofer.opFacturadas = 0;
-        facturasChofer?.forEach((factura: FacturaOp) => {                
+        facturasChofer?.forEach((factura: InformeOp) => {                
           chofer.opFacturadas += (factura.proforma ? factura.valores.total : 0);
           chofer.opSinFacturar += (!factura.proforma ? factura.valores.total : 0);
         });   
       }
 
-      /* facturasChofer?.forEach((factura: FacturaOp) => {
-        if (factura.liquidacion) {
-          chofer.opFacturadas += factura.valores.total;
-          chofer.opSinFacturar -= factura.valores.total;
-        } else {
-          chofer.opSinFacturar += factura.valores.total;
-          chofer.opFacturadas -= factura.valores.total;
-        }
-       
-      });    */
-      ////console.log("2) cliente: ", chofer);
      
   }
 
@@ -395,7 +368,7 @@ mostrarDuplicadasEnLiquidacion(){
    let choferId = this.datosTablaChofer[index].idChofer;
 
    // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
-   let facturasChofer = this.$facturasOpChofer.filter((factura: FacturaOp) => {
+   let facturasChofer = this.$facturasOpChofer.filter((factura: InformeOp) => {
        return factura.idChofer === choferId;
    });
    this.facturasPorChofer.set(choferId, facturasChofer);
@@ -444,7 +417,7 @@ mostrarDuplicadasEnLiquidacion(){
     //////////console.log()("APELLIDO: ", this.apellido);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
-    this.facturasLiquidadasChofer = facturasIdChofer.filter((factura: FacturaOp) => {
+    this.facturasLiquidadasChofer = facturasIdChofer.filter((factura: InformeOp) => {
         return factura.liquidacion === true && factura.proforma === false;
     });
 
@@ -456,7 +429,7 @@ mostrarDuplicadasEnLiquidacion(){
       ////console.log("1: ",this.facturasLiquidadasChofer);
       // Calcular el total sumando los montos de las facturas liquidadas
       this.totalFacturasLiquidadasChofer = 0;
-      this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
+      this.facturasLiquidadasChofer.forEach((factura: InformeOp) => {
         this.totalFacturasLiquidadasChofer += factura.valores.total;
       });
   
@@ -488,10 +461,10 @@ mostrarDuplicadasEnLiquidacion(){
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
-    this.facturasLiquidadasChofer.forEach((factura: FacturaOp) => {
+    this.facturasLiquidadasChofer.forEach((factura: InformeOp) => {
 
       //console.log("llamada al storage desde liq-chofer, addItem");
-      this.addItem(factura, "facOpLiqChofer", factura.idFacturaOp, "INTERNA");
+      this.addItem(factura, "facOpLiqChofer", factura.idInfOp, "INTERNA");
 
       this.editarOperacionesFac(factura)
       
@@ -508,7 +481,7 @@ mostrarDuplicadasEnLiquidacion(){
     this.ngOnInit(); */
   }
 
-  editarOperacionesFac(factura:FacturaOp){
+  editarOperacionesFac(factura:InformeOp){
     factura.idOperacion
     let op:ConId<Operacion>;
     this.dbFirebase
@@ -542,12 +515,12 @@ mostrarDuplicadasEnLiquidacion(){
     this.storageService.deleteItem("facturaOpChofer", item, item.idFacturaOp, "INTERNA", "");    
   }
 
-  editarFacturaOpCliente(factura: ConId<FacturaOp>, i:number){   
+  editarFacturaOpCliente(factura: ConId<InformeOp>, i:number){   
     this.facDetallada = factura;   
     this.buscarTarifa(i);    
   }
 
-  eliminarFacturaOpCliente(factura:FacturaOp, indice:number){
+  eliminarFacturaOpCliente(factura:InformeOp, indice:number){
     this.removeItem(factura);
     //this.cerrarTabla(indice)
     //this.ngOnInit(); 
@@ -607,8 +580,8 @@ mostrarDuplicadasEnLiquidacion(){
         this.isLoading = false;
         //console.log("resultado: ", result);
         if(result.exito){
-            this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre} Liquidada`,result.exito)
-            this.storageService.logSimple(this.facturaChofer.idFacturaChofer,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`, result.exito )
+            this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre} Liquidada`,result.exito)
+            this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`, result.exito )
             Swal.fire({
                   icon: "success",
                   //title: "Oops...",
@@ -639,8 +612,8 @@ mostrarDuplicadasEnLiquidacion(){
             this.mostrarMasDatos(this.indiceSeleccionado);
             this.procesarDatosParaTabla();
         } else {
-          this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre} Liquidada`,result.exito)
-            this.storageService.logSimple(this.facturaChofer.idFacturaChofer,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`, result.exito )
+          this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre} Liquidada`,result.exito)
+            this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`, result.exito )
           this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
         }
         
@@ -661,8 +634,8 @@ mostrarDuplicadasEnLiquidacion(){
           this.isLoading = false;
           ////console.log("resultado: ", result);
           if(result.exito){
-              this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`,result.exito);
-              this.storageService.logSimple(this.facturaChofer.idFacturaChofer,"ALTA", "facturaChofer", `Alta de Proforma del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`, result.exito );
+              this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`,result.exito);
+              this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Proforma del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`, result.exito );
               Swal.fire({
                     icon: "success",
                     //title: "Oops...",
@@ -693,8 +666,8 @@ mostrarDuplicadasEnLiquidacion(){
                   //this.mostrarMasDatos(this.indiceSeleccionado);
                   //this.procesarDatosParaTabla()
           } else {
-            this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`,result.exito);
-            this.storageService.logSimple(this.facturaChofer.idFacturaChofer,"ALTA", "facturaChofer", `Alta de Proforma del Chofer ${this.facturaChofer.apellido} ${this.facturaChofer.nombre}`, result.exito );
+            this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`,result.exito);
+            this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Proforma del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`, result.exito );
             this.mensajesError(`Ocurrió un error al procesar la proforma: ${result.mensaje}`, "error");
             //this.mostrarMasDatos(this.indiceSeleccionado);
             //this.procesarDatosParaTabla()
@@ -810,7 +783,7 @@ buscarTarifa(i:number ) {
         modalRef.result.then(
           (result) => {
             this.procesarDatosParaTabla();
-            let facturasChofer = this.$facturasOpChofer.filter((factura: FacturaOp) => {
+            let facturasChofer = this.$facturasOpChofer.filter((factura: InformeOp) => {
                 return factura.idChofer === this.facDetallada.idChofer;
             });
             this.facturasPorChofer.set(this.facDetallada.idChofer, facturasChofer);
@@ -841,7 +814,7 @@ buscarTarifa(i:number ) {
       });
     }
 
-     bajaOp(factura:FacturaOp, indice:number){
+     bajaOp(factura:InformeOp, indice:number){
         Swal.fire({
               title: "¿Desea anular la operación?",
               //text: "No se podrá revertir esta acción",
@@ -866,7 +839,7 @@ buscarTarifa(i:number ) {
         
       }
     
-      openModalBaja(factura:FacturaOp, indice:number){
+      openModalBaja(factura:InformeOp, indice:number){
         {
           const modalRef = this.modalService.open(ModalBajaComponent, {
             windowClass: 'myCustomModalClass',
@@ -924,9 +897,9 @@ buscarTarifa(i:number ) {
         }
       }
     
-      actualizarFacOp(factura: FacturaOp){
+      actualizarFacOp(factura: InformeOp){
     
-        let facOp:ConId<FacturaOp>;
+        let facOp:ConId<InformeOp>;
         this.dbFirebase
         .obtenerTarifaIdTarifa("facturaOpChofer",factura.idOperacion, "idOperacion")
         .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
@@ -937,7 +910,7 @@ buscarTarifa(i:number ) {
             facOp.liquidacion = false;
             let {id, ...fac} = facOp
             let chofer = this.getChofer(fac.idChofer)
-            this.storageService.updateItem("facturaOpChofer", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${chofer} `, facOp.id);
+            this.storageService.updateItem("facturaOpChofer", fac, fac.idInfOp, "PROFORMA", `Proforma para operación de Cliente ${chofer} `, facOp.id);
             //this.removeItem(factura);
         });
         
@@ -1006,7 +979,7 @@ buscarTarifa(i:number ) {
         
       }
 
-      agregarCampo(facturaOp: any[]): ConId<FacturaOp>[] {
+      agregarCampo(facturaOp: any[]): ConId<InformeOp>[] {
         return facturaOp.map(facOp => {
           return {
             ...facOp,

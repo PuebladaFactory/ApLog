@@ -7,7 +7,7 @@ import { StorageService } from '../../storage/storage.service';
 
 import { DbFirestoreService } from '../../database/db-firestore.service';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { FacturacionChoferService } from '../facturacion-chofer/facturacion-chofer.service';
 import { Proveedor } from 'src/app/interfaces/proveedor';
@@ -16,6 +16,7 @@ import { TarifaEventual } from 'src/app/interfaces/tarifa-eventual';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { result } from 'lodash';
 import { ResourceLoader } from '@angular/compiler';
+import { InformeOp } from 'src/app/interfaces/informe-op';
 
 @Injectable({
   providedIn: 'root'
@@ -33,13 +34,13 @@ export class FacturacionOpService {
   $ultTarifaGralProveedor!: ConIdType<TarifaGralCliente>;
   $ultTarifaEspProveedor!: ConIdType<TarifaGralCliente>;
   tarifaOpCliente!: ConIdType<TarifaGralCliente>;
-  facturaOpCliente!: FacturaOp;
-  facturaOpChofer!: FacturaOp;
-  facturaOpProveedor!: FacturaOp;
+  facturaOpCliente!: InformeOp;
+  facturaOpChofer!: InformeOp;
+  facturaOpProveedor!: InformeOp;
   $proveedores!: ConIdType<Proveedor>[];
-  clienteFacOp!: FacturaOp [];
-  choferFacOp!: FacturaOp [];
-  ProveedorFacOp!: FacturaOp [];
+  clienteFacOp!: InformeOp [];
+  choferFacOp!: InformeOp [];
+  ProveedorFacOp!: InformeOp [];
   operacion!: ConId<Operacion>;
   proveedorSeleccionado!: ConId<Proveedor> | undefined;
   tarifaEventual! : TarifaEventual;    
@@ -257,12 +258,12 @@ async $facturarOpProveedor(op: ConId<Operacion>) {
           proformaCl: false,
           proformaCh: false,
         };
-        op.facturaCliente = this.facturaOpCliente.idFacturaOp;
-        op.facturaChofer = this.facturaOpChofer.idFacturaOp;
+        op.facturaCliente = this.facturaOpCliente.idInfOp;
+        op.facturaChofer = this.facturaOpChofer.idInfOp;
         this.facturaOpCliente.contraParteMonto = this.facturaOpChofer.valores.total;
         this.facturaOpChofer.contraParteMonto = this.facturaOpCliente.valores.total;
-        this.facturaOpCliente.contraParteId = this.facturaOpChofer.idFacturaOp;
-        this.facturaOpChofer.contraParteId = this.facturaOpCliente.idFacturaOp;
+        this.facturaOpCliente.contraParteId = this.facturaOpChofer.idInfOp;
+        this.facturaOpChofer.contraParteId = this.facturaOpCliente.idInfOp;
         //this.$guardarFacturas(op);
       }
       } else {
@@ -278,12 +279,12 @@ async $facturarOpProveedor(op: ConId<Operacion>) {
             proformaCl: false,
             proformaCh: false,
           };
-          op.facturaCliente = this.facturaOpCliente.idFacturaOp;
-          op.facturaChofer = this.facturaOpProveedor.idFacturaOp;
+          op.facturaCliente = this.facturaOpCliente.idInfOp;
+          op.facturaChofer = this.facturaOpProveedor.idInfOp;
           this.facturaOpCliente.contraParteMonto = this.facturaOpProveedor.valores.total;
           this.facturaOpProveedor.contraParteMonto = this.facturaOpCliente.valores.total;
-          this.facturaOpCliente.contraParteId = this.facturaOpProveedor.idFacturaOp;
-          this.facturaOpProveedor.contraParteId = this.facturaOpCliente.idFacturaOp;
+          this.facturaOpCliente.contraParteId = this.facturaOpProveedor.idInfOp;
+          this.facturaOpProveedor.contraParteId = this.facturaOpCliente.idInfOp;
           //this.$guardarFacturas(op);
         }
       }

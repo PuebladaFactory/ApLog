@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
-import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { Subject, takeUntil } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
 import Swal from 'sweetalert2';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 @Component({
     selector: 'app-facturacion-proveedor',
@@ -18,11 +20,11 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 })
 export class FacturacionProveedorComponent implements OnInit {
     
-  $facturasProveedor!: ConId<FacturaProveedor>[];  
+  $facturasProveedor!: ConId<InformeLiq>[];  
   datosTablaProveedor: any[] = [];
   mostrarTablaProveedor: boolean[] = [];      
-  $facturaOpProveedor: ConId<FacturaOp>[] = []; 
-  facturasPorProveedor: Map<number, FacturaProveedor[]> = new Map<number, FacturaProveedor[]>();
+  $facturaOpProveedor: ConId<InformeOp>[] = []; 
+  facturasPorProveedor: Map<number, InformeLiq[]> = new Map<number, InformeLiq[]>();
   
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
@@ -46,14 +48,14 @@ export class FacturacionProveedorComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-      this.storageService.getObservable<ConId<FacturaProveedor>>("facturaProveedor")
+      this.storageService.getObservable<ConId<InformeLiq>>("facturaProveedor")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         console.log("facturas proveedores: ",data);
         if(data){
           
           this.$facturasProveedor = data;
-          this.$facturasProveedor = this.$facturasProveedor.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+          this.$facturasProveedor = this.$facturasProveedor.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
           this.procesarDatosParaTabla();
           this.mostrarTablaProveedor = new Array(this.datosTablaProveedor.length).fill(false); // Mueve esta línea aquí
         }else {
@@ -80,7 +82,7 @@ export class FacturacionProveedorComponent implements OnInit {
       console.log("procesarDatosParaTabla", this.$facturasProveedor);
       
       if(this.$facturasProveedor !== null){
-        this.$facturasProveedor.forEach((factura: FacturaProveedor) => {
+        this.$facturasProveedor.forEach((factura: InformeLiq) => {
             // Inicializar los totales a cero
           this.totalCant = 0;
           this.totalSumaAPagar = 0;
@@ -90,10 +92,10 @@ export class FacturacionProveedorComponent implements OnInit {
           this.totalFaltaPagar = 0;
       
           // Procesar cada factura y actualizar los datos del cliente
-          if (!proveedoresMap.has(factura.idProveedor)) {
-            proveedoresMap.set(factura.idProveedor, {
-              idProveedor: factura.idProveedor,
-              proveedor: factura.razonSocial ,            
+          if (!proveedoresMap.has(factura.idInfLiq)) {
+            proveedoresMap.set(factura.idInfLiq, {
+              idProveedor: factura.idInfLiq,
+              proveedor: factura.entidad.razonSocial ,            
               sumaAPagar: 0,
               sumaACobrar: 0,
               faltaPagar: 0,
@@ -104,7 +106,7 @@ export class FacturacionProveedorComponent implements OnInit {
             });
           }
     
-          const proveedor = proveedoresMap.get(factura.idProveedor);
+          const proveedor = proveedoresMap.get(factura.idInfLiq);
           //cliente.sumaACobrar++;
           if (factura.cobrado) {
             proveedor.sumaAPagar += Number(factura.valores.total);
@@ -113,7 +115,7 @@ export class FacturacionProveedorComponent implements OnInit {
             proveedor.faltaPagar += Number(factura.valores.total);
           }
           proveedor.total += factura.valores.total;  
-          proveedor.sumaACobrar += Number(factura.montoFacturaCliente);      
+          proveedor.sumaACobrar += Number(factura.valores.totalContraParte);      
           proveedor.cant += Number(factura.operaciones.length);    
           proveedor.neta = proveedor.sumaACobrar - proveedor.sumaAPagar
           proveedor.porcentaje = (proveedor.neta * 100) / proveedor.sumaACobrar   

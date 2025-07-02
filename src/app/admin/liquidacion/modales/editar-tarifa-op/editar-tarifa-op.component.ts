@@ -4,7 +4,8 @@ import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
@@ -23,12 +24,12 @@ import Swal from 'sweetalert2';
 export class EditarTarifaOpComponent implements OnInit {
 
 @Input() fromParent: any;
-    facDetallada!: ConId<FacturaOp>;
+    facDetallada!: ConId<InformeOp>;
     ultimaTarifa!: ConIdType<TarifaGralCliente>;
     edicion:boolean = false;
     tarifaEditForm: any;
     swichForm:any;    
-    facturaEditada!: ConId<FacturaOp>;
+    facturaEditada!: ConId<InformeOp>;
     swich!: boolean;
     $choferes!: ConIdType<Chofer>[];
     $clientes!: ConIdType<Cliente>[];
@@ -38,9 +39,9 @@ export class EditarTarifaOpComponent implements OnInit {
     operacion!: ConId<Operacion>;
     tarifaPersonalizada!: ConIdType<TarifaPersonalizadaCliente>;
     componente: string = "";
-    facOriginal!: ConId<FacturaOp>;
+    facOriginal!: ConId<InformeOp>;
     opOriginal!: ConId<Operacion>;
-    facContraParte!: ConId<FacturaOp>;
+    facContraParte!: ConId<InformeOp>;
      private destroy$ = new Subject<void>();
   
     constructor(private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private formNumServ: FormatoNumericoService, private dbFirebase: DbFirestoreService){
@@ -249,7 +250,7 @@ export class EditarTarifaOpComponent implements OnInit {
       this.storageService.updateItem(
         this.componente, 
         facDet, 
-        this.facDetallada.idFacturaOp, 
+        this.facDetallada.idInfOp, 
         "EDITAR", 
         this.componente === "facturaOpCliente" ? `Edición de Informe de Operación del Cliente ${this.getClienteId(this.facDetallada.idCliente)}` : this.componente === "facturaOpChofer" ? `Edición de Informe de Operación del Chofer ${this.getChoferId(this.facDetallada.idChofer)}` : `Edición de Informe de Operación del Proveedor ${this.getProveedorId(this.facDetallada.idProveedor)}`,
         this.facDetallada.id);
@@ -262,20 +263,20 @@ export class EditarTarifaOpComponent implements OnInit {
         case "clientes":{
           let{id, ...facOp} = this.facContraParte;
           if(this.operacion.chofer.idProveedor === 0){            
-            this.storageService.updateItem("facturaOpChofer", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
+            this.storageService.updateItem("facturaOpChofer", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
           } else {
-            this.storageService.updateItem("facturaOpProveedor", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
+            this.storageService.updateItem("facturaOpProveedor", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
           }          
           break;
         };
         case "choferes":{
           let{id, ...facOp} = this.facContraParte;
-          this.storageService.updateItem("facturaOpCliente", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
+          this.storageService.updateItem("facturaOpCliente", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
           break;
         }
         case "proveedores":{
           let{id, ...facOp} = this.facContraParte;
-          this.storageService.updateItem("facturaOpCliente", facOp, this.facContraParte.idFacturaOp, "INTERNA", "", this.facContraParte.id);
+          this.storageService.updateItem("facturaOpCliente", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
           break;
         }
         default:{

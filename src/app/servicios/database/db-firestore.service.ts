@@ -5,12 +5,13 @@ import { chunk } from 'lodash';
 import { firstValueFrom, from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
 import { Firestore } from '@angular/fire/firestore';
 import { inject } from '@angular/core';
 import { TableroDiario } from 'src/app/admin/operaciones/tablero-diario/tablero-diario.component';
+import { InformeOp } from 'src/app/interfaces/informe-op';
 
 @Injectable({
   providedIn: 'root'
@@ -572,7 +573,7 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
     );
   }
 
-  async guardarFacturasOp(compCliente:string, infOpCliente: FacturaOp, compChofer: string, infOpChofer: FacturaOp, op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {        
+  async guardarFacturasOp(compCliente:string, infOpCliente: InformeOp, compChofer: string, infOpChofer: InformeOp, op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {        
     const batch = writeBatch(this.firestore);        
     
     try {
@@ -668,7 +669,7 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
   }
 
 async procesarLiquidacion(
-  informesSeleccionados: ConId<FacturaOp>[],
+  informesSeleccionados: ConId<InformeOp>[],
   modo: string,
   componenteAlta: string,
   componenteBaja: string,
@@ -678,7 +679,7 @@ async procesarLiquidacion(
   const colOps = 'operaciones';
   const bloques = chunk(informesSeleccionados, 500);
   const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
-  const informesBackup: ConId<FacturaOp>[] = [...informesSeleccionados]; // Backup en memoria  
+  const informesBackup: ConId<InformeOp>[] = [...informesSeleccionados]; // Backup en memoria  
   try {
     for (let i = 0; i < bloques.length; i++) {
       const batch = writeBatch(this.firestore);
@@ -903,7 +904,7 @@ async guardarMultiple(
 }
 
 async procesarProforma(
-  informesSeleccionados: ConIdType<FacturaOp>[],
+  informesSeleccionados: ConIdType<InformeOp>[],
   modo: string,
   componenteInformes: string,  
   contraParteColeccion: string,
@@ -913,7 +914,7 @@ async procesarProforma(
   const colOps = 'operaciones';
   const bloques = chunk(informesSeleccionados, 500);
   const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
-  const informesBackup: ConId<FacturaOp>[] = [...informesSeleccionados]; // Backup en memoria  
+  const informesBackup: ConId<InformeOp>[] = [...informesSeleccionados]; // Backup en memoria  
   try {
     for (let i = 0; i < bloques.length; i++) {
       const batch = writeBatch(this.firestore);
@@ -1071,7 +1072,7 @@ async actualizarMultiple(
 }
 
 async anularProforma(
-  informesSeleccionados: ConIdType<FacturaOp>[],
+  informesSeleccionados: ConIdType<InformeOp>[],
   modo: string,
   componenteInformes: string,
   
@@ -1081,7 +1082,7 @@ async anularProforma(
   const colOps = 'operaciones';
   const bloques = chunk(informesSeleccionados, 500);
   const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
-  const informesBackup: ConId<FacturaOp>[] = [...informesSeleccionados]; // Backup en memoria  
+  const informesBackup: ConId<InformeOp>[] = [...informesSeleccionados]; // Backup en memoria  
   try {
     for (let i = 0; i < bloques.length; i++) {
       const batch = writeBatch(this.firestore);

@@ -8,8 +8,9 @@ import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 
 import { CategoriaTarifa, TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { InformeOp } from 'src/app/interfaces/informe-op';
 
 @Injectable({
   providedIn: 'root'
@@ -25,7 +26,7 @@ export class FacturacionChoferService {
   $proveedores!: Proveedor[];
   proveedorOp!: Proveedor;
   montoValorJornada!: number;
-  facturaOpChofer!: FacturaOp;
+  facturaOpChofer!: InformeOp;
   tarifaBase!: number;
   acompaniante!: number;
   kmValor!: number;
@@ -48,7 +49,7 @@ export class FacturacionChoferService {
   $facturarOpChofer(op:Operacion, tarifa: TarifaGralCliente){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp,
+      factura: InformeOp,
       resultado: boolean,
       msj: string,
     }
@@ -94,7 +95,7 @@ export class FacturacionChoferService {
   $facturarOpPersChofer(op: Operacion, tarifa: TarifaPersonalizadaCliente, idProveedor: number, tGeneral:TarifaGralCliente){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp,
+      factura: InformeOp,
       resultado: boolean,
       msj: string,
     }
@@ -120,7 +121,7 @@ export class FacturacionChoferService {
   $facturarOpEveChofer(op: Operacion, idProveedor: number, tGeneral:TarifaGralCliente){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp,
+      factura: InformeOp,
       resultado: boolean,
       msj: string,
     }
@@ -196,7 +197,7 @@ $crearFacturaOpChofer(op:Operacion, idTarifa: number, idProveedor: number){
 
   this.facturaOpChofer = {
     
-    idFacturaOp: new Date().getTime(),
+    idInfOp: new Date().getTime(),
     idOperacion: op.idOperacion,
     idCliente: op.cliente.idCliente,
     idChofer: op.chofer.idChofer,
@@ -238,7 +239,7 @@ $getTarifaTipoChofer(op:Operacion){
 $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: number){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp,
+      factura: InformeOp,
       resultado: boolean,
       msj: string,
     }

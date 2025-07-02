@@ -17,7 +17,7 @@ import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 
 @Component({
   selector: 'app-nueva-tabla',

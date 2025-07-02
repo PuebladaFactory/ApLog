@@ -2,11 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, take, takeUntil } from 'rxjs';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+
+
+
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ModalFacturaComponent } from 'src/app/shared/modal-factura/modal-factura.component';
 import Swal from 'sweetalert2';
@@ -17,6 +17,8 @@ import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { LogService } from 'src/app/servicios/log/log.service';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 @Component({
     selector: 'app-proforma',
@@ -27,9 +29,9 @@ import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 export class ProformaComponent implements OnInit {
   
   proformasTodas!: any;
-  proformasClientes!: ConIdType<FacturaCliente>[];
-  proformasChoferes!: ConIdType<FacturaChofer>[];
-  proformasProveedores!: ConIdType<FacturaProveedor>[];
+  proformasClientes!: ConIdType<InformeLiq>[];
+  proformasChoferes!: ConIdType<InformeLiq>[];
+  proformasProveedores!: ConIdType<InformeLiq>[];
   private destroy$ = new Subject<void>();
   filtroCliente:string = "";
   filtroChofer:string = "";
@@ -64,20 +66,20 @@ export class ProformaComponent implements OnInit {
   
     this.proformasTodas.forEach((factura:any) => {
       if ('idFacturaCliente' in factura) {
-        this.proformasClientes.push(factura as ConIdType<FacturaCliente>);
+        this.proformasClientes.push(factura as ConIdType<InformeLiq>);
       } else if ('idFacturaChofer' in factura) {
-        this.proformasChoferes.push(factura as ConIdType<FacturaChofer>);
+        this.proformasChoferes.push(factura as ConIdType<InformeLiq>);
       } else if ('idFacturaProveedor' in factura) {
-        this.proformasProveedores.push(factura as ConIdType<FacturaProveedor>);
+        this.proformasProveedores.push(factura as ConIdType<InformeLiq>);
       }
     });
     //console.log("this.proformasClientes", this.proformasClientes);
     //console.log("this.proformasChoferes", this.proformasChoferes);
     //console.log("this.proformasProveedores", this.proformasProveedores);
       
-    this.proformasClientes = this.proformasClientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
-    this.proformasChoferes = this.proformasChoferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
-    this.proformasProveedores = this.proformasProveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
+    this.proformasClientes = this.proformasClientes.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial));
+    this.proformasChoferes = this.proformasChoferes.sort((a, b) => a.entidad.apellido.localeCompare(b.entidad.apellido));
+    this.proformasProveedores = this.proformasProveedores.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial));
     
   }
 
@@ -114,7 +116,7 @@ export class ProformaComponent implements OnInit {
   }
 
   obtenerFacturasOp(proforma:any, origen: string, accion:string, tipo:string){
-    let facturasOp: ConIdType<FacturaOp>[];
+    let facturasOp: ConIdType<InformeOp>[];
     let respuesta:any;
     
     respuesta = this.encontrarMaximoYMinimo(proforma.operaciones)
@@ -126,7 +128,7 @@ export class ProformaComponent implements OnInit {
     
       //////////////CLIENTES///////////////////////
       case "clientes":
-          this.dbFirebase.getAllByDateValueField<ConIdType<FacturaOp>>("facturaOpCliente", "idOperacion",respuesta.min, respuesta.max, "idCliente", proforma.idCliente)
+          this.dbFirebase.getAllByDateValueField<ConIdType<InformeOp>>("facturaOpCliente", "idOperacion",respuesta.min, respuesta.max, "idCliente", proforma.idCliente)
           .pipe(take(1)) // Toma los valores hasta que destroy$ emita
           .subscribe(data => {
             if(data){
@@ -178,7 +180,7 @@ export class ProformaComponent implements OnInit {
       //////////////CHOFERES///////////////////////
       case "choferes":
                   
-          this.dbFirebase.getAllByDateValueField<ConIdType<FacturaOp>>("facturaOpChofer", "idOperacion",respuesta.min, respuesta.max, "idChofer", proforma.idChofer)
+          this.dbFirebase.getAllByDateValueField<ConIdType<InformeOp>>("facturaOpChofer", "idOperacion",respuesta.min, respuesta.max, "idChofer", proforma.idChofer)
           .pipe(take(1)) // Toma los valores hasta que destroy$ emita
           .subscribe(data => {
             if(data){
@@ -233,7 +235,7 @@ export class ProformaComponent implements OnInit {
       //////////////PROVEEDORES///////////////////////
       case "proveedores":       
         
-        this.dbFirebase.getAllByDateValueField<ConIdType<FacturaOp>>("facturaOpProveedor", "idOperacion",respuesta.min, respuesta.max, "idProveedor", proforma.idProveedor)
+        this.dbFirebase.getAllByDateValueField<ConIdType<InformeOp>>("facturaOpProveedor", "idOperacion",respuesta.min, respuesta.max, "idProveedor", proforma.idProveedor)
         .pipe(take(1)) // Toma los valores hasta que destroy$ emita
         .subscribe(data => {
           if(data){
@@ -288,7 +290,7 @@ export class ProformaComponent implements OnInit {
     }
   }
 
-  openModalDetalleFactura(factura:any, facturasOp: FacturaOp[], origen:string){
+  openModalDetalleFactura(factura:any, facturasOp: InformeOp[], origen:string){
     //console.log("lega??");
     
       {
@@ -385,7 +387,7 @@ export class ProformaComponent implements OnInit {
 
   }
 
-   editarOperacionesFac(factura:FacturaOp, componente:string){
+   editarOperacionesFac(factura:InformeOp, componente:string){
      //console.log("editarOperacionesFac",factura);
      //factura.idOperacion
      let op:ConId<Operacion>;
@@ -418,7 +420,7 @@ export class ProformaComponent implements OnInit {
  
    }
 
-   facturarProforma(proforma:any, facturasOp: ConIdType<FacturaOp>[], clientes:any, choferes:any, origen:string){
+   facturarProforma(proforma:any, facturasOp: ConIdType<InformeOp>[], clientes:any, choferes:any, origen:string){
     let {id,type, ...prof} = proforma;
     let facOpColeccion: string = origen === 'clientes' ? 'facturaOpCliente' : origen === 'choferes' ? 'facturaOpChofer' : origen === 'proveedores' ? 'facturaOpProveedor' : '';
     let facOpLiqColeccion: string = origen === 'clientes' ? 'facOpLiqCliente' : origen === 'choferes' ? 'facOpLiqChofer' : origen === 'proveedores' ? 'facOpLiqProveedor' : '';
@@ -444,7 +446,7 @@ export class ProformaComponent implements OnInit {
     });   */
    }
 
-   descargarFactura(proforma:any, facturasOp: ConId<FacturaOp>[], origen:string, clientes: any, choferes: any){
+   descargarFactura(proforma:any, facturasOp: ConId<InformeOp>[], origen:string, clientes: any, choferes: any){
       let titulo:string = origen === 'clientes' ? 'Cliente' : origen === 'choferes' ? 'Chofer' : 'Proveedor'
       Swal.fire({
             title: `¿Desea imprimir el detalle del ${titulo}?`,
@@ -477,7 +479,7 @@ export class ProformaComponent implements OnInit {
                 
    }
 
-   procesarFacturacion(facturasOp: ConId<FacturaOp>[], modo:string, compAlta: string, compBaja:string, factura:any, compFactura:string, clientes: any, choferes: any) {
+   procesarFacturacion(facturasOp: ConId<InformeOp>[], modo:string, compAlta: string, compBaja:string, factura:any, compFactura:string, clientes: any, choferes: any) {
      this.isLoading = true;
      let detalleNombre: string = modo === "clientes" ? "Cliente" : modo === "choferes" ? "Chofer" : "Proveedor"
      let detalleValor: string = modo === "clientes" ? factura.razonSocial : modo === "choferes" ? factura.apellido + " " + factura.nombre : factura.razonSocial;

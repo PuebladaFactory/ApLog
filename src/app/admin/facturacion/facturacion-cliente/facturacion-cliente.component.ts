@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { Subject, takeUntil } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
 import Swal from 'sweetalert2';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 @Component({
     selector: 'app-facturacion-cliente',
@@ -21,8 +22,8 @@ export class FacturacionClienteComponent implements OnInit {
   facturasPorCliente = new Map<number, any[]>();
   mostrarTablaCliente: boolean[] = [];
   searchText: string = '';
-  $facturasCliente!: ConId<FacturaCliente>[];
-  $facturaOpCliente!: ConId<FacturaOp>[];
+  $facturasCliente!: ConId<InformeLiq>[];
+  $facturaOpCliente!: ConId<InformeOp>[];
   operacionFac: any[] = [];
   totalCant: number = 0;
   totalSumaAPagar: number = 0;
@@ -46,7 +47,7 @@ export class FacturacionClienteComponent implements OnInit {
     ) {}
   
     ngOnInit(): void {
-      this.storageService.getObservable<ConId<FacturaCliente>>("facturaCliente")
+      this.storageService.getObservable<ConId<InformeLiq>>("facturaCliente")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         
@@ -54,7 +55,7 @@ export class FacturacionClienteComponent implements OnInit {
           //console.log("facturas clientes: ",data);
           
           this.$facturasCliente = data;
-          this.$facturasCliente = this.$facturasCliente.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+          this.$facturasCliente = this.$facturasCliente.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
           this.procesarDatosParaTabla();
           this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false); // Mueve esta línea aquí
         } else {

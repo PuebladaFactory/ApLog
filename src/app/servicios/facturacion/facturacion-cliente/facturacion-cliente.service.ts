@@ -7,11 +7,12 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { parseActionCodeURL } from 'firebase/auth';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
+
 import { TarifaGralCliente, CategoriaTarifa } from 'src/app/interfaces/tarifa-gral-cliente';
 import { Vehiculo } from 'src/app/interfaces/chofer';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { InformeOp } from 'src/app/interfaces/informe-op';
 
 @Injectable({
   providedIn: 'root'
@@ -28,7 +29,7 @@ export class FacturacionClienteService {
   
   total!:number;
   tarifaGralCliente! : TarifaGralCliente;
-  facturaOpCliente!: FacturaOp;
+  facturaOpCliente!: InformeOp;
   tarifaBase!: number;
   acompaniante!: number;
   kmValor!: number;
@@ -59,7 +60,7 @@ export class FacturacionClienteService {
   $facturarOpCliente(op: Operacion, tarifa: TarifaGralCliente){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp,
+      factura: InformeOp,
       resultado: boolean,
       msj: string,
     }
@@ -107,7 +108,7 @@ export class FacturacionClienteService {
     //console.log("!!!!!!!!!!!)op: ", op, " y tarifa: ",tarifa);
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp,
+      factura: InformeOp,
       resultado: boolean,
       msj: string,
     }
@@ -135,7 +136,7 @@ export class FacturacionClienteService {
   $facturarOpEveCliente(op: Operacion, tGeneral: TarifaGralCliente){
     let respuesta : {
       op: Operacion,
-      factura: FacturaOp,
+      factura: InformeOp,
       resultado: boolean,
       msj: string,
     }
@@ -212,7 +213,7 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
 
   this.facturaOpCliente = {
     
-    idFacturaOp: new Date().getTime(),
+    idInfOp: new Date().getTime(),
     idOperacion: op.idOperacion,
     idCliente: op.cliente.idCliente,
     idChofer: op.chofer.idChofer,

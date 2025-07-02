@@ -2,12 +2,12 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, take, takeUntil } from 'rxjs';
-import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Proveedor } from 'src/app/interfaces/proveedor';
@@ -20,6 +20,8 @@ import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.service';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 @Component({
     selector: 'app-liq-proveedor',
@@ -40,7 +42,7 @@ export class LiqProveedorComponent implements OnInit {
   searchText2!:string;
   searchText3!:string;
   componente: string = "facturaProveedor";
-  $facturasOpProveedor!: ConId<FacturaOp>[];
+  $facturasOpProveedor!: ConId<InformeOp>[];
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() , 1).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
@@ -53,9 +55,9 @@ export class LiqProveedorComponent implements OnInit {
   totalFacturasLiquidadasCliente: number = 0; // Variable para almacenar el total de las facturas liquidadas
   razonSocial!: string ;
   form!: any;
-  facturaProveedor!: FacturaProveedor;  
-  facturaEditada!: ConId<FacturaOp>;
-  facturasPorProveedor: Map<number, FacturaOp[]> = new Map<number, FacturaOp[]>();
+  facturaProveedor!: InformeLiq;  
+  facturaEditada!: ConId<InformeOp>;
+  facturasPorProveedor: Map<number, InformeOp[]> = new Map<number, InformeOp[]>();
   indiceSeleccionado!:number
   ultimaTarifa!:any;
   tarifaEditForm: any;
@@ -63,7 +65,7 @@ export class LiqProveedorComponent implements OnInit {
   edicion:boolean = false;
   tarifaEspecial: boolean = false;
   idOperaciones: number [] = [];
-  facDetallada!: ConId<FacturaOp>;
+  facDetallada!: ConId<InformeOp>;
   tarifaAplicada!:any
   $choferes!: ConIdType<Chofer>[];
   $clientes!: ConIdType<Cliente>[];
@@ -75,10 +77,10 @@ export class LiqProveedorComponent implements OnInit {
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>();
   opAbiertas!: ConId<Operacion>[];
-  $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
-  $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
+  $facturasOpDuplicadas: ConId<InformeOp>[] = [];
+  $facLiqOpDuplicadas: ConId<InformeOp>[] = [];
   isLoading: boolean = false;
-  objetoEditado: ConId<FacturaOp>[] = [];
+  objetoEditado: ConId<InformeOp>[] = [];
   
   constructor(private storageService: StorageService, private fb: FormBuilder, private excelServ: ExcelService, private pdfServ: PdfService, private modalService: NgbModal, private dbFirebase: DbFirestoreService, private liqService: LiquidacionService){
     // Inicializar el array para que todos los botones muestren la tabla cerrada al principio
@@ -113,10 +115,10 @@ export class LiqProveedorComponent implements OnInit {
       this.fechasConsulta = data;
       //console.log("LIQ proveedor: fechas consulta: ",this.fechasConsulta);
       //this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpProveedor");
-      this.storageService.syncChangesDateValue<FacturaOp>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");      
+      this.storageService.syncChangesDateValue<InformeOp>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");      
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
-      this.storageService.getObservable<ConId<FacturaOp>>("facturaOpProveedor")
+      this.storageService.getObservable<ConId<InformeOp>>("facturaOpProveedor")
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           if(data){
@@ -145,7 +147,7 @@ export class LiqProveedorComponent implements OnInit {
   verificarDuplicados() {
     const seenIds = new Set<number>();
 
-    this.$facturasOpProveedor = this.$facturasOpProveedor.filter((factura:ConId<FacturaOp>) => {
+    this.$facturasOpProveedor = this.$facturasOpProveedor.filter((factura:ConId<InformeOp>) => {
         if (seenIds.has(factura.idOperacion)) {
             this.$facturasOpDuplicadas.push(factura);
             return false; // Eliminar del array original
@@ -160,10 +162,7 @@ export class LiqProveedorComponent implements OnInit {
 }
 
 borrarDuplicadasEnLiquidacion(){
-  ////console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
-  /* this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
-    this.dbFirebase.delete(this.titulo, facDupli.id)
-}) */
+
 this.isLoading = true;
 this.dbFirebase.eliminarMultiple(this.$facturasOpDuplicadas, this.titulo).then(result=>{
   this.isLoading = false;
@@ -186,7 +185,7 @@ mostrarDuplicadasEnLiquidacion(){
 
 verificarDuplicadosFacturadas(){
 
-  this.$facturasOpProveedor.forEach((facturaOp:FacturaOp) => {
+  this.$facturasOpProveedor.forEach((facturaOp:InformeOp) => {
     this.dbFirebase.getMostRecentId("facOpLiqProveedor", "idFacturaOp", "idOperacion", facturaOp.idOperacion)
     .pipe(take(1))
     .subscribe(data=>{
@@ -204,7 +203,7 @@ verificarDuplicadosFacturadas(){
 
 deleteDuplicadas(){
   console.log("cantidad facLiqOpDuplicadas", this.$facLiqOpDuplicadas.length);
-  this.$facLiqOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+  this.$facLiqOpDuplicadas.forEach((facDupli: ConId<InformeOp>)=>{    
     this.dbFirebase.delete(this.titulo, facDupli.id)
 })
 }
@@ -216,7 +215,7 @@ deleteDuplicadas(){
     if(this.$facturasOpProveedor !== null){
       console.log("Facturas OP Proveedor: ", this.$facturasOpProveedor);
       
-      this.$facturasOpProveedor.forEach((factura: FacturaOp) => {
+      this.$facturasOpProveedor.forEach((factura: InformeOp) => {
         if (!proveedoresMap.has(factura.idProveedor)) {
           proveedoresMap.set(factura.idProveedor, {
             idProveedor: factura.idProveedor,
@@ -317,7 +316,7 @@ deleteDuplicadas(){
     return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
   }
 
-  liquidarFac(factura: FacturaOp) {
+  liquidarFac(factura: InformeOp) {
     factura.liquidacion = !factura.liquidacion;
     ////console.log("Estado de liquidación cambiado:", factura.liquidacion);
     //this.storageService.updateItem(this.tituloFacOpCliente, factura);
@@ -330,7 +329,7 @@ deleteDuplicadas(){
     //console.log("1)", seleccion); 
     let facturasProveedor = this.facturasPorProveedor.get(idProveedor);
     //console.log("2)", facturasProveedor);
-      facturasProveedor?.forEach((factura: FacturaOp) => {
+      facturasProveedor?.forEach((factura: InformeOp) => {
         if(!factura.proforma){
           factura.liquidacion = seleccion;
         }
@@ -345,28 +344,19 @@ deleteDuplicadas(){
       //console.log("1) cliente: ", proveedor);
       if(seleccion){
         proveedor.opFacturadas = 0
-        facturasProveedor?.forEach((factura: FacturaOp) => {                  
+        facturasProveedor?.forEach((factura: InformeOp) => {                  
           proveedor.opFacturadas += factura.valores.total;
           proveedor.opSinFacturar = 0;
           });   
       } else {
         proveedor.opSinFacturar = 0;
         proveedor.opFacturadas = 0;
-        facturasProveedor?.forEach((factura: FacturaOp) => {                          
+        facturasProveedor?.forEach((factura: InformeOp) => {                          
           proveedor.opFacturadas += (factura.proforma ? factura.valores.total : 0);
           proveedor.opSinFacturar += (!factura.proforma ? factura.valores.total : 0);
         });   
       }
-     /*  facturasProveedor?.forEach((factura: FacturaOp) => {
-        if (factura.liquidacion) {
-          proveedor.opFacturadas += factura.valores.total;
-          proveedor.opSinFacturar -= factura.valores.total;
-        } else {
-          proveedor.opSinFacturar += factura.valores.total;
-          proveedor.opFacturadas -= factura.valores.total;
-        }
-       
-      });    */
+
       //console.log("2) cliente: ", proveedor);
      
   }
@@ -382,7 +372,7 @@ deleteDuplicadas(){
    let proveedorId = this.datosTablaProveedor[index].idProveedor;
 
    // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
-   let facturasProveedor = this.$facturasOpProveedor.filter((factura: FacturaOp) => {
+   let facturasProveedor = this.$facturasOpProveedor.filter((factura: InformeOp) => {
        return factura.idProveedor === proveedorId;
    });
    this.facturasPorProveedor.set(proveedorId, facturasProveedor);
@@ -432,7 +422,7 @@ deleteDuplicadas(){
     ////////console.log()("APELLIDO: ", this.apellido);
     
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
-    this.facturasLiquidadasProveedor = facturasIdProveedor.filter((factura: FacturaOp) => {
+    this.facturasLiquidadasProveedor = facturasIdProveedor.filter((factura: InformeOp) => {
         return factura.liquidacion === true&& factura.proforma === false;
     });
 
@@ -445,7 +435,7 @@ deleteDuplicadas(){
       //console.log("1: ",this.facturasLiquidadasProveedor);
       // Calcular el total sumando los montos de las facturas liquidadas
       this.totalFacturasLiquidadasProveedor = 0;
-      this.facturasLiquidadasProveedor.forEach((factura: FacturaOp) => {
+      this.facturasLiquidadasProveedor.forEach((factura: InformeOp) => {
         this.totalFacturasLiquidadasProveedor += factura.valores.total;
       });
   
@@ -477,10 +467,10 @@ deleteDuplicadas(){
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
-    this.facturasLiquidadasProveedor.forEach((factura: FacturaOp) => {
+    this.facturasLiquidadasProveedor.forEach((factura: InformeOp) => {
 
       console.log("llamada al storage desde liq-proveedor, addItem");
-      this.addItem(factura, "facOpLiqProveedor", factura.idFacturaOp, "INTERNA");
+      this.addItem(factura, "facOpLiqProveedor", factura.idInfOp, "INTERNA");
 
       this.editarOperacionesFac(factura)
       
@@ -497,7 +487,7 @@ deleteDuplicadas(){
     this.ngOnInit(); */
   }
 
-  editarOperacionesFac(factura:FacturaOp){
+  editarOperacionesFac(factura:InformeOp){
     factura.idOperacion
     let op:ConId<Operacion>;
     this.dbFirebase
@@ -535,7 +525,7 @@ deleteDuplicadas(){
 
   }
 
-  editarFacturaOpCliente(factura: ConId<FacturaOp>, i:number){   
+  editarFacturaOpCliente(factura: ConId<InformeOp>, i:number){   
     this.facDetallada = factura;   
     this.buscarTarifa(i);    
   }
@@ -598,8 +588,8 @@ deleteDuplicadas(){
         this.isLoading = false;
         console.log("resultado: ", result);
         if(result.exito){
-            this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "LIQUIDAR", "operaciones", `Operación del Proveedor ${this.facturaProveedor.razonSocial} Liquidada`,result.exito);
-            this.storageService.logSimple(this.facturaProveedor.idFacturaProveedor,"ALTA", "facturaProveedor", `Alta de Factura del Proveedor ${this.facturaProveedor.razonSocial}`, result.exito );
+            this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "LIQUIDAR", "operaciones", `Operación del Proveedor ${this.facturaProveedor.entidad.razonSocial} Liquidada`,result.exito);
+            this.storageService.logSimple(this.facturaProveedor.idInfLiq,"ALTA", "facturaProveedor", `Alta de Factura del Proveedor ${this.facturaProveedor.entidad.razonSocial}`, result.exito );
             Swal.fire({
                   icon: "success",
                   //title: "Oops...",
@@ -630,8 +620,8 @@ deleteDuplicadas(){
                 this.mostrarMasDatos(this.indiceSeleccionado);
                 this.procesarDatosParaTabla()
         } else {
-          this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "LIQUIDAR", "operaciones", `Operación del Proveedor ${this.facturaProveedor.razonSocial} Liquidada`,result.exito);
-          this.storageService.logSimple(this.facturaProveedor.idFacturaProveedor,"ALTA", "facturaProveedor", `Alta de Factura del Proveedor ${this.facturaProveedor.razonSocial}`, result.exito );
+          this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "LIQUIDAR", "operaciones", `Operación del Proveedor ${this.facturaProveedor.entidad.razonSocial} Liquidada`,result.exito);
+          this.storageService.logSimple(this.facturaProveedor.idInfLiq,"ALTA", "facturaProveedor", `Alta de Factura del Proveedor ${this.facturaProveedor.entidad.razonSocial}`, result.exito );
           this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
         }
         
@@ -652,8 +642,8 @@ deleteDuplicadas(){
             this.isLoading = false;
             //console.log("resultado: ", result);
             if(result.exito){
-                this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Proveedor ${this.facturaProveedor.razonSocial}`,result.exito);
-                this.storageService.logSimple(this.facturaProveedor.idFacturaProveedor,"ALTA", "facturaProveedor", `Alta de Proforma del Proveedor ${this.facturaProveedor.razonSocial}`, result.exito );
+                this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Proveedor ${this.facturaProveedor.entidad.razonSocial}`,result.exito);
+                this.storageService.logSimple(this.facturaProveedor.idInfLiq,"ALTA", "facturaProveedor", `Alta de Proforma del Proveedor ${this.facturaProveedor.entidad.razonSocial}`, result.exito );
                 Swal.fire({
                       icon: "success",
                       //title: "Oops...",
@@ -684,8 +674,8 @@ deleteDuplicadas(){
                     //this.mostrarMasDatos(this.indiceSeleccionado);
                     //this.procesarDatosParaTabla()
             } else {
-              this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Proveedor ${this.facturaProveedor.razonSocial}`,result.exito);
-                this.storageService.logSimple(this.facturaProveedor.idFacturaProveedor,"ALTA", "facturaProveedor", `Alta de Proforma del Proveedor ${this.facturaProveedor.razonSocial}`, result.exito );
+              this.storageService.logMultiplesOp(this.facturaProveedor.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Proveedor ${this.facturaProveedor.entidad.razonSocial}`,result.exito);
+                this.storageService.logSimple(this.facturaProveedor.idInfLiq,"ALTA", "facturaProveedor", `Alta de Proforma del Proveedor ${this.facturaProveedor.entidad.razonSocial}`, result.exito );
               this.mensajesError(`Ocurrió un error al procesar la proforma: ${result.mensaje}`, "error");
               //this.mostrarMasDatos(this.indiceSeleccionado);
               //this.procesarDatosParaTabla()
@@ -797,7 +787,7 @@ deleteDuplicadas(){
           (result) => {
             this.procesarDatosParaTabla();
              // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
-            let facturasProveedor = this.$facturasOpProveedor.filter((factura: FacturaOp) => {
+            let facturasProveedor = this.$facturasOpProveedor.filter((factura: InformeOp) => {
                 return factura.idProveedor === this.facDetallada.idProveedor;
             });
             this.facturasPorProveedor.set(this.facDetallada.idProveedor, facturasProveedor);
@@ -828,7 +818,7 @@ deleteDuplicadas(){
       });
     }
 
-    bajaOp(factura:FacturaOp, indice:number){
+    bajaOp(factura:InformeOp, indice:number){
             Swal.fire({
                   title: "¿Desea anular la operación?",
                   //text: "No se podrá revertir esta acción",
@@ -853,7 +843,7 @@ deleteDuplicadas(){
             
           }
   
-    openModalBaja(factura:FacturaOp, indice:number){
+    openModalBaja(factura:InformeOp, indice:number){
       {
         const modalRef = this.modalService.open(ModalBajaComponent, {
           windowClass: 'myCustomModalClass',
@@ -913,9 +903,9 @@ deleteDuplicadas(){
       
     }
 
-    actualizarFacOp(factura: FacturaOp){
+    actualizarFacOp(factura: InformeOp){
 
-      let facOp:ConId<FacturaOp>;
+      let facOp:ConId<InformeOp>;
       this.dbFirebase
       .obtenerTarifaIdTarifa("facturaOpProveedor",factura.idOperacion, "idOperacion")
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
@@ -926,7 +916,7 @@ deleteDuplicadas(){
           facOp.liquidacion = false;
           let {id, ...fac} = facOp
           let proveedor = this.getProveedor(fac.idProveedor)
-          this.storageService.updateItem("facturaOpProveedor", fac, fac.idFacturaOp, "PROFORMA", `Proforma para operación de Cliente ${proveedor} `, facOp.id);
+          this.storageService.updateItem("facturaOpProveedor", fac, fac.idInfOp, "PROFORMA", `Proforma para operación de Cliente ${proveedor} `, facOp.id);
           //this.removeItem(factura);
       });
       
@@ -994,7 +984,7 @@ deleteDuplicadas(){
         
       }
 
-      agregarCampo(facturaOp: any[]): ConId<FacturaOp>[] {
+      agregarCampo(facturaOp: any[]): ConId<InformeOp>[] {
         return facturaOp.map(facOp => {
           return {
             ...facOp,

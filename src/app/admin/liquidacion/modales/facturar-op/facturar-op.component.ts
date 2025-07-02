@@ -3,19 +3,21 @@ import { FormBuilder } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { FacturaCliente, Valores } from 'src/app/interfaces/factura-cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
+
 
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { DescuentosComponent } from '../descuentos/descuentos.component';
-import { Descuento, FacturaChofer } from 'src/app/interfaces/factura-chofer';
+
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+
 import { Subject, takeUntil } from 'rxjs';
 import { ConIdType } from 'src/app/interfaces/conId';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { Descuento, InformeLiq, Valores } from 'src/app/interfaces/informe-liq';
 
 @Component({
     selector: 'app-facturar-op',
@@ -27,9 +29,9 @@ export class FacturarOpComponent implements OnInit {
 
   @Input() fromParent: any;  
     
-  facturaCliente!: FacturaCliente;  
-  facturaChofer!: FacturaChofer;
-  facturaProveedor!: FacturaProveedor;
+  facturaCliente!: InformeLiq;  
+  facturaChofer!: InformeLiq;
+  facturaProveedor!: InformeLiq;
   idOperaciones: number [] = [];        
   $clientes!: ConIdType<Cliente>[];
   $choferes!: ConIdType<Chofer>[];
@@ -61,7 +63,7 @@ export class FacturarOpComponent implements OnInit {
   totalDescuento: number = 0;
   ////////////////////////////////////////////
   titulo!:string;
-  facLiquidadas: ConIdType<FacturaOp>[] = [];
+  facLiquidadas: ConIdType<InformeOp>[] = [];
   total!: number;
   totalContraParte: number = 0;
   columnasVisibles: any[] = [];
@@ -96,7 +98,7 @@ export class FacturarOpComponent implements OnInit {
     //console.log("1): ", this.facLiquidadas);    
     this.total = this.fromParent.total;
     //console.log("2): ", this.total);
-    this.facLiquidadas.forEach((f:FacturaOp)=>{this.totalContraParte += f.contraParteMonto});
+    this.facLiquidadas.forEach((f:InformeOp)=>{this.totalContraParte += f.contraParteMonto});
     //console.log("3): ", this.totalContraParte);
     switch(this.fromParent.origen){
       case 'clientes':{        
@@ -224,20 +226,20 @@ export class FacturarOpComponent implements OnInit {
       }).then((result) => {
         if (result.isConfirmed) {          
           ////////console.log("op: ", this.op);
-          this.facLiquidadas.forEach((factura: FacturaOp) => {                
+          this.facLiquidadas.forEach((factura: InformeOp) => {                
             this.idOperaciones.push(factura.idOperacion)
           });
      
           ////console.log()("ID OPERACIONES: ", this.idOperaciones);
           //this.facturaChofer.operaciones = idOperaciones;
-          let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:this.total, descuentoTotal: this.totalDescuento};
-          this.facLiquidadas.forEach((f:FacturaOp)=>{
+          let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:this.total, descuentoTotal: this.totalDescuento, totalContraParte: this.totalContraParte,};
+          this.facLiquidadas.forEach((f:InformeOp)=>{
             valores.totalTarifaBase += f.valores.tarifaBase;
             valores.totalAcompaniante += f.valores.acompaniante;
-            valores.totalkmMonto += f.valores.kmMonto;  
+            valores.totalkmMonto += f.valores.kmMonto;           
+            
             //valores.total += f.valores.total          
-          });
-
+          });          
           valores.total -= this.totalDescuento
           this.modo = accion === 'factura' ? 'cerrar' : 'proforma';
 
@@ -320,7 +322,7 @@ export class FacturarOpComponent implements OnInit {
     
   }
 
-  obtenerDatoColumna(facOp: FacturaOp, col: any) {
+  obtenerDatoColumna(facOp: InformeOp, col: any) {
     
     
     switch (col.nombre) {
@@ -413,7 +415,7 @@ export class FacturarOpComponent implements OnInit {
     }
   }
 
-  getCategoria(fac: FacturaOp){
+  getCategoria(fac: InformeOp){
     let veh: Vehiculo[];   
     let choferSel: Chofer[];    
     choferSel = this.$choferes.filter((c:Chofer)=> {return c.idChofer === fac.idChofer});
@@ -422,18 +424,30 @@ export class FacturarOpComponent implements OnInit {
   }
 
   generarFacCliente(valores:Valores, colSel: any[]){
-    this.facturaCliente = {
-      
+    this.facturaCliente = {      
       fecha: new Date().toISOString().split('T')[0],
-      idFacturaCliente: new Date().getTime(),
-      idCliente: this.clienteSel.idCliente,        
-      razonSocial: this.clienteSel.razonSocial,
+      idInfLiq: new Date().getTime(),
+      numeroInterno: "LQCL-0042",             // Ej: LQCL-0042
+      tipo: 'cliente',
+      entidad:{
+          id: this.clienteSel.idCliente,                       // ID del cliente/chofer/proveedor
+          razonSocial: this.clienteSel.razonSocial,                  // Nombre o razón social
+          apellido: "",             
+          nombre: "",
+          cuit: this.clienteSel.cuit                  // Opcional, dependiendo si es persona física o no
+      },      
       operaciones: this.idOperaciones,
       valores: valores,
       cobrado:false,
-      montoFacturaChofer: this.totalContraParte,
+      estado: 'emitido',
       columnas: colSel,
       descuentos: this.descuentosAplicados,
+      formaPago: undefined,               // Efectivo, transferencia, etc. (opcional)
+      fechaCobro: undefined,       // Fecha en que se registró el cobro
+
+      observaciones: undefined,           // Campo libre para anotar algo manualmente
+
+      facturaVinculada: undefined,        // ID o número de la factura fiscal (a futuro)
     }
 
     this.factura = this.facturaCliente;
@@ -441,18 +455,31 @@ export class FacturarOpComponent implements OnInit {
 
   generarFacChofer(valores:Valores, colSel: any[]){
     this.facturaChofer = {
-      
+
       fecha: new Date().toISOString().split('T')[0],
-      idFacturaChofer: new Date().getTime(),
-      idChofer: this.choferSel.idChofer,
-      apellido: this.choferSel.apellido,
-      nombre: this.choferSel.nombre,
+      idInfLiq: new Date().getTime(),
+      numeroInterno: "LQCL-0042",             // Ej: LQCL-0042
+      tipo: 'chofer',
+      entidad:{
+          id: this.choferSel.idChofer,                       // ID del cliente/chofer/proveedor
+          razonSocial: "",                  // Nombre o razón social
+          apellido: this.choferSel.apellido,
+          nombre: this.choferSel.nombre,
+          cuit: this.clienteSel.cuit                  // Opcional, dependiendo si es persona física o no
+      },      
       operaciones: this.idOperaciones,
       valores: valores,
       cobrado:false,
-      montoFacturaCliente: this.totalContraParte,
+      estado: 'emitido',
       columnas: colSel,
       descuentos: this.descuentosAplicados,
+      formaPago: undefined,               // Efectivo, transferencia, etc. (opcional)
+      fechaCobro: undefined,       // Fecha en que se registró el cobro
+
+      observaciones: undefined,           // Campo libre para anotar algo manualmente
+
+      facturaVinculada: undefined,        // ID o número de la factura fiscal (a futuro)      
+    
     }
 
     this.factura = this.facturaChofer;
@@ -460,17 +487,31 @@ export class FacturarOpComponent implements OnInit {
 
   generarFacProveedor(valores:Valores, colSel: any[]){
     this.facturaProveedor = {
-      
+
       fecha: new Date().toISOString().split('T')[0],
-      idFacturaProveedor: new Date().getTime(),
-      idProveedor: this.proveedorSel.idProveedor,
-      razonSocial: this.proveedorSel.razonSocial,      
+      idInfLiq: new Date().getTime(),
+      numeroInterno: "LQCL-0042",             // Ej: LQCL-0042
+      tipo: 'chofer',
+      entidad:{
+          id: this.proveedorSel.idProveedor,                       // ID del cliente/chofer/proveedor
+          razonSocial: this.proveedorSel.razonSocial,                  // Nombre o razón social
+          apellido: "",
+          nombre: "",
+          cuit: this.clienteSel.cuit                  // Opcional, dependiendo si es persona física o no
+      },      
       operaciones: this.idOperaciones,
       valores: valores,
       cobrado:false,
-      montoFacturaCliente: this.totalContraParte,
+      estado: 'emitido',
       columnas: colSel,
       descuentos: this.descuentosAplicados,
+      formaPago: undefined,               // Efectivo, transferencia, etc. (opcional)
+      fechaCobro: undefined,       // Fecha en que se registró el cobro
+
+      observaciones: undefined,           // Campo libre para anotar algo manualmente
+
+      facturaVinculada: undefined,        // ID o número de la factura fiscal (a futuro)      
+
     }
 
     this.factura = this.facturaProveedor;

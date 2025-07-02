@@ -1,8 +1,7 @@
 import { TarifaTipo } from "./tarifa-gral-cliente";
 
-export interface FacturaOp {
-
-    idFacturaOp: number;    
+export interface InformeOp {
+    idInfOp: number;    
     idOperacion: number
     fecha: string | Date;        
     idCliente: number;
@@ -22,10 +21,11 @@ export interface FacturaOp {
     contraParteProforma: boolean;
 
 }
-
+    
 export interface Valores{
     tarifaBase: number;
     acompaniante: number;
     kmMonto: number;
     total: number;
 }
+

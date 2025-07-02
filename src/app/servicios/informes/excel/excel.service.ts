@@ -3,19 +3,21 @@ import * as ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import { Categoria, Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
+
+
 import { CellValue } from 'exceljs';
 
 
-import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from '../../storage/storage.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { Borders, Fill, Workbook } from 'exceljs';
 import saveAs from 'file-saver';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 type ChoferAsignado = ConIdType<Chofer> & {
   categoriaAsignada: Categoria;
@@ -37,7 +39,7 @@ interface MetadataChofer {
 })
 export class ExcelService {
 
-  factura!: FacturaChofer|FacturaCliente| FacturaProveedor
+  factura!: InformeLiq
   private readonly CATEGORIAS_TEXTO_CLARO = [
     'bg-dark', 'bg-secondary', 'bg-danger', 'bg-primary'
   ];
@@ -92,7 +94,7 @@ export class ExcelService {
     return veh[0].categoria.nombre;
   }
 
-  obtenerDatos(factura: any, facturaOp: FacturaOp, clientes: Cliente[], columna: any, choferes:Chofer[]){      
+  obtenerDatos(factura: any, facturaOp: InformeOp, clientes: Cliente[], columna: any, choferes:Chofer[]){      
       
     switch (columna) {
       case 'Fecha':{          
@@ -143,8 +145,8 @@ export class ExcelService {
 
   // Reportes EXCEL para los clientes
   async exportToExcelCliente(
-    factura: FacturaCliente,
-    facturasOp: FacturaOp[],
+    factura: InformeLiq,
+    facturasOp: InformeOp[],
     clientes: Cliente[],
     choferes: Chofer[], 
     modo:string,
@@ -163,7 +165,7 @@ export class ExcelService {
     // Título
     worksheet.mergeCells('A5:F5');
     const titleCell = worksheet.getCell('A5');
-    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.razonSocial}` : `Proforma ${factura.razonSocial}`;
+    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.entidad.razonSocial}` : `Proforma ${factura.entidad.razonSocial}`;
     titleCell.font = { size: 16, bold: true };
 
     // Subtítulo
@@ -175,7 +177,7 @@ export class ExcelService {
     // Subtítulo adicional
     worksheet.mergeCells('A7:F7');
     const subTitleCell2 = worksheet.getCell('A7');
-    subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaCliente}`: '';
+    subTitleCell2.value = modo === 'factura' ? `${factura.idInfLiq}`: '';
     subTitleCell2.font = { size: 8 };
 
     // Encabezados
@@ -341,14 +343,14 @@ export class ExcelService {
 
     // Guardar archivo
     const buffer = await workbook.xlsx.writeBuffer();
-    FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.razonSocial}_${factura.fecha}.xlsx`);
+    FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.entidad.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.entidad.razonSocial}_${factura.fecha}.xlsx`);
   }
 
 
   // Reportes EXCEL para los choferes
   async exportToExcelChofer(
-    factura: FacturaChofer, 
-    facturasOp: FacturaOp[], 
+    factura: InformeLiq, 
+    facturasOp: InformeOp[], 
     clientes:Cliente[], 
     choferes: Chofer[], 
     modo:string,
@@ -368,7 +370,7 @@ export class ExcelService {
     // Título
     worksheet.mergeCells('A5:F5');
     const titleCell = worksheet.getCell('A5');
-    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.apellido} ${factura.nombre} ` : `Proforma ${factura.apellido} ${factura.nombre} `;
+    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.entidad.apellido} ${factura.entidad.nombre} ` : `Proforma ${factura.entidad.apellido} ${factura.entidad.nombre} `;
     titleCell.font = { size: 16, bold: true };
 
     // Subtítulo
@@ -380,7 +382,7 @@ export class ExcelService {
     // Subtítulo adicional
     worksheet.mergeCells('A7:F7');
     const subTitleCell2 = worksheet.getCell('A7');
-    subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaChofer}` : '';
+    subTitleCell2.value = modo === 'factura' ? `${factura.idInfLiq}` : '';
     subTitleCell2.font = { size: 8 };
 
     // Encabezados
@@ -541,14 +543,14 @@ export class ExcelService {
 
     // Guardar archivo
     const buffer = await workbook.xlsx.writeBuffer();
-      FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx` : `Proforma_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx`);
+      FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.entidad.apellido}${factura.entidad.nombre}_${factura.fecha}.xlsx` : `Proforma_${factura.entidad.apellido}${factura.entidad.nombre}_${factura.fecha}.xlsx`);
 
   }
 
 
 
   ////////////// Reportes EXCEL para los proveedores
-  async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], clientes: Cliente[], choferes: Chofer[], modo:string): Promise<void> {
+  async exportToExcelProveedor(factura: InformeLiq, facturasOp: InformeOp[], clientes: Cliente[], choferes: Chofer[], modo:string): Promise<void> {
     
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Factura');
@@ -564,7 +566,7 @@ export class ExcelService {
     // Título
     worksheet.mergeCells('A5:F5');
     const titleCell = worksheet.getCell('A5');
-    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.razonSocial}` : `Proforma ${factura.razonSocial}`;
+    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.entidad.razonSocial}` : `Proforma ${factura.entidad.razonSocial}`;
     titleCell.font = { size: 16, bold: true };
 
     // Subtítulo
@@ -576,7 +578,7 @@ export class ExcelService {
     // Subtítulo adicional
     worksheet.mergeCells('A7:F7');
     const subTitleCell2 = worksheet.getCell('A7');
-    subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaProveedor}` : '';
+    subTitleCell2.value = modo === 'factura' ? `${factura.idInfLiq}` : '';
     subTitleCell2.font = { size: 8 };
 
     // Encabezados
@@ -737,7 +739,7 @@ export class ExcelService {
 
     // Guardar archivo
     const buffer = await workbook.xlsx.writeBuffer();
-    FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.razonSocial}_${factura.fecha}.xlsx`);
+    FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.entidad.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.entidad.razonSocial}_${factura.fecha}.xlsx`);
 
   }
 

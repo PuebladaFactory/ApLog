@@ -5,8 +5,10 @@ import { EditarTarifaOpComponent } from 'src/app/admin/liquidacion/modales/edita
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { Valores } from 'src/app/interfaces/factura-cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+import { Valores } from 'src/app/interfaces/informe-liq';
+
+import { InformeOp } from 'src/app/interfaces/informe-op';
+
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
@@ -25,7 +27,7 @@ export class ModalFacturaComponent implements OnInit {
   
   @Input() fromParent : any;
   titulo:string = "" ;
-  facOp!: FacturaOp[];
+  facOp!: InformeOp[];
   $choferes!: Chofer[];
   $clientes!: Cliente[];
   $proveedores!: Proveedor[];
@@ -105,12 +107,12 @@ export class ModalFacturaComponent implements OnInit {
 
   } 
 
-  editarFacOp(facOp:ConIdType<FacturaOp>){
+  editarFacOp(facOp:ConIdType<InformeOp>){
     ////console.log("facOp: ", facOp);
     this.buscarTarifa(facOp)
   }
 
-  buscarTarifa(facturaOp:ConIdType<FacturaOp> ) {
+  buscarTarifa(facturaOp:ConIdType<InformeOp> ) {
     //console.log("0)",facturaOp);
     let coleccionHistorialTarfGral: string = this.fromParent.tipo === 'clientes' ? 'historialTarifasGralCliente' : this.fromParent.tipo === 'choferes' ? 'historialTarifasGralChofer' : 'historialTarifasGralProveedor'
     let coleccionHistorialTarfEsp: string = this.fromParent.tipo === 'clientes' ? 'historialTarifasEspCliente' : this.fromParent.tipo === 'choferes' ? 'historialTarifasEspChofer' : 'historialTarifasEspProveedor'
@@ -175,7 +177,7 @@ export class ModalFacturaComponent implements OnInit {
     
     }
   
-    openModalTarifa(facturaOp: ConIdType<FacturaOp>): void {   
+    openModalTarifa(facturaOp: ConIdType<InformeOp>): void {   
      //console.log("2)this.tarifaAplicada", this.tarifaAplicada);
      //console.log("3)this.operacion", this.operacion);
      
@@ -248,7 +250,7 @@ export class ModalFacturaComponent implements OnInit {
       return tarifa;                
     }
 
-    buscarOperacion(facturaOp: ConIdType<FacturaOp>){
+    buscarOperacion(facturaOp: ConIdType<InformeOp>){
       this.dbFirebase
       .obtenerTarifaIdTarifa("operaciones",facturaOp.idOperacion, "idOperacion")
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
@@ -259,30 +261,17 @@ export class ModalFacturaComponent implements OnInit {
       });    
     }
 
-    recalcularFactura(facturaOp: ConIdType<FacturaOp>){
+    recalcularFactura(facturaOp: ConIdType<InformeOp>){
       this.facOp /// estas son las facturaOp de la factura
       this.factura // esta es la proforma
       facturaOp // esta es la factura editada
       console.log("0)this.facOp: ", this.facOp);
-      this.facOp = this.facOp.filter(factura=>factura.idFacturaOp !== facturaOp.idFacturaOp);
+      this.facOp = this.facOp.filter(factura=>factura.idInfOp !== facturaOp.idInfOp);
       console.log("1)this.facOp con elemnto eliminado: ", this.facOp);
       this.facOp.push(facturaOp);
       console.log("2)this.facOp con elemento agregado: ", this.facOp);
       this.actualizarProforma()
-     /*  let nuevaFacOp!: ConIdType<FacturaOp>
-      let coleccion: string = this.fromParent.tipo === 'clientes' ? 'facturaOpCliente' : this.fromParent.tipo === 'choferes' ? 'facturaOpChofer' : 'facturaOpProveedor'
-      this.dbFirebase
-      .obtenerTarifaIdTarifa(coleccion,facturaOp.idFacturaOp, "idFacturaOp")
-      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe(data => {      
-          nuevaFacOp = data;
-          console.log("1)nuevaFacOp: ", nuevaFacOp);
-          this.facOp = this.facOp.filter(factura=>factura.idFacturaOp !== facturaOp.idFacturaOp);
-          console.log("2)this.facOp con elemnto eliminado: ", this.facOp);
-          this.facOp.push(nuevaFacOp);
-          console.log("2)this.facOp con elemento agregado: ", this.facOp);
-          this.actualizarProforma();
-      });   */
+
     
       
     }
@@ -290,8 +279,8 @@ export class ModalFacturaComponent implements OnInit {
     actualizarProforma(){
       console.log("3)factura antes: ",this.factura );
       
-      let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0, descuentoTotal: this.factura.valores.descuentoTotal};
-      this.facOp.forEach((f:FacturaOp)=>{
+      let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0, descuentoTotal: this.factura.valores.descuentoTotal, totalContraParte:this.factura.valores.totalContraParte};
+      this.facOp.forEach((f:InformeOp)=>{
         valores.totalTarifaBase += f.valores.tarifaBase;
         valores.totalAcompaniante += f.valores.acompaniante;
         valores.totalkmMonto += f.valores.kmMonto;          

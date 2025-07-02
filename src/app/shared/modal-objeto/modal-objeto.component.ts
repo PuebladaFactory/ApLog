@@ -3,7 +3,8 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+
 import { LogDoc } from 'src/app/interfaces/log-doc';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
@@ -24,7 +25,7 @@ export class ModalObjetoComponent implements OnInit {
   @Input() fromParent:any;
   @Input() fromParentPapelera:any;
   objeto!:any;
-  arrayFacOp: FacturaOp[] =[];
+  arrayFacOp: InformeOp[] =[];
   $clientes!: Cliente[];
   $choferes!: Chofer[];
   $proveedores!: Proveedor[];
@@ -91,7 +92,7 @@ export class ModalObjetoComponent implements OnInit {
     let idOpMaxMin = this.encontrarMaximoYMinimo(this.objeto.operaciones);
     console.log("idOpMaxMin", idOpMaxMin);
     
-    this.dbFirebase.getAllColectionRangeIdValue<FacturaOp>(
+    this.dbFirebase.getAllColectionRangeIdValue<InformeOp>(
       coleccion,idOpMaxMin.min, idOpMaxMin.max, "idOperacion", idObjeto,
       this.fromParent.modo === 'facturaCliente' ? this.objeto.idCliente : this.fromParent.modo === 'facturaChofer' ? this.objeto.idChofer : this.objeto.idProveedor
     )  

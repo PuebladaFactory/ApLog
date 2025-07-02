@@ -6,10 +6,12 @@ import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
-import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+
+
+
+
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
+import { InformeOp } from 'src/app/interfaces/informe-op';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
@@ -60,9 +62,9 @@ export class ModalDetalleComponent implements OnInit {
   ajustes: boolean = false;
   firstFilter = '';
   secondFilter = '';
-  $facturasOpCliente: ConId<FacturaOp>[] = [];
-  $facturasOpChofer: ConId<FacturaOp>[] = [];
-  $facturasOpProveedor: ConId<FacturaOp>[] = [];
+  $facturasOpCliente: ConId<InformeOp>[] = [];
+  $facturasOpChofer: ConId<InformeOp>[] = [];
+  $facturasOpProveedor: ConId<InformeOp>[] = [];
   titulo:string = ""
   idFactura!: number;
   $choferes!: ConIdType<Chofer>[];
@@ -151,8 +153,8 @@ export class ModalDetalleComponent implements OnInit {
     //////////////CLIENTES///////////////////////
     if(this.fromParent.modo === "clientes"){
       //console.log(row);
-      let factura = this.data.filter((factura:FacturaCliente) => {
-        return factura.idFacturaCliente === row.idFactura
+      let factura = this.data.filter((factura:InformeLiq) => {
+        return factura.idInfLiq === row.idFactura
       })
       //console.log(factura);
       
@@ -162,8 +164,8 @@ export class ModalDetalleComponent implements OnInit {
     //////////////CHOFERES///////////////////////
     if(this.fromParent.modo === "choferes"){
       //console.log(row);
-      let factura = this.data.filter((factura:FacturaChofer) => {
-        return factura.idFacturaChofer === row.idFactura
+      let factura = this.data.filter((factura:InformeLiq) => {
+        return factura.idInfLiq === row.idFactura
       })
       //console.log(factura);
       
@@ -173,8 +175,8 @@ export class ModalDetalleComponent implements OnInit {
     //////////////PROVEEDORES///////////////////////
     if(this.fromParent.modo === "proveedores"){
       //console.log(row);
-      let factura = this.data.filter((factura:FacturaProveedor) => {
-        return factura.idFacturaProveedor === row.idFactura
+      let factura = this.data.filter((factura:InformeLiq) => {
+        return factura.idInfLiq === row.idFactura
       })
       //console.log(factura);
       
@@ -270,46 +272,46 @@ export class ModalDetalleComponent implements OnInit {
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "clientes":
-          this.rows = this.data.map((factura: FacturaCliente) => ({
+          this.rows = this.data.map((factura: InformeLiq) => ({
               indice: indice ++,
               fecha: factura.fecha,
               quincena: this.getQuincena(factura.fecha),
-              idFactura: factura.idFacturaCliente,
+              idFactura: factura.idInfLiq,
               cant: factura.operaciones.length,
-              sumaPagar: `$ ${this.formatearValor(factura.montoFacturaChofer)}`,
+              sumaPagar: `$ ${this.formatearValor(factura.valores.totalContraParte)}`,
               sumaCobrar: `$ ${this.formatearValor(factura.valores.total)}`,
-              neta: `$ ${this.formatearValor(factura.valores.total - factura.montoFacturaChofer)}`,
-              porcentaje: `${this.formatearValor((factura.valores.total - factura.montoFacturaChofer)*100/factura.valores.total)} %`,
+              neta: `$ ${this.formatearValor(factura.valores.total - factura.valores.totalContraParte)}`,
+              porcentaje: `${this.formatearValor((factura.valores.total - factura.valores.totalContraParte)*100/factura.valores.total)} %`,
               cobrado: factura.cobrado,
           }));
           break;
       //////////////CHOFERES///////////////////////
      case "choferes":
-          this.rows = this.data.map((factura: FacturaChofer) => ({
+          this.rows = this.data.map((factura: InformeLiq) => ({
               indice: indice ++,
               fecha: factura.fecha,
               quincena: this.getQuincena(factura.fecha),
-              idFactura: factura.idFacturaChofer,
+              idFactura: factura.idInfLiq,
               cant: factura.operaciones.length,
               sumaPagar: `$ ${this.formatearValor(factura.valores.total)}`,
-              sumaCobrar: `$ ${this.formatearValor(factura.montoFacturaCliente)}`,
-              neta: `$ ${this.formatearValor(factura.montoFacturaCliente - factura.valores.total)}`,
-              porcentaje: `${this.formatearValor((factura.montoFacturaCliente - factura.valores.total)*100/factura.montoFacturaCliente)} %`,
+              sumaCobrar: `$ ${this.formatearValor(factura.valores.totalContraParte)}`,
+              neta: `$ ${this.formatearValor(factura.valores.totalContraParte - factura.valores.total)}`,
+              porcentaje: `${this.formatearValor((factura.valores.totalContraParte - factura.valores.total)*100/factura.valores.totalContraParte)} %`,
               cobrado: factura.cobrado,              
           }));
           break;
       //////////////PROVEEDORES///////////////////////
        case "proveedores":
-          this.rows = this.data.map((factura: FacturaProveedor) => ({
+          this.rows = this.data.map((factura: InformeLiq) => ({
               indice: indice ++,
               fecha: factura.fecha,
               quincena: this.getQuincena(factura.fecha),
-              idFactura: factura.idFacturaProveedor,
+              idFactura: factura.idInfLiq,
               cant: factura.operaciones.length,
               sumaPagar: `$ ${this.formatearValor(factura.valores.total)}`,
-              sumaCobrar: `$ ${this.formatearValor(factura.montoFacturaCliente)}`,
-              neta: `$ ${this.formatearValor(factura.montoFacturaCliente - factura.valores.total)}`,
-              porcentaje: `$ ${this.formatearValor((factura.montoFacturaCliente - factura.valores.total)*100/factura.montoFacturaCliente)}`,
+              sumaCobrar: `$ ${this.formatearValor(factura.valores.totalContraParte)}`,
+              neta: `$ ${this.formatearValor(factura.valores.totalContraParte - factura.valores.total)}`,
+              porcentaje: `$ ${this.formatearValor((factura.valores.totalContraParte - factura.valores.total)*100/factura.valores.totalContraParte)}`,
               cobrado: factura.cobrado,
           }));
           break;
@@ -505,7 +507,7 @@ bajaOp(factura:any){
       //////////////CLIENTES///////////////////////
       case "clientes":
           console.log("1) fila: ",fila);    
-          factura = this.data.filter((factura:FacturaCliente) => {
+          factura = this.data.filter((factura:InformeLiq) => {
             return factura.idFacturaCliente === fila.idFactura
           })
           console.log(factura);
@@ -523,7 +525,7 @@ bajaOp(factura:any){
       //////////////CHOFERES///////////////////////
       case "choferes":
           console.log("1) fila: ",fila);    
-          factura = this.data.filter((factura:FacturaChofer) => {
+          factura = this.data.filter((factura:InformeLiq) => {
             return factura.idFacturaChofer === fila.idFactura
           })
           console.log(factura);
@@ -542,7 +544,7 @@ bajaOp(factura:any){
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
               ////console.log("1) row: ",row);    
-          factura = this.data.filter((factura:FacturaProveedor) => {
+          factura = this.data.filter((factura:InformeLiq) => {
             return factura.idFacturaProveedor === fila.idFactura
           })
           ////console.log(factura);
@@ -570,14 +572,14 @@ bajaOp(factura:any){
       //////////////CLIENTES///////////////////////
       case "clientes":
           console.log("1) row: ",row);    
-          this.factura = this.data.filter((factura:FacturaCliente) => {
-            return factura.idFacturaCliente === row.idFactura
+          this.factura = this.data.filter((factura:InformeLiq) => {
+            return factura.idInfLiq === row.idFactura
           });
           console.log(this.factura[0]);
           respuesta = this.encontrarMaximoYMinimo(this.factura[0].operaciones)
           console.log("respuesta", respuesta);
           
-          this.dbFirebase.getAllByDateValueField<FacturaOp>("facOpLiqCliente", "idOperacion",respuesta.min, respuesta.max, "idCliente", this.factura[0].idCliente)
+          this.dbFirebase.getAllByDateValueField<InformeOp>("facOpLiqCliente", "idOperacion",respuesta.min, respuesta.max, "idCliente", this.factura[0].idCliente)
           .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
           .subscribe(data => {
             if(data){
@@ -602,13 +604,13 @@ bajaOp(factura:any){
       //////////////CHOFERES///////////////////////
       case "choferes":
           console.log("1) row: ",row);    
-          this.factura = this.data.filter((factura:FacturaChofer) => {
-            return factura.idFacturaChofer === row.idFactura
+          this.factura = this.data.filter((factura:InformeLiq) => {
+            return factura.idInfLiq === row.idFactura
           })
           console.log(this.factura[0]);
           respuesta = this.encontrarMaximoYMinimo(this.factura[0].operaciones)
           console.log("respuesta", respuesta);
-          this.dbFirebase.getAllByDateValueField<FacturaOp>("facOpLiqChofer", "idOperacion",respuesta.min, respuesta.max, "idChofer", this.factura[0].idChofer)
+          this.dbFirebase.getAllByDateValueField<InformeOp>("facOpLiqChofer", "idOperacion",respuesta.min, respuesta.max, "idChofer", this.factura[0].idChofer)
           .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
           .subscribe(data => {
             if(data){
@@ -631,13 +633,13 @@ bajaOp(factura:any){
       //////////////PROVEEDORES///////////////////////
       case "proveedores":
           console.log("1) row: ",row);    
-          this.factura = this.data.filter((factura:FacturaProveedor) => {
-            return factura.idFacturaProveedor === row.idFactura
+          this.factura = this.data.filter((factura:InformeLiq) => {
+            return factura.idInfLiq === row.idFactura
           })
           console.log(this.factura[0]);
           respuesta = this.encontrarMaximoYMinimo(this.factura[0].operaciones)
           console.log("respuesta", respuesta);
-          this.dbFirebase.getAllByDateValueField<FacturaOp>("facOpLiqProveedor", "idOperacion",respuesta.min, respuesta.max, "idProveedor", this.factura[0].idProveedor)
+          this.dbFirebase.getAllByDateValueField<InformeOp>("facOpLiqProveedor", "idOperacion",respuesta.min, respuesta.max, "idProveedor", this.factura[0].idProveedor)
           .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
           .subscribe(data => {
             if(data){
@@ -697,7 +699,7 @@ bajaOp(factura:any){
     return { max, min }; // Devolvemos un objeto con el máximo y el mínimo
   }
 
-  openModalDetalleFactura(factura:any, facturasOp: FacturaOp[]){
+  openModalDetalleFactura(factura:any, facturasOp: InformeOp[]){
     {
       const modalRef = this.modalService.open(ModalFacturaComponent, {
         windowClass: 'myCustomModalClass',

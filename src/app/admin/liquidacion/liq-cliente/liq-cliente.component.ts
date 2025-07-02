@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
+
 
 import { FacturacionClienteService } from 'src/app/servicios/facturacion/facturacion-cliente/facturacion-cliente.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -12,7 +12,7 @@ import { Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
 import { FacturarOpComponent } from '../modales/facturar-op/facturar-op.component';
@@ -23,6 +23,8 @@ import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { LiquidacionService } from 'src/app/servicios/liquidacion/liquidacion.service';
 import { result } from 'lodash';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 
 @Component({
@@ -56,12 +58,12 @@ export class LiqClienteComponent {
   totalFacturasLiquidadasChofer: number = 0 ; // Variable para almacenar el total de las facturas liquidadas
   razonSocFac!: string ;
   form!: any;
-  facturaCliente!: FacturaCliente;  
+  facturaCliente!: InformeLiq;  
   
-  facturasPorCliente: Map<number, FacturaOp[]> = new Map<number, FacturaOp[]>();
+  facturasPorCliente: Map<number, InformeOp[]> = new Map<number, InformeOp[]>();
   indiceSeleccionado!:number;
   idOperaciones: number [] = [];
-  facDetallada!: ConId<FacturaOp>;
+  facDetallada!: ConId<InformeOp>;
   ultimaTarifa!: TarifaGralCliente |  undefined;
   tarifaAplicada!: any;
   tarifaEditForm: any;
@@ -78,13 +80,13 @@ export class LiqClienteComponent {
   columnaOrdenada: string = '';
   private destroy$ = new Subject<void>()
   opAbiertas!: ConId<Operacion>[];
-  $facturasOpDuplicadas: ConId<FacturaOp>[] = [];
-  $facturasOpChofer: ConId<FacturaOp>[] = []; // Array de facturas de choferes
-  $facturasOpChoferDuplicadas: ConId<FacturaOp>[] = []; // Array para guardar facturas de choferes duplicadas
-  $facturasOpProveedor: ConId<FacturaOp>[] = []; // Array de facturas de choferes
-  $facLiqOpDuplicadas: ConId<FacturaOp>[] = [];
+  $facturasOpDuplicadas: ConId<InformeOp>[] = [];
+  $facturasOpChofer: ConId<InformeOp>[] = []; // Array de facturas de choferes
+  $facturasOpChoferDuplicadas: ConId<InformeOp>[] = []; // Array para guardar facturas de choferes duplicadas
+  $facturasOpProveedor: ConId<InformeOp>[] = []; // Array de facturas de choferes
+  $facLiqOpDuplicadas: ConId<InformeOp>[] = [];
   isLoading: boolean = false;
-  objetoEditado: ConId<FacturaOp>[] = [];
+  objetoEditado: ConId<InformeOp>[] = [];
   proformas: ConId<any> [] = [];
   facturaOpsNoAsignadas: any[] = []
 
@@ -121,10 +123,10 @@ export class LiqClienteComponent {
       this.fechasConsulta = data;
       ////////console.log("LIQ CLIENTES: fechas consulta: ",this.fechasConsulta);
       //this.storageService.getByDateValue(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacOpCliente");
-      this.storageService.syncChangesDateValue<FacturaOp>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");
+      this.storageService.syncChangesDateValue<InformeOp>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");
       this.btnConsulta = true;
        //this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
-      this.storageService.getObservable<ConId<FacturaOp>>("facturaOpCliente")
+      this.storageService.getObservable<ConId<InformeOp>>("facturaOpCliente")
         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
         .subscribe(data => {
           this.$facturasOpCliente = data;
@@ -151,7 +153,7 @@ export class LiqClienteComponent {
   verificarDuplicados() {
     const seenIds = new Set<number>();
 
-    this.$facturasOpCliente = this.$facturasOpCliente.filter((factura:ConId<FacturaOp>) => {
+    this.$facturasOpCliente = this.$facturasOpCliente.filter((factura:ConId<InformeOp>) => {
         if (seenIds.has(factura.idOperacion)) {
             this.$facturasOpDuplicadas.push(factura);
             return false; // Eliminar del array original
@@ -167,7 +169,7 @@ export class LiqClienteComponent {
 
 verificarDuplicadosFacturadas(){
 
-  this.$facturasOpCliente.forEach((facturaOp:FacturaOp) => {
+  this.$facturasOpCliente.forEach((facturaOp:InformeOp) => {
     this.dbFirebase.getMostRecentId("facOpLiqCliente", "idFacturaOp", "idOperacion", facturaOp.idOperacion)
     .pipe(take(1))
     .subscribe(data=>{
@@ -185,16 +187,13 @@ verificarDuplicadosFacturadas(){
 
 deleteDuplicadas(){
   ////console.log("cantidad facLiqOpDuplicadas", this.$facLiqOpDuplicadas.length);
-  this.$facLiqOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
+  this.$facLiqOpDuplicadas.forEach((facDupli: ConId<InformeOp>)=>{    
     this.dbFirebase.delete(this.titulo, facDupli.id)
 })
 }
 
 borrarDuplicadasEnLiquidacion(){
-  ////console.log("cantidad facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
-  /* this.$facturasOpDuplicadas.forEach((facDupli: ConId<FacturaOp>)=>{    
-    this.dbFirebase.delete(this.titulo, facDupli.id)
-}) */
+
 this.isLoading = true;
 this.dbFirebase.eliminarMultiple(this.$facturasOpDuplicadas, this.titulo).then(result=>{
   this.isLoading = false;
@@ -221,7 +220,7 @@ mostrarDuplicadasEnLiquidacion(){
 
     if(this.$facturasOpCliente !== null){
       ////////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
-      this.$facturasOpCliente.forEach((factura: FacturaOp) => {
+      this.$facturasOpCliente.forEach((factura: InformeOp) => {
         if (!clientesMap.has(factura.idCliente)) {
           clientesMap.set(factura.idCliente, {
             idCliente: factura.idCliente,
@@ -314,7 +313,7 @@ mostrarDuplicadasEnLiquidacion(){
   }
  
 // Modifica liquidarFac para solo actualizar el estado y hacer cualquier procesamiento adicional
-liquidarFac(factura: FacturaOp) {
+liquidarFac(factura: InformeOp) {
   factura.liquidacion = !factura.liquidacion;
   //////////console.log("Estado de liquidación cambiado:", factura.liquidacion);
   //this.storageService.updateItem(this.tituloFacOpCliente, factura);
@@ -327,7 +326,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   ////////console.log("1)", seleccion); 
   let facturasCliente = this.facturasPorCliente.get(idCliente);
   ////////console.log("2)", facturasCliente);
-    facturasCliente?.forEach((factura: FacturaOp) => {
+    facturasCliente?.forEach((factura: InformeOp) => {
       if(!factura.proforma && !factura.contraParteProforma){
         factura.liquidacion = seleccion;
       }
@@ -342,28 +341,19 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     ////////console.log("1) cliente: ", cliente);
     if(seleccion){
       cliente.opFacturadas = 0
-      facturasCliente?.forEach((factura: FacturaOp) => {                  
+      facturasCliente?.forEach((factura: InformeOp) => {                  
           cliente.opFacturadas += factura.valores.total;
           cliente.opSinFacturar = 0;
         });   
     } else {
       cliente.opSinFacturar = 0;
       cliente.opFacturadas = 0;
-      facturasCliente?.forEach((factura: FacturaOp) => {                
+      facturasCliente?.forEach((factura: InformeOp) => {                
         cliente.opFacturadas += (factura.proforma ? factura.valores.total : 0);
         cliente.opSinFacturar += (!factura.proforma ? factura.valores.total : 0);
       });   
     }
-    /* facturasCliente?.forEach((factura: FacturaOp) => {
-      if (factura.liquidacion) {
-        cliente.opFacturadas += factura.valores.total;
-        cliente.opSinFacturar -= factura.valores.total;
-      } else {
-        cliente.opSinFacturar += factura.valores.total;
-        cliente.opFacturadas -= factura.valores.total;
-      }
-     
-    });    */
+ 
     ////////console.log("2) cliente: ", cliente);
    
 }
@@ -379,7 +369,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     ////console.log("clienteId: ", clienteId);
     
    // Filtrar las facturas según el id del cliente y almacenarlas en el mapa
-   let facturasCliente = this.$facturasOpCliente.filter((factura: FacturaOp) => {
+   let facturasCliente = this.$facturasOpCliente.filter((factura: InformeOp) => {
        return factura.idCliente === clienteId;
    });
    this.facturasPorCliente.set(clienteId, facturasCliente);
@@ -387,7 +377,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
    //this.buscarOpConProformas(facturasCliente, clienteId)     
   }
 
-  buscarOpConProformas(facturasOpCliente: ConId<FacturaOp>[], id:number){
+  buscarOpConProformas(facturasOpCliente: ConId<InformeOp>[], id:number){
     //console.log("FACTURAS DEL CLIENTE: ", facturasOpCliente);
     //console.log("clienteId: ", id);
     this.dbFirebase.buscarColeccionRangoFechaIdCampo<Operacion>('operaciones', this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "cliente.idCliente", id, "estado.proformaCh", true).subscribe(data=>{      
@@ -423,11 +413,11 @@ selectAllCheckboxes(event: any, idCliente: number): void {
    liquidarFacCliente(cliente: any, index: number){
     // Obtener las facturas del cliente
     console.log("cliente: ", cliente);
-    let facturasCliente = this.$facturasOpCliente.filter((factura: FacturaOp) => {
+    let facturasCliente = this.$facturasOpCliente.filter((factura: InformeOp) => {
        return factura.idCliente === cliente.idCliente;
     });
 
-    let alertaProforma = facturasCliente.some((f: ConId<FacturaOp>)=>{ return f.contraParteProforma})
+    let alertaProforma = facturasCliente.some((f: ConId<InformeOp>)=>{ return f.contraParteProforma})
     console.log("alertaProforma", alertaProforma);
     if(alertaProforma){
       Swal.fire({
@@ -455,7 +445,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     let facturasIdCliente:any = this.facturasPorCliente.get(cliente.idCliente);
     this.razonSocFac = cliente.razonSocial;
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
-    this.facturasLiquidadasCliente = facturasIdCliente.filter((factura: FacturaOp) => {
+    this.facturasLiquidadasCliente = facturasIdCliente.filter((factura: InformeOp) => {
         return factura.liquidacion === true && factura.proforma === false;
     });
 
@@ -463,7 +453,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       ////////console.log("1: ",this.facturasLiquidadasCliente);
       // Calcular el total sumando los montos de las facturas liquidadas
       this.totalFacturasLiquidadasCliente = 0;
-      this.facturasLiquidadasCliente.forEach((factura: FacturaOp) => {
+      this.facturasLiquidadasCliente.forEach((factura: InformeOp) => {
         this.totalFacturasLiquidadasCliente += factura.valores.total;
       });
   
@@ -500,27 +490,18 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
   eliminarFacturasOp(){
     this.idOperaciones = [];
-    this.facturasLiquidadasCliente.forEach((factura: FacturaOp) => {
+    this.facturasLiquidadasCliente.forEach((factura: InformeOp) => {
 
       ////console.log("llamada al storage desde liq-cliente, addItem");
-      this.addItem(factura, "facOpLiqCliente", factura.idFacturaOp, "INTERNA");
+      this.addItem(factura, "facOpLiqCliente", factura.idInfOp, "INTERNA");
 
       this.editarOperacionesFac(factura)
       
     }); 
-    /* this.facturaChofer.operaciones.forEach((factura: FacturaOpChofer) => {
-      this.removeItem(factura);
-    });  */
-    /* this.cerrarTabla(this.indiceSeleccionado);
-    this.ngOnInit();  */
-    /* this.facturaCliente.operaciones.forEach((factura: FacturaOpCliente) => {
-      this.removeItem(factura);
-    });
-    this.cerrarTabla(this.indiceSeleccionado);
-    this.ngOnInit(); */
+
   }
 
-  editarOperacionesFac(factura:FacturaOp){
+  editarOperacionesFac(factura:InformeOp){
     //factura.idOperacion
     let op:ConId<Operacion>;
     this.dbFirebase
@@ -556,7 +537,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
 
   }
 
-  editarFacturaOpCliente(factura: ConId<FacturaOp>, i: number){   
+  editarFacturaOpCliente(factura: ConId<InformeOp>, i: number){   
     this.facDetallada = factura;   
     this.buscarTarifa(i);    
   } 
@@ -617,8 +598,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       this.isLoading = false;
       ////console.log("resultado: ", result);
       if(result.exito){
-          this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "LIQUIDAR", "operaciones", `Operación del Cliente ${this.facturaCliente.razonSocial} Liquidada`,result.exito)
-          this.storageService.logSimple(this.facturaCliente.idFacturaCliente,"ALTA", "facturaCliente", `Alta de Factura del Cliente ${this.facturaCliente.razonSocial}`, result.exito )
+          this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "LIQUIDAR", "operaciones", `Operación del Cliente ${this.facturaCliente.entidad.razonSocial} Liquidada`,result.exito)
+          this.storageService.logSimple(this.facturaCliente.idInfLiq,"ALTA", "facturaCliente", `Alta de Factura del Cliente ${this.facturaCliente.entidad.razonSocial}`, result.exito )
           Swal.fire({
                 icon: "success",
                 //title: "Oops...",
@@ -649,8 +630,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           this.mostrarMasDatos(this.indiceSeleccionado);
           this.procesarDatosParaTabla();
       } else {
-        this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "LIQUIDAR", "operaciones", `Operación del Cliente ${this.facturaCliente.razonSocial} Liquidada`,result.exito)
-        this.storageService.logSimple(this.facturaCliente.idFacturaCliente,"ALTA", "facturaCliente", `Alta de Factura del Cliente ${this.facturaCliente.razonSocial}`, result.exito )
+        this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "LIQUIDAR", "operaciones", `Operación del Cliente ${this.facturaCliente.entidad.razonSocial} Liquidada`,result.exito)
+        this.storageService.logSimple(this.facturaCliente.idInfLiq,"ALTA", "facturaCliente", `Alta de Factura del Cliente ${this.facturaCliente.entidad.razonSocial}`, result.exito )
         this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
       }
       
@@ -762,7 +743,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         (result) => {
           this.procesarDatosParaTabla();
           //this.cerrarTabla(i)
-          let facturasCliente = this.$facturasOpCliente.filter((factura: FacturaOp) => {
+          let facturasCliente = this.$facturasOpCliente.filter((factura: InformeOp) => {
               return factura.idCliente === this.facDetallada.idCliente;
           });
           this.facturasPorCliente.set(this.facDetallada.idCliente, facturasCliente);
@@ -793,7 +774,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   }
 
 
-  bajaOp(factura:FacturaOp, indice:number){
+  bajaOp(factura:InformeOp, indice:number){
     Swal.fire({
           title: "¿Desea anular la operación?",
           //text: "No se podrá revertir esta acción",
@@ -819,7 +800,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
     
   }
 
-  openModalBaja(factura:FacturaOp, indice:number){
+  openModalBaja(factura:InformeOp, indice:number){
     {
       const modalRef = this.modalService.open(ModalBajaComponent, {
         windowClass: 'myCustomModalClass',
@@ -900,8 +881,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         this.isLoading = false;
         ////console.log("resultado: ", result);
         if(result.exito){
-            this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Cliente ${this.facturaCliente.razonSocial}`,result.exito)
-            this.storageService.logSimple(this.facturaCliente.idFacturaCliente,"ALTA", "facturaCliente", `Alta de Proforma del Cliente ${this.facturaCliente.razonSocial}`, result.exito )
+            this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Cliente ${this.facturaCliente.entidad.razonSocial}`,result.exito)
+            this.storageService.logSimple(this.facturaCliente.idInfLiq,"ALTA", "facturaCliente", `Alta de Proforma del Cliente ${this.facturaCliente.entidad.razonSocial}`, result.exito )
             Swal.fire({
                   icon: "success",
                   //title: "Oops...",
@@ -932,8 +913,8 @@ selectAllCheckboxes(event: any, idCliente: number): void {
                 //this.mostrarMasDatos(this.indiceSeleccionado);
                 //this.procesarDatosParaTabla()
         } else {
-          this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "PROFORMA", "operaciones", `Proforma de la operación del Cliente ${this.facturaCliente.razonSocial} Liquidada`,result.exito)
-          this.storageService.logSimple(this.facturaCliente.idFacturaCliente,"ALTA", "facturaCliente", `Alta de Proforma del Cliente ${this.facturaCliente.razonSocial}`, result.exito )
+          this.storageService.logMultiplesOp(this.facturaCliente.operaciones, "PROFORMA", "operaciones", `Proforma de la operación del Cliente ${this.facturaCliente.entidad.razonSocial} Liquidada`,result.exito)
+          this.storageService.logSimple(this.facturaCliente.idInfLiq,"ALTA", "facturaCliente", `Alta de Proforma del Cliente ${this.facturaCliente.entidad.razonSocial}`, result.exito )
           this.mensajesError(`Ocurrió un error al procesar la proforma: ${result.mensaje}`, "error");
           //this.mostrarMasDatos(this.indiceSeleccionado);
           //this.procesarDatosParaTabla()
@@ -1009,7 +990,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       filtrarObjeto(){
         console.log("1)this.facturasOpEditadas", this.$facturasOpCliente);
         //this.objetoEditado= this.agregarCampo(this.$facturasOpCliente)
-        this.objetoEditado= this.$facturasOpCliente.filter((fac:FacturaOp)=> {return fac.contraParteProforma})
+        this.objetoEditado= this.$facturasOpCliente.filter((fac:InformeOp)=> {return fac.contraParteProforma})
         console.log("2)this.objetoEditado", this.objetoEditado);
         
       }
@@ -1033,7 +1014,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       }
 
       proformasCongeladas(){
-        const facturaOps: FacturaOp[] = [...this.objetoEditado]; // tu array original
+        const facturaOps: InformeOp[] = [...this.objetoEditado]; // tu array original
         const facturas: any[] = [...this.proformas];     // tu otro array original
 
         // 1. Crear un Set con todos los idOperacion usados en alguna factura
@@ -1041,16 +1022,16 @@ selectAllCheckboxes(event: any, idCliente: number): void {
           facturas.flatMap(factura => factura.operaciones)
         );
 
-        // 2. Filtrar las FacturaOp que no estén en el set de operaciones usadas
+        // 2. Filtrar las InformeOp que no estén en el set de operaciones usadas
         this.facturaOpsNoAsignadas = facturaOps.filter(
           op => !operacionesUsadas.has(op.idOperacion)
         );
 
-        // Ahora tenés una copia de los FacturaOp que no están asignados a ninguna factura
+        // Ahora tenés una copia de los InformeOp que no están asignados a ninguna factura
         console.log("facturaOpsNoAsignadas",this.facturaOpsNoAsignadas );
       }
 
-      agregarCampo(facturaOp: any[]): ConId<FacturaOp>[] {
+      agregarCampo(facturaOp: any[]): ConId<InformeOp>[] {
         return facturaOp.map(facOp => {
           return {
             ...facOp,
