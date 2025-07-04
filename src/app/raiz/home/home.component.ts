@@ -39,29 +39,22 @@ export class HomeComponent implements OnInit {
         
       });
       let usuarioLogueado = this.storageService.loadInfo("usuario");
+      
+      
       this.$usuario = structuredClone(usuarioLogueado[0]);      
-      this.storageService.listenForChanges<Cliente>("clientes");
-      this.storageService.listenForChanges<Chofer>("choferes");
-      this.storageService.listenForChanges<Chofer>("proveedores");
-      this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralCliente");
-      this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspCliente");
-      this.storageService.listenForChanges<TarifaPersonalizadaCliente>('tarifasPersCliente');
-      this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralChofer");
-      this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspChofer");
-      this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralProveedor");
-      this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspProveedor");
+     
       
       
 
-/*       this.storageService.getObservable("ruta")
+      this.storageService.getObservable("ruta")
       .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
       .subscribe(data=>{
         if(data){
           console.log("ruta", data);
-          this.router.navigate([data[0]]);    
+          this.router.navigate([`raiz/${data[0]}`]);    
         }
-      }) */
-      //this.router.navigate(['op']);
+      })
+      this.router.navigate(['op']);
 
   }
 

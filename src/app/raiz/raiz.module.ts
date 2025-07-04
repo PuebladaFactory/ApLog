@@ -8,6 +8,9 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AgGridModule } from 'ag-grid-angular';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { SidebarComponent } from './sidebar/sidebar.component';
+import { ClientesModule } from '../clientes/clientes.module';
+import { OperacionesModule } from '../operaciones/operaciones.module';
+
 
 
 @NgModule({
@@ -21,7 +24,9 @@ import { SidebarComponent } from './sidebar/sidebar.component';
     SharedModule,
     FilterPipeModule,
     AgGridModule,
-    DragDropModule
+    DragDropModule,
+    ClientesModule,
+    OperacionesModule
   ]
 })
 export class RaizModule { }

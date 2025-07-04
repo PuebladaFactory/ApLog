@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 
 
 @Component({
-    selector: 'app-cliente-control',
+    selector: 'app-clientes-control',
     template: ` 
   <div class="d-flex justify-content-between mt-3">
     <h1>Clientes</h1>    
@@ -20,10 +20,10 @@ import { Router } from '@angular/router';
   </div>
   <router-outlet></router-outlet>
     `,
-    styleUrls: ['./cliente-control.component.scss'],
+    styleUrls: ['./clientes-control.component.scss'],
     standalone: false
 })
-export class ClienteControlComponent implements OnInit {
+export class ClientesControlComponent implements OnInit {  
 
   selectedTab: string = 'tab1';
   tabs = [

@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ClienteRoutingModule } from './cliente-routing.module';
-import { ClienteControlComponent } from './cliente-control/cliente-control.component';
+import { ClienteRoutingModule } from './clientes-routing.module';
+import { ClientesControlComponent } from './clientes-control/clientes-control.component';
 import { ClienteAltaComponent } from './cliente-alta/cliente-alta.component';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -12,7 +12,7 @@ import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/client
 import { ModalContactoComponent } from './modal-contacto/modal-contacto.component';
 import { ModalTarifaPersonalizadaComponent } from './modal-tarifa-personalizada/modal-tarifa-personalizada.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
-import { ListadoNuevoComponent } from './listado-nuevo/listado-nuevo.component';
+import { ClientesListadoComponent } from './clientes-listado/clientes-listado.component';
 import { AgGridModule } from 'ag-grid-angular';
 
 
@@ -25,14 +25,14 @@ import { AgGridModule } from 'ag-grid-angular';
 
 @NgModule({
   declarations: [
-    ClienteControlComponent,    
+    ClientesControlComponent,    
     ClienteAltaComponent,            
     ClienteTarifaPersonalizadaComponent, 
     ClienteTarifaGralComponent, 
     ClienteTarifaEspecialComponent, 
     ModalContactoComponent, 
     ModalTarifaPersonalizadaComponent, 
-    ListadoNuevoComponent,    
+    ClientesListadoComponent,    
   ],
   imports: [
     CommonModule,
@@ -45,4 +45,4 @@ import { AgGridModule } from 'ag-grid-angular';
     AgGridModule 
   ]
 })
-export class ClienteModule { }
+export class ClientesModule { }

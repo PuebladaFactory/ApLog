@@ -20,12 +20,12 @@ import { Cliente } from 'src/app/interfaces/cliente';
 
 
 @Component({
-  selector: 'app-nueva-tabla',
+  selector: 'app-tablero-op',
   standalone: false,
-  templateUrl: './nueva-tabla.component.html',
-  styleUrls: ['./nueva-tabla.component.scss']
+  templateUrl: './tablero-op.component.html',
+  styleUrls: ['./tablero-op.component.scss']
 })
-export class NuevaTablaComponent implements OnInit, OnDestroy {
+export class TableroOpComponent implements OnInit, OnDestroy {
   
   paginatedRows: any[] = [];
   private gridApi!: GridApi;  

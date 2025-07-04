@@ -7,10 +7,10 @@ import { RoleGuard } from '../guards/role.guard';
 const routes: Routes = [
   {path: '', component: AdminHomeComponent,
    children: [
-    { path: '', redirectTo: '/op', pathMatch: 'full' },    
+/*     { path: '', redirectTo: '/op', pathMatch: 'full' },    
     {
       path: 'clientes',
-      loadChildren: () => import('./cliente/cliente.module').then(m => m.ClienteModule),
+      loadChildren: () => import('./cliente/clientes.module').then(m => m.ClientesModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
       data: { roles: ['god','admin','manager','user'] }, // Accesible para todos los roles
     },  
@@ -55,7 +55,7 @@ const routes: Routes = [
       loadChildren: () => import('./ajustes/ajustes.module').then(m => m.AjustesModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
       data: { roles: ['god','admin'] }, // Accesible para todos los roles
-    },
+    }, */
     
     
     

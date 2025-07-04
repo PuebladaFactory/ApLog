@@ -13,10 +13,10 @@ import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.compone
 @Component({
   selector: 'app-listado-nuevo',
   standalone: false,
-  templateUrl: './listado-nuevo.component.html',
-  styleUrl: './listado-nuevo.component.scss'
+  templateUrl: './clientes-listado.component.html',
+  styleUrl: './clientes-listado.component.scss'
 })
-export class ListadoNuevoComponent implements OnInit, OnDestroy {
+export class ClientesListadoComponent implements OnInit, OnDestroy {
 
   rowData: any[] = [];
   paginatedRows: any[] = [];

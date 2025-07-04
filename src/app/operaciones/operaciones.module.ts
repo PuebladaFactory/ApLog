@@ -8,7 +8,7 @@ import { OpControlComponent } from './op-control/op-control.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 
-import { ConsultaOpComponent } from './consulta-op/consulta-op.component';
+
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
@@ -17,7 +17,7 @@ import { CargaMultipleComponent } from './carga-multiple/carga-multiple.componen
 import { ModalOpAltaComponent } from './modal-op-alta/modal-op-alta.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AgGridModule } from 'ag-grid-angular';
-import { NuevaTablaComponent } from './nueva-tabla/nueva-tabla.component';
+import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TableroDiarioComponent } from './tablero-diario/tablero-diario.component';
 import { CargaTableroDiarioComponent } from './carga-tablero-diario/carga-tablero-diario.component';
@@ -28,11 +28,11 @@ import { CargaTableroDiarioComponent } from './carga-tablero-diario/carga-tabler
 @NgModule({
   declarations: [
     OpControlComponent,      
-    ConsultaOpComponent,               
+    
     ModalFacturacionComponent, 
     CargaMultipleComponent, 
     ModalOpAltaComponent,
-    NuevaTablaComponent,
+    TableroOpComponent,
     TableroDiarioComponent,
     CargaTableroDiarioComponent
     

@@ -10,7 +10,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
 import { Firestore } from '@angular/fire/firestore';
 import { inject } from '@angular/core';
-import { TableroDiario } from 'src/app/admin/operaciones/tablero-diario/tablero-diario.component';
+import { TableroDiario } from 'src/app/operaciones/tablero-diario/tablero-diario.component';
 import { InformeOp } from 'src/app/interfaces/informe-op';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
