@@ -575,13 +575,13 @@ mostrarDuplicadasEnLiquidacion(){
   procesarFacturacion(titulo:string, accion:string) {
     this.isLoading = true;
     
-    this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasChofer, "choferes", "facOpLiqChofer", "facturaOpChofer", this.facturaChofer, "facturaChofer")
+    this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasChofer, "chofer", "facOpLiqChofer", "facturaOpChofer", this.facturaChofer, "facturaChofer")
       .then((result) => {
         this.isLoading = false;
         //console.log("resultado: ", result);
         if(result.exito){
-            this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre} Liquidada`,result.exito)
-            this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`, result.exito )
+            this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.entidad.razonSocial} Liquidada`,result.exito)
+            this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.entidad.razonSocial}`, result.exito )
             Swal.fire({
                   icon: "success",
                   //title: "Oops...",
@@ -612,8 +612,8 @@ mostrarDuplicadasEnLiquidacion(){
             this.mostrarMasDatos(this.indiceSeleccionado);
             this.procesarDatosParaTabla();
         } else {
-          this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre} Liquidada`,result.exito)
-            this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`, result.exito )
+          this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "LIQUIDAR", "operaciones", `Operación del Chofer ${this.facturaChofer.entidad.razonSocial} Liquidada`,result.exito)
+            this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Factura del Chofer ${this.facturaChofer.entidad.razonSocial} `, result.exito )
           this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
         }
         
@@ -629,13 +629,13 @@ mostrarDuplicadasEnLiquidacion(){
    procesarProforma(titulo:string, accion:string){
       this.isLoading = true;
      
-        this.dbFirebase.procesarProforma(this.facturasLiquidadasChofer, "choferes", this.titulo, "facturaOpCliente",  this.facturaChofer, "proforma")
+        this.dbFirebase.procesarProforma(this.facturasLiquidadasChofer, "chofer", this.titulo, this.facturaChofer, "proforma")
         .then((result) => {
           this.isLoading = false;
           ////console.log("resultado: ", result);
           if(result.exito){
-              this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`,result.exito);
-              this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Proforma del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`, result.exito );
+              this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Chofer ${this.facturaChofer.entidad.razonSocial} `,result.exito);
+              this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Proforma del Chofer ${this.facturaChofer.entidad.razonSocial}`, result.exito );
               Swal.fire({
                     icon: "success",
                     //title: "Oops...",
@@ -666,8 +666,8 @@ mostrarDuplicadasEnLiquidacion(){
                   //this.mostrarMasDatos(this.indiceSeleccionado);
                   //this.procesarDatosParaTabla()
           } else {
-            this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`,result.exito);
-            this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Proforma del Chofer ${this.facturaChofer.entidad.apellido} ${this.facturaChofer.entidad.nombre}`, result.exito );
+            this.storageService.logMultiplesOp(this.facturaChofer.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Chofer ${this.facturaChofer.entidad.razonSocial} `,result.exito);
+            this.storageService.logSimple(this.facturaChofer.idInfLiq,"ALTA", "facturaChofer", `Alta de Proforma del Chofer ${this.facturaChofer.entidad.razonSocial}`, result.exito );
             this.mensajesError(`Ocurrió un error al procesar la proforma: ${result.mensaje}`, "error");
             //this.mostrarMasDatos(this.indiceSeleccionado);
             //this.procesarDatosParaTabla()
@@ -768,7 +768,7 @@ buscarTarifa(i:number ) {
           //backdrop:"static" 
         });
         
-      let origen: string = "choferes"  
+      let origen: string = "chofer"  
   
        let info = {
           factura: this.facDetallada,
@@ -974,7 +974,7 @@ buscarTarifa(i:number ) {
       editarObjeto(){
         console.log("1)this.facturasOpEditadas", this.$facturasOpChofer);
         //this.objetoEditado= this.agregarCampo(this.$facturasOpChofer)
-        this.objetoEditado= this.$facturasOpChofer
+        this.objetoEditado= this.$facturasOpChofer.filter( (f:any)=> f.idChofer === 1739288497091)
         console.log("2)this.objetoEditado", this.objetoEditado);
         
       }
@@ -991,6 +991,18 @@ buscarTarifa(i:number ) {
       actualizarObjeto(){
         this.isLoading = true
         this.dbFirebase.eliminarMultiple(this.objetoEditado, "facturaOpChofer").then((result)=>{
+          this.isLoading = false
+          if(result.exito){
+            alert("actualizado correctamente")
+          } else {
+            alert(`error actualizando. errr: ${result.mensaje}`)
+          }
+        })
+      }
+
+      guardarObjeto(){
+        this.isLoading = true
+        this.dbFirebase.guardarMultiple(this.objetoEditado, "informesOpChoferes", "idOperacion", "operaciones").then((result)=>{
           this.isLoading = false
           if(result.exito){
             alert("actualizado correctamente")

@@ -255,6 +255,14 @@ export class StorageService {
   private _proforma$ = new BehaviorSubject<any>(this.loadInfo('proforma') || []);
   public proforma$ = this._proforma$.asObservable();
 
+  private _informesOpClientes$ = new BehaviorSubject<any>(this.loadInfo('informesOpClientes') || []);
+  public informesOpClientes$ = this._informesOpClientes$.asObservable();
+
+  private _informesOpChoferes$ = new BehaviorSubject<any>(this.loadInfo('informesOpChoferes') || []);
+  public informesOpChoferes$ = this._informesOpChoferes$.asObservable();
+
+  private _informesOpProveedores$ = new BehaviorSubject<any>(this.loadInfo('informesOpProveedores') || []);
+  public informesOpProveedores$ = this._informesOpProveedores$.asObservable();
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
@@ -622,6 +630,18 @@ export class StorageService {
         break
       }
 
+      case "informesOpClientes":{
+        this._informesOpClientes$.next(data);
+        break
+      }
+      case "informesOpChoferes":{
+        this._informesOpChoferes$.next(data);
+        break
+      }
+      case "informesOpProveedores":{
+        this._informesOpProveedores$.next(data);
+        break
+      }
       default: {
         //statements; 
         break;
@@ -892,6 +912,12 @@ export class StorageService {
         return this._legajos$.asObservable();
       case "proforma":
         return this._proforma$.asObservable();
+      case "informesOpClientes":
+        return this._informesOpClientes$.asObservable();
+      case "informesOpChoferes":
+        return this._informesOpChoferes$.asObservable();
+      case "informesOpProveedores":
+        return this._informesOpProveedores$.asObservable();
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }
@@ -1101,7 +1127,7 @@ export class StorageService {
         if (!user[0].roles.god) { 
           let logEntry: LogEntry = this.logService.createLogEntry(accion, coleccion, detalle, idObjeto, resultado,0);
           arryLog.push(logEntry)
-        //console.log("Storage Service: arraLog: ", arryLog);        
+        console.log("Storage Service: arraLog: ", arryLog);        
         this.guardadoMultiple(arryLog, "logs", "timestamp", "logs")
       }
     }

@@ -50,9 +50,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     private formNumServ: FormatoNumericoService,
     private buscarTarifaServ: BuscarTarifaService
   ) {}
-  ngOnDestroy(): void {
-    throw new Error('Method not implemented.');
-  }
+  ngOnDestroy(): void {}
 
   ngOnInit(): void {
     const storedClientes = localStorage.getItem('clientes');
@@ -212,12 +210,12 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
 
     for (const grupo of this.operacionesAgrupadas) {
       for (const op of grupo.operaciones) {
-        console.log("op: ", op);        
+        //console.log("op: ", op);        
         this.valoresIniciales(op)
       }
     }
 
-    //console.log('✅ Validación OK. Guardando operaciones...');
+    ////console.log('✅ Validación OK. Guardando operaciones...');
     // Si no hay errores, se puede proceder
     Swal.fire({
         title: `¿Desea dar de alta las operaciones con fecha ${this.fecha}?`,
@@ -230,7 +228,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          console.log("this.operaciones: ", this.operaciones);
+          //console.log("this.operaciones: ", this.operaciones);
           
           // Aplicar formato especial a tarifa eventual si corresponde
           this.operaciones.forEach(op => {
@@ -244,7 +242,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
             delete (op as any).originalEventual;
           });
 
-          console.log(this.operaciones);
+          //console.log(this.operaciones);
           this.activeModal.close(this.operaciones);
         }else{
           // Si el usuario cancela, realiza la acción correspondiente
@@ -481,10 +479,10 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
       let tEspClientes = this.storageService.loadInfo("tarifasEspCliente");
       this.tarifaEspCliente = tEspClientes.find((t:TarifaGralCliente)=>{return t.idCliente === cliente.idCliente} );
       tarifa = this.tarifaEspCliente;
-      //console.log("1A) tarifa esp cobrar: ", tarifa);    
+      ////console.log("1A) tarifa esp cobrar: ", tarifa);    
     } else {
       tarifa = this.tarifaGralCliente;
-      //console.log("1B) tarifa gral cobrar: ", tarifa);    
+      ////console.log("1B) tarifa gral cobrar: ", tarifa);    
     }
     return this.buscarTarifaServ.$getACobrar(tarifa, chofer, patente);  
   }
@@ -498,30 +496,30 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
         this.tarifaEspChofer = tEspChoferes.find((t:TarifaGralCliente)=>{return t.idChofer === chofer.idChofer} );
         if(this.tarifaEspChofer.idCliente === 0 || this.tarifaEspChofer.idCliente === op.cliente.idCliente){
           tarifa = this.tarifaEspChofer; 
-          //console.log("2A) tarifa esp chofer a pagar: ", tarifa);        
+          ////console.log("2A) tarifa esp chofer a pagar: ", tarifa);        
         } else {
           tarifa = this.tarifaGralChofer;
-          //console.log("2B) tarifa gral chofer a pagar: ", tarifa);  
+          ////console.log("2B) tarifa gral chofer a pagar: ", tarifa);  
         }      
       } else {
         let tEspProveedores = this.storageService.loadInfo("tarifasEspProveedor");
         this.tarifaEspProveedor = tEspProveedores.find((t:TarifaGralCliente)=>{return t.idProveedor === chofer.idProveedor} );
         if(this.tarifaEspProveedor.idCliente === 0 || this.tarifaEspProveedor.idCliente === op.cliente.idCliente){
           tarifa = this.tarifaEspProveedor;
-          //console.log("2B) tarifa esp proveedor a pagar: ", tarifa);       
+          ////console.log("2B) tarifa esp proveedor a pagar: ", tarifa);       
         } else {
           tarifa = this.tarifaGralProveedor;
-          //console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
+          ////console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
         }      
       }
 
     }else{
       if(chofer.idProveedor === 0){
         tarifa = this.tarifaGralChofer;
-        //console.log("2B) tarifa gral chofer a pagar: ", tarifa);   
+        ////console.log("2B) tarifa gral chofer a pagar: ", tarifa);   
       } else {
         tarifa = this.tarifaGralProveedor;
-        //console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
+        ////console.log("2B) tarifa gral proveedor a pagar: ", tarifa);   
       }    
     }
     return this.buscarTarifaServ.$getAPagar(tarifa, chofer, patente);  

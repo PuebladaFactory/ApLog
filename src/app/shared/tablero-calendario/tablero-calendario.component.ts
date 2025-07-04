@@ -52,16 +52,16 @@ export class TableroCalendarioComponent implements OnInit {
     // Al iniciar, calcular la semana actual como rango por defecto
 
     let rango = this.storageService.loadInfo("respuestaOp");
-    console.log("modo: ", this.modo);
-    console.log("rango en calendario: ", rango);
+    //console.log("modo: ", this.modo);
+    //console.log("rango en calendario: ", rango);
     switch(this.modo){
       case "operaciones":{
         if(rango[0] === undefined){
-          console.log("aca tablero calendario?");          
+          //console.log("aca tablero calendario?");          
           this.calcularSemanaActual();
         } else {
           let fechasConsultadas = rango[0].fechas
-          console.log("calendario: fechasConsultadas:", fechasConsultadas);
+          //console.log("calendario: fechasConsultadas:", fechasConsultadas);
           this.fechasConsulta = fechasConsultadas;
           this.formatoSeleccionado = rango[0].rango;
           this.fechaDesdeString = this.fechasConsulta.fechaDesde;
@@ -105,23 +105,23 @@ export class TableroCalendarioComponent implements OnInit {
 
   calcularSemanaActual() {
     const now = new Date();
-    //console.log("now: ", now);    
+    ////console.log("now: ", now);    
     const dayOfWeek = now.getDay();
-    //console.log("dayOfWeek: ", dayOfWeek);    
+    ////console.log("dayOfWeek: ", dayOfWeek);    
     const monday = new Date(now);
-    //console.log("monday 1", monday);    
+    ////console.log("monday 1", monday);    
     monday.setDate(now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)); // Lunes de la semana actual
-    //console.log("monday 2", monday);    
+    ////console.log("monday 2", monday);    
     const sunday = new Date(monday);
-    //console.log("sunday 1",sunday);        
+    ////console.log("sunday 1",sunday);        
     sunday.setDate(monday.getDate() + 6); // Domingo de la semana actual
-    //console.log("sunday 2",sunday);
+    ////console.log("sunday 2",sunday);
   
     // Construye la fecha manualmente en formato YYYY-MM-DD sin usar toISOString()
     this.fechasConsulta.fechaDesde = `${monday.getFullYear()}-${(monday.getMonth() + 1).toString().padStart(2, '0')}-${monday.getDate().toString().padStart(2, '0')}`;
     this.fechasConsulta.fechaHasta = `${sunday.getFullYear()}-${(sunday.getMonth() + 1).toString().padStart(2, '0')}-${sunday.getDate().toString().padStart(2, '0')}`;
   
-    //console.log("fecha consulta: ", this.fechasConsulta);
+    ////console.log("fecha consulta: ", this.fechasConsulta);
     
     this.formatoSeleccionado = 'Semana';
     this.actualizarFechasString();
@@ -186,7 +186,7 @@ export class TableroCalendarioComponent implements OnInit {
     const factor = adelante ? 1 : -1;
     const desde = new Date(this.fechasConsulta.fechaDesde);
     const hasta = new Date(this.fechasConsulta.fechaHasta);
-    ////console.log("1) desde: ", this.fechasConsulta.fechaDesde, " y hasta: ", this.fechasConsulta.fechaHasta);
+    //////console.log("1) desde: ", this.fechasConsulta.fechaDesde, " y hasta: ", this.fechasConsulta.fechaHasta);
     
 
     switch (this.formatoSeleccionado) {
@@ -203,14 +203,14 @@ export class TableroCalendarioComponent implements OnInit {
       case 'Quincena':
         //this.fechasConsulta.fechaDesde = this.getPrimerDia(factor);
         this.calcularQuincena(adelante);
-        ////console.log("2) Quincena desde: ", this.fechasConsulta.fechaDesde, " y hasta: ", this.fechasConsulta.fechaHasta);
+        //////console.log("2) Quincena desde: ", this.fechasConsulta.fechaDesde, " y hasta: ", this.fechasConsulta.fechaHasta);
         diff = 15;
         break;
       case 'Mes':
         this.fechasConsulta.fechaDesde = this.getPrimerDia(factor);
-        ////console.log("fechaDesde", this.fechasConsulta.fechaDesde);
+        //////console.log("fechaDesde", this.fechasConsulta.fechaDesde);
         this.fechasConsulta.fechaHasta =this.getUltimoDiaMes()
-        ////console.log("fechaHasta", this.fechasConsulta.fechaHasta);
+        //////console.log("fechaHasta", this.fechasConsulta.fechaHasta);
         break;
       case 'Trimestre':
         this.calcularTrimestre(adelante)
@@ -262,7 +262,7 @@ export class TableroCalendarioComponent implements OnInit {
   getUltimoDiaMes(){
     // Supongamos que tienes la fecha como string
     let fecha: string = this.fechasConsulta.fechaDesde;
-    //////console.log(fecha);
+    ////////console.log(fecha);
 
     // Dividimos la fecha en partes: año, mes y día
     let partesFecha = fecha.split('-');
@@ -286,13 +286,13 @@ export class TableroCalendarioComponent implements OnInit {
     // Volvemos a unir las partes para reconstruir la fecha con el día modificado
     fecha = partesFecha.join('-');
 
-    ////console.log(fecha); // Imprime la nueva fecha con el último día del mes, por ejemplo "2024-10-31"
+    //////console.log(fecha); // Imprime la nueva fecha con el último día del mes, por ejemplo "2024-10-31"
     return fecha
   }
 
   calcularQuincena(adelante: boolean) {
-    ////console.log(adelante);
-    ////console.log();
+    //////console.log(adelante);
+    //////console.log();
      // Convertimos la fecha actual almacenada en fechasConsulta a Date sin desajuste de zona horaria
   const partesFecha = this.fechasConsulta.fechaDesde.split('-');
   const anio = parseInt(partesFecha[0], 10);
@@ -301,7 +301,7 @@ export class TableroCalendarioComponent implements OnInit {
 
   // Creamos la fecha manualmente sin que JavaScript aplique el desfase horario
   let fechaActual = new Date(anio, mes, dia);
-  //console.log("1) Fecha actual sin desfase: ", fechaActual);
+  ////console.log("1) Fecha actual sin desfase: ", fechaActual);
 
   // Obtener mes y día
   let nuevoAnio = fechaActual.getFullYear();
@@ -419,7 +419,7 @@ export class TableroCalendarioComponent implements OnInit {
   }
 
   actualizarFechasString() {
-    //console.log("consulta: ", this.fechasConsulta);        
+    ////console.log("consulta: ", this.fechasConsulta);        
     this.fechaDesdeString = this.fechasConsulta.fechaDesde;
     this.fechaHastaString = this.fechasConsulta.fechaHasta;
     
@@ -431,7 +431,7 @@ export class TableroCalendarioComponent implements OnInit {
         }
         this.storageService.setInfo("respuestaOp",[this.respuesta]);                  
         this.consultaOp.emit(true);
-        console.log("termina el ciclo calendario??", this.consultaOp);
+        //console.log("termina el ciclo calendario??", this.consultaOp);
         break;
       }
       case "liquidaciones":{
@@ -452,13 +452,13 @@ export class TableroCalendarioComponent implements OnInit {
 
   onDateSelection(date: NgbDate) {
 		if (!this.fromDate && !this.toDate) {
-      ////console.log("1");      
+      //////console.log("1");      
 			this.fromDate = date;
 		} else if (this.fromDate && !this.toDate && date.after(this.fromDate)) {
-      ////console.log("2");
+      //////console.log("2");
 			this.toDate = date;
 		} else {
-      ////console.log("3");
+      //////console.log("3");
 			this.toDate = null;
 			this.fromDate = date;
 		}
@@ -468,7 +468,7 @@ export class TableroCalendarioComponent implements OnInit {
     }
    
     
-    ////console.log("desde: ", this.fechaDesdeManual, " hasta: ", this.fechaHastaManual);
+    //////console.log("desde: ", this.fechaDesdeManual, " hasta: ", this.fechaHastaManual);
     
 	}
 

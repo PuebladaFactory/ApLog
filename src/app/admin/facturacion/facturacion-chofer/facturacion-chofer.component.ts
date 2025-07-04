@@ -53,7 +53,7 @@ export class FacturacionChoferComponent implements OnInit {
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         this.$facturasChofer = data;
-        this.$facturasChofer = this.$facturasChofer.sort((a, b) => a.entidad.apellido.localeCompare(b.entidad.apellido)); // Ordena por el nombre del chofer
+        this.$facturasChofer = this.$facturasChofer.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
         this.procesarDatosParaTabla();
         this.mostrarTablaChofer = new Array(this.datosTablaChofer.length).fill(false); // Mueve esta línea aquí
       });
@@ -86,7 +86,7 @@ export class FacturacionChoferComponent implements OnInit {
           if (!choferesMap.has(factura.entidad.id)) {
             choferesMap.set(factura.entidad.id, {
               idChofer: factura.entidad.id,            
-              chofer: factura.entidad.apellido + " " + factura.entidad.nombre,            
+              chofer: factura.entidad.razonSocial,            
               sumaAPagar: 0,
               sumaACobrar: 0,
               faltaPagar: 0,

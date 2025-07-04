@@ -16,7 +16,7 @@ const appRoutes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   
   {path: 'admin', loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule)},
-  //{path: 'main', loadChildren: () => import('./main/main.module').then(m => m.MainModule)},
+  {path: 'raiz', loadChildren: () => import('./raiz/raiz.module').then(m => m.RaizModule)},
   { path: 'carga', component: CargaComponent }, 
   { path: 'login', component: LoginComponent }, // la ruta al login
   { path: 'forgot-password', component: ForgotPasswordComponent },

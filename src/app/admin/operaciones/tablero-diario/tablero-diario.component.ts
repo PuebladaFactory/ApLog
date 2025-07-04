@@ -84,7 +84,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     // 1. Obtener tarifa general del localStorage
     const storedTarifa = this.storageService.loadInfo("tarifasGralCliente")
     this.tarifaGeneral = storedTarifa[0];
-    //console.log("tarifaGeneral", this.tarifaGeneral );
+    ////console.log("tarifaGeneral", this.tarifaGeneral );
 
 
     // 2. Obtener choferes
@@ -188,14 +188,14 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       observaciones:"",
       hojaDeRuta:""
     };
-    //console.log("1)chofer: ", chofer);
+    ////console.log("1)chofer: ", chofer);
 
     /* if (!this.asignaciones[clienteId].some(c => c.idChofer === chofer.idChofer)) {
       // Guardamos la categoría con la que fue asignado
       this.asignaciones[clienteId].push(chofer);
     } */
     this.asignaciones[clienteId].push(chofer);
-    console.log("this.asignaciones;", this.asignaciones);
+    //console.log("this.asignaciones;", this.asignaciones);
     
   }
 
@@ -222,7 +222,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       observaciones:"",
       hojaDeRuta:""
     };
-    console.log("1)chofer: ", chofer);
+    //console.log("1)chofer: ", chofer);
     
     if (event.previousContainer !== event.container) {
       const clienteId = +event.previousContainer.id.replace('cliente-drop-', '');
@@ -280,9 +280,9 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   }
 
   altaOp() {
-    //console.log("this.asignaciones", this.asignaciones);
+    ////console.log("this.asignaciones", this.asignaciones);
     const hayAsignaciones = Object.entries(this.asignaciones).filter(([_, choferes]) => choferes.length > 0)
-    console.log("hayAsignaciones: ", hayAsignaciones);
+    //console.log("hayAsignaciones: ", hayAsignaciones);
     if(hayAsignaciones.length === 0){
       this.mensajesError("Debe asignar algun chofer para crear operaciones")
       return
@@ -301,10 +301,10 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
         })
       }))
 
-      console.log('Asignaciones a guardar:', resultadoFinal);
+      //console.log('Asignaciones a guardar:', resultadoFinal);
       // Aquí podés guardar en Firebase
       // Acá podrías guardar en Firebase o backend si querés
-      // console.log('Asignaciones guardadas:', this.asignaciones);
+      // //console.log('Asignaciones guardadas:', this.asignaciones);
 
       
       this.openModal(resultadoFinal);
@@ -424,10 +424,10 @@ openModal(opMultiples: any[]): void {
   
 
 /*   descargarOp() {
-    //console.log("this.fechaSeleccionada", this.fechaSeleccionada);
-    //console.log("this.asignaciones", this.asignaciones);
+    ////console.log("this.fechaSeleccionada", this.fechaSeleccionada);
+    ////console.log("this.asignaciones", this.asignaciones);
     const hayAsignaciones = Object.entries(this.asignaciones).filter(([_, choferes]) => choferes.length > 0)
-    console.log("hayAsignaciones: ", hayAsignaciones);
+    //console.log("hayAsignaciones: ", hayAsignaciones);
     if(!this.fechaSeleccionada){      
       return this.mensajesError("Debe seleccionar una fecha")
     }
@@ -560,11 +560,11 @@ async cargarTableroDiario(): Promise<void> {
       this.isLoading = false;
       return;
     }
-    console.log("tablero online: ", tablero);
+    //console.log("tablero online: ", tablero);
     
     const tableroLocalStr = localStorage.getItem('tableroDiarioFirestore');
     const tableroLocal = tableroLocalStr ? JSON.parse(tableroLocalStr) as TableroDiario : null;
-    console.log("tablero online local: ", tableroLocal);
+    //console.log("tablero online local: ", tableroLocal);
     // ⚠️ Comparamos por timestamp
     if (tableroLocal && tableroLocal.timestamp === tablero.timestamp) {
       this.isLoading = false;

@@ -39,9 +39,9 @@ export class LiqGralComponent implements OnInit {
   titulo: string = "liquidacion"
   btnConsulta:boolean = false;
   tabs = [
-    { id: 'tab1', name: 'Clientes', route: 'liquidacion/clientes'},    
-    { id: 'tab2', name: 'Choferes', route: 'liquidacion/choferes' },    
-    { id: 'tab3', name: 'Proveedores', route: 'liquidacion/proveedores' },    
+    { id: 'tab1', name: 'Clientes', route: 'liquidacion/cliente'},    
+    { id: 'tab2', name: 'Choferes', route: 'liquidacion/chofer' },    
+    { id: 'tab3', name: 'Proveedores', route: 'liquidacion/proveedor' },    
     { id: 'tab4', name: 'Proformas', route: 'liquidacion/proformas' },    
   ];
   ocultarCalendario: boolean = false;
@@ -50,12 +50,7 @@ export class LiqGralComponent implements OnInit {
   }
   
   ngOnInit(): void { 
-  /*   this.storageService.getByDateValue(this.tituloFacOpCliente, "fecha", this.primerDia, this.ultimoDia, "consultasFacOpCliente");
-    this.storageService.consultasFacOpCliente$.subscribe(data => {
-      this.$facturasOpCliente = data;
-      //this.procesarDatosParaTabla()
-    });  */   
-       
+
     this.selectTab("tab1");
     //this.consultaMes();
    
@@ -76,7 +71,7 @@ export class LiqGralComponent implements OnInit {
       fechaDesde: msg.fechaDesde,
       fechaHasta: msg.fechaHasta,
     };
-    ////console.log()(msg);        
+    //////console.log()(msg);        
     //alert("llega el msj")
     //this.consultaOperaciones(msg.fechaDesde, msg.fechaHasta);
     //this.msgBack(msg);

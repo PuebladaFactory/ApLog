@@ -20,10 +20,10 @@
             @if (fromParent.tipo === 'proveedores') {
               <th class="text-center">Chofer</th>
             }
-            <th class="text-center">{{fromParent.tipo === 'clientes' ? 'Chofer' : 'Cliente'}}</th>
-            <th class="text-center">{{fromParent.tipo === 'clientes' ? 'A Pagar' : 'A Cobrar'}}</th>
+            <th class="text-center">{{fromParent.tipo === 'cliente' ? 'Chofer' : 'Cliente'}}</th>
+            <th class="text-center">{{fromParent.tipo === 'cliente' ? 'A Pagar' : 'A Cobrar'}}</th>
             <th class="text-center">Porcentaje</th>
-            <th class="text-end">{{fromParent.tipo === 'clientes' ? 'A Cobrar' : 'A Pagar'}}</th>
+            <th class="text-end">{{fromParent.tipo === 'cliente' ? 'A Cobrar' : 'A Pagar'}}</th>
             @if (fromParent.modo === 'proforma') {
               <th class="text-end"></th>
             }
@@ -37,10 +37,10 @@
               @if (fromParent.tipo === 'proveedores') {
                 <td class="text-center">{{getChofer(fac.idChofer)}}</td>
               }
-              <td>{{fromParent.tipo === 'clientes' ? getChofer(fac.idChofer) : getCliente(fac.idCliente)}}</td>
+              <td>{{fromParent.tipo === 'cliente' ? getChofer(fac.idChofer) : getCliente(fac.idCliente)}}</td>
               <td class="text-end">{{fac.contraParteMonto | formatearValor : "$"}}</td>
               <!-- <td class="text-end">{{fromParent.tipo === 'clientes' ? ((fac.valores.total - fac.contraParteMonto)*100/fac.valores.total | formatearValor) : (fac.contraParteMonto - fac.valores.total)*100/fac.contraParteMonto | formatearValor }} %</td> -->
-              <td class="text-end">{{fromParent.tipo === 'clientes' ? (fac.contraParteMonto | calcularPorcentaje:fac.valores.total:true) : (fac.valores.total | calcularPorcentaje:fac.contraParteMonto:true) }}</td>
+              <td class="text-end">{{fromParent.tipo === 'cliente' ? (fac.contraParteMonto | calcularPorcentaje:fac.valores.total:true) : (fac.valores.total | calcularPorcentaje:fac.contraParteMonto:true) }}</td>
               <td class="text-end">{{fac.valores.total | formatearValor : "$"}}</td>
               @if (fromParent.modo === 'proforma') {
                 <td class="text-end"><app-btn-editar name="Editar" (click)="editarFacOp(fac)"></app-btn-editar> </td>
@@ -60,10 +60,10 @@
             <tr><th>Descuentos</th></tr>
             @for (desc of factura.descuentos; track desc) {
               <tr>
-                @if (fromParent.tipo === 'proveedores') {
+                @if (fromParent.tipo === 'proveedor') {
                   <td colspan="6"><span class="ms-3">{{desc.concepto}}</span></td>
                 }
-                @if (fromParent.tipo !== 'proveedores') {
+                @if (fromParent.tipo !== 'proveedor') {
                   <td colspan="5"><span class="ms-3">{{desc.concepto}}</span></td>
                 }
                 <td class="text-end"> - {{desc.valor | formatearValor : "$"}}</td>
@@ -76,10 +76,10 @@
 
         <tfoot class="table-group-divider">
           <tr>
-            @if (fromParent.tipo === 'proveedores') {
+            @if (fromParent.tipo === 'proveedor') {
               <th colspan="6"><span class="ms-3">Total</span></th>
             }
-            @if (fromParent.tipo !== 'proveedores') {
+            @if (fromParent.tipo !== 'proveedor') {
               <th colspan="5"><span class="ms-3">Total</span></th>
             }
             <th class="text-center">{{factura.valores.total | formatearValor : "$"}}</th>

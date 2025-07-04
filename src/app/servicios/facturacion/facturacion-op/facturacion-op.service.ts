@@ -82,15 +82,15 @@ export class FacturacionOpService {
 
       if (op.tarifaTipo.general) {//tarifa general
         ////////////// TARIFA GENERAL CLIENTE ///////////////////////
-        console.log("1)A.1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);     
+        ////console.log("1)A.1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);     
         respuesta = this.facturacionCliente.$facturarOpCliente(op, this.$ultTarifaGralCliente);        
-        //////console.log("1)A.2)Factura OP cliente ", this.facturaOpCliente);      
+        //////////console.log("1)A.2)Factura OP cliente ", this.facturaOpCliente);      
       } else if (op.tarifaTipo.especial){  //tarifa especial cliente                
           if(op.cliente.tarifaTipo.especial) {
             ////////////// TARIFA ESPECIAL CLIENTE ///////////////////////
             const tarifas = this.storageService.loadInfo("tarifasEspCliente");
             this.$ultTarifaEspCliente = tarifas.find(t => t.idCliente === op.cliente.idCliente);
-            console.log("1)A.2) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);     
+            ////console.log("1)A.2) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);     
             if (!this.$ultTarifaEspCliente || !this.$ultTarifaEspCliente.cargasGenerales?.length) {
               throw new Error("Tarifa especial del cliente no válida o vacía");
             }
@@ -103,7 +103,7 @@ export class FacturacionOpService {
         ////////////// TARIFA PERSONALIZADA CLIENTE ///////////////////////
         const tarifas = this.storageService.loadInfo("tarifasPersCliente");
         this.$ultTarifaPersCliente = tarifas.find(t => t.idCliente === op.cliente.idCliente);
-        console.log("1)A.3) tarifa PERSONALIZADA CLIENTE: ", this.$ultTarifaPersCliente);     
+        ////console.log("1)A.3) tarifa PERSONALIZADA CLIENTE: ", this.$ultTarifaPersCliente);     
         if (!this.$ultTarifaPersCliente || !this.$ultTarifaPersCliente.secciones?.length) {
           throw new Error("Tarifa personalizada del cliente no válida o vacía");
         }
@@ -135,14 +135,14 @@ export class FacturacionOpService {
 
       if (op.tarifaTipo.general) { //tarifa general
         /////////TARIFA GENERAL CHOFER /////////////////////////
-        console.log("1)B.1) tarifa GENERAL CHOFER: ", this.$ultTarifaGralChofer);  
+        ////console.log("1)B.1) tarifa GENERAL CHOFER: ", this.$ultTarifaGralChofer);  
         respuesta = this.facturacionChofer.$facturarOpChofer(op, this.$ultTarifaGralChofer);
       } else if (op.tarifaTipo.especial){  //tarifa especial chofer
           if(op.chofer.tarifaTipo.especial) {
             /////////TARIFA ESPECIAL CHOFER /////////////////////////
             const tarifas = this.storageService.loadInfo("tarifasEspChofer");
             this.$ultTarifaEspChofer = tarifas.find(t => t.idChofer === op.chofer.idChofer);
-            console.log("1)B.2) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);  
+            ////console.log("1)B.2) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);  
             if (!this.$ultTarifaEspChofer || !this.$ultTarifaEspChofer.cargasGenerales?.length) {
               throw new Error("Tarifa especial del chofer no válida o vacía");
             }
@@ -163,7 +163,7 @@ export class FacturacionOpService {
         /////////TARIFA PERSONALIZADA CHOFER /////////////////////////
         const tarifas = this.storageService.loadInfo("tarifasPersCliente");
         this.$ultTarifaPersCliente = tarifas.find(t => t.idCliente === op.cliente.idCliente);
-        console.log("1)B.3) tarifa PERSONALIZADA CHOFER: ", this.$ultTarifaPersCliente);  
+        ////console.log("1)B.3) tarifa PERSONALIZADA CHOFER: ", this.$ultTarifaPersCliente);  
         if (!this.$ultTarifaPersCliente || !this.$ultTarifaPersCliente.secciones?.length) {
           throw new Error("Tarifa personalizada del cliente para chofer no válida o vacía");
         }
@@ -191,14 +191,14 @@ async $facturarOpProveedor(op: ConId<Operacion>) {
       if (!this.proveedorSeleccionado) throw new Error("Proveedor no definido");
 
       if (op.tarifaTipo.general) {
-        console.log("3)C.1) tarifa GENERAL Proveedor: ", this.$ultTarifaGralProveedor);
+        ////console.log("3)C.1) tarifa GENERAL Proveedor: ", this.$ultTarifaGralProveedor);
         respuesta = this.facturacionChofer.$facturarOpProveedor(op, this.$ultTarifaGralProveedor, this.proveedorSeleccionado.idProveedor);
       } else if (op.tarifaTipo.especial){  //tarifa especial proveedor
           if(this.proveedorSeleccionado.tarifaTipo.especial) {
             ///////////// TARIFA ESPECIAL PROVEEDOR ///////////////////
             const tarifas = this.storageService.loadInfo("tarifasEspProveedor");
             this.$ultTarifaEspProveedor = tarifas.find(t => t.idChofer === op.chofer.idChofer);
-            console.log("3)C.2) tarifa ESPECIAL Proveedor: ", this.$ultTarifaGralProveedor);
+            ////console.log("3)C.2) tarifa ESPECIAL Proveedor: ", this.$ultTarifaGralProveedor);
             if (!this.$ultTarifaEspProveedor || !this.$ultTarifaEspProveedor.cargasGenerales?.length) {
               throw new Error("Tarifa especial del proveedor no válida o vacía");
             }
@@ -219,7 +219,7 @@ async $facturarOpProveedor(op: ConId<Operacion>) {
         /////////TARIFA PERSONALIZADA PROVEEDOR /////////////////////////
         const tarifas = this.storageService.loadInfo("tarifasPersCliente");
         this.$ultTarifaPersCliente = tarifas.find(t => t.idCliente === op.cliente.idCliente);
-        console.log("3)C.3) tarifa PERSONALIZADA Proveedor: ", this.$ultTarifaPersCliente);
+        ////console.log("3)C.3) tarifa PERSONALIZADA Proveedor: ", this.$ultTarifaPersCliente);
         if (!this.$ultTarifaPersCliente || !this.$ultTarifaPersCliente.secciones?.length) {
           throw new Error("Tarifa personalizada del cliente no válida para proveedor");
         }
@@ -299,9 +299,9 @@ async $guardarFacturas(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje:
     try {
       let result;
       if (op.chofer.idProveedor === 0) {
-        result = await this.dbFirebase.guardarFacturasOp("facturaOpCliente", this.facturaOpCliente, "facturaOpChofer", this.facturaOpChofer, op);
+        result = await this.dbFirebase.guardarFacturasOp("informesOpClientes", this.facturaOpCliente, "informesOpChoferes", this.facturaOpChofer, op);
       } else {
-        result = await this.dbFirebase.guardarFacturasOp("facturaOpCliente", this.facturaOpCliente, "facturaOpProveedor", this.facturaOpProveedor, op);
+        result = await this.dbFirebase.guardarFacturasOp("informesOpClientes", this.facturaOpCliente, "informesOpProveedores", this.facturaOpProveedor, op);
       }
       if (op.tarifaTipo.eventual) {
         this.guardarTarifasEventuales(op);

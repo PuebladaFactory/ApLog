@@ -593,7 +593,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   procesarFacturacion(titulo:string, accion:string) {
   this.isLoading = true;
   
-  this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasCliente, "clientes", "facOpLiqCliente", "facturaOpCliente", this.facturaCliente, "facturaCliente")
+  this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasCliente, "cliente", "facOpLiqCliente", "facturaOpCliente", this.facturaCliente, "facturaCliente")
     .then((result) => {
       this.isLoading = false;
       ////console.log("resultado: ", result);
@@ -727,7 +727,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
         //backdrop:"static" 
       });
       
-    let origen = "clientes";
+    let origen = "cliente";
 
      let info = {
         factura: this.facDetallada,
@@ -876,7 +876,7 @@ selectAllCheckboxes(event: any, idCliente: number): void {
   procesarProforma(titulo:string, accion:string){
     this.isLoading = true;
    
-      this.dbFirebase.procesarProforma(this.facturasLiquidadasCliente, "clientes", this.titulo, "",this.facturaCliente,"proforma")
+      this.dbFirebase.procesarProforma(this.facturasLiquidadasCliente, "cliente", this.titulo, this.facturaCliente,"proforma")
       .then((result) => {
         this.isLoading = false;
         ////console.log("resultado: ", result);
@@ -990,9 +990,10 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       filtrarObjeto(){
         console.log("1)this.facturasOpEditadas", this.$facturasOpCliente);
         //this.objetoEditado= this.agregarCampo(this.$facturasOpCliente)
-        this.objetoEditado= this.$facturasOpCliente.filter((fac:InformeOp)=> {return fac.contraParteProforma})
+        //this.objetoEditado= this.$facturasOpCliente.filter((fac:InformeOp)=> {return fac.contraParteProforma})
+        //console.log("2)this.objetoEditado", this.objetoEditado);
+        this.objetoEditado= this.$facturasOpCliente.filter( (f:any)=> f.idChofer === 1739288497091)
         console.log("2)this.objetoEditado", this.objetoEditado);
-        
       }
 
       editarObjeto(){
@@ -1043,6 +1044,18 @@ selectAllCheckboxes(event: any, idCliente: number): void {
       actualizarObjeto(){
         this.isLoading = true
         this.dbFirebase.actualizarMultiple(this.facturaOpsNoAsignadas, "facturaOpCliente").then((result)=>{
+          this.isLoading = false
+          if(result.exito){
+            alert("actualizado correctamente")
+          } else {
+            alert(`error actualizando. errr: ${result.mensaje}`)
+          }
+        })
+      }
+      
+      guardarObjeto(){
+        this.isLoading = true
+        this.dbFirebase.guardarMultiple(this.objetoEditado, "informesOpClientes", "idOperacion", "operaciones").then((result)=>{
           this.isLoading = false
           if(result.exito){
             alert("actualizado correctamente")

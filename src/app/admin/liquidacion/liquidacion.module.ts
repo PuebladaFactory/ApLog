@@ -17,6 +17,7 @@ import { FacturarOpComponent } from './modales/facturar-op/facturar-op.component
 import { EditarTarifaOpComponent } from './modales/editar-tarifa-op/editar-tarifa-op.component';
 import { ProformaComponent } from './proforma/proforma.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
+import { NuevaLiqComponent } from './nueva-liq/nueva-liq.component';
 
 
 
@@ -26,7 +27,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     LiqChoferComponent,
     LiqGralComponent,
     LiqClienteComponent,    
-    
+    NuevaLiqComponent,
     
     DescuentosComponent,
     FacturarOpComponent,

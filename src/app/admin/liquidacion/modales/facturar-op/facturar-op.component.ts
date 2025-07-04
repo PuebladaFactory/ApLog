@@ -73,7 +73,7 @@ export class FacturarOpComponent implements OnInit {
   constructor(private storageService: StorageService, private fb: FormBuilder, private excelServ: ExcelService, private pdfServ: PdfService, public activeModal: NgbActiveModal, private modalService: NgbModal){}
   
   ngOnInit(): void {
-    console.log("0) ", this.fromParent);
+    //console.log("0) ", this.fromParent);
     this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
@@ -95,25 +95,25 @@ export class FacturarOpComponent implements OnInit {
       this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
     this.facLiquidadas = this.fromParent.facturas;
-    //console.log("1): ", this.facLiquidadas);    
+    ////console.log("1): ", this.facLiquidadas);    
     this.total = this.fromParent.total;
-    //console.log("2): ", this.total);
+    ////console.log("2): ", this.total);
     this.facLiquidadas.forEach((f:InformeOp)=>{this.totalContraParte += f.contraParteMonto});
-    //console.log("3): ", this.totalContraParte);
+    ////console.log("3): ", this.totalContraParte);
     switch(this.fromParent.origen){
-      case 'clientes':{        
+      case 'cliente':{        
         this.getCliente();
         this.titulo = this.clienteSel.razonSocial;        
         this.actualizarColumnasSeleccionadas(); // Inicializar la lista de columnas seleccionadas
         break
       };
-      case 'choferes':{        
+      case 'chofer':{        
         this.getChofer();
         this.titulo = this.choferSel.apellido + " " + this.choferSel.nombre;
         this.actualizarColumnasSeleccionadas(); // Inicializar la lista de columnas seleccionadas
         break
       };
-      case 'proveedores':{        
+      case 'proveedor':{        
         this.getProveedor();
         this.titulo = this.proveedorSel.razonSocial;
         this.actualizarColumnasSeleccionadas(); // Inicializar la lista de columnas seleccionadas
@@ -196,7 +196,7 @@ export class FacturarOpComponent implements OnInit {
         minimumFractionDigits: 2, 
         maximumFractionDigits: 2 
     }).format(valor);
-   ////////console.log(nuevoValor);    
+   //////////console.log(nuevoValor);    
     //   `$${nuevoValor}`   
     return `$${nuevoValor}`
   }
@@ -207,12 +207,12 @@ export class FacturarOpComponent implements OnInit {
   }
   onSubmit(titulo:string, accion:string) {
     
-    //console.log("columnas seleccionadas", this.columnasSeleccionadas);
+    ////console.log("columnas seleccionadas", this.columnasSeleccionadas);
     let colSel: string [] = [];
     this.columnasSeleccionadas.forEach(c => colSel.push(c.nombre))
-    //console.log("colSel", colSel);
+    ////console.log("colSel", colSel);
     if(this.facLiquidadas.length > 0){
-      ////console.log()(this.facturasLiquidadasCliente);
+      //////console.log()(this.facturasLiquidadasCliente);
       
       Swal.fire({
         title: accion === 'factura' ? '¿Desea generar la liquidación de las operaciones seleccionadas?' : '¿Desea generar la proforma de las operaciones seleccionadas?',
@@ -225,12 +225,12 @@ export class FacturarOpComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {          
-          ////////console.log("op: ", this.op);
+          //////////console.log("op: ", this.op);
           this.facLiquidadas.forEach((factura: InformeOp) => {                
             this.idOperaciones.push(factura.idOperacion)
           });
      
-          ////console.log()("ID OPERACIONES: ", this.idOperaciones);
+          //////console.log()("ID OPERACIONES: ", this.idOperaciones);
           //this.facturaChofer.operaciones = idOperaciones;
           let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:this.total, descuentoTotal: this.totalDescuento, totalContraParte: this.totalContraParte,};
           this.facLiquidadas.forEach((f:InformeOp)=>{
@@ -244,16 +244,16 @@ export class FacturarOpComponent implements OnInit {
           this.modo = accion === 'factura' ? 'cerrar' : 'proforma';
 
           switch(this.fromParent.origen){
-            case "clientes":{
-              this.generarFacCliente(valores, colSel);
+            case "cliente":{
+              this.generarInformeLiquidacion(valores, colSel);
               break;
             }
-            case "choferes":{
-              this.generarFacChofer(valores,colSel);
+            case "chofer":{
+              this.generarInformeLiquidacion(valores,colSel);
               break;  
             }
-            case "proveedores":{
-              this.generarFacProveedor(valores,colSel);
+            case "proveedor":{
+              this.generarInformeLiquidacion(valores,colSel);
               break;  
             }
             default:{
@@ -269,7 +269,7 @@ export class FacturarOpComponent implements OnInit {
             //text: "Los cambios se han guardado.",
             icon: "success"
           }).then((result) => {
-            console.log("FACTURA: ", this.factura);
+            //console.log("FACTURA: ", this.factura);
             let respuesta = {
               factura: this.factura,
               titulo: titulo,
@@ -299,15 +299,15 @@ export class FacturarOpComponent implements OnInit {
 
   actualizarColumnasSeleccionadas(): void {
     switch(this.fromParent.origen){
-      case "clientes":{
+      case "cliente":{
         this.columnasVisibles = this.columnas.filter(col => col.nombre !== "Cliente");
         break;
       }
-      case "choferes":{
+      case "chofer":{
         this.columnasVisibles = this.columnas.filter(col => col.nombre !== "Chofer");
         break;  
       }
-      case "proveedores":{
+      case "proveedor":{
         this.columnasVisibles = this.columnas;
         break;  
       }
@@ -318,7 +318,7 @@ export class FacturarOpComponent implements OnInit {
     };
     
     this.columnasSeleccionadas = this.columnasVisibles.filter(col => col.seleccionada);
-    console.log("col sel:", this.columnasSeleccionadas);
+    //console.log("col sel:", this.columnasSeleccionadas);
     
   }
 
@@ -402,7 +402,7 @@ export class FacturarOpComponent implements OnInit {
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          console.log("descuentos: ", result);
+          //console.log("descuentos: ", result);
           if(result.total > 0){            
             this.descuentosAplicados = result.descuentos;
             this.tieneDescuentos = true;
@@ -423,7 +423,7 @@ export class FacturarOpComponent implements OnInit {
     return veh[0].categoria.nombre;
   }
 
-  generarFacCliente(valores:Valores, colSel: any[]){
+/*   generarFacCliente(valores:Valores, colSel: any[]){
     this.facturaCliente = {      
       fecha: new Date().toISOString().split('T')[0],
       idInfLiq: new Date().getTime(),
@@ -431,9 +431,7 @@ export class FacturarOpComponent implements OnInit {
       tipo: 'cliente',
       entidad:{
           id: this.clienteSel.idCliente,                       // ID del cliente/chofer/proveedor
-          razonSocial: this.clienteSel.razonSocial,                  // Nombre o razón social
-          apellido: "",             
-          nombre: "",
+          razonSocial: this.clienteSel.razonSocial,                  // Nombre o razón social          
           cuit: this.clienteSel.cuit                  // Opcional, dependiendo si es persona física o no
       },      
       operaciones: this.idOperaciones,
@@ -442,18 +440,18 @@ export class FacturarOpComponent implements OnInit {
       estado: 'emitido',
       columnas: colSel,
       descuentos: this.descuentosAplicados,
-      formaPago: undefined,               // Efectivo, transferencia, etc. (opcional)
-      fechaCobro: undefined,       // Fecha en que se registró el cobro
+      formaPago: "",               // Efectivo, transferencia, etc. (opcional)
+      fechaCobro: "",       // Fecha en que se registró el cobro
 
-      observaciones: undefined,           // Campo libre para anotar algo manualmente
+      observaciones: "",           // Campo libre para anotar algo manualmente
 
-      facturaVinculada: undefined,        // ID o número de la factura fiscal (a futuro)
+      facturaVinculada: "",        // ID o número de la factura fiscal (a futuro)
     }
 
     this.factura = this.facturaCliente;
-  }
+  } */
 
-  generarFacChofer(valores:Valores, colSel: any[]){
+/*   generarFacChofer(valores:Valores, colSel: any[]){
     this.facturaChofer = {
 
       fecha: new Date().toISOString().split('T')[0],
@@ -462,10 +460,8 @@ export class FacturarOpComponent implements OnInit {
       tipo: 'chofer',
       entidad:{
           id: this.choferSel.idChofer,                       // ID del cliente/chofer/proveedor
-          razonSocial: "",                  // Nombre o razón social
-          apellido: this.choferSel.apellido,
-          nombre: this.choferSel.nombre,
-          cuit: this.clienteSel.cuit                  // Opcional, dependiendo si es persona física o no
+          razonSocial: this.choferSel.apellido + " " + this.choferSel.nombre,                  // Nombre o razón social          
+          cuit: this.choferSel.cuit                  // Opcional, dependiendo si es persona física o no
       },      
       operaciones: this.idOperaciones,
       valores: valores,
@@ -473,19 +469,19 @@ export class FacturarOpComponent implements OnInit {
       estado: 'emitido',
       columnas: colSel,
       descuentos: this.descuentosAplicados,
-      formaPago: undefined,               // Efectivo, transferencia, etc. (opcional)
-      fechaCobro: undefined,       // Fecha en que se registró el cobro
+      formaPago: "",               // Efectivo, transferencia, etc. (opcional)
+      fechaCobro: "",       // Fecha en que se registró el cobro
 
-      observaciones: undefined,           // Campo libre para anotar algo manualmente
+      observaciones: "",           // Campo libre para anotar algo manualmente
 
-      facturaVinculada: undefined,        // ID o número de la factura fiscal (a futuro)      
+      facturaVinculada: "",        // ID o número de la factura fiscal (a futuro)      
     
     }
 
     this.factura = this.facturaChofer;
-  }
+  } */
 
-  generarFacProveedor(valores:Valores, colSel: any[]){
+/*   generarFacProveedor(valores:Valores, colSel: any[]){
     this.facturaProveedor = {
 
       fecha: new Date().toISOString().split('T')[0],
@@ -494,10 +490,8 @@ export class FacturarOpComponent implements OnInit {
       tipo: 'chofer',
       entidad:{
           id: this.proveedorSel.idProveedor,                       // ID del cliente/chofer/proveedor
-          razonSocial: this.proveedorSel.razonSocial,                  // Nombre o razón social
-          apellido: "",
-          nombre: "",
-          cuit: this.clienteSel.cuit                  // Opcional, dependiendo si es persona física o no
+          razonSocial: this.proveedorSel.razonSocial,                  // Nombre o razón social          
+          cuit: this.proveedorSel.cuit                  // Opcional, dependiendo si es persona física o no
       },      
       operaciones: this.idOperaciones,
       valores: valores,
@@ -505,16 +499,47 @@ export class FacturarOpComponent implements OnInit {
       estado: 'emitido',
       columnas: colSel,
       descuentos: this.descuentosAplicados,
-      formaPago: undefined,               // Efectivo, transferencia, etc. (opcional)
-      fechaCobro: undefined,       // Fecha en que se registró el cobro
+      formaPago: "",               // Efectivo, transferencia, etc. (opcional)
+      fechaCobro: "",       // Fecha en que se registró el cobro
 
-      observaciones: undefined,           // Campo libre para anotar algo manualmente
+      observaciones: "",           // Campo libre para anotar algo manualmente
 
-      facturaVinculada: undefined,        // ID o número de la factura fiscal (a futuro)      
+      facturaVinculada: "",        // ID o número de la factura fiscal (a futuro)      
 
     }
 
     this.factura = this.facturaProveedor;
+  } */
+
+  generarInformeLiquidacion(valores:Valores, colSel: any[]){
+    let idInforme = this.fromParent.origen === 'cliente' ? this.clienteSel.idCliente : this.fromParent.origen === 'chofer' ? this.choferSel.idChofer :  this.proveedorSel.idProveedor;
+    let razonSocial = this.fromParent.origen === 'cliente' ? this.clienteSel.razonSocial : this.fromParent.origen === 'chofer' ? this.choferSel.apellido + " " + this.choferSel.nombre : this.proveedorSel.razonSocial;
+    let cuit = this.fromParent.origen === 'cliente' ? this.clienteSel.cuit : this.fromParent.origen === 'chofer' ? this.choferSel.cuit :  this.proveedorSel.cuit;
+    this.factura = {
+
+      fecha: new Date().toISOString().split('T')[0],
+      idInfLiq: new Date().getTime(),
+      numeroInterno: "LQCL-0042",             // CONECTAR AL SERVICIO
+      tipo: this.fromParent.origen,
+      entidad:{
+          id: idInforme,                       // ID del cliente/chofer/proveedor
+          razonSocial: razonSocial,                  // Nombre o razón social          
+          cuit: cuit                  // Opcional, dependiendo si es persona física o no
+      },      
+      operaciones: this.idOperaciones,
+      valores: valores,
+      cobrado:false,
+      estado: 'emitido',
+      columnas: colSel,
+      descuentos: this.descuentosAplicados,
+      formaPago: "",               // Efectivo, transferencia, etc. (opcional)
+      fechaCobro: "",       // Fecha en que se registró el cobro
+
+      observaciones: "",           // Campo libre para anotar algo manualmente
+
+      facturaVinculada: "",        // ID o número de la factura fiscal (a futuro)      
+
+    }
   }
 
   proforma(){

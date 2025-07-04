@@ -27,9 +27,7 @@ export interface InformeLiq {
 
 export interface EntidadLiq {
     id: number;                       // ID del cliente/chofer/proveedor
-    razonSocial: string;                  // Nombre o razón social
-    apellido: string;             
-    nombre: string;
+    razonSocial: string;                  // Nombre o razón social    
     cuit?: number;                   // Opcional, dependiendo si es persona física o no
 }
 

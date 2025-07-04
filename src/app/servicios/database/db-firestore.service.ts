@@ -12,6 +12,7 @@ import { Firestore } from '@angular/fire/firestore';
 import { inject } from '@angular/core';
 import { TableroDiario } from 'src/app/admin/operaciones/tablero-diario/tablero-diario.component';
 import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 @Injectable({
   providedIn: 'root'
@@ -673,7 +674,7 @@ async procesarLiquidacion(
   modo: string,
   componenteAlta: string,
   componenteBaja: string,
-  factura: any,
+  factura: InformeLiq,
   componenteFactura: string
 ): Promise<{ exito: boolean; mensaje: string }> {
   const colOps = 'operaciones';
@@ -703,7 +704,7 @@ async procesarLiquidacion(
 
         // 3. Actualizar estado de la operación
         const nuevoEstado = { ...operacion.estado };
-        if (modo === 'clientes') {
+        if (modo === 'cliente') {
           nuevoEstado.cerrada = false;
           nuevoEstado.facCliente = true;
         } else {
@@ -741,8 +742,8 @@ async procesarLiquidacion(
         batch.delete(informeRefOrigen);
 
         // 8. (NUEVO) Si modo !== 'clientes', buscar contra parte y marcarla
-        if (modo !== 'clientes') {
-          const contraParteRef = collection(this.firestore, `/Vantruck/datos/facturaOpCliente`);
+        if (modo !== 'cliente') {
+          const contraParteRef = collection(this.firestore, `/Vantruck/datos/informesOpClientes`);
           const contraParteQuery = query(contraParteRef, where('idOperacion', '==', informe.idOperacion));
           const contraParteSnap = await getDocs(contraParteQuery);
 
@@ -763,14 +764,12 @@ async procesarLiquidacion(
 
     // 8. Verificar existencia de factura duplicada
     const facturasRef = collection(this.firestore, `/Vantruck/datos/${componenteFactura}`);
-    const idFactura = modo === 'clientes' ? factura.idFacturaCliente
-                   : modo === 'choferes' ? factura.idFacturaChofer
-                   : factura.idFacturaProveedor;
+    
 
-    const facturaQuery = query(facturasRef, where('idFactura', '==', idFactura));
+    const facturaQuery = query(facturasRef, where('idFactura', '==', factura.idInfLiq));
     const facturaSnap = await getDocs(facturaQuery);
     if (!facturaSnap.empty) {
-      throw new Error(`Ya existe una factura con idFactura ${idFactura} en ${componenteFactura}`);
+      throw new Error(`Ya existe una factura con idFactura ${factura.idInfLiq} en ${componenteFactura}`);
     }
 
     // 9. Guardar la factura
@@ -907,7 +906,7 @@ async procesarProforma(
   informesSeleccionados: ConIdType<InformeOp>[],
   modo: string,
   componenteInformes: string,  
-  contraParteColeccion: string,
+  
   factura: any,
   componenteProforma: string
 ): Promise<{ exito: boolean; mensaje: string }> {
@@ -938,7 +937,7 @@ async procesarProforma(
 
         // 3. Actualizar estado de la operación
         const nuevoEstado = { ...operacion.estado };
-        if (modo === 'clientes') {
+        if (modo === 'cliente') {
           nuevoEstado.cerrada = false;
           nuevoEstado.proformaCl = true;
           nuevoEstado.proformaCh = false; 
@@ -963,8 +962,8 @@ async procesarProforma(
         batch.update(informeRefOrigen, inf);
 
         // 6. (NUEVO) Si modo !== 'clientes', buscar contra parte y marcarla
-        if (modo !== 'clientes') {
-          const contraParteRef = collection(this.firestore, `/Vantruck/datos/${contraParteColeccion}`);
+        if (modo !== 'cliente') {
+          const contraParteRef = collection(this.firestore, `/Vantruck/datos/informesOpClientes`);
           const contraParteQuery = query(contraParteRef, where('idOperacion', '==', informe.idOperacion));
           const contraParteSnap = await getDocs(contraParteQuery);
 
@@ -973,7 +972,7 @@ async procesarProforma(
             const contraRef = contraDoc.ref;
             batch.update(contraRef, { contraParteProforma: true });
           } else {
-            console.warn(`No se encontró contra parte con idOperacion ${informe.idOperacion} en ${contraParteColeccion}`);
+            console.warn(`No se encontró contra parte con idOperacion ${informe.idOperacion} en informesOpClientes`);
           }
         }
         
@@ -986,14 +985,14 @@ async procesarProforma(
 
     // 8. Verificar existencia de factura duplicada
     const facturasRef = collection(this.firestore, `/Vantruck/datos/${componenteProforma}`);
-    const idFactura = modo === 'clientes' ? factura.idFacturaCliente
+/*     const idFactura = modo === 'clientes' ? factura.idFacturaCliente
                    : modo === 'choferes' ? factura.idFacturaChofer
-                   : factura.idFacturaProveedor;
+                   : factura.idFacturaProveedor; */
 
-    const facturaQuery = query(facturasRef, where('idFactura', '==', idFactura));
+    const facturaQuery = query(facturasRef, where('idInfLiq', '==', factura.idInfLiq));
     const facturaSnap = await getDocs(facturaQuery);
     if (!facturaSnap.empty) {
-      throw new Error(`Ya existe una factura con idFactura ${idFactura} en ${componenteProforma}`);
+      throw new Error(`Ya existe una factura con idFactura ${factura.idInfLiq} en ${componenteProforma}`);
     }
 
     // 9. Guardar la factura
@@ -1134,8 +1133,8 @@ async anularProforma(
 
 
          // 6. (NUEVO) Si modo !== 'clientes', buscar contra parte y marcarla
-        if (modo !== 'clientes') {
-          const contraParteRef = collection(this.firestore, `/Vantruck/datos/facturaOpCliente`);
+        if (modo !== 'cliente') {
+          const contraParteRef = collection(this.firestore, `/Vantruck/datos/informesOpClientes`);
           const contraParteQuery = query(contraParteRef, where('idOperacion', '==', informe.idOperacion));
           const contraParteSnap = await getDocs(contraParteQuery);
 

@@ -47,7 +47,7 @@ export class ExcelService {
   constructor(private storageService: StorageService) { }
 
   getQuincena(fecha: any): string {
-    console.log("fecha: ", fecha);
+    //console.log("fecha: ", fecha);
     
     // Dividir el string de la fecha en año, mes y día
     const [year, month, day] = fecha.split('-').map(Number);
@@ -370,7 +370,7 @@ export class ExcelService {
     // Título
     worksheet.mergeCells('A5:F5');
     const titleCell = worksheet.getCell('A5');
-    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.entidad.apellido} ${factura.entidad.nombre} ` : `Proforma ${factura.entidad.apellido} ${factura.entidad.nombre} `;
+    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.entidad.razonSocial}  ` : `Proforma ${factura.entidad.razonSocial}`;
     titleCell.font = { size: 16, bold: true };
 
     // Subtítulo
@@ -543,7 +543,7 @@ export class ExcelService {
 
     // Guardar archivo
     const buffer = await workbook.xlsx.writeBuffer();
-      FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.entidad.apellido}${factura.entidad.nombre}_${factura.fecha}.xlsx` : `Proforma_${factura.entidad.apellido}${factura.entidad.nombre}_${factura.fecha}.xlsx`);
+      FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.entidad.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.entidad.razonSocial}_${factura.fecha}.xlsx`);
 
   }
 

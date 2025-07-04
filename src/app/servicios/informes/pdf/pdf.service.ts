@@ -229,7 +229,7 @@ async exportToPdfCliente(
   }
 
   getQuincena(fecha: any): string {
-    //console.log("fecha: ", fecha);
+    ////console.log("fecha: ", fecha);
     
     // Dividir el string de la fecha en año, mes y día
     const [year, month, day] = fecha.split('-').map(Number);
@@ -270,7 +270,7 @@ async exportToPdfCliente(
         minimumFractionDigits: 2, 
         maximumFractionDigits: 2 
     }).format(valor);
-   //////////console.log(nuevoValor);    
+   ////////////console.log(nuevoValor);    
     //   `$${nuevoValor}`   
     return `$${nuevoValor}`  
   }
@@ -348,7 +348,7 @@ async exportToPdfChofer(factura: InformeLiq, facturasOp: InformeOp[], clientes: 
   // Título principal
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(modo === 'factura' ? `Liquidación de Servicios ${factura.entidad.apellido} ${factura.entidad.nombre}` : `Proforma ${factura.entidad.apellido} ${factura.entidad.nombre}`, 10, 30);
+  doc.text(modo === 'factura' ? `Liquidación de Servicios ${factura.entidad.razonSocial} ` : `Proforma ${factura.entidad.razonSocial} `, 10, 30);
 
   // Subtítulo
   doc.setFontSize(11);
@@ -470,7 +470,7 @@ async exportToPdfChofer(factura: InformeLiq, facturasOp: InformeOp[], clientes: 
     baseline: 'middle',
   });
 
-  doc.save(modo === 'factura' ? `Detalle_${factura.entidad.apellido}_${factura.entidad.nombre}_${factura.fecha}.pdf` : `Proforma_${factura.entidad.apellido}_${factura.entidad.nombre}_${factura.fecha}.pdf`);  
+  doc.save(modo === 'factura' ? `Detalle_${factura.entidad.razonSocial}_${factura.fecha}.pdf` : `Proforma_${factura.entidad.razonSocial}_${factura.fecha}.pdf`);  
 }
 
 //////////////////// Reportes PDF para los proveedores

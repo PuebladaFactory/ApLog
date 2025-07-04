@@ -583,7 +583,7 @@ deleteDuplicadas(){
   procesarFacturacion(titulo:string, accion:string) {
     this.isLoading = true;
     
-    this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasProveedor, "proveedores", "facOpLiqProveedor", "facturaOpProveedor", this.facturaProveedor, "facturaProveedor")
+    this.dbFirebase.procesarLiquidacion(this.facturasLiquidadasProveedor, "proveedor", "facOpLiqProveedor", "facturaOpProveedor", this.facturaProveedor, "facturaProveedor")
       .then((result) => {
         this.isLoading = false;
         console.log("resultado: ", result);
@@ -637,7 +637,7 @@ deleteDuplicadas(){
   procesarProforma(titulo:string, accion:string){
         this.isLoading = true;
        
-          this.dbFirebase.procesarProforma(this.facturasLiquidadasProveedor, "proveedores", this.titulo, "facturaOpCliente", this.facturaProveedor, "proforma")
+          this.dbFirebase.procesarProforma(this.facturasLiquidadasProveedor, "proveedor", this.titulo, this.facturaProveedor, "proforma")
           .then((result) => {
             this.isLoading = false;
             //console.log("resultado: ", result);
@@ -771,7 +771,7 @@ deleteDuplicadas(){
         });
         
       
-        let origen:string = "proveedores"
+        let origen:string = "proveedor"
   
        let info = {
           factura: this.facDetallada,
@@ -996,6 +996,18 @@ deleteDuplicadas(){
       actualizarObjeto(){
         this.isLoading = true
         this.dbFirebase.eliminarMultiple(this.objetoEditado, "facturaOpProveedor").then((result)=>{
+          this.isLoading = false
+          if(result.exito){
+            alert("actualizado correctamente")
+          } else {
+            alert(`error actualizando. errr: ${result.mensaje}`)
+          }
+        })
+      }
+
+      guardarObjeto(){
+        this.isLoading = true
+        this.dbFirebase.guardarMultiple(this.objetoEditado, "informesOpProveedores", "idOperacion", "operaciones").then((result)=>{
           this.isLoading = false
           if(result.exito){
             alert("actualizado correctamente")

@@ -211,7 +211,11 @@ private cargarConfiguracionColumnas(): void {
         this.$opActivas = ops;
         this.$opFiltradas = ops;
         this.armarTabla();
-        setTimeout(() => this.actualizarEstadoFiltrado(), 0);
+        setTimeout(() => {
+          if (this.gridApi) {
+            this.actualizarEstadoFiltrado();
+          }
+        }, 0);
       });
   }
 
@@ -472,17 +476,17 @@ private cargarConfiguracionColumnas(): void {
           modo: "operaciones",
           item: operacion [0]
         }  
-        ////////console.log()(info); */
+        //////////console.log()(info); */
         
         modalRef.componentInstance.fromParent = info;
       
         modalRef.result.then(
           (result) => {
-            //console.log("result", result);
+            ////console.log("result", result);
             if(result !== undefined){   
-              //////////console.log("llamada al storage desde op-abiertas, deleteItem");
+              ////////////console.log("llamada al storage desde op-abiertas, deleteItem");
               this.storageService.deleteItemPapelera(this.componente, this.opEditar, this.opEditar.idOperacion, "BAJA", "Baja de Operación", result);
-              //////////console.log("consultas Op: " , this.$consultasOp);
+              ////////////console.log("consultas Op: " , this.$consultasOp);
               Swal.fire({
                 title: "Confirmado",
                 text: "La operación ha sido dada de baja",
@@ -546,7 +550,7 @@ private cargarConfiguracionColumnas(): void {
 
     getMsg(e:any) {
         this.btnConsulta = e
-        //////console.log("getMsg: ", this.btnConsulta);                  
+        ////////console.log("getMsg: ", this.btnConsulta);                  
         if(this.btnConsulta){          
           this.consultarOp();            
         }
@@ -602,7 +606,7 @@ private cargarConfiguracionColumnas(): void {
 
     consultarOp(){
     const modoStorage = this.storageService.loadInfo("filtroOp");
-    //console.log("ngOnInit: modoStorage ", modoStorage);
+    ////console.log("ngOnInit: modoStorage ", modoStorage);
     
     /* if (modoStorage) {
       modoStorage.forEach((key: string) => {
@@ -611,32 +615,32 @@ private cargarConfiguracionColumnas(): void {
     } */
 
     //this.aplicarFiltros();
-    //////console.log("2)aca??: ");            
+    ////////console.log("2)aca??: ");            
     this.storageService.respuestaOp$
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         if(data){
-          //////console.log("respuestaOp data: ", data);
+          ////////console.log("respuestaOp data: ", data);
           
           this.respuestaOp = data
           this.fechasConsulta = this.respuestaOp[0].fechas;
-          ////console.log("fechasConsulta: ", this.fechasConsulta);
+          //////console.log("fechasConsulta: ", this.fechasConsulta);
           //this.rango = this.respuestaOp[0].rango ////ESTO NO SE SI SIGUE APLICANDO
-          ////console.log("rango: ", this.rango);
+          //////console.log("rango: ", this.rango);
           this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
           //this.storageService.listenForChangesDate<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
           //this.aplicarFiltros()   ////ESTO NO SE SI SIGUE APLICANDO 
         }
-        ////////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
+        //////////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
         //this.getMsg()
     });
   }
 
   editarObjeto(){
-    console.log("1)this.opActivas", this.$opActivas);
+    //console.log("1)this.opActivas", this.$opActivas);
     //this.objetoEditado= this.editarCampo(this.$opActivas)    
     this.objetoEditado= this.$opActivas
-    console.log("2)this.objetoEditado", this.objetoEditado);
+    //console.log("2)this.objetoEditado", this.objetoEditado);
   }
 
   editarCampo(operaciones: any[]): ConId<Operacion>[] {
@@ -657,6 +661,18 @@ private cargarConfiguracionColumnas(): void {
   }
 
   actualizarObjeto(){
+    this.isLoading = true
+    this.dbFirebase.actualizarOperacionesBatch(this.objetoEditado, "operaciones").then((result)=>{
+      this.isLoading = false
+      if(result.exito){
+        alert("actualizado correctamente")
+      } else {
+        alert(`error actualizando. errr: ${result.mensaje}`)
+      }
+    })
+  }
+
+  eliminarObjeto(){
     this.isLoading = true
     this.dbFirebase.eliminarMultiple(this.objetoEditado, "operaciones").then((result)=>{
       this.isLoading = false

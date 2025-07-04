@@ -49,7 +49,7 @@ export class EditarTarifaOpComponent implements OnInit {
     }
     
     ngOnInit(): void {         
-      console.log("4) fromParent: ",this.fromParent);    
+      //console.log("4) fromParent: ",this.fromParent);    
       this.facOriginal = this.fromParent.factura;
       this.facDetallada = structuredClone(this.facOriginal);
       this.opOriginal = this.fromParent.op;
@@ -71,29 +71,30 @@ export class EditarTarifaOpComponent implements OnInit {
       });
       this.getChofer(); 
       switch(this.fromParent.origen){
-        case "clientes":{
-            this.componente = "facturaOpCliente";
+        case "cliente":{
+            this.componente = "informesOpClientes";
             break;
         };
-        case "choferes":{
-          this.componente = "facturaOpChofer";
+        case "chofer":{
+          this.componente = "informesOpChoferes";
           break;
         }
-        case "proveedores":{
-          this.componente = "facturaOpProveedor";
+        case "proveedor":{
+          this.componente = "informesOpProveedores";
           break;
         }
         default:{
-          ////console.log("error en fromParent.origen")
+          //////console.log("error en fromParent.origen")
           break
         }
       } 
       
-
+      //console.log("this.componente", this.componente);
+      
       //this.swich = this.facDetallada.operacion.tarifaEventual;        
       if(!this.facDetallada.tarifaTipo.personalizada){
         this.ultimaTarifa = this.fromParent.tarifaAplicada;
-        //console.log("5) ultimaTarifa: ",this.ultimaTarifa);    
+        ////console.log("5) ultimaTarifa: ",this.ultimaTarifa);    
       } else {
         this.tarifaPersonalizada = this.fromParent.tarifaAplicada;
       }
@@ -105,12 +106,12 @@ export class EditarTarifaOpComponent implements OnInit {
       this.choferOp = this.$choferes.filter((chofer:Chofer)=>{
         return chofer.idChofer === this.facDetallada.idChofer;
       })
-      //console.log("4.25)this.choferOp: ", this.choferOp);
+      ////console.log("4.25)this.choferOp: ", this.choferOp);
       
       this.vehiculoOp = this.choferOp[0].vehiculo.filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === this.operacion.patenteChofer.toUpperCase()
       })
-      //console.log("4.5)vehiculoOp: ", this.vehiculoOp);
+      ////console.log("4.5)vehiculoOp: ", this.vehiculoOp);
       
   
     }
@@ -119,7 +120,7 @@ export class EditarTarifaOpComponent implements OnInit {
       let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
         return cat.orden === this.vehiculoOp[0].categoria.catOrden;
       });
-      //console.log("getCategoriaValor: catCg: ", catCg);
+      ////console.log("getCategoriaValor: catCg: ", catCg);
       return catCg[0].nombre;            
     }
 
@@ -127,7 +128,7 @@ export class EditarTarifaOpComponent implements OnInit {
       let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
         return cat.orden === this.vehiculoOp[0].categoria.catOrden;
       });
-      //console.log("getCategoriaValor: catCg: ", catCg);
+      ////console.log("getCategoriaValor: catCg: ", catCg);
       return catCg[0].valor;      
     }
 
@@ -135,7 +136,7 @@ export class EditarTarifaOpComponent implements OnInit {
       let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
         return cat.orden === this.vehiculoOp[0].categoria.catOrden;
       });
-      //console.log("getCategoriaValor: catCg: ", catCg);
+      ////console.log("getCategoriaValor: catCg: ", catCg);
       return catCg[0].adicionalKm.primerSector;        
     }
 
@@ -143,7 +144,7 @@ export class EditarTarifaOpComponent implements OnInit {
       let catCg = this.ultimaTarifa.cargasGenerales.filter((cat:CategoriaTarifa) =>{
         return cat.orden === this.vehiculoOp[0].categoria.catOrden;
       });
-      //console.log("getCategoriaValor: catCg: ", catCg);
+      ////console.log("getCategoriaValor: catCg: ", catCg);
       return catCg[0].adicionalKm.sectoresSiguientes;        
     }
 
@@ -152,7 +153,8 @@ export class EditarTarifaOpComponent implements OnInit {
       return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
     }
   
-    onSubmit(){      
+    onSubmit(){  
+    //console.log("onSubmit");    
     let cambios:boolean = false;
       Swal.fire({
         title: "¿Desea guardar los cambios en la factura?",
@@ -165,7 +167,7 @@ export class EditarTarifaOpComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
-          ////////////console.log("op: ", this.op);
+          //////////////console.log("op: ", this.op);
           this.formatearDatos();
           cambios = true;
           Swal.fire({
@@ -174,6 +176,7 @@ export class EditarTarifaOpComponent implements OnInit {
             icon: "success"
           }).then((result)=>{
             if (result.isConfirmed) {
+              //console.log("result.isConfirmed");    
               if(this.fromParent.componente === 'proforma'){
                 this.facOriginal = this.facDetallada;
                 let respuesta={
@@ -190,11 +193,12 @@ export class EditarTarifaOpComponent implements OnInit {
           
         }
       });   
-      ////console.log("factura EDITADA: ", this.facDetallada);      
+      //////console.log("factura EDITADA: ", this.facDetallada);      
     
      }
 
      formatearDatos(){
+      //console.log("formatearDatos");
       
       this.facDetallada.km = this.formNumServ.convertirAValorNumerico(this.facDetallada.km);
       
@@ -210,7 +214,7 @@ export class EditarTarifaOpComponent implements OnInit {
       this.operacion.km = this.facDetallada.km;
       this.operacion.observaciones = this.facDetallada.observaciones;
       switch(this.fromParent.origen){
-        case "clientes":{
+        case "cliente":{
             this.operacion.valores.cliente.aCobrar = this.facDetallada.valores.total;
             this.operacion.valores.cliente.acompValor = this.facDetallada.valores.acompaniante;
             this.operacion.valores.cliente.kmAdicional = this.facDetallada.valores.kmMonto;
@@ -219,7 +223,7 @@ export class EditarTarifaOpComponent implements OnInit {
             //this.updateItem();
             break;
         };
-        case "choferes":{
+        case "chofer":{
             this.operacion.valores.chofer.aPagar = this.facDetallada.valores.total;
             this.operacion.valores.chofer.acompValor = this.facDetallada.valores.acompaniante;
             this.operacion.valores.chofer.kmAdicional = this.facDetallada.valores.kmMonto;
@@ -227,7 +231,7 @@ export class EditarTarifaOpComponent implements OnInit {
             this.buscarContraParte();
           break;
         }
-        case "proveedores":{
+        case "proveedor":{
             this.operacion.valores.chofer.aPagar = this.facDetallada.valores.total;
             this.operacion.valores.chofer.acompValor = this.facDetallada.valores.acompaniante;
             this.operacion.valores.chofer.kmAdicional = this.facDetallada.valores.kmMonto;
@@ -236,23 +240,25 @@ export class EditarTarifaOpComponent implements OnInit {
           break;
         }
         default:{
-          ////console.log("error en fromParent.origen")
+          //////console.log("error en fromParent.origen")
           break
         }
       }
      }
   
      updateItem(){
-
-      ////console.log("this.facDetallada: ", this.facDetallada);
-      ////console.log("this.operacion: ", this.operacion);      
+      //console.log("updateItem");
+      //console.log("this.facDetallada: ", this.facDetallada);
+      //console.log("this.componente: ", this.componente);
+      
+      //////console.log("this.operacion: ", this.operacion);      
       let {id, ...facDet} = this.facDetallada;
       this.storageService.updateItem(
         this.componente, 
         facDet, 
         this.facDetallada.idInfOp, 
         "EDITAR", 
-        this.componente === "facturaOpCliente" ? `Edición de Informe de Operación del Cliente ${this.getClienteId(this.facDetallada.idCliente)}` : this.componente === "facturaOpChofer" ? `Edición de Informe de Operación del Chofer ${this.getChoferId(this.facDetallada.idChofer)}` : `Edición de Informe de Operación del Proveedor ${this.getProveedorId(this.facDetallada.idProveedor)}`,
+        this.componente === "informesOpClientes" ? `Edición de Informe de Operación del Cliente ${this.getClienteId(this.facDetallada.idCliente)}` : this.componente === "informesOpChoferes" ? `Edición de Informe de Operación del Chofer ${this.getChoferId(this.facDetallada.idChofer)}` : `Edición de Informe de Operación del Proveedor ${this.getProveedorId(this.facDetallada.idProveedor)}`,
         this.facDetallada.id);
         if(this.operacion){
           let {id, ...op} = this.operacion;
@@ -260,27 +266,27 @@ export class EditarTarifaOpComponent implements OnInit {
         }
       
       switch(this.fromParent.origen){
-        case "clientes":{
+        case "cliente":{
           let{id, ...facOp} = this.facContraParte;
           if(this.operacion.chofer.idProveedor === 0){            
-            this.storageService.updateItem("facturaOpChofer", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
+            this.storageService.updateItem("informesOpChoferes", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
           } else {
-            this.storageService.updateItem("facturaOpProveedor", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
+            this.storageService.updateItem("informesOpProveedores", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
           }          
           break;
         };
-        case "choferes":{
+        case "chofer":{
           let{id, ...facOp} = this.facContraParte;
-          this.storageService.updateItem("facturaOpCliente", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
+          this.storageService.updateItem("informesOpClientes", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
           break;
         }
-        case "proveedores":{
+        case "proveedor":{
           let{id, ...facOp} = this.facContraParte;
-          this.storageService.updateItem("facturaOpCliente", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
+          this.storageService.updateItem("informesOpClientes", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
           break;
         }
         default:{
-          ////console.log("error en fromParent.origen")
+          //////console.log("error en fromParent.origen")
           break
         }
       } 
@@ -288,16 +294,17 @@ export class EditarTarifaOpComponent implements OnInit {
      }
 
      buscarContraParte(){     
-
+      //console.log("buscarContraParte");
+      
       switch(this.fromParent.origen){
-        case "clientes":{
+        case "cliente":{
             if(this.operacion.chofer.idProveedor === 0){
               this.dbFirebase
-                  .obtenerTarifaIdTarifa("facturaOpChofer",this.facDetallada.contraParteId, "idFacturaOp")
+                  .obtenerTarifaIdTarifa("informesOpChoferes",this.facDetallada.contraParteId, "idInfOp")
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      ////console.log("factura contraparte: ", this.facContraParte);
+                      //////console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -305,11 +312,11 @@ export class EditarTarifaOpComponent implements OnInit {
                   });
             } else {
               this.dbFirebase
-                  .obtenerTarifaIdTarifa("facturaOpProveedor",this.facDetallada.contraParteId, "idFacturaOp")
+                  .obtenerTarifaIdTarifa("informesOpProveedores",this.facDetallada.contraParteId, "idInfOp")
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      ////console.log("factura contraparte: ", this.facContraParte);
+                      //////console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -319,13 +326,13 @@ export class EditarTarifaOpComponent implements OnInit {
 
             break;
         };
-        case "choferes":{
+        case "chofer":{
           this.dbFirebase
-                  .obtenerTarifaIdTarifa("facturaOpCliente",this.facDetallada.contraParteId, "idFacturaOp")  
+                  .obtenerTarifaIdTarifa("informesOpClientes",this.facDetallada.contraParteId, "idInfOp")  
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      ////console.log("factura contraparte: ", this.facContraParte);
+                      //////console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -334,13 +341,13 @@ export class EditarTarifaOpComponent implements OnInit {
            
           break;
         }
-        case "proveedores":{
+        case "proveedor":{
           this.dbFirebase
-                  .obtenerTarifaIdTarifa("facturaOpCliente",this.facDetallada.contraParteId, "idFacturaOp")  
+                  .obtenerTarifaIdTarifa("informesOpClientes",this.facDetallada.contraParteId, "idInfOp")  
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
                   .subscribe(data => {      
                       this.facContraParte = data || {};
-                      ////console.log("factura contraparte: ", this.facContraParte);
+                      //////console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
                         this.facContraParte.contraParteMonto = this.facDetallada.valores.total;
                         this.updateItem()
@@ -350,7 +357,7 @@ export class EditarTarifaOpComponent implements OnInit {
           break;
         }
         default:{
-          ////console.log("error en fromParent.origen")
+          //////console.log("error en fromParent.origen")
           break
         }
       }
@@ -361,6 +368,7 @@ export class EditarTarifaOpComponent implements OnInit {
     } 
 
     getClienteId(idCliente:number){
+      //console.log("aca si tiene que llegar");   
       let clientes: Cliente [] = this.$clientes.filter((c:Cliente) => {return c.idCliente === idCliente});
       return clientes[0].razonSocial;
     }
@@ -371,15 +379,16 @@ export class EditarTarifaOpComponent implements OnInit {
     }
 
     getProveedorId(idProveedor:number){
+      //console.log("no tiene que llegar aca?");      
       let prov: Proveedor [] = this.$proveedores.filter((p:Proveedor) => {return p.idProveedor === idProveedor});
-      return prov[0].razonSocial;
+      return prov ? prov[0].razonSocial : "";
     }
 
     actualizarTotal(){
       
       this.facDetallada.valores.total = this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.tarifaBase) + this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.acompaniante) + this.formNumServ.convertirAValorNumerico(this.facDetallada.valores.kmMonto)
       this.facDetallada.valores.total = this.formatearValor(this.facDetallada.valores.total)
-      //console.log("facDetallada.valores.tarifaBase: ", this.facDetallada.valores.total);
+      ////console.log("facDetallada.valores.tarifaBase: ", this.facDetallada.valores.total);
     }
 
     formatearValor(valor: number) : any{
@@ -387,7 +396,7 @@ export class EditarTarifaOpComponent implements OnInit {
        minimumFractionDigits: 2, 
        maximumFractionDigits: 2 
      }).format(valor);
-     ////////////////////console.log(nuevoValor);    
+     //////////////////////console.log(nuevoValor);    
      return nuevoValor
    }
 

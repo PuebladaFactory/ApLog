@@ -68,7 +68,7 @@ export class FacturacionGeneralComponent implements OnInit {
       //console.log("data factura choferes: ", data);
       if(data){
         this.$facturasChofer = data; 
-        this.$facturasChofer = this.$facturasChofer.sort((a, b) => a.entidad.apellido.localeCompare(b.entidad.apellido)); // Ordena por el nombre del chofer
+        this.$facturasChofer = this.$facturasChofer.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
         this.calcularPagos();     
       } else {
         this.mensajesError("error: facturaChofer")
