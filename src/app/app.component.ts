@@ -68,15 +68,5 @@ export class AppComponent implements OnInit {
     }
   }
   ngOnInit(): void {
-    this.storageService.listenForChanges<Cliente>("clientes");
-    this.storageService.listenForChanges<Chofer>("choferes");
-    this.storageService.listenForChanges<Proveedor>("proveedores");
-    this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralCliente");
-    this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspCliente");
-    this.storageService.listenForChanges<TarifaPersonalizadaCliente>('tarifasPersCliente');
-    this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralChofer");
-    this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspChofer");
-    this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralProveedor");
-    this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspProveedor");
   }
 }

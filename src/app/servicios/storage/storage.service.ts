@@ -264,6 +264,15 @@ export class StorageService {
   private _informesOpProveedores$ = new BehaviorSubject<any>(this.loadInfo('informesOpProveedores') || []);
   public informesOpProveedores$ = this._informesOpProveedores$.asObservable();
 
+  private _resumenLiqClientes$ = new BehaviorSubject<any>(this.loadInfo('resumenLiqClientes') || []);
+  public resumenLiqClientes$ = this._resumenLiqClientes$.asObservable();
+
+  private _resumenLiqChoferes$ = new BehaviorSubject<any>(this.loadInfo('resumenLiqChoferes') || []);
+  public resumenLiqChoferes$ = this._resumenLiqChoferes$.asObservable();
+
+  private _resumenLiqProveedores$ = new BehaviorSubject<any>(this.loadInfo('resumenLiqProveedores') || []);
+  public resumenLiqProveedores$ = this._resumenLiqProveedores$.asObservable();
+
   updateObservable(componente: any, data: any) {
     switch (componente) {
       case "clientes": {
@@ -642,6 +651,18 @@ export class StorageService {
         this._informesOpProveedores$.next(data);
         break
       }
+      case "resumenLiqClientes":{
+        this._resumenLiqClientes$.next(data);
+        break
+      }
+      case "resumenLiqChoferes":{
+        this._resumenLiqChoferes$.next(data);
+        break
+      }
+      case "resumenLiqProveedores":{
+        this._resumenLiqProveedores$.next(data);
+        break
+      }
       default: {
         //statements; 
         break;
@@ -918,7 +939,13 @@ export class StorageService {
         return this._informesOpChoferes$.asObservable();
       case "informesOpProveedores":
         return this._informesOpProveedores$.asObservable();
-      default:
+      case "resumenLiqClientes":
+        return this._resumenLiqClientes$.asObservable();
+      case "resumenLiqChoferes":
+        return this._resumenLiqChoferes$.asObservable();
+      case "resumenLiqProveedores":
+        return this._resumenLiqProveedores$.asObservable();  
+        default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }
   }

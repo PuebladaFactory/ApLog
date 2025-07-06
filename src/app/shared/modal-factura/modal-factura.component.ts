@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, take, takeUntil } from 'rxjs';
-import { EditarTarifaOpComponent } from 'src/app/admin/liquidacion/modales/editar-tarifa-op/editar-tarifa-op.component';
+import { EditarTarifaOpComponent } from 'src/app/raiz/liquidacion/modales/editar-tarifa-op/editar-tarifa-op.component';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
@@ -63,7 +63,7 @@ export class ModalFacturaComponent implements OnInit {
     });  
 
 
-    //console.log("fromParent", this.fromParent);
+    console.log("fromParent", this.fromParent);
     this.facOp = this.fromParent.facOp
     this.factura = this.fromParent.item;
     switch(this.fromParent.tipo){

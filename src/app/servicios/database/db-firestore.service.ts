@@ -10,7 +10,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
 import { Firestore } from '@angular/fire/firestore';
 import { inject } from '@angular/core';
-import { TableroDiario } from 'src/app/operaciones/tablero-diario/tablero-diario.component';
+import { TableroDiario } from 'src/app/raiz/operaciones/tablero-diario/tablero-diario.component';
 import { InformeOp } from 'src/app/interfaces/informe-op';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
@@ -1276,6 +1276,46 @@ async guardarOpMultiple(
       const docRef = doc(colRef); // genera un id automático
       //let {id, type, ...objEdit} = obj
       batch.set(docRef, op);
+    }
+
+    // Ejecutar el batch
+    await batch.commit();
+
+    return { exito: true, mensaje: "Todos los objetos fueron guardados correctamente." };
+  } catch (error: any) {
+    console.error(error);
+    return { exito: false, mensaje: `Error al guardar: ${error.message || error}` };
+  }
+}
+
+async guardarMultipleOtraColeccion(
+  objetos: any[],
+  coleccionAlta: string,  
+): Promise<{ exito: boolean; mensaje: string }> {
+  const batch = writeBatch(this.firestore);
+  const colRef = collection(this.firestore, `/Vantruck/datos/${coleccionAlta}`);
+  
+  try {
+    // Verificar que NINGUNO de los objetos exista ya en la colección
+    for (const obj of objetos) {
+      const docRef = doc(this.firestore, `/Vantruck/datos/${coleccionAlta}/${obj.id}`);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        return {
+          exito: false,
+          mensaje: `Ya existe un documento con id: ${obj.id} en la colección ${coleccionAlta}`
+        };
+      }
+
+    }
+
+    // Ninguno existe => agregar todos al batch
+    for (const obj of objetos) {
+      
+      const docRef = doc(colRef); // genera un id automático
+      let {id, type, ...objEdit} = obj
+      batch.set(docRef, objEdit);
     }
 
     // Ejecutar el batch

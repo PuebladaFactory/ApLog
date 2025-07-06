@@ -9,14 +9,24 @@ import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personaliz
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
+let version = 'v0.0.0'; // fallback por defecto
+
+try {
+  version = require('src/environments/version').appVersion;
+} catch (e) {
+  console.warn('⚠️ version.ts no encontrado, usando versión por defecto.');
+}
+
+
 @Component({
-  selector: 'app-home',
-  standalone: false,
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.scss'
+    selector: 'app-home',
+    templateUrl: './home.component.html',
+    styleUrls: ['./home.component.css'],
+    standalone: false
 })
 export class HomeComponent implements OnInit {
 
+  appVersion = version;
   activo!:boolean;
   $legajos!:Legajo[];
   $usuario!: any;
@@ -35,14 +45,22 @@ export class HomeComponent implements OnInit {
         this.$legajos = data;     
         if(this.$legajos.length > 0){
           this.legajoServ.verificarEstadosLegajos(this.$legajos);
-        };                
+        };        
+        //this.router.navigate(['admin']);
         
       });
       let usuarioLogueado = this.storageService.loadInfo("usuario");
-      
-      
       this.$usuario = structuredClone(usuarioLogueado[0]);      
-     
+      this.storageService.listenForChanges<Cliente>("clientes");
+      this.storageService.listenForChanges<Chofer>("choferes");
+      this.storageService.listenForChanges<Chofer>("proveedores");
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralCliente");
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspCliente");
+      this.storageService.listenForChanges<TarifaPersonalizadaCliente>('tarifasPersCliente');
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralChofer");
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspChofer");
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralProveedor");
+      this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspProveedor");
       
       
 
@@ -51,11 +69,14 @@ export class HomeComponent implements OnInit {
       .subscribe(data=>{
         if(data){
           console.log("ruta", data);
-          this.router.navigate([`raiz/${data[0]}`]);    
+          this.router.navigate([data[0]]);    
         }
       })
       this.router.navigate(['op']);
-
+      //this.storageService.setInfo("ruta", ["op"])
+      //this.storageService.syncChangesTarifasGral<TarifaGralCliente>('tarifasEspCliente');
+      //this.storageService.syncChangesTarifasGral<TarifaPersonalizadaCliente>('tarifasPersCliente');
+      //this.storageService.syncChangesTarifasEspCliente<TarifaPersonalizadaCliente>('tarifasPersCliente');
   }
 
   ngOnDestroy(): void {
@@ -76,5 +97,7 @@ export class HomeComponent implements OnInit {
   toogleSidebar(): void {
     this.activo = !this.activo;   
   }
+
+
 
 }

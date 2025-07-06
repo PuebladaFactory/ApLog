@@ -31,12 +31,10 @@ import { VerifyEmailComponent } from './appLogin/verify-email/verify-email.compo
 
 import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
 
-import { AdminModule } from './admin/admin.module';
+import { RaizModule } from './raiz/raiz.module';
 import { SharedModule } from './shared/shared.module';
-import { ChoferesModule } from './admin/choferes/choferes.module';
 
-import { ProveedoresModule } from './admin/proveedores/proveedores.module';
-import { FacturacionModule } from './admin/facturacion/facturacion.module';
+
 import { CargaComponent } from './carga/carga.component';
 import { CloudinaryModule } from '@cloudinary/ng';
 import { LimboComponent } from './limbo/limbo.component';
@@ -45,9 +43,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AgGridModule } from 'ag-grid-angular';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { OperacionesModule } from './operaciones/operaciones.module';
-import { RaizModule } from './raiz/raiz.module';
-import { ClientesModule } from './clientes/clientes.module';
 
 @NgModule({
   declarations: [
@@ -68,15 +63,9 @@ import { ClientesModule } from './clientes/clientes.module';
     AppRoutingModule,
     NgbModule,
     ReactiveFormsModule,
-    CloudinaryModule,
-    ChoferesModule,
-    ClientesModule,
-    AdminModule,
-    OperacionesModule,
+    CloudinaryModule,    
     RaizModule,
     SharedModule,
-    ProveedoresModule,
-    FacturacionModule,
     FilterPipeModule,
     AgGridModule,
     DragDropModule,

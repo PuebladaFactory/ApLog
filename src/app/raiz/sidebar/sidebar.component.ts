@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -12,13 +13,14 @@ try {
   console.warn('⚠️ version.ts no encontrado, usando versión por defecto.');
 }
 
+
 @Component({
-  selector: 'app-sidebar',
-  standalone: false,
-  templateUrl: './sidebar.component.html',
-  styleUrl: './sidebar.component.scss'
+    selector: 'app-sidebar',
+    templateUrl: './sidebar.component.html',
+    styleUrls: ['./sidebar.component.css'],
+    standalone: false
 })
-export class SidebarComponent implements OnInit{
+export class SidebarComponent implements OnInit {
 
   $legajos!: Legajo[];
   alertaRoja: boolean = false;
@@ -52,13 +54,20 @@ export class SidebarComponent implements OnInit{
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        this.authService.SignOut();        
+        this.authService.SignOut()
+        //this.router.navigate(['login'])      
+        /* Swal.fire({
+          title: "Confirmado",
+          text: "Los cambios se han guardado",
+          icon: "success"
+        }); */
       }
     });   
    }
     
   buscarAlertas(){
-    //console.log("0)sidebar");    
+    //console.log("0)sidebar");
+    
     this.$legajos.forEach((legajo:Legajo)=>{
       if(legajo.estadoGral.porVencer || legajo.estadoGral.vencido){
         if(legajo.estadoGral.vencido){
@@ -78,7 +87,8 @@ export class SidebarComponent implements OnInit{
     let rutaActual = this.storageService.loadInfo("ruta")
     console.log("rutaActual", rutaActual);
     if(rutaActual[0] !== ruta){
-      this.storageService.setInfo("ruta", [ruta]);      
+      this.storageService.setInfo("ruta", [ruta]);
+      //this.storageService.updateObservable("ruta", [ruta]);
     } else {
       console.log("nada");
       
