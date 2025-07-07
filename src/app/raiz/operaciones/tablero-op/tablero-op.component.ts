@@ -78,6 +78,7 @@ export class TableroOpComponent implements OnInit, OnDestroy {
   choferSeleccionado: ConIdType<Chofer> | null = null;
   objetoEditado: ConId<Operacion>[] = [];
   totalFiltrado: number = 0;
+  filtroPrincipal: 'cliente' | 'chofer' | null = null;
 
   constructor(
     private storageService: StorageService,
@@ -276,29 +277,93 @@ private cargarConfiguracionColumnas(): void {
   filtrarPorCliente(cliente: ConIdType<Cliente>) {
     this.clienteSeleccionado = cliente;
 
-    const filtro = {
-      ...this.gridApi.getFilterModel(),
-      cliente: { type: 'equals', filter: cliente.razonSocial }
-    };
+    const currentFilters = this.gridApi.getFilterModel();
 
-    this.gridApi.setFilterModel(filtro);
+    // Establecer jerarquía si no hay filtro principal aún
+    if (!this.filtroPrincipal) {
+      this.filtroPrincipal = 'cliente';
+    }
+
+    // Si cliente es principal y ya hay un chofer seleccionado, eliminar temporalmente el filtro de chofer
+    //
+    if (this.choferSeleccionado && this.filtroPrincipal === 'cliente') {
+      //filtroTemporalChofer = currentFilters['chofer'];
+      delete currentFilters['chofer'];
+      this.choferSeleccionado = null;
+    }
+
+    // Aplicar filtro de cliente
+    currentFilters['cliente'] = { type: 'equals', filter: cliente.razonSocial };
+    this.gridApi.setFilterModel(currentFilters);
     this.gridApi.onFilterChanged();
 
-    this.actualizarEstadoFiltrado();
+    // Solo actualizar listado de choferes si el cliente es el filtro principal
+    if (this.filtroPrincipal === 'cliente') {
+      const visibles = this.getFilasVisibles();
+      this.choferesEnPeriodo = this.filtrarChoferesDesdeFilas(visibles);
+    }
+
+    // Restaurar filtro de chofer si se eliminó temporalmente
+    /* if (filtroTemporalChofer) {
+      currentFilters['chofer'] = filtroTemporalChofer;
+      this.gridApi.setFilterModel(currentFilters);
+      this.gridApi.onFilterChanged();
+    } */
   }
+
 
   filtrarPorChofer(chofer: ConIdType<Chofer>) {
     this.choferSeleccionado = chofer;
 
-    const filtro = {
-      ...this.gridApi.getFilterModel(),
-      chofer: { type: 'equals', filter: `${chofer.apellido} ${chofer.nombre}` }
-    };
+    const currentFilters = this.gridApi.getFilterModel();
 
-    this.gridApi.setFilterModel(filtro);
+    // Establecer jerarquía si no hay filtro principal aún
+    if (!this.filtroPrincipal) {
+      this.filtroPrincipal = 'chofer';
+    }
+
+    // Si chofer es principal y ya hay un cliente seleccionado, eliminar temporalmente el filtro de cliente
+    //let filtroTemporalCliente: any = null;
+    if (this.clienteSeleccionado && this.filtroPrincipal === 'chofer') {
+      //filtroTemporalCliente = currentFilters['cliente'];
+      delete currentFilters['cliente'];
+      this.clienteSeleccionado = null;
+    }
+
+    // Aplicar filtro de chofer
+    currentFilters['chofer'] = {
+      type: 'equals',
+      filter: `${chofer.apellido} ${chofer.nombre}`,
+    };
+    this.gridApi.setFilterModel(currentFilters);
     this.gridApi.onFilterChanged();
 
-    this.actualizarEstadoFiltrado();
+    // Solo actualizar listado de clientes si chofer es el filtro principal
+    if (this.filtroPrincipal === 'chofer') {
+      const visibles = this.getFilasVisibles();
+      this.clientesEnPeriodo = this.filtrarClientesDesdeFilas(visibles);
+    }
+
+    // Restaurar filtro de cliente si se eliminó temporalmente
+    /* if (filtroTemporalCliente) {
+      currentFilters['cliente'] = filtroTemporalCliente;
+      this.gridApi.setFilterModel(currentFilters);
+      this.gridApi.onFilterChanged();
+    } */
+  }
+
+
+
+  private getFilasVisibles(): any[] {
+    const visibles: any[] = [];
+    if (!this.gridApi) return visibles;
+
+    for (let i = 0; i < this.gridApi.getDisplayedRowCount(); i++) {
+      const node = this.gridApi.getDisplayedRowAtIndex(i);
+      if (node?.data) visibles.push(node.data);
+    }
+
+    return visibles;
   }
 
   private actualizarEstadoFiltrado(): void {
@@ -315,21 +380,35 @@ private cargarConfiguracionColumnas(): void {
     this.choferesEnPeriodo = this.filtrarChoferesDesdeFilas(visibleRows);
   }
 
-  private actualizarOpcionesDropdown(): void {
-    this.clientesEnPeriodo = this.obtenerClientesFiltrados();
-    this.choferesEnPeriodo = this.obtenerChoferesFiltrados();
+  private actualizarDropdowns(visibleRows: any[]): void {
+    // Solo regenerar los dropdowns si NO hay selecciones cruzadas
+    if (!this.clienteSeleccionado) {
+      this.clientesEnPeriodo = this.filtrarClientesDesdeFilas(visibleRows);
+    }
+    if (!this.choferSeleccionado) {
+      this.choferesEnPeriodo = this.filtrarChoferesDesdeFilas(visibleRows);
+    }
   }
 
-  limpiarFiltrosCruzados() {
+  limpiarFiltrosCruzados(): void {
     this.clienteSeleccionado = null;
     this.choferSeleccionado = null;
+    this.filtroPrincipal = null;
 
-    this.gridApi.setFilterModel(null);
+    if (!this.gridApi) return;
+
+    const currentFilters = this.gridApi.getFilterModel();
+
+    delete currentFilters['cliente'];
+    delete currentFilters['chofer'];
+
+    this.gridApi.setFilterModel(currentFilters);
     this.gridApi.onFilterChanged();
-    localStorage.removeItem('filtrosTableroOp');
 
-    this.actualizarEstadoFiltrado();
+    const visibles = this.getFilasVisibles();
+    this.actualizarDropdowns(visibles);
   }
+
   
   getCategoria(op: Operacion): string {
     const vehiculo = op.chofer.vehiculo.find(v => v.dominio === op.patenteChofer);
@@ -567,7 +646,7 @@ private cargarConfiguracionColumnas(): void {
     // ✅ Actualiza el contador
     this.totalFiltrado = this.gridApi.getDisplayedRowCount();
 
-    // ✅ Extrae filas filtradas actualmente visibles
+    // ✅ Extrae filas visibles
     const visibleRows: any[] = [];
 
     for (let i = 0; i < this.gridApi.getDisplayedRowCount(); i++) {
@@ -577,14 +656,14 @@ private cargarConfiguracionColumnas(): void {
       }
     }
 
-    // ✅ Regenera dropdowns dinámicamente
-    this.clientesEnPeriodo = this.filtrarClientesDesdeFilas(visibleRows);
-    this.choferesEnPeriodo = this.filtrarChoferesDesdeFilas(visibleRows);
+    // ✅ Reemplazamos por la función que respeta reglas
+    this.actualizarDropdowns(visibleRows);
 
-    // ✅ Guarda el filtro actual para persistencia
+    // ✅ Guarda filtro para persistencia
     const model = this.gridApi.getFilterModel();
     localStorage.setItem('filtrosTableroOp', JSON.stringify(model));
   }
+
 
   private filtrarClientesDesdeFilas(filas: any[]): ConIdType<Cliente>[] {
     const idsClientes = new Set(filas.map(f => f.idCliente));
@@ -597,11 +676,14 @@ private cargarConfiguracionColumnas(): void {
   }
 
     limpiarFiltros(): void {
+      this.clienteSeleccionado = null;
+      this.choferSeleccionado = null;
+      this.filtroPrincipal = null;
       if (this.gridApi) {
         this.gridApi.setFilterModel(null);
         this.gridApi.onFilterChanged();
         localStorage.removeItem('filtrosTableroOp');
-      }
+      }      
     }
 
     consultarOp(){
@@ -638,25 +720,19 @@ private cargarConfiguracionColumnas(): void {
 
   editarObjeto(){
     //console.log("1)this.opActivas", this.$opActivas);
-    //this.objetoEditado= this.editarCampo(this.$opActivas)    
-    this.objetoEditado= this.$opActivas
-    //console.log("2)this.objetoEditado", this.objetoEditado);
+    this.objetoEditado= this.editarCampo(this.$opActivas);        
+    
+    console.log("2)this.objetoEditado", this.objetoEditado);
+  }
+
+  razonZocial(op:any):string{
+    return "Andesmar"
   }
 
   editarCampo(operaciones: any[]): ConId<Operacion>[] {
    return operaciones.map(operacion => {
-        return {
-            ...operacion,
-            estado: {
-                abierta:true,
-                cerrada:false,
-                facCliente: false,
-                facChofer: false,
-                facturada: false,
-                proformaCl: false,
-                proformaCh: false,
-            }
-        };
+        operacion.cliente.razonSocial = "Andesmar Cargas SA";
+        return operacion
     });
   }
 

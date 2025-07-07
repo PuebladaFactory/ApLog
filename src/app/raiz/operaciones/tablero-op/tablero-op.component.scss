@@ -28,3 +28,16 @@
 ul{
   font-size: 1.15rem;
 }
+
+.dropdown-item.activo {
+  background-color: #e3f2fd;
+  font-weight: bold;
+  color: #0d6efd;
+}
+
+.btn-primary {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+

@@ -17,29 +17,39 @@
                          <div class="d-flex gap-2 mt-3">
                             <!-- Dropdown Clientes -->
                             <div class="dropdown">
-                                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    Cliente: {{ clienteSeleccionado?.razonSocial || 'Todos' }}
+                                <button class="btn dropdown-toggle"
+                                        [ngClass]="clienteSeleccionado ? filtroPrincipal === 'cliente' ? 'btn-success' : 'btn-primary' : 'btn-outline-primary'"                                        
+                                        type="button"
+                                        data-bs-toggle="dropdown">
+                                    {{ clienteSeleccionado?.razonSocial || 'Clientes' }}
                                 </button>
                                 <ul class="dropdown-menu">
-                                <li *ngFor="let cliente of clientesEnPeriodo">
-                                    <a class="dropdown-item" (click)="filtrarPorCliente(cliente)">
-                                    {{ cliente.razonSocial }}
-                                    </a>
-                                </li>
+                                    <li *ngFor="let cliente of clientesEnPeriodo">
+                                        <a class="dropdown-item"
+                                            [ngClass]="{ 'activo': clienteSeleccionado?.idCliente === cliente.idCliente }"
+                                            (click)="filtrarPorCliente(cliente)">
+                                            {{ cliente.razonSocial }}
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
 
                             <!-- Dropdown Choferes -->
                             <div class="dropdown">
-                                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    Chofer: {{ choferSeleccionado?.apellido || 'Todos' }}
+                                <button class="btn dropdown-toggle"
+                                        [ngClass]="choferSeleccionado ? filtroPrincipal === 'chofer' ? 'btn-success' : 'btn-primary' : 'btn-outline-primary'"
+                                        type="button"
+                                        data-bs-toggle="dropdown">
+                                    {{ choferSeleccionado?.apellido || 'Choferes' }}
                                 </button>
                                 <ul class="dropdown-menu">
-                                <li *ngFor="let chofer of choferesEnPeriodo">
-                                    <a class="dropdown-item" (click)="filtrarPorChofer(chofer)">
-                                    {{ chofer.apellido }} {{ chofer.nombre }}
-                                    </a>
-                                </li>
+                                    <li *ngFor="let chofer of choferesEnPeriodo">
+                                        <a class="dropdown-item"
+                                            [ngClass]="{ 'activo': choferSeleccionado?.idChofer === chofer.idChofer }"
+                                            (click)="filtrarPorChofer(chofer)">
+                                            {{ chofer.apellido }} {{ chofer.nombre }}
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
 
@@ -132,4 +142,4 @@
 }
 
 <button class="btn btn-outline-secondary" (click)="editarObjeto()">Editar operaciones</button>
-<button class="btn btn-outline-secondary" (click)="eliminarObjeto()">Actualizar operaciones</button>
+<button class="btn btn-outline-secondary" (click)="actualizarObjeto()">Actualizar operaciones</button>
