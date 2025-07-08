@@ -17,7 +17,7 @@
           <tr>
             <th class="text-center">Fecha</th>
             <th class="text-center">idOperación</th>
-            @if (fromParent.tipo === 'proveedores') {
+            @if (fromParent.tipo === 'proveedor') {
               <th class="text-center">Chofer</th>
             }
             <th class="text-center">{{fromParent.tipo === 'cliente' ? 'Chofer' : 'Cliente'}}</th>
@@ -34,7 +34,7 @@
             <tr>
               <td>{{fac.fecha}}</td>
               <td>{{fac.idOperacion}}</td>
-              @if (fromParent.tipo === 'proveedores') {
+              @if (fromParent.tipo === 'proveedor') {
                 <td class="text-center">{{getChofer(fac.idChofer)}}</td>
               }
               <td>{{fromParent.tipo === 'cliente' ? getChofer(fac.idChofer) : getCliente(fac.idCliente)}}</td>

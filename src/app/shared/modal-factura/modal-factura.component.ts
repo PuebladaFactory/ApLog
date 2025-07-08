@@ -66,9 +66,10 @@ export class ModalFacturaComponent implements OnInit {
     console.log("fromParent", this.fromParent);
     this.facOp = this.fromParent.facOp
     this.factura = this.fromParent.item;
-    switch(this.fromParent.tipo){
+    this.titulo = this.fromParent.item.entidad.razonSocial
+    /* switch(this.fromParent.tipo){
       case "cliente":
-        this.titulo = this.fromParent.item.razonSocial
+        this.titulo = this.fromParent.item.entidad.razonSocial
         break;
       case "chofer":
         this.titulo = this.fromParent.item.apellido + " " + this.fromParent.item.nombre
@@ -78,7 +79,7 @@ export class ModalFacturaComponent implements OnInit {
         break;
       default:
         break;
-    }
+    } */
   }
 
   getChofer(idChofer: number){

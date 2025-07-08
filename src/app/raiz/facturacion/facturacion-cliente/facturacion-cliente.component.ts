@@ -184,7 +184,7 @@ export class FacturacionClienteComponent implements OnInit {
         });
   
        let info = {
-          modo: "clientes",
+          modo: "cliente",
           item: informesLiq,
         }; 
         //////console.log()(info);

@@ -51,7 +51,7 @@ export class FacturacionProveedorComponent implements OnInit {
       this.storageService.getObservable<ConId<InformeLiq>>("resumenLiqProveedores")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
-        //console.log("facturas proveedores: ",data);
+        console.log("facturas proveedores: ",data);
         if(data){
           
           this.informesLiqProveedor = data;
@@ -94,7 +94,7 @@ export class FacturacionProveedorComponent implements OnInit {
           // Procesar cada factura y actualizar los datos del cliente
           if (!proveedoresMap.has(factura.idInfLiq)) {
             proveedoresMap.set(factura.idInfLiq, {
-              idProveedor: factura.idInfLiq,
+              idProveedor: factura.entidad.id,
               proveedor: factura.entidad.razonSocial ,            
               sumaAPagar: 0,
               sumaACobrar: 0,
@@ -158,14 +158,15 @@ export class FacturacionProveedorComponent implements OnInit {
 
 
     mostrarMasDatos(index: number, proveedor:any) {   
-
+    console.log("index: ", index)
     if (this.datosTablaProveedor && this.datosTablaProveedor[index]) {
       this.mostrarTablaProveedor[index] = !this.mostrarTablaProveedor[index];
       const proveedorId = this.datosTablaProveedor[index].idProveedor;
-      const facturasProveedor = this.informesLiqProveedor.filter((factura: any) => factura.idProveedor === proveedorId);
+      console.log("proveedorId: ", proveedorId)
+      const facturasProveedor = this.informesLiqProveedor.filter((factura: ConId<InformeLiq>) => factura.entidad.id === proveedorId);
       this.facturasPorProveedor.set(proveedorId, facturasProveedor);        
-      ////console.log("1) facturasProveedor: ", facturasProveedor);
-      ////console.log("2) facturas por proveedor: ", this.facturasPorProveedor);
+      console.log("1) facturasProveedor: ", facturasProveedor);
+      console.log("2) facturas por proveedor: ", this.facturasPorProveedor);
       this.openModal(facturasProveedor, index)  
       
     } else {
@@ -187,7 +188,7 @@ export class FacturacionProveedorComponent implements OnInit {
         });
 
       let info = {
-          modo: "proveedores",
+          modo: "proveedor",
           item: informesLiq,
         }; 
         //////console.log()(info);

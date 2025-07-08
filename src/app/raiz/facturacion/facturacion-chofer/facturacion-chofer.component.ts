@@ -152,7 +152,7 @@ export class FacturacionChoferComponent implements OnInit {
       if (this.datosTablaChofer && this.datosTablaChofer[index]) {
         this.mostrarTablaChofer[index] = !this.mostrarTablaChofer[index];
         const choferId = this.datosTablaChofer[index].idChofer;
-        const facturasChofer = this.informesLiqChofer.filter((factura: any) => factura.idChofer === choferId);
+        const facturasChofer = this.informesLiqChofer.filter((factura: any) => factura.entidad.id === choferId);
         this.facturasPorChofer.set(choferId, facturasChofer);        
         ////console.log("1) facturasCliente: ", facturasCliente);
         ////console.log("2) facturas por cliente: ", this.facturasPorCliente);
@@ -177,7 +177,7 @@ export class FacturacionChoferComponent implements OnInit {
         });
 
       let info = {
-          modo: "choferes",
+          modo: "chofer",
           item: informesLiq,
         }; 
         ////console.log()(info);
