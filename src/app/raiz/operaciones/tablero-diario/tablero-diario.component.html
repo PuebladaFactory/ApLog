@@ -3,7 +3,13 @@
         <!-- Fecha -->
         <div class="">
             <label for="fechaSeleccionada" class="form-label mb-0 me-2 fw-bold">📅 Fecha:</label>
-            <input id="fechaSeleccionada" type="date" [(ngModel)]="fechaSeleccionada" class="form-control form-control-sm" />
+            <input
+              id="fechaSeleccionada"
+              type="date"
+              [(ngModel)]="fechaSeleccionada"
+              (change)="onFechaSeleccionadaChange()"
+              class="form-control form-control-sm"
+            />
         </div>
     </div>
     <div class="col-4">

@@ -1007,7 +1007,7 @@ export class StorageService {
           console.log(e.message)});
       }
 
-      public addLogItem(componente: string, item: any, idItem:number, accion:string, msj: string): void {
+/*       public addLogItem(componente: string, item: any, idItem:number, accion:string, msj: string): void {
         let user = this.loadInfo('usuario');
         //let accion: string = "ALTA";
         let regLog:boolean = this.controlLog(componente, accion);
@@ -1021,7 +1021,7 @@ export class StorageService {
             this.logService.logEvent(accion, componente, msj, idItem, false);
           }
           console.log(e.message)});
-      }
+      } */
     
       public deleteItem(componente: string, item: any,  idItem:number, accion:string, msj:string): void {
         //console.log(" storage deleteItem ", componente)

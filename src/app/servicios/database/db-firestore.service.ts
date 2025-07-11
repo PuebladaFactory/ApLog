@@ -1329,24 +1329,25 @@ async guardarMultipleOtraColeccion(
 }
 
 // 🔹 Guarda o reemplaza el tablero diario
-setItem<T extends { [key: string]: any }>(coleccion: string, id: string, data: T): Promise<void> {
+async setItem<T extends { [key: string]: any }>(
+  coleccion: string,
+  id: string,
+  data: T
+): Promise<void> {
+  console.log("📝 setItem() llamado para:", id, data);
   const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
-  return setDoc(docRef, data);
+  const cleanData = { ...data, id }; // fuerza que el id del objeto coincida con el del doc
+  return await setDoc(docRef, cleanData);
 }
 
-// 🔹 Obtiene el tablero diario guardado (por ID fijo: 'tablero-actual')
-async getTableroDiario(): Promise<TableroDiario | null> {
-  const docRef = doc(this.firestore, 'Vantruck/datos/tableroDiario/tablero-del-dia');
+
+async getTableroPorFecha(fecha: string): Promise<TableroDiario | null> {
+  const docRef = doc(this.firestore, `Vantruck/datos/tableroDiario/${fecha}`);
   const snapshot = await getDoc(docRef);
   if (!snapshot.exists()) return null;
   return snapshot.data() as TableroDiario;
 }
 
-// 🔹 Elimina el tablero diario almacenado
-async deleteTableroDiario(): Promise<void> {
-  const docRef = doc(this.firestore, 'Vantruck/datos/tableroDiario/tablero-del-dia');
-  return deleteDoc(docRef);
-}
 
 
 }
