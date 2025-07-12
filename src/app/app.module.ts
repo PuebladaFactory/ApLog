@@ -31,12 +31,10 @@ import { VerifyEmailComponent } from './appLogin/verify-email/verify-email.compo
 
 import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
 
-import { AdminModule } from './admin/admin.module';
+import { RaizModule } from './raiz/raiz.module';
 import { SharedModule } from './shared/shared.module';
-import { ChoferesModule } from './admin/choferes/choferes.module';
-import { OperacionesModule } from './admin/operaciones/operaciones.module';
-import { ProveedoresModule } from './admin/proveedores/proveedores.module';
-import { FacturacionModule } from './admin/facturacion/facturacion.module';
+
+
 import { CargaComponent } from './carga/carga.component';
 import { CloudinaryModule } from '@cloudinary/ng';
 import { LimboComponent } from './limbo/limbo.component';
@@ -65,13 +63,9 @@ import { ServiceWorkerModule } from '@angular/service-worker';
     AppRoutingModule,
     NgbModule,
     ReactiveFormsModule,
-    CloudinaryModule,
-    ChoferesModule,
-    AdminModule,
-    OperacionesModule,
+    CloudinaryModule,    
+    RaizModule,
     SharedModule,
-    ProveedoresModule,
-    FacturacionModule,
     FilterPipeModule,
     AgGridModule,
     DragDropModule,

@@ -1,0 +1,480 @@
+<div [ngClass]="{'isDisabled': isLoading}">
+  <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por cliente">
+  <table class="table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th scope="col" style="width:3%" class=""></th>
+        <th scope="col" style="width:18%" class=""  (click)="ordenar('razonSocial')">
+          <span type="button">Razon Social</span>
+          @if (ordenColumna === 'razonSocial') {
+            <span>
+              @if (ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+              @if (!ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+            </span>
+          }
+        </th>
+        <th scope="col" style="width:8%" class=""  (click)="ordenar('opCerradas')">
+          <span type="button">Op Cerradas</span>
+          @if (ordenColumna === 'opCerradas') {
+            <span>
+              @if (ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+              @if (!ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+            </span>
+          }
+        </th>
+        <th scope="col" style="width:8%" class=""  (click)="ordenar('opAbiertas')">
+          <span type="button">Op Abiertas</span>
+          @if (ordenColumna === 'opAbiertas') {
+            <span>
+              @if (ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+              @if (!ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+            </span>
+          }
+        </th>
+        <th scope="col" style="width:14.5%" class=""  (click)="ordenar('opSinFacturar')">
+          <span type="button">Sin Facturar</span>
+          @if (ordenColumna === 'opSinFacturar') {
+            <span>
+              @if (ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+              @if (!ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+            </span>
+          }
+        </th>
+        <th scope="col" style="width:14.5%" class=""  (click)="ordenar('opFacturadas')">
+          @if(llamadaOrigen === 'cliente'){
+            <span type="button">A Cobrar</span>
+          }@else {
+            <span type="button">A Pagar</span>
+          }          
+          @if (ordenColumna === 'opFacturadas') {
+            <span>
+              @if (ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+              @if (!ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+            </span>
+          }
+        </th>
+        <th scope="col" style="width:14.5%" class="table-success"  (click)="ordenar('total')">
+          <span type="button">Total</span>
+          @if (ordenColumna === 'total') {
+            <span>
+              @if (ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+              @if (!ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+            </span>
+          }
+        </th>
+        <th scope="col" style="width:14.5%" class=""  (click)="ordenar('aPagar')">
+          @if(llamadaOrigen === 'cliente'){
+            <span type="button">Total a Pagar</span>
+          }@else {
+            <span type="button">Total a Cobrar</span>
+          }
+          @if (ordenColumna === 'aPagar') {
+            <span>
+              @if (ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+              @if (!ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+            </span>
+          }
+        </th>
+        <th scope="col" style="width:8%" class="table-warning"  (click)="ordenar('ganancia')">
+          <span type="button">Ganancia</span>
+          @if (ordenColumna === 'ganancia') {
+            <span>
+              @if (ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+              @if (!ordenAscendente) {
+                <span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                  </svg>
+                </span>
+              }
+            </span>
+          }
+        </th>
+        <th scope="col" style="width:5%" class="">Facturar</th>
+      </tr>
+    </thead>
+    @if (datosTabla.length > 0) {
+      <tbody>
+        @for (objeto of datosTabla | globalFilter:searchText:['razonSocial','opCerradas', 'opAbiertas', 'opSinFacturar', 'opFacturadas','total','aPagar','aCobrar','ganancia']; track objeto; let i = $index) {
+          <tr>
+            <td>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" (click)="mostrarMasDatos(i)">
+                @if (!mostrarTabla[i]) {
+                  <ng-container>
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                  </ng-container>
+                }
+                @if (mostrarTabla[i]) {
+                  <ng-container>
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
+                  </ng-container>
+                }
+              </svg>
+            </td>
+            <td>{{ objeto.razonSocial }}</td>
+            <td class="text-center">{{ objeto.opCerradas }}</td>
+            <td class="text-center" [ngClass]="{'table-danger':objeto.opAbiertas !== 0}">{{ objeto.opAbiertas }}</td>
+            <td>{{objeto.opSinFacturar  | formatearValor : "$"}}</td>
+            <td>{{objeto.opFacturadas  | formatearValor : "$"}}</td>
+            <td class="table-success">{{objeto.total  | formatearValor : "$"}}</td>
+            @if(llamadaOrigen === 'cliente'){
+                <td>{{objeto.aPagar | formatearValor : "$"}}</td>
+            }@else {
+                <td>{{objeto.aCobrar | formatearValor : "$"}}</td>
+            }
+            @if(llamadaOrigen === 'cliente'){
+                <td class="text-center table-warning">{{ objeto.aPagar | calcularPorcentaje:objeto.total:true }}</td>
+            }@else {
+                <td class="text-center table-warning">{{ objeto.total | calcularPorcentaje:objeto.aCobrar:true }}</td>
+            }          
+            <!-- <td class="text-center table-warning">{{cliente.ganancia | formatearValor}} %</td> -->            
+            <td class="text-center">
+              <button class="btn btn-outline-secondary m-0 p-0" (click)="liquidarInformesObjeto(objeto, i)" [ngClass]="{'isDisabled': !mostrarTabla[i]}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16">
+                  <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73z"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+          <!-- Aquí agregamos la tabla adicional -->
+          @if (mostrarTabla[i]) {
+            <tr >
+              <td  [attr.colspan]="datosTabla.length + 9">
+                <!-- Aquí irían los datos adicionales del cliente -->
+                <input class="form-control" type="text" [(ngModel)]="searchText2" placeholder="Buscar por parámetro">
+                <table class="table table-light table-striped table-bordered" >
+                  <thead class="sticky-top">
+                    <tr>
+                      <!-- <th><input type="checkbox" (change)="selectAllCheckboxes($event, cliente.idCliente)"></th> -->
+                      <th style="width: 1.5%;"><input type="checkbox" (change)="selectAllCheckboxes($event, objeto.id)"></th>
+                      <th scope="col" class="" style="width: 8%;" >Fecha</th>
+                      <th scope="col" class="" style="width: 5.5%;">Quincena</th>
+                      <th scope="col" class="" style="width: 5.5%;">Id Op</th>
+                      @if(llamadaOrigen === 'cliente'){
+                          <th scope="col" class="" style="width: 13%;">Chofer</th>
+                      }@else {
+                          <th scope="col" class="" style="width: 13%;">Cliente</th>
+                      }
+                      @if (llamadaOrigen === 'proveedor') {
+                          <th scope="col" class="" style="width: 13%;">Chofer</th>
+                      }
+
+                      <th scope="col" class="" style="width: 3%;">Km</th>
+                      <th scope="col" class="" style="width: 8.5%;">Km $</th>
+                      <th scope="col" class="" style="width: 8%;">Acomp</th>
+                      <th scope="col" class="" style="width: 11%;">Tarifa Base</th>
+                      @if(llamadaOrigen === 'cliente'){
+                          <th scope="col" class="" style="width: 11.5%;">Total a Cobrar</th>
+                      }@else {
+                          <th scope="col" class="" style="width: 11.5%;">Total a Pagar</th>
+                      }
+                      @if(llamadaOrigen === 'cliente'){
+                          <th scope="col" class="" style="width: 11%;">A Pagar</th>
+                      }@else {
+                          <th scope="col" class="" style="width: 11%;">A Cobrar</th>
+                      }                     
+                      
+                      <th scope="col" class="" style="width: 6%;">Ganancia</th>
+                      <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>
+                      <th scope="col" class="" style="width: 4.5%;" >Facturar</th>
+                      <th *appRole="['god','admin', 'manager']" scope="col" colspan="2" style="width:3%;" class=""></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (informeOp of informesDetalladoPorObjeto.get(objeto.id)  ?? [] | globalFilter:searchText2:['Fecha','Quincena', 'idOperacion', 'Chofer', 'km','valores.kmMonto','valores.acompaniante','valores.tarifaBase', 'valores.total', 'contraParteMonto']; track informeOp) {
+                      <tr [ngClass]="{'isDisabled':informeOp.proforma || informeOp.contraParteProforma}">
+                        <td >
+                          <input type="checkbox" [checked]="informeOp.liquidacion" (change)="liquidarBoleano(informeOp)">
+                        </td>
+                        <td>{{informeOp.fecha}}</td>
+                        <td class="text-center" [innerHTML]="getQuincena(informeOp.fecha)"></td>
+                        <td>{{informeOp.idOperacion}}</td>
+                        @if (llamadaOrigen === 'cliente'){
+                            <td>{{getChofer(informeOp.idChofer)}}</td>
+                        }@else {
+                            <td>{{getCliente(informeOp.idCliente)}}</td>
+                        }
+                        @if (llamadaOrigen === 'proveedor') {
+                            <td>{{getChofer(informeOp.idChofer)}}</td>
+                        }
+                        <td>{{informeOp.km | formatearValor }}</td>
+                        <td>{{informeOp.valores.kmMonto | formatearValor :"$"}}</td>
+                        <td>{{informeOp.valores.acompaniante | formatearValor :"$"}}</td>
+                        <td>{{informeOp.valores.tarifaBase | formatearValor :"$"}}</td>
+                        <td class="table-success">{{informeOp.valores.total | formatearValor :"$"}}</td>
+                        <td>{{informeOp.contraParteMonto  | formatearValor :"$"}}</td>
+                        <!-- <td class="text-center table-warning">{{(100-((factura.contraParteMonto*100)/factura.valores.total)) | formatearValor}} %</td>     -->
+                         @if (llamadaOrigen === 'cliente'){
+                            <td class="text-center table-warning">{{ informeOp.contraParteMonto | calcularPorcentaje:informeOp.valores.total:true }}</td>
+                         } @else {
+                            <td class="text-center table-warning">{{ informeOp.valores.total | calcularPorcentaje:informeOp.contraParteMonto:true }}</td>
+                         }
+                        
+                        <td>
+                          <span [ngClass]="{'eventual':informeOp.tarifaTipo.eventual, 'personalizada':informeOp.tarifaTipo.personalizada}" >
+                            {{informeOp.tarifaTipo.personalizada ? "Personalizada" : informeOp.tarifaTipo.eventual ? "Eventual" : informeOp.tarifaTipo.especial ? "Especial" : "General"}}
+                          </span>
+                        </td>
+                        <td >
+                          <span [ngClass]="{'op-facturada': informeOp.liquidacion, 'op-sinFacturar':!informeOp.liquidacion}">{{informeOp.liquidacion ? "Si" : "No"}}</span>
+                        </td>
+                        <td *appRole="['god','admin', 'manager']">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" type="button" (click)="editarInformeOp(informeOp, i)">
+                            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                          </svg>
+                        </td>
+                        <td *appRole="['god','admin', 'manager']">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16" type="button" (click)="bajaInformeOp(informeOp, i)">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                          </svg>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    } @else {
+      <tbody>
+        <tr><td colspan="15">Sin Datos</td></tr>
+      </tbody>
+    }
+  </table>
+</div>
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}
+<div><small>Cantidad de Informes: {{informesOp.length}}</small></div>
+<br>
+<button class="btn btn-outline-secondary" (click)="filtrarObjeto()">2-Filtrar informes</button>
+<button class="btn btn-outline-secondary" (click)="eliminarObjetos()">Eliminar informes</button>
+<!-- 
+<button class="btn btn-outline-secondary" (click)="traerProformas()">1-Proformas</button>
+<button class="btn btn-outline-secondary" (click)="filtrarObjeto()">2-Filtrar informes</button>
+<button class="btn btn-outline-secondary" (click)="proformasCongeladas()">3-Encotrar informes congelados</button>
+<button class="btn btn-outline-secondary" (click)="editarObjeto()">4-Editar informes congelados</button>
+<button class="btn btn-outline-secondary" (click)="actualizarObjeto()">5-Actualizar informes</button>
+<button class="btn btn-outline-secondary" (click)="buscarObjetos()">Buscar informes</button>
+<button class="btn btn-outline-secondary" (click)="eliminarObjetos()">Eliminar informes</button>
+<button class="btn btn-outline-secondary" (click)="guardarObjeto()">5-Guardar informes</button>
+<hr>
+  <h1>DUPLICADAS LIQ</h1>
+  <button class="btn btn-outline-danger" (click)="mostrarDuplicadasEnLiquidacion()">mostrar Duplicadas Liquidación</button>
+  <button class="btn btn-danger" (click)="borrarDuplicadasEnLiquidacion()">Borrar Duplicadas Liquidación</button>
+  
+  <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
+  <table class="table table-light table-striped table-bordered" >
+    <thead>
+      <tr>
+        <th scope="col" class="" style="width: 8.5%;">Id Firebase</th>
+        <th scope="col" class="" style="width: 8.5%;">Id Objeto</th>
+        <th scope="col" class="" style="width: 8.5%;">Cliente</th>
+        <th scope="col" class="" style="width: 8.5%;">Fecha</th>
+        <th scope="col" class="" style="width: 5.5%;">Quincena</th>
+        <th scope="col" class="" style="width: 5.5%;">Id Op</th>
+        <th scope="col" class="" style="width: 12%;">Cliente</th>
+        <th scope="col" class="" style="width: 4.5%;">Km</th>
+        <th scope="col" class="" style="width: 8%;">Km $</th>
+        <th scope="col" class="" style="width: 8%;">Acomp</th>
+        <th scope="col" class="" style="width: 11%;">Tarifa Base</th>
+        <th scope="col" class="" style="width: 11%;">Total a Pagar</th>
+        <th scope="col" class="" style="width: 11%;">A Cobrar</th>
+        <th scope="col" class="" style="width: 6%;">Ganancia</th>
+        <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let factura of $facturasOpDuplicadas  | filterBy: searchText;">
+        <td>{{factura.id}}</td>
+        <td>{{factura.idFacturaOp}}</td>
+        <td >
+          {{getCliente(factura.idCliente)}}
+        </td>
+        <td>{{factura.fecha}}</td>
+        <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>
+        <td>{{factura.idOperacion}}</td>
+        <td>{{getCliente(factura.idCliente)}}</td>
+        <td>{{factura.km | formatearValor}}</td>
+        <td>{{factura.valores.kmMonto | formatearValor :"$"}}</td>
+        <td>{{factura.valores.acompaniante | formatearValor :"$"}}</td>
+        <td>{{factura.valores.tarifaBase | formatearValor :"$"}}</td>
+        <td class="table-success">{{factura.valores.total | formatearValor :"$"}}</td>
+        <td>{{factura.contraParteMonto | formatearValor :"$"}}</td>
+        <td class="text-center table-warning">{{(100-((factura.valores.total*100)/factura.contraParteMonto)) | formatearValor}} %</td>
+        <td>
+          <span [ngClass]="{'eventual':factura.tarifaTipo.eventual, 'personalizada':factura.tarifaTipo.personalizada}" >
+            {{factura.tarifaTipo.personalizada ? "Personalizada" : factura.tarifaTipo.eventual ? "Eventual" : factura.tarifaTipo.especial ? "Especial" : "General"}}
+          </span>
+        </td>
+        <td class="text-center" >
+          <span [ngClass]="{'op-facturada': factura.liquidacion, 'op-sinFacturar':!factura.liquidacion}">{{factura.liquidacion ? "Si" : "No"}}</span>
+        </td>
+
+      </tr>
+    </tbody>
+  </table>
+  <hr>
+    <button class="btn btn-primary" (click)="verificarDuplicadosFacturadas()">Buscar</button>
+    <h1>DUPLICADAS FACTURADAS</h1>
+    <button class="btn btn-danger" (click)="deleteDuplicadas()">Borrar</button>
+    <input class="form-control mt-2" type="text" [(ngModel)]="searchText3" placeholder="Buscar por chofer">
+    <table class="table table-light table-striped table-bordered" >
+      <thead>
+        <tr>
+          <th scope="col" class="" style="width: 8.5%;">Id Firebase</th>
+          <th scope="col" class="" style="width: 8.5%;">Id Objeto</th>
+          <th scope="col" class="" style="width: 8.5%;">Cliente</th>
+          <th scope="col" class="" style="width: 8.5%;">Fecha</th>
+          <th scope="col" class="" style="width: 5.5%;">Quincena</th>
+          <th scope="col" class="" style="width: 5.5%;">Id Op</th>
+          <th scope="col" class="" style="width: 12%;">Cliente</th>
+          <th scope="col" class="" style="width: 4.5%;">Km</th>
+          <th scope="col" class="" style="width: 8%;">Km $</th>
+          <th scope="col" class="" style="width: 8%;">Acomp</th>
+          <th scope="col" class="" style="width: 11%;">Tarifa Base</th>
+          <th scope="col" class="" style="width: 11%;">Total a Pagar</th>
+          <th scope="col" class="" style="width: 11%;">A Cobrar</th>
+          <th scope="col" class="" style="width: 6%;">Ganancia</th>
+          <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let factura of $facLiqOpDuplicadas  | filterBy: searchText3;">
+          <td>{{factura.id}}</td>
+          <td>{{factura.idFacturaOp}}</td>
+          <td >
+            {{getCliente(factura.idCliente)}}
+          </td>
+          <td>{{factura.fecha}}</td>
+          <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>
+          <td>{{factura.idOperacion}}</td>
+          <td>{{getCliente(factura.idCliente)}}</td>
+          <td>{{factura.km | formatearValor}}</td>
+          <td>{{factura.valores.kmMonto | formatearValor :"$"}}</td>
+          <td>{{factura.valores.acompaniante | formatearValor :"$"}}</td>
+          <td>{{factura.valores.tarifaBase | formatearValor :"$"}}</td>
+          <td class="table-success">{{factura.valores.total | formatearValor :"$"}}</td>
+          <td>{{factura.contraParteMonto | formatearValor :"$"}}</td>
+          <td class="text-center table-warning">{{(100-((factura.valores.total*100)/factura.contraParteMonto)) | formatearValor}} %</td>
+          <td>
+            <span [ngClass]="{'eventual':factura.tarifaTipo.eventual, 'personalizada':factura.tarifaTipo.personalizada}" >
+              {{factura.tarifaTipo.personalizada ? "Personalizada" : factura.tarifaTipo.eventual ? "Eventual" : factura.tarifaTipo.especial ? "Especial" : "General"}}
+            </span>
+          </td>
+          <td class="text-center" >
+            <span [ngClass]="{'op-facturada': factura.liquidacion, 'op-sinFacturar':!factura.liquidacion}">{{factura.liquidacion ? "Si" : "No"}}</span>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}
+
+<div>
+  <button class="btn btn-primary" (click)="borrarLiquidaciones()">Borrar </button>
+</div> -->
+
+
+
+
+
+
