@@ -63,7 +63,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   }
   
   ngOnInit(): void {   
-    //console.log(this.fromParent);    
+    console.log(this.fromParent);    
     //console.log('ModalFacturacionComponent - ngOnInit');
     //////console.log("vista: ",this.vista);
     //////console.log("editar: ",this.editar);

@@ -17,6 +17,7 @@ import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { Cliente } from 'src/app/interfaces/cliente';
+import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 
 
 @Component({
@@ -84,7 +85,8 @@ export class TableroOpComponent implements OnInit, OnDestroy {
     private storageService: StorageService,
     private dbFirebase: DbFirestoreService,
     private modalService: NgbModal,
-    private excelServ: ExcelService
+    private excelServ: ExcelService,
+    private tableroServ: TableroService
   ) {}
 
   ngOnInit(): void {
@@ -540,7 +542,7 @@ private cargarConfiguracionColumnas(): void {
     }
   }
 
-    openModalBaja(idOp:number){
+    async openModalBaja(idOp:number){
       {
         const modalRef = this.modalService.open(ModalBajaComponent, {
           windowClass: 'myCustomModalClass',
@@ -549,33 +551,29 @@ private cargarConfiguracionColumnas(): void {
           size: 'sm',     
         });   
         
-        let operacion:Operacion [] = this.$opActivas.filter(o => o.idOperacion === idOp);
+        let operacion:ConId<Operacion> [] = this.$opActivas.filter(o => o.idOperacion === idOp);
   
         let info = {
           modo: "operaciones",
-          item: operacion [0]
+          item: operacion[0]
         }  
         //////////console.log()(info); */
         
         modalRef.componentInstance.fromParent = info;
-      
-        modalRef.result.then(
-          (result) => {
-            ////console.log("result", result);
-            if(result !== undefined){   
-              ////////////console.log("llamada al storage desde op-abiertas, deleteItem");
-              this.storageService.deleteItemPapelera(this.componente, this.opEditar, this.opEditar.idOperacion, "BAJA", "Baja de Operación", result);
-              ////////////console.log("consultas Op: " , this.$consultasOp);
-              Swal.fire({
-                title: "Confirmado",
-                text: "La operación ha sido dada de baja",
-                icon: "success"
-              });
-            }
-           
-          },
-          (reason) => {}
-        );
+        try {
+          const motivo = await modalRef.result;
+          if(!motivo) return
+          await this.tableroServ.anularOperacionYActualizarTablero(operacion[0], motivo);
+          Swal.fire({
+            icon: 'success',
+            title: 'Operación eliminada',
+            text: 'La operación fue dada de baja y se actualizó el tablero.'
+          });
+
+        } catch (e) {
+          console.warn("El modal fue cancelado o falló:", e);
+        }
+
       }
     }
 

@@ -15,6 +15,7 @@ import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarif
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -63,7 +64,14 @@ export class ModalOpAltaComponent implements OnInit {
   today = new Date().toISOString().split('T')[0];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private buscarTarifaServ: BuscarTarifaService, private formNumServ: FormatoNumericoService, public activeModal: NgbActiveModal,  private dbFirebase: DbFirestoreService){
+  constructor(
+    private fb: FormBuilder, 
+    private storageService: StorageService, 
+    private buscarTarifaServ: BuscarTarifaService, 
+    private formNumServ: FormatoNumericoService, 
+    public activeModal: NgbActiveModal,  
+    private tableroServ: TableroService
+  ){
     this.form = this.fb.group({
       fecha: [this.today, Validators.required],
       cliente: ['', Validators.required],
@@ -87,7 +95,7 @@ export class ModalOpAltaComponent implements OnInit {
     this.formVehiculosChofer = this.fb.group({
       patente: ["", Validators.required],
     });
-   }
+  }
 
   ngOnInit(): void { 
         
@@ -166,12 +174,9 @@ export class ModalOpAltaComponent implements OnInit {
         //console.log("data", data);
         this.ultTarifaGralProveedor = data[0] || {};          
         //console.log("this.tarifaGeneral", this.tarifaGeneral);
-      }  
-   
+      }     
       
-    })
-
-     
+    });     
   }
 
   ngOnDestroy(): void {
@@ -215,14 +220,7 @@ export class ModalOpAltaComponent implements OnInit {
 
     if(this.clienteSeleccionado.tarifaTipo.personalizada){
       //////console.log("El cliente tiene tarifa personalizada");
-      this.buscarTarifaPersonalizada();
-      /* if(this.choferEventual){
-        this.tPersonalizada = false;         
-      } else{
-        this.tPersonalizada = true;      
-        this.tEventual = false
-        
-      }       */
+      this.buscarTarifaPersonalizada();     
     } else {
       this.tPersonalizada = false;
       //this.medidasModal(this.tPersonalizada, "opTarifaPersonalizada");      
@@ -343,27 +341,6 @@ export class ModalOpAltaComponent implements OnInit {
         }
     }
     })
-    
-    
-    
-    
-    //console.log("BUSCAR TARIFA PERSONALIZADA) proveedores: ", this.$proveedores);
-    /* this.storageService.tarifasPersCliente$
-    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-    .subscribe(data => {
-      if(data){
-        this.tarifaClienteSel = data;
-        console.log("this.tarifaClienteSel: ", this.tarifaClienteSel);    
-        if(this.choferEventual){
-          this.tPersonalizada = false;         
-        } else{
-          this.tPersonalizada = true;      
-          this.tEventual = false
-          
-        }                   
-      }
-      
-    }) */
   }
 
   selectTarifaEventual(event: any) {
@@ -399,12 +376,7 @@ export class ModalOpAltaComponent implements OnInit {
       this.formTarifaEventual.get('choferValor').clearValidators();
       this.formTarifaEventual.get('clienteConcepto').clearValidators();
       this.formTarifaEventual.get('clienteValor').clearValidators();
-      //this.tEventual = false;      
-      //this.medidasModal(this.tEventual, "opTarifaEventual");        
-      /* let array = [];
-      array.push(this.tEventual)
-      this.storageService.setInfo("opTarifaEventual", array);
-      array = []; */
+      
     }
 
     // Actualizar la validación de todos los campos
@@ -487,7 +459,7 @@ export class ModalOpAltaComponent implements OnInit {
     });
   }
 
-  armarOp(){
+  async armarOp(){
   //console.log("ARMAR OP) proveedores: ", this.$proveedores);
   // Extraer valores del formulario y otros datos
   const formValues = this.form.value;
@@ -675,7 +647,7 @@ export class ModalOpAltaComponent implements OnInit {
   }
 
   ////console.log("esta es la operacion: ", this.op);  
-  Swal.fire({
+   Swal.fire({
     title: `¿Desea agregar la operación con fecha ${this.op.fecha} para el Cliente ${this.op.cliente.razonSocial}?`,
     //text: "You won't be able to revert this!",
     icon: "warning",
@@ -685,7 +657,7 @@ export class ModalOpAltaComponent implements OnInit {
     confirmButtonText: "Agregar",
     cancelButtonText: "Cancelar"
   }).then((result) => {
-    if (result.isConfirmed) {
+    if (result.isConfirmed) {        
       ////////console.log("op: ", this.op);  
       this.addItem();
       Swal.fire({
@@ -716,13 +688,23 @@ export class ModalOpAltaComponent implements OnInit {
   
   }
 
-  addItem(): void {
+  async addItem() {
     ////////console.log("llamada al storage desde op-alta, addItem");
     //console.log("FIN) proveedores: ", this.$proveedores);
-    
     this.storageService.addItem(this.componente, this.op, this.op.idOperacion, "ALTA", "Alta de Operación");    
+    try {            
+      await this.tableroServ.altaOperacionYActualizarTablero(this.op);
+/*       Swal.fire({
+        icon: 'success',
+        title: 'El tablero fue',
+        text: 'La operación fue dada de baja y se actualizó el tablero.'
+      }); */
+
+    } catch (e) {
+      console.warn("El modal fue cancelado o falló:", e);
+    }    
     this.limpiarCampos()
-    this.ngOnInit()
+    //this.ngOnInit()
   
   }  
 

@@ -12,17 +12,15 @@ import { CargaTableroDiarioComponent } from '../carga-tablero-diario/carga-table
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-type complementoChofer =  {
-  categoriaAsignada: Categoria;
-  observaciones: string;
-  hojaDeRuta: string;
-  tEventual:boolean;
-};
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { TableroService } from 'src/app/servicios/tablero/tablero.service';
+
 type ChoferAsignado = ConIdType<Chofer> & {
   categoriaAsignada: Categoria;
   observaciones: string;
   hojaDeRuta: string;
   tEventual:boolean;
+  idOperacion?: number; // 👈 NUEVO
 };
 
 export interface ChoferAsignadoBase {
@@ -31,6 +29,7 @@ export interface ChoferAsignadoBase {
   categoriaAsignada?: Categoria;
   observaciones?: string;
   hojaDeRuta?: string;  
+  idOperacion?: number; // 👈 NUEVO
 }
 
 export interface TableroDiario {
@@ -73,12 +72,14 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   choferEditable: ChoferAsignado | null = null;
   isLoading: boolean = false;
   fechaAnterior: string | null = null;
+  tablero: TableroDiario | null = null;
 
   constructor(
     private storageService: StorageService,
     private modalService: NgbModal, 
     private dbFirestore: DbFirestoreService,
-    private excelServ: ExcelService
+    private excelServ: ExcelService,
+    private tableroServ: TableroService,
   ) {}
 
   ngOnInit(): void {
@@ -86,7 +87,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     // 1. Obtener tarifa general del localStorage
     const storedTarifa = this.storageService.loadInfo("tarifasGralCliente")
     this.tarifaGeneral = storedTarifa[0];
-    ////console.log("tarifaGeneral", this.tarifaGeneral );
+    //////console.log("tarifaGeneral", this.tarifaGeneral );
 
 
     // 2. Obtener choferes
@@ -135,9 +136,9 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
 
       const tableroLocalStr = localStorage.getItem('tableroDiarioFirestore');
       if (tableroLocalStr) {
-        const tablero = JSON.parse(tableroLocalStr) as TableroDiario;
-        this.fechaSeleccionada = tablero.fecha;
-        this.reconstruirDesdeTablero(tablero);
+        this.tablero = JSON.parse(tableroLocalStr) as TableroDiario;
+        this.fechaSeleccionada = this.tablero.fecha;
+        this.reconstruirDesdeTablero(this.tablero);
       }
 
       // 👇 Buscar tablero existente en base de datos
@@ -187,7 +188,8 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
 
 
   onDropChoferEnCliente(event: CdkDragDrop<any>, clienteId: number): void {
-    /* if(!this.fechaSeleccionada) return this.mensajesError("Antes debe seleccionar una fecha") */
+    if(!this.fechaSeleccionada) return this.mensajesError("Antes debe seleccionar una fecha");
+    if(this.tablero?.asignado) return this.mensajesError("El tablero ya fue dado de alta. Para agregar una operación debe hacerlo desde el Tablero de Operaciones");
     const data = event.item.data;
     const choferBase: ConIdType<Chofer> = data.chofer;
 
@@ -198,7 +200,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       observaciones:"",
       hojaDeRuta:""
     };
-    ////console.log("1)chofer: ", chofer);
+    //////console.log("1)chofer: ", chofer);
 
     /* if (!this.asignaciones[clienteId].some(c => c.idChofer === chofer.idChofer)) {
       // Guardamos la categoría con la que fue asignado
@@ -209,7 +211,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     }
 
     this.asignaciones[clienteId].push(chofer);
-    //console.log("this.asignaciones;", this.asignaciones);
+    ////console.log("this.asignaciones;", this.asignaciones);
     
   }
 
@@ -236,7 +238,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       observaciones:"",
       hojaDeRuta:""
     };
-    //console.log("1)chofer: ", chofer);
+    ////console.log("1)chofer: ", chofer);
     
     if (event.previousContainer !== event.container) {
       const clienteId = +event.previousContainer.id.replace('cliente-drop-', '');
@@ -265,8 +267,93 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     );
   }
 
-  quitarChoferDeCliente(idCliente: number, index: number): void {
-    this.asignaciones[idCliente].splice(index, 1);
+  async quitarChoferDeCliente(idCliente: number, index: number): Promise<void> {
+    console.log("this.tablero: ", this.tablero);
+    
+    const chofer = this.asignaciones[idCliente][index];
+    console.log("chofer: ", chofer);
+    // 🔸 Caso 1: tablero aún no asignado
+    if (!this.tablero?.asignado) {
+      this.asignaciones[idCliente].splice(index, 1);
+      return;
+    }
+
+    // 🔸 Caso 2: tablero ya asignado → buscar operación por ID
+    if (!chofer.idOperacion) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se puede encontrar la operación asociada a esta asignación.'
+      });
+      return;
+    }
+
+    if (this.tablero.asignado && chofer.idOperacion) {
+      const operacion = await this.dbFirestore.getItemByField<Operacion>('operaciones', 'idOperacion', chofer.idOperacion);
+      console.log("operacion", operacion);
+      
+      if (!operacion) return;
+
+      // 🟡 Confirmación inicial
+      const confirmacion = await Swal.fire({
+        icon: 'warning',
+        title: '¿Desea eliminar esta operación?',
+        text: 'Esta acción eliminará la operación guardada y actualizará el tablero.',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!confirmacion.isConfirmed) return;
+
+      // 📋 Modal para ingresar motivo
+      const modalRef = this.modalService.open(ModalBajaComponent, {
+        centered: true,
+        size: 'sm'
+      });
+
+      const info = {
+        modo: 'operaciones',
+        item: operacion
+      };
+
+      modalRef.componentInstance.fromParent = info;
+
+      try {
+        const motivo = await modalRef.result;
+        await this.tableroServ.anularOperacionYActualizarTablero(operacion, motivo);
+        const nuevoTableroStr = localStorage.getItem('tableroDiarioFirestore');
+        const nuevoTablero = nuevoTableroStr ? JSON.parse(nuevoTableroStr) as TableroDiario : null;
+        console.log("nuevoTablero", nuevoTablero);
+        
+        if (!nuevoTablero) {
+          this.tablero = null;
+          this.asignaciones = {};
+          this.fechaSeleccionada = ''; // opcional: resetear la fecha si lo ves necesario
+
+          Swal.fire({
+            icon: 'info',
+            title: 'Tablero eliminado',
+            text: 'Se eliminó la última asignación y el tablero fue eliminado.'
+          });
+          return;
+        }
+
+        // 🟢 Si hay asignaciones restantes → actualizar tablero local
+        this.tablero = nuevoTablero;
+        this.reconstruirDesdeTablero(nuevoTablero);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Operación eliminada',
+          text: 'La operación fue dada de baja y se actualizó el tablero.'
+        });
+
+      } catch (e) {
+        console.warn("El modal fue cancelado o falló:", e);
+      }
+    }
+
   }
 
   asignacionesMultiples(chofer: ConId<Chofer>): number {
@@ -294,16 +381,20 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   }
 
   async buscarTableroPorFecha(fecha: string): Promise<void> {
-    console.log("aca?");
+   
     
     this.isLoading = true;
     try {
-      const tablero = await this.dbFirestore.getTableroPorFecha(fecha); // nuevo método
+      const tablero = await this.tableroServ.getTableroPorFecha(fecha); // nuevo método
       if (!tablero){
         this.asignaciones = {};
+        localStorage.removeItem('asignacionesTemporal');
+        localStorage.removeItem('tableroDiarioFirestore');
+        this.tablero = null; // ← sin tablero cargado
         return 
       } 
-      console.log("tablero: ", tablero);
+      this.tablero = tablero; // ← guardás el tablero completo
+      //console.log("tablero: ", tablero);
       
       const tableroLocalStr = localStorage.getItem('tableroDiarioFirestore');
       const tableroLocal = tableroLocalStr ? JSON.parse(tableroLocalStr) as TableroDiario : null;
@@ -316,11 +407,11 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       this.fechaSeleccionada = tablero.fecha;
       this.reconstruirDesdeTablero(tablero);
 
-      Swal.fire({
+      /* Swal.fire({
         icon: 'info',
         title: 'Tablero cargado',
         text: 'Se restauró un tablero guardado para esta fecha.'
-      });
+      }); */
     } catch (error) {
       console.error(error);
       Swal.fire({
@@ -334,9 +425,9 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   }
 
   private reconstruirDesdeTablero(tablero: TableroDiario): void {
-    console.log("tablero: ", tablero, "this.asignaciones", this.asignaciones);
+    //console.log("tablero: ", tablero, "this.asignaciones", this.asignaciones);
     
-    this.asignaciones = {};
+    //this.asignaciones = {};
 
     for (const [idStr, choferesBase] of Object.entries(tablero.asignaciones)) {
       const idCliente = +idStr;
@@ -351,23 +442,24 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
           categoriaAsignada: base.categoriaAsignada ?? { catOrden: 0, nombre: 'Sin categoría' },
           tEventual: base.tEventual,
           observaciones: base.observaciones ?? '',
-          hojaDeRuta: base.hojaDeRuta ?? ''
+          hojaDeRuta: base.hojaDeRuta ?? '',
+          idOperacion: base.idOperacion ?? 0 // 👈 NUEVO
         });
       }
 
       this.asignaciones[idCliente] = choferesCompletos;
       
     }
-    console.log("this.asignaciones", this.asignaciones);
+    //console.log("this.asignaciones", this.asignaciones);
     
   }
 
 
 
   altaOp() {
-    ////console.log("this.asignaciones", this.asignaciones);
+    //////console.log("this.asignaciones", this.asignaciones);
     const hayAsignaciones = Object.entries(this.asignaciones).filter(([_, choferes]) => choferes.length > 0)
-    //console.log("hayAsignaciones: ", hayAsignaciones);
+    ////console.log("hayAsignaciones: ", hayAsignaciones);
     if(hayAsignaciones.length === 0){
       this.mensajesError("Debe asignar algun chofer para crear operaciones")
       return
@@ -380,16 +472,13 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       .map(([clienteId, choferes]) => ({
         fecha: this.fechaSeleccionada,
         clienteId: +clienteId,
-        choferes: choferes.map(c => {
-          let {categoriaAsignada, ...ch} = c;
-          return ch
-        })
+        choferes: choferes.map(c => ({ ...c }))
       }))
 
-      //console.log('Asignaciones a guardar:', resultadoFinal);
+      ////console.log('Asignaciones a guardar:', resultadoFinal);
       // Aquí podés guardar en Firebase
       // Acá podrías guardar en Firebase o backend si querés
-      // //console.log('Asignaciones guardadas:', this.asignaciones);
+      // ////console.log('Asignaciones guardadas:', this.asignaciones);
 
       
       this.openModal(resultadoFinal);
@@ -413,30 +502,35 @@ openModal(opMultiples: any[]): void {
   modalRef.componentInstance.fromParent = info;
 
   modalRef.result.then(
-    async (result: Operacion[]) => {
-      if (!result || result.length === 0) return;
+    async (result: { operaciones: Operacion[]; asignaciones: { [idCliente: number]: ChoferAsignadoBase[] } }) => {
+      if (!result || result.operaciones.length === 0) return;
 
       this.isLoading = true;
 
-      const res = await this.dbFirestore.guardarOpMultiple(result);
+      const res = await this.dbFirestore.guardarOpMultiple(result.operaciones);
 
       this.isLoading = false;
 
       if (res.exito) {
         await this.generarInfDiario(); // ✅ Generar informe automáticamente
 
-        await this.dbFirestore.setItem<TableroDiario>('tableroDiario', this.fechaSeleccionada, {
+        this.tablero = {
           id: this.fechaSeleccionada,
           fecha: this.fechaSeleccionada,
-          asignaciones: {}, // opcional: puedes guardar nuevamente las asignaciones reales o vaciar
+          asignaciones: result.asignaciones, // ← asignaciones con idOperacion
           timestamp: Date.now(),
-          asignado: true     // 👈 importante
-        });
-        let arrayOp: number[] = [];
-        result.map((op:Operacion)=>{
-          arrayOp.push(op.idOperacion);
-        })
-        this.storageService.logMultiplesOp(arrayOp, "ALTA", "operaciones", `Alta de Operación`,true)
+          asignado: true
+        }
+        await this.tableroServ.guardarTablero(this.tablero, "ALTA")
+        /* await this.dbFirestore.setItem<TableroDiario>('tableroDiario', this.fechaSeleccionada, {
+          id: this.fechaSeleccionada,
+          fecha: this.fechaSeleccionada,
+          asignaciones: result.asignaciones, // ← asignaciones con idOperacion
+          timestamp: Date.now(),
+          asignado: true
+        }); */
+        const arrayOp: number[] = result.operaciones.map((op) => op.idOperacion);
+        this.storageService.logMultiplesOp(arrayOp, "ALTA", "operaciones", `Alta de Operación`, true);
         this.limpiarAsignaciones();
         localStorage.removeItem('asignacionesTemporal');
         localStorage.removeItem('tableroDiarioFirestore');
@@ -466,6 +560,7 @@ openModal(opMultiples: any[]): void {
     }
     this.fechaSeleccionada = ''; // opcional
     localStorage.removeItem('asignacionesTemporal');
+    this.tablero = null;
   }
 
   mensajesError(msj:string){
@@ -514,14 +609,14 @@ openModal(opMultiples: any[]): void {
   }
   
 
-  onFechaSeleccionadaChange(): void {
+  onFechaSeleccionadaChange(): void {    
     if (!this.fechaSeleccionada || this.fechaSeleccionada === this.fechaAnterior) {
       return; // No hay cambio o fecha inválida
     }
 
     this.fechaAnterior = this.fechaSeleccionada;
-    console.log("this.fechaSeleccionada", this.fechaSeleccionada);
-    
+    //console.log("this.fechaSeleccionada", this.fechaSeleccionada);
+    this.asignaciones = {}
     this.buscarTableroPorFecha(this.fechaSeleccionada);
   }
 
@@ -537,6 +632,8 @@ openModal(opMultiples: any[]): void {
   }
 
   abrirEdicionChofer(chofer: ChoferAsignado, modalRef: TemplateRef<any>) {
+    console.log("chofer: ", chofer);
+    if(this.tablero?.asignado)return this.mensajesError("No se puede editar una asiganción que ya fue dada de alta")
     this.choferSeleccionadoOriginal = chofer;
     this.choferEditable = { ...chofer };
 
@@ -575,7 +672,7 @@ async guardarTableroDiario(): Promise<void> {
   if (!isConfirmed) return;  
   this.isLoading = true; // Activar spinner  
 
-  const tablero: TableroDiario = {
+  this.tablero = {
     id: this.fechaSeleccionada, 
     fecha: this.fechaSeleccionada,
     asignaciones: {},
@@ -587,7 +684,7 @@ async guardarTableroDiario(): Promise<void> {
   for (const [idStr, lista] of Object.entries(this.asignaciones)) {
     if (lista.length === 0) continue;
 
-    tablero.asignaciones[+idStr] = lista.map((c): ChoferAsignadoBase => ({
+    this.tablero.asignaciones[+idStr] = lista.map((c): ChoferAsignadoBase => ({
       idChofer: c.idChofer,
       categoriaAsignada: c.categoriaAsignada,
       tEventual: c.tEventual,
@@ -597,11 +694,11 @@ async guardarTableroDiario(): Promise<void> {
   }
 
   try {
-    await this.dbFirestore.setItem<TableroDiario>('tableroDiario', tablero.id, tablero);
+    await this.tableroServ.guardarTablero(this.tablero, "ALTA");
 
-    localStorage.setItem('tableroDiarioFirestore', JSON.stringify(tablero));
+    localStorage.setItem('tableroDiarioFirestore', JSON.stringify(this.tablero));
     localStorage.setItem('asignacionesTemporal', JSON.stringify(this.asignaciones));
-    this.storageService.logSimple(tablero.timestamp, "ALTA", 'tableroDiario', `Tablero Diario del dia ${tablero.fecha}, guardado`,true)
+    //this.storageService.logSimple(tablero.timestamp, "ALTA", 'tableroDiario', `Tablero Diario del dia ${tablero.fecha}, guardado`,true)
     this.isLoading = false; // Desactivar spinner
     Swal.fire({
       icon: 'success',
@@ -620,7 +717,27 @@ async guardarTableroDiario(): Promise<void> {
   }
 }
 
+  cambiarDia(direccion: number): void {
+    if (!this.fechaSeleccionada) return;
 
+    const fechaActual = new Date(this.fechaSeleccionada);
+    fechaActual.setDate(fechaActual.getDate() + direccion);
+
+    const nuevaFecha = fechaActual.toISOString().split('T')[0]; // formato yyyy-MM-dd
+    this.fechaSeleccionada = nuevaFecha;
+
+    this.onFechaSeleccionadaChange(); // vuelve a hacer la consulta
+  }
+  
+
+  getDiaSemana(fechaStr: string): string {
+    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+    const [anio, mes, dia] = fechaStr.split('-').map(Number);
+    const fechaLocal = new Date(anio, mes - 1, dia); // mes base 0
+
+    return dias[fechaLocal.getDay()];
+  }
 
 
 

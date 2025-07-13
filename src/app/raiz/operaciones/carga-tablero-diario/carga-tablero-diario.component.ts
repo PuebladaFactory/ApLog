@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
+import { ChoferAsignadoBase } from '../tablero-diario/tablero-diario.component';
 
 type ChoferAsignado = ConId<Chofer> & {
   hojaDeRuta?: string;
@@ -33,7 +34,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
 
   operaciones: Operacion[] = [];
   operacionesAgrupadas: { clienteId: number; razonSocial: string; tipo: 'eventual' | 'personalizada' | 'especial' | 'general'; operaciones: Operacion[] }[] = [];
-  clientes: Cliente[] = [];
+  clientes: ConIdType<Cliente>[] = [];
   fecha: string = '';
   tarifasPersonalizadas: TarifaPersonalizadaCliente[] = []
   tarifaGralCliente!: ConId<TarifaGralCliente>;
@@ -57,17 +58,19 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     this.clientes = storedClientes ? JSON.parse(storedClientes) : [];
 
     const entradas = this.fromParent.item;
+    console.log("entradas: ", entradas);
+    
     this.fecha = entradas[0]?.fecha || '';
     this.tarifasPersonalizadas = this.storageService.loadInfo('tarifasPersCliente') || [];
 
 
     for (const entrada of entradas) {
-      const cliente = this.clientes.find(c => c.idCliente === entrada.clienteId);
-      if (!cliente) continue;
+      const clienteComp = this.clientes.find(c => c.idCliente === entrada.clienteId);
+      if (!clienteComp) continue;
+      let {id,type, ...cliente} = clienteComp
 
       for (const chofer of entrada.choferes) {
-        const tarifaTipo = this.getTarifaTipo(cliente, chofer);
-
+        const tarifaTipo = this.getTarifaTipo(cliente, chofer);        
         const op: Operacion = {
           idOperacion: new Date().getTime() + Math.floor(Math.random() * 1000),
           fecha: entrada.fecha,
@@ -121,7 +124,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
 
         (op as any).tarifaTipoOriginal = { ...op.tarifaTipo };
         (op as any).originalEventual = tarifaTipo.eventual; // Propiedad temporal
-
+        (op as any).categoriaAsignada = (chofer as any).categoriaAsignada;
         this.operaciones.push(op);
       }
     }
@@ -243,7 +246,33 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
           });
 
           //console.log(this.operaciones);
-          this.activeModal.close(this.operaciones);
+          // Mapa de clienteId → choferes con idOperacion
+          const asignacionesConIdOperacion: { [idCliente: number]: ChoferAsignadoBase[] } = {};
+
+          for (const op of this.operaciones) {
+            const idCliente = op.cliente.idCliente;
+            const choferAsignado: ChoferAsignadoBase = {
+              idChofer: op.chofer.idChofer,
+              categoriaAsignada: (op as any).categoriaAsignada ?? { catOrden: 0, nombre: 'Sin categoría' },
+              observaciones: op.observaciones,
+              hojaDeRuta: op.hojaRuta,
+              tEventual: op.tarifaTipo.eventual,
+              idOperacion: op.idOperacion
+            };
+
+            if (!asignacionesConIdOperacion[idCliente]) {
+              asignacionesConIdOperacion[idCliente] = [];
+            }
+            asignacionesConIdOperacion[idCliente].push(choferAsignado);
+          }
+          this.operaciones.forEach(op => {
+            delete (op as any).categoriaAsignada;
+            delete (op as any).tarifaTipoOriginal;
+            delete (op as any).originalEventual;
+          });
+          this.limpiarPropiedadesChoferEnOperaciones();
+          // Mandar operaciones + asignaciones con ID
+          this.activeModal.close({ operaciones: this.operaciones, asignaciones: asignacionesConIdOperacion });
         }else{
           // Si el usuario cancela, realiza la acción correspondiente
          
@@ -526,6 +555,33 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     
 
   }
+
+  private limpiarPropiedadesChoferEnOperaciones(): void {
+    this.operaciones.forEach(op => {
+      const choferOriginal: Chofer = {
+        idChofer: op.chofer.idChofer,
+        nombre: op.chofer.nombre,
+        apellido: op.chofer.apellido,
+        cuit: op.chofer.cuit,
+        celularContacto: op.chofer.celularContacto,
+        celularEmergencia: op.chofer.celularEmergencia,
+        contactoEmergencia: op.chofer.contactoEmergencia,
+        direccion: op.chofer.direccion,
+        email: op.chofer.email,
+        fechaNac: op.chofer.fechaNac,
+        vehiculo: op.chofer.vehiculo,
+        condFiscal: op.chofer.condFiscal,
+        idProveedor: op.chofer.idProveedor,
+        tarifaTipo: op.chofer.tarifaTipo,
+        tarifaAsignada: op.chofer.tarifaAsignada,
+        idTarifa: op.chofer.idTarifa,
+        activo: op.chofer.activo
+      };
+
+      op.chofer = choferOriginal;
+    });
+  }
+
 
 
 

@@ -1348,6 +1348,31 @@ async getTableroPorFecha(fecha: string): Promise<TableroDiario | null> {
   return snapshot.data() as TableroDiario;
 }
 
+async getItemByField<T>(
+  coleccion: string,
+  campo: string,
+  valor: any
+): Promise<ConId<T> | null> {
+  const colRef = collection(this.firestore, `Vantruck/datos/${coleccion}`);
+  const q = query(colRef, where(campo, '==', valor));
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) return null;
+
+  const docSnap = querySnapshot.docs[0];
+  const data = docSnap.data() as T;
+
+  return {
+    ...data,
+    id: docSnap.id
+  };
+}
+
+async deleteItem(coleccion: string, id: string): Promise<void> {
+  const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
+  await deleteDoc(docRef);
+}
+
 
 
 }

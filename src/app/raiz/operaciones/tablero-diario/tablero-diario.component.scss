@@ -3,6 +3,17 @@ label, input, textarea, .chofer-item, .chofer-ubicado{
   font-size: 1.25rem;
 }
 
+.boton-flecha{
+  background: #002b5c;
+  color: white;
+  opacity: 0.8;
+  font-size: 1.25rem;
+}
+
+.boton-flecha{
+  background: #0d6efd;    
+}
+
 .fecha{
   max-width:150px;
 }
@@ -63,6 +74,18 @@ label, input, textarea, .chofer-item, .chofer-ubicado{
 
 .boton-alta:hover{
   background: #3be07d ;    
+}
+
+.boton-descargar{
+  width: 15rem;
+  background: #0590ac;
+  color: white;
+  opacity: 0.8;
+  font-size: 1.3rem;
+}
+
+.boton-descargar:hover{
+  background: #32d4f5 ;    
 }
 
 .titulo-choferes{
