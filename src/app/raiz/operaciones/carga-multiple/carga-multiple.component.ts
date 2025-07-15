@@ -4,7 +4,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { ConIdType } from 'src/app/interfaces/conId';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { Operacion, TarifaPersonalizada } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
@@ -193,7 +193,7 @@ export class CargaMultipleComponent implements OnInit {
     
 
     if(this.clienteSeleccionado.tarifaTipo.personalizada){
-      this.storageService.getMostRecentItemId("tarifasPersCliente", "idTarifa","idCliente", this.clienteSeleccionado?.idCliente)
+      /* this.storageService.getMostRecentItemId("tarifasPersCliente", "idTarifa","idCliente", this.clienteSeleccionado?.idCliente)
 
       this.storageService.getObservable<ConIdType<TarifaPersonalizadaCliente>>("tarifasPersCliente")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
@@ -209,9 +209,10 @@ export class CargaMultipleComponent implements OnInit {
             
           }
       }
-      })
-
-
+      }) */
+      let tarifasPersGuardadas: ConIdType<TarifaPersonalizadaCliente> [] = this.storageService.loadInfo("tarifasPersCliente");
+      
+      this.tarifaPersonalizada = tarifasPersGuardadas.find((t:ConIdType<TarifaPersonalizadaCliente>) => {return t.idCliente === this.clienteSeleccionado.idCliente})
 
       this.tPersonalizada = true;  
       ////console.log("tarifa personalizada: SI");

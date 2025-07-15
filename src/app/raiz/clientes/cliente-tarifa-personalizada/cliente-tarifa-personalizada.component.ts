@@ -102,8 +102,8 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     //this.storageService.getElemntByIdLimit("tarifasPersCliente","idCliente","idTarifa",this.clienteSeleccionado[0].idCliente,"ultTarifaPersCliente");  
     //this.storageService.getMostRecentItemId("tarifasPersCliente","idTarifa", "idCliente",this.clienteSeleccionado[0].idCliente);  
     //this.storageService.syncChangesByOneElemId<TarifaPersonalizadaCliente>("tarifasPersCliente","idTarifa","idCliente",this.clienteSeleccionado[0].idCliente);  
-    console.log("this.tarifasPersCliente", this.tarifasPersCliente);
-    
+    //console.log("this.tarifasPersCliente", this.tarifasPersCliente);
+    this.tarifasPersCliente= this.storageService.loadInfo("tarifasPersCliente");
     this.$ultTarifaCliente = this.tarifasPersCliente.find((t:TarifaPersonalizadaCliente) => {return t.idCliente === id})
     console.log("this.$ultTarifaCliente", this.$ultTarifaCliente);
     
