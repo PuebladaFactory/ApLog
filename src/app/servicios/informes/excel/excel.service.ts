@@ -1246,7 +1246,7 @@ export class ExcelService {
       
        if (choferAsignado) {
           const categoriaIndex = choferesAgrupadosPorCategoria.findIndex(
-            cat => cat.nombre === choferAsignado.categoriaAsignada.nombre
+            cat => cat.catOrden === choferAsignado.categoriaAsignada.catOrden
           );
           
           this.setCellWithMetadata(

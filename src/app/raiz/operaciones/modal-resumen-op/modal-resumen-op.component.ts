@@ -12,6 +12,7 @@ import { ValoresOpService } from 'src/app/servicios/valores-op/valores-op/valore
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
+import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 
 @Component({
     selector: 'app-modal-resumen-op',
@@ -47,7 +48,15 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   isLoading: boolean = false;
 
-  constructor(public activeModal: NgbActiveModal, private fb: FormBuilder, private storageService: StorageService, private valoresOpServ: ValoresOpService, private formNumServ: FormatoNumericoService, private dbFirebase: DbFirestoreService){
+  constructor(
+    public activeModal: NgbActiveModal, 
+    private fb: FormBuilder, 
+    private storageService: StorageService, 
+    private valoresOpServ: ValoresOpService, 
+    private formNumServ: FormatoNumericoService, 
+    private dbFirebase: DbFirestoreService,
+    private tableroServ: TableroService
+  ){
     this.form = this.fb.group({      
       km:['', Validators.required],
       documentacion:[''],
@@ -365,6 +374,7 @@ armarOp(){
       ////////////console.log("op: ", this.op);
       let {id, ...op } = this.op
       this.storageService.updateItem(this.componente, op, this.op.idOperacion,"EDITAR", "Edición de Operación", this.op.id);    
+      this.tableroServ.actualizarAsignacionDesdeOperacion(this.op);
       Swal.fire({
         title: "Confirmado",
         text: "La operación ha sido editada.",

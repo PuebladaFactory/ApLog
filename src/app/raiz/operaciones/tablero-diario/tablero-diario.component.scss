@@ -52,46 +52,61 @@ label, input, textarea, .chofer-item, .chofer-ubicado{
   font-size: 1.3rem;
 }
 
-.boton-baja{
-  width: 15rem;
-  background: #dc3545 ;
+.botonera{
+  width: 15rem;  
   color: white;
   opacity: 0.8;
   font-size: 1.3rem;
+}
+
+.boton-guardar{  
+  background: #002b5c;  
+}
+
+.boton-guardar:hover{
+  background: #0d6efd;    
+}
+
+.boton-baja{  
+  background: #dc3545 ;  
 }
 
 .boton-baja:hover{
-  background: #e35d6a;    
+  background: #e46773;    
 }
 
-.boton-alta{
-  width: 15rem;
-  background: #14A44D ;
-  color: white;
-  opacity: 0.8;
-  font-size: 1.3rem;
+.boton-alta{  
+  background: #14A44D ;  
 }
 
 .boton-alta:hover{
-  background: #3be07d ;    
+  background: #5dcf8b ;    
 }
 
-.boton-descargar{
-  width: 15rem;
-  background: #0590ac;
-  color: white;
-  opacity: 0.8;
-  font-size: 1.3rem;
+.boton-descargar{  
+  background: #0590ac;  
 }
 
 .boton-descargar:hover{
   background: #32d4f5 ;    
 }
 
+.boton-anulado{
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity:0.5;
+}
+
 .titulo-choferes{
   position: sticky;
   top: 10px;
 }
+
+.isDisabled {
+    pointer-events: none;
+   
+  }
+
 
 .choferes-scroll-container {
   position: sticky;

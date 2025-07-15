@@ -2,227 +2,224 @@
 
 
 <div class="modal-dialog custom-class">
-  <div class="modal-content container d-flex justify-content-center">
-    <div class="modal-header">
-      <h1 >Alta Operacion</h1>
-      <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
-    </div>
-    <div class="row modal-body con">
-      <div class="col  d-flex justify-content-center container">
-        <form [formGroup]="form" (ngSubmit)="onSubmit()">
-          <div class="form-group mb-2">
-            <label for="Fecha">Fecha</label>
-            <div class="input-group">
-              <input formControlName="fecha" class="form-control edicion" required type="date" [ngClass]="{ 'is-invalid': form.get('fecha').invalid && (form.get('fecha').dirty || form.get('fecha').touched) }" appFechaValida>
-            </div>
-            @if (hasError('fecha', 'required')) {
-              <div>La fecha es obligatoria.</div>
-            }
-            @if (hasError('fecha', 'formatoInvalido')) {
-              <div>El formato de la fecha es inválido.</div>
-            }
-            @if (hasError('fecha', 'yearInvalido')) {
-              <div>El año debe tener exactamente 4 dígitos.</div>
-            }
-          </div>
-          <div class="form-group mb-2">
-            <label for="Cliente">Cliente</label>
-            <select formControlName="cliente" class="form-select" (change)="changeCliente($event)" [ngClass]="{ 'is-invalid': form.get('cliente').invalid && (form.get('cliente').dirty || form.get('cliente').touched) }">
-              <option value="">Elegir Cliente</option>
-              @for (cliente of $clientes; track cliente) {
-                <option [value]="cliente.idCliente">
-                  {{cliente.razonSocial}}
-                </option>
-              }
-            </select>
-            @if (hasError('cliente', 'required')) {
-              <div>El cliente es obligatorio.</div>
-            }
-          </div>
-          @if (clienteSeleccionado !== undefined && clienteSeleccionado.tarifaTipo.eventual && tEventual) {
-            <div>
-              @if (clienteSeleccionado.tarifaTipo.eventual) {
-                <p class="my-3 border-bottom border-top">El Cliente seleccionado solo opera bajo una tarifa eventual</p>
-              }
-            </div>
-          }
-          <div class="form-group mb-2">
-            <label for="Chofer">Chofer</label>
-            <select formControlName="chofer" class="form-select" (change)="changeChofer($event)" [ngClass]="{ 'is-invalid': form.get('chofer').invalid && (form.get('chofer').dirty || form.get('chofer').touched) }">
-              <option value="">Elegir Chofer</option>
-              @for (chofer of $choferes; track chofer) {
-                <option [value]="chofer.idChofer">
-                  {{chofer.apellido}} {{chofer.nombre}}
-                </option>
-              }
-            </select>
-            @if (hasError('chofer', 'required')) {
-              <div>El cliente es obligatorio.</div>
-            }
-          </div>
-          @if (choferSeleccionado !== undefined  && choferSeleccionado.tarifaTipo.eventual && tEventual) {
-            <div>
-              @if (choferSeleccionado.tarifaTipo.eventual) {
-                <p class="my-3 border-bottom border-top">El Chofer seleccionado solo opera bajo una tarifa eventual</p>
-              }
-            </div>
-          }
-          <div class="mb-2" [ngClass]="{'invisible': !vehiculosChofer}">
-            <p class="my-3 border-top border-bottom">El chofer tiene varios vehiculos cargados. Seleccione el que corresponda para esta operación.</p>
-            <form [formGroup]="formVehiculosChofer">
-              @if (choferSeleccionado !== undefined && choferSeleccionado.vehiculo.length > 1) {
-                <div class="form-group">
-                  <label for="Vehiculo Chofer">Vehiculo</label>
-                  <select class="form-select" formControlName="patente" (change)="changeVehiculo($event)">
-                    <option value="">Elegir Vehiculo</option>
-                    @for (vehiculo of choferSeleccionado.vehiculo; track vehiculo) {
-                      <option [value]="vehiculo.dominio">
-                        {{vehiculo.categoria.nombre}}: {{vehiculo.dominio}}
-                      </option>
+    <div class="modal-content container d-flex justify-content-center">
+        <div class="modal-header">
+            <h1 >Alta Operacion</h1>
+            <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
+        </div>
+        <div class="row modal-body con">
+            <div class="col  d-flex justify-content-center container">
+                <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                    <div class="form-group mb-2">
+                        <label for="Fecha">Fecha</label>
+                        <div class="input-group">
+                            <input formControlName="fecha" class="form-control edicion" required type="date" [ngClass]="{ 'is-invalid': form.get('fecha').invalid && (form.get('fecha').dirty || form.get('fecha').touched) }" appFechaValida>
+                        </div>
+                        @if (hasError('fecha', 'required')) {
+                            <div>La fecha es obligatoria.</div>
+                        }
+                        @if (hasError('fecha', 'formatoInvalido')) {
+                            <div>El formato de la fecha es inválido.</div>
+                        }
+                        @if (hasError('fecha', 'yearInvalido')) {
+                            <div>El año debe tener exactamente 4 dígitos.</div>
+                        }
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="Cliente">Cliente</label>
+                        <select formControlName="cliente" class="form-select" (change)="changeCliente($event)" [ngClass]="{ 'is-invalid': form.get('cliente').invalid && (form.get('cliente').dirty || form.get('cliente').touched) }">
+                            <option value="">Elegir Cliente</option>
+                            @for (cliente of $clientes; track cliente) {
+                              <option [value]="cliente.idCliente">
+                                {{cliente.razonSocial}}
+                              </option>
+                            }
+                        </select>
+                        @if (hasError('cliente', 'required')) {
+                            <div>El cliente es obligatorio.</div>
+                        }
+                    </div>
+                    @if (clienteSeleccionado !== undefined && clienteSeleccionado.tarifaTipo.eventual && tEventual) {
+                        <div>
+                          @if (clienteSeleccionado.tarifaTipo.eventual) {
+                              <p class="my-3 border-bottom border-top">El Cliente seleccionado solo opera bajo una tarifa eventual</p>
+                          }
+                        </div>
                     }
-                  </select>
+                    <div class="form-group mb-2">
+                        <label for="Chofer">Chofer</label>
+                        <select formControlName="chofer" class="form-select" (change)="changeChofer($event)" [ngClass]="{ 'is-invalid': form.get('chofer').invalid && (form.get('chofer').dirty || form.get('chofer').touched) }">
+                            <option value="">Elegir Chofer</option>
+                            @for (chofer of $choferes; track chofer) {
+                                <option [value]="chofer.idChofer">
+                                  {{chofer.apellido}} {{chofer.nombre}}
+                                </option>
+                            }
+                        </select>
+                        @if (hasError('chofer', 'required')) {
+                          <div>El cliente es obligatorio.</div>
+                        }
+                    </div>
+                    @if (choferSeleccionado !== undefined  && choferSeleccionado.tarifaTipo.eventual && tEventual) {
+                        <div>
+                          @if (choferSeleccionado.tarifaTipo.eventual) {
+                            <p class="my-3 border-bottom border-top">El Chofer seleccionado solo opera bajo una tarifa eventual</p>
+                          }
+                        </div>
+                    }
+                    <div class="mb-2" [ngClass]="{'invisible': !vehiculosChofer}">
+                        <p class="my-3 border-top border-bottom">El chofer tiene varios vehiculos cargados. Seleccione el que corresponda para esta operación.</p>
+                        <form [formGroup]="formVehiculosChofer">
+                            @if (choferSeleccionado !== undefined && choferSeleccionado.vehiculo.length > 1) {
+                                <div class="form-group">
+                                    <label for="Vehiculo Chofer">Vehiculo</label>
+                                    <select class="form-select" formControlName="patente" (change)="changeVehiculo($event)">
+                                        <option value="">Elegir Vehiculo</option>
+                                        @for (vehiculo of choferSeleccionado.vehiculo; track vehiculo) {
+                                            <option [value]="vehiculo.dominio">
+                                              {{vehiculo.categoria.nombre}}: {{vehiculo.dominio}}
+                                            </option>
+                                        }
+                                  </select>
+                                </div>
+                            }
+                        </form>
+                    </div>
+                    <div [ngClass]="{'invisible': ocultarSelecEventual}" class="form-group mb-2 mt-2">
+                        <label for="TarifaEventual">Tarifa Eventual</label>
+                        <select formControlName="tarifaEventual" class="form-select" aria-label="Default select example" (change)="selectTarifaEventual($event)" [ngClass]="{ 'is-invalid': form.get('tarifaEventual').invalid && (form.get('tarifaEventual').dirty || form.get('tarifaEventual').touched) }">
+                            <option value="">Seleccione</option>
+                            <option value="si">Si</option>
+                            <option value="no">No</option>
+                        </select>
+                        @if (hasError('tarifaEventual', 'required')) {
+                            <div>El cliente es obligatorio.</div>
+                        }
+                    </div>
+                    @if (!tarifaEventual) {
+                        <div class="form-group mb-2">
+                          <label for="Acompaniante">Acompañante</label>
+                          <select formControlName="acompaniante" class="form-select" aria-label="Default select example" (change)="selectAcompaniante($event)" [ngClass]="{ 'is-invalid': form.get('acompaniante').invalid && (form.get('acompaniante').dirty || form.get('acompaniante').touched) }">
+                              <option value="">Seleccione</option>
+                              <option value="true">Si</option>
+                              <option value="false">No</option>
+                          </select>
+                          @if (hasError('acompaniante', 'required')) {
+                              <div>El cliente es obligatorio.</div>
+                          }
+                        </div>
+                    }
+                    <div class="form-group mb-2">
+                        <label for="HojaRuta">Hoja de Ruta</label>
+                        <div class="input-group">
+                            <input formControlName="hojaRuta" class="form-control edicion">
+                        </div>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="Observaciones">Observaciones</label>
+                        <div class="input-group">
+                            <textarea formControlName="observaciones" class="form-control edicion"></textarea>
+                        </div>
+                    </div>
+                    <div [ngClass]="{'isDisabled': form.invalid || (formTarifaEventual.invalid && tEventual)}">
+                        <app-btn-agregar name="Guardar" type="button" (click)="onSubmit()"></app-btn-agregar>
+                    </div>
+                </form>
+            </div>
+            <div class="col container" [ngClass]="{'invisible': !tPersonalizada && !tEventual && !clienteEventual && !choferEventual}">
+                @if (tPersonalizada) {
+                    @if (tarifaClienteSel !== undefined && tarifaClienteSel.hasOwnProperty('secciones')) {
+                        <div>
+                            <h5 for="TarifaPersonalizada" class="fw-normal">Tarifa Personalizada</h5>
+                            <p class="m-2 border-top border-bottom">El cliente tiene una tarifa Personalizada. Seleccione la sección y la categoria correspondiente a la operación.</p>
+                            <form [formGroup]="formTarifaPersonalizada">
+                                <div class="form-group">
+                                    <label for="Cliente">Secciion</label>
+                                    <select formControlName="seccion" class="form-select mb-3" (change)="changeSecion($event)">
+                                        <option selected >Elija la sección</option>
+                                        @for (seccion of tarifaClienteSel.secciones; track seccion) {
+                                            <option [value]="seccion.orden">
+                                              Seccion {{seccion.orden}}: {{seccion.descripcion? seccion.descripcion : ""}}
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                                @if (mostrarCategoria) {
+                                  <div class="form-group">
+                                    <label for="Categoria">Categoria</label>
+                                    <select formControlName="categoria" class="form-select mb-3" (change)="changeCategoria($event)">
+                                      <option selected >Elija la categoria</option>
+                                      @for (categoria of seccionElegida.categorias ; track categoria) {
+                                        <option [value]="categoria.orden">
+                                          Categoria {{categoria.orden}}: {{categoria.nombre}}
+                                        </option>
+                                      }
+                                    </select>
+                                  </div>
+                                }
+                            </form>
+                        </div>
+                    } @else {
+                      <h5 for="TarifaPersonalizada" class="fw-normal">Tarifa Personalizada</h5>
+                      <p class="m-2 border-top border-bottom">El cliente aún no tiene una tarifa personalizada asignada. Para continuar debe asignarle una tarifa.</p>
+                    }
+                }
+                <div [ngClass]="{'invisible': !tEventual && !clienteEventual && !choferEventual}" >
+                    <h5 for="TarifaEventual" class="fw-normal">Tarifa Eventual</h5>
+                    <p class="m-2 border-top border-bottom">La tarifa eventual se aplica una unica vez a esta operación especifica.</p>
+                    <form [formGroup]="formTarifaEventual" (ngSubmit)="onSubmit()">
+                        <div class="my-2">
+                            <h5 class="mt-2 fw-normal">Chofer:</h5>
+                            <div class="form-group">
+                                <label for="Fecha">Tarifa Eventual Concepto</label>
+                                <div class="input-group">
+                                    <input formControlName="choferConcepto" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': formTarifaEventual.get('choferConcepto').invalid && (formTarifaEventual.get('choferConcepto').dirty || formTarifaEventual.get('choferConcepto').touched) }">
+                                </div>
+                                @if (hasErrorTeventual('choferConcepto', 'required')) {
+                                    <div>El concepto es obligatorio.</div>
+                                }
+                            </div>
+                            <div class="form-group">
+                                <label for="Fecha">Tarifa Eventual Valor</label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                    <input formControlName="choferValor" class="form-control edicion" required type="text" inputmode="number" [ngClass]="{ 'is-invalid': formTarifaEventual.get('choferValor').invalid && (formTarifaEventual.get('choferValor').dirty || formTarifaEventual.get('choferValor').touched) }" appFormatoNumerico>
+                                </div>
+                                @if (hasErrorTeventual('choferValor', 'required')) {
+                                    <div>El valor a pagar al chofer es obligatorio.</div>
+                                }
+                            </div>
+                            <h5 class="my-2 fw-normal">Cliente:</h5>
+                            <div class="form-group">
+                                <label for="Fecha">Tarifa Eventual Concepto</label>
+                                <div class="input-group">
+                                    <input formControlName="clienteConcepto" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': formTarifaEventual.get('clienteConcepto').invalid && (formTarifaEventual.get('clienteConcepto').dirty || formTarifaEventual.get('clienteConcepto').touched) }">
+                                </div>
+                                @if (hasErrorTeventual('clienteConcepto', 'required')) {
+                                    <div>El concepto es obligatorio.</div>
+                                }
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="Fecha">Tarifa Eventual Valor</label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
+                                    <input formControlName="clienteValor" class="form-control edicion" required type="text" inputmode="number" [ngClass]="{ 'is-invalid': formTarifaEventual.get('clienteValor').invalid && (formTarifaEventual.get('clienteValor').dirty || formTarifaEventual.get('clienteValor').touched) }" appFormatoNumerico>
+                                </div>
+                                @if (hasErrorTeventual('clienteValor', 'required')) {
+                                    <div>El valor a cobrar al cliente es obligatorio.</div>
+                                }
+                            </div>
+                        </div>
+                    </form>
                 </div>
-              }
-            </form>
-          </div>
-          <div [ngClass]="{'invisible': ocultarSelecEventual}" class="form-group mb-2 mt-2">
-            <label for="TarifaEventual">Tarifa Eventual</label>
-            <select formControlName="tarifaEventual" class="form-select" aria-label="Default select example" (change)="selectTarifaEventual($event)" [ngClass]="{ 'is-invalid': form.get('tarifaEventual').invalid && (form.get('tarifaEventual').dirty || form.get('tarifaEventual').touched) }">
-              <option value="">Seleccione</option>
-              <option value="si">Si</option>
-              <option value="no">No</option>
-            </select>
-            @if (hasError('tarifaEventual', 'required')) {
-              <div>El cliente es obligatorio.</div>
-            }
-          </div>
-          @if (!tarifaEventual) {
-            <div class="form-group mb-2">
-              <label for="Acompaniante">Acompañante</label>
-              <select formControlName="acompaniante" class="form-select" aria-label="Default select example" (change)="selectAcompaniante($event)" [ngClass]="{ 'is-invalid': form.get('acompaniante').invalid && (form.get('acompaniante').dirty || form.get('acompaniante').touched) }">
-                <option value="">Seleccione</option>
-                <option value="true">Si</option>
-                <option value="false">No</option>
-              </select>
-              @if (hasError('acompaniante', 'required')) {
-                <div>El cliente es obligatorio.</div>
-              }
             </div>
-          }
-          <div class="form-group mb-2">
-            <label for="HojaRuta">Hoja de Ruta</label>
-            <div class="input-group">
-              <input formControlName="hojaRuta" class="form-control edicion">
-            </div>
-          </div>
-          <div class="form-group mb-2">
-            <label for="Observaciones">Observaciones</label>
-            <div class="input-group">
-              <textarea formControlName="observaciones" class="form-control edicion"></textarea>
-            </div>
-          </div>
-          <!-- <button class="btn btn-secondary mt-3" type="submit" [disabled]="!form.valid">
-          Guardar
-        </button> -->
-        <div [ngClass]="{'isDisabled': form.invalid || (formTarifaEventual.invalid && tEventual)}">
-          <app-btn-agregar name="Guardar" type="button" (click)="onSubmit()"></app-btn-agregar>
         </div>
 
-      </form>
     </div>
-    <div class="col container" [ngClass]="{'invisible': !tPersonalizada && !tEventual && !clienteEventual && !choferEventual}">
-      @if (tPersonalizada) {
-        @if (tarifaClienteSel !== undefined && tarifaClienteSel.hasOwnProperty('secciones')) {
-          <div>
-            <h5 for="TarifaPersonalizada" class="fw-normal">Tarifa Personalizada</h5>
-            <p class="m-2 border-top border-bottom">El cliente tiene una tarifa Personalizada. Seleccione la sección y la categoria correspondiente a la operación.</p>
-            <form [formGroup]="formTarifaPersonalizada">
-              <div class="form-group">
-                <label for="Cliente">Secciion</label>
-                <select formControlName="seccion" class="form-select mb-3" (change)="changeSecion($event)">
-                  <option selected >Elija la sección</option>
-                  @for (seccion of tarifaClienteSel.secciones; track seccion) {
-                    <option [value]="seccion.orden">
-                      Seccion {{seccion.orden}}: {{seccion.descripcion? seccion.descripcion : ""}}
-                    </option>
-                  }
-                </select>
-              </div>
-              @if (mostrarCategoria) {
-                <div class="form-group">
-                  <label for="Categoria">Categoria</label>
-                  <select formControlName="categoria" class="form-select mb-3" (change)="changeCategoria($event)">
-                    <option selected >Elija la categoria</option>
-                    @for (categoria of seccionElegida.categorias ; track categoria) {
-                      <option [value]="categoria.orden">
-                        Categoria {{categoria.orden}}: {{categoria.nombre}}
-                      </option>
-                    }
-                  </select>
-                </div>
-              }
-            </form>
-          </div>
-        } @else {
-          <h5 for="TarifaPersonalizada" class="fw-normal">Tarifa Personalizada</h5>
-          <p class="m-2 border-top border-bottom">El cliente aún no tiene una tarifa personalizada asignada. Para continuar debe asignarle una tarifa.</p>
-        }
-      }
-
-      <div [ngClass]="{'invisible': !tEventual && !clienteEventual && !choferEventual}" >
-        <h5 for="TarifaEventual" class="fw-normal">Tarifa Eventual</h5>
-        <p class="m-2 border-top border-bottom">La tarifa eventual se aplica una unica vez a esta operación especifica.</p>
-        <form [formGroup]="formTarifaEventual" (ngSubmit)="onSubmit()">
-          <div class="my-2">
-            <h5 class="mt-2 fw-normal">Chofer:</h5>
-            <div class="form-group">
-              <label for="Fecha">Tarifa Eventual Concepto</label>
-              <div class="input-group">
-                <input formControlName="choferConcepto" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': formTarifaEventual.get('choferConcepto').invalid && (formTarifaEventual.get('choferConcepto').dirty || formTarifaEventual.get('choferConcepto').touched) }">
-              </div>
-              @if (hasErrorTeventual('choferConcepto', 'required')) {
-                <div>El concepto es obligatorio.</div>
-              }
-            </div>
-            <div class="form-group">
-              <label for="Fecha">Tarifa Eventual Valor</label>
-              <div class="input-group">
-                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                <input formControlName="choferValor" class="form-control edicion" required type="text" inputmode="number" [ngClass]="{ 'is-invalid': formTarifaEventual.get('choferValor').invalid && (formTarifaEventual.get('choferValor').dirty || formTarifaEventual.get('choferValor').touched) }" appFormatoNumerico>
-              </div>
-              @if (hasErrorTeventual('choferValor', 'required')) {
-                <div>El valor a pagar al chofer es obligatorio.</div>
-              }
-            </div>
-            <h5 class="my-2 fw-normal">Cliente:</h5>
-            <div class="form-group">
-              <label for="Fecha">Tarifa Eventual Concepto</label>
-              <div class="input-group">
-                <input formControlName="clienteConcepto" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': formTarifaEventual.get('clienteConcepto').invalid && (formTarifaEventual.get('clienteConcepto').dirty || formTarifaEventual.get('clienteConcepto').touched) }">
-              </div>
-              @if (hasErrorTeventual('clienteConcepto', 'required')) {
-                <div>El concepto es obligatorio.</div>
-              }
-            </div>
-            <div class="form-group mb-2">
-              <label for="Fecha">Tarifa Eventual Valor</label>
-              <div class="input-group">
-                <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                <input formControlName="clienteValor" class="form-control edicion" required type="text" inputmode="number" [ngClass]="{ 'is-invalid': formTarifaEventual.get('clienteValor').invalid && (formTarifaEventual.get('clienteValor').dirty || formTarifaEventual.get('clienteValor').touched) }" appFormatoNumerico>
-              </div>
-              @if (hasErrorTeventual('clienteValor', 'required')) {
-                <div>El valor a cobrar al cliente es obligatorio.</div>
-              }
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
 </div>
-</div>
-
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}
 
 
 

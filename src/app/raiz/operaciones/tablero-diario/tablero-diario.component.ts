@@ -187,20 +187,24 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   }
 
 
-  onDropChoferEnCliente(event: CdkDragDrop<any>, clienteId: number): void {
+  onDropChoferEnCliente(event: CdkDragDrop<any>, clienteId: number): void {    
     if(!this.fechaSeleccionada) return this.mensajesError("Antes debe seleccionar una fecha");
     if(this.tablero?.asignado) return this.mensajesError("El tablero ya fue dado de alta. Para agregar una operación debe hacerlo desde el Tablero de Operaciones");
     const data = event.item.data;
+    //console.log("drop cliente: data: ", data);    
     const choferBase: ConIdType<Chofer> = data.chofer;
+    //console.log("drop cliente: choferBase: ", choferBase);
+    const categoria = data.categoria
+    let {choferes, ...cat} = categoria
 
     const chofer: ChoferAsignado = {
       ...choferBase,
-      categoriaAsignada: data.categoria, // o undefined, según tu lógica
+      categoriaAsignada: cat, // o undefined, según tu lógica
       tEventual: !!choferBase.tarifaTipo?.eventual,
       observaciones:"",
       hojaDeRuta:""
     };
-    //////console.log("1)chofer: ", chofer);
+    console.log("1)chofer: ", chofer);
 
     /* if (!this.asignaciones[clienteId].some(c => c.idChofer === chofer.idChofer)) {
       // Guardamos la categoría con la que fue asignado
@@ -229,8 +233,10 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
 
   onDropEnListaChoferes(event: CdkDragDrop<ConIdType<Chofer>[]>) {
     const data = event.item.data;
+    //console.log("drop choferes: data: ", data);
+    
     const choferBase: ConIdType<Chofer> = data.chofer;
-
+    //console.log("drop choferes: choferBase: ", choferBase);
     const chofer: ChoferAsignado = {
       ...choferBase,
       categoriaAsignada: data.categoria, // o undefined, según tu lógica
@@ -425,7 +431,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   }
 
   private reconstruirDesdeTablero(tablero: TableroDiario): void {
-    //console.log("tablero: ", tablero, "this.asignaciones", this.asignaciones);
+    console.log("tablero: ", tablero, "this.asignaciones", this.asignaciones);
     
     //this.asignaciones = {};
 
@@ -435,6 +441,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
 
       for (const base of choferesBase) {
         const choferCompleto = this.choferes.find(c => c.idChofer === base.idChofer);
+        //console.log("choferCompleto: ", choferCompleto);
         if (!choferCompleto) continue;
 
         choferesCompletos.push({
@@ -445,8 +452,10 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
           hojaDeRuta: base.hojaDeRuta ?? '',
           idOperacion: base.idOperacion ?? 0 // 👈 NUEVO
         });
+        
+        
       }
-
+      //console.log("TODOS choferesCompletos: ", choferesCompletos);
       this.asignaciones[idCliente] = choferesCompletos;
       
     }
@@ -621,6 +630,10 @@ openModal(opMultiples: any[]): void {
   }
 
   async generarInfDiario(){
+    //console.log("this.asignaciones ", this.asignaciones,);
+    //console.log("this.sectionColorClasses ", this.sectionColorClasses,);
+    //console.log("this.asignaciones ", this.asignaciones,);
+    
     await this.excelServ.generarInformeAsignaciones(
       this.asignaciones,
       this.clientes,
@@ -633,7 +646,7 @@ openModal(opMultiples: any[]): void {
 
   abrirEdicionChofer(chofer: ChoferAsignado, modalRef: TemplateRef<any>) {
     console.log("chofer: ", chofer);
-    if(this.tablero?.asignado)return this.mensajesError("No se puede editar una asiganción que ya fue dada de alta")
+    if(this.tablero?.asignado) this.mensajesError("No se puede editar una asiganción que ya fue dada de alta")
     this.choferSeleccionadoOriginal = chofer;
     this.choferEditable = { ...chofer };
 

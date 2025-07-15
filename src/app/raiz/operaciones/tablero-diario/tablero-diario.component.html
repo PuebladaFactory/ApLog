@@ -85,15 +85,19 @@
     <div class="col-4">
         <!-- Botones derechos -->
         <div class="d-flex justify-content-end">
-            <button class="btn btn-success boton-alta me-1" (click)="altaOp()" [disabled]="tablero?.asignado" [title]="tablero?.asignado ? 'EL tablero ya fue dado de alta' : ''">Alta de Op</button>
-            <button class="btn btn-primary boton-choferes me-1" type="button" id="" (click)="guardarTableroDiario()">               
+            <button class="btn botonera boton-alta me-1" (click)="altaOp()" [disabled]="tablero?.asignado" [title]="tablero?.asignado ? 'EL tablero ya fue dado de alta' : ''"
+            [ngClass]="{'boton-alta' :  !tablero?.asignado, 'btn-secondary':tablero?.asignado, 'boton-anulado':tablero?.asignado}">                
+                Alta de Op
+            </button>
+            <button class="btn botonera boton-guardar me-1" type="button" id="" (click)="guardarTableroDiario()">               
                 💾Guardar
             </button>
-            <button class="btn btn-info boton-descargar me-1" type="button" id="" (click)="generarInfDiario()" [disabled]="!tablero?.asignado"
-            [title]="!tablero?.asignado ? 'Debe dar de alta las operaciones antes de descargar' : 'Descargar informe'">                
+            <button class="btn botonera me-1" type="button" id="" (click)="generarInfDiario()" [disabled]="!tablero?.asignado"
+            [title]="!tablero?.asignado ? 'Debe dar de alta las operaciones antes de descargar' : 'Descargar informe'"
+            [ngClass]="{'boton-descargar' :  tablero?.asignado, 'btn-secondary':!tablero?.asignado, 'boton-anulado':!tablero?.asignado}">                
                 ⬇️Descargar
             </button>
-            <button class="btn btn-danger boton-baja" (click)="limpiarAsignaciones()">🧹Limpiar</button>
+            <button class="btn botonera boton-baja" (click)="limpiarAsignaciones()">🧹Limpiar</button>
         </div>
     </div>
 </nav>
@@ -176,7 +180,16 @@
                                 [ngClass]="getButtonClassForChofer(chofer)"
                                 (click)="quitarChoferDeCliente(cliente.idCliente, i)"
                                 title="Quitar chofer">
-                                ❌
+                                @if(!tablero?.asignado){
+                                  <span>❌</span>
+                                } @else {
+                                  <span>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                      </svg>
+                                  </span>                                  
+                                }                                
                               </button>
                           </div>
                       </div>
@@ -203,6 +216,7 @@
                   class="form-control"
                   [(ngModel)]="choferEditable!.observaciones"
                   rows="3"
+                  [disabled]="tablero ? tablero.asignado : false"
                 ></textarea>
             </div>
             <div class="mb-3">
@@ -211,12 +225,13 @@
                   type="text"
                   class="form-control"
                   [(ngModel)]="choferEditable!.hojaDeRuta"
+                  [disabled]="tablero ? tablero.asignado : false"
                 />
             </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
-            <button type="button" class="btn btn-primary" (click)="guardarCambiosChofer(modal)">Guardar</button>
+            <button type="button" class="btn btn-primary" (click)="guardarCambiosChofer(modal)" [disabled]="tablero ? tablero.asignado : false">Guardar</button>
         </div>    
     </div>
   
