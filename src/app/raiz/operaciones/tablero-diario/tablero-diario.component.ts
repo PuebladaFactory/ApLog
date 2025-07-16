@@ -646,7 +646,7 @@ openModal(opMultiples: any[]): void {
 
   abrirEdicionChofer(chofer: ChoferAsignado, modalRef: TemplateRef<any>) {
     console.log("chofer: ", chofer);
-    if(this.tablero?.asignado) this.mensajesError("No se puede editar una asiganción que ya fue dada de alta")
+    //if(this.tablero?.asignado) this.mensajesError("No se puede editar una asiganción que ya fue dada de alta")
     this.choferSeleccionadoOriginal = chofer;
     this.choferEditable = { ...chofer };
 
