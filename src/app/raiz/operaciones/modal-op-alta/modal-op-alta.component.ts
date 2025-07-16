@@ -321,7 +321,7 @@ export class ModalOpAltaComponent implements OnInit {
 
   buscarTarifaPersonalizada(){
     //this.storageService.getMostRecentItemId("tarifasPersCliente", "idTarifa", "idCliente", this.clienteSeleccionado?.idCliente);   
-    this.storageService.getObservable<ConIdType<TarifaPersonalizadaCliente>>("tarifasPersCliente")
+    /* this.storageService.getObservable<ConIdType<TarifaPersonalizadaCliente>>("tarifasPersCliente")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       if (data) {
@@ -341,7 +341,22 @@ export class ModalOpAltaComponent implements OnInit {
           
         }
     }
-    })
+    }) */
+    let tarfPers: ConIdType<TarifaPersonalizadaCliente>[] = this.storageService.loadInfo("tarifasPersCliente");
+    if(this.clienteSeleccionado){
+      console.log("aca????????");              
+      this.tarifaClienteSel = tarfPers.find((t:ConIdType<TarifaPersonalizadaCliente>) => {return t.idCliente === this.clienteSeleccionado.idCliente})
+      console.log("ultTarifaCliente", this.tarifaClienteSel);    
+      if(this.choferEventual){
+        this.tPersonalizada = false;         
+      } else{
+        this.tPersonalizada = true;      
+        this.tEventual = false
+        
+      }           
+          
+    }
+
   }
 
   selectTarifaEventual(event: any) {
