@@ -1373,6 +1373,43 @@ async deleteItem(coleccion: string, id: string): Promise<void> {
   await deleteDoc(docRef);
 }
 
+async obtenerDocsPorIdsOperacion(coleccion: string, idsOperacion: number[]) {
+  const resultados: any[] = [];
+  const encontrados: number[] = [];
+
+  const grupos = this.dividirEnGrupos(idsOperacion, 10);
+
+  for (const grupo of grupos) {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const q = query(colRef, where('idOperacion', 'in', grupo));
+    const snapshot = await getDocs(q);
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      resultados.push({ id: doc.id, ...data });
+      if (data['idOperacion'] !== undefined) {
+        encontrados.push(data['idOperacion']);
+      }
+    });
+  }
+
+  const noEncontrados = idsOperacion.filter(id => !encontrados.includes(id));
+
+  return {
+    encontrados: resultados,
+    idsFaltantes: noEncontrados
+  };
+}
+
+// Función auxiliar
+dividirEnGrupos(array: any[], tamaño: number): any[][] {
+  const grupos = [];
+  for (let i = 0; i < array.length; i += tamaño) {
+    grupos.push(array.slice(i, i + tamaño));
+  }
+  return grupos;
+}
+
 
 
 }

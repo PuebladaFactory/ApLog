@@ -18,6 +18,7 @@ import { EditarTarifaOpComponent } from './modales/editar-tarifa-op/editar-tarif
 import { ProformaComponent } from './proforma/proforma.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { LiquidacionesOpComponent } from './liquidaciones-op/liquidaciones-op.component';
+import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
 
 
 
@@ -28,7 +29,7 @@ import { LiquidacionesOpComponent } from './liquidaciones-op/liquidaciones-op.co
     LiqGralComponent,
     
     LiquidacionesOpComponent,
-    
+    MigrarDatosComponent,
     DescuentosComponent,
     ResumenOpLiquidadasComponent,
     EditarTarifaOpComponent,
@@ -44,6 +45,9 @@ import { LiquidacionesOpComponent } from './liquidaciones-op/liquidaciones-op.co
     SharedModule,
     FilterPipeModule,
     FacturacionModule
-  ]
+  ],
+   exports:[
+      MigrarDatosComponent,
+    ]
 })
 export class LiquidacionModule { }

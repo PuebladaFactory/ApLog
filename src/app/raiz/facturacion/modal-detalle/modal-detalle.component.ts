@@ -28,10 +28,11 @@ import Swal from 'sweetalert2';
     styleUrls: ['./modal-detalle.component.scss'],
     standalone: false
 })
+////////////////////COMPONENTE QUE MUESTRA LOS RESUMENES DE LIQUIDACION DE UN OBJETO//////////////////////////////
 export class ModalDetalleComponent implements OnInit {
 
   @Input() fromParent: any;
-  data!: any;
+  data: ConIdType<InformeLiq>[] = [];
   operacionFac: any[] = [];
   rows: any[] = [];
   filteredRows: any[] = [];
@@ -65,6 +66,7 @@ export class ModalDetalleComponent implements OnInit {
   informesOpCliente: ConId<InformeOp>[] = [];
   informesOpChofer: ConId<InformeOp>[] = [];
   informesOpProveedor: ConId<InformeOp>[] = [];
+  informesOp: ConId<InformeOp>[] = [];
   titulo:string = ""
   idFactura!: number;
   $choferes!: ConIdType<Chofer>[];
@@ -73,7 +75,8 @@ export class ModalDetalleComponent implements OnInit {
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   searchText!:string;
   componente: string = "";
-  factura:any
+  factura: ConId<InformeLiq>[] = [];
+  isLoading:boolean = false;
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private excelServ: ExcelService, 
     private pdfServ: PdfService, private logService: LogService,
@@ -101,7 +104,7 @@ export class ModalDetalleComponent implements OnInit {
       this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer           
     })       
     console.log("0) ", this.fromParent);
-    this.data = this.fromParent.item;
+    this.data = this.fromParent.item;  //resumenes de liquidacion
     console.log("data: ", this.data); 
     this.titulo = this.data[0].entidad.razonSocial
     this.componente = this.fromParent.modo === "cliente" ? "resumenLiqClientes" : this.fromParent.modo === "chofer" ? "resumenLiqChoferes" : "resumenLiqProveedores"
@@ -153,8 +156,16 @@ export class ModalDetalleComponent implements OnInit {
   }
 
   facturaCobrada(row: any) {
-    //////////////CLIENTES///////////////////////
-    if(this.fromParent.modo === "clientes"){
+    //console.log(row);
+    let factura = this.data.filter((factura:InformeLiq) => {
+      return factura.idInfLiq === row.idFactura
+    })
+    console.log("FACTURA CON ID CHTM", factura);
+      
+    factura[0].cobrado = !factura[0].cobrado;
+    this.updateItem(factura[0]);
+    /* //////////////CLIENTES///////////////////////
+    if(this.fromParent.modo === "cliente"){
       //console.log(row);
       let factura = this.data.filter((factura:InformeLiq) => {
         return factura.idInfLiq === row.idFactura
@@ -162,10 +173,10 @@ export class ModalDetalleComponent implements OnInit {
       //console.log(factura);
       
       factura[0].cobrado = !factura[0].cobrado;
-      this.updateItem(factura[0], factura[0].idFacturaCliente);
+      this.updateItem(factura[0]);
     }
     //////////////CHOFERES///////////////////////
-    if(this.fromParent.modo === "choferes"){
+    if(this.fromParent.modo === "chofer"){
       //console.log(row);
       let factura = this.data.filter((factura:InformeLiq) => {
         return factura.idInfLiq === row.idFactura
@@ -173,10 +184,10 @@ export class ModalDetalleComponent implements OnInit {
       //console.log(factura);
       
       factura[0].cobrado = !factura[0].cobrado;
-      this.updateItem(factura[0], factura[0].idFacturaChofer);
+      this.updateItem(factura[0]);
     }
     //////////////PROVEEDORES///////////////////////
-    if(this.fromParent.modo === "proveedores"){
+    if(this.fromParent.modo === "proveedor"){
       //console.log(row);
       let factura = this.data.filter((factura:InformeLiq) => {
         return factura.idInfLiq === row.idFactura
@@ -184,24 +195,26 @@ export class ModalDetalleComponent implements OnInit {
       //console.log(factura);
       
       factura[0].cobrado = !factura[0].cobrado;
-      this.updateItem(factura[0], factura[0].idFacturaProveedor);
-    }
+      this.updateItem(factura[0]);
+    } */
   }
 
-  updateItem(item: any, idItem: number) {
-    let {id,type, ...fac} = item
+  updateItem(item: ConIdType<InformeLiq>) {
+    console.log(item);
+    let {id,type, ...fac} = item;    
+    
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case"cliente":          
-          this.storageService.updateItem('facturaCliente', fac, idItem, "EDITAR", item.cobrado ? `Factura Cliente ${item.razonSocial} cobrada` : `Factura Cliente ${item.razonSocial} sin cobrar`, item.id );
+          this.storageService.updateItem('resumenLiqClientes', fac, item.entidad.id, "EDITAR", item.cobrado ? `Resumen de op Liquidadas del Cliente ${item.entidad.razonSocial} cobrada` : `Resumen de op Liquidadas del  Cliente ${item.entidad.razonSocial} sin cobrar`, item.id );
           break;
       //////////////CHOFERES///////////////////////
       case "chofer":
-          this.storageService.updateItem('facturaChofer', fac, idItem, "EDITAR", item.cobrado ? `Factura Chofer ${item.apellido} ${item.nombre}  cobrada` : `Factura Chofer ${item.apellido} ${item.nombre} sin cobrar`, item.id );
+          this.storageService.updateItem('resumenLiqChoferes', fac, item.entidad.id, "EDITAR", item.cobrado ? `Resumen de op Liquidadas del  Chofer ${item.entidad.razonSocial} cobrada` : `Resumen de op Liquidadas del  Chofer ${item.entidad.razonSocial} sin cobrar`, item.id );
           break;
       //////////////PROVEEDORES///////////////////////
       case "proveedor":
-          this.storageService.updateItem('facturaProveedor', fac, idItem, "EDITAR", item.cobrado ? `Factura Proveedor ${item.razonSocial} cobrada` : `Factura Proveedor ${item.razonSocial} sin cobrar`, item.id);
+          this.storageService.updateItem('resumenLiqCProveedores', fac, item.entidad.id, "EDITAR", item.cobrado ? `Resumen de op Liquidadas del  Proveedor ${item.entidad.razonSocial} cobrada` : `Resumen de op Liquidadas del  Proveedor ${item.entidad.razonSocial} sin cobrar`, item.id);
       break;
       default:
         alert("error update")
@@ -569,117 +582,25 @@ bajaOp(factura:any){
     } */
   }
 
-  obtenerFacturas(row:any, accion:string, formato:string){
-    let respuesta
-    switch (this.fromParent.modo){
-      //////////////CLIENTES///////////////////////
-      case "cliente":
-          console.log("1) row: ",row);    
-          this.factura = this.data.filter((factura:InformeLiq) => {
-            return factura.idInfLiq === row.idFactura
-          });
-          console.log(this.factura[0]);
-          respuesta = this.encontrarMaximoYMinimo(this.factura[0].operaciones)
-          console.log("respuesta", respuesta);
-          
-          this.dbFirebase.getAllByDateValueField<InformeOp>("infOpLiqClientes", "idOperacion",respuesta.min, respuesta.max, "idCliente", this.factura[0].entidad.id)
-          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-          .subscribe(data => {
-            if(data){
-              console.log("data infOpLiqClientes", data);
-              
-              this.informesOpCliente = data.filter((fac) => {
-                return this.factura[0].operaciones.includes(fac.idOperacion);
-              });
-              console.log("3) operacionFac!!!!: ", this.informesOpCliente);          
-              if(accion === "detalle"){
-                  this.openModalDetalleFactura(this.factura[0], this.informesOpCliente);
-              } else if (accion === "baja"){
-                  this.bajaOp(this.factura[0]);
-              } else if (accion === "reimpresion"){
-                  this.reimprimirFac(formato);
-              }
-            }
-          })
-          
-          //console.log("3) operacionFac: ", this.operacionFac);          
-          break;
-      //////////////CHOFERES///////////////////////
-      case "chofer":
-          console.log("1) row: ",row);    
-          this.factura = this.data.filter((factura:InformeLiq) => {
-            return factura.idInfLiq === row.idFactura
-          })
-          console.log(this.factura[0]);
-          respuesta = this.encontrarMaximoYMinimo(this.factura[0].operaciones)
-          console.log("respuesta", respuesta);
-          this.dbFirebase.getAllByDateValueField<InformeOp>("infOpLiqChoferes", "idOperacion",respuesta.min, respuesta.max, "idChofer", this.factura[0].entidad.id)
-          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-          .subscribe(data => {
-            if(data){
-              console.log("data infOpLiqChoferes", data);
-              
-              this.informesOpChofer = data.filter((fac) => {
-                return this.factura[0].operaciones.includes(fac.idOperacion);
-              });
-              console.log("3) operacionFac!!!!: ", this.informesOpChofer);          
-              if(accion === "detalle"){
-                this.openModalDetalleFactura(this.factura[0], this.informesOpChofer);
-              } else if (accion === "baja"){
-                  this.bajaOp(this.factura[0]);
-              } else if (accion === "reimpresion"){
-                this.reimprimirFac(formato);
-              }
-            }
-          })
-          break;
-      //////////////PROVEEDORES///////////////////////
-      case "proveedor":
-          console.log("1) row: ",row);    
-          this.factura = this.data.filter((factura:InformeLiq) => {
-            return factura.idInfLiq === row.idFactura
-          })
-          console.log(this.factura[0]);
-          respuesta = this.encontrarMaximoYMinimo(this.factura[0].operaciones)
-          console.log("respuesta", respuesta);
-          this.dbFirebase.getAllByDateValueField<InformeOp>("infOpLiqProveedores", "idOperacion",respuesta.min, respuesta.max, "idProveedor", this.factura[0].entidad.id)
-          .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-          .subscribe(data => {
-            if(data){
-              console.log("data infOpLiqProveedores", data);              
-              this.informesOpProveedor = data.filter((fac) => {
-                return this.factura[0].operaciones.includes(fac.idOperacion);
-              });
-              console.log("3) operacionFac!!!!: ", this.informesOpProveedor);          
-              if(accion === "detalle"){
-                this.openModalDetalleFactura(this.factura[0], this.informesOpProveedor);
-              } else if (accion === "baja"){
-                  this.bajaOp(this.factura[0]);
-              } else if (accion === "reimpresion"){
-                this.reimprimirFac(formato);
-              }
-            }
-          })
-          
-      break;
-      default:
-        alert("error de reimpresion")
-      break;
+  async obtenerFacturas(row:any, accion:string, formato:string){
+    this.factura = this.data.filter((factura:InformeLiq) => {
+      return factura.idInfLiq === row.idFactura
+    });
+    console.log("Factura: ", this.factura[0]);
+    //respuesta = this.encontrarMaximoYMinimo(this.factura[0].operaciones)
+    
+    await this.consultarOperacionesSeleccionadas(this.factura[0], this.fromParent.modo)
+
+    if(accion === "detalle"){
+      this.openModalDetalleFactura(this.factura[0], this.informesOp);
+    } else if (accion === "baja"){
+        this.bajaOp(this.factura[0]);
+    } else if (accion === "reimpresion"){
+      this.reimprimirFac(formato);
     }
 
-    switch(accion){
-      case "detalle":
-        this.mostrarDetalleOp(row);
-        break;
-      case "baja":
-        this.bajaOp(row);
-        break;
-      case "reimpresion":
-        //this.reimprimirFac(row);
-        break;
-      default:
-        break;
-    }
+
+   
   }
 
   encontrarMaximoYMinimo(operaciones: number[]): { max: number, min: number } {
@@ -700,6 +621,43 @@ bajaOp(factura:any){
     }
   
     return { max, min }; // Devolvemos un objeto con el máximo y el mínimo
+  }
+
+  async consultarOperacionesSeleccionadas(proforma:ConId<InformeLiq>, origen:string) {
+/*     if (!this.operaciones || this.operaciones.length === 0) {
+      Swal.fire('Error', 'No hay operaciones seleccionadas.', 'error');
+      return;
+    } */
+
+    this.isLoading = true;
+    let componente: string = origen === 'cliente' ? "infOpLiqClientes" : origen === 'chofer' ? "infOpLiqChoferes" : "infOpLiqProveedores"
+    try {
+      const consulta = await this.dbFirebase.obtenerDocsPorIdsOperacion(       
+        componente,         // nombre de la colección
+        proforma.operaciones       // array de idsOperacion
+      );
+      console.log("consulta", consulta);
+      
+
+      this.informesOp = consulta.encontrados;
+
+      if (consulta.idsFaltantes.length) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Atención',
+          text: `Se encontraron ${consulta.encontrados.length} informes, pero faltan ${consulta.idsFaltantes.length}.`,
+          footer: `IDs faltantes: ${consulta.idsFaltantes.join(', ')}`
+        });
+      } else {
+        //Swal.fire('Éxito', 'Se encontraron todas las operaciones.', 'success');
+      }
+
+    } catch (error) {
+      console.error("'Error al consultar por los informes", error);
+      Swal.fire('Error', 'Falló la consulta de los informes.', 'error');
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   openModalDetalleFactura(factura:any, facturasOp: InformeOp[]){

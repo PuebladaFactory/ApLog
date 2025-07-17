@@ -126,7 +126,7 @@ export class ModalTarifaPersonalizadaComponent implements OnInit {
     const { id, type, ...data } = this.nuevaTarifa;      
     const tarifaNueva: TarifaPersonalizadaCliente = {
       ...data,
-      idTarifa: new Date().getTime(),  // Asignar nuevo idTarifa
+      idTarifa: new Date().getTime() + Math.floor(Math.random() * 1000),  // Asignar nuevo idTarifa
       //id: null,
       fecha: new Date().toISOString().split('T')[0],
       secciones: this.$ultimaTarifa.secciones.map(seccion => ({

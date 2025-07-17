@@ -213,7 +213,7 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
 
   this.facturaOpCliente = {
     
-    idInfOp: new Date().getTime(),
+    idInfOp: new Date().getTime() + Math.floor(Math.random() * 1000),
     idOperacion: op.idOperacion,
     idCliente: op.cliente.idCliente,
     idChofer: op.chofer.idChofer,

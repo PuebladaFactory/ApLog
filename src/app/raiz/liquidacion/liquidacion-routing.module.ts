@@ -4,6 +4,7 @@ import { LiqGralComponent } from './liq-gral/liq-gral.component';
 
 import { ProformaComponent } from './proforma/proforma.component';
 import { LiquidacionesOpComponent } from './liquidaciones-op/liquidaciones-op.component';
+import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
 
 const routes: Routes = [
   {path: '', component:LiqGralComponent,
@@ -12,6 +13,7 @@ const routes: Routes = [
       {path: 'cliente', component:LiquidacionesOpComponent},
       {path: 'chofer', component:LiquidacionesOpComponent},
       {path: 'proveedor', component:LiquidacionesOpComponent},
+      {path: 'migrar', component:MigrarDatosComponent},
     ]
   },  
 ];

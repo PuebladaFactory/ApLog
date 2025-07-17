@@ -423,7 +423,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
     this.factura = {
 
       fecha: new Date().toISOString().split('T')[0],
-      idInfLiq: new Date().getTime(),
+      idInfLiq: new Date().getTime() + Math.floor(Math.random() * 1000),
       numeroInterno: numero,             // CONECTAR AL SERVICIO
       tipo: this.fromParent.origen,
       entidad:{

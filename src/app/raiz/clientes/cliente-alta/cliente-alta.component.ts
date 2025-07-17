@@ -145,7 +145,7 @@ export class ClienteAltaComponent implements OnInit {
           direccionOperativa: this.direccionOperativaCompleta,
         };                
         //this.cliente = this.form.value
-        this.cliente.idCliente = new Date().getTime();
+        this.cliente.idCliente = new Date().getTime() + Math.floor(Math.random() * 1000);
         this.cliente.contactos = this.contactos;
         this.cliente.condFiscal = this.condFiscal;
         ////console.log()(this.cliente);     

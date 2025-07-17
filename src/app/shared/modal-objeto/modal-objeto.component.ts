@@ -127,6 +127,7 @@ export class ModalObjetoComponent implements OnInit {
   
     return { max, min }; // Devolvemos un objeto con el máximo y el mínimo
   }
+  
 
   reimprimirFac(formato: string) {    
 

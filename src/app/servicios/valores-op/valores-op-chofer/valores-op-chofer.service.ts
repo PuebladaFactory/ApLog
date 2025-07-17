@@ -197,7 +197,7 @@ $crearFacturaOpChofer(op:Operacion, idTarifa: number, idProveedor: number){
 
   this.facturaOpChofer = {
     
-    idInfOp: new Date().getTime(),
+    idInfOp: new Date().getTime() + Math.floor(Math.random() * 1000),
     idOperacion: op.idOperacion,
     idCliente: op.cliente.idCliente,
     idChofer: op.chofer.idChofer,

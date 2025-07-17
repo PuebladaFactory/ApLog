@@ -313,7 +313,7 @@ async $guardarFacturas(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje:
   guardarTarifasEventuales(op:Operacion){
     this.tarifaEventual = {
       
-      idTarifa: new Date().getTime(),
+      idTarifa: new Date().getTime() + Math.floor(Math.random() * 1000),
       fecha: op.fecha,
       cliente: {
         concepto: op.tarifaEventual.cliente.concepto,

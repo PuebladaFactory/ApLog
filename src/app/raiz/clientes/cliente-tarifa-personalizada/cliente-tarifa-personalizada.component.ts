@@ -174,7 +174,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
    
     this.nuevaTarifa = {
       //id: null,
-      idTarifa: new Date().getTime(),
+      idTarifa: new Date().getTime() + Math.floor(Math.random() * 1000),
       fecha: new Date().toISOString().split('T')[0],
       secciones: this.secciones,
       tipo: { general: false, especial: false, eventual: false, personalizada:true },  // Ajusta según sea necesario

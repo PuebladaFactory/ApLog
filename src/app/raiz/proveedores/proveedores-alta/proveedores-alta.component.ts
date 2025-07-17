@@ -137,7 +137,7 @@ export class ProveedoresAltaComponent implements OnInit {
           direccionFiscal: this.direccionFiscalCompleta,
           direccionOperativa: this.direccionOperativaCompleta,
         };                
-        this.proveedor.idProveedor = new Date().getTime();
+        this.proveedor.idProveedor = new Date().getTime() + Math.floor(Math.random() * 1000);
         this.proveedor.contactos = this.contactos;
         //console.log()(this.cliente);     
         this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa

@@ -354,7 +354,7 @@ export class CargaMultipleComponent implements OnInit {
       
       if(proveedoresSinTarifa.length > 0){return this.mensajesError(`Uno de los proveedores de los choferes no tiene asignada una tarifa`, "error")};
 
-      let baseTime = new Date().getTime(); // Obtén el timestamp base
+      let baseTime = new Date().getTime() + Math.floor(Math.random() * 1000); // Obtén el timestamp base
       let increment = 0;
       
 

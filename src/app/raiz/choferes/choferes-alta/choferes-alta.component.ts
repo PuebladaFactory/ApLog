@@ -257,7 +257,7 @@ export class ChoferesAltaComponent implements OnInit {
           direccion: this.direccionCompleta,
         };
       /*  this.chofer.categoria = this.categoriaSeleccionada; */
-        this.chofer.idChofer = new Date().getTime();   
+        this.chofer.idChofer = new Date().getTime() + Math.floor(Math.random() * 1000);   
         this.chofer.condFiscal = this.condFiscal;
         this.chofer.idProveedor = this.idProveedor;
         this.chofer.vehiculo = this.vehiculos;

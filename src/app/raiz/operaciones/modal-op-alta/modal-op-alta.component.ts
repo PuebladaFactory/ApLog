@@ -482,7 +482,7 @@ export class ModalOpAltaComponent implements OnInit {
   // Construir la operación básica
   this.op = {
       
-    idOperacion: new Date().getTime(),
+    idOperacion: new Date().getTime() + Math.floor(Math.random() * 1000),
     fecha: formValues.fecha,
     km: 0,
     //documentacion: null,

@@ -52,7 +52,7 @@ export class FacturacionClienteComponent implements OnInit {
       .subscribe(data => {
         
         if(data){
-          //console.log("facturas clientes: ",data);
+          console.log("resumenLiqClientes: ",data);
           
           this.informesLiqCliente = data;
           this.informesLiqCliente = this.informesLiqCliente.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
@@ -165,7 +165,7 @@ export class FacturacionClienteComponent implements OnInit {
         const clienteId = this.datosTablaCliente[index].idCliente;
         const facturasCliente = this.informesLiqCliente.filter((informeLiq: ConId<InformeLiq>) => informeLiq.entidad.id === clienteId);
         this.facturasPorCliente.set(clienteId, facturasCliente);        
-        ////console.log("1) facturasCliente: ", facturasCliente);
+        console.log("1) facturasCliente: ", facturasCliente);
         ////console.log("2) facturas por cliente: ", this.facturasPorCliente);
         this.openModal(facturasCliente, index);          
       } else {

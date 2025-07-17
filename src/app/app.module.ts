@@ -43,6 +43,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AgGridModule } from 'ag-grid-angular';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ServiceWorkerModule } from '@angular/service-worker';
+import { LiquidacionModule } from "./raiz/liquidacion/liquidacion.module";
 
 @NgModule({
   declarations: [
@@ -63,20 +64,20 @@ import { ServiceWorkerModule } from '@angular/service-worker';
     AppRoutingModule,
     NgbModule,
     ReactiveFormsModule,
-    CloudinaryModule,    
+    CloudinaryModule,
     RaizModule,
     SharedModule,
     FilterPipeModule,
     AgGridModule,
     DragDropModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      // Register the ServiceWorker as soon as the application is stable
-      // or after 30 seconds (whichever comes first).
-      registrationStrategy: 'registerWhenStable:30000'
-    })
-    
-  ],
+        enabled: !isDevMode(),
+        // Register the ServiceWorker as soon as the application is stable
+        // or after 30 seconds (whichever comes first).
+        registrationStrategy: 'registerWhenStable:30000'
+    }),
+    LiquidacionModule
+],
   providers: [
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => getFirestore()),
