@@ -227,7 +227,7 @@ async guardarTransformados() {
 
 
   transformarInformesLiq() {
-    this.infLiqTransformados = this.infOrigen.map((data: any): InformeLiq => {
+    /* this.infLiqTransformados = this.infOrigen.map((data: any): InformeLiq => {
       let tipo: 'cliente' | 'chofer' | 'proveedor';
       let entidad: EntidadLiq;
       let totalContraParte = 0;
@@ -284,7 +284,8 @@ async guardarTransformados() {
         observaciones: '',
         facturaVinculada: ''
       };
-    });
+    }); */
+    this.infLiqTransformados = this.infOrigen
     console.log("this.infLiqTransformados", this.infLiqTransformados);
     
   }

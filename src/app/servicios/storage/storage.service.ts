@@ -273,6 +273,9 @@ export class StorageService {
   private _resumenLiqProveedores$ = new BehaviorSubject<any>(this.loadInfo('resumenLiqProveedores') || []);
   public resumenLiqProveedores$ = this._resumenLiqProveedores$.asObservable();
 
+  private _resumenLiq$ = new BehaviorSubject<any>(this.loadInfo('resumenLiq') || []);
+  public resumenLiq$ = this._resumenLiq$.asObservable();
+
   updateObservable(componente: any, data: any) {
     switch (componente) {
       case "clientes": {
@@ -663,6 +666,10 @@ export class StorageService {
         this._resumenLiqProveedores$.next(data);
         break
       }
+      case "resumenLiq":{
+        this._resumenLiq$.next(data);
+        break
+      }
       default: {
         //statements; 
         break;
@@ -945,7 +952,9 @@ export class StorageService {
         return this._resumenLiqChoferes$.asObservable();
       case "resumenLiqProveedores":
         return this._resumenLiqProveedores$.asObservable();  
-        default:
+      case "resumenLiq":
+        return this._resumenLiq$.asObservable();
+      default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }
   }

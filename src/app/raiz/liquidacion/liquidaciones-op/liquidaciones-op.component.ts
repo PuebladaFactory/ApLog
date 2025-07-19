@@ -35,7 +35,7 @@ export class LiquidacionesOpComponent implements OnInit {
   llamadaOrigen: string = "";
   componente: string = "";
   componenteBaja: string = "";
-  compInformeLiquidacion: string = "";
+  compInformeLiquidacion: string = 'resumenLiq';
   private destroy$ = new Subject<void>();
   choferes!: ConIdType<Chofer>[];
   clientes!: ConIdType<Cliente>[];
@@ -88,8 +88,7 @@ export class LiquidacionesOpComponent implements OnInit {
       //console.log('Módulo origen:', this.llamadaOrigen);
     }
     this.componente = this.llamadaOrigen === 'cliente' ? 'informesOpClientes' : this.llamadaOrigen === 'chofer' ? 'informesOpChoferes' : 'informesOpProveedores';
-    this.componenteBaja = this.llamadaOrigen === 'cliente' ? 'infOpLiqClientes' : this.llamadaOrigen === 'chofer' ? 'infOpLiqChoferes' : 'infOpLiqProveedores';
-    this.compInformeLiquidacion = this.llamadaOrigen === 'cliente' ? 'resumenLiqClientes' : this.llamadaOrigen === 'chofer' ? 'resumenLiqChoferes' : 'resumenLiqProveedores';    
+    this.componenteBaja = this.llamadaOrigen === 'cliente' ? 'infOpLiqClientes' : this.llamadaOrigen === 'chofer' ? 'infOpLiqChoferes' : 'infOpLiqProveedores';    
     this.storageService.getObservable<ConIdType<Chofer>>("choferes")
       .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
       .subscribe(data => {

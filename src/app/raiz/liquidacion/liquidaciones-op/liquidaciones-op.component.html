@@ -180,7 +180,7 @@
             </span>
           }
         </th>
-        <th scope="col" style="width:5%" class="">Facturar</th>
+        <th scope="col" style="width:5%" class="">Liquidar</th>
       </tr>
     </thead>
     @if (datosTabla.length > 0) {
@@ -268,7 +268,7 @@
                       
                       <th scope="col" class="" style="width: 6%;">Ganancia</th>
                       <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>
-                      <th scope="col" class="" style="width: 4.5%;" >Facturar</th>
+                      <th scope="col" class="" style="width: 4.5%;" >Liquidar</th>
                       <th *appRole="['god','admin', 'manager']" scope="col" colspan="2" style="width:3%;" class=""></th>
                     </tr>
                   </thead>
@@ -341,9 +341,9 @@
   <app-spinner></app-spinner>
 }
 <div><small>Cantidad de Informes: {{informesOp.length}}</small></div>
-<br>
+<!-- <br>
 <button class="btn btn-outline-secondary" (click)="filtrarObjeto()">2-Filtrar informes</button>
-<button class="btn btn-outline-secondary" (click)="eliminarObjetos()">Eliminar informes</button>
+<button class="btn btn-outline-secondary" (click)="eliminarObjetos()">Eliminar informes</button> -->
 <!-- 
 <button class="btn btn-outline-secondary" (click)="traerProformas()">1-Proformas</button>
 <button class="btn btn-outline-secondary" (click)="filtrarObjeto()">2-Filtrar informes</button>

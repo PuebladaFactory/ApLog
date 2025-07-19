@@ -49,24 +49,35 @@ export class FacturacionGeneralComponent implements OnInit {
 
   ngOnInit(): void {    
     //this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
-    this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqClientes", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
-    this.storageService.getObservable<ConId<InformeLiq>>("resumenLiqClientes")
+    this.storageService.syncChangesDateValue<InformeLiq>("resumenLiq", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
+    this.storageService.getObservable<ConId<InformeLiq>>("resumenLiq")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       //console.log("data factura clientes: ", data);
       if(data){
         
         
-        this.informesLiqCliente = data; 
+        this.informesLiqCliente = data.filter(inf=> inf.tipo === 'cliente'); 
+        console.log('COLECCION: resumenLiq: clientes: ', this.informesLiqCliente);
         this.informesLiqCliente = this.informesLiqCliente.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
-        this.calcularIngresos();     
+
+        this.informesLiqChofer = data.filter(inf=> inf.tipo === 'chofer'); 
+        console.log('COLECCION: resumenLiq: chofer: ', this.informesLiqChofer);
+        this.informesLiqChofer = this.informesLiqChofer.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
+
+        this.informesLiqProveedor = data.filter(inf=> inf.tipo === 'proveedor'); 
+        console.log('COLECCION: resumenLiq: proveedor: ', this.informesLiqProveedor);        
+        this.informesLiqProveedor = this.informesLiqProveedor.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
+        
+        this.calcularIngresos(); 
+        this.calcularPagos();      
       } else {
         this.mensajesError("error: resumen de liquidaciones de los clientes")
       }
       
     });
 
-    //his.storageService.getByDateValue("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacChofer");
+/*     //his.storageService.getByDateValue("facturaChofer", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacChofer");
     this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqChoferes", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
     this.storageService.getObservable<ConId<InformeLiq>>("resumenLiqChoferes")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
@@ -98,7 +109,7 @@ export class FacturacionGeneralComponent implements OnInit {
         this.mensajesError("error: resumen de liquidaciones de los proveedores")
       }      
     });
-
+ */
     
     this.storageService.fechasConsulta$
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
@@ -118,9 +129,9 @@ export class FacturacionGeneralComponent implements OnInit {
   }
 
   consultasFacturas(fechaDesde:string, fechaHasta:string){
-    this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqClientes", "fecha", fechaDesde, fechaHasta, "desc");
-    this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqChoferes", "fecha", fechaDesde, fechaHasta, "desc");
-    this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqProveedores", "fecha", fechaDesde, fechaHasta, "desc");
+    this.storageService.syncChangesDateValue<InformeLiq>("resumenLiq", "fecha", fechaDesde, fechaHasta, "desc");
+    /* this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqChoferes", "fecha", fechaDesde, fechaHasta, "desc");
+    this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqProveedores", "fecha", fechaDesde, fechaHasta, "desc"); */
     //this.storageService.getByDateValue("facturaCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacCliente");
     //this.storageService.getByDateValue("facturaChofer", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacChofer");
     //this.storageService.getByDateValue("facturaProveedor", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacProveedor");
@@ -215,9 +226,9 @@ export class FacturacionGeneralComponent implements OnInit {
       //this.storageService.getByDateValue("facturaChofer", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
       //this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
       //this.storageService.getByDateValue("facturaProveedor", "fecha", this.primerDia, this.ultimoDia, this.titulo);    
-      this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqClientes", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
-      this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqChoferes", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
-      this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqProveedores", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
+      this.storageService.syncChangesDateValue<InformeLiq>("resumenLiq", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
+      /* this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqChoferes", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc");
+      this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqProveedores", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "desc"); */
     }     
   
   }

@@ -17,7 +17,7 @@ export class NumeradorService {
     };
 
     const prefijo = prefixMap[tipo];
-    const docRef: DocumentReference = doc(this.firestore, `numeradores/${prefijo}`);
+    const docRef: DocumentReference = doc(this.firestore, `Vantruck/datos/numeradores/${prefijo}`);
 
     try {
       const numeroInterno = await runTransaction(this.firestore, async (transaction) => {

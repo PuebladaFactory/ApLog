@@ -592,10 +592,10 @@ export class ProformaComponent implements OnInit {
     let {id,type, ...prof} = proforma;
     let facOpColeccion: string = origen === 'cliente' ? 'informesOpClientes' : origen === 'chofer' ? 'informesOpChoferes' : origen === 'proveedor' ? 'informesOpProveedores' : '';
     let facOpLiqColeccion: string = origen === 'cliente' ? 'infOpLiqClientes' : origen === 'chofer' ? 'infOpLiqChoferes' : origen === 'proveedor' ? 'infOpLiqProveedores' : '';
-    let facturaColeccion: string = origen === 'cliente' ? 'resumenLiqClientes' : origen === 'chofer' ? 'resumenLiqChoferes' : origen === 'proveedor' ? 'resumenLiqProveedores' : '';
     
     
-    this.procesarFacturacion(facturasOp, origen,facOpLiqColeccion,facOpColeccion,proforma,facturaColeccion, clientes, choferes, tipo)
+    
+    this.procesarFacturacion(facturasOp, origen,facOpLiqColeccion,facOpColeccion,proforma,'resumenLiq', clientes, choferes, tipo)
     /* Swal.fire({
       title: '¿Desea generar la liquidación de la proforma seleccionada?',
       text: "Esta acción no se podrá revertir",

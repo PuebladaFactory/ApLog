@@ -21,12 +21,12 @@ export class CargaComponent implements OnInit {
 
   }
   ngOnInit(): void {    
-/*       //console.log("pasa por aca?");      
+      //console.log("pasa por aca?");      
       this.storageService.initializerAdmin()
       setTimeout(() => {
         this.storageService.setInfo("ruta", ["op"])
         this.router.navigate(['raiz']);
-      }, 3000); // 5000 milisegundos = 5 segundos  */
+      }, 3000); // 5000 milisegundos = 5 segundos 
       
       
   }   

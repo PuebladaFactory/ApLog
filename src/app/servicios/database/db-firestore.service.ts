@@ -13,6 +13,7 @@ import { inject } from '@angular/core';
 import { TableroDiario } from 'src/app/raiz/operaciones/tablero-diario/tablero-diario.component';
 import { InformeOp } from 'src/app/interfaces/informe-op';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
+import { NumeradorService } from '../numerador/numerador.service';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +24,7 @@ export class DbFirestoreService {
   componente: string = '';
   private firestore = inject(Firestore);
 
-  constructor() {
+  constructor(private numeradorService: NumeradorService) {
 
   }
 
@@ -1410,6 +1411,52 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
   return grupos;
 }
 
+  getInformesLiqPorTipoYFechas(
+    tipo: 'cliente' | 'chofer' | 'proveedor' | 'todos',
+    desde: string,
+    hasta: string
+  ): Promise<ConId<InformeLiq>[]> {
+    const tipos = tipo === 'todos' ? ['cliente', 'chofer', 'proveedor'] : [tipo];
+    const colRef = collection(this.firestore, '/Vantruck/datos/resumenLiq');
 
+    const q = query(
+      colRef,
+      where('estado', '==', 'emitido'),
+      where('fecha', '>=', desde),
+      where('fecha', '<=', hasta),
+      where('tipo', 'in', tipos),
+      orderBy('fecha', 'asc')
+    );
+
+    return getDocs(q).then(snap =>
+      snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as InformeLiq) }))
+    );
+  }
+
+  async asignarNumerosInternosFaltantes(): Promise<void> {
+    const colRef = collection(this.firestore, '/Vantruck/datos/resumenLiq');
+    const q = query(colRef, orderBy('fecha'));
+    const snapshot = await getDocs(q);
+
+    const docs = snapshot.docs;
+
+    for (const docSnap of docs) {
+      const data = docSnap.data() as InformeLiq;
+
+      // Saltar si ya tiene un número interno
+      if (data.numeroInterno && data.numeroInterno !== '') continue;
+
+      try {
+        const nuevoNumero = await this.numeradorService.generarNumeroInterno(data.tipo);
+        const ref = doc(this.firestore, `/Vantruck/datos/resumenLiq/${docSnap.id}`);
+        await updateDoc(ref, { numeroInterno: nuevoNumero });
+        console.log(`✅ Documento ${docSnap.id} actualizado con: ${nuevoNumero}`);
+      } catch (error) {
+        console.error(`❌ Error actualizando ${docSnap.id}:`, error);
+      }
+    }
+
+    console.log('🏁 Asignación de números internos finalizada.');
+  }
 
 }

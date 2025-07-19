@@ -47,14 +47,15 @@ export class FacturacionClienteComponent implements OnInit {
     ) {}
   
     ngOnInit(): void {
-      this.storageService.getObservable<ConId<InformeLiq>>("resumenLiqClientes")
+      this.storageService.getObservable<ConId<InformeLiq>>("resumenLiq")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         
         if(data){
-          console.log("resumenLiqClientes: ",data);
-          
-          this.informesLiqCliente = data;
+          //console.log("resumenLiq: ",data);
+
+          this.informesLiqCliente = data.filter(inf=> inf.tipo === 'cliente'); 
+          //console.log('COLECCION: resumenLiq: clientes: ', this.informesLiqCliente);
           this.informesLiqCliente = this.informesLiqCliente.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer
           this.procesarDatosParaTabla();
           this.mostrarTablaCliente = new Array(this.datosTablaCliente.length).fill(false); // Mueve esta línea aquí
