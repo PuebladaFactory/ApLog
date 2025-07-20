@@ -485,7 +485,7 @@ export class ProformaComponent implements OnInit {
       let titulo:string = origen === 'cliente' ? 'Cliente' : origen === 'chofer' ? 'Chofer' : 'Proveedor';
       let objeto:string = origen === 'cliente' ? this.getCliente(proforma.entidad.id) : origen === 'chofer' ? this.getChofer(proforma.entidad.id) : this.getProveedor(proforma.entidad.id);
       
-      let proceso: string = accion === 'baja' ? 'anular' : 'facturar' 
+      let proceso: string = accion === 'baja' ? 'anular' : 'generar la liquidación de' 
       ////console.log("proceso", proceso);
       
       Swal.fire({
