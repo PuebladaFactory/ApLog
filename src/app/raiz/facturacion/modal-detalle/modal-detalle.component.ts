@@ -228,14 +228,14 @@ export class ModalDetalleComponent implements OnInit {
     switch (this.fromParent.modo){
       //////////////CLIENTES///////////////////////
       case "cliente":          
-          console.log("REIMPRESION: factura ", this.factura[0], "facturas: ",  this.informesOpCliente );
+          console.log("REIMPRESION: factura ", this.factura[0], "facturas: ",  this.informesOp );
           if (formato === 'excel') {
             //console.log("3)factura y facturasOpCliente: ",this.factura[0], this.informesOpCliente );      
-            this.excelServ.exportToExcelInforme(this.factura[0], this.informesOpCliente, this.$clientes, this.$choferes, 'factura');
+            this.excelServ.exportToExcelInforme(this.factura[0], this.informesOp, this.$clientes, this.$choferes, 'factura');
             this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en excel del Cliente ${this.factura[0].entidad.razonSocial}`, this.factura[0].entidad.id, true);
           } else if(formato === 'pdf') {
             //console.log("3)factura y facturasOpCliente: ",this.factura[0], this.informesOpCliente );
-            this.pdfServ.exportToPdfInforme(this.factura[0], this.informesOpCliente, this.$clientes, this.$choferes, 'factura');
+            this.pdfServ.exportToPdfInforme(this.factura[0], this.informesOp, this.$clientes, this.$choferes, 'factura');
             this.logService.logEvent("REIMPRESION", "facturaCliente", `Reimpresion de detalle en pdf del Cliente ${this.factura[0].entidad.razonSocial}`, this.factura[0].entidad.id, true);
           } else {
             //console.log("listado de op", this.informesOpCliente);
@@ -248,11 +248,11 @@ export class ModalDetalleComponent implements OnInit {
           console.log("3) operacionFac: ", this.informesOpChofer);
           if (formato === 'excel') {
             //console.log("3)factura y facturasOpChofer: ",this.factura[0], this.informesOpCliente );      
-            this.excelServ.exportToExcelInforme(this.factura[0], this.informesOpChofer, this.$clientes, this.$choferes, 'factura');
+            this.excelServ.exportToExcelInforme(this.factura[0], this.informesOp, this.$clientes, this.$choferes, 'factura');
             this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en excel del Chofer ${this.factura[0].entidad.razonSocial}`, this.factura[0].entidad.id, true);
           } else if(formato === 'pdf') {
             //console.log("3)factura y facturasOpChofer: ",this.factura[0], this.informesOpCliente );
-            this.pdfServ.exportToPdfInforme(this.factura[0], this.informesOpChofer, this.$clientes, this.$choferes, 'factura');
+            this.pdfServ.exportToPdfInforme(this.factura[0], this.informesOp, this.$clientes, this.$choferes, 'factura');
             this.logService.logEvent("REIMPRESION", "facturaChofer", `Reimpresion de detalle en pdf del Chofer ${this.factura[0].entidad.razonSocial}`, this.factura[0].entidad.id, true);
           } else {
             //console.log("listado de op", this.informesOpChofer);
@@ -264,14 +264,14 @@ export class ModalDetalleComponent implements OnInit {
         
           if (formato === 'excel') {
             //console.log("3)factura y facturasOpProveedor: ",this.factura[0], this.informesOpProveedor );      
-            this.excelServ.exportToExcelInforme(this.factura[0], this.informesOpProveedor, this.$clientes, this.$choferes, 'factura');
+            this.excelServ.exportToExcelInforme(this.factura[0], this.informesOp, this.$clientes, this.$choferes, 'factura');
             this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor $${this.factura[0].entidad.razonSocial}`, this.factura[0].entidad.id, true);
           } else if(formato === 'pdf') {
-            console.log("3)factura y facturasOpProveedor: ",this.factura[0], this.informesOpProveedor );
-            this.pdfServ.exportToPdfInforme(this.factura[0], this.informesOpProveedor, this.$clientes, this.$choferes,'factura');
+            console.log("3)factura y facturasOpProveedor: ",this.factura[0], this.informesOp );
+            this.pdfServ.exportToPdfInforme(this.factura[0], this.informesOp, this.$clientes, this.$choferes,'factura');
             this.logService.logEvent("REIMPRESION", "facturaProveedor", `Reimpresion de detalle en excel del Proveedor ${this.factura[0].entidad.razonSocial}`, this.factura[0].entidad.id, true);
           }   else {
-            console.log("listado de op", this.informesOpProveedor);
+            console.log("listado de op", this.informesOp);
             
           }  
       break;
