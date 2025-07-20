@@ -60,6 +60,10 @@
       <div>
         <button class="btn btn-danger me-2" (click)="eliminarObjeto()">Borrar Duplicados</button>
       </div>
+      <div>
+        <button  class="btn btn-outline-dark" (click)="consultarNuevaColeccion()">Consultar nueva colección:</button>
+        <span>{{docuNuevaColeccion.length}}</span>
+      </div>
 
    </div>
 
@@ -209,9 +213,10 @@
         <label>Colección de origen:</label>
         <select class="form-select" [(ngModel)]="coleccionOrigen">
           <option value="">-- Seleccionar --</option>
-          <option value="resumenLiqClientes">FacturaCliente</option>
-          <option value="resumenLiqChoferes">FacturaChofer</option>
-          <option value="resumenLiqProveedores">FacturaProveedor</option>
+          <option value="facturaCliente">FacturaCliente</option>
+          <option value="facturaChofer">FacturaChofer</option>
+          <option value="facturaProveedor">FacturaProveedor</option>
+          <option value="proforma">Proforma</option>
         </select>
       </div>
       <div class="col-md-3">
@@ -226,12 +231,20 @@
     </div>
 
     <!-- Botones -->
-    <div class="mb-3">
-      <button class="btn btn-primary me-2" (click)="cargarFacturasOrigen()" [disabled]="cargando">Cargar datos</button>
-      <button class="btn btn-secondary me-2" (click)="transformarInformesLiq()" [disabled]="!infOrigen.length">Transformar</button>
-      <button class="btn btn-secondary me-2" (click)="verificarFacturasDuplicados()">Duplicados</button>
-      <button class="btn btn-success" (click)="guardarInLiqTransformados()" [disabled]="!infLiqTransformados.length || cargando">Guardar transformados</button>
+    <div class="d-flex justify-content-between">
+        <div class="mb-3">
+          <button class="btn btn-primary me-2" (click)="cargarFacturasOrigen()" [disabled]="cargando">Cargar datos</button>
+          <button class="btn btn-secondary me-2" (click)="transformarInformesLiq()" [disabled]="!infOrigen.length">Transformar</button>
+          <button class="btn btn-secondary me-2" (click)="verificarFacturasDuplicados()">Duplicados</button>
+          <button class="btn btn-success" (click)="guardarInLiqTransformados()" [disabled]="!infLiqTransformados.length || cargando">Guardar transformados</button>
+          <!-- <button class="btn btn-outline-dark ms-5" (click)="migrarProformasAInformeLiq()" [disabled]="!infOrigen.length || cargando">Proformas</button> -->
+        </div>
+        <div>
+          <button  class="btn btn-outline-dark" (click)="consultarNuevaColeccion()">Consultar nueva colección:</button>
+          <span>{{docuNuevaColeccion.length}}</span>
+        </div>
     </div>
+    
 
     <!-- Tabla: Datos Origen -->
     <div class="row">

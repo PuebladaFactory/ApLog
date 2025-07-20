@@ -57,6 +57,8 @@ export class ProformaComponent implements OnInit {
         .subscribe(data => {
           if(data){
             this.proformasTodas = data
+            console.log("proformasTodas", this.proformasTodas);
+            
             this.separarFacturas()
           }          
         });
@@ -83,9 +85,9 @@ export class ProformaComponent implements OnInit {
         this.proformasProveedores.push(factura as ConIdType<InformeLiq>);
       }
     });
-    //console.log("this.proformasClientes", this.proformasClientes);
-    //console.log("this.proformasChoferes", this.proformasChoferes);
-    //console.log("this.proformasProveedores", this.proformasProveedores);
+    console.log("this.proformasClientes", this.proformasClientes);
+    console.log("this.proformasChoferes", this.proformasChoferes);
+    console.log("this.proformasProveedores", this.proformasProveedores);
       
     this.proformasClientes = this.proformasClientes.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial));
     this.proformasChoferes = this.proformasChoferes.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial));

@@ -82,6 +82,7 @@ export class MigrarDatosComponent {
   filtroDduplicados:string= "";
 
   informesOpToogle:boolean = true;
+  docuNuevaColeccion: any[] = [];
   
   constructor(
     private firestore: Firestore,
@@ -141,13 +142,13 @@ export class MigrarDatosComponent {
   }
 
 async guardarTransformados() {
-  
   if (!this.datosTransformados.length || !this.coleccionDestino) {
     Swal.fire('Error', 'No hay datos transformados para guardar.', 'error');
     return;
   }
 
   this.cargando = true;
+  let omitidos: number[] = [];
 
   try {
     const loteTamaño = 500;
@@ -157,17 +158,34 @@ async guardarTransformados() {
     for (let i = 0; i < cantidadLotes; i++) {
       const loteDocs = this.datosTransformados.slice(i * loteTamaño, (i + 1) * loteTamaño);
       const batch = writeBatch(this.firestore);
+      let docsAgregados = 0;
 
       for (const info of loteDocs) {
-        // Firestore generará el ID automáticamente
-        const ref = doc(collection(this.firestore, `/Vantruck/datos/${this.coleccionDestino}`));
+        const colRef = collection(this.firestore, `/Vantruck/datos/${this.coleccionDestino}`);
+        const q = query(colRef, where('idOperacion', '==', info.idOperacion));
+        const snap = await getDocs(q);
+
+        if (!snap.empty) {
+          omitidos.push(info.idOperacion); // guardamos los omitidos para mostrar al final
+          continue;
+        }
+
+        const ref = doc(colRef); // Firestore genera ID automáticamente
         batch.set(ref, info);
+        docsAgregados++;
       }
 
-      await batch.commit(); // se espera cada lote antes de pasar al siguiente
+      if (docsAgregados > 0) {
+        await batch.commit();
+      }
     }
 
-    Swal.fire('Éxito', 'Los informes fueron guardados correctamente.', 'success');
+    let mensaje = 'Los informes fueron guardados correctamente.';
+    if (omitidos.length > 0) {
+      mensaje += `\nSe omitieron ${omitidos.length} informes ya existentes:\n${omitidos.join(', ')}`;
+    }
+
+    Swal.fire('Éxito', mensaje, 'success');
   } catch (err) {
     console.error(err);
     Swal.fire('Error', 'Falló la operación de guardado.', 'error');
@@ -227,7 +245,7 @@ async guardarTransformados() {
 
 
   transformarInformesLiq() {
-    /* this.infLiqTransformados = this.infOrigen.map((data: any): InformeLiq => {
+    this.infLiqTransformados = this.infOrigen.map((data: any): InformeLiq => {
       let tipo: 'cliente' | 'chofer' | 'proveedor';
       let entidad: EntidadLiq;
       let totalContraParte = 0;
@@ -284,9 +302,10 @@ async guardarTransformados() {
         observaciones: '',
         facturaVinculada: ''
       };
-    }); */
-    this.infLiqTransformados = this.infOrigen
+    });
     console.log("this.infLiqTransformados", this.infLiqTransformados);
+/*     this.infLiqTransformados = this.infOrigen
+    console.log("this.infLiqTransformados", this.infLiqTransformados); */
     
   }
 
@@ -351,5 +370,94 @@ async guardarTransformados() {
       this.cargando = false;
     }
   }
+
+  private convertirFacturaChoferAInformeLiq(data: any): InformeLiq {
+  return {
+    idInfLiq: data.idFacturaChofer || 0,
+    numeroInterno: '', // quedará vacío como paso intermedio
+    tipo: 'chofer',
+    fecha: data.fecha || '',
+    entidad: {
+      id: data.idChofer || 0,
+      razonSocial: `${data.apellido || ''} ${data.nombre || ''}`,
+      cuit: 0
+    },
+    operaciones: data.operaciones || [],
+    valores: {
+      totalTarifaBase: data.valores?.totalTarifaBase || 0,
+      totalAcompaniante: data.valores?.totalAcompaniante || 0,
+      totalkmMonto: data.valores?.totalkmMonto || 0,
+      descuentoTotal: data.valores?.descuentoTotal || 0,
+      total: data.valores?.total || 0,
+      totalContraParte: data.montoFacturaCliente || 0
+    },
+    descuentos: data.descuentos || [],
+    columnas: data.columnas || [],
+    estado: 'emitido',
+    cobrado: data.cobrado || false,
+    formaPago: '',
+    fechaCobro: '',
+    observaciones: '',
+    facturaVinculada: ''
+  };
+}
+
+async migrarProformasAInformeLiq() {
+  const colRef = collection(this.firestore, '/Vantruck/datos/proforma');
+
+  try {
+    const snapshot = await getDocs(colRef);
+    const documentos = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+
+    if (!documentos.length) {
+      Swal.fire('Sin datos', 'No hay proformas para migrar.', 'info');
+      return;
+    }
+
+    this.cargando = true;
+    const batch = writeBatch(this.firestore);
+
+    for (const { id, data } of documentos) {
+      const nuevoInforme = this.convertirFacturaChoferAInformeLiq(data);
+      const ref = doc(this.firestore, `/Vantruck/datos/proforma/${id}`);
+      batch.set(ref, nuevoInforme); // sobrescribe completamente
+    }
+
+    await batch.commit();
+    Swal.fire('Éxito', 'Las proformas fueron convertidas correctamente.', 'success');
+  } catch (error) {
+    console.error('Error al migrar proformas:', error);
+    Swal.fire('Error', 'Ocurrió un error durante la migración de proformas.', 'error');
+  } finally {
+    this.cargando = false;
+  }
+}
+
+async consultarNuevaColeccion(){
+    if (!this.fechaDesde || !this.fechaHasta || !this.coleccionOrigen) return;
+    this.docuNuevaColeccion = [];
+    this.cargando = true;
+    try {
+      const colRef = collection(this.firestore, `/Vantruck/datos/${this.coleccionDestino}`);
+      const snapshot = await getDocs(colRef);
+
+      const desde = new Date(this.fechaDesde);
+      const hasta = new Date(this.fechaHasta);
+
+      this.docuNuevaColeccion = snapshot.docs
+        .map(doc => doc.data())
+        .filter((data: any) => {
+          const fecha = new Date(data.fecha);
+          return fecha >= desde && fecha <= hasta;
+        });
+      console.log("docuNuevaColeccion", this.docuNuevaColeccion)
+    } catch (error) {
+      console.error('Error al cargar datos:', error);
+      Swal.fire('Error', 'Error al cargar los datos de origen.', 'error');
+    } finally {
+      this.cargando = false;
+    }
+}
+
 
 }
