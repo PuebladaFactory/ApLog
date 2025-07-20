@@ -2,16 +2,18 @@ import { Injectable } from '@angular/core';
 import Swal from 'sweetalert2';
 import { DbFirestoreService } from '../database/db-firestore.service';
 import { StorageService } from '../storage/storage.service';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
-import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
-import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+
+
+
+
 import { ConId } from 'src/app/interfaces/conId';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { take } from 'rxjs';
 import { forEach } from 'lodash';
 import { doc, DocumentData, Firestore, getDoc, writeBatch } from 'firebase/firestore';
 import { chunk } from 'lodash';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 @Injectable({
   providedIn: 'root'
@@ -32,7 +34,7 @@ export class LiquidacionService {
 
     
     
-  liquidarFacOpCliente(factura: FacturaCliente, facturasOp: ConId<FacturaOp>[]){
+  liquidarFacOpCliente(factura: InformeLiq, facturasOp: ConId<InformeOp>[]){
     console.log("liquidarFacOpClientes");
     /* this.addItem(factura, "facturaCliente", factura.idFacturaCliente, "ALTA");
     this.editarOperacionesFac(facturasOp, "clientes");
@@ -40,16 +42,16 @@ export class LiquidacionService {
     //this.dbFirebase.procesarLiquidacion(facturasOp, "clientes", "facOpLiqCliente", "facturaOpCliente")
   }
 
-  liquidarFacOpChofer(factura: FacturaChofer, facturasOp: ConId<FacturaOp>[]){
+  liquidarFacOpChofer(factura: InformeLiq, facturasOp: ConId<InformeOp>[]){
     console.log("liquidarFacOpChoferes");
-    this.addItem(factura, "facturaChofer", factura.idFacturaChofer, "ALTA");
+    this.addItem(factura, "facturaChofer", factura.idInfLiq, "ALTA");
     this.editarOperacionesFac(facturasOp, "choferes");
     this.eliminarFacturasOp(facturasOp, "facOpLiqChofer", "facturaOpChofer");
   }
 
-  liquidarFacOpProveedor(factura: FacturaProveedor, facturasOp: ConId<FacturaOp>[]){
+  liquidarFacOpProveedor(factura: InformeLiq, facturasOp: ConId<InformeOp>[]){
     console.log("liquidarFacOpProveedores");
-    this.addItem(factura, "facturaProveedor", factura.idFacturaProveedor, "ALTA");
+    this.addItem(factura, "facturaProveedor", factura.idInfLiq, "ALTA");
     this.editarOperacionesFac(facturasOp, "proveedores");
     this.eliminarFacturasOp(facturasOp, "facOpLiqProveedor", "facturaOpProveedor");
   }  
@@ -60,21 +62,21 @@ export class LiquidacionService {
 
   } 
   
-  eliminarFacturasOp(facturasOp: ConId<FacturaOp>[], componenteAlta: string, componenteBaja: string){
+  eliminarFacturasOp(facturasOp: ConId<InformeOp>[], componenteAlta: string, componenteBaja: string){
     
-    facturasOp.forEach((facturaOp: ConId<FacturaOp>) => {          
+    facturasOp.forEach((facturaOp: ConId<InformeOp>) => {          
       let{id, ...factura} = facturaOp;
-      this.addItem(factura, componenteAlta, factura.idFacturaOp, "INTERNA");
+      this.addItem(factura, componenteAlta, factura.idInfOp, "INTERNA");
       this.removeItem(facturaOp, componenteBaja);
       
     }); 
     console.log("eliminarFacturasOp");
   }
   
-  editarOperacionesFac(facturaOp:ConId<FacturaOp>[], modo:string){
+  editarOperacionesFac(facturaOp:ConId<InformeOp>[], modo:string){
     //factura.idOperacion
     
-    facturaOp.forEach((factura: ConId<FacturaOp>)=>{
+    facturaOp.forEach((factura: ConId<InformeOp>)=>{
       let op:ConId<Operacion>;
       this.dbFirebase
         .obtenerTarifaIdTarifa("operaciones",factura.idOperacion, "idOperacion")
@@ -103,10 +105,10 @@ export class LiquidacionService {
     console.log("editarOperacionesFac");      
   }
   
-  removeItem(item:ConId<FacturaOp>, componente:string){
+  removeItem(item:ConId<InformeOp>, componente:string){
 
     console.log("llamada al storage desde liq-cliente, deleteItem");
-    this.storageService.deleteItem(componente, item, item.idFacturaOp, "INTERNA", "");    
+    this.storageService.deleteItem(componente, item, item.idInfOp, "INTERNA", "");    
 
   }
 

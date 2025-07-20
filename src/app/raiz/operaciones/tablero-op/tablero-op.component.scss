@@ -1,0 +1,43 @@
+.isDisabled {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity:0.5;
+}
+  
+.isDisabled:hover {
+  cursor: not-allowed;
+  opacity:0.5;
+}
+
+.boton-alta{
+  width: 15rem;
+  background: #002b5c;
+  color: white;
+  opacity: 0.8;
+  font-size: 1.3rem;
+}
+
+.boton-alta:hover{
+  background: #0d6efd;    
+}
+
+.dropdown-toggle, .limpiar{
+  font-size: 1.3rem;
+}
+
+ul{
+  font-size: 1.15rem;
+}
+
+.dropdown-item.activo {
+  background-color: #e3f2fd;
+  font-weight: bold;
+  color: #0d6efd;
+}
+
+.btn-primary {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+

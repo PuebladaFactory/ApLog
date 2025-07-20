@@ -1,0 +1,243 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-3 mb-4 rounded shadow-sm row w-100 ms-1">  
+    <div class="col-4">
+        <!-- Dropdowns Izquierda -->
+        <div class="d-flex align-items-center justify-content-start">
+            <!-- Choferes Activos -->
+            <div class="dropdown">
+                <button class="btn btn-primary boton-choferes dropdown-toggle me-1" type="button" data-bs-toggle="dropdown">
+                  Choferes Activos
+                </button>
+                <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
+                    <li *ngFor="let chofer of choferes">
+                        <div class="form-check ms-2">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              [checked]="chofer.activo"
+                              (change)="toggleActivo(chofer)"
+                              id="chofer-activo-{{chofer.idChofer}}"
+                            />
+                            <label class="form-check-label" [for]="'chofer-activo-' + chofer.idChofer">
+                              {{ chofer.apellido }}, {{ chofer.nombre }}
+                            </label>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <!-- Choferes Inactivos -->
+            <div class="dropdown">
+                <button class="btn celeste-fijo dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  Choferes Inactivos
+                </button>
+                <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
+                    <li *ngFor="let chofer of choferesInactivos">
+                      <span style="font-size: 1.25rem;">{{ chofer.apellido }}, {{ chofer.nombre }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>  
+    <div class="col-4 d-flex justify-content-center">
+        <!-- Fecha -->
+        <div class="text-center">
+            <label for="fechaSeleccionada" class="form-label mb-0 fw-bold">📅 Fecha: <span *ngIf="fechaSeleccionada">{{ getDiaSemana(fechaSeleccionada) }}</span></label>
+            <div class="d-flex justify-content-center align-items-center">
+                <button class="btn btn-outline-primary"
+                        (click)="cambiarDia(-1)"
+                        [disabled]="!fechaSeleccionada">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                    </svg>
+                </button> 
+                <div>                  
+                  <input
+                    id="fechaSeleccionada"
+                    type="date"
+                    [(ngModel)]="fechaSeleccionada"
+                    (change)="onFechaSeleccionadaChange()"
+                    class="form-control form-control-sm"
+                  />
+                </div>
+                <button class="btn btn-outline-primary"
+                        (click)="cambiarDia(1)"
+                        [disabled]="!fechaSeleccionada">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
+                    </svg>
+                </button>
+            </div>
+            <span *ngIf="tablero && tablero.asignado"
+                  class="badge bg-success">
+              ✔️ Tablero dado de alta
+            </span>
+
+            <span *ngIf="tablero && !tablero.asignado"
+                  class="badge bg-warning text-dark">
+              ⚠️ Tablero sin el alta de operaciones
+            </span>
+            <span *ngIf="fechaSeleccionada && !tablero"
+                  class="badge bg-danger text-ligth">
+              ❌ Tablero sin asignaciones
+            </span>
+        </div>
+        
+    </div>    
+    <div class="col-4">
+        <!-- Botones derechos -->
+        <div class="d-flex justify-content-end">
+            <button class="btn botonera boton-alta me-1" (click)="altaOp()" [disabled]="tablero?.asignado" [title]="tablero?.asignado ? 'EL tablero ya fue dado de alta' : ''"
+            [ngClass]="{'boton-alta' :  !tablero?.asignado, 'btn-secondary':tablero?.asignado, 'boton-anulado':tablero?.asignado}">                
+                Alta de Op
+            </button>
+            <button class="btn botonera boton-guardar me-1" type="button" id="" (click)="guardarTableroDiario()">               
+                💾Guardar
+            </button>
+            <button class="btn botonera me-1" type="button" id="" (click)="generarInfDiario()" [disabled]="!tablero?.asignado"
+            [title]="!tablero?.asignado ? 'Debe dar de alta las operaciones antes de descargar' : 'Descargar informe'"
+            [ngClass]="{'boton-descargar' :  tablero?.asignado, 'btn-secondary':!tablero?.asignado, 'boton-anulado':!tablero?.asignado}">                
+                ⬇️Descargar
+            </button>
+            <button class="btn botonera boton-baja" (click)="limpiarAsignaciones()">🧹Limpiar</button>
+        </div>
+    </div>
+</nav>
+<div *ngIf="connectedDropListsIds?.length">
+    <div class="row">
+          <!-- Lista de Choferes -->
+          <div class="col-2 mt-3">      
+              <h3 class="titulo-choferes">Choferes Activos</h3>
+              <div class="choferes-scroll-container"
+                [class.hovered]="hovering"
+                (mouseenter)="hovering = true"
+                (mouseleave)="hovering = false"
+              >
+                  <div              
+                    cdkDropList
+                    id="choferes"
+                    [cdkDropListData]="choferes"
+                    [cdkDropListConnectedTo]="connectedDropListsIds"
+                    (cdkDropListDropped)="onDropEnListaChoferes($event)"
+                            
+                  >                  
+                      <div *ngFor="let categoria of choferesAgrupadosPorCategoria; let i = index" class="mb-3 border rounded p-2 shadow-sm">
+                          <h5 class="p-2 rounded">{{ categoria.nombre }}</h5>
+                          <div class="d-flex flex-wrap gap-2">
+                              <div
+                                *ngFor="let chofer of categoria.choferes"
+                                class="chofer-card"
+                                [ngClass]="[
+                                  sectionColorClasses[i % sectionColorClasses.length],
+                                  estaAsignado(chofer) ? 'opacity-50' : ''
+                                ]"
+                                [cdkDragData]="{ chofer: chofer, categoria: categoria }"
+                                cdkDrag
+                                [cdkDragBoundary]="'.drag-boundary'"
+                                
+                                [title]="clientesAsignados(chofer).join(', ')"
+                              >
+                                {{ chofer.apellido }}, {{ chofer.nombre }}
+                                <span *ngIf="asignacionesMultiples(chofer) > 1" class="badge bg-secondary ms-1">
+                                  x{{ asignacionesMultiples(chofer) }}
+                                </span>
+                              </div>
+                          </div>
+                      </div>
+                  <!-- nuevo -->
+                </div>
+              </div>
+          </div>
+
+          <!-- Columnas de Clientes -->
+          <div class="col-10 mt-3">
+              <div class="row">
+                  <div
+                    class="col-2 mb-4"
+                    *ngFor="let cliente of clientes"
+                  >
+                      <h3 class="text-center" style="min-height: 40px;">{{ cliente.razonSocial }}</h3>
+                      <div
+                        cdkDropList
+                        [id]="'cliente-drop-' + cliente.idCliente"
+                        [cdkDropListData]="asignaciones[cliente.idCliente]"
+                        [cdkDropListConnectedTo]="dropListConnections"
+                        (cdkDropListDropped)="onDropChoferEnCliente($event, cliente.idCliente)"
+                        class="p-2 border rounded min-vh-25 bg-light caja-cliente"
+                      >
+                          <div
+                            *ngFor="let chofer of asignaciones[cliente.idCliente]; let i = index"
+                            cdkDrag
+                            [cdkDragData]="chofer"
+                            class="mb-2 p-2 rounded chofer-ubicado d-flex justify-content-between fw-bold"
+                            [ngClass]="getColorClassForChoferAsignado(chofer)"
+                            style="cursor: pointer"
+                            (dblclick)="abrirEdicionChofer(chofer, modalEditarChofer)"
+                          >                  
+                              <span>{{chofer.apellido}} {{chofer.nombre}}</span>
+                              <span *ngIf="chofer.observaciones || chofer.hojaDeRuta" class="ms-2 text-info" title="Tiene información">
+                                📝
+                              </span>
+                              <button class="btn btn-sm ms-2"
+                                [ngClass]="getButtonClassForChofer(chofer)"
+                                (click)="quitarChoferDeCliente(cliente.idCliente, i)"
+                                title="Quitar chofer">
+                                @if(!tablero?.asignado){
+                                  <span>❌</span>
+                                } @else {
+                                  <span>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                      </svg>
+                                  </span>                                  
+                                }                                
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      <!-- </div> -->
+    </div>  
+</div>
+
+<!-- MODAL -->
+<ng-template #modalEditarChofer let-modal>
+    <div *ngIf="choferEditable">
+        <div class="modal-header">
+            <h3 class="modal-title">
+              {{ choferEditable.apellido }}, {{ choferEditable.nombre }}
+            </h3>
+            <button type="button" class="btn-close" aria-label="Cerrar" (click)="modal.dismiss()"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Observaciones</label>
+                <textarea
+                  class="form-control"
+                  [(ngModel)]="choferEditable!.observaciones"
+                  rows="3"
+                  [disabled]="tablero ? tablero.asignado : false"
+                ></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Hoja de Ruta</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="choferEditable!.hojaDeRuta"
+                  [disabled]="tablero ? tablero.asignado : false"
+                />
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+            <button type="button" class="btn btn-primary" (click)="guardarCambiosChofer(modal)" [disabled]="tablero ? tablero.asignado : false">Guardar</button>
+        </div>    
+    </div>
+  
+</ng-template>
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}
+
+

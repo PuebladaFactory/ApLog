@@ -31,12 +31,10 @@ import { VerifyEmailComponent } from './appLogin/verify-email/verify-email.compo
 
 import { PagenotfoundComponent } from './pagenotfound/pagenotfound.component';
 
-import { AdminModule } from './admin/admin.module';
+import { RaizModule } from './raiz/raiz.module';
 import { SharedModule } from './shared/shared.module';
-import { ChoferesModule } from './admin/choferes/choferes.module';
-import { OperacionesModule } from './admin/operaciones/operaciones.module';
-import { ProveedoresModule } from './admin/proveedores/proveedores.module';
-import { FacturacionModule } from './admin/facturacion/facturacion.module';
+
+
 import { CargaComponent } from './carga/carga.component';
 import { CloudinaryModule } from '@cloudinary/ng';
 import { LimboComponent } from './limbo/limbo.component';
@@ -45,6 +43,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AgGridModule } from 'ag-grid-angular';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ServiceWorkerModule } from '@angular/service-worker';
+import { LiquidacionModule } from "./raiz/liquidacion/liquidacion.module";
 
 @NgModule({
   declarations: [
@@ -66,23 +65,19 @@ import { ServiceWorkerModule } from '@angular/service-worker';
     NgbModule,
     ReactiveFormsModule,
     CloudinaryModule,
-    ChoferesModule,
-    AdminModule,
-    OperacionesModule,
+    RaizModule,
     SharedModule,
-    ProveedoresModule,
-    FacturacionModule,
     FilterPipeModule,
     AgGridModule,
     DragDropModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      // Register the ServiceWorker as soon as the application is stable
-      // or after 30 seconds (whichever comes first).
-      registrationStrategy: 'registerWhenStable:30000'
-    })
-    
-  ],
+        enabled: !isDevMode(),
+        // Register the ServiceWorker as soon as the application is stable
+        // or after 30 seconds (whichever comes first).
+        registrationStrategy: 'registerWhenStable:30000'
+    }),
+    LiquidacionModule
+],
   providers: [
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => getFirestore()),

@@ -18,7 +18,7 @@ export class LegajosService {
   crearLegajo(idChofer:number){
     this.legajo ={
       
-      idLegajo:new Date().getTime(),
+      idLegajo:new Date().getTime() + Math.floor(Math.random() * 1000),
       idChofer: idChofer,      
       estadoGral:{
         enFecha: false,

@@ -5,12 +5,15 @@ import { chunk } from 'lodash';
 import { firstValueFrom, from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
 import { Operacion } from 'src/app/interfaces/operacion';
 import Swal from 'sweetalert2';
 import { Firestore } from '@angular/fire/firestore';
 import { inject } from '@angular/core';
-import { TableroDiario } from 'src/app/admin/operaciones/tablero-diario/tablero-diario.component';
+import { TableroDiario } from 'src/app/raiz/operaciones/tablero-diario/tablero-diario.component';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
+import { NumeradorService } from '../numerador/numerador.service';
 
 @Injectable({
   providedIn: 'root'
@@ -21,7 +24,7 @@ export class DbFirestoreService {
   componente: string = '';
   private firestore = inject(Firestore);
 
-  constructor() {
+  constructor(private numeradorService: NumeradorService) {
 
   }
 
@@ -572,7 +575,7 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
     );
   }
 
-  async guardarFacturasOp(compCliente:string, infOpCliente: FacturaOp, compChofer: string, infOpChofer: FacturaOp, op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {        
+  async guardarFacturasOp(compCliente:string, infOpCliente: InformeOp, compChofer: string, infOpChofer: InformeOp, op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {        
     const batch = writeBatch(this.firestore);        
     
     try {
@@ -668,17 +671,17 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
   }
 
 async procesarLiquidacion(
-  informesSeleccionados: ConId<FacturaOp>[],
+  informesSeleccionados: ConId<InformeOp>[],
   modo: string,
   componenteAlta: string,
   componenteBaja: string,
-  factura: any,
+  factura: InformeLiq,
   componenteFactura: string
 ): Promise<{ exito: boolean; mensaje: string }> {
   const colOps = 'operaciones';
   const bloques = chunk(informesSeleccionados, 500);
   const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
-  const informesBackup: ConId<FacturaOp>[] = [...informesSeleccionados]; // Backup en memoria  
+  const informesBackup: ConId<InformeOp>[] = [...informesSeleccionados]; // Backup en memoria  
   try {
     for (let i = 0; i < bloques.length; i++) {
       const batch = writeBatch(this.firestore);
@@ -702,7 +705,7 @@ async procesarLiquidacion(
 
         // 3. Actualizar estado de la operación
         const nuevoEstado = { ...operacion.estado };
-        if (modo === 'clientes') {
+        if (modo === 'cliente') {
           nuevoEstado.cerrada = false;
           nuevoEstado.facCliente = true;
         } else {
@@ -740,8 +743,8 @@ async procesarLiquidacion(
         batch.delete(informeRefOrigen);
 
         // 8. (NUEVO) Si modo !== 'clientes', buscar contra parte y marcarla
-        if (modo !== 'clientes') {
-          const contraParteRef = collection(this.firestore, `/Vantruck/datos/facturaOpCliente`);
+        if (modo !== 'cliente') {
+          const contraParteRef = collection(this.firestore, `/Vantruck/datos/informesOpClientes`);
           const contraParteQuery = query(contraParteRef, where('idOperacion', '==', informe.idOperacion));
           const contraParteSnap = await getDocs(contraParteQuery);
 
@@ -762,14 +765,12 @@ async procesarLiquidacion(
 
     // 8. Verificar existencia de factura duplicada
     const facturasRef = collection(this.firestore, `/Vantruck/datos/${componenteFactura}`);
-    const idFactura = modo === 'clientes' ? factura.idFacturaCliente
-                   : modo === 'choferes' ? factura.idFacturaChofer
-                   : factura.idFacturaProveedor;
+    
 
-    const facturaQuery = query(facturasRef, where('idFactura', '==', idFactura));
+    const facturaQuery = query(facturasRef, where('idFactura', '==', factura.idInfLiq));
     const facturaSnap = await getDocs(facturaQuery);
     if (!facturaSnap.empty) {
-      throw new Error(`Ya existe una factura con idFactura ${idFactura} en ${componenteFactura}`);
+      throw new Error(`Ya existe una factura con idFactura ${factura.idInfLiq} en ${componenteFactura}`);
     }
 
     // 9. Guardar la factura
@@ -903,17 +904,17 @@ async guardarMultiple(
 }
 
 async procesarProforma(
-  informesSeleccionados: ConIdType<FacturaOp>[],
+  informesSeleccionados: ConIdType<InformeOp>[],
   modo: string,
   componenteInformes: string,  
-  contraParteColeccion: string,
+  
   factura: any,
   componenteProforma: string
 ): Promise<{ exito: boolean; mensaje: string }> {
   const colOps = 'operaciones';
   const bloques = chunk(informesSeleccionados, 500);
   const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
-  const informesBackup: ConId<FacturaOp>[] = [...informesSeleccionados]; // Backup en memoria  
+  const informesBackup: ConId<InformeOp>[] = [...informesSeleccionados]; // Backup en memoria  
   try {
     for (let i = 0; i < bloques.length; i++) {
       const batch = writeBatch(this.firestore);
@@ -937,7 +938,7 @@ async procesarProforma(
 
         // 3. Actualizar estado de la operación
         const nuevoEstado = { ...operacion.estado };
-        if (modo === 'clientes') {
+        if (modo === 'cliente') {
           nuevoEstado.cerrada = false;
           nuevoEstado.proformaCl = true;
           nuevoEstado.proformaCh = false; 
@@ -962,8 +963,8 @@ async procesarProforma(
         batch.update(informeRefOrigen, inf);
 
         // 6. (NUEVO) Si modo !== 'clientes', buscar contra parte y marcarla
-        if (modo !== 'clientes') {
-          const contraParteRef = collection(this.firestore, `/Vantruck/datos/${contraParteColeccion}`);
+        if (modo !== 'cliente') {
+          const contraParteRef = collection(this.firestore, `/Vantruck/datos/informesOpClientes`);
           const contraParteQuery = query(contraParteRef, where('idOperacion', '==', informe.idOperacion));
           const contraParteSnap = await getDocs(contraParteQuery);
 
@@ -972,7 +973,7 @@ async procesarProforma(
             const contraRef = contraDoc.ref;
             batch.update(contraRef, { contraParteProforma: true });
           } else {
-            console.warn(`No se encontró contra parte con idOperacion ${informe.idOperacion} en ${contraParteColeccion}`);
+            console.warn(`No se encontró contra parte con idOperacion ${informe.idOperacion} en informesOpClientes`);
           }
         }
         
@@ -985,14 +986,14 @@ async procesarProforma(
 
     // 8. Verificar existencia de factura duplicada
     const facturasRef = collection(this.firestore, `/Vantruck/datos/${componenteProforma}`);
-    const idFactura = modo === 'clientes' ? factura.idFacturaCliente
+/*     const idFactura = modo === 'clientes' ? factura.idFacturaCliente
                    : modo === 'choferes' ? factura.idFacturaChofer
-                   : factura.idFacturaProveedor;
+                   : factura.idFacturaProveedor; */
 
-    const facturaQuery = query(facturasRef, where('idFactura', '==', idFactura));
+    const facturaQuery = query(facturasRef, where('idInfLiq', '==', factura.idInfLiq));
     const facturaSnap = await getDocs(facturaQuery);
     if (!facturaSnap.empty) {
-      throw new Error(`Ya existe una factura con idFactura ${idFactura} en ${componenteProforma}`);
+      throw new Error(`Ya existe una factura con idFactura ${factura.idInfLiq} en ${componenteProforma}`);
     }
 
     // 9. Guardar la factura
@@ -1071,7 +1072,7 @@ async actualizarMultiple(
 }
 
 async anularProforma(
-  informesSeleccionados: ConIdType<FacturaOp>[],
+  informesSeleccionados: ConIdType<InformeOp>[],
   modo: string,
   componenteInformes: string,
   
@@ -1081,7 +1082,7 @@ async anularProforma(
   const colOps = 'operaciones';
   const bloques = chunk(informesSeleccionados, 500);
   const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
-  const informesBackup: ConId<FacturaOp>[] = [...informesSeleccionados]; // Backup en memoria  
+  const informesBackup: ConId<InformeOp>[] = [...informesSeleccionados]; // Backup en memoria  
   try {
     for (let i = 0; i < bloques.length; i++) {
       const batch = writeBatch(this.firestore);
@@ -1133,8 +1134,8 @@ async anularProforma(
 
 
          // 6. (NUEVO) Si modo !== 'clientes', buscar contra parte y marcarla
-        if (modo !== 'clientes') {
-          const contraParteRef = collection(this.firestore, `/Vantruck/datos/facturaOpCliente`);
+        if (modo !== 'cliente') {
+          const contraParteRef = collection(this.firestore, `/Vantruck/datos/informesOpClientes`);
           const contraParteQuery = query(contraParteRef, where('idOperacion', '==', informe.idOperacion));
           const contraParteSnap = await getDocs(contraParteQuery);
 
@@ -1288,25 +1289,174 @@ async guardarOpMultiple(
   }
 }
 
-// 🔹 Guarda o reemplaza el tablero diario
-setItem<T extends { [key: string]: any }>(coleccion: string, id: string, data: T): Promise<void> {
-  const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
-  return setDoc(docRef, data);
+async guardarMultipleOtraColeccion(
+  objetos: any[],
+  coleccionAlta: string,  
+): Promise<{ exito: boolean; mensaje: string }> {
+  const batch = writeBatch(this.firestore);
+  const colRef = collection(this.firestore, `/Vantruck/datos/${coleccionAlta}`);
+  
+  try {
+    // Verificar que NINGUNO de los objetos exista ya en la colección
+    for (const obj of objetos) {
+      const docRef = doc(this.firestore, `/Vantruck/datos/${coleccionAlta}/${obj.id}`);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        return {
+          exito: false,
+          mensaje: `Ya existe un documento con id: ${obj.id} en la colección ${coleccionAlta}`
+        };
+      }
+
+    }
+
+    // Ninguno existe => agregar todos al batch
+    for (const obj of objetos) {
+      
+      const docRef = doc(colRef); // genera un id automático
+      let {id, type, ...objEdit} = obj
+      batch.set(docRef, objEdit);
+    }
+
+    // Ejecutar el batch
+    await batch.commit();
+
+    return { exito: true, mensaje: "Todos los objetos fueron guardados correctamente." };
+  } catch (error: any) {
+    console.error(error);
+    return { exito: false, mensaje: `Error al guardar: ${error.message || error}` };
+  }
 }
 
-// 🔹 Obtiene el tablero diario guardado (por ID fijo: 'tablero-actual')
-async getTableroDiario(): Promise<TableroDiario | null> {
-  const docRef = doc(this.firestore, 'Vantruck/datos/tableroDiario/tablero-del-dia');
+// 🔹 Guarda o reemplaza el tablero diario
+async setItem<T extends { [key: string]: any }>(
+  coleccion: string,
+  id: string,
+  data: T
+): Promise<void> {
+  console.log("📝 setItem() llamado para:", id, data);
+  const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
+  const cleanData = { ...data, id }; // fuerza que el id del objeto coincida con el del doc
+  return await setDoc(docRef, cleanData);
+}
+
+
+async getTableroPorFecha(fecha: string): Promise<TableroDiario | null> {
+  const docRef = doc(this.firestore, `Vantruck/datos/tableroDiario/${fecha}`);
   const snapshot = await getDoc(docRef);
   if (!snapshot.exists()) return null;
   return snapshot.data() as TableroDiario;
 }
 
-// 🔹 Elimina el tablero diario almacenado
-async deleteTableroDiario(): Promise<void> {
-  const docRef = doc(this.firestore, 'Vantruck/datos/tableroDiario/tablero-del-dia');
-  return deleteDoc(docRef);
+async getItemByField<T>(
+  coleccion: string,
+  campo: string,
+  valor: any
+): Promise<ConId<T> | null> {
+  const colRef = collection(this.firestore, `Vantruck/datos/${coleccion}`);
+  const q = query(colRef, where(campo, '==', valor));
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) return null;
+
+  const docSnap = querySnapshot.docs[0];
+  const data = docSnap.data() as T;
+
+  return {
+    ...data,
+    id: docSnap.id
+  };
 }
 
+async deleteItem(coleccion: string, id: string): Promise<void> {
+  const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
+  await deleteDoc(docRef);
+}
+
+async obtenerDocsPorIdsOperacion(coleccion: string, idsOperacion: number[]) {
+  const resultados: any[] = [];
+  const encontrados: number[] = [];
+
+  const grupos = this.dividirEnGrupos(idsOperacion, 10);
+
+  for (const grupo of grupos) {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const q = query(colRef, where('idOperacion', 'in', grupo));
+    const snapshot = await getDocs(q);
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      resultados.push({ id: doc.id, ...data });
+      if (data['idOperacion'] !== undefined) {
+        encontrados.push(data['idOperacion']);
+      }
+    });
+  }
+
+  const noEncontrados = idsOperacion.filter(id => !encontrados.includes(id));
+
+  return {
+    encontrados: resultados,
+    idsFaltantes: noEncontrados
+  };
+}
+
+// Función auxiliar
+dividirEnGrupos(array: any[], tamaño: number): any[][] {
+  const grupos = [];
+  for (let i = 0; i < array.length; i += tamaño) {
+    grupos.push(array.slice(i, i + tamaño));
+  }
+  return grupos;
+}
+
+  getInformesLiqPorTipoYFechas(
+    tipo: 'cliente' | 'chofer' | 'proveedor' | 'todos',
+    desde: string,
+    hasta: string
+  ): Promise<ConId<InformeLiq>[]> {
+    const tipos = tipo === 'todos' ? ['cliente', 'chofer', 'proveedor'] : [tipo];
+    const colRef = collection(this.firestore, '/Vantruck/datos/resumenLiq');
+
+    const q = query(
+      colRef,
+      where('estado', '==', 'emitido'),
+      where('fecha', '>=', desde),
+      where('fecha', '<=', hasta),
+      where('tipo', 'in', tipos),
+      orderBy('fecha', 'asc')
+    );
+
+    return getDocs(q).then(snap =>
+      snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as InformeLiq) }))
+    );
+  }
+
+  async asignarNumerosInternosFaltantes(): Promise<void> {
+    const colRef = collection(this.firestore, '/Vantruck/datos/resumenLiq');
+    const q = query(colRef, orderBy('fecha'));
+    const snapshot = await getDocs(q);
+
+    const docs = snapshot.docs;
+
+    for (const docSnap of docs) {
+      const data = docSnap.data() as InformeLiq;
+
+      // Saltar si ya tiene un número interno
+      if (data.numeroInterno && data.numeroInterno !== '') continue;
+
+      try {
+        const nuevoNumero = await this.numeradorService.generarNumeroInterno(data.tipo);
+        const ref = doc(this.firestore, `/Vantruck/datos/resumenLiq/${docSnap.id}`);
+        await updateDoc(ref, { numeroInterno: nuevoNumero });
+        console.log(`✅ Documento ${docSnap.id} actualizado con: ${nuevoNumero}`);
+      } catch (error) {
+        console.error(`❌ Error actualizando ${docSnap.id}:`, error);
+      }
+    }
+
+    console.log('🏁 Asignación de números internos finalizada.');
+  }
 
 }

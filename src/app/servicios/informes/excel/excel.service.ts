@@ -3,19 +3,21 @@ import * as ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import { Categoria, Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { FacturaChofer } from 'src/app/interfaces/factura-chofer';
-import { FacturaCliente } from 'src/app/interfaces/factura-cliente';
-import { FacturaOp } from 'src/app/interfaces/factura-op';
+
+
+
 import { CellValue } from 'exceljs';
 
 
-import { FacturaProveedor } from 'src/app/interfaces/factura-proveedor';
+
 import { Operacion } from 'src/app/interfaces/operacion';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from '../../storage/storage.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { Borders, Fill, Workbook } from 'exceljs';
 import saveAs from 'file-saver';
+import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeLiq } from 'src/app/interfaces/informe-liq';
 
 type ChoferAsignado = ConIdType<Chofer> & {
   categoriaAsignada: Categoria;
@@ -37,15 +39,239 @@ interface MetadataChofer {
 })
 export class ExcelService {
 
-  factura!: FacturaChofer|FacturaCliente| FacturaProveedor
+  factura!: InformeLiq
   private readonly CATEGORIAS_TEXTO_CLARO = [
     'bg-dark', 'bg-secondary', 'bg-danger', 'bg-primary'
   ];
 
   constructor(private storageService: StorageService) { }
 
+  async exportToExcelInforme(
+    informeLiq: InformeLiq,
+    informesOp: InformeOp[],
+    clientes: Cliente[],
+    choferes: Chofer[], 
+    modo:string,
+  ) {
+    const titulo = modo === 'factura' ? `Liquidación de Servicios ${informeLiq.entidad.razonSocial}` : `Proforma ${informeLiq.entidad.razonSocial}`;
+    const subTitulo = modo === 'factura' ? `${informeLiq.numeroInterno}`: `${informeLiq.idInfLiq}`;
+    const nombreDoc = modo === 'factura' ? `Detalle_${informeLiq.entidad.razonSocial}_${informeLiq.fecha}.xlsx` : `Proforma_${informeLiq.entidad.razonSocial}_${informeLiq.fecha}.xlsx`
+
+    await this.exportarExcelInfomeOpLiquidadas(
+      informeLiq,
+      informesOp,
+      clientes,
+      choferes,       
+      titulo,
+      subTitulo,
+      nombreDoc
+    );
+  }
+
+
+  async exportarExcelInfomeOpLiquidadas(
+  informeLiq: InformeLiq,
+  informesOp: InformeOp[],
+  clientes: Cliente[],
+  choferes: Chofer[],     
+  titulo: string,
+  subtitulo:string,
+  nombreDoc: string,  
+): Promise<void> {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Datos');
+
+  // Logo
+  const logoBase64 = 'data:image/png;base64,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'; // Logo en formato base64
+  const imageId = workbook.addImage({
+    base64: logoBase64,
+    extension: 'png',
+  });
+  worksheet.addImage(imageId, 'A1:B3');
+
+  // Título
+  worksheet.mergeCells('A5:F5');
+  const titleCell = worksheet.getCell('A5');
+  titleCell.value = titulo;
+  titleCell.font = { size: 16, bold: true };
+
+  // Subtítulo
+  worksheet.mergeCells('A6:F6');
+  const subTitleCell = worksheet.getCell('A6');
+  subTitleCell.value = `Año: ${new Date(informeLiq.fecha).getFullYear()} Mes: ${new Date(informeLiq.fecha).toLocaleString('default', { month: 'long' })}`;
+  subTitleCell.font = { size: 12, bold: true };
+
+  // Subtítulo adicional
+  worksheet.mergeCells('A7:F7');
+  const subTitleCell2 = worksheet.getCell('A7');
+  subTitleCell2.value = subtitulo;
+  subTitleCell2.font = { size: 8 };
+
+  // Encabezados
+  worksheet.addRow(informeLiq.columnas).eachCell((cell) => {
+    cell.font = { size: 12, bold: true };
+    cell.alignment = { horizontal: 'center', vertical: 'top' };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E90FF' } };
+    cell.border = {
+      top: { style: 'thin' },
+      bottom: { style: 'thin' },
+      left: { style: 'thin' },
+      right: { style: 'thin' },
+    };
+  });
+
+    // Filas dinámicas
+  informesOp.forEach((informeOp) => {
+    const row = worksheet.addRow(
+    informeLiq.columnas.map((columna) => {
+        if (['Jornada', 'Ad Km', 'Acomp', 'A Cobrar'].includes(columna)) {
+          return this.obtenerDatos(informeLiq, informeOp, clientes, columna, choferes); // true = retorno numérico
+        }
+        return this.obtenerDatos(informeLiq, informeOp, clientes, columna, choferes);
+      })
+    );
+
+    // Aplicar estilo + formato contable para columnas numéricas
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const columnaNombre = informeLiq.columnas[colNumber - 1]; // -1 porque colNumber es 1-based
+      cell.font = { size: 12 };
+      cell.alignment = { horizontal: 'center', vertical: 'top' };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFADD8E6' } };
+      cell.border = {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+
+      if (['Jornada', 'Ad Km', 'Acomp', 'A Cobrar'].includes(columnaNombre)) {
+        cell.numFmt = '"$"#,##0.00'; // formato contable en Excel
+      }
+    });
+
+  });
+
+    // Subtotal (si hay descuentos)
+  if (informeLiq.valores.descuentoTotal > 0) {
+    // Subtotal fila
+    const subtotalRow = worksheet.addRow([]);
+    worksheet.mergeCells(`A${subtotalRow.number}:${String.fromCharCode(64 + informeLiq.columnas.length - 1)}${subtotalRow.number}`);
+    subtotalRow.getCell(1).value = 'Sub Total';
+    subtotalRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
+    //
+    const subtotalValor = informeLiq.valores.totalTarifaBase + informeLiq.valores.totalAcompaniante + informeLiq.valores.totalkmMonto;
+    subtotalRow.getCell(informeLiq.columnas.length).value = subtotalValor;
+    subtotalRow.getCell(informeLiq.columnas.length).numFmt = '"$"#,##0.00';
+    subtotalRow.getCell(informeLiq.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
+    //
+  
+    subtotalRow.eachCell((cell) => {
+      cell.font = { size: 12, bold: true };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E90FF' } }; // Azul
+      cell.border = {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+    });
+  
+    // Fila de descuentos
+    informeLiq.descuentos.forEach((descuento) => {
+      const descuentoRow = worksheet.addRow([]);
+      worksheet.mergeCells(`A${descuentoRow.number}:${String.fromCharCode(64 + informeLiq.columnas.length - 1)}${descuentoRow.number}`);
+      descuentoRow.getCell(1).value = descuento.concepto;
+      descuentoRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
+      //
+      descuentoRow.getCell(informeLiq.columnas.length).value = -descuento.valor;
+      descuentoRow.getCell(informeLiq.columnas.length).numFmt = '"$"#,##0.00';
+      //
+
+      descuentoRow.getCell(informeLiq.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
+  
+      descuentoRow.eachCell((cell) => {
+        cell.font = { size: 12, bold: false }; // Mantener consistencia con el footer
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E90FF' } }; // Azul como el footer
+        cell.border = {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+      });
+    });
+  }
+
+   // Total final
+  const totalRow = worksheet.addRow([]);
+  worksheet.mergeCells(`A${totalRow.number}:${String.fromCharCode(64 + informeLiq.columnas.length - 1)}${totalRow.number}`);
+  totalRow.getCell(1).value = 'Total';
+  totalRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
+  //
+  totalRow.getCell(informeLiq.columnas.length).value = informeLiq.valores.total;
+  totalRow.getCell(informeLiq.columnas.length).numFmt = '"$"#,##0.00';
+  //
+
+  totalRow.getCell(informeLiq.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
+  
+  totalRow.eachCell((cell) => {
+    cell.font = { size: 12, bold: true };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E90FF' } }; // Azul como el resto del footer
+    cell.border = {
+      top: { style: 'thin' },
+      bottom: { style: 'thin' },
+      left: { style: 'thin' },
+      right: { style: 'thin' },
+    };
+  });
+
+  // Configurar el tamaño del informe para una hoja A4
+  worksheet.pageSetup.paperSize = 9; // Tamaño A4
+  //worksheet.pageSetup.orientation = 'landscape'; // Orientación horizontal (opcional, ajusta según necesidad)
+  worksheet.pageSetup.fitToPage = true; // Ajustar al tamaño de la página
+  worksheet.pageSetup.fitToWidth = 1; // Ajustar al ancho de la página
+  worksheet.pageSetup.fitToHeight = 0; // Permitir que la altura sea dinámica
+
+  // Ajustar texto dentro de las celdas para que no se exceda
+  worksheet.eachRow((row) => {
+    row.eachCell((cell) => {
+      cell.alignment = { wrapText: true, vertical: 'middle'}; // Ajustar texto y centrar
+    });
+  });
+
+  // Configuración del ancho de las columnas basadas en el contenido esperado
+  worksheet.columns = informeLiq.columnas.map((columna) => {
+    switch (columna) {
+      case 'Fecha':
+        return { key: columna, width: 12 }; // yyyy-mm-dd tiene un ancho ideal de 12
+      case 'Quincena':
+        return { key: columna, width: 11 }; // "Primera" o "Segunda" requiere un ancho de 10
+      case 'Km':
+        return { key: columna, width: 5 }; // 3 dígitos + espacio adicional
+      case 'Patente':
+        return { key: columna, width: 10 }; // "Primera" o "Segunda" requiere un ancho de 10
+      case 'Hoja de Ruta':
+        return { key: columna, width: 14 }; // "Primera" o "Segunda" requiere un ancho de 10
+      default:
+        return { key: columna, width: 25 }; // Ancho estándar para otras columnas
+    }
+  });
+
+  // Ajustar alineación del texto y permitir saltos de línea en todas las celdas
+  worksheet.eachRow((row) => {
+    row.eachCell((cell) => {
+      cell.alignment = { wrapText: true, vertical: 'middle' }; // Ajustar texto y centrar
+    });
+  });
+
+  // Guardar archivo
+    const buffer = await workbook.xlsx.writeBuffer();
+    FileSaver.saveAs(new Blob([buffer]), nombreDoc);
+}
+  
+
   getQuincena(fecha: any): string {
-    console.log("fecha: ", fecha);
+    //console.log("fecha: ", fecha);
     
     // Dividir el string de la fecha en año, mes y día
     const [year, month, day] = fecha.split('-').map(Number);
@@ -92,47 +318,47 @@ export class ExcelService {
     return veh[0].categoria.nombre;
   }
 
-  obtenerDatos(factura: any, facturaOp: FacturaOp, clientes: Cliente[], columna: any, choferes:Chofer[]){      
+  obtenerDatos(factura: InformeLiq, informeOp: InformeOp, clientes: Cliente[], columna: any, choferes:Chofer[]){      
       
     switch (columna) {
       case 'Fecha':{          
-        return facturaOp.fecha;
+        return informeOp.fecha;
       };
       case 'Quincena':{          
-        return this.getQuincena(facturaOp.fecha);
+        return this.getQuincena(informeOp.fecha);
       };        
       case 'Chofer':{          
-        return this.getChofer(facturaOp.idChofer, choferes);
+        return this.getChofer(informeOp.idChofer, choferes);
       };
       case 'Cliente':{          
-        return this.getCliente(facturaOp.idCliente, clientes);
+        return this.getCliente(informeOp.idCliente, clientes);
       };
       case 'Patente':{          
-        return facturaOp.patente;
+        return informeOp.patente;
       };
       case 'Concepto':{       
-        return this.getCategoria(facturaOp.patente, facturaOp.idChofer);
+        return this.getCategoria(informeOp.patente, informeOp.idChofer);
       };
       case 'Observaciones':{       
-        return facturaOp.observaciones;
+        return informeOp.observaciones;
       };
       case 'Hoja de Ruta':{          
-        return facturaOp.hojaRuta;
+        return informeOp.hojaRuta;
       };
       case "Km":{          
-        return facturaOp.km;
+        return informeOp.km;
       };
       case "Jornada":{          
-        return facturaOp.valores.tarifaBase;
+        return informeOp.valores.tarifaBase;
       };
       case "Ad Km":{          
-        return facturaOp.valores.kmMonto;
+        return informeOp.valores.kmMonto;
       };
       case "Acomp":{          
-        return facturaOp.valores.acompaniante;
+        return informeOp.valores.acompaniante;
       };
       case "A Cobrar":{          
-        return facturaOp.valores.total;
+        return informeOp.valores.total;
       };
       default:{
         return ''
@@ -142,9 +368,9 @@ export class ExcelService {
 
 
   // Reportes EXCEL para los clientes
-  async exportToExcelCliente(
-    factura: FacturaCliente,
-    facturasOp: FacturaOp[],
+/*   async exportToExcelCliente(
+    factura: InformeLiq,
+    facturasOp: InformeOp[],
     clientes: Cliente[],
     choferes: Chofer[], 
     modo:string,
@@ -163,7 +389,7 @@ export class ExcelService {
     // Título
     worksheet.mergeCells('A5:F5');
     const titleCell = worksheet.getCell('A5');
-    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.razonSocial}` : `Proforma ${factura.razonSocial}`;
+    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.entidad.razonSocial}` : `Proforma ${factura.entidad.razonSocial}`;
     titleCell.font = { size: 16, bold: true };
 
     // Subtítulo
@@ -175,7 +401,7 @@ export class ExcelService {
     // Subtítulo adicional
     worksheet.mergeCells('A7:F7');
     const subTitleCell2 = worksheet.getCell('A7');
-    subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaCliente}`: '';
+    subTitleCell2.value = modo === 'factura' ? `${factura.idInfLiq}`: '';
     subTitleCell2.font = { size: 8 };
 
     // Encabezados
@@ -341,14 +567,14 @@ export class ExcelService {
 
     // Guardar archivo
     const buffer = await workbook.xlsx.writeBuffer();
-    FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.razonSocial}_${factura.fecha}.xlsx`);
+    FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.entidad.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.entidad.razonSocial}_${factura.fecha}.xlsx`);
   }
 
 
   // Reportes EXCEL para los choferes
   async exportToExcelChofer(
-    factura: FacturaChofer, 
-    facturasOp: FacturaOp[], 
+    factura: InformeLiq, 
+    facturasOp: InformeOp[], 
     clientes:Cliente[], 
     choferes: Chofer[], 
     modo:string,
@@ -368,7 +594,7 @@ export class ExcelService {
     // Título
     worksheet.mergeCells('A5:F5');
     const titleCell = worksheet.getCell('A5');
-    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.apellido} ${factura.nombre} ` : `Proforma ${factura.apellido} ${factura.nombre} `;
+    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.entidad.razonSocial}  ` : `Proforma ${factura.entidad.razonSocial}`;
     titleCell.font = { size: 16, bold: true };
 
     // Subtítulo
@@ -380,7 +606,7 @@ export class ExcelService {
     // Subtítulo adicional
     worksheet.mergeCells('A7:F7');
     const subTitleCell2 = worksheet.getCell('A7');
-    subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaChofer}` : '';
+    subTitleCell2.value = modo === 'factura' ? `${factura.idInfLiq}` : '';
     subTitleCell2.font = { size: 8 };
 
     // Encabezados
@@ -541,14 +767,14 @@ export class ExcelService {
 
     // Guardar archivo
     const buffer = await workbook.xlsx.writeBuffer();
-      FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx` : `Proforma_${factura.apellido}${factura.nombre}_${factura.fecha}.xlsx`);
+      FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.entidad.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.entidad.razonSocial}_${factura.fecha}.xlsx`);
 
   }
 
 
 
   ////////////// Reportes EXCEL para los proveedores
-  async exportToExcelProveedor(factura: FacturaProveedor, facturasOp: FacturaOp[], clientes: Cliente[], choferes: Chofer[], modo:string): Promise<void> {
+  async exportToExcelProveedor(factura: InformeLiq, facturasOp: InformeOp[], clientes: Cliente[], choferes: Chofer[], modo:string): Promise<void> {
     
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Factura');
@@ -564,7 +790,7 @@ export class ExcelService {
     // Título
     worksheet.mergeCells('A5:F5');
     const titleCell = worksheet.getCell('A5');
-    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.razonSocial}` : `Proforma ${factura.razonSocial}`;
+    titleCell.value = modo === 'factura' ? `Liquidación de Servicios ${factura.entidad.razonSocial}` : `Proforma ${factura.entidad.razonSocial}`;
     titleCell.font = { size: 16, bold: true };
 
     // Subtítulo
@@ -576,7 +802,7 @@ export class ExcelService {
     // Subtítulo adicional
     worksheet.mergeCells('A7:F7');
     const subTitleCell2 = worksheet.getCell('A7');
-    subTitleCell2.value = modo === 'factura' ? `${factura.idFacturaProveedor}` : '';
+    subTitleCell2.value = modo === 'factura' ? `${factura.idInfLiq}` : '';
     subTitleCell2.font = { size: 8 };
 
     // Encabezados
@@ -737,9 +963,9 @@ export class ExcelService {
 
     // Guardar archivo
     const buffer = await workbook.xlsx.writeBuffer();
-    FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.razonSocial}_${factura.fecha}.xlsx`);
+    FileSaver.saveAs(new Blob([buffer]), modo === 'factura' ? `Detalle_${factura.entidad.razonSocial}_${factura.fecha}.xlsx` : `Proforma_${factura.entidad.razonSocial}_${factura.fecha}.xlsx`);
 
-  }
+  } */
 
   ////////////// informe EXCEL del tablero de Operaciones
   generarInformeOperaciones(fechaDesde: string, fechaHasta: string, operaciones: Operacion[]) {
@@ -1020,7 +1246,7 @@ export class ExcelService {
       
        if (choferAsignado) {
           const categoriaIndex = choferesAgrupadosPorCategoria.findIndex(
-            cat => cat.nombre === choferAsignado.categoriaAsignada.nombre
+            cat => cat.catOrden === choferAsignado.categoriaAsignada.catOrden
           );
           
           this.setCellWithMetadata(
