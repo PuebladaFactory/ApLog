@@ -124,7 +124,7 @@ export class LiquidacionesOpComponent implements OnInit {
             if(this.informesOp){
               //////////console.log("?????????????");                   
               this.procesarDatosParaTabla();
-              ///this.verificarDuplicados();
+              //this.verificarDuplicados();
             } else {
               this.mensajesError("error: facturaOpCliente", "error")
             }
@@ -791,10 +791,10 @@ export class LiquidacionesOpComponent implements OnInit {
     });
   }
 ///////////////////////////////METODO POR ERROR DE DUPLICADAS//////////////////////////////////////////////////////////////////////////////////////
-/*  
-  verificarDuplicados() {
-    const seenIds = new Set<number>();
 
+  /* verificarDuplicados() {
+    const seenIds = new Set<number>();
+    this.$facturasOpDuplicadas = [];
     this.informesOp = this.informesOp.filter((factura:ConId<InformeOp>) => {
         if (seenIds.has(factura.idOperacion)) {
             this.$facturasOpDuplicadas.push(factura);
@@ -826,13 +826,7 @@ export class LiquidacionesOpComponent implements OnInit {
     })
     //////console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
   }
-  
-  deleteDuplicadas(){
-      //////console.log("cantidad facLiqOpDuplicadas", this.$facLiqOpDuplicadas.length);
-      this.$facLiqOpDuplicadas.forEach((facDupli: ConId<InformeOp>)=>{    
-        this.dbFirebase.delete(this.componente, facDupli.id)
-    })
-  }
+
   
   borrarDuplicadasEnLiquidacion(){
   
@@ -852,14 +846,14 @@ export class LiquidacionesOpComponent implements OnInit {
   }
   
   mostrarDuplicadasEnLiquidacion(){
-    //console.log("this.$facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
+    console.log("this.$facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
     
   }
 
 borrarLiquidaciones(){
   this.isLoading = true;
   //console.log("this.$facturasOpCliente", this.$facturasOpCliente);
-  this.dbFirebase.eliminarMultiple(this.$facturasOpCliente, "facturaOpCliente").then((result)=>{
+  this.dbFirebase.eliminarMultiple(this.informesOp, "facturaOpCliente").then((result)=>{
     this.isLoading = false;
     if(result.exito){
       alert("se eliminaron correctamente")
@@ -877,33 +871,6 @@ borrarLiquidaciones(){
     //console.log("facturaOpsNoAsignadas", this.facturaOpsNoAsignadas);
     
     
-  }
-
-  traerProformas(){
-    this.dbFirebase.getAllStateChanges("proforma").subscribe(data=>{
-      if(data){
-        this.proformas = data;
-        //console.log("proformas: ", this.proformas)
-      }
-    })
-  }
-
-  proformasCongeladas(){
-    const facturaOps: InformeOp[] = [...this.objetoEditado]; // tu array original
-    const facturas: any[] = [...this.proformas];     // tu otro array original
-
-    // 1. Crear un Set con todos los idOperacion usados en alguna factura
-    const operacionesUsadas = new Set<number>(
-      facturas.flatMap(factura => factura.operaciones)
-    );
-
-    // 2. Filtrar las InformeOp que no estén en el set de operaciones usadas
-    this.facturaOpsNoAsignadas = facturaOps.filter(
-      op => !operacionesUsadas.has(op.idOperacion)
-    );
-
-    // Ahora tenés una copia de los InformeOp que no están asignados a ninguna factura
-    //console.log("facturaOpsNoAsignadas",this.facturaOpsNoAsignadas );
   }
 
   agregarCampo(facturaOp: any[]): ConId<InformeOp>[] {
@@ -940,9 +907,9 @@ borrarLiquidaciones(){
   }
 
   buscarObjetos(){
-    this.objetoEditado= this.$facturasOpCliente;
+    this.objetoEditado= this.informesOp;
     //console.log("objetoEditado",this.objetoEditado );
-  }*/
+  }
 
     
   filtrarObjeto(){
@@ -964,7 +931,7 @@ borrarLiquidaciones(){
         alert(`error actualizando. errr: ${result.mensaje}`)
       }
     })
-  } 
+  }  */
   
 
 

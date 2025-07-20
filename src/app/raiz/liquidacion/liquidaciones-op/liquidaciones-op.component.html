@@ -343,18 +343,15 @@
 <div><small>Cantidad de Informes: {{informesOp.length}}</small></div>
 <!-- <br>
 <button class="btn btn-outline-secondary" (click)="filtrarObjeto()">2-Filtrar informes</button>
-<button class="btn btn-outline-secondary" (click)="eliminarObjetos()">Eliminar informes</button> -->
-<!-- 
-<button class="btn btn-outline-secondary" (click)="traerProformas()">1-Proformas</button>
-<button class="btn btn-outline-secondary" (click)="filtrarObjeto()">2-Filtrar informes</button>
-<button class="btn btn-outline-secondary" (click)="proformasCongeladas()">3-Encotrar informes congelados</button>
-<button class="btn btn-outline-secondary" (click)="editarObjeto()">4-Editar informes congelados</button>
-<button class="btn btn-outline-secondary" (click)="actualizarObjeto()">5-Actualizar informes</button>
-<button class="btn btn-outline-secondary" (click)="buscarObjetos()">Buscar informes</button>
 <button class="btn btn-outline-secondary" (click)="eliminarObjetos()">Eliminar informes</button>
-<button class="btn btn-outline-secondary" (click)="guardarObjeto()">5-Guardar informes</button>
+
+
+<button class="btn btn-outline-secondary" (click)="filtrarObjeto()">2-Filtrar informes</button>
+
+<button class="btn btn-outline-secondary" (click)="eliminarObjetos()">Eliminar informes</button>
+
 <hr>
-  <h1>DUPLICADAS LIQ</h1>
+  <h1>DUPLICADAS LIQ: {{$facturasOpDuplicadas.length}}</h1>
   <button class="btn btn-outline-danger" (click)="mostrarDuplicadasEnLiquidacion()">mostrar Duplicadas Liquidación</button>
   <button class="btn btn-danger" (click)="borrarDuplicadasEnLiquidacion()">Borrar Duplicadas Liquidación</button>
   
@@ -412,7 +409,7 @@
   <hr>
     <button class="btn btn-primary" (click)="verificarDuplicadosFacturadas()">Buscar</button>
     <h1>DUPLICADAS FACTURADAS</h1>
-    <button class="btn btn-danger" (click)="deleteDuplicadas()">Borrar</button>
+    
     <input class="form-control mt-2" type="text" [(ngModel)]="searchText3" placeholder="Buscar por chofer">
     <table class="table table-light table-striped table-bordered" >
       <thead>
@@ -463,12 +460,9 @@
 
         </tr>
       </tbody>
-    </table>
+    </table> -->
 
-@if (isLoading) {
-  <app-spinner></app-spinner>
-}
-
+<!-- 
 <div>
   <button class="btn btn-primary" (click)="borrarLiquidaciones()">Borrar </button>
 </div> -->
