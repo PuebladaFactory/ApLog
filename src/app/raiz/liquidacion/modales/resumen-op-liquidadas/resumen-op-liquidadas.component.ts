@@ -66,6 +66,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
   columnasVisibles: any[] = [];
   factura!: any;  
   private destroy$ = new Subject<void>();
+  obsInterna:string = "";
 
   constructor(
     private storageService: StorageService,     
@@ -440,7 +441,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
       formaPago: "",               // Efectivo, transferencia, etc. (opcional)
       fechaCobro: "",       // Fecha en que se registró el cobro
 
-      observaciones: "",           // Campo libre para anotar algo manualmente
+      observaciones: this.obsInterna,           // Campo libre para anotar algo manualmente
 
       facturaVinculada: "",        // ID o número de la factura fiscal (a futuro)      
 
