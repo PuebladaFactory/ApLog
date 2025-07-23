@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { EntidadLiq, InformeLiq } from 'src/app/interfaces/informe-liq';
+import { Operacion } from 'src/app/interfaces/operacion';
 
 
 export interface FacturaOp {
@@ -69,10 +70,10 @@ export class MigrarDatosComponent {
   coleccionDestino: string = 'informesOpClientes';
 
   // Datos cargados
-  datosOrigen: FacturaOp[] = [];
+  datosOrigen: InformeOp[] = [];
   infOrigen: any[] = [];
   datosTransformados: InformeOp[] = [];
-  facturasOpDuplicadas: FacturaOp[] = [];
+  informesOpDuplicadas: InformeOp[] = [];
   facturasDuplicadas: any[] = [];
   infLiqTransformados: InformeLiq[] = [];
 
@@ -80,14 +81,46 @@ export class MigrarDatosComponent {
   filtroOrigen:string = "";
   filtroDestino:string = "";
   filtroDduplicados:string= "";
+  filtroError:string = "";
 
   informesOpToogle:boolean = true;
+  informesLiqToogle:boolean = false;
+  opToogle:boolean = false;
   docuNuevaColeccion: any[] = [];
+  operaciones: Operacion[] = [];
+  idsOp: number[] = [];
+  infOpLiq: InformeOp[] = [];
+  opErrores: Operacion[] = [];
+  infOpErrores: InformeOp[] = []
+
   
   constructor(
     private firestore: Firestore,
     private dbFirebase: DbFirestoreService,
   ) {}
+
+  informesToogle(valor:string){
+    switch(valor){
+      case "a":
+        this.informesOpToogle = true;
+        this.informesLiqToogle = false;
+        this.opToogle = false;
+        break;
+      case "b":
+        this.informesOpToogle = false;
+        this.informesLiqToogle = true;
+        this.opToogle = false;
+        break;
+      case "c":
+        this.informesOpToogle = false;
+        this.informesLiqToogle = false;
+        this.opToogle = true;
+        break;
+      default:
+        this.mensajesError("error en el botón de swicth")
+        break;
+    }
+  }
 
   async cargarDatos() {
     if (!this.fechaDesde || !this.fechaHasta || !this.coleccionOrigen) {
@@ -104,12 +137,12 @@ export class MigrarDatosComponent {
     const q = query(ref, where('fecha', '>=', fechaIni.toISOString()), where('fecha', '<=', fechaFin.toISOString()));
 
     const snapshot = await getDocs(q);
-    this.datosOrigen = snapshot.docs.map(doc => doc.data() as FacturaOp);
+    this.datosOrigen = snapshot.docs.map(doc => doc.data() as InformeOp);
     console.log("datosOrigen: ", this.datosOrigen);
     
   }
 
-  transformarDatos() {
+/*   transformarDatos() {
     if (!this.datosOrigen.length) {
       Swal.fire('Error', 'No hay datos para transformar.', 'error');
       return;    
@@ -139,7 +172,7 @@ export class MigrarDatosComponent {
     }));
     console.log("datosTransformados: ", this.datosTransformados);
     
-  }
+  } */
 
 async guardarTransformados() {
   if (!this.datosTransformados.length || !this.coleccionDestino) {
@@ -196,12 +229,12 @@ async guardarTransformados() {
 
 
   verificarDuplicados() {
-      this.facturasOpDuplicadas=[]
+      this.informesOpDuplicadas=[]
     const seenIds = new Set<number>();
 
-    this.datosOrigen = this.datosOrigen.filter((factura:FacturaOp) => {
+    this.datosOrigen = this.datosOrigen.filter((factura:InformeOp) => {
         if (seenIds.has(factura.idOperacion)) {
-            this.facturasOpDuplicadas.push(factura);
+            this.informesOpDuplicadas.push(factura);
             return false; // Eliminar del array original
         } else {
             seenIds.add(factura.idOperacion);
@@ -209,7 +242,7 @@ async guardarTransformados() {
         }
     });    
     console.log("datosOrigen", this.datosOrigen);
-    console.log("duplicadas", this.facturasOpDuplicadas);
+    console.log("duplicadas", this.informesOpDuplicadas);
     //this.verificarDuplicadosFacturadas()
   }
 
@@ -233,7 +266,7 @@ async guardarTransformados() {
 
   eliminarObjeto(){
     this.cargando = true
-    this.dbFirebase.eliminarMultiple(this.facturasOpDuplicadas, this.coleccionOrigen).then((result)=>{
+    this.dbFirebase.eliminarMultiple(this.informesOpDuplicadas, this.coleccionOrigen).then((result)=>{
       this.cargando = false
       if(result.exito){
         alert("actualizado correctamente")
@@ -457,6 +490,121 @@ async consultarNuevaColeccion(){
     } finally {
       this.cargando = false;
     }
+}
+
+  mensajesError(msj:string){
+    Swal.fire({
+      icon: 'error',
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
+  }
+
+  ////////////////////////OPERACIONES/////////////////
+    async cargarOp() {
+    if (!this.fechaDesde || !this.fechaHasta || !this.coleccionOrigen || !this.coleccionDestino) {
+      Swal.fire('Error', 'Completá todos los campos.', 'error');
+      return;      
+    }
+    this.operaciones = [];
+    this.opErrores = [];
+    console.log("fechaDesde?: ", this.fechaDesde, " hasta?: ", this.fechaHasta, " coleccion: ",this.coleccionOrigen );
+    
+    const fechaIni = new Date(this.fechaDesde);
+    const fechaFin = new Date(this.fechaHasta);    
+
+    const ref = collection(this.firestore, `/Vantruck/datos/${this.coleccionOrigen}`);
+    const q = query(ref, where('fecha', '>=', fechaIni.toISOString()), where('fecha', '<=', fechaFin.toISOString()));
+
+    const snapshot = await getDocs(q);
+    this.operaciones = snapshot.docs.map(doc => doc.data() as Operacion);
+    console.log("operaciones: ", this.operaciones);
+    this.operaciones.forEach((op: Operacion) => {                
+      this.idsOp.push(op.idOperacion)
+    });
+    this.consultarInfOp()
+  }
+
+  async consultarInfOp(){
+    this.infOpLiq = [];
+    this.cargando = true;        
+        try {
+          const consulta = await this.dbFirebase.obtenerDocsPorIdsOperacion(       
+            this.coleccionDestino,         // nombre de la colección
+            this.idsOp       // array de idsOperacion
+          );
+          console.log("consulta", consulta);
+          
+    
+          this.infOpLiq = consulta.encontrados;
+    
+          if (consulta.idsFaltantes.length) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Atención',
+              text: `Se encontraron ${consulta.encontrados.length} informes, pero faltan ${consulta.idsFaltantes.length}.`,
+              footer: `IDs faltantes: ${consulta.idsFaltantes.join(', ')}`
+            });
+          } else {
+            //Swal.fire('Éxito', 'Se encontraron todas las operaciones.', 'success');
+          }
+    
+        } catch (error) {
+          console.error("'Error al consultar por los informes", error);
+          Swal.fire('Error', 'Falló la consulta de los informes.', 'error');
+        } finally {
+          this.cargando = false;
+        }
+
+  }
+
+  verificarValores(){
+    let respuesta = this.verificarConsistenciaValores();
+    this.opErrores = respuesta.operacionesInconsistentes;
+    console.log("this.opErrores", this.opErrores);
+    
+    this.infOpErrores = respuesta.informesInconsistentes;
+    console.log("this.infOpErrores", this.infOpErrores);
+
+  }
+
+
+verificarConsistenciaValores(
+  /* operaciones: Operacion[],
+  infOpLiq: InformeOp[],
+  coleccionDestino: string */
+): { operacionesInconsistentes: Operacion[], informesInconsistentes: InformeOp[] } {
+
+  const operacionesInconsistentes: Operacion[] = [];
+  const informesInconsistentes: InformeOp[] = [];
+
+  for (const op of this.operaciones) {
+    // Buscar el informe correspondiente por idOperacion
+    const informe = this.infOpLiq.find(i => i.idOperacion === op.idOperacion);
+
+    // Si no hay informe, simplemente continuar (sin agregar a ningún array)
+    if (!informe) continue;
+
+    // Determinar qué valores comparar
+    const valoresOp:any = this.coleccionDestino === 'infOpLiqClientes' ? op.valores.cliente : op.valores.chofer;
+
+    const coincide =
+      valoresOp.acompValor === informe.valores.acompaniante &&
+      valoresOp.kmAdicional === informe.valores.kmMonto &&
+      valoresOp.tarifaBase === informe.valores.tarifaBase &&
+      (
+        (this.coleccionDestino === 'infOpLiqClientes' && valoresOp.aCobrar === informe.valores.total) ||
+        (this.coleccionDestino !== 'infOpLiqClientes' && valoresOp.aPagar === informe.valores.total)
+      );
+
+    if (!coincide) {
+      operacionesInconsistentes.push(op);
+      informesInconsistentes.push(informe);
+    }
+  }
+
+  return { operacionesInconsistentes, informesInconsistentes };
 }
 
 

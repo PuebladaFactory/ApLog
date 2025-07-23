@@ -124,7 +124,7 @@ export class LiquidacionesOpComponent implements OnInit {
             if(this.informesOp){
               //////////console.log("?????????????");                   
               this.procesarDatosParaTabla();
-              //this.verificarDuplicados();
+              this.verificarDuplicados();
             } else {
               this.mensajesError("error: facturaOpCliente", "error")
             }
@@ -792,7 +792,7 @@ export class LiquidacionesOpComponent implements OnInit {
   }
 ///////////////////////////////METODO POR ERROR DE DUPLICADAS//////////////////////////////////////////////////////////////////////////////////////
 
-  /* verificarDuplicados() {
+  verificarDuplicados() {
     const seenIds = new Set<number>();
     this.$facturasOpDuplicadas = [];
     this.informesOp = this.informesOp.filter((factura:ConId<InformeOp>) => {
@@ -931,7 +931,7 @@ borrarLiquidaciones(){
         alert(`error actualizando. errr: ${result.mensaje}`)
       }
     })
-  }  */
+  } 
   
 
 
