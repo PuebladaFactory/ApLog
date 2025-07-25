@@ -81,7 +81,7 @@ export class TableroService {
   }
 
   /** ❌ Anular operación y actualizar tablero */
-  async anularOperacionYActualizarTablero(op: ConId<Operacion>, motivo: string): Promise<TableroDiario | null> {
+  async anularOperacionYActualizarTablero(op: ConId<Operacion>, motivo: string, mensaje:string): Promise<TableroDiario | null> {
     const fechaStr = (typeof op.fecha === 'string') ? op.fecha : new Date(op.fecha).toISOString().split('T')[0];;
 
     // 1. Dar de baja la operación
@@ -90,7 +90,7 @@ export class TableroService {
       op,
       op.idOperacion,
       'BAJA',
-      'Baja de operación desde el tablero',
+      mensaje,      
       motivo
     );
 
@@ -239,6 +239,49 @@ export class TableroService {
 
     // Actualizar localStorage
     localStorage.setItem('tableroDiarioFirestore', JSON.stringify(tablero));
+  }
+
+  //el caso que se anula una op desde liquidacion
+  async anularOpEnTablero(op: ConId<Operacion>): Promise<TableroDiario | null> {
+    const fechaStr = (typeof op.fecha === 'string') ? op.fecha : new Date(op.fecha).toISOString().split('T')[0];;
+
+    // 2. Buscar tablero
+    const tablero = await this.getTableroPorFecha(fechaStr);
+    if (!tablero) return null;
+
+    // 3. Filtrar asignaciones
+    const asignaciones: { [idCliente: number]: ChoferAsignado[] } = {};
+
+    for (const [idStr, lista] of Object.entries(tablero.asignaciones)) {
+      const idCliente = +idStr;
+      const nuevaLista = (lista as ChoferAsignado[]).filter(c => c.idOperacion !== op.idOperacion);
+      if (nuevaLista.length > 0) {
+        asignaciones[idCliente] = nuevaLista;
+      }
+    }
+
+    // 🔴 Si no queda ninguna asignación → eliminar tablero
+    const noHayAsignaciones = Object.values(asignaciones).every(lista => lista.length === 0);
+    if (noHayAsignaciones) {
+      await this.deleteTablero(fechaStr); // Eliminar de la base
+      localStorage.removeItem('tableroDiarioFirestore');
+      localStorage.removeItem('asignacionesTemporal');
+      return null;
+    }
+
+    // ✅ Si hay asignaciones → actualizar tablero
+    const tableroActualizado: TableroDiario = {
+      id: fechaStr,
+      fecha: fechaStr,
+      asignaciones,
+      asignado: tablero.asignado ?? false,
+      timestamp: Date.now()
+    };
+
+    await this.guardarTablero(tableroActualizado, "ACTUALIZACION");
+    localStorage.setItem('tableroDiarioFirestore', JSON.stringify(tableroActualizado));
+
+    return tableroActualizado;
   }
 
 }

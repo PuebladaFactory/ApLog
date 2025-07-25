@@ -23,6 +23,8 @@ export class LogService {
     try {
       const logId = doc(collection(this.firestore, '/Vantruck/datos/logs')).id; // Genera un ID único
       const logEntry = this.createLogEntry(accion, coleccion, detalle, idObjeto, resultado, 0);
+      console.log("LogService: logEntry: ", logEntry);
+      
       await setDoc(doc(this.firestore, '/Vantruck/datos/logs', logId), logEntry);
     } catch (error) {
       console.error('Error al registrar el log:', error);

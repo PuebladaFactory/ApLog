@@ -1062,6 +1062,17 @@ export class StorageService {
           }
           console.log(e.message)});
       }
+
+      async addSimpleLogPapelera(componente: string, item: any,  idItem:number, accion:string, msj:string, motivo:string){
+        let user = this.loadInfo('usuario');
+        //let accion: string = "BAJA";
+        let regLog:boolean = this.controlLog(componente, accion);      
+        if (!user[0].roles.god && regLog){  
+          console.log("aca?");                    
+          this.logService.logEventDoc(accion, componente, msj, idItem, item,  true, motivo);           
+        }         
+
+      }
     
       public updateItem(componente: string, item: any, idItem:number, accion:string, msj: string, uid:any): void {
         //////console.log("storage update item", componente, item);

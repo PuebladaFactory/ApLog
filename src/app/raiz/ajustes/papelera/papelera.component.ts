@@ -4,6 +4,7 @@ import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { LogDoc } from 'src/app/interfaces/log-doc';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 import { ModalObjetoComponent } from 'src/app/shared/modal-objeto/modal-objeto.component';
 import Swal from 'sweetalert2';
 
@@ -20,15 +21,21 @@ export class PapeleraComponent implements OnInit {
   $usuario!: any;
   limite:number = 100;
   papelera: LogDoc [] = [];
-  private destroy$ = new Subject<void>();         
+  private destroy$ = new Subject<void>();  
+  isLoading: boolean = false;       
   
-  constructor(private dbFirebase: DbFirestoreService, private storageService: StorageService, private modalService: NgbModal){}
+  constructor(
+    private dbFirebase: DbFirestoreService, 
+    private storageService: StorageService, 
+    private modalService: NgbModal,
+    private tableroServ: TableroService
+  ){}
   
   ngOnInit(): void {
       
-      this.storageService.users$
-        .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-        .subscribe(data => {
+    this.storageService.users$
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
           if(data){ this.$usuariosTodos = data;}      
       });
       this.consultarPapelera();
@@ -53,6 +60,7 @@ export class PapeleraComponent implements OnInit {
         distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
       )
       .subscribe(data => {            
+      console.log("data papelera:", data);
                         
         if(data){
           this.papelera = data;          
@@ -91,7 +99,7 @@ export class PapeleraComponent implements OnInit {
       }
     }
 
-    restaurarObjeto(logDoc:LogDoc){
+    async restaurarObjeto(logDoc:LogDoc){
       console.log("objeto", logDoc);
       let id: number = 0;
       let titulo: string = ""
@@ -137,7 +145,7 @@ export class PapeleraComponent implements OnInit {
       console.log("id", id);
       delete logDoc.objeto.id
       
-        Swal.fire({
+      const confirmacion = await Swal.fire({
               title: "¡Atención!",
               text: "A la hora de restaurar un objeto debe tener en cuento que algunos items trabajan en relación con otros objetos. Ej: un legajo esta asignado a un chofer, un chofer puede estar asignado a un proveedor. Tenga en cuenta estas relaciones y restaure todos los objetos relacionados entre si para un correcto funcionamiento de la app. ¿Desea restaurar este objeto?",
               icon: "warning",
@@ -146,21 +154,70 @@ export class PapeleraComponent implements OnInit {
               cancelButtonColor: "#d33",
               confirmButtonText: "Confirmar",
               cancelButtonText: "Cancelar"
-            }).then((result) => {
-              if (result.isConfirmed) {
-                console.log("RESTAURAR logDoc.objeto:", logDoc.objeto);
-                
-                this.storageService.addItem(logDoc.logEntry.coleccion, logDoc.objeto, id, "RESTAURAR", `${titulo} ${id} restaurado desde la Papelera`);   
-                this.storageService.deleteItem("papelera", logDoc, logDoc.idDoc, "INTERNA", "" ) 
-                Swal.fire({
-                  title: "Confirmado",
-                  text: "El Objeto ha sido restaurado",
-                  icon: "success"
-                });
-              }
-            });  
+            })
+
+      if (confirmacion.isConfirmed) {
+          this.isLoading = true;
+          await this.addItem(logDoc, id, titulo); // ahora espera el resultado
+          this.isLoading = false;
+        } else if (confirmacion.dismiss === Swal.DismissReason.cancel) {
+          Swal.fire({
+            title: "Cancelado",
+            text: "El objeto no ha sido restaurado.",
+            icon: "info",
+            confirmButtonText: "Entendido"
+          });
+
+        }
+
+
+      
     }
 
+  async addItem(logDoc:LogDoc, id:number, titulo:string) {
+    if(logDoc.logEntry.coleccion === 'operaciones'){
+      try {
+        await this.tableroServ.altaOperacionYActualizarTablero(logDoc.objeto); 
+        this.storageService.deleteItem("papelera", logDoc, logDoc.idDoc, "INTERNA", "" );
+        Swal.fire({
+          title: "Confirmado",
+          text: "El Objeto ha sido restaurado",
+          icon: "success"
+        });       
+
+        this.ngOnInit(); 
+      } catch (error) {
+        this.mensajesError("error en la restauracion del objeto", "error");
+      }      
+
+    } else {
+      try {
+        this.storageService.addItem(logDoc.logEntry.coleccion, logDoc.objeto, id, "RESTAURAR", `${titulo} ${id} restaurado desde la Papelera`);  
+        this.storageService.deleteItem("papelera", logDoc, logDoc.idDoc, "INTERNA", "" )      
+        Swal.fire({
+          title: "Confirmado",
+          text: "El Objeto ha sido restaurado",
+          icon: "success"
+        });
+        this.ngOnInit();
+      } catch (error) {
+        this.mensajesError("error en la restauracion del objeto", "error");
+      }     
+               
+               
+    }
+    
+    
+  }
+
+    mensajesError(msj:string, resultado:string){
+      Swal.fire({
+        icon: resultado === 'error' ? "error" : "success",
+        //title: "Oops...",
+        text: `${msj}`
+        //footer: `${msj}`
+      });
+    }
     
   
    
