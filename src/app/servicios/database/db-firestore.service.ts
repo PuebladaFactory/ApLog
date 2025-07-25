@@ -15,6 +15,18 @@ import { InformeOp } from 'src/app/interfaces/informe-op';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from '../numerador/numerador.service';
 
+export interface ResultadoEliminacion {
+  success: boolean;
+  mensaje: string;
+  faltantes: {
+    operacion: boolean;
+    informe1: boolean;
+    informe2: boolean;
+  };
+  eliminados: string[]; // paths eliminados efectivamente
+  omitidos: string[];   // paths que no se eliminaron (porque no existían o se canceló)
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -1458,5 +1470,58 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
 
     console.log('🏁 Asignación de números internos finalizada.');
   }
+
+  async eliminarOperacionEInformes(
+    operacion: Operacion,
+    coleccionInforme1: string,
+    coleccionInforme2: string
+  ): Promise<{ success: boolean; mensaje: string }> {
+    try {
+      const batch = writeBatch(this.firestore);
+
+      // Referencias a las colecciones
+      const opColRef = collection(this.firestore, 'Vantruck/datos/operaciones');
+      const infColRef1 = collection(this.firestore, `Vantruck/datos/${coleccionInforme1}`);
+      const infColRef2 = collection(this.firestore, `Vantruck/datos/${coleccionInforme2}`);
+
+      // Consultas por idOperacion
+      const [opSnap, infSnap1, infSnap2] = await Promise.all([
+        getDocs(query(opColRef, where('idOperacion', '==', operacion.idOperacion))),
+        getDocs(query(infColRef1, where('idOperacion', '==', operacion.idOperacion))),
+        getDocs(query(infColRef2, where('idOperacion', '==', operacion.idOperacion))),
+      ]);
+
+      if (opSnap.empty) {
+        return { success: false, mensaje: 'La operación no existe en la base de datos.' };
+      }
+      if (infSnap1.empty) {
+        return { success: false, mensaje: `El informe de ${coleccionInforme1} no existe.` };
+      }
+      if (infSnap2.empty) {
+        return { success: false, mensaje: `El informe de ${coleccionInforme2} no existe.` };
+      }
+
+      // Obtener referencias de los documentos a eliminar
+      const opDocRef = doc(this.firestore, `${opSnap.docs[0].ref.path}`);
+      const infDocRef1 = doc(this.firestore, `${infSnap1.docs[0].ref.path}`);
+      const infDocRef2 = doc(this.firestore, `${infSnap2.docs[0].ref.path}`);
+
+      // Agregar al batch
+      batch.delete(opDocRef);
+      batch.delete(infDocRef1);
+      batch.delete(infDocRef2);
+
+      // Ejecutar el batch
+      await batch.commit();
+
+      return { success: true, mensaje: 'Operación e informes eliminados correctamente.' };
+
+    } catch (error) {
+      console.error('❌ Error al eliminar documentos:', error);
+      return { success: false, mensaje: 'Error inesperado durante la eliminación.' };
+    }
+  }
+
+  
 
 }

@@ -18,6 +18,7 @@ import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
 import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 
 @Component({
   selector: 'app-liquidaciones-op',
@@ -76,7 +77,8 @@ export class LiquidacionesOpComponent implements OnInit {
     private pdfServ: PdfService, 
     private modalService: NgbModal, 
     private dbFirebase: DbFirestoreService,
-    private buscarTarifaServ: BuscarTarifaService
+    private buscarTarifaServ: BuscarTarifaService,
+    private tableroServ: TableroService
   ){}
 
   ngOnInit(): void {
@@ -124,7 +126,7 @@ export class LiquidacionesOpComponent implements OnInit {
             if(this.informesOp){
               //////////console.log("?????????????");                   
               this.procesarDatosParaTabla();
-              //this.verificarDuplicados();
+              this.verificarDuplicados();
             } else {
               this.mensajesError("error: facturaOpCliente", "error")
             }
@@ -686,7 +688,7 @@ export class LiquidacionesOpComponent implements OnInit {
       confirmButtonText: "Confirmar",
       cancelButtonText: "Cancelar"
     }).then((result) => {
-      if (result.isConfirmed) {
+      if (result.isConfirmed) {        
         this.dbFirebase
           .obtenerTarifaIdTarifa("operaciones", informeOp.idOperacion, "idOperacion")
           .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
@@ -699,7 +701,7 @@ export class LiquidacionesOpComponent implements OnInit {
     });    
   }
   
-  openModalBaja(informeOp:InformeOp, indice:number){
+  async openModalBaja(informeOp:InformeOp, indice:number){
     {
       const modalRef = this.modalService.open(ModalBajaComponent, {
         windowClass: 'myCustomModalClass',
@@ -715,45 +717,37 @@ export class LiquidacionesOpComponent implements OnInit {
       
       
       modalRef.componentInstance.fromParent = info;
-    
-      modalRef.result.then(
-        (result) => {
-          //////console.log("result", result);
-          if(result !== undefined){   
-              //BAJA DE CONTRAPARTE              
-              let coleccionContraParte = this.llamadaOrigen === 'cliente' &&  this.operacion.chofer.idProveedor === 0 ? 'informesOpChoferes' : this.llamadaOrigen === 'cliente' &&  this.operacion.chofer.idProveedor !== 0 ? 'informesOpProveedor' : 'informesOpCliente';
-              this.dbFirebase.obtenerTarifaMasReciente(coleccionContraParte, informeOp.contraParteId, "idInfLiq", "idInfLiq").subscribe(data => {
-                if(data){
-                  let facturaContraParte = data
-                  //////console.log("facturaContraParte: ", factura);
-                  this.storageService.deleteItem(coleccionContraParte, facturaContraParte, informeOp.contraParteId, "INTERNA", "");        
-                }
-                
-              })
-              //BAJA DE FACTURA OP CLIENTE
-              this.removeItem(informeOp);              
-              
-              //BAJA DE OP
-              this.storageService.deleteItemPapelera("operaciones", this.operacion, this.operacion.idOperacion, "Baja", `Baja de operacion ${this.operacion.idOperacion} desde Liquidaciones`, result);    
-              
-              this.cerrarTabla(indice)
-              this.ngOnInit(); 
-              //////////////////
+      try {
+        const motivo = await modalRef.result;
+        if(!motivo) return
+        this.isLoading = true;  
+        let coleccionContraParte = this.llamadaOrigen === 'cliente' &&  this.operacion.chofer.idProveedor === 0 ? 'informesOpChoferes' : this.llamadaOrigen === 'cliente' &&  this.operacion.chofer.idProveedor !== 0 ? 'informesOpProveedores' : 'informesOpClientes';
+        const resultado = await this.dbFirebase.eliminarOperacionEInformes(this.operacion,this.componente, coleccionContraParte);
+        if (resultado.success) {
+          await this.tableroServ.anularOpEnTablero(this.operacion)
+          await this.storageService.addSimpleLogPapelera("operaciones",this.operacion,this.operacion.idOperacion, "BAJA",'Baja de operación desde Liquidaciones', motivo)
+          this.isLoading = false;
+          Swal.fire({
+          title: "Confirmado",
+          text: "La operación ha sido anulada",
+          icon: "success"
+        });
+        this.cerrarTabla(indice)
+        this.ngOnInit(); 
+        
+        } else {
+          this.isLoading = false;
+          Swal.fire({
+          title: "Error",
+          text: `${resultado.mensaje}`,
+          icon: "error"
+        });
+        }      
 
+      } catch (e) {
+        console.warn("El modal fue cancelado o falló:", e);
+      }
 
-              //////////////console.log("llamada al storage desde op-abiertas, deleteItem");
-
-              //////////////console.log("consultas Op: " , this.$consultasOp);
-              Swal.fire({
-                title: "Confirmado",
-                text: "La operación ha sido dada de baja",
-                icon: "success"
-              });
-          }
-          
-        },
-        (reason) => {}
-      );
     }
   }
 
@@ -792,7 +786,7 @@ export class LiquidacionesOpComponent implements OnInit {
   }
 ///////////////////////////////METODO POR ERROR DE DUPLICADAS//////////////////////////////////////////////////////////////////////////////////////
 
-  /* verificarDuplicados() {
+  verificarDuplicados() {
     const seenIds = new Set<number>();
     this.$facturasOpDuplicadas = [];
     this.informesOp = this.informesOp.filter((factura:ConId<InformeOp>) => {
@@ -931,7 +925,7 @@ borrarLiquidaciones(){
         alert(`error actualizando. errr: ${result.mensaje}`)
       }
     })
-  }  */
+  } 
   
 
 

@@ -1,12 +1,16 @@
 <div>
     <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
     <input type="radio" class="btn-check" name="options" id="option1" autocomplete="off" 
-          [checked]="informesOpToogle" (change)="informesOpToogle = true">
+          [checked]="informesOpToogle" (click)="informesToogle ('a')">
     <label class="btn btn-outline-primary" for="option1">Informes Op</label>
 
     <input type="radio" class="btn-check" name="options" id="option2" autocomplete="off"
-          [checked]="!informesOpToogle" (change)="informesOpToogle = false">
+          [checked]="informesLiqToogle" (click)="informesToogle('b')">
     <label class="btn btn-outline-success" for="option2">Informes Liq</label>
+
+    <input type="radio" class="btn-check" name="options" id="option3" autocomplete="off"
+          [checked]="opToogle" (click)="informesToogle('c')">
+    <label class="btn btn-outline-success" for="option3">operaciones</label>
 </div>
 </div>
 @if(informesOpToogle){
@@ -26,16 +30,16 @@
     <div class="col-md-3">
       <label>Colección origen:</label>
       <select class="form-control" [(ngModel)]="coleccionOrigen">
-        <option value="facturaOpCliente">facturaOpCliente</option>
-        <option value="facturaOpChofer">facturaOpChofer</option>
-        <option value="facturaOpProveedor">facturaOpProveedor</option>
-          
-        <option value="facOpLiqCliente">facOpLiqCliente</option>
-        <option value="facOpLiqChofer">facOpLiqChofer</option>
-        <option value="facOpLiqProveedor">facOpLiqProveedor</option>
+        <option value="informesOpClientes">informesOpClientes</option>
+        <option value="informesOpChoferes">informesOpChoferes</option>
+        <option value="informesOpProveedores">informesOpProveedores</option>
+         
+        <option value="infOpLiqClientes">infOpLiqClientes</option>
+        <option value="infOpLiqChoferes">infOpLiqChoferes</option>
+        <option value="infOpLiqProveedores">infOpLiqProveedores</option>
       </select>
     </div>
-    <div class="col-md-3">
+    <!-- <div class="col-md-3">
       <label>Colección destino:</label>
       <select class="form-control" [(ngModel)]="coleccionDestino">
         <option value="informesOpClientes">informesOpClientes</option>
@@ -46,7 +50,7 @@
         <option value="infOpLiqChoferes">infOpLiqChoferes</option>
         <option value="infOpLiqProveedores">infOpLiqProveedores</option>
       </select>
-    </div>
+    </div> -->
   </div>
 
   <!-- Botones de acción -->
@@ -54,8 +58,8 @@
       <div class="mb-4">
         <button class="btn btn-primary me-2" (click)="cargarDatos()">Cargar datos</button>
         <button class="btn btn-secondary me-2" (click)="verificarDuplicados()">Duplicados</button>
-        <button class="btn btn-warning me-2" (click)="transformarDatos()">Transformar</button>
-        <button class="btn btn-success" (click)="guardarTransformados()">Guardar en destino</button>
+        <!-- <button class="btn btn-warning me-2" (click)="transformarDatos()">Transformar</button> -->
+        <!-- <button class="btn btn-success" (click)="guardarTransformados()">Guardar en destino</button> -->
       </div>
       <div>
         <button class="btn btn-danger me-2" (click)="eliminarObjeto()">Borrar Duplicados</button>
@@ -83,46 +87,6 @@
               <tr>
                 <th>Fecha</th>
                 <th class="bg-info">ID Op</th>
-                <th>Id Factura</th>
-                <th>Cliente</th>
-                <th>Chofer</th>
-                <th>Km</th>                
-                <th class="bg-warning">Total</th>
-                <th>Contra Parte</th>
-                <th>Liquidada</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of datosOrigen | globalFilter:filtroOrigen:['fecha','idOperacion', 'idCliente', 'idChofer', 'km','valores.total','contraParteMonto','liquidacion']; track item; let i = $index) {
-                <tr>
-                  <td>{{ item.fecha}}</td>
-                  <td class="bg-info">{{ item.idOperacion }}</td>
-                  <td>{{ item.idFacturaOp }}</td> 
-                  <td>{{ item.idCliente }}</td>
-                  <td>{{ item.idChofer }}</td>
-                  <td>{{ item.km}}</td>
-                  <td class="bg-warning">{{ item.valores?.total | currency }}</td>
-                  <td>{{ item.contraParteMonto | currency }}</td>
-                  <td>{{ item.liquidacion}}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tabla 2: Transformados -->
-    <div class="col-12">
-      <div class="border rounded p-2 h-100 d-flex flex-column" style="max-height: 80vh;">
-        <h5>Datos transformados ({{ datosTransformados.length }})</h5>
-        <input class="form-control mb-2" type="text" placeholder="Buscar..." [(ngModel)]="filtroDestino" />
-        <div class="table-responsive overflow-auto">
-          <table class="table table-sm table-bordered table-hover">
-            <thead class="table-light">
-              <tr>
-                <th>Fecha</th>
-                <th class="bg-info">ID Op</th>
                 <th>Id Informe</th>
                 <th>Cliente</th>
                 <th>Chofer</th>
@@ -133,7 +97,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (item of datosTransformados | globalFilter:filtroDestino:['fecha','idOperacion', 'idInfOp', 'idCliente', 'idChofer', 'km','valores.total','contraParteMonto','liquidacion']; track item; let i = $index) {
+              @for (item of datosOrigen | globalFilter:filtroOrigen:['fecha','idOperacion', 'idInfOp', 'idCliente', 'idChofer', 'km','valores.total','contraParteMonto','liquidacion']; track item; let i = $index) {
                 <tr>
                   <td>{{ item.fecha}}</td>
                   <td class="bg-info">{{ item.idOperacion }}</td>
@@ -151,10 +115,50 @@
         </div>
       </div>
     </div>
-    @if (facturasOpDuplicadas.length > 0) {
+
+    <!-- Tabla 2: Transformados -->
+    <div class="col-12">
+      <div class="border rounded p-2 h-100 d-flex flex-column" style="max-height: 80vh;">
+        <h5>Datos Duplicados ({{ informesOpDuplicadas.length }})</h5>
+        <input class="form-control mb-2" type="text" placeholder="Buscar..." [(ngModel)]="filtroDestino" />
+        <div class="table-responsive overflow-auto">
+          <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Fecha</th>
+                <th class="bg-info">ID Op</th>
+                <th>Id Informe</th>
+                <th>Cliente</th>
+                <th>Chofer</th>
+                <th>Km</th>                
+                <th class="bg-success">Total</th>
+                <th>Contra Parte</th>
+                <th>Liquidada</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of informesOpDuplicadas | globalFilter:filtroDestino:['fecha','idOperacion', 'idInfOp', 'idCliente', 'idChofer', 'km','valores.total','contraParteMonto','liquidacion']; track item; let i = $index) {
+                <tr>
+                  <td>{{ item.fecha}}</td>
+                  <td class="bg-info">{{ item.idOperacion }}</td>
+                  <td>{{ item.idInfOp}}</td>                  
+                  <td>{{ item.idCliente }}</td>
+                  <td>{{ item.idChofer }}</td>
+                  <td>{{ item.km}}</td>
+                  <td class="bg-success">{{ item.valores?.total | currency }}</td>
+                  <td>{{ item.contraParteMonto | currency }}</td>
+                  <td>{{ item.liquidacion}}</td>
+                </tr>
+              }              
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+<!--     @if (informesOpDuplicadas.length > 0) {
       <div class="col-12">
         <div class="border rounded p-2 h-100 d-flex flex-column" style="max-height: 80vh;">
-          <h5 class="bg-danger">Datos Duplicados ({{ facturasOpDuplicadas.length }})</h5>
+          <h5 class="bg-danger">Datos Duplicados ({{ informesOpDuplicadas.length }})</h5>
           <input class="form-control mb-2" type="text" placeholder="Buscar..." [(ngModel)]="filtroDduplicados" />
           <div class="table-responsive overflow-auto">
             <table class="table table-sm table-bordered table-hover">
@@ -172,7 +176,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (item of facturasOpDuplicadas | globalFilter:filtroDestino:['fecha','idOperacion', 'idFacturaOp', 'idCliente', 'idChofer', 'km','valores.total','contraParteMonto','liquidacion']; track item; let i = $index) {
+                @for (item of informesOpDuplicadas | globalFilter:filtroDestino:['fecha','idOperacion', 'idFacturaOp', 'idCliente', 'idChofer', 'km','valores.total','contraParteMonto','liquidacion']; track item; let i = $index) {
                   <tr>
                     <td>{{ item.fecha}}</td>
                     <td class="bg-info">{{ item.idOperacion }}</td>
@@ -190,11 +194,11 @@
           </div>
         </div>
       </div>
-    }
+    } -->
     
   </div>
 </div>
-}@else {
+}@else if (informesLiqToogle){
     <div class="container my-4">
 
     <h2>Migración de Facturas a Informes de Liquidación</h2>
@@ -217,6 +221,7 @@
           <option value="facturaChofer">FacturaChofer</option>
           <option value="facturaProveedor">FacturaProveedor</option>
           <option value="proforma">Proforma</option>
+          <option value="resumenLiq">resumenLiq</option>
         </select>
       </div>
       <div class="col-md-3">
@@ -317,11 +322,196 @@
     </div>
   </div>
 
+}@else if (opToogle){
+  <h2>Operaciones</h2>
+  <div class="container-fluid py-3">
+  <h1 class="mb-4">Verificar valores de Op </h1>
+
+  <!-- Filtros -->
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <label>Fecha desde:</label>
+      <input type="date" class="form-control" [(ngModel)]="fechaDesde" />
+    </div>
+    <div class="col-md-3">
+      <label>Fecha hasta:</label>
+      <input type="date" class="form-control" [(ngModel)]="fechaHasta" />
+    </div>
+    <div class="col-md-3">
+      <label>Colección origen:</label>
+      <select class="form-control" [(ngModel)]="coleccionOrigen">                 
+        <option value="operaciones">Operaciones</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label>Colección destino:</label>
+      <select class="form-control" [(ngModel)]="coleccionDestino">
+        <option value="infOpLiqClientes">infOpLiqClientes</option>
+        <option value="infOpLiqChoferes">infOpLiqChoferes</option>
+        <option value="infOpLiqProveedores">infOpLiqProveedores</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Botones de acción -->
+   <div class="d-flex justify-content-between">
+      <div class="mb-4">
+        <button class="btn btn-primary me-2" (click)="cargarOp()">Cargar datos</button>
+        <button class="btn btn-secondary me-2" (click)="verificarValores()">VErificar valores</button>
+        
+      </div>
+      <!-- <div>
+        <button class="btn btn-danger me-2" (click)="eliminarObjeto()">Borrar Duplicados</button>
+      </div>
+      <div>
+        <button  class="btn btn-outline-dark" (click)="consultarNuevaColeccion()">Consultar nueva colección:</button>
+        <span>{{docuNuevaColeccion.length}}</span>
+      </div> -->
+
+   </div>
+
+
+  <!-- Spinner de carga -->
+  <app-spinner *ngIf="cargando"></app-spinner>
+
+  <div class="row">
+    <!-- Tabla 1: Origen -->
+    <div class="col-12">
+      <div class="border rounded p-2 h-100 d-flex flex-column" style="max-height: 80vh;">
+        <h5>Datos de Operaciones con errores ({{ operaciones.length }})</h5>
+        <input class="form-control mb-2" type="text" placeholder="Buscar..." [(ngModel)]="filtroOrigen" />
+        <div class="table-responsive overflow-auto">
+          <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Fecha</th>
+                <th class="table-info">ID Op</th>
+                <th>Cliente</th>
+                <th>tarifaBase</th>
+                <th>acomp</th>
+                <th>km valor</th>                
+                <th class="table-success">A Cobrar</th>
+                <th>Chofer</th>
+                <th>tarifaBase</th>
+                <th>acomp</th>
+                <th>km valor</th>                
+                <th class="table-danger">A Pagar</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of operaciones | globalFilter:filtroOrigen:['fecha','idOperacion', 'cliente.razonSocial', 'chofer.apellido', 'valores.cliente.acompValor', 'valores.cliente.kmAdicional', 'valores.cliente.tarifaBase','valores.cliente.aCobrar', 'valores.chofer.acompValor', 'valores.chofer.kmAdicional', 'valores.chofer.tarifaBase','valores.chofer.aPagar']; track item; let i = $index) {
+                <tr>
+                  <td>{{ item.fecha}}</td>
+                  <td class="table-info">{{ item.idOperacion }}</td>                                    
+                  <td>{{ item.cliente.razonSocial }}</td>
+                  <td>{{ item.valores?.cliente.tarifaBase  | formatearValor : '$' }}</td>
+                  <td>{{ item.valores?.cliente.acompValor  | formatearValor : '$'}}</td>
+                  <td>{{ item.valores?.cliente.kmAdicional  | formatearValor : '$'}}</td>
+                  <td class="table-success">{{ item.valores?.cliente.aCobrar | formatearValor : '$' }}</td>
+                  <td>{{ item.chofer.apellido + " " + item.chofer.nombre }}</td>
+                  <td>{{ item.valores?.chofer.tarifaBase  | formatearValor : '$' }}</td>
+                  <td>{{ item.valores?.chofer.acompValor  | formatearValor : '$'}}</td>
+                  <td>{{ item.valores?.chofer.kmAdicional  | formatearValor : '$'}}</td>
+                  <td class="table-danger">{{ item.valores?.chofer.aPagar | formatearValor : '$' }}</td>
+                </tr>
+              }              
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    Datos con errores:
+    <div class="col-12">
+      <div class="border rounded p-2 h-100 d-flex flex-column" style="max-height: 80vh;">
+        <h5>Datos de Operación con errores ({{ opErrores.length }})</h5>
+        <input class="form-control mb-2" type="text" placeholder="Buscar..." [(ngModel)]="filtroError" />
+        <div class="table-responsive overflow-auto">
+          <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Fecha</th>
+                <th class="table-info">ID Op</th>
+                <th>Cliente</th>
+                <th>tarifaBase</th>
+                <th>acomp</th>
+                <th>km valor</th>                
+                <th class="table-success">A Cobrar</th>
+                <th>Chofer</th>
+                <th>tarifaBase</th>
+                <th>acomp</th>
+                <th>km valor</th>                
+                <th class="table-danger">A Pagar</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of opErrores | globalFilter:filtroError:['fecha','idOperacion', 'cliente.razonSocial', 'chofer.apellido', 'valores.cliente.acompValor', 'valores.cliente.kmAdicional', 'valores.cliente.tarifaBase','valores.cliente.aCobrar', 'valores.chofer.acompValor', 'valores.chofer.kmAdicional', 'valores.chofer.tarifaBase','valores.chofer.aPagar']; track item; let i = $index) {
+                <tr>
+                  <td>{{ item.fecha}}</td>
+                  <td class="table-info">{{ item.idOperacion }}</td>                                    
+                  <td>{{ item.cliente.razonSocial }}</td>
+                  <td>{{ item.valores?.cliente.tarifaBase  | formatearValor : '$' }}</td>
+                  <td>{{ item.valores?.cliente.acompValor  | formatearValor : '$'}}</td>
+                  <td>{{ item.valores?.cliente.kmAdicional  | formatearValor : '$'}}</td>
+                  <td class="table-success">{{ item.valores?.cliente.aCobrar | formatearValor : '$' }}</td>
+                  <td>{{ item.chofer.apellido + " " + item.chofer.nombre }}</td>
+                  <td>{{ item.valores?.chofer.tarifaBase  | formatearValor : '$' }}</td>
+                  <td>{{ item.valores?.chofer.acompValor  | formatearValor : '$'}}</td>
+                  <td>{{ item.valores?.chofer.kmAdicional  | formatearValor : '$'}}</td>
+                  <td class="table-danger">{{ item.valores?.chofer.aPagar | formatearValor : '$' }}</td>
+                </tr>
+              }              
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla 2: Transformados -->
+    <div class="col-12">
+      <div class="border rounded p-2 h-100 d-flex flex-column" style="max-height: 80vh;">
+        <h5>Informes con erroes ({{ infOpErrores.length }})</h5>
+        <input class="form-control mb-2" type="text" placeholder="Buscar..." [(ngModel)]="filtroDestino" />
+        <div class="table-responsive overflow-auto">
+          <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Fecha</th>
+                <th class="table-info">ID Op</th>
+                <th>Id Informe</th>
+                <th>Cliente</th>
+                <th>Chofer</th>
+                <th>tarifaBase</th>                
+                <th>acomp</th>
+                <th>kmMonto</th>
+                <th class="table-success">Total</th>                
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of infOpErrores | globalFilter:filtroDestino:['fecha','idOperacion', 'idInfOp', 'idCliente', 'idChofer', 'valores.tarifaBase','valores.acompaniante','valores.kmMonto','valores.total']; track item; let i = $index) {
+                <tr>
+                  <td>{{ item.fecha}}</td>
+                  <td class="table-info">{{ item.idOperacion }}</td>
+                  <td>{{ item.idInfOp}}</td>                  
+                  <td>{{ item.idCliente }}</td>
+                  <td>{{ item.idChofer }}</td>
+                  <td>{{ item.valores.tarifaBase}}</td>
+                  <td>{{ item.valores.acompaniante}}</td>
+                  <td>{{ item.valores.kmMonto}}</td>
+                  <td class="table-success">{{ item.valores?.total | currency }}</td>
+                </tr>
+              }              
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 }
- @if (facturasOpDuplicadas.length > 0) {
+ <!-- @if (informesOpDuplicadas.length > 0) {
       <div class="col-12">
         <div class="border rounded p-2 h-100 d-flex flex-column" style="max-height: 80vh;">
-          <h5 class="bg-danger">Facturas Duplicados ({{ facturasOpDuplicadas.length }})</h5>
+          <h5 class="bg-danger">Facturas Duplicados ({{ informesOpDuplicadas.length }})</h5>
           <input class="form-control mb-2" type="text" placeholder="Buscar..." [(ngModel)]="filtroDduplicados" />
           <div class="table-responsive overflow-auto">
             <table class="table table-sm table-bordered table-hover">
@@ -339,7 +529,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (item of facturasOpDuplicadas | globalFilter:filtroDestino:['fecha','idOperacion', 'idFacturaOp', 'idCliente', 'idChofer', 'km','valores.total','contraParteMonto','liquidacion']; track item; let i = $index) {
+                @for (item of informesOpDuplicadas | globalFilter:filtroDestino:['fecha','idOperacion', 'idFacturaOp', 'idCliente', 'idChofer', 'km','valores.total','contraParteMonto','liquidacion']; track item; let i = $index) {
                   <tr>
                     <td>{{ item.fecha}}</td>
                     <td class="bg-info">{{ item.idOperacion }}</td>
@@ -357,7 +547,7 @@
           </div>
         </div>
       </div>
-    }
+    } -->
 
 @if (cargando) {
   <app-spinner></app-spinner>

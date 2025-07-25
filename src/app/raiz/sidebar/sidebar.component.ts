@@ -36,7 +36,7 @@ export class SidebarComponent implements OnInit {
       this.buscarAlertas();
     });
     //this.$usuario = this.storageService.loadInfo("usuario")
-    //console.log("this.usuario: ", this.$usuario);
+    ////console.log("this.usuario: ", this.$usuario);
     let usuarioLogueado = this.storageService.loadInfo("usuario");
     this.$usuario = structuredClone(usuarioLogueado[0]);
     
@@ -66,17 +66,17 @@ export class SidebarComponent implements OnInit {
    }
     
   buscarAlertas(){
-    //console.log("0)sidebar");
+    ////console.log("0)sidebar");
     
     this.$legajos.forEach((legajo:Legajo)=>{
       if(legajo.estadoGral.porVencer || legajo.estadoGral.vencido){
         if(legajo.estadoGral.vencido){
           this.alertaRoja = true;
-          //console.log("alerta roja: ", this.alertaRoja);          
+          ////console.log("alerta roja: ", this.alertaRoja);          
         } else{
           if(legajo.estadoGral.porVencer){
             this.alertaAmarilla = true;
-            //console.log("alerta amarilla: ", this.alertaAmarilla);
+            ////console.log("alerta amarilla: ", this.alertaAmarilla);
           }          
         }
       }
@@ -85,12 +85,12 @@ export class SidebarComponent implements OnInit {
 
   navegar(ruta:string){
     let rutaActual = this.storageService.loadInfo("ruta")
-    console.log("rutaActual", rutaActual);
+    //console.log("rutaActual", rutaActual);
     if(rutaActual[0] !== ruta){
       this.storageService.setInfo("ruta", [ruta]);
       //this.storageService.updateObservable("ruta", [ruta]);
     } else {
-      console.log("nada");
+      //console.log("nada");
       
     }
     

@@ -77,11 +77,11 @@ export class RegistroComponent implements OnInit {
       distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)) // Emitir solo si hay cambios reales
     )
     .subscribe(data => {    
-      console.log("data registro", data);
+      //console.log("data registro", data);
                       
       if(data){
         this.registros = data;
-        console.log("this.resgistro: ", this.registros);
+        //console.log("this.resgistro: ", this.registros);
       }
     });
   }

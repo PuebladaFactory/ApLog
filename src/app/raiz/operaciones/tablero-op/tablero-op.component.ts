@@ -110,9 +110,11 @@ export class TableroOpComponent implements OnInit, OnDestroy {
         .subscribe(data => {
           this.$proveedores = data;
       });
+      this.restaurarEstadoFiltros();
       this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
       this.construirColumnDefs();         // Ahora sí, construye columnas visibles
       this.cargarDatos();
+
   }
 
   ngOnDestroy(): void {
@@ -294,7 +296,7 @@ cargarDatos(): void {
 
   filtrarPorCliente(cliente: ConIdType<Cliente>) {
     this.clienteSeleccionado = cliente;
-
+    this.guardarEstadoFiltros(); // <<<< guardar estado
     const currentFilters = this.gridApi.getFilterModel();
 
     // Establecer jerarquía si no hay filtro principal aún
@@ -326,7 +328,8 @@ cargarDatos(): void {
 
   filtrarPorChofer(chofer: ConIdType<Chofer>) {
     this.choferSeleccionado = chofer;
-
+    this.guardarEstadoFiltros(); // <<<< guardar estado
+  
     const currentFilters = this.gridApi.getFilterModel();
 
     // Establecer jerarquía si no hay filtro principal aún
@@ -420,7 +423,7 @@ private actualizarDropdowns(): void {
       }
     }
   }
-  console.log("baseData", baseData);
+  //console.log("baseData", baseData);
   
 
   // Actualizar dropdowns según jerarquía
@@ -606,13 +609,13 @@ private actualizarDropdowns(): void {
           modo: "operaciones",
           item: operacion[0]
         }  
-        //////////console.log()(info); */
+        ////////////console.log()(info); */
         
         modalRef.componentInstance.fromParent = info;
         try {
           const motivo = await modalRef.result;
           if(!motivo) return
-          await this.tableroServ.anularOperacionYActualizarTablero(operacion[0], motivo);
+          await this.tableroServ.anularOperacionYActualizarTablero(operacion[0], motivo, 'Baja de operación desde el tablero-op');
           Swal.fire({
             icon: 'success',
             title: 'Operación eliminada',
@@ -676,7 +679,7 @@ private actualizarDropdowns(): void {
 
     getMsg(e:any) {
         this.btnConsulta = e
-        ////////console.log("getMsg: ", this.btnConsulta);                  
+        //////////console.log("getMsg: ", this.btnConsulta);                  
         if(this.btnConsulta){          
           this.consultarOp();            
         }
@@ -722,20 +725,71 @@ private actualizarDropdowns(): void {
     return this.$choferes.filter(c => idsChoferes.has(c.idChofer));
   }
 
-    limpiarFiltros(): void {
-      this.clienteSeleccionado = null;
-      this.choferSeleccionado = null;
-      this.filtroPrincipal = null;
-      if (this.gridApi) {
-        this.gridApi.setFilterModel(null);
-        this.gridApi.onFilterChanged();
-        localStorage.removeItem('filtrosTableroOp');
-      }      
+  limpiarFiltros(): void {
+    this.clienteSeleccionado = null;
+    this.choferSeleccionado = null;
+    this.filtroPrincipal = null;
+    if (this.gridApi) {
+      this.gridApi.setFilterModel(null);
+      this.gridApi.onFilterChanged();
+      localStorage.removeItem('filtrosTableroOp');
+    }      
+  }
+
+  private guardarEstadoFiltros() {
+  const estado = {
+    clienteId: this.clienteSeleccionado?.idCliente || null,
+    choferId: this.choferSeleccionado?.idChofer || null,
+    filtroPrincipal: this.filtroPrincipal || null
+  };
+  localStorage.setItem('estadoFiltrosTableroOp', JSON.stringify(estado));
+}
+
+  private restaurarEstadoFiltros() {
+    const estadoRaw = localStorage.getItem('estadoFiltrosTableroOp');
+    if (!estadoRaw) return;
+
+    try {
+    const estado = JSON.parse(estadoRaw);
+
+    // Restaurar filtro principal
+    this.filtroPrincipal = estado.filtroPrincipal;
+
+    // Restaurar cliente
+    if (estado.clienteId) {
+      this.clienteSeleccionado = this.$clientes.find(c => c.idCliente === estado.clienteId) || null;
     }
 
-    consultarOp(){
+    // Restaurar chofer
+    if (estado.choferId) {
+      this.choferSeleccionado = this.$choferes.find(c => c.idChofer === estado.choferId) || null;
+    }
+
+    // Aplicar los filtros guardados en ag-grid
+    setTimeout(() => {
+      const currentFilters = this.gridApi?.getFilterModel() || {};
+
+      if (this.clienteSeleccionado) {
+        currentFilters['cliente'] = { type: 'equals', filter: this.clienteSeleccionado.razonSocial };
+      }
+      if (this.choferSeleccionado) {
+        currentFilters['chofer'] = { type: 'equals', filter: `${this.choferSeleccionado.apellido} ${this.choferSeleccionado.nombre}` };
+      }
+
+        this.gridApi?.setFilterModel(currentFilters);
+        this.gridApi?.onFilterChanged();
+        this.actualizarDropdowns(); // reconstruir listados
+    }, 0);
+
+    } catch (e) {
+      console.error('Error restaurando estado de filtros', e);
+    }
+  }
+
+////////////////////////////////////////////////MÉTODOS PARA PRUEBAS Y CORRECCION DE ERRORES///////////////////////////
+  consultarOp(){
     const modoStorage = this.storageService.loadInfo("filtroOp");
-    ////console.log("ngOnInit: modoStorage ", modoStorage);
+    //////console.log("ngOnInit: modoStorage ", modoStorage);
     
     /* if (modoStorage) {
       modoStorage.forEach((key: string) => {
@@ -744,32 +798,32 @@ private actualizarDropdowns(): void {
     } */
 
     //this.aplicarFiltros();
-    ////////console.log("2)aca??: ");            
+    //////////console.log("2)aca??: ");            
     this.storageService.respuestaOp$
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         if(data){
-          ////////console.log("respuestaOp data: ", data);
+          //////////console.log("respuestaOp data: ", data);
           
           this.respuestaOp = data
           this.fechasConsulta = this.respuestaOp[0].fechas;
-          //////console.log("fechasConsulta: ", this.fechasConsulta);
+          ////////console.log("fechasConsulta: ", this.fechasConsulta);
           //this.rango = this.respuestaOp[0].rango ////ESTO NO SE SI SIGUE APLICANDO
-          //////console.log("rango: ", this.rango);
+          ////////console.log("rango: ", this.rango);
           this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
           //this.storageService.listenForChangesDate<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
           //this.aplicarFiltros()   ////ESTO NO SE SI SIGUE APLICANDO 
         }
-        //////////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
+        ////////////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
         //this.getMsg()
     });
   }
 
   editarObjeto(){
-    //console.log("1)this.opActivas", this.$opActivas);
+    ////console.log("1)this.opActivas", this.$opActivas);
     //this.objetoEditado= this.editarCampo(this.$opActivas);        
     this.objetoEditado= this.$opActivas;
-    console.log("2)this.objetoEditado", this.objetoEditado);
+    //console.log("2)this.objetoEditado", this.objetoEditado);
   }
 
   razonZocial(op:any):string{
@@ -806,5 +860,7 @@ private actualizarDropdowns(): void {
       }
     })
   }
+
+
 
 }

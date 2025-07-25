@@ -24,14 +24,14 @@ export class AjustesUsuariosComponent implements OnInit {
   ngOnInit(): void {
     let usuarioLogueado = this.storageService.loadInfo("usuario");
     this.$usuario = structuredClone(usuarioLogueado[0]);
-    console.log("this.usuario2: ", this.$usuario);
+    //console.log("this.usuario2: ", this.$usuario);
     this.storageService.users$
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       if(data){
         
         this.$usuariosTodos = data;
-        console.log("usuarios todos: ", this.$usuariosTodos);        
+        //console.log("usuarios todos: ", this.$usuariosTodos);        
       }      
     });
 
@@ -77,7 +77,7 @@ export class AjustesUsuariosComponent implements OnInit {
        let info = {          
           item: user,
         } 
-        ////console.log()(info); */
+        //////console.log()(info); */
         
         modalRef.componentInstance.fromParent = info;
         modalRef.result.then(

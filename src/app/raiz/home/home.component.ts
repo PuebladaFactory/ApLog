@@ -68,7 +68,7 @@ export class HomeComponent implements OnInit {
       .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
       .subscribe(data=>{
         if(data){
-          console.log("ruta", data);
+          //console.log("ruta", data);
           this.router.navigate([data[0]]);    
         }
       })

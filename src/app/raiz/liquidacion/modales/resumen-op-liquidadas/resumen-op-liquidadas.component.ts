@@ -280,7 +280,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
               columnas: colSel,
               accion: accion,
             }
-
+            console.log(respuesta);            
             this.activeModal.close(respuesta);
           });        
         }
