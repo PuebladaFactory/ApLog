@@ -682,145 +682,169 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
     return deleteDoc(estacionamiento1DocumentReference);
   }
 
-async procesarLiquidacion(
-  informesSeleccionados: ConId<InformeOp>[],
-  modo: string,
-  componenteAlta: string,
-  componenteBaja: string,
-  factura: InformeLiq,
-  componenteFactura: string
-): Promise<{ exito: boolean; mensaje: string }> {
-  const colOps = 'operaciones';
-  const bloques = chunk(informesSeleccionados, 500);
-  const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
-  const informesBackup: ConId<InformeOp>[] = [...informesSeleccionados]; // Backup en memoria  
-  try {
-    for (let i = 0; i < bloques.length; i++) {
-      const batch = writeBatch(this.firestore);
+  async procesarLiquidacion(
+    informesSeleccionados: ConId<InformeOp>[],
+    modo: string,
+    componenteAlta: string,
+    componenteBaja: string,
+    factura: InformeLiq,
+    componenteFactura: string
+  ): Promise<{ exito: boolean; mensaje: string }> {
+    const colOps = 'operaciones';
+    const bloques = chunk(informesSeleccionados, 500);
 
-      for (const informe of bloques[i]) {
-        // 1. Buscar operación
-        const operacionesRef = collection(this.firestore, `/Vantruck/datos/${colOps}`);
-        const q = query(operacionesRef, where('idOperacion', '==', informe.idOperacion));
-        const querySnap = await getDocs(q);
+    const reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
+    const informesBackup: ConId<InformeOp>[] = [...informesSeleccionados];
+    const destinosCreados: ReturnType<typeof doc>[] = [];
+    const contraPartesBackup: { docRef: ReturnType<typeof doc>, prevData: any }[] = [];
 
-        if (querySnap.empty) {
-          throw new Error(`No se encontró operación con idOperacion ${informe.idOperacion}`);
+    try {
+      // ---------------------------------------------------
+      // 1. PRE-CHECK
+      // ---------------------------------------------------
+      const operacionesRef = collection(this.firestore, `/Vantruck/datos/${colOps}`);
+      const facturasRef = collection(this.firestore, `/Vantruck/datos/${componenteFactura}`);
+
+      for (const informe of informesSeleccionados) {
+        const opSnap = await getDocs(query(operacionesRef, where('idOperacion', '==', informe.idOperacion)));
+        if (opSnap.empty) {
+          throw new Error(`Pre-Check: No se encontró operación con idOperacion ${informe.idOperacion}`);
         }
 
-        const opDoc = querySnap.docs[0];
-        const operacion = opDoc.data() as Operacion;
-        const opDocRef = opDoc.ref;
-
-        // 2. Guardar datos para reversión
-        reversionData.push({ docRef: opDocRef, prevData: { ...operacion } });
-
-        // 3. Actualizar estado de la operación
-        const nuevoEstado = { ...operacion.estado };
-        if (modo === 'cliente') {
-          nuevoEstado.cerrada = false;
-          nuevoEstado.facCliente = true;
-        } else {
-          nuevoEstado.cerrada = false;
-          nuevoEstado.facChofer = true;
-        }
-        nuevoEstado.proformaCh = false;
-        nuevoEstado.proformaCl = false;
-        nuevoEstado.facturada = nuevoEstado.facCliente && nuevoEstado.facChofer;
-        if(nuevoEstado.facturada){
-          nuevoEstado.facCliente = false;
-          nuevoEstado.facChofer = false;
+        const origenDocRef = doc(this.firestore, `/Vantruck/datos/${componenteBaja}/${informe.id}`);
+        const origenDocSnap = await getDoc(origenDocRef);
+        if (!origenDocSnap.exists()) {
+          throw new Error(`Pre-Check: No se encontró informe con id ${informe.id} en ${componenteBaja}`);
         }
 
-        batch.update(opDocRef, { estado: nuevoEstado });
-
-        // 4. Verificar duplicado en destino
-        const informeRefDestino = doc(this.firestore, `/Vantruck/datos/${componenteAlta}/${informe.id}`);
-        const destinoSnap = await getDoc(informeRefDestino);
-        if (destinoSnap.exists()) {
-          throw new Error(`Ya existe un informe con id ${informe.id} en ${componenteAlta}`);
+        const destinoDocRef = doc(this.firestore, `/Vantruck/datos/${componenteAlta}/${informe.id}`);
+        const destinoDocSnap = await getDoc(destinoDocRef);
+        if (destinoDocSnap.exists()) {
+          throw new Error(`Pre-Check: Ya existe un informe con id ${informe.id} en ${componenteAlta}`);
         }
+      }
 
-        // 5. Verificar que el origen existe
-        const informeRefOrigen = doc(this.firestore, `/Vantruck/datos/${componenteBaja}/${informe.id}`);
-        const origenSnap = await getDoc(informeRefOrigen);
-        if (!origenSnap.exists()) {
-          throw new Error(`No se encontró el informe con id ${informe.id} en ${componenteBaja}`);
-        }
+      const facturaQuery = query(facturasRef, where('idFactura', '==', factura.idInfLiq));
+      const facturaSnap = await getDocs(facturaQuery);
+      if (!facturaSnap.empty) {
+        throw new Error(`Pre-Check: Ya existe una factura con idFactura ${factura.idInfLiq} en ${componenteFactura}`);
+      }
 
-        // 6. Mover informe (set en destino, delete en origen)
-        informe.proforma = false;
-        const { id, ...inf } = informe;
-        batch.set(informeRefDestino, inf);
-        batch.delete(informeRefOrigen);
+      // ---------------------------------------------------
+      // 2. PROCESAR BATCHES
+      // ---------------------------------------------------
+      for (let i = 0; i < bloques.length; i++) {
+        const batch = writeBatch(this.firestore);
 
-        // 8. (NUEVO) Si modo !== 'clientes', buscar contra parte y marcarla
-        if (modo !== 'cliente') {
-          const contraParteRef = collection(this.firestore, `/Vantruck/datos/informesOpClientes`);
-          const contraParteQuery = query(contraParteRef, where('idOperacion', '==', informe.idOperacion));
-          const contraParteSnap = await getDocs(contraParteQuery);
+        for (const informe of bloques[i]) {
+          const opSnap = await getDocs(query(operacionesRef, where('idOperacion', '==', informe.idOperacion)));
+          const opDoc = opSnap.docs[0];
+          const operacion = opDoc.data() as Operacion;
+          const opDocRef = opDoc.ref;
 
-          if (!contraParteSnap.empty) {
-            const contraDoc = contraParteSnap.docs[0];
-            const contraRef = contraDoc.ref;
-            batch.update(contraRef, { contraParteProforma: false });
+          reversionData.push({ docRef: opDocRef, prevData: { ...operacion } });
+
+          const nuevoEstado = { ...operacion.estado };
+          if (modo === 'cliente') {
+            nuevoEstado.cerrada = false;
+            nuevoEstado.facCliente = true;
           } else {
-            console.warn(`No se encontró contra parte con idOperacion ${informe.idOperacion} en facturaOpCliente`);
+            nuevoEstado.cerrada = false;
+            nuevoEstado.facChofer = true;
+          }
+          nuevoEstado.proformaCh = false;
+          nuevoEstado.proformaCl = false;
+          nuevoEstado.facturada = nuevoEstado.facCliente && nuevoEstado.facChofer;
+          if (nuevoEstado.facturada) {
+            nuevoEstado.facCliente = false;
+            nuevoEstado.facChofer = false;
+          }
+
+          batch.update(opDocRef, { estado: nuevoEstado });
+
+          const informeRefDestino = doc(this.firestore, `/Vantruck/datos/${componenteAlta}/${informe.id}`);
+          const informeRefOrigen = doc(this.firestore, `/Vantruck/datos/${componenteBaja}/${informe.id}`);
+          informe.proforma = false;
+          const { id, ...inf } = informe;
+          batch.set(informeRefDestino, inf);
+          batch.delete(informeRefOrigen);
+
+          destinosCreados.push(informeRefDestino);
+
+          if (modo !== 'cliente') {
+            const contraParteRef = collection(this.firestore, `/Vantruck/datos/informesOpClientes`);
+            const contraParteSnap = await getDocs(query(contraParteRef, where('idOperacion', '==', informe.idOperacion)));
+
+            if (!contraParteSnap.empty) {
+              const contraDoc = contraParteSnap.docs[0];
+              contraPartesBackup.push({ docRef: contraDoc.ref, prevData: { ...contraDoc.data() } });
+              batch.update(contraDoc.ref, { contraParteProforma: false });
+            }
           }
         }
+
+        await batch.commit();
       }
 
-      // 7. Ejecutar batch
-      await batch.commit();
-      console.log(`Batch ${i + 1} procesado correctamente.`);
+      // ---------------------------------------------------
+      // 3. GUARDAR FACTURA
+      // ---------------------------------------------------
+      await addDoc(facturasRef, factura);
+      return { exito: true, mensaje: 'La liquidación y la factura se procesaron con éxito.' };
+    } catch (error: any) {
+      console.error('Error en la liquidación:', error);
+
+      // LLAMAMOS A ROLLBACK CENTRALIZADO
+      await this.revertirCambios({
+        reversionData,
+        informesBackup,
+        destinosCreados,
+        contraPartesBackup,
+        componenteBaja
+      });
+
+      return { exito: false, mensaje: `Ocurrió un error: ${error.message || 'Error desconocido'}. Se revirtieron los cambios.` };
     }
+  }
 
-    // 8. Verificar existencia de factura duplicada
-    const facturasRef = collection(this.firestore, `/Vantruck/datos/${componenteFactura}`);
-    
+  private async revertirCambios(params: {
+    reversionData: { docRef: ReturnType<typeof doc>, prevData: any }[],
+    informesBackup: ConId<InformeOp>[],
+    destinosCreados: ReturnType<typeof doc>[],
+    contraPartesBackup: { docRef: ReturnType<typeof doc>, prevData: any }[],
+    componenteBaja: string
+  }): Promise<void> {
+    const { reversionData, informesBackup, destinosCreados, contraPartesBackup, componenteBaja } = params;
 
-    const facturaQuery = query(facturasRef, where('idFactura', '==', factura.idInfLiq));
-    const facturaSnap = await getDocs(facturaQuery);
-    if (!facturaSnap.empty) {
-      throw new Error(`Ya existe una factura con idFactura ${factura.idInfLiq} en ${componenteFactura}`);
-    }
-
-    // 9. Guardar la factura
-    await addDoc(facturasRef, factura);
-    console.log('Factura guardada correctamente.');
-
-    return {
-      exito: true,
-      mensaje: 'La liquidación y la factura se procesaron con éxito.'
-    };
-  } catch (error: any) {
-    console.error('Error durante la liquidación o el guardado de la factura:', error);
-
-    // Restaurar operaciones modificadas
+    // 1. Restaurar operaciones
     for (const { docRef, prevData } of reversionData) {
-      try {
-        await setDoc(docRef, prevData);
-      } catch (revertErr) {
-        console.error('Error al revertir operación:', revertErr);
-      }
+      try { await setDoc(docRef, prevData); }
+      catch (err) { console.error('Error al revertir operación:', err); }
     }
 
-    // Restaurar informes desde backup
+    // 2. Restaurar informes en colección de origen
     for (const informe of informesBackup) {
       try {
         const informeRef = doc(this.firestore, `/Vantruck/datos/${componenteBaja}/${informe.id}`);
-        await setDoc(informeRef, informe); // reescribe el documento
-      } catch (revertInfErr) {
-        console.error('Error al restaurar informe:', revertInfErr);
-      }
+        await setDoc(informeRef, informe);
+      } catch (err) { console.error('Error al restaurar informe:', err); }
     }
 
-    return {
-      exito: false,
-      mensaje: `Ocurrió un error: ${error.message || 'Error desconocido'}. Se revirtieron los cambios previos.`
-    };
+    // 3. Eliminar informes creados en el destino
+    for (const destinoRef of destinosCreados) {
+      try { await deleteDoc(destinoRef); }
+      catch (err) { console.error('Error al borrar destino en rollback:', err); }
+    }
+
+    // 4. Revertir contraPartes
+    for (const { docRef, prevData } of contraPartesBackup) {
+      try { await setDoc(docRef, prevData); }
+      catch (err) { console.error('Error al revertir contraParte:', err); }
+    }
   }
-}
+
+
+
 
 async guardarMultiple(
   objetos: any[],
@@ -1519,6 +1543,38 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
     } catch (error) {
       console.error('❌ Error al eliminar documentos:', error);
       return { success: false, mensaje: 'Error inesperado durante la eliminación.' };
+    }
+  }
+
+  
+  /**
+   * Busca en una colección destino informesOp cuyo idOperacion coincida
+   * con los idOperacion de los informes pasados en el array.
+   *
+   * @param informeOps Array de InformeOp base
+   * @param coleccionDestino Ruta de la colección destino
+   * @returns Promise<InformeOp[]> Array de informes encontrados (vacío si ninguno coincide)
+   */
+  async buscarInformesPorIdOperacion(
+    informeOps: ConId<InformeOp>[],
+    coleccionDestino: string
+  ): Promise<InformeOp[]> {
+    try {
+      const colRef = collection(this.firestore, `Vantruck/datos/${coleccionDestino}`);
+      const resultados: InformeOp[] = [];
+
+      for (const inf of informeOps) {
+        const snap = await getDocs(query(colRef, where('idOperacion', '==', inf.idOperacion)));
+
+        snap.forEach(docSnap => {
+          resultados.push(docSnap.data() as InformeOp);
+        });
+      }
+
+      return resultados;
+    } catch (error) {
+      console.error('Error en buscarInformesPorIdOperacion:', error);
+      return [];
     }
   }
 
