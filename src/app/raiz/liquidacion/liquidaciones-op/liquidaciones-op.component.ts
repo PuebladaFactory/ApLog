@@ -67,7 +67,7 @@ export class LiquidacionesOpComponent implements OnInit {
 
   ///////////////////////VARIABLES POR ERROR DE DUPLICADAS///////////////////////////////////////////
   $facturasOpDuplicadas: ConId<InformeOp>[] = [];
-  $facLiqOpDuplicadas: ConId<InformeOp>[] = [];  
+  $facLiqOpDuplicadas: InformeOp[] = [];  
   objetoEditado: ConId<InformeOp>[] = [];  
   facturaOpsNoAsignadas: any[] = []
   constructor(
@@ -803,22 +803,19 @@ export class LiquidacionesOpComponent implements OnInit {
     //this.verificarDuplicadosFacturadas()
   }
   
-  verificarDuplicadosFacturadas(){
-  
-    this.informesOp.forEach((facturaOp:InformeOp) => {
-      this.dbFirebase.getMostRecentId(this.componente, "idFacturaOp", "idOperacion", facturaOp.idOperacion)
-      .pipe(take(1))
-      .subscribe(data=>{
-        if(data.length > 0){
-          //console.log("hay data", data);
-          let facOp: any = data[0];
-          this.$facLiqOpDuplicadas.push(facOp)
-        } else {
-          //console.log("no hay data", data);        
-        }
-      })
-    })
-    //////console.log("facLiqOpDuplicadas", this.$facLiqOpDuplicadas);
+  async verificarDuplicadosFacturadas(){
+    this.isLoading = true;
+    
+    try {
+      this.$facLiqOpDuplicadas = await this.dbFirebase.buscarInformesPorIdOperacion(this.informesOp, this.compInformeLiquidacion);  
+      console.log("this.$facLiqOpDuplicadas: ", this.$facLiqOpDuplicadas);
+      
+    } catch (error) {
+      
+    } finally {
+      this.isLoading = false;
+    }
+    
   }
 
   
