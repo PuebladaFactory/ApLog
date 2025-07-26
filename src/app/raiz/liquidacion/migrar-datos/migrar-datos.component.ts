@@ -503,6 +503,7 @@ async consultarNuevaColeccion(){
 
   ////////////////////////OPERACIONES/////////////////
     async cargarOp() {
+    this.cargando = true;
     if (!this.fechaDesde || !this.fechaHasta || !this.coleccionOrigen || !this.coleccionDestino) {
       Swal.fire('Error', 'Completá todos los campos.', 'error');
       return;      
@@ -523,7 +524,8 @@ async consultarNuevaColeccion(){
     this.operaciones.forEach((op: Operacion) => {                
       this.idsOp.push(op.idOperacion)
     });
-    this.consultarInfOp()
+    this.cargando = false;
+    //this.consultarInfOp()
   }
 
   async consultarInfOp(){
