@@ -12,7 +12,7 @@ import { CargaTableroDiarioComponent } from '../carga-tablero-diario/carga-table
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 
 type ChoferAsignado = ConIdType<Chofer> & {
@@ -313,7 +313,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       if (!confirmacion.isConfirmed) return;
 
       // 📋 Modal para ingresar motivo
-      const modalRef = this.modalService.open(ModalBajaComponent, {
+      const modalRef = this.modalService.open(BajaObjetoComponent, {
         centered: true,
         size: 'sm'
       });

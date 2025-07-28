@@ -9,7 +9,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-renderers/acciones-cell-renderer/acciones-cell-renderer.component';
 import Swal from 'sweetalert2';
 import { ProveedoresAltaComponent } from '../proveedores-alta/proveedores-alta.component';
-import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -228,7 +228,7 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
     }
   
     openModalBaja(idProveedor: number) {
-      const modalRef = this.modalService.open(ModalBajaComponent, {
+      const modalRef = this.modalService.open(BajaObjetoComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         scrollable: true,

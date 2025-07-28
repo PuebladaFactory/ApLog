@@ -5,8 +5,8 @@ import { AdicionalTarifa, CategoriaTarifa, TarifaGralCliente, TarifaTipo } from 
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
-import { TarigaGralEdicionComponent } from 'src/app/shared/tariga-gral-edicion/tariga-gral-edicion.component';
+import { HistorialTarifasGralComponent } from 'src/app/shared/modales/historial-tarifas-gral/historial-tarifas-gral.component';
+import { TarigaGralEdicionComponent } from 'src/app/shared/modales/tariga-gral-edicion/tariga-gral-edicion.component';
 import { Subject, takeUntil } from 'rxjs';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { ConIdType } from 'src/app/interfaces/conId';

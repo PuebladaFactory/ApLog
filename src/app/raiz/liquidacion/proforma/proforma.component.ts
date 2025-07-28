@@ -8,7 +8,7 @@ import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { ModalFacturaComponent } from 'src/app/shared/modal-factura/modal-factura.component';
+import { InformeLiqDetalleComponent } from 'src/app/shared/modales/informe-liq-detalle/informe-liq-detalle.component';
 import Swal from 'sweetalert2';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Chofer } from 'src/app/interfaces/chofer';
@@ -457,7 +457,7 @@ export class ProformaComponent implements OnInit {
     //console.log("lega??");
     
       {
-        const modalRef = this.modalService.open(ModalFacturaComponent, {
+        const modalRef = this.modalService.open(InformeLiqDetalleComponent, {
           windowClass: 'myCustomModalClass',
           centered: true,
           scrollable: true, 
