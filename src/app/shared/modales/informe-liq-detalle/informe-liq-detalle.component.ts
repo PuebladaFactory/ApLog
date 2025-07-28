@@ -1,11 +1,11 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, TemplateRef } from '@angular/core';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, take, takeUntil } from 'rxjs';
 import { EditarTarifaOpComponent } from 'src/app/raiz/liquidacion/modales/editar-tarifa-op/editar-tarifa-op.component';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { ConIdType } from 'src/app/interfaces/conId';
-import { Valores } from 'src/app/interfaces/informe-liq';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { Descuento, InformeLiq, Valores } from 'src/app/interfaces/informe-liq';
 
 import { InformeOp } from 'src/app/interfaces/informe-op';
 
@@ -15,23 +15,26 @@ import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { EditarInfOpComponent } from '../editar-inf-op/editar-inf-op.component';
+import { DescuentosComponent } from '../descuentos/descuentos.component';
+import Swal from 'sweetalert2';
 
 
 @Component({
     selector: 'app-modal-factura',
-    templateUrl: './modal-factura.component.html',
-    styleUrls: ['./modal-factura.component.scss'],
+    templateUrl: './informe-liq-detalle.component.html',
+    styleUrls: ['./informe-liq-detalle.component.scss'],
     standalone: false
 })
-export class ModalFacturaComponent implements OnInit {
+export class InformeLiqDetalleComponent implements OnInit {
   
   @Input() fromParent : any;
   titulo:string = "" ;
-  facOp!: InformeOp[];
+  informesOp!: InformeOp[];
   $choferes!: Chofer[];
   $clientes!: Cliente[];
   $proveedores!: Proveedor[];
-  factura: any;
+  informeLiq!: ConIdType<InformeLiq>;
   searchText: string = "";
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   tarifaGral!: ConIdType<TarifaGralCliente> | undefined;
@@ -39,6 +42,8 @@ export class ModalFacturaComponent implements OnInit {
   tarifaPers!: ConIdType<TarifaPersonalizadaCliente> | undefined;
   tarifaAplicada!: any;
   operacion!: Operacion;
+  descuentosEditar!: Descuento[];
+  obsInterna: string = "";
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private dbFirebase: DbFirestoreService, private modalService: NgbModal){}
   
@@ -64,22 +69,10 @@ export class ModalFacturaComponent implements OnInit {
 
 
     console.log("fromParent", this.fromParent);
-    this.facOp = this.fromParent.facOp
-    this.factura = this.fromParent.item;
-    this.titulo = this.fromParent.item.entidad.razonSocial
-    /* switch(this.fromParent.tipo){
-      case "cliente":
-        this.titulo = this.fromParent.item.entidad.razonSocial
-        break;
-      case "chofer":
-        this.titulo = this.fromParent.item.apellido + " " + this.fromParent.item.nombre
-        break;
-      case "proveedor":
-        this.titulo = this.fromParent.item.razonSocial
-        break;
-      default:
-        break;
-    } */
+    this.informesOp = this.fromParent.facOp;
+    this.informeLiq = this.fromParent.item;
+    this.titulo = this.fromParent.item.entidad.razonSocial;
+    
   }
 
   getChofer(idChofer: number){
@@ -113,6 +106,13 @@ export class ModalFacturaComponent implements OnInit {
     this.buscarTarifa(facOp)
   }
 
+  editarDesc(){
+    //////console.log("facOp: ", facOp);
+    this.descuentosEditar = this.informeLiq.descuentos;
+    this.openModalDescuentos()
+    
+  }
+
   buscarTarifa(facturaOp:ConIdType<InformeOp> ) {
     ////console.log("0)",facturaOp);
     let coleccionHistorialTarfGral: string = this.fromParent.tipo === 'cliente' ? 'historialTarifasGralCliente' : this.fromParent.tipo === 'chofer' ? 'historialTarifasGralChofer' : 'historialTarifasGralProveedor'
@@ -135,21 +135,21 @@ export class ModalFacturaComponent implements OnInit {
       this.buscarOperacion(facturaOp);     
       
     }
-  if(facturaOp.tarifaTipo.especial){
-    this.tarifaEsp = this.getTarifaEsp(facturaOp.idTarifa);
-    ////console.log("1)this.tarifaEsp", this.tarifaEsp);      
-    if(this.tarifaEsp === undefined){
-      this.dbFirebase
-      .obtenerTarifaIdTarifa(coleccionHistorialTarfEsp,facturaOp.idTarifa, "idTarifa")
-      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe(data => {      
-          this.tarifaAplicada = data;
-         ////console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
-      });
-    } else {
-      this.tarifaAplicada = this.tarifaEsp;        
-    }
-    this.buscarOperacion(facturaOp);
+    if(facturaOp.tarifaTipo.especial){
+      this.tarifaEsp = this.getTarifaEsp(facturaOp.idTarifa);
+      ////console.log("1)this.tarifaEsp", this.tarifaEsp);      
+      if(this.tarifaEsp === undefined){
+        this.dbFirebase
+        .obtenerTarifaIdTarifa(coleccionHistorialTarfEsp,facturaOp.idTarifa, "idTarifa")
+        .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+        .subscribe(data => {      
+            this.tarifaAplicada = data;
+          ////console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);           
+        });
+      } else {
+        this.tarifaAplicada = this.tarifaEsp;        
+      }
+      this.buscarOperacion(facturaOp);
     
     }
     if(facturaOp.tarifaTipo.eventual){
@@ -176,50 +176,159 @@ export class ModalFacturaComponent implements OnInit {
       
     }        
     
-    }
+  }
   
-    openModalTarifa(facturaOp: ConIdType<InformeOp>): void {   
-     ////console.log("2)this.tarifaAplicada", this.tarifaAplicada);
-     ////console.log("3)this.operacion", this.operacion);
-     
+  async openModalEditarInfOp(informeOp: ConIdType<InformeOp>) {   
+    ////console.log("2)this.tarifaAplicada", this.tarifaAplicada);
+    ////console.log("3)this.operacion", this.operacion);
+    {
+      const modalRef = this.modalService.open(EditarInfOpComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg', 
+        //backdrop:"static" 
+      });
       
-      {
-        const modalRef = this.modalService.open(EditarTarifaOpComponent, {
-          windowClass: 'myCustomModalClass',
-          centered: true,
-          size: 'lg', 
-          //backdrop:"static" 
-        });
-        
-      let origen = this.fromParent.tipo;
-  
-       let info = {
-          factura: facturaOp,
-          tarifaAplicada: this.tarifaAplicada,   
-          op: this.operacion,     
-          origen: origen,
-          componente:'proforma',
-        }; 
-        ////////console.log(info); 
-        
-        modalRef.componentInstance.fromParent = info;
-        modalRef.result.then(
-          (result) => {
-            ////console.log("result:", result);
-            if(result.resultado && this.fromParent.modo === 'proforma'){
+    let origen = this.fromParent.tipo;
+
+      let info = {
+        infOp: informeOp,
+        tarifaAplicada: this.tarifaAplicada,   
+        op: this.operacion,     
+        origen: origen,
+        componente:this.fromParent.modo,
+      }; 
+      ////////console.log(info); 
+      
+      modalRef.componentInstance.fromParent = info;
+      const respuesta = await modalRef.result
+      if(respuesta){
+        //console.log("result:", result);
+          informeOp = respuesta.infOp;
+          //console.log("informeOp:", informeOp);
+          this.recalcularFactura(informeOp);
+          
+          
+/*             if(result){
+            if(this.fromParent.modo === 'proforma'){
               
               facturaOp = result.factura;
               //console.log("result:", facturaOp);
               this.recalcularFactura(facturaOp);
             }
-            /* this.procesarDatosParaTabla();
-            this.cerrarTabla(i) */
+            if(this.fromParent.modo === 'facturacion'){
+              
+              facturaOp = result.factura;
+              //console.log("result:", facturaOp);
+              this.recalcularFactura(facturaOp);
+            }
             
-          },
-          (reason) => {}
-        );
+          } */
       }
+/*       modalRef.result.then(
+        (result) => {
+          //console.log("result:", result);
+          informeOp = result.infOp;
+          //console.log("informeOp:", informeOp);
+          this.recalcularFactura(informeOp);
+          
+          
+            if(result){
+            if(this.fromParent.modo === 'proforma'){
+              
+              facturaOp = result.factura;
+              //console.log("result:", facturaOp);
+              this.recalcularFactura(facturaOp);
+            }
+            if(this.fromParent.modo === 'facturacion'){
+              
+              facturaOp = result.factura;
+              //console.log("result:", facturaOp);
+              this.recalcularFactura(facturaOp);
+            }
+            
+          }
+          
+          
+        },
+        (reason) => {}
+      ); */
     }
+  }
+
+  async openModalDescuentos(){
+    {
+      const modalRef = this.modalService.open(DescuentosComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'md', 
+        //backdrop:"static" 
+      });
+      
+
+      let info = {      
+        descuentos : this.descuentosEditar,
+      }; 
+      
+      
+      modalRef.componentInstance.fromParent = info;
+      const respuesta = await modalRef.result;
+      console.log("respuesta modal: ", respuesta);
+      if (respuesta && respuesta.cambios){
+        console.log("total descuentos: ", respuesta.total);
+        this.informeLiq.valores.descuentoTotal = respuesta.total;
+        this.informeLiq.descuentos = respuesta.descuentos;
+        this.actualizarInformeLiq()
+      }
+      
+/*       modalRef.result.then(
+        (result) => {
+          //console.log("descuentos: ", result);
+          if(result.total > 0){            
+           this.descuentosAplicados = result.descuentos;
+            this.tieneDescuentos = true;
+            this.totalDescuento = result.total;            
+          }
+
+        },
+        (reason) => {}
+      ); */
+    }
+
+  }
+
+  abrirModalObs(modalRef: TemplateRef<any>) {
+    let obs:string = this.informeLiq.observaciones || "";
+    this.obsInterna = structuredClone(obs)
+    let componente: string = this.fromParent.modo === "proforma" ? "proforma" : "resumenLiq"
+    const modal = this.modalService.open(modalRef, { centered: true });
+
+
+    // Limpiar referencias al cerrar o cancelar el modal
+    modal.result.finally(() => {
+      this.storageService.updateItem(componente, this.informeLiq, this.informeLiq.idInfLiq, "EDICION", `Observaciones del informe ${this.informeLiq.idInfLiq}, editada`, this.informeLiq.id );
+    });
+  }
+
+  async guardarCambiosObs(modal: any) {    
+    const respuesta = await Swal.fire({
+        title: "¿Desea guardar los cambios?",
+        //text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Guardar",
+        cancelButtonText: "Cancelar"
+      })
+
+    if (respuesta.isConfirmed) {
+      this.informeLiq.observaciones = this.obsInterna;
+      modal.close(); // El finally del modal se encarga de limpiar
+    } else if (respuesta.dismiss === Swal.DismissReason.cancel) {        
+    }
+    
+  }
 
     getTarifaGral(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
       let tarifasGral: ConIdType<TarifaGralCliente>[];
@@ -258,30 +367,30 @@ export class ModalFacturaComponent implements OnInit {
       .subscribe(data => {      
           this.operacion = data;
           //////////console.log("OPERACION: ", this.operacion);
-          this.openModalTarifa(facturaOp)
+          this.openModalEditarInfOp(facturaOp)
       });    
     }
 
-    recalcularFactura(facturaOp: ConIdType<InformeOp>){
-      this.facOp /// estas son las facturaOp de la factura
-      this.factura // esta es la proforma
-      facturaOp // esta es la factura editada
-      //console.log("0)this.facOp: ", this.facOp);
-      this.facOp = this.facOp.filter(factura=>factura.idInfOp !== facturaOp.idInfOp);
-      //console.log("1)this.facOp con elemnto eliminado: ", this.facOp);
-      this.facOp.push(facturaOp);
-      //console.log("2)this.facOp con elemento agregado: ", this.facOp);
-      this.actualizarProforma()
+    recalcularFactura(infOp: ConIdType<InformeOp>){
+      this.informesOp /// estas son las facturaOp de la factura
+      this.informeLiq // esta es la proforma
+      infOp // esta es la factura editada
+      //console.log("0)this.informesOp: ", this.informesOp);
+      this.informesOp = this.informesOp.filter(factura=>factura.idInfOp !== infOp.idInfOp);
+      //console.log("1)this.informesOp con elemnto eliminado: ", this.informesOp);
+      this.informesOp.push(infOp);
+      //console.log("2)this.informesOp con elemento agregado: ", this.informesOp);
+      this.actualizarInformeLiq()
 
     
       
     }
 
-    actualizarProforma(){
-      //console.log("3)factura antes: ",this.factura );
+    actualizarInformeLiq(){
+      //console.log("3)factura antes: ",this.informeLiq );
       
-      let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0, descuentoTotal: this.factura.valores.descuentoTotal, totalContraParte:this.factura.valores.totalContraParte};
-      this.facOp.forEach((f:InformeOp)=>{
+      let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0, descuentoTotal: this.informeLiq.valores.descuentoTotal, totalContraParte:this.informeLiq.valores.totalContraParte};
+      this.informesOp.forEach((f:InformeOp)=>{
         valores.totalTarifaBase += f.valores.tarifaBase;
         valores.totalAcompaniante += f.valores.acompaniante;
         valores.totalkmMonto += f.valores.kmMonto;          
@@ -289,18 +398,20 @@ export class ModalFacturaComponent implements OnInit {
       });
       
       valores.total -= valores.descuentoTotal;
-      this.factura.valores = valores;
-      //console.log("4)factura desp: ",this.factura );
+      this.informeLiq.valores = valores;
+      console.log("total de la liquidacion: ", this.informeLiq.valores.total);
+      
+      //console.log("4)factura desp: ",this.informeLiq );
       /* let idFactura: number; 
       switch(this.fromParent.tipo){
         case 'cliente':
-          idFactura = this.factura.idFacturaCliente;
+          idFactura = this.informeLiq.idFacturaCliente;
           break;
         case 'chofer':
-          idFactura = this.factura.idFacturaChofer;
+          idFactura = this.informeLiq.idFacturaChofer;
           break;
         case 'proveedor':
-          idFactura = this.factura.idFacturaProveedor;
+          idFactura = this.informeLiq.idFacturaProveedor;
           break;
         default:
           idFactura = 0;
@@ -308,10 +419,11 @@ export class ModalFacturaComponent implements OnInit {
       }
       //console.log("5)idFactura", idFactura); */
       
-      let msj: string = this.fromParent.tipo === 'cliente' ? `Edición de proforma de Cliente ${this.factura.entidad.razonSocial}` : this.fromParent.tipo === 'chofer' ? `Edición de proforma del Chofer ${this.factura.entidad.razonSocial} ` : this.fromParent.tipo === 'proveedor' ? `Edición de proforma del Proveedor ${this.factura.entidad.razonSocial}` : '';
-      let{id,type, ...proforma} = this.factura;
+      ///esto lo hace en el servicio
+      //let msj: string = this.fromParent.tipo === 'cliente' ? `Edición de proforma de Cliente ${this.informeLiq.entidad.razonSocial}` : this.fromParent.tipo === 'chofer' ? `Edición de proforma del Chofer ${this.informeLiq.entidad.razonSocial} ` : this.fromParent.tipo === 'proveedor' ? `Edición de proforma del Proveedor ${this.informeLiq.entidad.razonSocial}` : '';
+      //let{id,type, ...proforma} = this.informeLiq;
 
-      this.storageService.updateItem("proforma", proforma, proforma.idInfLiq, "EDICION", msj, this.factura.id );
+      //this.storageService.updateItem("proforma", proforma, proforma.idInfLiq, "EDICION", msj, this.informeLiq.id );
       
     }
 

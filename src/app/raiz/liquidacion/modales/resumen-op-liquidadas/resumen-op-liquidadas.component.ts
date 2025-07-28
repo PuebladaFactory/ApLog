@@ -282,7 +282,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
               accion: accion,
             }
             console.log("respuesta", respuesta);
-            //this.activeModal.close(respuesta);
+            this.activeModal.close(respuesta);
           });        
         }
       });   

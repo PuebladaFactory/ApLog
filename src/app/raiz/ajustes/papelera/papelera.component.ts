@@ -4,7 +4,7 @@ import { distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { LogDoc } from 'src/app/interfaces/log-doc';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { ModalObjetoComponent } from 'src/app/shared/modal-objeto/modal-objeto.component';
+import { ObjetoPapeleraComponent } from 'src/app/shared/modales/objeto-papelera/objeto-papelera.component';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -62,7 +62,7 @@ export class PapeleraComponent implements OnInit {
 
     modalObjeto(p:LogDoc){
       {
-          const modalRef = this.modalService.open(ModalObjetoComponent, {
+          const modalRef = this.modalService.open(ObjetoPapeleraComponent, {
             windowClass: 'myCustomModalClass',
             centered: true,
             scrollable: true, 

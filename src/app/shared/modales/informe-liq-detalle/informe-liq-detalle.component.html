@@ -6,9 +6,22 @@
     <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
   </div>
   <div class="modal-body">
-    <div>
-      <h3>Detalle de Operaciones de {{titulo}} </h3>
+    <div class="d-flex">
+      <div class="flex-grow-1">
+        <h3>Detalle de Operaciones de {{titulo}} </h3>
+      </div>
+      @if((fromParent.modo === 'proforma' || fromParent.accion === 'edicion')){
+        <div class="d-flex">
+          <h4 class="me-3">Descuentos</h4>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" type="button" (click)="editarDesc()" style="color: rgb(0, 110, 255);">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+          </svg>
+        </div>
+      }
+      
     </div>
+
 
     <div class="">
       <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por parámetro">
@@ -24,13 +37,13 @@
             <th class="text-center">{{fromParent.tipo === 'cliente' ? 'A Pagar' : 'A Cobrar'}}</th>
             <th class="text-center">Porcentaje</th>
             <th class="text-end">{{fromParent.tipo === 'cliente' ? 'A Cobrar' : 'A Pagar'}}</th>
-            @if (fromParent.modo === 'proforma') {
+            @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
               <th class="text-end"></th>
             }
           </tr>
         </thead>
         <tbody>
-          @for (fac of facOp | filterBy: searchText; track fac) {
+          @for (fac of informesOp | filterBy: searchText; track fac) {
             <tr>
               <td>{{fac.fecha}}</td>
               <td>{{fac.idOperacion}}</td>
@@ -42,23 +55,33 @@
               <!-- <td class="text-end">{{fromParent.tipo === 'clientes' ? ((fac.valores.total - fac.contraParteMonto)*100/fac.valores.total | formatearValor) : (fac.contraParteMonto - fac.valores.total)*100/fac.contraParteMonto | formatearValor }} %</td> -->
               <td class="text-end">{{fromParent.tipo === 'cliente' ? (fac.contraParteMonto | calcularPorcentaje:fac.valores.total:true) : (fac.valores.total | calcularPorcentaje:fac.contraParteMonto:true) }}</td>
               <td class="text-end">{{fac.valores.total | formatearValor : "$"}}</td>
-              @if (fromParent.modo === 'proforma') {
+              @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
                 <td class="text-end"><app-btn-editar name="Editar" (click)="editarFacOp(fac)"></app-btn-editar> </td>
               }
             </tr>
           }
-          @if (factura.descuentos.length > 0) {
-            <tr class="table-group-divider" >
+          @if (informeLiq.descuentos.length > 0) {
+            <tr class="division" >
               @if (fromParent.tipo === 'proveedores') {
                 <td colspan="6">Sub Total</td>
               }
               @if (fromParent.tipo !== 'proveedores') {
                 <td colspan="5">Sub Total</td>
               }
-              <td class="text-end">{{factura.valores.totalTarifaBase + factura.valores.totalAcompaniante + factura.valores.totalkmMonto | formatearValor : "$"}}</td>
+              <td class="text-end">{{informeLiq.valores.totalTarifaBase + informeLiq.valores.totalAcompaniante + informeLiq.valores.totalkmMonto | formatearValor : "$"}}</td>
             </tr>
-            <tr><th>Descuentos</th></tr>
-            @for (desc of factura.descuentos; track desc) {
+            <tr class="division">
+              @if (fromParent.tipo === 'proveedor') {
+                <th colspan="7"><span class="ms-3">Descuentos</span></th>
+              }
+              @if (fromParent.tipo !== 'proveedor') {
+                <th colspan="6"><span>Descuentos</span></th>
+              }
+              @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
+                <th class="text-end"><app-btn-editar name="Editar" (click)="editarDesc()"></app-btn-editar></th>
+              }              
+            </tr>
+            @for (desc of informeLiq.descuentos; track desc) {
               <tr>
                 @if (fromParent.tipo === 'proveedor') {
                   <td colspan="6"><span class="ms-3">{{desc.concepto}}</span></td>
@@ -66,7 +89,7 @@
                 @if (fromParent.tipo !== 'proveedor') {
                   <td colspan="5"><span class="ms-3">{{desc.concepto}}</span></td>
                 }
-                <td class="text-end"> - {{desc.valor | formatearValor : "$"}}</td>
+                <td class="text-end"> - {{desc.valor | formatearValor : "$"}}</td>               
               </tr>
             }
           }
@@ -82,10 +105,43 @@
             @if (fromParent.tipo !== 'proveedor') {
               <th colspan="5"><span class="ms-3">Total</span></th>
             }
-            <th class="text-center">{{factura.valores.total | formatearValor : "$"}}</th>
+            <th class="text-end">{{informeLiq.valores.total | formatearValor : "$"}}</th>
           </tr>
         </tfoot>
       </table>
     </div>
   </div>
+  <div class="modal-footer d-flex">
+    <div class="align-self-end flex-grow-1">
+        <label class="text-start">Observacion Interna</label>
+        <textarea name="" id="" [value]="informeLiq.observaciones" disabled  rows="1" class="w-100"></textarea>
+    </div>
+    @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
+      <td class="text-end align-self-end"><app-btn-editar name="Editar" (click)="abrirModalObs(modalEditarObs)"></app-btn-editar> </td>
+    }
+  </div>
 </div>
+
+
+<!-- MODAL -->
+<ng-template #modalEditarObs let-modal>
+    <div >
+        <div class="modal-header">
+            <h2>Observaciones</h2>
+            <button type="button" class="btn-close" aria-label="Cerrar" (click)="modal.dismiss()"></button>
+        </div>
+        <div class="modal-body">
+            <div class="align-self-end">
+                <!-- <label class="text-start">Observacion Interna</label> -->
+                <textarea name="" id="" [(ngModel)]="obsInterna" rows="4" class="w-100"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+           <button class="btn btn-primary" (click)="guardarCambiosObs(modal)">Guardar</button>
+        </div>    
+    </div>
+  
+</ng-template>
+
+
+

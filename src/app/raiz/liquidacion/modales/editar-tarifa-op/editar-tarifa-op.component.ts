@@ -23,7 +23,7 @@ import Swal from 'sweetalert2';
 })
 export class EditarTarifaOpComponent implements OnInit {
 
-@Input() fromParent: any;
+  @Input() fromParent: any;
     facDetallada!: ConId<InformeOp>;
     ultimaTarifa!: ConIdType<TarifaGralCliente>;
     edicion:boolean = false;
@@ -157,7 +157,7 @@ export class EditarTarifaOpComponent implements OnInit {
     //console.log("onSubmit");    
     let cambios:boolean = false;
       Swal.fire({
-        title: "¿Desea guardar los cambios en la factura?",
+        title: "¿Desea guardar los cambios?",
         //text: "You won't be able to revert this!",
         icon: "warning",
         showCancelButton: true,
@@ -177,7 +177,7 @@ export class EditarTarifaOpComponent implements OnInit {
           }).then((result)=>{
             if (result.isConfirmed) {
               //console.log("result.isConfirmed");    
-              if(this.fromParent.componente === 'proforma'){
+              if(this.fromParent.componente === 'proforma' || this.fromParent.componente === 'facturacion'){
                 this.facOriginal = this.facDetallada;
                 let respuesta={
                   factura: this.facOriginal,

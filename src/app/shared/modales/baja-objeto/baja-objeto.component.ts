@@ -9,11 +9,11 @@ import Swal from 'sweetalert2';
 
 @Component({
     selector: 'app-modal-baja',
-    templateUrl: './modal-baja.component.html',
-    styleUrls: ['./modal-baja.component.scss'],
+    templateUrl: './baja-objeto.component.html',
+    styleUrls: ['./baja-objeto.component.scss'],
     standalone: false
 })
-export class ModalBajaComponent implements OnInit {
+export class BajaObjetoComponent implements OnInit {
   
   @Input() fromParent:any
   titulo: string = "";

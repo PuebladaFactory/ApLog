@@ -17,7 +17,7 @@ import { ResumenOpLiquidadasComponent } from '../modales/resumen-op-liquidadas/r
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
-import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 
 @Component({
   selector: 'app-liquidaciones-op',
@@ -432,7 +432,7 @@ export class LiquidacionesOpComponent implements OnInit {
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          //console.log(result);
+          console.log(result);
           
           if(result.modo === "cerrar" || result.modo === "proforma"){
             let titulo = result.titulo
@@ -701,7 +701,7 @@ export class LiquidacionesOpComponent implements OnInit {
   
   openModalBaja(informeOp:InformeOp, indice:number){
     {
-      const modalRef = this.modalService.open(ModalBajaComponent, {
+      const modalRef = this.modalService.open(BajaObjetoComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         scrollable: true, 

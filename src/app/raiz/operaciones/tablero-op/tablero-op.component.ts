@@ -12,7 +12,7 @@ import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-rend
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalResumenOpComponent } from '../modal-resumen-op/modal-resumen-op.component';
 import Swal from 'sweetalert2';
-import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
@@ -593,7 +593,7 @@ private actualizarDropdowns(): void {
 
     async openModalBaja(idOp:number){
       {
-        const modalRef = this.modalService.open(ModalBajaComponent, {
+        const modalRef = this.modalService.open(BajaObjetoComponent, {
           windowClass: 'myCustomModalClass',
           centered: true,
           scrollable: true, 

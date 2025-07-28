@@ -8,7 +8,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-renderers/acciones-cell-renderer/acciones-cell-renderer.component';
 import Swal from 'sweetalert2';
 import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
-import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 
 @Component({
   selector: 'app-listado-nuevo',
@@ -220,7 +220,7 @@ toggleColumnVisibility(colId: string): void {
   }
 
   openModalBaja(idCliente: number) {
-    const modalRef = this.modalService.open(ModalBajaComponent, {
+    const modalRef = this.modalService.open(BajaObjetoComponent, {
       windowClass: 'myCustomModalClass',
       centered: true,
       scrollable: true,

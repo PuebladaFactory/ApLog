@@ -7,7 +7,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalTarifaPersonalizadaComponent } from '../modal-tarifa-personalizada/modal-tarifa-personalizada.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { HistorialTarifasGralComponent } from 'src/app/shared/historial-tarifas-gral/historial-tarifas-gral.component';
+import { HistorialTarifasGralComponent } from 'src/app/shared/modales/historial-tarifas-gral/historial-tarifas-gral.component';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { Subject, takeUntil } from 'rxjs';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
