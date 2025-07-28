@@ -122,7 +122,7 @@ export class LiquidacionesOpComponent implements OnInit {
           .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
           .subscribe(data => {
             this.informesOp = data;
-            //console.log("1)", this.informesOp );
+            console.log("1)", this.informesOp );
             if(this.informesOp){
               //////////console.log("?????????????");                   
               this.procesarDatosParaTabla();
@@ -619,8 +619,10 @@ export class LiquidacionesOpComponent implements OnInit {
   }
 
   async buscarTarifa(i: number) {
+    console.log("informeDetallado", this.informeDetallado);
+    
     this.tarifaAplicada = await this.buscarTarifaServ.buscarTarifa(this.informeDetallado, this.llamadaOrigen);
-    //console.log("this.tarifaAplicada", this.tarifaAplicada);
+    console.log("this.tarifaAplicada", this.tarifaAplicada);
     
     this.buscarOperacion(i);
   }
@@ -799,7 +801,7 @@ export class LiquidacionesOpComponent implements OnInit {
         }
     });    
     //////console.log("this.$facturasOpChofer", this.$facturasOpCliente);
-    //////console.log("duplicadas", this.$facturasOpDuplicadas);
+    console.log("duplicadas", this.$facturasOpDuplicadas);
     //this.verificarDuplicadosFacturadas()
   }
   

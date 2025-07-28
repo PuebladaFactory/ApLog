@@ -43,7 +43,7 @@ export class LiqGralComponent implements OnInit {
     { id: 'tab2', name: 'Choferes', route: 'liquidacion/chofer' },    
     { id: 'tab3', name: 'Proveedores', route: 'liquidacion/proveedor' },    
     { id: 'tab4', name: 'Proformas', route: 'liquidacion/proformas' },    
-    /* { id: 'tab5', name: 'Migrar Datos', route: 'liquidacion/migrar' }, */
+    { id: 'tab5', name: 'Migrar Datos', route: 'liquidacion/migrar' },
   ];
   ocultarCalendario: boolean = false;
 

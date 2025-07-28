@@ -8,6 +8,9 @@ import { ConId } from 'src/app/interfaces/conId';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { EntidadLiq, InformeLiq } from 'src/app/interfaces/informe-liq';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { Cliente } from 'src/app/interfaces/cliente';
+import { Chofer } from 'src/app/interfaces/chofer';
 
 
 export interface FacturaOp {
@@ -86,18 +89,28 @@ export class MigrarDatosComponent {
   informesOpToogle:boolean = true;
   informesLiqToogle:boolean = false;
   opToogle:boolean = false;
+  liqSinTarifa: boolean = false;
   docuNuevaColeccion: any[] = [];
   operaciones: Operacion[] = [];
   idsOp: number[] = [];
   infOpLiq: InformeOp[] = [];
   opErrores: Operacion[] = [];
-  infOpErrores: InformeOp[] = []
-
+  infOpErrores: InformeOp[] = [];
+  clientes: ConId<Cliente> [] = [];
+  choferes: ConId<Chofer> [] = [];
+  clienteSeleccionado!: ConId<Cliente> | undefined
+  infSinTarifa: InformeOp[] = [];
   
   constructor(
     private firestore: Firestore,
     private dbFirebase: DbFirestoreService,
+    private storageService: StorageService,
   ) {}
+
+  ngOnInit(){
+    this.clientes = this.storageService.loadInfo('clientes');
+    this.choferes = this.storageService.loadInfo('choferes');
+  }
 
   informesToogle(valor:string){
     switch(valor){
@@ -105,16 +118,25 @@ export class MigrarDatosComponent {
         this.informesOpToogle = true;
         this.informesLiqToogle = false;
         this.opToogle = false;
+        this.liqSinTarifa = false;
         break;
       case "b":
         this.informesOpToogle = false;
         this.informesLiqToogle = true;
         this.opToogle = false;
+        this.liqSinTarifa = false;
         break;
       case "c":
         this.informesOpToogle = false;
         this.informesLiqToogle = false;
         this.opToogle = true;
+        this.liqSinTarifa = false;
+        break;
+      case "d":
+        this.informesOpToogle = false;
+        this.informesLiqToogle = false;
+        this.opToogle = false;
+        this.liqSinTarifa = true;
         break;
       default:
         this.mensajesError("error en el botón de swicth")
@@ -507,6 +529,11 @@ async consultarNuevaColeccion(){
       Swal.fire('Error', 'Completá todos los campos.', 'error');
       return;      
     }
+    ///control para tarifa tipo
+    if(!this.clienteSeleccionado){
+      Swal.fire('Error', 'Debe seleccionar un cliente.', 'error');
+      return; 
+    }
     this.operaciones = [];
     this.opErrores = [];
     console.log("fechaDesde?: ", this.fechaDesde, " hasta?: ", this.fechaHasta, " coleccion: ",this.coleccionOrigen );
@@ -515,7 +542,8 @@ async consultarNuevaColeccion(){
     const fechaFin = new Date(this.fechaHasta);    
 
     const ref = collection(this.firestore, `/Vantruck/datos/${this.coleccionOrigen}`);
-    const q = query(ref, where('fecha', '>=', fechaIni.toISOString()), where('fecha', '<=', fechaFin.toISOString()));
+    //const q = query(ref, where('fecha', '>=', fechaIni.toISOString()), where('fecha', '<=', fechaFin.toISOString()));
+    const q = query(ref, where('fecha', '>=', fechaIni.toISOString()), where('fecha', '<=', fechaFin.toISOString()), where('cliente.razonSocial', '==',this.clienteSeleccionado.idCliente));
 
     const snapshot = await getDocs(q);
     this.operaciones = snapshot.docs.map(doc => doc.data() as Operacion);
@@ -523,7 +551,7 @@ async consultarNuevaColeccion(){
     this.operaciones.forEach((op: Operacion) => {                
       this.idsOp.push(op.idOperacion)
     });
-    this.consultarInfOp()
+    this.obtenerOperacionesSinTarifaAsignada()
   }
 
   async consultarInfOp(){
@@ -606,6 +634,78 @@ verificarConsistenciaValores(
 
   return { operacionesInconsistentes, informesInconsistentes };
 }
+
+//////////////////// tarifa tipo op ////////////////////////
+changeCliente(e:any){
+  let clienteForm = this.clientes.filter(function (cliente: Cliente) { 
+        return cliente.idCliente === Number(e.target.value)
+    });
+    ////////////////////console.log()(clienteForm);
+    
+    this.clienteSeleccionado = clienteForm[0];              
+}
+
+async obtenerOperacionesSinTarifaAsignada()  {
+/*     const operacionesRef = collection(this.firestore, 'Vantruck/datos/operaciones');
+    const snapshot = await getDocs(operacionesRef);
+
+    const operaciones: Operacion[] = [];
+
+    snapshot.forEach(doc => {
+      const data = doc.data() as Operacion;
+
+      if (
+        data.tarifaTipo &&
+        !data.tarifaTipo.general &&
+        !data.tarifaTipo.especial &&
+        !data.tarifaTipo.eventual &&
+        !data.tarifaTipo.personalizada
+      ) {
+        operaciones.push(data);
+      }
+    });
+
+    return operaciones; */
+  this.infSinTarifa = []
+  this.datosOrigen.forEach(inf=> {
+    if (
+        inf.tarifaTipo &&
+        !inf.tarifaTipo.general &&
+        !inf.tarifaTipo.especial &&
+        !inf.tarifaTipo.eventual &&
+        !inf.tarifaTipo.personalizada
+      ) {
+        this.infSinTarifa.push(inf);
+      }
+  })
+  console.log("this.infSinTarifa: ", this.infSinTarifa);
+  
+
+  }
+
+  getCliente(id:number):string{
+    let cliente = this.clientes.find(c=> c.idCliente === id)
+    if(cliente){
+      return cliente.razonSocial;
+    } else {
+      return "sin datos"
+    }
+  }
+
+  getChofer(id: number):string{
+    let chofer = this.choferes.find(c=> c.idChofer === id)
+    if(chofer){
+      return chofer.apellido + " " + chofer.nombre;
+    } else {
+      return "sin datos"
+    }
+  }
+
+  consolaItem(item:any){
+    console.log("item: ", item);
+    
+  }
+
 
 
 }

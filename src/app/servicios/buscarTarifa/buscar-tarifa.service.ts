@@ -97,6 +97,8 @@ export class BuscarTarifaService {
 
     if (informeOp.tarifaTipo.personalizada) {
       const tarifaPers = this.getTarifaPers(informeOp.idTarifa);
+      console.log("tarifaPers: ", tarifaPers);
+      
       return tarifaPers ?? await this.buscarTarifaDb(coleccionHistorialTarfPers, informeOp);
     }
 
@@ -121,13 +123,14 @@ export class BuscarTarifaService {
     tarifasPersonalizada = this.storageService.loadInfo('tarifasPersCliente');
     //console.log("getTarifaPers) tarifasPersonalizada", tarifasPersonalizada);        
     tarifa = tarifasPersonalizada.find((tarf:ConIdType<TarifaPersonalizadaCliente>)=> {return tarf.idTarifa === idTarifa});
-    //console.log("getTarifaPers) tarifa", tarifa);    
+    console.log("getTarifaPers tarifa", tarifa);    
     return tarifa;                
   }
 
   async buscarTarifaDb(coleccion: string, informe: ConId<InformeOp>): Promise<any> {
     const obs$ = this.dbFirebase.obtenerTarifaIdTarifa(coleccion, informe.idTarifa, "idTarifa");
     const tarifa = await firstValueFrom(obs$);
+    console.log("tarifa de la base de datos", tarifa);    
     return tarifa;
   }  
 
