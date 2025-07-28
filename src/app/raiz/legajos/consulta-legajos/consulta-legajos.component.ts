@@ -85,7 +85,7 @@ export class ConsultaLegajosComponent implements OnInit {
     let legajoSel : ConIdType<Legajo>[];
     legajoSel = this.$legajos.filter((l)=> l.idChofer === this.choferSeleccionado.idChofer);    
     this.legajoSeleccionado = legajoSel[0];    
-    //console.log("legajo seleccionado: ",this.legajoSeleccionado);  
+    console.log("legajo seleccionado: ",this.legajoSeleccionado);  
   }
 
   getFileIconSVG(fileName: string): SafeHtml {
