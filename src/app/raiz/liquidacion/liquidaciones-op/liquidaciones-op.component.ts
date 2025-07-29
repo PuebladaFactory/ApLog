@@ -18,6 +18,7 @@ import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
+import { EditarInfOpComponent } from 'src/app/shared/modales/editar-inf-op/editar-inf-op.component';
 
 @Component({
   selector: 'app-liquidaciones-op',
@@ -638,7 +639,7 @@ export class LiquidacionesOpComponent implements OnInit {
     
     this.indiceSeleccionado
     {
-      const modalRef = this.modalService.open(EditarTarifaOpComponent, {
+      const modalRef = this.modalService.open(EditarInfOpComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         size: 'lg', 
