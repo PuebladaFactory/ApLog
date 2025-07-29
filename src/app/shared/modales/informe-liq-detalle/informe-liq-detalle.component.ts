@@ -44,6 +44,7 @@ export class InformeLiqDetalleComponent implements OnInit {
   operacion!: Operacion;
   descuentosEditar!: Descuento[];
   obsInterna: string = "";
+  isLoading: boolean = false;
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private dbFirebase: DbFirestoreService, private modalService: NgbModal){}
   
@@ -71,7 +72,7 @@ export class InformeLiqDetalleComponent implements OnInit {
     console.log("fromParent", this.fromParent);
     this.informesOp = this.fromParent.facOp;
     this.informeLiq = this.fromParent.item;
-    this.titulo = this.fromParent.item.entidad.razonSocial;
+    this.titulo = this.fromParent.item.entidad.razonSocial;    
     
   }
 
@@ -203,10 +204,28 @@ export class InformeLiqDetalleComponent implements OnInit {
       modalRef.componentInstance.fromParent = info;
       const respuesta = await modalRef.result
       if(respuesta){
-        //console.log("result:", result);
+        this.isLoading = true;
+        console.log("respuesta:", respuesta);
           informeOp = respuesta.infOp;
+          this.operacion = respuesta.op
           //console.log("informeOp:", informeOp);
           this.recalcularFactura(informeOp);
+          let coleccionInfOp = this.getColeccionInfOp();
+          let coleccionInfLiq = this.fromParent.modo === "facturacion" ? 'resumenLiq' : this.fromParent.modo === "proforma" ? 'proforma' : "";
+          if(coleccionInfOp === "") return this.mensajesError("error en la colección del informe de op", "error");
+          if(coleccionInfLiq === "") return this.mensajesError("error en la colección del informe de Liquidación", "error");
+          //console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
+          
+          const resultado = await this.dbFirebase.actualizarOperacionInformeOpYFactura(this.operacion, informeOp, coleccionInfOp, this.fromParent.modo, this.informeLiq, coleccionInfLiq)
+          console.log("resultado de la edicion de todo: ", resultado);
+          if(resultado.exito){
+            this.isLoading = false;
+            await this.mensajesError("El informe se ha editado correctamente", "success");
+            this.activeModal.close();
+          } else {
+            this.isLoading = false;
+            await this.mensajesError(`error: ${resultado.mensaje}`, "error")
+          }
           
           
 /*             if(result){
@@ -426,6 +445,35 @@ export class InformeLiqDetalleComponent implements OnInit {
       //this.storageService.updateItem("proforma", proforma, proforma.idInfLiq, "EDICION", msj, this.informeLiq.id );
       
     }
+
+    ///obtener la colección del informe de op
+    ///si viene de facturación, son 3 opciones: infOpLiqClientes, infOpLiqChoferes, infOpLiqProveedores. y si viene de proforma: proforma. de liquidación no pasa por este método
+  getColeccionInfOp(): string{
+    
+    let coleccion: string = ""
+    switch (this.fromParent.modo){
+      case 'facturacion':
+        coleccion = this.informeLiq.tipo === 'cliente' ? 'infOpLiqClientes' : this.informeLiq.tipo === 'chofer' ? 'infOpLiqChoferes' : this.informeLiq.tipo === 'proveedor' ? 'infOpLiqProveedores' : ""
+        break;
+      case 'proforma':
+        coleccion = 'proforma';
+        break;
+      default:
+        coleccion = '';
+        break;
+    } 
+    return coleccion
+
+  }
+
+  async mensajesError(msj:string, resultado:string){
+    Swal.fire({
+      icon: resultado === 'error' ? "error" : "success",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
+  }
 
 
 

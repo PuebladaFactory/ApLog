@@ -1538,20 +1538,20 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
       const { opDocRef, operacionDocData } = await this.obtenerOperacionPorIdOperacion(operacionActualizada.idOperacion);
       if (!opDocRef) {
         return { exito: false, mensaje: `No existe Operacion con idOperacion ${operacionActualizada.idOperacion}.` };
-      }
-
+      }      
+      
       // 1.2) InformeOp original
       const informeOriginalRef = doc(this.firestore, `/Vantruck/datos/${coleccionInformeOriginal}/${informeOriginalActualizado.id}`);
       const informeOriginalSnap = await getDoc(informeOriginalRef);
       if (!informeOriginalSnap.exists()) {
         return { exito: false, mensaje: `No existe el InformeOp original con id ${informeOriginalActualizado.id} en ${coleccionInformeOriginal}.` };
-      }
+      }      
 
       // 1.3) Contra-parte
       const contraParte = await this.buscarContraParteInformeOp(informeOriginalActualizado, coleccionInformeOriginal);
       if (!contraParte) {
         return { exito: false, mensaje: 'No se encontró la contra-parte del InformeOp proporcionado.' };
-      }
+      }      
 
       const { docRef: contraParteRef, data: contraParteData } = contraParte;
 
@@ -1565,8 +1565,9 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
         const facturaSnap = await getDoc(facturaRef);
         if (!facturaSnap.exists()) {
           return { exito: false, mensaje: `No existe la factura (InformeLiq) con id ${facturaActualizada.id} en ${coleccionFactura}.` };
-        }
+        }       
       }
+      
 
       // ------------------------------------------------------
       // 2) Batch: actualizar todos juntos
