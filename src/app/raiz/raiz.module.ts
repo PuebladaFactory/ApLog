@@ -16,7 +16,7 @@ import { AgGridModule } from 'ag-grid-angular';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { AjustesModule } from './ajustes/ajustes.module';
 import { LegajosModule } from './legajos/legajos.module';
-import { NuevaFacturacionModule } from './nueva-facturacion/nueva-facturacion.module';
+/* import { NuevaFacturacionModule } from './nueva-facturacion/nueva-facturacion.module'; */
 
 
 @NgModule({
@@ -40,7 +40,7 @@ import { NuevaFacturacionModule } from './nueva-facturacion/nueva-facturacion.mo
         FilterPipeModule,
         AgGridModule,
         DragDropModule, 
-        NuevaFacturacionModule
+/*         NuevaFacturacionModule */
     ],
 })
 export class RaizModule { }
