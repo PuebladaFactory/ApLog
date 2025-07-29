@@ -53,7 +53,7 @@ export class EditarInfOpComponent implements OnInit {
   }
   
   ngOnInit(): void {
-    //console.log("4) fromParent: ",this.fromParent);    
+    console.log("0) fromParent: ",this.fromParent);    
     this.infOpOriginal = this.fromParent.infOp;
     this.infOpDetallada = structuredClone(this.infOpOriginal);
     this.opOriginal = this.fromParent.op;
