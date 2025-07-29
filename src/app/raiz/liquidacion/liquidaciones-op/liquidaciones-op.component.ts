@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable, Subject, take, takeUntil } from 'rxjs';
+import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
@@ -173,59 +174,58 @@ export class LiquidacionesOpComponent implements OnInit {
     );
   }
 
-
   procesarDatosParaTabla() {
       const informesMap = new Map<number, any>();    
 
-      if(this.informesOp !== null){
-        //////////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
-        this.informesOp.forEach((inf: InformeOp) => {
-          let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
-          if (!informesMap.has(idObjeto)) {
-            informesMap.set(idObjeto, {
-              id: idObjeto,
-              razonSocial: this.getRazonSocial(idObjeto),
-              opCerradas: 0,
-              opAbiertas: 0,
-              opSinFacturar: 0,
-              opFacturadas: 0,
-              total: 0,
-              aPagar: 0,
-              aCobrar: 0,
-              ganancia: 0,
-            });
-          }
-        
-          const objInf = informesMap.get(idObjeto);
-          objInf.opCerradas++;
-          if (inf.liquidacion) {
-            objInf.opFacturadas += inf.valores.total;
-          } else {
-            objInf.opSinFacturar += inf.valores.total;
-          }
-          objInf.total += inf.valores.total;
-          if(this.llamadaOrigen === 'cliente'){
-            objInf.aPagar += inf.contraParteMonto;   
-            objInf.ganancia = 100-((objInf.aPagar*100)/objInf.total);
-          } else {
-            objInf.aCobrar += inf.contraParteMonto;   
-            objInf.ganancia = 100-((objInf.total*100)/objInf.aCobrar);
-          }       
-          
-          
-        });      
-    
-        this.datosTabla = Array.from(informesMap.values());
-        // Ahora que opAbiertas ya fue cargado, podés calcular sincrónicamente
-        this.datosTabla.forEach(c => {
-          c.opAbiertas = this.getOpAbiertas(c.id);
-        });
-        this.datosTabla = this.datosTabla.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-        
+    if(this.informesOp !== null){
+      //////////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
+      this.informesOp.forEach((inf: InformeOp) => {
+        let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
+        if (!informesMap.has(idObjeto)) {
+          informesMap.set(idObjeto, {
+            id: idObjeto,
+            razonSocial: this.getRazonSocial(idObjeto),
+            opCerradas: 0,
+            opAbiertas: 0,
+            opSinFacturar: 0,
+            opFacturadas: 0,
+            total: 0,
+            aPagar: 0,
+            aCobrar: 0,
+            ganancia: 0,
+          });
         }
-      //console.log("this.datosTabla: ", this.datosTabla);
+      
+        const objInf = informesMap.get(idObjeto);
+        objInf.opCerradas++;
+        if (inf.liquidacion) {
+          objInf.opFacturadas += inf.valores.total;
+        } else {
+          objInf.opSinFacturar += inf.valores.total;
+        }
+        objInf.total += inf.valores.total;
+        if(this.llamadaOrigen === 'cliente'){
+          objInf.aPagar += inf.contraParteMonto;   
+          objInf.ganancia = 100-((objInf.aPagar*100)/objInf.total);
+        } else {
+          objInf.aCobrar += inf.contraParteMonto;   
+          objInf.ganancia = 100-((objInf.total*100)/objInf.aCobrar);
+        }       
         
-    }
+        
+      });      
+  
+      this.datosTabla = Array.from(informesMap.values());
+      // Ahora que opAbiertas ya fue cargado, podés calcular sincrónicamente
+      this.datosTabla.forEach(c => {
+        c.opAbiertas = this.getOpAbiertas(c.id);
+      });
+      this.datosTabla = this.datosTabla.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+      
+      }
+    //console.log("this.datosTabla: ", this.datosTabla);
+      
+  }
   
   getOpAbiertas(id:number){
     if(this.opAbiertas !== undefined){
@@ -670,7 +670,7 @@ export class LiquidacionesOpComponent implements OnInit {
     });    
   }
 
-  openModalTarifa(i:number): void {   
+  async openModalTarifa(i:number) {   
     
     this.indiceSeleccionado
     {
@@ -684,7 +684,7 @@ export class LiquidacionesOpComponent implements OnInit {
     let origen = this.llamadaOrigen;
 
       let info = {
-        factura: this.informeDetallado,
+        infOp: this.informeDetallado,
         tarifaAplicada: this.tarifaAplicada,   
         op: this.operacion,     
         origen: origen,
@@ -693,21 +693,41 @@ export class LiquidacionesOpComponent implements OnInit {
       //////////console.log(info); 
       
       modalRef.componentInstance.fromParent = info;
-      modalRef.result.then(
-        (result) => {
-          //console.log("result", result);
-          
-          this.procesarDatosParaTabla();
-          //this.cerrarTabla(i)
-          let idinformeDetallado = this.llamadaOrigen === 'cliente' ? this.informeDetallado.idCliente : this.llamadaOrigen === 'chofer' ? this.informeDetallado.idChofer : this.informeDetallado.idProveedor;
-          let informesObjetoId = this.informesOp.filter((inf: InformeOp) => {
-              let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
-              return idObjeto === idinformeDetallado;
-          });
-          this.informesDetalladoPorObjeto.set(idinformeDetallado, informesObjetoId);
-        },
-        (reason) => {}
-      );
+      const respuesta = await modalRef.result
+      if(respuesta){
+              this.isLoading = true;
+              console.log("respuesta:", respuesta);
+                this.informeDetallado = respuesta.infOp;
+                this.operacion = respuesta.op
+                //console.log("informeOp:", informeOp);
+                //this.recalcularFactura(informeOp);
+                //let coleccionInfOp = this.getColeccionInfOp();
+                //let coleccionInfLiq = this.fromParent.modo === "facturacion" ? 'resumenLiq' : this.fromParent.modo === "proforma" ? 'proforma' : "";
+                //if(coleccionInfOp === "") return this.mensajesError("error en la colección del informe de op", "error");
+                //if(coleccionInfLiq === "") return this.mensajesError("error en la colección del informe de Liquidación", "error");
+                //console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
+                
+                const resultado = await this.dbFirebase.actualizarOperacionInformeOpYFactura(this.operacion, this.informeDetallado, this.componente, 'liquidacion')
+                console.log("resultado de la edicion de todo: ", resultado);
+                if(resultado.exito){
+                  this.isLoading = false;
+                  this.procesarDatosParaTabla();
+                  //this.cerrarTabla(i)
+                  let idinformeDetallado = this.llamadaOrigen === 'cliente' ? this.informeDetallado.idCliente : this.llamadaOrigen === 'chofer' ? this.informeDetallado.idChofer : this.informeDetallado.idProveedor;
+                  let informesObjetoId = this.informesOp.filter((inf: InformeOp) => {
+                      let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
+                      return idObjeto === idinformeDetallado;
+                  });
+                  this.informesDetalladoPorObjeto.set(idinformeDetallado, informesObjetoId);
+                  await this.mensajesError("El informe se ha editado correctamente", "success");
+                  
+                } else {
+                  this.isLoading = false;
+                  await this.mensajesError(`error: ${resultado.mensaje}`, "error")
+                }
+
+            }
+
     }
   }
 
