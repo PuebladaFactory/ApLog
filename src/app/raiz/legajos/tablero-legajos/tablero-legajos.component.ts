@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
-import { Documentacion, Legajo } from 'src/app/interfaces/legajo';
+import { Documentacion, Estado, Legajo } from 'src/app/interfaces/legajo';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalChoferesComponent } from '../modal-choferes/modal-choferes.component';
@@ -227,4 +227,56 @@ export class TableroLegajosComponent implements OnInit {
         //this.$legajos.forEach(l=> console.log(`chofer ${this.getChofer(l.idChofer)}, estado: enFecha: ${l.estadoGral.enFecha}, porVencer: ${l.estadoGral.porVencer}, vencido: ${l.estadoGral.vencido}, vacio: ${l.estadoGral.vacio}, `))
         
       }
+
+verificarInconsistenciasLegajos(): void {
+  const legajosErroneos: ConIdType<Legajo>[] = [];
+
+  for (const legajo of this.$legajos) {
+    const docs = legajo.documentacion;
+
+    const estadoCalculado: Estado = {
+      enFecha: false,
+      porVencer: false,
+      vencido: false,
+      vacio: false,
+    };
+
+    if (!docs || docs.length === 0) {
+      estadoCalculado.vacio = true;
+    } else {
+      const docsConVto = docs.filter(doc => !doc.sinVto);
+
+      const tieneVencido = docsConVto.some(doc => doc.estado.vencido);
+      const tienePorVencer = docsConVto.some(doc => doc.estado.porVencer);
+      const todosEnFecha = docsConVto.every(doc => doc.estado.enFecha);
+
+      if (tieneVencido) {
+        estadoCalculado.vencido = true;
+      } else if (tienePorVencer) {
+        estadoCalculado.porVencer = true;
+      } else if (docsConVto.length > 0 && todosEnFecha) {
+        estadoCalculado.enFecha = true;
+      }
+    }
+
+    const estadoActual = legajo.estadoGral;
+
+    const inconsistente =
+      estadoActual.enFecha !== estadoCalculado.enFecha ||
+      estadoActual.porVencer !== estadoCalculado.porVencer ||
+      estadoActual.vencido !== estadoCalculado.vencido ||
+      estadoActual.vacio !== estadoCalculado.vacio;
+
+    if (inconsistente) {
+      legajosErroneos.push(structuredClone(legajo));
+    }
+  }
+
+  console.log(`Se encontraron ${legajosErroneos.length} legajos con inconsistencias.`);
+  legajosErroneos.forEach((l, index) => {
+    const chofer = this.getChofer(l.idChofer);
+    console.log(`${index + 1}) Chofer: ${chofer} - ID Legajo: ${l.idLegajo}`, l);
+  });
+}
+
 }
