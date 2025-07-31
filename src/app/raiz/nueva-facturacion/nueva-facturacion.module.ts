@@ -9,13 +9,15 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ModalDetalleComponent } from './modal-detalle/modal-detalle.component';
+import { ModalVincularFacturaComponent } from './modal-vincular-factura/modal-vincular-factura.component';
 
 
 @NgModule({
   declarations: [
     ControlComponent, 
     FacturacionListadoComponent,
-    ModalDetalleComponent
+    ModalDetalleComponent,
+    ModalVincularFacturaComponent
   ],
   imports: [
     CommonModule,

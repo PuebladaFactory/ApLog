@@ -13,6 +13,11 @@ import Swal from 'sweetalert2';
 import { ModalDetalleComponent } from '../modal-detalle/modal-detalle.component';
 import { InformeLiqDetalleComponent } from 'src/app/shared/modales/informe-liq-detalle/informe-liq-detalle.component';
 import { InformeOp } from 'src/app/interfaces/informe-op';
+import { Cliente } from 'src/app/interfaces/cliente';
+import { Chofer } from 'src/app/interfaces/chofer';
+import { Proveedor } from 'src/app/interfaces/proveedor';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
+import { ModalVincularFacturaComponent } from '../modal-vincular-factura/modal-vincular-factura.component';
 
 @Component({
   selector: 'app-facturacion-listado',
@@ -29,7 +34,7 @@ export class FacturacionListadoComponent implements OnInit {
   filtroRazonSocial: string = '';
   fechaDesde: string = '';
   fechaHasta: string = '';
-
+  coleccion:string = "resumenLiq";
   date:any = new Date();
   primerDia: any = new Date(this.date.getFullYear(), this.date.getMonth() -3, ).toISOString().split('T')[0];
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
@@ -39,6 +44,9 @@ export class FacturacionListadoComponent implements OnInit {
   cargando = false;
   ///////
   facturasDuplicadas: InformeLiq[] = [];
+  clientes: ConId<Cliente>[] = [];
+  choferes: ConId<Chofer>[] = [];
+  proveedores: ConId<Proveedor>[] = [];
 
 
   constructor(
@@ -54,6 +62,9 @@ export class FacturacionListadoComponent implements OnInit {
     this.fechaDesde = this.primerDiaAnio;
     this.fechaHasta = this.ultimoDiaAnio;
     this.cargarInformes(this.primerDiaAnio, this.ultimoDiaAnio);
+    this.clientes = this.storageService.loadInfo('clientes');
+    this.choferes = this.storageService.loadInfo('choferes');
+    this.proveedores = this.storageService.loadInfo('proveedores');
   }
 
   async cargarInformes(desde:string,hasta:string) {
@@ -86,6 +97,7 @@ export class FacturacionListadoComponent implements OnInit {
     });
   }
 
+  ////// MODAL PARA LA VISTA Y LA EDICION
   async openModalVista(informesLiq: ConId<InformeLiq>, accion:string){  
     await this.obtenerInformesOp(informesLiq)
     {
@@ -145,6 +157,120 @@ export class FacturacionListadoComponent implements OnInit {
       Swal.fire('Error', 'Falló la consulta de los informes.', 'error');
     } finally {
       this.cargando = false;
+    }
+  }
+
+  async reimprimirLiq(inf:ConId<InformeLiq>, tipo:string){
+    const respuesta = await Swal.fire({
+      title: `¿Desea imprimir el detalle de la liquidación?`,
+      //text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    })
+    
+    if (respuesta.isConfirmed) {
+      await this.obtenerInformesOp(inf);       
+      if(tipo === "excel"){
+        this.excelServ.exportToExcelInforme(inf, this.informesOp, this.clientes, this.choferes, 'factura');
+      }else if (tipo === "pdf"){
+        this.pdfServ.exportToPdfInforme(inf, this.informesOp, this.clientes, this.choferes, 'factura');        
+      }                        
+    }
+
+  }
+
+  async anularInfLiq(infLiq:ConId<InformeLiq>){
+     const respuesta = await Swal.fire({
+      title: `¿Desea anular el informe de liquidación?`,
+      text: "Esta acción no se podra revertir",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    })
+    if(respuesta.isConfirmed){
+      this.openModalBaja(infLiq)
+    }
+  }
+
+  ////// MODAL PARA ANULAR UN INFORME DE LIQUIDACION
+  async openModalBaja(informeLiq: ConId<InformeLiq>){  
+    await this.obtenerInformesOp(informeLiq)
+    {
+      const modalRef = this.modalService.open(BajaObjetoComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        scrollable: true, 
+        size: 'sm',     
+      });       
+      console.log("informesLiq",informeLiq);
+      let info = {
+          modo: "facturacion",
+          item: informeLiq,
+        }        
+      
+      modalRef.componentInstance.fromParent = info;
+      try {
+        let usuario = this.storageService.loadInfo('usuario')
+        const motivo = await modalRef.result;
+        console.log("motivo", motivo);
+        
+        if(!motivo) return
+        this.cargando = true;
+        informeLiq.anuladoMotivo = motivo;
+        informeLiq.fechaAnulacion = new Date().toISOString().split('T')[0]
+        informeLiq.anuladoPor = usuario[0].email;
+        informeLiq.estado = 'anulado';
+        console.log("informesLiq anulado", informeLiq);
+        this.storageService.updateItem(this.coleccion,informeLiq, informeLiq.idInfLiq, "ANULACION", `Anulación de informe de liquidación N° ${informeLiq.numeroInterno}`, informeLiq.id)
+        this.cargando = false;
+        const respuesta = await
+        Swal.fire({
+          icon: 'success',
+          title: 'El informe de liquidación fue anulado',
+//          text: 'La operación fue dada de baja y se actualizó el tablero.'
+        }); 
+        if(respuesta.isConfirmed){
+          this.ngOnInit()
+        }
+        
+      } catch (e) {
+        console.warn("El modal fue cancelado o falló:", e);
+      }
+    }
+  }
+
+  vincularFacElec(infLiq: ConId<InformeLiq>){
+     {
+      const modalRef = this.modalService.open(ModalVincularFacturaComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        scrollable: true, 
+        size: 'md',        
+      });       
+      console.log("informesLiq",infLiq);
+/*       let info = {
+        modo: "facturacion",
+        item: informesLiq,
+        tipo: informesLiq.tipo,
+        facOp: this.informesOp,
+        accion:accion,
+      }   */
+      
+      modalRef.componentInstance.fromParent = infLiq;
+
+      modalRef.result.then(
+        (result) => {
+      
+        },
+        (reason) => {}
+      );
     }
   }
 

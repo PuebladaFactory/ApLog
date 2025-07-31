@@ -44,7 +44,7 @@
           <div class="isDisabled">
             <label for="" class="fs-5">{{item}}</label>
             <div class="input-group">
-              <input class="form-control edicion" type="text" [value]="item === 'Cliente' ? factura?.razonSocial : item === 'Chofer' ? factura?.apellido + ' ' + factura?.nombre : factura?.razonSocial">
+              <input class="form-control edicion" type="text" [value]="factura.entidad.razonSocial">
             </div>
           </div>
           <div class="isDisabled">

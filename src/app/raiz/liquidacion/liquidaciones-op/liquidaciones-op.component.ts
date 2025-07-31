@@ -514,34 +514,7 @@ export class LiquidacionesOpComponent implements OnInit {
                         this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
                   }else if (titulo === "pdf"){
                     this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);        
-                  }
-/*                   
-                  switch (this.llamadaOrigen){
-                    case 'cliente':
-                      if(titulo === "excel"){
-                        this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                      }else if (titulo === "pdf"){
-                        this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);        
-                      }
-                      break;
-                    case 'chofer':
-                      if(titulo === "excel"){
-                        this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                      }else if (titulo === "pdf"){
-                        this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);        
-                      } 
-                      break;
-                    case 'proveedor':
-                      if(titulo === "excel"){
-                          this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                        }else if (titulo === "pdf"){          
-                          this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                      }
-                      break;  
-                    default:
-                      this.mensajesError("Error en la impresion de la liquidación", "error");
-                  }   */ 
-                        
+                  }                        
                 }
               }); 
           });

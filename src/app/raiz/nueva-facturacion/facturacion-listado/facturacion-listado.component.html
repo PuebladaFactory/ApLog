@@ -50,12 +50,12 @@
           <th>Id Informe</th>
           <th>Razón Social</th>
           <th class="table-success">Total</th>
-          <th>Cant Op</th>
+          <th class="text-center">Cant Op</th>
           <th>Estado</th>
           <th class="text-center">Detalle</th>
           <th class="text-center">Editar</th>
           <th class="text-center">Reimprimir</th>
-          <th class="text-center">Facturar</th>
+          <th class="text-center" style="width: 2%;">F.Electrónica</th>
           <th class="text-center">Anular</th>
         </tr>
       </thead>
@@ -68,7 +68,7 @@
           <td>{{ inf.idInfLiq }}</td>
           <td>{{ inf.entidad.razonSocial }}</td>
           <td class="table-success">{{ inf.valores.total | formatearValor:'$' }}</td>
-          <td>{{ inf.operaciones.length }}</td>
+          <td class="text-center">{{ inf.operaciones.length }}</td>
           <td>{{ inf.estado }}</td>
           <td class="text-center">
             <app-btn-leer name="DetalleColor"class="me-2" (click)="openModalVista(inf, 'vista')"></app-btn-leer>
@@ -77,14 +77,14 @@
             <app-btn-editar name="EditarColor" class="me-1" (click)="openModalVista(inf, 'edicion')"></app-btn-editar>
           </td>
           <td class="text-center">
-            <app-btn-leer name="excel"class="me-2"></app-btn-leer>
-            <app-btn-leer name="pdf"></app-btn-leer>
+            <app-btn-leer name="excel"class="me-2" (click)="reimprimirLiq(inf, 'excel')"></app-btn-leer>
+            <app-btn-leer name="pdf" (click)="reimprimirLiq(inf, 'pdf')"></app-btn-leer>
           </td>          
           <td class="text-center">
-            <app-btn-agregar *appRole="['god','admin', 'manager']"  name="FacturaColor"></app-btn-agregar>
+            <app-btn-agregar *appRole="['god','admin', 'manager']"  name="electronica" (click)="vincularFacElec(inf)"></app-btn-agregar>            
           </td>
           <td class="text-center">
-            <app-btn-eliminar *appRole="['god','admin', 'manager']"  name="EliminarColor"></app-btn-eliminar>
+            <app-btn-eliminar *appRole="['god','admin', 'manager']"  name="EliminarColor" (click)="anularInfLiq(inf)"></app-btn-eliminar>
           </td>
         </tr>
       </tbody>
