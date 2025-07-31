@@ -190,7 +190,7 @@ export class InformeLiqDetalleComponent implements OnInit {
         //backdrop:"static" 
       });
       
-    let origen = this.fromParent.tipo;
+      let origen = this.fromParent.tipo;
 
       let info = {
         infOp: informeOp,
@@ -225,53 +225,9 @@ export class InformeLiqDetalleComponent implements OnInit {
           } else {
             this.isLoading = false;
             await this.mensajesError(`error: ${resultado.mensaje}`, "error")
-          }
-          
-          
-/*             if(result){
-            if(this.fromParent.modo === 'proforma'){
-              
-              facturaOp = result.factura;
-              //console.log("result:", facturaOp);
-              this.recalcularFactura(facturaOp);
-            }
-            if(this.fromParent.modo === 'facturacion'){
-              
-              facturaOp = result.factura;
-              //console.log("result:", facturaOp);
-              this.recalcularFactura(facturaOp);
-            }
-            
-          } */
+          }          
+    
       }
-/*       modalRef.result.then(
-        (result) => {
-          //console.log("result:", result);
-          informeOp = result.infOp;
-          //console.log("informeOp:", informeOp);
-          this.recalcularFactura(informeOp);
-          
-          
-            if(result){
-            if(this.fromParent.modo === 'proforma'){
-              
-              facturaOp = result.factura;
-              //console.log("result:", facturaOp);
-              this.recalcularFactura(facturaOp);
-            }
-            if(this.fromParent.modo === 'facturacion'){
-              
-              facturaOp = result.factura;
-              //console.log("result:", facturaOp);
-              this.recalcularFactura(facturaOp);
-            }
-            
-          }
-          
-          
-        },
-        (reason) => {}
-      ); */
     }
   }
 
@@ -294,24 +250,15 @@ export class InformeLiqDetalleComponent implements OnInit {
       const respuesta = await modalRef.result;
       console.log("respuesta modal: ", respuesta);
       if (respuesta && respuesta.cambios){
+        this.isLoading = true;
         console.log("total descuentos: ", respuesta.total);
         this.informeLiq.valores.descuentoTotal = respuesta.total;
         this.informeLiq.descuentos = respuesta.descuentos;
-        this.actualizarInformeLiq()
+        this.actualizarInformeLiq();
+        let coleccionInfLiq = this.fromParent.modo === "facturacion" ? 'resumenLiq' : this.fromParent.modo === "proforma" ? 'proforma' : "";
+        this.actElementoUnico(coleccionInfLiq)
       }
-      
-/*       modalRef.result.then(
-        (result) => {
-          //console.log("descuentos: ", result);
-          if(result.total > 0){            
-           this.descuentosAplicados = result.descuentos;
-            this.tieneDescuentos = true;
-            this.totalDescuento = result.total;            
-          }
 
-        },
-        (reason) => {}
-      ); */
     }
 
   }
@@ -325,8 +272,10 @@ export class InformeLiqDetalleComponent implements OnInit {
 
     // Limpiar referencias al cerrar o cancelar el modal
     modal.result.finally(() => {
-      this.storageService.updateItem(componente, this.informeLiq, this.informeLiq.idInfLiq, "EDICION", `Observaciones del informe ${this.informeLiq.idInfLiq}, editada`, this.informeLiq.id );
+      this.actElementoUnico(componente)
+      
     });
+    
   }
 
   async guardarCambiosObs(modal: any) {    
@@ -342,112 +291,98 @@ export class InformeLiqDetalleComponent implements OnInit {
       })
 
     if (respuesta.isConfirmed) {
+      this.isLoading = true;
       this.informeLiq.observaciones = this.obsInterna;
       modal.close(); // El finally del modal se encarga de limpiar
     } else if (respuesta.dismiss === Swal.DismissReason.cancel) {        
     }
     
   }
+  
+  actElementoUnico(componente:string){
+    let mensaje: string = this.fromParent.modo === 'proforma' ? 'de la Proforma' : 'del Resumen de Liquidación'
+    this.storageService.updateItem(componente, this.informeLiq, this.informeLiq.idInfLiq, "EDICION", `Observaciones del informe ${this.informeLiq.idInfLiq}, editada`, this.informeLiq.id );
+    this.storageService.logSimple(this.informeLiq.idInfLiq,"EDICION", componente, `Edición ${mensaje} del ${this.fromParent.tipo} ${this.informeLiq.entidad.razonSocial}`, true )
+    this.isLoading = false;
+  }
 
-    getTarifaGral(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
-      let tarifasGral: ConIdType<TarifaGralCliente>[];
-      let tarifa: ConIdType<TarifaGralCliente> | undefined;
-      let coleccion: string = this.fromParent.tipo === 'cliente' ? 'tarifasGralCliente' : this.fromParent.tipo === 'chofer' ? 'tarifasGralChofer' : 'tarifasGralProveedor'
-      
-      tarifasGral = this.storageService.loadInfo(coleccion);
-      tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
-      return tarifa;      
-    }
 
-    getTarifaEsp(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
-      let tarifasGral: ConIdType<TarifaGralCliente>[];
-      let tarifa: ConIdType<TarifaGralCliente> | undefined;
-      let coleccion: string = this.fromParent.tipo === 'cliente' ? 'tarifasEspCliente' : this.fromParent.tipo === 'chofer' ? 'tarifasEspChofer' : 'tarifasEspProveedor'
+  getTarifaGral(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
+    let tarifasGral: ConIdType<TarifaGralCliente>[];
+    let tarifa: ConIdType<TarifaGralCliente> | undefined;
+    let coleccion: string = this.fromParent.tipo === 'cliente' ? 'tarifasGralCliente' : this.fromParent.tipo === 'chofer' ? 'tarifasGralChofer' : 'tarifasGralProveedor'
+    
+    tarifasGral = this.storageService.loadInfo(coleccion);
+    tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
+    return tarifa;      
+  }
 
-      tarifasGral = this.storageService.loadInfo(coleccion);
-      tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
-      return tarifa;                
-    }
+  getTarifaEsp(idTarifa: number):ConIdType<TarifaGralCliente> | undefined{
+    let tarifasGral: ConIdType<TarifaGralCliente>[];
+    let tarifa: ConIdType<TarifaGralCliente> | undefined;
+    let coleccion: string = this.fromParent.tipo === 'cliente' ? 'tarifasEspCliente' : this.fromParent.tipo === 'chofer' ? 'tarifasEspChofer' : 'tarifasEspProveedor'
 
-    getTarifaPers(idTarifa: number):ConIdType<TarifaPersonalizadaCliente> | undefined{
-      let tarifasPersonalizada: ConIdType<TarifaPersonalizadaCliente>[];
-      let tarifa: ConIdType<TarifaPersonalizadaCliente> | undefined;
-      
+    tarifasGral = this.storageService.loadInfo(coleccion);
+    tarifa = tarifasGral.find((tarf:ConIdType<TarifaGralCliente>)=> {return tarf.idTarifa === idTarifa});
+    return tarifa;                
+  }
 
-      tarifasPersonalizada = this.storageService.loadInfo('tarifasPersCliente');
-      tarifa = tarifasPersonalizada.find((tarf:ConIdType<TarifaPersonalizadaCliente>)=> {return tarf.idTarifa === idTarifa});
-      return tarifa;                
-    }
+  getTarifaPers(idTarifa: number):ConIdType<TarifaPersonalizadaCliente> | undefined{
+    let tarifasPersonalizada: ConIdType<TarifaPersonalizadaCliente>[];
+    let tarifa: ConIdType<TarifaPersonalizadaCliente> | undefined;
+    
 
-    buscarOperacion(facturaOp: ConIdType<InformeOp>){
-      this.dbFirebase
-      .obtenerTarifaIdTarifa("operaciones",facturaOp.idOperacion, "idOperacion")
-      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe(data => {      
-          this.operacion = data;
-          //////////console.log("OPERACION: ", this.operacion);
-          this.openModalEditarInfOp(facturaOp)
-      });    
-    }
+    tarifasPersonalizada = this.storageService.loadInfo('tarifasPersCliente');
+    tarifa = tarifasPersonalizada.find((tarf:ConIdType<TarifaPersonalizadaCliente>)=> {return tarf.idTarifa === idTarifa});
+    return tarifa;                
+  }
 
-    recalcularFactura(infOp: ConIdType<InformeOp>){
-      this.informesOp /// estas son las facturaOp de la factura
-      this.informeLiq // esta es la proforma
-      infOp // esta es la factura editada
-      //console.log("0)this.informesOp: ", this.informesOp);
-      this.informesOp = this.informesOp.filter(factura=>factura.idInfOp !== infOp.idInfOp);
-      //console.log("1)this.informesOp con elemnto eliminado: ", this.informesOp);
-      this.informesOp.push(infOp);
-      //console.log("2)this.informesOp con elemento agregado: ", this.informesOp);
-      this.actualizarInformeLiq()
+  buscarOperacion(facturaOp: ConIdType<InformeOp>){
+    this.dbFirebase
+    .obtenerTarifaIdTarifa("operaciones",facturaOp.idOperacion, "idOperacion")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        this.operacion = data;
+        //////////console.log("OPERACION: ", this.operacion);
+        this.openModalEditarInfOp(facturaOp)
+    });    
+  }
+
+  recalcularFactura(infOp: ConIdType<InformeOp>){
+    this.informesOp /// estas son las facturaOp de la factura
+    this.informeLiq // esta es la proforma
+    infOp // esta es la factura editada
+    //console.log("0)this.informesOp: ", this.informesOp);
+    this.informesOp = this.informesOp.filter(factura=>factura.idInfOp !== infOp.idInfOp);
+    //console.log("1)this.informesOp con elemnto eliminado: ", this.informesOp);
+    this.informesOp.push(infOp);
+    //console.log("2)this.informesOp con elemento agregado: ", this.informesOp);
+    this.actualizarInformeLiq()
+
+  
+    
+  }
+
+  actualizarInformeLiq(){
+    //console.log("3)factura antes: ",this.informeLiq );
+    
+    let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0, descuentoTotal: this.informeLiq.valores.descuentoTotal, totalContraParte:this.informeLiq.valores.totalContraParte};
+    this.informesOp.forEach((f:InformeOp)=>{
+      valores.totalTarifaBase += f.valores.tarifaBase;
+      valores.totalAcompaniante += f.valores.acompaniante;
+      valores.totalkmMonto += f.valores.kmMonto;          
+      valores.total += f.valores.total;          
+    });
+    
+    valores.total -= valores.descuentoTotal;
+    this.informeLiq.valores = valores;
+    console.log("total de la liquidacion: ", this.informeLiq.valores.total);
 
     
-      
-    }
+  }
 
-    actualizarInformeLiq(){
-      //console.log("3)factura antes: ",this.informeLiq );
-      
-      let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0, descuentoTotal: this.informeLiq.valores.descuentoTotal, totalContraParte:this.informeLiq.valores.totalContraParte};
-      this.informesOp.forEach((f:InformeOp)=>{
-        valores.totalTarifaBase += f.valores.tarifaBase;
-        valores.totalAcompaniante += f.valores.acompaniante;
-        valores.totalkmMonto += f.valores.kmMonto;          
-        valores.total += f.valores.total;          
-      });
-      
-      valores.total -= valores.descuentoTotal;
-      this.informeLiq.valores = valores;
-      console.log("total de la liquidacion: ", this.informeLiq.valores.total);
-      
-      //console.log("4)factura desp: ",this.informeLiq );
-      /* let idFactura: number; 
-      switch(this.fromParent.tipo){
-        case 'cliente':
-          idFactura = this.informeLiq.idFacturaCliente;
-          break;
-        case 'chofer':
-          idFactura = this.informeLiq.idFacturaChofer;
-          break;
-        case 'proveedor':
-          idFactura = this.informeLiq.idFacturaProveedor;
-          break;
-        default:
-          idFactura = 0;
-          break;
-      }
-      //console.log("5)idFactura", idFactura); */
-      
-      ///esto lo hace en el servicio
-      //let msj: string = this.fromParent.tipo === 'cliente' ? `Edición de proforma de Cliente ${this.informeLiq.entidad.razonSocial}` : this.fromParent.tipo === 'chofer' ? `Edición de proforma del Chofer ${this.informeLiq.entidad.razonSocial} ` : this.fromParent.tipo === 'proveedor' ? `Edición de proforma del Proveedor ${this.informeLiq.entidad.razonSocial}` : '';
-      //let{id,type, ...proforma} = this.informeLiq;
-
-      //this.storageService.updateItem("proforma", proforma, proforma.idInfLiq, "EDICION", msj, this.informeLiq.id );
-      
-    }
-
-    ///obtener la colección del informe de op
-    ///si viene de facturación, son 3 opciones: infOpLiqClientes, infOpLiqChoferes, infOpLiqProveedores. y si viene de proforma: proforma. de liquidación no pasa por este método
+  ///obtener la colección del informe de op
+  ///si viene de facturación, son 3 opciones: infOpLiqClientes, infOpLiqChoferes, infOpLiqProveedores. y si viene de proforma: proforma. de liquidación no pasa por este método
   getColeccionInfOp(): string{
     
     let coleccion: string = ""

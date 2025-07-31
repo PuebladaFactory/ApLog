@@ -60,9 +60,8 @@ export class DescuentosComponent implements OnInit {
   }
 
   async aplicarDescuento(){
-    if (this.totalDescuento === 0){      
-      const respuesta = await Swal.fire({
-          title: "Los descuentos suman un total de $0 ¿Desea guardar igualmente?",
+    const consulta = await Swal.fire({
+          title: "¿Guardar los valores de descuento?",
           //text: "You won't be able to revert this!",
           icon: "warning",
           showCancelButton: true,
@@ -72,17 +71,31 @@ export class DescuentosComponent implements OnInit {
           cancelButtonText: "Cancelar"
         })
 
-      if (respuesta.isConfirmed) {
+    if(consulta.isConfirmed){
+      if (this.totalDescuento === 0){      
+        const respuesta = await Swal.fire({
+            title: "Los descuentos suman un total de $0 ¿Desea guardar igualmente?",
+            //text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Guardar",
+            cancelButtonText: "Cancelar"
+          })
+
+        if (respuesta.isConfirmed) {
+          this.descuentosOriginal = this.descuentos;
+          let respuesta = {descuentos: this.descuentosOriginal, total: this.totalDescuento, cambios:true}
+          this.activeModal.close(respuesta)
+        
+        } else if (respuesta.dismiss === Swal.DismissReason.cancel) {        
+          }  
+      } else {
         this.descuentosOriginal = this.descuentos;
         let respuesta = {descuentos: this.descuentosOriginal, total: this.totalDescuento, cambios:true}
         this.activeModal.close(respuesta)
-      
-      } else if (respuesta.dismiss === Swal.DismissReason.cancel) {        
-        }  
-    } else {
-      this.descuentosOriginal = this.descuentos;
-      let respuesta = {descuentos: this.descuentosOriginal, total: this.totalDescuento, cambios:true}
-      this.activeModal.close(respuesta)
+      }
     }
     
   }
