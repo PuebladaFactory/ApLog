@@ -10,11 +10,13 @@
   <form [formGroup]="form">
     <div class="mb-2">
       <label>CAE</label>
-      <input class="form-control" formControlName="cae" />
+      <input class="form-control" formControlName="cae"
+      [class.is-invalid]="form.get('cae')?.invalid && form.get('cae')?.touched" />
     </div>
     <div class="mb-2">
       <label>CUIT Emisor</label>
-      <input class="form-control" formControlName="cuit" />
+      <input class="form-control" formControlName="cuit"
+      [class.is-invalid]="form.get('cuit')?.invalid && form.get('cuit')?.touched" />
     </div>
     <div class="mb-2">
       <label>Número de Comprobante</label>
@@ -26,17 +28,36 @@
     </div>
     <div class="mb-2">
       <label>Tipo de Comprobante</label>
-      <input class="form-control" formControlName="tipoComprobante" />
+      <select class="form-select" formControlName="tipoComprobante">
+        @if(!tipoComprobanteDesc){
+          <option [ngValue]="null" disabled>Seleccionar tipo</option>
+        }@else {
+          <option [ngValue]="tipoComprobanteOrd" disabled>{{tipoComprobanteDesc}}</option>
+        }
+       
+        <option *ngFor="let tipo of tiposComprobante" [value]="tipo.codigo">
+          {{ tipo.descripcion }}
+        </option>
+      </select>
     </div>
     <div class="mb-2">
       <label>Fecha de Emisión</label>
       <input class="form-control" formControlName="fecha" type="date" />
     </div>
     <div class="mb-2">
+      <label>CUIT Receptor</label>
+      <input class="form-control" formControlName="nroDocRec" />
+    </div>
+    <div class="mb-2">
       <label>Importe</label>
       <input class="form-control" formControlName="importe" />
     </div>
-
+  </form>
+    <div class="mb-2">
+        <label class="text-start">Observacion Interna</label>
+        <textarea name="" id="" [(ngModel)]="informeLiq.observaciones" rows="2" class="w-100"></textarea>
+    </div>
+  
     <div class="mb-2">
       <label>Seleccionar archivo PDF</label>
       <input type="file" class="form-control" (change)="seleccionarArchivo($event)" accept=".pdf" />
@@ -44,10 +65,14 @@
         Leer QR desde PDF
       </button>
     </div>
-  </form>
+  
 </div>
 
 <div class="modal-footer">
-  <button class="btn btn-primary" (click)="guardar()">Vincular</button>
+  <button class="btn btn-primary" (click)="guardar()" [disabled]="form.invalid">Vincular</button>
   <button class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
 </div>
+
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}
