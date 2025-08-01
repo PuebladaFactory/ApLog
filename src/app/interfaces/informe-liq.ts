@@ -23,7 +23,7 @@ export interface InformeLiq {
     observaciones?: string;           // Campo libre para anotar algo manualmente
 
     facturaVinculada?: string;        // ID o número de la factura fiscal (a futuro)
-
+    factura?: FacturaQR;
     anuladoMotivo?: string;                 //motivo de anulacion
     anuladoPor?: string;                 //usuario que realizó la anulación
     fechaAnulacion?: string | Date;         //fecha de la anulación
@@ -47,4 +47,16 @@ export interface Valores{
 export interface Descuento {
     concepto: string;
     valor: number;
+}
+
+interface FacturaQR {
+  cuit: string;
+  nroDocRec:string;
+  cae: string;
+  numero: string;
+  puntoVenta: string;
+  tipoComprobante: string;
+  fecha: string;
+  importe: number;
+  qrData?: string;
 }

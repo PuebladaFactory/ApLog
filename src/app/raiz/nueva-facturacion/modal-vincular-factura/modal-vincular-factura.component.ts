@@ -4,6 +4,19 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConId } from 'src/app/interfaces/conId';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { FacturaQrService } from 'src/app/servicios/factura-qr/factura-qr.service';
+import Swal from 'sweetalert2';
+import { TIPOS_COMPROBANTE } from 'src/app/constants/tipos-comprobante';
+
+export interface FacturaQRData {
+  cuit: string;
+  ptoVta: number;
+  tipoCmp: number;
+  nroCmp: number;
+  fecha: string;
+  codAut: string;
+  importe: number;
+  nroDocRec: string;
+}
 
 @Component({
   selector: 'app-modal-vincular-factura',
@@ -16,6 +29,12 @@ export class ModalVincularFacturaComponent implements OnInit {
   form!: FormGroup;
   pdfSeleccionado?: File;
   informeLiq!: ConId<InformeLiq>;
+  factura?: FacturaQRData;
+  isLoading: boolean = false;
+  validacionExitosa:boolean = false;
+  tiposComprobante = TIPOS_COMPROBANTE;
+  tipoComprobanteDesc!:string;
+  tipoComprobanteOrd!:number;
 
   constructor(
     public modal: NgbActiveModal,
@@ -26,14 +45,16 @@ export class ModalVincularFacturaComponent implements OnInit {
   ngOnInit() {
     this.informeLiq = this.fromParent
     this.form = this.fb.group({
-      cae: ['', Validators.required],
-      cuit: ['', Validators.required],
-      numero: ['', Validators.required],
-      puntoVenta: ['', Validators.required],
-      tipoComprobante: ['', Validators.required],
+      cae: ['', [Validators.required, Validators.pattern(/^\d{14}$/)]],
+      cuit: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
+      nroDocRec: ['', [Validators.pattern(/^\d{11}$/)]],  // opcional según tipo
+      numero: ['', [Validators.required]],
+      puntoVenta: ['', [Validators.required, Validators.pattern(/^\d{4}$/)]],
+      tipoComprobante: ['', [Validators.required, Validators.pattern(/^\d{1,2}$/)]],
       fecha: ['', Validators.required],
-      importe: ['', Validators.required],
-      qrData: ['']
+      importe: ['', [Validators.required, Validators.min(1)]],
+      qrData: [''],
+      observaciones: ['']
     });    
   }
 
@@ -46,12 +67,12 @@ export class ModalVincularFacturaComponent implements OnInit {
 
   async cargarDesdeQR() {
     if (!this.pdfSeleccionado) return;
-
+    this.isLoading = true;
     // Aquí se llamará al servicio que decodifica el QR y llena el formulario
     // Simulación (lo completamos después con el servicio real)
     const datosFactura = await this.decodificarQRdesdePDF(this.pdfSeleccionado);
-    //console.log("datosFactura: ", datosFactura);
-    
+    console.log("datosFactura: ", datosFactura);
+    if(!datosFactura) return;
     if (datosFactura) {
       this.form.patchValue({
         cae: datosFactura.codAut,
@@ -60,10 +81,26 @@ export class ModalVincularFacturaComponent implements OnInit {
         puntoVenta: datosFactura.ptoVta,
         tipoComprobante: datosFactura.tipoCmp,
         fecha: datosFactura.fecha,
+        nroDocRec: datosFactura.nroDocRec,
         importe: datosFactura.importe,
-        qrData: JSON.stringify(datosFactura)
+        qrData: JSON.stringify(datosFactura),
       });
     }
+    const tipoComprobanteDescripcion = TIPOS_COMPROBANTE.find(tc => tc.codigo === datosFactura.tipoComprobante)?.descripcion || 'Desconocido';
+
+    // Lo podés asignar a una propiedad para mostrar en la vista:
+    this.tipoComprobanteDesc = tipoComprobanteDescripcion;
+    this.tipoComprobanteOrd = datosFactura.tipoComprobante;
+
+    this.validacionExitosa = this.validarFacturaConInforme(datosFactura, this.informeLiq)
+    if(this.validacionExitosa){
+      this.informeLiq.factura = datosFactura; // lo guardás dentro del informe
+    } else{
+      this.form.get('observaciones')?.setValidators([Validators.required]);
+      this.form.get('observaciones')?.updateValueAndValidity();
+      this.mensajesError("Los datos de la factura no coinciden con el informe.")   
+    }
+
   }
 
 async decodificarQRdesdePDF(file: File): Promise<any> {
@@ -85,22 +122,63 @@ async decodificarQRdesdePDF(file: File): Promise<any> {
       fecha: decoded.fecha,
       codAut: decoded.codAut,
       importe: decoded.importe,
+      nroDocRec: decoded.nroDocRec // 👈 lo agregamos
     };
-
+    this.isLoading = false;
     return datos;
-  } catch (error) {
-    console.error("Error al decodificar el QR:", error);
+  } catch (error) {        
+    this.mensajesError(`Error al leer el archivo pdf`)
     return null;
   }
 }
 
-  guardar() {
-    if (this.form.invalid) return;
+  guardar() {   
+    
+    if (this.form.invalid) {
+      this.form.markAllAsTouched(); // 👈 fuerza la visualización de errores
+      this.mensajesError('Por favor, completá correctamente todos los campos.');
+      return;
+    }
+
+    const factura = this.form.value;
+    console.log();
+
+    const cuitValido = /^\d{11}$/.test(factura.cuit);
+    const nroDocRecValido = factura.nroDocRec
+      ? /^\d{11}$/.test(factura.nroDocRec)
+      : true;
+
+    if (!cuitValido || !nroDocRecValido) {
+      alert('CUIT o Nro. Doc. Receptor deben tener 11 dígitos numéricos.');
+      return;
+    }
+    
+    if (!this.validacionExitosa && this.informeLiq.observaciones === "" ) return this.mensajesError("Los datos de la factura no coinciden con los datos del informe, debe agregar un motivo en el campo observaciones");
     this.modal.close(this.form.value);
   }
 
   cancelar() {
     this.modal.dismiss();
   }
+
+  validarFacturaConInforme(factura: FacturaQRData, informe: InformeLiq): boolean {
+    const importeValido = Math.abs(factura.importe - informe.valores.total) < 0.01;
+
+    const cuitValido = informe.tipo === 'cliente'
+    ? factura.nroDocRec === String(informe.entidad.cuit)
+    : factura.cuit === String(informe.entidad.cuit);
+
+    return importeValido && cuitValido;
+  }
+
+  mensajesError(msj:string){
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
+  }
+  
 
 }
