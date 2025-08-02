@@ -75,7 +75,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
   ){}
   
   ngOnInit(): void {
-    //console.log("0) ", this.fromParent);
+    console.log("0) ", this.fromParent);
     this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {

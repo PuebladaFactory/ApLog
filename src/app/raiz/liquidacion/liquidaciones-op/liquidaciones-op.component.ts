@@ -335,7 +335,7 @@ export class LiquidacionesOpComponent implements OnInit {
   liquidarInformesObjeto(objInf: any, index: number){
     // Obtener las facturas del cliente
     
-    //console.log("objInf: ", objInf);
+    console.log("objInf: ", objInf);
     let informesSeleccionados = this.informesOp.filter((inf: InformeOp) => {
         let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
         return idObjeto === objInf.id;
@@ -457,6 +457,12 @@ export class LiquidacionesOpComponent implements OnInit {
 
   procesarFacturacion(titulo:string, accion:string) {
     this.isLoading = true;
+    // Validar que todos los idOperacion sean únicos
+    const ids = this.informesLiquidados.map(infOp => infOp.idOperacion);
+    const idsDuplicados = ids.filter((id, index) => ids.indexOf(id) !== index);
+    if (idsDuplicados.length > 0) {
+      return this.mensajesError('Se encontraron informes con idOperacion duplicado:', "error");
+    }
     
     this.dbFirebase.procesarLiquidacion(this.informesLiquidados, this.llamadaOrigen, this.componenteBaja, this.componente, this.informeDeLiquidacion, this.compInformeLiquidacion)
     .then((result) => {
@@ -613,7 +619,7 @@ export class LiquidacionesOpComponent implements OnInit {
     });
   }
 
-  async editarInformeOp(informe: ConId<InformeOp>, i: number) {   
+  async editarInformeOp(informe: ConId<InformeOp>, i: number) {       
     this.informeDetallado = informe;   
     await this.buscarTarifa(i);    
   }

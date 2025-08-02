@@ -58,21 +58,27 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     this.clientes = storedClientes ? JSON.parse(storedClientes) : [];
 
     const entradas = this.fromParent.item;
-    console.log("entradas: ", entradas);
-    
+    console.log("📥 Entradas recibidas:", entradas);
+
     this.fecha = entradas[0]?.fecha || '';
     this.tarifasPersonalizadas = this.storageService.loadInfo('tarifasPersCliente') || [];
 
+    const operacionesGeneradas: Operacion[] = [];
+    let contadorInterno = 0;
 
     for (const entrada of entradas) {
       const clienteComp = this.clientes.find(c => c.idCliente === entrada.clienteId);
       if (!clienteComp) continue;
-      let {id,type, ...cliente} = clienteComp
+      let { id, type, ...cliente } = clienteComp;
 
       for (const chofer of entrada.choferes) {
-        const tarifaTipo = this.getTarifaTipo(cliente, chofer);        
+        const tarifaTipo = this.getTarifaTipo(cliente, chofer);
+
+        const timestamp = new Date().getTime();
+        const idOperacion = Number(`${timestamp}${(contadorInterno++).toString().padStart(3, '0')}`);
+
         const op: Operacion = {
-          idOperacion: new Date().getTime() + Math.floor(Math.random() * 1000),
+          idOperacion,
           fecha: entrada.fecha,
           km: 0,
           cliente,
@@ -122,15 +128,39 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
           multiplicadorChofer: 1
         } as any;
 
+        // Extras temporales
         (op as any).tarifaTipoOriginal = { ...op.tarifaTipo };
-        (op as any).originalEventual = tarifaTipo.eventual; // Propiedad temporal
+        (op as any).originalEventual = tarifaTipo.eventual;
         (op as any).categoriaAsignada = (chofer as any).categoriaAsignada;
-        this.operaciones.push(op);
+
+        operacionesGeneradas.push(op);
       }
     }
 
+    // 🔍 Validación: cantidad de entradas vs operaciones generadas
+    if (entradas.length !== operacionesGeneradas.length) {
+      console.warn(`⚠️ Atencion: entradas (${entradas.length}) ≠ operaciones (${operacionesGeneradas.length})`);
+    }
+
+    // 🔍 Validación: ids únicos
+    const ids = operacionesGeneradas.map(op => op.idOperacion);
+    const idsDuplicados = ids.filter((id, idx) => ids.indexOf(id) !== idx);
+
+    if (idsDuplicados.length > 0) {
+      console.error('❌ Duplicados detectados en idOperacion:', idsDuplicados);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en la generación de operaciones',
+        text: `Se detectaron ${idsDuplicados.length} operaciones con el mismo id. Reintente la carga.`,
+      });
+      return;
+    }
+
+    // ✅ Si todo OK
+    this.operaciones = operacionesGeneradas;
     this.agruparOperacionesPorCliente();
   }
+
 
   getTarifaTipo(cliente: Cliente, chofer: ConId<Chofer>) {
     if (cliente.tarifaTipo?.eventual || chofer.tarifaTipo?.eventual) {

@@ -1286,44 +1286,54 @@ async eliminarMultiple(
 }
 
 async guardarOpMultiple(
-  operaciones: Operacion[],  
+  operaciones: Operacion[],
 ): Promise<{ exito: boolean; mensaje: string }> {
   const batch = writeBatch(this.firestore);
   const colRef = collection(this.firestore, `/Vantruck/datos/operaciones`);
-  
-  try {
-    // Verificar que NINGUNO de los objetos exista ya en la colección
-    for (const op of operaciones) {      
 
-      const q = query(colRef, where("idOperacion", "==", op.idOperacion));
+  try {
+    // Validación interna: verificar duplicados dentro del mismo lote
+    const ids = operaciones.map(op => op.idOperacion);
+    const idsDuplicados = ids.filter((id, index) => ids.indexOf(id) !== index);
+    if (idsDuplicados.length > 0) {
+      return {
+        exito: false,
+        mensaje: `Se encontraron ${idsDuplicados.length} operaciones duplicadas dentro del lote: ${idsDuplicados.join(', ')}`
+      };
+    }
+
+    // Verificación externa: verificar que NINGUNO ya exista en Firestore
+    for (const idOperacion of ids) {
+      const q = query(colRef, where("idOperacion", "==", idOperacion));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        // Encontró un objeto ya existente => no continúa
         return {
           exito: false,
-          mensaje: `Ya existe un documento con idOperacion: ${op.idOperacion}`
+          mensaje: `Ya existe una operación con idOperacion: ${idOperacion}`
         };
       }
     }
 
-    // Ninguno existe => agregar todos al batch
+    // Si todo está OK, agregar al batch
     for (const op of operaciones) {
-      
-      const docRef = doc(colRef); // genera un id automático
-      //let {id, type, ...objEdit} = obj
+      const docRef = doc(colRef); // id autogenerado
       batch.set(docRef, op);
     }
 
-    // Ejecutar el batch
     await batch.commit();
 
-    return { exito: true, mensaje: "Todos los objetos fueron guardados correctamente." };
+    return { exito: true, mensaje: "Todas las operaciones fueron guardadas correctamente." };
+
   } catch (error: any) {
-    console.error(error);
-    return { exito: false, mensaje: `Error al guardar: ${error.message || error}` };
+    console.error("❌ Error al guardar operaciones múltiples:", error);
+    return {
+      exito: false,
+      mensaje: `Error inesperado al guardar: ${error.message || error}`
+    };
   }
 }
+
 
 async guardarMultipleOtraColeccion(
   objetos: any[],
