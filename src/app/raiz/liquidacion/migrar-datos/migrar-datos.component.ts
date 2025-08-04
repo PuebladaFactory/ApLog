@@ -8,6 +8,7 @@ import { ConId } from 'src/app/interfaces/conId';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { EntidadLiq, InformeLiq } from 'src/app/interfaces/informe-liq';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { Cliente } from 'src/app/interfaces/cliente';
 
 
 export interface FacturaOp {
@@ -91,7 +92,9 @@ export class MigrarDatosComponent {
   idsOp: number[] = [];
   infOpLiq: InformeOp[] = [];
   opErrores: Operacion[] = [];
-  infOpErrores: InformeOp[] = []
+  infOpErrores: InformeOp[] = [];
+  backupToogle:boolean = false;
+  datosBackUp:any[] = []
 
   
   constructor(
@@ -105,16 +108,26 @@ export class MigrarDatosComponent {
         this.informesOpToogle = true;
         this.informesLiqToogle = false;
         this.opToogle = false;
+        this.backupToogle = false;
         break;
       case "b":
         this.informesOpToogle = false;
         this.informesLiqToogle = true;
         this.opToogle = false;
+        this.backupToogle = false;
         break;
       case "c":
         this.informesOpToogle = false;
         this.informesLiqToogle = false;
         this.opToogle = true;
+        this.backupToogle = false;
+        break;
+
+      case "d":
+        this.informesOpToogle = false;
+        this.informesLiqToogle = false;
+        this.opToogle = false;
+        this.backupToogle = true;
         break;
       default:
         this.mensajesError("error en el botón de swicth")
@@ -606,6 +619,100 @@ verificarConsistenciaValores(
 
   return { operacionesInconsistentes, informesInconsistentes };
 }
+
+  descargarComoJSON() {
+    const jsonStr = JSON.stringify(this.datosBackUp, null, 2); // 'null, 2' para formato legible
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${this.coleccionOrigen}.json`;
+    a.click();
+
+    window.URL.revokeObjectURL(url); // Limpieza
+  }
+
+  cargarOperacionesDesdeArchivo(event: any) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e: any) => {
+    const contenido = e.target.result;
+    const clientes: Cliente[] = JSON.parse(contenido);
+    this.datosBackUp = clientes;
+    
+    console.log(`this.datosBackUp: ${this.coleccionOrigen} cargado:`, this.datosBackUp);
+
+    // ahora podés trabajar con ellas
+    //this.probarErroresConOperaciones(operaciones);
+  };
+  reader.readAsText(file);
+}
+
+  async cargarDatosCompletos() {
+   /*  if (!this.fechaDesde || !this.fechaHasta || !this.coleccionOrigen) {
+      Swal.fire('Error', 'Completá todos los campos.', 'error');
+      return;      
+    } */
+    this.datosBackUp = [];
+    console.log("fechaDesde?: ", this.fechaDesde, " hasta?: ", this.fechaHasta, " coleccion: ",this.coleccionOrigen );
+    
+    const fechaIni = new Date(this.fechaDesde);
+    const fechaFin = new Date(this.fechaHasta);    
+
+    const ref = collection(this.firestore, `/Vantruck/datos/${this.coleccionOrigen}`);
+    const q = query(ref);
+
+    const snapshot = await getDocs(q);
+    this.datosBackUp = snapshot.docs.map(doc => doc.data() as any);
+    console.log("datosOrigen: ", this.datosBackUp);
+    
+  }
+
+    async cargarDatosPorFecha() {
+    if (!this.fechaDesde || !this.fechaHasta || !this.coleccionOrigen) {
+      Swal.fire('Error', 'Completá todos los campos.', 'error');
+      return;      
+    }
+    this.datosBackUp = [];
+    console.log("fechaDesde?: ", this.fechaDesde, " hasta?: ", this.fechaHasta, " coleccion: ",this.coleccionOrigen );
+    
+    const fechaIni = new Date(this.fechaDesde);
+    const fechaFin = new Date(this.fechaHasta);    
+
+    const ref = collection(this.firestore, `/Vantruck/datos/${this.coleccionOrigen}`);
+    const q = query(ref, where('fecha', '>=', fechaIni.toISOString()), where('fecha', '<=', fechaFin.toISOString()));
+
+    const snapshot = await getDocs(q);
+    this.datosBackUp = snapshot.docs.map(doc => doc.data() as any);
+    console.log("datosOrigen: ", this.datosBackUp);
+    
+  }
+
+  async guardarObjeto(){
+    this.cargando = true;
+    const respuesta = await this.dbFirebase.guardarMultipleOtraColeccion(this.datosBackUp, this.coleccionOrigen);
+    if(respuesta.exito){
+      console.log("respuesta: ", respuesta.mensaje);
+      
+      this.cargando = false;
+      Swal.fire({
+          icon: 'success',
+          title: 'Atención',
+          text: `Se guardaron todos los objetos en ${this.coleccionOrigen}`,          
+        });
+    } else {
+      console.log("respuesta: ", respuesta.mensaje);
+      this.cargando = false;
+      Swal.fire({
+          icon: 'error',
+          title: 'Atención',
+          text: `Error al guardar los objetos en ${this.coleccionOrigen}`,          
+        });
+    }
+  }
 
 
 }

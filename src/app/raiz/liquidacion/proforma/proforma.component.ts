@@ -420,7 +420,8 @@ export class ProformaComponent implements OnInit {
       Swal.fire('Error', 'No hay operaciones seleccionadas.', 'error');
       return;
     } */
-
+    console.log("origen", origen);
+    
     this.isLoading = true;
     let componente: string = origen === 'cliente' ? "informesOpClientes" : origen === 'chofer' ? "informesOpChoferes" : "informesOpProveedores"
     try {

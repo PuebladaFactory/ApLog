@@ -823,7 +823,7 @@ private actualizarDropdowns(): void {
     ////console.log("1)this.opActivas", this.$opActivas);
     //this.objetoEditado= this.editarCampo(this.$opActivas);        
     this.objetoEditado= this.$opActivas;
-    //console.log("2)this.objetoEditado", this.objetoEditado);
+    console.log("2)this.objetoEditado", this.objetoEditado);
   }
 
   razonZocial(op:any):string{
@@ -861,6 +861,37 @@ private actualizarDropdowns(): void {
     })
   }
 
+  descargarComoJSON() {
+    const jsonStr = JSON.stringify(this.objetoEditado, null, 2); // 'null, 2' para formato legible
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `operaciones.json`;
+    a.click();
+
+    window.URL.revokeObjectURL(url); // Limpieza
+  }
+
+  cargarOperacionesDesdeArchivo(event: any) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e: any) => {
+    const contenido = e.target.result;
+    const operaciones: Operacion[] = JSON.parse(contenido);
+    
+    console.log('Operaciones cargadas:', operaciones);
+
+    // ahora podés trabajar con ellas
+    //this.probarErroresConOperaciones(operaciones);
+  };
+  reader.readAsText(file);
+}
+
+  
 
 
 }

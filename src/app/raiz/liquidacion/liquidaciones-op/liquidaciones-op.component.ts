@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subject, take, takeUntil } from 'rxjs';
+import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
@@ -81,7 +81,7 @@ export class LiquidacionesOpComponent implements OnInit {
     private tableroServ: TableroService
   ){}
 
-  ngOnInit(): void {
+    ngOnInit(): void {
     // Obtenemos la URL completa y dividimos los segmentos para obtener el módulo de origen
     const urlSegments = this.router.url.split('/');
     //console.log('urlSegments:', urlSegments);
@@ -91,48 +91,70 @@ export class LiquidacionesOpComponent implements OnInit {
     }
     this.componente = this.llamadaOrigen === 'cliente' ? 'informesOpClientes' : this.llamadaOrigen === 'chofer' ? 'informesOpChoferes' : 'informesOpProveedores';
     this.componenteBaja = this.llamadaOrigen === 'cliente' ? 'infOpLiqClientes' : this.llamadaOrigen === 'chofer' ? 'infOpLiqChoferes' : 'infOpLiqProveedores';    
+/*     ////////// CHOFERES ///////////////
     this.storageService.getObservable<ConIdType<Chofer>>("choferes")
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.choferes = data;
-        this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-      });
-      this.storageService.getObservable<ConIdType<Cliente>>("clientes")
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.clientes = data;
-        this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      }); 
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
+      this.choferes = data;
+      this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+    });
+    ////////// CLIENTES ///////////////
+    this.storageService.getObservable<ConIdType<Cliente>>("clientes")
+    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+    .subscribe(data => {
+      this.clientes = data;
+      this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+    }); 
+    ////////// PROVEEDORES ///////////////
       this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
       .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
       .subscribe(data => {
         this.proveedores = data;
         this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      });  
-  
+      });   */
+    /// CHOFERES/CLIENTES/PROVEEDORES
+    this.choferes = this.storageService.loadInfo('choferes');
+    this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+    this.clientes = this.storageService.loadInfo('clientes');
+    this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+    this.proveedores = this.storageService.loadInfo('proveedores');
+    this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+
+    ////////// FECHAS E INFORMES OP ///////////////
       this.storageService.fechasConsulta$
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.fechasConsulta = data;
-        
-        this.storageService.syncChangesDateValue<InformeOp>(this.componente, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");
-        this.btnConsulta = true;
-        
-        this.storageService.getObservable<ConId<InformeOp>>(this.componente)
-          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-          .subscribe(data => {
-            this.informesOp = data;
-            //console.log("1)", this.informesOp );
-            if(this.informesOp){
-              //////////console.log("?????????????");                   
-              this.procesarDatosParaTabla();
-              this.verificarDuplicados();
-            } else {
-              this.mensajesError("error: facturaOpCliente", "error")
-            }
-            
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(fechas => {
+      this.fechasConsulta = fechas;
+
+      // 1. Consultar operaciones abiertas
+      this.cargarOperacionesAbiertas()
+        .pipe(take(1)) // Nos aseguramos que se ejecute solo una vez
+        .subscribe(opAbiertas => {
+          this.opAbiertas = opAbiertas;
+
+          // 2. Una vez obtenidas, sincronizar informes
+          this.storageService.syncChangesDateValue<InformeOp>(
+            this.componente,
+            "fecha",
+            this.fechasConsulta.fechaDesde,
+            this.fechasConsulta.fechaHasta,
+            "desc"
+          );
+
+          this.btnConsulta = true;
+
+          this.storageService.getObservable<ConId<InformeOp>>(this.componente)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(data => {
+              this.informesOp = data;
+              if (this.informesOp) {
+                this.procesarDatosParaTabla();
+              } else {
+                this.mensajesError("error: facturaOpCliente", "error");
+              }
+            });
         });
-      });
+    });
   }
 
   ngOnDestroy(): void {
@@ -140,64 +162,70 @@ export class LiquidacionesOpComponent implements OnInit {
     this.destroy$.complete();
   }
 
-  procesarDatosParaTabla() {
-    const informesMap = new Map<number, any>();    
-
-    if(this.informesOp !== null){
-      //////////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
-      this.informesOp.forEach((inf: InformeOp) => {
-        let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
-        if (!informesMap.has(idObjeto)) {
-          informesMap.set(idObjeto, {
-            id: idObjeto,
-            razonSocial: this.getRazonSocial(idObjeto),
-            opCerradas: 0,
-            opAbiertas: 0,
-            opSinFacturar: 0,
-            opFacturadas: 0,
-            total: 0,
-            aPagar: 0,
-            aCobrar: 0,
-            ganancia: 0,
-          });
-        }
-      
-        const objInf = informesMap.get(idObjeto);
-        objInf.opCerradas++;
-        if (inf.liquidacion) {
-          objInf.opFacturadas += inf.valores.total;
-        } else {
-          objInf.opSinFacturar += inf.valores.total;
-        }
-        objInf.total += inf.valores.total;
-        if(this.llamadaOrigen === 'cliente'){
-          objInf.aPagar += inf.contraParteMonto;   
-          objInf.ganancia = 100-((objInf.aPagar*100)/objInf.total);
-        } else {
-          objInf.aCobrar += inf.contraParteMonto;   
-          objInf.ganancia = 100-((objInf.total*100)/objInf.aCobrar);
-        }       
-        
-        
-      });      
-  
-      this.datosTabla = Array.from(informesMap.values());
-      this.datosTabla = this.datosTabla.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      ////console.log("Datos para la tabla: ", this.datosTablaCliente); 
-      this.dbFirebase.getAllByDateValueField<Operacion>('operaciones', 'fecha', this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "estado.abierta", true).subscribe(data=>{      
-        if(data){
-          this.opAbiertas = data;
-          this.opAbiertas = this.opAbiertas.filter((op:Operacion)=> op.estado.abierta)
-          //////////console.log("this.opAbiertas", this.opAbiertas.length);    
-          this.datosTabla.forEach(c=>{
-            c.opAbiertas = this.getOpAbiertas(c.id)
-          })        
-        }      
-        });      
-      }
-    //console.log("this.datosTabla: ", this.datosTabla);
-      
+  cargarOperacionesAbiertas(): Observable<ConId<Operacion>[]> {
+    return this.dbFirebase.getAllByDateValueField<Operacion>(
+      'operaciones',
+      'fecha',
+      this.fechasConsulta.fechaDesde,
+      this.fechasConsulta.fechaHasta,
+      "estado.abierta",
+      true
+    );
   }
+
+
+  procesarDatosParaTabla() {
+      const informesMap = new Map<number, any>();    
+
+      if(this.informesOp !== null){
+        //////////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
+        this.informesOp.forEach((inf: InformeOp) => {
+          let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
+          if (!informesMap.has(idObjeto)) {
+            informesMap.set(idObjeto, {
+              id: idObjeto,
+              razonSocial: this.getRazonSocial(idObjeto),
+              opCerradas: 0,
+              opAbiertas: 0,
+              opSinFacturar: 0,
+              opFacturadas: 0,
+              total: 0,
+              aPagar: 0,
+              aCobrar: 0,
+              ganancia: 0,
+            });
+          }
+        
+          const objInf = informesMap.get(idObjeto);
+          objInf.opCerradas++;
+          if (inf.liquidacion) {
+            objInf.opFacturadas += inf.valores.total;
+          } else {
+            objInf.opSinFacturar += inf.valores.total;
+          }
+          objInf.total += inf.valores.total;
+          if(this.llamadaOrigen === 'cliente'){
+            objInf.aPagar += inf.contraParteMonto;   
+            objInf.ganancia = 100-((objInf.aPagar*100)/objInf.total);
+          } else {
+            objInf.aCobrar += inf.contraParteMonto;   
+            objInf.ganancia = 100-((objInf.total*100)/objInf.aCobrar);
+          }       
+          
+          
+        });      
+    
+        this.datosTabla = Array.from(informesMap.values());
+        // Ahora que opAbiertas ya fue cargado, podés calcular sincrónicamente
+        this.datosTabla.forEach(c => {
+          c.opAbiertas = this.getOpAbiertas(c.id);
+        });
+        this.datosTabla = this.datosTabla.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+        
+        }
+      //console.log("this.datosTabla: ", this.datosTabla);
+        
+    }
   
   getOpAbiertas(id:number){
     if(this.opAbiertas !== undefined){

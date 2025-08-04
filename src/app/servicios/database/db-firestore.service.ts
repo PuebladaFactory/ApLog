@@ -1344,7 +1344,7 @@ async guardarMultipleOtraColeccion(
   
   try {
     // Verificar que NINGUNO de los objetos exista ya en la colección
-    for (const obj of objetos) {
+   /*  for (const obj of objetos) {
       const docRef = doc(this.firestore, `/Vantruck/datos/${coleccionAlta}/${obj.id}`);
       const docSnap = await getDoc(docRef);
 
@@ -1355,7 +1355,7 @@ async guardarMultipleOtraColeccion(
         };
       }
 
-    }
+    } */
 
     // Ninguno existe => agregar todos al batch
     for (const obj of objetos) {
