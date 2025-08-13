@@ -1344,39 +1344,45 @@ async guardarMultipleOtraColeccion(
   objetos: any[],
   coleccionAlta: string,  
 ): Promise<{ exito: boolean; mensaje: string }> {
-  const batch = writeBatch(this.firestore);
-  const colRef = collection(this.firestore, `/Vantruck/datos/${coleccionAlta}`);
   
   try {
-    // Verificar que NINGUNO de los objetos exista ya en la colección
-   /*  for (const obj of objetos) {
-      const docRef = doc(this.firestore, `/Vantruck/datos/${coleccionAlta}/${obj.id}`);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        return {
-          exito: false,
-          mensaje: `Ya existe un documento con id: ${obj.id} en la colección ${coleccionAlta}`
-        };
-      }
-
-    } */
-
-    // Ninguno existe => agregar todos al batch
-    for (const obj of objetos) {
-      
-      const docRef = doc(colRef); // genera un id automático
-      let {id, type, ...objEdit} = obj
-      batch.set(docRef, objEdit);
+    // Dividir el array en chunks de máximo 500 elementos
+    const chunkSize = 500;
+    const chunks = [];
+    
+    for (let i = 0; i < objetos.length; i += chunkSize) {
+      chunks.push(objetos.slice(i, i + chunkSize));
     }
 
-    // Ejecutar el batch
-    await batch.commit();
+    // Procesar cada chunk por separado
+    for (const chunk of chunks) {
+      const batch = writeBatch(this.firestore);
+      const colRef = collection(this.firestore, `/Vantruck/datos/${coleccionAlta}`);
 
-    return { exito: true, mensaje: "Todos los objetos fueron guardados correctamente." };
+      // Agregar todos los documentos del chunk al batch
+      for (const obj of chunk) {
+        const docRef = doc(colRef); // genera un id automático
+        let {id, type, ...objEdit} = obj;
+        batch.set(docRef, objEdit);
+      }
+
+      // Ejecutar el batch para este chunk
+      await batch.commit();
+      
+      // Pequeña pausa entre chunks para evitar sobrecarga
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    return { 
+      exito: true, 
+      mensaje: `Todos los objetos (${objetos.length}) fueron guardados correctamente en ${chunks.length} lotes.` 
+    };
   } catch (error: any) {
     console.error(error);
-    return { exito: false, mensaje: `Error al guardar: ${error.message || error}` };
+    return { 
+      exito: false, 
+      mensaje: `Error al guardar: ${error.message || error}` 
+    };
   }
 }
 

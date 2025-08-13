@@ -246,7 +246,7 @@ export class FacturacionListadoComponent implements OnInit {
     }
   }
 
-  vincularFacElec(infLiq: ConId<InformeLiq>){
+  async vincularFacElec(infLiq: ConId<InformeLiq>){
      {
       const modalRef = this.modalService.open(ModalVincularFacturaComponent, {
         windowClass: 'myCustomModalClass',
@@ -255,22 +255,24 @@ export class FacturacionListadoComponent implements OnInit {
         size: 'md',        
       });       
       console.log("informesLiq",infLiq);
-/*       let info = {
-        modo: "facturacion",
-        item: informesLiq,
-        tipo: informesLiq.tipo,
-        facOp: this.informesOp,
-        accion:accion,
-      }   */
       
       modalRef.componentInstance.fromParent = infLiq;
-
-      modalRef.result.then(
-        (result) => {
       
-        },
-        (reason) => {}
-      );
+      try {
+        const respuesta = await modalRef.result;
+        if (respuesta) {
+          console.log("respuesta del modal", respuesta);
+          infLiq = respuesta.infLiq;
+          infLiq.estado = 'facturado'
+          // aquí seguir con guardado
+        }
+      } catch (error) {
+        //console.log("Modal cerrado sin guardar", error);
+        // no pasa nada, simplemente el usuario cerró
+      }
+      
+      
+
     }
   }
 

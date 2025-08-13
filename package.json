@@ -1,6 +1,6 @@
 {
   "name": "ap-log",
-  "version": "1.4.4",
+  "version": "1.5.1",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

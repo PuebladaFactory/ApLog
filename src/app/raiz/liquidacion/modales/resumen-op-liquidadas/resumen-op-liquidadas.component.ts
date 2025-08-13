@@ -98,7 +98,10 @@ export class ResumenOpLiquidadasComponent implements OnInit {
       this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
     this.facLiquidadas = this.fromParent.facturas;
-    ////console.log("1): ", this.facLiquidadas);    
+    this.facLiquidadas = this.facLiquidadas.sort((a, b) => {
+      return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
+    });
+    console.log("1): ", this.facLiquidadas);    
     this.total = this.fromParent.total;
     ////console.log("2): ", this.total);
     this.facLiquidadas.forEach((f:InformeOp)=>{this.totalContraParte += f.contraParteMonto});

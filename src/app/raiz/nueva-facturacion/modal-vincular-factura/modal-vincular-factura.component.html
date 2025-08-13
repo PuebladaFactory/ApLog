@@ -7,7 +7,7 @@
 </div>
 
 <div class="modal-body">
-  <form [formGroup]="form">
+  <form [formGroup]="form" class="isDisabled">
     <div class="mb-2">
       <label>CAE</label>
       <input class="form-control" formControlName="cae"
@@ -35,9 +35,12 @@
           <option [ngValue]="tipoComprobanteOrd" disabled>{{tipoComprobanteDesc}}</option>
         }
        
-        <option *ngFor="let tipo of tiposComprobante" [value]="tipo.codigo">
-          {{ tipo.descripcion }}
-        </option>
+        @for (tipo of tiposComprobante; track tipo) {
+          <option [value]="tipo.codigo">
+            {{ tipo.descripcion }}
+          </option>
+        }
+        
       </select>
     </div>
     <div class="mb-2">
@@ -69,7 +72,7 @@
 </div>
 
 <div class="modal-footer">
-  <button class="btn btn-primary" (click)="guardar()" [disabled]="form.invalid">Vincular</button>
+  <button class="btn btn-primary" (click)="guardar()">Vincular</button>
   <button class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
 </div>
 

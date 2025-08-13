@@ -37,6 +37,7 @@ import { EstadoCellRendererComponent } from './estado-cell-renderer/estado-cell-
 import { AccionesCellRendererComponent } from './tabla/ag-cell-renderers/acciones-cell-renderer/acciones-cell-renderer.component';
 import { EditarInfOpComponent } from './modales/editar-inf-op/editar-inf-op.component';
 import { DescuentosComponent } from './modales/descuentos/descuentos.component';
+import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
 
 
 
@@ -70,7 +71,8 @@ import { DescuentosComponent } from './modales/descuentos/descuentos.component';
     GlobalFilterPipe,
     EstadoCellRendererComponent,
     EditarInfOpComponent,
-    DescuentosComponent
+    DescuentosComponent,
+    BuscarPorChoferPipe
     
     
   ],
@@ -112,7 +114,8 @@ import { DescuentosComponent } from './modales/descuentos/descuentos.component';
     SpinnerComponent,
     GlobalFilterPipe,
     EstadoCellRendererComponent,
-    DescuentosComponent
+    DescuentosComponent,
+    BuscarPorChoferPipe,
     
   ]
 })

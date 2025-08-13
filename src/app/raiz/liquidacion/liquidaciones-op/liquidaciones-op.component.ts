@@ -2,7 +2,6 @@ import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable, Subject, take, takeUntil } from 'rxjs';
-import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
@@ -92,27 +91,7 @@ export class LiquidacionesOpComponent implements OnInit {
     }
     this.componente = this.llamadaOrigen === 'cliente' ? 'informesOpClientes' : this.llamadaOrigen === 'chofer' ? 'informesOpChoferes' : 'informesOpProveedores';
     this.componenteBaja = this.llamadaOrigen === 'cliente' ? 'infOpLiqClientes' : this.llamadaOrigen === 'chofer' ? 'infOpLiqChoferes' : 'infOpLiqProveedores';    
-/*     ////////// CHOFERES ///////////////
-    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
-    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-    .subscribe(data => {
-      this.choferes = data;
-      this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-    });
-    ////////// CLIENTES ///////////////
-    this.storageService.getObservable<ConIdType<Cliente>>("clientes")
-    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-    .subscribe(data => {
-      this.clientes = data;
-      this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-    }); 
-    ////////// PROVEEDORES ///////////////
-      this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.proveedores = data;
-        this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      });   */
+
     /// CHOFERES/CLIENTES/PROVEEDORES
     this.choferes = this.storageService.loadInfo('choferes');
     this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
@@ -931,12 +910,13 @@ borrarLiquidaciones(){
 
     
   filtrarObjeto(){
+    this.objetoEditado = [];
     //console.log("1)this.this.informesOp", this.informesOp);
     //this.objetoEditado= this.agregarCampo(this.$facturasOpCliente)
     //this.objetoEditado= this.$facturasOpCliente.filter((fac:InformeOp)=> {return fac.contraParteProforma})
-    ////console.log("2)this.objetoEditado", this.objetoEditado);
-    this.objetoEditado= this.informesOp;
-    //console.log("2)this.objetoEditado", this.objetoEditado);
+    console.log("1)this.objetoEditado", this.objetoEditado);
+    this.objetoEditado = this.informesOp;
+    console.log("2)this.objetoEditado", this.objetoEditado);
   }
 
   eliminarObjetos(){

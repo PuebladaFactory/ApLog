@@ -217,7 +217,7 @@ $crearFacturaOpCliente(op:Operacion, idTarifa: number){
     idOperacion: op.idOperacion,
     idCliente: op.cliente.idCliente,
     idChofer: op.chofer.idChofer,
-    idProveedor:0,
+    idProveedor: op.chofer.idProveedor,
     idTarifa: idTarifa,
     fecha: op.fecha,      
     valores:{

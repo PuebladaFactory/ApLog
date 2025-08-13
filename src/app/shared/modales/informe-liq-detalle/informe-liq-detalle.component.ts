@@ -214,7 +214,7 @@ export class InformeLiqDetalleComponent implements OnInit {
           let coleccionInfLiq = this.fromParent.modo === "facturacion" ? 'resumenLiq' : this.fromParent.modo === "proforma" ? 'proforma' : "";
           if(coleccionInfOp === "") return this.mensajesError("error en la colección del informe de op", "error");
           if(coleccionInfLiq === "") return this.mensajesError("error en la colección del informe de Liquidación", "error");
-          //console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
+          console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
           
           const resultado = await this.dbFirebase.actualizarOperacionInformeOpYFactura(this.operacion, informeOp, coleccionInfOp, this.fromParent.modo, this.informeLiq, coleccionInfLiq)
           console.log("resultado de la edicion de todo: ", resultado);
@@ -385,13 +385,13 @@ export class InformeLiqDetalleComponent implements OnInit {
   ///si viene de facturación, son 3 opciones: infOpLiqClientes, infOpLiqChoferes, infOpLiqProveedores. y si viene de proforma: proforma. de liquidación no pasa por este método
   getColeccionInfOp(): string{
     
-    let coleccion: string = ""
+    let coleccion: string = ""    
     switch (this.fromParent.modo){
       case 'facturacion':
         coleccion = this.informeLiq.tipo === 'cliente' ? 'infOpLiqClientes' : this.informeLiq.tipo === 'chofer' ? 'infOpLiqChoferes' : this.informeLiq.tipo === 'proveedor' ? 'infOpLiqProveedores' : ""
         break;
       case 'proforma':
-        coleccion = 'proforma';
+        coleccion = this.informeLiq.tipo === 'cliente' ? 'informesOpClientes' : this.informeLiq.tipo === 'chofer' ? 'informesOpChoferes' : this.informeLiq.tipo === 'proveedor' ? 'informesOpProveedores' : ""
         break;
       default:
         coleccion = '';

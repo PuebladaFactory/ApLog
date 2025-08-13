@@ -64,4 +64,5 @@ export const environment = {
     cloudName: 'dfrstiqwd',
     uploadPreset: 'ml_default'
   }
-}; */
+};
+ */

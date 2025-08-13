@@ -821,8 +821,8 @@ private actualizarDropdowns(): void {
 
   editarObjeto(){
     ////console.log("1)this.opActivas", this.$opActivas);
-    //this.objetoEditado= this.editarCampo(this.$opActivas);        
-    this.objetoEditado= this.$opActivas;
+    this.objetoEditado= this.editarCampo(this.$opActivas);        
+    //this.objetoEditado= this.$opActivas;
     console.log("2)this.objetoEditado", this.objetoEditado);
   }
 
@@ -832,7 +832,18 @@ private actualizarDropdowns(): void {
 
   editarCampo(operaciones: any[]): ConId<Operacion>[] {
    return operaciones.map(operacion => {
-        operacion.cliente.razonSocial = "Andesmar Cargas SA";
+        operacion.estado ={
+          abierta: true,
+          cerrada: false,
+          facCliente: false,
+          facChofer: false,
+          facturada: false,
+          proformaCl: false,
+          proformaCh: false,
+        }
+        operacion.km = 0;
+        operacion.facturaChofer = 0;
+        operacion.facturaChofer = 0;
         return operacion
     });
   }
