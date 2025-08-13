@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule, JsonPipe } from '@angular/common';
 
 import { SharedRoutingModule } from './shared-routing.module';
+
 import { BtnAgregarComponent } from './botones/btn-agregar/btn-agregar.component';
 import { BtnEditarComponent } from './botones/btn-editar/btn-editar.component';
 import { BtnEliminarComponent } from './botones/btn-eliminar/btn-eliminar.component';
@@ -12,6 +13,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TableroCalendarioComponent } from './tablero-calendario/tablero-calendario.component';
 import { NgbDropdownModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
+
 import { HistorialTarifasGralComponent } from './modales/historial-tarifas-gral/historial-tarifas-gral.component';
 import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventuales.component';
 import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
@@ -21,11 +23,14 @@ import { FormatearValorPipe } from './pipes/formatear-valor.pipe';
 import { FormatoNumericoDirective } from './directives/formato-numerico.directive';
 import { SoloLetrasDirective } from './directives/solo-letras.directive';
 import { FormatoNumericoNgModelDirective } from './directives/formato-numerico-ng-model.directive';
+
 import { TarigaGralEdicionComponent } from './modales/tariga-gral-edicion/tariga-gral-edicion.component';
 import { RoleDirective } from './directives/role.directive';
+
 import { BajaObjetoComponent } from './modales/baja-objeto/baja-objeto.component';
 import { ObjetoPapeleraComponent } from './modales/objeto-papelera/objeto-papelera.component';
 import { FechaValidaDirective } from './directives/fecha-valida.directive';
+
 import { InformeLiqDetalleComponent } from './modales/informe-liq-detalle/informe-liq-detalle.component';
 
 import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
@@ -69,6 +74,7 @@ import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
     CalcularPorcentajePipe, 
     SpinnerComponent, 
     GlobalFilterPipe,
+
     EstadoCellRendererComponent,
     EditarInfOpComponent,
     DescuentosComponent,

@@ -17,9 +17,8 @@ import { ResumenOpLiquidadasComponent } from '../modales/resumen-op-liquidadas/r
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
-import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
-import { EditarInfOpComponent } from 'src/app/shared/modales/editar-inf-op/editar-inf-op.component';
-import { TableroService } from 'src/app/servicios/tablero/tablero.service';
+import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+
 @Component({
   selector: 'app-liquidaciones-op',
   standalone:false, 
@@ -91,16 +90,25 @@ export class LiquidacionesOpComponent implements OnInit {
     }
     this.componente = this.llamadaOrigen === 'cliente' ? 'informesOpClientes' : this.llamadaOrigen === 'chofer' ? 'informesOpChoferes' : 'informesOpProveedores';
     this.componenteBaja = this.llamadaOrigen === 'cliente' ? 'infOpLiqClientes' : this.llamadaOrigen === 'chofer' ? 'infOpLiqChoferes' : 'infOpLiqProveedores';    
-
-    /// CHOFERES/CLIENTES/PROVEEDORES
-    this.choferes = this.storageService.loadInfo('choferes');
-    this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-    this.clientes = this.storageService.loadInfo('clientes');
-    this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-    this.proveedores = this.storageService.loadInfo('proveedores');
-    this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-
-    ////////// FECHAS E INFORMES OP ///////////////
+    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data => {
+        this.choferes = data;
+        this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+      });
+      this.storageService.getObservable<ConIdType<Cliente>>("clientes")
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data => {
+        this.clientes = data;
+        this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+      }); 
+      this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
+      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
+      .subscribe(data => {
+        this.proveedores = data;
+        this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+      });  
+  
       this.storageService.fechasConsulta$
     .pipe(takeUntil(this.destroy$))
     .subscribe(fechas => {
