@@ -69,7 +69,7 @@ export class InformeLiqDetalleComponent implements OnInit {
     });  
 
 
-    console.log("fromParent", this.fromParent);
+    console.log("2)fromParent", this.fromParent);
     this.informesOp = this.fromParent.facOp;
     this.informeLiq = this.fromParent.item;
     this.titulo = this.fromParent.item.entidad.razonSocial;    

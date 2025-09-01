@@ -1,6 +1,6 @@
 {
   "name": "ap-log",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -31,6 +31,7 @@
     "@cloudinary/url-gen": "^1.21.0",
     "@ng-bootstrap/ng-bootstrap": "^15.1.2",
     "@popperjs/core": "^2.11.8",
+    "@supabase/supabase-js": "^2.56.0",
     "@types/pdfmake": "^0.2.9",
     "@zxing/library": "^0.21.3",
     "@zxing/ngx-scanner": "^20.0.0",

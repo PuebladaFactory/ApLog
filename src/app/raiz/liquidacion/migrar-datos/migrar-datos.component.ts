@@ -346,7 +346,7 @@ async guardarTransformados() {
         formaPago: '',
         fechaCobro: '',
         observaciones: '',
-        facturaVinculada: ''
+        facturaUrl: ''
       };
     });
     console.log("this.infLiqTransformados", this.infLiqTransformados);
@@ -444,7 +444,7 @@ async guardarTransformados() {
     formaPago: '',
     fechaCobro: '',
     observaciones: '',
-    facturaVinculada: ''
+    facturaUrl: ''
   };
 }
 

@@ -17,7 +17,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
-import { ModalVincularFacturaComponent } from '../modal-vincular-factura/modal-vincular-factura.component';
+import { ModalVincularFacturaComponent } from '../modales/modal-vincular-factura/modal-vincular-factura.component';
 import { SupabaseStorageService } from 'src/app/servicios/supabase/supabase-storage.service';
 
 @Component({

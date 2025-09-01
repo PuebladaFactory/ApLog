@@ -22,7 +22,7 @@ export interface InformeLiq {
 
     observaciones?: string;           // Campo libre para anotar algo manualmente
 
-    facturaVinculada?: string;        // ID o número de la factura fiscal (a futuro)
+    facturaUrl?: string;        // ID o número de la factura fiscal (a futuro)
     factura?: FacturaQR;
     anuladoMotivo?: string;                 //motivo de anulacion
     anuladoPor?: string;                 //usuario que realizó la anulación
