@@ -32,7 +32,8 @@ export class TableroLegajosComponent implements OnInit {
     'Seguro',
     'VTV/RTO',
     'RUTA',
-    'Senasa'
+    'Senasa',
+    'Fotos Camioneta'
   ];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   searchText: string = "";

@@ -36,6 +36,7 @@ export class CargarDocumentosComponent implements OnInit {
     {nombre:'VTV/RTO', seleccionado : false},
     {nombre:'RUTA', seleccionado : false},
     {nombre:'Senasa', seleccionado : false},
+    {nombre:'Fotos Camioneta', seleccionado : false},
   ];
   tramitesSeleccionados:Documentacion[] = [];
   tieneVto: any = null;
