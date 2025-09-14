@@ -135,7 +135,7 @@
                   <app-btn-leer name="DetalleColor"class="me-2" (click)="openModalVista(inf, 'vista')"></app-btn-leer>
                 </td>
                 <td class="text-center">
-                  <app-btn-editar name="EditarColor" class="me-1" (click)="openModalVista(inf, 'edicion')"></app-btn-editar>
+                  <app-btn-editar name="EditarColor" class="me-1" *appRole="['god','admin', 'manager']"  (click)="openModalVista(inf, 'edicion')"></app-btn-editar>
                 </td>
                 <td class="text-center">
                   <app-btn-leer name="excel"class="me-2" (click)="reimprimirLiq(inf, 'excel')"></app-btn-leer>
