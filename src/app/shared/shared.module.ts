@@ -2,17 +2,19 @@ import { NgModule } from '@angular/core';
 import { CommonModule, JsonPipe } from '@angular/common';
 
 import { SharedRoutingModule } from './shared-routing.module';
-import { BtnAgregarComponent } from './btn-agregar/btn-agregar.component';
-import { BtnEditarComponent } from './btn-editar/btn-editar.component';
-import { BtnEliminarComponent } from './btn-eliminar/btn-eliminar.component';
-import { BtnReimpresionComponent } from './btn-reimpresion/btn-reimpresion.component';
-import { BtnLeerComponent } from './btn-leer/btn-leer.component';
+
+import { BtnAgregarComponent } from './botones/btn-agregar/btn-agregar.component';
+import { BtnEditarComponent } from './botones/btn-editar/btn-editar.component';
+import { BtnEliminarComponent } from './botones/btn-eliminar/btn-eliminar.component';
+import { BtnReimpresionComponent } from './botones/btn-reimpresion/btn-reimpresion.component';
+import { BtnLeerComponent } from './botones/btn-leer/btn-leer.component';
 import { ConsolaTarifaComponent } from './consola-tarifa/consola-tarifa.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TableroCalendarioComponent } from './tablero-calendario/tablero-calendario.component';
 import { NgbDropdownModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgbCalendar, NgbDate, NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
-import { HistorialTarifasGralComponent } from './historial-tarifas-gral/historial-tarifas-gral.component';
+
+import { HistorialTarifasGralComponent } from './modales/historial-tarifas-gral/historial-tarifas-gral.component';
 import { TarifasEventualesComponent } from './tarifas-eventuales/tarifas-eventuales.component';
 import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
 import { CuitFormatDirective } from './directives/cuit-format.directive';
@@ -21,12 +23,15 @@ import { FormatearValorPipe } from './pipes/formatear-valor.pipe';
 import { FormatoNumericoDirective } from './directives/formato-numerico.directive';
 import { SoloLetrasDirective } from './directives/solo-letras.directive';
 import { FormatoNumericoNgModelDirective } from './directives/formato-numerico-ng-model.directive';
-import { TarigaGralEdicionComponent } from './tariga-gral-edicion/tariga-gral-edicion.component';
+
+import { TarigaGralEdicionComponent } from './modales/tariga-gral-edicion/tariga-gral-edicion.component';
 import { RoleDirective } from './directives/role.directive';
-import { ModalBajaComponent } from './modal-baja/modal-baja.component';
-import { ModalObjetoComponent } from './modal-objeto/modal-objeto.component';
+
+import { BajaObjetoComponent } from './modales/baja-objeto/baja-objeto.component';
+import { ObjetoPapeleraComponent } from './modales/objeto-papelera/objeto-papelera.component';
 import { FechaValidaDirective } from './directives/fecha-valida.directive';
-import { ModalFacturaComponent } from './modal-factura/modal-factura.component';
+
+import { InformeLiqDetalleComponent } from './modales/informe-liq-detalle/informe-liq-detalle.component';
 
 import { ScrollToTopComponent } from './scroll-to-top/scroll-to-top.component';
 import { CalcularPorcentajePipe } from './pipes/calcular-porcentaje.pipe';
@@ -35,6 +40,9 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
 import { GlobalFilterPipe } from './pipes/global-filter.pipe';
 import { EstadoCellRendererComponent } from './estado-cell-renderer/estado-cell-renderer.component';
 import { AccionesCellRendererComponent } from './tabla/ag-cell-renderers/acciones-cell-renderer/acciones-cell-renderer.component';
+import { EditarInfOpComponent } from './modales/editar-inf-op/editar-inf-op.component';
+import { DescuentosComponent } from './modales/descuentos/descuentos.component';
+import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
 
 
 
@@ -58,8 +66,19 @@ import { AccionesCellRendererComponent } from './tabla/ag-cell-renderers/accione
     SoloLetrasDirective,
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,    
-    RoleDirective, ModalBajaComponent, ModalObjetoComponent, FechaValidaDirective, ModalFacturaComponent, ScrollToTopComponent, CalcularPorcentajePipe, SpinnerComponent, GlobalFilterPipe,
+    RoleDirective, BajaObjetoComponent, 
+    ObjetoPapeleraComponent, 
+    FechaValidaDirective, 
+    InformeLiqDetalleComponent, 
+    ScrollToTopComponent, 
+    CalcularPorcentajePipe, 
+    SpinnerComponent, 
+    GlobalFilterPipe,
+
     EstadoCellRendererComponent,
+    EditarInfOpComponent,
+    DescuentosComponent,
+    BuscarPorChoferPipe
     
     
   ],
@@ -93,14 +112,16 @@ import { AccionesCellRendererComponent } from './tabla/ag-cell-renderers/accione
     FormatoNumericoNgModelDirective,
     TarigaGralEdicionComponent,
     RoleDirective,
-    ModalBajaComponent,
+    BajaObjetoComponent,
     FechaValidaDirective,
-    ModalFacturaComponent, 
+    InformeLiqDetalleComponent, 
     ScrollToTopComponent,
     CalcularPorcentajePipe,
     SpinnerComponent,
     GlobalFilterPipe,
     EstadoCellRendererComponent,
+    DescuentosComponent,
+    BuscarPorChoferPipe,
     
   ]
 })

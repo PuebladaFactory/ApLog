@@ -64,7 +64,7 @@ export class HomeComponent implements OnInit {
       
       
 
-      this.storageService.getObservable("ruta")
+/*       this.storageService.getObservable("ruta")
       .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
       .subscribe(data=>{
         if(data){
@@ -72,7 +72,7 @@ export class HomeComponent implements OnInit {
           this.router.navigate([data[0]]);    
         }
       })
-      this.router.navigate(['op']);
+      this.router.navigate(['op']); */
       //this.storageService.setInfo("ruta", ["op"])
       //this.storageService.syncChangesTarifasGral<TarifaGralCliente>('tarifasEspCliente');
       //this.storageService.syncChangesTarifasGral<TarifaPersonalizadaCliente>('tarifasPersCliente');

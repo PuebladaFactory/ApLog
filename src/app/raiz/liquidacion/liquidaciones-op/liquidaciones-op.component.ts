@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subject, take, takeUntil } from 'rxjs';
+import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
@@ -17,9 +17,9 @@ import { ResumenOpLiquidadasComponent } from '../modales/resumen-op-liquidadas/r
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
 import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
-import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
+import { EditarInfOpComponent } from 'src/app/shared/modales/editar-inf-op/editar-inf-op.component';
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
-
 @Component({
   selector: 'app-liquidaciones-op',
   standalone:false, 
@@ -81,7 +81,7 @@ export class LiquidacionesOpComponent implements OnInit {
     private tableroServ: TableroService
   ){}
 
-  ngOnInit(): void {
+    ngOnInit(): void {
     // Obtenemos la URL completa y dividimos los segmentos para obtener el módulo de origen
     const urlSegments = this.router.url.split('/');
     //console.log('urlSegments:', urlSegments);
@@ -91,48 +91,50 @@ export class LiquidacionesOpComponent implements OnInit {
     }
     this.componente = this.llamadaOrigen === 'cliente' ? 'informesOpClientes' : this.llamadaOrigen === 'chofer' ? 'informesOpChoferes' : 'informesOpProveedores';
     this.componenteBaja = this.llamadaOrigen === 'cliente' ? 'infOpLiqClientes' : this.llamadaOrigen === 'chofer' ? 'infOpLiqChoferes' : 'infOpLiqProveedores';    
-    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.choferes = data;
-        this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-      });
-      this.storageService.getObservable<ConIdType<Cliente>>("clientes")
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.clientes = data;
-        this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      }); 
-      this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.proveedores = data;
-        this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      });  
-  
+
+    /// CHOFERES/CLIENTES/PROVEEDORES
+    this.choferes = this.storageService.loadInfo('choferes');
+    this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+    this.clientes = this.storageService.loadInfo('clientes');
+    this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+    this.proveedores = this.storageService.loadInfo('proveedores');
+    this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+
+    ////////// FECHAS E INFORMES OP ///////////////
       this.storageService.fechasConsulta$
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.fechasConsulta = data;
-        
-        this.storageService.syncChangesDateValue<InformeOp>(this.componente, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "desc");
-        this.btnConsulta = true;
-        
-        this.storageService.getObservable<ConId<InformeOp>>(this.componente)
-          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-          .subscribe(data => {
-            this.informesOp = data;
-            //console.log("1)", this.informesOp );
-            if(this.informesOp){
-              //////////console.log("?????????????");                   
-              this.procesarDatosParaTabla();
-              this.verificarDuplicados();
-            } else {
-              this.mensajesError("error: facturaOpCliente", "error")
-            }
-            
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(fechas => {
+      this.fechasConsulta = fechas;
+
+      // 1. Consultar operaciones abiertas
+      this.cargarOperacionesAbiertas()
+        .pipe(take(1)) // Nos aseguramos que se ejecute solo una vez
+        .subscribe(opAbiertas => {
+          this.opAbiertas = opAbiertas;
+
+          // 2. Una vez obtenidas, sincronizar informes
+          this.storageService.syncChangesDateValue<InformeOp>(
+            this.componente,
+            "fecha",
+            this.fechasConsulta.fechaDesde,
+            this.fechasConsulta.fechaHasta,
+            "desc"
+          );
+
+          this.btnConsulta = true;
+
+          this.storageService.getObservable<ConId<InformeOp>>(this.componente)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(data => {
+              this.informesOp = data;
+              if (this.informesOp) {
+                this.procesarDatosParaTabla();
+              } else {
+                this.mensajesError("error: facturaOpCliente", "error");
+              }
+            });
         });
-      });
+    });
   }
 
   ngOnDestroy(): void {
@@ -140,8 +142,19 @@ export class LiquidacionesOpComponent implements OnInit {
     this.destroy$.complete();
   }
 
+  cargarOperacionesAbiertas(): Observable<ConId<Operacion>[]> {
+    return this.dbFirebase.getAllByDateValueField<Operacion>(
+      'operaciones',
+      'fecha',
+      this.fechasConsulta.fechaDesde,
+      this.fechasConsulta.fechaHasta,
+      "estado.abierta",
+      true
+    );
+  }
+
   procesarDatosParaTabla() {
-    const informesMap = new Map<number, any>();    
+      const informesMap = new Map<number, any>();    
 
     if(this.informesOp !== null){
       //////////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
@@ -182,18 +195,12 @@ export class LiquidacionesOpComponent implements OnInit {
       });      
   
       this.datosTabla = Array.from(informesMap.values());
+      // Ahora que opAbiertas ya fue cargado, podés calcular sincrónicamente
+      this.datosTabla.forEach(c => {
+        c.opAbiertas = this.getOpAbiertas(c.id);
+      });
       this.datosTabla = this.datosTabla.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      ////console.log("Datos para la tabla: ", this.datosTablaCliente); 
-      this.dbFirebase.getAllByDateValueField<Operacion>('operaciones', 'fecha', this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "estado.abierta", true).subscribe(data=>{      
-        if(data){
-          this.opAbiertas = data;
-          this.opAbiertas = this.opAbiertas.filter((op:Operacion)=> op.estado.abierta)
-          //////////console.log("this.opAbiertas", this.opAbiertas.length);    
-          this.datosTabla.forEach(c=>{
-            c.opAbiertas = this.getOpAbiertas(c.id)
-          })        
-        }      
-        });      
+      
       }
     //console.log("this.datosTabla: ", this.datosTabla);
       
@@ -335,7 +342,7 @@ export class LiquidacionesOpComponent implements OnInit {
   liquidarInformesObjeto(objInf: any, index: number){
     // Obtener las facturas del cliente
     
-    //console.log("objInf: ", objInf);
+    console.log("objInf: ", objInf);
     let informesSeleccionados = this.informesOp.filter((inf: InformeOp) => {
         let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
         return idObjeto === objInf.id;
@@ -434,7 +441,7 @@ export class LiquidacionesOpComponent implements OnInit {
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          //console.log(result);
+          console.log(result);
           
           if(result.modo === "cerrar" || result.modo === "proforma"){
             let titulo = result.titulo
@@ -457,6 +464,12 @@ export class LiquidacionesOpComponent implements OnInit {
 
   procesarFacturacion(titulo:string, accion:string) {
     this.isLoading = true;
+    // Validar que todos los idOperacion sean únicos
+    const ids = this.informesLiquidados.map(infOp => infOp.idOperacion);
+    const idsDuplicados = ids.filter((id, index) => ids.indexOf(id) !== index);
+    if (idsDuplicados.length > 0) {
+      return this.mensajesError('Se encontraron informes con idOperacion duplicado:', "error");
+    }
     
     this.dbFirebase.procesarLiquidacion(this.informesLiquidados, this.llamadaOrigen, this.componenteBaja, this.componente, this.informeDeLiquidacion, this.compInformeLiquidacion)
     .then((result) => {
@@ -488,34 +501,7 @@ export class LiquidacionesOpComponent implements OnInit {
                         this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
                   }else if (titulo === "pdf"){
                     this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);        
-                  }
-/*                   
-                  switch (this.llamadaOrigen){
-                    case 'cliente':
-                      if(titulo === "excel"){
-                        this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                      }else if (titulo === "pdf"){
-                        this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);        
-                      }
-                      break;
-                    case 'chofer':
-                      if(titulo === "excel"){
-                        this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                      }else if (titulo === "pdf"){
-                        this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);        
-                      } 
-                      break;
-                    case 'proveedor':
-                      if(titulo === "excel"){
-                          this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                        }else if (titulo === "pdf"){          
-                          this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                      }
-                      break;  
-                    default:
-                      this.mensajesError("Error en la impresion de la liquidación", "error");
-                  }   */ 
-                        
+                  }                        
                 }
               }); 
           });
@@ -613,7 +599,7 @@ export class LiquidacionesOpComponent implements OnInit {
     });
   }
 
-  async editarInformeOp(informe: ConId<InformeOp>, i: number) {   
+  async editarInformeOp(informe: ConId<InformeOp>, i: number) {       
     this.informeDetallado = informe;   
     await this.buscarTarifa(i);    
   }
@@ -636,11 +622,11 @@ export class LiquidacionesOpComponent implements OnInit {
     });    
   }
 
-  openModalTarifa(i:number): void {   
+  async openModalTarifa(i:number) {   
     
     this.indiceSeleccionado
     {
-      const modalRef = this.modalService.open(EditarTarifaOpComponent, {
+      const modalRef = this.modalService.open(EditarInfOpComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         size: 'lg', 
@@ -650,7 +636,7 @@ export class LiquidacionesOpComponent implements OnInit {
     let origen = this.llamadaOrigen;
 
       let info = {
-        factura: this.informeDetallado,
+        infOp: this.informeDetallado,
         tarifaAplicada: this.tarifaAplicada,   
         op: this.operacion,     
         origen: origen,
@@ -659,21 +645,41 @@ export class LiquidacionesOpComponent implements OnInit {
       //////////console.log(info); 
       
       modalRef.componentInstance.fromParent = info;
-      modalRef.result.then(
-        (result) => {
-          //console.log("result", result);
-          
-          this.procesarDatosParaTabla();
-          //this.cerrarTabla(i)
-          let idinformeDetallado = this.llamadaOrigen === 'cliente' ? this.informeDetallado.idCliente : this.llamadaOrigen === 'chofer' ? this.informeDetallado.idChofer : this.informeDetallado.idProveedor;
-          let informesObjetoId = this.informesOp.filter((inf: InformeOp) => {
-              let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
-              return idObjeto === idinformeDetallado;
-          });
-          this.informesDetalladoPorObjeto.set(idinformeDetallado, informesObjetoId);
-        },
-        (reason) => {}
-      );
+      const respuesta = await modalRef.result
+      if(respuesta){
+              this.isLoading = true;
+              console.log("respuesta:", respuesta);
+                this.informeDetallado = respuesta.infOp;
+                this.operacion = respuesta.op
+                //console.log("informeOp:", informeOp);
+                //this.recalcularFactura(informeOp);
+                //let coleccionInfOp = this.getColeccionInfOp();
+                //let coleccionInfLiq = this.fromParent.modo === "facturacion" ? 'resumenLiq' : this.fromParent.modo === "proforma" ? 'proforma' : "";
+                //if(coleccionInfOp === "") return this.mensajesError("error en la colección del informe de op", "error");
+                //if(coleccionInfLiq === "") return this.mensajesError("error en la colección del informe de Liquidación", "error");
+                //console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
+                
+                const resultado = await this.dbFirebase.actualizarOperacionInformeOpYFactura(this.operacion, this.informeDetallado, this.componente, 'liquidacion')
+                console.log("resultado de la edicion de todo: ", resultado);
+                if(resultado.exito){
+                  this.isLoading = false;
+                  this.procesarDatosParaTabla();
+                  //this.cerrarTabla(i)
+                  let idinformeDetallado = this.llamadaOrigen === 'cliente' ? this.informeDetallado.idCliente : this.llamadaOrigen === 'chofer' ? this.informeDetallado.idChofer : this.informeDetallado.idProveedor;
+                  let informesObjetoId = this.informesOp.filter((inf: InformeOp) => {
+                      let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
+                      return idObjeto === idinformeDetallado;
+                  });
+                  this.informesDetalladoPorObjeto.set(idinformeDetallado, informesObjetoId);
+                  await this.mensajesError("El informe se ha editado correctamente", "success");
+                  
+                } else {
+                  this.isLoading = false;
+                  await this.mensajesError(`error: ${resultado.mensaje}`, "error")
+                }
+
+            }
+
     }
   }
 
@@ -703,7 +709,7 @@ export class LiquidacionesOpComponent implements OnInit {
   
   async openModalBaja(informeOp:InformeOp, indice:number){
     {
-      const modalRef = this.modalService.open(ModalBajaComponent, {
+      const modalRef = this.modalService.open(BajaObjetoComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         scrollable: true, 
@@ -904,12 +910,13 @@ borrarLiquidaciones(){
 
     
   filtrarObjeto(){
+    this.objetoEditado = [];
     //console.log("1)this.this.informesOp", this.informesOp);
     //this.objetoEditado= this.agregarCampo(this.$facturasOpCliente)
     //this.objetoEditado= this.$facturasOpCliente.filter((fac:InformeOp)=> {return fac.contraParteProforma})
-    ////console.log("2)this.objetoEditado", this.objetoEditado);
-    this.objetoEditado= this.informesOp;
-    //console.log("2)this.objetoEditado", this.objetoEditado);
+    console.log("1)this.objetoEditado", this.objetoEditado);
+    this.objetoEditado = this.informesOp;
+    console.log("2)this.objetoEditado", this.objetoEditado);
   }
 
   eliminarObjetos(){

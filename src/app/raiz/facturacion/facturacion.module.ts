@@ -14,6 +14,8 @@ import { FacturacionProveedorComponent } from './facturacion-proveedor/facturaci
 import { ModalDetalleComponent } from './modal-detalle/modal-detalle.component';
 import { FacturacionControlComponent } from './facturacion-control/facturacion-control.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
+import { FacturacionListadoComponent } from './facturacion-listado/facturacion-listado.component';
+import { ModalVincularFacturaComponent } from './modales/modal-vincular-factura/modal-vincular-factura.component';
 
 
 
@@ -27,6 +29,8 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     FacturacionProveedorComponent,
     ModalDetalleComponent,
     FacturacionControlComponent,
+    FacturacionListadoComponent,
+    ModalVincularFacturaComponent
     
   ],
   imports: [

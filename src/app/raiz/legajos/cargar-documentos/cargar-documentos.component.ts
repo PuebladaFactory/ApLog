@@ -36,6 +36,7 @@ export class CargarDocumentosComponent implements OnInit {
     {nombre:'VTV/RTO', seleccionado : false},
     {nombre:'RUTA', seleccionado : false},
     {nombre:'Senasa', seleccionado : false},
+    {nombre:'Fotos Camioneta', seleccionado : false},
   ];
   tramitesSeleccionados:Documentacion[] = [];
   tieneVto: any = null;
@@ -50,6 +51,7 @@ export class CargarDocumentosComponent implements OnInit {
   
   archivoPDFBase64: SafeResourceUrl | null = null;
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
+  isLoading:boolean = false;
   
   constructor(private storageService: StorageService, private sanitizer: DomSanitizer, private modalService: NgbModal, private http: HttpClient){
 
@@ -362,6 +364,7 @@ export class CargarDocumentosComponent implements OnInit {
         cancelButtonText: "Cancelar"
       }).then((result) => {
         if (result.isConfirmed) {
+          this.isLoading = true;
           // Promesas para subir imágenes a Cloudinary
           const uploadPromises: Promise<any>[] = [];
     
@@ -442,6 +445,7 @@ export class CargarDocumentosComponent implements OnInit {
             .then(() => {
               this.actualizarEstadoGeneral();
               this.updateItem();
+              this.isLoading = false;
               Swal.fire({
                 title: "Confirmado",
                 text: "El legajo ha sido guardado.",

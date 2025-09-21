@@ -66,6 +66,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
   columnasVisibles: any[] = [];
   factura!: any;  
   private destroy$ = new Subject<void>();
+  obsInterna:string = "";
 
   constructor(
     private storageService: StorageService,     
@@ -75,7 +76,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
   ){}
   
   ngOnInit(): void {
-    //console.log("0) ", this.fromParent);
+    console.log("0) ", this.fromParent);
     this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
@@ -97,7 +98,10 @@ export class ResumenOpLiquidadasComponent implements OnInit {
       this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     }); 
     this.facLiquidadas = this.fromParent.facturas;
-    ////console.log("1): ", this.facLiquidadas);    
+    this.facLiquidadas = this.facLiquidadas.sort((a, b) => {
+      return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
+    });
+    console.log("1): ", this.facLiquidadas);    
     this.total = this.fromParent.total;
     ////console.log("2): ", this.total);
     this.facLiquidadas.forEach((f:InformeOp)=>{this.totalContraParte += f.contraParteMonto});
@@ -280,7 +284,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
               columnas: colSel,
               accion: accion,
             }
-            console.log(respuesta);            
+            console.log("respuesta", respuesta);
             this.activeModal.close(respuesta);
           });        
         }
@@ -440,7 +444,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
       formaPago: "",               // Efectivo, transferencia, etc. (opcional)
       fechaCobro: "",       // Fecha en que se registró el cobro
 
-      observaciones: "",           // Campo libre para anotar algo manualmente
+      observaciones: this.obsInterna,           // Campo libre para anotar algo manualmente
 
       facturaVinculada: "",        // ID o número de la factura fiscal (a futuro)      
 

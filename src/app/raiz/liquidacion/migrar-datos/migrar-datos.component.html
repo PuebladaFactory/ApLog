@@ -11,6 +11,10 @@
     <input type="radio" class="btn-check" name="options" id="option3" autocomplete="off"
           [checked]="opToogle" (click)="informesToogle('c')">
     <label class="btn btn-outline-success" for="option3">operaciones</label>
+
+    <input type="radio" class="btn-check" name="options" id="option4" autocomplete="off"
+          [checked]="backupToogle" (click)="informesToogle('d')">
+    <label class="btn btn-outline-success" for="option4">backup</label>
 </div>
 </div>
 @if(informesOpToogle){
@@ -507,47 +511,98 @@
     </div>
   </div>
 </div>
-}
- <!-- @if (informesOpDuplicadas.length > 0) {
-      <div class="col-12">
-        <div class="border rounded p-2 h-100 d-flex flex-column" style="max-height: 80vh;">
-          <h5 class="bg-danger">Facturas Duplicados ({{ informesOpDuplicadas.length }})</h5>
-          <input class="form-control mb-2" type="text" placeholder="Buscar..." [(ngModel)]="filtroDduplicados" />
-          <div class="table-responsive overflow-auto">
-            <table class="table table-sm table-bordered table-hover">
-              <thead class="table-light">
-                <tr>
-                  <th>Fecha</th>
-                  <th class="bg-info">ID Op</th>
-                  <th>Id Informe</th>
-                  <th>Cliente</th>
-                  <th>Chofer</th>
-                  <th>Km</th>                
-                  <th class="bg-success">Total</th>
-                  <th>Contra Parte</th>
-                  <th>Liquidada</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (item of informesOpDuplicadas | globalFilter:filtroDestino:['fecha','idOperacion', 'idFacturaOp', 'idCliente', 'idChofer', 'km','valores.total','contraParteMonto','liquidacion']; track item; let i = $index) {
-                  <tr>
-                    <td>{{ item.fecha}}</td>
-                    <td class="bg-info">{{ item.idOperacion }}</td>
-                    <td>{{ item.idFacturaOp}}</td>                  
-                    <td>{{ item.idCliente }}</td>
-                    <td>{{ item.idChofer }}</td>
-                    <td>{{ item.km}}</td>
-                    <td class="bg-success">{{ item.valores?.total | currency }}</td>
-                    <td>{{ item.contraParteMonto | currency }}</td>
-                    <td>{{ item.liquidacion}}</td>
-                  </tr>
-                }              
-              </tbody>
-            </table>
-          </div>
-        </div>
+}@else if (backupToogle) {
+<div class="container-fluid py-3">
+  <h1 class="mb-4">Migrar Informes de Operaciones</h1>
+
+  <!-- Filtros -->
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <label>Fecha desde:</label>
+      <input type="date" class="form-control" [(ngModel)]="fechaDesde" />
+    </div>
+    <div class="col-md-3">
+      <label>Fecha hasta:</label>
+      <input type="date" class="form-control" [(ngModel)]="fechaHasta" />
+    </div>
+    <div class="col-md-3">
+      <label>Colección origen:</label>
+      <select class="form-control" [(ngModel)]="coleccionOrigen">
+
+        <option value="operaciones" class="bg-primary text-white">operaciones</option>
+
+        <option value="clientes" class="bg-primary text-white">clientes</option>
+        <option value="choferes" class="bg-success text-white">choferes</option>
+        <option value="proveedores" class="bg-warning text-dark">proveedores</option>
+
+        <option value="tableroDiario" class="bg-secondary-subtle text-secondary-emphasis">tableroDiario</option>
+ 
+        <option value="tarifasGralCliente" class="bg-primary-subtle text-primary-emphasis">tarifasGralCliente</option>
+        <option value="tarifasEspCliente" class="bg-primary-subtle text-primary-emphasis">tarifasEspCliente</option>
+        <option value="tarifasPersCliente" class="bg-primary-subtle text-primary-emphasis">tarifasPersCliente </option>
+        <option value="tarifasGralChofer" class="bg-success-subtle text-success-emphasis">tarifasGralChofer </option>
+        <option value="tarifasEspChofer" class="bg-success-subtle text-success-emphasis">tarifasEspChofer</option>
+        <option value="tarifasGralProveedor" class="bg-warning-subtle text-warning-emphasis">tarifasGralProveedor </option>
+        <option value="tarifasEspProveedor" class="bg-warning-subtle text-warning-emphasis">tarifasEspProveedor</option>
+        <option value="tarifasEventuales" class="bg-danger-subtle text-danger-emphasis">tarifasEventuales </option>
+
+
+        <option value="historialTarifasGralCliente" class="bg-primary-subtle text-primary-emphasis">historialTarifasGralCliente</option>
+        <option value="historialTarifasEspCliente" class="bg-primary-subtle text-primary-emphasis">historialTarifasEspCliente</option>
+        <option value="historialTarifasPersCliente" class="bg-primary-subtle text-primary-emphasis">historialTarifasPersCliente</option>
+        <option value="historialTarifasGralChofer" class="bg-success-subtle text-success-emphasis">historialTarifasGralChofer</option>
+        <option value="historialTarifasEspChofer" class="bg-success-subtle text-success-emphasis">historialTarifasEspChofer</option>
+        <option value="historialTarifasGralProveedor" class="bg-warning-subtle text-warning-emphasis">historialTarifasGralProveedor </option>
+
+    
+         
+        <option value="numeradores" class="bg-body-secondary">numeradores</option>
+
+        <option value="legajos" class="bg-body-tertiary">legajos</option>
+          
+
+
+        <option value="informesOpClientes" class=" bg-info text-dark">informesOpClientes</option>
+        <option value="informesOpChoferes" class=" bg-info text-dark">informesOpChoferes</option>
+        <option value="informesOpProveedores" class=" bg-info text-dark">informesOpProveedores</option>
+         
+        <option value="infOpLiqClientes" class="bg-light text-dark">infOpLiqClientes</option>
+        <option value="infOpLiqChoferes" class="bg-light text-dark">infOpLiqChoferes</option>
+        <option value="infOpLiqProveedores" class="bg-light text-dark">infOpLiqProveedores</option>
+
+        <option value="resumenLiq" class="bg-danger text-white">resumenLiq </option>
+
+        <option value="proforma" class="bg-danger text-white">proforma </option>
+      </select>
+    </div>
+   
+  </div>
+
+  <!-- Botones de acción -->
+   <div class="d-flex justify-content-between">
+      <div class="mb-4">
+        <button class="btn btn-primary me-2" (click)="cargarDatosCompletos()">Cargar datos Completos</button>
+        <button class="btn btn-success me-2" (click)="cargarDatosPorFecha()">Cargar datos por Fecha</button>
+        <button class="btn btn-warning me-2" (click)="descargarComoJSON()">descargar datos</button>
+        
+        
+      </div> 
+      
+      <div>
+        <input type="file" (change)="cargarOperacionesDesdeArchivo($event)" />
+        <button class="btn btn-outline-success me-2" (click)="guardarObjeto()">Guardar datos</button>
       </div>
-    } -->
+
+
+   </div>
+
+   <div>
+    <h4>DATOS DEL BACKUP: {{datosBackUp.length}}</h4>
+   </div>
+
+</div>
+}
+
 
 @if (cargando) {
   <app-spinner></app-spinner>

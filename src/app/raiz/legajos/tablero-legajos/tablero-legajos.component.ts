@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
-import { Documentacion, Legajo } from 'src/app/interfaces/legajo';
+import { Documentacion, Estado, Legajo } from 'src/app/interfaces/legajo';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ModalChoferesComponent } from '../modal-choferes/modal-choferes.component';
@@ -32,19 +32,29 @@ export class TableroLegajosComponent implements OnInit {
     'Seguro',
     'VTV/RTO',
     'RUTA',
-    'Senasa'
+    'Senasa',
+    'Fotos Camioneta'
   ];
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   searchText: string = "";
   $proveedores!: Proveedor [];
   filtrosProveedores = '';
-  $choferesFiltrados!: Chofer[];
+  $choferesFiltrados!: ConIdType<Chofer>[];
+  $legajosFiltrados: ConIdType<Legajo>[] = [];
+  isLoading: boolean = false;
 
   constructor(private storageService: StorageService, private modalService: NgbModal){}  
   
   ngOnInit(): void {
     this.storageService.listenForChanges<Legajo>("legajos");
-    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
+    this.$choferes = this.storageService.loadInfo("choferes");
+    this.$choferes = this.$choferes      
+      .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+    this.$choferesFiltrados = structuredClone(this.$choferes);
+      //console.log("1)choferes especiales: ", this.$choferes);
+    this.$proveedores = this.storageService.loadInfo("proveedores");
+
+    /* this.storageService.getObservable<ConIdType<Chofer>>("choferes")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$choferes = data;     
@@ -53,21 +63,22 @@ export class TableroLegajosComponent implements OnInit {
       this.$choferesFiltrados = structuredClone(this.$choferes);
       //console.log("1)choferes especiales: ", this.$choferes);      
       
-    })     
+    })      */
     this.storageService.getObservable<ConIdType<Legajo>>("legajos")
-    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
+    .pipe(takeUntil(this.destroy$))
     .subscribe(data => {
-      this.$legajos = data;      
-      console.log("tablero legajos: legajos: ", this.$legajos);
+      this.$legajos = [...data]; // aseguramos nuevo array
+      this.filtrarLegajosConChoferes();
+      this.verificarYActualizarEstadosLegajos(); // ← Aquí se ejecuta la verificación al iniciar
     });
     
 
-    this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
+    /* this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$proveedores = data;      
     });
-    console.log(this.$proveedores);
+    console.log(this.$proveedores); */
     
     //this.crearLegajos()  
     //this.storageService.syncChanges("legajos");
@@ -149,18 +160,18 @@ export class TableroLegajosComponent implements OnInit {
       
     }
 
-    filtrarChoferes(idProveedor: number, razonSocial:string){   
-      console.log("idProveedor", idProveedor, "razonSocial", razonSocial);
-      this.$choferesFiltrados = this.$choferes
-      if(idProveedor !== 0){      
-        this.filtrosProveedores = razonSocial;
-        this.$choferesFiltrados = this.$choferesFiltrados.filter(c => c.idProveedor === idProveedor);        
-        //console.log("this.filtrosChoferes", this.filtrosChoferes);
-      }else {     
-        this.filtrosProveedores = ""; 
-        this.$choferesFiltrados = this.$choferes;
-      }
+  filtrarChoferes(idProveedor: number, razonSocial:string) {   
+    this.$choferesFiltrados = this.$choferes;
+
+    if (idProveedor !== 0) {
+      this.filtrosProveedores = razonSocial;
+      this.$choferesFiltrados = this.$choferesFiltrados.filter(c => c.idProveedor === idProveedor);
+    } else {
+      this.filtrosProveedores = "";
     }
+
+    this.filtrarLegajosConChoferes();
+  }
 
 
     obtenerFecha(vto: any){
@@ -200,4 +211,185 @@ export class TableroLegajosComponent implements OnInit {
           );
         }
       }
+
+      
+
+  private filtrarLegajosConChoferes(): void {
+    const idsChoferes = this.$choferesFiltrados.map(c => c.idChofer);
+
+    this.$legajosFiltrados = this.$legajos
+      .filter(l => idsChoferes.includes(l.idChofer))
+      .sort((a, b) => {
+        const choferA = this.$choferes.find(c => c.idChofer === a.idChofer);
+        const choferB = this.$choferes.find(c => c.idChofer === b.idChofer);
+
+        if (!choferA || !choferB) return 0;
+
+        const nombreCompletoA = `${choferA.apellido} ${choferA.nombre}`.toLowerCase();
+        const nombreCompletoB = `${choferB.apellido} ${choferB.nombre}`.toLowerCase();
+
+        return nombreCompletoA.localeCompare(nombreCompletoB);
+      });
+  }
+
+  verificarInconsistenciasLegajos(): void {
+    const legajosErroneos: ConIdType<Legajo>[] = [];
+
+    for (const legajo of this.$legajos) {
+      const docs = legajo.documentacion;
+
+      const estadoCalculado: Estado = {
+        enFecha: false,
+        porVencer: false,
+        vencido: false,
+        vacio: false,
+      };
+
+      if (!docs || docs.length === 0) {
+        estadoCalculado.vacio = true;
+      } else {
+        const docsConVto = docs.filter(doc => !doc.sinVto);
+
+        const tieneVencido = docsConVto.some(doc => doc.estado.vencido);
+        const tienePorVencer = docsConVto.some(doc => doc.estado.porVencer);
+        const todosEnFecha = docsConVto.every(doc => doc.estado.enFecha);
+
+        if (tieneVencido) {
+          estadoCalculado.vencido = true;
+        } else if (tienePorVencer) {
+          estadoCalculado.porVencer = true;
+        } else if (docsConVto.length > 0 && todosEnFecha) {
+          estadoCalculado.enFecha = true;
+        }
+      }
+
+      const estadoActual = legajo.estadoGral;
+
+      const inconsistente =
+        estadoActual.enFecha !== estadoCalculado.enFecha ||
+        estadoActual.porVencer !== estadoCalculado.porVencer ||
+        estadoActual.vencido !== estadoCalculado.vencido ||
+        estadoActual.vacio !== estadoCalculado.vacio;
+
+      if (inconsistente) {
+        legajosErroneos.push(structuredClone(legajo));
+      }
+    }
+
+    console.log(`Se encontraron ${legajosErroneos.length} legajos con inconsistencias.`);
+    legajosErroneos.forEach((l, index) => {
+      const chofer = this.getChofer(l.idChofer);
+      console.log(`${index + 1}) Chofer: ${chofer} - ID Legajo: ${l.idLegajo}`, l);
+    });
+  }
+
+  mostrarLegajo(legajo:ConIdType<Legajo>){
+      console.log("legajo: ", legajo);
+      
+  }
+
+  private verificarYActualizarEstadosLegajos(): void {
+    this.isLoading = true;
+    const hoy = new Date();
+    const MILIS_DIA = 1000 * 60 * 60 * 24;
+
+    const legajosModificados: ConIdType<Legajo>[] = [];
+
+    for (let legajo of this.$legajos) {
+      let modificado = false;
+
+      // Copia de documentos para poder detectar cambios
+      const docsActualizados = legajo.documentacion.map(doc => {
+        if (!doc.sinVto && doc.fechaVto) {
+          const fechaVto = new Date(doc.fechaVto);
+          const diffDias = Math.floor((fechaVto.getTime() - hoy.getTime()) / MILIS_DIA);
+
+          const nuevoEstado: Estado = {
+            enFecha: false,
+            porVencer: false,
+            vencido: false,
+            vacio: false
+          };
+
+          if (diffDias < 0) {
+            nuevoEstado.vencido = true;
+          } else if (diffDias <= 30) {
+            nuevoEstado.porVencer = true;
+          } else {
+            nuevoEstado.enFecha = true;
+          }
+
+          // Detectar si cambió el estado del documento
+          if (
+            doc.estado.enFecha !== nuevoEstado.enFecha ||
+            doc.estado.porVencer !== nuevoEstado.porVencer ||
+            doc.estado.vencido !== nuevoEstado.vencido
+          ) {
+            modificado = true;
+            doc = { ...doc, estado: nuevoEstado };
+          }
+        }
+        return doc;
+      });
+
+      // Recalcular estadoGral
+      const estadoCalculado: Estado = {
+        enFecha: false,
+        porVencer: false,
+        vencido: false,
+        vacio: false
+      };
+
+      if (!docsActualizados || docsActualizados.length === 0) {
+        estadoCalculado.vacio = true;
+      } else {
+        const docsConVto = docsActualizados.filter(doc => !doc.sinVto);
+        const tieneVencido = docsConVto.some(doc => doc.estado.vencido);
+        const tienePorVencer = docsConVto.some(doc => doc.estado.porVencer);
+        const todosEnFecha = docsConVto.every(doc => doc.estado.enFecha);
+
+        if (tieneVencido) {
+          estadoCalculado.vencido = true;
+        } else if (tienePorVencer) {
+          estadoCalculado.porVencer = true;
+        } else if (docsConVto.length > 0 && todosEnFecha) {
+          estadoCalculado.enFecha = true;
+        }
+      }
+
+      // Si cambió el estado general
+      if (
+        legajo.estadoGral.enFecha !== estadoCalculado.enFecha ||
+        legajo.estadoGral.porVencer !== estadoCalculado.porVencer ||
+        legajo.estadoGral.vencido !== estadoCalculado.vencido ||
+        legajo.estadoGral.vacio !== estadoCalculado.vacio
+      ) {
+        modificado = true;
+      }
+
+      if (modificado) {
+        const legajoActualizado = {
+          ...legajo,
+          documentacion: docsActualizados,
+          estadoGral: estadoCalculado
+        };
+        legajosModificados.push(legajoActualizado);
+      }
+    }
+
+    // Si hay legajos modificados, actualizarlos en la base
+    if (legajosModificados.length > 0) {
+      console.log(`Se actualizarán ${legajosModificados.length} legajos.`);
+      legajosModificados.forEach(l => {
+        const { id, type, ...leg } = l;
+        this.storageService.updateItem("legajos", leg, l.idLegajo, "INTERNA", "", l.id);
+      });
+    } else {
+      console.log("No se encontraron legajos para actualizar.");
+    }
+    this.isLoading = false;
+  }
+
+
+
 }

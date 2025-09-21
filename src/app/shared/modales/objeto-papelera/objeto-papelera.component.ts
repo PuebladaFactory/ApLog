@@ -15,12 +15,12 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
     selector: 'app-modal-objeto',
-    templateUrl: './modal-objeto.component.html',
-    styleUrls: ['./modal-objeto.component.scss'],
+    templateUrl: './objeto-papelera.component.html',
+    styleUrls: ['./objeto-papelera.component.scss'],
     standalone: false
 })
 
-export class ModalObjetoComponent implements OnInit {
+export class ObjetoPapeleraComponent implements OnInit {
 
   @Input() fromParent:any;
   @Input() fromParentPapelera:any;

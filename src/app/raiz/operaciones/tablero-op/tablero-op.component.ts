@@ -12,7 +12,7 @@ import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-rend
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalResumenOpComponent } from '../modal-resumen-op/modal-resumen-op.component';
 import Swal from 'sweetalert2';
-import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
@@ -596,7 +596,7 @@ private actualizarDropdowns(): void {
 
     async openModalBaja(idOp:number){
       {
-        const modalRef = this.modalService.open(ModalBajaComponent, {
+        const modalRef = this.modalService.open(BajaObjetoComponent, {
           windowClass: 'myCustomModalClass',
           centered: true,
           scrollable: true, 
@@ -821,9 +821,9 @@ private actualizarDropdowns(): void {
 
   editarObjeto(){
     ////console.log("1)this.opActivas", this.$opActivas);
-    //this.objetoEditado= this.editarCampo(this.$opActivas);        
-    this.objetoEditado= this.$opActivas;
-    //console.log("2)this.objetoEditado", this.objetoEditado);
+    this.objetoEditado= this.editarCampo(this.$opActivas);        
+    //this.objetoEditado= this.$opActivas;
+    console.log("2)this.objetoEditado", this.objetoEditado);
   }
 
   razonZocial(op:any):string{
@@ -832,7 +832,18 @@ private actualizarDropdowns(): void {
 
   editarCampo(operaciones: any[]): ConId<Operacion>[] {
    return operaciones.map(operacion => {
-        operacion.cliente.razonSocial = "Andesmar Cargas SA";
+        operacion.estado ={
+          abierta: true,
+          cerrada: false,
+          facCliente: false,
+          facChofer: false,
+          facturada: false,
+          proformaCl: false,
+          proformaCh: false,
+        }
+        operacion.km = 0;
+        operacion.facturaChofer = 0;
+        operacion.facturaChofer = 0;
         return operacion
     });
   }
@@ -861,6 +872,37 @@ private actualizarDropdowns(): void {
     })
   }
 
+  descargarComoJSON() {
+    const jsonStr = JSON.stringify(this.objetoEditado, null, 2); // 'null, 2' para formato legible
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `operaciones.json`;
+    a.click();
+
+    window.URL.revokeObjectURL(url); // Limpieza
+  }
+
+  cargarOperacionesDesdeArchivo(event: any) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e: any) => {
+    const contenido = e.target.result;
+    const operaciones: Operacion[] = JSON.parse(contenido);
+    
+    console.log('Operaciones cargadas:', operaciones);
+
+    // ahora podés trabajar con ellas
+    //this.probarErroresConOperaciones(operaciones);
+  };
+  reader.readAsText(file);
+}
+
+  
 
 
 }

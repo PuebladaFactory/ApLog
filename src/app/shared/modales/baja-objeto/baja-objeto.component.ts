@@ -9,11 +9,11 @@ import Swal from 'sweetalert2';
 
 @Component({
     selector: 'app-modal-baja',
-    templateUrl: './modal-baja.component.html',
-    styleUrls: ['./modal-baja.component.scss'],
+    templateUrl: './baja-objeto.component.html',
+    styleUrls: ['./baja-objeto.component.scss'],
     standalone: false
 })
-export class ModalBajaComponent implements OnInit {
+export class BajaObjetoComponent implements OnInit {
   
   @Input() fromParent:any
   titulo: string = "";
@@ -46,10 +46,10 @@ export class ModalBajaComponent implements OnInit {
         }  
         break;
       case "facturacion":{
-          this.titulo = "Factura"
-          this.factura = this.fromParent.item
-          this.id = this.fromParent.tipo === "clientes" ? this.factura.idFacturaCliente : this.fromParent.tipo === "choferes" ? this.factura.idFacturaChofer : this.factura.idFacturaProveedor
-          this.item = this.fromParent.tipo === "clientes" ? "Cliente" : this.fromParent.tipo === "choferes" ? "Chofer" : "Proveedor"
+          this.titulo = "Resumen de Liquidación";
+          this.factura = this.fromParent.item;
+          this.id = this.fromParent.item.numeroInterno;
+          this.item = this.fromParent.item.tipo === "cliente" ? "Cliente" : this.fromParent.item.tipo === "chofer" ? "Chofer" : "Proveedor";
         }  
         break;
       case "Cliente": case "Chofer": case "Proveedor":{          
@@ -64,9 +64,22 @@ export class ModalBajaComponent implements OnInit {
   }   
   
 
-  onSubmit(){
+  async onSubmit(){
     if(this.motivoBaja !== ""){
-      this.activeModal.close(this.motivoBaja)
+      const respuesta = await Swal.fire({
+        title: `¿Confirmar la baja?`,
+        //text: "Esta acción no se podra revertir",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar"
+      })
+      if(respuesta.isConfirmed){
+        this.activeModal.close(this.motivoBaja)
+      }
+      
     } else {
       return this.mensajesError("Debe especificar un motivo para la baja")
     }

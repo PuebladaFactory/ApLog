@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 /* import { AngularFirestore } from '@angular/fire/compat/firestore'; */
-import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, getDoc, getDocs, limit, onSnapshot, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@angular/fire/firestore';
+
+import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, DocumentReference, getDoc, getDocs, limit, onSnapshot, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@angular/fire/firestore';
 import { chunk } from 'lodash';
 import { firstValueFrom, from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -14,6 +15,11 @@ import { TableroDiario } from 'src/app/raiz/operaciones/tablero-diario/tablero-d
 import { InformeOp } from 'src/app/interfaces/informe-op';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from '../numerador/numerador.service';
+
+export interface Resultado {
+  exito: boolean;
+  mensaje: string;
+}
 
 export interface ResultadoEliminacion {
   success: boolean;
@@ -1286,82 +1292,98 @@ async eliminarMultiple(
 }
 
 async guardarOpMultiple(
-  operaciones: Operacion[],  
+  operaciones: Operacion[],
 ): Promise<{ exito: boolean; mensaje: string }> {
   const batch = writeBatch(this.firestore);
   const colRef = collection(this.firestore, `/Vantruck/datos/operaciones`);
-  
-  try {
-    // Verificar que NINGUNO de los objetos exista ya en la colección
-    for (const op of operaciones) {      
 
-      const q = query(colRef, where("idOperacion", "==", op.idOperacion));
+  try {
+    // Validación interna: verificar duplicados dentro del mismo lote
+    const ids = operaciones.map(op => op.idOperacion);
+    const idsDuplicados = ids.filter((id, index) => ids.indexOf(id) !== index);
+    if (idsDuplicados.length > 0) {
+      return {
+        exito: false,
+        mensaje: `Se encontraron ${idsDuplicados.length} operaciones duplicadas dentro del lote: ${idsDuplicados.join(', ')}`
+      };
+    }
+
+    // Verificación externa: verificar que NINGUNO ya exista en Firestore
+    for (const idOperacion of ids) {
+      const q = query(colRef, where("idOperacion", "==", idOperacion));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        // Encontró un objeto ya existente => no continúa
         return {
           exito: false,
-          mensaje: `Ya existe un documento con idOperacion: ${op.idOperacion}`
+          mensaje: `Ya existe una operación con idOperacion: ${idOperacion}`
         };
       }
     }
 
-    // Ninguno existe => agregar todos al batch
+    // Si todo está OK, agregar al batch
     for (const op of operaciones) {
-      
-      const docRef = doc(colRef); // genera un id automático
-      //let {id, type, ...objEdit} = obj
+      const docRef = doc(colRef); // id autogenerado
       batch.set(docRef, op);
     }
 
-    // Ejecutar el batch
     await batch.commit();
 
-    return { exito: true, mensaje: "Todos los objetos fueron guardados correctamente." };
+    return { exito: true, mensaje: "Todas las operaciones fueron guardadas correctamente." };
+
   } catch (error: any) {
-    console.error(error);
-    return { exito: false, mensaje: `Error al guardar: ${error.message || error}` };
+    console.error("❌ Error al guardar operaciones múltiples:", error);
+    return {
+      exito: false,
+      mensaje: `Error inesperado al guardar: ${error.message || error}`
+    };
   }
 }
+
 
 async guardarMultipleOtraColeccion(
   objetos: any[],
   coleccionAlta: string,  
 ): Promise<{ exito: boolean; mensaje: string }> {
-  const batch = writeBatch(this.firestore);
-  const colRef = collection(this.firestore, `/Vantruck/datos/${coleccionAlta}`);
   
   try {
-    // Verificar que NINGUNO de los objetos exista ya en la colección
-    for (const obj of objetos) {
-      const docRef = doc(this.firestore, `/Vantruck/datos/${coleccionAlta}/${obj.id}`);
-      const docSnap = await getDoc(docRef);
+    // Dividir el array en chunks de máximo 500 elementos
+    const chunkSize = 500;
+    const chunks = [];
+    
+    for (let i = 0; i < objetos.length; i += chunkSize) {
+      chunks.push(objetos.slice(i, i + chunkSize));
+    }
 
-      if (docSnap.exists()) {
-        return {
-          exito: false,
-          mensaje: `Ya existe un documento con id: ${obj.id} en la colección ${coleccionAlta}`
-        };
+    // Procesar cada chunk por separado
+    for (const chunk of chunks) {
+      const batch = writeBatch(this.firestore);
+      const colRef = collection(this.firestore, `/Vantruck/datos/${coleccionAlta}`);
+
+      // Agregar todos los documentos del chunk al batch
+      for (const obj of chunk) {
+        const docRef = doc(colRef); // genera un id automático
+        let {id, type, ...objEdit} = obj;
+        batch.set(docRef, objEdit);
       }
 
-    }
-
-    // Ninguno existe => agregar todos al batch
-    for (const obj of objetos) {
+      // Ejecutar el batch para este chunk
+      await batch.commit();
       
-      const docRef = doc(colRef); // genera un id automático
-      let {id, type, ...objEdit} = obj
-      batch.set(docRef, objEdit);
+      // Pequeña pausa entre chunks para evitar sobrecarga
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    // Ejecutar el batch
-    await batch.commit();
-
-    return { exito: true, mensaje: "Todos los objetos fueron guardados correctamente." };
+    return { 
+      exito: true, 
+      mensaje: `Todos los objetos (${objetos.length}) fueron guardados correctamente en ${chunks.length} lotes.` 
+    };
   } catch (error: any) {
     console.error(error);
-    return { exito: false, mensaje: `Error al guardar: ${error.message || error}` };
+    return { 
+      exito: false, 
+      mensaje: `Error al guardar: ${error.message || error}` 
+    };
   }
 }
 
@@ -1495,7 +1517,181 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
     console.log('🏁 Asignación de números internos finalizada.');
   }
 
-  async eliminarOperacionEInformes(
+
+
+  /**
+   * Actualiza, de forma atómica (batch):
+   *  - La Operacion (en /Vantruck/datos/operaciones)
+   *  - El InformeOp original (colección recibida por parámetro)
+   *  - La contra-parte del InformeOp (localizada con el método auxiliar)
+   *  - (Opcional) El InformeLiq (si modo !== 'liquidacion')
+   *
+   * Si alguno de los documentos que deben existir NO existe, cancela todo.
+   */
+  async actualizarOperacionInformeOpYFactura(
+    operacionActualizada: Operacion,
+    informeOriginalActualizado: ConId<InformeOp>,
+    coleccionInformeOriginal: string,
+    modo: string,
+    facturaActualizada?: ConId<InformeLiq>,
+    coleccionFactura?: string
+  ): Promise<Resultado> {
+    try {
+      // ------------------------------------------------------
+      // 1) Verificaciones de existencia (pre-check)
+      // ------------------------------------------------------
+
+      // 1.1) Operación
+      const { opDocRef, operacionDocData } = await this.obtenerOperacionPorIdOperacion(operacionActualizada.idOperacion);
+      if (!opDocRef) {
+        return { exito: false, mensaje: `No existe Operacion con idOperacion ${operacionActualizada.idOperacion}.` };
+      }      
+      
+      // 1.2) InformeOp original
+      const informeOriginalRef = doc(this.firestore, `/Vantruck/datos/${coleccionInformeOriginal}/${informeOriginalActualizado.id}`);
+      const informeOriginalSnap = await getDoc(informeOriginalRef);
+      if (!informeOriginalSnap.exists()) {
+        return { exito: false, mensaje: `No existe el InformeOp original con id ${informeOriginalActualizado.id} en ${coleccionInformeOriginal}.` };
+      }      
+
+      // 1.3) Contra-parte
+      const contraParte = await this.buscarContraParteInformeOp(informeOriginalActualizado, coleccionInformeOriginal);
+      if (!contraParte) {
+        return { exito: false, mensaje: 'No se encontró la contra-parte del InformeOp proporcionado.' };
+      }      
+
+      const { docRef: contraParteRef, data: contraParteData } = contraParte;
+
+      // 1.4) InformeLiq (solo si corresponde)
+      let facturaRef: DocumentReference<DocumentData> | null = null;
+      if (modo !== 'liquidacion') {
+        if (!facturaActualizada || !coleccionFactura) {
+          return { exito: false, mensaje: 'Se esperaba un InformeLiq y su colección, pero no fueron proporcionados.' };
+        }
+        facturaRef = doc(this.firestore, `/Vantruck/datos/${coleccionFactura}/${facturaActualizada.id}`);
+        const facturaSnap = await getDoc(facturaRef);
+        if (!facturaSnap.exists()) {
+          return { exito: false, mensaje: `No existe la factura (InformeLiq) con id ${facturaActualizada.id} en ${coleccionFactura}.` };
+        }       
+      }
+      
+
+      // ------------------------------------------------------
+      // 2) Batch: actualizar todos juntos
+      // ------------------------------------------------------
+      const batch = writeBatch(this.firestore);
+
+      // 2.1) Actualizar Operacion completa (o solo campos necesarios)
+      //      Podés usar update si sabés que todas las keys existen; aquí uso set con merge true.
+      batch.set(opDocRef, operacionActualizada, { merge: true });
+
+      // 2.2) Actualizar InformeOp original
+      const { id: _, ...informeOriginalSinId } = informeOriginalActualizado;
+      batch.update(informeOriginalRef, informeOriginalSinId);
+
+      // 2.3) Actualizar contra-parte: solo contraParteMonto (y lo que quieras)
+      const nuevoContraParteMonto = informeOriginalActualizado.valores.total;
+      batch.update(contraParteRef, { contraParteMonto: nuevoContraParteMonto });
+
+      // 2.4) Factura (opcional)
+      if (modo !== 'liquidacion' && facturaRef) {
+        const { id: _fid, ...facturaSinId } = facturaActualizada!;
+        batch.update(facturaRef, facturaSinId);
+      }
+
+      // 2.5) (Opcional) Si querés forzar coherencias especiales por "modo",
+      //      podés setear flags o campos acá con batch.update(...) en los documentos que correspondan.
+
+      // 3) Commit
+      await batch.commit();
+
+      return { exito: true, mensaje: 'Actualización realizada correctamente y de forma atómica.' };
+
+    } catch (err: any) {
+      console.error('Error en actualizarOperacionInformeOpYFactura:', err);
+      return { exito: false, mensaje: `Error: ${err?.message || err}` };
+    }
+  }
+
+  // ------------------------------------------
+  // MÉTODO AUXILIAR: Buscar contra-parte
+  // ------------------------------------------
+  /**
+   * Busca la contra-parte de un InformeOp original, deduciendo las colecciones
+   * a inspeccionar según:
+   *  - Si el original es de Clientes => buscar en Choferes o Proveedores (según idProveedor)
+   *  - Si el original es de Choferes/Proveedores => buscar en Clientes
+   *  - Primero busca en la colección "no liquidada", luego en la "liquidada"
+   *
+   * Devuelve null si no la encuentra.
+   */
+  private async buscarContraParteInformeOp(
+    informeOriginal: ConId<InformeOp>,
+    coleccionOriginal: string
+  ): Promise<{ docRef: DocumentReference<DocumentData>, data: ConId<InformeOp>, coleccion: string } | null> {
+
+    // Colecciones
+    const COLS = {
+      clientes:     { noLiq: 'informesOpClientes',   liq: 'infOpLiqClientes' },
+      choferes:     { noLiq: 'informesOpChoferes',   liq: 'infOpLiqChoferes' },
+      proveedores:  { noLiq: 'informesOpProveedores',liq: 'infOpLiqProveedores' },
+    };
+
+    // Detectar "lado" del informe original
+    const esCliente      = coleccionOriginal.includes('Clientes');
+    const esChofer       = coleccionOriginal.includes('Choferes');
+    const esProveedor    = coleccionOriginal.includes('Proveedores');
+
+    // Determinar a dónde buscar la contra-parte
+    let targets: { noLiq: string; liq: string };
+
+    if (esCliente) {
+      // El original es del cliente ⇒ buscar chofer o proveedor
+      targets = informeOriginal.idProveedor === 0 ? COLS.choferes : COLS.proveedores;
+    } else {
+      // El original es del chofer o proveedor ⇒ buscar cliente
+      targets = COLS.clientes;
+    }
+
+    // Buscar por contraParteId (idInfOp del otro informe)
+    const contraId = informeOriginal.contraParteId;
+
+    // 1) Primero "no liquidado"
+    for (const colName of [targets.noLiq, targets.liq]) {
+      const colRef = collection(this.firestore, `/Vantruck/datos/${colName}`);
+      const qContra = query(colRef, where('idInfOp', '==', contraId));
+      const snap = await getDocs(qContra);
+
+      if (!snap.empty) {
+        const d = snap.docs[0];
+        const data = { id: d.id, ...(d.data() as InformeOp) } as ConId<InformeOp>;
+        return { docRef: d.ref, data, coleccion: colName };
+      }
+    }
+
+    return null;
+  }
+
+  // ------------------------------------------
+  // AUX: Obtener Operacion por idOperacion
+  // ------------------------------------------
+  private async obtenerOperacionPorIdOperacion(
+    idOperacion: number
+  ): Promise<{ opDocRef: DocumentReference<DocumentData> | null, operacionDocData: Operacion | null }> {
+    const operacionesRef = collection(this.firestore, '/Vantruck/datos/operaciones');
+    const qOp = query(operacionesRef, where('idOperacion', '==', idOperacion));
+    const snap = await getDocs(qOp);
+
+    if (snap.empty) {
+      return { opDocRef: null, operacionDocData: null };
+    }
+
+    const d = snap.docs[0];
+    return { opDocRef: d.ref, operacionDocData: d.data() as Operacion };
+  }
+
+
+async eliminarOperacionEInformes(
     operacion: Operacion,
     coleccionInforme1: string,
     coleccionInforme2: string
@@ -1578,6 +1774,5 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
     }
   }
 
-  
 
 }

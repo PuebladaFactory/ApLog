@@ -18,8 +18,9 @@ import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { LogService } from 'src/app/servicios/log/log.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { ModalBajaComponent } from 'src/app/shared/modal-baja/modal-baja.component';
-import { ModalFacturaComponent } from 'src/app/shared/modal-factura/modal-factura.component';
+import { SupabaseStorageService } from 'src/app/servicios/supabase/supabase-storage.service';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
+import { InformeLiqDetalleComponent } from 'src/app/shared/modales/informe-liq-detalle/informe-liq-detalle.component';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -80,7 +81,9 @@ export class ModalDetalleComponent implements OnInit {
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private excelServ: ExcelService, 
     private pdfServ: PdfService, private logService: LogService,
-    private dbFirebase: DbFirestoreService, private modalService: NgbModal){
+    private dbFirebase: DbFirestoreService, private modalService: NgbModal,
+    private supabaseStorageService : SupabaseStorageService 
+){
 
   }
   
@@ -293,12 +296,15 @@ export class ModalDetalleComponent implements OnInit {
               fecha: factura.fecha,
               quincena: this.getQuincena(factura.fecha),
               idFactura: factura.idInfLiq,
+              numInt: factura.numeroInterno,
               cant: factura.operaciones.length,
               sumaPagar: `$ ${this.formatearValor(factura.valores.totalContraParte)}`,
               sumaCobrar: `$ ${this.formatearValor(factura.valores.total)}`,
               neta: `$ ${this.formatearValor(factura.valores.total - factura.valores.totalContraParte)}`,
               porcentaje: `${this.formatearValor((factura.valores.total - factura.valores.totalContraParte)*100/factura.valores.total)} %`,
               cobrado: factura.cobrado,
+              url: factura.facturaUrl ?  factura.facturaUrl : "",
+              estado: factura.estado,
           }));
           break;
       //////////////CHOFERES///////////////////////
@@ -308,12 +314,15 @@ export class ModalDetalleComponent implements OnInit {
               fecha: factura.fecha,
               quincena: this.getQuincena(factura.fecha),
               idFactura: factura.idInfLiq,
+              numInt: factura.numeroInterno,
               cant: factura.operaciones.length,
               sumaPagar: `$ ${this.formatearValor(factura.valores.total)}`,
               sumaCobrar: `$ ${this.formatearValor(factura.valores.totalContraParte)}`,
               neta: `$ ${this.formatearValor(factura.valores.totalContraParte - factura.valores.total)}`,
               porcentaje: `${this.formatearValor((factura.valores.totalContraParte - factura.valores.total)*100/factura.valores.totalContraParte)} %`,
-              cobrado: factura.cobrado,              
+              cobrado: factura.cobrado,   
+              url: factura.facturaUrl ?  factura.facturaUrl : "",     
+              estado: factura.estado,      
           }));
           break;
       //////////////PROVEEDORES///////////////////////
@@ -323,12 +332,15 @@ export class ModalDetalleComponent implements OnInit {
               fecha: factura.fecha,
               quincena: this.getQuincena(factura.fecha),
               idFactura: factura.idInfLiq,
+              numInt: factura.numeroInterno,
               cant: factura.operaciones.length,
               sumaPagar: `$ ${this.formatearValor(factura.valores.total)}`,
               sumaCobrar: `$ ${this.formatearValor(factura.valores.totalContraParte)}`,
               neta: `$ ${this.formatearValor(factura.valores.totalContraParte - factura.valores.total)}`,
               porcentaje: `$ ${this.formatearValor((factura.valores.totalContraParte - factura.valores.total)*100/factura.valores.totalContraParte)}`,
               cobrado: factura.cobrado,
+              url: factura.facturaUrl ?  factura.facturaUrl : "",
+              estado: factura.estado,
           }));
           break;
       default:
@@ -467,7 +479,7 @@ bajaOp(factura:any){
 
   openModalBaja(factura:ConId<InformeLiq>){
     {
-      const modalRef = this.modalService.open(ModalBajaComponent, {
+      const modalRef = this.modalService.open(BajaObjetoComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         scrollable: true, 
@@ -588,7 +600,7 @@ bajaOp(factura:any){
     });
     console.log("Factura: ", this.factura[0]);
     //respuesta = this.encontrarMaximoYMinimo(this.factura[0].operaciones)
-    
+    this.isLoading = true;
     await this.consultarOperacionesSeleccionadas(this.factura[0], this.fromParent.modo)
 
     if(accion === "detalle"){
@@ -640,7 +652,7 @@ bajaOp(factura:any){
       
 
       this.informesOp = consulta.encontrados;
-
+      this.isLoading = false;
       if (consulta.idsFaltantes.length) {
         Swal.fire({
           icon: 'warning',
@@ -653,6 +665,7 @@ bajaOp(factura:any){
       }
 
     } catch (error) {
+      this.isLoading = false;
       console.error("'Error al consultar por los informes", error);
       Swal.fire('Error', 'Falló la consulta de los informes.', 'error');
     } finally {
@@ -662,7 +675,7 @@ bajaOp(factura:any){
 
   openModalDetalleFactura(factura:any, facturasOp: InformeOp[]){
     {
-      const modalRef = this.modalService.open(ModalFacturaComponent, {
+      const modalRef = this.modalService.open(InformeLiqDetalleComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
         scrollable: true, 
@@ -695,5 +708,15 @@ bajaOp(factura:any){
         //footer: `${msj}`
       });
     }
+
+  async verPdf(infLiq: string){
+    console.log("InformeLiq", infLiq);
+    
+    if (infLiq === "") return;
+    const signedUrl = await this.supabaseStorageService.verFactura(infLiq);
+    if (signedUrl) {
+      window.open(signedUrl, '_blank');
+    }
+  } 
 
 }

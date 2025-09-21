@@ -1,17 +1,21 @@
-input, td, th {
-    font-size: 1.3rem;
-  }
+input, td, th, textarea {
+  font-size: 1.3rem;
+}
 
-  button{
-    border-color: #0d6efd;    
-  }
+label {
+  font-size: 1.1rem;
+}
 
-  #cerrar{   
-    background-color: transparent;
-    border-color: black;
-  }
-  
-  #cerrar:hover{
-    background-color: #0d6efd;
-    color: white;
-  }
+button{
+  border-color: #0d6efd;    
+}
+
+#cerrar{   
+  background-color: transparent;
+  border-color: black;
+}
+
+#cerrar:hover{
+  background-color: #0d6efd;
+  color: white;
+}

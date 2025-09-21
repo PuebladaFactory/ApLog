@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -27,11 +28,14 @@ export class SidebarComponent implements OnInit {
   alertaAmarilla: boolean = false;
   $usuario!: any;
   appVersion = version;
+  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
   constructor(private authService: AuthService, private storageService: StorageService) { }
 
   ngOnInit(): void {
-    this.storageService.legajos$.subscribe(data => {
+    this.storageService.getObservable<Legajo>("legajos")
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(data => {
       this.$legajos = data;     
       this.buscarAlertas();
     });
@@ -41,6 +45,13 @@ export class SidebarComponent implements OnInit {
     this.$usuario = structuredClone(usuarioLogueado[0]);
     
   }
+
+  ngOnDestroy(): void {
+    // Completa el Subject para cancelar todas las suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   
   volverLogin(){
     Swal.fire({

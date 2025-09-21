@@ -14,7 +14,7 @@ export interface InformeLiq {
 
     columnas: string[];              // Columnas visibles en el informe exportado
 
-    estado: 'borrador' | 'emitido' | 'cobrado'; // Estado interno del informe
+    estado: 'borrador' | 'emitido' | 'facturado' | 'cobrado' | 'anulado'; // Estado interno del informe
     cobrado:boolean;                    //agregado para que coincida con el viejo modelo de FacturaCliente/Chofer
 
     formaPago?: string;               // Efectivo, transferencia, etc. (opcional)
@@ -22,7 +22,11 @@ export interface InformeLiq {
 
     observaciones?: string;           // Campo libre para anotar algo manualmente
 
-    facturaVinculada?: string;        // ID o número de la factura fiscal (a futuro)
+    facturaUrl?: string;        // ID o número de la factura fiscal (a futuro)
+    factura?: FacturaQR;
+    anuladoMotivo?: string;                 //motivo de anulacion
+    anuladoPor?: string;                 //usuario que realizó la anulación
+    fechaAnulacion?: string | Date;         //fecha de la anulación
 }
 
 export interface EntidadLiq {
@@ -43,4 +47,16 @@ export interface Valores{
 export interface Descuento {
     concepto: string;
     valor: number;
+}
+
+interface FacturaQR {
+  cuit: string;
+  nroDocRec:string;
+  cae: string;
+  numero: string;
+  puntoVenta: string;
+  tipoComprobante: string;
+  fecha: string;
+  importe: number;
+  qrData?: string;
 }

@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ModalObjetoComponent } from './modal-objeto.component';
+import { BajaObjetoComponent } from './baja-objeto.component';
 
-describe('ModalObjetoComponent', () => {
-  let component: ModalObjetoComponent;
-  let fixture: ComponentFixture<ModalObjetoComponent>;
+describe('ModalBajaComponent', () => {
+  let component: BajaObjetoComponent;
+  let fixture: ComponentFixture<BajaObjetoComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ModalObjetoComponent ]
+      declarations: [ BajaObjetoComponent ]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ModalObjetoComponent);
+    fixture = TestBed.createComponent(BajaObjetoComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

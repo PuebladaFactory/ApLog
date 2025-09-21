@@ -635,6 +635,14 @@ export class CargaMultipleComponent implements OnInit {
 
     if (!result.isConfirmed) return;
 
+    // Validar que todos los idOperacion sean únicos
+    const ids = this.operaciones.map(op => op.idOperacion);
+    const idsDuplicados = ids.filter((id, index) => ids.indexOf(id) !== index);
+    if (idsDuplicados.length > 0) {
+      return this.mensajesError('Se encontraron operaciones con idOperacion duplicado:', "error");
+    }
+    
+
     this.isWaiting = true;
 
     const res = await this.tableroServ.altaMultipleOperacionesYActualizarTablero(this.operaciones);
