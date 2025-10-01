@@ -16,6 +16,7 @@ import { AgGridModule } from 'ag-grid-angular';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { AjustesModule } from './ajustes/ajustes.module';
 import { LegajosModule } from './legajos/legajos.module';
+import { VendedoresModule } from './vendedores/vendedores.module';
 /* import { NuevaFacturacionModule } from './nueva-facturacion/nueva-facturacion.module'; */
 
 
@@ -36,6 +37,7 @@ import { LegajosModule } from './legajos/legajos.module';
         ProveedoresModule,
         FacturacionModule,
         LiquidacionModule,
+        VendedoresModule,
         SharedModule,
         FilterPipeModule,
         AgGridModule,

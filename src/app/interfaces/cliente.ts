@@ -12,6 +12,7 @@ export interface Cliente {
     tarifaTipo: TarifaTipo;
     tarifaAsignada: boolean;
     idTarifa:number;
+    vendedor?:number[];
 }
 
 export interface Contacto {    

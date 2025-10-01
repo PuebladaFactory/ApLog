@@ -15,6 +15,7 @@ import { TarifaEventual } from 'src/app/interfaces/tarifa-eventual';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 
 import { InformeOp } from 'src/app/interfaces/informe-op';
+import { InformeVenta } from 'src/app/interfaces/informe-venta';
 
 @Injectable({
   providedIn: 'root'
@@ -42,7 +43,7 @@ export class ValoresOpService {
   operacion!: ConId<Operacion>;
   proveedorSeleccionado!: ConId<Proveedor> | undefined;
   tarifaEventual! : TarifaEventual;    
-  
+  informesVenta: InformeVenta[] = []
   respuesta:any
 
   constructor( private facturacionCliente: ValoresOpClienteService, private facturacionChofer: ValoresOpChoferService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
@@ -66,6 +67,7 @@ export class ValoresOpService {
       this.operacion = op;
 
       await this.$facturarOpCliente(op);
+      if(op.cliente.vendedor && op.cliente.vendedor.length > 0) this.asignacionComisionVenta(op);
       return await this.$guardarFacturas(op);
 
     } catch (error: any) {
@@ -304,6 +306,7 @@ async $guardarFacturas(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje:
       if (op.tarifaTipo.eventual) {
         this.guardarTarifasEventuales(op);
       }
+      if(op.cliente.vendedor && op.cliente.vendedor.length > 0) await this.dbFirebase.guardarMultipleGeneral(this.informesVenta, "informesVenta")
       return result;
     } catch (error: any) {
       throw new Error("Error al guardar facturas: " + error?.message);
@@ -337,6 +340,26 @@ async $guardarFacturas(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje:
     }
     this.storageService.addItem("tarifasEventuales", this.tarifaEventual, this.tarifaEventual.idTarifa, "ALTA", `Alta de Tarifa Eventual ${this.tarifaEventual.idTarifa}, Cliente ${op.cliente.razonSocial}, Chofer ${op.chofer.apellido} ${op.chofer.nombre} `);
 
+  }
+
+  asignacionComisionVenta(op:ConId<Operacion>){
+    
+    op.cliente.vendedor?.forEach((idVend: number)=>{
+      let informeVenta: InformeVenta;
+      informeVenta = {
+        idInfVenta: new Date().getTime() + Math.floor(Math.random() * 1000),
+        fecha: op.fecha,
+        idOperacion: op.idOperacion,
+        idCliente: op.cliente.idCliente,
+        idVendedor: idVend,
+        valoresOp: {
+          totalCliente: op.valores.cliente.aCobrar,
+          totalChofer: op.valores.chofer.aPagar,
+        },
+        pago: false,
+      };
+      this.informesVenta.push(informeVenta);
+    })
   }
 
 
