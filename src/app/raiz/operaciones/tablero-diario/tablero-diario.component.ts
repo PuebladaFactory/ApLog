@@ -14,6 +14,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
+import { ModalObjetosActivosComponent } from '../modal-objetos-activos/modal-objetos-activos.component';
 
 type ChoferAsignado = ConIdType<Chofer> & {
   categoriaAsignada: Categoria;
@@ -56,6 +57,9 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   fechaSeleccionada: string = '';
   choferesActivos: ConIdType<Chofer>[] = [];
   choferesInactivos: ConIdType<Chofer>[] = [];
+  clientesInactivos: ConIdType<Cliente>[] = [];
+  clientesActivos: ConIdType<Cliente>[] = [];
+  clientesVisibles: ConIdType<Cliente>[] = [];
   tarifaGeneral!: ConIdType<TarifaGralCliente>;
   choferesAgrupadosPorCategoria: { nombre: string; catOrden: number; choferes: ConId<Chofer>[] }[] = [];
   sectionColorClasses: string[] = [
@@ -110,11 +114,15 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
           a.razonSocial.localeCompare(b.razonSocial)
         );
 
-        this.connectedDropListsIds = this.clientes.map(
+        this.clientesActivos = this.clientes.filter(c => c.activo);
+        this.clientesInactivos = this.clientes.filter(c => !c.activo);
+        this.clientesVisibles = structuredClone(this.clientesActivos)
+
+        this.connectedDropListsIds = this.clientesVisibles.map(
           (c) => `cliente-drop-${c.idCliente}`
         );
 
-        this.clientes.forEach((cliente) => {
+        this.clientesVisibles.forEach((cliente) => {
           this.asignaciones[cliente.idCliente] = [];
         });
       });
@@ -327,16 +335,17 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
 
       try {
         const motivo = await modalRef.result;
+        this.isLoading = true;
         await this.tableroServ.anularOperacionYActualizarTablero(operacion, motivo, 'Baja de operación desde el tablero-diario');
         const nuevoTableroStr = localStorage.getItem('tableroDiarioFirestore');
         const nuevoTablero = nuevoTableroStr ? JSON.parse(nuevoTableroStr) as TableroDiario : null;
-        //console.log("nuevoTablero", nuevoTablero);
+        console.log("nuevoTablero", nuevoTablero);
         
         if (!nuevoTablero) {
           this.tablero = null;
           this.asignaciones = {};
           this.fechaSeleccionada = ''; // opcional: resetear la fecha si lo ves necesario
-
+          this.isLoading = false;
           Swal.fire({
             icon: 'info',
             title: 'Tablero eliminado',
@@ -346,8 +355,10 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
         }
 
         // 🟢 Si hay asignaciones restantes → actualizar tablero local
+        
+        await this.reconstruirDesdeTablero(nuevoTablero);
         this.tablero = nuevoTablero;
-        this.reconstruirDesdeTablero(nuevoTablero);
+        this.isLoading = false;
 
         Swal.fire({
           icon: 'success',
@@ -397,6 +408,15 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
         localStorage.removeItem('asignacionesTemporal');
         localStorage.removeItem('tableroDiarioFirestore');
         this.tablero = null; // ← sin tablero cargado
+        this.clientesVisibles = structuredClone(this.clientesActivos)
+
+        this.connectedDropListsIds = this.clientesVisibles.map(
+          (c) => `cliente-drop-${c.idCliente}`
+        );
+
+        this.clientesVisibles.forEach((cliente) => {
+          this.asignaciones[cliente.idCliente] = [];
+        });
         return 
       } 
       this.tablero = tablero; // ← guardás el tablero completo
@@ -430,18 +450,45 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     }
   }
 
-  private reconstruirDesdeTablero(tablero: TableroDiario): void {
-    //console.log("tablero: ", tablero, "this.asignaciones", this.asignaciones);
-    
-    //this.asignaciones = {};
+  private async reconstruirDesdeTablero(tablero: TableroDiario): Promise<void> {
+    console.log("tablero: ", tablero);
 
+    this.asignaciones = {};
+
+    // 🔹 1. Obtener IDs de clientes con asignaciones guardadas en el tablero
+    const idsClientesEnTablero = Object.keys(tablero.asignaciones).map(id => +id);
+
+    // 🔹 2. Obtener los clientes visibles = activos + los que tengan asignaciones guardadas
+    const clientesGuardados = this.clientes.filter(c => idsClientesEnTablero.includes(c.idCliente));
+
+    const fusion = [...this.clientesActivos];
+    for (const cliente of clientesGuardados) {
+      if (!fusion.some(c => c.idCliente === cliente.idCliente)) {
+        fusion.push(cliente);
+      }
+    }
+
+    // 🔹 3. Actualizamos clientesVisibles
+    this.clientesVisibles = fusion;
+
+    // 🔹 4. Actualizamos las droplists y las asignaciones vacías
+    this.connectedDropListsIds = this.clientesVisibles.map(
+      (c) => `cliente-drop-${c.idCliente}`
+    );
+
+    for (const cliente of this.clientesVisibles) {
+      if (!this.asignaciones[cliente.idCliente]) {
+        this.asignaciones[cliente.idCliente] = [];
+      }
+    }
+
+    // 🔹 5. Reconstruir las asignaciones completas del tablero
     for (const [idStr, choferesBase] of Object.entries(tablero.asignaciones)) {
       const idCliente = +idStr;
       const choferesCompletos: ChoferAsignado[] = [];
 
       for (const base of choferesBase) {
         const choferCompleto = this.choferes.find(c => c.idChofer === base.idChofer);
-        ////console.log("choferCompleto: ", choferCompleto);
         if (!choferCompleto) continue;
 
         choferesCompletos.push({
@@ -450,18 +497,17 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
           tEventual: base.tEventual,
           observaciones: base.observaciones ?? '',
           hojaDeRuta: base.hojaDeRuta ?? '',
-          idOperacion: base.idOperacion ?? 0 // 👈 NUEVO
+          idOperacion: base.idOperacion ?? 0
         });
-        
-        
       }
-      ////console.log("TODOS choferesCompletos: ", choferesCompletos);
+
       this.asignaciones[idCliente] = choferesCompletos;
-      
     }
-    ////console.log("this.asignaciones", this.asignaciones);
-    
+
+    console.log("✅ Reconstrucción completa: this.asignaciones", this.asignaciones);
+    console.log("✅ Clientes visibles reconstruidos:", this.clientesVisibles.map(c => c.razonSocial));
   }
+
 
 
 
@@ -585,14 +631,53 @@ openModal(opMultiples: any[]): void {
     return this.choferes.filter(c => c.activo);
   } */
 
+  openModalActivos(modo:string){
+    //console.log("clientes activos: ", this.clientesActivos);
+    //console.log("clientes inactivos: ", this.clientesInactivos);
+    //console.log("choferes activos: ", this.choferesActivos);
+    //console.log("choferes inactivos: ", this.choferesInactivos);
+    
+    {
+      const modalRef = this.modalService.open(ModalObjetosActivosComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg',
+
+      });      
+      modalRef.componentInstance.fromParent = {
+        coleccion: modo, 
+        objetos: modo === "clientes" ? this.clientes : this.choferes,
+        inactivos: modo === "clientes" ? this.clientesInactivos : this.choferesInactivos,
+
+      };
+    
+      modalRef.result.then(
+        (result) => {
+          
+        },
+        (reason) => {}
+      );
+    }
+  }
+
   toggleActivo(chofer: ConIdType<Chofer>) {
     chofer.activo = !chofer.activo;
     this.updateItem(chofer)
   }
 
+  toggleClienteActivo(cliente: ConIdType<Cliente>) {
+    cliente.activo = !cliente.activo;
+    this.updateItemCliente(cliente)
+  }
+
   updateItem(chofer: ConIdType<Chofer>){
     let{id, type, ...ch} = chofer
-    this.storageService.updateItem("choferes", chofer, chofer.idChofer, "INTERNA", "", chofer.id)
+    this.storageService.updateItem("choferes", ch, chofer.idChofer, "INTERNA", "", chofer.id)
+  }
+
+  updateItemCliente(cliente: ConIdType<Cliente>){
+    let{id, type, ...cl} = cliente
+    this.storageService.updateItem("clientes", cl, cliente.idCliente, "INTERNA", "", cliente.id)
   }
 
   getColorClassForChofer(chofer: Chofer): string {

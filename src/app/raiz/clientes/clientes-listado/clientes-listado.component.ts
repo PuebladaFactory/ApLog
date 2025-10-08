@@ -9,6 +9,8 @@ import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-rend
 import Swal from 'sweetalert2';
 import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
+import { forEach } from 'lodash';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 @Component({
   selector: 'app-listado-nuevo',
@@ -48,13 +50,19 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
     resizable: true,
   };
 
-  $clientes: Cliente[] = [];
+  $clientes: ConId<Cliente>[] = [];
   clienteEditar!: ConId<Cliente>;
   //firstFilter: string = '';
   //secondFilter: string = '';
   private destroy$ = new Subject<void>();
+  clientesActivo: ConId<Cliente>[] = [];
+  isLoading: boolean = false;
 
-  constructor(private storageService: StorageService, private modalService: NgbModal) {}
+  constructor(
+    private storageService: StorageService, 
+    private modalService: NgbModal,
+    private dbFirestore: DbFirestoreService,
+  ) {}
 
   ngOnInit(): void {
     this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
@@ -263,4 +271,36 @@ toggleColumnVisibility(colId: string): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  clientesActivos(){
+    this.$clientes.map((c:ConId<Cliente>) => {
+        c.activo = true;
+        this.clientesActivo.push(c);
+      })
+    this.clientesActivo = this.clientesActivo.sort((a, b) =>
+      a.razonSocial.localeCompare(b.razonSocial)
+    );
+    console.log("this.clientesActivo", this.clientesActivo);   
+    
+  }
+
+  async actualizarActivos(){
+    this.isLoading = true;    
+    const resp = await this.dbFirestore.actualizarMultiple(this.clientesActivo, "clientes");
+    if(resp){
+      this.isLoading = false;
+      this.mensajesError(resp.mensaje)
+    }
+    
+  }
+
+    mensajesError(msj:string){
+      Swal.fire({
+        icon: "error",
+        //title: "Oops...",
+        text: `${msj}`
+        //footer: `${msj}`
+      });
+    }
+
 }

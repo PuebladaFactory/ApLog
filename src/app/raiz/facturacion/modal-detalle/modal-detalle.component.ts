@@ -41,7 +41,8 @@ export class ModalDetalleComponent implements OnInit {
   allColumns = [
 //    { prop: '', name: '', selected: true, flexGrow:1  },
   { prop: 'fecha', name: 'Fecha', selected: true, flexGrow:2  },  
-  { prop: 'quincena', name: 'Quincena', selected: true, flexGrow:2  },          
+  { prop: 'mes', name: 'Mes', selected: true, flexGrow:2  }, 
+  { prop: 'periodo', name: 'Periodo Liq', selected: true, flexGrow:2  },   
   { prop: 'idFactura', name: 'Id Factura', selected: true, flexGrow:2  },
   { prop: 'cant', name: 'Cant Op', selected: true, flexGrow:2 },
   { prop: 'cobrado', name: 'Cobrado', selected: false, flexGrow:2 },
@@ -294,7 +295,8 @@ export class ModalDetalleComponent implements OnInit {
           this.rows = this.data.map((factura: InformeLiq) => ({
               indice: indice ++,
               fecha: factura.fecha,
-              quincena: this.getQuincena(factura.fecha),
+              mes: factura.mes,              
+              periodo: factura.periodo === 'quincena' ? this.getQuincena(factura.fecha) : 'mes',
               idFactura: factura.idInfLiq,
               numInt: factura.numeroInterno,
               cant: factura.operaciones.length,
@@ -312,7 +314,8 @@ export class ModalDetalleComponent implements OnInit {
           this.rows = this.data.map((factura: InformeLiq) => ({
               indice: indice ++,
               fecha: factura.fecha,
-              quincena: this.getQuincena(factura.fecha),
+              mes: factura.mes,
+              periodo: factura.periodo === 'quincena' ? this.getQuincena(factura.fecha) : 'mes',
               idFactura: factura.idInfLiq,
               numInt: factura.numeroInterno,
               cant: factura.operaciones.length,
@@ -330,7 +333,8 @@ export class ModalDetalleComponent implements OnInit {
           this.rows = this.data.map((factura: InformeLiq) => ({
               indice: indice ++,
               fecha: factura.fecha,
-              quincena: this.getQuincena(factura.fecha),
+              mes: factura.mes,
+              periodo: factura.periodo === 'quincena' ? this.getQuincena(factura.fecha) : 'mes',
               idFactura: factura.idInfLiq,
               numInt: factura.numeroInterno,
               cant: factura.operaciones.length,

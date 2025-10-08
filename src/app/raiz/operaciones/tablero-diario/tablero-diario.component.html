@@ -3,38 +3,15 @@
         <!-- Dropdowns Izquierda -->
         <div class="d-flex align-items-center justify-content-start">
             <!-- Choferes Activos -->
-            <div class="dropdown">
-                <button class="btn btn-primary boton-choferes dropdown-toggle me-1" type="button" data-bs-toggle="dropdown">
+            <button class="btn btn-primary boton-choferes me-1" type="button" (click)="openModalActivos('choferes')" >
                   Choferes Activos
-                </button>
-                <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
-                    <li *ngFor="let chofer of choferes">
-                        <div class="form-check ms-2">
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              [checked]="chofer.activo"
-                              (change)="toggleActivo(chofer)"
-                              id="chofer-activo-{{chofer.idChofer}}"
-                            />
-                            <label class="form-check-label" [for]="'chofer-activo-' + chofer.idChofer">
-                              {{ chofer.apellido }}, {{ chofer.nombre }}
-                            </label>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-            <!-- Choferes Inactivos -->
-            <div class="dropdown">
-                <button class="btn celeste-fijo dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                  Choferes Inactivos
-                </button>
-                <ul class="dropdown-menu p-2" style="width: 350px; max-height: 500px; overflow-y: auto;">
-                    <li *ngFor="let chofer of choferesInactivos">
-                      <span style="font-size: 1.25rem;">{{ chofer.apellido }}, {{ chofer.nombre }}</span>
-                    </li>
-                </ul>
-            </div>
+            </button>
+            <!-- Clientes Activos -->
+            
+            <button class="btn btn-primary celeste-fijo  me-1" type="button" (click)="openModalActivos('clientes')">
+              Clientes Activos
+            </button>
+            
         </div>
     </div>  
     <div class="col-4 d-flex justify-content-center">
@@ -152,7 +129,7 @@
               <div class="row">
                   <div
                     class="col-2 mb-4"
-                    *ngFor="let cliente of clientes"
+                    *ngFor="let cliente of clientesVisibles"
                   >
                       <h3 class="text-center" style="min-height: 40px;">{{ cliente.razonSocial }}</h3>
                       <div

@@ -15,6 +15,7 @@ import { TableroDiario } from 'src/app/raiz/operaciones/tablero-diario/tablero-d
 import { InformeOp } from 'src/app/interfaces/informe-op';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from '../numerador/numerador.service';
+import { error } from 'jquery';
 
 export interface Resultado {
   exito: boolean;
@@ -1813,6 +1814,67 @@ async eliminarOperacionEInformes(
     } catch (error) {
       console.error('Error en buscarInformesPorIdOperacion:', error);
       return [];
+    }
+  }
+
+  async eliminarInformesPorIdOperacion(
+    op: ConId<Operacion>,    
+  ): Promise<void> {
+    try {
+      const batch = writeBatch(this.firestore);
+      ///informe de cliente
+      const colRef = collection(this.firestore, `Vantruck/datos/informesOpClientes`);
+      
+
+      const clienteSnap = await getDocs(query(colRef, where('idOperacion', '==', op.idOperacion)));
+
+      if (clienteSnap.empty) {
+        throw new Error(`No existe un informe de operacion con id ${op.idOperacion} en informesOpClientes`);
+      }
+
+      const clienteSnapRef = doc(this.firestore, `${clienteSnap.docs[0].ref.path}`);
+
+      // Agregar al batch
+      batch.delete(clienteSnapRef);
+
+      if(op.chofer.idProveedor === 0){
+        const colRef = collection(this.firestore, `Vantruck/datos/informesOpChoferes`);
+        
+
+        const choferSnap = await getDocs(query(colRef, where('idOperacion', '==', op.idOperacion)));
+
+        if (choferSnap.empty) {
+          throw new Error(`No existe un informe de operacion con id ${op.idOperacion} en informesOpChoferes`);
+        }
+
+        const choferSnapRef = doc(this.firestore, `${choferSnap.docs[0].ref.path}`);
+
+        // Agregar al batch
+        batch.delete(choferSnapRef);
+      } else {
+        const colRef = collection(this.firestore, `Vantruck/datos/informesOpProveedores`);
+        
+
+        const proveedorSnap = await getDocs(query(colRef, where('idOperacion', '==', op.idOperacion)));
+
+        if (proveedorSnap.empty) {
+          throw new Error(`No existe un informe de operacion con id ${op.idOperacion} en informesOpProveedores`);
+        }
+
+        const proveedorSnapRef = doc(this.firestore, `${proveedorSnap.docs[0].ref.path}`);
+
+        // Agregar al batch
+        batch.delete(proveedorSnapRef);
+      }
+
+      // Ejecutar el batch
+      await batch.commit();
+      console.log("llego?");
+      
+      
+    } catch (error) {
+      console.error('Error en la eliminación de los informes de operación:', error);
+      
     }
   }
 

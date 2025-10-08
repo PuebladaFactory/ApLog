@@ -94,6 +94,12 @@ export class TableroService {
       motivo
     );
 
+    //1.5 elimina los informes de op        
+    if(op.estado.cerrada){
+      console.log("TABLERO SERVICE: operacion: ",op);
+      await this.dbFirestore.eliminarInformesPorIdOperacion(op);
+    }
+
     // 2. Buscar tablero
     const tablero = await this.getTableroPorFecha(fechaStr);
     if (!tablero) return null;
@@ -129,6 +135,9 @@ export class TableroService {
 
     await this.guardarTablero(tableroActualizado, "ACTUALIZACION");
     localStorage.setItem('tableroDiarioFirestore', JSON.stringify(tableroActualizado));
+
+    
+    
 
     return tableroActualizado;
   }
