@@ -114,6 +114,7 @@ export class FacturacionGeneralComponent implements OnInit {
     this.storageService.fechasConsulta$
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
+      this.isLoading = true;
       this.fechasConsulta = data;
       ////console.log("FACTURACION GRAL: fechas consulta: ",this.fechasConsulta);      
       this.btnConsulta = true;
@@ -128,8 +129,9 @@ export class FacturacionGeneralComponent implements OnInit {
     this.destroy$.complete();
   }
 
-  consultasFacturas(fechaDesde:string, fechaHasta:string){
-    this.storageService.syncChangesDateValue<InformeLiq>("resumenLiq", "fecha", fechaDesde, fechaHasta, "desc");
+  async consultasFacturas(fechaDesde:string, fechaHasta:string){
+    await this.storageService.syncChangesDateValue<InformeLiq>("resumenLiq", "fecha", fechaDesde, fechaHasta, "desc");
+    this.isLoading = false;
     /* this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqChoferes", "fecha", fechaDesde, fechaHasta, "desc");
     this.storageService.syncChangesDateValue<InformeLiq>("resumenLiqProveedores", "fecha", fechaDesde, fechaHasta, "desc"); */
     //this.storageService.getByDateValue("facturaCliente", "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "consultasFacCliente");
