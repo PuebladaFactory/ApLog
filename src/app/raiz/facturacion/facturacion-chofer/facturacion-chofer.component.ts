@@ -52,6 +52,7 @@ export class FacturacionChoferComponent implements OnInit {
       this.storageService.getObservable<ConId<InformeLiq>>("resumenLiq")
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
+        data = data.filter(inf=> inf.estado !== 'anulado');
         this.informesLiqChofer = data.filter(inf=> inf.tipo === 'chofer'); 
         //console.log('COLECCION: resumenLiq: chofer: ', this.informesLiqChofer);
         this.informesLiqChofer = this.informesLiqChofer.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer

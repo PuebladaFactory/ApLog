@@ -55,7 +55,7 @@ export class FacturacionGeneralComponent implements OnInit {
     .subscribe(data => {
       //console.log("data factura clientes: ", data);
       if(data){
-        
+        data = data.filter(inf=> inf.estado !== 'anulado');
         
         this.informesLiqCliente = data.filter(inf=> inf.tipo === 'cliente'); 
         console.log('COLECCION: resumenLiq: clientes: ', this.informesLiqCliente);
