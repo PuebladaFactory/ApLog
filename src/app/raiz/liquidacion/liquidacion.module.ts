@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 
 import { LiquidacionRoutingModule } from './liquidacion-routing.module';
 
@@ -48,6 +48,7 @@ import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
   ],
    exports:[
       MigrarDatosComponent,
-    ]
+    ],
+  providers: [DatePipe] 
 })
 export class LiquidacionModule { }

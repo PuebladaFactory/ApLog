@@ -275,6 +275,9 @@ export class StorageService {
 
   private _resumenLiq$ = new BehaviorSubject<any>(this.loadInfo('resumenLiq') || []);
   public resumenLiq$ = this._resumenLiq$.asObservable();
+  
+  private _vendedores$ = new BehaviorSubject<any>(this.loadInfo('vendedores') || []);
+  public vendedores$ = this._vendedores$.asObservable();
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
@@ -803,9 +806,9 @@ export class StorageService {
     });
   } */
 
-  syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
+  async syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
     //console.log(" storage syncChangesDateValue ", componente)
-    this.dbFirebase.getAllByDateValue<T>(componente, campo, value1, value2, orden).subscribe(data => {
+    await this.dbFirebase.getAllByDateValue<T>(componente, campo, value1, value2, orden).subscribe(data => {
       //console.log("syncChangesDateValue/componente: ", componente, " data: ", data);
       
       const currentData = this.loadInfo(componente);
@@ -954,6 +957,10 @@ export class StorageService {
         return this._resumenLiqProveedores$.asObservable();  
       case "resumenLiq":
         return this._resumenLiq$.asObservable();
+      case "vendedores":
+        return this._vendedores$.asObservable();
+      case "fechasConsulta":
+        return this._fechasConsulta$.asObservable();
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }

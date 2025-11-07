@@ -73,6 +73,10 @@ export class TableroCalendarioComponent implements OnInit {
         this.calcularMesActual();
         break;
       }
+      case "vendedores":{
+        this.calcularMesActual();
+        break;
+      }
       case "facturacion":{
         this.calcularAnioActual();
         break;

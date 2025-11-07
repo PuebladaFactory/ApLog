@@ -37,6 +37,10 @@ export class ResumenOpLiquidadasComponent implements OnInit {
   choferSel!: ConIdType<Chofer>;
   proveedorSel!: ConIdType<Proveedor>;
   modo: string = "vista";  
+  mes: string = "";
+  periodo: string = "";
+  periodoBoolean: boolean = true;
+
 
   columnas = [
     { nombre: 'Fecha', propiedad: 'fecha', seleccionada: true },
@@ -103,6 +107,8 @@ export class ResumenOpLiquidadasComponent implements OnInit {
     });
     console.log("1): ", this.facLiquidadas);    
     this.total = this.fromParent.total;
+    this.mes = this.fromParent.mesPeriodo;
+    console.log("mes: ", this.mes);
     ////console.log("2): ", this.total);
     this.facLiquidadas.forEach((f:InformeOp)=>{this.totalContraParte += f.contraParteMonto});
     ////console.log("3): ", this.totalContraParte);
@@ -424,6 +430,8 @@ export class ResumenOpLiquidadasComponent implements OnInit {
     let idInforme = this.fromParent.origen === 'cliente' ? this.clienteSel.idCliente : this.fromParent.origen === 'chofer' ? this.choferSel.idChofer :  this.proveedorSel.idProveedor;
     let razonSocial = this.fromParent.origen === 'cliente' ? this.clienteSel.razonSocial : this.fromParent.origen === 'chofer' ? this.choferSel.apellido + " " + this.choferSel.nombre : this.proveedorSel.razonSocial;
     let cuit = this.fromParent.origen === 'cliente' ? this.clienteSel.cuit : this.fromParent.origen === 'chofer' ? this.choferSel.cuit :  this.proveedorSel.cuit;
+    this.periodo = this.periodoBoolean ? 'mes' : 'quincena'
+    
     this.factura = {
 
       fecha: new Date().toISOString().split('T')[0],
@@ -447,9 +455,12 @@ export class ResumenOpLiquidadasComponent implements OnInit {
       observaciones: this.obsInterna,           // Campo libre para anotar algo manualmente
 
       facturaVinculada: "",        // ID o número de la factura fiscal (a futuro)      
+      mes: this.mes,
+      periodo: this.periodo,
 
     }
   }
+
 
 
 }

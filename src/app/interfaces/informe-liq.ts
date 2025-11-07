@@ -21,7 +21,8 @@ export interface InformeLiq {
     fechaCobro?: Date | string;       // Fecha en que se registró el cobro
 
     observaciones?: string;           // Campo libre para anotar algo manualmente
-
+    mes?: 'Enero' | 'Febrero' | 'Marzo' | 'Abril' | 'Mayo' | 'Junio' | 'Julio' | 'Agosto' | 'Septiembre' | 'Noviembre' | 'Diciembre'
+    periodo?: 'mes' | 'quincena'
     facturaUrl?: string;        // ID o número de la factura fiscal (a futuro)
     factura?: FacturaQR;
     anuladoMotivo?: string;                 //motivo de anulacion

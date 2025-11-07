@@ -250,6 +250,7 @@ onSubmit(){
 }
 
 cerrarOp(){
+  
   this.op.km = this.formNumServ.convertirAValorNumerico(this.form.value.km);
   this.op.valores.chofer.aPagar = this.formNumServ.convertirAValorNumerico(this.op.valores.chofer.aPagar);
   this.op.valores.chofer.tarifaBase = this.formNumServ.convertirAValorNumerico(this.op.valores.chofer.tarifaBase);
@@ -393,23 +394,49 @@ armarOp(){
  
 } 
 
-changeMultiCliente(event: any) {
-  ////console.log("multi cliente: ", Number(event.target.value));    
-  //this.acompaniante = event.target.value.toLowerCase() == 'true';
-  this.op.multiplicadorCliente = Number(event.target.value);
-  this.aCobrar = this.formatearValor(this.op.valores.cliente.aCobrar * this.op.multiplicadorCliente);
-    
-  //////console.log(this.acompaniante);
-  
-}
+  changeMultiCliente(event: any) {
+    let valor = Number(event.target.value);
 
-changeMultiChofer(event: any) {
-  ////console.log("multi chofer: ", Number(event.target.value));    
-  this.op.multiplicadorChofer = Number(event.target.value);
-  this.aPagar = this.formatearValor(this.op.valores.chofer.aPagar * this.op.multiplicadorChofer);
-  //this.acompaniante = event.target.value.toLowerCase() == 'true';
-  //////console.log(this.acompaniante);
-  
-}
+    // Validar rango (0–2)
+    if (isNaN(valor) || valor < 0 || valor > 2) {
+      alert('El multiplicador debe estar entre 0 y 2');
+
+      // Reasignar valor válido
+      valor = 1;
+      this.op.multiplicadorCliente = valor;
+
+      // Forzar actualización visual del input
+      event.target.value = valor.toString();
+
+      return;
+    }
+
+    // Calcular normalmente
+    this.op.multiplicadorCliente = valor;
+    this.aCobrar = this.formatearValor(this.op.valores.cliente.aCobrar * valor);
+  }
+
+  changeMultiChofer(event: any) {
+    let valor = Number(event.target.value);
+
+    // Validar rango (0–2)
+    if (isNaN(valor) || valor < 0 || valor > 2) {
+      alert('El multiplicador debe estar entre 0 y 2');
+
+      // Reasignar valor válido
+      valor = 1;
+      this.op.multiplicadorChofer = valor;
+
+      // Forzar actualización visual del input
+      event.target.value = valor.toString();
+
+      return;
+    }
+
+    // Calcular normalmente
+    this.op.multiplicadorChofer = valor;
+    this.aPagar = this.formatearValor(this.op.valores.chofer.aPagar * valor);
+  }
+
 
 }

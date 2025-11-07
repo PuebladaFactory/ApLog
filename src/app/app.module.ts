@@ -1,4 +1,4 @@
-import { NgModule, isDevMode } from '@angular/core';
+import { LOCALE_ID, NgModule, isDevMode } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 
@@ -44,6 +44,11 @@ import { AgGridModule } from 'ag-grid-angular';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { LiquidacionModule } from "./raiz/liquidacion/liquidacion.module";
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es'; // Importa los datos en español
+
+// Registra los datos del locale en español
+registerLocaleData(localeEs);
 
 @NgModule({
   declarations: [
@@ -84,6 +89,7 @@ import { LiquidacionModule } from "./raiz/liquidacion/liquidacion.module";
     provideAuth(() => getAuth()),
     AuthService,
     provideHttpClient(withInterceptorsFromDi()),
+     { provide: LOCALE_ID, useValue: 'es' } // Establece el español como locale
   ],
   bootstrap: [AppComponent],
 })

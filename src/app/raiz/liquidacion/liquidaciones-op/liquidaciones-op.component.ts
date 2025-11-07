@@ -20,6 +20,7 @@ import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tari
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { EditarInfOpComponent } from 'src/app/shared/modales/editar-inf-op/editar-inf-op.component';
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
+import { DatePipe } from '@angular/common';
 @Component({
   selector: 'app-liquidaciones-op',
   standalone:false, 
@@ -78,7 +79,8 @@ export class LiquidacionesOpComponent implements OnInit {
     private modalService: NgbModal, 
     private dbFirebase: DbFirestoreService,
     private buscarTarifaServ: BuscarTarifaService,
-    private tableroServ: TableroService
+    private tableroServ: TableroService,
+    private datePipe: DatePipe
   ){}
 
     ngOnInit(): void {
@@ -420,6 +422,9 @@ export class LiquidacionesOpComponent implements OnInit {
     //this.facturasLiquidadasCliente
     //this.totalFacturasLiquidadasChofer
     //this.totalFacturasLiquidadasCliente
+    
+    let mes = this.getMesCapitalizado(this.fechasConsulta.fechaDesde);
+    //console.log("mes: ", mes);
 
     this.indiceSeleccionado
     {
@@ -434,7 +439,8 @@ export class LiquidacionesOpComponent implements OnInit {
         origen:this.llamadaOrigen,
         facturas: this.informesLiquidados,
         total: this.totalInformesLiquidados,
-        //totalChofer: this.totalFacturasLiquidadasChofer,
+        mesPeriodo: mes
+        
       }; 
       //////console.log("info: ",info);
       
@@ -930,6 +936,16 @@ borrarLiquidaciones(){
       }
     })
   } 
+
+  getMesCapitalizado(fechaString: string): string {
+    const mes = this.datePipe.transform(fechaString, 'MMMM');
+    return this.capitalizeFirst(mes);
+  }
+  
+  private capitalizeFirst(texto: string | null): string {
+    if (!texto) return '';
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+  }
   
 
 

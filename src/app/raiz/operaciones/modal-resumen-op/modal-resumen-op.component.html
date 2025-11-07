@@ -336,32 +336,38 @@
 
         </div>
         <div class="col-4">
-          <div class="input-group">
-            <span class="input-group-text" id="basic-addon1" >Multiplicador Cliente</span>
-            <select class="form-select" (change)="changeMultiCliente($event)">
-              <option [value]="op.multiplicadorCliente" selected>{{op.multiplicadorCliente}}</option>
-              <option [value]="0">0</option>
-              <option [value]="1/2">0.5</option>
-              <option [value]="1">1</option>
-              <option [value]="3/2">1.5</option>
-              <option [value]="2">2</option>
-            </select>
-          </div>
+          <div class="form-group">
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1">Multiplicador Cliente</span>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="op.multiplicadorCliente"
+                    name="multiplicadorCliente"
+                    step="0.01"
+                    min="0"
+                    max="2"
+                    (input)="changeMultiCliente($event)"
+                  />
+                </div>
+              </div>
         </div>
         <div class="col-4">
-          <div class="form-group" >
-            <div class="input-group">
-              <span class="input-group-text" id="basic-addon1" >Multiplicador Chofer</span>
-              <select class="form-select" (change)="changeMultiChofer($event)">
-                <option [value]="op.multiplicadorChofer" selected>{{op.multiplicadorChofer}}</option>
-                <option [value]="0">0</option>
-                <option [value]="1/2">0.5</option>
-                <option [value]="1">1</option>
-                <option [value]="3/2">1.5</option>
-                <option [value]="2">2</option>
-              </select>
-            </div>
-          </div>
+            <div class="form-group">
+                <div class="input-group">
+                  <span class="input-group-text" id="basic-addon1">Multiplicador Chofer</span>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="op.multiplicadorChofer"
+                    name="multiplicadorChofer"
+                    step="0.01"
+                    min="0"
+                    max="2"
+                    (input)="changeMultiChofer($event)"
+                  />
+                </div>
+              </div>
         </div>
       </div>
 

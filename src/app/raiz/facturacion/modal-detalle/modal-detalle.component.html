@@ -12,24 +12,26 @@
   <table class="table table-light table-striped table-bordered">
     <thead class="sticky-top">
       <th scope="col">Fecha</th>
-      <th scope="col">Quincena</th>
+      <th scope="col">Mes</th>
+      <th scope="col">Periodo Liq</th>      
       <th scope="col">Id Factura</th>
       <th scope="col">Cant Op</th>
       <th scope="col">Suma a Cobrar</th>
       <th scope="col">Suma a Pagar</th>
       <th scope="col">Ganancia Neta</th>
       <th scope="col">Porcentaje</th>
-      <th scope="col">{{fromParent.modo === 'clientes' ? 'Cobrado' : 'Pagado'}}</th>
-      <th scope="col">Estado</th>
+      <th scope="col">{{fromParent.modo === 'clientes' ? 'Cobrado' : 'Pagado'}}</th>           
       <th scope="col">Reimpresión </th>
+      <th scope="col">Estado</th>
       <th scope="col" class="text-center">Detalle </th>
-      <th scope="col">F. Electrónica</th>
+      <th scope="col">Fac.Elec.</th>
     </thead>
     <tbody>
       @for (fila of rows | filterBy: searchText; track fila; let i = $index) {
         <tr>
           <td>{{fila.fecha}}</td>
-          <td>{{fila.quincena}}</td>
+          <td>{{fila.mes}}</td>
+          <td>{{fila.periodo}}</td>          
           <td>{{fila.numInt}}</td>
           <td class="text-center">{{fila.cant}}</td>
           <td [ngClass]="{'table-success' : fromParent.modo === 'clientes'}">{{fila.sumaCobrar}}</td>
