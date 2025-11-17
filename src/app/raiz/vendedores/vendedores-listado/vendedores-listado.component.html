@@ -1,5 +1,43 @@
-<div class="d-flex justify-content-between">
+<div>
     <div class="align-self-start mt-3 mb-2">  
-        <app-btn-leer class="align-items-end" name="Cliente" (click)="openModal('alta')"></app-btn-leer>
+        <app-btn-leer class="align-items-end" name="Vendedor" (click)="openModal('alta')"></app-btn-leer>
+    </div>
+    <div>
+        <div class="row">
+            @for(vendedor of vendedores; track vendedor){
+                <div class="col">
+                    <div class="card" style="width: 30rem;">                    
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{vendedor.datosPersonales.apellido}} {{vendedor.datosPersonales.nombre}}</h4>
+                                </div>
+                                <div>
+                                    <app-btn-editar name="Editar" (click)="editarVendedor(vendedor)" ></app-btn-editar>
+                                    <app-btn-eliminar name="Eliminar"  (click)="eliminarVendedor(vendedor)"></app-btn-eliminar>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <div class="card-body">
+                            <table>
+                                <tr>
+                                    <th class="w-75">Cliente</th>
+                                    <th class="w-25">Comisión</th>
+                                </tr>
+                            <tbody>
+                                @for (asignacion of vendedor.asignaciones; track asignacion) {
+                                    <tr>
+                                        <td class="w-75">{{getCliente(asignacion.idCliente)}}</td>
+                                        <td class="w-25 text-end">{{asignacion.porcentaje}}%</td>
+                                    </tr>
+                                }                                
+                            </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>   
+            }                     
+        </div>
     </div>
 </div>

@@ -1816,5 +1816,19 @@ async eliminarOperacionEInformes(
     }
   }
 
+  async existeCuit(coleccion: string, cuit: string): Promise<boolean> {
+    try {
+      const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+      const q = query(colRef, where('datosPersonales.cuit', '==', cuit));
+      const snap = await getDocs(q);
+
+      // Si encuentra al menos un documento, devuelve true
+      return !snap.empty;
+    } catch (error) {
+      console.error('Error verificando CUIT:', error);
+      throw error;
+    }
+  }
+
 
 }

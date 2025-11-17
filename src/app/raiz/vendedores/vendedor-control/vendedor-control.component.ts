@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Vendedor } from 'src/app/interfaces/vendedor';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
   selector: 'app-vendedor-control',
@@ -30,13 +32,17 @@ export class VendedorControlComponent implements OnInit {
   ocultarCalendario: boolean = false;
   selectedTab: string = 'tab1';
   tabs = [
-    { id: 'tab1', name: 'Tablero de Actividad', route: 'vendedores/tablero' },    
+    { id: 'tab1', name: 'Tablero de Actividad', route: 'vendedores/tableroVendedores' },    
     { id: 'tab2', name: 'Listado', route: 'vendedores/listado' }, 
   ];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private storageService: StorageService, 
+  ) {}
 
   ngOnInit(): void {
+    this.storageService.listenForChanges<Vendedor>("vendedores");
     this.selectTab("tab1");
   }
 

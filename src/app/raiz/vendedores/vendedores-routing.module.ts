@@ -14,7 +14,7 @@ const routes: Routes = [
           data: { roles: ['god', 'admin', 'manager'] }, // no se permiten usuarios
         },        
     {path: 'listado', component:VendedoresListadoComponent},    
-    {path: 'tablero', component:TableroActividadComponent},    
+    {path: 'tableroVendedores', component:TableroActividadComponent},    
     
 ]  },
   

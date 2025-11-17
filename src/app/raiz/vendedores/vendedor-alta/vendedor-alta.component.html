@@ -92,8 +92,8 @@
         <div class="row mt-3">
             <div class="d-flex justify-content-between">
                 <h3>Clientes Asignados</h3>
-                @if (!soloVista) {
-                <button class="btn azul" (click)="openModal()"> Asignar Cliente
+                @if (soloVista === false) {
+                <button class="btn azul" (click)="openModal(asignarCliente, 'alta')"> Asignar Cliente
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
@@ -107,14 +107,22 @@
                         <th>Razon Social</th>
                         <th>Comision</th>                    
                         @if (!soloVista) {
-                            <th style="width: 80px;" >Acciones</th>
+                            <th >Acciones</th>
                         }
                     </thead>
                     @if (asignaciones.length > 0) {
                         <tbody>
                         @for (asignacion of asignaciones; track asignacion; let i = $index) {
-                            <td class="align-middle">{{getCliente(asignacion.idCliente)}}</td>
-                            <td class="align-middle">{{asignacion.porcentaje}}</td>
+                            <tr>
+                                <td class="align-middle">{{getCliente(asignacion.idCliente)}}</td>
+                                <td class="align-middle">{{asignacion.porcentaje}}<span>%</span></td>
+                                @if (!soloVista) {
+                                <td class="tabla align-baseline">
+                                    <app-btn-editar name="Editar" (click)="editarAsignacion(asignarCliente, asignacion, i)" ></app-btn-editar>
+                                    <app-btn-eliminar name="Eliminar"  (click)="eliminarAsignacion(i)"></app-btn-eliminar>
+                                </td>
+                                }
+                            </tr>                            
                         }
                         </tbody>
                     } @else {
@@ -133,4 +141,51 @@
         </div>
     }
 </div>
+
+<!-- MODAL -->
+<ng-template #asignarCliente let-modal>   
+    <div>
+        <div class="modal-header">
+            <h3>Asignar Cliente</h3>
+        </div>
+        <div class="modal-body">
+            <div class="d-flex">
+                <div class="mb-3 w-75">
+                <label class="form-label">Cliente</label>                    
+                    <select class="form-select" (change)="changeCliente($event)">
+                        <option value="">{{clienteSeleccionado ? clienteSeleccionado.razonSocial : 'Seleccione'}}</option>
+                        @for (cliente of clientes; track cliente) {
+                            <option [value]="cliente.idCliente">
+                            {{cliente.razonSocial}}
+                            </option>
+                        }
+                    </select>                    
+                </div>
+                <div class="mb-3 w-25">
+                    <label class="form-label">Porcentaje</label>
+                    <div class="input-group input-group">                        
+                        <input
+                        type="number"
+                        class="form-control"
+                        [(ngModel)]="porcentajeAsignado"
+                        name="multiplicadorChofer"
+                        step="1"
+                        min="0"
+                        max="100"
+                        (input)="changePorcentaje($event)"
+                        />
+                        <span class="input-group-text" id="basic-addon1">%</span>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancelar</button>
+            <button type="button" class="btn btn-primary" (click)="guardarClienteAsignado(modal)">Asignar</button>
+        </div>    
+    </div>  
+</ng-template>
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}
 

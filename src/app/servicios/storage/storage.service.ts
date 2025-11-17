@@ -1205,6 +1205,7 @@ export class StorageService {
           case "facturaProveedor":
           case "proforma":
           case "tableroDiario":
+          case "vendedores":
             if(accion === "INTERNA"){
               return false;
             } else{
