@@ -31,7 +31,7 @@
           </div>
         </div>
         <div class="d-flex">
-          <h4 class="me-3">Descuentos</h4>
+          <h4 class="me-3">Ajustes</h4>
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" type="button" (click)="abrirModalDescuentos()" style="color: rgb(0, 110, 255);">
             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
@@ -72,6 +72,15 @@
                   }
                 </tr>
               }
+              <tr>
+                @if (fromParent.origen !== 'proveedores') {
+                  <th colspan="11"><span class="ms-3">Subtotal</span></th>
+                }
+                @if (fromParent.origen === 'proveedores') {
+                  <th colspan="12"><span class="ms-3">Subtotal</span></th>
+                }
+                <th class="text-center">{{formatearValor(subtotal)}}</th>
+              </tr>
               @if (tieneDescuentos) {
                 <ng-container class="table-group-divider table-bordered table-striped">
                   @if (fromParent.origen !== 'proveedores') {
@@ -79,7 +88,7 @@
                     @for (desc of descuentosAplicados; track desc) {
                       <tr>
                         <td colspan="11">{{desc.concepto}}</td>
-                        <td class="text-center">- {{desc.valor | formatearValor :"$"}}</td>
+                        <td class="text-center" [ngClass]="desc.valor >= 0 ? 'positivo' : 'negativo'">{{desc.valor | formatearValor :"$"}}</td>
                       </tr>
                     }
                   } @else {
@@ -87,7 +96,7 @@
                     @for (desc of descuentosAplicados; track desc) {
                       <tr>
                         <td colspan="12">{{desc.concepto}}</td>
-                        <td class="text-center">- {{desc.valor  | formatearValor :"$"}}</td>
+                        <td class="text-center" [ngClass]="desc.valor >= 0 ? 'positivo' : 'negativo'">{{desc.valor  | formatearValor :"$"}}</td>
                       </tr>
                     }
                   }
@@ -103,7 +112,7 @@
                 @if (fromParent.origen === 'proveedores') {
                   <th colspan="12"><span class="ms-3">Total</span></th>
                 }
-                <th class="text-center">{{tieneDescuentos ? formatearValor(total - totalDescuento) : formatearValor(total)}}</th>
+                <th class="text-center">{{tieneDescuentos ? formatearValor(total + totalDescuento) : formatearValor(total)}}</th>
               </tr>
             </tfoot>            
           </table>
