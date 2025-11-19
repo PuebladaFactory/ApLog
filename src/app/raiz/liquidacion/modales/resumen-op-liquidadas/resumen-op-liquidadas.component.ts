@@ -66,6 +66,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
   titulo!:string;
   facLiquidadas: ConIdType<InformeOp>[] = [];
   total!: number;
+  subtotal!: number;
   totalContraParte: number = 0;
   columnasVisibles: any[] = [];
   factura!: any;  
@@ -107,6 +108,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
     });
     console.log("1): ", this.facLiquidadas);    
     this.total = this.fromParent.total;
+    this.subtotal = this.fromParent.total;
     this.mes = this.fromParent.mesPeriodo;
     console.log("mes: ", this.mes);
     ////console.log("2): ", this.total);
@@ -252,7 +254,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
             
             //valores.total += f.valores.total          
           });          
-          valores.total -= this.totalDescuento
+          valores.total += this.totalDescuento
           this.modo = accion === 'factura' ? 'cerrar' : 'proforma';
 
           this.generarInformeLiquidacion(valores,colSel, accion);
@@ -404,7 +406,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
       modalRef.result.then(
         (result) => {
           //console.log("descuentos: ", result);
-          if(result.total > 0){            
+          if(result.descuentos.length > 0){            
             this.descuentosAplicados = result.descuentos;
             this.tieneDescuentos = true;
             this.totalDescuento = result.total;            

@@ -374,7 +374,7 @@ export class InformeLiqDetalleComponent implements OnInit {
       valores.total += f.valores.total;          
     });
     
-    valores.total -= valores.descuentoTotal;
+    valores.total += valores.descuentoTotal;
     this.informeLiq.valores = valores;
     console.log("total de la liquidacion: ", this.informeLiq.valores.total);
 

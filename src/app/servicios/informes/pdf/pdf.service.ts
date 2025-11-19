@@ -171,7 +171,7 @@ export class PdfService {
       doc.rect(margin + subtotalWidth, finalY, lastColumnWidth, footerHeight, 'FD'); // Celda de valor
 
       doc.text(descuento.concepto, margin + 5, finalY + footerHeight / 2, { baseline: 'middle' });
-      doc.text(`- ${this.formatearValor(descuento.valor)}`, margin + tableWidth - (informeLiq.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
+      doc.text(`${this.formatearValor(descuento.valor)}`, margin + tableWidth - (informeLiq.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
         align: 'right',
         baseline: 'middle',
       });

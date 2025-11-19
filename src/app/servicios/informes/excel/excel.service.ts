@@ -153,7 +153,7 @@ export class ExcelService {
   });
 
     // Subtotal (si hay descuentos)
-  if (informeLiq.valores.descuentoTotal > 0) {
+  if (informeLiq.descuentos.length > 0) {
     // Subtotal fila
     const subtotalRow = worksheet.addRow([]);
     worksheet.mergeCells(`A${subtotalRow.number}:${String.fromCharCode(64 + informeLiq.columnas.length - 1)}${subtotalRow.number}`);
@@ -184,7 +184,7 @@ export class ExcelService {
       descuentoRow.getCell(1).value = descuento.concepto;
       descuentoRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
       //
-      descuentoRow.getCell(informeLiq.columnas.length).value = -descuento.valor;
+      descuentoRow.getCell(informeLiq.columnas.length).value = descuento.valor;
       descuentoRow.getCell(informeLiq.columnas.length).numFmt = '"$"#,##0.00';
       //
 
