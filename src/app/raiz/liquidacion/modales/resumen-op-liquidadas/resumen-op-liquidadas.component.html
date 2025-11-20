@@ -84,7 +84,7 @@
               @if (tieneDescuentos) {
                 <ng-container class="table-group-divider table-bordered table-striped">
                   @if (fromParent.origen !== 'proveedores') {
-                    <tr><th colspan="12">Descuentos:</th></tr>
+                    <tr><th colspan="12">Ajustes:</th></tr>
                     @for (desc of descuentosAplicados; track desc) {
                       <tr>
                         <td colspan="11">{{desc.concepto}}</td>
@@ -92,7 +92,7 @@
                       </tr>
                     }
                   } @else {
-                    <tr><th colspan="13">Descuentos:</th></tr>
+                    <tr><th colspan="13">Ajustes:</th></tr>
                     @for (desc of descuentosAplicados; track desc) {
                       <tr>
                         <td colspan="12">{{desc.concepto}}</td>
