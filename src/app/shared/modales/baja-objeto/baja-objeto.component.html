@@ -55,18 +55,18 @@
           </div>
         </div>
       }
-      @if (fromParent.modo === 'Cliente' || fromParent.modo === 'Chofer' || fromParent.modo === 'Proveedor') {
+      @if (fromParent.modo === 'Cliente' || fromParent.modo === 'Chofer' || fromParent.modo === 'Proveedor' || fromParent.modo === 'Vendedor') {
         <div>
           <div class="form-group isDisabled">
             <label for="Acompaniante" class="fs-5">Id {{item}}</label>
             <div class="input-group">
-              <input class="form-control edicion" type="text" [value]="item === 'Cliente' ? objeto.idCliente : item === 'Chofer' ? objeto.idChofer : objeto.idProveedor">
+              <input class="form-control edicion" type="text" [value]="item === 'Cliente' ? objeto.idCliente : item === 'Chofer' ? objeto.idChofer : item === 'Proveedor' ? objeto.idProveedor : objeto.idVendedor">
             </div>
           </div>
           <div class="isDisabled">
             <label for="" class="fs-5">{{item}}</label>
             <div class="input-group">
-              <input class="form-control edicion" type="text" [value]="item === 'Cliente' ? objeto?.razonSocial : item === 'Chofer' ? objeto?.apellido + ' ' + objeto?.nombre : objeto?.razonSocial">
+              <input class="form-control edicion" type="text" [value]="item === 'Cliente' ? objeto?.razonSocial : item === 'Chofer' ? objeto?.apellido + ' ' + objeto?.nombre : item === 'Proveedor' ? objeto?.razonSocial  : objeto?.datosPersonales.apellido + ' ' + objeto?.datosPersonales.nombre">
             </div>
           </div>
         </div>

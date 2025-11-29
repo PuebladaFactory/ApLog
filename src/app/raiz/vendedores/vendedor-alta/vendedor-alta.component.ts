@@ -34,6 +34,8 @@ export class VendedorAltaComponent implements OnInit{
   asignacionEditar!: Asignacion;
   accionCliente: string = "";  
   modo: string  = "";
+  clientesModificados: ConId<Cliente>[] = [];
+  nuevaAsignacion: boolean = false;
 
 
   constructor(
@@ -86,7 +88,7 @@ export class VendedorAltaComponent implements OnInit{
     this.form.patchValue({
       nombre: this.vendedorEditar.datosPersonales.nombre, 
       apellido: this.vendedorEditar.datosPersonales.apellido, 
-      cuit: this.vendedorEditar.datosPersonales.cuit,
+      cuit: this.formatCuit(this.vendedorEditar.datosPersonales.cuit),
       email: this.vendedorEditar.datosPersonales.mail,
       celularContacto: this.vendedorEditar.datosPersonales.celular,
     });
@@ -109,25 +111,18 @@ export class VendedorAltaComponent implements OnInit{
     if (confirmacion.isConfirmed) {      
       this.armarVendedor();
       const existe = await this.dbFirestore.existeCuit('vendedores', this.vendedor.datosPersonales.cuit);
-      console.log("vendedor: ", this.vendedor, "existe: ", existe);
+      console.log("2)vendedor: ", this.vendedor, "existe: ", existe);
       if(this.modo === 'alta' && existe) return this.mensajesError('Error: Ya existe un vendedor con ese CUIT. Alta cancelada');
       if(this.modo === 'edicion' && !existe) return this.mensajesError('Error: No se puede encontrar ningún vendedor con ese CUIT. Edición cancelada');
       if(this.modo === 'alta'){
         this.storageService.addItem("vendedores", this.vendedor, this.vendedor.idVendedor, "ALTA", `Alta del vendedor ${this.vendedor.datosPersonales.apellido} + ${this.vendedor.datosPersonales.nombre}`);
-      } else {
-        let {id, type, ...vendedor} = this.vendedorEditar
-        this.storageService.updateItem("vendedores", vendedor, vendedor.idVendedor, "EDICION", `Edición del vendedor ${vendedor.datosPersonales.apellido} + ${vendedor.datosPersonales.nombre}`, this.vendedorEditar.id);
+        this.editarCliente();
+      } else {        
+        this.storageService.updateItem("vendedores", this.vendedor, this.vendedor.idVendedor, "EDICION", `Edición del vendedor ${this.vendedor.datosPersonales.apellido} + ${this.vendedor.datosPersonales.nombre}`, this.vendedorEditar.id);
+        this.editarCliente();
       }
 
-      Swal.fire({
-        title: "Confirmado",
-        text: `${this.modo} exitosa`,
-        icon: "success"
-      }).then((result)=>{
-        if (result.isConfirmed) {
-          this.activeModal.close();
-        }
-      });           
+        
     }       
    
     
@@ -135,11 +130,13 @@ export class VendedorAltaComponent implements OnInit{
 
   armarVendedor(){
     let formValue = this.form.value;
+    console.log("0)formValue", formValue);
+    
     // Eliminar los guiones del CUIT
     let cuitSinGuiones = formValue.cuit.replace(/-/g, '');       
         
-    this.vendedor = {
-      idVendedor: new Date().getTime() + Math.floor(Math.random() * 1000),
+    this.vendedor = {      
+      idVendedor: this.fromParent.modo === "alta" ? new Date().getTime() + Math.floor(Math.random() * 1000) : this.vendedorEditar.idVendedor,
       datosPersonales: {
           nombre: formValue.nombre,
           apellido: formValue.apellido,
@@ -151,7 +148,7 @@ export class VendedorAltaComponent implements OnInit{
       activo: true,
       
     };                
-    
+    console.log("1)this.vendedor", this.vendedor);
   }
 
   hasError(controlName: string, errorName: string): boolean {
@@ -183,6 +180,10 @@ export class VendedorAltaComponent implements OnInit{
 
   openModal(modalRef: TemplateRef<any>, accion:string): void {   
     this.accionCliente = accion;
+    if(this.accionCliente === 'alta'){
+      this.nuevaAsignacion = true;
+      this.porcentajeAsignado = 0
+    }
     const modal = this.modalService.open(modalRef, { centered: true });
   }
 
@@ -199,8 +200,8 @@ export class VendedorAltaComponent implements OnInit{
   changeCliente(e: any) {
     //////////console.log()(e.target.value)
     
-    let clienteSelec = this.clientes.find(function (cliente: Cliente) { 
-        return cliente.idCliente === Number(e.target.value)
+    let clienteSelec = this.clientes.find( c=> { 
+        return c.idCliente === Number(e.target.value)
     });   
     
     if(clienteSelec) this.clienteSeleccionado = clienteSelec;                
@@ -283,8 +284,62 @@ export class VendedorAltaComponent implements OnInit{
     editarAsignacion(modalRef: TemplateRef<any>, asignacion: Asignacion, indice:number){    
       this.asignacionEditar = asignacion;
       this.porcentajeAsignado = asignacion.porcentaje;
+      this.nuevaAsignacion = false;
+      let clienteSel = this.clientes.find( c=> { 
+        return c.idCliente === asignacion.idCliente
+      });   
+      if(clienteSel){this.clienteSeleccionado = clienteSel}
       this.openModal(modalRef, 'edicion')
   
+    }
+
+    async editarCliente(){
+      this.isLoading = true;
+      console.log("EDITAR CLIENTE => vendedor: ",this.vendedor);
+      
+      this.vendedor.asignaciones.map(a=>{
+        let clienteSel = this.clientes.find( c=> { 
+          return c.idCliente === a.idCliente
+        }); 
+        console.log("EDITAR CLIENTE => clienteSel", clienteSel);
+                 
+        if(clienteSel){
+          if (!clienteSel.vendedor) {
+            clienteSel.vendedor = [];
+          }
+
+          // Verificar si ya existe
+          const existe = clienteSel.vendedor.includes(this.vendedor.idVendedor);
+
+          // Agregar si no existe
+          if (!existe) {
+            clienteSel.vendedor.push(this.vendedor.idVendedor);
+          }
+          this.clientesModificados.push(clienteSel);
+          
+        } else {
+          this.mensajesError("Error en la modificación de los clientes")
+        }
+      });
+      console.log("EDITAR CLIENTE => this.clientesModificados: ", this.clientesModificados);
+      
+      const respuesta = await this.dbFirestore.actualizarMultiple(this.clientesModificados, 'clientes');
+      if(respuesta.exito){
+        
+        Swal.fire({
+        title: "Confirmado",
+        text: `${this.modo} exitosa`,
+        icon: "success"
+        }).then((result)=>{
+          if (result.isConfirmed) {
+            this.activeModal.close();
+          }
+        });         
+       } else {
+        this.isLoading = false;
+        this.mensajesError(respuesta.mensaje)
+       }
+      
     }
 
 

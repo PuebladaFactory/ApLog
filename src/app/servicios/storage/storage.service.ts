@@ -673,6 +673,10 @@ export class StorageService {
         this._resumenLiq$.next(data);
         break
       }
+      case "vendedores":{
+        this._vendedores$.next(data);
+        break
+      }
       default: {
         //statements; 
         break;

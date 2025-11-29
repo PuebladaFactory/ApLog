@@ -153,7 +153,7 @@
                 <div class="mb-3 w-75">
                 <label class="form-label">Cliente</label>                    
                     <select class="form-select" (change)="changeCliente($event)">
-                        <option value="">{{clienteSeleccionado ? clienteSeleccionado.razonSocial : 'Seleccione'}}</option>
+                        <option value="">{{nuevaAsignacion ? 'Seleccione' : clienteSeleccionado.razonSocial}}</option>
                         @for (cliente of clientes; track cliente) {
                             <option [value]="cliente.idCliente">
                             {{cliente.razonSocial}}

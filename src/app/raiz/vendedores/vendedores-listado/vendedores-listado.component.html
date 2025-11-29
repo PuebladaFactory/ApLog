@@ -3,9 +3,9 @@
         <app-btn-leer class="align-items-end" name="Vendedor" (click)="openModal('alta')"></app-btn-leer>
     </div>
     <div>
-        <div class="row">
+        <div class="row justify-content-start">
             @for(vendedor of vendedores; track vendedor){
-                <div class="col">
+                <div class="col-3 mb-5">
                     <div class="card" style="width: 30rem;">                    
                         <div class="card-header">
                             <div class="d-flex justify-content-between">
@@ -41,3 +41,8 @@
         </div>
     </div>
 </div>
+
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}
+
