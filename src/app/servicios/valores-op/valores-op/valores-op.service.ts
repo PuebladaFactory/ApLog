@@ -49,6 +49,7 @@ export class ValoresOpService {
   constructor( private facturacionCliente: ValoresOpClienteService, private facturacionChofer: ValoresOpChoferService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
 
   async facturarOperacion(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {
+    this.informesVenta = [];
     try {
       this.$proveedores = this.storageService.loadInfo('proveedores');
       if (op.chofer.idProveedor !== 0) {
@@ -296,17 +297,18 @@ async $facturarOpProveedor(op: ConId<Operacion>) {
 
 
 async $guardarFacturas(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {
+    //console.log("$guardarFacturas: informesVenta", this.informesVenta);
+    
     try {
       let result;
       if (op.chofer.idProveedor === 0) {
-        result = await this.dbFirebase.guardarFacturasOp("informesOpClientes", this.facturaOpCliente, "informesOpChoferes", this.facturaOpChofer, op);
+        result = await this.dbFirebase.guardarFacturasOp("informesOpClientes", this.facturaOpCliente, "informesOpChoferes", this.facturaOpChofer, op, this.informesVenta);
       } else {
-        result = await this.dbFirebase.guardarFacturasOp("informesOpClientes", this.facturaOpCliente, "informesOpProveedores", this.facturaOpProveedor, op);
+        result = await this.dbFirebase.guardarFacturasOp("informesOpClientes", this.facturaOpCliente, "informesOpProveedores", this.facturaOpProveedor, op, this.informesVenta);
       }
       if (op.tarifaTipo.eventual) {
         this.guardarTarifasEventuales(op);
-      }
-      if(op.cliente.vendedor && op.cliente.vendedor.length > 0) await this.dbFirebase.guardarMultipleGeneral(this.informesVenta, "informesVenta")
+      }      
       return result;
     } catch (error: any) {
       throw new Error("Error al guardar facturas: " + error?.message);
@@ -343,7 +345,7 @@ async $guardarFacturas(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje:
   }
 
   asignacionComisionVenta(op:ConId<Operacion>){
-    
+    this.informesVenta = [];
     op.cliente.vendedor?.forEach((idVend: number)=>{
       let informeVenta: InformeVenta;
       informeVenta = {

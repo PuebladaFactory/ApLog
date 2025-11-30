@@ -15,6 +15,7 @@ import { TableroDiario } from 'src/app/raiz/operaciones/tablero-diario/tablero-d
 import { InformeOp } from 'src/app/interfaces/informe-op';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from '../numerador/numerador.service';
+import { InformeVenta } from 'src/app/interfaces/informe-venta';
 
 export interface Resultado {
   exito: boolean;
@@ -593,8 +594,8 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
     );
   }
 
-  async guardarFacturasOp(compCliente:string, infOpCliente: InformeOp, compChofer: string, infOpChofer: InformeOp, op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {        
-    const batch = writeBatch(this.firestore);        
+  async guardarFacturasOp(compCliente:string, infOpCliente: InformeOp, compChofer: string, infOpChofer: InformeOp, op: ConId<Operacion>,  informesVenta?: InformeVenta[]): Promise<{ exito: boolean; mensaje: string }> {        
+    const batch = writeBatch(this.firestore);            
     
     try {
       // Verificar que no exista informe de operación para cliente
@@ -626,6 +627,32 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
   
       const docOp = snapOp.docs[0];
       const docOpRef = docOp.ref;
+
+      console.log("♣ Cantidad informesVenta recibidos:", informesVenta?.length);
+      console.log(JSON.stringify(informesVenta, null, 2));
+
+      // ==========================================================
+      // OPCIONAL: VERIFICAR Y GUARDAR INFORMES VENTA
+      // ==========================================================
+      if (informesVenta && informesVenta.length > 0) {
+
+        const colVenta = collection(this.firestore, `/Vantruck/datos/informesVenta`);
+
+        for (const infVenta of informesVenta) {
+
+          // Buscar si ya existe
+          const qVenta = query(colVenta, where('idInfVenta', '==', infVenta.idInfVenta));
+          const snapVenta = await getDocs(qVenta);
+
+          if (!snapVenta.empty) {
+            throw new Error(`Ya existe un InformeVenta con idInfVenta ${infVenta.idInfVenta}`);
+          }
+
+          // Crear un doc nuevo para insertar
+          const newVentaRef = doc(colVenta);
+          batch.set(newVentaRef, infVenta);
+        }
+      }
   
       // Agregar informes
       const informeRefCliente = doc(collection(this.firestore, `/Vantruck/datos/${compCliente}`));
