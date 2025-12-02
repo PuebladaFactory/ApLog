@@ -33,7 +33,7 @@ export class VendedoresListadoComponent implements OnInit {
   ){}
 
   ngOnInit(): void {   
-    this.storageService.listenForChanges<Vendedor>("vendedores");
+    
     this.storageService
       .getObservable<ConIdType<Vendedor>>('vendedores')
       .pipe(takeUntil(this.destroy$))

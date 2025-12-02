@@ -1,1 +1,99 @@
-<p>tablero-actividad works!</p>
+<div>
+
+    <h2 class="mb-4">Informes de Venta por Vendedor</h2>
+
+    <!-- ============================ -->
+    <!--   SECCIÓN POR VENDEDOR       -->
+    <!-- ============================ -->
+    @if(vendedorGrupos.length > 0 ){
+        @for (vg of vendedorGrupos; track vg) {
+            <div class="mb-5 bg-light border rounded border-2 rounded-5 border-dark-subtle">
+
+                <!-- Encabezado vendedor -->
+                <div class="d-flex justify-content-between w-100">
+                    <div class="p-3 ms-2 mt-2 border bg-warning rounded mb-3 rounded-5 " style="width: 250px;">
+                        <h3 class="m-0">
+                            {{ vg.vendedor.datosPersonales.apellido }}, {{ vg.vendedor.datosPersonales.nombre }}
+                        </h3>
+                        
+                        <div class="mt-1 fs-2">
+                            <strong>Total a pagar:</strong>
+                            <span class="text-success fw-bold">
+                            {{ vg.totalVendedor | formatearValor:'$' }}                    
+                            </span>
+                        </div>
+                    </div>
+                    <div class="me-3 mt-2">
+                        <app-btn-agregar name="Pagar" (click)="pagarVendedor(vg)"></app-btn-agregar>
+                    </div>
+                </div>
+                
+                
+                <!-- Tabla de clientes -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered align-middle">
+
+                        <thead class="">
+                            <tr>
+                                <th style="width: 25%;">Cliente</th>
+                                <th style="width: 8%;">Cant. Op</th>
+                                <th style="width: 15%;">A Cobrar</th>
+                                <th style="width: 15%;">A Pagar</th>
+                                <th style="width: 7%;">Comisión</th>
+                                <th class="table-success" style="width: 20%;">Valor Comisión</th>
+                                <th style="width: 10%;">Estado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <!-- FILA POR CLIENTE -->
+                            @for (cg of vg.clientes; track cg) {
+                                <tr>
+                                    <td>{{ cg.cliente.razonSocial }}</td>
+                                    <td>{{ cg.cantidadOperaciones }}</td>
+
+                                    <td>{{ cg.totalCobrar | formatearValor:'$' }}</td>
+                                    <td>{{ cg.totalPagar | formatearValor:'$'}}</td>
+
+                                    <td>{{ cg.comision }}%</td>
+
+                                    <td class="fw-bold" class="table-success">
+                                    {{ cg.valorComision | formatearValor:'$' }}
+                                    </td>
+
+                                    <td class="text-center">
+                                        @if(vg.estadoPago){
+                                            <span class="badge bg-success">Pagado</span>
+                                        }
+                                        @if (!vg.estadoPago) {
+                                            <span class="badge bg-warning text-dark">Pendiente</span>
+                                        }                                                                                
+                                    </td>
+                                </tr> 
+                            }
+                        
+
+                            <!-- TOTAL FINAL -->
+                            <tr class="table-secondary fw-bold">
+                                <td colspan="5" class="text-start">TOTAL:</td>
+                                <td class="table-success">
+                                {{ vg.totalVendedor | formatearValor:'$' }}
+                                </td>
+                                <td></td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+
+
+            </div>
+        } 
+    } @else {
+        <tbody>
+            <tr><td colspan="15">Sin Datos</td></tr>
+        </tbody>
+    }
+
+</div>
