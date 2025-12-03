@@ -10,6 +10,7 @@ import { VendedorControlComponent } from './vendedor-control/vendedor-control.co
 import { TableroActividadComponent } from './tablero-actividad/tablero-actividad.component';
 import { VendedorAltaComponent } from './vendedor-alta/vendedor-alta.component';
 import { VendedoresListadoComponent } from './vendedores-listado/vendedores-listado.component';
+import { HistorialComponent } from './historial/historial.component';
 
 
 @NgModule({
@@ -17,7 +18,8 @@ import { VendedoresListadoComponent } from './vendedores-listado/vendedores-list
     VendedorControlComponent,
     TableroActividadComponent,
     VendedorAltaComponent,
-    VendedoresListadoComponent
+    VendedoresListadoComponent,
+    HistorialComponent
   ],
   imports: [
     CommonModule,

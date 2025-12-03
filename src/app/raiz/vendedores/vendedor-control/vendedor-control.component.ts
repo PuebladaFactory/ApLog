@@ -34,6 +34,7 @@ export class VendedorControlComponent implements OnInit {
   tabs = [
     { id: 'tab1', name: 'Tablero de Actividad', route: 'vendedores/tableroVendedores' },    
     { id: 'tab2', name: 'Listado', route: 'vendedores/listado' }, 
+    { id: 'tab3', name: 'Historial', route: 'vendedores/historial' }, 
   ];
 
   constructor(

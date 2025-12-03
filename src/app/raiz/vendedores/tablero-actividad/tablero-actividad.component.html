@@ -19,7 +19,11 @@
                         <div class="mt-1 fs-2">
                             <strong>Total a pagar:</strong>
                             <span class="text-success fw-bold">
-                            {{ vg.totalVendedor | formatearValor:'$' }}                    
+                                @if(vg.estadoPago){
+                                    {{ 0 | formatearValor:'$' }}                    
+                                } @else {
+                                    {{ vg.totalVendedor | formatearValor:'$' }}                    
+                                }                            
                             </span>
                         </div>
                     </div>
@@ -97,3 +101,7 @@
     }
 
 </div>
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}
+

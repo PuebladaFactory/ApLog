@@ -926,26 +926,27 @@ async guardarMultiple(
 async guardarMultipleGeneral(
   objetos: any[],
   componenteAlta: string, 
+  propiedadConsulta: string,
+  campoConsulta: number,
 ): Promise<{ exito: boolean; mensaje: string }> {
   const batch = writeBatch(this.firestore);
   const colRef = collection(this.firestore, `/Vantruck/datos/${componenteAlta}`);
   
   try {
     // Verificar que NINGUNO de los objetos exista ya en la colección
-/*     for (const obj of objetos) {
-      const idValor: number = tipo === "operaciones" ? obj.idOperacion : obj.timestamp;
+    for (const obj of objetos) {      
 
-      const q = query(colRef, where(idObjetoNombre, "==", idValor));
+      const q = query(colRef, where(propiedadConsulta, "==", campoConsulta));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         // Encontró un objeto ya existente => no continúa
         return {
           exito: false,
-          mensaje: `Ya existe un documento con ${idObjetoNombre}: ${idValor}`
+          mensaje: `Ya existe un documento con ${propiedadConsulta}: ${campoConsulta}`
         };
       }
-    } */
+    }
 
     // Ninguno existe => agregar todos al batch
     for (const obj of objetos) {

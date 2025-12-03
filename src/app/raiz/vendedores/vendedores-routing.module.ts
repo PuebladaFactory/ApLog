@@ -5,6 +5,7 @@ import { VendedorAltaComponent } from './vendedor-alta/vendedor-alta.component';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { VendedoresListadoComponent } from './vendedores-listado/vendedores-listado.component';
 import { TableroActividadComponent } from './tablero-actividad/tablero-actividad.component';
+import { HistorialComponent } from './historial/historial.component';
 
 const routes: Routes = [
   {path: '', component:VendedorControlComponent,
@@ -15,6 +16,7 @@ const routes: Routes = [
         },        
     {path: 'listado', component:VendedoresListadoComponent},    
     {path: 'tableroVendedores', component:TableroActividadComponent},    
+    {path: 'historial', component:HistorialComponent},    
     
 ]  },
   

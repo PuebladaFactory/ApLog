@@ -57,6 +57,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
   vendedorGrupos!: VendedorGrupo[];
   informesVenta!: ConId<InformeVenta>[];
   vendedores!: ConId<Vendedor>[];
+  isLoading: boolean = false;
 
   constructor(
     
@@ -68,7 +69,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
 
   ){}
 
-      ngOnInit(): void {
+    ngOnInit(): void {
       
       
   
@@ -80,6 +81,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
       this.proveedores = this.storageService.loadInfo('proveedores');
       this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       this.vendedores = this.storageService.loadInfo('vendedores');
+      this.vendedores = this.vendedores.sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido)); // Ordena por el nombre del chofer
   
       ////////// FECHAS E INFORMES OP ///////////////
       this.storageService.fechasConsulta$
@@ -248,7 +250,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
   ): ResumenVenta {
   
     const idResumen = new Date().getTime() + Math.floor(Math.random() * 1000);
-    const fecha = new Date();
+    const fecha = new Date().toISOString().split('T')[0];
 
     // ids de los informes
     const idsInfVenta = informes.map(i => i.idInfVenta);
@@ -298,7 +300,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
     });
 
     if (!res.isConfirmed) return;
-
+    this.isLoading = true;
     // obtener todos los informes del vendedor
     const informesVendedor = this.informesVenta.filter(
       inf => inf.idVendedor === vg.vendedor.idVendedor
@@ -320,27 +322,46 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
       ...inf,
       pago: true
     }));
+    console.log("informesActualizados", informesActualizados);
 
     // 4) guardamos el resumen (por ahora simulado)
-    //const exitoResumen = await this.guardarResumenLocal(resumen);
+    const resumenArray = [];
+    resumenArray.push(resumen);
+    const respuestaResumen = await this.dbFirebase.guardarMultipleGeneral(resumenArray, "resumenVenta", "idResumen", resumen.idResumen );
 
-    /* if (!exitoResumen) {
+    if (!respuestaResumen.exito) {
+      this.isLoading = false
       Swal.fire("Error", "No se pudo guardar el resumen.", "error");
       return;
-    } */
-
-    // 5) aplicar actualización local
+    }
+  
+    // 5) actualizar los informes en la colección
     //this.aplicarActualizacionInformes(informesActualizados);
-
-    Swal.fire("OK", "El vendedor fue pagado correctamente.", "success");
+    const respuestaInf = await this.dbFirebase.actualizarMultiple(informesActualizados, "informesVenta")
+    if(respuestaInf.exito){
+      this.isLoading = false
+      Swal.fire("OK", "El vendedor fue pagado correctamente.", "success");
+    } else {
+      this.isLoading = false
+      Swal.fire("Error", "No se puedo actualizar los informes de venta correctamente.", "error");
+    }
+    
+    
   }
 
-  private obtenerPeriodo(fechas: { fechaDesde: string }) {
-    const d = new Date(fechas.fechaDesde);
+  private obtenerPeriodo(fechas: { fechaHasta: string }) {
+    const d = new Date(fechas.fechaHasta);
 
     return {
       mes: d.getMonth() + 1,   // 1 a 12
       anio: d.getFullYear()    // 2025, etc.
     };
   }
+
+/*   private aplicarActualizacionInformes(informesAct: InformeVenta[]) {
+    for (let actualizado of informesAct) {
+      const idx = this.informesVenta.findIndex(i => i.idInfVenta === actualizado.idInfVenta);
+      if (idx !== -1) this.informesVenta[idx] = actualizado;
+    }
+  } */
 }

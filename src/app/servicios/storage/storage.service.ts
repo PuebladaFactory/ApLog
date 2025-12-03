@@ -282,6 +282,9 @@ export class StorageService {
   private _informesVenta$ = new BehaviorSubject<any>(this.loadInfo('informesVenta') || []);
   public informesVenta$ = this._informesVenta$.asObservable();
 
+  private _resumenVenta$ = new BehaviorSubject<any>(this.loadInfo('resumenVenta') || []);
+  public resumenVenta$ = this._resumenVenta$.asObservable();
+
   updateObservable(componente: any, data: any) {
     switch (componente) {
       case "clientes": {
@@ -684,6 +687,10 @@ export class StorageService {
         this._informesVenta$.next(data);
         break
       }
+      case "resumenVenta":{
+        this._resumenVenta$.next(data);
+        break
+      }
       default: {
         //statements; 
         break;
@@ -972,6 +979,8 @@ export class StorageService {
         return this._vendedores$.asObservable();
       case "informesVenta":
         return this._informesVenta$.asObservable();
+      case "resumenVenta":
+        return this._resumenVenta$.asObservable();
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }
