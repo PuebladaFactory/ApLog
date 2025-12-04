@@ -10,12 +10,12 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-historial',
+  selector: 'app-vendedor-historial',
   standalone: false,
-  templateUrl: './historial.component.html',
-  styleUrl: './historial.component.scss'
+  templateUrl: './vendedor-historial.component.html',
+  styleUrl: './vendedor-historial.component.scss'
 })
-export class HistorialComponent implements OnInit, OnDestroy {
+export class VendedorHistorialComponent implements OnInit, OnDestroy {
 
   vendedores!: ConId<Vendedor>[];
   clientes!: ConId<Cliente>[];

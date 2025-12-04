@@ -96,7 +96,7 @@ export class VendedorAltaComponent implements OnInit{
   }
 
   async onSubmit(){  
-    if(this.asignaciones.length === 0 ) return this.mensajesError('Debe asignar un cliente al vendedor'); 
+    /* if(this.asignaciones.length === 0 ) return this.mensajesError('Debe asignar un cliente al vendedor');  */
     let titulo = this.fromParent.modo === "alta" ? 'el alta' : 'la edición'
 
     const confirmacion = await Swal.fire({

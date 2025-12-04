@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between mt-5">
   <div class="d-flex w-50">
     <h2 class="d-flex align-items-center">Consultar Resumen de Ventas por Vendedor: </h2>
-     <div class="form-group mb-2">        
+     <div class="form-group mb-2 ms-2 d-flex align-items-center">        
         <select class="form-select" (change)="changeVendedor($event)">
             <option value="">{{vendSeleccionado ? vendSeleccionado.datosPersonales.apellido + " " + vendSeleccionado.datosPersonales.nombre : "Elegir Vendedor"}}</option>
             @for (v of vendedores; track v) {
@@ -13,7 +13,7 @@
     </div>
   </div>
   @if (vendSeleccionado) {
-    <div  style="width:100px;">
+    <div  style="width:110px;">
       <label for="">Cantidad de Informes</label>
       <div class="input-group">
         <input type="text" inputmode="numeric" class="form-control"  placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarTarifasEventuales()" appSoloNumeros>

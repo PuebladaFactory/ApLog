@@ -26,12 +26,17 @@
                                     <th class="w-25">Comisión</th>
                                 </tr>
                             <tbody>
-                                @for (asignacion of vendedor.asignaciones; track asignacion) {
-                                    <tr>
-                                        <td class="w-75">{{getCliente(asignacion.idCliente)}}</td>
-                                        <td class="w-25 text-end">{{asignacion.porcentaje}}%</td>
-                                    </tr>
-                                }                                
+                                @if(vendedor.asignaciones.length > 0){
+                                    @for (asignacion of vendedor.asignaciones; track asignacion) {
+                                        <tr>
+                                            <td class="w-75">{{getCliente(asignacion.idCliente)}}</td>
+                                            <td class="w-25 text-end">{{asignacion.porcentaje}}%</td>
+                                        </tr>
+                                    }       
+                                } @else {
+                                    <tr><td>Sin clientes asignados</td></tr>
+                                }
+                                                         
                             </tbody>
                             </table>
                         </div>
