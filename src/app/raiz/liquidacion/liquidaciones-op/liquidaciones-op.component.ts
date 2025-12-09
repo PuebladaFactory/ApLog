@@ -662,6 +662,7 @@ export class LiquidacionesOpComponent implements OnInit {
                 const resultado = await this.dbFirebase.actualizarOperacionInformeOpYFactura(this.operacion, this.informeDetallado, this.componente, 'liquidacion')
                 console.log("resultado de la edicion de todo: ", resultado);
                 if(resultado.exito){
+                  await this.actualizarInfVenta("edicion");
                   this.isLoading = false;
                   this.procesarDatosParaTabla();
                   //this.cerrarTabla(i)
@@ -730,8 +731,9 @@ export class LiquidacionesOpComponent implements OnInit {
         let coleccionContraParte = this.llamadaOrigen === 'cliente' &&  this.operacion.chofer.idProveedor === 0 ? 'informesOpChoferes' : this.llamadaOrigen === 'cliente' &&  this.operacion.chofer.idProveedor !== 0 ? 'informesOpProveedores' : 'informesOpClientes';
         const resultado = await this.dbFirebase.eliminarOperacionEInformes(this.operacion,this.componente, coleccionContraParte);
         if (resultado.success) {
-          await this.tableroServ.anularOpEnTablero(this.operacion)
-          await this.storageService.addSimpleLogPapelera("operaciones",this.operacion,this.operacion.idOperacion, "BAJA",'Baja de operación desde Liquidaciones', motivo)
+          await this.tableroServ.anularOpEnTablero(this.operacion);
+          await this.storageService.addSimpleLogPapelera("operaciones",this.operacion,this.operacion.idOperacion, "BAJA",'Baja de operación desde Liquidaciones', motivo);
+          await this.actualizarInfVenta("baja");
           this.isLoading = false;
           Swal.fire({
           title: "Confirmado",
@@ -789,6 +791,28 @@ export class LiquidacionesOpComponent implements OnInit {
       text: `${msj}`
       //footer: `${msj}`
     });
+  }
+
+  actualizarInfVenta(modo:string){
+     this.dbFirebase
+    .obtenerTarifaIdTarifa("informesVenta",this.operacion.idOperacion, "idOperacion")
+    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+    .subscribe(data => {      
+        let informeVenta = data;
+        console.log("2000) informeVenta: ", informeVenta);
+        informeVenta.valoresOp = {
+          totalCliente: this.operacion.valores.cliente.aCobrar,
+          totalChofer: this.operacion.valores.chofer.aPagar,
+        }
+        let {id, ...infVenta} = informeVenta;
+        if(modo === "edicion"){
+          this.storageService.updateItem("informesVenta", infVenta, infVenta.idInfVenta, "INTERNA", "", informeVenta.id);
+        } else if(modo === "baja") {   
+          console.log("baja inf venta");               
+          this.storageService.deleteItem("informesVenta", informeVenta, informeVenta.id, "INTERNA", "");    
+        }
+        
+    })
   }
 ///////////////////////////////METODO POR ERROR DE DUPLICADAS//////////////////////////////////////////////////////////////////////////////////////
 
