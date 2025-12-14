@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 /* import { AngularFirestore } from '@angular/fire/compat/firestore'; */
 
-import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, DocumentReference, getDoc, getDocs, limit, onSnapshot, orderBy, query, setDoc, updateDoc, where, writeBatch } from '@angular/fire/firestore';
+import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, DocumentReference, getDoc, getDocs, limit, onSnapshot, orderBy, query, setDoc, updateDoc, where, WriteBatch, writeBatch } from '@angular/fire/firestore';
 import { chunk } from 'lodash';
 import { firstValueFrom, from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -16,6 +16,7 @@ import { InformeOp } from 'src/app/interfaces/informe-op';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from '../numerador/numerador.service';
 import { InformeVenta } from 'src/app/interfaces/informe-venta';
+import { error } from 'jquery';
 
 export interface Resultado {
   exito: boolean;
@@ -1857,6 +1858,220 @@ async eliminarOperacionEInformes(
       throw error;
     }
   }
+
+  async eliminarInformesPorIdOperacion(
+    op: ConId<Operacion>,    
+  ): Promise<void> {
+    try {
+      const batch = writeBatch(this.firestore);
+      ///informe de cliente
+      const colRef = collection(this.firestore, `Vantruck/datos/informesOpClientes`);
+      
+
+      const clienteSnap = await getDocs(query(colRef, where('idOperacion', '==', op.idOperacion)));
+
+      if (clienteSnap.empty) {
+        throw new Error(`No existe un informe de operacion con id ${op.idOperacion} en informesOpClientes`);
+      }
+
+      const clienteSnapRef = doc(this.firestore, `${clienteSnap.docs[0].ref.path}`);
+
+      // Agregar al batch
+      batch.delete(clienteSnapRef);
+
+      if(op.chofer.idProveedor === 0){
+        const colRef = collection(this.firestore, `Vantruck/datos/informesOpChoferes`);
+        
+
+        const choferSnap = await getDocs(query(colRef, where('idOperacion', '==', op.idOperacion)));
+
+        if (choferSnap.empty) {
+          throw new Error(`No existe un informe de operacion con id ${op.idOperacion} en informesOpChoferes`);
+        }
+
+        const choferSnapRef = doc(this.firestore, `${choferSnap.docs[0].ref.path}`);
+
+        // Agregar al batch
+        batch.delete(choferSnapRef);
+      } else {
+        const colRef = collection(this.firestore, `Vantruck/datos/informesOpProveedores`);
+        
+
+        const proveedorSnap = await getDocs(query(colRef, where('idOperacion', '==', op.idOperacion)));
+
+        if (proveedorSnap.empty) {
+          throw new Error(`No existe un informe de operacion con id ${op.idOperacion} en informesOpProveedores`);
+        }
+
+        const proveedorSnapRef = doc(this.firestore, `${proveedorSnap.docs[0].ref.path}`);
+
+        // Agregar al batch
+        batch.delete(proveedorSnapRef);
+      }
+
+      // Ejecutar el batch
+      await batch.commit();
+      console.log("llego?");
+      
+      
+    } catch (error) {
+      console.error('Error en la eliminación de los informes de operación:', error);
+      
+    }
+  }
+
+  async anularInformeLiq(
+    informeLiq: ConId<InformeLiq>,
+    informesOp: any[]
+  ): Promise<Resultado> {
+    const resultado: Resultado = { exito: false, mensaje: '' };
+
+    try {
+      // 🔹 1. Verificar existencia y coherencia
+      const verificacion = await this.verificarDatos(informeLiq, informesOp);
+      if (!verificacion.exito) return verificacion;
+
+      // 🔹 2. Iniciar batch para operación atómica
+      const batch = writeBatch(this.firestore);
+
+      // 🔹 3. Determinar colecciones según tipo
+      const colLiq = this.getColLiq(informeLiq.tipo);
+      const colNoLiq = this.getColNoLiq(informeLiq.tipo);
+
+      // 🔹 4. Mover informesOp (eliminar de liquidados y guardar en no liquidados)
+      for (const infOp of informesOp) {
+        const liqRef = doc(this.firestore, `${colLiq}/${infOp.id}`);
+        const noLiqRef = doc(this.firestore, `${colNoLiq}/${infOp.id}`);
+
+        const infOpModificado = { ...infOp, liquidacion: false };
+        batch.delete(liqRef);
+        batch.set(noLiqRef, infOpModificado);
+      }
+
+      // 🔹 5. Actualizar operaciones relacionadas
+      const operacionesResultado = await this.prepararActualizacionOperaciones(batch, informeLiq, informesOp);
+      if (!operacionesResultado.exito) return operacionesResultado;
+
+      // 🔹 6. Actualizar estado del InformeLiq
+      const infLiqRef = doc(this.firestore, `/Vantruck/datos/resumenLiq/${informeLiq.id}`);
+      batch.update(infLiqRef, { ...informeLiq });
+
+      // 🔹 7. Ejecutar batch
+      await batch.commit();
+
+      resultado.exito = true;
+      resultado.mensaje = `Informe ${informeLiq.numeroInterno} anulado correctamente.`;
+    } catch (error) {
+      console.error('Error anulando informe:', error);
+      resultado.mensaje = `Error al anular el informe: ${(error as Error).message}`;
+    }
+
+    return resultado;
+  }
+
+
+  private getColLiq(tipo: string): string {
+    switch (tipo) {
+      case 'cliente': return '/Vantruck/datos/infOpLiqClientes';
+      case 'chofer': return '/Vantruck/datos/infOpLiqChoferes';
+      case 'proveedor': return '/Vantruck/datos/infOpLiqProveedores';
+      default: throw new Error(`Tipo de informe inválido: ${tipo}`);
+    }
+  }
+
+  private getColNoLiq(tipo: string): string {
+    switch (tipo) {
+      case 'cliente': return '/Vantruck/datos/informesOpClientes';
+      case 'chofer': return '/Vantruck/datos/informesOpChoferes';
+      case 'proveedor': return '/Vantruck/datos/informesOpProveedores';
+      default: throw new Error(`Tipo de informe inválido: ${tipo}`);
+    }
+  }
+
+  private async verificarDatos(informeLiq: ConId<InformeLiq>, informesOp: any[]): Promise<Resultado> {
+    const colLiq = this.getColLiq(informeLiq.tipo);
+    const colNoLiq = this.getColNoLiq(informeLiq.tipo);
+
+    for (const infOp of informesOp) {
+      // 1️⃣ Verificar informeOp en colección liquidada
+      const liqRef = doc(this.firestore, `${colLiq}/${infOp.id}`);
+      const liqSnap = await getDoc(liqRef);
+      if (!liqSnap.exists()) {
+        return { exito: false, mensaje: `No se encontró el informeOp ${infOp.id} en su colección de liquidados.` };
+      }
+
+      // 2️⃣ Verificar que no exista en la colección no liquidada
+      const noLiqRef = doc(this.firestore, `${colNoLiq}/${infOp.id}`);
+      const noLiqSnap = await getDoc(noLiqRef);
+      if (noLiqSnap.exists()) {
+        return { exito: false, mensaje: `El informeOp ${infOp.id} ya existe en la colección de no liquidados.` };
+      }
+
+      // 3️⃣ Buscar operación asociada por idOperacion
+      const colOps = collection(this.firestore, '/Vantruck/datos/operaciones');
+      const q = query(colOps, where('idOperacion', '==', infOp.idOperacion));
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        return { exito: false, mensaje: `No se encontró la operación con idOperacion=${infOp.idOperacion} asociada al informeOp ${infOp.id}.` };
+      }
+    }
+
+    // 4️⃣ Verificar el informeLiq en su colección
+    const infLiqRef = doc(this.firestore, `/Vantruck/datos/resumenLiq/${informeLiq.id}`);
+    const infLiqSnap = await getDoc(infLiqRef);
+    if (!infLiqSnap.exists()) {
+      return { exito: false, mensaje: `No se encontró el informeLiq ${informeLiq.id}.` };
+    }
+
+    return { exito: true, mensaje: 'Verificación exitosa' };
+  }
+
+  private async prepararActualizacionOperaciones(
+    batch: WriteBatch,
+    informeLiq: ConId<InformeLiq>,
+    informesOp: any[]
+  ): Promise<Resultado> {
+
+    const colOps = collection(this.firestore, '/Vantruck/datos/operaciones');
+
+    for (const infOp of informesOp) {
+      const q = query(colOps, where('idOperacion', '==', infOp.idOperacion));
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        console.warn(`No se encontró la operación asociada a idOperacion=${infOp.idOperacion}`);
+        continue;
+      }
+
+      const opDoc = snap.docs[0]; // 🔹 solo debería haber una coincidencia
+      const opRef = doc(this.firestore, `/Vantruck/datos/operaciones/${opDoc.id}`);
+      const opData = opDoc.data() as any;
+      const estado = { ...opData.estado };
+
+      // 🔸 Reaplicar lógica de actualización de estados
+      if (estado.facturada) {
+        estado.facturada = false;
+        if (informeLiq.tipo === 'cliente') estado.facChofer = true;
+        else estado.facCliente = true;
+      } else {
+        if (informeLiq.tipo === 'cliente') estado.facCliente = false;
+        else estado.facChofer = false;
+
+        if (!estado.proformaCl && !estado.proformaCh) estado.cerrada = true;
+      }
+
+      batch.update(opRef, { estado });
+    }
+
+    return { exito: true, mensaje: 'Estados de operaciones actualizados correctamente' };
+  }
+
+
+
+
+
+
 
 
 }

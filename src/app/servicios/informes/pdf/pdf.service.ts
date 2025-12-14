@@ -77,9 +77,9 @@ export class PdfService {
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   const fechaFactura = new Date(informeLiq.fecha);
-  const mes = fechaFactura.toLocaleString('default', { month: 'long' });
+  const periodo = informeLiq.periodo === 'mes' ? 'mes' : this.getQuincena(informesOp[0].fecha) === 'Primera' ? 'primer quincena' : 'segunda quincena';
   const anio = fechaFactura.getFullYear();
-  doc.text(`Año: ${anio}  Mes: ${mes}`, 10, 35);
+  doc.text(`Año: ${anio}  Mes: ${informeLiq.mes}  Periodo Liquidado: ${periodo}`, 10, 35);
 
   // ID de la factura
   doc.setFontSize(8);  
@@ -171,7 +171,7 @@ export class PdfService {
       doc.rect(margin + subtotalWidth, finalY, lastColumnWidth, footerHeight, 'FD'); // Celda de valor
 
       doc.text(descuento.concepto, margin + 5, finalY + footerHeight / 2, { baseline: 'middle' });
-      doc.text(`- ${this.formatearValor(descuento.valor)}`, margin + tableWidth - (informeLiq.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
+      doc.text(`${this.formatearValor(descuento.valor)}`, margin + tableWidth - (informeLiq.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
         align: 'right',
         baseline: 'middle',
       });

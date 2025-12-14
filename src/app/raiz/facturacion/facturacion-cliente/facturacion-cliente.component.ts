@@ -53,7 +53,7 @@ export class FacturacionClienteComponent implements OnInit {
         
         if(data){
           //console.log("resumenLiq: ",data);
-
+          data = data.filter(inf=> inf.estado !== 'anulado');
           this.informesLiqCliente = data.filter(inf=> inf.tipo === 'cliente'); 
           //console.log('COLECCION: resumenLiq: clientes: ', this.informesLiqCliente);
           this.informesLiqCliente = this.informesLiqCliente.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer

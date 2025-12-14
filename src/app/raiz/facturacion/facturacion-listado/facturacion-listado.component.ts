@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { LogoutComponent } from 'src/app/appLogin/logout/logout.component';
-import { ConId } from 'src/app/interfaces/conId';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
@@ -30,7 +30,7 @@ export class FacturacionListadoComponent implements OnInit {
   
   informesLiq: ConId<InformeLiq>[] = [];
   informesFiltrados: ConId<InformeLiq>[] = [];
-  informesOp: ConId<InformeOp>[] = []
+  informesOp: ConIdType<InformeOp>[] = []
   filtroTipo: string = 'todos';
   filtroRazonSocial: string = '';
   fechaDesde: string = '';
@@ -218,7 +218,8 @@ export class FacturacionListadoComponent implements OnInit {
           modo: "facturacion",
           item: informeLiq,
         }        
-      
+      console.log("this.informesOp", this.informesOp);
+       
       modalRef.componentInstance.fromParent = info;
       try {
         let usuario = this.storageService.loadInfo('usuario')
@@ -232,17 +233,29 @@ export class FacturacionListadoComponent implements OnInit {
         informeLiq.anuladoPor = usuario[0].email;
         informeLiq.estado = 'anulado';
         console.log("informesLiq anulado", informeLiq);
-        this.storageService.updateItem(this.coleccion,informeLiq, informeLiq.idInfLiq, "ANULACION", `Anulación de informe de liquidación N° ${informeLiq.numeroInterno}`, informeLiq.id)
-        this.cargando = false;
-        const respuesta = await
-        Swal.fire({
-          icon: 'success',
-          title: 'El informe de liquidación fue anulado',
-//          text: 'La operación fue dada de baja y se actualizó el tablero.'
-        }); 
-        if(respuesta.isConfirmed){
-          this.ngOnInit()
+        const bajaRespuesta = await this.dbService.anularInformeLiq(informeLiq, this.informesOp ) 
+        if(bajaRespuesta.exito){
+          //this.storageService.updateItem(this.coleccion,informeLiq, informeLiq.idInfLiq, "ANULACION", `Anulación de informe de liquidación N° ${informeLiq.numeroInterno}`, informeLiq.id)
+          this.cargando = false;
+          const respuesta = await
+          Swal.fire({
+            icon: 'success',
+            title: 'El informe de liquidación fue anulado',
+  //          text: 'La operación fue dada de baja y se actualizó el tablero.'
+          }); 
+          if(respuesta.isConfirmed){
+            this.ngOnInit()
+          }
+        } else {
+          this.cargando = false;
+          Swal.fire({
+            icon: 'error',
+            title: `${bajaRespuesta.mensaje}`,
+  //          text: 'La operación fue dada de baja y se actualizó el tablero.'
+          });  
+
         }
+
         
       } catch (e) {
         console.warn("El modal fue cancelado o falló:", e);

@@ -13,6 +13,7 @@ export interface Cliente {
     tarifaAsignada: boolean;
     idTarifa:number;
     vendedor?:number[];
+    activo?:boolean;
 }
 
 export interface Contacto {    

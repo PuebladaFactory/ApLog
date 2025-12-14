@@ -53,7 +53,7 @@ export class FacturacionProveedorComponent implements OnInit {
       .subscribe(data => {
         console.log("facturas proveedores: ",data);
         if(data){
-          
+          data = data.filter(inf=> inf.estado !== 'anulado');
           this.informesLiqProveedor = data.filter(inf=> inf.tipo === 'proveedor'); 
           //console.log('COLECCION: resumenLiq: proveedor: ', this.informesLiqProveedor);        
           this.informesLiqProveedor = this.informesLiqProveedor.sort((a, b) => a.entidad.razonSocial.localeCompare(b.entidad.razonSocial)); // Ordena por el nombre del chofer

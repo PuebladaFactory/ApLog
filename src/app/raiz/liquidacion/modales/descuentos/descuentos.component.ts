@@ -19,7 +19,10 @@ export class DescuentosComponent implements OnInit{
 
   constructor(public activeModal: NgbActiveModal, private formNumServ: FormatoNumericoService){}
   ngOnInit(): void {      
-      this.descuentos = this.fromParent.descuentos;    
+      this.descuentos = this.fromParent.descuentos;
+      if(this.descuentos.length > 0){
+        this.descuentos.map(d => this.totalDescuento += d.valor)
+      }    
       console.log("descuentos: ", this.descuentos);
   }
 
@@ -56,6 +59,8 @@ export class DescuentosComponent implements OnInit{
 
   aplicarDescuento(){
     let respuesta = {descuentos: this.descuentos, total: this.totalDescuento}
+    console.log("respuesta: ", respuesta);
+    
     this.activeModal.close(respuesta)
   }
 

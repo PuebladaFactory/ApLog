@@ -824,9 +824,9 @@ export class StorageService {
     });
   } */
 
-  syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
+  async syncChangesDateValue<T>(componente:string, campo:string, value1:any, value2:any, orden:string){
     //console.log(" storage syncChangesDateValue ", componente)
-    this.dbFirebase.getAllByDateValue<T>(componente, campo, value1, value2, orden).subscribe(data => {
+    await this.dbFirebase.getAllByDateValue<T>(componente, campo, value1, value2, orden).subscribe(data => {
       //console.log("syncChangesDateValue/componente: ", componente, " data: ", data);
       
       const currentData = this.loadInfo(componente);
@@ -981,6 +981,8 @@ export class StorageService {
         return this._informesVenta$.asObservable();
       case "resumenVenta":
         return this._resumenVenta$.asObservable();
+      case "fechasConsulta":
+        return this._fechasConsulta$.asObservable();
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }

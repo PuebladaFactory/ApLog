@@ -1,7 +1,7 @@
 <div class="modal-dialog modal-dialog-centered">
   <div class="modal-content">
     <div class="modal-header">
-      <h1 class="modal-title fs-2" id="exampleModalToggleLabel2">Aplicar Descuentos</h1>
+      <h1 class="modal-title fs-2" id="exampleModalToggleLabel2">Aplicar Ajustes</h1>
 
       <button type="button" class="btn-close btn " id="cerrar" (click)="activeModal.close()"></button>
     </div>
@@ -26,7 +26,7 @@
                 [(ngModel)]="descuento.valor"
                 type="text"
                 inputmode="number"
-                appFormatoNumericoNgModel
+                appFormatoNumericoNgModelConSigno
                 >
               </div>
             </td>
@@ -53,7 +53,7 @@
                   @for (desc of descuentos; track desc; let i = $index) {
                     <tr>
                       <td>{{desc.concepto}}</td>
-                      <td>{{desc.valor  | formatearValor:"$"}}</td>
+                      <td [ngClass]="desc.valor >= 0 ? 'positivo' : 'negativo'">{{desc.valor  | formatearValor:"$"}}</td>
                       <td style="width: 10%;"><app-btn-eliminar name="Eliminar" (click)="eliminarDescuento(i)"></app-btn-eliminar> </td>
                     </tr>
                   }
@@ -61,7 +61,7 @@
                 <tfoot class="table-group-divider">
                   <tr>
                     <th>Total</th>
-                    <th colspan="2">{{totalDescuento | formatearValor:"$"}}</th>
+                    <th colspan="2" [ngClass]="totalDescuento >= 0 ? 'positivo' : 'negativo'">{{totalDescuento | formatearValor:"$"}}</th>
                   </tr>
                 </tfoot>
               </table>
@@ -69,7 +69,7 @@
           }
         </div>
         <div class="modal-footer" [ngClass]="{'isDisabled': descuentos.length === 0}">
-          <button class="btn aplicar" (click)="aplicarDescuento()">Guardar Descuento</button>
+          <button class="btn aplicar" (click)="aplicarDescuento()">Guardar Valores</button>
         </div>
       </div>
     </div>

@@ -21,6 +21,7 @@ import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TableroDiarioComponent } from './tablero-diario/tablero-diario.component';
 import { CargaTableroDiarioComponent } from './carga-tablero-diario/carga-tablero-diario.component';
+import { ModalObjetosActivosComponent } from './modal-objetos-activos/modal-objetos-activos.component';
 
 
 
@@ -34,7 +35,8 @@ import { CargaTableroDiarioComponent } from './carga-tablero-diario/carga-tabler
     ModalOpAltaComponent,
     TableroOpComponent,
     TableroDiarioComponent,
-    CargaTableroDiarioComponent
+    CargaTableroDiarioComponent,
+    ModalObjetosActivosComponent
     
   ],
   imports: [
