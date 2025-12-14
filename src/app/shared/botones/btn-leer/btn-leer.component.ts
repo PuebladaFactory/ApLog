@@ -22,7 +22,7 @@ import { Component, Input, OnInit } from '@angular/core';
     </button>
   }
   
-  @if (name === 'Cliente' || name === 'Chofer'|| name === 'Proveedor' ) {
+  @if (name === 'Cliente' || name === 'Chofer'|| name === 'Proveedor' || name === 'Vendedor') {
     <button class="btn boton-alta">
       Alta {{name}}
     </button>

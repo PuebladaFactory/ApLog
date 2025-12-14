@@ -6,6 +6,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
+import { Vendedor } from 'src/app/interfaces/vendedor';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
@@ -61,6 +62,7 @@ export class HomeComponent implements OnInit {
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspChofer");
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralProveedor");
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspProveedor");
+      this.storageService.listenForChanges<Vendedor>("vendedores");
       
       
 

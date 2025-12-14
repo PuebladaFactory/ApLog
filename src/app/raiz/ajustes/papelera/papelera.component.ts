@@ -139,6 +139,10 @@ export class PapeleraComponent implements OnInit {
           id = logDoc.objeto.idLegajo;
           titulo = "Legajo";
           break;
+        case "vendedores":
+          id = logDoc.objeto.idVendedor;
+          titulo = "Vendedor";
+          break;
         default:
           break;
       }

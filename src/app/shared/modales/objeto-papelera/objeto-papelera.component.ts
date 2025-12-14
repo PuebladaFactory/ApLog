@@ -74,6 +74,7 @@ export class ObjetoPapeleraComponent implements OnInit {
       this.getChofer(this.objeto.idChofer)
     }
     console.log("fromParentPapelera", this.fromParentPapelera);
+    this.$clientes = this.storageService.loadInfo("clientes")
     
   }
 
@@ -204,6 +205,16 @@ export class ObjetoPapeleraComponent implements OnInit {
       let choferDoc: LogDoc[] =  choferes.filter(cDoc => cDoc.objeto.idChofer === idChofer);
       console.log("choferDoc", choferDoc);
       this.chofer = choferDoc[0].objeto.apellido + " " + choferDoc[0].objeto.nombre
+    }
+
+    getCliente(id:number){
+      let cliente
+      cliente = this.$clientes.find(c=> c.idCliente === id)
+      if(cliente){
+        return cliente.razonSocial
+      } else {
+        return ""
+      }
     }
 
 

@@ -1,17 +1,20 @@
-import { InformeVenta } from "./informe-venta";
+import { Asignacion } from "./vendedor";
 
 export interface ResumenVenta {
     idResumen:number;
     idVendedor:number;
     fecha: any;
-    informesVenta: InformeVenta[];
-    porcentaje: number;
-    valores: ValoresResumen;
-    pagado?:boolean;
+    periodo: {
+        mes: number;
+        anio: number;
+    };
+    idsInfVenta: number[];
+    asignacionesExt: AsignacionExtendida[];
+    total: number;
+    
 }
 
-export interface ValoresResumen{
-    totalCliente: number;
-    totalChofer: number;
-    totalVendedor:number;
+interface AsignacionExtendida extends Asignacion {
+  totalCliente: number;
+  totalComision: number;
 }

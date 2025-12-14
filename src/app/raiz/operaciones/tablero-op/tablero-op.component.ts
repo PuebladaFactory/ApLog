@@ -831,8 +831,11 @@ private actualizarDropdowns(): void {
   }
 
   editarCampo(operaciones: any[]): ConId<Operacion>[] {
-   return operaciones.map(operacion => {
-        operacion.estado ={
+    operaciones = operaciones.filter((o:Operacion)=>{
+      return o.cliente.idCliente === 1736605467098;
+    })
+    return operaciones.map(operacion => {
+        /* operacion.estado ={
           abierta: true,
           cerrada: false,
           facCliente: false,
@@ -843,7 +846,9 @@ private actualizarDropdowns(): void {
         }
         operacion.km = 0;
         operacion.facturaChofer = 0;
-        operacion.facturaChofer = 0;
+        operacion.facturaChofer = 0; */
+        operacion.cliente.vendedor = [1764440789409]
+
         return operacion
     });
   }

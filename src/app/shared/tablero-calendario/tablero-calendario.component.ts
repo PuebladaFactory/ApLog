@@ -21,6 +21,7 @@ export class TableroCalendarioComponent implements OnInit {
   @Output() consultaOp = new EventEmitter<boolean>();
   @Output() consultaLiq = new EventEmitter<boolean>();
   @Output() consultaFac = new EventEmitter<boolean>();
+  @Output() consultaVend = new EventEmitter<boolean>();
   // Variables para controlar el formato seleccionado
   formatoSeleccionado: string = 'Semana';
   
@@ -446,6 +447,11 @@ export class TableroCalendarioComponent implements OnInit {
       case "facturacion":{
         this.storageService.setInfo("fechasConsulta",this.fechasConsulta);
         this.consultaFac.emit(true);
+        break;
+      }
+      case "vendedores":{
+        this.storageService.setInfo("fechasConsulta",this.fechasConsulta);
+        this.consultaVend.emit(true);
         break;
       }
       default:

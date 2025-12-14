@@ -52,7 +52,7 @@ export class BajaObjetoComponent implements OnInit {
           this.item = this.fromParent.item.tipo === "cliente" ? "Cliente" : this.fromParent.item.tipo === "chofer" ? "Chofer" : "Proveedor";
         }  
         break;
-      case "Cliente": case "Chofer": case "Proveedor":{          
+      case "Cliente": case "Chofer": case "Proveedor": case "Vendedor":{          
         this.item = this.fromParent.modo;
         this.titulo = this.fromParent.modo;
         this.objeto = this.fromParent.item;

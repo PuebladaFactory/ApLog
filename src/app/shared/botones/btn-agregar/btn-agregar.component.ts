@@ -84,6 +84,12 @@ import { Component, Input, OnInit } from '@angular/core';
   </button>
 }
 
+@if (name === 'Pagar') {
+  <button class="btn btn-primary mt-2" type="submit">
+    Pagar
+  </button>
+}
+
 
 @if (name === 'Factura') {
   <button class="btn btn-light m-0 verde"  style="border-radius: 10%;  margin: 10px;"
