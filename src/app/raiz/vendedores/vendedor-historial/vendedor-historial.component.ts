@@ -1,4 +1,5 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, TemplateRef } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
@@ -24,10 +25,13 @@ export class VendedorHistorialComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   vendSeleccionado!: ConId<Vendedor>;
   resumenVentas: ConId<ResumenVenta>[] = [];
-  limite:number = 12
+  limite:number = 12;
+  isLoading: boolean = false;
+  resumenDetalle!: ConId<ResumenVenta>;
 
   constructor(
     private storageService: StorageService,
+    private modalService: NgbModal, 
   ){}
 
   ngOnInit(): void {
@@ -95,6 +99,29 @@ export class VendedorHistorialComponent implements OnInit, OnDestroy {
     }
   }
 
+  abrirDetalle(resumen:ConId<ResumenVenta>, modalRef: TemplateRef<any>) {
+    //console.log("chofer: ", chofer);
+    //if(this.tablero?.asignado) this.mensajesError("No se puede editar una asiganción que ya fue dada de alta")
+    this.resumenDetalle = resumen;    
+
+    const modal = this.modalService.open(modalRef, { centered: true });
+
+    // Limpiar referencias al cerrar o cancelar el modal
+    /* modal.result.finally(() => {
+      this.choferEditable = null;
+      this.choferSeleccionadoOriginal = null;
+    }); */
+  }
+
+  getVendedor(id: number){
+    let vendedor
+    vendedor = this.vendedores.find(v=> v.idVendedor === id)
+    if(vendedor){
+      return vendedor.datosPersonales.apellido + " " + vendedor.datosPersonales.nombre
+    } else {
+      return ""
+    }
+  }
 
 
 }
