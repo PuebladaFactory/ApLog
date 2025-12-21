@@ -27,36 +27,39 @@
 @if (vendSeleccionado && resumenVentas.length > 0) {
   <div class="mt-5">
     <h1>Resumenes de Venta</h1>
-    <table class="table table-light table-striped" >
+    <table class="table table-light table-striped align-middle" >
       <thead class="sticky-top">
-        <tr>
+        <tr>          
+          <th class="table-info">Periodo</th>
           <th>Fecha</th>
-          <th>Periodo</th>
           <th>IdResumen</th>
           <th>Clientes</th>
-          <th>Total</th>
+          <th c>Total</th>
           <th>Detalle</th>
         </tr>
       </thead>
       <tbody>
         @for (r of resumenVentas; track r) {
-          <tr>
+          <tr>            
+            <td class="table-info">{{r.periodo.mes}}/{{r.periodo.anio}} </td>
             <td>{{r.fecha}}</td>
-            <td>{{r.periodo.mes}}/{{r.periodo.anio}} </td>
             <td>{{r.idResumen}}</td>           
             <td>
-              <table class="table table-light table-striped table-bordered">                
+              <table class="table table-light table-striped table-bordered table-sm align-middle m-0">                
                 @for(asig of r.asignacionesExt; track asig ){
-                  <tr>
-                      <td>{{getCliente(asig.idCliente)}}</td>
-                      <td>{{(asig.totalCliente * asig.porcentaje)/100| formatearValor:'$'}}</td>
-                  </tr>                  
+                  <tbody>
+                      <tr>
+                          <td>{{getCliente(asig.idCliente)}}</td>
+                          <td>{{(asig.totalCliente * asig.porcentaje)/100| formatearValor:'$'}}</td>
+                      </tr>                  
+                  </tbody>
+                  
                 }
               </table>
             </td>
-            <td>{{r.total | formatearValor:'$'}}</td>
+            <td class="table-success">{{r.total | formatearValor:'$'}}</td>
             <td>
-              <app-btn-leer name="DetalleColor"class="me-2"></app-btn-leer>
+              <app-btn-leer name="DetalleColor"class="me-2" (click)="abrirDetalle(r, modalDetalle)"></app-btn-leer>
             </td>
           </tr>
         }
@@ -67,6 +70,61 @@
   <div class="mt-5">
     <h3>No se registran resumenes de ventas</h3>
   </div>
+}
+
+<!-- MODAL -->
+<ng-template #modalDetalle let-modal>
+    @if(resumenDetalle){
+      
+          <div class="modal-header">
+              <h3 class="modal-title">
+                {{getVendedor(resumenDetalle.idVendedor) }}
+              </h3>              
+              <button type="button" class="btn-close" aria-label="Cerrar" (click)="modal.dismiss()"></button>
+          </div>
+          <div class="modal-body">
+              <h4 class="my-0">
+                Resumen id: {{resumenDetalle.idResumen}}
+              </h4>              
+              <h4 class="mt-0 mb-2">
+                Periodo: {{resumenDetalle.periodo.mes}}/{{resumenDetalle.periodo.anio}}
+              </h4>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                      <th>Cliente</th>                                       
+                      <th>Total Cliente</th>
+                      <th>Comision</th>
+                      <th>Pago Vendedor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (asig of resumenDetalle.asignacionesExt; track asig) {
+                        <tr>
+                          <td>{{getCliente(asig.idCliente)}}</td>
+                          <td>{{asig.totalCliente | formatearValor:'$'}}</td>
+                          <td>{{asig.porcentaje | formatearValor}}%</td>
+                          <td>{{asig.totalComision | formatearValor:'$'}}</td>
+                        </tr>
+                    }
+                </tbody>
+                
+            </table>
+            
+          </div>
+          <div class="modal-footer">
+              <tr>
+                <td colspan="3">Total</td>
+                <td>{{resumenDetalle.total | formatearValor:'$'}}</td>
+              </tr>
+          </div>    
+    
+    }  
+
+  
+</ng-template>
+@if (isLoading) {
+  <app-spinner></app-spinner>
 }
 
 
