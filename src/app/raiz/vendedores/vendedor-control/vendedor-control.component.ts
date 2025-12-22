@@ -49,7 +49,7 @@ export class VendedorControlComponent implements OnInit {
 
   selectTab(tabId: string) {
     this.selectedTab = tabId;
-    if(tabId === 'tab2'){this.ocultarCalendario = true} else {this.ocultarCalendario = false}
+    if(tabId === 'tab2' || tabId === 'tab3'){this.ocultarCalendario = true} else {this.ocultarCalendario = false}
     const tab = this.tabs.find(t => t.id === tabId);
     if (tab) {
       this.router.navigate([tab.route]);

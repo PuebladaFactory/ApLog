@@ -27,9 +27,12 @@
                             </span>
                         </div>
                     </div>
-                    <div class="me-3 mt-2">
-                        <app-btn-agregar name="Pagar" (click)="pagarVendedor(vg)"></app-btn-agregar>
-                    </div>
+                    @if(!vg.estadoPago){
+                        <div class="me-3 mt-2">
+                            <app-btn-agregar name="Pagar" (click)="pagarVendedor(vg)"></app-btn-agregar>
+                        </div>
+                    }
+
                 </div>
                 
                 
