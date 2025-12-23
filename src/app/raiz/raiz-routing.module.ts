@@ -66,7 +66,7 @@ const routes: Routes = [
       path: 'vendedores',
       loadChildren: () => import('./vendedores/vendedores.module').then(m => m.VendedoresModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, // Accesible para todos los roles
+      data: { roles: ['god','admin', 'manager','user'] }, // Accesible para todos los roles
     },
     
     

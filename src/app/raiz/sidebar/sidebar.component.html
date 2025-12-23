@@ -104,7 +104,7 @@
                             </h2>
                         </a>               
                     </li>
-                    @if($usuario.roles.admin || $usuario.roles.god){
+                    
                         <li>
                             <a [routerLink]="['/vendedores']" >
                                 <h2  class="d-flex mt-3" type="button">                    
@@ -115,7 +115,7 @@
                                 </h2>   
                             </a>                                        
                         </li>
-                    }
+                    
                     @if($usuario.roles.admin || $usuario.roles.god){
                         <li>
                             <a [routerLink]="['/ajustes']" >
