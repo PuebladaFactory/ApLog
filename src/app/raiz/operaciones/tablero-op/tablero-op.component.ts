@@ -18,6 +18,7 @@ import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.compone
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
+import { InformeVenta } from 'src/app/interfaces/informe-venta';
 
 
 @Component({
@@ -81,6 +82,7 @@ export class TableroOpComponent implements OnInit, OnDestroy {
   totalFiltrado: number = 0;
   filtroPrincipal: 'cliente' | 'chofer' | null = null;
   private modeloFiltrosPrevio: any = null;
+  informesVenta: InformeVenta[] = []
 
   constructor(
     private storageService: StorageService,
@@ -832,7 +834,7 @@ private actualizarDropdowns(): void {
 
   editarCampo(operaciones: any[]): ConId<Operacion>[] {
     operaciones = operaciones.filter((o:Operacion)=>{
-      return o.cliente.idCliente === 1736605467098;
+      return o.cliente.idCliente === 1737814865336;
     })
     return operaciones.map(operacion => {
         /* operacion.estado ={
@@ -847,8 +849,8 @@ private actualizarDropdowns(): void {
         operacion.km = 0;
         operacion.facturaChofer = 0;
         operacion.facturaChofer = 0; */
-        operacion.cliente.vendedor = [1764440789409]
-
+        operacion.cliente.vendedor = [1766498633336]
+        
         return operacion
     });
   }
@@ -905,6 +907,44 @@ private actualizarDropdowns(): void {
     //this.probarErroresConOperaciones(operaciones);
   };
   reader.readAsText(file);
+}
+
+actualizarInformeVenta(){
+  this.objetoEditado.map(o=>{
+    this.asignacionComisionVenta(o)
+  })
+  console.log("this.informesVenta: ",this.informesVenta);
+  
+}
+
+asignacionComisionVenta(op:ConId<Operacion>){
+  this.informesVenta = [];
+  op.cliente.vendedor?.forEach((idVend: number)=>{
+    let informeVenta: InformeVenta;
+    informeVenta = {
+      idInfVenta: new Date().getTime() + Math.floor(Math.random() * 1000),
+      fecha: op.fecha,
+      idOperacion: op.idOperacion,
+      idCliente: op.cliente.idCliente,
+      idVendedor: idVend,
+      valoresOp: {
+        totalCliente: op.valores.cliente.aCobrar,
+        totalChofer: op.valores.chofer.aPagar,
+      },
+      pago: false,
+    };
+    this.informesVenta.push(informeVenta);
+  })
+}
+
+async guardarInformeVenta(){
+  this.isLoading = true;
+  const resp = await this.dbFirebase.guardarMultipleGeneral(this.informesVenta, 'informesVenta', 'idInfVenta', this.informesVenta[0].idInfVenta)
+  if(resp.exito){
+    alert("actualizado correctamente")
+  } else {
+    alert(`error actualizando. errr: ${resp.mensaje}`)
+  }  
 }
 
   
