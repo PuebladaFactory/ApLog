@@ -12,6 +12,7 @@ import Swal from 'sweetalert2';
 import { ChoferesAltaComponent } from '../choferes-alta/choferes-alta.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 
 @Component({
   selector: 'app-choferes-listado',
@@ -57,7 +58,12 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
     choferesActualizados: any[] = [];
     private destroy$ = new Subject<void>();
   
-    constructor(private storageService: StorageService, private modalService: NgbModal, private dbFirebase: DbFirestoreService) {}
+    constructor(
+      private storageService: StorageService, 
+      private modalService: NgbModal, 
+      private dbFirebase: DbFirestoreService,
+      private excelServ: ExcelService
+    ) {}
   
     ngOnInit(): void {
       this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
@@ -298,6 +304,11 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
 
     actualizarChoferes(){
       this.dbFirebase.actualizarMultiple(this.choferesActualizados, "choferes")
+    }
+
+
+    descargarChoferes(){
+       this.excelServ.exportarChoferesTablaExcel(this.$choferes)
     }
 
 }

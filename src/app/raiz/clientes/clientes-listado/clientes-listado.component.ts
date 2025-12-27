@@ -11,6 +11,7 @@ import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { forEach } from 'lodash';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 
 @Component({
   selector: 'app-listado-nuevo',
@@ -62,6 +63,7 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
     private storageService: StorageService, 
     private modalService: NgbModal,
     private dbFirestore: DbFirestoreService,
+    private excelServ: ExcelService,
   ) {}
 
   ngOnInit(): void {
@@ -294,13 +296,17 @@ toggleColumnVisibility(colId: string): void {
     
   }
 
-    mensajesError(msj:string){
-      Swal.fire({
-        icon: "error",
-        //title: "Oops...",
-        text: `${msj}`
-        //footer: `${msj}`
-      });
-    }
+  mensajesError(msj:string){
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
+  }
+
+  descargarClientes(){
+    this.excelServ.exportarClientesTablaExcel(this.$clientes, 'Clientes')
+  }
 
 }

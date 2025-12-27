@@ -1,7 +1,18 @@
 <!-- Filtros y configuración -->
 <div class="d-flex justify-content-between">
-    <div class="align-self-start mt-3 mb-2">  
-        <app-btn-leer class="align-items-end" name="Chofer" (click)="openModal('alta')"></app-btn-leer>
+
+    <div class="d-flex" >  
+        <div class="align-self-start mt-3 me-2">
+            <app-btn-leer class="align-items-end" name="Chofer" (click)="openModal('alta')"></app-btn-leer>
+        </div>
+        <div class="align-self-start mt-3 mb-1">
+            <button  class="btn btn-primary boton-alta" type="button" id="" (click)="descargarChoferes()">
+                Descargar Choferes
+            </button>
+        </div>
+        
+        <!-- <button class="btn btn-primary" (click)="clientesActivos()">Editar Clientes</button>
+        <button class="btn btn-secondary" (click)="actualizarActivos()">Actualizar Clientes</button> -->
     </div>
     <!-- div>
         <button class="btn btn-outline-danger" (click)="editarChoferes()">Editar Choferes</button>
