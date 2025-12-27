@@ -10,6 +10,7 @@ import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-rend
 import Swal from 'sweetalert2';
 import { ProveedoresAltaComponent } from '../proveedores-alta/proveedores-alta.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -57,7 +58,11 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
     //secondFilter: string = '';
     private destroy$ = new Subject<void>();
   
-    constructor(private storageService: StorageService, private modalService: NgbModal) {}
+    constructor(
+      private storageService: StorageService, 
+      private modalService: NgbModal,
+      private excelServ: ExcelService
+    ) {}
   
     ngOnInit(): void {
       this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
@@ -282,5 +287,9 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
           centered: true,
         });
     }
+
+  descargarProveedores(){
+    this.excelServ.exportarClientesTablaExcel(this.$proveedores, 'Proveedores')
+  }
 
 }
