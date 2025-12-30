@@ -212,7 +212,7 @@ export class DbFirestoreService {
 
     }
 
-    getMostRecentLimitId<T>(componente: string, field: string, campo:string, id:number, limite:number): Observable<ConId<T>[]> {
+    getMostRecentLimitId<T>(componente: string, field: string, campo:string, id:any, limite:number): Observable<ConId<T>[]> {
       
       const dataCollectionPath = `/Vantruck/datos/${componente}`;
       const colRef = collection(this.firestore, dataCollectionPath);
@@ -390,6 +390,36 @@ export class DbFirestoreService {
         }, error => observer.error(error));
 
         // Cleanup callback
+        return { unsubscribe };
+      });
+    }
+
+    getAllStateChangesByField<T>(
+      componente: string,
+      campo: string,
+      valor: any
+    ): Observable<ConIdType<T>[]> {
+
+      const dataCollectionPath = `/Vantruck/datos/${componente}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+
+      const q = query(colRef, where(campo, '==', valor));
+
+      return new Observable<ConIdType<T>[]>(observer => {
+        const unsubscribe = onSnapshot(
+          q,
+          snapshot => {
+            const changes: ConIdType<T>[] = snapshot.docChanges().map(change => ({
+              id: change.doc.id,
+              ...(change.doc.data() as T),
+              type: change.type
+            }));
+
+            observer.next(changes);
+          },
+          error => observer.error(error)
+        );
+
         return { unsubscribe };
       });
     }

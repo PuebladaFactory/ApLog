@@ -4,6 +4,7 @@ import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Legajo } from 'src/app/interfaces/legajo';
+import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { Vendedor } from 'src/app/interfaces/vendedor';
@@ -63,6 +64,7 @@ export class HomeComponent implements OnInit {
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralProveedor");
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspProveedor");
       this.storageService.listenForChanges<Vendedor>("vendedores");
+      this.storageService.listenForChangesField<NoDisponibilidadChofer>("noOperativo", "activa", true);
       
       
 

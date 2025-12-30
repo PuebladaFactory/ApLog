@@ -52,6 +52,20 @@ label, input, textarea, .chofer-item, .chofer-ubicado{
   font-size: 1.3rem;
 }
 
+.gris-fijo{
+  background-color: rgb(167, 166, 166);
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
+.gris-fijo:hover{
+  background-color: grey;
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
 .botonera{
   width: 15rem;  
   color: white;

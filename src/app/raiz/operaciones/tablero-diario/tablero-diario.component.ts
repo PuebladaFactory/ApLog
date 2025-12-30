@@ -15,6 +15,7 @@ import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 import { ModalObjetosActivosComponent } from '../modal-objetos-activos/modal-objetos-activos.component';
+import { ModalChoferesNoDisponiblesComponent } from '../modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
 
 type ChoferAsignado = ConIdType<Chofer> & {
   categoriaAsignada: Categoria;
@@ -835,6 +836,18 @@ async guardarTableroDiario(): Promise<void> {
     const fechaLocal = new Date(anio, mes - 1, dia); // mes base 0
 
     return dias[fechaLocal.getDay()];
+  }
+
+  openModalNoOperativos(){
+     {
+      const modalRef = this.modalService.open(ModalChoferesNoDisponiblesComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg',
+
+      });            
+    }
+
   }
 
 
