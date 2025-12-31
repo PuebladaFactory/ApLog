@@ -93,6 +93,7 @@
   </div>
 
   <!-- ================= TABLA ================= -->
+   <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por Chofer">
   <div class="table-responsive">
     <table class="table table-sm table-striped align-middle">
       <thead>
@@ -118,9 +119,9 @@
             </tr>
         }@else {
 
-            @for(n of noDisponibilidades; track n){
+            @for(n of noDisponibilidadesView | globalFilter: searchText : 'nombreChofer'; track n){
                 <tr>
-                <td>{{ getNombreChofer(n.idChofer) }}</td>
+                <td>{{ n.nombreChofer }}</td>
                 <td>{{ n.desde }}</td>
                 <td>{{ n.hasta }}</td>
                 <td>{{ n.motivo || '-' }}</td>

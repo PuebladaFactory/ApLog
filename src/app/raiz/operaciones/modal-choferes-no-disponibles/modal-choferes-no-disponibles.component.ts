@@ -9,6 +9,11 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
+interface NoDisponibilidadChoferView extends NoDisponibilidadChofer {
+  nombreChofer: string;
+}
+
+
 @Component({
   selector: 'app-modal-choferes-no-disponibles',
   standalone: false,
@@ -28,8 +33,11 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
   verInactivas: boolean= false;
   noDisponibilidades: ConId<NoDisponibilidadChofer>[] = [];
   idEditando: number | null = null;
-  bajaOp!: ConId<NoDisponibilidadChofer>;
+  bajaOp!: ConIdType<NoDisponibilidadChoferView>;
   private destroy$ = new Subject<void>();
+  searchText: string = "";
+  noDisponibilidadesView: NoDisponibilidadChoferView[] = [];
+
   
 
   constructor(
@@ -64,47 +72,48 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
     .getObservable<ConIdType<NoDisponibilidadChofer>>('noOperativo')
     .pipe(takeUntil(this.destroy$))
     .subscribe((data) => {
-      console.log("data: ", data);
+      //console.log("data: ", data);
       this.noDisponibilidades = data;
-      console.log("this.noDisponibilidades", this.noDisponibilidades);
-      
+      //console.log("this.noDisponibilidades", this.noDisponibilidades);
+      this.construirVista(this.noDisponibilidades)
     });
   }
 
-  guardar(): void {
+  async guardar(): Promise<void> {
     if (this.form.invalid) return;
 
-    const value = this.form.value;
+    const respuesta = await Swal.fire({
+      title: '¿Guardar?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Desactivar',
+      cancelButtonText: 'Cancelar'
+    })
 
-    const data: NoDisponibilidadChofer = {
-      idNoDisponibilidad: this.idEditando ?? new Date().getTime() + Math.floor(Math.random() * 1000),
-      idChofer: +value.idChofer,
-      desde: value.desde,
-      hasta: value.hasta,
-      motivo: value.motivo,
-      activa: true,
-    };
+    if(respuesta){
 
-    let lista = this.storageService.loadInfo(
-      'noOperativo'
-    ) || [];
+      const value = this.form.value;
 
-   /*  if (this.editando) {
-      lista = lista.map(n =>
-        n.idNoDisponibilidad === data.idNoDisponibilidad ? data : n
-      );
-    } else {
-      lista.push(data);
-    } */
+      const data: NoDisponibilidadChofer = {
+        idNoDisponibilidad: this.idEditando ?? new Date().getTime() + Math.floor(Math.random() * 1000),
+        idChofer: +value.idChofer,
+        desde: value.desde,
+        hasta: value.hasta,
+        motivo: value.motivo,
+        activa: true,
+      };
+    
+      if (this.editando) {      
+        this.storageService.updateItem('noOperativo', data, data.idNoDisponibilidad, "EDiCION", `Editada baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`, this.bajaOp.id)
+      } else {
+        this.storageService.addItem('noOperativo', data, data.idNoDisponibilidad, "ALTA", `Alta de baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`)
+      }    
 
-    if (this.editando) {      
-      this.storageService.updateItem('noOperativo', data, data.idNoDisponibilidad, "EDiCION", `Editada baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`, this.bajaOp.id)
-    } else {
-      this.storageService.addItem('noOperativo', data, data.idNoDisponibilidad, "ALTA", `Alta de baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`)
-    }    
+      this.resetForm();
+      //this.consultar();
 
-    this.resetForm();
-    //this.consultar();
+    }
+    
   }
 
 
@@ -125,6 +134,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
     this.form.reset();
     this.dbFirestore.getMostRecentLimitId<NoDisponibilidadChofer>("noOperativo", "desde", "activa", false, this.cantidad).subscribe(data=>{
       this.noDisponibilidades = data;
+      this.construirVista(this.noDisponibilidades);
     })
     /* const todas = this.storageService.loadInfo<NoDisponibilidadChofer>(
       'noDisponibilidadChofer'
@@ -150,7 +160,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
     return c ? `${c.apellido}, ${c.nombre}` : 'Chofer no encontrado';
   }
 
-  editar(n: ConId<NoDisponibilidadChofer>): void {
+  editar(n: ConIdType<NoDisponibilidadChoferView>): void {
     this.editando = true;
     this.idEditando = n.idNoDisponibilidad;
     this.bajaOp = n;
@@ -165,7 +175,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
 }
 
 
-  desactivar(n: ConId<NoDisponibilidadChofer>): void {
+  desactivar(n: ConIdType<NoDisponibilidadChoferView>): void {
     Swal.fire({
       title: '¿Desactivar baja operativa?',
       icon: 'warning',
@@ -177,7 +187,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
 
       this.bajaOp = n;
       this.bajaOp.activa = false;
-      let {id, ...data} = this.bajaOp
+      let {id, type, nombreChofer, ...data} = this.bajaOp
 
       /* let lista = this.storageService.loadInfo<NoDisponibilidadChofer>(
         'noDisponibilidadChofer'
@@ -188,7 +198,8 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
           ? { ...item, activa: false }
           : item
       ); */
-
+      console.log("data: ", data);
+      
       this.storageService.updateItem('noOperativo', data, data.idNoDisponibilidad, "BAJA", `Baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}, cerrada`, this.bajaOp.id)
       this.consultar();
     });
@@ -202,6 +213,22 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       this.noDisponibilidades = [];
     }
   }
+
+  private construirVista(
+    bajas: NoDisponibilidadChofer[]
+  ) {
+    this.noDisponibilidadesView = bajas.map(baja => {
+      const chofer = this.choferes.find(c => c.idChofer === baja.idChofer);
+
+      return {
+        ...baja,
+        nombreChofer: chofer
+          ? `${chofer.apellido} ${chofer.nombre}`
+          : 'Chofer desconocido'
+      };
+    });
+  }
+
 
 
 }

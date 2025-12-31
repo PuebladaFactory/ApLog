@@ -10,6 +10,7 @@ import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personaliz
 import * as _ from 'lodash';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { LogEntry } from 'src/app/interfaces/log-entry';
+import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 
 
 
@@ -1339,6 +1340,39 @@ export class StorageService {
         }
         
       }
-      
-     
+    
+  getChoferesHabilitados(
+    choferes: Chofer[],
+    noDisponibilidades: NoDisponibilidadChofer[],
+    fecha: string
+  ): Chofer[] {
+
+    if (!fecha || !choferes?.length) {
+      return [];
     }
+
+    const fechaMs = new Date(fecha + 'T00:00:00').getTime();
+
+    // 1️⃣ Armar set de choferes NO disponibles para esa fecha
+    const noDisponiblesSet = new Set<number>();
+
+    for (const nd of noDisponibilidades || []) {
+      if (!nd.activa) continue;
+
+      const desdeMs = new Date(nd.desde + 'T00:00:00').getTime();
+      const hastaMs = new Date(nd.hasta + 'T23:59:59').getTime();
+
+      if (fechaMs >= desdeMs && fechaMs <= hastaMs) {
+        noDisponiblesSet.add(nd.idChofer);
+      }
+    }
+
+    // 2️⃣ Filtrar choferes habilitados
+    return choferes.filter(chofer =>
+      chofer.activo === true &&
+      !noDisponiblesSet.has(chofer.idChofer)
+    );
+  }
+
+     
+}

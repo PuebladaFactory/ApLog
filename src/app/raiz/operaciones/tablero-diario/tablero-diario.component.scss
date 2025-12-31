@@ -216,6 +216,12 @@ nav.navbar {
   background-color: rgba(0, 0, 0, 0.4);
 }
 
+.no-operativo {
+  opacity: 0.5;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
 @media (min-width: 1400px) {
   ::ng-deep .modal-super-xl .modal-dialog {
     max-width: 80vw;     // Casi ancho total del viewport

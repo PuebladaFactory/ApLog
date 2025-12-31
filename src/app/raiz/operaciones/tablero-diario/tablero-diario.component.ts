@@ -16,6 +16,7 @@ import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-obj
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 import { ModalObjetosActivosComponent } from '../modal-objetos-activos/modal-objetos-activos.component';
 import { ModalChoferesNoDisponiblesComponent } from '../modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
+import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 
 type ChoferAsignado = ConIdType<Chofer> & {
   categoriaAsignada: Categoria;
@@ -78,6 +79,14 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   isLoading: boolean = false;
   fechaAnterior: string | null = null;
   tablero: TableroDiario | null = null;
+  // No disponibilidad
+  noDisponibilidades: NoDisponibilidadChofer[] = [];
+  // Resultado por fecha
+  choferesNoOperativos: Chofer[] = [];
+  choferesDisponibles: Chofer[] = [];
+  // Lookup rápido
+  noOperativosSet = new Set<number>();
+
 
   constructor(
     private storageService: StorageService,
@@ -152,6 +161,26 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
 
       // 👇 Buscar tablero existente en base de datos
      //this.cargarTableroDiario();
+     this.storageService
+      .getObservable<NoDisponibilidadChofer>('noOperativo')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        if (!data) return;
+
+        // quedarnos solo con las activas
+        this.noDisponibilidades = data
+          .filter(n => n.activa)
+          .map(n => {
+            const { id, type, ...clean } = n as any;
+            return clean as NoDisponibilidadChofer;
+          });
+
+        // Si ya hay fecha seleccionada, recalcular
+        if (this.fechaSeleccionada) {
+          this.calcularChoferesNoOperativosPorFecha(this.fechaSeleccionada);
+        }
+      });
+
   }
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -203,6 +232,11 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     ////console.log("drop cliente: data: ", data);    
     const choferBase: ConIdType<Chofer> = data.chofer;
     ////console.log("drop cliente: choferBase: ", choferBase);
+    if (this.isChoferNoOperativo(choferBase.idChofer)) {
+      this.mensajesError('El chofer no está disponible para la fecha seleccionada');
+      return;
+    }
+
     const categoria = data.categoria
     let {choferes, ...cat} = categoria
 
@@ -432,6 +466,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       localStorage.setItem('fechaTableroDiario', JSON.stringify(fecha));
 
       this.fechaSeleccionada = tablero.fecha;
+      this.calcularChoferesNoOperativosPorFecha(tablero.fecha);
       this.reconstruirDesdeTablero(tablero);
 
       /* Swal.fire({
@@ -712,6 +747,7 @@ openModal(opMultiples: any[]): void {
     this.fechaAnterior = this.fechaSeleccionada;
     ////console.log("this.fechaSeleccionada", this.fechaSeleccionada);
     this.asignaciones = {}
+    this.calcularChoferesNoOperativosPorFecha(this.fechaSeleccionada);
     this.buscarTableroPorFecha(this.fechaSeleccionada);
   }
 
@@ -848,6 +884,48 @@ async guardarTableroDiario(): Promise<void> {
       });            
     }
 
+  }
+
+  private calcularChoferesNoOperativosPorFecha(fecha: string): void {
+    this.noOperativosSet.clear();
+    this.choferesNoOperativos = [];
+    this.choferesDisponibles = [];
+
+    const fechaMs = new Date(fecha + 'T00:00:00').getTime();
+
+    // 1️⃣ Armar Set de ids no disponibles
+    for (const nd of this.noDisponibilidades) {
+      const desdeMs = new Date(nd.desde + 'T00:00:00').getTime();
+      const hastaMs = new Date(nd.hasta + 'T23:59:59').getTime();
+
+      if (fechaMs >= desdeMs && fechaMs <= hastaMs) {
+        this.noOperativosSet.add(nd.idChofer);
+      }
+    }
+
+    // 2️⃣ Separar choferes activos
+    for (const chofer of this.choferesActivos) {
+      if (this.noOperativosSet.has(chofer.idChofer)) {
+        this.choferesNoOperativos.push(chofer);
+      } else {
+        this.choferesDisponibles.push(chofer);
+      }
+    }
+  }
+
+
+  isChoferNoOperativo(idChofer: number): boolean {
+    return this.noOperativosSet.has(idChofer);
+  }
+
+  getMotivoNoDisponibilidad(idChofer: number): string {
+    const nd = this.noDisponibilidades.find(n =>
+      n.idChofer === idChofer &&
+      this.fechaSeleccionada >= n.desde &&
+      this.fechaSeleccionada <= n.hasta
+    );
+
+    return nd?.motivo || 'No disponible';
   }
 
 
