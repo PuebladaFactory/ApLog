@@ -227,6 +227,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
           : 'Chofer desconocido'
       };
     });
+    this.noDisponibilidadesView.sort((a, b) => a.nombreChofer.localeCompare(b.nombreChofer));
   }
 
 
