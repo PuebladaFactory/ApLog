@@ -98,7 +98,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
         idNoDisponibilidad: this.idEditando ?? new Date().getTime() + Math.floor(Math.random() * 1000),
         idChofer: +value.idChofer,
         desde: value.desde,
-        hasta: value.hasta,
+        hasta: value.hasta ?? null,
         motivo: value.motivo,
         activa: true,
       };
@@ -110,8 +110,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       }    
 
       this.resetForm();
-      //this.consultar();
-
+   
     }
     
   }
@@ -122,36 +121,22 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
   }
 
   resetForm(): void {
+    this.form.reset();
     this.editando = false;
     this.idEditando = null;
-    this.form.reset({
-      activa: true
-    });
+    this.form.get('hasta')?.enable();
+    
   }
 
 
   consultar(): void {
     this.form.reset();
+    this.form.get('hasta')?.enable();
     this.dbFirestore.getMostRecentLimitId<NoDisponibilidadChofer>("noOperativo", "desde", "activa", false, this.cantidad).subscribe(data=>{
       this.noDisponibilidades = data;
       this.construirVista(this.noDisponibilidades);
     })
-    /* const todas = this.storageService.loadInfo<NoDisponibilidadChofer>(
-      'noDisponibilidadChofer'
-    ) || [];
-
-    let filtradas = todas.filter(n =>
-      this.verInactivas ? !n.activa : n.activa
-    );
-
-    // ordenar por fecha desde DESC
-    filtradas.sort((a, b) => b.desde.localeCompare(a.desde));
-
-    this.noDisponibilidades = filtradas.slice(0, this.cantidad)
-      .map(n => ({
-        ...n,
-        nombreChofer: this.getNombreChofer(n.idChofer)
-      }) as any); */
+  
     
   }
 
@@ -172,6 +157,12 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       motivo: n.motivo,
       activa: n.activa
     });
+
+    if (!n.hasta) {
+      this.form.get('hasta')?.disable();
+    } else {
+      this.form.get('hasta')?.enable()
+    }
 }
 
 
@@ -189,19 +180,11 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       this.bajaOp.activa = false;
       let {id, type, nombreChofer, ...data} = this.bajaOp
 
-      /* let lista = this.storageService.loadInfo<NoDisponibilidadChofer>(
-        'noDisponibilidadChofer'
-      ) || [];
-
-      lista = lista.map(item =>
-        item.idNoDisponibilidad === n.idNoDisponibilidad
-          ? { ...item, activa: false }
-          : item
-      ); */
+     
       console.log("data: ", data);
       
       this.storageService.updateItem('noOperativo', data, data.idNoDisponibilidad, "BAJA", `Baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}, cerrada`, this.bajaOp.id)
-      this.consultar();
+      
     });
   }
 
@@ -228,6 +211,17 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       };
     });
     this.noDisponibilidadesView.sort((a, b) => a.nombreChofer.localeCompare(b.nombreChofer));
+  }
+
+  toggleSinDefinir(event: any): void {
+    const checked = event.target.checked;
+
+    if (checked) {
+      this.form.get('hasta')?.setValue(null);
+      this.form.get('hasta')?.disable();
+    } else {
+      this.form.get('hasta')?.enable();
+    }
   }
 
 

@@ -896,9 +896,15 @@ async guardarTableroDiario(): Promise<void> {
     // 1️⃣ Armar Set de ids no disponibles
     for (const nd of this.noDisponibilidades) {
       const desdeMs = new Date(nd.desde + 'T00:00:00').getTime();
-      const hastaMs = new Date(nd.hasta + 'T23:59:59').getTime();
+      const hastaMs = nd.hasta
+        ? new Date(nd.hasta + 'T23:59:59').getTime()
+        : null;
 
-      if (fechaMs >= desdeMs && fechaMs <= hastaMs) {
+      const estaEnRango =
+        fechaMs >= desdeMs &&
+        (hastaMs === null || fechaMs <= hastaMs);
+
+      if (estaEnRango) {
         this.noOperativosSet.add(nd.idChofer);
       }
     }
@@ -914,19 +920,26 @@ async guardarTableroDiario(): Promise<void> {
   }
 
 
+
   isChoferNoOperativo(idChofer: number): boolean {
     return this.noOperativosSet.has(idChofer);
   }
 
   getMotivoNoDisponibilidad(idChofer: number): string {
-    const nd = this.noDisponibilidades.find(n =>
-      n.idChofer === idChofer &&
-      this.fechaSeleccionada >= n.desde &&
-      this.fechaSeleccionada <= n.hasta
-    );
+    const fecha = this.fechaSeleccionada;
+
+    const nd = this.noDisponibilidades.find(n => {
+      if (n.idChofer !== idChofer) return false;
+
+      const cumpleDesde = fecha >= n.desde;
+      const cumpleHasta = !n.hasta || fecha <= n.hasta;
+
+      return cumpleDesde && cumpleHasta;
+    });
 
     return nd?.motivo || 'No disponible';
   }
+
 
 
 
