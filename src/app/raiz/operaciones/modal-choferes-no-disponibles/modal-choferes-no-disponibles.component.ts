@@ -90,7 +90,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     })
 
-    if(respuesta){
+    if(respuesta.isConfirmed){
 
       const value = this.form.value;
 
