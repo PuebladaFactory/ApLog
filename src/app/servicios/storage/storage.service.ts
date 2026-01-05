@@ -10,6 +10,7 @@ import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personaliz
 import * as _ from 'lodash';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { LogEntry } from 'src/app/interfaces/log-entry';
+import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 
 
 
@@ -284,6 +285,9 @@ export class StorageService {
 
   private _resumenVenta$ = new BehaviorSubject<any>(this.loadInfo('resumenVenta') || []);
   public resumenVenta$ = this._resumenVenta$.asObservable();
+
+  private _noOperativo$ = new BehaviorSubject<any>(this.loadInfo('noOperativo') || []);
+  public noOperativo$ = this._noOperativo$.asObservable();
 
   updateObservable(componente: any, data: any) {
     switch (componente) {
@@ -691,6 +695,10 @@ export class StorageService {
         this._resumenVenta$.next(data);
         break
       }
+      case "noOperativo":{
+        this._noOperativo$.next(data);
+        break
+      }
       default: {
         //statements; 
         break;
@@ -911,6 +919,41 @@ export class StorageService {
       });
   }
 
+    listenForChangesField<T>(componente: string, campo:string, valor:any): void {
+      //console.log("admin: ", componente);    
+      this.dbFirebase.getAllStateChangesByField<T>(componente, campo, valor)
+        .subscribe(changes => {
+          if (changes.length > 0) {
+            //console.log(`${componente}: Cambios detectados`, changes);
+            let currentData = this.loadInfo(componente) || [];          
+            changes.forEach(change => {
+              if (change.type === 'added') {
+                ////console.log("change", change);
+                const existe = currentData.some(obj => obj.id === change.id);
+
+                if (!existe) {
+                  ////console.log("El id no está en el array");
+                  currentData.push(change);
+                } else {
+                  //console.log("sin cambios en el componente: ", componente);
+                }
+                
+                
+              } else if (change.type === 'modified') {
+                //console.log("editar!!!!");
+                currentData = currentData.map(item => item.id === change.id ? change : item);
+              } else if (change.type === 'removed') {
+                //console.log("DAAALEEE LOOOOCOOO!!!!");
+                
+                currentData = currentData.filter(item => item.id !== change.id);
+              }
+            });
+    
+            this.setInfo(componente, currentData); // Actualiza caché          
+          }
+        });
+    }
+
   getObservable<T>(componente: string): Observable<T[]> {
     switch (componente) {
       case 'clientes':
@@ -983,6 +1026,8 @@ export class StorageService {
         return this._resumenVenta$.asObservable();
       case "fechasConsulta":
         return this._fechasConsulta$.asObservable();
+      case "noOperativo":
+        return this._noOperativo$.asObservable();
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }
@@ -1295,6 +1340,39 @@ export class StorageService {
         }
         
       }
-      
-     
+    
+  getChoferesHabilitados(
+    choferes: Chofer[],
+    noDisponibilidades: NoDisponibilidadChofer[],
+    fecha: string
+  ): Chofer[] {
+
+    if (!fecha || !choferes?.length) {
+      return [];
     }
+
+    const fechaMs = new Date(fecha + 'T00:00:00').getTime();
+
+    // 1️⃣ Armar set de choferes NO disponibles para esa fecha
+    const noDisponiblesSet = new Set<number>();
+
+    for (const nd of noDisponibilidades || []) {
+      if (!nd.activa) continue;
+
+      const desdeMs = new Date(nd.desde + 'T00:00:00').getTime();
+      const hastaMs = new Date(nd.hasta + 'T23:59:59').getTime();
+
+      if (fechaMs >= desdeMs && fechaMs <= hastaMs) {
+        noDisponiblesSet.add(nd.idChofer);
+      }
+    }
+
+    // 2️⃣ Filtrar choferes habilitados
+    return choferes.filter(chofer =>
+      chofer.activo === true &&
+      !noDisponiblesSet.has(chofer.idChofer)
+    );
+  }
+
+     
+}

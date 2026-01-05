@@ -11,13 +11,17 @@
             <button class="btn btn-primary celeste-fijo  me-1" type="button" (click)="openModalActivos('clientes')">
               Clientes Activos
             </button>
+
+            <button class="btn btn-secondary gris-fijo  me-1" type="button" (click)="openModalNoOperativos()">
+              Choferes No Operativos
+            </button>
             
         </div>
     </div>  
     <div class="col-4 d-flex justify-content-center">
         <!-- Fecha -->
-        <div class="text-center">
-            <label for="fechaSeleccionada" class="form-label mb-0 fw-bold">📅 Fecha: <span *ngIf="fechaSeleccionada">{{ getDiaSemana(fechaSeleccionada) }}</span></label>
+        <div class="text-center">            
+            <label for="fechaSeleccionada" class="form-label mb-0 fw-bold">📅 Fecha: @if(fechaSeleccionada){<span>{{ getDiaSemana(fechaSeleccionada) }}</span>} </label>
             <div class="d-flex justify-content-center align-items-center">
                 <button class="btn btn-outline-primary"
                         (click)="cambiarDia(-1)"
@@ -102,6 +106,9 @@
                               <div
                                 *ngFor="let chofer of categoria.choferes"
                                 class="chofer-card"
+                                [class.no-operativo]="isChoferNoOperativo(chofer.idChofer)"
+                                cdkDrag
+                                [cdkDragDisabled]="isChoferNoOperativo(chofer.idChofer)"
                                 [ngClass]="[
                                   sectionColorClasses[i % sectionColorClasses.length],
                                   estaAsignado(chofer) ? 'opacity-50' : ''
@@ -111,6 +118,7 @@
                                 [cdkDragBoundary]="'.drag-boundary'"
                                 
                                 [title]="clientesAsignados(chofer).join(', ')"
+                                
                               >
                                 {{ chofer.apellido }}, {{ chofer.nombre }}
                                 <span *ngIf="asignacionesMultiples(chofer) > 1" class="badge bg-secondary ms-1">
@@ -171,6 +179,20 @@
                           </div>
                       </div>
                   </div>
+                  @if(choferesNoOperativos.length > 0){
+                    <div class="col-2 mb-4">
+                        <h3 class="text-center" style="min-height: 40px;">Choferes No Operativos</h3>
+                        <div class="p-2 border rounded min-vh-25 bg-secondary caja-cliente">
+                            
+
+                            <div class="chofer-card" *ngFor="let chofer of choferesNoOperativos" class="mb-2 p-2 rounded chofer-ubicado d-flex justify-content-between fw-bold bg-light" [title]="getMotivoNoDisponibilidad(chofer.idChofer)">
+                              {{ chofer.apellido }}, {{ chofer.nombre }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                  }
+                  
               </div>
           </div>
       <!-- </div> -->

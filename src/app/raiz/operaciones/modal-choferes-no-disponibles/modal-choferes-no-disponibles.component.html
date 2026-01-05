@@ -1,0 +1,152 @@
+<div class="modal-header">
+  <h3 class="modal-title">
+    Gestión de bajas operativas de choferes
+  </h3>
+  <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+
+  <!-- ================= FORMULARIO ================= -->
+  <div class="card mb-3">
+    <div class="card-header fs-4">
+      {{ editando ? 'Editar baja operativa' : 'Nueva baja operativa' }}
+    </div>
+
+    <div class="card-body">
+      <form [formGroup]="form">
+
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label">Chofer</label>
+            <select class="form-select" formControlName="idChofer">
+              <option value="">Seleccione chofer</option>
+              @for (c of choferes; track c) {
+                <option [value]="c.idChofer">
+                    {{ c.apellido }}, {{ c.nombre }}
+                </option>
+              }
+              
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Desde</label>
+            <input type="date" class="form-control" formControlName="desde">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Hasta</label>
+            <input type="date" class="form-control" formControlName="hasta">
+          </div>
+
+          <!-- <div class="col-md-2 d-flex align-items-end">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" formControlName="activa">
+              <label class="form-check-label">Activa</label>
+            </div>
+          </div> -->
+        </div>
+
+        <div class="mt-2">
+          <label class="form-label">Motivo</label>
+          <input type="text" class="form-control" formControlName="motivo">
+        </div>
+
+        <div class="mt-3 d-flex gap-2">
+          <button class="btn btn-primary" (click)="guardar()" [disabled]="form.invalid">
+            {{ editando ? 'Actualizar' : 'Guardar' }}
+          </button>
+
+          @if(editando){
+            <button class="btn btn-secondary" (click)="cancelarEdicion()">
+                Cancelar
+            </button>
+          }
+          
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= FILTROS ================= -->
+  <div class="d-flex align-items-center gap-3 mb-2">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" (click)="verHistorial()" [(ngModel)]="verInactivas">
+      <label class="form-check-label">
+        Ver historial
+      </label>
+    </div>
+
+    <div class="d-flex gap-1 align-items-center">
+        @if(verInactivas){
+            <input type="number" class="form-control form-control-sm"
+             style="width: 80px"
+             [(ngModel)]="cantidad">
+            <button class="btn btn-sm btn-outline-primary" (click)="consultar()">
+                Consultar
+            </button>
+        }
+      
+    </div>
+  </div>
+
+  <!-- ================= TABLA ================= -->
+   <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por Chofer">
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Chofer</th>
+          <th>Desde</th>
+          <th>Hasta</th>
+          <th>Motivo</th>
+          <th>Estado</th>
+          @if(!verInactivas){
+            <th class="text-center">Acciones</th>
+          }          
+          
+        </tr>
+      </thead>
+
+      <tbody>
+        @if(noDisponibilidades.length === 0){
+            <tr>
+                <td colspan="6" class="text-center text-muted">
+                    No hay registros
+                </td>
+            </tr>
+        }@else {
+
+            @for(n of noDisponibilidadesView | globalFilter: searchText : 'nombreChofer'; track n){
+                <tr>
+                <td>{{ n.nombreChofer }}</td>
+                <td>{{ n.desde }}</td>
+                <td>{{ n.hasta }}</td>
+                <td>{{ n.motivo || '-' }}</td>
+                <td>
+                    <span class="badge" [ngClass]="n.activa ? 'bg-success' : 'bg-secondary'">
+                    {{ n.activa ? 'Activa' : 'Inactiva' }}
+                    </span>
+                </td>
+                @if(!verInactivas){
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary me-1" (click)="editar(n)">
+                        ✏️
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" (click)="desactivar(n)">
+                        🗑️
+                        </button>
+                    </td>
+                }
+                </tr>
+            }
+        }
+
+      </tbody>
+    </table>
+  </div>
+
+</div>
+

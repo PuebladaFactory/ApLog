@@ -52,6 +52,20 @@ label, input, textarea, .chofer-item, .chofer-ubicado{
   font-size: 1.3rem;
 }
 
+.gris-fijo{
+  background-color: rgb(167, 166, 166);
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
+.gris-fijo:hover{
+  background-color: grey;
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
 .botonera{
   width: 15rem;  
   color: white;
@@ -202,6 +216,12 @@ nav.navbar {
   background-color: rgba(0, 0, 0, 0.4);
 }
 
+.no-operativo {
+  opacity: 0.5;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
 @media (min-width: 1400px) {
   ::ng-deep .modal-super-xl .modal-dialog {
     max-width: 80vw;     // Casi ancho total del viewport
@@ -211,6 +231,15 @@ nav.navbar {
   ::ng-deep .modal-super-xl .modal-content {
     min-height: 80vh;         // Alto del 90% de la ventana
     overflow-y: auto;     // Scrolleable si se necesita
+  }
+}
+
+@media (max-width: 1366px) {
+  .celeste-fijo, .gris-fijo, .boton-choferes {
+    font-size: 1.2rem;
+  }
+  .celeste-fijo:hover, .gris-fijo:hover, .boton-choferes :hover {
+    font-size: 1.2rem;
   }
 }
 
