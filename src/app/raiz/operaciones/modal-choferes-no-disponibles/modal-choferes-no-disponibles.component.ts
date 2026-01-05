@@ -86,7 +86,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       title: '¿Guardar?',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Desactivar',
+      confirmButtonText: 'Confirmar',
       cancelButtonText: 'Cancelar'
     })
 
