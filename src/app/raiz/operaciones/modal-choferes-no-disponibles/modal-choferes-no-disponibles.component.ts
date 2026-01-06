@@ -40,6 +40,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
   ordenColumna: string = '';
   ordenAscendente: boolean = true;
   columnaOrdenada: string = '';
+  isLoading:boolean = false;
 
   
 
@@ -94,7 +95,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
     })
 
     if(respuesta.isConfirmed){
-
+      this.isLoading = true;
       const value = this.form.value;
 
       const data: NoDisponibilidadChofer = {
@@ -105,12 +106,34 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
         motivo: value.motivo,
         activa: true,
       };
+
+      try {
+        let titulo: string = this.editando ? 'editada' : 'dada de alta'
+        if (this.editando) {      
+          this.storageService.updateItem('noOperativo', data, data.idNoDisponibilidad, "EDICION", `Edición de baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`, this.bajaOp.id)
+        } else {
+          this.storageService.addItem('noOperativo', data, data.idNoDisponibilidad, "ALTA", `Alta de baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`)
+        }
+  
+        this.isLoading = false;
+        Swal.fire({
+          title: "Confirmado",
+          text: `La baja operativa ha sido ${titulo}`,
+          icon: "success"
+        });
+  
+      } catch (error) {
+        console.error("Error con la baja operativa:", error);
+        this.isLoading = false;
+  
+        Swal.fire({
+          title: "Error",
+          text: "Ocurrió un error con la baja operativa.",
+          icon: "error"
+        });
+      }
     
-      if (this.editando) {      
-        this.storageService.updateItem('noOperativo', data, data.idNoDisponibilidad, "EDICION", `Edición de baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`, this.bajaOp.id)
-      } else {
-        this.storageService.addItem('noOperativo', data, data.idNoDisponibilidad, "ALTA", `Alta de baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`)
-      }    
+          
 
       this.resetForm();
    
@@ -178,15 +201,36 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then(res => {
       if (!res.isConfirmed) return;
-
-      this.bajaOp = n;
-      this.bajaOp.activa = false;
-      let {id, type, nombreChofer, ...data} = this.bajaOp
+        this.isLoading = true;
+        try {
+          this.bajaOp = n;
+          this.bajaOp.activa = false;
+          let {id, type, nombreChofer, ...data} = this.bajaOp
 
      
-      console.log("data: ", data);
+          console.log("data: ", data);
       
-      this.storageService.updateItem('noOperativo', data, data.idNoDisponibilidad, "BAJA", `Baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}, cerrada`, this.bajaOp.id)
+          this.storageService.updateItem('noOperativo', data, data.idNoDisponibilidad, "BAJA", `Baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}: cerrada`, this.bajaOp.id);         
+    
+          this.isLoading = false;
+          Swal.fire({
+            title: "Confirmado",
+            text: `La baja operativa ha sido desactivada`,
+            icon: "success"
+          });
+    
+        } catch (error) {
+          console.error("Error al cerrar la baja operativa:", error);
+          this.isLoading = false;
+    
+          Swal.fire({
+            title: "Error",
+            text: "Ocurrió un error con la baja operativa.",
+            icon: "error"
+          });
+        }
+
+      
       
     });
   }
