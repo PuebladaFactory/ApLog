@@ -36,7 +36,10 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
   bajaOp!: ConIdType<NoDisponibilidadChoferView>;
   private destroy$ = new Subject<void>();
   searchText: string = "";
-  noDisponibilidadesView: NoDisponibilidadChoferView[] = [];
+  noDisponibilidadesView: any[] = [];
+  ordenColumna: string = '';
+  ordenAscendente: boolean = true;
+  columnaOrdenada: string = '';
 
   
 
@@ -104,7 +107,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       };
     
       if (this.editando) {      
-        this.storageService.updateItem('noOperativo', data, data.idNoDisponibilidad, "EDiCION", `Editada baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`, this.bajaOp.id)
+        this.storageService.updateItem('noOperativo', data, data.idNoDisponibilidad, "EDICION", `Edición de baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`, this.bajaOp.id)
       } else {
         this.storageService.addItem('noOperativo', data, data.idNoDisponibilidad, "ALTA", `Alta de baja operativa N° ${data.idNoDisponibilidad} del chofer ${this.getNombreChofer(data.idChofer)}`)
       }    
@@ -223,6 +226,26 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       this.form.get('hasta')?.enable();
     }
   }
+
+    ordenar(columna: string): void {
+      if (this.ordenColumna === columna) {
+        this.ordenAscendente = !this.ordenAscendente;
+      } else {
+        this.ordenColumna = columna;
+        this.ordenAscendente = true;
+      }
+      this.noDisponibilidadesView.sort((a, b) => {
+        const valorA = a[columna];
+        const valorB = b[columna];
+        if (typeof valorA === 'string') {
+          return this.ordenAscendente
+            ? valorA.localeCompare(valorB)
+            : valorB.localeCompare(valorA);
+        } else {
+          return this.ordenAscendente ? valorA - valorB : valorB - valorA;
+        }
+      });
+    }
 
 
 
