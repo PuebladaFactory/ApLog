@@ -1275,6 +1275,7 @@ export class StorageService {
           case "proforma":
           case "tableroDiario":
           case "vendedores":
+          case "noOperativo":
             if(accion === "INTERNA"){
               return false;
             } else{
