@@ -10,6 +10,8 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ModalDetalleComponent } from './modal-detalle/modal-detalle.component';
 import { ModalVincularFacturaComponent } from './modal-vincular-factura/modal-vincular-factura.component';
+import { FacturacionHistoricoComponent } from './facturacion-historico/facturacion-historico.component';
+import { InformesTablaComponent } from './informes-tabla/informes-tabla.component';
 
 
 @NgModule({
@@ -17,7 +19,9 @@ import { ModalVincularFacturaComponent } from './modal-vincular-factura/modal-vi
     ControlComponent, 
     FacturacionListadoComponent,
     ModalDetalleComponent,
-    ModalVincularFacturaComponent
+    ModalVincularFacturaComponent,
+    FacturacionHistoricoComponent,
+    InformesTablaComponent
   ],
   imports: [
     CommonModule,
