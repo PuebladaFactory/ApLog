@@ -1,33 +1,43 @@
 <h2 class="mt-2">Listado de Informes Emitidos para Facturación</h2>
 
-<div class="row mb-3">
+<div class="row mb-3 column-gap-3">
     <div class="col">
-      <label>Tipo</label>
-      <select class="form-select" [(ngModel)]="filtroTipo" (change)="aplicarFiltros()">
-        <option value="todos">Todos</option>
-        <option value="cliente">Clientes</option>
-        <option value="chofer">Choferes</option>
-        <option value="proveedor">Proveedores</option>
-      </select>
+        <label><span class="fs-5">Filtros</span></label>
+        <div class="row bg-light border rounded border-1 rounded-2 pb-2">            
+            <div class="col">
+                <label>Tipo</label>
+                <select class="form-select" [(ngModel)]="filtroTipo" (change)="aplicarFiltros()">
+                    <option value="todos">Todos</option>
+                    <option value="cliente">Clientes</option>
+                    <option value="chofer">Choferes</option>
+                    <option value="proveedor">Proveedores</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Razón Social / N° de informe / Fecha</label>
+                <input type="text" class="form-control" [(ngModel)]="filtroRazonSocial" (input)="aplicarFiltros()" placeholder="Buscar...">
+            </div>
+      </div>
+     
     </div>
 
-    <div class="col">
-      <label>Razón Social / N° de informe</label>
-      <input type="text" class="form-control" [(ngModel)]="filtroRazonSocial" (input)="aplicarFiltros()" placeholder="Buscar...">
-    </div>
+    <div class="col ">
+        <label><span class="fs-5">Consulta</span></label>
+        <div class="row bg-light border rounded border-1 rounded-2 pb-2">
+            <div class="col">
+                <label>Desde</label>
+                <input type="date" class="form-control" [(ngModel)]="fechaDesde">
+            </div>
 
-    <div class="col">
-      <label>Desde</label>
-      <input type="date" class="form-control" [(ngModel)]="fechaDesde">
-    </div>
-
-    <div class="col">
-      <label>Hasta</label>
-      <input type="date" class="form-control" [(ngModel)]="fechaHasta">
-    </div>
-    <div class="col align-self-end mb-2">
-        <button class="btn btn-outline-primary" (click)="cargarInformes(fechaDesde,fechaHasta )">Consultar</button>
-    </div>
+            <div class="col">
+                <label>Hasta</label>
+                <input type="date" class="form-control" [(ngModel)]="fechaHasta">
+            </div>
+            <div class="col align-self-end mb-1">
+                <button class="btn btn-outline-primary" (click)="cargarInformes(fechaDesde,fechaHasta )">Consultar</button>
+            </div>
+        </div>
+    </div>    
 </div>
 
 @if(cargando){
