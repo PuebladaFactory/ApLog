@@ -132,7 +132,7 @@
                             </a>                                        
                         </li>
                     }     
-                    @if($usuario.roles.god){
+                    @if($usuario.roles.admin || $usuario.roles.god){
                         <li>
                             <a [routerLink]="['/nuevaFacturacion']" >
                                 <h2  class="d-flex mt-3" type="button">                    

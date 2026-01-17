@@ -1,0 +1,16 @@
+th,td, input, select, option {
+    font-size: 1.3rem;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.tabla-container {
+  position: relative;
+}

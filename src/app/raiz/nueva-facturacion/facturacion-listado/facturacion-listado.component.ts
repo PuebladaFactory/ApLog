@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { LogoutComponent } from 'src/app/appLogin/logout/logout.component';
 import { ConId } from 'src/app/interfaces/conId';
@@ -19,6 +19,8 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { ModalVincularFacturaComponent } from '../modal-vincular-factura/modal-vincular-factura.component';
 import { SupabaseStorageService } from 'src/app/servicios/supabase/supabase-storage.service';
+import { AccionInformeLiq, puedeEjecutarAccion } from 'src/app/reglas/informe-liq.rules';
+import { ColumnaTabla, OrdenTabla } from 'src/app/interfaces/tablas';
 
 @Component({
   selector: 'app-facturacion-listado',
@@ -30,7 +32,7 @@ export class FacturacionListadoComponent implements OnInit {
   
   informesLiq: ConId<InformeLiq>[] = [];
   informesFiltrados: ConId<InformeLiq>[] = [];
-  informesOp: ConId<InformeOp>[] = []
+  informesOp: ConId<InformeOp>[] = [];
   filtroTipo: string = 'todos';
   filtroRazonSocial: string = '';
   fechaDesde: string = '';
@@ -41,7 +43,6 @@ export class FacturacionListadoComponent implements OnInit {
   ultimoDia:any = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).toISOString().split('T')[0];  
   primerDiaAnio: any = new Date(this.date.getFullYear(), 0 , 1).toISOString().split('T')[0];
   ultimoDiaAnio: any = new Date(this.date.getFullYear(), 11 , 31).toISOString().split('T')[0];
-
   cargando = false;
   ///////
   facturasDuplicadas: InformeLiq[] = [];
@@ -51,13 +52,66 @@ export class FacturacionListadoComponent implements OnInit {
   ordenColumna: string = '';
   ordenAsc: boolean = true;
 
+  columnas: ColumnaTabla<InformeLiq>[] = [
+    {
+      key: 'fecha',
+      label: 'Fecha',
+      sortable: true,
+      
+    },
+    {
+      key: 'tipo',
+      label: 'Tipo',
+      sortable: true,
+      
+    },
+    {
+      key: 'numInterno',
+      label: 'N° Informe',
+      sortable: true,
+      value: inf => inf.numeroInterno ?? 0
+    },
+    {
+      key: 'id',
+      label: 'Id',
+      sortable: true,
+      value: inf => inf.idInfLiq ?? 0
+    },
+    {
+      key: 'razonSocial',
+      label: 'Razón Social',
+      sortable: true,
+      value: inf => inf.entidad?.razonSocial ?? ''
+    },
+    {
+      key: 'cantOp',
+      label: 'Cant Op',
+      sortable: true,
+      align: 'center',
+      value: inf => inf.operaciones?.length ?? 0
+    },
+    {
+      key: 'total',
+      label: 'Total',
+      sortable: true,
+      align: 'end',
+      value: inf => this.formatearValor(inf.valores?.total) ?? this.formatearValor(0)
+    },
+
+    // acciones ↓
+    { key: 'detalle', label: 'Detalle', align: 'center', acciones: ['detalle'] },
+    { key: 'editar', label: 'Editar', align: 'center', acciones: ['editar'] },
+    { key: 'reimprimir', label: 'Reimprimir', align: 'center', acciones: ['reimprimir'] },
+    { key: 'fElectrónica', label: 'F. Electrónica', align: 'center', acciones: ['factura'] },
+    { key: 'anular', label: 'Anular', align: 'center', acciones: ['anular'] },
+  ];
+
 
   constructor(
     private dbService: DbFirestoreService, 
     private storageService: StorageService, 
     private excelServ: ExcelService,     
-    private pdfServ: PdfService, 
-    private logService: LogService,    
+    private pdfServ: PdfService,     
     private modalService: NgbModal,
     private supabaseStorageService : SupabaseStorageService   
   ) {}
@@ -81,7 +135,8 @@ export class FacturacionListadoComponent implements OnInit {
       this.informesLiq = await this.dbService.getInformesLiqPorTipoYFechas(      
         this.filtroTipo as any,
         desde,
-        hasta
+        hasta,
+        "emitido"
       );    
       this.aplicarFiltros();
     } catch (error) {
@@ -94,15 +149,28 @@ export class FacturacionListadoComponent implements OnInit {
 
 
   aplicarFiltros() {
+    const textoBusqueda = this.filtroRazonSocial.toLowerCase().trim();
+
     this.informesFiltrados = this.informesLiq.filter(inf => {
-      const coincideTipo = this.filtroTipo === 'todos' || inf.tipo === this.filtroTipo;
-      const coincideRazon = inf.entidad.razonSocial.toLowerCase().includes(this.filtroRazonSocial.toLowerCase());
-      return coincideTipo && coincideRazon;
+      const coincideTipo =
+        this.filtroTipo === 'todos' || inf.tipo === this.filtroTipo;
+
+      const coincideRazon =
+        inf.entidad?.razonSocial
+          ?.toLowerCase()
+          .includes(textoBusqueda);
+
+      const coincideNumero =
+        inf.numeroInterno
+          ?.toLowerCase()
+          .includes(textoBusqueda);
+
+      return coincideTipo && (coincideRazon || coincideNumero);
     });
   }
 
   ////// MODAL PARA LA VISTA Y LA EDICION
-  async openModalVista(informesLiq: ConId<InformeLiq>, accion:string){  
+  async verDetalle(informesLiq: ConId<InformeLiq>, accion:string){  
     await this.obtenerInformesOp(informesLiq)
     {
       const modalRef = this.modalService.open(InformeLiqDetalleComponent, {
@@ -331,25 +399,8 @@ export class FacturacionListadoComponent implements OnInit {
     }
   } 
   
-  ordenarPor(columna: string) {
-    if (this.ordenColumna === columna) {
-      // si ya estaba ordenado por esa columna, alterno asc/desc
-      this.ordenAsc = !this.ordenAsc;
-    } else {
-      // cambio de columna, empiezo ascendente
-      this.ordenColumna = columna;
-      this.ordenAsc = true;
-    }
 
-    this.informesFiltrados.sort((a: any, b: any) => {
-      const valorA = this.obtenerValorOrden(a, columna);
-      const valorB = this.obtenerValorOrden(b, columna);
 
-      if (valorA < valorB) return this.ordenAsc ? -1 : 1;
-      if (valorA > valorB) return this.ordenAsc ? 1 : -1;
-      return 0;
-    });
-  }
 
   private obtenerValorOrden(obj: any, columna: string) {
     switch (columna) {
@@ -361,10 +412,81 @@ export class FacturacionListadoComponent implements OnInit {
         return obj.entidad.razonSocial.toLowerCase();
       case 'cantOp':
         return obj.operaciones.length;
+      case 'cantOp':
+        return obj.operaciones.length;
+      case 'numInterno':
+        return obj.numeroInterno;
+      case 'id':
+        return obj.idInfLiq;
       default:
         return obj[columna];
     }
   }
+
+  puede(inf: InformeLiq, accion: AccionInformeLiq): boolean {
+    return puedeEjecutarAccion(inf.estado, accion);
+  }
+
+  puedeVincularFactura(inf: InformeLiq): boolean {
+    return inf.estado === 'emitido';
+  }
+
+  puedeAnular(inf: InformeLiq): boolean {
+    return inf.estado === 'emitido';
+  }
+
+  onAccion(e: { accion: string; item: ConId<InformeLiq> }) {
+    switch (e.accion) {
+      case 'detalle':
+        this.verDetalle(e.item, 'vista');
+        break;
+      case 'editar':
+        this.verDetalle(e.item, 'edicion');
+        break;
+      case 'excel':
+      case 'pdf':
+        this.reimprimirLiq(e.item, e.accion);
+        break;
+      case 'factura':
+        this.vincularFacElec(e.item);
+        break;
+      case 'anular':
+        this.anularInfLiq(e.item);
+        break;
+    }
+  }
+
+onOrdenar(event: { key: string; asc: boolean }) {
+    const { key, asc } = event;
+
+    this.informesFiltrados = [...this.informesFiltrados].sort((a, b) => {
+      const valA = this.obtenerValorOrden(a, key);
+      const valB = this.obtenerValorOrden(b, key);
+
+      if (valA == null || valB == null) return 0;
+
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return asc ? valA - valB : valB - valA;
+      }
+
+      return asc
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+  }
+
+  formatearValor(valor: number) : any{
+    let nuevoValor =  new Intl.NumberFormat('es-ES', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+    }).format(valor);
+   //////////console.log(nuevoValor);    
+    //   `$${nuevoValor}`   
+    return `$ ${nuevoValor}`
+  }
+
+
+
 
 
   ////////////////////////// METODOS INTERNOS DE CONTROL Y CORRECCION ////////////////////////
