@@ -112,13 +112,21 @@
       </table>
     </div>
   </div>
-  <div class="modal-footer d-flex">
-    <div class="align-self-end flex-grow-1">
-        <label class="text-start">Observacion Interna</label>
-        <textarea name="" id="" [value]="informeLiq.observaciones" disabled  rows="1" class="w-100"></textarea>
-    </div>
-    @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
-      <td class="text-end align-self-end"><app-btn-editar name="Editar" (click)="abrirModalObs(modalEditarObs)"></app-btn-editar> </td>
+  <div class="modal-footer d-flex flex-column">
+    <div class="d-flex w-100">
+        <div class="align-self-end flex-grow-1">
+            <label class="text-start">Observacion Interna</label>
+            <textarea name="" id="" [value]="informeLiq.observaciones" disabled  rows="1" class="w-100"></textarea>
+        </div>
+        @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
+          <td class="text-end align-self-end"><app-btn-editar name="Editar" (click)="abrirModalObs(modalEditarObs)"></app-btn-editar> </td>
+        }
+    </div>    
+    @if(informeLiq.estado === "anulado"){
+      <div class="w-100">
+          <label class="text-start">Motivo de la anulación</label>
+          <textarea name="" id="" [value]="informeLiq.anuladoMotivo" disabled  rows="1" class="w-100"></textarea>
+      </div>      
     }
   </div>
 </div>

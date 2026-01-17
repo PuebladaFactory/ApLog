@@ -2,15 +2,6 @@ th,td, input, select, option {
     font-size: 1.3rem;
 }
 
-th.ordenable {
-  cursor: pointer;
-  user-select: none; /* evita seleccionar texto al hacer click */
-}
-
-th.ordenable:hover {
-  background-color: #f1f1f1; /* leve highlight */
-}
-
 .isDisabled {
   pointer-events: none;
   cursor: not-allowed;
@@ -21,3 +12,12 @@ th.ordenable:hover {
   cursor: not-allowed;
   opacity:0.5;
 }
+
+.sortable {
+  cursor: pointer;
+}
+
+.sortable:hover {
+  text-decoration: underline;
+}
+
