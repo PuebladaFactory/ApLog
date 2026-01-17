@@ -127,7 +127,7 @@ import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/in
     EstadoCellRendererComponent,
     DescuentosComponent,
     BuscarPorChoferPipe,
-    VisibilidadListadosComponent
+    VisibilidadListadosComponent,
     InformesAccionesCellComponent
   ]
 })
