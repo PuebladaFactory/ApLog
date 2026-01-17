@@ -165,7 +165,12 @@ export class FacturacionListadoComponent implements OnInit {
           ?.toLowerCase()
           .includes(textoBusqueda);
 
-      return coincideTipo && (coincideRazon || coincideNumero);
+      const coincideFecha =
+        inf.fecha.toLocaleString()
+          ?.toLowerCase()
+          .includes(textoBusqueda);
+
+      return coincideTipo && (coincideRazon || coincideNumero || coincideFecha);
     });
   }
 
