@@ -44,6 +44,7 @@ import { EditarInfOpComponent } from './modales/editar-inf-op/editar-inf-op.comp
 import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
 import { VisibilidadListadosComponent } from './modales/visibilidad-listados/visibilidad-listados.component';
+import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/informes-acciones-cell.component';
 
 
 
@@ -80,7 +81,8 @@ import { VisibilidadListadosComponent } from './modales/visibilidad-listados/vis
     EditarInfOpComponent,
     DescuentosComponent,
     BuscarPorChoferPipe,
-    VisibilidadListadosComponent
+    VisibilidadListadosComponent,
+    InformesAccionesCellComponent
     
     
   ],
@@ -126,7 +128,7 @@ import { VisibilidadListadosComponent } from './modales/visibilidad-listados/vis
     DescuentosComponent,
     BuscarPorChoferPipe,
     VisibilidadListadosComponent
-    
+    InformesAccionesCellComponent
   ]
 })
 export class SharedModule { }

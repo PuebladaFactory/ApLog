@@ -1,0 +1,40 @@
+@if (acciones.includes('detalle')) {
+  <app-btn-leer
+    name="DetalleColor"
+    (click)="ejecutar('detalle')">
+  </app-btn-leer>
+}
+
+@if (acciones.includes('editar')) {
+  <app-btn-editar
+    name="EditarColor"
+    (click)="ejecutar('editar')">
+  </app-btn-editar>
+}
+
+@if (acciones.includes('reimprimir')) {
+  <app-btn-leer
+    name="excel"
+    (click)="ejecutar('excel')">
+  </app-btn-leer>
+
+  <app-btn-leer
+    name="pdf"
+    class="ms-1"
+    (click)="ejecutar('pdf')">
+  </app-btn-leer>
+}
+
+@if (acciones.includes('factura')) {
+  <app-btn-agregar
+    name="electronica"
+    (click)="ejecutar('factura')">
+  </app-btn-agregar>
+}
+
+@if (acciones.includes('anular')) {
+  <app-btn-eliminar
+    name="EliminarColor"
+    (click)="ejecutar('anular')">
+  </app-btn-eliminar>
+}
