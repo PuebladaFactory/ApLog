@@ -1573,14 +1573,15 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
   getInformesLiqPorTipoYFechas(
     tipo: 'cliente' | 'chofer' | 'proveedor' | 'todos',
     desde: string,
-    hasta: string
+    hasta: string,
+    estado: string,
   ): Promise<ConId<InformeLiq>[]> {
     const tipos = tipo === 'todos' ? ['cliente', 'chofer', 'proveedor'] : [tipo];
     const colRef = collection(this.firestore, '/Vantruck/datos/resumenLiq');
 
     const q = query(
       colRef,
-      where('estado', '==', 'emitido'),
+      where('estado', '==', estado),
       where('fecha', '>=', desde),
       where('fecha', '<=', hasta),
       where('tipo', 'in', tipos),
