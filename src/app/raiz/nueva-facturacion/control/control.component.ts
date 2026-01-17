@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
   standalone:false,
       template: `
   <div class="mt-3">
-    <h1 class="text-center w-100">Operaciones</h1>
+    <h1 class="text-start w-100">Facturación</h1>
   </div>
   <div class="tab-container">
     @for (tab of tabs; track tab) {
@@ -54,7 +54,8 @@ import { Router } from '@angular/router';
 })
 export class ControlComponent implements OnInit{
   tabs = [
-    { id: 'tab1', name: 'listado', route: 'nuevaFacturacion/listado' },            
+    { id: 'tab1', name: 'Informes Emitidos', route: 'nuevaFacturacion/listado' }, 
+    { id: 'tab2', name: 'Informes Facturados', route: 'nuevaFacturacion/historial' }, 
   ];
 
   selectedTab: string = 'tab1';
