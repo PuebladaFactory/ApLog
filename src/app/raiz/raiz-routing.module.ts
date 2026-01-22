@@ -80,6 +80,12 @@ const routes: Routes = [
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
       data: { roles: ['god','admin'] }, // 
     },
+    {
+      path: 'finanzas',
+      loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
+      canActivate: [RoleGuard], // Protege acceso dentro del módulo
+      data: { roles: ['god','admin'] }, // 
+    },
     
     
     
