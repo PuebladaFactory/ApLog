@@ -59,6 +59,9 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
   clientesActivo: ConId<Cliente>[] = [];
   isLoading: boolean = false;
 
+  clientesFiltrados: ConId<Cliente>[] = [];
+  filtroEstado: 'activos' | 'todos' = 'activos';
+
   constructor(
     private storageService: StorageService, 
     private modalService: NgbModal,
@@ -76,12 +79,22 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
         this.$clientes = data.sort((a, b) =>
           a.razonSocial.localeCompare(b.razonSocial)
         );
-        this.armarTabla();
+        this.aplicarFiltro(); // 👈 clave
       });
   }
 
+  aplicarFiltro(): void {
+    if (this.filtroEstado === 'activos') {
+      this.clientesFiltrados = this.$clientes.filter(c => c.activo === true);
+    } else {
+      this.clientesFiltrados = [...this.$clientes];
+    }
+
+    this.armarTabla();
+  }
+
   armarTabla(): void {
-    this.rowData = this.$clientes.map((cliente) => ({
+    this.rowData = this.clientesFiltrados.map((cliente) => ({
       idCliente: cliente.idCliente,
       razonSocial: cliente.razonSocial,
       cuit: this.formatCuit(cliente.cuit),
@@ -101,6 +114,11 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
       correo: cliente.contactos[0]?.email || 'Sin Datos',
       cliente: cliente, // guardamos el objeto para acciones
     }));
+  }
+
+  cambiarFiltro(valor: 'activos' | 'todos'): void {
+    this.filtroEstado = valor;
+    this.aplicarFiltro();
   }
 
   private cargarConfiguracionColumnas(): void {

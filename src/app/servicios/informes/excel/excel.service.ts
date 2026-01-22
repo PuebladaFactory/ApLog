@@ -992,8 +992,14 @@ this.agregarHojaMetadata(workbook, metadata);
     const columnas = [
       { name: 'Razón Social', filterButton: true },
       { name: 'CUIT', filterButton: true },
-      { name: 'Dirección Fiscal', filterButton: true },
+      { name: 'Dirección Fiscal', filterButton: true },      
+      { name: 'Localidad Fiscal', filterButton: true },
+      { name: 'Municipio Fiscal', filterButton: true },
+      { name: 'Provincia Fiscal', filterButton: true },
       { name: 'Dirección Operativa', filterButton: true },
+      { name: 'Localidad Operativa', filterButton: true },
+      { name: 'Municipio Operativa', filterButton: true },
+      { name: 'Provincia Operativa', filterButton: true },
       { name: 'Condición Fiscal', filterButton: true },
       { name: 'Contactos', filterButton: true }
     ];
@@ -1004,8 +1010,14 @@ this.agregarHojaMetadata(workbook, metadata);
     const filas = clientes.map(cliente => ([
       cliente.razonSocial,
       cliente.cuit.toString(), // CUIT como texto
-      this.formatearDireccion(cliente.direccionFiscal),
-      this.formatearDireccion(cliente.direccionOperativa),
+      cliente.direccionFiscal?.domicilio ?? '',
+      cliente.direccionFiscal?.localidad ?? '',
+      cliente.direccionFiscal?.municipio ?? '',
+      cliente.direccionFiscal?.provincia ?? '',
+      cliente.direccionOperativa?.domicilio ?? '',
+      cliente.direccionOperativa?.localidad ?? '',
+      cliente.direccionOperativa?.municipio ?? '',
+      cliente.direccionOperativa?.provincia ?? '',
       cliente.condFiscal,
       '' // contactos luego
     ]));
@@ -1036,7 +1048,7 @@ this.agregarHojaMetadata(workbook, metadata);
       worksheet.getCell(rowNumber, 1).font = { bold: true };
 
       // Contactos con richText
-      worksheet.getCell(rowNumber, 6).value =
+      worksheet.getCell(rowNumber, 12).value =
         this.formatearContactosRich(cliente.contactos);
     });
 
@@ -1124,7 +1136,11 @@ this.agregarHojaMetadata(workbook, metadata);
       { name: 'Celular', filterButton: true },
       { name: 'Celular Emergencia', filterButton: true },
       { name: 'Contacto Emergencia', filterButton: true },
+       // 👇 NUEVAS COLUMNAS
       { name: 'Dirección', filterButton: true },
+      { name: 'Localidad', filterButton: true },
+      { name: 'Municipio', filterButton: true },
+      { name: 'Provincia', filterButton: true },
       { name: 'Email', filterButton: true },
       { name: 'Fecha de Nacimiento', filterButton: true },
       { name: 'Condición Fiscal', filterButton: true },
@@ -1141,7 +1157,11 @@ this.agregarHojaMetadata(workbook, metadata);
       ch.celularContacto,
       ch.celularEmergencia,
       ch.contactoEmergencia,
-      this.formatearDireccion(ch.direccion),
+      // 👇 Dirección desagregada
+      ch.direccion?.domicilio ?? '',
+      ch.direccion?.localidad ?? '',
+      ch.direccion?.municipio ?? '',
+      ch.direccion?.provincia ?? '',
       ch.email,
       this.formatearFecha(ch.fechaNac),
       ch.condFiscal,
@@ -1174,7 +1194,7 @@ this.agregarHojaMetadata(workbook, metadata);
       worksheet.getCell(rowNumber, 1).font = { bold: true };
 
       // Vehículos (dominio en negrita)
-      worksheet.getCell(rowNumber, 11).value =
+      worksheet.getCell(rowNumber, 14).value =
         this.formatearVehiculosRich(chofer.vehiculo);
     });
 
@@ -1223,22 +1243,33 @@ this.agregarHojaMetadata(workbook, metadata);
 
     const richText: any[] = [];
 
-    vehiculos.forEach((v, index) => {
-      if (index > 0) {
-        richText.push({ text: '\n' });
-      }
+  vehiculos.forEach((v, index) => {
+    if (index > 0) {
+      richText.push({ text: '\n' });
+    }
 
-      // Dominio en negrita
-      richText.push({
-        text: `${v.dominio} `,
-        font: { bold: true }
-      });
-
-      // Resto del vehículo
-      richText.push({
-        text: `(${v.marca} ${v.modelo} - ${v.categoria?.nombre})`
-      });
+    // Dominio en negrita
+    richText.push({
+      text: `${v.dominio} `,
+      font: { bold: true }
     });
+
+    // Marca y modelo normal
+    richText.push({
+      text: `(${v.marca} ${v.modelo} - `
+    });
+
+    // Categoría en negrita
+    richText.push({
+      text: `${v.categoria?.nombre ?? ''}`,
+      font: { bold: true }
+    });
+
+    // Cierre
+    richText.push({
+      text: `)`
+    });
+  });
 
     return { richText };
   }

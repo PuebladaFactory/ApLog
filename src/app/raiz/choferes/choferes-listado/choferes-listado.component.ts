@@ -57,6 +57,9 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
     choferEditar!: ConIdType<Chofer>;
     choferesActualizados: any[] = [];
     private destroy$ = new Subject<void>();
+
+    choferesFiltrados: ConIdType<Chofer>[] = [];
+    filtroEstado: 'activos' | 'todos' = 'activos';
   
     constructor(
       private storageService: StorageService, 
@@ -80,14 +83,24 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
               console.log('Datos choferes actualizados:', data);
               this.$choferes = data; // Clona el array para evitar problemas con referencias
               this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
-              this.armarTabla();
+              this.aplicarFiltro(); // 👈 clave
             }
       });                     
+    }
+
+    aplicarFiltro(): void {
+      if (this.filtroEstado === 'activos') {
+        this.choferesFiltrados = this.$choferes.filter(c => c.activo === true);
+      } else {
+        this.choferesFiltrados = [...this.$choferes];
+      }
+
+      this.armarTabla();
     }
   
     armarTabla(): void {
       let indice = 0
-      this.rowData = this.$choferes.map((chofer:ConIdType<Chofer>) => ({
+      this.rowData = this.choferesFiltrados.map((chofer:ConIdType<Chofer>) => ({
         indice: indice ++,
         idChofer: chofer.idChofer,
         apellido: chofer.apellido,
@@ -103,6 +116,11 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
         fechaNac: chofer.fechaNac,
         chofer: chofer, // guardamos el objeto para acciones
       }));
+    }
+
+    cambiarFiltro(valor: 'activos' | 'todos'): void {
+      this.filtroEstado = valor;
+      this.aplicarFiltro();
     }
   
     private cargarConfiguracionColumnas(): void {

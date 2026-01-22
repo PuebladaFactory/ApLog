@@ -22,6 +22,32 @@
     </div> -->
     <div class="d-flex w-100 h-50 align-self-end justify-content-end">  
         <div class="d-flex ">
+            <div class="btn-group ms-3 mb-2 me-2" role="group">
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="filtroChoferes"
+                    id="choferesActivos"
+                    autocomplete="off"
+                    checked
+                    (change)="cambiarFiltro('activos')"
+                />
+                <label class="btn btn-outline-primary" for="choferesActivos">
+                    Activos
+                </label>
+
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="filtroChoferes"
+                    id="choferesTodos"
+                    autocomplete="off"
+                    (change)="cambiarFiltro('todos')"
+                />
+                <label class="btn btn-outline-primary" for="choferesTodos">
+                    Todos
+                </label>
+            </div>
             <div data-bs-toggle="tooltip"
             data-bs-placement="left"
             title="Limpiar filtros"
