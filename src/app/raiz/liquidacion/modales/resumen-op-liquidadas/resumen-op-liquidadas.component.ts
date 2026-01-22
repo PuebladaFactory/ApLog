@@ -447,8 +447,14 @@ export class ResumenOpLiquidadasComponent implements OnInit {
       },      
       operaciones: this.idOperaciones,
       valores: valores,
+      valoresFinancieros: {
+        total: valores.total,
+        totalCobrado: 0,
+        saldo: valores.total,
+      },
       cobrado:false,
       estado: 'emitido',
+      estadoFinanciero: 'pendiente',
       columnas: colSel,
       descuentos: this.descuentosAplicados,
       formaPago: "",               // Efectivo, transferencia, etc. (opcional)
