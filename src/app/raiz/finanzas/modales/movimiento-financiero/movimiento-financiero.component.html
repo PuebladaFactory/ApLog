@@ -1,0 +1,115 @@
+<div class="modal-header">
+  <h5 class="modal-title">
+    {{ tipo === 'cobro' ? 'Registrar cobro' : 'Registrar pago' }}
+  </h5>
+  <button type="button" class="btn-close" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+
+  <!-- Entidad -->
+  <div class="mb-3">
+    <strong>{{ entidad.razonSocial }}</strong>
+  </div>
+
+  <!-- Tabla de informes -->
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>N°</th>
+          <th>Fecha</th>
+          <th class="text-end">Total</th>
+          <th class="text-end">Cobrado</th>
+          <th class="text-end">Saldo</th>
+          <th class="text-end">Monto a {{ tipo === 'cobro' ? 'cobrar' : 'pagar' }}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (inf of informesVM; track inf.informeLiqId) {
+          <tr>
+            <td>{{ inf.numeroInterno }}</td>
+            <td>{{ inf.fecha }}</td>
+
+            <td class="text-end">
+              {{ inf.total | formatearValor:"$" }}
+            </td>
+
+            <td class="text-end">
+              {{ inf.totalCobrado | formatearValor:"$" }}
+            </td>
+
+            <td class="text-end">
+              {{ inf.saldo | formatearValor:"$" }}
+            </td>
+
+            <td class="text-end">
+              <input
+                type="number"
+                class="form-control form-control-sm text-end"
+                [(ngModel)]="inf.montoACobrar"
+                [min]="0"
+                [max]="inf.saldo"
+                step="0.01">
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Totales -->
+  <div class="d-flex justify-content-end mt-3">
+    <h5>
+      Total:
+      <span class="ms-2">
+        {{ totalMovimiento | formatearValor:"$" }}
+      </span>
+    </h5>
+  </div>
+
+  <!-- Datos del movimiento -->
+  <hr>
+
+  <div class="row">
+    <div class="col-md-4">
+      <label>Medio de pago</label>
+      <select class="form-select" [(ngModel)]="medioPago">
+        <option [ngValue]="undefined">Seleccione</option>
+        <option value="efectivo">Efectivo</option>
+        <option value="transferencia">Transferencia</option>
+        <option value="cheque">Cheque</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+
+    <div class="col-md-8">
+      <label>Referencia</label>
+      <input type="text" class="form-control" [(ngModel)]="referencia">
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <label>Observaciones</label>
+    <textarea
+      rows="3"
+      class="form-control"
+      [(ngModel)]="observaciones">
+    </textarea>
+  </div>
+
+</div>
+
+<div class="modal-footer">
+  <button class="btn btn-secondary" (click)="cancelar()">
+    Cancelar
+  </button>
+
+  <button
+    class="btn btn-success"
+    [disabled]="!puedeConfirmar()"
+    (click)="confirmar()">
+    Confirmar
+  </button>
+</div>

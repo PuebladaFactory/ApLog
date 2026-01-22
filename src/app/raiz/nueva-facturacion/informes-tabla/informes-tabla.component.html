@@ -29,6 +29,7 @@
                       <td
                         [class.text-center]="col.align === 'center'"
                         [class.text-end]="col.align === 'end'"
+                        [ngClass]="getCellClasses(col, item)"
                       >
                         @if (col.acciones) {
                             <app-informes-acciones-cell
