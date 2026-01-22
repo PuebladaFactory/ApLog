@@ -9,6 +9,8 @@ export interface ColumnaTabla<T> {
   value?: (item: T) => string | number | null;
   // 👉 para columnas de acción o custom
   acciones?: string[]; // 🔥 NUEVO
+  // 🔥 NUEVO
+  cellClass?: string | ((item: T) => string);
 }
 
 

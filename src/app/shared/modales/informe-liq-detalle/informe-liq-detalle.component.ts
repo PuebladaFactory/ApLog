@@ -376,6 +376,11 @@ export class InformeLiqDetalleComponent implements OnInit {
     
     valores.total += valores.descuentoTotal;
     this.informeLiq.valores = valores;
+    this.informeLiq.valoresFinancieros = {
+      total: this.informeLiq.valores.total,
+      totalCobrado: 0,
+      saldo: this.informeLiq.valores.total,
+    }
     console.log("total de la liquidacion: ", this.informeLiq.valores.total);
 
     

@@ -95,7 +95,8 @@ export class FacturacionListadoComponent implements OnInit {
       label: 'Total',
       sortable: true,
       align: 'end',
-      value: inf => this.formatearValor(inf.valores?.total) ?? this.formatearValor(0)
+      value: inf => this.formatearValor(inf.valores?.total) ?? this.formatearValor(0),
+      cellClass: 'table-success'
     },
 
     // acciones ↓
