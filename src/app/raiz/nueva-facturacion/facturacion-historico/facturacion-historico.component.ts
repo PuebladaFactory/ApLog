@@ -88,7 +88,8 @@ export class FacturacionHistoricoComponent implements OnInit {
         label: 'Total',
         sortable: true,
         align: 'end',
-        value: inf => this.formatearValor(inf.valores?.total) ?? this.formatearValor(0)
+        value: inf => this.formatearValor(inf.valores?.total) ?? this.formatearValor(0),
+        cellClass: 'table-success'
       },
       {
         key: 'cantOp',
@@ -109,6 +110,8 @@ export class FacturacionHistoricoComponent implements OnInit {
       { key: 'reimprimir', label: 'Reimprimir', align: 'center', acciones: ['reimprimir'] },
       { key: 'fElectrónica', label: 'F. Electrónica', align: 'center', acciones: ['factura'] },      
     ];
+
+  informesEditables: ConId<InformeLiq>[] = [];
   
   constructor(
     private dbService: DbFirestoreService, 
@@ -353,6 +356,49 @@ export class FacturacionHistoricoComponent implements OnInit {
     return `$ ${nuevoValor}`
   }
 
+  editarInformesFinanzas(){
+    
+    console.log("1)informesLiq: ", this.informesLiq);
+    this.informesEditables = this.migrarInformesAFinanzas(this.informesLiq)
+    console.log("2)informesEditables: ", this.informesEditables);
+  }
+
+
+
+  migrarInformesAFinanzas(
+    informes: ConId<InformeLiq>[]
+  ): ConId<InformeLiq>[] {
+    return informes.map(inf => {
+      // si ya está migrado, no tocarlo
+      if (inf.estadoFinanciero && inf.valoresFinancieros) {
+        return inf;
+      }
+
+      const total = inf.valores?.total ?? 0;
+
+      return {
+        ...inf,
+        estadoFinanciero: inf.estadoFinanciero ?? 'pendiente',
+        valoresFinancieros: inf.valoresFinancieros ?? {
+          total,
+          totalCobrado: 0,
+          saldo: total
+        }
+      };
+    });
+  }
+
+  actualizarObjeto(){
+    this.cargando = true
+    this.dbService.actualizarOperacionesBatch(this.informesEditables, "resumenLiq").then((result)=>{
+      this.cargando = false
+      if(result.exito){
+        alert("actualizado correctamente")
+      } else {
+        alert(`error actualizando. errr: ${result.mensaje}`)
+      }
+    })
+  }
 
 
 

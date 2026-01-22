@@ -339,9 +339,16 @@ async guardarTransformados() {
         entidad,
         operaciones: data.operaciones || [],
         valores,
+        valoresFinancieros: {
+          total: valores.total,
+          totalCobrado: 0,
+          saldo: valores.total,
+          
+        },
         descuentos: data.descuentos || [],
         columnas: data.columnas || [],
         estado: 'emitido',
+        estadoFinanciero: 'pendiente',
         cobrado: data.cobrado || false,
         formaPago: '',
         fechaCobro: '',
@@ -437,9 +444,16 @@ async guardarTransformados() {
       total: data.valores?.total || 0,
       totalContraParte: data.montoFacturaCliente || 0
     },
+    valoresFinancieros: {
+      total: data.valores?.total,
+      totalCobrado: 0,
+      saldo: data.valores?.total,
+      
+    },
     descuentos: data.descuentos || [],
     columnas: data.columnas || [],
     estado: 'emitido',
+    estadoFinanciero: 'pendiente',
     cobrado: data.cobrado || false,
     formaPago: '',
     fechaCobro: '',
