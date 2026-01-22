@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 /* import { AngularFirestore } from '@angular/fire/compat/firestore'; */
 
-import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, DocumentReference, getDoc, getDocs, limit, onSnapshot, orderBy, query, setDoc, updateDoc, where, WriteBatch, writeBatch } from '@angular/fire/firestore';
+import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, DocumentReference, getDoc, getDocs, limit, onSnapshot, orderBy, query, runTransaction, setDoc, updateDoc, where, WriteBatch, writeBatch } from '@angular/fire/firestore';
 import { chunk } from 'lodash';
 import { firstValueFrom, from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -17,6 +17,8 @@ import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from '../numerador/numerador.service';
 import { InformeVenta } from 'src/app/interfaces/informe-venta';
 import { error } from 'jquery';
+import { MovimientoFormVM } from 'src/app/interfaces/movimiento-form-v-m';
+import { ImputacionMovimiento, MovimientoFinanciero } from 'src/app/interfaces/movimiento-financiero';
 
 export interface Resultado {
   exito: boolean;
@@ -1009,7 +1011,7 @@ async guardarMultipleGeneral(
     }
 
   async actualizarOperacionesBatch(
-  operaciones: ConId<Operacion>[],
+  operaciones: ConId<any>[],
   componente: string
 ): Promise<{ exito: boolean; mensaje: string }> {
   const batch = writeBatch(this.firestore);
@@ -2097,6 +2099,119 @@ async eliminarOperacionEInformes(
 
     return { exito: true, mensaje: 'Estados de operaciones actualizados correctamente' };
   }
+
+  getInformesPendientesPorEntidad(
+    entidadId: number
+  ): Promise<ConId<InformeLiq>[]> {
+
+    const colRef = collection(this.firestore, '/Vantruck/datos/resumenLiq');
+
+    const q = query(
+      colRef,
+      where('entidad.id', '==', entidadId),
+      where('estado', '==', 'facturado'),
+      where('estadoFinanciero', 'in', ['pendiente', 'parcial'])
+    );
+
+    return getDocs(q).then(snap =>
+      snap.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() as InformeLiq)
+      }))
+    );
+  }
+
+
+async registrarMovimientoFinanciero(
+  form: MovimientoFormVM,
+  usuarioUid: string
+): Promise<void> {
+
+  const movimientosRef = collection(
+    this.firestore,
+    '/Vantruck/datos/movimientos'
+  );
+
+  const creadoEn = new Date().toISOString();
+
+  await runTransaction(this.firestore, async (tx) => {
+
+    const imputaciones: ImputacionMovimiento[] = [];
+    let totalMovimiento = 0;
+
+    // 1️⃣ Procesar informes dentro de la transacción
+    for (const inf of form.informesSeleccionados) {
+
+      const infRef = doc(
+        this.firestore,
+        `/Vantruck/datos/resumenLiq/${inf.informeLiqId}`
+      );
+
+      const snap = await tx.get(infRef);
+      if (!snap.exists()) {
+        throw new Error(`Informe ${inf.numeroInterno} no existe`);
+      }
+
+      const data = snap.data() as InformeLiq;
+
+      const vf = data.valoresFinancieros!;
+      const nuevoTotalCobrado = vf.totalCobrado + inf.montoACobrar;
+      const nuevoSaldo = vf.total - nuevoTotalCobrado;
+
+      let nuevoEstadoFinanciero: 'pendiente' | 'parcial' | 'cobrado';
+      if (nuevoSaldo <= 0) {
+        nuevoEstadoFinanciero = 'cobrado';
+      } else if (nuevoTotalCobrado > 0) {
+        nuevoEstadoFinanciero = 'parcial';
+      } else {
+        nuevoEstadoFinanciero = 'pendiente';
+      }
+
+      // 2️⃣ Actualizar informe
+      tx.update(infRef, {
+        valoresFinancieros: {
+          total: vf.total,
+          totalCobrado: nuevoTotalCobrado,
+          saldo: nuevoSaldo
+        },
+        estadoFinanciero: nuevoEstadoFinanciero
+      });
+
+      // 3️⃣ Armar imputación
+      imputaciones.push({
+        informeLiqId: inf.informeLiqId,
+        numeroInterno: inf.numeroInterno,
+        fechaInforme: inf.fecha,
+        totalInforme: inf.total,
+        montoImputado: inf.montoACobrar
+      });
+
+      totalMovimiento += inf.montoACobrar;
+    }
+
+    // 4️⃣ Crear movimiento financiero
+    const movimiento: MovimientoFinanciero = {
+      fecha: creadoEn.substring(0, 10),
+      tipo: form.tipo,
+
+      entidad: form.entidad,
+
+      imputaciones,
+      totalMovimiento,
+
+      medioPago: form.medioPago,
+      referencia: form.referencia,
+      observaciones: form.observaciones,
+
+      creadoEn,
+      creadoPor: usuarioUid
+    };
+
+    const movRef = doc(movimientosRef);
+    tx.set(movRef, movimiento);
+  });
+}
+  
 
 
 

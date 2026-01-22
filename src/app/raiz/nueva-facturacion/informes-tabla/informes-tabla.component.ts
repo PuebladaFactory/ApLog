@@ -81,6 +81,27 @@ export class InformesTablaComponent implements OnInit{
     return item[col.key as keyof typeof item] ?? null;
   }
 
+  getCellClasses(col: ColumnaTabla<InformeLiq>, item: InformeLiq): string[] {
+    const classes: string[] = [];
+
+    // alineación
+    if (col.align === 'end') classes.push('text-end');
+    if (col.align === 'center') classes.push('text-center');
+
+    // clases dinámicas
+    if (col.cellClass) {
+      if (typeof col.cellClass === 'function') {
+        const cls = col.cellClass(item);
+        if (cls) classes.push(cls);
+      } else {
+        classes.push(col.cellClass);
+      }
+    }
+
+    return classes;
+  }
+
+
 
 
 }
