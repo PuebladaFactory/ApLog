@@ -8,6 +8,8 @@ import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
+import { MovimientoFinancieroComponent } from '../modales/movimiento-financiero/movimiento-financiero.component';
+import { MovimientoFormVM } from 'src/app/interfaces/movimiento-form-v-m';
 
 @Component({
   selector: 'app-finanzas-cobros',
@@ -148,14 +150,58 @@ export class FinanzasCobrosComponent implements OnInit {
     );
   }
 
-  registrarCobro(): void {
-    if (!this.puedeRegistrarCobro()) return;
+registrarCobro(): void {
+  if (!this.puedeRegistrarCobro()) return;
 
-    // 🔜 abrir modal de cobro
-    console.log('Registrar cobro:', {
-      clienteId: this.clienteSeleccionadoId,
-      informes: this.informesSeleccionados,
-      saldo: this.saldoSeleccionado
-    });
+  const cliente = this.clientes.find(
+    c => c.idCliente === this.clienteSeleccionadoId
+  );
+
+  if (!cliente) {
+    console.error('Cliente no encontrado');
+    return;
   }
+
+  const modalRef = this.modalService.open(
+    MovimientoFinancieroComponent,
+    {
+      size: 'lg',
+      backdrop: 'static'
+    }
+  );
+
+  modalRef.componentInstance.tipo = 'cobro';
+
+  modalRef.componentInstance.entidad = {
+    id: String(cliente.idCliente),
+    tipo: 'cliente',
+    razonSocial: cliente.razonSocial
+  };
+
+  modalRef.componentInstance.informes = this.informesSeleccionados;
+
+  modalRef.result.then(
+    async (form: MovimientoFormVM) => {
+      try {
+        // 🔥 acá va el service real
+        await this.dbService.registrarMovimientoFinanciero(
+          form,
+          'UID_USUARIO' // luego lo sacás del auth
+        );
+
+        Swal.fire('OK', 'Cobro registrado correctamente', 'success');
+
+        // refrescar informes
+        await this.onClienteSeleccionado(this.clienteSeleccionadoId!);
+      } catch (err) {
+        console.error(err);
+        Swal.fire('Error', 'No se pudo registrar el cobro', 'error');
+      }
+    },
+    () => {
+      // modal cancelado → no hacemos nada
+    }
+  );
+}
+  
 }
