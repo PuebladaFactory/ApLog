@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule, JsonPipe } from '@angular/common';
+import { CommonModule, JsonPipe, TitleCasePipe } from '@angular/common';
 
 import { SharedRoutingModule } from './shared-routing.module';
 
@@ -43,6 +43,7 @@ import { AccionesCellRendererComponent } from './tabla/ag-cell-renderers/accione
 import { EditarInfOpComponent } from './modales/editar-inf-op/editar-inf-op.component';
 import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
+import { VisibilidadListadosComponent } from './modales/visibilidad-listados/visibilidad-listados.component';
 
 
 
@@ -78,7 +79,8 @@ import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
     EstadoCellRendererComponent,
     EditarInfOpComponent,
     DescuentosComponent,
-    BuscarPorChoferPipe
+    BuscarPorChoferPipe,
+    VisibilidadListadosComponent
     
     
   ],
@@ -91,7 +93,8 @@ import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
     JsonPipe,
     NgbDatepickerModule,
     NgbModule,
-    FilterPipeModule
+    FilterPipeModule,
+    TitleCasePipe
   ],
   exports:[
     BtnAgregarComponent,
@@ -122,6 +125,7 @@ import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
     EstadoCellRendererComponent,
     DescuentosComponent,
     BuscarPorChoferPipe,
+    VisibilidadListadosComponent
     
   ]
 })

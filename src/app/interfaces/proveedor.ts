@@ -14,6 +14,7 @@ export interface Proveedor {
     tarifaTipo: TarifaTipo;
     tarifaAsignada: boolean;
     idTarifa:number;
+    visible?:boolean;
 }
 
 export interface Contacto {    

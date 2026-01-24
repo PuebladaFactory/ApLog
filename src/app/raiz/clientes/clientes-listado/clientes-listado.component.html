@@ -9,6 +9,11 @@
                 Descargar Clientes
             </button>
         </div>
+        <div class="align-self-start ms-2 mt-3 mb-1">
+            <button  class="btn btn-primary boton-alta" type="button" id="" (click)="visibilidadClientes()">
+                Clientes Visibles
+            </button>
+        </div>
         
         <!-- <button class="btn btn-primary" (click)="clientesActivos()">Editar Clientes</button>
         <button class="btn btn-secondary" (click)="actualizarActivos()">Actualizar Clientes</button> -->
@@ -23,10 +28,10 @@
                     id="clientesActivos"
                     autocomplete="off"
                     checked
-                    (change)="cambiarFiltro('activos')"
+                    (change)="cambiarFiltro('visibles')"
                 />
                 <label class="btn btn-outline-primary" for="clientesActivos">
-                    Activos
+                    Visibles
                 </label>
 
                 <input

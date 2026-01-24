@@ -5,8 +5,9 @@ import { Chofer } from 'src/app/interfaces/chofer';
 import { Documentacion, Estado, Legajo } from 'src/app/interfaces/legajo';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { ModalChoferesComponent } from '../modal-choferes/modal-choferes.component';
+
 import { ConIdType } from 'src/app/interfaces/conId';
+import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
 
 @Component({
     selector: 'app-tablero-legajos',
@@ -188,26 +189,26 @@ export class TableroLegajosComponent implements OnInit {
     }
 
       openModalChoferes(): void {      
-        {
-          const modalRef = this.modalService.open(ModalChoferesComponent, {
+       {
+          const modalRef = this.modalService.open(VisibilidadListadosComponent, {
             windowClass: 'myCustomModalClass',
             centered: true,
             size: 'md', 
             //backdrop:"static" 
           });      
-    
+  
         let info = {
-            choferes: this.$choferes,
-            legajos: this.$legajos
+            tipo: 'legajos',
+            objetos: this.$legajos,
           } 
           //console.log()(info); */
           
-          modalRef.componentInstance.fromParent = info;
+          modalRef.componentInstance.info = info;
           modalRef.result.then(
-            (result) => {
-            
-            },
-            (reason) => {}
+  
+            () => {
+              // modal cancelado → no hacemos nada
+            }
           );
         }
       }

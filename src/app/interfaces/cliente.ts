@@ -14,6 +14,7 @@ export interface Cliente {
     idTarifa:number;
     vendedor?:number[];
     activo?:boolean;
+    visible?:boolean;
 }
 
 export interface Contacto {    

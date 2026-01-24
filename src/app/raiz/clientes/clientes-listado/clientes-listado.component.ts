@@ -12,6 +12,7 @@ import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-obj
 import { forEach } from 'lodash';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
 
 @Component({
   selector: 'app-listado-nuevo',
@@ -60,7 +61,7 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
   isLoading: boolean = false;
 
   clientesFiltrados: ConId<Cliente>[] = [];
-  filtroEstado: 'activos' | 'todos' = 'activos';
+  filtroEstado: 'visibles' | 'todos' = 'visibles';
 
   constructor(
     private storageService: StorageService, 
@@ -84,8 +85,8 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
   }
 
   aplicarFiltro(): void {
-    if (this.filtroEstado === 'activos') {
-      this.clientesFiltrados = this.$clientes.filter(c => c.activo === true);
+    if (this.filtroEstado === 'visibles') {
+      this.clientesFiltrados = this.$clientes.filter(c => c.visible === true);
     } else {
       this.clientesFiltrados = [...this.$clientes];
     }
@@ -116,7 +117,7 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
     }));
   }
 
-  cambiarFiltro(valor: 'activos' | 'todos'): void {
+  cambiarFiltro(valor: 'visibles' | 'todos'): void {
     this.filtroEstado = valor;
     this.aplicarFiltro();
   }
@@ -325,6 +326,31 @@ toggleColumnVisibility(colId: string): void {
 
   descargarClientes(){
     this.excelServ.exportarClientesTablaExcel(this.$clientes, 'Clientes')
+  }
+
+  visibilidadClientes(){
+    {
+      const modalRef = this.modalService.open(VisibilidadListadosComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'md', 
+        //backdrop:"static" 
+      });      
+
+    let info = {
+        tipo: 'clientes',
+        objetos: this.$clientes,
+      } 
+      //console.log()(info); */
+      
+      modalRef.componentInstance.info = info;
+      modalRef.result.then(
+
+        () => {
+          // modal cancelado → no hacemos nada
+        }
+      );
+    }
   }
 
 }
