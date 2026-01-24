@@ -13,6 +13,7 @@ import { ChoferesAltaComponent } from '../choferes-alta/choferes-alta.component'
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
 
 @Component({
   selector: 'app-choferes-listado',
@@ -59,7 +60,7 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
     private destroy$ = new Subject<void>();
 
     choferesFiltrados: ConIdType<Chofer>[] = [];
-    filtroEstado: 'activos' | 'todos' = 'activos';
+    filtroEstado: 'visibles' | 'todos' = 'visibles';
   
     constructor(
       private storageService: StorageService, 
@@ -89,8 +90,8 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
     }
 
     aplicarFiltro(): void {
-      if (this.filtroEstado === 'activos') {
-        this.choferesFiltrados = this.$choferes.filter(c => c.activo === true);
+      if (this.filtroEstado === 'visibles') {
+        this.choferesFiltrados = this.$choferes.filter(c => c.visible === true);
       } else {
         this.choferesFiltrados = [...this.$choferes];
       }
@@ -118,7 +119,7 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
       }));
     }
 
-    cambiarFiltro(valor: 'activos' | 'todos'): void {
+    cambiarFiltro(valor: 'visibles' | 'todos'): void {
       this.filtroEstado = valor;
       this.aplicarFiltro();
     }
@@ -327,6 +328,31 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
 
     descargarChoferes(){
        this.excelServ.exportarChoferesTablaExcel(this.$choferes)
+    }
+
+    visibilidadChoferes(){
+      {
+        const modalRef = this.modalService.open(VisibilidadListadosComponent, {
+          windowClass: 'myCustomModalClass',
+          centered: true,
+          size: 'md', 
+          //backdrop:"static" 
+        });      
+
+      let info = {
+          tipo: 'choferes',
+          objetos: this.$choferes,
+        } 
+        //console.log()(info); */
+        
+        modalRef.componentInstance.info = info;
+        modalRef.result.then(
+
+          () => {
+            // modal cancelado → no hacemos nada
+          }
+        );
+      }
     }
 
 }

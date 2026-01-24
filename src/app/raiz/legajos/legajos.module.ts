@@ -10,7 +10,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { ModalChoferesComponent } from './modal-choferes/modal-choferes.component';
+
 import { FilterPipeModule } from 'ngx-filter-pipe';
 
 
@@ -21,7 +21,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ConsultaLegajosComponent,
     CargarDocumentosComponent,
     SafeUrlPipe,
-    ModalChoferesComponent
+    
   ],
   imports: [
     CommonModule,

@@ -11,6 +11,7 @@ import Swal from 'sweetalert2';
 import { ProveedoresAltaComponent } from '../proveedores-alta/proveedores-alta.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -57,6 +58,9 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
     //firstFilter: string = '';
     //secondFilter: string = '';
     private destroy$ = new Subject<void>();
+
+    proveedoresFiltrados: ConIdType<Proveedor>[] = [];
+    filtroEstado: 'visibles' | 'todos' = 'visibles';
   
     constructor(
       private storageService: StorageService, 
@@ -82,13 +86,23 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
           .subscribe(data => {
             this.$proveedores = data;
             this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
-            this.armarTabla();
-          });              
+            this.aplicarFiltro(); // 👈 clave
+      });
+  }
+
+  aplicarFiltro(): void {
+    if (this.filtroEstado === 'visibles') {
+      this.proveedoresFiltrados = this.$proveedores.filter(p => p.visible === true);
+    } else {
+      this.proveedoresFiltrados = [...this.$proveedores];
     }
+
+    this.armarTabla();
+  }
   
     armarTabla(): void {
       let indice = 0
-      this.rowData = this.$proveedores.map((proveedor:ConIdType<Proveedor>) => ({
+      this.rowData = this.proveedoresFiltrados.map((proveedor:ConIdType<Proveedor>) => ({
         indice: indice ++,
         idProveedor: proveedor.idProveedor,
         razonSocial: proveedor.razonSocial,
@@ -103,6 +117,11 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
         correo: proveedor.contactos.length > 0 ? proveedor.contactos[0].email : "Sin Datos",
         proveedor: proveedor, // guardamos el objeto para acciones
       }));
+    }
+
+    cambiarFiltro(valor: 'visibles' | 'todos'): void {
+      this.filtroEstado = valor;
+      this.aplicarFiltro();
     }
   
     private cargarConfiguracionColumnas(): void {
@@ -290,6 +309,31 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
 
   descargarProveedores(){
     this.excelServ.exportarClientesTablaExcel(this.$proveedores, 'Proveedores')
+  }
+
+  visibilidadProveedores(){
+    {
+      const modalRef = this.modalService.open(VisibilidadListadosComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'md', 
+        //backdrop:"static" 
+      });      
+
+    let info = {
+        tipo: 'proveedores',
+        objetos: this.$proveedores,
+      } 
+      //console.log()(info); */
+      
+      modalRef.componentInstance.info = info;
+      modalRef.result.then(
+
+        () => {
+          // modal cancelado → no hacemos nada
+        }
+      );
+    }
   }
 
 }

@@ -9,12 +9,43 @@
                 Descargar Proveedores
             </button>
         </div>
+        <div class="align-self-start ms-2 mt-3 mb-1">
+            <button  class="btn btn-primary boton-alta" type="button" id="" (click)="visibilidadProveedores()">
+                Proveedores Visibles
+            </button>
+        </div>
         
         <!-- <button class="btn btn-primary" (click)="clientesActivos()">Editar Clientes</button>
         <button class="btn btn-secondary" (click)="actualizarActivos()">Actualizar Clientes</button> -->
     </div>
     <div class="d-flex w-100 h-50 align-self-end justify-content-end">  
         <div class="d-flex ">
+            <div class="btn-group ms-3 mb-2 me-2" role="group">
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="filtroProveedores"
+                    id="proveedoresActivos"
+                    autocomplete="off"
+                    checked
+                    (change)="cambiarFiltro('visibles')"
+                />
+                <label class="btn btn-outline-primary" for="proveedoresActivos">
+                    Visibles
+                </label>
+
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="filtroProveedores"
+                    id="proveedoresTodos"
+                    autocomplete="off"
+                    (change)="cambiarFiltro('todos')"
+                />
+                <label class="btn btn-outline-primary" for="proveedoresTodos">
+                    Todos
+                </label>
+            </div>
             <div data-bs-toggle="tooltip"
             data-bs-placement="left"
             title="Limpiar filtros"

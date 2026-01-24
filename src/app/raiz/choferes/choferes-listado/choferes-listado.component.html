@@ -10,6 +10,11 @@
                 Descargar Choferes
             </button>
         </div>
+        <div class="align-self-start ms-2 mt-3 mb-1">
+            <button  class="btn btn-primary boton-alta" type="button" id="" (click)="visibilidadChoferes()">
+                Choferes Visibles
+            </button>
+        </div>
         
         <!-- <button class="btn btn-primary" (click)="clientesActivos()">Editar Clientes</button>
         <button class="btn btn-secondary" (click)="actualizarActivos()">Actualizar Clientes</button> -->
@@ -30,10 +35,10 @@
                     id="choferesActivos"
                     autocomplete="off"
                     checked
-                    (change)="cambiarFiltro('activos')"
+                    (change)="cambiarFiltro('visibles')"
                 />
                 <label class="btn btn-outline-primary" for="choferesActivos">
-                    Activos
+                    Visibles
                 </label>
 
                 <input

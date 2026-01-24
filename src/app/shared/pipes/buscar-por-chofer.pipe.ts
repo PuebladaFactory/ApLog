@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { ConIdType } from 'src/app/interfaces/conId';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { Chofer } from 'src/app/interfaces/chofer';
 
@@ -8,7 +8,7 @@ import { Chofer } from 'src/app/interfaces/chofer';
   standalone: false
 })
 export class BuscarPorChoferPipe implements PipeTransform {
-  transform(legajos: ConIdType<Legajo>[], searchText: string, choferes: ConIdType<Chofer>[]): ConIdType<Legajo>[] {
+  transform(legajos: ConIdType<Legajo>[], searchText: string, choferes: ConId<Chofer>[]): ConIdType<Legajo>[] {
     if (!searchText) return legajos;
     const search = searchText.toLowerCase();
 
