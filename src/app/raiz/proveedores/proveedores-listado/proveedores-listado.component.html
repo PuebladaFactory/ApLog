@@ -15,7 +15,7 @@
             </button>
         </div>
         
-        <!-- <button class="btn btn-primary" (click)="clientesActivos()">Editar Clientes</button>
+       <!--  <button class="btn btn-primary" (click)="editarProveedores()">Editar Proveedores</button>
         <button class="btn btn-secondary" (click)="actualizarActivos()">Actualizar Clientes</button> -->
     </div>
     <div class="d-flex w-100 h-50 align-self-end justify-content-end">  
@@ -152,3 +152,7 @@
 
     </div>
 </ng-template>
+
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}

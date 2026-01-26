@@ -305,6 +305,14 @@ toggleColumnVisibility(colId: string): void {
     
   }
 
+  editarClientes(){
+    this.clientesActivo = structuredClone(this.$clientes);
+    this.clientesActivo = this.anonimizarClientes(this.clientesActivo);
+   
+    console.log("this.clientesActivo", this.clientesActivo);   
+    
+  }
+
   async actualizarActivos(){
     this.isLoading = true;    
     const resp = await this.dbFirestore.actualizarMultiple(this.clientesActivo, "clientes");
@@ -352,5 +360,52 @@ toggleColumnVisibility(colId: string): void {
       );
     }
   }
+
+  public anonimizarClientes(clientes: ConId<Cliente>[]): ConId<Cliente>[] {
+  return clientes.map(cliente => ({
+    ...cliente,
+
+    cuit: this.randomNumber(11),
+
+    direccionFiscal: {
+      ...cliente.direccionFiscal,
+      domicilio: this.randomString(10),
+    },
+
+    direccionOperativa: {
+      ...cliente.direccionOperativa,
+      domicilio: this.randomString(10),
+    },
+
+    contactos: cliente.contactos.map(contacto => ({
+      ...contacto,
+      puesto: this.randomString(10),
+      apellido: this.randomString(10),
+      telefono: this.randomNumber(10),
+      email: this.randomEmail(10),
+    }))
+  }));
+}
+
+private randomString(length: number): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+private randomNumber(length: number): number {
+  const min = Math.pow(10, length - 1);
+  const max = Math.pow(10, length) - 1;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+private randomEmail(length: number): string {
+  return `${this.randomString(length)}@mail.com`;
+}
+
+
 
 }

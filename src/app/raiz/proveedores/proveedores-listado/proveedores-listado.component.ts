@@ -12,6 +12,7 @@ import { ProveedoresAltaComponent } from '../proveedores-alta/proveedores-alta.c
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 @Component({
   selector: 'app-proveedores-listado',
@@ -61,11 +62,14 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
 
     proveedoresFiltrados: ConIdType<Proveedor>[] = [];
     filtroEstado: 'visibles' | 'todos' = 'visibles';
+    proveedoresMockeados: ConIdType<Proveedor>[] = [];
+    isLoading: boolean = false;
   
     constructor(
       private storageService: StorageService, 
       private modalService: NgbModal,
-      private excelServ: ExcelService
+      private excelServ: ExcelService,
+      private dbFirestore: DbFirestoreService,
     ) {}
   
     ngOnInit(): void {
@@ -335,5 +339,78 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
       );
     }
   }
+
+    editarProveedores(){
+    this.proveedoresMockeados = structuredClone(this.$proveedores);
+    this.proveedoresMockeados = this.anonimizarProveedores(this.proveedoresMockeados);
+   
+    console.log("this.clientesActivo", this.proveedoresMockeados);   
+    
+  }
+
+   public anonimizarProveedores(clientes: ConIdType<Proveedor>[]): ConIdType<Proveedor>[] {
+    return clientes.map(cliente => ({
+      ...cliente,
+  
+      cuit: this.randomNumber(11),
+  
+      direccionFiscal: {
+        ...cliente.direccionFiscal,
+        domicilio: this.randomString(10),
+      },
+  
+      direccionOperativa: {
+        ...cliente.direccionOperativa,
+        domicilio: this.randomString(10),
+      },
+  
+      contactos: cliente.contactos.map(contacto => ({
+        ...contacto,
+        puesto: this.randomString(10),
+        apellido: this.randomString(10),
+        telefono: this.randomNumber(10),
+        email: this.randomEmail(10),
+      }))
+    }));
+  }
+  
+  private randomString(length: number): string {
+    const chars = 'abcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+  
+  private randomNumber(length: number): number {
+    const min = Math.pow(10, length - 1);
+    const max = Math.pow(10, length) - 1;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+  
+  private randomEmail(length: number): string {
+    return `${this.randomString(length)}@mail.com`;
+  }
+
+    async actualizarActivos(){
+    this.isLoading = true;    
+    const resp = await this.dbFirestore.actualizarMultiple(this.proveedoresMockeados, "proveedores");
+    if(resp){
+      this.isLoading = false;
+      this.mensajesError(resp.mensaje)
+    }
+    
+  }
+
+    mensajesError(msj:string){
+      Swal.fire({
+        icon: "error",
+        //title: "Oops...",
+        text: `${msj}`
+        //footer: `${msj}`
+      });
+    }
+  
 
 }

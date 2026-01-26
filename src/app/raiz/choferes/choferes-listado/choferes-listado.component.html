@@ -15,8 +15,8 @@
                 Choferes Visibles
             </button>
         </div>
-        
-        <!-- <button class="btn btn-primary" (click)="clientesActivos()">Editar Clientes</button>
+      <!--   
+        <button class="btn btn-primary" (click)="editarChoferesMock()">Editar Choferes</button>
         <button class="btn btn-secondary" (click)="actualizarActivos()">Actualizar Clientes</button> -->
     </div>
     <!-- div>
@@ -103,3 +103,7 @@
     theme="legacy"
     [context]="{ componentParent: this }"
 ></ag-grid-angular>
+
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}

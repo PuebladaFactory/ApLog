@@ -12,37 +12,37 @@ const routes: Routes = [
       path: 'clientes',
       loadChildren: () => import('./clientes/clientes.module').then(m => m.ClientesModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin','manager','user'] }, // Accesible para todos los roles
+      data: { roles: ['god','admin','manager','user', 'demo'] }, // Accesible para todos los roles
     },  
     {
       path: 'choferes',
       loadChildren: () => import('./choferes/choferes.module').then(m => m.ChoferesModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin','manager','user'] }, // Accesible para todos los roles
+      data: { roles: ['god','admin','manager','user', 'demo'] }, // Accesible para todos los roles
     },  
     {
       path: 'op',
       loadChildren: () => import('./operaciones/operaciones.module').then(m => m.OperacionesModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin','manager','user'] }, // Accesible para todos los roles
+      data: { roles: ['god','admin','manager','user', 'demo'] }, // Accesible para todos los roles
     },  
     {
       path: 'proveedores',
       loadChildren: () => import('./proveedores/proveedores.module').then(m => m.ProveedoresModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin','manager','user'] }, // Accesible para todos los roles
+      data: { roles: ['god','admin','manager','user', 'demo'] }, // Accesible para todos los roles
     },  
     {
       path: 'facturacion',
       loadChildren: () => import('./facturacion/facturacion.module').then(m => m.FacturacionModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin','manager','user'] }, // Accesible para todos los roles
+      data: { roles: ['god','admin','manager','user', 'demo'] }, // Accesible para todos los roles
     },  
     {
       path: 'liquidacion',
       loadChildren: () => import('./liquidacion/liquidacion.module').then(m => m.LiquidacionModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin','manager','user'] }, // Accesible para todos los roles
+      data: { roles: ['god','admin','manager','user', 'demo'] }, // Accesible para todos los roles
     },             
     {
       path: 'legajos',
@@ -54,7 +54,7 @@ const routes: Routes = [
       path: 'ajustes',
       loadChildren: () => import('./ajustes/ajustes.module').then(m => m.AjustesModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, // Accesible para todos los roles
+      data: { roles: ['god','admin',] }, // Accesible para todos los roles
     },
     {
       path: 'nuevaFacturacion',
@@ -66,7 +66,7 @@ const routes: Routes = [
       path: 'vendedores',
       loadChildren: () => import('./vendedores/vendedores.module').then(m => m.VendedoresModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin', 'manager','user'] }, // Accesible para todos los roles
+      data: { roles: ['god','admin', 'manager','user', 'demo'] }, // Accesible para todos los roles
     },
     
     
