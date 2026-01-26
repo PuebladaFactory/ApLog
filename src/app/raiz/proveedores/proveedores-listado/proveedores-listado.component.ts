@@ -308,7 +308,7 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
     }
 
   descargarProveedores(){
-    this.excelServ.exportarClientesTablaExcel(this.$proveedores, 'Proveedores')
+    this.excelServ.exportarClientesTablaExcel(this.proveedoresFiltrados, 'Proveedores')
   }
 
   visibilidadProveedores(){

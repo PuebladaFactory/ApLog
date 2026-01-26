@@ -325,7 +325,7 @@ toggleColumnVisibility(colId: string): void {
   }
 
   descargarClientes(){
-    this.excelServ.exportarClientesTablaExcel(this.$clientes, 'Clientes')
+    this.excelServ.exportarClientesTablaExcel(this.clientesFiltrados, 'Clientes')
   }
 
   visibilidadClientes(){

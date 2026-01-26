@@ -327,7 +327,7 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
 
 
     descargarChoferes(){
-       this.excelServ.exportarChoferesTablaExcel(this.$choferes)
+       this.excelServ.exportarChoferesTablaExcel(this.choferesFiltrados)
     }
 
     visibilidadChoferes(){
