@@ -22,7 +22,6 @@ import { SupabaseStorageService } from 'src/app/servicios/supabase/supabase-stor
 import { AccionInformeLiq, puedeEjecutarAccion } from 'src/app/reglas/informe-liq.rules';
 import { ColumnaTabla, OrdenTabla } from 'src/app/interfaces/tablas';
 
-
 @Component({
   selector: 'app-facturacion-listado',
   standalone: false,
