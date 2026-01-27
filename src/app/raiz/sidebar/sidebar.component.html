@@ -79,7 +79,7 @@
                             </h2> 
                         </a>              
                     </li>
-                    @if($usuario.roles.god){
+                    @if(!$usuario.roles.demo){
                         <li>
                             <a [routerLink]="['/legajos']" >
                                 <h2  class="d-flex mt-3" type="button">                    

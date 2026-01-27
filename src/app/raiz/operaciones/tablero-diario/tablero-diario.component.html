@@ -47,19 +47,25 @@
                     </svg>
                 </button>
             </div>
-            <span *ngIf="tablero && tablero.asignado"
-                  class="badge bg-success">
-              ✔️ Tablero dado de alta
-            </span>
-
-            <span *ngIf="tablero && !tablero.asignado"
-                  class="badge bg-warning text-dark">
-              ⚠️ Tablero sin el alta de operaciones
-            </span>
-            <span *ngIf="fechaSeleccionada && !tablero"
+            @if(tablero && tablero.asignado){
+              <span 
+                    class="badge bg-success">
+                ✔️ Tablero dado de alta
+              </span>
+            }
+            @if(tablero && !tablero.asignado){
+              <span 
+                    class="badge bg-warning text-dark">
+                ⚠️ Tablero sin el alta de operaciones
+              </span>
+            }
+            @if(fechaSeleccionada && !tablero){
+               <span 
                   class="badge bg-danger text-ligth">
-              ❌ Tablero sin asignaciones
-            </span>
+                  ❌ Tablero sin asignaciones
+              </span>
+            }
+           
         </div>
         
     </div>    

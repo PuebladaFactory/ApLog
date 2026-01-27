@@ -223,6 +223,9 @@ export class TableroCalendarioComponent implements OnInit {
       case 'Semestre':
         this.calcularSemestre(adelante)
         break;
+      case 'Año':
+        this.calcularAnio(adelante);
+        break;
       default:
         return;
     }    
@@ -523,5 +526,20 @@ export class TableroCalendarioComponent implements OnInit {
     this.formatoSeleccionado = 'Año';
     this.actualizarFechasString();
   }
+
+  calcularAnio(adelante: boolean) {
+    const partesFecha = this.fechasConsulta.fechaDesde.split('-');
+    let anio = parseInt(partesFecha[0], 10);
+
+    // Avanzar o retroceder año
+    anio = adelante ? anio + 1 : anio - 1;
+
+    const firstDay = new Date(anio, 0, 1);   // 1 de enero
+    const lastDay = new Date(anio, 11, 31);  // 31 de diciembre
+
+    this.fechasConsulta.fechaDesde = firstDay.toISOString().split('T')[0];
+    this.fechasConsulta.fechaHasta = lastDay.toISOString().split('T')[0];
+  }
+
 
 }
