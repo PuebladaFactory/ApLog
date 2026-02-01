@@ -83,6 +83,7 @@ export class TableroOpComponent implements OnInit, OnDestroy {
   filtroPrincipal: 'cliente' | 'chofer' | null = null;
   private modeloFiltrosPrevio: any = null;
   informesVenta: InformeVenta[] = []
+  usuario!: any;
 
   constructor(
     private storageService: StorageService,
@@ -93,6 +94,8 @@ export class TableroOpComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    let usuarioLogueado = this.storageService.loadInfo("usuario");
+    this.usuario = structuredClone(usuarioLogueado[0]);
       this.storageService.getObservable<ConIdType<Chofer>>("choferes")
         .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
         .subscribe(data => {

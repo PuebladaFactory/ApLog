@@ -9,7 +9,7 @@
                             <button  class="btn btn-primary boton-alta mt-2" type="button" id="" (click)="modalAltaOp()">
                               Alta de Operación
                             </button>
-                            <app-btn-editar name="cargaMultiple" class="ms-3" (click)="modalCargaMultiple()" ></app-btn-editar>
+                            <app-btn-editar name="cargaMultiple" class="ms-3" (click)="modalCargaMultiple()" [ngClass]="{'anulado': usuario.roles.demo}" ></app-btn-editar>
                         </div>
                     </div>
                     <div class="row">
