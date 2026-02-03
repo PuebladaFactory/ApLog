@@ -19,6 +19,7 @@ import { ProformaComponent } from './proforma/proforma.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { LiquidacionesOpComponent } from './liquidaciones-op/liquidaciones-op.component';
 import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
+import { PeriodoModalComponent } from './modales/periodo-modal/periodo-modal.component';
 
 
 
@@ -33,7 +34,8 @@ import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
     DescuentosComponent,
     ResumenOpLiquidadasComponent,
     EditarTarifaOpComponent,
-    ProformaComponent
+    ProformaComponent,
+    PeriodoModalComponent
     
   ],
   imports: [

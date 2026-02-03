@@ -700,6 +700,12 @@ export class ProformaComponent implements OnInit {
          text: `${msj}`
          //footer: `${msj}`
        });
-     }
+  }
+
+  getQuincena(fecha: string | Date): string {
+    const fechaObj = new Date(fecha);
+    const dia = fechaObj.getDate();
+    return dia <= 15 ? '1° quincena' : '2° quincena';
+  }
 
 }
