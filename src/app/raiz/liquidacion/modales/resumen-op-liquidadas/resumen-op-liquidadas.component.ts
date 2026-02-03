@@ -1,4 +1,4 @@
-import { Component, Input, OnInit} from '@angular/core';
+import { AfterViewInit, Component, Input, OnInit} from '@angular/core';
 
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
@@ -15,6 +15,7 @@ import { ConIdType } from 'src/app/interfaces/conId';
 import { InformeOp } from 'src/app/interfaces/informe-op';
 import { Descuento, InformeLiq, Valores } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
+import { PeriodoModalComponent } from '../periodo-modal/periodo-modal.component';
 
 @Component({
     selector: 'app-resumen-op-liquidadas',
@@ -22,7 +23,7 @@ import { NumeradorService } from 'src/app/servicios/numerador/numerador.service'
     styleUrls: ['./resumen-op-liquidadas.component.scss'],
     standalone: false
 })
-export class ResumenOpLiquidadasComponent implements OnInit {
+export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
 
   @Input() fromParent: any;  
     
@@ -138,6 +139,11 @@ export class ResumenOpLiquidadasComponent implements OnInit {
         break
       }
     }
+    
+  }
+
+  ngAfterViewInit(): void {
+    this.abrirModalPeriodo();
   }
 
   ngOnDestroy(): void {
@@ -465,10 +471,38 @@ export class ResumenOpLiquidadasComponent implements OnInit {
       facturaVinculada: "",        // ID o número de la factura fiscal (a futuro)      
       mes: this.mes,
       periodo: this.periodo,
+      quincena: this.periodo === 'mes' ? '-' : this.getQuincenaLiq(this.facLiquidadas[0].fecha)
 
     }
   }
 
+  getQuincenaLiq(fecha: string | Date): string {
+    const fechaObj = new Date(fecha);
+    const dia = fechaObj.getDate();
+    return dia <= 15 ? '1° quincena' : '2° quincena';
+  }
+
+  abrirModalPeriodo(): void {
+    const modalRef = this.modalService.open(PeriodoModalComponent, {
+      size: 'sm',
+      backdrop: 'static', // no cerrar al clickear afuera
+      keyboard: false,     // no cerrar con ESC
+      centered: true,
+    });
+
+    modalRef.result.then(
+      (resultado: boolean) => {
+        // true = Mes | false = Quincena
+        console.log('Periodo seleccionado:', resultado);
+
+        // acá hacés lo que necesites:
+        this.periodoBoolean = resultado;
+      },
+      () => {
+        // No debería entrar nunca acá
+      }
+    );
+  }
 
 
 }

@@ -6,12 +6,14 @@
     <table class="table table-light table-striped table-bordered">
       <thead class="sticky-top">
         <th style="width: 21%">Cliente</th>
-        <th>Proforma N°</th>
-        <th>Cant Op</th>
+        <th class="text-center">Proforma N°</th>
+        <th class="text-center">Mes</th>
+        <th class="text-center">Periodo Liq</th>
+        <th class="text-center">Cant Op</th>
         <th>Suma a Cobrar</th>
         <th>Suma a Pagar</th>
-        <th>Ganancia Neta</th>
-        <th>% Ganancia</th>
+        <th class="text-center">Ganancia Neta</th>
+        <th class="text-center">% Ganancia</th>
         <th style="width: 13%" class="text-center">Acciones</th>
       </thead>
       <tbody>
@@ -20,6 +22,8 @@
             <tr>
               <td>{{cliente.entidad.razonSocial}}</td>
               <td class="text-center">{{cliente.idInfLiq}}</td>
+              <td class="text-center">{{cliente.mes}}</td>
+              <td class="text-center">{{getQuincena(cliente.fecha)}}</td>
               <td class="text-center">{{cliente.operaciones.length}}</td>
               <td class="table-success">{{cliente.valores.total | formatearValor :"$"}}</td>
               <td>{{cliente.valores.totalContraParte | formatearValor :"$"}}</td>
@@ -68,12 +72,14 @@
     <table class="table table-light table-striped table-bordered">
       <thead class="sticky-top">
         <th style="width: 21%">Chofer</th>
-        <th>Proforma N°</th>
-        <th>Cant Op</th>
+        <th class="text-center">Proforma N°</th>
+        <th class="text-center">Mes</th>
+        <th class="text-center">Periodo Liq</th>
+        <th class="text-center">Cant Op</th>
         <th>Suma a Cobrar</th>
         <th>Suma a Pagar</th>
-        <th>Ganancia Neta</th>
-        <th>% Ganancia</th>
+        <th class="text-center">Ganancia Neta</th>
+        <th class="text-center">% Ganancia</th>
         <th style="width: 13%" class="text-center">Acciones</th>
       </thead>
       <tbody>
@@ -82,6 +88,8 @@
             <tr>
               <td>{{chofer.entidad.razonSocial}}</td>
               <td class="text-center">{{chofer.idInfLiq}}</td>
+              <td class="text-center">{{chofer.mes}}</td>
+              <td class="text-center">{{getQuincena(chofer.fecha)}}</td>
               <td class="text-center">{{chofer.operaciones.length}}</td>
               <td>{{chofer.valores.totalContraParte | formatearValor :"$"}}</td>
               <td class="table-danger">{{chofer.valores.total | formatearValor :"$"}}</td>
@@ -128,12 +136,14 @@
     <table class="table table-light table-striped table-bordered">
       <thead class="sticky-top">
         <th style="width: 21%">Proveedor</th>
-        <th>Proforma N°</th>
-        <th>Cant Op</th>
+        <th class="text-center">Proforma N°</th>
+        <th class="text-center">Mes</th>
+        <th class="text-center">Periodo Liq</th>
+        <th class="text-center">Cant Op</th>
         <th>Suma a Cobrar</th>
         <th>Suma a Pagar</th>
-        <th>Ganancia Neta</th>
-        <th>% Ganancia</th>
+        <th class="text-center">Ganancia Neta</th>
+        <th class="text-center">% Ganancia</th>
         <th style="width: 13%" class="text-center">Acciones</th>
       </thead>
       <tbody>
@@ -142,6 +152,8 @@
             <tr>
               <td>{{prov.entidad.razonSocial}}</td>
               <td class="text-center">{{prov.idInfLiq}}</td>
+              <td class="text-center">{{prov.mes}}</td>
+              <td class="text-center">{{getQuincena(prov.fecha)}}</td>              
               <td class="text-center">{{prov.operaciones.length}}</td>
               <td>{{prov.valores.totalContraParte | formatearValor :"$"}}</td>
               <td class="table-danger">{{prov.valores.total | formatearValor :"$"}}</td>

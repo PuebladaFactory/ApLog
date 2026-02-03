@@ -20,6 +20,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
 import { LiquidacionesOpComponent } from './liquidaciones-op/liquidaciones-op.component';
 import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
+import { PeriodoModalComponent } from './modales/periodo-modal/periodo-modal.component';
 
 
 
@@ -34,7 +35,8 @@ import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
     DescuentosComponent,
     ResumenOpLiquidadasComponent,
     EditarTarifaOpComponent,
-    ProformaComponent
+    ProformaComponent,
+    PeriodoModalComponent
     
   ],
   imports: [
