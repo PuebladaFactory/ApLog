@@ -13,7 +13,7 @@ import { Firestore } from '@angular/fire/firestore';
 import { inject } from '@angular/core';
 import { TableroDiario } from 'src/app/raiz/operaciones/tablero-diario/tablero-diario.component';
 import { InformeOp } from 'src/app/interfaces/informe-op';
-import { InformeLiq } from 'src/app/interfaces/informe-liq';
+import { InformeLiq, ValoresFinancieros } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from '../numerador/numerador.service';
 import { InformeVenta } from 'src/app/interfaces/informe-venta';
 import { error } from 'jquery';
@@ -1977,8 +1977,9 @@ async eliminarOperacionEInformes(
         const noLiqRef = doc(this.firestore, `${colNoLiq}/${infOp.id}`);
 
         const infOpModificado = { ...infOp, liquidacion: false };
+        let {id, ...informeOp} = infOpModificado
         batch.delete(liqRef);
-        batch.set(noLiqRef, infOpModificado);
+        batch.set(noLiqRef, informeOp);
       }
 
       // 🔹 5. Actualizar operaciones relacionadas
@@ -1986,8 +1987,9 @@ async eliminarOperacionEInformes(
       if (!operacionesResultado.exito) return operacionesResultado;
 
       // 🔹 6. Actualizar estado del InformeLiq
+      let {id, ...infLiqMod} = informeLiq
       const infLiqRef = doc(this.firestore, `/Vantruck/datos/resumenLiq/${informeLiq.id}`);
-      batch.update(infLiqRef, { ...informeLiq });
+      batch.update(infLiqRef, { ...infLiqMod });
 
       // 🔹 7. Ejecutar batch
       await batch.commit();
@@ -2121,8 +2123,7 @@ async eliminarOperacionEInformes(
     );
   }
 
-
-async registrarMovimientoFinanciero(
+  async registrarMovimientoFinanciero(
   form: MovimientoFormVM,
   usuarioUid: string
 ): Promise<void> {
@@ -2136,81 +2137,143 @@ async registrarMovimientoFinanciero(
 
   await runTransaction(this.firestore, async (tx) => {
 
-    const imputaciones: ImputacionMovimiento[] = [];
-    let totalMovimiento = 0;
+    // =========================
+    // 🔹 FASE 1 — READS
+    // =========================
 
-    // 1️⃣ Procesar informes dentro de la transacción
-    for (const inf of form.informesSeleccionados) {
+    const informesLeidos: {
+      ref: DocumentReference;
+      data: InformeLiq;
+      formInf: MovimientoFormVM['informesSeleccionados'][number];
+    }[] = [];
 
-      const infRef = doc(
-        this.firestore,
-        `/Vantruck/datos/resumenLiq/${inf.informeLiqId}`
+      for (const inf of form.informesSeleccionados) {
+
+        const infRef = doc(
+          this.firestore,
+          `/Vantruck/datos/resumenLiq/${inf.informeLiqId}`
+        );
+
+        const snap = await tx.get(infRef);
+
+        if (!snap.exists()) {
+          throw new Error(`Informe ${inf.numeroInterno} no existe`);
+        }
+
+        informesLeidos.push({
+          ref: infRef,
+          data: snap.data() as InformeLiq,
+          formInf: inf
+        });
+      }
+
+      // =========================
+      // 🔹 FASE 2 — CALCULAR
+      // =========================
+
+      const imputaciones: ImputacionMovimiento[] = [];
+      let totalMovimiento = 0;
+
+      const updates: {
+        ref: DocumentReference;
+        valoresFinancieros: ValoresFinancieros;
+        estadoFinanciero: 'pendiente' | 'parcial' | 'cobrado';
+      }[] = [];
+
+      for (const item of informesLeidos) {
+
+        const vf = item.data.valoresFinancieros!;
+
+        const nuevoTotalCobrado =
+          vf.totalCobrado + item.formInf.montoACobrar;
+
+        const nuevoSaldo =
+          vf.total - nuevoTotalCobrado;
+
+        let nuevoEstado: 'pendiente' | 'parcial' | 'cobrado';
+
+        if (nuevoSaldo <= 0) {
+          nuevoEstado = 'cobrado';
+        } else if (nuevoTotalCobrado > 0) {
+          nuevoEstado = 'parcial';
+        } else {
+          nuevoEstado = 'pendiente';
+        }
+
+        updates.push({
+          ref: item.ref,
+          valoresFinancieros: {
+            total: vf.total,
+            totalCobrado: nuevoTotalCobrado,
+            saldo: nuevoSaldo
+          },
+          estadoFinanciero: nuevoEstado
+        });
+
+        imputaciones.push({
+          informeLiqId: item.formInf.informeLiqId,
+          numeroInterno: item.formInf.numeroInterno,
+          fechaInforme: item.formInf.fecha,
+          totalInforme: item.formInf.total,
+          montoImputado: item.formInf.montoACobrar
+        });
+
+        totalMovimiento += item.formInf.montoACobrar;
+      }
+
+      // =========================
+      // 🔹 FASE 3 — WRITE
+      // =========================
+
+      // actualizar informes
+      for (const up of updates) {
+        tx.update(up.ref, {
+          valoresFinancieros: up.valoresFinancieros,
+          estadoFinanciero: up.estadoFinanciero
+        });
+      }
+
+      // crear movimiento
+      const movimiento: MovimientoFinanciero = {
+        fecha: creadoEn.substring(0, 10),
+        tipo: form.tipo,
+        entidad: form.entidad,
+        imputaciones,
+        totalMovimiento,
+        medioPago: form.medioPago,
+        referencia: form.referencia,
+        observaciones: form.observaciones,
+        creadoEn,
+        creadoPor: usuarioUid
+      };
+
+      const movRef = doc(movimientosRef);
+      tx.set(movRef, movimiento);
+    });
+  }
+
+
+    getMostRecentLimitIdLog<T>(componente: string,campo:any, id:any, limite:number): Observable<ConId<T>[]> {
+      
+      const dataCollectionPath = `/Vantruck/datos/${componente}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+      const q = query(
+        colRef,        
+        orderBy("timestamp", 'desc'),
+        limit(limite), // Ordenar por id descendente y limitar a 1        
+        where(campo, "==" ,id) 
+      );
+      
+       return from(getDocs(q)).pipe(
+        map(snapshot =>
+          snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...(doc.data() as T)
+          }))
+        )
       );
 
-      const snap = await tx.get(infRef);
-      if (!snap.exists()) {
-        throw new Error(`Informe ${inf.numeroInterno} no existe`);
-      }
-
-      const data = snap.data() as InformeLiq;
-
-      const vf = data.valoresFinancieros!;
-      const nuevoTotalCobrado = vf.totalCobrado + inf.montoACobrar;
-      const nuevoSaldo = vf.total - nuevoTotalCobrado;
-
-      let nuevoEstadoFinanciero: 'pendiente' | 'parcial' | 'cobrado';
-      if (nuevoSaldo <= 0) {
-        nuevoEstadoFinanciero = 'cobrado';
-      } else if (nuevoTotalCobrado > 0) {
-        nuevoEstadoFinanciero = 'parcial';
-      } else {
-        nuevoEstadoFinanciero = 'pendiente';
-      }
-
-      // 2️⃣ Actualizar informe
-      tx.update(infRef, {
-        valoresFinancieros: {
-          total: vf.total,
-          totalCobrado: nuevoTotalCobrado,
-          saldo: nuevoSaldo
-        },
-        estadoFinanciero: nuevoEstadoFinanciero
-      });
-
-      // 3️⃣ Armar imputación
-      imputaciones.push({
-        informeLiqId: inf.informeLiqId,
-        numeroInterno: inf.numeroInterno,
-        fechaInforme: inf.fecha,
-        totalInforme: inf.total,
-        montoImputado: inf.montoACobrar
-      });
-
-      totalMovimiento += inf.montoACobrar;
     }
-
-    // 4️⃣ Crear movimiento financiero
-    const movimiento: MovimientoFinanciero = {
-      fecha: creadoEn.substring(0, 10),
-      tipo: form.tipo,
-
-      entidad: form.entidad,
-
-      imputaciones,
-      totalMovimiento,
-
-      medioPago: form.medioPago,
-      referencia: form.referencia,
-      observaciones: form.observaciones,
-
-      creadoEn,
-      creadoPor: usuarioUid
-    };
-
-    const movRef = doc(movimientosRef);
-    tx.set(movRef, movimiento);
-  });
-}
   
 
 

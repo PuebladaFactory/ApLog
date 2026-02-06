@@ -46,6 +46,7 @@ import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
 import { VisibilidadListadosComponent } from './modales/visibilidad-listados/visibilidad-listados.component';
 import { TableroFechasComponent } from './tablero-fechas/tablero-fechas.component';
 import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/informes-acciones-cell.component';
+import { FormatoMonetarioControlDirective } from './directives/formato-monetario-control.directive';
 
 
 
@@ -84,7 +85,8 @@ import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/in
     BuscarPorChoferPipe,
     VisibilidadListadosComponent,
     TableroFechasComponent,
-    InformesAccionesCellComponent
+    InformesAccionesCellComponent,
+    FormatoMonetarioControlDirective
     
     
   ],
@@ -131,7 +133,8 @@ import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/in
     BuscarPorChoferPipe,
     VisibilidadListadosComponent,
     TableroFechasComponent,
-    InformesAccionesCellComponent
+    InformesAccionesCellComponent,
+    FormatoMonetarioControlDirective
   ]
 })
 export class SharedModule { }

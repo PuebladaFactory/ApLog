@@ -153,11 +153,18 @@ export class ModalDetalleComponent implements OnInit {
     this.destroy$.complete();
   }
 
-  getQuincena(fecha: string | Date): string {
-    const fechaObj = new Date(fecha);
-    const dia = fechaObj.getDate();
-    return dia <= 15 ? '1° quincena' : '2° quincena';
-  }
+  getQuincena(fecha: any): string {
+      console.log("fecha: ", fecha);
+      
+      // Dividir el string de la fecha en año, mes y día
+      const [year, month, day] = fecha.split('-').map(Number);
+      
+      // Crear la fecha asegurando que tome la zona horaria local
+      const date = new Date(year, month - 1, day); // mes - 1 porque los meses en JavaScript son 0-indexed
+      console.log("dayv: ", day);
+      // Determinar si está en la primera o segunda quincena
+      return day <= 15 ? '1° quincena' : '2° quincena';
+    }
 
   facturaCobrada(row: any) {
     //console.log(row);
@@ -296,7 +303,7 @@ export class ModalDetalleComponent implements OnInit {
               indice: indice ++,
               fecha: factura.fecha,
               mes: factura.mes,              
-              periodo: factura.periodo === 'quincena' ? this.getQuincena(factura.fecha) : 'mes',
+              periodo: factura.periodo,
               idFactura: factura.idInfLiq,
               numInt: factura.numeroInterno,
               cant: factura.operaciones.length,
@@ -315,7 +322,7 @@ export class ModalDetalleComponent implements OnInit {
               indice: indice ++,
               fecha: factura.fecha,
               mes: factura.mes,
-              periodo: factura.periodo === 'quincena' ? this.getQuincena(factura.fecha) : 'mes',
+              periodo: factura.periodo,
               idFactura: factura.idInfLiq,
               numInt: factura.numeroInterno,
               cant: factura.operaciones.length,
@@ -334,7 +341,7 @@ export class ModalDetalleComponent implements OnInit {
               indice: indice ++,
               fecha: factura.fecha,
               mes: factura.mes,
-              periodo: factura.periodo === 'quincena' ? this.getQuincena(factura.fecha) : 'mes',
+              periodo: factura.periodo,
               idFactura: factura.idInfLiq,
               numInt: factura.numeroInterno,
               cant: factura.operaciones.length,

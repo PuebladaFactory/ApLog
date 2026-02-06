@@ -23,7 +23,7 @@
               <td>{{cliente.entidad.razonSocial}}</td>
               <td class="text-center">{{cliente.idInfLiq}}</td>
               <td class="text-center">{{cliente.mes}}</td>
-              <td class="text-center">{{getQuincena(cliente.fecha)}}</td>
+              <td class="text-center">{{cliente.periodo}}</td>
               <td class="text-center">{{cliente.operaciones.length}}</td>
               <td class="table-success">{{cliente.valores.total | formatearValor :"$"}}</td>
               <td>{{cliente.valores.totalContraParte | formatearValor :"$"}}</td>
@@ -89,7 +89,7 @@
               <td>{{chofer.entidad.razonSocial}}</td>
               <td class="text-center">{{chofer.idInfLiq}}</td>
               <td class="text-center">{{chofer.mes}}</td>
-              <td class="text-center">{{getQuincena(chofer.fecha)}}</td>
+              <td class="text-center">{{chofer.periodo}}</td>
               <td class="text-center">{{chofer.operaciones.length}}</td>
               <td>{{chofer.valores.totalContraParte | formatearValor :"$"}}</td>
               <td class="table-danger">{{chofer.valores.total | formatearValor :"$"}}</td>
@@ -153,7 +153,7 @@
               <td>{{prov.entidad.razonSocial}}</td>
               <td class="text-center">{{prov.idInfLiq}}</td>
               <td class="text-center">{{prov.mes}}</td>
-              <td class="text-center">{{getQuincena(prov.fecha)}}</td>              
+              <td class="text-center">{{prov.periodo}}</td>              
               <td class="text-center">{{prov.operaciones.length}}</td>
               <td>{{prov.valores.totalContraParte | formatearValor :"$"}}</td>
               <td class="table-danger">{{prov.valores.total | formatearValor :"$"}}</td>

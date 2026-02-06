@@ -152,6 +152,7 @@ export class FinanzasCobrosComponent implements OnInit {
 
 registrarCobro(): void {
   if (!this.puedeRegistrarCobro()) return;
+  let usuario = this.storageService.loadInfo('usuario')
 
   const cliente = this.clientes.find(
     c => c.idCliente === this.clienteSeleccionadoId
@@ -186,7 +187,7 @@ registrarCobro(): void {
         // 🔥 acá va el service real
         await this.dbService.registrarMovimientoFinanciero(
           form,
-          'UID_USUARIO' // luego lo sacás del auth
+          usuario[0].email
         );
 
         Swal.fire('OK', 'Cobro registrado correctamente', 'success');

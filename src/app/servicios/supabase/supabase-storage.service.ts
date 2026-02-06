@@ -8,9 +8,21 @@ export class SupabaseStorageService {
   private supabase: SupabaseClient;
 
   constructor() {
-    this.supabase = createClient(
+    //primer prueba
+/*     this.supabase = createClient(
       'https://inblxpskpbzbmgsetuas.supabase.co',  // 🔹 Reemplazar con tu Project URL
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluYmx4cHNrcGJ6Ym1nc2V0dWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NDY3NjIsImV4cCI6MjA3MTUyMjc2Mn0.TRja5GQwYD2LJDHz6p-TT1c8b3Pz_Jo87ta28MPRyvE'                 // 🔹 Reemplazar con tu Anon Key      
+    ); */
+
+    //VANTRUCK
+/*     this.supabase = createClient(
+      'https://inblxpskpbzbmgsetuas.supabase.co',  // 🔹 Reemplazar con tu Project URL
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluYmx4cHNrcGJ6Ym1nc2V0dWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NDY3NjIsImV4cCI6MjA3MTUyMjc2Mn0.TRja5GQwYD2LJDHz6p-TT1c8b3Pz_Jo87ta28MPRyvE'                 // 🔹 Reemplazar con tu Anon Key      
+    ); */
+    //DEMO
+    this.supabase = createClient(
+      'https://rftlqytgggozedtbhhvb.supabase.co',  // 🔹 Reemplazar con tu Project URL
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmdGxxeXRnZ2dvemVkdGJoaHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMzM3MTIsImV4cCI6MjA4NTcwOTcxMn0.ZcQ-jqWlbEPdV6Tku_r0Wb44e9O2c0MiQRe73ifQHNo'                 // 🔹 Reemplazar con tu Anon Key      
     );
   }
 

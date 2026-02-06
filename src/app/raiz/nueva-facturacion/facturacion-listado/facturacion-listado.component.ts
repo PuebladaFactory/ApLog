@@ -79,6 +79,18 @@ export class FacturacionListadoComponent implements OnInit {
       value: inf => inf.idInfLiq ?? 0
     },
     {
+      key: 'mes',
+      label: 'Mes',
+      sortable: true,
+      value: inf => inf.mes ?? ''
+    },
+    {
+      key: 'periodo',
+      label: 'Periodo Liq',
+      sortable: true,
+      value: inf => inf.periodo ?? ''
+    },
+    {
       key: 'razonSocial',
       label: 'Razón Social',
       sortable: true,
@@ -307,17 +319,33 @@ export class FacturacionListadoComponent implements OnInit {
         informeLiq.anuladoPor = usuario[0].email;
         informeLiq.estado = 'anulado';
         console.log("informesLiq anulado", informeLiq);
-        this.storageService.updateItem(this.coleccion,informeLiq, informeLiq.idInfLiq, "ANULACION", `Anulación de informe de liquidación N° ${informeLiq.numeroInterno}`, informeLiq.id)
-        this.cargando = false;
-        const respuesta = await
-        Swal.fire({
-          icon: 'success',
-          title: 'El informe de liquidación fue anulado',
-//          text: 'La operación fue dada de baja y se actualizó el tablero.'
-        }); 
-        if(respuesta.isConfirmed){
-          this.ngOnInit()
+        const resultado = await this.dbService.anularInformeLiq(informeLiq, this.informesOp)
+        if(resultado.exito){
+          //this.storageService.updateItem(this.coleccion,informeLiq, informeLiq.idInfLiq, "ANULACION", `Anulación de informe de liquidación N° ${informeLiq.numeroInterno}`, informeLiq.id)
+          this.storageService.logSimple(informeLiq.idInfLiq, "ANULACION", this.coleccion, `Anulación de informe de liquidación N° ${informeLiq.numeroInterno}`, resultado.exito )
+          this.cargando = false;
+          const respuesta = await
+          Swal.fire({
+            icon: 'success',
+            title: 'El informe de liquidación fue anulado',
+  //          text: 'La operación fue dada de baja y se actualizó el tablero.'
+          }); 
+          if(respuesta.isConfirmed){
+            this.ngOnInit()
+          }
+        } else {
+          const respuesta = await
+          Swal.fire({
+            icon: 'error',
+            title: `${resultado.mensaje}`,
+  //          text: 'La operación fue dada de baja y se actualizó el tablero.'
+          }); 
+          if(respuesta.isConfirmed){
+            this.ngOnInit()
+          }
         }
+        
+
         
       } catch (e) {
         console.warn("El modal fue cancelado o falló:", e);

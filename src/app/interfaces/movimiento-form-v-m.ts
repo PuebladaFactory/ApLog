@@ -11,6 +11,7 @@ export interface MovimientoFormVM {
     informeLiqId: string;
     numeroInterno: string;
     fecha: string;
+
     total: number;
     totalCobrado: number;
     saldo: number;

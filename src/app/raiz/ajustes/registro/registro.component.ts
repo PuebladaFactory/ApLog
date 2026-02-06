@@ -19,6 +19,7 @@ export class RegistroComponent implements OnInit {
   limite:number = 100;
   registros: LogEntry [] = [];
   private destroy$ = new Subject<void>();
+  consulta: any
 
 
      fechasConsulta: any = {
@@ -165,5 +166,23 @@ export class RegistroComponent implements OnInit {
 			this.isHovered(date)
 		);
 	}
+
+  async consultarId(){
+    
+    this.consulta = Number(this.consulta)
+    console.log(this.consulta);
+    let respuesta
+    await this.dbFirebase.getMostRecentLimitIdLog<any>("logs", "idObjet", this.consulta, 100).subscribe((data)=>{
+      console.log(data);
+      if(data){
+ 
+
+      this.registros = data
+      } 
+     
+    });
+   
+    
+  }
 
 }

@@ -1,115 +1,204 @@
 <div class="modal-header">
-  <h5 class="modal-title">
-    {{ tipo === 'cobro' ? 'Registrar cobro' : 'Registrar pago' }}
-  </h5>
-  <button type="button" class="btn-close" (click)="cancelar()"></button>
+    <h5 class="modal-title">
+        Registrar {{ tipo === 'cobro' ? 'Cobro' : 'Pago' }}
+    </h5>
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close"
+      (click)="activeModal.dismiss()">
+    </button>
 </div>
 
 <div class="modal-body">
 
-  <!-- Entidad -->
-  <div class="mb-3">
-    <strong>{{ entidad.razonSocial }}</strong>
-  </div>
+    <!-- TOTAL DEL MOVIMIENTO -->
+    <div class="mb-3">
+        <label class="form-label fw-bold">
+          Monto total a registrar
+        </label>
 
-  <!-- Tabla de informes -->
-  <div class="table-responsive">
-    <table class="table table-sm table-bordered align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>N°</th>
-          <th>Fecha</th>
-          <th class="text-end">Total</th>
-          <th class="text-end">Cobrado</th>
-          <th class="text-end">Saldo</th>
-          <th class="text-end">Monto a {{ tipo === 'cobro' ? 'cobrar' : 'pagar' }}</th>
-        </tr>
-      </thead>
+        <input
+          type="text"
+          inputmode="number"
+          class="form-control text-end"
+          [(ngModel)]="montoTotalMovimiento"
+          appFormatoNumericoNgModel
+          (change)="recalcularDistribucion()">
+    </div>
 
-      <tbody>
-        @for (inf of informesVM; track inf.informeLiqId) {
-          <tr>
-            <td>{{ inf.numeroInterno }}</td>
-            <td>{{ inf.fecha }}</td>
+    <div class="mt-2">
 
-            <td class="text-end">
-              {{ inf.total | formatearValor:"$" }}
-            </td>
-
-            <td class="text-end">
-              {{ inf.totalCobrado | formatearValor:"$" }}
-            </td>
-
-            <td class="text-end">
-              {{ inf.saldo | formatearValor:"$" }}
-            </td>
-
-            <td class="text-end">
-              <input
-                type="number"
-                class="form-control form-control-sm text-end"
-                [(ngModel)]="inf.montoACobrar"
-                [min]="0"
-                [max]="inf.saldo"
-                step="0.01">
-            </td>
-          </tr>
+        @if (estadoDiferencia === 'ok') {
+          <div class="text-success fw-semibold">
+            ✔ Imputación completa
+          </div>
         }
-      </tbody>
-    </table>
-  </div>
 
-  <!-- Totales -->
-  <div class="d-flex justify-content-end mt-3">
-    <h5>
-      Total:
-      <span class="ms-2">
-        {{ totalMovimiento | formatearValor:"$" }}
-      </span>
-    </h5>
-  </div>
+        @if (estadoDiferencia === 'faltante') {
+          <div class="text-warning fw-semibold">
+            Falta imputar {{ diferencia | formatearValor:'$' }}
+          </div>
+        }
 
-  <!-- Datos del movimiento -->
-  <hr>
+        @if (estadoDiferencia === 'exceso') {
+          <div class="text-danger fw-semibold">
+            Se imputó de más {{ (diferencia * -1) | formatearValor:'$' }}
+          </div>
+        }
 
-  <div class="row">
-    <div class="col-md-4">
-      <label>Medio de pago</label>
-      <select class="form-select" [(ngModel)]="medioPago">
-        <option [ngValue]="undefined">Seleccione</option>
-        <option value="efectivo">Efectivo</option>
-        <option value="transferencia">Transferencia</option>
-        <option value="cheque">Cheque</option>
-        <option value="otro">Otro</option>
-      </select>
     </div>
 
-    <div class="col-md-8">
-      <label>Referencia</label>
-      <input type="text" class="form-control" [(ngModel)]="referencia">
-    </div>
-  </div>
 
-  <div class="mt-3">
-    <label>Observaciones</label>
-    <textarea
-      rows="3"
-      class="form-control"
-      [(ngModel)]="observaciones">
-    </textarea>
-  </div>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Informe</th>
+                    <th>Fecha</th>
+                    <th class="text-center">Saldo</th>
+                    <th>Modo</th>
+                    <th class="text-end">Monto a imputar</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @for (inf of informesVM; track inf) {
+                    <tr  [class.table-success]="inf.montoACobrar === inf.saldo && inf.saldo > 0"
+                      [class.table-warning]="inf.montoACobrar > 0 && inf.montoACobrar < inf.saldo"
+                      [class.table-light]="inf.montoACobrar === 0">
+                        <td>
+                          #{{ inf.numeroInterno }}
+                        </td>
+
+                        <td>
+                          {{ inf.fecha }}
+                        </td>
+
+                        <td class="text-end">
+                          {{ inf.saldo | formatearValor:'$' }}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+
+                                <input
+                                  type="radio"
+                                  class="btn-check"
+                                  [name]="'modo-' + inf.informeLiqId"
+                                  [(ngModel)]="inf.modo"
+                                  value="auto"
+                                  (change)="recalcularDistribucion()"
+                                  id="auto-{{ inf.informeLiqId }}"
+                                />
+                                <label class="btn btn-outline-secondary"
+                                      for="auto-{{ inf.informeLiqId }}">
+                                  Auto
+                                </label>
+
+                                <input
+                                  type="radio"
+                                  class="btn-check"
+                                  [name]="'modo-' + inf.informeLiqId"
+                                  [(ngModel)]="inf.modo"
+                                  value="manual"
+                                  (change)="recalcularDistribucion()"
+                                  id="manual-{{ inf.informeLiqId }}"
+                                />
+                                <label class="btn btn-outline-secondary"
+                                      for="manual-{{ inf.informeLiqId }}">
+                                  Manual
+                                </label>
+
+                                <input
+                                  type="radio"
+                                  class="btn-check"
+                                  [name]="'modo-' + inf.informeLiqId"
+                                  [(ngModel)]="inf.modo"
+                                  value="total"
+                                  (change)="recalcularDistribucion()"
+                                  id="total-{{ inf.informeLiqId }}"
+                                />
+                                <label class="btn btn-outline-secondary"
+                                      for="total-{{ inf.informeLiqId }}">
+                                  Total
+                                </label>
+
+                            </div>
+                        </td>
+
+                        <td class="text-end">
+                            <input
+                              type="text"
+                              inputmode="number"
+                              class="form-control form-control-sm text-end"
+                              [(ngModel)]="inf.montoACobrar"
+                              [disabled]="inf.modo !== 'manual'"
+                              [max]="inf.saldo"
+                              appFormatoMonetarioControl
+                              (ngModelChange)="recalcularDistribucion()"
+                            >
+                        </td>
+                    </tr>
+                }
+              
+            </tbody>
+        </table>
+    </div>
+
+    @if (errorDistribucion) {
+      <div class="alert alert-danger mt-3">
+        {{ errorDistribucion }}
+      </div>
+    }
+    
+
+    <div class="row mt-3">
+      <div class="col-md-6">
+        <label class="form-label">Medio de pago</label>
+        <select
+          class="form-select"
+          [(ngModel)]="medioPago"
+          (change)="recalcularDistribucion()">
+          <option [ngValue]="null">Seleccione</option>
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+          <option value="cheque">Cheque</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Referencia</label>
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="referencia">
+      </div>
+    </div>
+    <div class="mt-3">
+      <label>Observaciones</label>
+      <textarea
+        rows="3"
+        class="form-control"
+        [(ngModel)]="observaciones">
+      </textarea>
+    </div>
 
 </div>
 
 <div class="modal-footer">
-  <button class="btn btn-secondary" (click)="cancelar()">
-    Cancelar
-  </button>
+    <button
+      type="button"
+      class="btn btn-secondary"
+      (click)="activeModal.dismiss()">
+      Cancelar
+    </button>
 
-  <button
-    class="btn btn-success"
-    [disabled]="!puedeConfirmar()"
-    (click)="confirmar()">
-    Confirmar
-  </button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="!puedeConfirmar"
+      (click)="confirmar()">
+      Confirmar
+    </button>
 </div>

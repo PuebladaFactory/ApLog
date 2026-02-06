@@ -438,7 +438,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
     let idInforme = this.fromParent.origen === 'cliente' ? this.clienteSel.idCliente : this.fromParent.origen === 'chofer' ? this.choferSel.idChofer :  this.proveedorSel.idProveedor;
     let razonSocial = this.fromParent.origen === 'cliente' ? this.clienteSel.razonSocial : this.fromParent.origen === 'chofer' ? this.choferSel.apellido + " " + this.choferSel.nombre : this.proveedorSel.razonSocial;
     let cuit = this.fromParent.origen === 'cliente' ? this.clienteSel.cuit : this.fromParent.origen === 'chofer' ? this.choferSel.cuit :  this.proveedorSel.cuit;
-    this.periodo = this.periodoBoolean ? 'mes' : 'quincena'
+    this.periodo = this.periodoBoolean ? 'mes' : this.getQuincenaLiq(this.facLiquidadas[0].fecha);
     
     this.factura = {
 
@@ -470,16 +470,22 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
 
       facturaVinculada: "",        // ID o número de la factura fiscal (a futuro)      
       mes: this.mes,
-      periodo: this.periodo,
-      quincena: this.periodo === 'mes' ? '-' : this.getQuincenaLiq(this.facLiquidadas[0].fecha)
+      periodo: this.periodo,      
 
     }
   }
 
-  getQuincenaLiq(fecha: string | Date): string {
-    const fechaObj = new Date(fecha);
-    const dia = fechaObj.getDate();
-    return dia <= 15 ? '1° quincena' : '2° quincena';
+  getQuincenaLiq(fecha: any): string {
+    console.log("fecha: ", fecha);
+    
+    // Dividir el string de la fecha en año, mes y día
+    const [year, month, day] = fecha.split('-').map(Number);
+    
+    // Crear la fecha asegurando que tome la zona horaria local
+    const date = new Date(year, month - 1, day); // mes - 1 porque los meses en JavaScript son 0-indexed
+    console.log("dayv: ", day);
+    // Determinar si está en la primera o segunda quincena
+    return day <= 15 ? '1° quincena' : '2° quincena';
   }
 
   abrirModalPeriodo(): void {
