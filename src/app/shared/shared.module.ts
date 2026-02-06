@@ -45,6 +45,7 @@ import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
 import { VisibilidadListadosComponent } from './modales/visibilidad-listados/visibilidad-listados.component';
 import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/informes-acciones-cell.component';
+import { FormatoMonetarioControlDirective } from './directives/formato-monetario-control.directive';
 
 
 
@@ -82,7 +83,8 @@ import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/in
     DescuentosComponent,
     BuscarPorChoferPipe,
     VisibilidadListadosComponent,
-    InformesAccionesCellComponent
+    InformesAccionesCellComponent,
+    FormatoMonetarioControlDirective
     
     
   ],
@@ -128,7 +130,8 @@ import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/in
     DescuentosComponent,
     BuscarPorChoferPipe,
     VisibilidadListadosComponent,
-    InformesAccionesCellComponent
+    InformesAccionesCellComponent,
+    FormatoMonetarioControlDirective
   ]
 })
 export class SharedModule { }

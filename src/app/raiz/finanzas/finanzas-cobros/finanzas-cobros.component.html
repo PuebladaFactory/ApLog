@@ -49,6 +49,8 @@
           <th>N° Informe</th>
           <th>Fecha</th>
           <th>Entidad</th>
+          <th>Mes</th>
+          <th>Periodo Liq</th>
           <th>Estado</th>
           <th>Estado Financiero</th>
           <th class="text-end table-info" >Total</th>
@@ -71,6 +73,8 @@
             <td>{{ inf.numeroInterno }}</td>
             <td>{{ inf.fecha | date:'dd/MM/yyyy' }}</td>
             <td>{{ inf.entidad.razonSocial }}</td>
+            <td>{{ inf.mes }}</td>
+            <td>{{ inf.periodo }}</td>
             <td>{{ inf.estado }}</td>
             <td>{{ inf.estadoFinanciero }}</td>
 

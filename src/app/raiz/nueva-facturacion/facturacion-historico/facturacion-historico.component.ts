@@ -78,6 +78,18 @@ export class FacturacionHistoricoComponent implements OnInit {
         value: inf => inf.idInfLiq ?? 0
       },
       {
+        key: 'mes',
+        label: 'Mes',
+        sortable: true,
+        value: inf => inf.mes ?? ''
+      },
+      {
+        key: 'periodo',
+        label: 'Periodo Liq',
+        sortable: true,
+        value: inf => inf.periodo ?? ''
+      },
+      {
         key: 'razonSocial',
         label: 'Razón Social',
         sortable: true,
@@ -103,6 +115,7 @@ export class FacturacionHistoricoComponent implements OnInit {
         label: 'Estado',
         sortable: true,
         align: 'center',       
+        value: inf => inf.estadoFinanciero === 'cobrado' ? inf.estadoFinanciero : inf.estado
       },
   
       // acciones ↓
@@ -173,7 +186,22 @@ export class FacturacionHistoricoComponent implements OnInit {
           ?.toLowerCase()
           .includes(textoBusqueda);
 
-      return coincideTipo && (coincideRazon || coincideNumero);
+      const estado =
+        inf.estado
+          ?.toLowerCase()
+          .includes(textoBusqueda);
+
+      const estadoFinanciero =
+        inf.estadoFinanciero
+          ?.toLowerCase()
+          .includes(textoBusqueda);
+
+      const periodo =
+        inf.periodo
+          ?.toLowerCase()
+          .includes(textoBusqueda);
+
+      return coincideTipo && (coincideRazon || coincideNumero || estado || estadoFinanciero || periodo );
     });
   }
 
@@ -266,8 +294,14 @@ export class FacturacionHistoricoComponent implements OnInit {
 
   async obtenerInformesOp(informesLiq:ConId<InformeLiq>){
 
-    this.cargando = true;
-    let coleccion: string = informesLiq.tipo === 'cliente' ? "infOpLiqClientes" : informesLiq.tipo === 'chofer' ? "infOpLiqChoferes" : "infOpLiqProveedores"
+    this.cargando = true;    
+    let coleccion: string = ""
+    if(informesLiq.estado === 'anulado'){
+      coleccion = informesLiq.tipo === 'cliente' ? "informesOpClientes" : informesLiq.tipo === 'chofer' ? "informesOpChoferes" : "informesOpProveedores"  
+    } else {
+      coleccion = informesLiq.tipo === 'cliente' ? "infOpLiqClientes" : informesLiq.tipo === 'chofer' ? "infOpLiqChoferes" : "infOpLiqProveedores"
+    }
+    
     try {
       const consulta = await this.dbService.obtenerDocsPorIdsOperacion(       
         coleccion,         // nombre de la colección

@@ -447,7 +447,7 @@ export class LiquidacionesOpComponent implements OnInit {
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          console.log(result);
+          console.log("resultado del modal resumen-op:", result);
           
           if(result.modo === "cerrar" || result.modo === "proforma"){
             let titulo = result.titulo

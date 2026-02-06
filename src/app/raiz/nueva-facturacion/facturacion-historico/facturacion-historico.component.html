@@ -15,7 +15,7 @@
                 </select>
             </div>
             <div class="col">
-                <label>Razón Social / N° de informe / Fecha</label>
+                <label>Razón Social / N° de informe / Fecha / Estado / Periodo</label>
                 <input type="text" class="form-control" [(ngModel)]="filtroRazonSocial" (input)="aplicarFiltros()" placeholder="Buscar...">
             </div>
         </div>
@@ -30,7 +30,7 @@
                             >
                         <option value="facturado">Facturados</option>
                         <option value="anulado">Anulados</option>
-                        <option value="cobrado">Cobrados</option>
+                        <!-- <option value="cobrado">Cobrados</option> -->
                         <!-- <option value="emitido">Emitido</option>                 -->
                     </select>
                 </div>
