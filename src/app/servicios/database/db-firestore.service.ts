@@ -2126,12 +2126,14 @@ async eliminarOperacionEInformes(
   async registrarMovimientoFinanciero(
   form: MovimientoFormVM,
   usuarioUid: string
-): Promise<void> {
+):  Promise<string> {
 
   const movimientosRef = collection(
     this.firestore,
     '/Vantruck/datos/movimientos'
   );
+
+  const movRef = doc(movimientosRef); // ← crear ref antes
 
   const creadoEn = new Date().toISOString();
 
@@ -2214,8 +2216,11 @@ async eliminarOperacionEInformes(
           informeLiqId: item.formInf.informeLiqId,
           numeroInterno: item.formInf.numeroInterno,
           fechaInforme: item.formInf.fecha,
-          totalInforme: item.formInf.total,
-          montoImputado: item.formInf.montoACobrar
+          mesLiquidado: item.data.mes,
+          periodoLiquidado: item.data.periodo,
+          totalInforme: item.formInf.total,          
+          montoImputado: item.formInf.montoACobrar,
+          saldonInforme: item.formInf.saldo,
         });
 
         totalMovimiento += item.formInf.montoACobrar;
@@ -2234,22 +2239,30 @@ async eliminarOperacionEInformes(
       }
 
       // crear movimiento
-      const movimiento: MovimientoFinanciero = {
+      const movimientoBase = {
         fecha: creadoEn.substring(0, 10),
         tipo: form.tipo,
         entidad: form.entidad,
         imputaciones,
         totalMovimiento,
-        medioPago: form.medioPago,
-        referencia: form.referencia,
-        observaciones: form.observaciones,
         creadoEn,
         creadoPor: usuarioUid
       };
 
-      const movRef = doc(movimientosRef);
+      const movimiento: MovimientoFinanciero = {
+        ...movimientoBase,
+        ...(form.medioPago && { medioPago: form.medioPago }),
+        ...(form.referencia && { referencia: form.referencia }),
+        ...(form.observaciones && { observaciones: form.observaciones })
+      };
+
+      console.log("movimiento: ", movimiento);
+      
+      
       tx.set(movRef, movimiento);
+      
     });
+    return movRef.id; // 🔥 clave
   }
 
 
@@ -2275,6 +2288,48 @@ async eliminarOperacionEInformes(
 
     }
   
+
+  async getMovimientosFiltrados(params: {
+    tipoEntidad: 'cliente' | 'chofer' | 'proveedor';
+    entidadId: string;
+    tipoMovimiento?: 'cobro' | 'pago';
+    fechaDesde?: string; // yyyy-mm-dd
+    fechaHasta?: string;
+  }): Promise<(MovimientoFinanciero & { id: string })[]> {
+
+    const colRef = collection(
+      this.firestore,
+      '/Vantruck/datos/movimientos'
+    );
+
+    const constraints: any[] = [
+      where('entidad.tipo', '==', params.tipoEntidad),
+      where('entidad.id', '==', params.entidadId)
+    ];
+
+    if (params.tipoMovimiento) {
+      constraints.push(where('tipo', '==', params.tipoMovimiento));
+    }
+
+    if (params.fechaDesde) {
+      constraints.push(where('fecha', '>=', params.fechaDesde));
+    }
+
+    if (params.fechaHasta) {
+      constraints.push(where('fecha', '<=', params.fechaHasta));
+    }
+
+    constraints.push(orderBy('fecha', 'desc'));
+
+    const q = query(colRef, ...constraints);
+
+    const snap = await getDocs(q);
+
+    return snap.docs.map(d => ({
+      id: d.id,
+      ...(d.data() as MovimientoFinanciero)
+    }));
+  }
 
 
 

@@ -1,0 +1,195 @@
+<div>
+    <h2 class="mt-2">Historial de movimientos</h2>    
+    <div class="card-body">
+        <div class="row mb-3 column-gap-3 bg-light border rounded border-1 rounded-2 pb-2">
+            <div class="col">
+                <label class="form-label">Tipo de entidad</label>
+                <select class="form-select"
+                [(ngModel)]="tipoEntidad"
+                (ngModelChange)="onTipoEntidadChange()">
+                    <option [ngValue]="null">Seleccione</option>
+                    <option value="cliente">Cliente</option>
+                    <option value="chofer">Chofer</option>
+                    <option value="proveedor">Proveedor</option>
+                </select>
+            </div>  
+
+            <div class="col-3">
+                <label class="form-label">Entidad</label>
+
+
+                <select class="form-select"
+                [disabled]="!tipoEntidad"
+                [(ngModel)]="entidadSeleccionada"
+                (ngModelChange)="onEntidadSeleccionada($event)">
+
+
+                    <option [ngValue]="null">Seleccione</option>
+
+
+                    @for (e of entidadesFiltradas; track $index) {
+                    <option [ngValue]="e">
+                    {{ getLabelEntidad(e) }}
+                    </option>
+                    }
+
+
+                </select>
+            </div>   
+
+            <div class="col">
+                <label class="form-label">Tipo movimiento</label>
+                <select class="form-select"
+                        [(ngModel)]="tipoMovimientoFiltro">
+                    <option value="">Todos</option>
+                    <option value="cobro">Cobros</option>
+                    <option value="pago">Pagos</option>
+                </select>
+            </div>
+
+            <div class="col">
+                <label class="form-label">Desde</label>
+                <input type="date"
+                        class="form-control"
+                        [(ngModel)]="fechaDesde">
+            </div>
+
+            <div class="col">
+                <label class="form-label">Hasta</label>
+                <input type="date"
+                        class="form-control"
+                        [(ngModel)]="fechaHasta">
+            </div>
+
+            <div class="col d-flex align-items-end">
+                <button class="btn btn-primary mb-1"
+                (click)="buscar()"
+                [disabled]="!entidadIdSeleccionada">
+                    Buscar
+                </button>
+            </div>
+        </div>
+
+    </div>
+    @if (error) {
+    <div class="alert alert-danger">{{ error }}</div>
+    }
+
+
+    @if (cargando) {
+    <div class="text-muted">Consultando movimientos...</div>
+    }
+    @if (!cargando && movimientos.length > 0) {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Medio</th>
+                        <th>Referencia</th>
+                        <th>Observaciones</th>
+                        <th>Cant Imputaciones</th>
+                        <th class="text-end">Total</th>                        
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (m of movimientos; track m.id) {
+                        <tr>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        (click)="toggleDetalle(m.id)">
+                                @if (estaExpandido(m.id)) { − } @else { + }
+                                </button>
+                            </td>
+
+                            <td>{{ m.fecha }}</td>
+
+                            <td>
+                                <span class="badge"
+                                    [class.bg-success]="m.tipo === 'cobro'"
+                                    [class.bg-danger]="m.tipo === 'pago'">
+                                {{ m.tipo }}
+                                </span>
+                            </td>
+
+                            <td>{{ m.medioPago || '-' }}</td>
+                            
+                            <td>{{ m.referencia}}</td>
+
+                            <td>{{ m.observaciones}}</td>
+
+                            <td>{{ m.imputaciones.length}}</td>
+
+                            <td class="text-end table-success">
+                                {{ m.totalMovimiento | formatearValor:'$' }}
+                            </td>
+
+                        </tr>
+                        @if (estaExpandido(m.id)) {
+
+                        <tr class="table-light">
+                            <td colspan="8">
+
+                                <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                    <th>Informe</th>
+                                    <th>Fecha</th>
+                                    <th>Mes</th>
+                                    <th>Periodo Liq</th>
+                                    <th class="text-end">Total informe</th>
+                                    <th class="text-end">Saldo informe</th>
+                                    <th class="text-end">Monto Imputado</th>
+                                    <th></th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @for (imp of m.imputaciones; track imp.informeLiqId) {
+                                    <tr>
+                                        <td class="align-middle">#{{ imp.numeroInterno }}</td>
+                                        <td class="align-middle">{{ imp.fechaInforme }}</td>
+                                        <td class="align-middle">{{imp.mesLiquidado}}</td>
+                                        <td class="align-middle">{{imp.periodoLiquidado}}</td>
+                                        <td class="text-end table-success align-middle">
+                                            {{ imp.totalInforme | formatearValor:'$' }}
+                                        </td>
+                                        <td class="text-end table-info align-middle">
+                                            {{ imp.saldonInforme | formatearValor:'$' }}
+                                        </td>
+                                        <td class="text-end table-danger align-middle">
+                                            {{ imp.montoImputado | formatearValor:'$' }}
+                                        </td>
+                                        <td class="text-center align-middle"><app-btn-leer name="DetalleColor" ></app-btn-leer></td>
+                                    </tr>
+                                    }
+                                </tbody>
+                                </table>
+
+                            </td>
+                        </tr>
+
+                        }
+                    }
+
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-2 text-end">
+            <strong>
+                Total listado: {{ totalMovimientos | formatearValor:'$' }}
+            </strong>
+        </div>
+    } @else if (!cargando && movimientos.length === 0) {
+        <div class="text-muted">No hay movimientos para la entidad seleccionada</div>
+    }
+
+</div>
+
+@if (cargando) {
+    <div class="text-center my-4">
+      <app-spinner></app-spinner>
+    </div>
+}

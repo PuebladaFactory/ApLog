@@ -10,6 +10,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { MovimientoFinancieroComponent } from './modales/movimiento-financiero/movimiento-financiero.component';
+import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 
 
 @NgModule({
@@ -17,7 +18,8 @@ import { MovimientoFinancieroComponent } from './modales/movimiento-financiero/m
     FinanzasControlComponent,
     FinanzasCobrosComponent,
     FinanzasPagosComponent,
-    MovimientoFinancieroComponent
+    MovimientoFinancieroComponent,
+    HistorialMovimientosComponent
   ],
   imports: [
     CommonModule,
