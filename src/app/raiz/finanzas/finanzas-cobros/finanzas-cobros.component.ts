@@ -150,59 +150,71 @@ export class FinanzasCobrosComponent implements OnInit {
     );
   }
 
-registrarCobro(): void {
-  if (!this.puedeRegistrarCobro()) return;
-  let usuario = this.storageService.loadInfo('usuario')
+  registrarCobro(): void {
+    if (!this.puedeRegistrarCobro()) return;
+    let usuario = this.storageService.loadInfo('usuario')
+    console.log("usuario: ", usuario);
+    
+    const cliente = this.clientes.find(
+      c => c.idCliente === this.clienteSeleccionadoId
+    );
 
-  const cliente = this.clientes.find(
-    c => c.idCliente === this.clienteSeleccionadoId
-  );
+    if (!cliente) {
+      console.error('Cliente no encontrado');
+      return;
+    }
 
-  if (!cliente) {
-    console.error('Cliente no encontrado');
-    return;
+    const modalRef = this.modalService.open(
+      MovimientoFinancieroComponent,
+      {
+        size: 'lg',
+        backdrop: 'static'
+      }
+    );
+
+    modalRef.componentInstance.tipo = 'cobro';
+
+    modalRef.componentInstance.entidad = {
+      id: String(cliente.idCliente),
+      tipo: 'cliente',
+      razonSocial: cliente.razonSocial
+    };
+
+    modalRef.componentInstance.informes = this.informesSeleccionados;
+
+    modalRef.result.then(
+      async (form: MovimientoFormVM) => {
+        try {
+          console.log("form: ", form);
+          // 🔥 acá va el service real
+          const movimientoId = await this.dbService.registrarMovimientoFinanciero(
+            form,
+            usuario[0].email
+          );
+          Swal.fire('OK', 'Cobro registrado correctamente', 'success');
+          
+
+          // refrescar informes
+          await this.onClienteSeleccionado(this.clienteSeleccionadoId!);
+          this.storageService.logSimple(movimientoId, "COBRO", "movimientos", `Cobro del ${form.entidad.tipo} ${form.entidad.razonSocial} registrado`, true);
+        } catch (err) {
+          console.error(err);          
+          Swal.fire('Error', 'No se pudo registrar el cobro', 'error');
+        }
+      },
+      () => {
+        // modal cancelado → no hacemos nada
+      }
+    );
   }
 
-  const modalRef = this.modalService.open(
-    MovimientoFinancieroComponent,
-    {
-      size: 'lg',
-      backdrop: 'static'
-    }
-  );
-
-  modalRef.componentInstance.tipo = 'cobro';
-
-  modalRef.componentInstance.entidad = {
-    id: String(cliente.idCliente),
-    tipo: 'cliente',
-    razonSocial: cliente.razonSocial
-  };
-
-  modalRef.componentInstance.informes = this.informesSeleccionados;
-
-  modalRef.result.then(
-    async (form: MovimientoFormVM) => {
-      try {
-        // 🔥 acá va el service real
-        await this.dbService.registrarMovimientoFinanciero(
-          form,
-          usuario[0].email
-        );
-
-        Swal.fire('OK', 'Cobro registrado correctamente', 'success');
-
-        // refrescar informes
-        await this.onClienteSeleccionado(this.clienteSeleccionadoId!);
-      } catch (err) {
-        console.error(err);
-        Swal.fire('Error', 'No se pudo registrar el cobro', 'error');
-      }
-    },
-    () => {
-      // modal cancelado → no hacemos nada
-    }
-  );
-}
+  mensajesError(msj:string){
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`
+      //footer: `${msj}`
+    });
+  }
   
 }

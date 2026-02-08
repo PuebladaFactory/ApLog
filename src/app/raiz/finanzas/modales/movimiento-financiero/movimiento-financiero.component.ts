@@ -4,6 +4,7 @@ import { ConId } from 'src/app/interfaces/conId';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { MovimientoFormVM } from 'src/app/interfaces/movimiento-form-v-m';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
+import Swal from 'sweetalert2';
 
 /** Modo de imputación por informe */
 export type ModoImputacion = 'auto' | 'total' | 'manual';
@@ -254,9 +255,22 @@ export class MovimientoFinancieroComponent implements OnInit {
   // CONFIRMAR
   // ---------------------------------------------------------------------------
 
-  confirmar(): void {
+  async confirmar(): Promise<void> {
     //if (!this.puedeConfirmar) return;
     if (!this.validar()) return;
+
+    const confirmacion = await Swal.fire({
+      title: `¿Desea confirmar la operación?`,
+      //text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    })
+
+    if (!confirmacion.isConfirmed) return;
 
     const form: MovimientoFormVM = {
       tipo: this.tipo,

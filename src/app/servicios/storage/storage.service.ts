@@ -1236,7 +1236,7 @@ export class StorageService {
       }
 
       logSimple(
-        idObjeto: number,
+        idObjeto: any,
         accion: string,
         coleccion: string,
         detalle: string,        

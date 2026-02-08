@@ -35,8 +35,13 @@ export interface ImputacionMovimiento {
   numeroInterno: string;
   fechaInforme: string;
 
+  /** datos */
+  mesLiquidado?: string;
+  periodoLiquidado?: string;
+
   /** Montos */
   totalInforme: number;
   montoImputado: number;
+  saldonInforme: number;
 }
 
