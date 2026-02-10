@@ -1,6 +1,6 @@
 // numerador.service.ts
 import { inject, Injectable } from '@angular/core';
-import { doc, DocumentReference, runTransaction } from 'firebase/firestore';
+import { doc, DocumentReference, runTransaction, Transaction } from 'firebase/firestore';
 import { Firestore } from '@angular/fire/firestore';
 
 @Injectable({
@@ -42,4 +42,29 @@ export class NumeradorService {
       throw new Error("No se pudo generar el número interno");
     }
   }
+
+  async leerProximoNumeroMovimiento(
+    tx: Transaction,
+    tipo: 'cobro' | 'pago'
+  ): Promise<{ prefijo: string; numero: number }> {
+
+    const prefijo = tipo === 'cobro' ? 'RC' : 'OP';
+
+    const docRef = doc(
+      this.firestore,
+      `Vantruck/datos/numeradores/${prefijo}`
+    );
+
+    const snap = await tx.get(docRef);
+
+    let numero = 1;
+
+    if (snap.exists()) {
+      numero = (snap.data()['ultimoNumero'] ?? 0) + 1;
+    }
+
+    return { prefijo, numero };
+  }
+
+
 }

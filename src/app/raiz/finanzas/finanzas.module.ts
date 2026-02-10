@@ -11,6 +11,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { MovimientoFinancieroComponent } from './modales/movimiento-financiero/movimiento-financiero.component';
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
+import { MovimientoDetalleComponent } from './movimiento-detalle/movimiento-detalle.component';
 
 
 @NgModule({
@@ -19,7 +20,8 @@ import { HistorialMovimientosComponent } from './historial-movimientos/historial
     FinanzasCobrosComponent,
     FinanzasPagosComponent,
     MovimientoFinancieroComponent,
-    HistorialMovimientosComponent
+    HistorialMovimientosComponent,
+    MovimientoDetalleComponent
   ],
   imports: [
     CommonModule,

@@ -22,7 +22,8 @@ export class PapeleraComponent implements OnInit {
   limite:number = 100;
   papelera: LogDoc [] = [];
   private destroy$ = new Subject<void>();  
-  isLoading: boolean = false;       
+  isLoading: boolean = false;     
+  idObjConsulta: any  
   
   constructor(
     private dbFirebase: DbFirestoreService, 
@@ -222,6 +223,22 @@ export class PapeleraComponent implements OnInit {
         //footer: `${msj}`
       });
     }
+
+      consultarId(){
+    
+        this.idObjConsulta = Number(this.idObjConsulta)
+        console.log(this.idObjConsulta);
+        let respuesta
+        this.dbFirebase.getObjIdg<any>("papelera", "logEntry.idObjet", this.idObjConsulta).subscribe((data)=>{
+          console.log(data);
+          if(data){
+            this.papelera = data
+          } 
+        
+        });
+      
+        
+      }
     
   
    

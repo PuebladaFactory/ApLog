@@ -18,44 +18,42 @@ export class RegistroComponent implements OnInit {
   $usuario!: any;
   limite:number = 100;
   registros: LogEntry [] = [];
+  registrosOrdenados: LogEntry [] = [];
   private destroy$ = new Subject<void>();
-  consulta: any
+  idObjConsulta: any
 
 
-     fechasConsulta: any = {
-      fechaDesde: '',
-      fechaHasta: ''
-    };        
-    // Variables para controlar el formato seleccionado
-    formatoSeleccionado: string = 'Semana';    
-    // Fecha seleccionada en modo manual
-    fechaDesdeManual!: NgbDateStruct;
-    fechaHastaManual!: NgbDateStruct;    
-    // Para mostrar el rango de fechas en el template
-    fechaDesdeString!: string;
-    fechaHastaString!: string;  
-    fechaManualDesdeString!: string;
-    fechaManualHastaString!: string;  
-    calendar = inject(NgbCalendar);  
-    hoveredDate: NgbDate | null = null;
-    fromDate: NgbDate = this.calendar.getToday();
-    toDate: NgbDate | null = this.calendar.getNext(this.fromDate, 'd', 10);
+  fechasConsulta: any = {
+    fechaDesde: '',
+    fechaHasta: ''
+  };        
+  // Variables para controlar el formato seleccionado
+  formatoSeleccionado: string = 'Semana';    
+  // Fecha seleccionada en modo manual
+  fechaDesdeManual!: NgbDateStruct;
+  fechaHastaManual!: NgbDateStruct;    
+  // Para mostrar el rango de fechas en el template
+  fechaDesdeString!: string;
+  fechaHastaString!: string;  
+  fechaManualDesdeString!: string;
+  fechaManualHastaString!: string;  
+  calendar = inject(NgbCalendar);  
+  hoveredDate: NgbDate | null = null;
+  fromDate: NgbDate = this.calendar.getToday();
+  toDate: NgbDate | null = this.calendar.getNext(this.fromDate, 'd', 10);
+  sortColumn: string | null = null;
+  sortDirection: 'asc' | 'desc' = 'asc';
+
 
   constructor(private dbFirebase: DbFirestoreService, private storageService: StorageService){}
   
   ngOnInit(): void {
     
-      this.storageService.users$
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        if(data){
-          
-          this.$usuariosTodos = data;
-          //console.log("usuarios REGISTRO todos: ", this.$usuariosTodos);        
-        }      
-    });
+      this.$usuariosTodos = this.storageService.loadInfo('users')
+      //console.log("usuarios REGISTRO todos: ", this.$usuariosTodos); 
+
     this.calcularDiaActual()
-    this.storageService.syncChangesUsers("users");
+    //this.storageService.syncChangesUsers("users");
   }
 
   getUsuario(email:string){
@@ -82,6 +80,7 @@ export class RegistroComponent implements OnInit {
                       
       if(data){
         this.registros = data;
+        this.registrosOrdenados = this.registros.sort((a,b)=> a.timestamp - b.timestamp);        
         //console.log("this.resgistro: ", this.registros);
       }
     });
@@ -97,7 +96,7 @@ export class RegistroComponent implements OnInit {
     this.fechasConsulta.fechaHasta = tomorrow.toISOString().split('T')[0];
     
     this.actualizarFechasString();
-    this.consultarRegistro()
+    //this.consultarRegistro()
   }
 
   actualizarFechasString() {
@@ -117,6 +116,7 @@ export class RegistroComponent implements OnInit {
       this.formatoSeleccionado = 'Manual';
       
     }  */
+      this.idObjConsulta = ""
       this.actualizarFechasString();
       this.consultarRegistro();
   }
@@ -167,22 +167,93 @@ export class RegistroComponent implements OnInit {
 		);
 	}
 
-  async consultarId(){
+  consultarId(){
     
-    this.consulta = Number(this.consulta)
-    console.log(this.consulta);
+    this.idObjConsulta = Number(this.idObjConsulta)
+    console.log(this.idObjConsulta);
     let respuesta
-    await this.dbFirebase.getMostRecentLimitIdLog<any>("logs", "idObjet", this.consulta, 100).subscribe((data)=>{
+    this.dbFirebase.getObjIdg<any>("logs", "idObjet", this.idObjConsulta).subscribe((data)=>{
       console.log(data);
       if(data){
- 
-
-      this.registros = data
+        this.registros = data;
+        this.registrosOrdenados = this.registros.sort((a,b)=> a.timestamp - b.timestamp);
       } 
      
     });
    
     
   }
+
+  ordenarPor(columna: string) {
+
+    if (this.sortColumn === columna) {
+      // invertir dirección
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = columna;
+      this.sortDirection = 'asc';
+    }
+
+    const dir = this.sortDirection === 'asc' ? 1 : -1;
+
+    this.registrosOrdenados.sort((a, b) => {
+
+      let valA: any;
+      let valB: any;
+
+      switch (columna) {
+
+        case 'fecha':
+          valA = a.timestamp;
+          valB = b.timestamp;
+          break;
+
+        case 'usuario':
+          valA = a.userEmail;
+          valB = b.userEmail;
+          break;
+
+        case 'accion':
+          valA = a.action;
+          valB = b.action;
+          break;
+
+        case 'coleccion':
+          valA = a.coleccion;
+          valB = b.coleccion;
+          break;
+
+        case 'detalle':
+          valA = a.details;
+          valB = b.details;
+          break;
+
+        case 'idObjet':
+          valA = a.idObjet;
+          valB = b.idObjet;
+          break;
+
+        case 'status':
+          valA = a.idObjet;
+          valB = b.idObjet;
+          break;
+          
+
+        default:
+          return 0;
+      }
+
+      // ---- comparar ----
+
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return (valA - valB) * dir;
+      }
+
+      return valA.toString().localeCompare(valB.toString()) * dir;
+
+    });
+  }
+
+
 
 }

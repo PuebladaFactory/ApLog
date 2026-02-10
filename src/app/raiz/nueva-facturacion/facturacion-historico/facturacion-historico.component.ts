@@ -115,7 +115,7 @@ export class FacturacionHistoricoComponent implements OnInit {
         label: 'Estado',
         sortable: true,
         align: 'center',       
-        value: inf => inf.estadoFinanciero === 'cobrado' ? inf.estadoFinanciero : inf.estado
+        value: inf => inf.estadoFinanciero === 'cobrado' || inf.estadoFinanciero === 'parcial' ? inf.estadoFinanciero : inf.estado
       },
   
       // acciones ↓

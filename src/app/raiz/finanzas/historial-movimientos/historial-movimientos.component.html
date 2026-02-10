@@ -38,7 +38,7 @@
             </div>   
 
             <div class="col">
-                <label class="form-label">Tipo movimiento</label>
+                <label class="form-label">Tipo movimiento (opcional)</label>
                 <select class="form-select"
                         [(ngModel)]="tipoMovimientoFiltro">
                     <option value="">Todos</option>
@@ -48,14 +48,14 @@
             </div>
 
             <div class="col">
-                <label class="form-label">Desde</label>
+                <label class="form-label">Desde (opcional)</label>
                 <input type="date"
                         class="form-control"
                         [(ngModel)]="fechaDesde">
             </div>
 
             <div class="col">
-                <label class="form-label">Hasta</label>
+                <label class="form-label">Hasta (opcional)</label>
                 <input type="date"
                         class="form-control"
                         [(ngModel)]="fechaHasta">
@@ -72,124 +72,130 @@
 
     </div>
     @if (error) {
-    <div class="alert alert-danger">{{ error }}</div>
+        <div class="alert alert-danger">{{ error }}</div>
     }
-
-
-    @if (cargando) {
-    <div class="text-muted">Consultando movimientos...</div>
-    }
-    @if (!cargando && movimientos.length > 0) {
-        <div class="table-responsive">
-            <table class="table table-sm table-striped align-middle">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>Fecha</th>
-                        <th>Tipo</th>
-                        <th>Medio</th>
-                        <th>Referencia</th>
-                        <th>Observaciones</th>
-                        <th>Cant Imputaciones</th>
-                        <th class="text-end">Total</th>                        
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (m of movimientos; track m.id) {
+    @if (movimientos) {
+        @if (!cargando && movimientos.length > 0) {
+            <div class="table-responsive mt-5">
+                <table class="table table-sm table-striped align-middle">
+                    <thead>
                         <tr>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary"
-                                        (click)="toggleDetalle(m.id)">
-                                @if (estaExpandido(m.id)) { − } @else { + }
-                                </button>
-                            </td>
-
-                            <td>{{ m.fecha }}</td>
-
-                            <td>
-                                <span class="badge"
-                                    [class.bg-success]="m.tipo === 'cobro'"
-                                    [class.bg-danger]="m.tipo === 'pago'">
-                                {{ m.tipo }}
-                                </span>
-                            </td>
-
-                            <td>{{ m.medioPago || '-' }}</td>
-                            
-                            <td>{{ m.referencia}}</td>
-
-                            <td>{{ m.observaciones}}</td>
-
-                            <td>{{ m.imputaciones.length}}</td>
-
-                            <td class="text-end table-success">
-                                {{ m.totalMovimiento | formatearValor:'$' }}
-                            </td>
-
+                            <th></th>
+                            <th>Fecha</th>
+                            <th>Id</th>
+                            <th>N° Comprobante</th>
+                            <th>Tipo</th>
+                            <th>Medio</th>
+                            <th>Referencia</th>
+                            <th>Observaciones</th>
+                            <th>Cant Imputaciones</th>
+                            <th class="text-end">Total</th>
+                            <th style="width: 4%;"></th>    
+                            <th style="width: 4%;"></th>                         
                         </tr>
-                        @if (estaExpandido(m.id)) {
+                    </thead>
+                    <tbody>
+                        @for (m of movimientos; track m.id) {
+                            <tr>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                            (click)="toggleDetalle(m.id)">
+                                    @if (estaExpandido(m.id)) { − } @else { + }
+                                    </button>
+                                </td>
 
-                        <tr class="table-light">
-                            <td colspan="8">
+                                <td>{{ m.fecha }}</td>
 
-                                <table class="table table-sm mb-0">
-                                <thead>
-                                    <tr>
-                                    <th>Informe</th>
-                                    <th>Fecha</th>
-                                    <th>Mes</th>
-                                    <th>Periodo Liq</th>
-                                    <th class="text-end">Total informe</th>
-                                    <th class="text-end">Saldo informe</th>
-                                    <th class="text-end">Monto Imputado</th>
-                                    <th></th>
-                                    </tr>
-                                </thead>
+                                <td>{{ m.idMovFinanciero }}</td>
 
-                                <tbody>
-                                    @for (imp of m.imputaciones; track imp.informeLiqId) {
-                                    <tr>
-                                        <td class="align-middle">#{{ imp.numeroInterno }}</td>
-                                        <td class="align-middle">{{ imp.fechaInforme }}</td>
-                                        <td class="align-middle">{{imp.mesLiquidado}}</td>
-                                        <td class="align-middle">{{imp.periodoLiquidado}}</td>
-                                        <td class="text-end table-success align-middle">
-                                            {{ imp.totalInforme | formatearValor:'$' }}
-                                        </td>
-                                        <td class="text-end table-info align-middle">
-                                            {{ imp.saldonInforme | formatearValor:'$' }}
-                                        </td>
-                                        <td class="text-end table-danger align-middle">
-                                            {{ imp.montoImputado | formatearValor:'$' }}
-                                        </td>
-                                        <td class="text-center align-middle"><app-btn-leer name="DetalleColor" ></app-btn-leer></td>
-                                    </tr>
-                                    }
-                                </tbody>
-                                </table>
+                                <td>{{ m.numeroComprobante }}</td>
 
-                            </td>
-                        </tr>
+                                <td>
+                                    <span class="badge"
+                                        [class.bg-success]="m.tipo === 'cobro'"
+                                        [class.bg-danger]="m.tipo === 'pago'">
+                                    {{ m.tipo }}
+                                    </span>
+                                </td>
 
+                                <td>{{ m.medioPago || '-' }}</td>
+                                
+                                <td>{{ m.referencia}}</td>
+
+                                <td>{{ m.observaciones}}</td>
+
+                                <td>{{ m.imputaciones.length}}</td>
+
+                                <td class="text-end table-success">
+                                    {{ m.totalMovimiento | formatearValor:'$' }}                            
+                                </td>
+                                <td class="text-center align-middle"><app-btn-leer name="DetalleColor" (click)="verDetalle(m)" ></app-btn-leer></td>
+                                <td class="text-center align-middle"><app-btn-reimpresion (click)="imprimirDetalle(m)" ></app-btn-reimpresion></td>
+
+                            </tr>
+                            @if (estaExpandido(m.id)) {
+
+                            <tr class="table-light">
+                                <td colspan="12">
+
+                                    <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>                                        
+                                            <th style="width: 12%;">Informe</th>
+                                            <th style="width: 12%;">Fecha</th>
+                                            <th style="width: 12%;">Mes</th>
+                                            <th style="width: 12%;">Periodo Liq</th>
+                                            <th class="text-end" style="width: 17%;">Total informe</th>
+                                            <th class="text-end" style="width: 17%;">Saldo informe</th>
+                                            <th class="text-end" style="width: 17%;">Monto Imputado</th>                                    
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @for (imp of m.imputaciones; track imp.informeLiqId) {
+                                        <tr>                                        
+                                            <td class="align-middle">#{{ imp.numeroInterno }}</td>
+                                            <td class="align-middle">{{ imp.fechaInforme }}</td>
+                                            <td class="align-middle">{{imp.mesLiquidado}}</td>
+                                            <td class="align-middle">{{imp.periodoLiquidado}}</td>
+                                            <td class="text-end table-info align-middle">
+                                                {{ imp.totalInforme | formatearValor:'$' }}
+                                            </td>
+                                            <td class="text-end table-danger align-middle">
+                                                {{ imp.saldonInforme | formatearValor:'$' }}
+                                            </td>
+                                            <td class="text-end table-success align-middle">
+                                                {{ imp.montoImputado | formatearValor:'$' }}
+                                            </td>                                        
+                                        </tr>
+                                        }
+                                    </tbody>
+                                    </table>
+
+                                </td>
+                            </tr>
+
+                            }
                         }
-                    }
 
-                </tbody>
-            </table>
-        </div>
-        <div class="mt-2 text-end">
-            <strong>
-                Total listado: {{ totalMovimientos | formatearValor:'$' }}
-            </strong>
-        </div>
-    } @else if (!cargando && movimientos.length === 0) {
-        <div class="text-muted">No hay movimientos para la entidad seleccionada</div>
-    }
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-2 text-end">
+                <strong>
+                    Total listado: {{ totalMovimientos | formatearValor:'$' }}
+                </strong>
+            </div>
+        } @else if (!cargando && movimientos.length === 0) {
+            <div class="text-muted">No hay movimientos para la entidad seleccionada</div>
+        }
+    } 
+
 
 </div>
 
 @if (cargando) {
     <div class="text-center my-4">
-      <app-spinner></app-spinner>
+        <app-spinner></app-spinner>
     </div>
 }
