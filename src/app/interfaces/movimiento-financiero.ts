@@ -1,6 +1,8 @@
 export interface MovimientoFinanciero {
   /** Metadata */
   fecha: string; // ISO yyyy-mm-dd
+  idMovFinanciero: number;
+  numeroComprobante: string
   tipo: 'cobro' | 'pago';
   fechaOperacion?: string; // ISO yyyy-mm-dd
   /** Entidad */

@@ -1,94 +1,155 @@
 
 <div class="d-flex justify-content-between mt-3">
-  <div class="">
-    <h2 class="ng ">Registro de Actividad</h2>
-    <h3>Últimos {{limite}} resultados:</h3>
-  </div>
-  <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
-    <table>
+    <div class="">
+        <h2 class="ng ">Registro de Actividad</h2>
+        <h3>{{registros.length >=0 ? registros.length : 'Sin'}} resultados:</h3>
+    </div>
+    <div class="" >
+        <label><span class="fs-5">Consultar por Id</span></label>
+        <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded d-flex">      
+            <input class="form-control w-75 flex-grow-1" type="text" [(ngModel)]="idObjConsulta" placeholder="id">
+            <button class="btn btn-primary boton" type="button"(click)="consultarId()">Consultar</button>
+        </div>
+    </div>
+    
+    <div>
+        <label><span class="fs-5">Consultar por Fecha</span></label>
+        <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
+            <table>
+              <thead>
+                <th></th>
+                <th>Desde</th>
+                <th>Hasta</th>
+                <th>Cant</th>
+                <th></th>
+              </thead>
+              <tbody>
+                <td>
+                  <div class="btn-group dropup" >
+                    <button id="fechas" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside"></button>
+                    <ul class="dropdown-menu">
+                      <li>
+
+                        <!-- <input class="form-control text-center" style="font-size: 1.15rem;" type="text" readonly [value]="'Desde: ' + fromDate.year + '/' + fromDate.month + '/' + fromDate.day + '   Hasta: ' + toDate?.year + '/' + toDate?.month + '/' +toDate?.day"> -->
+                        <ngb-datepicker #dp (dateSelect)="onDateSelection($event)" [displayMonths]="2" [dayTemplate]="t" outsideDays="hidden">
+
+                          <ng-template #t let-date let-focused="focused">
+                            <span
+                              class="custom-day"
+                              [class.focused]="focused"
+                              [class.range]="isRange(date)"
+                              [class.faded]="isHovered(date) || isInside(date)"
+                              (mouseenter)="hoveredDate = date"
+                              (mouseleave)="hoveredDate = null"
+                              >
+                              {{ date.day }}
+                            </span>
+                          </ng-template>
+                        </ngb-datepicker>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+                <td>
+                  <input class="form-control text-center" style="width: 100px; font-size: 1.2rem;" type="text" readonly [value]="fechaDesdeString" >
+                </td>
+                <td>
+                  <input class="form-control text-center" style="width: 100px; font-size: 1.2rem;" type="text" readonly [value]="fechaHastaString">
+                </td>
+                <td>
+                  <input  type="text" inputmode="numeric" style="width: 50px;  font-size: 1.2rem;"  class="form-control"  aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarRegistro()" appSoloNumeros>
+                </td>
+                <td>
+                  <button class="btn btn-primary boton" type="button" id="button-addon2"   (click)="consultarRangoManual()">Consultar</button>
+                </td>
+              </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<div class="">  
+    <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por usuario">
+    <table class="table table-striped table-bordered">
       <thead>
-        <th></th>
-        <th>Desde</th>
-        <th>Hasta</th>
-        <th>Cant</th>
-        <th></th>
+        <tr>
+          <th scope="col" class="" (click)="ordenarPor('fecha')">
+            @if (sortColumn === 'fecha') {
+              <span>
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            }
+            <span type="button">Fecha</span>
+          </th>
+          <th scope="col" class="" (click)="ordenarPor('usuario')">
+            @if (sortColumn === 'usuario') {
+              <span>
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            }
+            <span type="button">Usuario</span>
+          </th>
+          <th scope="col" class="" (click)="ordenarPor('accion')">
+            @if (sortColumn === 'accion') {
+              <span>
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            }
+            <span type="button">Accion</span>
+          </th>
+          <th scope="col" class="" (click)="ordenarPor('coleccion')">
+            @if (sortColumn === 'coleccion') {
+              <span>
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            }
+            <span type="button">Colección</span>
+          </th>
+          <th scope="col" class="" (click)="ordenarPor('detalle')">
+            @if (sortColumn === 'detalle') {
+              <span>
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            }
+            <span type="button">Detalle</span>
+          </th>
+          <th scope="col" class="" (click)="ordenarPor('idObjet')">
+            @if (sortColumn === 'idObjet') {
+              <span>
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            }
+            <span type="button">Id Objeto</span>
+          </th>
+          <th scope="col" class="" (click)="ordenarPor('status')">
+            @if (sortColumn === 'status') {
+              <span>
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            }
+            <span type="button">Status</span></th>
+        </tr>
       </thead>
       <tbody>
-        <td>
-          <div class="btn-group dropup" >
-            <button id="fechas" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside"></button>
-            <ul class="dropdown-menu">
-              <li>
+        @if(registrosOrdenados.length > 0){
+          @for (r of registros | globalFilter:searchText:['timestamp','userEmail', 'action', 'coleccion', 'details','idObjet', 'status']; track r) {
+            <tr>
+              <td>{{getFecha(r.timestamp)}}</td>
+              <td>{{getUsuario(r.userEmail)}}</td>
+              <td>{{r.action}}</td>
+              <td>{{r.coleccion === "facturaCliente" ? "Factura Cliente" : r.coleccion === "facturaChofer" ? "Factura Chofer" : r.coleccion === "facturaProveedor" ? "Factura Proveedor" : r.coleccion}}</td>
+              <td>{{r.details}}</td>
+              <td>{{r.idObjet}}</td>
+              <td>{{r.status }}</td>
+            </tr>
+          }
+        } @else {
+          <tr><td colspan="7">Sin Datos</td></tr>
+        }
 
-                <!-- <input class="form-control text-center" style="font-size: 1.15rem;" type="text" readonly [value]="'Desde: ' + fromDate.year + '/' + fromDate.month + '/' + fromDate.day + '   Hasta: ' + toDate?.year + '/' + toDate?.month + '/' +toDate?.day"> -->
-                <ngb-datepicker #dp (dateSelect)="onDateSelection($event)" [displayMonths]="2" [dayTemplate]="t" outsideDays="hidden">
-
-                  <ng-template #t let-date let-focused="focused">
-                    <span
-                      class="custom-day"
-                      [class.focused]="focused"
-                      [class.range]="isRange(date)"
-                      [class.faded]="isHovered(date) || isInside(date)"
-                      (mouseenter)="hoveredDate = date"
-                      (mouseleave)="hoveredDate = null"
-                      >
-                      {{ date.day }}
-                    </span>
-                  </ng-template>
-                </ngb-datepicker>
-              </li>
-            </ul>
-          </div>
-        </td>
-        <td>
-          <input class="form-control text-center" style="width: 100px; font-size: 1.2rem;" type="text" readonly [value]="fechaDesdeString" >
-        </td>
-        <td>
-          <input class="form-control text-center" style="width: 100px; font-size: 1.2rem;" type="text" readonly [value]="fechaHastaString">
-        </td>
-        <td>
-          <input  type="text" inputmode="numeric" style="width: 50px;  font-size: 1.2rem;"  class="form-control"  aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarRegistro()" appSoloNumeros>
-        </td>
-        <td>
-          <button class="btn btn-primary boton" type="button" id="button-addon2"   (click)="consultarRangoManual()">Consultar</button>
-        </td>
       </tbody>
     </table>
-
-  </div>
-</div>
-<div>
-  <input class="form-control" type="text" [(ngModel)]="consulta" placeholder="consultar por id">
-  <button class="btn btn-primary boton" type="button"(click)="consultarId()">Consultar</button>
-</div>
-<div class="">
-  <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por usuario">
-  <table class="table table-striped table-bordered">
-    <thead>
-      <tr>
-        <th scope="col" class="">Fecha</th>
-        <th scope="col" class="">Usuario</th>
-        <th scope="col" class="">Accion</th>
-        <th scope="col" class="">Colección</th>
-        <th scope="col" class="">Detalle</th>
-        <th scope="col" class="">Id Objeto</th>
-        <th scope="col" class="">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (r of registros | globalFilter:searchText:['timestamp','userEmail', 'action', 'coleccion', 'details','idObjet', 'status']; track r) {
-        <tr>
-          <td>{{getFecha(r.timestamp)}}</td>
-          <td>{{getUsuario(r.userEmail)}}</td>
-          <td>{{r.action}}</td>
-          <td>{{r.coleccion === "facturaCliente" ? "Factura Cliente" : r.coleccion === "facturaChofer" ? "Factura Chofer" : r.coleccion === "facturaProveedor" ? "Factura Proveedor" : r.coleccion}}</td>
-          <td>{{r.details}}</td>
-          <td>{{r.idObjet}}</td>
-          <td>{{r.status }}</td>
-        </tr>
-      }
-    </tbody>
-  </table>
 </div>
 
 

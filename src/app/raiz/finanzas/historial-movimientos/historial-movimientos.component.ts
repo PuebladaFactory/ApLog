@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
@@ -7,6 +8,7 @@ import { MovimientoFinanciero } from 'src/app/interfaces/movimiento-financiero';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { MovimientoDetalleComponent } from '../movimiento-detalle/movimiento-detalle.component';
 
 @Component({
   selector: 'app-historial-movimientos',
@@ -22,7 +24,7 @@ export class HistorialMovimientosComponent implements OnInit {
   entidadIdSeleccionada: string | null = null;
   
   // 🔹 datos
-  movimientos: ConId<MovimientoFinanciero>[] = [];
+  movimientos!: ConId<MovimientoFinanciero>[];
   cargando:boolean = false;
   error: string | null = null;
   clientes: ConId<Cliente>[] = [];
@@ -37,6 +39,7 @@ export class HistorialMovimientosComponent implements OnInit {
   constructor(
     private dbService: DbFirestoreService,
     private storageService: StorageService,
+    private router: Router,
     private modalService: NgbModal
   ){}
   
@@ -101,7 +104,7 @@ export class HistorialMovimientosComponent implements OnInit {
 
   async buscar(): Promise<void> {
     if (!this.tipoEntidad || !this.entidadIdSeleccionada) return;
-
+    this.cargando = true;
     this.movimientos =
       await this.dbService.getMovimientosFiltrados({
         tipoEntidad: this.tipoEntidad,
@@ -113,6 +116,7 @@ export class HistorialMovimientosComponent implements OnInit {
       });
 
     this.expandedIds.clear();
+    this.cargando = false;
   }
 
   get totalMovimientos(): number {
@@ -130,6 +134,21 @@ export class HistorialMovimientosComponent implements OnInit {
   estaExpandido(id: string): boolean {
     return this.expandedIds.has(id);
   }
+
+  imprimirDetalle(mov: ConId<MovimientoFinanciero>) {
+    this.router.navigate(['/finanzas/movimiento', mov.id]);
+  }
+  
+  verDetalle(mov: ConId<MovimientoFinanciero>){
+    const ref = this.modalService.open(MovimientoDetalleComponent, {
+      size: 'lg',
+      scrollable: true
+    });
+
+    ref.componentInstance.modoModal = true;
+    ref.componentInstance.movimientoId = mov.id;
+  }
+
 
   
 
