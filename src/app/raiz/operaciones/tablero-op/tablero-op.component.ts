@@ -4,7 +4,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { Subject, takeUntil } from 'rxjs';
+import { filter, Subject, takeUntil } from 'rxjs';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { EstadoCellRendererComponent } from 'src/app/shared/estado-cell-renderer/estado-cell-renderer.component';
@@ -19,6 +19,7 @@ import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 import { InformeVenta } from 'src/app/interfaces/informe-venta';
+import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 
 
 @Component({
@@ -90,7 +91,8 @@ export class TableroOpComponent implements OnInit, OnDestroy {
     private dbFirebase: DbFirestoreService,
     private modalService: NgbModal,
     private excelServ: ExcelService,
-    private tableroServ: TableroService
+    private tableroServ: TableroService,
+    private dateRangeService:DateRangeService
   ) {}
 
   ngOnInit(): void {
@@ -115,10 +117,30 @@ export class TableroOpComponent implements OnInit, OnDestroy {
         .subscribe(data => {
           this.$proveedores = data;
       });
-      this.restaurarEstadoFiltros();
-      this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
-      this.construirColumnDefs();         // Ahora sí, construye columnas visibles
-      this.cargarDatos();
+      this.dateRangeService.range$
+          .pipe(
+        filter((r): r is DateRange => r !== null),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(r => {
+        //this.consultarOperaciones(r.desde, r.hasta);
+        this.isLoading = true;
+        //console.log("this.isLoading", this.isLoading);
+        
+        const desde = toISODateString(r.desde);
+        const hasta = toISODateString(r.hasta);
+        this.fechasConsulta = {
+          fechaDesde: desde,
+          fechaHasta: hasta,
+        }
+        //console.log("0)desde:", desde, " hasta: ", hasta);
+        this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", desde, hasta, 'desc');
+        this.restaurarEstadoFiltros();
+        this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
+        this.construirColumnDefs();         // Ahora sí, construye columnas visibles
+        this.cargarDatos();        
+      });
+      
 
   }
 
@@ -157,19 +179,19 @@ export class TableroOpComponent implements OnInit, OnDestroy {
     this.construirColumnDefs(); // reconstruir las columnas
   }
 
-private cargarConfiguracionColumnas(): void {
-  const saved = this.storageService.loadInfo('columnasVisiblesTablero');
+  private cargarConfiguracionColumnas(): void {
+    const saved = this.storageService.loadInfo('columnasVisiblesTablero');
 
-  if (Array.isArray(saved) && saved.length) {
-    this.visibleColumns = saved;
-  } else {
-    // Mostrar por defecto las columnas deseadas
-    this.visibleColumns = [
-      'estado', 'fecha', 'cliente', 'chofer', 'categoria',
-      'aCobrar', 'aPagar', 'hojaRuta', 'observaciones'
-    ];
+    if (Array.isArray(saved) && saved.length) {
+      this.visibleColumns = saved;
+    } else {
+      // Mostrar por defecto las columnas deseadas
+      this.visibleColumns = [
+        'estado', 'fecha', 'cliente', 'chofer', 'categoria',
+        'aCobrar', 'aPagar', 'hojaRuta', 'observaciones'
+      ];
+    }
   }
-}
 
   private construirColumnDefs(): void {
     const columnas: ColDef[] = [];
@@ -215,34 +237,39 @@ private cargarConfiguracionColumnas(): void {
     this.agColumnDefs = columnas;
   }
 
-cargarDatos(): void {
-  if (this.gridApi) {
-    // ✅ Guarda los filtros activos ANTES de que llegue nueva data
-    this.modeloFiltrosPrevio = this.gridApi.getFilterModel();
+  cargarDatos(): void {
+    this.isLoading = true; 
+    if (this.gridApi) {
+      // ✅ Guarda los filtros activos ANTES de que llegue nueva data
+      this.modeloFiltrosPrevio = this.gridApi.getFilterModel();
+    }
+
+    this.storageService.getObservable<ConId<Operacion>>("operaciones")
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((ops: ConId<Operacion>[]) => {
+               
+        this.$opActivas = ops;
+        this.$opFiltradas = ops;        
+        this.armarTabla();      
+          
+        setTimeout(() => {
+          // ✅ Reaplica el filtro anterior si existe
+          if (this.gridApi && this.modeloFiltrosPrevio) {
+            this.gridApi.setFilterModel(this.modeloFiltrosPrevio);
+            this.gridApi.onFilterChanged();
+            this.modeloFiltrosPrevio = null;
+          }
+
+          // ✅ Actualiza dropdowns y contador
+          if (this.gridApi) {
+            this.actualizarEstadoFiltrado();
+          }
+        }, 0);
+        setTimeout(()=>{this.isLoading = false;}, 1000)
+        
+      });  
+      
   }
-
-  this.storageService.getObservable<ConId<Operacion>>("operaciones")
-    .pipe(takeUntil(this.destroy$))
-    .subscribe((ops: ConId<Operacion>[]) => {
-      this.$opActivas = ops;
-      this.$opFiltradas = ops;
-      this.armarTabla();
-
-      setTimeout(() => {
-        // ✅ Reaplica el filtro anterior si existe
-        if (this.gridApi && this.modeloFiltrosPrevio) {
-          this.gridApi.setFilterModel(this.modeloFiltrosPrevio);
-          this.gridApi.onFilterChanged();
-          this.modeloFiltrosPrevio = null;
-        }
-
-        // ✅ Actualiza dropdowns y contador
-        if (this.gridApi) {
-          this.actualizarEstadoFiltrado();
-        }
-      }, 0);
-    });
-}
 
 
   aplicarFiltros(filtros: string[]): void {
@@ -285,7 +312,7 @@ cargarDatos(): void {
     }));
 
     this.clientesEnPeriodo = this.obtenerClientesFiltrados(this.$opFiltradas);
-    this.choferesEnPeriodo = this.obtenerChoferesFiltrados(this.$opFiltradas);
+    this.choferesEnPeriodo = this.obtenerChoferesFiltrados(this.$opFiltradas);    
   }
 
   private obtenerClientesFiltrados(operaciones: ConId<Operacion>[]): ConIdType<Cliente>[] {
@@ -404,50 +431,44 @@ cargarDatos(): void {
       this.choferesEnPeriodo = this.filtrarChoferesDesdeFilas(visibleRows);
     }
   } */
-private actualizarDropdowns(): void {
-  if (!this.gridApi) return;
+ 
+  private actualizarDropdowns(): void {
+    if (!this.gridApi) return;
 
-  const allData = this.$opFiltradas; // operaciones filtradas por periodo
-  let baseData: any[] = [];
+    const allData = this.$opFiltradas; // operaciones filtradas por periodo
+    let baseData: any[] = [];
 
-  const model = this.gridApi.getFilterModel();
+    const model = this.gridApi.getFilterModel();
 
-  // Si no hay filtros, usar todas las del periodo
-  if (!model || Object.keys(model).length === 0) {
-    baseData = [...allData];
-  } else if (this.filtroPrincipal === 'cliente' && this.clienteSeleccionado) {
-    baseData = allData.filter(op => op.cliente.idCliente === this.clienteSeleccionado?.idCliente);
-  } else if (this.filtroPrincipal === 'chofer' && this.choferSeleccionado) {
-    baseData = allData.filter(op => op.chofer.idChofer === this.choferSeleccionado?.idChofer);
-  } else {
-    // fallback: usar lo visible en la tabla
-    for (let i = 0; i < this.gridApi.getDisplayedRowCount(); i++) {
-      const rowNode = this.gridApi.getDisplayedRowAtIndex(i);
-      if (rowNode?.data) {
-        baseData.push(rowNode.data);
+    // Si no hay filtros, usar todas las del periodo
+    if (!model || Object.keys(model).length === 0) {
+      baseData = [...allData];
+    } else if (this.filtroPrincipal === 'cliente' && this.clienteSeleccionado) {
+      baseData = allData.filter(op => op.cliente.idCliente === this.clienteSeleccionado?.idCliente);
+    } else if (this.filtroPrincipal === 'chofer' && this.choferSeleccionado) {
+      baseData = allData.filter(op => op.chofer.idChofer === this.choferSeleccionado?.idChofer);
+    } else {
+      // fallback: usar lo visible en la tabla
+      for (let i = 0; i < this.gridApi.getDisplayedRowCount(); i++) {
+        const rowNode = this.gridApi.getDisplayedRowAtIndex(i);
+        if (rowNode?.data) {
+          baseData.push(rowNode.data);
+        }
       }
     }
+    ////console.log("baseData", baseData);
+    
+
+    // Actualizar dropdowns según jerarquía
+    if (!this.filtroPrincipal) {
+      this.clientesEnPeriodo = this.obtenerClientesFiltrados(baseData);
+      this.choferesEnPeriodo = this.obtenerChoferesFiltrados(baseData);
+    } else if (this.filtroPrincipal === 'cliente') {
+      this.choferesEnPeriodo = this.obtenerChoferesFiltrados(baseData);
+    } else if (this.filtroPrincipal === 'chofer') {
+      this.clientesEnPeriodo = this.obtenerClientesFiltrados(baseData);
+    }
   }
-  //console.log("baseData", baseData);
-  
-
-  // Actualizar dropdowns según jerarquía
-  if (!this.filtroPrincipal) {
-    this.clientesEnPeriodo = this.obtenerClientesFiltrados(baseData);
-    this.choferesEnPeriodo = this.obtenerChoferesFiltrados(baseData);
-  } else if (this.filtroPrincipal === 'cliente') {
-    this.choferesEnPeriodo = this.obtenerChoferesFiltrados(baseData);
-  } else if (this.filtroPrincipal === 'chofer') {
-    this.clientesEnPeriodo = this.obtenerClientesFiltrados(baseData);
-  }
-}
-
-
-
-
-
-
-
 
   limpiarFiltrosCruzados(): void {
     this.clienteSeleccionado = null;
@@ -527,12 +548,12 @@ private actualizarDropdowns(): void {
   }
 
   onFirstDataRendered(): void {
-  // Opcional: aplicar estilos adicionales al header si querés
-  const header = document.querySelector('.ag-header') as HTMLElement;
-  /* if (header) {
-    header.classList.add('sticky-top'); // Solo si usás Bootstrap
-  } */
-}
+    // Opcional: aplicar estilos adicionales al header si querés
+    const header = document.querySelector('.ag-header') as HTMLElement;
+    /* if (header) {
+      header.classList.add('sticky-top'); // Solo si usás Bootstrap
+    } */
+  }
 
   seleccionarOp(op:any){    
     //let seleccion = this.$opActivas.filter((operacion:Operacion)=>{
@@ -599,76 +620,51 @@ private actualizarDropdowns(): void {
     }
   }
 
-    async openModalBaja(idOp:number){
-      {
-        const modalRef = this.modalService.open(BajaObjetoComponent, {
-          windowClass: 'myCustomModalClass',
-          centered: true,
-          scrollable: true, 
-          size: 'sm',     
-        });   
-        
-        let operacion:ConId<Operacion> [] = this.$opActivas.filter(o => o.idOperacion === idOp);
-  
-        let info = {
-          modo: "operaciones",
-          item: operacion[0]
-        }  
-        ////////////console.log()(info); */
-        
-        modalRef.componentInstance.fromParent = info;
-        try {
-          const motivo = await modalRef.result;
-          if(!motivo) return
-          await this.tableroServ.anularOperacionYActualizarTablero(operacion[0], motivo, 'Baja de operación desde el tablero-op');
-          Swal.fire({
-            icon: 'success',
-            title: 'Operación eliminada',
-            text: 'La operación fue dada de baja y se actualizó el tablero.'
-          });
+  async openModalBaja(idOp:number){
+    {
+      const modalRef = this.modalService.open(BajaObjetoComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        scrollable: true, 
+        size: 'sm',     
+      });   
+      
+      let operacion:ConId<Operacion> [] = this.$opActivas.filter(o => o.idOperacion === idOp);
 
-        } catch (e) {
-          console.warn("El modal fue cancelado o falló:", e);
-        }
+      let info = {
+        modo: "operaciones",
+        item: operacion[0]
+      }  
+      //////////////console.log()(info); */
+      
+      modalRef.componentInstance.fromParent = info;
+      try {
+        const motivo = await modalRef.result;
+        if(!motivo) return
+        await this.tableroServ.anularOperacionYActualizarTablero(operacion[0], motivo, 'Baja de operación desde el tablero-op');
+        Swal.fire({
+          icon: 'success',
+          title: 'Operación eliminada',
+          text: 'La operación fue dada de baja y se actualizó el tablero.'
+        });
 
+      } catch (e) {
+        console.warn("El modal fue cancelado o falló:", e);
       }
-    }
 
-    modalAltaOp(){
-        {
-          const modalRef = this.modalService.open(ModalOpAltaComponent, {
-            windowClass: 'custom-modal-top-right',        
-    
-            scrollable: true,    
-            backdrop:"static"   
-    
-          });      
-        
-          modalRef.result.then(
-            (result) => {
-             
-            },
-            (reason) => {}
-          );
-        }
     }
+  }
 
-    modalCargaMultiple(){
+  modalAltaOp(){
       {
-        const modalRef = this.modalService.open(CargaMultipleComponent, {
-          windowClass: 'myCustomModalClass',
-          centered: true,
-          size: 'xl', 
-          backdrop:"static" 
+        const modalRef = this.modalService.open(ModalOpAltaComponent, {
+          windowClass: 'custom-modal-top-right',        
+  
+          scrollable: true,    
+          backdrop:"static"   
+  
         });      
-  
-        /* let info = {
-          modo: modo,
-          item: this.opEditar,
-        }  */
-  
-        
-        //modalRef.componentInstance.fromParent = info;
+      
         modalRef.result.then(
           (result) => {
             
@@ -676,25 +672,50 @@ private actualizarDropdowns(): void {
           (reason) => {}
         );
       }
-    }
+  }
 
-    descargarOp(){
-        this.excelServ.generarInformeOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta,this.$opFiltradas)
-    }
+  modalCargaMultiple(){
+    {
+      const modalRef = this.modalService.open(CargaMultipleComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'xl', 
+        backdrop:"static" 
+      });      
 
-    getMsg(e:any) {
-        this.btnConsulta = e
-        //////////console.log("getMsg: ", this.btnConsulta);                  
-        if(this.btnConsulta){          
-          this.consultarOp();            
-        }
+      /* let info = {
+        modo: modo,
+        item: this.opEditar,
+      }  */
+
+      
+      //modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+          
+        },
+        (reason) => {}
+      );
     }
+  }
+
+  descargarOp(){
+      this.excelServ.generarInformeOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta,this.$opFiltradas)
+  }
+
+/*   getMsg(e:any) {
+      this.btnConsulta = e
+      ////////////console.log("getMsg: ", this.btnConsulta);                  
+      if(this.btnConsulta){          
+        this.consultarOp();            
+      }
+  } */
      
-    toogleAjustes(){      
-      this.ajustes = !this.ajustes;
-    }
+  toogleAjustes(){      
+    this.ajustes = !this.ajustes;
+  }
 
- // NUEVO: Guarda el filtro en localStorage
+  // NUEVO: Guarda el filtro en localStorage
   onFilterChanged(): void {
     if (!this.gridApi) return;
 
@@ -742,13 +763,13 @@ private actualizarDropdowns(): void {
   }
 
   private guardarEstadoFiltros() {
-  const estado = {
-    clienteId: this.clienteSeleccionado?.idCliente || null,
-    choferId: this.choferSeleccionado?.idChofer || null,
-    filtroPrincipal: this.filtroPrincipal || null
-  };
-  localStorage.setItem('estadoFiltrosTableroOp', JSON.stringify(estado));
-}
+    const estado = {
+      clienteId: this.clienteSeleccionado?.idCliente || null,
+      choferId: this.choferSeleccionado?.idChofer || null,
+      filtroPrincipal: this.filtroPrincipal || null
+    };
+    localStorage.setItem('estadoFiltrosTableroOp', JSON.stringify(estado));
+  }
 
   private restaurarEstadoFiltros() {
     const estadoRaw = localStorage.getItem('estadoFiltrosTableroOp');
@@ -794,7 +815,7 @@ private actualizarDropdowns(): void {
 ////////////////////////////////////////////////MÉTODOS PARA PRUEBAS Y CORRECCION DE ERRORES///////////////////////////
   consultarOp(){
     const modoStorage = this.storageService.loadInfo("filtroOp");
-    //////console.log("ngOnInit: modoStorage ", modoStorage);
+    ////////console.log("ngOnInit: modoStorage ", modoStorage);
     
     /* if (modoStorage) {
       modoStorage.forEach((key: string) => {
@@ -803,32 +824,33 @@ private actualizarDropdowns(): void {
     } */
 
     //this.aplicarFiltros();
-    //////////console.log("2)aca??: ");            
-    this.storageService.respuestaOp$
+    ////////////console.log("2)aca??: ");            
+/*     this.storageService.respuestaOp$
       .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
       .subscribe(data => {
         if(data){
-          //////////console.log("respuestaOp data: ", data);
+          ////////////console.log("respuestaOp data: ", data);
           
           this.respuestaOp = data
           this.fechasConsulta = this.respuestaOp[0].fechas;
-          ////////console.log("fechasConsulta: ", this.fechasConsulta);
+          //////////console.log("fechasConsulta: ", this.fechasConsulta);
           //this.rango = this.respuestaOp[0].rango ////ESTO NO SE SI SIGUE APLICANDO
-          ////////console.log("rango: ", this.rango);
+          //////////console.log("rango: ", this.rango);
           this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
           //this.storageService.listenForChangesDate<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
           //this.aplicarFiltros()   ////ESTO NO SE SI SIGUE APLICANDO 
         }
-        ////////////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
+        //////////////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
         //this.getMsg()
-    });
+    }); */
+    
   }
 
   editarObjeto(){
-    ////console.log("1)this.opActivas", this.$opActivas);
+    //////console.log("1)this.opActivas", this.$opActivas);
     this.objetoEditado= this.editarCampo(this.$opActivas);        
     //this.objetoEditado= this.$opActivas;
-    console.log("2)this.objetoEditado", this.objetoEditado);
+    //console.log("2)this.objetoEditado", this.objetoEditado);
   }
 
   razonZocial(op:any):string{
@@ -896,59 +918,59 @@ private actualizarDropdowns(): void {
   }
 
   cargarOperacionesDesdeArchivo(event: any) {
-  const file = event.target.files[0];
-  if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = (e: any) => {
-    const contenido = e.target.result;
-    const operaciones: Operacion[] = JSON.parse(contenido);
-    
-    console.log('Operaciones cargadas:', operaciones);
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const contenido = e.target.result;
+      const operaciones: Operacion[] = JSON.parse(contenido);
+      
+      //console.log('Operaciones cargadas:', operaciones);
 
-    // ahora podés trabajar con ellas
-    //this.probarErroresConOperaciones(operaciones);
-  };
-  reader.readAsText(file);
-}
-
-actualizarInformeVenta(){
-  this.objetoEditado.map(o=>{
-    this.asignacionComisionVenta(o)
-  })
-  console.log("this.informesVenta: ",this.informesVenta);
-  
-}
-
-asignacionComisionVenta(op:ConId<Operacion>){
-  this.informesVenta = [];
-  op.cliente.vendedor?.forEach((idVend: number)=>{
-    let informeVenta: InformeVenta;
-    informeVenta = {
-      idInfVenta: new Date().getTime() + Math.floor(Math.random() * 1000),
-      fecha: op.fecha,
-      idOperacion: op.idOperacion,
-      idCliente: op.cliente.idCliente,
-      idVendedor: idVend,
-      valoresOp: {
-        totalCliente: op.valores.cliente.aCobrar,
-        totalChofer: op.valores.chofer.aPagar,
-      },
-      pago: false,
+      // ahora podés trabajar con ellas
+      //this.probarErroresConOperaciones(operaciones);
     };
-    this.informesVenta.push(informeVenta);
-  })
-}
+    reader.readAsText(file);
+  }
 
-async guardarInformeVenta(){
-  this.isLoading = true;
-  const resp = await this.dbFirebase.guardarMultipleGeneral(this.informesVenta, 'informesVenta', 'idInfVenta', this.informesVenta[0].idInfVenta)
-  if(resp.exito){
-    alert("actualizado correctamente")
-  } else {
-    alert(`error actualizando. errr: ${resp.mensaje}`)
-  }  
-}
+  actualizarInformeVenta(){
+    this.objetoEditado.map(o=>{
+      this.asignacionComisionVenta(o)
+    })
+    //console.log("this.informesVenta: ",this.informesVenta);
+    
+  }
+
+  asignacionComisionVenta(op:ConId<Operacion>){
+    this.informesVenta = [];
+    op.cliente.vendedor?.forEach((idVend: number)=>{
+      let informeVenta: InformeVenta;
+      informeVenta = {
+        idInfVenta: new Date().getTime() + Math.floor(Math.random() * 1000),
+        fecha: op.fecha,
+        idOperacion: op.idOperacion,
+        idCliente: op.cliente.idCliente,
+        idVendedor: idVend,
+        valoresOp: {
+          totalCliente: op.valores.cliente.aCobrar,
+          totalChofer: op.valores.chofer.aPagar,
+        },
+        pago: false,
+      };
+      this.informesVenta.push(informeVenta);
+    })
+  }
+
+  async guardarInformeVenta(){
+    //this.isLoading = true;
+    const resp = await this.dbFirebase.guardarMultipleGeneral(this.informesVenta, 'informesVenta', 'idInfVenta', this.informesVenta[0].idInfVenta)
+    if(resp.exito){
+      alert("actualizado correctamente")
+    } else {
+      alert(`error actualizando. errr: ${resp.mensaje}`)
+    }  
+  }
 
   
 

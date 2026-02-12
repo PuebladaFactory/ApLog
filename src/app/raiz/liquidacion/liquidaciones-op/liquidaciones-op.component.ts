@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Observable, Subject, take, takeUntil } from 'rxjs';
+import { filter, Observable, Subject, take, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
@@ -21,11 +21,12 @@ import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-obj
 import { EditarInfOpComponent } from 'src/app/shared/modales/editar-inf-op/editar-inf-op.component';
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 import { DatePipe } from '@angular/common';
+import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 @Component({
   selector: 'app-liquidaciones-op',
   standalone:false, 
   templateUrl: './liquidaciones-op.component.html',
-  styleUrl: './liquidaciones-op.component.scss'
+  styleUrl: './liquidaciones-op.component.scss',
 })
 export class LiquidacionesOpComponent implements OnInit {
 
@@ -80,7 +81,8 @@ export class LiquidacionesOpComponent implements OnInit {
     private dbFirebase: DbFirestoreService,
     private buscarTarifaServ: BuscarTarifaService,
     private tableroServ: TableroService,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private dateRangeService:DateRangeService
   ){}
 
     ngOnInit(): void {
@@ -103,7 +105,7 @@ export class LiquidacionesOpComponent implements OnInit {
     this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
 
     ////////// FECHAS E INFORMES OP ///////////////
-      this.storageService.fechasConsulta$
+ /*      this.storageService.fechasConsulta$
     .pipe(takeUntil(this.destroy$))
     .subscribe(fechas => {
       this.fechasConsulta = fechas;
@@ -136,7 +138,55 @@ export class LiquidacionesOpComponent implements OnInit {
               }
             });
         });
+    }); */
+
+    this.dateRangeService.range$
+    .pipe(
+      filter((r): r is DateRange => r !== null),
+      takeUntil(this.destroy$)
+    )
+    .subscribe(r => {
+      //this.consultarOperaciones(r.desde, r.hasta);
+      this.isLoading = true;
+      const desde = toISODateString(r.desde);
+      const hasta = toISODateString(r.hasta);
+      console.log("0)desde:", desde, " hasta: ", hasta);
+      // 1. Consultar operaciones abiertas
+      this.cargarOperacionesAbiertas()
+        .pipe(take(1)) // Nos aseguramos que se ejecute solo una vez
+        .subscribe(opAbiertas => {
+          this.opAbiertas = opAbiertas;
+          
+          
+          // 2. Una vez obtenidas, sincronizar informes
+          this.storageService.syncChangesDateValue<InformeOp>(
+            this.componente,
+            "fecha",
+            desde,
+            hasta,
+            "desc"
+          );
+
+          //this.btnConsulta = true;
+          this.mostrarTabla = this.mostrarTabla.map(() => false);
+          this.storageService.getObservable<ConId<InformeOp>>(this.componente)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(data => {
+              console.log("data-liquidaciones", data);
+              
+              this.informesOp = data;
+
+              if (this.informesOp) {
+                this.procesarDatosParaTabla();
+                this.isLoading = false;
+              } else {
+                this.isLoading = true;
+                this.mensajesError("error: facturaOpCliente", "error");                
+              }
+            });
+        });
     });
+
   }
 
   ngOnDestroy(): void {

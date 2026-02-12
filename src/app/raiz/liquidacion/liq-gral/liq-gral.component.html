@@ -1,55 +1,21 @@
 <div class="d-flex justify-content-between mt-3">
-  <h1>Liquidación</h1>
+    <h1>Liquidación</h1>
 </div>
 <div class="tab-container mb-4">
-  @for (tab of tabs; track tab) {
-    <div
-      class="tab"
-      [class.active]="selectedTab === tab.id"
-      (click)="selectTab(tab.id)">
-      {{ tab.name }}
-    </div>
-  }
+    @for (tab of tabs; track tab) {
+        <div
+          class="tab"
+          [class.active]="selectedTab === tab.id"
+          (click)="selectTab(tab.id)">
+          {{ tab.name }}
+        </div>
+    }
 </div>
-<app-tablero-calendario [modo]="modo" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-calendario>
+<!-- <app-tablero-calendario [modo]="modo" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-calendario> -->
+<div class="d-flex justify-content-center">
+    <div style="width:420px">
+        <app-tablero-fechas defaultTipo="mes" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-fechas>  
+    </div>    
+</div>
+
 <router-outlet></router-outlet>
-
-
-
-
-<!--     <div class=" d-flex">
-<h1 class="text-center w-100 mx-auto">Liquidación</h1>
-<button   data-bs-target="#consultaModal" data-bs-toggle="modal" id="bt" class="btn btn-outline-secondary ">
-  Consultar Operaciones
-</button>
-
-<div class="modal fade modal-sm" id="consultaModal" tabindex="-1" aria-labelledby="consultaModal" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
-      </div>
-      <app-facturacion-consulta (newItemEvent)="getMsg($event)" [titulo]="titulo"></app-facturacion-consulta>
-
-    </div>
-  </div>
-</div>
-</div>
-
-<h3 *ngIf="!btnConsulta" class="mt-5">Operaciones: {{primerDia}} / {{ultimoDia}} </h3>
-<h3 *ngIf="btnConsulta" class="mt-5">Resultado de la consulta: {{fechasConsulta.fechaDesde}} / {{fechasConsulta.fechaHasta}} </h3>
-
-<div class="mt-4">
-  <h2>Clientes:</h2>
-  <app-liq-cliente class="mt-2"></app-liq-cliente>
-</div>
-<div class="mt-4">
-  <h2>Choferes:</h2>
-  <app-liq-chofer class="mt-2"></app-liq-chofer>
-</div>
-<div class="mt-4">
-  <h2>Proveedores:</h2>
-  <app-liq-proveedor class="mt-2"></app-liq-proveedor>
-</div>
--->

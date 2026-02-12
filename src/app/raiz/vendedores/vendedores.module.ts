@@ -11,6 +11,7 @@ import { TableroActividadComponent } from './tablero-actividad/tablero-actividad
 import { VendedorAltaComponent } from './vendedor-alta/vendedor-alta.component';
 import { VendedoresListadoComponent } from './vendedores-listado/vendedores-listado.component';
 import { VendedorHistorialComponent } from './vendedor-historial/vendedor-historial.component';
+import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 
 
 @NgModule({
@@ -30,6 +31,7 @@ import { VendedorHistorialComponent } from './vendedor-historial/vendedor-histor
     FilterPipeModule,
     
     AgGridModule 
-  ]
+  ],
+  providers: [DateRangeService]
 })
 export class VendedoresModule { }

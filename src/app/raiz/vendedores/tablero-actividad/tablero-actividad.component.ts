@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subject, takeUntil } from 'rxjs';
+import { filter, Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId } from 'src/app/interfaces/conId';
@@ -10,6 +10,7 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { ResumenVenta } from 'src/app/interfaces/resumen-venta';
 import { Vendedor } from 'src/app/interfaces/vendedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -40,7 +41,7 @@ interface InformeVentaExtendido extends InformeVenta {
   selector: 'app-tablero-actividad',
   standalone: false,
   templateUrl: './tablero-actividad.component.html',
-  styleUrl: './tablero-actividad.component.scss'
+  styleUrl: './tablero-actividad.component.scss',  
 })
 export class TableroActividadComponent implements OnInit, OnDestroy{
 
@@ -59,14 +60,13 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
   vendedores!: ConId<Vendedor>[];
   isLoading: boolean = false;
 
-  constructor(
-    
+  constructor(    
     private storageService: StorageService,
     private excelServ: ExcelService, 
     private pdfServ: PdfService, 
     private modalService: NgbModal, 
     private dbFirebase: DbFirestoreService,
-
+    private dateRangeService:DateRangeService
   ){}
 
     ngOnInit(): void {
@@ -84,7 +84,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
       this.vendedores = this.vendedores.sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido)); // Ordena por el nombre del chofer
   
       ////////// FECHAS E INFORMES OP ///////////////
-      this.storageService.fechasConsulta$
+/*       this.storageService.fechasConsulta$
       .pipe(takeUntil(this.destroy$))
       .subscribe(fechas => {
         this.fechasConsulta = fechas;
@@ -115,8 +115,47 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
                   this.mensajesError("error: informesVenta", "error");
                 }
               });
-      });
-
+      }); */
+          this.dateRangeService.range$
+          .pipe(
+            filter((r): r is DateRange => r !== null),
+            takeUntil(this.destroy$)
+          )
+          .subscribe(r => {
+            //this.consultarOperaciones(r.desde, r.hasta);
+            this.isLoading = true;
+            const desde = toISODateString(r.desde);
+            const hasta = toISODateString(r.hasta);
+            console.log("0)desde:", desde, " hasta: ", hasta);
+             // 2. Una vez obtenidas, sincronizar informes
+            this.storageService.syncChangesDateValue<InformeVenta>(
+              this.componenteOp,
+              "fecha",
+              desde,
+              hasta,
+              "desc"
+            );
+  
+            
+  
+            this.storageService.getObservable<ConId<InformeVenta>>(this.componenteOp)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe(data => {
+                console.log("data: ", data);
+                
+                this.informesVenta = data;
+                if (this.informesVenta) {
+                  console.log("informesVenta: ", this.informesVenta);
+                    // 👉 REARMAR LOS GRUPOS
+                    this.cargarDatos();
+                    this.isLoading = false;
+                } else {
+                  this.isLoading = false;
+                  this.mensajesError("error: informesVenta", "error");
+                }
+              });
+            
+          });
     }
   
     ngOnDestroy(): void {

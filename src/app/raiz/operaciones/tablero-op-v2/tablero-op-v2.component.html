@@ -1,0 +1,150 @@
+<app-tablero-fechas></app-tablero-fechas>
+
+<div class="d-flex gap-2 mb-2 align-items-center flex-wrap">
+
+    <input
+    class="form-control"  style="max-width:260px" placeholder="Buscar..."
+    [(ngModel)]="filtros.textoGlobal"
+    (input)="aplicarFiltros()"
+  />
+
+  <select class="form-select" style="width:220px"
+          [(ngModel)]="filtros.clienteId"
+          (change)="seleccionarCliente($any($event.target).value ? +$any($event.target).value : null)">
+    <option [ngValue]="null">Cliente</option>
+    @for (c of clientesDropdown; track c.id) {
+      <option [value]="c.id">{{c.n}}</option>
+    }
+  </select>
+
+  <select class="form-select" style="width:220px"
+          [(ngModel)]="filtros.choferId"
+          (change)="seleccionarChofer($any($event.target).value ? +$any($event.target).value : null)">
+    <option [ngValue]="null">Chofer</option>
+    @for (c of choferesDropdown; track c.id) {
+      <option [value]="c.id">{{c.n}}</option>
+    }
+  </select>
+
+  <button class="btn btn-outline-secondary btn-sm"
+          (click)="limpiarFiltrosTotales()">
+    Limpiar
+  </button>
+
+  <!-- selector columnas -->
+
+  <div class="dropdown" [class.show]="columnasDropdownOpen">
+    <button class="btn btn-outline-secondary dropdown-toggle"
+            (click)="toggleColumnasDropdown()">
+      Columnas
+    </button>
+
+    <div class="dropdown-menu p-2"
+         [class.show]="columnasDropdownOpen"
+         style="max-height:300px; overflow:auto">
+
+      @for (c of columnasDisponibles; track c) {
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox"
+                 [checked]="isColVisible(c)"
+                 (change)="toggleCol(c)">
+          <label class="form-check-label">
+            {{ headerLabel(c) }}
+          </label>
+        </div>
+      }
+
+    </div>
+  </div>
+
+</div>
+
+<div class="table-responsive" style="max-height:70vh; overflow:auto">
+
+<table class="table table-sm table-striped table-hover"
+       style="table-layout: fixed;">
+
+  <thead class="table-light" style="position:sticky; top:0; z-index:2">
+    <tr>
+      @for (c of columnasVisibles; track c) {
+        <th (click)="sortBy(c)"
+            [style.width]="getColWidth(c)"
+            style="cursor:pointer">
+          {{ headerLabel(c) }}
+          @if (filtros.sortCampo===c) {
+            <span>{{filtros.sortDir==='asc' ? '▲':'▼'}}</span>
+          }
+        </th>
+      }
+      <th style="width:120px">Acciones</th>
+    </tr>
+
+    <tr>
+      @for (c of columnasVisibles; track c) {
+        <th>
+          <input
+            class="form-control"
+            [(ngModel)]="filtros.columnas[c]"
+            (input)="aplicarFiltros()"
+          />
+        </th>
+      }
+      <th></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    @if(operacionesVista.length > 0){
+        @for (row of operacionesVista; track row.idOperacion) {
+        <tr>
+            @for (c of columnasVisibles; track c) {
+            <td class="align-middle">
+                @if (c === 'estado') {
+                <span [class]="getEstadoBadgeClass(row.estado)">
+                    {{row.estado}}
+                </span>
+                } @else {
+                {{row[c]}}
+                }
+            </td>
+            }
+            <td class="text-nowrap">
+
+            <app-btn-leer
+                name="DetalleColor"
+                (click)="verDetalle(row)">
+            </app-btn-leer>
+
+            <app-btn-editar
+                name="EditarColor"
+                (click)="editar(row)">
+            </app-btn-editar>
+
+            <app-btn-agregar
+                name="FacturaColor"
+                (click)="cerrar(row)">
+            </app-btn-agregar>
+
+            <app-btn-eliminar
+                name="EliminarColor"
+                (click)="eliminar(row)">
+            </app-btn-eliminar>
+
+            </td>
+        </tr>
+        }
+    } @else {
+        <tr><td [colSpan]="columnasVisibles.length + 1" class="align-middle">Sin datos</td></tr>
+    }
+
+  </tbody>
+</table>
+
+</div>
+
+<div class="mt-2 text-muted small">
+  Mostrando {{operacionesVista.length}} operaciones
+</div>
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}

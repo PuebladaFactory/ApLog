@@ -19,6 +19,7 @@ import { ProformaComponent } from './proforma/proforma.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { LiquidacionesOpComponent } from './liquidaciones-op/liquidaciones-op.component';
 import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
+import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 
 
 
@@ -49,6 +50,10 @@ import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
    exports:[
       MigrarDatosComponent,
     ],
-  providers: [DatePipe] 
+
+  providers: [
+    DatePipe, 
+    DateRangeService
+  ] 
 })
 export class LiquidacionModule { }

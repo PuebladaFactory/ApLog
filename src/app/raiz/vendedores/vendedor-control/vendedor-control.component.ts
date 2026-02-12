@@ -20,7 +20,12 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
       </div>
     }
   </div>
-  <app-tablero-calendario [modo]="modo" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-calendario>
+  <!-- <app-tablero-calendario [modo]="modo" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-calendario> -->
+  <div class="d-flex justify-content-center">
+    <div style="width:420px">
+        <app-tablero-fechas defaultTipo="mes" [ngClass]="{'invisible': ocultarCalendario}"></app-tablero-fechas>  
+    </div>    
+  </div>
   <router-outlet></router-outlet>
 
     `,
