@@ -1,10 +1,11 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { filter, Subject, takeUntil } from 'rxjs';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 
 
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 
@@ -12,7 +13,8 @@ import Swal from 'sweetalert2';
     selector: 'app-facturacion-general',
     templateUrl: './facturacion-general.component.html',
     styleUrls: ['./facturacion-general.component.scss'],
-    standalone: false
+    standalone: false,
+    providers: [DateRangeService]
 })
 export class FacturacionGeneralComponent implements OnInit {
 
@@ -45,7 +47,11 @@ export class FacturacionGeneralComponent implements OnInit {
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   isLoading:boolean = false;
 
-  constructor(private storageService: StorageService, private dbFirebase: DbFirestoreService,){}
+  constructor(
+    private storageService: StorageService, 
+    private dbFirebase: DbFirestoreService,
+    private dateRangeService:DateRangeService
+  ){}
 
   ngOnInit(): void {    
     //this.storageService.getByDateValue("facturaCliente", "fecha", this.primerDiaAnio, this.ultimoDiaAnio, "consultasFacCliente");
@@ -111,7 +117,7 @@ export class FacturacionGeneralComponent implements OnInit {
     });
  */
     
-    this.storageService.fechasConsulta$
+/*     this.storageService.fechasConsulta$
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.isLoading = true;
@@ -120,6 +126,21 @@ export class FacturacionGeneralComponent implements OnInit {
       this.btnConsulta = true;
       this.consultasFacturas(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta);
     });
+ */
+    this.dateRangeService.range$
+      .pipe(
+      filter((r): r is DateRange => r !== null),
+      takeUntil(this.destroy$)
+    )
+        .subscribe(r => {
+          //this.consultarOperaciones(r.desde, r.hasta);
+          this.isLoading = true;
+          const desde = toISODateString(r.desde);
+          const hasta = toISODateString(r.hasta);
+          console.log("0)desde:", desde, " hasta: ", hasta);
+          // 1. Consultar operaciones abiertas
+          this.consultasFacturas(desde, hasta);
+        });
    
   }
 

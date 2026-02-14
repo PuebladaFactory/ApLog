@@ -1,0 +1,61 @@
+<div class="d-flex flex-column principal flex-shrink-0">
+     <!-- RANGO MOSTRADO -->
+    <div class="w-50 align-self-center border-top border-start border-end border-info border-2 rounded-top-2 ">
+        <select class="form-select form-select-sm text-center" [(ngModel)]="periodoActual" (change)="selectPeriodo(periodoActual)">
+            <option value="dia">Día</option>
+            <option value="semana">Semana</option>
+            <option value="quincena">Quincena</option>
+            <option value="mes">Mes</option>
+            <option value="trimestre">Trimestre</option>
+            <option value="semestre">Semestre</option>
+            <option value="anio">Año</option>
+            <option value="manual">Manual</option>
+        </select>
+    </div>    
+
+    <div class="btn-group mt-0">
+        <button class="btn btn-sm btn-outline-primary" (click)="moverPeriodo(false)">◀</button>
+        @if (rangoActual) {
+            <div class="alert alert-info py-1 px-2 small mb-0 fechas border border-info border border-2 text-center w-100">
+                <strong>Rango activo:</strong> {{ rangoLabel }}
+            </div>
+        }
+        <button class="btn btn-sm btn-outline-primary" (click)="moverPeriodo(true)">▶</button>
+    </div>
+
+   
+  <!-- BOTON MANUAL -->
+    @if (periodoActual==='manual') {
+        <button class="btn btn-sm btn-secondary"
+            (click)="toggleManualPicker()">
+        {{ showManualPicker ? 'Ocultar calendario' : 'Elegir rango manual' }}
+        </button>
+    }  
+
+    <!-- DATEPICKER FLOTANTE -->
+     @if(showManualPicker){
+        <div class="manual-popover">
+            <ngb-datepicker
+            [displayMonths]="2"
+            outsideDays="hidden"
+            [dayTemplate]="t"
+            (dateSelect)="onDateSelection($event)">
+            </ngb-datepicker>
+
+            <ng-template #t let-date let-focused="focused">
+                <span
+                    class="custom-day"
+                    [class.focused]="focused"
+                    [class.range]="isRange(date)"
+                    [class.faded]="isHovered(date) || isInside(date)"
+                    (mouseenter)="hoveredDate = date"
+                    (mouseleave)="hoveredDate = null"
+                >
+                    {{ date.day }}
+                </span>
+            </ng-template>
+        </div> 
+     }
+    
+
+</div>

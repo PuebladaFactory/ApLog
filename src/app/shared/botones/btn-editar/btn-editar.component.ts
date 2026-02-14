@@ -37,7 +37,7 @@ import { Component, Input, OnInit } from '@angular/core';
 }
 
 @if (name === 'cargaMultiple') {
-  <button type="button" class="btn celeste-fijo mt-2">
+  <button type="button" class="btn celeste-fijo">
     Carga Múltiple
   </button>
 }

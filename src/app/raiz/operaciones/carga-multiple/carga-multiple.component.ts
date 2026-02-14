@@ -393,7 +393,7 @@ export class CargaMultipleComponent implements OnInit {
           const operacion: Operacion = {
               
               idOperacion: idOperacionUnico,
-              fecha: fecha,
+              fecha: new Date(fecha).toISOString().split('T')[0],
               km: 0,    
               documentacion: null,
               cliente: cliente,

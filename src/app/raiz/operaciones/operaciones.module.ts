@@ -23,6 +23,8 @@ import { TableroDiarioComponent } from './tablero-diario/tablero-diario.componen
 import { CargaTableroDiarioComponent } from './carga-tablero-diario/carga-tablero-diario.component';
 import { ModalObjetosActivosComponent } from './modal-objetos-activos/modal-objetos-activos.component';
 import { ModalChoferesNoDisponiblesComponent } from './modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
+import { TableroOpV2Component } from './tablero-op-v2/tablero-op-v2.component';
+import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 
 
 
@@ -38,7 +40,8 @@ import { ModalChoferesNoDisponiblesComponent } from './modal-choferes-no-disponi
     TableroDiarioComponent,
     CargaTableroDiarioComponent,
     ModalObjetosActivosComponent,
-    ModalChoferesNoDisponiblesComponent
+    ModalChoferesNoDisponiblesComponent,
+    TableroOpV2Component
     
   ],
   imports: [
@@ -53,5 +56,6 @@ import { ModalChoferesNoDisponiblesComponent } from './modal-choferes-no-disponi
     AgGridModule,
     DragDropModule
   ],
+  providers: [DateRangeService]
 })
 export class OperacionesModule { }

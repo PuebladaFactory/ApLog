@@ -44,6 +44,7 @@ import { EditarInfOpComponent } from './modales/editar-inf-op/editar-inf-op.comp
 import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
 import { VisibilidadListadosComponent } from './modales/visibilidad-listados/visibilidad-listados.component';
+import { TableroFechasComponent } from './tablero-fechas/tablero-fechas.component';
 
 
 
@@ -80,7 +81,8 @@ import { VisibilidadListadosComponent } from './modales/visibilidad-listados/vis
     EditarInfOpComponent,
     DescuentosComponent,
     BuscarPorChoferPipe,
-    VisibilidadListadosComponent
+    VisibilidadListadosComponent,
+    TableroFechasComponent
     
     
   ],
@@ -125,7 +127,8 @@ import { VisibilidadListadosComponent } from './modales/visibilidad-listados/vis
     EstadoCellRendererComponent,
     DescuentosComponent,
     BuscarPorChoferPipe,
-    VisibilidadListadosComponent
+    VisibilidadListadosComponent,
+    TableroFechasComponent
     
   ]
 })

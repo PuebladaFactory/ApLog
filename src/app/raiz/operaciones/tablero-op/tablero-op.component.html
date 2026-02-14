@@ -62,8 +62,13 @@
                     </div>                    
                 </div>
                 <div class="col-4">
-                    <div class="mt-2">
+<!--                     <div class="mt-2">
                         <app-tablero-calendario [modo]="modo" (consultaOp)="getMsg($event)"></app-tablero-calendario>
+                    </div> -->
+                    <div class="d-flex justify-content-center mt-2">
+                        <div style="width:420px">
+                            <app-tablero-fechas defaultTipo="semana"></app-tablero-fechas>  
+                        </div>    
                     </div>                    
                 </div>
                 <div class="col-4 m-0 p-0 ">

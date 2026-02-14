@@ -5,7 +5,7 @@ import { TarifaTipo } from "./tarifa-gral-cliente";
 export interface Operacion {
     
     idOperacion: number;
-    fecha: Date;
+    fecha: string;
     km: number;    
     documentacion: string | null;
     cliente: Cliente;

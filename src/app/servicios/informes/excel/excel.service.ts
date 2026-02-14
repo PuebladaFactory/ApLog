@@ -365,213 +365,176 @@ export class ExcelService {
  
 
   ////////////// informe EXCEL del tablero de Operaciones
-  generarInformeOperaciones(fechaDesde: string, fechaHasta: string, operaciones: Operacion[]) {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Informe');
+async generarInformeOperaciones(
+  fechaDesde: string,
+  fechaHasta: string,
+  operaciones: any[]
+) {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Operaciones');
 
-    // Fila 1 - Fecha Desde
-    worksheet.addRow(['Desde:', fechaDesde]);
-    // Fila 2 - Fecha Hasta
-    worksheet.addRow(['Hasta:', fechaHasta]);
-    worksheet.addRow([]); // fila vacía
-  // Fila 4 - Encabezados combinados "Cliente" y "Chofer"
-  worksheet.mergeCells('E4:I4');
-  worksheet.getCell('E4').value = 'Cliente';
-  worksheet.getCell('E4').alignment = { vertical: 'middle', horizontal: 'center' };
-  worksheet.getCell('E4').font = { bold: true };
+  // -----------------------------
+  // ENCABEZADO SUPERIOR
+  // -----------------------------
 
-  worksheet.mergeCells('J4:Q4');
-  worksheet.getCell('J4').value = 'Chofer';
-  worksheet.getCell('J4').alignment = { vertical: 'middle', horizontal: 'center' };
-  worksheet.getCell('J4').font = { bold: true };
-  // Establecer bordes para la celda combinada "Cliente" (E4:I4)
-  const clienteHeaderCell = worksheet.getCell('E4');
-  clienteHeaderCell.border = {
-    top: { style: 'medium' },
-    bottom: { style: 'medium' },
-    left: { style: 'medium' },
-    right: { style: 'medium' },
-  };
+  worksheet.addRow(['Informe de Operaciones']);
+  worksheet.mergeCells('A1:T1');
+  worksheet.getCell('A1').font = { size: 16, bold: true };
+  worksheet.getCell('A1').alignment = { horizontal: 'center' };
 
-  // Establecer bordes para la celda combinada "Chofer" (J4:Q4)
-  const choferHeaderCell = worksheet.getCell('J4');
-  choferHeaderCell.border = {
-    top: { style: 'medium' },
-    bottom: { style: 'medium' },
-    left: { style: 'medium' },
-    right: { style: 'medium' },
-  };
+  worksheet.addRow(['Desde:', fechaDesde]);
+  worksheet.addRow(['Hasta:', fechaHasta]);
+  worksheet.addRow([]);
 
-  // Fila 5 - Encabezados de columna
-  const headers = [
-    'Estado', 'Fecha', 'idOperacion', 'Km',
-    'Razon Social', 'Tarifa Base', 'Adicional Km', 'Acompañante', 'Total Op',
-    'Nombre', 'Proveedor', 'Patente', 'Categoria',
-    'Tarifa Base', 'Adicional Km', 'Acompañante', 'Total Op',
-    'Acompañante', 'Hoja de Ruta', 'Observacion'
-  ];
-  const headerRow = worksheet.addRow(headers);
-  headerRow.font = { bold: true };
-  headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+  // -----------------------------
+  // BUILD DATA ROWS
+  // -----------------------------
 
+  const rows = operaciones.map(op => {
 
+    const estado = op.estado?.abierta
+      ? 'Abierta'
+      : op.estado?.cerrada
+      ? 'Cerrada'
+      : op.estado?.facturada
+      ? 'Facturada'
+      : op.estado?.facCliente
+      ? 'Cliente Fac'
+      : op.estado?.facChofer
+      ? 'Chofer Fac'
+      : 'Sin Datos';
 
-  // Estilo de color para secciones del encabezado
-  const headerStyle = (cell: ExcelJS.Cell, bgColor: string) => {
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: bgColor.replace('#', '') },
-    };
-    cell.font = { bold: true };
-  };
+    const proveedor =
+      op.chofer?.idProveedor === 0
+        ? 'No'
+        : this.getProveedor(op.chofer?.idProveedor);
 
-  // A5:D5 – Azul Oscuro, texto 2, claro 80%
-  ['A5', 'B5', 'C5', 'D5'].forEach(cell => headerStyle(worksheet.getCell(cell), '#D9E1F2'));
+    const categoria = this.getCategoria(
+      op.patenteChofer,
+      op.chofer?.idChofer
+    );
 
-  // Cliente – E4 (título) y E5:I5
-  ['E4', 'E5', 'F5', 'G5', 'H5', 'I5'].forEach(cell => headerStyle(worksheet.getCell(cell), '#FCE4D6'));
+    return [
+      estado,
+      op.fecha,
+      op.idOperacion,
+      op.km,
 
-  // Chofer – J4 (título) y J5:Q5
-  ['J4', 'J5', 'K5', 'L5', 'M5', 'N5', 'O5', 'P5', 'Q5'].forEach(cell => headerStyle(worksheet.getCell(cell), '#D9EAD3'));
+      op.cliente?.razonSocial,
+      op.valores?.cliente?.tarifaBase,
+      op.valores?.cliente?.kmAdicional,
+      op.valores?.cliente?.acompValor,
+      op.valores?.cliente?.aCobrar,
 
-  // R5:T5 – Anaranjado, Énfasis 6, claro 80%
-  ['R5', 'S5', 'T5'].forEach(cell => headerStyle(worksheet.getCell(cell), '#FFE699'));
+      op.chofer?.apellido + ' ' + op.chofer?.nombre,
+      proveedor,
+      op.patenteChofer,
+      categoria,
+      op.valores?.chofer?.tarifaBase,
+      op.valores?.chofer?.kmAdicional,
+      op.valores?.chofer?.acompValor,
+      op.valores?.chofer?.aPagar,
 
+      op.acompaniante ? 'Sí' : 'No',
+      op.hojaRuta,
+      op.observaciones
+    ];
 
-
-    // Datos
-    operaciones.forEach(op => {
-      const estado = op.estado.abierta
-        ? 'Abierta'
-        : op.estado.cerrada
-        ? 'Cerrada'
-        : op.estado.facturada
-        ? 'Facturada'
-        : op.estado.facCliente
-        ? 'Cliente Fac'
-        : op.estado.facChofer
-        ? 'Chofer Fac'
-        : 'Sin Datos';
-
-      const proveedor = op.chofer.idProveedor === 0 ? "No" : this.getProveedor(op.chofer.idProveedor);
-      const categoria = this.getCategoria(op.patenteChofer, op.chofer.idChofer)
-
-      worksheet.addRow([
-        estado,
-        op.fecha,
-        op.idOperacion,
-        op.km,
-
-        // Cliente
-        op.cliente.razonSocial,
-        op.valores.cliente.tarifaBase,
-        op.valores.cliente.kmAdicional,
-        op.valores.cliente.acompValor,
-        op.valores.cliente.aCobrar,
-
-        // Chofer
-        op.chofer.apellido + " " +  op.chofer.nombre,
-        proveedor,
-        op.patenteChofer,
-        categoria,
-        op.valores.chofer.tarifaBase,
-        op.valores.chofer.kmAdicional,
-        op.valores.chofer.acompValor,
-        op.valores.chofer.aPagar,
-
-        // Otros
-        op.acompaniante ? 'Sí' : 'No',
-        op.hojaRuta,
-        op.observaciones,
-      ]);
-    });
-
-    // Estilo de encabezados
-    worksheet.getRow(4).font = { bold: true };
-    worksheet.getRow(5).font = { bold: true };
-
-    
-    // Aplicar formato numérico sin decimales a la columna C (idOperacion)
-    worksheet.getColumn('C').numFmt = '0';
-
-    // Formato moneda con dos decimales
-  const currencyFormat = '"$"#,##0.00'; // O usá '[$$-en-US]#,##0.00' si querés el formato dólar explícito
-
-  ['F', 'G', 'H', 'I', 'N', 'O', 'P', 'Q'].forEach((col) => {
-    worksheet.getColumn(col).numFmt = currencyFormat;
   });
 
-    // Auto ajuste de ancho de columnas
-    worksheet.columns.forEach((column) => {
-      if (!column) return;
-    
-      let maxLength = 0;
-    
-      if (typeof column.eachCell === 'function') {
-        column.eachCell({ includeEmpty: true }, (cell) => {
-          const cellValue = cell.value ? cell.value.toString() : '';
-          maxLength = Math.max(maxLength, cellValue.length);
-        });
-      }
-    
-      column.width = maxLength + 1;
+  // -----------------------------
+  // TABLA EXCEL REAL
+  // -----------------------------
+
+  worksheet.addTable({
+    name: 'OperacionesTabla',
+    ref: 'A5',
+    headerRow: true,
+    totalsRow: false,
+
+    style: {
+      theme: 'TableStyleMedium9',
+      showRowStripes: true
+    },
+
+    columns: [
+      { name: 'Estado' },
+      { name: 'Fecha' },
+      { name: 'Operacion' },
+      { name: 'Km' },
+
+      { name: 'Cliente' },
+      { name: 'Tarifa Base Cl' },
+      { name: 'Adic Km Cl' },
+      { name: 'Acomp Cl' },
+      { name: 'Total Cl' },
+
+      { name: 'Chofer' },
+      { name: 'Proveedor' },
+      { name: 'Patente' },
+      { name: 'Categoria' },
+      { name: 'Tarifa Base Ch' },
+      { name: 'Adic Km Ch' },
+      { name: 'Acomp Ch' },
+      { name: 'Total Ch' },
+
+      { name: 'Acompañante' },
+      { name: 'Hoja Ruta' },
+      { name: 'Observaciones' }
+    ],
+
+    rows
+  });
+
+  // -----------------------------
+  // FORMATOS
+  // -----------------------------
+
+  worksheet.getColumn('B').numFmt = 'dd/mm/yyyy';
+  worksheet.getColumn('C').numFmt = '0';
+
+  const currencyFormat = '"$"#,##0.00';
+
+  ['F','G','H','I','N','O','P','Q'].forEach(c => {
+    worksheet.getColumn(c).numFmt = currencyFormat;
+  });
+
+  // -----------------------------
+  // AUTO WIDTH
+  // -----------------------------
+
+  worksheet.columns.forEach(col => {
+    if (!col) return;
+
+    let maxLength = 10;
+
+    col.eachCell?.({ includeEmpty: true }, cell => {
+      const len = cell.value ? cell.value.toString().length : 0;
+      if (len > maxLength) maxLength = len;
     });
 
-    // Rango de datos
-  const startRow = 5;
-  const endRow = worksheet.lastRow?.number;
-  const totalColumns = headers.length;
+    col.width = Math.min(maxLength + 2, 40);
+  });
 
-  // Aplicar bordes
-  if(endRow){
-    for (let rowNum = startRow; rowNum <= endRow; rowNum++) {
-      const row = worksheet.getRow(rowNum);
-      for (let colNum = 1; colNum <= totalColumns; colNum++) {
-        const cell = row.getCell(colNum);
-    
-        // Borde básico interior (todos los lados thin por defecto)
-        cell.border = {
-          top: { style: 'thin' },
-          bottom: { style: 'thin' },
-          left: { style: 'thin' },
-          right: { style: 'thin' }
-        };
-    
-        // Borde exterior grueso (fila superior e inferior, columna izquierda y derecha)
-        if (rowNum === startRow) {
-          cell.border.top = { style: 'medium' };
-        }
-        if (rowNum === endRow) {
-          cell.border.bottom = { style: 'medium' };
-        }
-        if (colNum === 1) {
-          cell.border.left = { style: 'medium' };
-        }
-        if (colNum === totalColumns) {
-          cell.border.right = { style: 'medium' };
-        }
-    
-        // Línea divisoria gruesa entre encabezado y datos (solo fila 5 inferior)
-        if (rowNum === startRow) {
-          cell.border.bottom = { style: 'medium' };
-        }
-    
-        // Bordes verticales entre secciones
-        if ([4, 9, 17].includes(colNum)) {
-          cell.border.right = { style: 'medium' };
-        }
-      }
-    }
-  }
+  // -----------------------------
+  // SAVE
+  // -----------------------------
 
-    // Guardar archivo
-    workbook.xlsx.writeBuffer().then(buffer => {
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      FileSaver.saveAs(blob, `InformeOperaciones_${fechaDesde}_a_${fechaHasta}.xlsx`);
-    
-    });
-  }
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+
+  a.href = url;
+  a.download = `operaciones_${fechaDesde}_${fechaHasta}.xlsx`;
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+}
 
  /** Crea y descarga el tablero en Excel */
   async generarInformeAsignaciones(
