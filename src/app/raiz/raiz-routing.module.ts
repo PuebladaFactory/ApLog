@@ -60,8 +60,7 @@ const routes: Routes = [
       path: 'nuevaFacturacion',
       loadChildren: () => import('./nueva-facturacion/nueva-facturacion.module').then(m => m.NuevaFacturacionModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, 
-      data: { roles: ['god','admin'] }, 
+      data: { roles: ['god','admin'] },       
     },
     {
       path: 'vendedores',
