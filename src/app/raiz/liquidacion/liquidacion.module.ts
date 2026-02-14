@@ -21,6 +21,7 @@ import { LiquidacionesOpComponent } from './liquidaciones-op/liquidaciones-op.co
 import { MigrarDatosComponent } from './migrar-datos/migrar-datos.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 import { PeriodoModalComponent } from './modales/periodo-modal/periodo-modal.component';
+import { PeriodoModalComponent } from './modales/periodo-modal/periodo-modal.component';
 
 
 

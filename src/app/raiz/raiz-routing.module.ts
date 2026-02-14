@@ -61,6 +61,7 @@ const routes: Routes = [
       loadChildren: () => import('./nueva-facturacion/nueva-facturacion.module').then(m => m.NuevaFacturacionModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
       data: { roles: ['god','admin'] }, 
+      data: { roles: ['god','admin'] }, 
     },
     {
       path: 'vendedores',
@@ -74,48 +75,7 @@ const routes: Routes = [
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
       data: { roles: ['god','admin'] }, // 
     },
-    {
-      path: 'finanzas',
-      loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
-      canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, // 
-    },
-    {
-      path: 'finanzas',
-      loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
-      canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, // 
-    },
-    {
-      path: 'finanzas',
-      loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
-      canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, // 
-    },
-    {
-      path: 'finanzas',
-      loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
-      canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, // 
-    },
-    {
-      path: 'finanzas',
-      loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
-      canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, // 
-    },
-    {
-      path: 'finanzas',
-      loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
-      canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, // 
-    },
-    {
-      path: 'finanzas',
-      loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
-      canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, // 
-    },
+    
     
     
     
