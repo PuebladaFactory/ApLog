@@ -81,7 +81,8 @@ export class FacturacionListadoComponent implements OnInit {
       this.informesLiq = await this.dbService.getInformesLiqPorTipoYFechas(      
         this.filtroTipo as any,
         desde,
-        hasta
+        hasta,
+        "emitido"
       );    
       this.aplicarFiltros();
     } catch (error) {

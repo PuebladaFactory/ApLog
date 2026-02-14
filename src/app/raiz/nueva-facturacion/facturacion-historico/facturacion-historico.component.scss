@@ -1,0 +1,23 @@
+th,td, input, select, option {
+    font-size: 1.3rem;
+}
+
+.isDisabled {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity:0.5;
+}
+  
+.isDisabled:hover {
+  cursor: not-allowed;
+  opacity:0.5;
+}
+
+.sortable {
+  cursor: pointer;
+}
+
+.sortable:hover {
+  text-decoration: underline;
+}
+

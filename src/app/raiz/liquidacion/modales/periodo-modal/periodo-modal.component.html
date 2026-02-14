@@ -1,0 +1,35 @@
+<div class="modal-body text-center">
+
+  <p class="fw-bold mb-3 fs-3">
+    Especifique el periodo de la Liquidación
+  </p>
+
+  <div class="btn-group w-100" role="group">
+
+    <input
+      type="radio"
+      class="btn-check"
+      name="periodo"
+      id="periodoMes"
+      autocomplete="off"
+      (click)="seleccionarPeriodo(true)"
+    >
+    <label class="btn btn-outline-primary periodo" for="periodoMes">
+      Mes
+    </label>
+
+    <input
+      type="radio"
+      class="btn-check"
+      name="periodo"
+      id="periodoQuincena"
+      autocomplete="off"
+      (click)="seleccionarPeriodo(false)"
+    >
+    <label class="btn btn-outline-primary periodo" for="periodoQuincena">
+      Quincena
+    </label>
+
+  </div>
+
+</div>

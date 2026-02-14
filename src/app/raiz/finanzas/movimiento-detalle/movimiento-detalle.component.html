@@ -1,0 +1,184 @@
+<!-- ========================= -->
+<!-- MODO MODAL / PANTALLA    -->
+<!-- ========================= -->
+
+@if (!loading && movimiento) {
+
+  <div class="container-fluid">
+
+      <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+              <h4 class="mb-1">{{ titulo }}</h4>
+              <div class="text-muted small">
+                ID Movimiento: {{ movimiento.id }}
+              </div>
+          </div>
+
+          <div class="text-end">
+              <button class="btn btn-outline-primary btn-sm me-2"
+                      (click)="imprimir()">
+                Imprimir
+              </button>
+
+              @if(modoModal){
+                  <button class="btn btn-outline-secondary btn-sm" (click)="cerrar()">
+                    Cerrar
+                  </button>
+              }              
+          </div>
+      </div>
+
+      <!-- ===== Datos principales ===== -->
+
+      <div class="card mb-3">
+          <div class="card-body">
+
+              <div class="row g-3">
+
+                  <div class="col-md-4">
+                      <label class="form-label small text-muted">Fecha</label>
+                      <div>{{ movimiento.fecha }}</div>
+                  </div>
+
+                  <div class="col-md-4">
+                      <label class="form-label small text-muted">Tipo</label>
+                      <div class="text-capitalize">{{ movimiento.tipo }}</div>
+                  </div>
+
+                  <div class="col-md-4">
+                      <label class="form-label small text-muted">Medio de pago</label>
+                      <div class="text-capitalize">
+                        {{ movimiento.medioPago || '—' }}
+                      </div>
+                  </div>
+
+                  <div class="col-md-8">
+                      <label class="form-label small text-muted">Entidad</label>
+                      <div>
+                          {{ movimiento.entidad.razonSocial }}
+                          <span class="badge bg-secondary ms-2 text-capitalize">
+                            {{ movimiento.entidad.tipo }}
+                          </span>
+                      </div>
+                  </div>
+
+                  <div class="col-md-4">
+                      <label class="form-label small text-muted">Referencia</label>
+                      <div>{{ movimiento.referencia || '—' }}</div>
+                  </div>
+
+                  @if (movimiento.observaciones) {
+                    <div class="col-12">
+                        <label class="form-label small text-muted">Observaciones</label>
+                        <div>{{ movimiento.observaciones }}</div>
+                    </div>
+                  }
+
+              </div>
+
+          </div>
+      </div>
+
+
+      <!-- ===== Imputaciones ===== -->
+
+      <div class="card mb-3">
+          <div class="card-header">
+            Imputaciones
+          </div>
+
+          <div class="table-responsive">
+              <table class="table table-sm table-striped mb-0">
+                  <thead>
+                      <tr>
+                          <th># Informe</th>
+                          <th>Fecha</th>
+                          <th class="text-end">Total Informe</th>
+                          <th class="text-end">Imputado</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+
+                      @for (imp of movimiento.imputaciones; track imp.informeLiqId) {
+                          <tr>
+                              <td>{{ imp.numeroInterno }}</td>
+                              <td>{{ imp.fechaInforme }}</td>
+                              <td class="text-end">
+                                {{ imp.totalInforme | formatearValor:'$' }}
+                              </td>
+                              <td class="text-end fw-semibold">
+                                {{ imp.montoImputado | formatearValor:'$' }}
+                              </td>
+                          </tr>
+                      }
+
+                  </tbody>
+              </table>
+          </div>
+      </div>
+
+
+      <!-- ===== Totales ===== -->
+
+      <div class="card">
+          <div class="card-body text-end">
+              <div class="fs-5">
+                  Total movimiento:
+                  <span class="fw-bold">
+                    {{ movimiento.totalMovimiento | formatearValor:'$' }}
+                  </span>
+              </div>
+          </div>
+      </div>
+
+  </div>
+
+}
+
+@if (loading) {
+    <div class="text-center p-5">
+      Cargando movimiento...
+    </div>
+}
+
+
+<!-- ========================= -->
+<!-- BLOQUE PRINT             -->
+<!-- ========================= -->
+
+<div class="print-only" *ngIf="movimiento">
+
+    <h2>{{ titulo }}</h2>
+
+    <p>
+      <strong>Fecha:</strong> {{ movimiento.fecha }}<br>
+      <strong>Entidad:</strong> {{ movimiento.entidad.razonSocial }}<br>
+      <strong>Tipo:</strong> {{ movimiento.tipo }}<br>
+    </p>
+
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Informe</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Imputado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (imp of movimiento.imputaciones; track imp.informeLiqId) {
+                <tr>
+                    <td>{{ imp.numeroInterno }}</td>
+                    <td>{{ imp.fechaInforme }}</td>
+                    <td>{{ imp.totalInforme | formatearValor:'$' }}</td>
+                    <td>{{ imp.montoImputado | formatearValor:'$' }}</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h4 class="text-end">
+      Total: {{ movimiento.totalMovimiento | formatearValor:'$' }}
+    </h4>
+
+</div>

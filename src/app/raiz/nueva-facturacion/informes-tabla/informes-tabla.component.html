@@ -1,0 +1,55 @@
+<div class="tabla-container">
+
+  @if (loading) {
+    <div class="text-center py-4">
+      <div class="spinner-border"></div>
+    </div>
+  } @else {
+
+    <table class="table table-sm table-bordered table-hover table-striped table-light">
+        <thead>
+            <tr>
+              @for (col of columnas; track col.key) {
+                <th
+                  [class.text-center]="col.align === 'center'"
+                  [class.text-end]="col.align === 'end'"
+                  (click)="col.sortable ? onOrdenar(col) : null"
+                  [class.sortable]="col.sortable"
+                >
+                  {{ col.label }}
+                </th>
+              }
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (item of items; track item.id) {
+                <tr>
+                  @for (col of columnas; track col.key) {
+                      <td
+                        [class.text-center]="col.align === 'center'"
+                        [class.text-end]="col.align === 'end'"
+                        [ngClass]="getCellClasses(col, item)"
+                      >
+                        @if (col.acciones) {
+                            <app-informes-acciones-cell
+                              [item]="item"
+                              [acciones]="col.acciones"
+                              (accion)="accionClick.emit($event)">
+                            </app-informes-acciones-cell>
+                          } @else {
+                            {{ getValor(col, item) }}
+                          }
+
+                      </td>
+
+                  }
+                </tr>
+            }
+        </tbody>
+
+    </table>
+
+  }
+
+</div>

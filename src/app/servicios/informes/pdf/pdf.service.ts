@@ -77,7 +77,7 @@ export class PdfService {
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   const fechaFactura = new Date(informeLiq.fecha);
-  const periodo = informeLiq.periodo === 'mes' ? 'mes' : this.getQuincena(informesOp[0].fecha) === 'Primera' ? 'primer quincena' : 'segunda quincena';
+  const periodo = informeLiq.periodo;
   const anio = fechaFactura.getFullYear();
   doc.text(`Año: ${anio}  Mes: ${informeLiq.mes}  Periodo Liquidado: ${periodo}`, 10, 35);
 

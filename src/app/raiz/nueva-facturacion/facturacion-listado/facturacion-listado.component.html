@@ -1,160 +1,71 @@
-  <h2>Listado de Informes para Facturación</h2>
+<h2 class="mt-2">Listado de Informes Emitidos para Facturación</h2>
 
-  <div class="row mb-3">
-    <div class="col-md-2">
-      <label>Tipo</label>
-      <select class="form-select" [(ngModel)]="filtroTipo" (change)="aplicarFiltros()">
-        <option value="todos">Todos</option>
-        <option value="cliente">Clientes</option>
-        <option value="chofer">Choferes</option>
-        <option value="proveedor">Proveedores</option>
-      </select>
+<div class="row mb-3 column-gap-3">
+    <div class="col">
+        <label><span class="fs-5">Filtros</span></label>
+        <div class="row bg-light border rounded border-1 rounded-2 pb-2">            
+            <div class="col">
+                <label>Tipo</label>
+                <select class="form-select" [(ngModel)]="filtroTipo" (change)="aplicarFiltros()">
+                    <option value="todos">Todos</option>
+                    <option value="cliente">Clientes</option>
+                    <option value="chofer">Choferes</option>
+                    <option value="proveedor">Proveedores</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Razón Social / N° de informe / Fecha</label>
+                <input type="text" class="form-control" [(ngModel)]="filtroRazonSocial" (input)="aplicarFiltros()" placeholder="Buscar...">
+            </div>
+      </div>
+     
     </div>
 
-    <div class="col-md-3">
-      <label>Razón Social</label>
-      <input type="text" class="form-control" [(ngModel)]="filtroRazonSocial" (input)="aplicarFiltros()" placeholder="Buscar...">
-    </div>
+    <div class="col ">
+        <label><span class="fs-5">Consulta</span></label>
+        <div class="row bg-light border rounded border-1 rounded-2 pb-2">
+            <div class="col">
+                <label>Desde</label>
+                <input type="date" class="form-control" [(ngModel)]="fechaDesde">
+            </div>
 
-    <div class="col-md-3">
-      <label>Desde</label>
-      <input type="date" class="form-control" [(ngModel)]="fechaDesde">
-    </div>
+            <div class="col">
+                <label>Hasta</label>
+                <input type="date" class="form-control" [(ngModel)]="fechaHasta">
+            </div>
+            <div class="col align-self-end mb-1">
+                <button class="btn btn-outline-primary" (click)="cargarInformes(fechaDesde,fechaHasta )">Consultar</button>
+            </div>
+        </div>
+    </div>    
+</div>
 
-    <div class="col-md-3">
-      <label>Hasta</label>
-      <input type="date" class="form-control" [(ngModel)]="fechaHasta">
-    </div>
-    <div>
-        <button class="btn btn-outline-primary" (click)="cargarInformes(fechaDesde,fechaHasta )">Consultar</button>
-    </div>
-  </div>
-
-  @if(cargando){
+@if(cargando){
     <div class="text-center my-4">
       <app-spinner></app-spinner>
     </div>
-  }  
-  @if(!cargando && informesFiltrados.length === 0){
+}  
+@if(!cargando && informesFiltrados.length === 0){
     <div class="alert alert-warning">
       No se encontraron informes con los filtros aplicados.
     </div>
-  }
+}
 
-  @if(!cargando && informesFiltrados.length > 0){
-      <div>
-          <p><strong>Total: {{ informesFiltrados.length }}</strong> informes listados</p>
-          <table class="table table-sm table-bordered table-hover table-striped table-light">
-            <thead class="table-light">
-              <tr>
-                <th>#</th>
-                <th (click)="ordenarPor('fecha')" class="ordenable">
-                  Fecha
-                  @if(ordenColumna === 'fecha'){
-                    <span>
-                      {{ ordenAsc ? '▲' : '▼' }}
-                    </span>
-                  }                  
-                </th>
-                <th (click)="ordenarPor('tipo')" class="ordenable">
-                  Tipo
-                  @if(ordenColumna === 'tipo'){
-                    <span>
-                      {{ ordenAsc ? '▲' : '▼' }}
-                    </span>
-                  }
-                </th>
-                <th (click)="ordenarPor('numeroInterno')" class="ordenable">
-                  Id
-                  @if(ordenColumna === 'numeroInterno'){
-                    <span>
-                      {{ ordenAsc ? '▲' : '▼' }}
-                    </span>
-                  }
-                </th>
-                <th (click)="ordenarPor('idInfLiq')" class="ordenable">
-                  Id Informe
-                  @if(ordenColumna === 'idInfLiq'){
-                    <span>
-                      {{ ordenAsc ? '▲' : '▼' }}
-                    </span>
-                  }
-                </th>
-                <th (click)="ordenarPor('razonSocial')" class="ordenable">
-                  Razón Social
-                  @if(ordenColumna === 'razonSocial'){
-                    <span>
-                      {{ ordenAsc ? '▲' : '▼' }}
-                    </span>
-                  }
-                </th>
-                <th (click)="ordenarPor('total')" class="ordenable">
-                  Total
-                  @if(ordenColumna === 'total'){
-                    <span>
-                      {{ ordenAsc ? '▲' : '▼' }}
-                    </span>
-                  }
-                </th>
-                <th (click)="ordenarPor('cantOp')" class="ordenable">
-                  Cant Op
-                  @if(ordenColumna === 'cantOp'){
-                    <span>
-                      {{ ordenAsc ? '▲' : '▼' }}
-                    </span>
-                  }
-                </th>
-                <th (click)="ordenarPor('estado')" class="ordenable">
-                  Estado
-                  @if(ordenColumna === 'estado'){
-                    <span>
-                      {{ ordenAsc ? '▲' : '▼' }}
-                    </span>
-                  }
-                </th>
-                <!-- Las columnas de botones NO necesitan ordenamiento -->
-                <th class="text-center">Detalle</th>
-                <th class="text-center">Editar</th>
-                <th class="text-center">Reimprimir</th>
-                <th class="text-center">F.Electrónica</th>
-                <th class="text-center">Anular</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let inf of informesFiltrados; let i = index">
-                <td>{{ i + 1 }}</td>
-                <td>{{ inf.fecha }}</td>
-                <td>{{ inf.tipo }}</td>
-                <td>{{ inf.numeroInterno }}</td>
-                <td>{{ inf.idInfLiq }}</td>
-                <td>{{ inf.entidad.razonSocial }}</td>
-                <td class="table-success">{{ inf.valores.total | formatearValor:'$' }}</td>
-                <td class="text-center">{{ inf.operaciones.length }}</td>
-                <td>{{ inf.estado }}</td>
-                <td class="text-center">
-                  <app-btn-leer name="DetalleColor"class="me-2" (click)="openModalVista(inf, 'vista')"></app-btn-leer>
-                </td>
-                <td class="text-center">
-                  <app-btn-editar name="EditarColor" class="me-1" (click)="openModalVista(inf, 'edicion')"></app-btn-editar>
-                </td>
-                <td class="text-center">
-                  <app-btn-leer name="excel"class="me-2" (click)="reimprimirLiq(inf, 'excel')"></app-btn-leer>
-                  <app-btn-leer name="pdf" (click)="reimprimirLiq(inf, 'pdf')"></app-btn-leer>
-                </td>          
-                <td class="text-center">
-                  <app-btn-agregar *appRole="['god','admin', 'manager']"  name="electronica" (click)="vincularFacElec(inf)"></app-btn-agregar>            
-                </td>
-                <td class="text-center">
-                  <app-btn-eliminar *appRole="['god','admin', 'manager']"  name="EliminarColor" (click)="anularInfLiq(inf)"></app-btn-eliminar>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-      </div>
-  }
+@if(!cargando && informesFiltrados.length > 0){
+    <div>
+        <p><strong>Total: {{ informesFiltrados.length }}</strong> informes listados</p>
 
-
-
+        <app-informes-tabla
+          [items]="informesFiltrados"
+          [columnas]="columnas"
+          
+          [loading]="cargando"
+          (accionClick)="onAccion($event)"
+          (ordenar)="onOrdenar($event)">
+        </app-informes-tabla>
+    </div>
+}
+ 
   <!-- <div>
     <button class="btn btn-outline-primary me-5" (click)="verificarFacturasDuplicados()">Duplicados</button>
     <button class="btn btn-outline-danger me-" (click)="eliminarObjeto()">Duplicados</button>

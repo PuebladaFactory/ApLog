@@ -1,0 +1,87 @@
+<h2 class="mt-2">Listado de Informes Facturados</h2>  
+<div class="row mb-3 column-gap-3">
+    <div class="col">
+        <label><span class="fs-5">Filtros</span></label>
+        <div class="row bg-light border rounded border-1 rounded-2 pb-2"> 
+            <div class="col">
+                <label>Tipo</label>
+                <select class="form-select"
+                        [(ngModel)]="filtroTipo"
+                        (change)="aplicarFiltros()">
+                    <option value="todos">Todos</option>
+                    <option value="cliente">Clientes</option>
+                    <option value="chofer">Choferes</option>
+                    <option value="proveedor">Proveedores</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Razón Social / N° de informe / Fecha / Estado / Periodo</label>
+                <input type="text" class="form-control" [(ngModel)]="filtroRazonSocial" (input)="aplicarFiltros()" placeholder="Buscar...">
+            </div>
+        </div>
+    </div>         
+    <div class="col ">
+            <label><span class="fs-5">Consulta</span></label>
+            <div class="row bg-light border rounded border-1 rounded-2 pb-2">
+                <div class="col">
+                    <label>Estado</label>
+                    <select class="form-select"
+                            [(ngModel)]="filtroEstado"
+                            >
+                        <option value="facturado">Facturados</option>
+                        <option value="anulado">Anulados</option>
+                        <!-- <option value="cobrado">Cobrados</option> -->
+                        <!-- <option value="emitido">Emitido</option>                 -->
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Desde</label>
+                    <input type="date" class="form-control"
+                        [(ngModel)]="fechaDesde"
+                        >
+                </div>
+
+                <div class="col">
+                    <label>Hasta</label>
+                    <input type="date" class="form-control"
+                        [(ngModel)]="fechaHasta"
+                        >
+                </div>
+
+                <div class="col align-self-end mb-2">
+                    <button class="btn btn-outline-primary" (click)="cargarInformes(fechaDesde,fechaHasta )">Consultar</button>
+                </div>
+            </div>
+    </div>
+            
+    
+
+</div>
+<!-- <button class="btn btn-outline-secondary" (click)="editarInformesFinanzas()">Editar Informes de Liquidación</button>
+<button class="btn btn-outline-warning" (click)="actualizarObjeto()">Actualizar operaciones</button> -->
+@if(cargando){
+    <div class="text-center my-4">
+      <app-spinner></app-spinner>
+    </div>
+}  
+@if(!cargando && informesFiltrados.length === 0){
+    <div class="alert alert-warning">
+        No se encontraron informes con los filtros aplicados.
+    </div>
+}
+@if(!cargando && informesFiltrados.length > 0){
+    <div>
+        <p><strong>Total: {{ informesFiltrados.length }}</strong> informes listados</p>
+
+        <app-informes-tabla
+          [items]="informesFiltrados"
+          [columnas]="columnas"
+          
+          [loading]="cargando"
+          (accionClick)="onAccion($event)"
+          (ordenar)="onOrdenar($event)">
+        </app-informes-tabla>
+    </div>
+}
+
+

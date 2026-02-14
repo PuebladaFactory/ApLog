@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 /* import { AngularFirestore } from '@angular/fire/compat/firestore'; */
 
-import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, DocumentReference, getDoc, getDocs, limit, onSnapshot, orderBy, query, setDoc, updateDoc, where, WriteBatch, writeBatch } from '@angular/fire/firestore';
+import { addDoc, collection, collectionData, CollectionReference, deleteDoc, doc, docData, DocumentData, DocumentReference, getDoc, getDocs, limit, onSnapshot, orderBy, query, runTransaction, setDoc, updateDoc, where, WriteBatch, writeBatch } from '@angular/fire/firestore';
 import { chunk } from 'lodash';
 import { firstValueFrom, from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -13,10 +13,12 @@ import { Firestore } from '@angular/fire/firestore';
 import { inject } from '@angular/core';
 import { TableroDiario } from 'src/app/raiz/operaciones/tablero-diario/tablero-diario.component';
 import { InformeOp } from 'src/app/interfaces/informe-op';
-import { InformeLiq } from 'src/app/interfaces/informe-liq';
+import { InformeLiq, ValoresFinancieros } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from '../numerador/numerador.service';
 import { InformeVenta } from 'src/app/interfaces/informe-venta';
 import { error } from 'jquery';
+import { MovimientoFormVM } from 'src/app/interfaces/movimiento-form-v-m';
+import { ImputacionMovimiento, MovimientoFinanciero } from 'src/app/interfaces/movimiento-financiero';
 
 export interface Resultado {
   exito: boolean;
@@ -43,6 +45,7 @@ export class DbFirestoreService {
   coleccion: string = '';
   componente: string = '';
   private firestore = inject(Firestore);
+  
 
   constructor(private numeradorService: NumeradorService) {
 
@@ -1009,7 +1012,7 @@ async guardarMultipleGeneral(
     }
 
   async actualizarOperacionesBatch(
-  operaciones: ConId<Operacion>[],
+  operaciones: ConId<any>[],
   componente: string
 ): Promise<{ exito: boolean; mensaje: string }> {
   const batch = writeBatch(this.firestore);
@@ -1573,14 +1576,15 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
   getInformesLiqPorTipoYFechas(
     tipo: 'cliente' | 'chofer' | 'proveedor' | 'todos',
     desde: string,
-    hasta: string
+    hasta: string,
+    estado: string,
   ): Promise<ConId<InformeLiq>[]> {
     const tipos = tipo === 'todos' ? ['cliente', 'chofer', 'proveedor'] : [tipo];
     const colRef = collection(this.firestore, '/Vantruck/datos/resumenLiq');
 
     const q = query(
       colRef,
-      where('estado', '==', 'emitido'),
+      where('estado', '==', estado),
       where('fecha', '>=', desde),
       where('fecha', '<=', hasta),
       where('tipo', 'in', tipos),
@@ -1974,8 +1978,9 @@ async eliminarOperacionEInformes(
         const noLiqRef = doc(this.firestore, `${colNoLiq}/${infOp.id}`);
 
         const infOpModificado = { ...infOp, liquidacion: false };
+        let {id, ...informeOp} = infOpModificado
         batch.delete(liqRef);
-        batch.set(noLiqRef, infOpModificado);
+        batch.set(noLiqRef, informeOp);
       }
 
       // 🔹 5. Actualizar operaciones relacionadas
@@ -1983,8 +1988,9 @@ async eliminarOperacionEInformes(
       if (!operacionesResultado.exito) return operacionesResultado;
 
       // 🔹 6. Actualizar estado del InformeLiq
+      let {id, ...infLiqMod} = informeLiq
       const infLiqRef = doc(this.firestore, `/Vantruck/datos/resumenLiq/${informeLiq.id}`);
-      batch.update(infLiqRef, { ...informeLiq });
+      batch.update(infLiqRef, { ...infLiqMod });
 
       // 🔹 7. Ejecutar batch
       await batch.commit();
@@ -2095,6 +2101,268 @@ async eliminarOperacionEInformes(
     }
 
     return { exito: true, mensaje: 'Estados de operaciones actualizados correctamente' };
+  }
+
+  getInformesPendientesPorEntidad(
+    entidadId: number
+  ): Promise<ConId<InformeLiq>[]> {
+
+    const colRef = collection(this.firestore, '/Vantruck/datos/resumenLiq');
+
+    const q = query(
+      colRef,
+      where('entidad.id', '==', entidadId),
+      where('estado', '==', 'facturado'),
+      where('estadoFinanciero', 'in', ['pendiente', 'parcial'])
+    );
+
+    return getDocs(q).then(snap =>
+      snap.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() as InformeLiq)
+      }))
+    );
+  }
+
+  async registrarMovimientoFinanciero(
+    form: MovimientoFormVM,
+    usuarioUid: string
+  ):  Promise<number> {
+
+    const movimientosRef = collection(
+      this.firestore,
+      '/Vantruck/datos/movimientos'
+    );
+
+    const movRef = doc(movimientosRef); // ← crear ref antes
+    const idObj = new Date().getTime() + Math.floor(Math.random() * 1000);
+    const creadoEn = new Date().toISOString();
+  
+    await runTransaction(this.firestore, async (tx) => {
+
+      // =========================
+      // 🔹 FASE 1 — READS
+      // =========================
+
+      const { prefijo, numero } = await this.numeradorService.leerProximoNumeroMovimiento(tx, form.tipo);
+
+      const numeroComprobante = `${prefijo}-${numero.toString().padStart(6,'0')}`;
+
+      const informesLeidos: {
+        ref: DocumentReference;
+        data: InformeLiq;
+        formInf: MovimientoFormVM['informesSeleccionados'][number];
+      }[] = [];
+
+        for (const inf of form.informesSeleccionados) {
+
+          const infRef = doc(
+            this.firestore,
+            `/Vantruck/datos/resumenLiq/${inf.informeLiqId}`
+          );
+
+          const snap = await tx.get(infRef);
+
+          if (!snap.exists()) {
+            throw new Error(`Informe ${inf.numeroInterno} no existe`);
+          }
+
+          informesLeidos.push({
+            ref: infRef,
+            data: snap.data() as InformeLiq,
+            formInf: inf
+          });
+        }
+
+        // =========================
+        // 🔹 FASE 2 — CALCULAR
+        // =========================
+
+        const imputaciones: ImputacionMovimiento[] = [];
+        let totalMovimiento = 0;
+
+        const updates: {
+          ref: DocumentReference;
+          valoresFinancieros: ValoresFinancieros;
+          estadoFinanciero: 'pendiente' | 'parcial' | 'cobrado';
+        }[] = [];
+
+        for (const item of informesLeidos) {
+
+          const vf = item.data.valoresFinancieros!;
+
+          const nuevoTotalCobrado =
+            vf.totalCobrado + item.formInf.montoACobrar;
+
+          const nuevoSaldo =
+            vf.total - nuevoTotalCobrado;
+
+          let nuevoEstado: 'pendiente' | 'parcial' | 'cobrado';
+
+          if (nuevoSaldo <= 0) {
+            nuevoEstado = 'cobrado';
+          } else if (nuevoTotalCobrado > 0) {
+            nuevoEstado = 'parcial';
+          } else {
+            nuevoEstado = 'pendiente';
+          }
+
+          updates.push({
+            ref: item.ref,
+            valoresFinancieros: {
+              total: vf.total,
+              totalCobrado: nuevoTotalCobrado,
+              saldo: nuevoSaldo
+            },
+            estadoFinanciero: nuevoEstado
+          });
+
+          imputaciones.push({
+            informeLiqId: item.formInf.informeLiqId,
+            numeroInterno: item.formInf.numeroInterno,
+            fechaInforme: item.formInf.fecha,
+            mesLiquidado: item.data.mes,
+            periodoLiquidado: item.data.periodo,
+            totalInforme: item.formInf.total,          
+            montoImputado: item.formInf.montoACobrar,
+            saldonInforme: item.formInf.saldo,
+          });
+
+          totalMovimiento += item.formInf.montoACobrar;
+        }
+
+        // =========================
+        // 🔹 FASE 3 — WRITE
+        // =========================
+
+        const numeradorRef = doc(this.firestore,`Vantruck/datos/numeradores/${prefijo}`);
+
+        tx.set(numeradorRef, { ultimoNumero: numero }, { merge: true });
+
+        // actualizar informes
+        for (const up of updates) {
+          tx.update(up.ref, {
+            valoresFinancieros: up.valoresFinancieros,
+            estadoFinanciero: up.estadoFinanciero
+          });
+        }
+
+
+
+
+        // crear movimiento
+        const movimientoBase = {
+          fecha: creadoEn.substring(0, 10),
+          idMovFinanciero: idObj,
+          numeroComprobante,
+          tipo: form.tipo,
+          entidad: form.entidad,
+          imputaciones,
+          totalMovimiento,
+          creadoEn,
+          creadoPor: usuarioUid
+        };
+
+        const movimiento: MovimientoFinanciero = {
+          ...movimientoBase,
+          ...(form.medioPago && { medioPago: form.medioPago }),
+          ...(form.referencia && { referencia: form.referencia }),
+          ...(form.observaciones && { observaciones: form.observaciones })
+        };
+
+        console.log("movimiento: ", movimiento);
+        
+        
+        tx.set(movRef, movimiento);
+        
+      });
+    return idObj; // 🔥 clave
+  }
+
+
+    getObjIdg<T>(componente: string,campo:string, id:number): Observable<ConId<T>[]> {
+      
+      const dataCollectionPath = `/Vantruck/datos/${componente}`;
+      const colRef = collection(this.firestore, dataCollectionPath);
+      const q = query(
+        colRef,                
+        where(campo, "==" ,id), 
+        //orderBy("timestamp", 'desc'),        
+      );
+      
+       return from(getDocs(q)).pipe(
+        map(snapshot =>
+          snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...(doc.data() as T)
+          }))
+        )
+      );
+
+    }
+  
+
+  async getMovimientosFiltrados(params: {
+    tipoEntidad: 'cliente' | 'chofer' | 'proveedor';
+    entidadId: string;
+    tipoMovimiento?: 'cobro' | 'pago';
+    fechaDesde?: string; // yyyy-mm-dd
+    fechaHasta?: string;
+  }): Promise<(MovimientoFinanciero & { id: string })[]> {
+
+    const colRef = collection(
+      this.firestore,
+      '/Vantruck/datos/movimientos'
+    );
+
+    const constraints: any[] = [
+      where('entidad.tipo', '==', params.tipoEntidad),
+      where('entidad.id', '==', params.entidadId)
+    ];
+
+    if (params.tipoMovimiento) {
+      constraints.push(where('tipo', '==', params.tipoMovimiento));
+    }
+
+    if (params.fechaDesde) {
+      constraints.push(where('fecha', '>=', params.fechaDesde));
+    }
+
+    if (params.fechaHasta) {
+      constraints.push(where('fecha', '<=', params.fechaHasta));
+    }
+
+    constraints.push(orderBy('fecha', 'desc'));
+
+    const q = query(colRef, ...constraints);
+
+    const snap = await getDocs(q);
+
+    return snap.docs.map(d => ({
+      id: d.id,
+      ...(d.data() as MovimientoFinanciero)
+    }));
+  }
+
+  async getMovimientoPorId(
+    movimientoId: string
+  ): Promise<ConId<MovimientoFinanciero> | null> {
+
+    const ref = doc(
+      this.firestore,
+      `/Vantruck/datos/movimientos/${movimientoId}`
+    );
+
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      return null;
+    }
+
+    return {
+      id: snap.id,
+      ...(snap.data() as MovimientoFinanciero)
+    };
   }
 
 

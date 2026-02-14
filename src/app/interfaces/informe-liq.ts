@@ -10,11 +10,13 @@ export interface InformeLiq {
     operaciones: number[];            // Array de IDs de operaciones incluidas
 
     valores: Valores;              // Detalle de los montos calculados
+    valoresFinancieros: ValoresFinancieros;
     descuentos: Descuento[];         // Descuentos aplicados (opcional)
 
     columnas: string[];              // Columnas visibles en el informe exportado
 
-    estado: 'borrador' | 'emitido' | 'facturado' | 'cobrado' | 'anulado'; // Estado interno del informe
+    estado: 'borrador' | 'emitido' | 'facturado' | 'anulado';
+    estadoFinanciero: 'pendiente' | 'parcial' | 'cobrado';
     cobrado:boolean;                    //agregado para que coincida con el viejo modelo de FacturaCliente/Chofer
 
     formaPago?: string;               // Efectivo, transferencia, etc. (opcional)
@@ -22,7 +24,7 @@ export interface InformeLiq {
 
     observaciones?: string;           // Campo libre para anotar algo manualmente
     mes?: 'Enero' | 'Febrero' | 'Marzo' | 'Abril' | 'Mayo' | 'Junio' | 'Julio' | 'Agosto' | 'Septiembre' | 'Noviembre' | 'Diciembre'
-    periodo?: 'mes' | 'quincena'
+    periodo?: 'mes' | '1° quincena' | '2° quincena' 
     facturaUrl?: string;        // ID o número de la factura fiscal (a futuro)
     factura?: FacturaQR;
     anuladoMotivo?: string;                 //motivo de anulacion
@@ -60,4 +62,10 @@ interface FacturaQR {
   fecha: string;
   importe: number;
   qrData?: string;
+}
+
+export interface ValoresFinancieros {
+    total: number;
+    totalCobrado: number;
+    saldo: number;
 }

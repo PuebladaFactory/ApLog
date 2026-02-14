@@ -60,7 +60,7 @@ const routes: Routes = [
       path: 'nuevaFacturacion',
       loadChildren: () => import('./nueva-facturacion/nueva-facturacion.module').then(m => m.NuevaFacturacionModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god'] }, // Accesible para todos los roles
+      data: { roles: ['god'] },       
     },
     {
       path: 'vendedores',
@@ -68,6 +68,13 @@ const routes: Routes = [
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
       data: { roles: ['god','admin', 'manager','user', 'demo'] }, // Accesible para todos los roles
     },
+    {
+      path: 'finanzas',
+      loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
+      canActivate: [RoleGuard], // Protege acceso dentro del módulo
+      data: { roles: ['god'] }, // 
+    },
+    
     
     
     

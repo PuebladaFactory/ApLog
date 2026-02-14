@@ -1,4 +1,4 @@
-import { Component, Input, OnInit} from '@angular/core';
+import { AfterViewInit, Component, Input, OnInit} from '@angular/core';
 
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
@@ -15,6 +15,7 @@ import { ConIdType } from 'src/app/interfaces/conId';
 import { InformeOp } from 'src/app/interfaces/informe-op';
 import { Descuento, InformeLiq, Valores } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
+import { PeriodoModalComponent } from '../periodo-modal/periodo-modal.component';
 
 @Component({
     selector: 'app-resumen-op-liquidadas',
@@ -22,7 +23,7 @@ import { NumeradorService } from 'src/app/servicios/numerador/numerador.service'
     styleUrls: ['./resumen-op-liquidadas.component.scss'],
     standalone: false
 })
-export class ResumenOpLiquidadasComponent implements OnInit {
+export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
 
   @Input() fromParent: any;  
     
@@ -138,6 +139,11 @@ export class ResumenOpLiquidadasComponent implements OnInit {
         break
       }
     }
+    
+  }
+
+  ngAfterViewInit(): void {
+    this.abrirModalPeriodo();
   }
 
   ngOnDestroy(): void {
@@ -432,7 +438,7 @@ export class ResumenOpLiquidadasComponent implements OnInit {
     let idInforme = this.fromParent.origen === 'cliente' ? this.clienteSel.idCliente : this.fromParent.origen === 'chofer' ? this.choferSel.idChofer :  this.proveedorSel.idProveedor;
     let razonSocial = this.fromParent.origen === 'cliente' ? this.clienteSel.razonSocial : this.fromParent.origen === 'chofer' ? this.choferSel.apellido + " " + this.choferSel.nombre : this.proveedorSel.razonSocial;
     let cuit = this.fromParent.origen === 'cliente' ? this.clienteSel.cuit : this.fromParent.origen === 'chofer' ? this.choferSel.cuit :  this.proveedorSel.cuit;
-    this.periodo = this.periodoBoolean ? 'mes' : 'quincena'
+    this.periodo = this.periodoBoolean ? 'mes' : this.getQuincenaLiq(this.facLiquidadas[0].fecha);
     
     this.factura = {
 
@@ -447,8 +453,14 @@ export class ResumenOpLiquidadasComponent implements OnInit {
       },      
       operaciones: this.idOperaciones,
       valores: valores,
+      valoresFinancieros: {
+        total: valores.total,
+        totalCobrado: 0,
+        saldo: valores.total,
+      },
       cobrado:false,
       estado: 'emitido',
+      estadoFinanciero: 'pendiente',
       columnas: colSel,
       descuentos: this.descuentosAplicados,
       formaPago: "",               // Efectivo, transferencia, etc. (opcional)
@@ -458,11 +470,45 @@ export class ResumenOpLiquidadasComponent implements OnInit {
 
       facturaVinculada: "",        // ID o número de la factura fiscal (a futuro)      
       mes: this.mes,
-      periodo: this.periodo,
+      periodo: this.periodo,      
 
     }
   }
 
+  getQuincenaLiq(fecha: any): string {
+    console.log("fecha: ", fecha);
+    
+    // Dividir el string de la fecha en año, mes y día
+    const [year, month, day] = fecha.split('-').map(Number);
+    
+    // Crear la fecha asegurando que tome la zona horaria local
+    const date = new Date(year, month - 1, day); // mes - 1 porque los meses en JavaScript son 0-indexed
+    console.log("dayv: ", day);
+    // Determinar si está en la primera o segunda quincena
+    return day <= 15 ? '1° quincena' : '2° quincena';
+  }
+
+  abrirModalPeriodo(): void {
+    const modalRef = this.modalService.open(PeriodoModalComponent, {
+      size: 'sm',
+      backdrop: 'static', // no cerrar al clickear afuera
+      keyboard: false,     // no cerrar con ESC
+      centered: true,
+    });
+
+    modalRef.result.then(
+      (resultado: boolean) => {
+        // true = Mes | false = Quincena
+        console.log('Periodo seleccionado:', resultado);
+
+        // acá hacés lo que necesites:
+        this.periodoBoolean = resultado;
+      },
+      () => {
+        // No debería entrar nunca acá
+      }
+    );
+  }
 
 
 }

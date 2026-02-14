@@ -511,7 +511,8 @@ export class ProformaComponent implements OnInit {
 
   async generarNumLiquidacion(proforma: ConId<InformeLiq>, origen:any){
     const numInterno = await this.numeradorService.generarNumeroInterno(origen);
-    proforma.numeroInterno = numInterno
+    proforma.numeroInterno = numInterno;
+    //console.log("numero interno: ", proforma.numeroInterno);
   }
 
     
@@ -592,13 +593,14 @@ export class ProformaComponent implements OnInit {
    }
 
    facturarProforma(proforma:ConIdType<InformeLiq>, facturasOp: ConIdType<InformeOp>[], clientes:any, choferes:any, origen:string, tipo:string){
-    let {id,type, ...prof} = proforma;
+
+    
     let facOpColeccion: string = origen === 'cliente' ? 'informesOpClientes' : origen === 'chofer' ? 'informesOpChoferes' : origen === 'proveedor' ? 'informesOpProveedores' : '';
     let facOpLiqColeccion: string = origen === 'cliente' ? 'infOpLiqClientes' : origen === 'chofer' ? 'infOpLiqChoferes' : origen === 'proveedor' ? 'infOpLiqProveedores' : '';
     
     
     
-    this.procesarFacturacion(facturasOp, origen,facOpLiqColeccion,facOpColeccion,proforma,'resumenLiq', clientes, choferes, tipo)
+    this.procesarFacturacion(facturasOp, origen,facOpLiqColeccion,facOpColeccion, proforma,'resumenLiq', clientes, choferes, tipo)
     /* Swal.fire({
       title: '¿Desea generar la liquidación de la proforma seleccionada?',
       text: "Esta acción no se podrá revertir",
@@ -657,9 +659,12 @@ export class ProformaComponent implements OnInit {
 
    procesarFacturacion(facturasOp: ConId<InformeOp>[], modo:string, compAlta: string, compBaja:string, factura:ConIdType<InformeLiq>, compFactura:string, clientes: any, choferes: any, tipo:string) {
      this.isLoading = true;
-     let detalleNombre: string = modo === "cliente" ? "Cliente" : modo === "chofer" ? "Chofer" : "Proveedor";          
-     
-     this.dbFirebase.procesarLiquidacion(facturasOp, modo, compAlta, compBaja, factura, compFactura)
+     let detalleNombre: string = modo === "cliente" ? "Cliente" : modo === "chofer" ? "Chofer" : "Proveedor"; 
+    let {id, type, ...prof} = factura;
+    prof.numeroInterno = factura.numeroInterno;
+    console.log("proforma sin id ni type: ", prof);         
+    console.log("factura : ", factura);         
+     this.dbFirebase.procesarLiquidacion(facturasOp, modo, compAlta, compBaja, prof, compFactura)
        .then((result) => {
          this.isLoading = false;
          //console.log("resultado: ", result);
@@ -700,6 +705,6 @@ export class ProformaComponent implements OnInit {
          text: `${msj}`
          //footer: `${msj}`
        });
-     }
+  }
 
 }
