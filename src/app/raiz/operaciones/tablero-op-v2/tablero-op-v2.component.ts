@@ -15,6 +15,7 @@ import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-obj
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 
 // =====================
 // MODELOS
@@ -30,7 +31,7 @@ interface OpRow {
   idChofer: number;
   categoria: string;
   patente: string;
-  acompaniante: string;
+  acomp: string;
   tarifa: string;
   aCobrar: string;      // formateado
   aPagar: string;       // formateado
@@ -70,10 +71,11 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
 
   operacionesPeriodo: ConId<Operacion>[] = [];
   operacionesVista: OpRow[] = [];
+  opSeleccionada!: ConId<Operacion> | null;
 
   columnasDisponibles = [
     'estado','fecha','idOperacion','cliente','chofer','categoria','patente',
-    'acompaniante','tarifa','aCobrar','aPagar','hojaRuta','proveedor','observaciones'
+    'acomp','tarifa','aCobrar','aPagar','hojaRuta','proveedor','observaciones'
   ];
 
   columnasVisibles: string[] = [];
@@ -108,12 +110,30 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
   choferes: ConId<Chofer>[] = [];
   proveedores: ConId<Proveedor>[] = [];
 
+  fechaDesde:any;
+  fechaHasta:any;
+
+
+
+// -----------------------------
+// STATE COLUMNAS
+// -----------------------------
+
+
+columnWidths: Record<string, number> = {};
+private STORAGE_COL_WIDTH_KEY = 'tablero_op_colwidth_v1';
+
+private resizingCol: string | null = null;
+private resizeStartX = 0;
+private resizeStartWidth = 0;
+
   constructor(
     private storage: StorageService,
     private dateRange: DateRangeService,
-    private modal: NgbModal,
+    private modalService: NgbModal,
     private tableroServ: TableroService,
-    private formatoNum: FormatoNumericoService
+    private formatoNum: FormatoNumericoService,
+    private excelServ: ExcelService,
   ) {}
 
   // =====================
@@ -132,14 +152,14 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
     this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     this.proveedores = this.storage.loadInfo('proveedores');
     this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-
+    this.loadColumnWidths();
     this.dateRange.range$
       .pipe(
         filter((r): r is DateRange => r !== null),
         takeUntil(this.destroy$))
       .subscribe(r => {
         this.isLoading = true;
-         localStorage.setItem(
+        localStorage.setItem(
           this.STORAGE_RANGE_KEY,
           JSON.stringify({
             desde: r.desde.toISOString(),
@@ -149,8 +169,9 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
         );
         const desde = toISODateString(r.desde);
         const hasta = toISODateString(r.hasta);
-
-        this.isLoading = true;
+        this.fechaDesde = desde;
+        this.fechaHasta = hasta;
+        
         this.storage.syncChangesDateValue('operaciones','fecha',desde,hasta,'desc');
         this.escucharOperaciones();
       });
@@ -166,11 +187,12 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
     this.storage.getObservable<ConId<Operacion>>('operaciones')
       .pipe(takeUntil(this.destroy$))
       .subscribe(ops => {
+        //this.isLoading = true;
         this.operacionesPeriodo = ops;
         this.rebuildDropdownsBase();
         this.syncFiltroLabels();   // 👈 importante
         this.aplicarFiltros();
-        this.isLoading = false;
+        setTimeout(()=>{this.isLoading = false;}, 500)
       });
   }
 
@@ -185,6 +207,19 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
       hasta: new Date(r.hasta),
       tipo: r.tipo
     });
+  }
+
+  private loadColumnWidths() {
+    const s = localStorage.getItem(this.STORAGE_COL_WIDTH_KEY);
+    if (s) this.columnWidths = JSON.parse(s);
+    }
+
+
+  private saveColumnWidths() {
+    localStorage.setItem(
+    this.STORAGE_COL_WIDTH_KEY,
+    JSON.stringify(this.columnWidths)
+    );
   }
 
 // ===================== MAPEO =====================
@@ -210,14 +245,14 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
       idChofer: op.chofer.idChofer,
       categoria: this.getCategoria(op),
       patente: op.patenteChofer,
-      acompaniante: op.acompaniante ? 'Sí':'No',
+      acomp: op.acompaniante ? 'Sí':'No',
       tarifa: this.getTarifa(op),
       aCobrar: `$${this.formatoNum.convertirAValorFormateado(aCobrarNum)}`,
       aPagar: `$${this.formatoNum.convertirAValorFormateado(aPagarNum)}`,
       aCobrarNum,
       aPagarNum,
       hojaRuta: op.hojaRuta,
-      proveedor: String(op.chofer.idProveedor ?? ''),
+      proveedor: this.getProveedor(op.chofer.idProveedor),
       observaciones: op.observaciones,
       _raw: op
     };
@@ -425,11 +460,11 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
     cliente: '15rem',
     chofer: '15rem',
     idOperacion: '12rem',
-    categoria: '12rem',
+    categoria: '10rem',
     hojaRuta: '12rem',
-    aCobrar: '12rem',
+    aCobrar: '10rem',
     aPagar: '12rem',
-    observaciones: '12rem'
+    observaciones: '10rem'
     };
     return map[col] ?? null;
   }
@@ -472,6 +507,20 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
 
     this.clientesDropdown = [...mapC.entries()].map(([id,n])=>({id,n}));
     this.choferesDropdown = [...mapCh.entries()].map(([id,n])=>({id,n}));
+
+    this.clientesDropdown = [...mapC.entries()]
+      .map(([id,n]) => ({id,n}))
+      .sort((a,b) =>
+        a.n.localeCompare(b.n, 'es', { sensitivity: 'base' })
+      );
+
+    this.choferesDropdown = [...mapCh.entries()]
+      .map(([id,n]) => ({id,n}))
+      .sort((a,b) =>
+        a.n.localeCompare(b.n, 'es', { sensitivity: 'base' })
+    );
+
+
   }
 
   private rebuildDropdownsDesdeFiltradas() {
@@ -502,7 +551,7 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
       case 'Cerrada': return 'badge bg-danger';
       case 'Proforma': return 'badge bg-warning text-dark';
       case 'Cliente Fac': return 'badge bg-info text-dark';
-      case 'Chofer Fac': return 'badge bg-light text-dark';
+      case 'Chofer Fac': return 'badge bg-secondary';
       case 'Facturada': return 'badge bg-primary';
       default: return 'badge bg-light text-secondary';
     }
@@ -535,23 +584,248 @@ export class TableroOpV2Component implements OnInit, OnDestroy {
     return 'General';
   }
 
+  getProveedor(idProveedor: number): string {
+    if (!this.proveedores || idProveedor === 0) return 'No';
+    const proveedor = this.proveedores.find(p => p.idProveedor === idProveedor);
+    return proveedor?.razonSocial ?? 'Proveedor dado de baja';
+  }
+
+  // -----------------------------
+// WIDTH GETTER
+// -----------------------------
+
+
+getColWidthPx(col: string): number {
+  if (this.columnWidths[col]) return this.columnWidths[col];
+
+
+  switch (col) {
+    case 'estado': return 95;
+    case 'fecha': return 110;    
+    case 'proveedor':
+    case 'tarifa': 
+    case 'aCobrar':
+    case 'aPagar': return 120;
+    case 'hojaRuta': return 100;
+    case 'categoria':
+    case 'observaciones': return 115;
+    case 'acciones': return 260;
+    case 'idOperacion': return 160;
+    case 'patente': 
+    case 'acomp': return 90;
+    default: return 180;
+  }
+}
+
+
+getColWidthStyle(col: string) {
+  return { width: this.getColWidthPx(col) + 'px' };
+}
+
+
+// -----------------------------
+// RESIZE LOGIC
+// -----------------------------
+
+
+startResize(event: MouseEvent, col: string) {
+  event.preventDefault();
+  event.stopPropagation();
+
+
+  this.resizingCol = col;
+  this.resizeStartX = event.clientX;
+  this.resizeStartWidth = this.getColWidthPx(col);
+
+
+  document.addEventListener('mousemove', this.onResizeMove);
+  document.addEventListener('mouseup', this.onResizeEnd);
+}
+
+
+onResizeMove = (event: MouseEvent) => {
+  if (!this.resizingCol) return;
+
+
+  const delta = event.clientX - this.resizeStartX;
+  const newWidth = Math.max(70, this.resizeStartWidth + delta);
+
+
+  this.columnWidths[this.resizingCol] = newWidth;
+};
+
+
+onResizeEnd = () => {
+  if (!this.resizingCol) return;
+
+
+  this.saveColumnWidths();
+  this.resizingCol = null;
+
+
+  document.removeEventListener('mousemove', this.onResizeMove);
+  document.removeEventListener('mouseup', this.onResizeEnd);
+};
+
   // ===================== ACCIONES =====================
 
-  verDetalle(row: OpRow) {
+  seleccionarOp(idOp:number){    
+    let op = this.operacionesPeriodo.find(o=>{return o.idOperacion === idOp});
+    if(op){
+      return op
+    } else {
+      return null
+    }  
+  }
+  
+  abrirModalDetalle(idOp:number, accion:string) {
   // emitir evento o abrir modal
-  console.log('detalle', row._raw);
+    this.opSeleccionada = this.seleccionarOp(idOp);
+    this.modalDetalle(accion);
   }
 
-  editar(row: OpRow) {
-    console.log('editar', row._raw);
+  eliminar(idOp:number) {
+    this.opSeleccionada = this.seleccionarOp(idOp);
+    Swal.fire({
+              title: "¿Desea dar de baja la operación?",
+              //text: "No se podrá revertir esta acción",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Confirmar",
+              cancelButtonText: "Cancelar"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.openModalBaja();    
+              }
+            }); 
   }
 
-  cerrar(row: OpRow) {
-    console.log('cerrar', row._raw);
+  modalDetalle(modo: string){
+    {
+      const modalRef = this.modalService.open(ModalResumenOpComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'lg', 
+        //backdrop:"static" 
+      });      
+
+     let info = {
+        modo: modo,
+        item: this.opSeleccionada,
+      } 
+
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+         
+        },
+        (reason) => {}
+      );
+    }
   }
 
-  eliminar(row: OpRow) {
-    console.log('eliminar', row._raw.id);
+  async openModalBaja(){
+    {
+      const modalRef = this.modalService.open(BajaObjetoComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        scrollable: true, 
+        size: 'sm',     
+      });   
+
+      let info = {
+        modo: "operaciones",
+        item: this.opSeleccionada,
+      }  
+      //////////////console.log()(info); */
+      
+      modalRef.componentInstance.fromParent = info;
+      try {
+        const motivo = await modalRef.result;
+        if(!motivo) return
+        if(this.opSeleccionada){
+          this.isLoading = true;
+          await this.tableroServ.anularOperacionYActualizarTablero(this.opSeleccionada, motivo, 'Baja de operación desde el tablero-op');
+             
+          Swal.fire({
+            icon: 'success',
+            title: 'Operación eliminada',
+            text: 'La operación fue dada de baja y se actualizó el tablero.'
+          });
+        }   
+
+      } catch (e) {
+        console.warn("El modal fue cancelado o falló:", e);
+      }
+
+    }
+  }
+
+  modalAltaOp(){
+    {
+      const modalRef = this.modalService.open(ModalOpAltaComponent, {
+        windowClass: 'custom-modal-top-right',        
+
+        scrollable: true,    
+        backdrop:"static"   
+
+      });      
+    
+      modalRef.result.then(
+        (result) => {
+          
+        },
+        (reason) => {}
+      );
+    }
+  }
+
+  modalCargaMultiple(){
+    {
+      const modalRef = this.modalService.open(CargaMultipleComponent, {
+        windowClass: 'myCustomModalClass',
+        centered: true,
+        size: 'xl', 
+        backdrop:"static" 
+      });      
+
+      /* let info = {
+        modo: modo,
+        item: this.opEditar,
+      }  */
+
+      
+      //modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {
+          
+        },
+        (reason) => {}
+      );
+    }
+  }
+
+  descargarOp(){
+    this.excelServ.generarInformeOperaciones(this.fechaDesde, this.fechaHasta,this.operacionesPeriodo)
+  }
+
+
+  // --- VISIBILIDAD DE ACCIONES POR ESTADO ---
+
+  puedeEditar(op: any): boolean {
+    return op.estado === 'Abierta';
+  }
+
+
+  puedeCerrar(op: any): boolean {
+    return op.estado === 'Abierta';
+  }
+
+
+  puedeEliminar(op: any): boolean {
+    return op.estado === 'Abierta';
   }
 
 }

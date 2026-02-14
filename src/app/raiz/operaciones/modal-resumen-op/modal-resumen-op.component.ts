@@ -274,7 +274,7 @@ cerrarOp(){
       ////console.log("op: ", this.op);
       this.valoresOpServ.facturarOperacion(this.op).then(                        
         (result:any)=>{
-          this.isLoading = false;
+          //this.isLoading = false;
           //console.log("modal facturacion: respuesta: ", result);
           let idOp: number[] = [];
           idOp.push(this.op.idOperacion)
@@ -373,6 +373,7 @@ armarOp(){
   }).then((result) => {
     if (result.isConfirmed) {
       ////////////console.log("op: ", this.op);
+      this.isLoading = true;
       let {id, ...op } = this.op
       this.storageService.updateItem(this.componente, op, this.op.idOperacion,"EDITAR", "Edición de Operación", this.op.id);    
       this.tableroServ.actualizarAsignacionDesdeOperacion(this.op);

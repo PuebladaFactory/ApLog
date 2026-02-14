@@ -4,3 +4,84 @@ input, th, td, select, option, button {
 table tbody tr {
     height: 41px;
 }
+
+.th-resizable {
+    position: relative;
+    user-select: none;
+}
+
+
+.th-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    padding-right: 8px;
+}
+
+.sort-indicator {
+    margin-left: 6px;
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+
+/* .resize-handle {
+    width: 8px;
+    cursor: col-resize;
+    position: absolute;
+    right: -4px;
+    top: 0;
+    bottom: 0;
+    opacity: 0.35;
+} */
+
+.resize-handle {
+    width: 8px;
+    cursor: col-resize;
+    position: absolute;
+    right: -4px;
+    top: 0;
+    bottom: 0;
+
+    opacity: 0.2;
+    transition: opacity 0.15s ease;
+}
+
+.th-resizable:hover .resize-handle {
+    opacity: 0.6;
+}
+
+.resize-handle:hover {
+    opacity: 1;
+    background: rgba(0,0,0,0.18);
+}
+
+
+/* .resize-handle:hover {
+    background: rgba(0,0,0,0.18);
+    opacity: 1;
+} */
+
+.isDisabled {
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity:0.5;
+    }
+  
+.isDisabled:hover {
+    cursor: not-allowed;
+    opacity:0.5;
+}
+
+.boton-alta{
+    width: 15rem;
+    background: #002b5c;
+    color: white;
+    opacity: 0.8;
+    font-size: 1.3rem;
+}
+
+.boton-alta:hover{
+    background: #0d6efd;    
+}

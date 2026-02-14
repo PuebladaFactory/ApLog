@@ -55,9 +55,9 @@ import { Router } from '@angular/router';
 export class OpControlComponent implements OnInit {
 
   tabs = [
-    { id: 'tab1', name: 'Tablero de Operaciones', route: 'op/tablero' },        
+    { id: 'tab1', name: 'Tablero de Operaciones', route: 'op/tablero2' },        
     { id: 'tab2', name: 'Tablero Diario', route: 'op/diario' },     
-    { id: 'tab3', name: 'Nuevo Tablero Op', route: 'op/tablero2' },
+    /* { id: 'tab3', name: 'Nuevo Tablero Op', route: 'op/tablero' }, */
   ];
 
   selectedTab: string = 'tab1';
@@ -65,7 +65,7 @@ export class OpControlComponent implements OnInit {
   constructor(private router: Router) {}
 
   ngOnInit(): void {
-    this.selectTab('tab3');
+    this.selectTab('tab1');
   }
 
   selectTab(tabId: string) {
