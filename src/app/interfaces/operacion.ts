@@ -12,7 +12,8 @@ export interface Operacion {
     chofer: Chofer;
     observaciones: string;    
     //unidadesConFrio: boolean;
-    acompaniante: boolean;    
+    acompaniante: boolean;
+    acompanienteCant?:number;    
     facturaCliente: number;
     facturaChofer: number;
     hojaRuta:string;
@@ -62,7 +63,7 @@ export interface Valores{
     cliente:{
         acompValor: number;
         kmAdicional: number;
-        tarifaBase: number,
+        tarifaBase: number,        
         aCobrar: number;    
     }
     chofer: {

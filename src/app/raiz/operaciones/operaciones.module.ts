@@ -25,6 +25,7 @@ import { ModalObjetosActivosComponent } from './modal-objetos-activos/modal-obje
 import { ModalChoferesNoDisponiblesComponent } from './modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
 import { TableroOpV2Component } from './tablero-op-v2/tablero-op-v2.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
+import { OperacionesTableComponent } from './operaciones-table/operaciones-table.component';
 
 
 
@@ -41,7 +42,8 @@ import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
     CargaTableroDiarioComponent,
     ModalObjetosActivosComponent,
     ModalChoferesNoDisponiblesComponent,
-    TableroOpV2Component
+    TableroOpV2Component,
+    OperacionesTableComponent,    
     
   ],
   imports: [

@@ -86,6 +86,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
           observaciones: chofer.observaciones || '',
           hojaRuta: chofer.hojaDeRuta || '',
           acompaniante: false,
+          acompanienteCant: 0,
           facturaCliente: 0,
           facturaChofer: 0,
           tarifaEventual: {

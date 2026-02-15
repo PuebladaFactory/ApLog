@@ -31,6 +31,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   formTarifaEventual!:any;    
   $choferes!: Chofer[];
   acompaniante: boolean = false;
+  cantAcompaniantes:number = 0;
   vehiculosChofer: boolean = false;
   tarifaClienteSel!: ConIdType<TarifaPersonalizadaCliente> | undefined;
   mostrarCategoria: boolean = false;
@@ -78,8 +79,8 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     //////console.log("editar: ",this.editar);
     //////console.log("cerrar: ",this.cerrar);
     this.opOriginal = this.fromParent.item;    
-    this.op = structuredClone(this.opOriginal);
-        
+    this.op = structuredClone(this.opOriginal);    
+
     //this.op = this.fromParent.item;
     switch (this.fromParent.modo) {
       case "vista":
@@ -173,6 +174,13 @@ changeAcompaniante(event: any) {
   ////////console.log(event.target.value);    
   this.acompaniante = event.target.value.toLowerCase() == 'true';
   //////console.log(this.acompaniante);
+  if(this.acompaniante) this.cantAcompaniantes = 1;
+}
+
+changeCantAcompaniantes(event: any) {
+  console.log(event.target.value);    
+  this.cantAcompaniantes = Number(event.target.value);
+  console.log(this.cantAcompaniantes);
   
 }
 
@@ -258,6 +266,10 @@ cerrarOp(){
   this.op.valores.cliente.tarifaBase = this.formNumServ.convertirAValorNumerico(this.op.valores.cliente.tarifaBase);
   this.op.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(this.op.tarifaEventual.chofer.valor);
   this.op.tarifaEventual.cliente.valor = this.formNumServ.convertirAValorNumerico(this.op.tarifaEventual.cliente.valor);
+  this.op.acompanienteCant = !this.op.acompaniante ? 0 : this.op.acompanienteCant? this.op.acompanienteCant : 1;
+
+  console.log("this.op.acompanienteCant :", this.op.acompanienteCant );
+  
 
   Swal.fire({
     title: "¿Desea cerrar la operación?",
@@ -350,6 +362,10 @@ armarOp(){
     this.op.valores.chofer.tarifaBase = this.tarifaPersonalizada.aPagar;
  }
   ////console.log("op: ", this.op);
+
+  this.op.acompanienteCant = !this.op.acompaniante ? 0 : this.op.acompanienteCant? this.op.acompanienteCant : 1;
+
+  console.log("this.op.acompanienteCant :", this.op.acompanienteCant );
   
   
   this.updateItem(); 
