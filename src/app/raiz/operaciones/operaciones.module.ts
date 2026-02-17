@@ -26,6 +26,7 @@ import { ModalChoferesNoDisponiblesComponent } from './modal-choferes-no-disponi
 import { TableroOpV2Component } from './tablero-op-v2/tablero-op-v2.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 import { OperacionesTableComponent } from './operaciones-table/operaciones-table.component';
+import { ɵɵDir } from "@angular/cdk/scrolling";
 
 
 
@@ -54,10 +55,10 @@ import { OperacionesTableComponent } from './operaciones-table/operaciones-table
     SharedModule,
     FilterPipeModule,
     NgbModule,
-    
     AgGridModule,
-    DragDropModule
-  ],
+    DragDropModule,
+    ɵɵDir
+],
   providers: [DateRangeService]
 })
 export class OperacionesModule { }

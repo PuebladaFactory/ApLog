@@ -455,5 +455,23 @@ armarOp(){
     this.aPagar = this.formatearValor(this.op.valores.chofer.aPagar * valor);
   }
 
+  getClaseTarifa(op: Operacion): string {
+    if(op.tarifaTipo.eventual){
+      return "bg-warning";
+    }
+    if(op.tarifaTipo.personalizada){
+      return "bg-success";
+    }
+    if(op.tarifaTipo.especial){
+      return "bg-info";
+    }
+    if(op.tarifaTipo.general){
+      return "bg-primary";
+    }
+    return "bg-secondary";
+
+  }
+
+
 
 }

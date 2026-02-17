@@ -285,6 +285,18 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
   return respuesta;
 }
 
+valoresInicialesTarifaGral(op:Operacion, tarifa:TarifaGralCliente){
+    let vehiculo
+    vehiculo  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
+        return vehiculo.dominio === op.patenteChofer;
+    });
+    let categoria = vehiculo[0].categoria.catOrden
+    let catCG = tarifa.cargasGenerales.filter((cat: CategoriaTarifa)=>{
+      return cat.orden === categoria
+    });
+    return catCG[0].valor; 
+}
+
   
   
 }

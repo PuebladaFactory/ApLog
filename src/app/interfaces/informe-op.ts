@@ -27,5 +27,6 @@ export interface Valores{
     acompaniante: number;
     kmMonto: number;
     total: number;
+    adExtra?:number;
 }
 

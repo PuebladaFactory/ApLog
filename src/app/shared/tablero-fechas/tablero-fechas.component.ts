@@ -100,9 +100,45 @@ export class TableroFechasComponent implements OnInit {
           base.setDate(base.getDate() + 7 * factor);
           break;
 
-        case 'quincena':
-          base.setDate(base.getDate() + 15 * factor);
-          break;
+      case 'quincena': {
+
+        const d = current.desde; // Date
+        const y = d.getFullYear();
+        const m = d.getMonth();
+        const day = d.getDate();
+
+        let newYear = y;
+        let newMonth = m;
+        let newStartDay: number;
+
+        const esPrimera = day === 1;
+
+        if (next) {
+          if (esPrimera) {
+            // 1ra → 2da misma mes
+            newStartDay = 16;
+          } else {
+            // 2da → 1ra mes siguiente
+            newStartDay = 1;
+            newMonth += 1;
+          }
+        } else {
+          if (!esPrimera) {
+            // 2da → 1ra misma mes
+            newStartDay = 1;
+          } else {
+            // 1ra → 2da mes anterior
+            newMonth -= 1;
+            newStartDay = 16;
+          }
+        }
+
+        const base = new Date(newYear, newMonth, newStartDay);
+        const nuevo = this.buildQuincena(base);
+        this.dateRangeService.setRange(nuevo);
+        return;
+      }
+
 
         case 'mes':
           base.setMonth(base.getMonth() + factor);

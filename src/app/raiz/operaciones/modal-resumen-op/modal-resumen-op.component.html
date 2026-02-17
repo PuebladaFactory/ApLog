@@ -18,7 +18,7 @@
                     <label for="Fecha" class="fs-5">Fecha</label>
                     <div class="input-group">
                         <input
-                            class="form-control edicion"
+                            class="form-control edicion border-info"
                             type="date"
                             [value]="op.fecha"
                         />
@@ -32,7 +32,7 @@
                             [ngClass]="{ isDisabled: vista }"
                         >
                             <input
-                                class="form-control edicion"
+                                class="form-control edicion border-info"
                                 [value]="op.patenteChofer"
                             />
                         </div>
@@ -44,7 +44,7 @@
                     <label for="Cliente" class="fs-5">Cliente</label>
                     <div class="input-group">
                         <input
-                            class="form-control edicion"
+                            class="form-control edicion border-warning"
                             type="text"
                             [value]="op.cliente.razonSocial"
                         />
@@ -54,7 +54,7 @@
                     <label for="Cliente" class="fs-5">Tarifa Cliente</label>
                     <div class="input-group">
                         <input
-                            class="form-control edicion"
+                            class="form-control edicion border-warning"
                             type="text"
                             [ngModel]="
                                 op.cliente.tarifaTipo.especial
@@ -74,7 +74,7 @@
                     <label for="Chofer" class="fs-5">Chofer</label>
                     <div class="input-group">
                         <input
-                            class="form-control edicion"
+                            class="form-control edicion border-primary"
                             type="text"
                             [value]="
                                 op.chofer.apellido + ' ' + op.chofer.nombre
@@ -86,7 +86,7 @@
                     <label for="Cliente" class="fs-5">Tarifa Chofer</label>
                     <div class="input-group">
                         <input
-                            class="form-control edicion"
+                            class="form-control edicion border-primary"
                             type="text"
                             [ngModel]="
                                 op.chofer.tarifaTipo.especial
@@ -102,7 +102,9 @@
                 </div>
             </div>
         </div>
+        <!-- DETALLES OP -->
         <div class="row">
+            <!-- DETALLES KM / ACOMPAÑANTE -->
             <div class="col-4">
                 <!-- OPERACION ABIERTA -->
                 @if (op.estado.abierta) {
@@ -116,7 +118,7 @@
                                 [ngClass]="{ isDisabled: vista }"
                             >
                                 <input
-                                    class="form-control edicion"
+                                    class="form-control edicion border-info"
                                     [value]="op.patenteChofer"
                                 />
                             </div>
@@ -129,7 +131,7 @@
                                 >Acompañante</label
                             >
                             <select
-                                class="form-select mb-3"
+                                class="form-select mb-3 border-info"
                                 (change)="changeAcompaniante($event)"
                             >
                                 <option [value]="acompaniante" selected>
@@ -147,9 +149,11 @@
                                 >Cantidad acompañantes</label
                             >
                             <input
-                                    class="form-control edicion" type="number" (change)="changeCantAcompaniantes($event)"
-                                    [(ngModel)]="op.acompanienteCant"
-                                />
+                                class="form-control edicion border-info"
+                                type="number"
+                                (change)="changeCantAcompaniantes($event)"
+                                [(ngModel)]="op.acompanienteCant"
+                            />
                         </div>
                         <form [formGroup]="form">
                             <div
@@ -164,9 +168,9 @@
                                     [ngClass]="{ isDisabled: vista }"
                                 >
                                     <input
-                                        formControlName="hojaRuta"
-                                        class="form-control edicion"
-                                    >
+                                        formControlName="hojaRuta "
+                                        class="form-control edicion border-info"
+                                    />
                                 </div>
                             </div>
                             <div
@@ -182,7 +186,7 @@
                                 >
                                     <textarea
                                         formControlName="observaciones"
-                                        class="form-control edicion"
+                                        class="form-control edicion border-info"
                                     ></textarea>
                                 </div>
                             </div>
@@ -212,7 +216,7 @@
                                     <input
                                         #kmInput
                                         formControlName="km"
-                                        class="form-control edicion"
+                                        class="form-control edicion border-info"
                                         required
                                         type="text"
                                         inputmode="numeric"
@@ -227,7 +231,7 @@
                                 >
                                 <input
                                     formControlName="documentacion"
-                                    class="form-control edicion"
+                                    class="form-control edicion border-info"
                                     type="file"
                                     id="formFile"
                                 />
@@ -247,7 +251,7 @@
                                 [ngClass]="{ isDisabled: vista }"
                             >
                                 <input
-                                    class="form-control edicion"
+                                    class="form-control edicion border-info"
                                     [value]="op.patenteChofer"
                                 />
                             </div>
@@ -257,14 +261,27 @@
                             <label for="A Cobrar" class="fs-5"
                                 >Acompañante</label
                             >
-                            <div class="input-group">                                
+                            <div class="input-group">
                                 <input
-                                    class="form-control edicion isDisabled"
+                                    class="form-control edicion isDisabled border-info"
                                     required
                                     type="text"
                                     [value]="op.acompaniante ? 'Si' : 'No'"
                                 />
                             </div>
+                        </div>
+                        <div
+                            class="form-group"
+                            [ngClass]="{ isDisabled: vista || cerrar }"
+                        >
+                            <label for="Cantidad acompaniantes" class="fs-5"
+                                >Cantidad acompañantes</label
+                            >
+                            <input
+                                class="form-control edicion border-info"
+                                type="number"
+                                [(ngModel)]="op.acompanienteCant"
+                            />
                         </div>
                         <div class="form-group">
                             <label for="A Cobrar" class="fs-5"
@@ -278,7 +295,7 @@
                                     >Km</span
                                 >
                                 <input
-                                    class="form-control edicion isDisabled"
+                                    class="form-control edicion isDisabled border-info"
                                     required
                                     type="text"
                                     [(ngModel)]="op.km"
@@ -299,7 +316,7 @@
                                 >
                                     <textarea
                                         formControlName="hojaRuta"
-                                        class="form-control edicion"
+                                        class="form-control edicion border-info"
                                     ></textarea>
                                 </div>
                             </div>
@@ -316,7 +333,7 @@
                                 >
                                     <textarea
                                         formControlName="observaciones"
-                                        class="form-control edicion"
+                                        class="form-control edicion border-info"
                                     ></textarea>
                                 </div>
                             </div>
@@ -324,6 +341,7 @@
                     </div>
                 }
             </div>
+            <!-- DETALLES TARIFAS -->
             <div
                 class="col-8"
                 [ngClass]="{
@@ -339,21 +357,343 @@
                 >
                     <!-- TARIFAS-->
                     <div class="row">
-                        <h3>
-                            Tarifa Aplicada:
-                            {{
-                                op.tarifaTipo.eventual
-                                    ? "Eventual"
-                                    : op.tarifaTipo.personalizada
-                                      ? "Personalizada"
-                                      : ""
-                            }}
-                        </h3>
-                        <!-- OPERACIONES EVENTUALES-->
-                        @if (op.tarifaTipo.eventual) {
-                            <div class="row">
-                                <div class="col border-end">
-                                    <h4 class="my-2 mt-2">Cliente</h4>
+                        <div class="col border-end">
+                            <h2>Cliente</h2>
+                            <h4 class="my-2 mt-2">
+                                Tarifa Aplicada:
+                                <span
+                                    class="fw-semibold fs-4 badge"
+                                    [ngClass]="getClaseTarifa(op)"
+                                    >{{
+                                        op.tarifaTipo.eventual
+                                            ? "Eventual"
+                                            : op.tarifaTipo.personalizada
+                                              ? "Personalizada"
+                                              : op.cliente.tarifaTipo.general
+                                                ? "General"
+                                                : "Especial"
+                                    }}</span
+                                >
+                            </h4>
+                            <!-- OPERACIONES EVENTUALES-->
+                            @if (op.tarifaTipo.eventual) {
+                                <div class="row">
+                                    <div class="col">                                        
+                                        <div class="col">
+                                            <div class="form-group mt-3">
+                                                <label for="Fecha" class="fs-5"
+                                                    >Tarifa Eventual
+                                                    Concepto</label
+                                                >
+                                                <div class="input-group">
+                                                    <input
+                                                        class="form-control edicion border-warning"
+                                                        required
+                                                        type="text"
+                                                        [(ngModel)]="
+                                                            tarifaEventual
+                                                                .cliente
+                                                                .concepto
+                                                        "
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div class="form-group mt-3">
+                                                <label for="Fecha" class="fs-5"
+                                                    >Tarifa Eventual
+                                                    Valor</label
+                                                >
+                                                <div class="input-group">
+                                                    <span
+                                                        class="input-group-text"
+                                                        id="basic-addon1"
+                                                        style="width: 30px"
+                                                        >$</span
+                                                    >
+                                                    <input
+                                                        class="form-control edicion border-warning"
+                                                        required
+                                                        type="text"
+                                                        inputmode="number"
+                                                        [(ngModel)]="
+                                                            tarifaEventual
+                                                                .cliente.valor
+                                                        "
+                                                        appFormatoNumericoNgModel
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            <!-- OPERACIONES PERSONALIZADAS -->
+                            @if (op.tarifaTipo.personalizada) {
+                                <div class="row">
+                                    <div class="col">
+                                        <form
+                                            [formGroup]="
+                                                formTarifaPersonalizada
+                                            "
+                                        >
+                                            @if (tarifaClienteSel) {
+                                                <div class="form-group">
+                                                    <label for="Cliente"
+                                                        >Sección</label
+                                                    >
+                                                    <select
+                                                        class="form-select mb-3 border-success"
+                                                        (change)="
+                                                            changeSecion($event)
+                                                        "
+                                                    >
+                                                        <option
+                                                            [value]="
+                                                                op
+                                                                    .tarifaPersonalizada
+                                                                    .seccion
+                                                            "
+                                                            selected
+                                                        >
+                                                            {{
+                                                                op.tarifaTipo
+                                                                    .personalizada
+                                                                    ? "Seccion " +
+                                                                      op
+                                                                          .tarifaPersonalizada
+                                                                          .seccion +
+                                                                      " : " +
+                                                                      tarifaClienteSel
+                                                                          .secciones[
+                                                                          op
+                                                                              .tarifaPersonalizada
+                                                                              .seccion -
+                                                                              1
+                                                                      ]
+                                                                          .descripcion
+                                                                    : "Sin datos"
+                                                            }}
+                                                        </option>
+                                                        @for (
+                                                            seccion of tarifaClienteSel.secciones;
+                                                            track seccion
+                                                        ) {
+                                                            <option
+                                                                [value]="
+                                                                    seccion?.orden
+                                                                "
+                                                            >
+                                                                Seccion
+                                                                {{
+                                                                    seccion?.orden
+                                                                }}:
+                                                                {{
+                                                                    seccion?.descripcion
+                                                                        ? seccion.descripcion
+                                                                        : ""
+                                                                }}
+                                                            </option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            }
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="form-group mb-2">
+                                            <label for="Fecha" class="fs-5"
+                                                >Tarifa Personalizada
+                                                Valor</label
+                                            >
+                                            <div class="input-group">
+                                                <span
+                                                    class="input-group-text"
+                                                    id="basic-addon1"
+                                                    style="width: 30px"
+                                                    >$</span
+                                                >
+                                                <input
+                                                    class="form-control edicion isDisabled border-warning"
+                                                    required
+                                                    type="text"
+                                                    [value]="
+                                                        formatearValor(
+                                                            op
+                                                                .tarifaPersonalizada
+                                                                .aCobrar
+                                                        )
+                                                    "
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            <!-- OPERACIONES GENERALES Y ESPECIALES -->
+                            @if (
+                                !op.tarifaTipo.personalizada &&
+                                !op.tarifaTipo.eventual
+                            ) {
+                                <div class="row isDisabled">
+                                    <!-- CLIENTE -->
+                                    <div class="col">
+                                        <div class="form-group mb-2">
+                                            <label for="Fecha" class="fs-5"
+                                                >Tarifa Base Valor</label
+                                            >
+                                            <div class="input-group">
+                                                <span
+                                                    class="input-group-text"
+                                                    id="basic-addon1"
+                                                    style="width: 30px"
+                                                    >$</span
+                                                >
+                                                <input
+                                                    class="form-control edicion border-warning"
+                                                    required
+                                                    type="text"
+                                                    [value]="
+                                                        formatearValor(
+                                                            op.valores.cliente
+                                                                .tarifaBase
+                                                        )
+                                                    "
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            <h4 class="mt-3">Adicionales:</h4>
+                            <!-- CLIENTE -->
+                            <div class="col">
+                                <!-- acompañante valor -->
+                                <div class="form-group">
+                                    <label for="Fecha" class="fs-5"
+                                        >Acompañante valor</label
+                                    >
+                                    <div class="input-group">
+                                        <span
+                                            class="input-group-text"
+                                            id="basic-addon1"
+                                            style="width: 30px"
+                                            >$</span
+                                        >
+                                        <input
+                                            class="form-control edicion isDisabled border-warning"
+                                            required
+                                            type="text"
+                                            [value]="
+                                                formatearValor(
+                                                    op.valores.cliente
+                                                        .acompValor
+                                                )
+                                            "
+                                        />
+                                    </div>
+                                </div>
+                                <!-- km valor -->
+                                <div class="form-group mt-3">
+                                    <label for="Fecha" class="fs-5"
+                                        >Km adicionales valor</label
+                                    >
+                                    <div class="input-group">
+                                        <span
+                                            class="input-group-text"
+                                            id="basic-addon1"
+                                            style="width: 30px"
+                                            >$</span
+                                        >
+                                        <input
+                                            class="form-control edicion isDisabled border-warning"
+                                            required
+                                            type="text"
+                                            [value]="
+                                                op.tarifaTipo.eventual ||
+                                                op.tarifaTipo.personalizada
+                                                    ? formatearValor(0)
+                                                    : formatearValor(
+                                                          op.valores.cliente
+                                                              .kmAdicional
+                                                      )
+                                            "
+                                        />
+                                    </div>
+                                </div>
+                                <!-- adicional extra -->
+                                <div class="form-group isDisabled mt-3">
+                                    <label for="ad-extra-concepto" class="fs-5"
+                                        >Adicional extra concepto:
+                                    </label>
+                                    <div
+                                        class="input-group"
+                                        [ngClass]="{ isDisabled: vista }"
+                                    >
+                                        <input
+                                            class="form-control edicion border-warning"
+                                            [ngModel]="
+                                                op.valores.cliente
+                                                    .adExtraConcepto
+                                            "
+                                        />
+                                    </div>
+                                </div>
+                                <div class="form-group isDisabled mt-3">
+                                    <label for="ad-extra-concepto" class="fs-5"
+                                        >Adicional extra valor:
+                                    </label>
+                                    <div class="input-group">
+                                        <span
+                                            class="input-group-text"
+                                            id="basic-addon1"
+                                            style="width: 30px"
+                                            >$</span
+                                        >
+                                        <input
+                                            class="form-control edicion isDisabled border-warning"
+                                            required
+                                            type="text"
+                                            [ngModel]="
+                                                op.tarifaTipo.eventual ||
+                                                op.tarifaTipo.personalizada
+                                                    ? formatearValor(0)
+                                                    : formatearValor(
+                                                          op.valores.cliente
+                                                              .adExtraValor
+                                                              ? op.valores
+                                                                    .cliente
+                                                                    .adExtraValor
+                                                              : 0
+                                                      )
+                                            "
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <h2>Chofer</h2>
+                            <h4>
+                                Tarifa Aplicada:
+                                <span
+                                    class="fw-semibold fs-4 badge"
+                                    [ngClass]="getClaseTarifa(op)"
+                                    >{{
+                                        op.tarifaTipo.eventual
+                                            ? "Eventual"
+                                            : op.tarifaTipo.personalizada
+                                              ? "Personalizada"
+                                              : op.chofer.tarifaTipo.general
+                                                ? "General"
+                                                : "Especial"
+                                    }}</span
+                                >
+                            </h4>
+                            <!-- OPERACIONES EVENTUALES-->
+                            @if (op.tarifaTipo.eventual) {
+                                <div class="row">
                                     <div class="col">
                                         <div class="form-group mt-3">
                                             <label for="Fecha" class="fs-5"
@@ -361,11 +701,11 @@
                                             >
                                             <div class="input-group">
                                                 <input
-                                                    class="form-control edicion"
+                                                    class="form-control edicion border-primary"
                                                     required
                                                     type="text"
                                                     [(ngModel)]="
-                                                        tarifaEventual.cliente
+                                                        tarifaEventual.chofer
                                                             .concepto
                                                     "
                                                 />
@@ -383,12 +723,12 @@
                                                     >$</span
                                                 >
                                                 <input
-                                                    class="form-control edicion"
+                                                    class="form-control edicion border-primary"
                                                     required
                                                     type="text"
                                                     inputmode="number"
                                                     [(ngModel)]="
-                                                        tarifaEventual.cliente
+                                                        tarifaEventual.chofer
                                                             .valor
                                                     "
                                                     appFormatoNumericoNgModel
@@ -397,272 +737,140 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col">
-                                    <h4 class="mt-2">Chofer:</h4>
-                                    <div class="form-group mt-3">
-                                        <label for="Fecha" class="fs-5"
-                                            >Tarifa Eventual Concepto</label
+                            }
+                            <!-- OPERACIONES PERSONALIZADAS -->
+                            @if (op.tarifaTipo.personalizada) {
+                                <div class="row">
+                                    <div class="col">
+                                        <form
+                                            [formGroup]="
+                                                formTarifaPersonalizada
+                                            "
                                         >
-                                        <div class="input-group">
-                                            <input
-                                                class="form-control edicion"
-                                                required
-                                                type="text"
-                                                [(ngModel)]="
-                                                    tarifaEventual.chofer
-                                                        .concepto
-                                                "
-                                            />
-                                        </div>
-                                    </div>
-                                    <div class="form-group mt-3">
-                                        <label for="Fecha" class="fs-5"
-                                            >Tarifa Eventual Valor</label
-                                        >
-                                        <div class="input-group">
-                                            <span
-                                                class="input-group-text"
-                                                id="basic-addon1"
-                                                style="width: 30px"
-                                                >$</span
-                                            >
-                                            <input
-                                                class="form-control edicion"
-                                                required
-                                                type="text"
-                                                inputmode="number"
-                                                [(ngModel)]="
-                                                    tarifaEventual.chofer.valor
-                                                "
-                                                appFormatoNumericoNgModel
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                        <!-- OPERACIONES PERSONALIZADAS -->
-                        @if (op.tarifaTipo.personalizada) {
-                            <div class="row">
-                                <div class="col">
-                                    <form [formGroup]="formTarifaPersonalizada">
-                                        @if (tarifaClienteSel) {
                                             <div class="form-group">
-                                                <label for="Cliente"
-                                                    >Sección</label
+                                                <label for="Categoria"
+                                                    >Categoria</label
                                                 >
                                                 <select
-                                                    class="form-select mb-3"
+                                                    class="form-select mb-3 border-success"
                                                     (change)="
-                                                        changeSecion($event)
+                                                        changeCategoria($event)
                                                     "
                                                 >
-                                                    <option
-                                                        [value]="
-                                                            op
-                                                                .tarifaPersonalizada
-                                                                .seccion
-                                                        "
-                                                        selected
-                                                    >
+                                                    <option selected>
                                                         {{
                                                             op.tarifaTipo
                                                                 .personalizada
-                                                                ? "Seccion " +
+                                                                ? "Categoria " +
                                                                   op
                                                                       .tarifaPersonalizada
-                                                                      .seccion +
+                                                                      .categoria +
                                                                   " : " +
-                                                                  tarifaClienteSel
-                                                                      .secciones[
-                                                                      op
-                                                                          .tarifaPersonalizada
-                                                                          .seccion -
-                                                                          1
-                                                                  ].descripcion
+                                                                  op
+                                                                      .tarifaPersonalizada
+                                                                      .nombre
                                                                 : "Sin datos"
                                                         }}
                                                     </option>
                                                     @for (
-                                                        seccion of tarifaClienteSel.secciones;
-                                                        track seccion
+                                                        categoria of seccionElegida.categorias;
+                                                        track categoria
                                                     ) {
                                                         <option
                                                             [value]="
-                                                                seccion?.orden
+                                                                categoria.orden
                                                             "
                                                         >
-                                                            Seccion
+                                                            Categoria
                                                             {{
-                                                                seccion?.orden
+                                                                categoria.orden
                                                             }}:
                                                             {{
-                                                                seccion?.descripcion
-                                                                    ? seccion.descripcion
-                                                                    : ""
+                                                                categoria.nombre
                                                             }}
                                                         </option>
                                                     }
                                                 </select>
                                             </div>
-                                        }
-                                    </form>
+                                        </form>
+                                    </div>
                                 </div>
-                                <div class="col">
-                                    <form [formGroup]="formTarifaPersonalizada">
-                                        <div class="form-group">
-                                            <label for="Categoria"
-                                                >Categoria</label
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="form-group mb-2">
+                                            <label for="Fecha" class="fs-5"
+                                                >Tarifa Personalizada
+                                                Valor</label
                                             >
-                                            <select
-                                                class="form-select mb-3"
-                                                (change)="
-                                                    changeCategoria($event)
-                                                "
-                                            >
-                                                <option selected>
-                                                    {{
-                                                        op.tarifaTipo
-                                                            .personalizada
-                                                            ? "Categoria " +
-                                                              op
-                                                                  .tarifaPersonalizada
-                                                                  .categoria +
-                                                              " : " +
-                                                              op
-                                                                  .tarifaPersonalizada
-                                                                  .nombre
-                                                            : "Sin datos"
-                                                    }}
-                                                </option>
-                                                @for (
-                                                    categoria of seccionElegida.categorias;
-                                                    track categoria
-                                                ) {
-                                                    <option
-                                                        [value]="
-                                                            categoria.orden
-                                                        "
-                                                    >
-                                                        Categoria
-                                                        {{ categoria.orden }}:
-                                                        {{ categoria.nombre }}
-                                                    </option>
-                                                }
-                                            </select>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col border-end">
-                                    <h4 class="my-2 mt-2">Cliente:</h4>
-                                    <div class="form-group mb-2">
-                                        <label for="Fecha" class="fs-5"
-                                            >Tarifa Personalizada Valor</label
-                                        >
-                                        <div class="input-group">
-                                            <span
-                                                class="input-group-text"
-                                                id="basic-addon1"
-                                                style="width: 30px"
-                                                >$</span
-                                            >
-                                            <input
-                                                class="form-control edicion isDisabled"
-                                                required
-                                                type="text"
-                                                [value]="
-                                                    formatearValor(
-                                                        op.tarifaPersonalizada
-                                                            .aCobrar
-                                                    )
-                                                "
-                                            />
+                                            <div class="input-group">
+                                                <span
+                                                    class="input-group-text"
+                                                    id="basic-addon1"
+                                                    style="width: 30px"
+                                                    >$</span
+                                                >
+                                                <input
+                                                    class="form-control edicion isDisabled border-primary"
+                                                    required
+                                                    type="text"
+                                                    [value]="
+                                                        formatearValor(
+                                                            op
+                                                                .tarifaPersonalizada
+                                                                .aPagar
+                                                        )
+                                                    "
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col">
-                                    <h4 class="my-2 mt-2">Chofer</h4>
-                                    <div class="form-group mb-2">
-                                        <label for="Fecha" class="fs-5"
-                                            >Tarifa Personalizada Valor</label
-                                        >
-                                        <div class="input-group">
-                                            <span
-                                                class="input-group-text"
-                                                id="basic-addon1"
-                                                style="width: 30px"
-                                                >$</span
+                            }
+
+                            <!-- OPERACIONES GENERALES Y ESPECIALES -->
+                            @if (
+                                !op.tarifaTipo.personalizada &&
+                                !op.tarifaTipo.eventual
+                            ) {
+                                <div class="row isDisabled">
+                                    <!-- CHOFER -->
+                                    <div class="col">
+                                        <div class="form-group mb-2">
+                                            <label for="Fecha" class="fs-5"
+                                                >Tarifa Base Valor</label
                                             >
-                                            <input
-                                                class="form-control edicion isDisabled"
-                                                required
-                                                type="text"
-                                                [value]="
-                                                    formatearValor(
-                                                        op.tarifaPersonalizada
-                                                            .aPagar
-                                                    )
-                                                "
-                                            />
+                                            <div class="input-group">
+                                                <span
+                                                    class="input-group-text"
+                                                    id="basic-addon1"
+                                                    style="width: 30px"
+                                                    >$</span
+                                                >
+                                                <input
+                                                    class="form-control edicion border-primary"
+                                                    required
+                                                    type="text"
+                                                    [value]="
+                                                        formatearValor(
+                                                            op.valores.chofer
+                                                                .tarifaBase
+                                                        )
+                                                    "
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        }
-                        <!-- OPERACIONES GENERALES Y ESPECIALES -->
-                        @if (
-                            !op.tarifaTipo.personalizada &&
-                            !op.tarifaTipo.eventual
-                        ) {
+                            }
+                            <!-- ADICIONALES -->
+                            <h4 class="mt-3">Adicionales:</h4>
                             <div class="row isDisabled">
-                                <div class="col border-end">
-                                    <h4 class="my-2 mt-2">
-                                        Cliente:
-                                        <span class="fw-semibold fs-4">{{
-                                            op.cliente.tarifaTipo.general
-                                                ? "General"
-                                                : "Especial"
-                                        }}</span>
-                                    </h4>
-                                    <div class="form-group mb-2">
-                                        <label for="Fecha" class="fs-5"
-                                            >Tarifa Base Valor</label
-                                        >
-                                        <div class="input-group">
-                                            <span
-                                                class="input-group-text"
-                                                id="basic-addon1"
-                                                style="width: 30px"
-                                                >$</span
-                                            >
-                                            <input
-                                                class="form-control edicion"
-                                                required
-                                                type="text"
-                                                [value]="
-                                                    formatearValor(
-                                                        op.valores.cliente
-                                                            .tarifaBase
-                                                    )
-                                                "
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
+                                <!-- CHOFER -->
                                 <div class="col">
-                                    <h4 class="my-2 mt-2">
-                                        Chofer:
-                                        <span class="fw-semibold fs-4">{{
-                                            op.chofer.tarifaTipo.general
-                                                ? "General"
-                                                : "Especial"
-                                        }}</span>
-                                    </h4>
-                                    <div class="form-group mb-2">
+                                    <!-- acompañante valor -->
+                                    <div class="form-group">
                                         <label for="Fecha" class="fs-5"
-                                            >Tarifa Base Valor</label
+                                            >Acompañante valor</label
                                         >
                                         <div class="input-group">
                                             <span
@@ -672,125 +880,98 @@
                                                 >$</span
                                             >
                                             <input
-                                                class="form-control edicion"
+                                                class="form-control edicion isDisabled border-primary"
                                                 required
                                                 type="text"
                                                 [value]="
                                                     formatearValor(
                                                         op.valores.chofer
-                                                            .tarifaBase
+                                                            .acompValor
                                                     )
                                                 "
                                             />
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        }
-                        <h3 class="mt-3">Adicionales:</h3>
-                        <div class="row isDisabled">
-                            <div class="col border-end">
-                                <div class="form-group">
-                                    <label for="Fecha" class="fs-5"
-                                        >Acompañante valor</label
-                                    >
-                                    <div class="input-group">
-                                        <span
-                                            class="input-group-text"
-                                            id="basic-addon1"
-                                            style="width: 30px"
-                                            >$</span
+                                    <!-- km valor -->
+                                    <div class="form-group mt-3">
+                                        <label for="Fecha" class="fs-5"
+                                            >Km adicionales valor</label
                                         >
-                                        <input
-                                            class="form-control edicion isDisabled"
-                                            required
-                                            type="text"
-                                            [value]="
-                                                formatearValor(
-                                                    op.valores.cliente
-                                                        .acompValor
-                                                )
-                                            "
-                                        />
+                                        <div class="input-group">
+                                            <span
+                                                class="input-group-text"
+                                                id="basic-addon1"
+                                                style="width: 30px"
+                                                >$</span
+                                            >
+                                            <input
+                                                class="form-control edicion isDisabled border-primary"
+                                                required
+                                                type="text"
+                                                [value]="
+                                                    op.tarifaTipo.eventual ||
+                                                    op.tarifaTipo.personalizada
+                                                        ? formatearValor(0)
+                                                        : formatearValor(
+                                                              op.valores.chofer
+                                                                  .kmAdicional
+                                                          )
+                                                "
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="form-group mt-3">
-                                    <label for="Fecha" class="fs-5"
-                                        >Km adicionales valor</label
-                                    >
-                                    <div class="input-group">
-                                        <span
-                                            class="input-group-text"
-                                            id="basic-addon1"
-                                            style="width: 30px"
-                                            >$</span
+                                    <!-- adicional extra -->
+                                    <div class="form-group isDisabled mt-3">
+                                        <label
+                                            for="ad-extra-concepto"
+                                            class="fs-5"
+                                            >Adicional extra concepto:
+                                        </label>
+                                        <div
+                                            class="input-group"
+                                            [ngClass]="{ isDisabled: vista }"
                                         >
-                                        <input
-                                            class="form-control edicion isDisabled"
-                                            required
-                                            type="text"
-                                            [value]="
-                                                op.tarifaTipo.eventual ||
-                                                op.tarifaTipo.personalizada
-                                                    ? formatearValor(0)
-                                                    : formatearValor(
-                                                          op.valores.cliente
-                                                              .kmAdicional
-                                                      )
-                                            "
-                                        />
+                                            <input
+                                                class="form-control edicion border-primary"
+                                                [ngModel]="
+                                                    op.valores.chofer
+                                                        .adExtraConcepto
+                                                "
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="Fecha" class="fs-5"
-                                        >Acompañante valor</label
-                                    >
-                                    <div class="input-group">
-                                        <span
-                                            class="input-group-text"
-                                            id="basic-addon1"
-                                            style="width: 30px"
-                                            >$</span
-                                        >
-                                        <input
-                                            class="form-control edicion isDisabled"
-                                            required
-                                            type="text"
-                                            [value]="
-                                                formatearValor(
-                                                    op.valores.chofer.acompValor
-                                                )
-                                            "
-                                        />
-                                    </div>
-                                </div>
-                                <div class="form-group mt-3">
-                                    <label for="Fecha" class="fs-5"
-                                        >Km adicionales valor</label
-                                    >
-                                    <div class="input-group">
-                                        <span
-                                            class="input-group-text"
-                                            id="basic-addon1"
-                                            style="width: 30px"
-                                            >$</span
-                                        >
-                                        <input
-                                            class="form-control edicion isDisabled"
-                                            required
-                                            type="text"
-                                            [value]="
-                                                op.tarifaTipo.eventual ||
-                                                op.tarifaTipo.personalizada
-                                                    ? formatearValor(0)
-                                                    : formatearValor(
-                                                          op.valores.chofer
-                                                              .kmAdicional
-                                                      )
-                                            "
-                                        />
+                                    <div class="form-group isDisabled mt-3">
+                                        <label
+                                            for="ad-extra-concepto"
+                                            class="fs-5"
+                                            >Adicional extra valor:
+                                        </label>
+                                        <div class="input-group">
+                                            <span
+                                                class="input-group-text"
+                                                id="basic-addon1"
+                                                style="width: 30px"
+                                                >$</span
+                                            >
+                                            <input
+                                                class="form-control edicion isDisabled border-primary"
+                                                required
+                                                type="text"
+                                                [ngModel]="
+                                                    op.tarifaTipo.eventual ||
+                                                    op.tarifaTipo.personalizada
+                                                        ? formatearValor(0)
+                                                        : formatearValor(
+                                                              op.valores.chofer
+                                                                  .adExtraValor
+                                                                  ? op.valores
+                                                                        .chofer
+                                                                        .adExtraValor
+                                                                  : 0
+                                                          )
+                                                "
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -799,6 +980,7 @@
                 </div>
             </div>
         </div>
+        <!-- TOTALES -->
         <div
             class="row border border-dark border-1 rounded-4 shadow p-3 mt-3 bg-body-tertiary rounded mx-1 px-0"
         >
@@ -817,7 +999,7 @@
                                 >$</span
                             >
                             <input
-                                class="form-control edicion isDisabled"
+                                class="form-control edicion isDisabled border-warning"
                                 required
                                 type="text"
                                 [(ngModel)]="aCobrar"
@@ -836,7 +1018,7 @@
                                 >$</span
                             >
                             <input
-                                class="form-control edicion isDisabled"
+                                class="form-control edicion isDisabled border-primary"
                                 required
                                 type="text"
                                 [(ngModel)]="aPagar"
@@ -855,7 +1037,7 @@
                             >
                             <input
                                 type="number"
-                                class="form-control"
+                                class="form-control border-warning"
                                 [(ngModel)]="op.multiplicadorCliente"
                                 name="multiplicadorCliente"
                                 step="0.01"
@@ -874,7 +1056,7 @@
                             >
                             <input
                                 type="number"
-                                class="form-control"
+                                class="form-control border-primary"
                                 [(ngModel)]="op.multiplicadorChofer"
                                 name="multiplicadorChofer"
                                 step="0.01"
