@@ -136,7 +136,7 @@
 
                         <td>
                             <select
-                                class="form-select form-select-sm"
+                                class="form-select form-select-sm" (change)="configurarAcompaniante(op)"
                                 [(ngModel)]="op.acompaniante"
                             >
                                 <option [ngValue]="true">Sí</option>
@@ -147,7 +147,7 @@
                         <td>
                             <input
                                 type="number"
-                                class="form-control form-control-sm"
+                                class="form-control form-control-sm" (change)="configurarCantAcompaniante(op)"
                                 [(ngModel)]="op.acompanienteCant"
                                 [ngClass]="{ isDisabled: !op.acompaniante }"
                             />

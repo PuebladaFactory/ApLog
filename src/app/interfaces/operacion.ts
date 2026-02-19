@@ -27,6 +27,7 @@ export interface Operacion {
     valores: Valores;
     multiplicadorCliente:number;
     multiplicadorChofer:number;
+    adExtraConcepto?: string;
     
 }
 
@@ -65,16 +66,14 @@ export interface Valores{
         acompValor: number;
         kmAdicional: number;
         tarifaBase: number,        
-        aCobrar: number;
-        adExtraConcepto?: number;
+        aCobrar: number;        
         adExtraValor?:number;    
     }
     chofer: {
         acompValor: number;
         kmAdicional: number;
         tarifaBase: number;
-        aPagar: number;
-        adExtraConcepto?: number;
+        aPagar: number;        
         adExtraValor?:number;
     }
 }

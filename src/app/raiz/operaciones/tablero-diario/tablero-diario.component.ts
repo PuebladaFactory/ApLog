@@ -378,6 +378,15 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
 
       if (!operacion) return;
 
+      if(operacion.estado.facChofer || operacion.estado.facCliente || operacion.estado.proformaCh || operacion.estado.proformaCl || operacion.estado.facturada ){
+        Swal.fire({
+            icon: "error",
+            title: "Operación Liquidada",
+            text: "No se puede eliminar la operación debido a que ya fue liquidada.",
+          });
+          return;
+      }
+
       // 🟡 Confirmación inicial
       const confirmacion = await Swal.fire({
         icon: "warning",

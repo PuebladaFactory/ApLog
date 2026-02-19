@@ -16,6 +16,7 @@ import { Subject, takeUntil } from "rxjs";
 import { ValoresOpService } from "src/app/servicios/valores-op/valores-op/valores-op.service";
 import { ModalChoferesNoDisponiblesComponent } from "../modal-choferes-no-disponibles/modal-choferes-no-disponibles.component";
 import { NoDisponibilidadChofer } from "src/app/interfaces/no-disponibilidad-chofer";
+import { FormatoNumericoService } from "src/app/servicios/formato-numerico/formato-numerico.service";
 
 /* =========================
    Runtime types
@@ -93,6 +94,7 @@ export class CargaMultipleComponent implements OnInit {
     public activeModal: NgbActiveModal,
     private modalService: NgbModal,
     private valoresServ: ValoresOpService,
+    private formNumServ: FormatoNumericoService,
   ) {}
 
   /* =========================
@@ -271,6 +273,8 @@ export class CargaMultipleComponent implements OnInit {
       tarifaOverride: override,
     } as unknown as OperacionRuntime;
 
+    (op as any).originalEventual = tarifaTipo.eventual;
+
     this.syncFlags(op);
 
     return op;
@@ -381,7 +385,7 @@ export class CargaMultipleComponent implements OnInit {
     }
 
     const confirm = await Swal.fire({
-      title: "¿Dar de alta operaciones?",
+      title: "¿Confirmar el alta de las operaciones?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Guardar",
@@ -389,17 +393,23 @@ export class CargaMultipleComponent implements OnInit {
 
     if (!confirm.isConfirmed) return;
 
-    this.isLoading = true;
+    //this.isLoading = true;
 
     try {
       // sync runtime → legacy flags
       this.operaciones.forEach((op) => this.syncFlags(op));
 
+      this.operaciones.forEach(op => {            
+        delete (op as any).originalEventual;
+      });
+
       // strip runtime props
       this.operacionesFinales = this.operaciones.map((op) => {
         const { tarifaBase, tarifaOverride, ...clean } = op;
         return clean as Operacion;
-      });
+      });      
+
+      
 
       this.operacionesFinales = this.operacionesFinales.map((op) => {
         return this.valoresIniciales(op);
@@ -432,11 +442,18 @@ export class CargaMultipleComponent implements OnInit {
       op.valores.chofer.aPagar = op.tarifaPersonalizada.aPagar;
     }
     if (op.tarifaTipo.eventual) {
+      op.tarifaEventual.cliente.valor = this.formNumServ.convertirAValorNumerico(op.tarifaEventual.cliente.valor);
+      op.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(op.tarifaEventual.chofer.valor);
       op.valores.cliente.aCobrar = op.tarifaEventual.cliente.valor;
       op.valores.chofer.aPagar = op.tarifaEventual.chofer.valor;
     }
     op.valores.cliente.tarifaBase = op.valores.cliente.aCobrar;
     op.valores.chofer.tarifaBase = op.valores.chofer.aPagar;
+
+    if(op.acompaniante) {
+      op = this.valoresServ.valoresOpAcompaniante(op);
+    }
+    op = this.valoresServ.recalcularValores(op);
 
     return op;
   }

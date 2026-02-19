@@ -123,6 +123,11 @@
                                 />
                             </div>
                         </div>
+                        <form
+                                            [formGroup]="
+                                                formAcomp
+                                            "
+                                        >
                         <div
                             class="form-group"
                             [ngClass]="{ isDisabled: vista || cerrar }"
@@ -131,16 +136,18 @@
                                 >Acompañante</label
                             >
                             <select
-                                class="form-select mb-3 border-info"
+                                class="form-select mb-3 border-info" formControlName="acompaniante"
                                 (change)="changeAcompaniante($event)"
+                                
                             >
-                                <option [value]="acompaniante" selected>
-                                    {{ acompaniante ? "Si" : "No" }}
+                                <option [value]="this.op.acompaniante" selected>
+                                    {{ this.op.acompaniante ? "Si" : "No" }}
                                 </option>
                                 <option [value]="true">Si</option>
                                 <option [value]="false">No</option>
                             </select>
                         </div>
+                        </form>
                         <div
                             class="form-group"
                             [ngClass]="{ isDisabled: vista || cerrar }"
@@ -155,7 +162,7 @@
                                 [(ngModel)]="op.acompanienteCant"
                             />
                         </div>
-                        <form [formGroup]="form">
+                        
                             <div
                                 class="form-group"
                                 [ngClass]="{ invisible: cerrar }"
@@ -167,9 +174,9 @@
                                     class="input-group"
                                     [ngClass]="{ isDisabled: vista }"
                                 >
-                                    <input
-                                        formControlName="hojaRuta "
+                                    <input                                        
                                         class="form-control edicion border-info"
+                                        [(ngModel)]="op.hojaRuta"
                                     />
                                 </div>
                             </div>
@@ -184,24 +191,20 @@
                                     class="input-group"
                                     [ngClass]="{ isDisabled: vista }"
                                 >
-                                    <textarea
-                                        formControlName="observaciones"
+                                    <textarea                                        
                                         class="form-control edicion border-info"
+                                        [(ngModel)]="op.observaciones"
                                     ></textarea>
                                 </div>
                             </div>
-                        </form>
+                        
                         <h3
                             class="mt-5 mb-3"
                             [ngClass]="{ invisible: !cerrar }"
                         >
                             Cerrar Operación:
                         </h3>
-                        <form
-                            [formGroup]="form"
-                            class="border border-dark border-1 rounded-4 shadow p-3 mb-1 bg-body-tertiary rounded pb-5"
-                            [ngClass]="{ invisible: !cerrar }"
-                        >
+                        <form [formGroup]="form" class="border border-dark border-1 rounded-4 shadow p-3 mb-1 bg-body-tertiary rounded pb-5" [ngClass]="{'invisible': !cerrar}">
                             <div class="form-group">
                                 <label for="Km" class="fs-5"
                                     >Km Recorridos</label
@@ -225,18 +228,19 @@
                                     />
                                 </div>
                             </div>
+                            </form>
                             <div class="form-group mt-3">
                                 <label for="Documentacion" class="fs-5"
                                     >Documentacion</label
                                 >
                                 <input
-                                    formControlName="documentacion"
+                                    
                                     class="form-control edicion border-info"
                                     type="file"
                                     id="formFile"
                                 />
                             </div>
-                        </form>
+                        
                     </div>
                 }
                 <!-- OPERACION CERRADA -->
@@ -302,7 +306,7 @@
                                 />
                             </div>
                         </div>
-                        <form [formGroup]="form" class="m-2">
+                        
                             <div
                                 class="form-group"
                                 [ngClass]="{ invisible: cerrar }"
@@ -315,7 +319,7 @@
                                     [ngClass]="{ isDisabled: vista }"
                                 >
                                     <textarea
-                                        formControlName="hojaRuta"
+                                        [(ngModel)]="op.hojaRuta"
                                         class="form-control edicion border-info"
                                     ></textarea>
                                 </div>
@@ -332,12 +336,12 @@
                                     [ngClass]="{ isDisabled: vista }"
                                 >
                                     <textarea
-                                        formControlName="observaciones"
+                                        [(ngModel)]="op.observaciones"
                                         class="form-control edicion border-info"
                                     ></textarea>
                                 </div>
                             </div>
-                        </form>
+                        
                     </div>
                 }
             </div>
@@ -355,9 +359,10 @@
                 <div
                     class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100"
                 >
-                    <!-- TARIFAS-->
+                    <!-- TARIFAS Y VALORES -->
                     <div class="row">
-                        <div class="col border-end">
+                        <!-- CLIENTE -->
+                        <div class="col border-end mb-4">
                             <h2>Cliente</h2>
                             <h4 class="my-2 mt-2">
                                 Tarifa Aplicada:
@@ -378,7 +383,7 @@
                             <!-- OPERACIONES EVENTUALES-->
                             @if (op.tarifaTipo.eventual) {
                                 <div class="row">
-                                    <div class="col">                                        
+                                    <div class="col">
                                         <div class="col">
                                             <div class="form-group mt-3">
                                                 <label for="Fecha" class="fs-5"
@@ -391,7 +396,7 @@
                                                         required
                                                         type="text"
                                                         [(ngModel)]="
-                                                            tarifaEventual
+                                                            op.tarifaEventual
                                                                 .cliente
                                                                 .concepto
                                                         "
@@ -416,10 +421,11 @@
                                                         type="text"
                                                         inputmode="number"
                                                         [(ngModel)]="
-                                                            tarifaEventual
+                                                            op.tarifaEventual
                                                                 .cliente.valor
                                                         "
                                                         appFormatoNumericoNgModel
+                                                        (change)="valoresEventuales()"
                                                     />
                                                 </div>
                                             </div>
@@ -518,13 +524,9 @@
                                                     class="form-control edicion isDisabled border-warning"
                                                     required
                                                     type="text"
-                                                    [value]="
-                                                        formatearValor(
-                                                            op
-                                                                .tarifaPersonalizada
-                                                                .aCobrar
-                                                        )
-                                                    "
+                                                    inputmode="number"
+                                                    appFormatoMonetarioControl
+                                                    [(ngModel)]="op.tarifaPersonalizada.aCobrar"
                                                 />
                                             </div>
                                         </div>
@@ -554,12 +556,9 @@
                                                     class="form-control edicion border-warning"
                                                     required
                                                     type="text"
-                                                    [value]="
-                                                        formatearValor(
-                                                            op.valores.cliente
-                                                                .tarifaBase
-                                                        )
-                                                    "
+                                                    inputmode="number"
+                                                    appFormatoMonetarioControl
+                                                    [(ngModel)]="op.valores.cliente.tarifaBase"
                                                 />
                                             </div>
                                         </div>
@@ -583,14 +582,12 @@
                                         >
                                         <input
                                             class="form-control edicion isDisabled border-warning"
+                                            disabled
                                             required
                                             type="text"
-                                            [value]="
-                                                formatearValor(
-                                                    op.valores.cliente
-                                                        .acompValor
-                                                )
-                                            "
+                                            inputmode="number"
+                                            appFormatoMonetarioControl
+                                            [(ngModel)]="op.valores.cliente.acompValor"
                                         />
                                     </div>
                                 </div>
@@ -608,72 +605,22 @@
                                         >
                                         <input
                                             class="form-control edicion isDisabled border-warning"
+                                            disabled
                                             required
                                             type="text"
-                                            [value]="
-                                                op.tarifaTipo.eventual ||
-                                                op.tarifaTipo.personalizada
-                                                    ? formatearValor(0)
-                                                    : formatearValor(
-                                                          op.valores.cliente
-                                                              .kmAdicional
-                                                      )
-                                            "
-                                        />
-                                    </div>
-                                </div>
-                                <!-- adicional extra -->
-                                <div class="form-group isDisabled mt-3">
-                                    <label for="ad-extra-concepto" class="fs-5"
-                                        >Adicional extra concepto:
-                                    </label>
-                                    <div
-                                        class="input-group"
-                                        [ngClass]="{ isDisabled: vista }"
-                                    >
-                                        <input
-                                            class="form-control edicion border-warning"
-                                            [ngModel]="
-                                                op.valores.cliente
-                                                    .adExtraConcepto
-                                            "
-                                        />
-                                    </div>
-                                </div>
-                                <div class="form-group isDisabled mt-3">
-                                    <label for="ad-extra-concepto" class="fs-5"
-                                        >Adicional extra valor:
-                                    </label>
-                                    <div class="input-group">
-                                        <span
-                                            class="input-group-text"
-                                            id="basic-addon1"
-                                            style="width: 30px"
-                                            >$</span
-                                        >
-                                        <input
-                                            class="form-control edicion isDisabled border-warning"
-                                            required
-                                            type="text"
+                                            inputmode="number"
+                                            appFormatoMonetarioControl
                                             [ngModel]="
                                                 op.tarifaTipo.eventual ||
                                                 op.tarifaTipo.personalizada
-                                                    ? formatearValor(0)
-                                                    : formatearValor(
-                                                          op.valores.cliente
-                                                              .adExtraValor
-                                                              ? op.valores
-                                                                    .cliente
-                                                                    .adExtraValor
-                                                              : 0
-                                                      )
-                                            "
+                                                    ? 0
+                                                    : op.valores.cliente.kmAdicional"
                                         />
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col mb-4">
                             <h2>Chofer</h2>
                             <h4>
                                 Tarifa Aplicada:
@@ -705,7 +652,7 @@
                                                     required
                                                     type="text"
                                                     [(ngModel)]="
-                                                        tarifaEventual.chofer
+                                                        op.tarifaEventual.chofer
                                                             .concepto
                                                     "
                                                 />
@@ -728,10 +675,11 @@
                                                     type="text"
                                                     inputmode="number"
                                                     [(ngModel)]="
-                                                        tarifaEventual.chofer
+                                                        op.tarifaEventual.chofer
                                                             .valor
                                                     "
                                                     appFormatoNumericoNgModel
+                                                    (change)="valoresEventuales()"
                                                 />
                                             </div>
                                         </div>
@@ -813,13 +761,9 @@
                                                     class="form-control edicion isDisabled border-primary"
                                                     required
                                                     type="text"
-                                                    [value]="
-                                                        formatearValor(
-                                                            op
-                                                                .tarifaPersonalizada
-                                                                .aPagar
-                                                        )
-                                                    "
+                                                    inputmode="number"
+                                                    appFormatoMonetarioControl
+                                                    [(ngModel)]="op.tarifaPersonalizada.aPagar"
                                                 />
                                             </div>
                                         </div>
@@ -850,12 +794,9 @@
                                                     class="form-control edicion border-primary"
                                                     required
                                                     type="text"
-                                                    [value]="
-                                                        formatearValor(
-                                                            op.valores.chofer
-                                                                .tarifaBase
-                                                        )
-                                                    "
+                                                    inputmode="number"
+                                                    appFormatoMonetarioControl
+                                                    [(ngModel)]="op.valores.chofer.tarifaBase"
                                                 />
                                             </div>
                                         </div>
@@ -881,14 +822,12 @@
                                             >
                                             <input
                                                 class="form-control edicion isDisabled border-primary"
+                                                disabled
                                                 required
                                                 type="text"
-                                                [value]="
-                                                    formatearValor(
-                                                        op.valores.chofer
-                                                            .acompValor
-                                                    )
-                                                "
+                                                inputmode="number"
+                                                appFormatoMonetarioControl
+                                                [(ngModel)]="op.valores.chofer.acompValor"
                                             />
                                         </div>
                                     </div>
@@ -906,73 +845,91 @@
                                             >
                                             <input
                                                 class="form-control edicion isDisabled border-primary"
+                                                disabled
                                                 required
                                                 type="text"
-                                                [value]="
-                                                    op.tarifaTipo.eventual ||
-                                                    op.tarifaTipo.personalizada
-                                                        ? formatearValor(0)
-                                                        : formatearValor(
-                                                              op.valores.chofer
-                                                                  .kmAdicional
-                                                          )
-                                                "
-                                            />
-                                        </div>
-                                    </div>
-                                    <!-- adicional extra -->
-                                    <div class="form-group isDisabled mt-3">
-                                        <label
-                                            for="ad-extra-concepto"
-                                            class="fs-5"
-                                            >Adicional extra concepto:
-                                        </label>
-                                        <div
-                                            class="input-group"
-                                            [ngClass]="{ isDisabled: vista }"
-                                        >
-                                            <input
-                                                class="form-control edicion border-primary"
-                                                [ngModel]="
-                                                    op.valores.chofer
-                                                        .adExtraConcepto
-                                                "
-                                            />
-                                        </div>
-                                    </div>
-                                    <div class="form-group isDisabled mt-3">
-                                        <label
-                                            for="ad-extra-concepto"
-                                            class="fs-5"
-                                            >Adicional extra valor:
-                                        </label>
-                                        <div class="input-group">
-                                            <span
-                                                class="input-group-text"
-                                                id="basic-addon1"
-                                                style="width: 30px"
-                                                >$</span
-                                            >
-                                            <input
-                                                class="form-control edicion isDisabled border-primary"
-                                                required
-                                                type="text"
+                                                inputmode="number"
+                                                appFormatoMonetarioControl
                                                 [ngModel]="
                                                     op.tarifaTipo.eventual ||
                                                     op.tarifaTipo.personalizada
-                                                        ? formatearValor(0)
-                                                        : formatearValor(
-                                                              op.valores.chofer
-                                                                  .adExtraValor
-                                                                  ? op.valores
-                                                                        .chofer
-                                                                        .adExtraValor
-                                                                  : 0
-                                                          )
-                                                "
+                                                        ? 0
+                                                        : op.valores.chofer.kmAdicional"
                                             />
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- GASTOS EXTRAS -->
+                    <!-- CONCEPTO -->
+                    <div class="row border-top"  [ngClass]="{ isDisabled: vista }">
+                        <h4 class="mt-2">Gastos Extras:</h4>
+                        <div class="form-group">
+                            <label for="ad-extra-concepto" class="fs-5"
+                                >Adicional extra concepto:
+                            </label>
+                            <div
+                                class="input-group"
+                                [ngClass]="{ isDisabled: vista }"
+                            >
+                                <input
+                                    class="form-control edicion border-info"
+                                    [(ngModel)]="op.adExtraConcepto"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- VALORES GASTOS EXTRAS -->
+                    <div class="row" >
+                        <!-- VALOR CLIENTE -->
+                        <div class="col mt-2">
+                            <div class="form-group">
+                                <label for="ad-extra-concepto" class="fs-5"
+                                    >Adicional extra valor:
+                                </label>
+                                <div class="input-group">
+                                    <span
+                                        class="input-group-text"
+                                        id="basic-addon1"
+                                        style="width: 30px"
+                                        >$</span
+                                    >
+                                    <input
+                                        class="form-control edicion border-warning"
+                                        required
+                                        type="text"
+                                        inputmode="number"
+                                        appFormatoNumericoNgModel
+                                        [(ngModel)]="op.valores.cliente.adExtraValor"
+                                        (change)="valoresGastosExtras()"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <!-- VALOR CHOFER -->
+                        <div class="col mt-2">
+                            <div class="form-group">
+                                <label for="ad-extra-concepto" class="fs-5"
+                                    >Adicional extra valor:
+                                </label>
+                                <div class="input-group">
+                                    <span
+                                        class="input-group-text"
+                                        id="basic-addon1"
+                                        style="width: 30px"
+                                        >$</span
+                                    >
+                                    <input
+                                        class="form-control edicion border-primary"
+                                        required
+                                        type="text"
+                                        inputmode="number"
+                                        appFormatoNumericoNgModel
+                                        (change)="valoresGastosExtras()"
+                                        [(ngModel)]="op.valores.chofer.adExtraValor"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -1000,9 +957,12 @@
                             >
                             <input
                                 class="form-control edicion isDisabled border-warning"
+                                disabled
                                 required
                                 type="text"
-                                [(ngModel)]="aCobrar"
+                                inputmode="number"
+                                appFormatoMonetarioControl
+                                [(ngModel)]="this.op.valores.cliente.aCobrar"
                             />
                         </div>
                     </div>
@@ -1019,9 +979,12 @@
                             >
                             <input
                                 class="form-control edicion isDisabled border-primary"
+                                disabled
                                 required
                                 type="text"
-                                [(ngModel)]="aPagar"
+                                inputmode="number"
+                                appFormatoMonetarioControl
+                                [(ngModel)]="this.op.valores.chofer.aPagar"
                             />
                         </div>
                     </div>
@@ -1070,8 +1033,9 @@
             </div>
         </div>
     </div>
+    <div class="modal-footer">
     @if (!vista) {
-        <div class="modal-footer">
+        
             @if (!cerrar) {
                 <app-btn-agregar
                     name="Guardar"
@@ -1088,8 +1052,9 @@
                     Cerrar Operación
                 </button>
             }
-        </div>
+        
     }
+    </div>
 </div>
 @if (isLoading) {
     <app-spinner></app-spinner>

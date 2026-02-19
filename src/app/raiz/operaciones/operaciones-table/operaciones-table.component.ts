@@ -126,6 +126,10 @@ export class OperacionesTableComponent {
       if (!op.tarifaEventual.cliente.concepto) errores.push('Concepto cliente');
     }
 
+    if(op.acompaniante && op.acompanienteCant === 0){
+      errores.push("La cantidad de acompañantes no puede ser 0")
+    }
+
     return errores;
   }
 
@@ -248,6 +252,18 @@ export class OperacionesTableComponent {
         Swal.fire('Eliminada', 'La operación fue eliminada correctamente.', 'success');
       }
     });
+  }
+
+  // ---------- ACOMPAÑANTES ----------
+
+  configurarAcompaniante(op:OperacionRuntime){
+    if(op.acompaniante) op.acompanienteCant = 1;
+    if(!op.acompaniante) op.acompanienteCant = 0;
+  }
+
+  configurarCantAcompaniante(op:OperacionRuntime){
+    if(op.acompanienteCant === 0) op.acompaniante = false;
+    if(op.acompanienteCant && op.acompanienteCant > 0) op.acompaniante = true;
   }
 
 }

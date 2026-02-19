@@ -437,5 +437,55 @@ async $guardarFacturas(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje:
     return op.valores.chofer;
   }
 
+  valoresOpAcompaniante(op:Operacion):Operacion{      
+
+    op.valores.cliente.acompValor = this.clienteAcompaniante(op);
+    op.valores.chofer.acompValor = this.choferAcompaniante(op);
+
+    return op
+
+  }
+
+  clienteAcompaniante(op:Operacion):number{
+    let tarifas
+    let tarifaAplicada: TarifaGralCliente
+      if(op.cliente.tarifaTipo.especial){
+        tarifas = this.storageService.loadInfo("tarifasEspCliente");
+        tarifaAplicada = tarifas.find(t=> t.idCliente === op.cliente.idCliente);
+      } else {
+        tarifas = this.storageService.loadInfo("tarifasGralCliente");
+        tarifaAplicada = tarifas[0];
+      }
+    
+      return tarifaAplicada.adicionales.acompaniante * (op.acompanienteCant ?? 1);
+  }
+
+  choferAcompaniante(op:Operacion):number{
+    let tarifas
+    let tGralChofer = this.storageService.loadInfo("tarifasGralChofer");
+    let tarifaAplicada: TarifaGralCliente
+
+
+      if(op.chofer.tarifaTipo.especial){
+        tarifas = this.storageService.loadInfo("tarifasEspChofer");
+        let tEspecial = tarifas.find(t=> t.idCliente === op.cliente.idCliente);
+        if(tEspecial.idCliente === 0 || tEspecial.idCliente === op.cliente.idCliente){
+          tarifaAplicada = tEspecial;
+        }else{
+          tarifaAplicada = tGralChofer[0];
+        }
+      } else {        
+        tarifaAplicada = tGralChofer[0];
+      }
+    
+      return tarifaAplicada.adicionales.acompaniante * (op.acompanienteCant ?? 1);
+  }
+
+  recalcularValores(op:Operacion): Operacion {
+    op.valores.cliente.aCobrar = (op.valores.cliente.tarifaBase * op.multiplicadorCliente) + op.valores.cliente.kmAdicional + op.valores.cliente.acompValor + (op.valores.cliente.adExtraValor ?? 0);
+    op.valores.chofer.aPagar = (op.valores.chofer.tarifaBase * op.multiplicadorChofer) + op.valores.chofer.kmAdicional + op.valores.chofer.acompValor + (op.valores.chofer.adExtraValor ?? 0);
+    return op
+  }
+
 
 }
