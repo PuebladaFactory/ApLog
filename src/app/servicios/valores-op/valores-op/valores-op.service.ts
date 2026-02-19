@@ -468,7 +468,7 @@ async $guardarFacturas(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje:
 
       if(op.chofer.tarifaTipo.especial){
         tarifas = this.storageService.loadInfo("tarifasEspChofer");
-        let tEspecial = tarifas.find(t=> t.idCliente === op.cliente.idCliente);
+        let tEspecial = tarifas.find(t=> t.idChofer === op.chofer.idChofer);
         if(tEspecial.idCliente === 0 || tEspecial.idCliente === op.cliente.idCliente){
           tarifaAplicada = tEspecial;
         }else{

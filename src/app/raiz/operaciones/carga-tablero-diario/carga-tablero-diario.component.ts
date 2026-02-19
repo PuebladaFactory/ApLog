@@ -343,22 +343,10 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
-        // 🔹 convertir a Operacion persistible
-
-        this.operaciones.forEach(op => {
-            delete (op as any).categoriaAsignada;
-            delete (op as any).tarifaTipoOriginal;
-            delete (op as any).originalEventual;
-          });
-
-        const operacionesFinales: Operacion[] = this.operaciones.map((op) => {
-          const { tarifaBase, tarifaOverride, ...persistible } = op;
-          return persistible;
-        });
 
         const asignaciones: { [idCliente: number]: ChoferAsignadoBase[] } = {};
 
-        for (const op of operacionesFinales) {
+        for (const op of this.operaciones) {
           const idCliente = op.cliente.idCliente;
 
           const a: ChoferAsignadoBase = {
@@ -374,12 +362,27 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
           asignaciones[idCliente].push(a);
         }
 
+        this.operaciones.forEach(op => {
+          delete (op as any).categoriaAsignada;
+          delete (op as any).tarifaTipoOriginal;
+          delete (op as any).originalEventual;
+        });
+
+        // 🔹 convertir a Operacion persistible
+
+        const operacionesFinales: Operacion[] = this.operaciones.map((op) => {
+          const { tarifaBase, tarifaOverride, ...persistible } = op;
+          return persistible;
+        });
+
+
         operacionesFinales.map((op) => {
           op = this.valoresIniciales(op);
         });
 
         this.limpiarPropiedadesChoferEnOperaciones(operacionesFinales);
         console.log("operacionesFinales: ", operacionesFinales);
+        console.log("asignaciones: ", asignaciones);
 
         this.activeModal.close({
           operaciones: operacionesFinales,
@@ -435,7 +438,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
         tarifaAsignada: op.chofer.tarifaAsignada,
         idTarifa: op.chofer.idTarifa,
         activo: op.chofer.activo,
-        visible: op.chofer.visible
+        visible: op.chofer.visible ?? false
       };
 
       op.chofer = choferOriginal;

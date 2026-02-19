@@ -670,6 +670,8 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
             timestamp: Date.now(),
             asignado: true,
           };
+          console.log("this.tablero: ", this.tablero);
+          
           await this.tableroServ.guardarTablero(this.tablero, "ALTA");
 
           const arrayOp: number[] = result.operaciones.map(
@@ -685,13 +687,14 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
           this.limpiarAsignaciones();
           localStorage.removeItem("asignacionesTemporal");
           localStorage.removeItem("tableroDiarioFirestore");
-
+          
           Swal.fire({
             icon: "success",
             title: "Operaciones guardadas",
             text: res.mensaje,
           });
         } else {
+          
           Swal.fire({
             icon: "error",
             title: "Error al guardar",
