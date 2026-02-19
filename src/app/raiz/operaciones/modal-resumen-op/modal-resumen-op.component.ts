@@ -287,6 +287,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
         this.mensajesError("El campo de Km recorridos no puede quedar vacio");
       }
     } else {
+      if((this.op.valores.cliente.adExtraValor && this.op.valores.chofer.adExtraValor) && (this.op.valores.cliente.adExtraValor > 0 || this.op.valores.chofer.adExtraValor > 0) && this.op.adExtraConcepto === "" ) return this.mensajesError("Debe asignar una descripción al gasto extra");
       this.armarOp();
     }
   }
@@ -331,9 +332,11 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
         : 1;
 
     console.log("this.op.acompanienteCant :", this.op.acompanienteCant); */
+    
+
 
     console.log("operacion: para cerrar", this.op);
-    //this.calcularValoresfinales()
+    this.calcularValoresfinales()
 
 
   }
@@ -412,7 +415,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     //this.op.acompanienteCant = !this.op.acompaniante ? 0 : this.op.acompanienteCant? this.op.acompanienteCant : 1;
 
     console.log("editar op :", this.op);    
-    //this.updateItem();
+    this.updateItem();
   }
 
   ////// ACTUALIZAR OBJETO /////////

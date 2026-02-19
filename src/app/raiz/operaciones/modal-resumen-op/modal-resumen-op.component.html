@@ -17,8 +17,8 @@
                 <div class="form-group">
                     <label for="Fecha" class="fs-5">Fecha</label>
                     <div class="input-group">
-                        <input
-                            class="form-control edicion border-info"
+                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                            class="form-control edicion border-info"                            
                             type="date"
                             [value]="op.fecha"
                         />
@@ -31,7 +31,7 @@
                             class="input-group"
                             [ngClass]="{ isDisabled: vista }"
                         >
-                            <input
+                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                 class="form-control edicion border-info"
                                 [value]="op.patenteChofer"
                             />
@@ -43,7 +43,7 @@
                 <div class="form-group">
                     <label for="Cliente" class="fs-5">Cliente</label>
                     <div class="input-group">
-                        <input
+                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                             class="form-control edicion border-warning"
                             type="text"
                             [value]="op.cliente.razonSocial"
@@ -53,7 +53,7 @@
                 <div class="form-group">
                     <label for="Cliente" class="fs-5">Tarifa Cliente</label>
                     <div class="input-group">
-                        <input
+                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                             class="form-control edicion border-warning"
                             type="text"
                             [ngModel]="
@@ -73,7 +73,7 @@
                 <div class="form-group">
                     <label for="Chofer" class="fs-5">Chofer</label>
                     <div class="input-group">
-                        <input
+                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                             class="form-control edicion border-primary"
                             type="text"
                             [value]="
@@ -85,7 +85,7 @@
                 <div class="form-group isDisabled">
                     <label for="Cliente" class="fs-5">Tarifa Chofer</label>
                     <div class="input-group">
-                        <input
+                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                             class="form-control edicion border-primary"
                             type="text"
                             [ngModel]="
@@ -117,7 +117,7 @@
                                 class="input-group"
                                 [ngClass]="{ isDisabled: vista }"
                             >
-                                <input
+                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                     class="form-control edicion border-info"
                                     [value]="op.patenteChofer"
                                 />
@@ -135,8 +135,9 @@
                             <label for="Acompaniante" class="fs-5"
                                 >Acompañante</label
                             >
-                            <select
+                            <select  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                 class="form-select mb-3 border-info" formControlName="acompaniante"
+                                [ngClass]="{'select-deshabilitado': fromParent.modo === 'cerrar'}"
                                 (change)="changeAcompaniante($event)"
                                 
                             >
@@ -155,7 +156,7 @@
                             <label for="Cantidad acompaniantes" class="fs-5"
                                 >Cantidad acompañantes</label
                             >
-                            <input
+                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                 class="form-control edicion border-info"
                                 type="number"
                                 (change)="changeCantAcompaniantes($event)"
@@ -174,7 +175,7 @@
                                     class="input-group"
                                     [ngClass]="{ isDisabled: vista }"
                                 >
-                                    <input                                        
+                                    <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"                                        
                                         class="form-control edicion border-info"
                                         [(ngModel)]="op.hojaRuta"
                                     />
@@ -216,7 +217,7 @@
                                         style="width: 30px"
                                         >Km</span
                                     >
-                                    <input
+                                    <input  
                                         #kmInput
                                         formControlName="km"
                                         class="form-control edicion border-info"
@@ -233,8 +234,8 @@
                                 <label for="Documentacion" class="fs-5"
                                     >Documentacion</label
                                 >
-                                <input
-                                    
+                                <input  
+                                    disabled
                                     class="form-control edicion border-info"
                                     type="file"
                                     id="formFile"
@@ -254,7 +255,7 @@
                                 class="input-group"
                                 [ngClass]="{ isDisabled: vista }"
                             >
-                                <input
+                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                     class="form-control edicion border-info"
                                     [value]="op.patenteChofer"
                                 />
@@ -266,7 +267,7 @@
                                 >Acompañante</label
                             >
                             <div class="input-group">
-                                <input
+                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                     class="form-control edicion isDisabled border-info"
                                     required
                                     type="text"
@@ -281,7 +282,7 @@
                             <label for="Cantidad acompaniantes" class="fs-5"
                                 >Cantidad acompañantes</label
                             >
-                            <input
+                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                 class="form-control edicion border-info"
                                 type="number"
                                 [(ngModel)]="op.acompanienteCant"
@@ -298,7 +299,7 @@
                                     style="width: 30px"
                                     >Km</span
                                 >
-                                <input
+                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                     class="form-control edicion isDisabled border-info"
                                     required
                                     type="text"
@@ -319,6 +320,7 @@
                                     [ngClass]="{ isDisabled: vista }"
                                 >
                                     <textarea
+                                        disabled
                                         [(ngModel)]="op.hojaRuta"
                                         class="form-control edicion border-info"
                                     ></textarea>
@@ -336,6 +338,7 @@
                                     [ngClass]="{ isDisabled: vista }"
                                 >
                                     <textarea
+                                        disabled
                                         [(ngModel)]="op.observaciones"
                                         class="form-control edicion border-info"
                                     ></textarea>
@@ -391,7 +394,7 @@
                                                     Concepto</label
                                                 >
                                                 <div class="input-group">
-                                                    <input
+                                                    <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                         class="form-control edicion border-warning"
                                                         required
                                                         type="text"
@@ -415,7 +418,7 @@
                                                         style="width: 30px"
                                                         >$</span
                                                     >
-                                                    <input
+                                                    <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                         class="form-control edicion border-warning"
                                                         required
                                                         type="text"
@@ -447,7 +450,7 @@
                                                     <label for="Cliente"
                                                         >Sección</label
                                                     >
-                                                    <select
+                                                    <select  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                         class="form-select mb-3 border-success"
                                                         (change)="
                                                             changeSecion($event)
@@ -520,7 +523,7 @@
                                                     style="width: 30px"
                                                     >$</span
                                                 >
-                                                <input
+                                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                     class="form-control edicion isDisabled border-warning"
                                                     required
                                                     type="text"
@@ -552,7 +555,7 @@
                                                     style="width: 30px"
                                                     >$</span
                                                 >
-                                                <input
+                                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                     class="form-control edicion border-warning"
                                                     required
                                                     type="text"
@@ -580,7 +583,7 @@
                                             style="width: 30px"
                                             >$</span
                                         >
-                                        <input
+                                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                             class="form-control edicion isDisabled border-warning"
                                             disabled
                                             required
@@ -603,7 +606,7 @@
                                             style="width: 30px"
                                             >$</span
                                         >
-                                        <input
+                                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                             class="form-control edicion isDisabled border-warning"
                                             disabled
                                             required
@@ -647,7 +650,7 @@
                                                 >Tarifa Eventual Concepto</label
                                             >
                                             <div class="input-group">
-                                                <input
+                                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                     class="form-control edicion border-primary"
                                                     required
                                                     type="text"
@@ -669,7 +672,7 @@
                                                     style="width: 30px"
                                                     >$</span
                                                 >
-                                                <input
+                                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                     class="form-control edicion border-primary"
                                                     required
                                                     type="text"
@@ -699,7 +702,7 @@
                                                 <label for="Categoria"
                                                     >Categoria</label
                                                 >
-                                                <select
+                                                <select  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                     class="form-select mb-3 border-success"
                                                     (change)="
                                                         changeCategoria($event)
@@ -757,7 +760,7 @@
                                                     style="width: 30px"
                                                     >$</span
                                                 >
-                                                <input
+                                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                     class="form-control edicion isDisabled border-primary"
                                                     required
                                                     type="text"
@@ -790,7 +793,7 @@
                                                     style="width: 30px"
                                                     >$</span
                                                 >
-                                                <input
+                                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                     class="form-control edicion border-primary"
                                                     required
                                                     type="text"
@@ -820,7 +823,7 @@
                                                 style="width: 30px"
                                                 >$</span
                                             >
-                                            <input
+                                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                 class="form-control edicion isDisabled border-primary"
                                                 disabled
                                                 required
@@ -843,7 +846,7 @@
                                                 style="width: 30px"
                                                 >$</span
                                             >
-                                            <input
+                                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                 class="form-control edicion isDisabled border-primary"
                                                 disabled
                                                 required
@@ -874,7 +877,7 @@
                                 class="input-group"
                                 [ngClass]="{ isDisabled: vista }"
                             >
-                                <input
+                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                     class="form-control edicion border-info"
                                     [(ngModel)]="op.adExtraConcepto"
                                 />
@@ -896,7 +899,7 @@
                                         style="width: 30px"
                                         >$</span
                                     >
-                                    <input
+                                    <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                         class="form-control edicion border-warning"
                                         required
                                         type="text"
@@ -921,7 +924,7 @@
                                         style="width: 30px"
                                         >$</span
                                     >
-                                    <input
+                                    <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                         class="form-control edicion border-primary"
                                         required
                                         type="text"
@@ -955,7 +958,7 @@
                                 style="width: 30px"
                                 >$</span
                             >
-                            <input
+                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                 class="form-control edicion isDisabled border-warning"
                                 disabled
                                 required
@@ -977,7 +980,7 @@
                                 style="width: 30px"
                                 >$</span
                             >
-                            <input
+                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                 class="form-control edicion isDisabled border-primary"
                                 disabled
                                 required
@@ -998,7 +1001,7 @@
                             <span class="input-group-text" id="basic-addon1"
                                 >Multiplicador Cliente</span
                             >
-                            <input
+                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                 type="number"
                                 class="form-control border-warning"
                                 [(ngModel)]="op.multiplicadorCliente"
@@ -1017,7 +1020,7 @@
                             <span class="input-group-text" id="basic-addon1"
                                 >Multiplicador Chofer</span
                             >
-                            <input
+                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                 type="number"
                                 class="form-control border-primary"
                                 [(ngModel)]="op.multiplicadorChofer"
