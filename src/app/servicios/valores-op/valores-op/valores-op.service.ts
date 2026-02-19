@@ -46,7 +46,11 @@ export class ValoresOpService {
   informesVenta: InformeVenta[] = []
   respuesta:any
 
-  constructor( private facturacionCliente: ValoresOpClienteService, private facturacionChofer: ValoresOpChoferService, private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
+  constructor( 
+    private facturacionCliente: ValoresOpClienteService, 
+    private facturacionChofer: ValoresOpChoferService, 
+    private storageService: StorageService, 
+    private dbFirebase: DbFirestoreService) { }
 
   async facturarOperacion(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje: string }> {
     this.informesVenta = [];
@@ -362,6 +366,125 @@ async $guardarFacturas(op: ConId<Operacion>): Promise<{ exito: boolean; mensaje:
       };
       this.informesVenta.push(informeVenta);
     })
+  }
+
+  valoresIniciales(op:Operacion):Operacion{      
+
+      op.valores.cliente = this.aCobrarOp(op);
+
+      op.valores.chofer = this.aPagarOp(op);
+
+      return op
+
+  }
+
+  aCobrarOp(op:Operacion){  
+    let tarifa: any;
+    let tarifaGral = this.storageService.loadInfo("tarifasGralCliente");    
+    let tarifasEspeciales = this.storageService.loadInfo("tarifasEspCliente");  
+    
+    if(op.cliente.tarifaTipo.especial){      
+      tarifa = tarifasEspeciales.find(t => t.idCliente === op.cliente.idCliente);
+    } else {
+      tarifa = tarifaGral[0];
+    }
+
+    if(tarifa){
+      op.valores.cliente.aCobrar = this.facturacionCliente.valoresInicialesTarifaGral(op, tarifa);
+    } else {
+      op.valores.cliente.aCobrar = 0;
+    }      
+    return op.valores.cliente;
+
+  }
+
+  aPagarOp(op: Operacion){
+    let tarifa: any;
+    let tarifaGralChofer = this.storageService.loadInfo("tarifasGralChofer");    
+    let tarifaGralProveedor = this.storageService.loadInfo("tarifasGralProveedor");    
+    let tarifasEspecialesChofer = this.storageService.loadInfo("tarifasEspChofer");  
+    let tarifasEspecialesProveedor = this.storageService.loadInfo("tarifasEspProveedor");  
+    
+    if(op.chofer.tarifaTipo.especial){ 
+      if(op.chofer.idProveedor === 0){
+        let tEsp = tarifasEspecialesChofer.find(t => t.idChofer === op.chofer.idChofer)
+        if(tEsp.idCliente === 0 || tEsp.idCliente === op.cliente.idCliente){
+          tarifa = tEsp;
+          ////console.log("2A) tarifa esp chofer a pagar: ", tarifa);        
+        } else {
+          tarifa = tarifaGralChofer[0];
+          ////console.log("2B) tarifa gral chofer a pagar: ", tarifa);  
+        } 
+      } else {
+        let tEsp = tarifasEspecialesProveedor.find(t => t.idProveedor === op.chofer.idProveedor);
+        if(tEsp.idCliente === 0 || tEsp.idCliente === op.cliente.idCliente){
+          tarifa = tEsp;
+          ////console.log("2A) tarifa esp chofer a pagar: ", tarifa);        
+        } else {
+          tarifa = tarifaGralProveedor[0];
+          ////console.log("2B) tarifa gral chofer a pagar: ", tarifa);  
+        } 
+      }      
+    } else {
+      tarifa = op.chofer.idProveedor === 0 ? tarifaGralChofer[0] : tarifaGralProveedor[0];
+    }
+
+    if(tarifa){
+      op.valores.chofer.aPagar = this.facturacionChofer.valoresInicialesTarifaGral(op, tarifa);
+    } else {
+      op.valores.chofer.aPagar = 0;
+    }      
+    return op.valores.chofer;
+  }
+
+  valoresOpAcompaniante(op:Operacion):Operacion{      
+
+    op.valores.cliente.acompValor = this.clienteAcompaniante(op);
+    op.valores.chofer.acompValor = this.choferAcompaniante(op);
+
+    return op
+
+  }
+
+  clienteAcompaniante(op:Operacion):number{
+    let tarifas
+    let tarifaAplicada: TarifaGralCliente
+      if(op.cliente.tarifaTipo.especial){
+        tarifas = this.storageService.loadInfo("tarifasEspCliente");
+        tarifaAplicada = tarifas.find(t=> t.idCliente === op.cliente.idCliente);
+      } else {
+        tarifas = this.storageService.loadInfo("tarifasGralCliente");
+        tarifaAplicada = tarifas[0];
+      }
+    
+      return tarifaAplicada.adicionales.acompaniante * (op.acompanienteCant ?? 1);
+  }
+
+  choferAcompaniante(op:Operacion):number{
+    let tarifas
+    let tGralChofer = this.storageService.loadInfo("tarifasGralChofer");
+    let tarifaAplicada: TarifaGralCliente
+
+
+      if(op.chofer.tarifaTipo.especial){
+        tarifas = this.storageService.loadInfo("tarifasEspChofer");
+        let tEspecial = tarifas.find(t=> t.idCliente === op.cliente.idCliente);
+        if(tEspecial.idCliente === 0 || tEspecial.idCliente === op.cliente.idCliente){
+          tarifaAplicada = tEspecial;
+        }else{
+          tarifaAplicada = tGralChofer[0];
+        }
+      } else {        
+        tarifaAplicada = tGralChofer[0];
+      }
+    
+      return tarifaAplicada.adicionales.acompaniante * (op.acompanienteCant ?? 1);
+  }
+
+  recalcularValores(op:Operacion): Operacion {
+    op.valores.cliente.aCobrar = (op.valores.cliente.tarifaBase * op.multiplicadorCliente) + op.valores.cliente.kmAdicional + op.valores.cliente.acompValor + (op.valores.cliente.adExtraValor ?? 0);
+    op.valores.chofer.aPagar = (op.valores.chofer.tarifaBase * op.multiplicadorChofer) + op.valores.chofer.kmAdicional + op.valores.chofer.acompValor + (op.valores.chofer.adExtraValor ?? 0);
+    return op
   }
 
 

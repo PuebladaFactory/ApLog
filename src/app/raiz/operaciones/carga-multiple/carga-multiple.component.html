@@ -1,135 +1,271 @@
-<div  [ngClass]="{'isDisabled': isWaiting}">
-  <form [formGroup]="operacionesForm" (ngSubmit)="onSubmit()">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1>Operación</h1>
-        <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row mx-2">
-          <div class="col-3">
-            <div class="form-group">
-              <label for="Fecha">Fecha</label>
-              <div class="input-group mb-3">
-                <input type="date" formControlName="fecha" class="form-control"  [ngClass]="{ 'is-invalid': operacionesForm.get('fecha')?.invalid && (operacionesForm.get('fecha')?.dirty || operacionesForm.get('fecha')?.touched) }" appFechaValida>
-              </div>
-              @if (hasError('fecha', 'required')) {
-                <div>La fecha es obligatoria.</div>
-              }
-              @if (hasError('fecha', 'formatoInvalido')) {
-                <div>El formato de la fecha es inválido.</div>
-              }
-              @if (hasError('fecha', 'yearInvalido')) {
-                <div>El año debe tener exactamente 4 dígitos.</div>
-              }
-            </div>
-          </div>
-          <div class="col-3">
-            <div class="form-group">
-              <label for="Cliente">Cliente</label>
-              <select class="form-select mb-3" formControlName="cliente" (change)="changeCliente($event)">
-                <option [ngValue]="null">Seleccionar Cliente</option>
-                @for (cliente of $clientesNoEventuales; track cliente) {
-                  <option [value]="cliente.idCliente">
-                    {{cliente.razonSocial}}
-                  </option>
-                }
-              </select>
-            </div>
-          </div>
-          <div class="col-6">
-            @if (tPersonalizada) {
-              <p class="fs-4 mb-0">El cliente tiene una tarifa personalizada.</p>
-            }
-            @if (tPersonalizada) {
-              <p class="fs-4">Deberá seleccionar una sección y una categoría para cada Operación.</p>
-            }
-          </div>
-        </div>
-        <div class="row mx-2">
-          <table class="table">
-            <thead class="sticky-top">
-              <tr>
-                <th class="align-middle" style="width: 2%;">
-                  <input type="checkbox" (change)="onSeleccionarTodosChange($event)">
-                </th>
-                <th class="align-middle" style="width: 10%;">Chofer</th>
-                <th class="align-middle" style="width: 10%;">Vehiculo</th>
-                <th class="align-middle" style="width: 8%;">Tarifa Chofer</th>
-                <th class="align-middle" style="width: 10%;">Acompañante</th>
-                <th class="align-middle" style="width: 15%;">Sección</th>
-                <th class="align-middle" style="width: 15%;">Categoria</th>
-                <th class="align-middle" style="width: 15%;">Hoja de Ruta</th>
-                <th class="align-middle" style="width: 17%;">Observaciones</th>
-              </tr>
-            </thead>
-            <tbody formArrayName="choferes">
-              @for (choferForm of choferesFormArray.controls; track choferForm; let i = $index) {
-                <tr [formGroupName]="i">
-                  <td class="align-middle" [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
-                    <input type="checkbox" formControlName="seleccionado">
-                  </td>
-                  <td class="align-middle isDisabled"   [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
-                    <input type="text" formControlName="nombre">
-                  </td>
-                  <td class="align-middle"   [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
-                    <select class="form-select" (change)="changeVehiculo(i,$event)" >
-                      <option value="">{{choferForm.get('vehiculoSeleccionado')?.value.length === 1 ? choferForm.get('vehiculoSeleccionado')?.value[0].dominio : "Elegir Vehiculo" }}  </option>
-                      @for (vehiculo of choferForm.get('vehiculoSeleccionado')?.value; track vehiculo) {
-                        <option [value]="vehiculo.dominio">
-                          {{vehiculo.categoria.nombre}}: {{vehiculo.dominio}}
-                        </option>
-                      }
-                    </select>
-                  </td>
-                  <td class="align-middle" [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
-                    {{choferForm.get('tarifa')?.value}}
-                  </td>
-                  <td class="align-middle"  [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
-                    <select formControlName="acompaniante" class="form-select" aria-label="Default select example" (change)="selectAcompaniante(i, $event)">
-                      <!-- <option value="">Seleccione</option> -->
-                      <option value="true">Si</option>
-                      <option value="false">No</option>
-                    </select>
-                  </td>
-                  <td class="align-middle" [ngClass]="{'isDisabled': !tPersonalizada}"  [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
-                    <select class="form-select" (change)="changeSeccion(i, $event)">
-                      <option value="">{{tPersonalizada ? "Elija la sección" : "Sin datos"}} </option>
-                      @for (seccion of tarifaPersonalizada?.secciones; track seccion) {
-                        <option [value]="seccion.orden">
-                          Seccion {{seccion.orden}}: {{seccion.descripcion || ''}}
-                        </option>
-                      }
-                    </select>
-                  </td>
-                  <td class="align-middle" [ngClass]="{'isDisabled': !tPersonalizada}"  [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
-                    <select formControlName="categoria" class="form-select " (change)="changeCategoria(i,$event)">
-                      <option selected>{{tPersonalizada ? "Elija la sección" : "Sin datos"}}</option>
-                      @for (categoria of seccionElegida?.categorias; track categoria) {
-                        <option [value]="categoria.orden">
-                          Categoria {{categoria.orden}}: {{categoria.nombre}}
-                        </option>
-                      }
-                    </select>
-                  </td>
-                  <td class="align-middle"  [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
-                    <input class="form-control" formControlName="hojaRuta" rows="2">
-                  </td>
-                  <td class="align-middle"  [ngClass]="{'seleccionado': choferForm.get('seleccionado')?.value }">
-                    <textarea class="form-control" formControlName="observaciones" rows="2"></textarea>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="modal-footer" [ngClass]="{'isDisabled':operacionesForm.invalid}">
-        <button type="submit" class="btn btn-primary" >Guardar</button>
-      </div>
+<!-- =========================
+     MODAL HEADER
+========================= -->
+
+<div class="modal-header flex-column align-items-stretch">
+    <div class="d-flex w-100 align-items-center">
+        <h3 class="modal-title flex-grow-1">Carga de operaciones</h3>
+
+        <button
+            type="button"
+            class="btn-close me-2"
+            (click)="activeModal.dismiss()"
+        ></button>
     </div>
-  </form>
+
+    <!-- Tabs -->
+    <div class="tab-container mt-2">
+        @for (tab of tabs; track tab.id) {
+            <div
+                class="tab"
+                [class.active]="vistaActiva === tab.id"
+                [class.disabled]="
+                    tab.id === 'tabla' && operaciones.length === 0
+                "
+                (click)="selectTab(tab.id)"
+            >
+                <span class="fs-4">{{ tab.name }}</span>
+
+                @if (tab.id === "tabla" && operaciones.length > 0) {
+                    <span class="badge bg-primary ms-2">
+                        {{ operaciones.length }}
+                    </span>
+                }
+            </div>
+        }
+    </div>
 </div>
-@if (isWaiting) {
-  <app-spinner></app-spinner>
+
+<!-- =========================
+     MODAL BODY
+========================= -->
+<div class="modal-body">
+    <!-- ========================
+       VISTA SELECCION
+  ========================= -->
+
+    @if (vistaActiva === "seleccion") {
+        <!-- filtros -->
+        <div class="row bg-light border rounded border-1 rounded-2 pb-2 mb-3">
+            <!-- clientes/choferes activos -->
+            <div class="col-4 d-flex">
+                <!-- Dropdowns Izquierda -->
+                <div class="d-flex justify-content-start align-self-end">
+                    <!-- Choferes Activos -->
+                    <button
+                        class="btn btn-primary boton-choferes me-1"
+                        type="button"
+                        (click)="openModalActivos('choferes')"
+                    >
+                        Choferes Activos
+                    </button>
+                    <!-- Clientes Activos -->
+
+                    <button
+                        class="btn btn-primary celeste-fijo me-1"
+                        type="button"
+                        (click)="openModalActivos('clientes')"
+                    >
+                        Clientes Activos
+                    </button>
+                    <button
+                        class="btn btn-secondary gris-fijo me-1"
+                        type="button"
+                        (click)="openModalNoOperativos()"
+                    >
+                        Choferes No Operativos
+                    </button>
+                </div>
+            </div>
+            <!-- fecha -->
+            <div class="col-3">
+                <label class="form-label">Fecha</label>
+                <input
+                    type="date"
+                    class="form-control"
+                    [(ngModel)]="fechaSeleccionada"
+                    (change)="calcularChoferesNoOperativosPorFecha()"
+                />
+            </div>
+            <!-- selección de cliente -->
+            <div class="col-3">
+                <label class="form-label">Cliente</label>
+                <select class="form-select" [(ngModel)]="clienteSeleccionado">
+                    <option [ngValue]="null">Seleccionar cliente...</option>
+
+                    @for (c of clientesActivos; track c.idCliente) {
+                        <option [ngValue]="c">
+                            {{ c.razonSocial }}
+                        </option>
+                    }
+                </select>
+            </div>
+            <!-- guardar -->
+            <div class="col-2 d-flex justify-content-end">
+                <button
+                    class="btn btn-primary align-self-end fs-5"
+                    (click)="crearOperaciones()"
+                >
+                    Crear operaciones
+                </button>
+            </div>
+        </div>
+
+        <!-- choferes -->
+        <div class="card">
+            <div class="card-header fs-4">Choferes</div>
+
+            <div class="card-body">
+                <div class="row">
+                    @for (ch of choferesDisponibles; track ch.idChofer) {
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    [checked]="
+                                        choferesSeleccionadosIds.has(
+                                            ch.idChofer
+                                        )
+                                    "
+                                    (change)="
+                                        toggleChofer(
+                                            ch.idChofer,
+                                            $any($event.target).checked
+                                        )
+                                    "
+                                />
+
+                                <div class="">
+                                    <span class="me-2 fs-4"
+                                        >{{ ch.apellido }},
+                                        {{ ch.nombre }} :</span
+                                    >
+                                </div>
+                                <div>
+                                    <label class="form-check-label">
+                                        @for (v of ch.vehiculo; track v) {
+                                            <span
+                                                class="badge me-2 f-4"
+                                                [ngClass]="
+                                                    getClaseCategoria(
+                                                        v.categoria.catOrden
+                                                    )
+                                                "
+                                            >
+                                                {{ v.categoria.nombre }}</span
+                                            >
+                                        }
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <!-- choferes no operativos-->
+        @if (choferesNoOperativos.length > 0) {
+            <div class="card">
+                <div class="card-header fs-4">Choferes No Operativos</div>
+
+                <div class="card-body">
+                    <div class="row">
+                        @for (ch of choferesNoOperativos; track ch.idChofer) {
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        disabled
+                                        [checked]="
+                                            choferesSeleccionadosIds.has(
+                                                ch.idChofer
+                                            )
+                                        "
+                                        (change)="
+                                            toggleChofer(
+                                                ch.idChofer,
+                                                $any($event.target).checked
+                                            )
+                                        "
+                                    />
+
+                                    <div class="">
+                                        <span class="me-2 fs-4 noOperativo"
+                                            >{{ ch.apellido }},
+                                            {{ ch.nombre }} :</span
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="form-check-label">
+                                            @for (v of ch.vehiculo; track v) {
+                                                <span
+                                                    class="badge me-2 f-4"
+                                                    [ngClass]="
+                                                        getClaseCategoria(
+                                                            v.categoria.catOrden
+                                                        )
+                                                    "
+                                                >
+                                                    {{
+                                                        v.categoria.nombre
+                                                    }}</span
+                                                >
+                                            }
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    <!-- ========================
+       VISTA TABLA
+  ========================= -->
+
+    @if (vistaActiva === "tabla") {
+        @if (operacionesAgrupadas.length === 0) {
+            <div class="alert alert-warning">
+                Primero debe crear las operaciones desde la pestaña
+                <strong>Selección</strong>.
+            </div>
+        } @else {
+            <app-operaciones-table
+                [grupos]="operacionesAgrupadas"
+                (eliminar)="eliminarOperacion($event)"
+            >
+            </app-operaciones-table>
+        }
+    }
+</div>
+
+<!-- =========================
+     MODAL FOOTER
+========================= -->
+
+<div class="modal-footer">
+    <button class="btn btn-secondary" (click)="activeModal.dismiss()">
+        Cancelar
+    </button>
+
+    <button
+        class="btn btn-success"
+        (click)="guardar()"
+        [disabled]="isLoading || operaciones.length === 0"
+    >
+        @if (isLoading) {
+            Guardando...
+        } @else {
+            Guardar operaciones
+        }
+    </button>
+</div>
+
+@if (isLoading) {
+    <app-spinner></app-spinner>
 }

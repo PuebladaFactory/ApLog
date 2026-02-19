@@ -1,70 +1,76 @@
 
-<div class="d-flex justify-content-between mt-3">
-    <div class="">
+<div class="row mt-3">
+    <div class="col">
         <h2 class="ng ">Registro de Actividad</h2>
         <h3>{{registros.length >=0 ? registros.length : 'Sin'}} resultados:</h3>
     </div>
-    <div class="" >
-        <label><span class="fs-5">Consultar por Id</span></label>
-        <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded d-flex">      
-            <input class="form-control w-75 flex-grow-1" type="text" [(ngModel)]="idObjConsulta" placeholder="id">
-            <button class="btn btn-primary boton" type="button"(click)="consultarId()">Consultar</button>
+    <div class="col" >
+        <div class="w-50">
+            <label><span class="fs-5">Consultar por Id</span></label>
+            <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded d-flex">      
+                <input class="form-control w-75 flex-grow-1" type="text" [(ngModel)]="idObjConsulta" placeholder="id">
+                <button class="btn btn-primary boton" type="button"(click)="consultarId()">Consultar</button>
+            </div>
         </div>
+        
     </div>
     
-    <div>
-        <label><span class="fs-5">Consultar por Fecha</span></label>
-        <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
-            <table>
-              <thead>
-                <th></th>
-                <th>Desde</th>
-                <th>Hasta</th>
-                <th>Cant</th>
-                <th></th>
-              </thead>
-              <tbody>
-                <td>
-                  <div class="btn-group dropup" >
-                    <button id="fechas" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside"></button>
-                    <ul class="dropdown-menu">
-                      <li>
+    <div class="col d-flex justify-content-end">
+        <div class="">
+          <label><span class="fs-5">Consultar por Fecha</span></label>
+          <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded">
+              <table>
+                <thead>
+                  <th></th>
+                  <th>Desde</th>
+                  <th>Hasta</th>
+                  <th>Cant</th>
+                  <th></th>
+                </thead>
+                <tbody>
+                  <td>
+                    <div class="btn-group dropup" >
+                      <button id="fechas" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside"></button>
+                      <ul class="dropdown-menu">
+                        <li>
 
-                        <!-- <input class="form-control text-center" style="font-size: 1.15rem;" type="text" readonly [value]="'Desde: ' + fromDate.year + '/' + fromDate.month + '/' + fromDate.day + '   Hasta: ' + toDate?.year + '/' + toDate?.month + '/' +toDate?.day"> -->
-                        <ngb-datepicker #dp (dateSelect)="onDateSelection($event)" [displayMonths]="2" [dayTemplate]="t" outsideDays="hidden">
+                          <!-- <input class="form-control text-center" style="font-size: 1.15rem;" type="text" readonly [value]="'Desde: ' + fromDate.year + '/' + fromDate.month + '/' + fromDate.day + '   Hasta: ' + toDate?.year + '/' + toDate?.month + '/' +toDate?.day"> -->
+                          <ngb-datepicker #dp (dateSelect)="onDateSelection($event)" [displayMonths]="2" [dayTemplate]="t" outsideDays="hidden">
 
-                          <ng-template #t let-date let-focused="focused">
-                            <span
-                              class="custom-day"
-                              [class.focused]="focused"
-                              [class.range]="isRange(date)"
-                              [class.faded]="isHovered(date) || isInside(date)"
-                              (mouseenter)="hoveredDate = date"
-                              (mouseleave)="hoveredDate = null"
-                              >
-                              {{ date.day }}
-                            </span>
-                          </ng-template>
-                        </ngb-datepicker>
-                      </li>
-                    </ul>
-                  </div>
-                </td>
-                <td>
-                  <input class="form-control text-center" style="width: 100px; font-size: 1.2rem;" type="text" readonly [value]="fechaDesdeString" >
-                </td>
-                <td>
-                  <input class="form-control text-center" style="width: 100px; font-size: 1.2rem;" type="text" readonly [value]="fechaHastaString">
-                </td>
-                <td>
-                  <input  type="text" inputmode="numeric" style="width: 50px;  font-size: 1.2rem;"  class="form-control"  aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarRegistro()" appSoloNumeros>
-                </td>
-                <td>
-                  <button class="btn btn-primary boton" type="button" id="button-addon2"   (click)="consultarRangoManual()">Consultar</button>
-                </td>
-              </tbody>
-            </table>
+                            <ng-template #t let-date let-focused="focused">
+                              <span
+                                class="custom-day"
+                                [class.focused]="focused"
+                                [class.range]="isRange(date)"
+                                [class.faded]="isHovered(date) || isInside(date)"
+                                (mouseenter)="hoveredDate = date"
+                                (mouseleave)="hoveredDate = null"
+                                >
+                                {{ date.day }}
+                              </span>
+                            </ng-template>
+                          </ngb-datepicker>
+                        </li>
+                      </ul>
+                    </div>
+                  </td>
+                  <td>
+                    <input class="form-control text-center" style="width: 100px; font-size: 1.2rem;" type="text" readonly [value]="fechaDesdeString" >
+                  </td>
+                  <td>
+                    <input class="form-control text-center" style="width: 100px; font-size: 1.2rem;" type="text" readonly [value]="fechaHastaString">
+                  </td>
+                  <td>
+                    <input  type="text" inputmode="numeric" style="width: 50px;  font-size: 1.2rem;"  class="form-control"  aria-label="Recipient's username" aria-describedby="button-addon2" [(ngModel)]="limite" (keyup.enter)="consultarRegistro()" appSoloNumeros>
+                  </td>
+                  <td>
+                    <button class="btn btn-primary boton" type="button" id="button-addon2"   (click)="consultarRangoManual()">Consultar</button>
+                  </td>
+                </tbody>
+              </table>
+          </div>
         </div>
+
     </div>
 
 </div>

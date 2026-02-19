@@ -12,7 +12,8 @@ export interface Operacion {
     chofer: Chofer;
     observaciones: string;    
     //unidadesConFrio: boolean;
-    acompaniante: boolean;    
+    acompaniante: boolean;
+    acompanienteCant?:number;    
     facturaCliente: number;
     facturaChofer: number;
     hojaRuta:string;
@@ -26,6 +27,8 @@ export interface Operacion {
     valores: Valores;
     multiplicadorCliente:number;
     multiplicadorChofer:number;
+    adExtraConcepto?: string;
+    
 }
 
 export interface TarifaEventual {    
@@ -45,7 +48,7 @@ export interface TarifaPersonalizada {
     categoria:number;
     nombre: string;
     aCobrar: number;
-    aPagar: number;
+    aPagar: number;    
 }
 
 export interface EstadoOp {    
@@ -62,13 +65,20 @@ export interface Valores{
     cliente:{
         acompValor: number;
         kmAdicional: number;
-        tarifaBase: number,
-        aCobrar: number;    
+        tarifaBase: number,        
+        aCobrar: number;        
+        adExtraValor?:number;    
     }
     chofer: {
         acompValor: number;
         kmAdicional: number;
         tarifaBase: number;
-        aPagar: number;
+        aPagar: number;        
+        adExtraValor?:number;
     }
 }
+
+export type OperacionUI = Operacion & {
+  tarifaBase: 'general' | 'especial' | 'personalizada';
+  tarifaOverride: 'eventual' | null;
+};

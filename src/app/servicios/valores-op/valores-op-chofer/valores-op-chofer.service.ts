@@ -71,7 +71,8 @@ export class ValoresOpChoferService {
       this.tarifaBase = this.$calcularCG(tarifa, vehiculo[0])*op.multiplicadorChofer;
       op.valores.chofer.tarifaBase = this.tarifaBase;  
       ////////console.log("tarifa base: " ,this.tarifaBase);
-      this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0 ;
+      //this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0 ;
+      this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante * (op.acompanienteCant?? 1) : 0 ;
       op.valores.chofer.acompValor = this.acompaniante;
       ////////console.log("acompañante valor: ", this.acompaniante);
       this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
@@ -101,7 +102,8 @@ export class ValoresOpChoferService {
     }
     this.tarifaBase = this.$calcularCGPersonalizada(tarifa, op)*op.multiplicadorChofer;
     op.valores.chofer.tarifaBase = this.tarifaBase;
-    this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
+    //this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
+    this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante * (op.acompanienteCant?? 1) : 0 ;
     op.valores.chofer.acompValor = this.acompaniante;
     this.kmValor = 0 ; 
     //////console.log("tarifa base: " ,this.tarifaBase);
@@ -127,7 +129,8 @@ export class ValoresOpChoferService {
     }
     this.tarifaBase = op.tarifaEventual.chofer.valor*op.multiplicadorChofer;
     op.valores.chofer.tarifaBase = this.tarifaBase;
-    this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
+    //this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
+    this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante * (op.acompanienteCant?? 1) : 0 ;
     op.valores.chofer.acompValor = this.acompaniante;
     this.kmValor = 0;
     this.$crearFacturaOpChofer(op, 0,idProveedor);
@@ -280,6 +283,18 @@ $facturarOpProveedor(op:Operacion, tarifa: TarifaGralCliente, idProveedor: numbe
   }
   ////////console.log("Factura OP cliente ", this.facturaOpCliente)
   return respuesta;
+}
+
+valoresInicialesTarifaGral(op:Operacion, tarifa:TarifaGralCliente){
+    let vehiculo
+    vehiculo  = op.chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
+        return vehiculo.dominio === op.patenteChofer;
+    });
+    let categoria = vehiculo[0].categoria.catOrden
+    let catCG = tarifa.cargasGenerales.filter((cat: CategoriaTarifa)=>{
+      return cat.orden === categoria
+    });
+    return catCG[0].valor; 
 }
 
   

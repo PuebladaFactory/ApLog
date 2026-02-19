@@ -1,24 +1,83 @@
-input, th, td, select, option, textarea{
-  font-size: 1.25rem;
+.tab-container {
+  display: flex;
+  border-bottom: 1px solid #ccc;
 }
-label{
-  font-size:1.15rem;
+
+.tab {
+  padding: 8px 18px;
+  cursor: pointer;
+  background: #e7e7e7;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  margin-right: 4px;
+  border-radius: 10px 10px 0 0;
+  font-weight: 500;
 }
-.isDisabled {
-    pointer-events: none;
-    cursor: not-allowed;
-  }
+
+.tab:hover {
+  background: #ddd;
+}
+
+.tab.active {
+  background: white;
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.tab.disabled {
+  opacity: .5;
+  pointer-events: none;
+}
+
+label, select, input {
+  font-size: 1.3rem;
+}
+.boton-choferes{
   
-  .isDisabled:hover {
-    cursor: not-allowed;
-  }
-
-  .seleccionado{
-    background-color: rgb(219, 241, 247);
-  }
-
-  .isWaiting {
-    pointer-events: none;
-    cursor: not-allowed;    
-    opacity: 0.5; /* o cualquier otro estilo para indicar que está deshabilitado */
+  background: #002b5c;
+  color: white;
+  opacity: 0.8;
+  font-size: 1.3rem;
 }
+
+.boton-choferes:hover{
+  background: #0d6efd;    
+}
+
+.celeste-fijo{
+  background-color: rgb(134, 194, 214);
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
+.celeste-fijo:hover{
+  background-color: rgb(121, 174, 192);;
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
+.gris-fijo{
+  background-color: rgb(167, 166, 166);
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
+.gris-fijo:hover{
+  background-color: grey;
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
+.noOperativo {
+  opacity: 0.5;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+
+
+

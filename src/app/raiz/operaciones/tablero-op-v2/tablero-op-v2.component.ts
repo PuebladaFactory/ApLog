@@ -746,14 +746,18 @@ onResizeEnd = () => {
         const motivo = await modalRef.result;
         if(!motivo) return
         if(this.opSeleccionada){
-          this.isLoading = true;
+          this.isLoading = true; 
           await this.tableroServ.anularOperacionYActualizarTablero(this.opSeleccionada, motivo, 'Baja de operación desde el tablero-op');
              
-          Swal.fire({
+          const confirmacion = await Swal.fire({
             icon: 'success',
             title: 'Operación eliminada',
             text: 'La operación fue dada de baja y se actualizó el tablero.'
           });
+          if(confirmacion.isConfirmed){
+            this.escucharOperaciones()
+          }
+          
         }   
 
       } catch (e) {
@@ -785,10 +789,10 @@ onResizeEnd = () => {
   modalCargaMultiple(){
     {
       const modalRef = this.modalService.open(CargaMultipleComponent, {
-        windowClass: 'myCustomModalClass',
+        windowClass: "modal-super-xl",
         centered: true,
-        size: 'xl', 
-        backdrop:"static" 
+        size: "xl",
+        backdrop: true,
       });      
 
       /* let info = {
