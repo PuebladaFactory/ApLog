@@ -18,7 +18,7 @@
                     <label for="Fecha" class="fs-5">Fecha</label>
                     <div class="input-group">
                         <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
-                            class="form-control edicion border-info"                            
+                            class="form-control border-info"                            
                             type="date"
                             [value]="op.fecha"
                         />
@@ -141,8 +141,8 @@
                                 (change)="changeAcompaniante($event)"
                                 
                             >
-                                <option [value]="this.op.acompaniante" selected>
-                                    {{ this.op.acompaniante ? "Si" : "No" }}
+                                <option [value]="op.acompaniante" selected>
+                                    {{ op.acompaniante ? "Si" : "No" }}
                                 </option>
                                 <option [value]="true">Si</option>
                                 <option [value]="false">No</option>
