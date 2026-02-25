@@ -58,6 +58,7 @@ export class LiquidacionesOpComponent implements OnInit {
   indiceSeleccionado!:number;
   informeDeLiquidacion!: InformeLiq;
   informeDetallado!: ConId<InformeOp>;
+  informeContraParte!: ConId<InformeOp>;
   operacion!:ConId<Operacion>;
   tarifaAplicada:any;
   ordenColumna: string = '';
@@ -683,9 +684,9 @@ export class LiquidacionesOpComponent implements OnInit {
     this.indiceSeleccionado
     {
       const modalRef = this.modalService.open(EditarInfOpComponent, {
-        windowClass: 'myCustomModalClass',
+        windowClass: 'modal-xxl',
         centered: true,
-        size: 'lg', 
+        //size: 'lg', 
         //backdrop:"static" 
       });
       
@@ -707,6 +708,7 @@ export class LiquidacionesOpComponent implements OnInit {
               console.log("respuesta:", respuesta);
                 this.informeDetallado = respuesta.infOp;
                 this.operacion = respuesta.op
+
                 //console.log("informeOp:", informeOp);
                 //this.recalcularFactura(informeOp);
                 //let coleccionInfOp = this.getColeccionInfOp();
@@ -714,7 +716,11 @@ export class LiquidacionesOpComponent implements OnInit {
                 //if(coleccionInfOp === "") return this.mensajesError("error en la colección del informe de op", "error");
                 //if(coleccionInfLiq === "") return this.mensajesError("error en la colección del informe de Liquidación", "error");
                 //console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
+   
+
+
                 
+
                 const resultado = await this.dbFirebase.actualizarOperacionInformeOpYFactura(this.operacion, this.informeDetallado, this.componente, 'liquidacion')
                 console.log("resultado de la edicion de todo: ", resultado);
                 if(resultado.exito){
@@ -855,18 +861,22 @@ export class LiquidacionesOpComponent implements OnInit {
     .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
     .subscribe(data => {      
         let informeVenta = data;
-        console.log("2000) informeVenta: ", informeVenta);
-        informeVenta.valoresOp = {
-          totalCliente: this.operacion.valores.cliente.aCobrar,
-          totalChofer: this.operacion.valores.chofer.aPagar,
+
+        if(informeVenta){
+          console.log("2000) informeVenta: ", informeVenta);
+          informeVenta.valoresOp = {
+            totalCliente: this.operacion.valores.cliente.aCobrar,
+            totalChofer: this.operacion.valores.chofer.aPagar,
+          }
+          let {id, ...infVenta} = informeVenta;
+          if(modo === "edicion"){
+            this.storageService.updateItem("informesVenta", infVenta, infVenta.idInfVenta, "INTERNA", "", informeVenta.id);
+          } else if(modo === "baja") {   
+            console.log("baja inf venta");               
+            this.storageService.deleteItem("informesVenta", informeVenta, informeVenta.id, "INTERNA", "");    
+          }
         }
-        let {id, ...infVenta} = informeVenta;
-        if(modo === "edicion"){
-          this.storageService.updateItem("informesVenta", infVenta, infVenta.idInfVenta, "INTERNA", "", informeVenta.id);
-        } else if(modo === "baja") {   
-          console.log("baja inf venta");               
-          this.storageService.deleteItem("informesVenta", informeVenta, informeVenta.id, "INTERNA", "");    
-        }
+
         
     })
   }
@@ -1019,6 +1029,12 @@ borrarLiquidaciones(){
   private capitalizeFirst(texto: string | null): string {
     if (!texto) return '';
     return texto.charAt(0).toUpperCase() + texto.slice(1);
+  }
+/* :ConId<InformeOp> */
+  async corregirContraparte(contraparteRes:any){
+    let contraparteInf = contraparteRes.data;
+    let tarifa = await this.buscarTarifaServ.buscarTarifa(contraparteInf, contraparteInf);
+    
   }
   
 

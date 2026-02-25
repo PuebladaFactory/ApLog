@@ -47,3 +47,25 @@ thead {
     width: 100%;
 }
 
+::ng-deep .modal-xxl .modal-dialog {
+  max-width: 70vw;     // Casi ancho total del viewport
+  width: 70vw;
+}
+
+::ng-deep .modal-xxl .modal-content {
+  height: 80vh;         // Alto del 90% de la ventana
+  overflow-y: auto;     // Scrolleable si se necesita
+}
+
+/* Scroll suave y elegante */
+::ng-deep .modal-xxl .modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+::ng-deep .modal-xxl .modal-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+::ng-deep .modal-xxl .modal-content:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+

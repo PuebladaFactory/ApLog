@@ -1730,7 +1730,7 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
    *
    * Devuelve null si no la encuentra.
    */
-  private async buscarContraParteInformeOp(
+  public async buscarContraParteInformeOp(
     informeOriginal: ConId<InformeOp>,
     coleccionOriginal: string
   ): Promise<{ docRef: DocumentReference<DocumentData>, data: ConId<InformeOp>, coleccion: string } | null> {

@@ -184,7 +184,7 @@ export class InformeLiqDetalleComponent implements OnInit {
     ////console.log("3)this.operacion", this.operacion);
     {
       const modalRef = this.modalService.open(EditarInfOpComponent, {
-        windowClass: 'myCustomModalClass',
+        windowClass: 'modal-xxl',
         centered: true,
         size: 'lg', 
         //backdrop:"static" 
