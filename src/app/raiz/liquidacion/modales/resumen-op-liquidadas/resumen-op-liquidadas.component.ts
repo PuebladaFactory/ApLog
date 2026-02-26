@@ -16,6 +16,7 @@ import { InformeOp } from 'src/app/interfaces/informe-op';
 import { Descuento, InformeLiq, Valores } from 'src/app/interfaces/informe-liq';
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
 import { PeriodoModalComponent } from '../periodo-modal/periodo-modal.component';
+import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 
 @Component({
     selector: 'app-resumen-op-liquidadas',
@@ -31,9 +32,9 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
   facturaChofer!: InformeLiq;
   facturaProveedor!: InformeLiq;
   idOperaciones: number [] = [];        
-  $clientes!: ConIdType<Cliente>[];
-  $choferes!: ConIdType<Chofer>[];
-  $proveedores!: ConIdType<Proveedor>[];
+  clientes!: ConIdType<Cliente>[];
+  choferes!: ConIdType<Chofer>[];
+  proveedores!: ConIdType<Proveedor>[];
   clienteSel!: ConIdType<Cliente>;
   choferSel!: ConIdType<Chofer>;
   proveedorSel!: ConIdType<Proveedor>;
@@ -56,6 +57,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
     { nombre: 'Jornada', propiedad: 'jornada', seleccionada: true },
     { nombre: 'Ad Km', propiedad: 'adicionalKm', seleccionada: true },
     { nombre: 'Acomp', propiedad: 'acompanante', seleccionada: true },
+    { nombre: 'Extra', propiedad: 'adExtra', seleccionada: true },
     { nombre: 'A Cobrar', propiedad: 'aCobrar', seleccionada: true }
   ];
   operaciones: any[] = []; // Recibe las operaciones desde el LiqClienteComponent
@@ -78,31 +80,19 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
     private storageService: StorageService,     
     public activeModal: NgbActiveModal, 
     private modalService: NgbModal, 
-    private numeradorService :NumeradorService
+    private numeradorService :NumeradorService,
+    private formNumServ: FormatoNumericoService,
   ){}
   
   ngOnInit(): void {
     console.log("0) ", this.fromParent);
-    this.storageService.getObservable<ConIdType<Chofer>>("choferes")
-    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-    .subscribe(data => {
-      this.$choferes = data;    
-      this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer 
-    }); 
-
-    this.storageService.getObservable<ConIdType<Cliente>>("clientes")
-    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-    .subscribe(data => {
-      this.$clientes = data;   
-      this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer   
-    }); 
-
-    this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
-    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-    .subscribe(data => {
-      this.$proveedores = data;      
-      this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-    }); 
+    this.clientes = this.storageService.loadInfo('clientes');
+    this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer 
+    this.choferes = this.storageService.loadInfo('choferes');
+    this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer 
+    this.proveedores = this.storageService.loadInfo('proveedores');
+    this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+    
     this.facLiquidadas = this.fromParent.facturas;
     this.facLiquidadas = this.facLiquidadas.sort((a, b) => {
       return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
@@ -153,37 +143,37 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
 
   getCliente(){
     let clienteArray
-    clienteArray = this.$clientes.filter((cliente:Cliente)=>{ return cliente.idCliente === this.facLiquidadas[0].idCliente});
+    clienteArray = this.clientes.filter((cliente:Cliente)=>{ return cliente.idCliente === this.facLiquidadas[0].idCliente});
     this.clienteSel = clienteArray[0];
   }
 
   getChofer(){
     let choferArray
-    choferArray = this.$choferes.filter((c:Chofer)=>{ return c.idChofer === this.facLiquidadas[0].idChofer});
+    choferArray = this.choferes.filter((c:Chofer)=>{ return c.idChofer === this.facLiquidadas[0].idChofer});
     this.choferSel = choferArray[0];
   }
 
   getProveedor(){
     let proveedorArray
-    proveedorArray = this.$proveedores.filter((p:Proveedor)=>{ return p.idProveedor === this.facLiquidadas[0].idProveedor});
+    proveedorArray = this.proveedores.filter((p:Proveedor)=>{ return p.idProveedor === this.facLiquidadas[0].idProveedor});
     this.proveedorSel = proveedorArray[0];
   }
 
   getClienteId(idCliente:number){
     let clienteArray
-    clienteArray = this.$clientes.filter((c:Cliente)=>{ return c.idCliente === idCliente;});
+    clienteArray = this.clientes.filter((c:Cliente)=>{ return c.idCliente === idCliente;});
     return clienteArray[0].razonSocial;
   }
 
   getChoferId(idChofer:number){
     let choferArray
-    choferArray = this.$choferes.filter((c:Chofer)=>{ return c.idChofer === idChofer;});
+    choferArray = this.choferes.filter((c:Chofer)=>{ return c.idChofer === idChofer;});
     return choferArray[0].apellido + " " + choferArray[0].nombre;
   }
 
   getProveedorId(idProveedor:number){
     let proveedorArray
-    proveedorArray = this.$proveedores.filter((p:Proveedor)=>{ return p.idProveedor === idProveedor;});
+    proveedorArray = this.proveedores.filter((p:Proveedor)=>{ return p.idProveedor === idProveedor;});
     return proveedorArray[0].razonSocial;
   }
 
@@ -211,7 +201,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
     this.activeModal.close(respuesta);    
   }
 
-  formatearValor(valor: number) : any{
+/*   formatearValor(valor: number) : any{
     let nuevoValor =  new Intl.NumberFormat('es-ES', { 
         minimumFractionDigits: 2, 
         maximumFractionDigits: 2 
@@ -219,7 +209,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
    //////////console.log(nuevoValor);    
     //   `$${nuevoValor}`   
     return `$${nuevoValor}`
-  }
+  } */
 
   limpiarValorFormateado(valorFormateado: string): number {
   // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
@@ -375,16 +365,20 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
         return facOp.km;
       };
       case "Jornada":{
-        return this.formatearValor(facOp.valores.tarifaBase);
+        
+        return `$ ${this.formNumServ.convertirAValorNumerico(facOp.valores.tarifaBase)}`;
       };
       case "Ad Km":{
-        return this.formatearValor(facOp.valores.kmMonto);
+        return `$ ${this.formNumServ.convertirAValorNumerico(facOp.valores.kmMonto)}`;
       };
       case "Acomp":{
-        return this.formatearValor(facOp.valores.acompaniante);
+        return `$ ${this.formNumServ.convertirAValorNumerico(facOp.valores.acompaniante)}`;
+      };
+      case "Extra":{
+        return `$ ${this.formNumServ.convertirAValorNumerico(facOp.valores.adExtra ?? 0)}`;
       };
       case "A Cobrar":{
-        return this.formatearValor(facOp.valores.total);
+        return `$ ${this.formNumServ.convertirAValorNumerico(facOp.valores.total)}`;
       };
       default:{
         return ''
@@ -427,7 +421,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit  {
   getCategoria(fac: InformeOp){
     let veh: Vehiculo[];   
     let choferSel: Chofer[];    
-    choferSel = this.$choferes.filter((c:Chofer)=> {return c.idChofer === fac.idChofer});
+    choferSel = this.choferes.filter((c:Chofer)=> {return c.idChofer === fac.idChofer});
     veh = choferSel[0].vehiculo.filter((v:Vehiculo)=>{return v.dominio === fac.patente});    
     return veh[0].categoria.nombre;
   }

@@ -121,7 +121,7 @@ export class ExcelService {
   informesOp.forEach((informeOp) => {
     const row = worksheet.addRow(
     informeLiq.columnas.map((columna) => {
-        if (['Jornada', 'Ad Km', 'Acomp', 'A Cobrar'].includes(columna)) {
+        if (['Jornada', 'Ad Km', 'Acomp', 'Extra', 'A Cobrar'].includes(columna)) {
           return this.obtenerDatos(informeLiq, informeOp, clientes, columna, choferes); // true = retorno numérico
         }
         return this.obtenerDatos(informeLiq, informeOp, clientes, columna, choferes);
@@ -141,7 +141,7 @@ export class ExcelService {
         right: { style: 'thin' },
       };
 
-      if (['Jornada', 'Ad Km', 'Acomp', 'A Cobrar'].includes(columnaNombre)) {
+      if (['Jornada', 'Ad Km', 'Acomp', 'Extra', 'A Cobrar'].includes(columnaNombre)) {
         cell.numFmt = '"$"#,##0.00'; // formato contable en Excel
       }
     });
@@ -312,6 +312,8 @@ export class ExcelService {
     let choferesStorage: Chofer[] = this.storageService.loadInfo("choferes")
     choferSel = choferesStorage.filter((c:Chofer)=> {return c.idChofer === idChofer});
     veh = choferSel[0].vehiculo.filter((v:Vehiculo)=>{return v.dominio === patente});    
+    console.log(veh[0]);
+    
     return veh[0].categoria.nombre;
   }
 
@@ -353,6 +355,9 @@ export class ExcelService {
       };
       case "Acomp":{          
         return informeOp.valores.acompaniante;
+      };
+      case "Extra":{          
+        return informeOp.valores.adExtra ?? 0;
       };
       case "A Cobrar":{          
         return informeOp.valores.total;

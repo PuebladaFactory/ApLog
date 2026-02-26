@@ -1,112 +1,134 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { filter, Observable, Subject, take, takeUntil } from 'rxjs';
-import { Chofer } from 'src/app/interfaces/chofer';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { InformeOp } from 'src/app/interfaces/informe-op';
-import { Operacion } from 'src/app/interfaces/operacion';
-import { Proveedor } from 'src/app/interfaces/proveedor';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
-import Swal from 'sweetalert2';
-import { ResumenOpLiquidadasComponent } from '../modales/resumen-op-liquidadas/resumen-op-liquidadas.component';
-import { InformeLiq } from 'src/app/interfaces/informe-liq';
-import { BuscarTarifaService } from 'src/app/servicios/buscarTarifa/buscar-tarifa.service';
-import { EditarTarifaOpComponent } from '../modales/editar-tarifa-op/editar-tarifa-op.component';
-import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
-import { EditarInfOpComponent } from 'src/app/shared/modales/editar-inf-op/editar-inf-op.component';
-import { TableroService } from 'src/app/servicios/tablero/tablero.service';
-import { DatePipe } from '@angular/common';
-import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
+import { Component, Input, OnInit } from "@angular/core";
+import { Router } from "@angular/router";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { filter, Observable, Subject, take, takeUntil } from "rxjs";
+import { Chofer } from "src/app/interfaces/chofer";
+import { Cliente } from "src/app/interfaces/cliente";
+import { ConId, ConIdType } from "src/app/interfaces/conId";
+import { InformeOp } from "src/app/interfaces/informe-op";
+import { Operacion } from "src/app/interfaces/operacion";
+import { Proveedor } from "src/app/interfaces/proveedor";
+import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
+import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
+import { PdfService } from "src/app/servicios/informes/pdf/pdf.service";
+import { StorageService } from "src/app/servicios/storage/storage.service";
+import Swal from "sweetalert2";
+import { ResumenOpLiquidadasComponent } from "../modales/resumen-op-liquidadas/resumen-op-liquidadas.component";
+import { InformeLiq } from "src/app/interfaces/informe-liq";
+import { BuscarTarifaService } from "src/app/servicios/buscarTarifa/buscar-tarifa.service";
+import { EditarTarifaOpComponent } from "../modales/editar-tarifa-op/editar-tarifa-op.component";
+import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
+import { EditarInfOpComponent } from "src/app/shared/modales/editar-inf-op/editar-inf-op.component";
+import { TableroService } from "src/app/servicios/tablero/tablero.service";
+import { DatePipe } from "@angular/common";
+import {
+  DateRange,
+  DateRangeService,
+  toISODateString,
+} from "src/app/servicios/fechas/date-range.service";
 @Component({
-  selector: 'app-liquidaciones-op',
-  standalone:false, 
-  templateUrl: './liquidaciones-op.component.html',
-  styleUrl: './liquidaciones-op.component.scss',
+  selector: "app-liquidaciones-op",
+  standalone: false,
+  templateUrl: "./liquidaciones-op.component.html",
+  styleUrl: "./liquidaciones-op.component.scss",
 })
 export class LiquidacionesOpComponent implements OnInit {
-
   @Input() fechasConsulta?: any = {
     fechaDesde: 0,
     fechaHasta: 0,
   };
-  
+
   llamadaOrigen: string = "";
   componente: string = "";
   componenteBaja: string = "";
-  compInformeLiquidacion: string = 'resumenLiq';
+  compInformeLiquidacion: string = "resumenLiq";
   private destroy$ = new Subject<void>();
   choferes!: ConIdType<Chofer>[];
   clientes!: ConIdType<Cliente>[];
-  proveedores!: ConIdType<Proveedor>[]; 
+  proveedores!: ConIdType<Proveedor>[];
   btnConsulta: boolean = false;
   informesOp: ConId<InformeOp>[] = [];
   datosTabla: any[] = [];
   opAbiertas!: ConId<Operacion>[];
   isLoading: boolean = false;
-  proformas: ConId<any> [] = [];
-  informesDetalladoPorObjeto: Map<number, InformeOp[]> = new Map<number, InformeOp[]>();
+  proformas: ConId<any>[] = [];
+  informesDetalladoPorObjeto: Map<number, InformeOp[]> = new Map<
+    number,
+    InformeOp[]
+  >();
   mostrarTabla: boolean[] = [];
   informesLiquidados: any[] = []; // Nuevo array para almacenar las facturas liquidadas
-  razonSocFac!: string ;
+  razonSocFac!: string;
   totalInformesLiquidados: number = 0; // Variable para almacenar el total de las facturas liquidadas
-  totalInformesLiquidadosContraParte: number = 0 ; // Variable para almacenar el total de las facturas liquidadas
-  indiceSeleccionado!:number;
+  totalInformesLiquidadosContraParte: number = 0; // Variable para almacenar el total de las facturas liquidadas
+  indiceSeleccionado!: number;
   informeDeLiquidacion!: InformeLiq;
   informeDetallado!: ConId<InformeOp>;
   informeContraParte!: ConId<InformeOp>;
-  operacion!:ConId<Operacion>;
-  tarifaAplicada:any;
-  ordenColumna: string = '';
+  operacion!: ConId<Operacion>;
+  tarifaAplicada: any;
+  ordenColumna: string = "";
   ordenAscendente: boolean = true;
-  columnaOrdenada: string = '';
-  searchText!:string;
-  searchText2!:string;
-  searchText3!:string;
+  columnaOrdenada: string = "";
+  searchText!: string;
+  searchText2!: string;
+  searchText3!: string;
 
   ///////////////////////VARIABLES POR ERROR DE DUPLICADAS///////////////////////////////////////////
   $facturasOpDuplicadas: ConId<InformeOp>[] = [];
-  $facLiqOpDuplicadas: InformeOp[] = [];  
-  objetoEditado: ConId<InformeOp>[] = [];  
-  facturaOpsNoAsignadas: any[] = []
+  $facLiqOpDuplicadas: InformeOp[] = [];
+  objetoEditado: ConId<InformeOp>[] = [];
+  facturaOpsNoAsignadas: any[] = [];
   constructor(
-    private router: Router, 
+    private router: Router,
     private storageService: StorageService,
-    private excelServ: ExcelService, 
-    private pdfServ: PdfService, 
-    private modalService: NgbModal, 
+    private excelServ: ExcelService,
+    private pdfServ: PdfService,
+    private modalService: NgbModal,
     private dbFirebase: DbFirestoreService,
     private buscarTarifaServ: BuscarTarifaService,
     private tableroServ: TableroService,
     private datePipe: DatePipe,
-    private dateRangeService:DateRangeService
-  ){}
+    private dateRangeService: DateRangeService,
+  ) {}
 
-    ngOnInit(): void {
+  ngOnInit(): void {
     // Obtenemos la URL completa y dividimos los segmentos para obtener el módulo de origen
-    const urlSegments = this.router.url.split('/');
+    const urlSegments = this.router.url.split("/");
     //console.log('urlSegments:', urlSegments);
     if (urlSegments.length > 1) {
       this.llamadaOrigen = urlSegments[2]; // Esto será 'clientes' o 'choferes'
       //console.log('Módulo origen:', this.llamadaOrigen);
     }
-    this.componente = this.llamadaOrigen === 'cliente' ? 'informesOpClientes' : this.llamadaOrigen === 'chofer' ? 'informesOpChoferes' : 'informesOpProveedores';
-    this.componenteBaja = this.llamadaOrigen === 'cliente' ? 'infOpLiqClientes' : this.llamadaOrigen === 'chofer' ? 'infOpLiqChoferes' : 'infOpLiqProveedores';    
+    this.componente =
+      this.llamadaOrigen === "cliente"
+        ? "informesOpClientes"
+        : this.llamadaOrigen === "chofer"
+          ? "informesOpChoferes"
+          : "informesOpProveedores";
+    this.componenteBaja =
+      this.llamadaOrigen === "cliente"
+        ? "infOpLiqClientes"
+        : this.llamadaOrigen === "chofer"
+          ? "infOpLiqChoferes"
+          : "infOpLiqProveedores";
 
     /// CHOFERES/CLIENTES/PROVEEDORES
-    this.choferes = this.storageService.loadInfo('choferes');
-    this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-    this.clientes = this.storageService.loadInfo('clientes');
-    this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-    this.proveedores = this.storageService.loadInfo('proveedores');
-    this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+    this.choferes = this.storageService.loadInfo("choferes");
+    this.choferes = this.choferes.sort((a, b) =>
+      a.apellido.localeCompare(b.apellido),
+    ); // Ordena por el nombre del chofer
+    this.clientes = this.storageService.loadInfo("clientes");
+    this.clientes = this.clientes.sort((a, b) =>
+      a.razonSocial.localeCompare(b.razonSocial),
+    ); // Ordena por el nombre del chofer
+    this.proveedores = this.storageService.loadInfo("proveedores");
+    this.proveedores = this.proveedores.sort((a, b) =>
+      a.razonSocial.localeCompare(b.razonSocial),
+    ); // Ordena por el nombre del chofer
 
     ////////// FECHAS E INFORMES OP ///////////////
- /*      this.storageService.fechasConsulta$
+    /*      this.storageService.fechasConsulta$
     .pipe(takeUntil(this.destroy$))
     .subscribe(fechas => {
       this.fechasConsulta = fechas;
@@ -142,52 +164,51 @@ export class LiquidacionesOpComponent implements OnInit {
     }); */
 
     this.dateRangeService.range$
-    .pipe(
-      filter((r): r is DateRange => r !== null),
-      takeUntil(this.destroy$)
-    )
-    .subscribe(r => {
-      //this.consultarOperaciones(r.desde, r.hasta);
-      this.isLoading = true;
-      const desde = toISODateString(r.desde);
-      const hasta = toISODateString(r.hasta);
-      console.log("0)desde:", desde, " hasta: ", hasta);
-      // 1. Consultar operaciones abiertas
-      this.cargarOperacionesAbiertas()
-        .pipe(take(1)) // Nos aseguramos que se ejecute solo una vez
-        .subscribe(opAbiertas => {
-          this.opAbiertas = opAbiertas;
-          
-          
-          // 2. Una vez obtenidas, sincronizar informes
-          this.storageService.syncChangesDateValue<InformeOp>(
-            this.componente,
-            "fecha",
-            desde,
-            hasta,
-            "desc"
-          );
+      .pipe(
+        filter((r): r is DateRange => r !== null),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((r) => {
+        //this.consultarOperaciones(r.desde, r.hasta);
+        this.isLoading = true;
+        const desde = toISODateString(r.desde);
+        const hasta = toISODateString(r.hasta);
+        console.log("0)desde:", desde, " hasta: ", hasta);
+        // 1. Consultar operaciones abiertas
+        this.cargarOperacionesAbiertas()
+          .pipe(take(1)) // Nos aseguramos que se ejecute solo una vez
+          .subscribe((opAbiertas) => {
+            this.opAbiertas = opAbiertas;
 
-          //this.btnConsulta = true;
-          this.mostrarTabla = this.mostrarTabla.map(() => false);
-          this.storageService.getObservable<ConId<InformeOp>>(this.componente)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(data => {
-              console.log("data-liquidaciones", data);
-              
-              this.informesOp = data;
+            // 2. Una vez obtenidas, sincronizar informes
+            this.storageService.syncChangesDateValue<InformeOp>(
+              this.componente,
+              "fecha",
+              desde,
+              hasta,
+              "desc",
+            );
 
-              if (this.informesOp) {
-                this.procesarDatosParaTabla();
-                this.isLoading = false;
-              } else {
-                this.isLoading = true;
-                this.mensajesError("error: facturaOpCliente", "error");                
-              }
-            });
-        });
-    });
+            //this.btnConsulta = true;
+            this.mostrarTabla = this.mostrarTabla.map(() => false);
+            this.storageService
+              .getObservable<ConId<InformeOp>>(this.componente)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe((data) => {
+                console.log("data-liquidaciones", data);
 
+                this.informesOp = data;
+
+                if (this.informesOp) {
+                  this.procesarDatosParaTabla();
+                  this.isLoading = false;
+                } else {
+                  this.isLoading = true;
+                  this.mensajesError("error: facturaOpCliente", "error");
+                }
+              });
+          });
+      });
   }
 
   ngOnDestroy(): void {
@@ -197,22 +218,27 @@ export class LiquidacionesOpComponent implements OnInit {
 
   cargarOperacionesAbiertas(): Observable<ConId<Operacion>[]> {
     return this.dbFirebase.getAllByDateValueField<Operacion>(
-      'operaciones',
-      'fecha',
+      "operaciones",
+      "fecha",
       this.fechasConsulta.fechaDesde,
       this.fechasConsulta.fechaHasta,
       "estado.abierta",
-      true
+      true,
     );
   }
 
   procesarDatosParaTabla() {
-      const informesMap = new Map<number, any>();    
+    const informesMap = new Map<number, any>();
 
-    if(this.informesOp !== null){
+    if (this.informesOp !== null) {
       //////////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
       this.informesOp.forEach((inf: InformeOp) => {
-        let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
+        let idObjeto =
+          this.llamadaOrigen === "cliente"
+            ? inf.idCliente
+            : this.llamadaOrigen === "chofer"
+              ? inf.idChofer
+              : inf.idProveedor;
         if (!informesMap.has(idObjeto)) {
           informesMap.set(idObjeto, {
             id: idObjeto,
@@ -227,7 +253,7 @@ export class LiquidacionesOpComponent implements OnInit {
             ganancia: 0,
           });
         }
-      
+
         const objInf = informesMap.get(idObjeto);
         objInf.opCerradas++;
         if (inf.liquidacion) {
@@ -236,517 +262,681 @@ export class LiquidacionesOpComponent implements OnInit {
           objInf.opSinFacturar += inf.valores.total;
         }
         objInf.total += inf.valores.total;
-        if(this.llamadaOrigen === 'cliente'){
-          objInf.aPagar += inf.contraParteMonto;   
-          objInf.ganancia = 100-((objInf.aPagar*100)/objInf.total);
+        if (this.llamadaOrigen === "cliente") {
+          objInf.aPagar += inf.contraParteMonto;
+          objInf.ganancia = 100 - (objInf.aPagar * 100) / objInf.total;
         } else {
-          objInf.aCobrar += inf.contraParteMonto;   
-          objInf.ganancia = 100-((objInf.total*100)/objInf.aCobrar);
-        }       
-        
-        
-      });      
-  
+          objInf.aCobrar += inf.contraParteMonto;
+          objInf.ganancia = 100 - (objInf.total * 100) / objInf.aCobrar;
+        }
+      });
+
       this.datosTabla = Array.from(informesMap.values());
       // Ahora que opAbiertas ya fue cargado, podés calcular sincrónicamente
-      this.datosTabla.forEach(c => {
+      this.datosTabla.forEach((c) => {
         c.opAbiertas = this.getOpAbiertas(c.id);
       });
-      this.datosTabla = this.datosTabla.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      
-      }
-    //console.log("this.datosTabla: ", this.datosTabla);
-      
-  }
-  
-  getOpAbiertas(id:number){
-    if(this.opAbiertas !== undefined){
-      let cantOpAbiertas = this.opAbiertas.filter((op:Operacion)=>{
-        let idObjeto = this.llamadaOrigen === 'cliente' ? op.cliente.idCliente : this.llamadaOrigen === 'chofer' ? op.chofer.idChofer : op.chofer.idProveedor;
-        return idObjeto === id
-      })
-    
-      return cantOpAbiertas.length
-    } else{
-      return 0 
+      this.datosTabla = this.datosTabla.sort((a, b) =>
+        a.razonSocial.localeCompare(b.razonSocial),
+      ); // Ordena por el nombre del chofer
     }
-  
+    //console.log("this.datosTabla: ", this.datosTabla);
   }
 
-  getRazonSocial(id:number):string{
-    let razonSocial = this.llamadaOrigen === 'cliente' ? this.getCliente(id) : this.llamadaOrigen === 'chofer' ? this.getChofer(id) : this.getProveedor(id);
+  getOpAbiertas(id: number) {
+    if (this.opAbiertas !== undefined) {
+      let cantOpAbiertas = this.opAbiertas.filter((op: Operacion) => {
+        let idObjeto =
+          this.llamadaOrigen === "cliente"
+            ? op.cliente.idCliente
+            : this.llamadaOrigen === "chofer"
+              ? op.chofer.idChofer
+              : op.chofer.idProveedor;
+        return idObjeto === id;
+      });
+
+      return cantOpAbiertas.length;
+    } else {
+      return 0;
+    }
+  }
+
+  getRazonSocial(id: number): string {
+    let razonSocial =
+      this.llamadaOrigen === "cliente"
+        ? this.getCliente(id)
+        : this.llamadaOrigen === "chofer"
+          ? this.getChofer(id)
+          : this.getProveedor(id);
     return razonSocial;
   }
 
-  getCliente(id: number): string{
-    let cliente = this.clientes.find((cliente:Cliente)=>{
+  getCliente(id: number): string {
+    let cliente = this.clientes.find((cliente: Cliente) => {
       return cliente.idCliente === id;
-    })
-    if(cliente){
+    });
+    if (cliente) {
       return cliente.razonSocial;
     } else {
       return `Cliente dado de baja. idCliente ${id}`;
     }
   }
 
-  getChofer(id: number):string{
-    let chofer = this.choferes.find((chofer:Chofer)=>{
+  getChofer(id: number): string {
+    let chofer = this.choferes.find((chofer: Chofer) => {
       return chofer.idChofer === id;
-    })
-    if(chofer){
-      return chofer.apellido + " " + chofer.nombre; 
+    });
+    if (chofer) {
+      return chofer.apellido + " " + chofer.nombre;
     } else {
       return `Chofer dado de baja. idChofer ${id}`;
     }
-  
   }
 
-  getProveedor(id: number):string{
-    let proveedor = this.proveedores.find((proveedor:Proveedor)=>{
+  getProveedor(id: number): string {
+    let proveedor = this.proveedores.find((proveedor: Proveedor) => {
       return proveedor.idProveedor === id;
-    })
-    if(proveedor){
+    });
+    if (proveedor) {
       return proveedor.razonSocial;
     } else {
       return `Proveedor dado de baja. idProveedor ${id}`;
     }
   }
 
-  mostrarMasDatos(index: number) {   
+  mostrarMasDatos(index: number) {
     // Cambiar el estado del botón en la posición indicada
-    this.mostrarTabla[index] = !this.mostrarTabla[index];   
+    this.mostrarTabla[index] = !this.mostrarTabla[index];
 
     // Obtener el id del objeto utilizando el índice proporcionado
     let objId = this.datosTabla[index].id;
-      //////console.log("clienteId: ", clienteId);
-      
+    //////console.log("clienteId: ", clienteId);
+
     // Filtrar las informes según el id del objeto y almacenarlas en el mapa
     let informesObjetoId = this.informesOp.filter((inf: InformeOp) => {
-        let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
-        return idObjeto === objId;
+      let idObjeto =
+        this.llamadaOrigen === "cliente"
+          ? inf.idCliente
+          : this.llamadaOrigen === "chofer"
+            ? inf.idChofer
+            : inf.idProveedor;
+      return idObjeto === objId;
     });
     this.informesDetalladoPorObjeto.set(objId, informesObjetoId);
     //////console.log("FACTURAS DEL CLIENTE: ", facturasCliente);
-    //this.buscarOpConProformas(facturasCliente, clienteId)     
+    //this.buscarOpConProformas(facturasCliente, clienteId)
   }
 
   liquidarBoleano(informe: InformeOp) {
-    informe.liquidacion = !informe.liquidacion;    
+    informe.liquidacion = !informe.liquidacion;
     this.procesarDatosParaTabla();
   }
 
   selectAllCheckboxes(event: any, id: number): void {
     //let isChecked = (event.target as HTMLInputElement).checked;
     const seleccion = event.target.checked;
-    //////////console.log("1)", seleccion); 
+    //////////console.log("1)", seleccion);
     let informesObjeto = this.informesDetalladoPorObjeto.get(id);
     //////////console.log("2)", facturasCliente);
-      informesObjeto?.forEach((inf: InformeOp) => {
-        if(!inf.proforma && !inf.contraParteProforma){
-          inf.liquidacion = seleccion;
-        }
-        
-        //////////console.log("3)", factura.liquidacion);
-      
-      });   
-      //////////console.log("primera tabla: ", this.datosTablaCliente);
-      let objeto = this.datosTabla.find((obj:any)=>{
-        return obj.id === id
-      });
-      //////////console.log("1) cliente: ", cliente);
-      if(seleccion){
-        objeto.opFacturadas = 0
-        informesObjeto?.forEach((factura: InformeOp) => {                  
-            objeto.opFacturadas += factura.valores.total;
-            objeto.opSinFacturar = 0;
-          });   
-      } else {
-        objeto.opSinFacturar = 0;
-        objeto.opFacturadas = 0;
-        informesObjeto?.forEach((factura: InformeOp) => {                
-          objeto.opFacturadas += (factura.proforma ? factura.valores.total : 0);
-          objeto.opSinFacturar += (!factura.proforma ? factura.valores.total : 0);
-        });   
+    informesObjeto?.forEach((inf: InformeOp) => {
+      if (!inf.proforma && !inf.contraParteProforma) {
+        inf.liquidacion = seleccion;
       }
-  
-      //////////console.log("2) cliente: ", cliente);
-    
-  }  
-  
-  cerrarTabla(index: number){
+
+      //////////console.log("3)", factura.liquidacion);
+    });
+    //////////console.log("primera tabla: ", this.datosTablaCliente);
+    let objeto = this.datosTabla.find((obj: any) => {
+      return obj.id === id;
+    });
+    //////////console.log("1) cliente: ", cliente);
+    if (seleccion) {
+      objeto.opFacturadas = 0;
+      informesObjeto?.forEach((factura: InformeOp) => {
+        objeto.opFacturadas += factura.valores.total;
+        objeto.opSinFacturar = 0;
+      });
+    } else {
+      objeto.opSinFacturar = 0;
+      objeto.opFacturadas = 0;
+      informesObjeto?.forEach((factura: InformeOp) => {
+        objeto.opFacturadas += factura.proforma ? factura.valores.total : 0;
+        objeto.opSinFacturar += !factura.proforma ? factura.valores.total : 0;
+      });
+    }
+
+    //////////console.log("2) cliente: ", cliente);
+  }
+
+  cerrarTabla(index: number) {
     this.mostrarTabla[index] = !this.mostrarTabla[index];
   }
 
   getQuincena(fecha: any | Date): string {
     // Convierte la fecha a objeto Date
-    const [year, month, day] = fecha.split('-').map(Number);
-  
+    const [year, month, day] = fecha.split("-").map(Number);
+
     // Crear la fecha asegurando que tome la zona horaria local
     const date = new Date(year, month - 1, day); // mes - 1 porque los meses en JavaScript son 0-indexed
-  
+
     // Determinar si está en la primera o segunda quincena
     if (day <= 15) {
-      return '1<sup> ra</sup>';
+      return "1<sup> ra</sup>";
     } else {
-      return '2<sup> da</sup>';
+      return "2<sup> da</sup>";
     }
   }
 
-  liquidarInformesObjeto(objInf: any, index: number){
+  liquidarInformesObjeto(objInf: any, index: number) {
     // Obtener las facturas del cliente
-    
+
     console.log("objInf: ", objInf);
     let informesSeleccionados = this.informesOp.filter((inf: InformeOp) => {
-        let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
-        return idObjeto === objInf.id;
+      let idObjeto =
+        this.llamadaOrigen === "cliente"
+          ? inf.idCliente
+          : this.llamadaOrigen === "chofer"
+            ? inf.idChofer
+            : inf.idProveedor;
+      return idObjeto === objInf.id;
     });
 
-    let alertaProforma = informesSeleccionados.some((f: ConId<InformeOp>)=>{ return f.contraParteProforma})
+    let alertaProforma = informesSeleccionados.some((f: ConId<InformeOp>) => {
+      return f.contraParteProforma;
+    });
     //console.log("alertaProforma", alertaProforma);
-    if(alertaProforma && this.llamadaOrigen === 'cliente'){
+    if (alertaProforma && this.llamadaOrigen === "cliente") {
       Swal.fire({
-          icon: "warning",
-          title: "¡Atención!",
-          text: "El cliente tiene operaciones asignadas a una proforma de Chofer. Las mismas no se incluyen en la liquidación",
-          //footer: '<a href="#">Why do I have this issue?</a>'
-        });
+        icon: "warning",
+        title: "¡Atención!",
+        text: "El cliente tiene operaciones asignadas a una proforma de Chofer. Las mismas no se incluyen en la liquidación",
+        //footer: '<a href="#">Why do I have this issue?</a>'
+      });
     }
 
     //console.log("informesSeleccionados: ", informesSeleccionados);
-    
-    if(objInf.opAbiertas > 0){
-        Swal.fire({
-          icon: "warning",
-          title: "¡Atención!",
-          text: `El ${this.llamadaOrigen} tiene operaciones abiertas que corresponden al periodo que se esta facturando`,
-          //footer: '<a href="#">Why do I have this issue?</a>'
-        });
+
+    if (objInf.opAbiertas > 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "¡Atención!",
+        text: `El ${this.llamadaOrigen} tiene operaciones abiertas que corresponden al periodo que se esta facturando`,
+        //footer: '<a href="#">Why do I have this issue?</a>'
+      });
     }
 
-    
-    
-    
-    let informesIdObjeto:any = this.informesDetalladoPorObjeto.get(objInf.id);
+    let informesIdObjeto: any = this.informesDetalladoPorObjeto.get(objInf.id);
     this.razonSocFac = objInf.razonSocial;
     // Filtrar las facturas con liquidacion=true y guardarlas en un nuevo array
     this.informesLiquidados = informesIdObjeto.filter((informe: InformeOp) => {
-        return informe.liquidacion === true && informe.proforma === false;
+      return informe.liquidacion === true && informe.proforma === false;
     });
 
-    if(this.informesLiquidados.length > 0){
+    if (this.informesLiquidados.length > 0) {
       //////////console.log("1: ",this.facturasLiquidadasCliente);
       // Calcular el total sumando los montos de las facturas liquidadas
       this.totalInformesLiquidados = 0;
       this.informesLiquidados.forEach((informe: InformeOp) => {
         this.totalInformesLiquidados += informe.valores.total;
       });
-  
+
       this.indiceSeleccionado = index;
-      this.buscarOpConProformas(this.informesLiquidados, objInf.id)
+      this.buscarOpConProformas(this.informesLiquidados, objInf.id);
       //////////console.log("3) Facturas liquidadas del cliente", cliente.razonSocial + ":", this.facturasLiquidadasCliente);
       //////////console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasCliente);
       ////////////console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
     } else {
-      this.mensajesError("Debe seleccionar una factura para liquidar", "error")
+      this.mensajesError("Debe seleccionar una factura para liquidar", "error");
     }
-  
-     
   }
 
   //// CREO QUE YA NO SE USA
-  buscarOpConProformas(facturasOpCliente: ConId<InformeOp>[], id:number){
+  buscarOpConProformas(facturasOpCliente: ConId<InformeOp>[], id: number) {
     ////console.log("FACTURAS DEL CLIENTE: ", facturasOpCliente);
     ////console.log("clienteId: ", id);
     //let idObjeto = this.llamadaOrigen === 'cliente' ? 'cliente.idCliente' : this.llamadaOrigen === 'chofer' ? 'chofer.idChofer' : 'chofer.idProveedor';
-    this.dbFirebase.buscarColeccionRangoFechaIdCampo<Operacion>('operaciones', this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, "cliente.idCliente", id, "estado.proformaCh", true).subscribe(data=>{      
-      let opProformas: ConId<Operacion>[] = []  
-      if(data){
-          opProformas = data;          
-          ////console.log("opProformas", opProformas);    
-          
-        }      
-    });      
+    this.dbFirebase
+      .buscarColeccionRangoFechaIdCampo<Operacion>(
+        "operaciones",
+        this.fechasConsulta.fechaDesde,
+        this.fechasConsulta.fechaHasta,
+        "cliente.idCliente",
+        id,
+        "estado.proformaCh",
+        true,
+      )
+      .subscribe((data) => {
+        let opProformas: ConId<Operacion>[] = [];
+        if (data) {
+          opProformas = data;
+          ////console.log("opProformas", opProformas);
+        }
+      });
   }
 
-  openModalLiquidacion(): void {   
+  openModalLiquidacion(): void {
     //this.facturasLiquidadasCliente
     //this.totalFacturasLiquidadasChofer
     //this.totalFacturasLiquidadasCliente
-    
+
     let mes = this.getMesCapitalizado(this.fechasConsulta.fechaDesde);
     //console.log("mes: ", mes);
 
-    this.indiceSeleccionado
+    this.indiceSeleccionado;
     {
       const modalRef = this.modalService.open(ResumenOpLiquidadasComponent, {
-        windowClass: 'myCustomModalClass',
+        windowClass: "myCustomModalClass",
         centered: true,
-        size: 'xl', 
-        //backdrop:"static" 
+        size: "xl",
+        //backdrop:"static"
       });
-      
-    let info = {
-        origen:this.llamadaOrigen,
+
+      let info = {
+        origen: this.llamadaOrigen,
         facturas: this.informesLiquidados,
         total: this.totalInformesLiquidados,
-        mesPeriodo: mes
-        
-      }; 
+        mesPeriodo: mes,
+      };
       //////console.log("info: ",info);
-      
+
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
           console.log("resultado del modal resumen-op:", result);
-          
-          if(result.modo === "cerrar" || result.modo === "proforma"){
-            let titulo = result.titulo
-            this.informeDeLiquidacion = result.factura;            
-            let accion: string = result.accion;
-            if(result.modo === "cerrar"){                            
-              this.procesarFacturacion(titulo, accion);              
-            }
-            if(result.modo === "proforma"){
-              this.procesarProforma(titulo, accion);             
-            }                       
 
-          } 
-          
-          },
-        (reason) => {}
+          if (result.modo === "cerrar" || result.modo === "proforma") {
+            let titulo = result.titulo;
+            this.informeDeLiquidacion = result.factura;
+            let accion: string = result.accion;
+            if (result.modo === "cerrar") {
+              this.procesarFacturacion(titulo, accion);
+            }
+            if (result.modo === "proforma") {
+              this.procesarProforma(titulo, accion);
+            }
+          }
+        },
+        (reason) => {},
       );
     }
   }
 
-  procesarFacturacion(titulo:string, accion:string) {
+  procesarFacturacion(titulo: string, accion: string) {
     this.isLoading = true;
     // Validar que todos los idOperacion sean únicos
-    const ids = this.informesLiquidados.map(infOp => infOp.idOperacion);
+    const ids = this.informesLiquidados.map((infOp) => infOp.idOperacion);
     const idsDuplicados = ids.filter((id, index) => ids.indexOf(id) !== index);
     if (idsDuplicados.length > 0) {
-      return this.mensajesError('Se encontraron informes con idOperacion duplicado:', "error");
+      return this.mensajesError(
+        "Se encontraron informes con idOperacion duplicado:",
+        "error",
+      );
     }
-    
-    this.dbFirebase.procesarLiquidacion(this.informesLiquidados, this.llamadaOrigen, this.componenteBaja, this.componente, this.informeDeLiquidacion, this.compInformeLiquidacion)
-    .then((result) => {
-      this.isLoading = false;
-      //////console.log("resultado: ", result);
-      if(result.exito){
-        this.storageService.logMultiplesOp(this.informeDeLiquidacion.operaciones, "LIQUIDAR", "operaciones", `Operación del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial} Liquidada`,result.exito)
-        this.storageService.logSimple(this.informeDeLiquidacion.idInfLiq,"ALTA", this.compInformeLiquidacion, `Alta de Factura del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`, result.exito )
-        Swal.fire({
+
+    this.dbFirebase
+      .procesarLiquidacion(
+        this.informesLiquidados,
+        this.llamadaOrigen,
+        this.componenteBaja,
+        this.componente,
+        this.informeDeLiquidacion,
+        this.compInformeLiquidacion,
+      )
+      .then((result) => {
+        this.isLoading = false;
+        //////console.log("resultado: ", result);
+        if (result.exito) {
+          this.storageService.logMultiplesOp(
+            this.informeDeLiquidacion.operaciones,
+            "LIQUIDAR",
+            "operaciones",
+            `Operación del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial} Liquidada`,
+            result.exito,
+          );
+          this.storageService.logSimple(
+            this.informeDeLiquidacion.idInfLiq,
+            "ALTA",
+            this.compInformeLiquidacion,
+            `Alta de Factura del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`,
+            result.exito,
+          );
+          Swal.fire({
             icon: "success",
             //title: "Oops...",
-            text: 'La liquidación se procesó con éxito.',
+            text: "La liquidación se procesó con éxito.",
             confirmButtonColor: "#3085d6",
             confirmButtonText: "Confirmar",
             //footer: `${msj}`
           }).then(() => {
-              Swal.fire({
-                title: `¿Desea imprimir el detalle de la liquidación?`,
-                //text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Confirmar",
-                cancelButtonText: "Cancelar"
-              }).then((result) => {
-                if (result.isConfirmed) {  
-                  if(titulo === "excel"){
-                        this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                  }else if (titulo === "pdf"){
-                    this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);        
-                  }                        
+            Swal.fire({
+              title: `¿Desea imprimir el detalle de la liquidación?`,
+              //text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Confirmar",
+              cancelButtonText: "Cancelar",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                if (titulo === "excel") {
+                  this.excelServ.exportToExcelInforme(
+                    this.informeDeLiquidacion,
+                    this.informesLiquidados,
+                    this.clientes,
+                    this.choferes,
+                    accion,
+                  );
+                } else if (titulo === "pdf") {
+                  this.pdfServ.exportToPdfInforme(
+                    this.informeDeLiquidacion,
+                    this.informesLiquidados,
+                    this.clientes,
+                    this.choferes,
+                    accion,
+                  );
                 }
-              }); 
+              }
+            });
           });
-        this.mostrarMasDatos(this.indiceSeleccionado);
-        this.procesarDatosParaTabla();
-      } else {
-        this.storageService.logMultiplesOp(this.informeDeLiquidacion.operaciones, "LIQUIDAR", "operaciones", `Operación del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial} Liquidada`,result.exito)
-        this.storageService.logSimple(this.informeDeLiquidacion.idInfLiq,"ALTA", this.compInformeLiquidacion, `Alta de Factura del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`, result.exito )
-        this.mensajesError(`Ocurrió un error al procesar la facturación: ${result.mensaje}`, "error");
-      }
-      
-      
-    })
-    .catch((error) => {
-      this.isLoading = false;
-      console.error(error);
-      this.mensajesError('Ocurrió un error al procesar la facturación.', "error");
-    });
-      
+          this.mostrarMasDatos(this.indiceSeleccionado);
+          this.procesarDatosParaTabla();
+        } else {
+          this.storageService.logMultiplesOp(
+            this.informeDeLiquidacion.operaciones,
+            "LIQUIDAR",
+            "operaciones",
+            `Operación del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial} Liquidada`,
+            result.exito,
+          );
+          this.storageService.logSimple(
+            this.informeDeLiquidacion.idInfLiq,
+            "ALTA",
+            this.compInformeLiquidacion,
+            `Alta de Factura del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`,
+            result.exito,
+          );
+          this.mensajesError(
+            `Ocurrió un error al procesar la facturación: ${result.mensaje}`,
+            "error",
+          );
+        }
+      })
+      .catch((error) => {
+        this.isLoading = false;
+        console.error(error);
+        this.mensajesError(
+          "Ocurrió un error al procesar la facturación.",
+          "error",
+        );
+      });
   }
 
-  procesarProforma(titulo:string, accion:string){
+  procesarProforma(titulo: string, accion: string) {
     this.isLoading = true;
 
-    this.dbFirebase.procesarProforma(this.informesLiquidados, this.llamadaOrigen, this.componente, this.informeDeLiquidacion, "proforma")
-    .then((result) => {
-      this.isLoading = false;
-      //////console.log("resultado: ", result);
-      if(result.exito){
-          this.storageService.logMultiplesOp(this.informeDeLiquidacion.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Cliente ${this.informeDeLiquidacion.entidad.razonSocial}`,result.exito)
-          this.storageService.logSimple(this.informeDeLiquidacion.idInfLiq,"ALTA", "proforma", `Alta de Proforma del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`, result.exito )
+    this.dbFirebase
+      .procesarProforma(
+        this.informesLiquidados,
+        this.llamadaOrigen,
+        this.componente,
+        this.informeDeLiquidacion,
+        "proforma",
+      )
+      .then((result) => {
+        this.isLoading = false;
+        //////console.log("resultado: ", result);
+        if (result.exito) {
+          this.storageService.logMultiplesOp(
+            this.informeDeLiquidacion.operaciones,
+            "PROFORMA",
+            "operaciones",
+            `Proforma de operación del Cliente ${this.informeDeLiquidacion.entidad.razonSocial}`,
+            result.exito,
+          );
+          this.storageService.logSimple(
+            this.informeDeLiquidacion.idInfLiq,
+            "ALTA",
+            "proforma",
+            `Alta de Proforma del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`,
+            result.exito,
+          );
           Swal.fire({
-                icon: "success",
-                //title: "Oops...",
-                text: 'La proforma se generó con éxito.',
-                confirmButtonColor: "#3085d6",
-                confirmButtonText: "Confirmar",
-                //footer: `${msj}`
-              }).then(() => {
-                  Swal.fire({
-                    title: `¿Desea imprimir la proforma del ${this.llamadaOrigen}?`,
-                    //text: "You won't be able to revert this!",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Confirmar",
-                    cancelButtonText: "Cancelar"
-                  }).then((result) => {
-                      if (result.isConfirmed) {     
-                        switch (this.llamadaOrigen){
-                          case 'cliente':
-                            if(titulo === "excel"){
-                              this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                            }else if (titulo === "pdf"){
-                              this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);        
-                            }
-                            break;
-                          case 'chofer':
-                            if(titulo === "excel"){
-                              this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                            }else if (titulo === "pdf"){
-                              this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);        
-                            } 
-                            break;
-                          case 'proveedor':
-                            if(titulo === "excel"){
-                                this.excelServ.exportToExcelInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                              }else if (titulo === "pdf"){          
-                                this.pdfServ.exportToPdfInforme(this.informeDeLiquidacion, this.informesLiquidados, this.clientes, this.choferes, accion);
-                            }
-                            break;  
-                          default:
-                        this.mensajesError("Error en la impresion de la liquidación", "error");
-                        }   
-                      }
-                  }); 
-              });
-              //this.mostrarMasDatos(this.indiceSeleccionado);
-              //this.procesarDatosParaTabla()
-      } else {
-        this.storageService.logMultiplesOp(this.informeDeLiquidacion.operaciones, "PROFORMA", "operaciones", `Proforma de operación del Cliente ${this.informeDeLiquidacion.entidad.razonSocial}`,result.exito)
-        this.storageService.logSimple(this.informeDeLiquidacion.idInfLiq,"ALTA", "proforma", `Alta de Proforma del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`, result.exito )
-        this.mensajesError(`Ocurrió un error al procesar la proforma: ${result.mensaje}`, "error");
-        //this.mostrarMasDatos(this.indiceSeleccionado);
-        //this.procesarDatosParaTabla()
-      }
-      
-    
-    })
-    .catch((error) => {
-      this.isLoading = false;
-      console.error(error);
-      this.mensajesError('Ocurrió un error al procesar la proforma.', "error");
-    });
+            icon: "success",
+            //title: "Oops...",
+            text: "La proforma se generó con éxito.",
+            confirmButtonColor: "#3085d6",
+            confirmButtonText: "Confirmar",
+            //footer: `${msj}`
+          }).then(() => {
+            Swal.fire({
+              title: `¿Desea imprimir la proforma del ${this.llamadaOrigen}?`,
+              //text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Confirmar",
+              cancelButtonText: "Cancelar",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                switch (this.llamadaOrigen) {
+                  case "cliente":
+                    if (titulo === "excel") {
+                      this.excelServ.exportToExcelInforme(
+                        this.informeDeLiquidacion,
+                        this.informesLiquidados,
+                        this.clientes,
+                        this.choferes,
+                        accion,
+                      );
+                    } else if (titulo === "pdf") {
+                      this.pdfServ.exportToPdfInforme(
+                        this.informeDeLiquidacion,
+                        this.informesLiquidados,
+                        this.clientes,
+                        this.choferes,
+                        accion,
+                      );
+                    }
+                    break;
+                  case "chofer":
+                    if (titulo === "excel") {
+                      this.excelServ.exportToExcelInforme(
+                        this.informeDeLiquidacion,
+                        this.informesLiquidados,
+                        this.clientes,
+                        this.choferes,
+                        accion,
+                      );
+                    } else if (titulo === "pdf") {
+                      this.pdfServ.exportToPdfInforme(
+                        this.informeDeLiquidacion,
+                        this.informesLiquidados,
+                        this.clientes,
+                        this.choferes,
+                        accion,
+                      );
+                    }
+                    break;
+                  case "proveedor":
+                    if (titulo === "excel") {
+                      this.excelServ.exportToExcelInforme(
+                        this.informeDeLiquidacion,
+                        this.informesLiquidados,
+                        this.clientes,
+                        this.choferes,
+                        accion,
+                      );
+                    } else if (titulo === "pdf") {
+                      this.pdfServ.exportToPdfInforme(
+                        this.informeDeLiquidacion,
+                        this.informesLiquidados,
+                        this.clientes,
+                        this.choferes,
+                        accion,
+                      );
+                    }
+                    break;
+                  default:
+                    this.mensajesError(
+                      "Error en la impresion de la liquidación",
+                      "error",
+                    );
+                }
+              }
+            });
+          });
+          //this.mostrarMasDatos(this.indiceSeleccionado);
+          //this.procesarDatosParaTabla()
+        } else {
+          this.storageService.logMultiplesOp(
+            this.informeDeLiquidacion.operaciones,
+            "PROFORMA",
+            "operaciones",
+            `Proforma de operación del Cliente ${this.informeDeLiquidacion.entidad.razonSocial}`,
+            result.exito,
+          );
+          this.storageService.logSimple(
+            this.informeDeLiquidacion.idInfLiq,
+            "ALTA",
+            "proforma",
+            `Alta de Proforma del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`,
+            result.exito,
+          );
+          this.mensajesError(
+            `Ocurrió un error al procesar la proforma: ${result.mensaje}`,
+            "error",
+          );
+          //this.mostrarMasDatos(this.indiceSeleccionado);
+          //this.procesarDatosParaTabla()
+        }
+      })
+      .catch((error) => {
+        this.isLoading = false;
+        console.error(error);
+        this.mensajesError(
+          "Ocurrió un error al procesar la proforma.",
+          "error",
+        );
+      });
   }
 
-  async editarInformeOp(informe: ConId<InformeOp>, i: number) {       
-    this.informeDetallado = informe;   
-    await this.buscarTarifa(i);    
+  async editarInformeOp(informe: ConId<InformeOp>, i: number) {
+    this.informeDetallado = informe;
+    await this.buscarTarifa(i);
   }
 
   async buscarTarifa(i: number) {
-    this.tarifaAplicada = await this.buscarTarifaServ.buscarTarifa(this.informeDetallado, this.llamadaOrigen);
+    this.tarifaAplicada = await this.buscarTarifaServ.buscarTarifa(
+      this.informeDetallado,
+      this.llamadaOrigen,
+    );
     //console.log("this.tarifaAplicada", this.tarifaAplicada);
-    
+
     this.buscarOperacion(i);
   }
 
-  buscarOperacion(i:number){
+  buscarOperacion(i: number) {
     this.dbFirebase
-    .obtenerTarifaIdTarifa("operaciones",this.informeDetallado.idOperacion, "idOperacion")
-    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-    .subscribe(data => {      
+      .obtenerTarifaIdTarifa(
+        "operaciones",
+        this.informeDetallado.idOperacion,
+        "idOperacion",
+      )
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe((data) => {
         this.operacion = data;
         //////console.log("2) OPERACION: ", this.operacion);
-        this.openModalTarifa(i)
-    });    
+        this.openModalTarifa(i);
+      });
   }
 
-  async openModalTarifa(i:number) {   
-    
-    this.indiceSeleccionado
+  async openModalTarifa(i: number) {
+    this.indiceSeleccionado;
     {
       const modalRef = this.modalService.open(EditarInfOpComponent, {
-        windowClass: 'modal-xxl',
+        windowClass: "modal-xxl",
         centered: true,
-        //size: 'lg', 
-        //backdrop:"static" 
+        //size: 'lg',
+        //backdrop:"static"
       });
-      
-    let origen = this.llamadaOrigen;
+
+      let origen = this.llamadaOrigen;
 
       let info = {
         infOp: this.informeDetallado,
-        tarifaAplicada: this.tarifaAplicada,   
-        op: this.operacion,     
+        tarifaAplicada: this.tarifaAplicada,
+        op: this.operacion,
         origen: origen,
-        componente:"liquidacion",
-      }; 
-      //////////console.log(info); 
-      
+        componente: "liquidacion",
+      };
+      //////////console.log(info);
+
       modalRef.componentInstance.fromParent = info;
-      const respuesta = await modalRef.result
-      if(respuesta){
-              this.isLoading = true;
-              console.log("respuesta:", respuesta);
-                this.informeDetallado = respuesta.infOp;
-                this.operacion = respuesta.op
+      const respuesta = await modalRef.result;
+      if (respuesta) {
+        this.isLoading = true;
+        console.log("respuesta:", respuesta);
+        this.informeDetallado = respuesta.infOp;
+        this.operacion = respuesta.op;
 
-                //console.log("informeOp:", informeOp);
-                //this.recalcularFactura(informeOp);
-                //let coleccionInfOp = this.getColeccionInfOp();
-                //let coleccionInfLiq = this.fromParent.modo === "facturacion" ? 'resumenLiq' : this.fromParent.modo === "proforma" ? 'proforma' : "";
-                //if(coleccionInfOp === "") return this.mensajesError("error en la colección del informe de op", "error");
-                //if(coleccionInfLiq === "") return this.mensajesError("error en la colección del informe de Liquidación", "error");
-                //console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
-   
+        //console.log("informeOp:", informeOp);
+        //this.recalcularFactura(informeOp);
+        //let coleccionInfOp = this.getColeccionInfOp();
+        //let coleccionInfLiq = this.fromParent.modo === "facturacion" ? 'resumenLiq' : this.fromParent.modo === "proforma" ? 'proforma' : "";
+        //if(coleccionInfOp === "") return this.mensajesError("error en la colección del informe de op", "error");
+        //if(coleccionInfLiq === "") return this.mensajesError("error en la colección del informe de Liquidación", "error");
+        //console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
 
-
-                
-
-                const resultado = await this.dbFirebase.actualizarOperacionInformeOpYFactura(this.operacion, this.informeDetallado, this.componente, 'liquidacion')
-                console.log("resultado de la edicion de todo: ", resultado);
-                if(resultado.exito){
-                  await this.actualizarInfVenta("edicion");
-                  this.isLoading = false;
-                  this.procesarDatosParaTabla();
-                  //this.cerrarTabla(i)
-                  let idinformeDetallado = this.llamadaOrigen === 'cliente' ? this.informeDetallado.idCliente : this.llamadaOrigen === 'chofer' ? this.informeDetallado.idChofer : this.informeDetallado.idProveedor;
-                  let informesObjetoId = this.informesOp.filter((inf: InformeOp) => {
-                      let idObjeto = this.llamadaOrigen === 'cliente' ? inf.idCliente : this.llamadaOrigen === 'chofer' ? inf.idChofer : inf.idProveedor;
-                      return idObjeto === idinformeDetallado;
-                  });
-                  this.informesDetalladoPorObjeto.set(idinformeDetallado, informesObjetoId);
-                  await this.mensajesError("El informe se ha editado correctamente", "success");
-                  
-                } else {
-                  this.isLoading = false;
-                  await this.mensajesError(`error: ${resultado.mensaje}`, "error")
-                }
-
-            }
-
+        const resultado =
+          await this.dbFirebase.actualizarOperacionInformeOpYFactura(
+            this.operacion,
+            this.informeDetallado,
+            this.componente,
+            "liquidacion",
+            respuesta.contraParte,
+            respuesta.contraParteColeccion,
+          );
+        console.log("resultado de la edicion de todo: ", resultado);
+        if (resultado.exito) {
+          await this.actualizarInfVenta("edicion");
+          this.isLoading = false;
+          this.procesarDatosParaTabla();
+          //this.cerrarTabla(i)
+          let idinformeDetallado =
+            this.llamadaOrigen === "cliente"
+              ? this.informeDetallado.idCliente
+              : this.llamadaOrigen === "chofer"
+                ? this.informeDetallado.idChofer
+                : this.informeDetallado.idProveedor;
+          let informesObjetoId = this.informesOp.filter((inf: InformeOp) => {
+            let idObjeto =
+              this.llamadaOrigen === "cliente"
+                ? inf.idCliente
+                : this.llamadaOrigen === "chofer"
+                  ? inf.idChofer
+                  : inf.idProveedor;
+            return idObjeto === idinformeDetallado;
+          });
+          this.informesDetalladoPorObjeto.set(
+            idinformeDetallado,
+            informesObjetoId,
+          );
+          await this.mensajesError(
+            "El informe se ha editado correctamente",
+            "success",
+          );
+        } else {
+          this.isLoading = false;
+          await this.mensajesError(`error: ${resultado.mensaje}`, "error");
+        }
+      }
     }
   }
 
-  bajaInformeOp(informeOp:InformeOp, indice:number){
+  bajaInformeOp(informeOp: InformeOp, indice: number) {
     Swal.fire({
       title: "¿Desea anular la operación?",
       //text: "No se podrá revertir esta acción",
@@ -755,75 +945,99 @@ export class LiquidacionesOpComponent implements OnInit {
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar"
+      cancelButtonText: "Cancelar",
     }).then((result) => {
-      if (result.isConfirmed) {        
+      if (result.isConfirmed) {
         this.dbFirebase
-          .obtenerTarifaIdTarifa("operaciones", informeOp.idOperacion, "idOperacion")
+          .obtenerTarifaIdTarifa(
+            "operaciones",
+            informeOp.idOperacion,
+            "idOperacion",
+          )
           .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-          .subscribe(data => {      
-              this.operacion = data;
-              ////////console.log("OPERACION: ", this.operacion);
-              this.openModalBaja(informeOp, indice)
-          });               
+          .subscribe((data) => {
+            this.operacion = data;
+            ////////console.log("OPERACION: ", this.operacion);
+            this.openModalBaja(informeOp, indice);
+          });
       }
-    });    
+    });
   }
-  
-  async openModalBaja(informeOp:InformeOp, indice:number){
+
+  async openModalBaja(informeOp: InformeOp, indice: number) {
     {
       const modalRef = this.modalService.open(BajaObjetoComponent, {
-        windowClass: 'myCustomModalClass',
+        windowClass: "myCustomModalClass",
         centered: true,
-        scrollable: true, 
-        size: 'sm',     
-      });       
+        scrollable: true,
+        size: "sm",
+      });
       //////console.log("factura",factura);
       let info = {
         modo: "liquidaciones",
         item: this.operacion,
-      }  
-      
-      
+      };
+
       modalRef.componentInstance.fromParent = info;
       try {
         const motivo = await modalRef.result;
-        if(!motivo) return
-        this.isLoading = true;  
-        let coleccionContraParte = this.llamadaOrigen === 'cliente' &&  this.operacion.chofer.idProveedor === 0 ? 'informesOpChoferes' : this.llamadaOrigen === 'cliente' &&  this.operacion.chofer.idProveedor !== 0 ? 'informesOpProveedores' : 'informesOpClientes';
-        const resultado = await this.dbFirebase.eliminarOperacionEInformes(this.operacion,this.componente, coleccionContraParte);
+        if (!motivo) return;
+        this.isLoading = true;
+        let coleccionContraParte =
+          this.llamadaOrigen === "cliente" &&
+          this.operacion.chofer.idProveedor === 0
+            ? "informesOpChoferes"
+            : this.llamadaOrigen === "cliente" &&
+                this.operacion.chofer.idProveedor !== 0
+              ? "informesOpProveedores"
+              : "informesOpClientes";
+        const resultado = await this.dbFirebase.eliminarOperacionEInformes(
+          this.operacion,
+          this.componente,
+          coleccionContraParte,
+        );
         if (resultado.success) {
           await this.tableroServ.anularOpEnTablero(this.operacion);
-          await this.storageService.addSimpleLogPapelera("operaciones",this.operacion,this.operacion.idOperacion, "BAJA",'Baja de operación desde Liquidaciones', motivo);
+          await this.storageService.addSimpleLogPapelera(
+            "operaciones",
+            this.operacion,
+            this.operacion.idOperacion,
+            "BAJA",
+            "Baja de operación desde Liquidaciones",
+            motivo,
+          );
           await this.actualizarInfVenta("baja");
           this.isLoading = false;
           Swal.fire({
-          title: "Confirmado",
-          text: "La operación ha sido anulada",
-          icon: "success"
-        });
-        this.cerrarTabla(indice)
-        this.ngOnInit(); 
-        
+            title: "Confirmado",
+            text: "La operación ha sido anulada",
+            icon: "success",
+          });
+          this.cerrarTabla(indice);
+          this.ngOnInit();
         } else {
           this.isLoading = false;
           Swal.fire({
-          title: "Error",
-          text: `${resultado.mensaje}`,
-          icon: "error"
-        });
-        }      
-
+            title: "Error",
+            text: `${resultado.mensaje}`,
+            icon: "error",
+          });
+        }
       } catch (e) {
         console.warn("El modal fue cancelado o falló:", e);
       }
-
     }
   }
 
-  removeItem(item:any){
+  removeItem(item: any) {
     //////console.log("llamada al storage desde liq-cliente, deleteItem");
-    this.storageService.deleteItem(this.componente, item, item.idInfLiq, "INTERNA", "");    
+    this.storageService.deleteItem(
+      this.componente,
+      item,
+      item.idInfLiq,
+      "INTERNA",
+      "",
+    );
   }
 
   ordenar(columna: string): void {
@@ -836,7 +1050,7 @@ export class LiquidacionesOpComponent implements OnInit {
     this.datosTabla.sort((a, b) => {
       const valorA = a[columna];
       const valorB = b[columna];
-      if (typeof valorA === 'string') {
+      if (typeof valorA === "string") {
         return this.ordenAscendente
           ? valorA.localeCompare(valorB)
           : valorB.localeCompare(valorA);
@@ -846,122 +1060,138 @@ export class LiquidacionesOpComponent implements OnInit {
     });
   }
 
-  mensajesError(msj:string, resultado:string){
+  mensajesError(msj: string, resultado: string) {
     Swal.fire({
-      icon: resultado === 'error' ? "error" : "success",
+      icon: resultado === "error" ? "error" : "success",
       //title: "Oops...",
-      text: `${msj}`
+      text: `${msj}`,
       //footer: `${msj}`
     });
   }
 
-  actualizarInfVenta(modo:string){
-     this.dbFirebase
-    .obtenerTarifaIdTarifa("informesVenta",this.operacion.idOperacion, "idOperacion")
-    .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-    .subscribe(data => {      
+  actualizarInfVenta(modo: string) {
+    this.dbFirebase
+      .obtenerTarifaIdTarifa(
+        "informesVenta",
+        this.operacion.idOperacion,
+        "idOperacion",
+      )
+      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
+      .subscribe((data) => {
         let informeVenta = data;
 
-        if(informeVenta){
+        if (informeVenta) {
           console.log("2000) informeVenta: ", informeVenta);
           informeVenta.valoresOp = {
             totalCliente: this.operacion.valores.cliente.aCobrar,
             totalChofer: this.operacion.valores.chofer.aPagar,
-          }
-          let {id, ...infVenta} = informeVenta;
-          if(modo === "edicion"){
-            this.storageService.updateItem("informesVenta", infVenta, infVenta.idInfVenta, "INTERNA", "", informeVenta.id);
-          } else if(modo === "baja") {   
-            console.log("baja inf venta");               
-            this.storageService.deleteItem("informesVenta", informeVenta, informeVenta.id, "INTERNA", "");    
+          };
+          let { id, ...infVenta } = informeVenta;
+          if (modo === "edicion") {
+            this.storageService.updateItem(
+              "informesVenta",
+              infVenta,
+              infVenta.idInfVenta,
+              "INTERNA",
+              "",
+              informeVenta.id,
+            );
+          } else if (modo === "baja") {
+            console.log("baja inf venta");
+            this.storageService.deleteItem(
+              "informesVenta",
+              informeVenta,
+              informeVenta.id,
+              "INTERNA",
+              "",
+            );
           }
         }
-
-        
-    })
+      });
   }
-///////////////////////////////METODO POR ERROR DE DUPLICADAS//////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////METODO POR ERROR DE DUPLICADAS//////////////////////////////////////////////////////////////////////////////////////
 
   verificarDuplicados() {
     const seenIds = new Set<number>();
     this.$facturasOpDuplicadas = [];
-    this.informesOp = this.informesOp.filter((factura:ConId<InformeOp>) => {
-        if (seenIds.has(factura.idOperacion)) {
-            this.$facturasOpDuplicadas.push(factura);
-            return false; // Eliminar del array original
-        } else {
-            seenIds.add(factura.idOperacion);
-            return true; // Mantener en el array original
-        }
-    });    
+    this.informesOp = this.informesOp.filter((factura: ConId<InformeOp>) => {
+      if (seenIds.has(factura.idOperacion)) {
+        this.$facturasOpDuplicadas.push(factura);
+        return false; // Eliminar del array original
+      } else {
+        seenIds.add(factura.idOperacion);
+        return true; // Mantener en el array original
+      }
+    });
     //////console.log("this.$facturasOpChofer", this.$facturasOpCliente);
     //////console.log("duplicadas", this.$facturasOpDuplicadas);
     //this.verificarDuplicadosFacturadas()
   }
-  
-  async verificarDuplicadosFacturadas(){
+
+  async verificarDuplicadosFacturadas() {
     this.isLoading = true;
-    
+
     try {
-      this.$facLiqOpDuplicadas = await this.dbFirebase.buscarInformesPorIdOperacion(this.informesOp, this.compInformeLiquidacion);  
+      this.$facLiqOpDuplicadas =
+        await this.dbFirebase.buscarInformesPorIdOperacion(
+          this.informesOp,
+          this.compInformeLiquidacion,
+        );
       console.log("this.$facLiqOpDuplicadas: ", this.$facLiqOpDuplicadas);
-      
     } catch (error) {
-      
     } finally {
       this.isLoading = false;
     }
-    
   }
 
-  
-  borrarDuplicadasEnLiquidacion(){
-  
-  this.isLoading = true;
-  this.dbFirebase.eliminarMultiple(this.$facturasOpDuplicadas, this.componente).then(result=>{
-    this.isLoading = false;
-    if(result.exito){
-      this.$facturasOpDuplicadas = []
-      this.procesarDatosParaTabla();
-      this.verificarDuplicados();
-      alert("se eliminaron correctamente")
-    }else {
-      alert("error en la eliminacion")
-    }
-  })
-  
-  }
-  
-  mostrarDuplicadasEnLiquidacion(){
-    console.log("this.$facturasOpDuplicadas", this.$facturasOpDuplicadas.length);
-    
+  borrarDuplicadasEnLiquidacion() {
+    this.isLoading = true;
+    this.dbFirebase
+      .eliminarMultiple(this.$facturasOpDuplicadas, this.componente)
+      .then((result) => {
+        this.isLoading = false;
+        if (result.exito) {
+          this.$facturasOpDuplicadas = [];
+          this.procesarDatosParaTabla();
+          this.verificarDuplicados();
+          alert("se eliminaron correctamente");
+        } else {
+          alert("error en la eliminacion");
+        }
+      });
   }
 
-borrarLiquidaciones(){
-  this.isLoading = true;
-  //console.log("this.$facturasOpCliente", this.$facturasOpCliente);
-  this.dbFirebase.eliminarMultiple(this.informesOp, "facturaOpCliente").then((result)=>{
-    this.isLoading = false;
-    if(result.exito){
-      alert("se eliminaron correctamente")
-    } else {
-      alert(`error en la eliminación: ${result.mensaje}` )
-    }
-  })
-}
+  mostrarDuplicadasEnLiquidacion() {
+    console.log(
+      "this.$facturasOpDuplicadas",
+      this.$facturasOpDuplicadas.length,
+    );
+  }
 
+  borrarLiquidaciones() {
+    this.isLoading = true;
+    //console.log("this.$facturasOpCliente", this.$facturasOpCliente);
+    this.dbFirebase
+      .eliminarMultiple(this.informesOp, "facturaOpCliente")
+      .then((result) => {
+        this.isLoading = false;
+        if (result.exito) {
+          alert("se eliminaron correctamente");
+        } else {
+          alert(`error en la eliminación: ${result.mensaje}`);
+        }
+      });
+  }
 
-  editarObjeto(){
-    this.facturaOpsNoAsignadas.map((fac:any)=>{
+  editarObjeto() {
+    this.facturaOpsNoAsignadas.map((fac: any) => {
       fac.contraParteProforma = false;
-    })
+    });
     //console.log("facturaOpsNoAsignadas", this.facturaOpsNoAsignadas);
-    
-    
   }
 
   agregarCampo(facturaOp: any[]): ConId<InformeOp>[] {
-    return facturaOp.map(facOp => {
+    return facturaOp.map((facOp) => {
       return {
         ...facOp,
         contraParteProforma: false,
@@ -969,37 +1199,45 @@ borrarLiquidaciones(){
     });
   }
 
-  actualizarObjeto(){
-    this.isLoading = true
-    this.dbFirebase.actualizarMultiple(this.facturaOpsNoAsignadas, "facturaOpCliente").then((result)=>{
-      this.isLoading = false
-      if(result.exito){
-        alert("actualizado correctamente")
-      } else {
-        alert(`error actualizando. errr: ${result.mensaje}`)
-      }
-    })
-  }
-  
-  guardarObjeto(){
-    this.isLoading = true
-    this.dbFirebase.guardarMultiple(this.objetoEditado, "informesOpClientes", "idOperacion", "operaciones").then((result)=>{
-      this.isLoading = false
-      if(result.exito){
-        alert("actualizado correctamente")
-      } else {
-        alert(`error actualizando. errr: ${result.mensaje}`)
-      }
-    })
+  actualizarObjeto() {
+    this.isLoading = true;
+    this.dbFirebase
+      .actualizarMultiple(this.facturaOpsNoAsignadas, "facturaOpCliente")
+      .then((result) => {
+        this.isLoading = false;
+        if (result.exito) {
+          alert("actualizado correctamente");
+        } else {
+          alert(`error actualizando. errr: ${result.mensaje}`);
+        }
+      });
   }
 
-  buscarObjetos(){
-    this.objetoEditado= this.informesOp;
+  guardarObjeto() {
+    this.isLoading = true;
+    this.dbFirebase
+      .guardarMultiple(
+        this.objetoEditado,
+        "informesOpClientes",
+        "idOperacion",
+        "operaciones",
+      )
+      .then((result) => {
+        this.isLoading = false;
+        if (result.exito) {
+          alert("actualizado correctamente");
+        } else {
+          alert(`error actualizando. errr: ${result.mensaje}`);
+        }
+      });
+  }
+
+  buscarObjetos() {
+    this.objetoEditado = this.informesOp;
     //console.log("objetoEditado",this.objetoEditado );
   }
 
-    
-  filtrarObjeto(){
+  filtrarObjeto() {
     this.objetoEditado = [];
     //console.log("1)this.this.informesOp", this.informesOp);
     //this.objetoEditado= this.agregarCampo(this.$facturasOpCliente)
@@ -1009,34 +1247,35 @@ borrarLiquidaciones(){
     console.log("2)this.objetoEditado", this.objetoEditado);
   }
 
-  eliminarObjetos(){
-    this.isLoading = true
-    this.dbFirebase.eliminarMultiple(this.objetoEditado, this.componente).then((result)=>{
-      this.isLoading = false
-      if(result.exito){
-        alert("eliminado correctamente")
-      } else {
-        alert(`error actualizando. errr: ${result.mensaje}`)
-      }
-    })
-  } 
+  eliminarObjetos() {
+    this.isLoading = true;
+    this.dbFirebase
+      .eliminarMultiple(this.objetoEditado, this.componente)
+      .then((result) => {
+        this.isLoading = false;
+        if (result.exito) {
+          alert("eliminado correctamente");
+        } else {
+          alert(`error actualizando. errr: ${result.mensaje}`);
+        }
+      });
+  }
 
   getMesCapitalizado(fechaString: string): string {
-    const mes = this.datePipe.transform(fechaString, 'MMMM');
+    const mes = this.datePipe.transform(fechaString, "MMMM");
     return this.capitalizeFirst(mes);
   }
-  
+
   private capitalizeFirst(texto: string | null): string {
-    if (!texto) return '';
+    if (!texto) return "";
     return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
-/* :ConId<InformeOp> */
-  async corregirContraparte(contraparteRes:any){
+  /* :ConId<InformeOp> */
+  async corregirContraparte(contraparteRes: any) {
     let contraparteInf = contraparteRes.data;
-    let tarifa = await this.buscarTarifaServ.buscarTarifa(contraparteInf, contraparteInf);
-    
+    let tarifa = await this.buscarTarifaServ.buscarTarifa(
+      contraparteInf,
+      contraparteInf,
+    );
   }
-  
-
-
 }

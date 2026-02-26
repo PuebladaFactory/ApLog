@@ -32,3 +32,18 @@ button{
     background-color: #0d6efd;
     color: white;
 }
+
+.liquidado{
+    border-color: red;
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.3;
+}
+
+@media (max-width: 1400px) {
+
+    input, option, textarea, select, span {
+        font-size: 1.25rem;
+    }
+    
+}

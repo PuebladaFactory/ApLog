@@ -16,13 +16,20 @@ color: red;
 
 
 ::ng-deep .modal-xxl .modal-dialog {
-  max-width: 70vw;     // Casi ancho total del viewport
-  width: 70vw;
+  max-width: 72vw;     // Casi ancho total del viewport
+  width: 72vw;
+  max-height: 82vh;
 }
 
 ::ng-deep .modal-xxl .modal-content {
-  height: 80vh;         // Alto del 90% de la ventana
+  height: 75vh;         // Alto del 90% de la ventana
   overflow-y: auto;     // Scrolleable si se necesita
+}
+
+::ng-deep .modal-xxl .modal-content .modal-footer {
+  max-height: 50px;         
+  height: 50px;
+  
 }
 
 /* Scroll suave y elegante */
@@ -35,4 +42,18 @@ color: red;
 }
 ::ng-deep .modal-xxl .modal-content:hover::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 1400px) {
+  ::ng-deep .modal-xxl .modal-dialog {
+    max-width: 92vw;     // Casi ancho total del viewport
+    width: 92vw;
+  }
+
+  ::ng-deep .modal-xxl .modal-content {
+    max-height: 90vh;         // Alto del 90% de la ventana
+    height: 90vh;
+    overflow-y: auto;     // Scrolleable si se necesita
+  }
+
 }
