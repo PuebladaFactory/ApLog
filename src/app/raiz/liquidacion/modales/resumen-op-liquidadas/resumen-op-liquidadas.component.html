@@ -127,13 +127,14 @@
                                 }
                             </tr>
                         }
+                        <!-- SUB-TOTAL -->
                         <tr>
-                            @if (fromParent.origen !== "proveedores") {
+                            @if (fromParent.origen !== "proveedor") {
                                 <th colspan="12">
                                     <span class="ms-3">Subtotal</span>
                                 </th>
                             }
-                            @if (fromParent.origen === "proveedores") {
+                            @if (fromParent.origen === "proveedor") {
                                 <th colspan="13">
                                     <span class="ms-3">Subtotal</span>
                                 </th>
@@ -142,11 +143,12 @@
                                 {{ subtotal | formatearValor: "$" }}
                             </th>
                         </tr>
+                        <!-- DESCUENTOS -->
                         @if (tieneDescuentos) {
                             <ng-container
                                 class="table-group-divider table-bordered table-striped"
                             >
-                                @if (fromParent.origen !== "proveedores") {
+                                @if (fromParent.origen !== "proveedor") {
                                     <tr>
                                         <th colspan="13">Ajustes:</th>
                                     </tr>
@@ -204,15 +206,15 @@
                             </ng-container>
                         }
                     </tbody>
-
+                    <!-- TOTAL -->
                     <tfoot class="table-group-divider">
                         <tr>
-                            @if (fromParent.origen !== "proveedores") {
+                            @if (fromParent.origen !== "proveedor") {
                                 <th colspan="12">
                                     <span class="ms-3">Total</span>
                                 </th>
                             }
-                            @if (fromParent.origen === "proveedores") {
+                            @if (fromParent.origen === "proveedor") {
                                 <th colspan="13">
                                     <span class="ms-3">Total</span>
                                 </th>

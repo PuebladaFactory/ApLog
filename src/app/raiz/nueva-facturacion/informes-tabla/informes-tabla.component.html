@@ -16,6 +16,11 @@
                   (click)="col.sortable ? onOrdenar(col) : null"
                   [class.sortable]="col.sortable"
                 >
+                <span>@if (ordenColumna === col.key) {
+                                <span class="sort-indicator">
+                                {{ ordenAsc  ? '▲' : '▼' }}
+                                </span>
+                            }</span>
                   {{ col.label }}
                 </th>
               }

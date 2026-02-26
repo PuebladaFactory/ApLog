@@ -430,6 +430,7 @@ export class EditarInfOpComponent implements OnInit {
       infOriginal: this.infOpDetallada,
       contraparte: this.informeContraParte,
     };
+    
     return respuesta;
   }
 
