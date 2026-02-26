@@ -45,6 +45,11 @@ color: red;
 }
 
 @media (max-width: 1400px) {
+
+  th, td, input, textarea {
+    font-size: 1.3rem;
+  }
+
   ::ng-deep .modal-xxl .modal-dialog {
     max-width: 92vw;     // Casi ancho total del viewport
     width: 92vw;
