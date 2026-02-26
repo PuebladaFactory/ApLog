@@ -17,7 +17,8 @@
                 <div class="form-group">
                     <label for="Fecha" class="fs-5">Fecha</label>
                     <div class="input-group">
-                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                        <input  
+                            disabled
                             class="form-control border-info"                            
                             type="date"
                             [value]="op.fecha"
@@ -31,7 +32,8 @@
                             class="input-group"
                             [ngClass]="{ isDisabled: vista }"
                         >
-                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                            <input  
+                                disabled
                                 class="form-control edicion border-info"
                                 [value]="op.patenteChofer"
                             />
@@ -43,7 +45,8 @@
                 <div class="form-group">
                     <label for="Cliente" class="fs-5">Cliente</label>
                     <div class="input-group">
-                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                        <input  
+                            disabled
                             class="form-control edicion border-warning"
                             type="text"
                             [value]="op.cliente.razonSocial"
@@ -53,7 +56,8 @@
                 <div class="form-group">
                     <label for="Cliente" class="fs-5">Tarifa Cliente</label>
                     <div class="input-group">
-                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                        <input  
+                            disabled
                             class="form-control edicion border-warning"
                             type="text"
                             [ngModel]="
@@ -73,7 +77,8 @@
                 <div class="form-group">
                     <label for="Chofer" class="fs-5">Chofer</label>
                     <div class="input-group">
-                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                        <input      
+                            disabled
                             class="form-control edicion border-primary"
                             type="text"
                             [value]="
@@ -85,7 +90,8 @@
                 <div class="form-group isDisabled">
                     <label for="Cliente" class="fs-5">Tarifa Chofer</label>
                     <div class="input-group">
-                        <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                        <input  
+                            disabled
                             class="form-control edicion border-primary"
                             type="text"
                             [ngModel]="
@@ -117,7 +123,8 @@
                                 class="input-group"
                                 [ngClass]="{ isDisabled: vista }"
                             >
-                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                                <input  
+                                    disabled
                                     class="form-control edicion border-info"
                                     [value]="op.patenteChofer"
                                 />
@@ -556,7 +563,8 @@
                                                     style="width: 30px"
                                                     >$</span
                                                 >
-                                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                                                <input
+                                                    disabled
                                                     class="form-control edicion border-warning"
                                                     required
                                                     type="text"
@@ -1009,7 +1017,7 @@
                                 class="form-control border-warning"
                                 [(ngModel)]="op.multiplicadorCliente"
                                 name="multiplicadorCliente"
-                                step="0.01"
+                                step="0.1"
                                 min="0"
                                 max="2"
                                 (input)="changeMultiCliente($event)"
@@ -1028,7 +1036,7 @@
                                 class="form-control border-primary"
                                 [(ngModel)]="op.multiplicadorChofer"
                                 name="multiplicadorChofer"
-                                step="0.01"
+                                step="0.1"
                                 min="0"
                                 max="2"
                                 (input)="changeMultiChofer($event)"
