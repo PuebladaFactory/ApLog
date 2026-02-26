@@ -74,28 +74,28 @@
               }
               <tr>
                 @if (fromParent.origen !== 'proveedores') {
-                  <th colspan="11"><span class="ms-3">Subtotal</span></th>
-                }
-                @if (fromParent.origen === 'proveedores') {
                   <th colspan="12"><span class="ms-3">Subtotal</span></th>
                 }
-                <th class="text-center">{{formatearValor(subtotal)}}</th>
+                @if (fromParent.origen === 'proveedores') {
+                  <th colspan="13"><span class="ms-3">Subtotal</span></th>
+                }
+                <th class="text-center">{{subtotal | formatearValor : '$'}}</th>
               </tr>
               @if (tieneDescuentos) {
                 <ng-container class="table-group-divider table-bordered table-striped">
                   @if (fromParent.origen !== 'proveedores') {
-                    <tr><th colspan="12">Ajustes:</th></tr>
-                    @for (desc of descuentosAplicados; track desc) {
-                      <tr>
-                        <td colspan="11">{{desc.concepto}}</td>
-                        <td class="text-center" [ngClass]="desc.valor >= 0 ? 'positivo' : 'negativo'">{{desc.valor | formatearValor :"$"}}</td>
-                      </tr>
-                    }
-                  } @else {
                     <tr><th colspan="13">Ajustes:</th></tr>
                     @for (desc of descuentosAplicados; track desc) {
                       <tr>
                         <td colspan="12">{{desc.concepto}}</td>
+                        <td class="text-center" [ngClass]="desc.valor >= 0 ? 'positivo' : 'negativo'">{{desc.valor | formatearValor :"$"}}</td>
+                      </tr>
+                    }
+                  } @else {
+                    <tr><th colspan="14">Ajustes:</th></tr>
+                    @for (desc of descuentosAplicados; track desc) {
+                      <tr>
+                        <td colspan="13">{{desc.concepto}}</td>
                         <td class="text-center" [ngClass]="desc.valor >= 0 ? 'positivo' : 'negativo'">{{desc.valor  | formatearValor :"$"}}</td>
                       </tr>
                     }
@@ -107,12 +107,12 @@
             <tfoot class="table-group-divider">
               <tr>
                 @if (fromParent.origen !== 'proveedores') {
-                  <th colspan="11"><span class="ms-3">Total</span></th>
-                }
-                @if (fromParent.origen === 'proveedores') {
                   <th colspan="12"><span class="ms-3">Total</span></th>
                 }
-                <th class="text-center">{{tieneDescuentos ? formatearValor(total + totalDescuento) : formatearValor(total)}}</th>
+                @if (fromParent.origen === 'proveedores') {
+                  <th colspan="13"><span class="ms-3">Total</span></th>
+                }
+                <th class="text-center">{{total + totalDescuento | formatearValor : '$'}}</th>
               </tr>
             </tfoot>            
           </table>

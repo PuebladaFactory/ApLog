@@ -184,7 +184,7 @@ export class InformeLiqDetalleComponent implements OnInit {
     ////console.log("3)this.operacion", this.operacion);
     {
       const modalRef = this.modalService.open(EditarInfOpComponent, {
-        windowClass: 'myCustomModalClass',
+        windowClass: 'modal-xxl',
         centered: true,
         size: 'lg', 
         //backdrop:"static" 
@@ -216,7 +216,7 @@ export class InformeLiqDetalleComponent implements OnInit {
           if(coleccionInfLiq === "") return this.mensajesError("error en la colección del informe de Liquidación", "error");
           console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
           
-          const resultado = await this.dbFirebase.actualizarOperacionInformeOpYFactura(this.operacion, informeOp, coleccionInfOp, this.fromParent.modo, this.informeLiq, coleccionInfLiq)
+          const resultado = await this.dbFirebase.actualizarOperacionInformeOpYFactura(this.operacion, informeOp, coleccionInfOp, this.fromParent.modo, respuesta.contraParte, respuesta.contraParteColeccion, this.informeLiq, coleccionInfLiq)
           console.log("resultado de la edicion de todo: ", resultado);
           if(resultado.exito){
             this.isLoading = false;

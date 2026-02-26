@@ -486,6 +486,9 @@ async exportToPdfCliente(
         case "Acomp":{          
           return this.formatearValor(facturaOp.valores.acompaniante);
         };
+        case "Extra":{          
+          return this.formatearValor(facturaOp.valores.adExtra ?? 0);
+        };
         case "A Cobrar":{          
           return this.formatearValor(facturaOp.valores.total);
         };

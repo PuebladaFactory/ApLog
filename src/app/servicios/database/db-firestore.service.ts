@@ -832,6 +832,7 @@ getByFieldValue<T>(componente:string, campo:string, value:any): Observable<ConId
           const informeRefDestino = doc(this.firestore, `/Vantruck/datos/${componenteAlta}/${informe.id}`);
           const informeRefOrigen = doc(this.firestore, `/Vantruck/datos/${componenteBaja}/${informe.id}`);
           informe.proforma = false;
+          informe.liquidacion = true;
           const { id, ...inf } = informe;
           batch.set(informeRefDestino, inf);
           batch.delete(informeRefOrigen);
@@ -1638,6 +1639,8 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
     informeOriginalActualizado: ConId<InformeOp>,
     coleccionInformeOriginal: string,
     modo: string,
+    contraParteActualizada: ConId<InformeOp>,
+    coleccionContraParte: string,
     facturaActualizada?: ConId<InformeLiq>,
     coleccionFactura?: string
   ): Promise<Resultado> {
@@ -1659,13 +1662,20 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
         return { exito: false, mensaje: `No existe el InformeOp original con id ${informeOriginalActualizado.id} en ${coleccionInformeOriginal}.` };
       }      
 
-      // 1.3) Contra-parte
-      const contraParte = await this.buscarContraParteInformeOp(informeOriginalActualizado, coleccionInformeOriginal);
-      if (!contraParte) {
-        return { exito: false, mensaje: 'No se encontró la contra-parte del InformeOp proporcionado.' };
-      }      
+      // 1.3) Contra-parte (YA NO SE BUSCA, SOLO SE VALIDA EXISTENCIA)
+      const contraParteRef = doc(
+        this.firestore,
+        `/Vantruck/datos/${coleccionContraParte}/${contraParteActualizada.id}`
+      );
 
-      const { docRef: contraParteRef, data: contraParteData } = contraParte;
+      const contraParteSnap = await getDoc(contraParteRef);
+
+      if (!contraParteSnap.exists()) {
+        return {
+          exito: false,
+          mensaje: `No existe la contra-parte con id ${contraParteActualizada.id} en ${coleccionContraParte}.`
+        };
+      }
 
       // 1.4) InformeLiq (solo si corresponde)
       let facturaRef: DocumentReference<DocumentData> | null = null;
@@ -1694,9 +1704,11 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
       const { id: _, ...informeOriginalSinId } = informeOriginalActualizado;
       batch.update(informeOriginalRef, informeOriginalSinId);
 
-      // 2.3) Actualizar contra-parte: solo contraParteMonto (y lo que quieras)
-      const nuevoContraParteMonto = informeOriginalActualizado.valores.total;
-      batch.update(contraParteRef, { contraParteMonto: nuevoContraParteMonto });
+      // 2.3) Contra-parte (AHORA SE ACTUALIZA COMPLETA)
+      const { id: _idContra, ...contraParteSinId } =
+      contraParteActualizada;
+
+      batch.update(contraParteRef, contraParteSinId);
 
       // 2.4) Factura (opcional)
       if (modo !== 'liquidacion' && facturaRef) {
@@ -1730,7 +1742,7 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
    *
    * Devuelve null si no la encuentra.
    */
-  private async buscarContraParteInformeOp(
+  public async buscarContraParteInformeOp(
     informeOriginal: ConId<InformeOp>,
     coleccionOriginal: string
   ): Promise<{ docRef: DocumentReference<DocumentData>, data: ConId<InformeOp>, coleccion: string } | null> {
