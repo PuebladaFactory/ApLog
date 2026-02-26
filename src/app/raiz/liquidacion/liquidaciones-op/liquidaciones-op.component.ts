@@ -173,6 +173,8 @@ export class LiquidacionesOpComponent implements OnInit {
         this.isLoading = true;
         const desde = toISODateString(r.desde);
         const hasta = toISODateString(r.hasta);
+        this.fechasConsulta.fechaDesde = desde;
+        this.fechasConsulta.fechaHasta = hasta;
         console.log("0)desde:", desde, " hasta: ", hasta);
         // 1. Consultar operaciones abiertas
         this.cargarOperacionesAbiertas()
@@ -521,14 +523,14 @@ export class LiquidacionesOpComponent implements OnInit {
     //this.totalFacturasLiquidadasCliente
 
     let mes = this.getMesCapitalizado(this.fechasConsulta.fechaDesde);
-    //console.log("mes: ", mes);
+    console.log("mes: ", mes);
 
     this.indiceSeleccionado;
     {
       const modalRef = this.modalService.open(ResumenOpLiquidadasComponent, {
-        windowClass: "myCustomModalClass",
+        windowClass: "modal-facturacion-xxl",
         centered: true,
-        size: "xl",
+        //size: "xl",
         //backdrop:"static"
       });
 
@@ -1262,6 +1264,8 @@ export class LiquidacionesOpComponent implements OnInit {
   }
 
   getMesCapitalizado(fechaString: string): string {
+    console.log("fechaString: ", fechaString);
+    
     const mes = this.datePipe.transform(fechaString, "MMMM");
     return this.capitalizeFirst(mes);
   }

@@ -31,9 +31,9 @@ export class InformeLiqDetalleComponent implements OnInit {
   @Input() fromParent : any;
   titulo:string = "" ;
   informesOp!: InformeOp[];
-  $choferes!: Chofer[];
-  $clientes!: Cliente[];
-  $proveedores!: Proveedor[];
+  choferes!: Chofer[];
+  clientes!: Cliente[];
+  proveedores!: Proveedor[];
   informeLiq!: ConIdType<InformeLiq>;
   searchText: string = "";
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
@@ -49,26 +49,12 @@ export class InformeLiqDetalleComponent implements OnInit {
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService, private dbFirebase: DbFirestoreService, private modalService: NgbModal){}
   
   ngOnInit(): void {
-    this.storageService.choferes$
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.$choferes = data;
-        this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-      });
-    this.storageService.clientes$
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.$clientes = data;
-        this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-    }); 
-      this.storageService.proveedores$
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.$proveedores = data;
-        this.$proveedores = this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-    });  
-
-
+    this.clientes = this.storageService.loadInfo('clientes');
+    this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer 
+    this.choferes = this.storageService.loadInfo('choferes');
+    this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer 
+    this.proveedores = this.storageService.loadInfo('proveedores');
+    this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer   
     console.log("2)fromParent", this.fromParent);
     this.informesOp = this.fromParent.facOp;
     this.informeLiq = this.fromParent.item;
@@ -78,7 +64,7 @@ export class InformeLiqDetalleComponent implements OnInit {
 
   getChofer(idChofer: number){
     let chofer: Chofer []
-    chofer = this.$choferes.filter((chofer:Chofer)=>{
+    chofer = this.choferes.filter((chofer:Chofer)=>{
       return chofer.idChofer === idChofer
     })
     if(chofer[0]){
@@ -91,7 +77,7 @@ export class InformeLiqDetalleComponent implements OnInit {
 
   getCliente(idCliente: number){
     let cliente: Cliente []
-    cliente = this.$clientes.filter((cliente:Cliente)=>{
+    cliente = this.clientes.filter((cliente:Cliente)=>{
       return cliente.idCliente === idCliente
     })
     if(cliente[0]){
@@ -366,11 +352,12 @@ export class InformeLiqDetalleComponent implements OnInit {
   actualizarInformeLiq(){
     //console.log("3)factura antes: ",this.informeLiq );
     
-    let valores: Valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0, descuentoTotal: this.informeLiq.valores.descuentoTotal, totalContraParte:this.informeLiq.valores.totalContraParte};
+    let valores = {totalTarifaBase:0, totalAcompaniante:0, totalkmMonto:0, total:0, descuentoTotal: this.informeLiq.valores.descuentoTotal, totalContraParte:this.informeLiq.valores.totalContraParte, totalAdExtra: 0};
     this.informesOp.forEach((f:InformeOp)=>{
       valores.totalTarifaBase += f.valores.tarifaBase;
       valores.totalAcompaniante += f.valores.acompaniante;
-      valores.totalkmMonto += f.valores.kmMonto;          
+      valores.totalkmMonto += f.valores.kmMonto;   
+      valores.totalAdExtra += f.valores.adExtra ?? 0;       
       valores.total += f.valores.total;          
     });
     

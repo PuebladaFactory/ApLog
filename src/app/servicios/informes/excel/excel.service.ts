@@ -121,7 +121,7 @@ export class ExcelService {
   informesOp.forEach((informeOp) => {
     const row = worksheet.addRow(
     informeLiq.columnas.map((columna) => {
-        if (['Jornada', 'Ad Km', 'Acomp', 'Extra', 'A Cobrar'].includes(columna)) {
+        if (['Jornada', 'Ad Km', 'Ad Acomp', 'Extra', 'A Cobrar'].includes(columna)) {
           return this.obtenerDatos(informeLiq, informeOp, clientes, columna, choferes); // true = retorno numérico
         }
         return this.obtenerDatos(informeLiq, informeOp, clientes, columna, choferes);
@@ -141,7 +141,7 @@ export class ExcelService {
         right: { style: 'thin' },
       };
 
-      if (['Jornada', 'Ad Km', 'Acomp', 'Extra', 'A Cobrar'].includes(columnaNombre)) {
+      if (['Jornada', 'Ad Km', 'Ad Acomp', 'Extra', 'A Cobrar'].includes(columnaNombre)) {
         cell.numFmt = '"$"#,##0.00'; // formato contable en Excel
       }
     });
@@ -156,7 +156,7 @@ export class ExcelService {
     subtotalRow.getCell(1).value = 'Sub Total';
     subtotalRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
     //
-    const subtotalValor = informeLiq.valores.totalTarifaBase + informeLiq.valores.totalAcompaniante + informeLiq.valores.totalkmMonto;
+    const subtotalValor = informeLiq.valores.totalTarifaBase + informeLiq.valores.totalAcompaniante + informeLiq.valores.totalkmMonto + (informeLiq.valores.totalAdExtra ?? 0);
     subtotalRow.getCell(informeLiq.columnas.length).value = subtotalValor;
     subtotalRow.getCell(informeLiq.columnas.length).numFmt = '"$"#,##0.00';
     subtotalRow.getCell(informeLiq.columnas.length).alignment = { horizontal: 'center', vertical: 'middle' };
@@ -353,7 +353,7 @@ export class ExcelService {
       case "Ad Km":{          
         return informeOp.valores.kmMonto;
       };
-      case "Acomp":{          
+      case "Ad Acomp":{          
         return informeOp.valores.acompaniante;
       };
       case "Extra":{          

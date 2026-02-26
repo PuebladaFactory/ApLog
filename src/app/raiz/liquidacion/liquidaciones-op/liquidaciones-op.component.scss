@@ -47,6 +47,7 @@ thead {
     width: 100%;
 }
 
+/* MODAL EDICION INF OP */
 ::ng-deep .modal-xxl .modal-dialog {
   max-width: 72vw;     // Casi ancho total del viewport
   width: 72vw;
@@ -76,6 +77,30 @@ thead {
   background-color: rgba(0, 0, 0, 0.4);
 }
 
+/* MODAL INFORME LIQ */
+
+::ng-deep .modal-facturacion-xxl .modal-dialog {
+  max-width: 95vw;     // Casi ancho total del viewport
+  width: 95vw;
+}
+
+::ng-deep .modal-facturacion-xxl .modal-content {
+  max-height: 85vh;         // Alto del 90% de la ventana
+  overflow-y: auto;     // Scrolleable si se necesita
+}
+
+/* Scroll suave y elegante */
+::ng-deep .modal-facturacion-xxl .modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+::ng-deep .modal-facturacion-xxl .modal-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+::ng-deep .modal-facturacion-xxl .modal-content:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
 @media (max-width: 1400px) {
   ::ng-deep .modal-xxl .modal-dialog {
     max-width: 92vw;     // Casi ancho total del viewport
@@ -88,5 +113,19 @@ thead {
     overflow-y: auto;     // Scrolleable si se necesita
   }
 
+  ::ng-deep .modal-facturacion-xxl .modal-dialog {
+    max-width: 90vw;     // Casi ancho total del viewport
+    //width: 80vw;
+  }
+
+  ::ng-deep .modal-facturacion-xxl .modal-content {
+    min-height: 80vh;         // Alto del 90% de la ventana
+    overflow-y: auto;     // Scrolleable si se necesita
+  }
+
 }
+
+
+
+
 

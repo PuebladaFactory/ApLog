@@ -69,7 +69,7 @@
               @if (fromParent.tipo !== 'proveedores') {
                 <td colspan="5">Sub Total</td>
               }
-              <td class="text-end">{{informeLiq.valores.totalTarifaBase + informeLiq.valores.totalAcompaniante + informeLiq.valores.totalkmMonto | formatearValor : "$"}}</td>
+              <td class="text-end">{{informeLiq.valores.totalTarifaBase + informeLiq.valores.totalAcompaniante + informeLiq.valores.totalkmMonto + (informeLiq.valores.totalAdExtra ?? 0)| formatearValor : "$"}}</td>
             </tr>
             <tr class="division">
               @if (fromParent.tipo === 'proveedor') {

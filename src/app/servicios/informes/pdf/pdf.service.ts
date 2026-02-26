@@ -156,7 +156,7 @@ export class PdfService {
 
     doc.text('Subtotal', margin + 5, finalY + footerHeight / 2, { baseline: 'middle' });
     doc.text(
-      `${this.formatearValor(informeLiq.valores.totalAcompaniante + informeLiq.valores.totalkmMonto + informeLiq.valores.totalTarifaBase)}`,
+      `${this.formatearValor(informeLiq.valores.totalAcompaniante + informeLiq.valores.totalkmMonto + informeLiq.valores.totalTarifaBase + (informeLiq.valores.totalAdExtra ?? 0))}`,
       margin + tableWidth - (informeLiq.columnas.length <= 9 ? 3 : 2), finalY + footerHeight / 2, {
         align: 'right',
         baseline: 'middle',
@@ -483,7 +483,7 @@ async exportToPdfCliente(
         case "Ad Km":{          
           return this.formatearValor(facturaOp.valores.kmMonto);
         };
-        case "Acomp":{          
+        case "Ad Acomp":{          
           return this.formatearValor(facturaOp.valores.acompaniante);
         };
         case "Extra":{          

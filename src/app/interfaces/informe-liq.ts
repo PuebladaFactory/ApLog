@@ -43,6 +43,7 @@ export interface Valores{
     totalTarifaBase: number;
     totalAcompaniante: number;
     totalkmMonto: number;
+    totalAdExtra?:number;
     descuentoTotal: number;
     total: number;
     totalContraParte:number;

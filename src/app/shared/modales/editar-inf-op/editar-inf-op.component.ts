@@ -490,12 +490,12 @@ export class EditarInfOpComponent implements OnInit {
       observaciones: this.operacion.observaciones,
       hojaRuta: this.operacion.hojaRuta,
     };
-    if (this.operacion.tarifaTipo.eventual) {
+/*     if (this.operacion.tarifaTipo.eventual) {
       this.operacion.tarifaEventual.cliente.valor =
-        this.operacion.valores.cliente.aCobrar;
+        this.operacion.valores.cliente.tarifaBase;
       this.operacion.tarifaEventual.chofer.valor =
-        this.operacion.valores.chofer.aPagar;
-    }
+        this.operacion.valores.chofer.tarifaBase;
+    } */
     return this.operacion;
   }
 
