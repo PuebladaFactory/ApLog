@@ -55,7 +55,8 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   mostrarCategoria: boolean = false;
   seccionElegida!: Seccion;
   categoriaElegida: number = 0;
-  tarifaPersonalizada!: TarifaPersonalizada;
+  tarifaPersonalizadaOp!: TarifaPersonalizada;
+  tarifaPersonalizada!: ConIdType<TarifaPersonalizadaCliente>
   tarifaTipo!: TarifaTipo;
   vista: boolean = false;
   editar: boolean = false;
@@ -80,7 +81,13 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     private tableroServ: TableroService,
   ) {
     this.form = this.fb.group({
-      km: ["", Validators.required],
+       km: [
+    '',
+    [
+      Validators.required,
+      Validators.pattern(/^[0-9]+$/)
+    ]
+  ]
     });
 
     this.formAcomp = this.fb.group({
@@ -121,15 +128,16 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
         break;
     }
     if (this.op.tarifaTipo.personalizada) {
-      let tarifas: ConIdType<TarifaPersonalizadaCliente>[] =
+      let tarifas =
         this.storageService.loadInfo("tarifasPersCliente");
       //console.log("tarifas pers clientes", tarifas);
-      if (tarifas.length > 0) {
-        this.tarifaClienteSel = tarifas.find(
+      if (tarifas) {
+        this.tarifaPersonalizada = tarifas.find(
           (tarifa: ConIdType<TarifaPersonalizadaCliente>) =>
             tarifa.idCliente === this.op.cliente.idCliente,
         );
-        //console.log("tarifa personalizada del cliente: ", this.tarifaClienteSel);
+        console.log("tarifa personalizada del cliente: ", this.tarifaPersonalizada);
+        this.tarifaPersonalizadaOp = this.op.tarifaPersonalizada;
       } else {
         this.mensajesError("no hay tarifas personalizadas");
       }
@@ -149,8 +157,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     //console.log('ModalFacturacionComponent - ngOnDestroy');
   }
 
-  ngAfterViewInit(): void {
-    //console.log('ModalFacturacionComponent - ngAfterViewInit');
+  ngAfterViewInit(): void {    
     // Establece el foco en el input de Km Recorridos al inicializar el componente
     if (this.cerrar) {
       setTimeout(() => {
@@ -165,18 +172,18 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       acompaniante: this.op.acompaniante,
     });
 
-    this.tarifaPersonalizada = this.op.tarifaPersonalizada;
+    
 
     /* this.tEventual = this.op.tEventual; */
 
-    //////////console.log("1)", this.tarifaPersonalizada);
-    if (this.op.tarifaTipo.personalizada && this.tarifaClienteSel) {
+    //////////console.log("1)", this.tarifaPersonalizadaOp);
+/*     if (this.op.tarifaTipo.personalizada && this.tarifaClienteSel) {
       this.seccionElegida =
         this.tarifaClienteSel.secciones[
           this.op.tarifaPersonalizada.seccion - 1
         ];
       //this.tPersonalizada = this.op.tPersonalizada;
-    }
+    } */
   }
 
   /*   formatearValor(valor: number) : any{
@@ -225,7 +232,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   }
 
   ///////// TARIFA PERSONALIZADA /////////////
-  changeSecion(e: any) {
+/*   changeSecion(e: any) {
     //////////console.log("seccion: ", e.target.value);
     this.mostrarCategoria = true;
     if (this.tarifaEventual) {
@@ -236,12 +243,12 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     }
     if (this.tarifaClienteSel) {
       this.seccionElegida = this.tarifaClienteSel.secciones[e.target.value - 1];
-      this.tarifaPersonalizada = {
+      this.tarifaPersonalizadaOp = {
         seccion: Number(e.target.value),
-        categoria: this.tarifaPersonalizada.categoria,
-        nombre: this.tarifaPersonalizada.nombre,
-        aCobrar: this.tarifaPersonalizada.aCobrar,
-        aPagar: this.tarifaPersonalizada.aPagar,
+        categoria: this.tarifaPersonalizadaOp.categoria,
+        nombre: this.tarifaPersonalizadaOp.nombre,
+        aCobrar: this.tarifaPersonalizadaOp.aCobrar,
+        aPagar: this.tarifaPersonalizadaOp.aPagar,
       };
     } else {
       this.mensajesError("no hay tarifa personalizada seleccionada");
@@ -251,33 +258,84 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   changeCategoria(e: any) {
     //////////console.log("categoria: ", e.target.value);
     if (this.tarifaClienteSel) {
-      this.tarifaPersonalizada = {
-        seccion: this.tarifaPersonalizada.seccion,
+      this.tarifaPersonalizadaOp = {
+        seccion: this.tarifaPersonalizadaOp.seccion,
         categoria: Number(
-          this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1]
+          this.tarifaClienteSel.secciones[this.tarifaPersonalizadaOp.seccion - 1]
             .categorias[Number(e.target.value) - 1].orden,
         ),
         nombre:
-          this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1]
+          this.tarifaClienteSel.secciones[this.tarifaPersonalizadaOp.seccion - 1]
             .categorias[e.target.value - 1].nombre,
         aCobrar:
-          this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1]
+          this.tarifaClienteSel.secciones[this.tarifaPersonalizadaOp.seccion - 1]
             .categorias[e.target.value - 1].aCobrar,
         aPagar:
-          this.tarifaClienteSel.secciones[this.tarifaPersonalizada.seccion - 1]
+          this.tarifaClienteSel.secciones[this.tarifaPersonalizadaOp.seccion - 1]
             .categorias[e.target.value - 1].aPagar,
       };
       //////console.log("tarifa personalizada: ", this.tPersonalizada);
-      this.op.tarifaPersonalizada = this.tarifaPersonalizada;
-      this.op.valores.cliente.tarifaBase = this.tarifaPersonalizada.aCobrar;
-      this.op.valores.chofer.tarifaBase = this.tarifaPersonalizada.aPagar;
+      this.op.tarifaPersonalizada = this.tarifaPersonalizadaOp;
+      this.op.valores.cliente.tarifaBase = this.tarifaPersonalizadaOp.aCobrar;
+      this.op.valores.chofer.tarifaBase = this.tarifaPersonalizadaOp.aPagar;
       this.recalcularValores();
     } else {
       this.mensajesError("no hay tarifa personalizada seleccionada");
     }
+  } */
+
+  
+    ///////// TARIFA PERSONALIZADA /////////////
+  changeSecion(e: any) {
+    //console.log("seccion: ", e.target.value);
+    this.tarifaPersonalizadaOp = {
+      seccion: Number(e.target.value),
+      categoria: 0,
+      nombre: "",
+      aCobrar: 0,
+      aPagar: 0,
+    };
   }
 
-  onSubmit() {
+  changeCategoria(e: any) {
+    //console.log("categoria: ", e.target.value);
+    let valor = Number(e.target.value);
+    let categoria = this.tarifaPersonalizada.secciones[
+      this.tarifaPersonalizadaOp.seccion - 1
+    ].categorias.find((c) => {
+      return c.orden === valor;
+    });
+    ////console.log("categoria: ",categoria);
+
+    if (categoria) {
+      this.tarifaPersonalizadaOp = {
+        seccion: this.tarifaPersonalizadaOp.seccion,
+        categoria: categoria.orden,
+        nombre: categoria.nombre,
+        aCobrar: categoria.aCobrar,
+        aPagar: categoria.aPagar,
+      };
+      ////////console.log("tarifa personalizada: ", this.tPersonalizada);
+      this.op.tarifaPersonalizada = this.tarifaPersonalizadaOp;
+      this.op.valores.cliente.tarifaBase =
+        this.formNumServ.convertirAValorNumerico(
+          this.tarifaPersonalizadaOp.aCobrar,
+        );
+      this.op.valores.chofer.tarifaBase =
+        this.formNumServ.convertirAValorNumerico(
+          this.tarifaPersonalizadaOp.aPagar,
+        );
+      ////console.log("tarifaPersonalizadaOp: ",this.tarifaPersonalizadaOp);
+      
+      this.recalcularValores();
+    } else {
+      this.mensajesError(
+        "Error al encontrar la categoria de la tarifa personalizada",
+      );
+    }
+  }
+  
+    onSubmit() {
     console.log(this.form.value.km);
     
     if (this.cerrar) {
@@ -402,13 +460,13 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
 
 
   armarOp() {
-    this.op.tarifaPersonalizada = this.tarifaPersonalizada;
+    this.op.tarifaPersonalizada = this.tarifaPersonalizadaOp;
 
     if (this.op.tarifaTipo.personalizada) {
-      this.op.valores.cliente.aCobrar = this.tarifaPersonalizada.aCobrar;
-      this.op.valores.cliente.tarifaBase = this.tarifaPersonalizada.aCobrar;
-      this.op.valores.chofer.aPagar = this.tarifaPersonalizada.aPagar;
-      this.op.valores.chofer.tarifaBase = this.tarifaPersonalizada.aPagar;
+      this.op.valores.cliente.aCobrar = this.tarifaPersonalizadaOp.aCobrar;
+      this.op.valores.cliente.tarifaBase = this.tarifaPersonalizadaOp.aCobrar;
+      this.op.valores.chofer.aPagar = this.tarifaPersonalizadaOp.aPagar;
+      this.op.valores.chofer.tarifaBase = this.tarifaPersonalizadaOp.aPagar;
     }
     ////console.log("op: ", this.op);
 

@@ -241,7 +241,7 @@
                       <th style="width: 1.5%;"><input type="checkbox" (change)="selectAllCheckboxes($event, objeto.id)"></th>
                       <th scope="col" class="" style="width: 8%;" >Fecha</th>
                       <th scope="col" class="" style="width: 5.5%;">Quincena</th>
-                      <th scope="col" class="" style="width: 5.5%;">Id Op</th>
+                      <!-- <th scope="col" class="" style="width: 5.5%;">Id Op</th> -->
                       @if(llamadaOrigen === 'cliente'){
                           <th scope="col" class="" style="width: 13%;">Chofer</th>
                       }@else {
@@ -250,7 +250,7 @@
                       @if (llamadaOrigen === 'proveedor') {
                           <th scope="col" class="" style="width: 13%;">Chofer</th>
                       }
-
+                      <th scope="col" class="" style="width: 5.5%;">Hoja Ruta</th>
                       <th scope="col" class="" style="width: 3%;">Km</th>
                       <th scope="col" class="" style="width: 8.5%;">Km $</th>
                       <th scope="col" class="" style="width: 8%;">Acomp</th>
@@ -280,7 +280,7 @@
                         </td>
                         <td>{{informeOp.fecha}}</td>
                         <td class="text-center" [innerHTML]="getQuincena(informeOp.fecha)"></td>
-                        <td>{{informeOp.idOperacion}}</td>
+                        <!-- <td>{{informeOp.idOperacion}}</td> -->
                         @if (llamadaOrigen === 'cliente'){
                             <td>{{getChofer(informeOp.idChofer)}}</td>
                         }@else {
@@ -289,6 +289,7 @@
                         @if (llamadaOrigen === 'proveedor') {
                             <td>{{getChofer(informeOp.idChofer)}}</td>
                         }
+                        <td>{{informeOp.hojaRuta}}</td>
                         <td>{{informeOp.km | formatearValor }}</td>
                         <td>{{informeOp.valores.kmMonto | formatearValor :"$"}}</td>
                         <td>{{informeOp.valores.acompaniante | formatearValor :"$"}}</td>

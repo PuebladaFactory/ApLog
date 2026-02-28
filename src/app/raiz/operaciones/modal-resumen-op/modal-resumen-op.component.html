@@ -227,12 +227,11 @@
                                     <input  
                                         #kmInput
                                         formControlName="km"
-                                        class="form-control edicion border-info"
-                                        required
+                                        class="form-control edicion border-info"                                        
                                         type="text"
                                         inputmode="numeric"
                                         (keyup.enter)="onSubmit()"
-                                        appSoloNumeros
+                                        appSoloNumerosRequerido
                                     />
                                 </div>
                             </div>
@@ -452,7 +451,7 @@
                                                 formTarifaPersonalizada
                                             "
                                         >
-                                            @if (tarifaClienteSel) {
+                                            @if (tarifaPersonalizada) {
                                                 <div class="form-group">
                                                     <label for="Cliente"
                                                         >Sección</label
@@ -465,49 +464,32 @@
                                                     >
                                                         <option
                                                             [value]="
-                                                                op
-                                                                    .tarifaPersonalizada
-                                                                    .seccion
+                                                                tarifaPersonalizadaOp.seccion
                                                             "
                                                             selected
                                                         >
                                                             {{
-                                                                op.tarifaTipo
-                                                                    .personalizada
-                                                                    ? "Seccion " +
-                                                                      op
-                                                                          .tarifaPersonalizada
-                                                                          .seccion +
-                                                                      " : " +
-                                                                      tarifaClienteSel
-                                                                          .secciones[
-                                                                          op
-                                                                              .tarifaPersonalizada
-                                                                              .seccion -
-                                                                              1
-                                                                      ]
-                                                                          .descripcion
-                                                                    : "Sin datos"
-                                                            }}
+                                                            "Seccion " +
+                                                                tarifaPersonalizada
+                                                                    .secciones[
+                                                                    tarifaPersonalizadaOp.seccion -
+                                                                        1
+                                                                ].descripcion
+                                                        }}
                                                         </option>
                                                         @for (
-                                                            seccion of tarifaClienteSel.secciones;
+                                                            seccion of tarifaPersonalizada.secciones;
                                                             track seccion
                                                         ) {
                                                             <option
                                                                 [value]="
-                                                                    seccion?.orden
+                                                                    seccion.orden
                                                                 "
                                                             >
                                                                 Seccion
                                                                 {{
-                                                                    seccion?.orden
-                                                                }}:
-                                                                {{
-                                                                    seccion?.descripcion
-                                                                        ? seccion.descripcion
-                                                                        : ""
-                                                                }}
+                                                                seccion.descripcion
+                                                            }}
                                                             </option>
                                                         }
                                                     </select>
@@ -717,23 +699,25 @@
                                                         changeCategoria($event)
                                                     "
                                                 >
-                                                    <option selected>
-                                                        {{
-                                                            op.tarifaTipo
-                                                                .personalizada
-                                                                ? "Categoria " +
-                                                                  op
-                                                                      .tarifaPersonalizada
-                                                                      .categoria +
+                                                    <option selected [value]="
+                                                            tarifaPersonalizadaOp.categoria
+                                                        ">
+                               {{
+                                                            tarifaPersonalizadaOp.categoria ===
+                                                            0
+                                                                ? "Seleccione"
+                                                                : "Categoria " +
+                                                                  tarifaPersonalizadaOp.categoria +
                                                                   " : " +
-                                                                  op
-                                                                      .tarifaPersonalizada
-                                                                      .nombre
-                                                                : "Sin datos"
+                                                                  tarifaPersonalizadaOp.nombre
                                                         }}
                                                     </option>
                                                     @for (
-                                                        categoria of seccionElegida.categorias;
+                                                        categoria of tarifaPersonalizada
+                                                            .secciones[
+                                                            tarifaPersonalizadaOp.seccion -
+                                                                1
+                                                        ].categorias;
                                                         track categoria
                                                     ) {
                                                         <option
@@ -1013,13 +997,14 @@
                                 >Multiplicador Cliente</span
                             >
                             <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
-                                type="number"
+                                type="text"
                                 class="form-control border-warning"
                                 [(ngModel)]="op.multiplicadorCliente"
                                 name="multiplicadorCliente"
-                                step="0.1"
-                                min="0"
-                                max="2"
+                                appDecimalInput
+                                [min]="0"
+                                [max]="2"
+                                [decimals]="2"
                                 (input)="changeMultiCliente($event)"
                             />
                         </div>
@@ -1032,13 +1017,14 @@
                                 >Multiplicador Chofer</span
                             >
                             <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
-                                type="number"
+                                type="text"
                                 class="form-control border-primary"
                                 [(ngModel)]="op.multiplicadorChofer"
                                 name="multiplicadorChofer"
-                                step="0.1"
-                                min="0"
-                                max="2"
+                                appDecimalInput
+                                [min]="0"
+                                [max]="2"
+                                [decimals]="2"
                                 (input)="changeMultiChofer($event)"
                             />
                         </div>

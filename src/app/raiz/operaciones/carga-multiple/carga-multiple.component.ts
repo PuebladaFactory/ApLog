@@ -17,6 +17,7 @@ import { ValoresOpService } from "src/app/servicios/valores-op/valores-op/valore
 import { ModalChoferesNoDisponiblesComponent } from "../modal-choferes-no-disponibles/modal-choferes-no-disponibles.component";
 import { NoDisponibilidadChofer } from "src/app/interfaces/no-disponibilidad-chofer";
 import { FormatoNumericoService } from "src/app/servicios/formato-numerico/formato-numerico.service";
+import { LogService } from "src/app/servicios/log/log.service";
 
 /* =========================
    Runtime types
@@ -187,6 +188,8 @@ export class CargaMultipleComponent implements OnInit {
   ========================= */
 
   crearOperaciones() {
+    console.log("cliente: ", this.clienteSeleccionado);
+    
     if (!this.fechaSeleccionada) {
       return this.error("Debe seleccionar una fecha");
     }
@@ -382,6 +385,17 @@ export class CargaMultipleComponent implements OnInit {
   async guardar() {
     if (this.operaciones.length === 0) {
       return this.error("No hay operaciones para guardar");
+    }
+
+    const errores = this.operaciones.flatMap((op) => this.validarOperacion(op));
+
+    if (errores.length) {
+      Swal.fire({
+        icon: "error",
+        title: "Validación",
+        html: errores.join("<br>"),
+      });
+      return;
     }
 
     const confirm = await Swal.fire({
@@ -588,4 +602,43 @@ export class CargaMultipleComponent implements OnInit {
     "bg-secondary text-white",
     "bg-dark text-white",
   ];
+
+  
+  // =========================
+  // VALIDACION (usa runtime)
+  // =========================
+
+  validarOperacion(op: OperacionRuntime): string[] {
+    const errores: string[] = [];
+
+    if (!op.patenteChofer?.trim()) {
+      errores.push(`Debe seleccionar patente — ${op.chofer.apellido}`);
+    }
+
+    const activa = this.getTarifaActiva(op);
+
+    if (activa === "eventual") {
+      if (!op.tarifaEventual.chofer.concepto)
+        errores.push("Concepto chofer eventual faltante");
+      if (!op.tarifaEventual.cliente.concepto)
+        errores.push("Concepto cliente eventual faltante");
+    }
+
+    if (activa === "personalizada") {
+      if (op.tarifaPersonalizada.seccion <= 0)
+        errores.push("Sección personalizada faltante");
+      if (op.tarifaPersonalizada.categoria <= 0)
+        errores.push("Categoría personalizada faltante");
+    }
+
+    if(op.acompaniante && op.acompanienteCant === 0){
+      errores.push("La cantidad de acompañantes no puede ser 0")
+    }
+
+    return errores;
+  }
+
+  tieneErrores(op: OperacionRuntime) {
+    return this.validarOperacion(op).length > 0;
+  }
 }

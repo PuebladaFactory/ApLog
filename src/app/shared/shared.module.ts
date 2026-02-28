@@ -47,6 +47,8 @@ import { VisibilidadListadosComponent } from './modales/visibilidad-listados/vis
 import { TableroFechasComponent } from './tablero-fechas/tablero-fechas.component';
 import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/informes-acciones-cell.component';
 import { FormatoMonetarioControlDirective } from './directives/formato-monetario-control.directive';
+import { DecimalInputDirective } from './directives/decimal-input.directive';
+import { SoloNumerosRequeridoDirective } from './directives/solo-numeros-requerido.directive';
 
 
 
@@ -86,8 +88,9 @@ import { FormatoMonetarioControlDirective } from './directives/formato-monetario
     VisibilidadListadosComponent,
     TableroFechasComponent,
     InformesAccionesCellComponent,
-    FormatoMonetarioControlDirective
-    
+    FormatoMonetarioControlDirective,
+    DecimalInputDirective,
+    SoloNumerosRequeridoDirective
     
   ],
   imports: [
@@ -134,7 +137,9 @@ import { FormatoMonetarioControlDirective } from './directives/formato-monetario
     VisibilidadListadosComponent,
     TableroFechasComponent,
     InformesAccionesCellComponent,
-    FormatoMonetarioControlDirective
+    FormatoMonetarioControlDirective,
+    DecimalInputDirective,
+    SoloNumerosRequeridoDirective
   ]
 })
 export class SharedModule { }

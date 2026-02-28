@@ -775,15 +775,16 @@
 
                                             <input
                                                 [disabled]="!editarCliente"
-                                                type="number"
+                                                type="text"
                                                 class="form-control border-warning"
                                                 [(ngModel)]="
                                                     operacion.multiplicadorCliente
                                                 "
                                                 name="multiplicadorCliente"
-                                                step="0.1"
-                                                min="0"
-                                                max="2"
+                                                 appDecimalInput
+                                                [min]="0"
+                                                [max]="2"
+                                                [decimals]="2"
                                                 (input)="
                                                     changeMultiCliente($event)
                                                 "
@@ -966,15 +967,16 @@
                                             >
                                             <input
                                                 [disabled]="!editarChofer"
-                                                type="number"
+                                                type="text"
                                                 class="form-control border-primary"
                                                 [(ngModel)]="
                                                     operacion.multiplicadorChofer
                                                 "
                                                 name="multiplicadorChofer"
-                                                step="0.1"
-                                                min="0"
-                                                max="2"
+                                                 appDecimalInput
+                                                [min]="0"
+                                                [max]="2"
+                                                [decimals]="2"
                                                 (input)="
                                                     changeMultiChofer($event)
                                                 "
