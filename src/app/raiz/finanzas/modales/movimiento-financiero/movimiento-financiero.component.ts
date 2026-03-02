@@ -58,6 +58,7 @@ export class MovimientoFinancieroComponent implements OnInit {
   referencia?: string;
   observaciones?: string;
   errorDistribucion: string | null = null;
+  fechaOperacion: string = this.getFechaHoy();
 
 
   constructor(
@@ -224,6 +225,11 @@ export class MovimientoFinancieroComponent implements OnInit {
 
     this.errorDistribucion = '';
 
+    if (!this.fechaOperacion) {
+      this.errorDistribucion = 'Debe asignar una fecha para el movimiento';
+      return false;
+    }
+
     if (!this.montoTotalMovimiento || this.montoTotalMovimiento <= 0) {
       this.errorDistribucion = 'El monto total debe ser mayor a cero';
       return false;
@@ -275,7 +281,7 @@ export class MovimientoFinancieroComponent implements OnInit {
     const form: MovimientoFormVM = {
       tipo: this.tipo,
       entidad: this.entidad,
-
+      fechaOperacion: this.fechaOperacion,
       informesSeleccionados: this.informesVM
         .filter(i => i.montoACobrar > 0)
         .map(i => ({
@@ -300,6 +306,19 @@ export class MovimientoFinancieroComponent implements OnInit {
   cancelar(): void {
     this.activeModal.dismiss();
   }
+
+    // ---------------------------------------------------------------------------
+  // HELPERS
+  // -
+
+  private getFechaHoy(): string {
+  const hoy = new Date();
+  return hoy.toISOString().substring(0, 10); // yyyy-mm-dd
+}
+
+get esFechaFutura(): boolean {
+  return this.fechaOperacion > this.getFechaHoy();
+}
 
 }
 

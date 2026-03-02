@@ -1,6 +1,6 @@
 export interface MovimientoFormVM {
   tipo: 'cobro' | 'pago';
-
+  fechaOperacion: string; // yyyy-mm-dd
   entidad: {
     id: string;
     tipo: 'cliente' | 'chofer' | 'proveedor';

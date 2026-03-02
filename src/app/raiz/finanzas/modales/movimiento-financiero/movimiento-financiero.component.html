@@ -9,8 +9,25 @@
       (click)="activeModal.dismiss()">
     </button>
 </div>
-
+    <!-- FECHA DEL MOVIMIENTO -->
 <div class="modal-body">
+
+  <div class="mb-3">
+  <label class="form-label fw-bold">
+    Fecha de operación
+  </label>
+
+  <input
+    type="date"
+    class="form-control"
+    [(ngModel)]="fechaOperacion"
+  >
+</div>
+@if (esFechaFutura) {
+  <div class="text-warning small mt-1">
+    La fecha seleccionada es futura.
+  </div>
+}
 
     <!-- TOTAL DEL MOVIMIENTO -->
     <div class="mb-3">
