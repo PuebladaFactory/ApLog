@@ -144,6 +144,13 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       this.obtenerTarifas();
       this.armarForm();
     } else {
+      this.tarifaPersonalizadaOp = {
+        seccion: 0,
+        categoria:0,
+        nombre: "",
+        aCobrar: 0,
+        aPagar: 0,
+      }
       this.obtenerTarifas();
       this.armarForm();
     }
