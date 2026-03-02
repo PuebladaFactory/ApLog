@@ -9,6 +9,7 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { MovimientoDetalleComponent } from '../movimiento-detalle/movimiento-detalle.component';
+import { MovimientoFinancieroService } from 'src/app/servicios/finanzas/movimiento-financiero.service';
 
 @Component({
   selector: 'app-historial-movimientos',
@@ -37,7 +38,7 @@ export class HistorialMovimientosComponent implements OnInit {
   expandedIds = new Set<string>();
 
   constructor(
-    private dbService: DbFirestoreService,
+    private movFinancieroServ: MovimientoFinancieroService,
     private storageService: StorageService,
     private router: Router,
     private modalService: NgbModal
@@ -106,7 +107,7 @@ export class HistorialMovimientosComponent implements OnInit {
     if (!this.tipoEntidad || !this.entidadIdSeleccionada) return;
     this.cargando = true;
     this.movimientos =
-      await this.dbService.getMovimientosFiltrados({
+      await this.movFinancieroServ.getMovimientosFiltrados({
         tipoEntidad: this.tipoEntidad,
         entidadId: this.entidadIdSeleccionada,
         tipoMovimiento:

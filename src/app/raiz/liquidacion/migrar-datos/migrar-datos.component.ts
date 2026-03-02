@@ -2,7 +2,7 @@ import { Component, Pipe, PipeTransform } from '@angular/core';
 import { InformeOp } from 'src/app/interfaces/informe-op';
 import { TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
 import { collection, Firestore, getDocs, query, where, writeBatch, doc } from '@angular/fire/firestore';
-import { Timestamp } from 'firebase/firestore';
+
 import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';

@@ -104,7 +104,7 @@
                                     </button>
                                 </td>
 
-                                <td>{{ m.fecha }}</td>
+                                <td>{{ m.fechaOperacion }}</td>
 
                                 <td>{{ m.idMovFinanciero }}</td>
 
@@ -162,7 +162,7 @@
                                                 {{ imp.totalInforme | formatearValor:'$' }}
                                             </td>
                                             <td class="text-end table-danger align-middle">
-                                                {{ imp.saldonInforme | formatearValor:'$' }}
+                                                {{ imp.saldoInforme | formatearValor:'$' }}
                                             </td>
                                             <td class="text-end table-success align-middle">
                                                 {{ imp.montoImputado | formatearValor:'$' }}

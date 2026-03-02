@@ -1,10 +1,11 @@
 import { Component, inject, Input, OnInit, Optional } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { doc, Firestore, getDoc } from 'firebase/firestore';
-import { ConId } from 'src/app/interfaces/conId';
-import { MovimientoFinanciero } from 'src/app/interfaces/movimiento-financiero';
+
+
+
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { MovimientoFinancieroService } from 'src/app/servicios/finanzas/movimiento-financiero.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 @Component({
@@ -26,7 +27,7 @@ export class MovimientoDetalleComponent implements OnInit {
   modoModal = false;
 
   constructor(
-    private dbService: DbFirestoreService,
+    private movFinancieroServ: MovimientoFinancieroService,
     private storageService: StorageService,
     @Optional() private activeModal?: NgbActiveModal
    
@@ -41,7 +42,7 @@ export class MovimientoDetalleComponent implements OnInit {
     if (!id) return;    
     
 
-    this.movimiento = await this.dbService.getMovimientoPorId(id);
+    this.movimiento = await this.movFinancieroServ.getMovimientoPorId(id);
 
     this.loading = false;
   }

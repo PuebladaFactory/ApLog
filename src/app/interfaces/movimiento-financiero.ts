@@ -25,6 +25,12 @@ export interface MovimientoFinanciero {
   /** Observaciones */
   observaciones?: string;
 
+  /* Anulación */
+  estado: 'activo' | 'anulado';
+  anuladoPor?: string;
+  fechaAnulacion?: string;
+  motivoAnulacion?: string;
+
   /** Auditoría */
   creadoEn: string; // ISO datetime
   creadoPor: string; // uid
@@ -44,6 +50,6 @@ export interface ImputacionMovimiento {
   /** Montos */
   totalInforme: number;
   montoImputado: number;
-  saldonInforme: number;
+  saldoInforme: number;
 }
 
