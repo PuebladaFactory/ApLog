@@ -663,7 +663,7 @@
                                             >
                                             <input
                                                 class="form-control border-success"
-                                                disabled
+                                                [disabled]="operacion.tarifaTipo.eventual"
                                                 required
                                                 type="text"
                                                 inputmode="number"
@@ -855,9 +855,8 @@
                                                 style="width: 30px"
                                                 >$</span
                                             >
-                                            <input
-                                                class="form-control border-success"
-                                                disabled
+                                            <input [disabled]="operacion.tarifaTipo.eventual"
+                                                class="form-control border-success"                                                
                                                 required
                                                 type="text"
                                                 inputmode="number"

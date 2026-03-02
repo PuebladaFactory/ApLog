@@ -491,12 +491,12 @@ export class EditarInfOpComponent implements OnInit {
       observaciones: this.operacion.observaciones,
       hojaRuta: this.operacion.hojaRuta,
     };
-/*     if (this.operacion.tarifaTipo.eventual) {
-      this.operacion.tarifaEventual.cliente.valor =
+    if (this.operacion.tarifaTipo.personalizada) {
+      this.operacion.tarifaPersonalizada.aCobrar =
         this.operacion.valores.cliente.tarifaBase;
-      this.operacion.tarifaEventual.chofer.valor =
+      this.operacion.tarifaPersonalizada.aPagar =
         this.operacion.valores.chofer.tarifaBase;
-    } */
+    }
     return this.operacion;
   }
 
@@ -623,6 +623,7 @@ export class EditarInfOpComponent implements OnInit {
       this.formNumServ.convertirAValorNumerico(
         this.informeChofer.valores.tarifaBase,
       );
+    
     this.emparejarDatos();
 
     this.recalcularValores();
