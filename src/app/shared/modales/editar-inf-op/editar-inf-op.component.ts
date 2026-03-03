@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
 import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { lowerFirst } from "lodash";
 import { Subject } from "rxjs";
 import { Chofer, Vehiculo } from "src/app/interfaces/chofer";
 import { Cliente } from "src/app/interfaces/cliente";
@@ -614,7 +615,7 @@ export class EditarInfOpComponent implements OnInit {
     this.recalcularValores();
   }
 
-  tarifaBaseValor() {
+  tarifaBaseValor() {    
     this.informeCliente.valores.tarifaBase =
       this.formNumServ.convertirAValorNumerico(
         this.informeCliente.valores.tarifaBase,
