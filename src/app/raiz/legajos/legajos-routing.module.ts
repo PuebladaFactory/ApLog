@@ -7,7 +7,8 @@ import { CargarDocumentosComponent } from './cargar-documentos/cargar-documentos
 
 const routes: Routes = [
   {path: '', component:ControlComponent,
-    children: [        
+    children: [    
+      {path: '', redirectTo: 'tablero', pathMatch: 'full' },        
       {path: 'tablero', component:TableroLegajosComponent},    
       {path: 'consulta', component:ConsultaLegajosComponent},
       {path: 'cargarDoc', component:CargarDocumentosComponent},      

@@ -615,16 +615,9 @@ export class EditarInfOpComponent implements OnInit {
     this.recalcularValores();
   }
 
-  tarifaBaseValor() {    
-    this.informeCliente.valores.tarifaBase =
-      this.formNumServ.convertirAValorNumerico(
-        this.informeCliente.valores.tarifaBase,
-      );
-    this.informeChofer.valores.tarifaBase =
-      this.formNumServ.convertirAValorNumerico(
-        this.informeChofer.valores.tarifaBase,
-      );
-    
+  tarifaBaseValor() {  
+    console.log(this.informeCliente.valores.tarifaBase)  
+
     this.emparejarDatos();
 
     this.recalcularValores();

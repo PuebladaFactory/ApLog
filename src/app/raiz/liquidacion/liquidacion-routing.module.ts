@@ -9,7 +9,8 @@ import { RoleGuard } from 'src/app/guards/role.guard';
 
 const routes: Routes = [
   {path: '', component:LiqGralComponent,
-    children: [              
+    children: [ 
+      {path: '', redirectTo: 'cliente', pathMatch: 'full' },                     
       {path: 'proformas', component:ProformaComponent},
       {path: 'cliente', component:LiquidacionesOpComponent},
       {path: 'chofer', component:LiquidacionesOpComponent},

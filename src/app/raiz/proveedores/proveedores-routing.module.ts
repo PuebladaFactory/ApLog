@@ -11,6 +11,7 @@ import { ProveedoresListadoComponent } from './proveedores-listado/proveedores-l
 const routes: Routes = [
   {path: '', component:ProveedoresControlComponent,
     children: [      
+      {path: '', redirectTo: 'listado', pathMatch: 'full' },                                 
       {path: 'alta', component:ProveedoresAltaComponent,
             canActivate: [RoleGuard],
             data: { roles: ['god', 'admin', 'manager'] }, // no se permiten usuarios

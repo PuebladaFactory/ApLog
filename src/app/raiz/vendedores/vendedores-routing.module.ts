@@ -9,7 +9,8 @@ import { VendedorHistorialComponent } from './vendedor-historial/vendedor-histor
 
 const routes: Routes = [
   {path: '', component:VendedorControlComponent,
-  children: [    
+  children: [ 
+    {path: '', redirectTo: 'tableroVendedores', pathMatch: 'full' },                                    
     {path: 'alta', component:VendedorAltaComponent,
           canActivate: [RoleGuard],
           data: { roles: ['god', 'admin', 'manager'] }, // no se permiten usuarios

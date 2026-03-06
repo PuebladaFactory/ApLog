@@ -38,7 +38,7 @@ export class MovimientoFinancieroComponent implements OnInit {
   @Input() tipo!: 'cobro' | 'pago';
 
   @Input() entidad!: {
-    id: string;
+    id: number;
     tipo: 'cliente' | 'chofer' | 'proveedor';
     razonSocial: string;
   };
@@ -71,7 +71,8 @@ export class MovimientoFinancieroComponent implements OnInit {
   // ---------------------------------------------------------------------------
 
   ngOnInit(): void {
-    console.log("0) this.informes: ", this.informes);
+    //console.log("0) this.informes: ", this.informes);
+    console.log("0) this.entidad: ", this.entidad);
     
     this.informesVM = this.informes.map(inf => ({
       informeLiqId: inf.id,
@@ -89,7 +90,7 @@ export class MovimientoFinancieroComponent implements OnInit {
       montoACobrar: inf.valoresFinancieros!.saldo,
       modo: 'auto'
     }));
-    console.log("1) this.informesVM: ", this.informesVM);
+    //console.log("1) this.informesVM: ", this.informesVM);
     
     // valor inicial sugerido
     this.montoTotalMovimiento = this.totalSaldo;
@@ -144,9 +145,9 @@ export class MovimientoFinancieroComponent implements OnInit {
   // ---------------------------------------------------------------------------
 
   recalcularDistribucion(): void {
-    console.log("montoTotalMovimiento", this.montoTotalMovimiento);
+    //console.log("montoTotalMovimiento", this.montoTotalMovimiento);
     this.montoTotalMovimiento = this.fomNumServ.convertirAValorNumerico(this.montoTotalMovimiento)
-    console.log("montoTotalMovimiento", this.montoTotalMovimiento);
+    //console.log("montoTotalMovimiento", this.montoTotalMovimiento);
     this.errorDistribucion = null;
 
     if (!this.montoTotalMovimiento || this.montoTotalMovimiento <= 0) {
@@ -299,7 +300,7 @@ export class MovimientoFinancieroComponent implements OnInit {
       observaciones: this.observaciones
     };
 
-    //console.log("form: ", form);    
+    ////console.log("form: ", form);    
     this.activeModal.close(form);
   }
 

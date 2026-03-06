@@ -8,7 +8,8 @@ import { TableroOpV2Component } from './tablero-op-v2/tablero-op-v2.component';
 
 const routes: Routes = [
     {path: '', component:OpControlComponent,
-      children: [               
+      children: [         
+        {path: '', redirectTo: 'tablero2', pathMatch: 'full' },      
         {path: 'tablero', component:TableroOpComponent},             
         {path: 'diario', component:TableroDiarioComponent},             
         {path: 'tablero2', component:TableroOpV2Component}, 

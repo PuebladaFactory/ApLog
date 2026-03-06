@@ -49,7 +49,7 @@ export class VendedorControlComponent implements OnInit {
 
   ngOnInit(): void {
     this.storageService.listenForChanges<Vendedor>("vendedores");
-    this.selectTab("tab1");
+    //this.selectTab("tab1");
   }
 
   selectTab(tabId: string) {

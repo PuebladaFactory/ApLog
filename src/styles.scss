@@ -71,6 +71,12 @@ body.modal-open {
   user-select: text !important;
 }
 
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
 
 
 

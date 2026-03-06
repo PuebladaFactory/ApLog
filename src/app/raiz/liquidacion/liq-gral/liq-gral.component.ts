@@ -54,7 +54,7 @@ export class LiqGralComponent implements OnInit {
   
   ngOnInit(): void { 
 
-    this.selectTab("tab1");
+    //this.selectTab("tab1");
     //this.consultaMes();
    
   }

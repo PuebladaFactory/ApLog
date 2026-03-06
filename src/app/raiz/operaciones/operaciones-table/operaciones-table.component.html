@@ -232,7 +232,7 @@
                                 inputmode="number"
                                 class="form-control form-control-sm"
                                 [(ngModel)]="op.tarifaEventual.chofer.valor"
-                                appFormatoNumerico
+                                appMonto [minimo]="0"
                             />
                         </td>
 
@@ -261,7 +261,7 @@
                                 inputmode="number"
                                 class="form-control form-control-sm"
                                 [(ngModel)]="op.tarifaEventual.cliente.valor"
-                                appFormatoNumerico
+                                appMonto [minimo]="0"
                             />
                         </td>
 

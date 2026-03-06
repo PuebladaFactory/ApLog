@@ -1,10 +1,9 @@
-import { Injectable } from '@angular/core';
-
+import { Injectable } from "@angular/core";
 
 export interface InformeFinanciero {
   id: string;
 
-  estado: 'borrador' | 'emitido' | 'facturado' | 'anulado';
+  estado: "borrador" | "emitido" | "facturado" | "anulado";
 
   valoresFinancieros: {
     total: number;
@@ -32,7 +31,7 @@ export interface InformeActualizado {
     saldo: number;
   };
 
-  estadoFinanciero: 'pendiente' | 'parcial' | 'cobrado';
+  estadoFinanciero: "pendiente" | "parcial" | "cobrado";
 }
 
 export interface MovimientoImpactResult {
@@ -41,26 +40,24 @@ export interface MovimientoImpactResult {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class SaldoEngine {
-
   // ================================
   // CREAR MOVIMIENTO
   // ================================
 
   static calcularImpactoMovimiento(
-    input: MovimientoImpactInput
+    input: MovimientoImpactInput,
   ): MovimientoImpactResult {
-
     const { informes, imputaciones } = input;
 
     if (!informes.length) {
-      throw new Error('No hay informes para procesar');
+      throw new Error("No hay informes para procesar");
     }
 
     if (!imputaciones.length) {
-      throw new Error('No hay imputaciones');
+      throw new Error("No hay imputaciones");
     }
 
     let totalMovimiento = 0;
@@ -68,48 +65,57 @@ export class SaldoEngine {
     const informesActualizados: InformeActualizado[] = [];
 
     for (const imp of imputaciones) {
-
-      if (imp.montoImputado <= 0) {
-        throw new Error('Monto imputado inválido');
+      if (imp.montoImputado <= 0 || isNaN(imp.montoImputado)) {
+        throw new Error("Monto imputado inválido");
       }
 
-      const informe = informes.find(i => i.id === imp.informeId);
+      const informe = informes.find((i) => i.id === imp.informeId);
 
       if (!informe) {
         throw new Error(`Informe ${imp.informeId} no encontrado`);
       }
 
-      if (informe.estado === 'anulado' || informe.estado === 'borrador') {
+      if (informe.estado === "anulado" || informe.estado === "borrador") {
         throw new Error(`Informe ${imp.informeId} no permite imputaciones`);
       }
 
       const vf = informe.valoresFinancieros;
 
-      if (imp.montoImputado > vf.saldo) {
-        throw new Error(`Monto supera saldo disponible en informe ${imp.informeId}`);
+      if (!vf) {
+        throw new Error(`Informe ${imp.informeId} sin valores financieros`);
       }
 
-      const nuevoTotalCobrado = vf.totalCobrado + imp.montoImputado;
-      const nuevoSaldo = vf.total - nuevoTotalCobrado;
+      const total = Number(vf.total || 0);
+      const totalCobradoActual = Number(vf.totalCobrado || 0);
+      const saldoActual = Number(vf.saldo || total);
 
-      let nuevoEstado: 'pendiente' | 'parcial' | 'cobrado';
+      if (imp.montoImputado > saldoActual) {
+        throw new Error(
+          `Monto supera saldo disponible en informe ${imp.informeId}`,
+        );
+      }
+
+      const nuevoTotalCobrado = totalCobradoActual + imp.montoImputado;
+      const nuevoSaldo = total - nuevoTotalCobrado;
+
+      let nuevoEstado: "pendiente" | "parcial" | "cobrado";
 
       if (nuevoSaldo <= 0) {
-        nuevoEstado = 'cobrado';
+        nuevoEstado = "cobrado";
       } else if (nuevoTotalCobrado > 0) {
-        nuevoEstado = 'parcial';
+        nuevoEstado = "parcial";
       } else {
-        nuevoEstado = 'pendiente';
+        nuevoEstado = "pendiente";
       }
 
       informesActualizados.push({
         id: informe.id,
         valoresFinancieros: {
-          total: vf.total,
+          total: total,
           totalCobrado: nuevoTotalCobrado,
-          saldo: nuevoSaldo
+          saldo: nuevoSaldo,
         },
-        estadoFinanciero: nuevoEstado
+        estadoFinanciero: nuevoEstado,
       });
 
       totalMovimiento += imp.montoImputado;
@@ -117,16 +123,16 @@ export class SaldoEngine {
 
     const sumaImputaciones = imputaciones.reduce(
       (acc, i) => acc + i.montoImputado,
-      0
+      0,
     );
 
     if (totalMovimiento !== sumaImputaciones) {
-      throw new Error('Inconsistencia en total del movimiento');
+      throw new Error("Inconsistencia en total del movimiento");
     }
 
     return {
       informesActualizados,
-      totalMovimiento
+      totalMovimiento,
     };
   }
 
@@ -135,9 +141,8 @@ export class SaldoEngine {
   // ================================
 
   static revertirImpactoMovimiento(
-    input: MovimientoImpactInput
+    input: MovimientoImpactInput,
   ): MovimientoImpactResult {
-
     const { informes, imputaciones } = input;
 
     let totalMovimiento = 0;
@@ -145,8 +150,7 @@ export class SaldoEngine {
     const informesActualizados: InformeActualizado[] = [];
 
     for (const imp of imputaciones) {
-
-      const informe = informes.find(i => i.id === imp.informeId);
+      const informe = informes.find((i) => i.id === imp.informeId);
 
       if (!informe) {
         throw new Error(`Informe ${imp.informeId} no encontrado`);
@@ -162,14 +166,14 @@ export class SaldoEngine {
 
       const nuevoSaldo = vf.total - nuevoTotalCobrado;
 
-      let nuevoEstado: 'pendiente' | 'parcial' | 'cobrado';
+      let nuevoEstado: "pendiente" | "parcial" | "cobrado";
 
       if (nuevoSaldo === vf.total) {
-        nuevoEstado = 'pendiente';
+        nuevoEstado = "pendiente";
       } else if (nuevoSaldo > 0) {
-        nuevoEstado = 'parcial';
+        nuevoEstado = "parcial";
       } else {
-        nuevoEstado = 'cobrado';
+        nuevoEstado = "cobrado";
       }
 
       informesActualizados.push({
@@ -177,9 +181,9 @@ export class SaldoEngine {
         valoresFinancieros: {
           total: vf.total,
           totalCobrado: nuevoTotalCobrado,
-          saldo: nuevoSaldo
+          saldo: nuevoSaldo,
         },
-        estadoFinanciero: nuevoEstado
+        estadoFinanciero: nuevoEstado,
       });
 
       totalMovimiento += imp.montoImputado;
@@ -187,7 +191,7 @@ export class SaldoEngine {
 
     return {
       informesActualizados,
-      totalMovimiento
+      totalMovimiento,
     };
   }
 }

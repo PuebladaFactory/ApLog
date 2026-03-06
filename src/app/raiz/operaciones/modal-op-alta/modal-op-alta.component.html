@@ -183,7 +183,7 @@
                                 <label for="Fecha">Tarifa Eventual Valor</label>
                                 <div class="input-group">
                                     <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                    <input formControlName="choferValor" class="form-control edicion" required type="text" inputmode="number" [ngClass]="{ 'is-invalid': formTarifaEventual.get('choferValor').invalid && (formTarifaEventual.get('choferValor').dirty || formTarifaEventual.get('choferValor').touched) }" appFormatoNumerico>
+                                    <input formControlName="choferValor" class="form-control edicion" required type="text" inputmode="number" [ngClass]="{ 'is-invalid': formTarifaEventual.get('choferValor').invalid && (formTarifaEventual.get('choferValor').dirty || formTarifaEventual.get('choferValor').touched) }" appMonto [minimo]="0">
                                 </div>
                                 @if (hasErrorTeventual('choferValor', 'required')) {
                                     <div>El valor a pagar al chofer es obligatorio.</div>
@@ -203,7 +203,7 @@
                                 <label for="Fecha">Tarifa Eventual Valor</label>
                                 <div class="input-group">
                                     <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                                    <input formControlName="clienteValor" class="form-control edicion" required type="text" inputmode="number" [ngClass]="{ 'is-invalid': formTarifaEventual.get('clienteValor').invalid && (formTarifaEventual.get('clienteValor').dirty || formTarifaEventual.get('clienteValor').touched) }" appFormatoNumerico>
+                                    <input formControlName="clienteValor" class="form-control edicion" required type="text" inputmode="number" [ngClass]="{ 'is-invalid': formTarifaEventual.get('clienteValor').invalid && (formTarifaEventual.get('clienteValor').dirty || formTarifaEventual.get('clienteValor').touched) }" appMonto [minimo]="0">
                                 </div>
                                 @if (hasErrorTeventual('clienteValor', 'required')) {
                                     <div>El valor a cobrar al cliente es obligatorio.</div>

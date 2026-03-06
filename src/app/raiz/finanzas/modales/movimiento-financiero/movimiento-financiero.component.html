@@ -40,7 +40,7 @@
           inputmode="number"
           class="form-control text-end"
           [(ngModel)]="montoTotalMovimiento"
-          appFormatoNumericoNgModel
+          appMonto [minimo]="0"
           (change)="recalcularDistribucion()">
     </div>
 
@@ -151,7 +151,7 @@
                               [(ngModel)]="inf.montoACobrar"
                               [disabled]="inf.modo !== 'manual'"
                               [max]="inf.saldo"
-                              appFormatoMonetarioControl
+                              appMonto [minimo]="0"
                               (ngModelChange)="recalcularDistribucion()"
                             >
                         </td>

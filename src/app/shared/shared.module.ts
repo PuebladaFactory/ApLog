@@ -49,6 +49,8 @@ import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/in
 import { FormatoMonetarioControlDirective } from './directives/formato-monetario-control.directive';
 import { DecimalInputDirective } from './directives/decimal-input.directive';
 import { SoloNumerosRequeridoDirective } from './directives/solo-numeros-requerido.directive';
+import { AutoNumericDirective } from './directives/auto-numeric.directive';
+import { MontoDirective } from './directives/monto.directive';
 
 
 
@@ -90,7 +92,9 @@ import { SoloNumerosRequeridoDirective } from './directives/solo-numeros-requeri
     InformesAccionesCellComponent,
     FormatoMonetarioControlDirective,
     DecimalInputDirective,
-    SoloNumerosRequeridoDirective
+    SoloNumerosRequeridoDirective,
+    AutoNumericDirective,
+    MontoDirective
     
   ],
   imports: [
@@ -139,7 +143,9 @@ import { SoloNumerosRequeridoDirective } from './directives/solo-numeros-requeri
     InformesAccionesCellComponent,
     FormatoMonetarioControlDirective,
     DecimalInputDirective,
-    SoloNumerosRequeridoDirective
+    SoloNumerosRequeridoDirective,
+    AutoNumericDirective,
+    MontoDirective
   ]
 })
 export class SharedModule { }

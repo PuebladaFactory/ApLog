@@ -7,7 +7,7 @@ export interface MovimientoFinanciero {
   fechaOperacion?: string; // ISO yyyy-mm-dd
   /** Entidad */
   entidad: {
-    id: string;
+    id: number;
     tipo: 'cliente' | 'chofer' | 'proveedor';
     razonSocial: string;
   };

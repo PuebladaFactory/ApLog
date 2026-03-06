@@ -7,7 +7,7 @@ import { RoleGuard } from '../guards/role.guard';
 const routes: Routes = [
   {path: '', component: HomeComponent,
    children: [
-    { path: '', redirectTo: '/op', pathMatch: 'full' },    
+    { path: '', redirectTo: 'op', pathMatch: 'full' },
     {
       path: 'clientes',
       loadChildren: () => import('./clientes/clientes.module').then(m => m.ClientesModule),

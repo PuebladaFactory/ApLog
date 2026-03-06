@@ -12,6 +12,7 @@ import { MovimientoFinancieroComponent } from '../modales/movimiento-financiero/
 import { MovimientoFormVM } from 'src/app/interfaces/movimiento-form-v-m';
 import { MovimientoFinancieroService } from 'src/app/servicios/finanzas/movimiento-financiero.service';
 
+
 @Component({
   selector: 'app-finanzas-cobros',
   standalone: false,
@@ -176,7 +177,7 @@ export class FinanzasCobrosComponent implements OnInit {
     modalRef.componentInstance.tipo = 'cobro';
 
     modalRef.componentInstance.entidad = {
-      id: String(cliente.idCliente),
+      id: cliente.idCliente,
       tipo: 'cliente',
       razonSocial: cliente.razonSocial
     };

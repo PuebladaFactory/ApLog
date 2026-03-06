@@ -159,7 +159,7 @@
                   <label for="km" class="fs-5">Km recorridos</label>
                   <div class="input-group">
                     <span class="input-group-text" id="basic-addon1" style="width:30px">Km</span>
-                    <input class="form-control" type="text" inputmode="number" [(ngModel)]="facDetallada.km" appFormatoNumericoNgModel>
+                    <input class="form-control" type="text" inputmode="number" [(ngModel)]="facDetallada.km" appMonto [minimo]="0">
                   </div>
                 </div>
                 <div class="form-group mb-2 " >
@@ -185,28 +185,28 @@
                   <label for="Base" class="fs-5">Tarifa Base</label>
                   <div class="input-group">
                     <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.tarifaBase" appFormatoNumericoNgModel (change)="actualizarTotal()">
+                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.tarifaBase" appMonto [minimo]="0" (change)="actualizarTotal()">
                   </div>
                 </div>
                 <div class="form-group mb-3">
                   <label for="adiconalAcompaniante" class="fs-5">Adicional Acompañante</label>
                   <div class="input-group">
                     <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.acompaniante" appFormatoNumericoNgModel (change)="actualizarTotal()">
+                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.acompaniante" appMonto [minimo]="0" (change)="actualizarTotal()">
                   </div>
                 </div>
                 <div class="form-group mb-3">
                   <label for="adiconalKm" class="fs-5">Adicional Km</label>
                   <div class="input-group">
                     <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.kmMonto" appFormatoNumericoNgModel (change)="actualizarTotal()">
+                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.kmMonto" appMonto [minimo]="0" (change)="actualizarTotal()">
                   </div>
                 </div>
                 <div class="form-group mb-3 isDisabled">
                   <label for="total" class="fs-5">Total</label>
                   <div class="input-group">
                     <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.total" appFormatoNumericoNgModel>
+                    <input  class="form-control edicion" required type="text" inputmode="number" [(ngModel)]="facDetallada.valores.total" appMonto [minimo]="0">
                   </div>
                 </div>
               </div>

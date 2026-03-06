@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
   selector: 'app-finanzas-control',
   standalone: false,
   template: `
-  <div class="mt-3">
+  <div class="layout-global no-print">
+<div class="mt-3">
     <h1 class="text-start w-100">Finanzas</h1>
   </div>
   <div class="tab-container">
@@ -18,7 +19,10 @@ import { Router } from '@angular/router';
       </div>
     }
   </div>
+   </div>
   <router-outlet></router-outlet>
+ 
+  
   
   `,
    styles: [`
@@ -64,7 +68,7 @@ export class FinanzasControlComponent implements OnInit {
   constructor(private router: Router) {}
 
   ngOnInit(): void {
-    this.selectTab('tab1');
+    //this.selectTab('tab1');
   }
 
   selectTab(tabId: string) {

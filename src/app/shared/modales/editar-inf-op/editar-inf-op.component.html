@@ -203,7 +203,7 @@
                                             >Concepto</label
                                         >
                                         <div class="input-group">
-                                            <input                                                
+                                            <input
                                                 class="form-control border-warning"
                                                 type="text"
                                                 [(ngModel)]="
@@ -226,16 +226,19 @@
                                                 style="width: 30px"
                                                 >$</span
                                             >
-                                            <input                                                
+                                            <input
                                                 class="form-control border-warning"
                                                 type="text"
                                                 inputmode="number"
-                                                appFormatoNumericoNgModel
+                                                appMonto
+                                                [minimo]="0"
                                                 [(ngModel)]="
-                                                operacion.tarifaEventual
-                                                    .cliente.valor                                                        
+                                                    operacion.tarifaEventual
+                                                        .cliente.valor
                                                 "
-                                                (change)="changeTarifaEVentual()"
+                                                (change)="
+                                                    changeTarifaEVentual()
+                                                "
                                             />
                                         </div>
                                     </div>
@@ -249,7 +252,7 @@
                                             >Concepto</label
                                         >
                                         <div class="input-group">
-                                            <input                                                
+                                            <input
                                                 class="form-control border-warning"
                                                 type="text"
                                                 [(ngModel)]="
@@ -272,16 +275,19 @@
                                                 style="width: 30px"
                                                 >$</span
                                             >
-                                            <input                                                
+                                            <input
                                                 class="form-control border-warning"
                                                 type="text"
                                                 inputmode="number"
-                                                appFormatoNumericoNgModel
+                                                appMonto
+                                                [minimo]="0"
                                                 [(ngModel)]="
                                                     operacion.tarifaEventual
-                                                        .chofer.valor                                                        
+                                                        .chofer.valor
                                                 "
-                                                (change)="changeTarifaEVentual()"
+                                                (change)="
+                                                    changeTarifaEVentual()
+                                                "
                                             />
                                         </div>
                                     </div>
@@ -420,7 +426,7 @@
                                                         required
                                                         type="text"
                                                         inputmode="number"
-                                                        appFormatoMonetarioControl
+                                                        appMonto [minimo]="0"
                                                         [(ngModel)]="
                                                             tarifaPersonalizadaOp.aCobrar
                                                         "
@@ -453,7 +459,7 @@
                                                         required
                                                         type="text"
                                                         inputmode="number"
-                                                        appFormatoMonetarioControl
+                                                        appMonto [minimo]="0"
                                                         [(ngModel)]="
                                                             tarifaPersonalizadaOp.aPagar
                                                         "
@@ -566,7 +572,8 @@
                                                 type="text"
                                                 inputmode="number"
                                                 [(ngModel)]="operacion.km"
-                                                appFormatoNumericoNgModel
+                                                appMonto
+                                                [minimo]="0"
                                                 (change)="changeKm()"
                                             />
                                         </div>
@@ -663,15 +670,19 @@
                                             >
                                             <input
                                                 class="form-control border-success"
-                                                [disabled]="operacion.tarifaTipo.eventual"
+                                                [disabled]="
+                                                    operacion.tarifaTipo
+                                                        .eventual
+                                                "
                                                 required
                                                 type="text"
-                                                inputmode="number"
+                                                inputmode="decimal"
                                                 [(ngModel)]="
                                                     informeCliente.valores
                                                         .tarifaBase
                                                 "
-                                                appFormatoMonetarioControl                                                
+                                                appMonto
+                                                [minimo]="0"
                                                 (change)="tarifaBaseValor()"
                                             />
                                         </div>
@@ -700,7 +711,8 @@
                                                     informeCliente.valores
                                                         .acompaniante
                                                 "
-                                                appFormatoMonetarioControl
+                                                appMonto 
+                                                [minimo]="0"
                                             />
                                         </div>
                                     </div>
@@ -725,7 +737,7 @@
                                                     informeCliente.valores
                                                         .kmMonto
                                                 "
-                                                appFormatoMonetarioControl
+                                                appMonto [minimo]="0"
                                             />
                                         </div>
                                     </div>
@@ -752,7 +764,8 @@
                                                     required
                                                     type="text"
                                                     inputmode="number"
-                                                    appFormatoNumericoNgModel
+                                                    appMonto
+                                                    [minimo]="0"
                                                     [(ngModel)]="
                                                         informeCliente.valores
                                                             .adExtra
@@ -781,7 +794,7 @@
                                                     operacion.multiplicadorCliente
                                                 "
                                                 name="multiplicadorCliente"
-                                                 appDecimalInput
+                                                appDecimalInput
                                                 [min]="0"
                                                 [max]="2"
                                                 [decimals]="2"
@@ -811,7 +824,7 @@
                                                         informeCliente.valores
                                                             .total
                                                     "
-                                                    appFormatoMonetarioControl
+                                                    appMonto [minimo]="0"
                                                 />
                                             </div>
                                         </div>
@@ -855,8 +868,12 @@
                                                 style="width: 30px"
                                                 >$</span
                                             >
-                                            <input [disabled]="operacion.tarifaTipo.eventual"
-                                                class="form-control border-success"                                                
+                                            <input
+                                                [disabled]="
+                                                    operacion.tarifaTipo
+                                                        .eventual
+                                                "
+                                                class="form-control border-success"
                                                 required
                                                 type="text"
                                                 inputmode="number"
@@ -864,7 +881,7 @@
                                                     informeChofer.valores
                                                         .tarifaBase
                                                 "
-                                                appFormatoMonetarioControl
+                                                appMonto [minimo]="0"
                                                 (change)="tarifaBaseValor()"
                                             />
                                         </div>
@@ -893,7 +910,7 @@
                                                     informeChofer.valores
                                                         .acompaniante
                                                 "
-                                                appFormatoMonetarioControl
+                                                appMonto [minimo]="0"
                                             />
                                         </div>
                                     </div>
@@ -918,7 +935,7 @@
                                                     informeChofer.valores
                                                         .kmMonto
                                                 "
-                                                appFormatoMonetarioControl
+                                                appMonto [minimo]="0"
                                             />
                                         </div>
                                     </div>
@@ -944,7 +961,8 @@
                                                     required
                                                     type="text"
                                                     inputmode="number"
-                                                    appFormatoNumericoNgModel
+                                                    appMonto
+                                                    [minimo]="0"
                                                     [(ngModel)]="
                                                         informeChofer.valores
                                                             .adExtra
@@ -972,7 +990,7 @@
                                                     operacion.multiplicadorChofer
                                                 "
                                                 name="multiplicadorChofer"
-                                                 appDecimalInput
+                                                appDecimalInput
                                                 [min]="0"
                                                 [max]="2"
                                                 [decimals]="2"
@@ -1002,7 +1020,7 @@
                                                         informeChofer.valores
                                                             .total
                                                     "
-                                                    appFormatoMonetarioControl
+                                                    appMonto [minimo]="0"
                                                 />
                                             </div>
                                         </div>

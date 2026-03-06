@@ -254,7 +254,7 @@
                                     isDisabled: !esHabilitadoTarifaEventual(op),
                                 }"
                                 [(ngModel)]="op.tarifaEventual.chofer.valor"
-                                appFormatoNumerico
+                                appMonto [minimo]="0"
                                 title="{{ op.tarifaEventual.chofer.valor }}"
                             />
                         </td>
@@ -288,7 +288,7 @@
                                     isDisabled: !esHabilitadoTarifaEventual(op),
                                 }"
                                 [(ngModel)]="op.tarifaEventual.cliente.valor"
-                                appFormatoNumerico
+                                appMonto [minimo]="0"
                                 title="{{ op.tarifaEventual.cliente.valor }}"
                             />
                         </td>
