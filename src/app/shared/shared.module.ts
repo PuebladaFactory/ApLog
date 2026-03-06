@@ -20,9 +20,9 @@ import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
 import { CuitFormatDirective } from './directives/cuit-format.directive';
 import { SoloNumerosDirective } from './directives/solo-numeros.directive';
 import { FormatearValorPipe } from './pipes/formatear-valor.pipe';
-import { FormatoNumericoDirective } from './directives/formato-numerico.directive';
+
 import { SoloLetrasDirective } from './directives/solo-letras.directive';
-import { FormatoNumericoNgModelDirective } from './directives/formato-numerico-ng-model.directive';
+
 
 import { TarigaGralEdicionComponent } from './modales/tariga-gral-edicion/tariga-gral-edicion.component';
 import { RoleDirective } from './directives/role.directive';
@@ -46,10 +46,10 @@ import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
 import { VisibilidadListadosComponent } from './modales/visibilidad-listados/visibilidad-listados.component';
 import { TableroFechasComponent } from './tablero-fechas/tablero-fechas.component';
 import { InformesAccionesCellComponent } from './tabla/informes-acciones-cell/informes-acciones-cell.component';
-import { FormatoMonetarioControlDirective } from './directives/formato-monetario-control.directive';
+
 import { DecimalInputDirective } from './directives/decimal-input.directive';
-import { SoloNumerosRequeridoDirective } from './directives/solo-numeros-requerido.directive';
-import { AutoNumericDirective } from './directives/auto-numeric.directive';
+
+
 import { MontoDirective } from './directives/monto.directive';
 
 
@@ -70,9 +70,9 @@ import { MontoDirective } from './directives/monto.directive';
     CuitFormatDirective,
     SoloNumerosDirective,
     FormatearValorPipe,
-    FormatoNumericoDirective,
+    
     SoloLetrasDirective,
-    FormatoNumericoNgModelDirective,
+    
     TarigaGralEdicionComponent,    
     RoleDirective, BajaObjetoComponent, 
     ObjetoPapeleraComponent, 
@@ -90,10 +90,10 @@ import { MontoDirective } from './directives/monto.directive';
     VisibilidadListadosComponent,
     TableroFechasComponent,
     InformesAccionesCellComponent,
-    FormatoMonetarioControlDirective,
+    
     DecimalInputDirective,
-    SoloNumerosRequeridoDirective,
-    AutoNumericDirective,
+    
+    
     MontoDirective
     
   ],
@@ -123,9 +123,9 @@ import { MontoDirective } from './directives/monto.directive';
     CuitFormatDirective,
     SoloNumerosDirective,
     FormatearValorPipe,
-    FormatoNumericoDirective,
+    
     SoloLetrasDirective,
-    FormatoNumericoNgModelDirective,
+    
     TarigaGralEdicionComponent,
     RoleDirective,
     BajaObjetoComponent,
@@ -141,10 +141,10 @@ import { MontoDirective } from './directives/monto.directive';
     VisibilidadListadosComponent,
     TableroFechasComponent,
     InformesAccionesCellComponent,
-    FormatoMonetarioControlDirective,
+    
     DecimalInputDirective,
-    SoloNumerosRequeridoDirective,
-    AutoNumericDirective,
+    
+    
     MontoDirective
   ]
 })
