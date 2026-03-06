@@ -377,7 +377,7 @@
                                 Tarifa Aplicada:
                                 <span
                                     class="fw-semibold fs-4 badge"
-                                    [ngClass]="getClaseTarifa(op)"
+                                    [ngClass]="getClaseTarifa(op, 'cliente')"
                                     >{{
                                         op.tarifaTipo.eventual
                                             ? "Eventual"
@@ -620,7 +620,7 @@
                                 Tarifa Aplicada:
                                 <span
                                     class="fw-semibold fs-4 badge"
-                                    [ngClass]="getClaseTarifa(op)"
+                                    [ngClass]="getClaseTarifa(op, 'chofer')"
                                     >{{
                                         op.tarifaTipo.eventual
                                             ? "Eventual"
