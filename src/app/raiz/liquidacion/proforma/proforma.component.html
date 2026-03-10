@@ -22,6 +22,7 @@
                 <th style="width: 13%" class="text-center">Acciones</th>
             </thead>
             <tbody>
+                <!-- TABLA DE CLIENTES -->
                 @if (proformasClientes.length > 0) {
                     @for (
                         cliente of proformasClientes
@@ -36,6 +37,8 @@
                                       "total",
                                       "aPagar",
                                       "ganancia",
+                                      "mes",
+                                      "periodo",
                                   ];
                         track cliente;
                         let i = $index
@@ -75,7 +78,7 @@
                                             : true
                                 }}
                             </td>
-                            <td class="d-flex">                                
+                            <td class="d-flex">
                                 <app-btn-leer
                                     name="Detalle"
                                     class="me-2"
@@ -83,92 +86,45 @@
                                         obtenerFacturasOp(
                                             cliente,
                                             'cliente',
-                                            'vista',
-                                            ''
+                                            'vista'
                                         )
                                     "
                                 ></app-btn-leer>
-                                <div class="dropdown m-0 p-0">
-                                    <app-btn-leer
-                                        name="print"
-                                        class="me-2"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
-                                    ></app-btn-leer>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    cliente,
-                                                    'cliente',
-                                                    'reimpresion',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    cliente,
-                                                    'cliente',
-                                                    'reimpresion',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
+                                <app-btn-leer
+                                    name="print"
+                                    class="me-2"
+                                    (click)="
+                                        obtenerFacturasOp(
+                                            cliente,
+                                            'cliente',
+                                            'reimpresion'
+                                        )
+                                    "
+                                ></app-btn-leer>
                                 <app-btn-eliminar
                                     name="Eliminar"
                                     class="me-2"
                                     (click)="
-                                        procesarProforma(
+                                        obtenerFacturasOp(
                                             cliente,
                                             'cliente',
-                                            'baja',
-                                            ''
+                                            'baja'
                                         )
                                     "
                                 ></app-btn-eliminar>
-                                <div class="dropdown m-0 p-0">
-                                    <app-btn-agregar
-                                        name="Factura"
-                                        class="me-2"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
-                                    ></app-btn-agregar>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                procesarProforma(
-                                                    cliente,
-                                                    'cliente',
-                                                    'facturar',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                procesarProforma(
-                                                    cliente,
-                                                    'cliente',
-                                                    'facturar',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
-                                <!-- <app-btn-agregar name="Factura" (click)="procesarProforma(cliente,'cliente', 'facturar')"></app-btn-agregar> -->
+                                <app-btn-agregar
+                                    name="Factura"
+                                    class="me-2"
+                                    type="button"
+                                    (click)="
+                                        obtenerFacturasOp(
+                                            cliente,
+                                            'cliente',
+                                            'factura'
+                                        )
+                                    "
+                                ></app-btn-agregar>
+                 
                             </td>
                         </tr>
                     }
@@ -204,6 +160,7 @@
                 <th style="width: 13%" class="text-center">Acciones</th>
             </thead>
             <tbody>
+                <!-- TABLA DE CHOFERES -->
                 @if (proformasChoferes.length > 0) {
                     @for (
                         chofer of proformasChoferes
@@ -217,6 +174,8 @@
                                       "opFacturadas",
                                       "total",
                                       "aCobrar",
+                                      "mes",
+                                      "periodo",
                                   ];
                         track chofer;
                         let i = $index
@@ -244,8 +203,7 @@
                                         chofer.valores.total
                                         | formatearValor: "$"
                                 }}
-                            </td>
-                            <!-- <td class="text-center table-warning">{{(100-((chofer.valores.total*100)/chofer.montoFacturaCliente)) | formatearValor}} %</td> -->
+                            </td>                            
                             <td class="text-center table-warning">
                                 {{
                                     chofer.valores.total
@@ -262,92 +220,44 @@
                                         obtenerFacturasOp(
                                             chofer,
                                             'chofer',
-                                            'vista',
-                                            ''
+                                            'vista'
                                         )
                                     "
                                 ></app-btn-leer>
-                                <div class="dropdown m-0 p-0">
-                                    <app-btn-leer
-                                        name="print"
-                                        class="me-2"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
-                                    ></app-btn-leer>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    chofer,
-                                                    'chofer',
-                                                    'reimpresion',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    chofer,
-                                                    'chofer',
-                                                    'reimpresion',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
+                                <app-btn-leer
+                                    name="print"
+                                    class="me-2"
+                                    (click)="
+                                        obtenerFacturasOp(
+                                            chofer,
+                                            'cliente',
+                                            'reimpresion'
+                                        )
+                                    "
+                                ></app-btn-leer>
                                 <app-btn-eliminar
                                     name="Eliminar"
                                     class="me-2"
                                     (click)="
-                                        procesarProforma(
+                                        obtenerFacturasOp(
                                             chofer,
                                             'chofer',
-                                            'baja',
-                                            ''
+                                            'baja'
                                         )
                                     "
                                 ></app-btn-eliminar>
-                                <div class="dropdown m-0 p-0">
-                                    <app-btn-agregar
-                                        name="Factura"
-                                        class="me-2"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
-                                    ></app-btn-agregar>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                procesarProforma(
-                                                    chofer,
-                                                    'chofer',
-                                                    'facturar',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                procesarProforma(
-                                                    chofer,
-                                                    'chofer',
-                                                    'facturar',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
-                                <!-- <app-btn-agregar name="Factura" (click)="procesarProforma(chofer,'chofer', 'facturar')"></app-btn-agregar> -->
+                                <app-btn-agregar
+                                    name="Factura"
+                                    class="me-2"
+                                    type="button"
+                                    (click)="
+                                        obtenerFacturasOp(
+                                            chofer,
+                                            'chofer',
+                                            'factura'
+                                        )
+                                    "
+                                ></app-btn-agregar>
                             </td>
                         </tr>
                     }
@@ -382,6 +292,7 @@
                 <th style="width: 13%" class="text-center">Acciones</th>
             </thead>
             <tbody>
+                <!-- TABLA DE PROVEEDORES -->
                 @if (proformasProveedores.length > 0) {
                     @for (
                         prov of proformasProveedores
@@ -395,6 +306,8 @@
                                       "opFacturadas",
                                       "total",
                                       "aCobrar",
+                                      "mes",
+                                      "periodo",
                                   ];
                         track prov;
                         let i = $index
@@ -421,8 +334,7 @@
                                     prov.valores.totalContraParte -
                                         prov.valores.total | formatearValor: "$"
                                 }}
-                            </td>
-                            <!-- <td class="text-center table-warning">{{(100-((prov.valores.total*100)/prov.montoFacturaCliente)) | formatearValor}} %</td> -->
+                            </td>                            
                             <td class="text-center table-warning">
                                 {{
                                     prov.valores.total
@@ -439,92 +351,45 @@
                                         obtenerFacturasOp(
                                             prov,
                                             'proveedor',
-                                            'vista',
-                                            ''
+                                            'vista'
                                         )
                                     "
                                 ></app-btn-leer>
-                                <div class="dropdown">
-                                    <app-btn-leer
-                                        name="print"
-                                        class="me-2"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
-                                    ></app-btn-leer>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    prov,
-                                                    'proveedor',
-                                                    'reimpresion',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    prov,
-                                                    'proveedor',
-                                                    'reimpresion',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
+                                <app-btn-leer
+                                    name="print"
+                                    class="me-2"
+                                    (click)="
+                                        obtenerFacturasOp(
+                                            prov,
+                                            'cliente',
+                                            'reimpresion'
+                                        )
+                                    "
+                                ></app-btn-leer>
                                 <app-btn-eliminar
                                     name="Eliminar"
                                     class="me-2"
                                     (click)="
-                                        procesarProforma(
+                                        obtenerFacturasOp(
                                             prov,
                                             'proveedor',
-                                            'baja',
-                                            ''
+                                            'baja'
                                         )
                                     "
                                 ></app-btn-eliminar>
-                                <div class="dropdown m-0 p-0">
-                                    <app-btn-agregar
-                                        name="Factura"
-                                        class="me-2"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
-                                    ></app-btn-agregar>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                procesarProforma(
-                                                    prov,
-                                                    'proveedor',
-                                                    'facturar',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                procesarProforma(
-                                                    prov,
-                                                    'proveedor',
-                                                    'facturar',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
-                                <!-- <app-btn-agregar name="Factura" (click)="procesarProforma(prov,'proveedor', 'facturar')"></app-btn-agregar> -->
+                                <app-btn-agregar
+                                    name="Factura"
+                                    class="me-2"
+                                    type="button"
+                                    (click)="
+                                        obtenerFacturasOp(
+                                            prov,
+                                            'proveedor',
+                                            'factura'
+                                        )
+                                    "
+                                ></app-btn-agregar>
+                                
                             </td>
                         </tr>
                     }

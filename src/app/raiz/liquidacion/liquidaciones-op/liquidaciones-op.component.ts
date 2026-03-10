@@ -14,7 +14,11 @@ import { PdfService } from "src/app/servicios/informes/pdf/pdf.service";
 import { StorageService } from "src/app/servicios/storage/storage.service";
 import Swal from "sweetalert2";
 import { ResumenOpLiquidadasComponent } from "../modales/resumen-op-liquidadas/resumen-op-liquidadas.component";
-import { InformeLiq } from "src/app/interfaces/informe-liq";
+import {
+  Descuento,
+  EntidadLiq,
+  InformeLiq,
+} from "src/app/interfaces/informe-liq";
 import { BuscarTarifaService } from "src/app/servicios/buscarTarifa/buscar-tarifa.service";
 import { EditarTarifaOpComponent } from "../modales/editar-tarifa-op/editar-tarifa-op.component";
 import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
@@ -26,6 +30,8 @@ import {
   DateRangeService,
   toISODateString,
 } from "src/app/servicios/fechas/date-range.service";
+import { CrearLiquidacionParams } from "src/app/servicios/liquidaciones/liquidacion-builder.service";
+import { LiquidacionService } from "src/app/servicios/liquidaciones/liquidacion.service";
 @Component({
   selector: "app-liquidaciones-op",
   standalone: false,
@@ -38,9 +44,9 @@ export class LiquidacionesOpComponent implements OnInit {
     fechaHasta: 0,
   };
 
-  llamadaOrigen: string = "";
+  llamadaOrigen!: any;
   componente: string = "";
-  componenteBaja: string = "";
+  componenteAlta: string = "";
   compInformeLiquidacion: string = "resumenLiq";
   private destroy$ = new Subject<void>();
   choferes!: ConIdType<Chofer>[];
@@ -73,6 +79,11 @@ export class LiquidacionesOpComponent implements OnInit {
   searchText!: string;
   searchText2!: string;
   searchText3!: string;
+  entidadSeleccionada!: EntidadLiq;
+  mes!: any;
+  usuario!: any;
+
+  private STORAGE_RANGE_KEY = "liquidaciones_range_v1";
 
   ///////////////////////VARIABLES POR ERROR DE DUPLICADAS///////////////////////////////////////////
   $facturasOpDuplicadas: ConId<InformeOp>[] = [];
@@ -90,15 +101,17 @@ export class LiquidacionesOpComponent implements OnInit {
     private tableroServ: TableroService,
     private datePipe: DatePipe,
     private dateRangeService: DateRangeService,
+    private liquidacionService: LiquidacionService,
   ) {}
 
   ngOnInit(): void {
+    this.isLoading = true;
     // Obtenemos la URL completa y dividimos los segmentos para obtener el módulo de origen
     const urlSegments = this.router.url.split("/");
-    //console.log('urlSegments:', urlSegments);
+    ////console.log('urlSegments:', urlSegments);
     if (urlSegments.length > 1) {
-      this.llamadaOrigen = urlSegments[2]; // Esto será 'clientes' o 'choferes'
-      //console.log('Módulo origen:', this.llamadaOrigen);
+      this.llamadaOrigen = urlSegments[2]; // Esto será 'cliente' o 'chofer' o 'proveedor'
+      ////console.log('Módulo origen:', this.llamadaOrigen);
     }
     this.componente =
       this.llamadaOrigen === "cliente"
@@ -106,7 +119,7 @@ export class LiquidacionesOpComponent implements OnInit {
         : this.llamadaOrigen === "chofer"
           ? "informesOpChoferes"
           : "informesOpProveedores";
-    this.componenteBaja =
+    this.componenteAlta =
       this.llamadaOrigen === "cliente"
         ? "infOpLiqClientes"
         : this.llamadaOrigen === "chofer"
@@ -126,6 +139,8 @@ export class LiquidacionesOpComponent implements OnInit {
     this.proveedores = this.proveedores.sort((a, b) =>
       a.razonSocial.localeCompare(b.razonSocial),
     ); // Ordena por el nombre del chofer
+
+    this.restaurarRangoPropio();
 
     ////////// FECHAS E INFORMES OP ///////////////
     /*      this.storageService.fechasConsulta$
@@ -171,11 +186,19 @@ export class LiquidacionesOpComponent implements OnInit {
       .subscribe((r) => {
         //this.consultarOperaciones(r.desde, r.hasta);
         this.isLoading = true;
+        localStorage.setItem(
+          this.STORAGE_RANGE_KEY,
+          JSON.stringify({
+            desde: r.desde.toISOString(),
+            hasta: r.hasta.toISOString(),
+            tipo: r.tipo,
+          }),
+        );
         const desde = toISODateString(r.desde);
         const hasta = toISODateString(r.hasta);
         this.fechasConsulta.fechaDesde = desde;
         this.fechasConsulta.fechaHasta = hasta;
-        console.log("0)desde:", desde, " hasta: ", hasta);
+        //console.log("0)desde:", desde, " hasta: ", hasta);
         // 1. Consultar operaciones abiertas
         this.cargarOperacionesAbiertas()
           .pipe(take(1)) // Nos aseguramos que se ejecute solo una vez
@@ -197,7 +220,7 @@ export class LiquidacionesOpComponent implements OnInit {
               .getObservable<ConId<InformeOp>>(this.componente)
               .pipe(takeUntil(this.destroy$))
               .subscribe((data) => {
-                console.log("data-liquidaciones", data);
+                //console.log("data-liquidaciones", data);
 
                 this.informesOp = data;
 
@@ -211,6 +234,9 @@ export class LiquidacionesOpComponent implements OnInit {
               });
           });
       });
+
+    let usuario = this.storageService.loadInfo("usuario");
+    this.usuario = usuario[0];
   }
 
   ngOnDestroy(): void {
@@ -233,7 +259,7 @@ export class LiquidacionesOpComponent implements OnInit {
     const informesMap = new Map<number, any>();
 
     if (this.informesOp !== null) {
-      //////////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
+      ////////////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
       this.informesOp.forEach((inf: InformeOp) => {
         let idObjeto =
           this.llamadaOrigen === "cliente"
@@ -282,7 +308,7 @@ export class LiquidacionesOpComponent implements OnInit {
         a.razonSocial.localeCompare(b.razonSocial),
       ); // Ordena por el nombre del chofer
     }
-    //console.log("this.datosTabla: ", this.datosTabla);
+    ////console.log("this.datosTabla: ", this.datosTabla);
   }
 
   getOpAbiertas(id: number) {
@@ -352,7 +378,7 @@ export class LiquidacionesOpComponent implements OnInit {
 
     // Obtener el id del objeto utilizando el índice proporcionado
     let objId = this.datosTabla[index].id;
-    //////console.log("clienteId: ", clienteId);
+    ////////console.log("clienteId: ", clienteId);
 
     // Filtrar las informes según el id del objeto y almacenarlas en el mapa
     let informesObjetoId = this.informesOp.filter((inf: InformeOp) => {
@@ -365,7 +391,7 @@ export class LiquidacionesOpComponent implements OnInit {
       return idObjeto === objId;
     });
     this.informesDetalladoPorObjeto.set(objId, informesObjetoId);
-    //////console.log("FACTURAS DEL CLIENTE: ", facturasCliente);
+    ////////console.log("FACTURAS DEL CLIENTE: ", facturasCliente);
     //this.buscarOpConProformas(facturasCliente, clienteId)
   }
 
@@ -377,21 +403,21 @@ export class LiquidacionesOpComponent implements OnInit {
   selectAllCheckboxes(event: any, id: number): void {
     //let isChecked = (event.target as HTMLInputElement).checked;
     const seleccion = event.target.checked;
-    //////////console.log("1)", seleccion);
+    ////////////console.log("1)", seleccion);
     let informesObjeto = this.informesDetalladoPorObjeto.get(id);
-    //////////console.log("2)", facturasCliente);
+    ////////////console.log("2)", facturasCliente);
     informesObjeto?.forEach((inf: InformeOp) => {
       if (!inf.proforma && !inf.contraParteProforma) {
         inf.liquidacion = seleccion;
       }
 
-      //////////console.log("3)", factura.liquidacion);
+      ////////////console.log("3)", factura.liquidacion);
     });
-    //////////console.log("primera tabla: ", this.datosTablaCliente);
+    ////////////console.log("primera tabla: ", this.datosTablaCliente);
     let objeto = this.datosTabla.find((obj: any) => {
       return obj.id === id;
     });
-    //////////console.log("1) cliente: ", cliente);
+    ////////////console.log("1) cliente: ", cliente);
     if (seleccion) {
       objeto.opFacturadas = 0;
       informesObjeto?.forEach((factura: InformeOp) => {
@@ -407,7 +433,7 @@ export class LiquidacionesOpComponent implements OnInit {
       });
     }
 
-    //////////console.log("2) cliente: ", cliente);
+    ////////////console.log("2) cliente: ", cliente);
   }
 
   cerrarTabla(index: number) {
@@ -432,7 +458,7 @@ export class LiquidacionesOpComponent implements OnInit {
   liquidarInformesObjeto(objInf: any, index: number) {
     // Obtener las facturas del cliente
 
-    console.log("objInf: ", objInf);
+    //console.log("objInf: ", objInf);
     let informesSeleccionados = this.informesOp.filter((inf: InformeOp) => {
       let idObjeto =
         this.llamadaOrigen === "cliente"
@@ -443,10 +469,12 @@ export class LiquidacionesOpComponent implements OnInit {
       return idObjeto === objInf.id;
     });
 
+    this.getEntidad(objInf);
+
     let alertaProforma = informesSeleccionados.some((f: ConId<InformeOp>) => {
       return f.contraParteProforma;
     });
-    //console.log("alertaProforma", alertaProforma);
+    ////console.log("alertaProforma", alertaProforma);
     if (alertaProforma && this.llamadaOrigen === "cliente") {
       Swal.fire({
         icon: "warning",
@@ -456,7 +484,7 @@ export class LiquidacionesOpComponent implements OnInit {
       });
     }
 
-    //console.log("informesSeleccionados: ", informesSeleccionados);
+    ////console.log("informesSeleccionados: ", informesSeleccionados);
 
     if (objInf.opAbiertas > 0) {
       Swal.fire({
@@ -475,7 +503,7 @@ export class LiquidacionesOpComponent implements OnInit {
     });
 
     if (this.informesLiquidados.length > 0) {
-      //////////console.log("1: ",this.facturasLiquidadasCliente);
+      ////////////console.log("1: ",this.facturasLiquidadasCliente);
       // Calcular el total sumando los montos de las facturas liquidadas
       this.totalInformesLiquidados = 0;
       this.informesLiquidados.forEach((informe: InformeOp) => {
@@ -484,9 +512,9 @@ export class LiquidacionesOpComponent implements OnInit {
 
       this.indiceSeleccionado = index;
       this.buscarOpConProformas(this.informesLiquidados, objInf.id);
-      //////////console.log("3) Facturas liquidadas del cliente", cliente.razonSocial + ":", this.facturasLiquidadasCliente);
-      //////////console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasCliente);
-      ////////////console.log("indice: ", this.indiceSeleccionado);
+      ////////////console.log("3) Facturas liquidadas del cliente", cliente.razonSocial + ":", this.facturasLiquidadasCliente);
+      ////////////console.log("Total de las facturas liquidadas:", this.totalFacturasLiquidadasCliente);
+      //////////////console.log("indice: ", this.indiceSeleccionado);
       this.openModalLiquidacion();
     } else {
       this.mensajesError("Debe seleccionar una factura para liquidar", "error");
@@ -495,8 +523,8 @@ export class LiquidacionesOpComponent implements OnInit {
 
   //// CREO QUE YA NO SE USA
   buscarOpConProformas(facturasOpCliente: ConId<InformeOp>[], id: number) {
-    ////console.log("FACTURAS DEL CLIENTE: ", facturasOpCliente);
-    ////console.log("clienteId: ", id);
+    //////console.log("FACTURAS DEL CLIENTE: ", facturasOpCliente);
+    //////console.log("clienteId: ", id);
     //let idObjeto = this.llamadaOrigen === 'cliente' ? 'cliente.idCliente' : this.llamadaOrigen === 'chofer' ? 'chofer.idChofer' : 'chofer.idProveedor';
     this.dbFirebase
       .buscarColeccionRangoFechaIdCampo<Operacion>(
@@ -512,7 +540,7 @@ export class LiquidacionesOpComponent implements OnInit {
         let opProformas: ConId<Operacion>[] = [];
         if (data) {
           opProformas = data;
-          ////console.log("opProformas", opProformas);
+          //////console.log("opProformas", opProformas);
         }
       });
   }
@@ -522,8 +550,8 @@ export class LiquidacionesOpComponent implements OnInit {
     //this.totalFacturasLiquidadasChofer
     //this.totalFacturasLiquidadasCliente
 
-    let mes = this.getMesCapitalizado(this.fechasConsulta.fechaDesde);
-    console.log("mes: ", mes);
+    this.mes = this.getMesCapitalizado(this.fechasConsulta.fechaDesde);
+    //console.log("mes: ", this.mes);
 
     this.indiceSeleccionado;
     {
@@ -538,25 +566,35 @@ export class LiquidacionesOpComponent implements OnInit {
         origen: this.llamadaOrigen,
         facturas: this.informesLiquidados,
         total: this.totalInformesLiquidados,
-        mesPeriodo: mes,
+        mesPeriodo: this.mes,
       };
-      //////console.log("info: ",info);
+      ////////console.log("info: ",info);
 
       modalRef.componentInstance.fromParent = info;
       modalRef.result.then(
         (result) => {
-          console.log("resultado del modal resumen-op:", result);
+          //console.log("resultado del modal resumen-op:", result);
 
-          if (result.modo === "cerrar" || result.modo === "proforma") {
-            let titulo = result.titulo;
-            this.informeDeLiquidacion = result.factura;
-            let accion: string = result.accion;
-            if (result.modo === "cerrar") {
-              this.procesarFacturacion(titulo, accion);
+          if (result.accion === "factura" || result.accion === "proforma") {
+            //this.informeDeLiquidacion = result.factura;
+            let accion = result.accion;
+            let columnas = result.columnas;
+            let descuentos = result.descuentos;
+            let periodo = result.periodo;
+            let obsInterna = result.obsInterna;
+            /* if (result.modo === "cerrar") {
+              this.procesarFacturacion(accion);
             }
             if (result.modo === "proforma") {
-              this.procesarProforma(titulo, accion);
-            }
+              this.procesarProforma(accion);
+            } */
+            this.procesarInformeLiq(
+              accion,
+              columnas,
+              descuentos,
+              periodo,
+              obsInterna,
+            );
           }
         },
         (reason) => {},
@@ -564,7 +602,159 @@ export class LiquidacionesOpComponent implements OnInit {
     }
   }
 
-  procesarFacturacion(titulo: string, accion: string) {
+  async procesarInformeLiq(
+    accion: "factura" | "proforma",
+    columnas: string[],
+    descuentos: Descuento[],
+    periodo: "mes" | "1° quincena" | "2° quincena",
+    obsInterna: string,
+  ) {
+    this.isLoading = true;
+    //this.setearColecciones();
+    // Validar que todos los idOperacion sean únicos
+    const ids = this.informesLiquidados.map((infOp) => infOp.idOperacion);
+    const idsDuplicados = ids.filter((id, index) => ids.indexOf(id) !== index);
+    if (idsDuplicados.length > 0) {
+      return this.mensajesError(
+        "Se encontraron informes con idOperacion duplicado:",
+        "error",
+      );
+    }
+    this.compInformeLiquidacion = accion === 'factura' ? 'resumenLiq' : 'proforma'
+    let parametros: CrearLiquidacionParams = {
+      tipo: this.llamadaOrigen,
+
+      informesOp: this.informesLiquidados,
+
+      entidad: this.entidadSeleccionada,
+
+      descuentos: descuentos,
+
+      columnas: columnas,
+
+      mes: this.mes,
+
+      periodo: periodo,
+
+      modo: accion,
+
+      obsInterna: obsInterna,
+    };
+
+    //console.log("parametros: ", parametros);
+    //console.log("this.componente: ", this.componente);
+    //console.log("this.componenteAlta: ", this.componenteAlta);
+    //console.log("this.compInformeLiquidacion: ", this.compInformeLiquidacion);
+    //console.log("this.usuario.emial: ", this.usuario.email);
+
+    const operatoria = await this.liquidacionService.crearLiquidacion(
+      parametros,      
+      this.usuario.email,
+    );
+    //console.log("operatoria: ", operatoria);
+    
+    if(operatoria.informe) this.informeDeLiquidacion = operatoria.informe
+    if (operatoria.exito) {
+      this.isLoading = false;
+      this.storageService.logMultiplesOp(
+        this.informeDeLiquidacion.operaciones,
+        "LIQUIDAR",
+        "operaciones",
+        `Operación del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial} Liquidada`,
+        operatoria.exito,
+      );
+      this.storageService.logSimple(
+        this.informeDeLiquidacion.idInfLiq,
+        "ALTA",
+        this.compInformeLiquidacion,
+        `Alta de Factura del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`,
+        operatoria.exito,
+      );
+      Swal.fire({
+        icon: "success",
+        //title: "Oops...",
+        text: "La liquidación se procesó con éxito.",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Confirmar",
+        //footer: `${msj}`
+      }).then(() => {
+        this.preguntarDescarga(accion);
+      });
+      this.mostrarMasDatos(this.indiceSeleccionado);
+      this.procesarDatosParaTabla();
+    } else {
+      this.isLoading = false;
+      this.storageService.logMultiplesOp(
+        ids,
+        "LIQUIDAR",
+        "operaciones",
+        `Error: Operación del ${this.llamadaOrigen} ${this.entidadSeleccionada.razonSocial} no liquidadas`,
+        operatoria.exito,
+      );
+      this.storageService.logSimple(
+        0,
+        "ALTA",
+        this.compInformeLiquidacion,
+        `Error: Alta de Factura del ${this.llamadaOrigen} ${this.entidadSeleccionada.razonSocial} fallada`,
+        operatoria.exito,
+      );
+      this.mensajesError(
+        `Ocurrió un error al procesar la facturación: ${operatoria.mensaje}`,
+        "error",
+      );
+    }
+  }
+
+  async preguntarDescarga(accion: string) {
+    const result = await Swal.fire({
+      title: "¿Desea descargar el informe?",
+      text: "Seleccione el formato",
+      icon: "question",
+
+      showCancelButton: true,
+      showDenyButton: true,
+
+      confirmButtonText: "Excel",
+      denyButtonText: "PDF",
+      cancelButtonText: "No descargar",
+    });
+
+    if (result.isConfirmed) {
+      //console.log("Descargar Excel");
+      this.descargarInforme(accion, "excel");
+    }
+
+    if (result.isDenied) {
+      //console.log("Descargar PDF");
+      this.descargarInforme(accion, "pdf");
+    }
+
+    if (result.isDismissed) {
+      //console.log("No descargar");
+    }
+  }
+
+  descargarInforme(accion: string, formato: string) {
+    if (formato === "excel") {
+      this.excelServ.exportToExcelInforme(
+        this.informeDeLiquidacion,
+        this.informesLiquidados,
+        this.clientes,
+        this.choferes,
+        accion,
+      );
+    } else if (formato === "pdf") {
+      this.pdfServ.exportToPdfInforme(
+        this.informeDeLiquidacion,
+        this.informesLiquidados,
+        this.clientes,
+        this.choferes,
+        accion,
+      );
+    }
+  }
+
+  procesarFacturacion(accion: string) {
     this.isLoading = true;
     // Validar que todos los idOperacion sean únicos
     const ids = this.informesLiquidados.map((infOp) => infOp.idOperacion);
@@ -580,14 +770,14 @@ export class LiquidacionesOpComponent implements OnInit {
       .procesarLiquidacion(
         this.informesLiquidados,
         this.llamadaOrigen,
-        this.componenteBaja,
+        this.componenteAlta,
         this.componente,
         this.informeDeLiquidacion,
         this.compInformeLiquidacion,
       )
       .then((result) => {
         this.isLoading = false;
-        //////console.log("resultado: ", result);
+        ////////console.log("resultado: ", result);
         if (result.exito) {
           this.storageService.logMultiplesOp(
             this.informeDeLiquidacion.operaciones,
@@ -611,36 +801,7 @@ export class LiquidacionesOpComponent implements OnInit {
             confirmButtonText: "Confirmar",
             //footer: `${msj}`
           }).then(() => {
-            Swal.fire({
-              title: `¿Desea imprimir el detalle de la liquidación?`,
-              //text: "You won't be able to revert this!",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonColor: "#3085d6",
-              cancelButtonColor: "#d33",
-              confirmButtonText: "Confirmar",
-              cancelButtonText: "Cancelar",
-            }).then((result) => {
-              if (result.isConfirmed) {
-                if (titulo === "excel") {
-                  this.excelServ.exportToExcelInforme(
-                    this.informeDeLiquidacion,
-                    this.informesLiquidados,
-                    this.clientes,
-                    this.choferes,
-                    accion,
-                  );
-                } else if (titulo === "pdf") {
-                  this.pdfServ.exportToPdfInforme(
-                    this.informeDeLiquidacion,
-                    this.informesLiquidados,
-                    this.clientes,
-                    this.choferes,
-                    accion,
-                  );
-                }
-              }
-            });
+            this.preguntarDescarga(accion);
           });
           this.mostrarMasDatos(this.indiceSeleccionado);
           this.procesarDatosParaTabla();
@@ -675,7 +836,7 @@ export class LiquidacionesOpComponent implements OnInit {
       });
   }
 
-  procesarProforma(titulo: string, accion: string) {
+  procesarProforma(accion: string) {
     this.isLoading = true;
 
     this.dbFirebase
@@ -688,7 +849,7 @@ export class LiquidacionesOpComponent implements OnInit {
       )
       .then((result) => {
         this.isLoading = false;
-        //////console.log("resultado: ", result);
+        ////////console.log("resultado: ", result);
         if (result.exito) {
           this.storageService.logMultiplesOp(
             this.informeDeLiquidacion.operaciones,
@@ -712,83 +873,8 @@ export class LiquidacionesOpComponent implements OnInit {
             confirmButtonText: "Confirmar",
             //footer: `${msj}`
           }).then(() => {
-            Swal.fire({
-              title: `¿Desea imprimir la proforma del ${this.llamadaOrigen}?`,
-              //text: "You won't be able to revert this!",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonColor: "#3085d6",
-              cancelButtonColor: "#d33",
-              confirmButtonText: "Confirmar",
-              cancelButtonText: "Cancelar",
-            }).then((result) => {
-              if (result.isConfirmed) {
-                switch (this.llamadaOrigen) {
-                  case "cliente":
-                    if (titulo === "excel") {
-                      this.excelServ.exportToExcelInforme(
-                        this.informeDeLiquidacion,
-                        this.informesLiquidados,
-                        this.clientes,
-                        this.choferes,
-                        accion,
-                      );
-                    } else if (titulo === "pdf") {
-                      this.pdfServ.exportToPdfInforme(
-                        this.informeDeLiquidacion,
-                        this.informesLiquidados,
-                        this.clientes,
-                        this.choferes,
-                        accion,
-                      );
-                    }
-                    break;
-                  case "chofer":
-                    if (titulo === "excel") {
-                      this.excelServ.exportToExcelInforme(
-                        this.informeDeLiquidacion,
-                        this.informesLiquidados,
-                        this.clientes,
-                        this.choferes,
-                        accion,
-                      );
-                    } else if (titulo === "pdf") {
-                      this.pdfServ.exportToPdfInforme(
-                        this.informeDeLiquidacion,
-                        this.informesLiquidados,
-                        this.clientes,
-                        this.choferes,
-                        accion,
-                      );
-                    }
-                    break;
-                  case "proveedor":
-                    if (titulo === "excel") {
-                      this.excelServ.exportToExcelInforme(
-                        this.informeDeLiquidacion,
-                        this.informesLiquidados,
-                        this.clientes,
-                        this.choferes,
-                        accion,
-                      );
-                    } else if (titulo === "pdf") {
-                      this.pdfServ.exportToPdfInforme(
-                        this.informeDeLiquidacion,
-                        this.informesLiquidados,
-                        this.clientes,
-                        this.choferes,
-                        accion,
-                      );
-                    }
-                    break;
-                  default:
-                    this.mensajesError(
-                      "Error en la impresion de la liquidación",
-                      "error",
-                    );
-                }
-              }
-            });
+            this.preguntarDescarga(accion);
+
           });
           //this.mostrarMasDatos(this.indiceSeleccionado);
           //this.procesarDatosParaTabla()
@@ -835,7 +921,7 @@ export class LiquidacionesOpComponent implements OnInit {
       this.informeDetallado,
       this.llamadaOrigen,
     );
-    //console.log("this.tarifaAplicada", this.tarifaAplicada);
+    ////console.log("this.tarifaAplicada", this.tarifaAplicada);
 
     this.buscarOperacion(i);
   }
@@ -850,7 +936,7 @@ export class LiquidacionesOpComponent implements OnInit {
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe((data) => {
         this.operacion = data;
-        //////console.log("2) OPERACION: ", this.operacion);
+        ////////console.log("2) OPERACION: ", this.operacion);
         this.openModalTarifa(i);
       });
   }
@@ -874,23 +960,23 @@ export class LiquidacionesOpComponent implements OnInit {
         origen: origen,
         componente: "liquidacion",
       };
-      //////////console.log(info);
+      ////////////console.log(info);
 
       modalRef.componentInstance.fromParent = info;
       const respuesta = await modalRef.result;
       if (respuesta) {
         this.isLoading = true;
-        console.log("respuesta:", respuesta);
+        //console.log("respuesta:", respuesta);
         this.informeDetallado = respuesta.infOp;
         this.operacion = respuesta.op;
 
-        //console.log("informeOp:", informeOp);
+        ////console.log("informeOp:", informeOp);
         //this.recalcularFactura(informeOp);
         //let coleccionInfOp = this.getColeccionInfOp();
         //let coleccionInfLiq = this.fromParent.modo === "facturacion" ? 'resumenLiq' : this.fromParent.modo === "proforma" ? 'proforma' : "";
         //if(coleccionInfOp === "") return this.mensajesError("error en la colección del informe de op", "error");
         //if(coleccionInfLiq === "") return this.mensajesError("error en la colección del informe de Liquidación", "error");
-        //console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
+        ////console.log("this.fromParent.modo: ", this.fromParent.modo, "\ninformeOp: ", informeOp , "\ncoleccionInfOp: ",coleccionInfOp, "\nthis.fromParent.modo: ",this.fromParent.modo, "\nthis.informeLiq: ",this.informeLiq, "\ncoleccionInfLiq: ",coleccionInfLiq);
 
         const resultado =
           await this.dbFirebase.actualizarOperacionInformeOpYFactura(
@@ -901,7 +987,7 @@ export class LiquidacionesOpComponent implements OnInit {
             respuesta.contraParte,
             respuesta.contraParteColeccion,
           );
-        console.log("resultado de la edicion de todo: ", resultado);
+        //console.log("resultado de la edicion de todo: ", resultado);
         if (resultado.exito) {
           await this.actualizarInfVenta("edicion");
           this.isLoading = false;
@@ -959,7 +1045,7 @@ export class LiquidacionesOpComponent implements OnInit {
           .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
           .subscribe((data) => {
             this.operacion = data;
-            ////////console.log("OPERACION: ", this.operacion);
+            //////////console.log("OPERACION: ", this.operacion);
             this.openModalBaja(informeOp, indice);
           });
       }
@@ -974,7 +1060,7 @@ export class LiquidacionesOpComponent implements OnInit {
         scrollable: true,
         size: "sm",
       });
-      //////console.log("factura",factura);
+      ////////console.log("factura",factura);
       let info = {
         modo: "liquidaciones",
         item: this.operacion,
@@ -1032,7 +1118,7 @@ export class LiquidacionesOpComponent implements OnInit {
   }
 
   removeItem(item: any) {
-    //////console.log("llamada al storage desde liq-cliente, deleteItem");
+    ////////console.log("llamada al storage desde liq-cliente, deleteItem");
     this.storageService.deleteItem(
       this.componente,
       item,
@@ -1083,7 +1169,7 @@ export class LiquidacionesOpComponent implements OnInit {
         let informeVenta = data;
 
         if (informeVenta) {
-          console.log("2000) informeVenta: ", informeVenta);
+          //console.log("2000) informeVenta: ", informeVenta);
           informeVenta.valoresOp = {
             totalCliente: this.operacion.valores.cliente.aCobrar,
             totalChofer: this.operacion.valores.chofer.aPagar,
@@ -1099,7 +1185,7 @@ export class LiquidacionesOpComponent implements OnInit {
               informeVenta.id,
             );
           } else if (modo === "baja") {
-            console.log("baja inf venta");
+            //console.log("baja inf venta");
             this.storageService.deleteItem(
               "informesVenta",
               informeVenta,
@@ -1110,6 +1196,19 @@ export class LiquidacionesOpComponent implements OnInit {
           }
         }
       });
+  }
+
+  private restaurarRangoPropio() {
+    const s = localStorage.getItem(this.STORAGE_RANGE_KEY);
+    if (!s) return;
+
+    const r = JSON.parse(s);
+
+    this.dateRangeService.setRange({
+      desde: new Date(r.desde),
+      hasta: new Date(r.hasta),
+      tipo: r.tipo,
+    });
   }
   ///////////////////////////////METODO POR ERROR DE DUPLICADAS//////////////////////////////////////////////////////////////////////////////////////
 
@@ -1125,8 +1224,8 @@ export class LiquidacionesOpComponent implements OnInit {
         return true; // Mantener en el array original
       }
     });
-    //////console.log("this.$facturasOpChofer", this.$facturasOpCliente);
-    //////console.log("duplicadas", this.$facturasOpDuplicadas);
+    ////////console.log("this.$facturasOpChofer", this.$facturasOpCliente);
+    ////////console.log("duplicadas", this.$facturasOpDuplicadas);
     //this.verificarDuplicadosFacturadas()
   }
 
@@ -1139,7 +1238,7 @@ export class LiquidacionesOpComponent implements OnInit {
           this.informesOp,
           this.compInformeLiquidacion,
         );
-      console.log("this.$facLiqOpDuplicadas: ", this.$facLiqOpDuplicadas);
+      //console.log("this.$facLiqOpDuplicadas: ", this.$facLiqOpDuplicadas);
     } catch (error) {
     } finally {
       this.isLoading = false;
@@ -1164,15 +1263,12 @@ export class LiquidacionesOpComponent implements OnInit {
   }
 
   mostrarDuplicadasEnLiquidacion() {
-    console.log(
-      "this.$facturasOpDuplicadas",
-      this.$facturasOpDuplicadas.length,
-    );
+    //console.log("this.$facturasOpDuplicadas",this.$facturasOpDuplicadas.length,);
   }
 
   borrarLiquidaciones() {
     this.isLoading = true;
-    //console.log("this.$facturasOpCliente", this.$facturasOpCliente);
+    ////console.log("this.$facturasOpCliente", this.$facturasOpCliente);
     this.dbFirebase
       .eliminarMultiple(this.informesOp, "facturaOpCliente")
       .then((result) => {
@@ -1189,7 +1285,7 @@ export class LiquidacionesOpComponent implements OnInit {
     this.facturaOpsNoAsignadas.map((fac: any) => {
       fac.contraParteProforma = false;
     });
-    //console.log("facturaOpsNoAsignadas", this.facturaOpsNoAsignadas);
+    ////console.log("facturaOpsNoAsignadas", this.facturaOpsNoAsignadas);
   }
 
   agregarCampo(facturaOp: any[]): ConId<InformeOp>[] {
@@ -1236,17 +1332,17 @@ export class LiquidacionesOpComponent implements OnInit {
 
   buscarObjetos() {
     this.objetoEditado = this.informesOp;
-    //console.log("objetoEditado",this.objetoEditado );
+    ////console.log("objetoEditado",this.objetoEditado );
   }
 
   filtrarObjeto() {
     this.objetoEditado = [];
-    //console.log("1)this.this.informesOp", this.informesOp);
+    ////console.log("1)this.this.informesOp", this.informesOp);
     //this.objetoEditado= this.agregarCampo(this.$facturasOpCliente)
     //this.objetoEditado= this.$facturasOpCliente.filter((fac:InformeOp)=> {return fac.contraParteProforma})
-    console.log("1)this.objetoEditado", this.objetoEditado);
+    //console.log("1)this.objetoEditado", this.objetoEditado);
     this.objetoEditado = this.informesOp;
-    console.log("2)this.objetoEditado", this.objetoEditado);
+    //console.log("2)this.objetoEditado", this.objetoEditado);
   }
 
   eliminarObjetos() {
@@ -1264,8 +1360,8 @@ export class LiquidacionesOpComponent implements OnInit {
   }
 
   getMesCapitalizado(fechaString: string): string {
-    console.log("fechaString: ", fechaString);
-    
+    //console.log("fechaString: ", fechaString);
+
     const mes = this.datePipe.transform(fechaString, "MMMM");
     return this.capitalizeFirst(mes);
   }
@@ -1281,5 +1377,32 @@ export class LiquidacionesOpComponent implements OnInit {
       contraparteInf,
       contraparteInf,
     );
+  }
+
+  getEntidad(objetoSeleccionado: any) {
+    let id: number = objetoSeleccionado.id;
+    let razonSocial: string = objetoSeleccionado.razonSocial;
+    let cuit: number = 0;
+    let objeto: any;
+    switch (this.llamadaOrigen) {
+      case "cliente":
+        objeto = this.clientes.find((c) => c.idCliente === id);
+        break;
+      case "chofer":
+        objeto = this.choferes.find((c) => c.idChofer === id);
+        break;
+      case "proveedor":
+        objeto = this.proveedores.find((c) => c.idProveedor === id);
+        break;
+      default:
+        this.mensajesError("Error al obtener la entidad", "error");
+        break;
+    }
+    if (objeto) cuit = objeto.cuit;
+    this.entidadSeleccionada = {
+      id: id,
+      razonSocial: razonSocial,
+      cuit: cuit,
+    };
   }
 }

@@ -120,7 +120,7 @@ export class FacturacionHistoricoComponent implements OnInit {
   
       // acciones ↓
       { key: 'detalle', label: 'Detalle', align: 'center', acciones: ['detalle'] },      
-      { key: 'reimprimir', label: 'Reimprimir', align: 'center', acciones: ['reimprimir'] },
+      { key: 'descargar', label: 'Decargar', align: 'center', acciones: ['reimprimir'] },
       { key: 'fElectrónica', label: 'F. Electrónica', align: 'center', acciones: ['factura'] },      
     ];
 
@@ -333,7 +333,7 @@ export class FacturacionHistoricoComponent implements OnInit {
 
   async reimprimirLiq(inf:ConId<InformeLiq>, tipo:string){
     const respuesta = await Swal.fire({
-      title: `¿Desea imprimir el detalle de la liquidación?`,
+      title: `¿Desea descargar el detalle de la liquidación?`,
       //text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,

@@ -211,9 +211,11 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
   }
   closeModal() {
     let respuesta = {
-      factura: "",
+      /* factura: "",
       titulo: "",
-      modo: this.modo,
+      modo: this.modo, */
+      columnas: "",
+      accion: "",
     };
     this.activeModal.close(respuesta);
   }
@@ -222,8 +224,8 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
     // Elimina el punto de miles y reemplaza la coma por punto para que sea un valor numérico válido
     return parseFloat(valorFormateado.replace(/\./g, "").replace(",", "."));
   }
-  
-  onSubmit(titulo: string, accion: string) {
+
+  onSubmit(accion: string) {
     ////console.log("columnas seleccionadas", this.columnasSeleccionadas);
     let colSel: string[] = [];
     this.columnasSeleccionadas.forEach((c) => colSel.push(c.nombre));
@@ -246,13 +248,13 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
       }).then((result) => {
         if (result.isConfirmed) {
           //////////console.log("op: ", this.op);
-          this.facLiquidadas.forEach((factura: InformeOp) => {
+          /*  this.facLiquidadas.forEach((factura: InformeOp) => {
             this.idOperaciones.push(factura.idOperacion);
-          });
+          }); */
 
           //////console.log()("ID OPERACIONES: ", this.idOperaciones);
           //this.facturaChofer.operaciones = idOperaciones;
-          let valores = {
+          /*           let valores = {
             totalTarifaBase: 0,
             totalAcompaniante: 0,
             totalkmMonto: 0,
@@ -269,10 +271,10 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
 
             //valores.total += f.valores.total
           });
-          valores.total += this.totalDescuento;
-          this.modo = accion === "factura" ? "cerrar" : "proforma";
+          valores.total += this.totalDescuento; */
+          //this.modo = accion === "factura" ? "cerrar" : "proforma";
 
-          this.generarInformeLiquidacion(valores, colSel, accion);
+          //this.generarInformeLiquidacion(valores, colSel, accion);
 
           Swal.fire({
             title: "Confirmado",
@@ -280,12 +282,18 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
             icon: "success",
           }).then((result) => {
             //console.log("FACTURA: ", this.factura);
+            this.periodo = this.periodoBoolean
+              ? "mes"
+              : this.getQuincenaLiq(this.facLiquidadas[0].fecha);
             let respuesta = {
-              factura: this.factura,
-              titulo: titulo,
-              modo: this.modo,
+              //factura: this.factura,
+              //titulo: titulo,
+              //modo: this.modo,
               columnas: colSel,
               accion: accion,
+              descuentos: this.descuentosAplicados,
+              periodo: this.periodo,
+              obsInterna: this.obsInterna,
             };
             console.log("respuesta", respuesta);
             this.activeModal.close(respuesta);

@@ -18,6 +18,13 @@ import { PdfService } from "src/app/servicios/informes/pdf/pdf.service";
 import { InformeOp } from "src/app/interfaces/informe-op";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import { NumeradorService } from "src/app/servicios/numerador/numerador.service";
+import { CrearLiquidacionParams } from "src/app/servicios/liquidaciones/liquidacion-builder.service";
+import {
+  AnularParams,
+  LiquidacionService,
+  ProcesarParams,
+} from "src/app/servicios/liquidaciones/liquidacion.service";
+import { toISODateString } from "src/app/servicios/fechas/date-range.service";
 
 @Component({
   selector: "app-proforma",
@@ -36,6 +43,14 @@ export class ProformaComponent implements OnInit {
   filtroProveedor: string = "";
   isLoading: boolean = false;
   informesOp: ConIdType<InformeOp>[] = [];
+  coleccionOrigen: string = "";
+  coleccionDestino: string = "";
+  coleccionInformeLiq: string = "";
+  usuario: any;
+  informeLiq!: InformeLiq;
+  choferes!: ConId<Chofer>[];
+  clientes!: ConId<Cliente>[];
+  proveedores!: ConId<Proveedor>[];
 
   constructor(
     private storageService: StorageService,
@@ -44,7 +59,8 @@ export class ProformaComponent implements OnInit {
     private excelServ: ExcelService,
     private logService: LogService,
     private pdfServ: PdfService,
-    private numeradorService: NumeradorService,
+
+    private liquidacionService: LiquidacionService,
   ) {}
 
   ngOnInit(): void {
@@ -55,11 +71,26 @@ export class ProformaComponent implements OnInit {
       .subscribe((data) => {
         if (data) {
           this.proformasTodas = data;
-          console.log("proformasTodas", this.proformasTodas);
+          //console.log("proformasTodas", this.proformasTodas);
 
           this.separarFacturas();
         }
       });
+    let usuario = this.storageService.loadInfo("usuario");
+    this.usuario = usuario[0];
+    /// CHOFERES/CLIENTES/PROVEEDORES
+    this.choferes = this.storageService.loadInfo("choferes");
+    this.choferes = this.choferes.sort((a, b) =>
+      a.apellido.localeCompare(b.apellido),
+    ); // Ordena por el nombre del chofer
+    this.clientes = this.storageService.loadInfo("clientes");
+    this.clientes = this.clientes.sort((a, b) =>
+      a.razonSocial.localeCompare(b.razonSocial),
+    ); // Ordena por el nombre del chofer
+    this.proveedores = this.storageService.loadInfo("proveedores");
+    this.proveedores = this.proveedores.sort((a, b) =>
+      a.razonSocial.localeCompare(b.razonSocial),
+    ); // Ordena por el nombre del chofer
   }
 
   ngOnDestroy(): void {
@@ -81,9 +112,9 @@ export class ProformaComponent implements OnInit {
         this.proformasProveedores.push(factura as ConIdType<InformeLiq>);
       }
     });
-    console.log("this.proformasClientes", this.proformasClientes);
-    console.log("this.proformasChoferes", this.proformasChoferes);
-    console.log("this.proformasProveedores", this.proformasProveedores);
+    //console.log("this.proformasClientes", this.proformasClientes);
+    //console.log("this.proformasChoferes", this.proformasChoferes);
+    //console.log("this.proformasProveedores", this.proformasProveedores);
 
     this.proformasClientes = this.proformasClientes.sort((a, b) =>
       a.entidad.razonSocial.localeCompare(b.entidad.razonSocial),
@@ -96,452 +127,25 @@ export class ProformaComponent implements OnInit {
     );
   }
 
-  detalleProforma(proforma: any, origen: string, accion: string) {
-    ////console.log("origen: ", origen);
-    ////console.log("proforma: ", proforma);
-
-    //let respuesta:any;
-    //respuesta = this.encontrarMaximoYMinimo(proforma.operaciones)
-    ////console.log("respuesta", respuesta);
-    this.obtenerFacturasOp(proforma, origen, accion, "");
-  }
-
-  /*   encontrarMaximoYMinimo(operaciones: number[]): { max: number, min: number } {
-    if (operaciones.length === 0) {
-      throw new Error("El array de operaciones está vacío.");
-    }
-  
-    let max = operaciones[0]; // Inicializamos con el primer valor del array
-    let min = operaciones[0]; // Inicializamos con el primer valor del array
-  
-    for (let i = 1; i < operaciones.length; i++) {
-      if (operaciones[i] > max) {
-        max = operaciones[i]; // Actualizamos el máximo si encontramos un valor mayor
-      }
-      if (operaciones[i] < min) {
-        min = operaciones[i]; // Actualizamos el mínimo si encontramos un valor menor
-      }
-    }
-  
-    return { max, min }; // Devolvemos un objeto con el máximo y el mínimo
-  } */
 
   async obtenerFacturasOp(
     proforma: ConIdType<InformeLiq>,
     origen: string,
     accion: string,
-    tipo: string,
+    
   ) {
-    let facturasOp: ConIdType<InformeOp>[];
-    let respuesta: any;
-    await this.consultarOperacionesSeleccionadas(proforma, origen);
-    console.log("this.informesOp", this.informesOp);
-    console.log("1)proforma", proforma);
+    this.isLoading = true;
+    await this.consultarOperacionesSeleccionadas(proforma, origen); //acá se obtienen los informesOp
 
-    //respuesta = this.encontrarMaximoYMinimo(proforma.operaciones)
-    //console.log("respuesta", respuesta);
-
-    let clientes = this.storageService.loadInfo("clientes");
-    let choferes = this.storageService.loadInfo("choferes");
-    switch (origen) {
-      //////////////CLIENTES///////////////////////
-      case "cliente":
-        if (accion === "vista") {
-          this.openModalDetalleFactura(proforma, this.informesOp, origen);
-        } else if (accion === "baja") {
-          this.isLoading = true;
-          this.dbFirebase
-            .anularProforma(
-              this.informesOp,
-              "cliente",
-              "informesOpClientes",
-              proforma,
-              "proforma",
-            )
-            .then((result) => {
-              this.isLoading = false;
-              //console.log("resultado: ", result);
-              if (result.exito) {
-                this.storageService.logSimple(
-                  proforma.idInfLiq,
-                  "BAJA",
-                  "proforma",
-                  `Baja de proforma N° ${proforma.idInfLiq} del Cliente ${this.getCliente(proforma.entidad.id)}`,
-                  result.exito,
-                );
-                Swal.fire({
-                  icon: "success",
-                  //title: "Oops...",
-                  text: "La proforma se anuló con éxito.",
-                  confirmButtonColor: "#3085d6",
-                  confirmButtonText: "Confirmar",
-                  //footer: `${msj}`
-                });
-              } else {
-                this.mensajesError(
-                  `error en anular proforma: ${result.mensaje}`,
-                  "error",
-                );
-              }
-            });
-        } else if (accion === "reimpresion") {
-          if (tipo === "excel") {
-            this.excelServ.exportToExcelInforme(
-              proforma,
-              this.informesOp,
-              clientes,
-              choferes,
-              "proforma",
-            );
-            this.logService.logEvent(
-              "REIMPRESION",
-              "proforma",
-              `Reimpresion de la proforma del Cliente ${proforma.entidad.razonSocial}`,
-              proforma.idInfLiq,
-              true,
-            );
-          } else if (tipo === "pdf") {
-            this.pdfServ.exportToPdfInforme(
-              proforma,
-              this.informesOp,
-              clientes,
-              choferes,
-              "proforma",
-            );
-            this.logService.logEvent(
-              "REIMPRESION",
-              "proforma",
-              `Reimpresion de la proforma del Cliente ${proforma.entidad.razonSocial}`,
-              proforma.idInfLiq,
-              true,
-            );
-          }
-        } else if (accion === "facturar") {
-          this.facturarProforma(
-            proforma,
-            this.informesOp,
-            clientes,
-            choferes,
-            origen,
-            tipo,
-          );
-        }
-
-        /*           this.dbFirebase.getAllByDateValueField<ConIdType<InformeOp>>("informesOpClientes", "idOperacion",respuesta.min, respuesta.max, "idCliente", proforma.entidad.id)
-          .pipe(take(1)) // Toma los valores hasta que destroy$ emita
-          .subscribe(data => {
-            if(data){
-              ////console.log("data facturaOpCliente", data);              
-              facturasOp = data.filter((fac) => {
-                return proforma.operaciones.includes(fac.idOperacion);
-              });
-              ////console.log("3) operacionFac!!!!: ", facturasOp);          
-              if(accion === "vista"){
-                  this.openModalDetalleFactura(proforma, facturasOp, origen);
-              } else if (accion === "baja"){
-                this.isLoading = true;
-                this.dbFirebase.anularProforma(facturasOp, "cliente", "informesOpClientes", proforma, "proforma").then((result)=>{
-                  this.isLoading = false;
-                    //console.log("resultado: ", result);
-                    if(result.exito){
-                      this.storageService.logSimple(proforma.idInfLiq,"BAJA", "proforma", `Baja de proforma N° ${proforma.idInfLiq} del Cliente ${this.getCliente(proforma.entidad.id)}`, result.exito )
-                      Swal.fire({
-                        icon: "success",
-                        //title: "Oops...",
-                        text: 'La proforma se anuló con éxito.',
-                        confirmButtonColor: "#3085d6",
-                        confirmButtonText: "Confirmar",
-                        //footer: `${msj}`
-                      })
-                    } else {
-                      this.mensajesError(`error en anular proforma: ${result.mensaje}`, "error")
-                    }
-                });
-              } else if (accion === "reimpresion"){
-                if(tipo === 'excel'){
-                    this.excelServ.exportToExcelInforme(proforma, facturasOp, clientes, choferes, 'proforma');
-                    this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Cliente ${proforma.entidad.razonSocial}`, proforma.idInfLiq, true);
-                }else if (tipo === 'pdf'){
-                    this.pdfServ.exportToPdfInforme(proforma, facturasOp, clientes, choferes, 'proforma');
-                    this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Cliente ${proforma.entidad.razonSocial}`, proforma.idInfLiq, true);
-                }
-                
-                
-
-              } else if( accion === 'facturar'){
-                this.facturarProforma(proforma, facturasOp, clientes, choferes, origen, tipo)                
-              }
-            }
-          })  */
-        //////console.log("3) operacionFac: ", this.operacionFac);
-        break;
-      //////////////CHOFERES///////////////////////
-      case "chofer":
-        if (accion === "vista") {
-          this.openModalDetalleFactura(proforma, this.informesOp, origen);
-        } else if (accion === "baja") {
-          this.isLoading = true;
-          this.dbFirebase
-            .anularProforma(
-              this.informesOp,
-              "chofer",
-              "informesOpChoferes",
-              proforma,
-              "proforma",
-            )
-            .then((result) => {
-              this.isLoading = false;
-              //console.log("resultado: ", result);
-              if (result.exito) {
-                this.storageService.logSimple(
-                  proforma.idInfLiq,
-                  "BAJA",
-                  "proforma",
-                  `Baja de proforma N° ${proforma.idInfLiq} del Chofer ${this.getChofer(proforma.entidad.id)}`,
-                  result.exito,
-                );
-                Swal.fire({
-                  icon: "success",
-                  //title: "Oops...",
-                  text: "La proforma se anuló con éxito.",
-                  confirmButtonColor: "#3085d6",
-                  confirmButtonText: "Confirmar",
-                  //footer: `${msj}`
-                });
-              }
-            });
-        } else if (accion === "reimpresion") {
-          if (tipo === "excel") {
-            this.excelServ.exportToExcelInforme(
-              proforma,
-              this.informesOp,
-              clientes,
-              choferes,
-              "proforma",
-            );
-            this.logService.logEvent(
-              "REIMPRESION",
-              "proforma",
-              `Reimpresion de la proforma del Chofer ${proforma.entidad.razonSocial}`,
-              proforma.idInfLiq,
-              true,
-            );
-          } else if (tipo === "pdf") {
-            this.pdfServ.exportToPdfInforme(
-              proforma,
-              this.informesOp,
-              clientes,
-              choferes,
-              "proforma",
-            );
-            this.logService.logEvent(
-              "REIMPRESION",
-              "proforma",
-              `Reimpresion de la proforma del Chofer ${proforma.entidad.razonSocial}`,
-              proforma.idInfLiq,
-              true,
-            );
-          }
-        } else if (accion === "facturar") {
-          this.facturarProforma(
-            proforma,
-            this.informesOp,
-            clientes,
-            choferes,
-            origen,
-            tipo,
-          );
-          //this.storageService.addItem("facturaCliente", prof, prof.idFacturaCliente, "ALTA", `Alta de Factura de Cliente ${prof.razonSocial}`);
-
-          //this.storageService.deleteItem("proforma", proforma, proforma.idFacturaCliente, "BAJA", `Baja de proforma N° ${proforma.idFacturaCliente} del Cliente ${this.getCliente(proforma.idCliente)}`)
-        }
-
-        /* this.dbFirebase.getAllByDateValueField<ConIdType<InformeOp>>("informesOpChoferes", "idOperacion",respuesta.min, respuesta.max, "idChofer", proforma.entidad.id)
-          .pipe(take(1)) // Toma los valores hasta que destroy$ emita
-          .subscribe(data => {
-            if(data){
-              ////console.log("data facturaOpChofer", data);              
-              facturasOp = data.filter((fac) => {
-                return proforma.operaciones.includes(fac.idOperacion);
-              });
-              ////console.log("3) operacionFac!!!!: ", facturasOp);          
-              if(accion === "vista"){
-                  this.openModalDetalleFactura(proforma, facturasOp, origen);
-              } else if (accion === "baja"){
-                this.isLoading = true;   
-                this.dbFirebase.anularProforma(facturasOp, "chofer", "informesOpChoferes", proforma, "proforma").then((result)=>{
-                  this.isLoading = false;
-                    //console.log("resultado: ", result);
-                    if(result.exito){
-                      this.storageService.logSimple(proforma.idInfLiq,"BAJA", "proforma", `Baja de proforma N° ${proforma.idInfLiq} del Chofer ${this.getChofer(proforma.entidad.id)}`, result.exito )
-                      Swal.fire({
-                        icon: "success",
-                        //title: "Oops...",
-                        text: 'La proforma se anuló con éxito.',
-                        confirmButtonColor: "#3085d6",
-                        confirmButtonText: "Confirmar",
-                        //footer: `${msj}`
-                      })
-                    }
-                });                             
-              } else if (accion === "reimpresion"){
-                if(tipo === 'excel'){
-                  this.excelServ.exportToExcelInforme(proforma, facturasOp, clientes, choferes, 'proforma');
-                  this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Chofer ${proforma.entidad.razonSocial}`, proforma.idInfLiq, true);
-                }else if (tipo === 'pdf'){
-                  this.pdfServ.exportToPdfInforme(proforma, facturasOp, clientes, choferes, 'proforma');
-                  this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Chofer ${proforma.entidad.razonSocial}`, proforma.idInfLiq, true);                  
-                }
-                
-                
-              
-              } else if( accion === 'facturar'){
-                this.facturarProforma(proforma, facturasOp, clientes, choferes, origen, tipo)
-                //this.storageService.addItem("facturaCliente", prof, prof.idFacturaCliente, "ALTA", `Alta de Factura de Cliente ${prof.razonSocial}`);        
-                
-                //this.storageService.deleteItem("proforma", proforma, proforma.idFacturaCliente, "BAJA", `Baja de proforma N° ${proforma.idFacturaCliente} del Cliente ${this.getCliente(proforma.idCliente)}`)
-                
-                
-              }
-
-            }
-          }) */
-
-        break;
-      //////////////PROVEEDORES///////////////////////
-      case "proveedor":
-        if (accion === "vista") {
-          this.openModalDetalleFactura(proforma, this.informesOp, origen);
-        } else if (accion === "baja") {
-          this.isLoading = true;
-          this.dbFirebase
-            .anularProforma(
-              this.informesOp,
-              "proveedor",
-              "informesOpProveedores",
-              proforma,
-              "proforma",
-            )
-            .then((result) => {
-              this.isLoading = false;
-              //console.log("resultado: ", result);
-              if (result.exito) {
-                this.storageService.logSimple(
-                  proforma.idInfLiq,
-                  "BAJA",
-                  "proforma",
-                  `Baja de proforma N° ${proforma.idInfLiq} del Proveedor ${this.getProveedor(proforma.entidad.id)}`,
-                  result.exito,
-                );
-                Swal.fire({
-                  icon: "success",
-                  //title: "Oops...",
-                  text: "La proforma se anuló con éxito.",
-                  confirmButtonColor: "#3085d6",
-                  confirmButtonText: "Confirmar",
-                  //footer: `${msj}`
-                });
-              }
-            });
-        } else if (accion === "reimpresion") {
-          if (tipo === "excel") {
-            this.excelServ.exportToExcelInforme(
-              proforma,
-              this.informesOp,
-              clientes,
-              choferes,
-              "proforma",
-            );
-            this.logService.logEvent(
-              "REIMPRESION",
-              "proforma",
-              `Reimpresion de la proforma del Proveedor ${proforma.entidad.razonSocial}`,
-              proforma.idInfLiq,
-              true,
-            );
-          } else if (tipo === "pdf") {
-            this.pdfServ.exportToPdfInforme(
-              proforma,
-              this.informesOp,
-              clientes,
-              choferes,
-              "proforma",
-            );
-            this.logService.logEvent(
-              "REIMPRESION",
-              "proforma",
-              `Reimpresion de la proforma del Proveedor ${proforma.entidad.razonSocial}`,
-              proforma.idInfLiq,
-              true,
-            );
-          }
-        } else if (accion === "facturar") {
-          this.facturarProforma(
-            proforma,
-            this.informesOp,
-            clientes,
-            choferes,
-            origen,
-            tipo,
-          );
-          //this.storageService.addItem("facturaCliente", prof, prof.idFacturaCliente, "ALTA", `Alta de Factura de Cliente ${prof.razonSocial}`);
-
-          //this.storageService.deleteItem("proforma", proforma, proforma.idFacturaCliente, "BAJA", `Baja de proforma N° ${proforma.idFacturaCliente} del Cliente ${this.getCliente(proforma.idCliente)}`)
-        }
-
-        /*  this.dbFirebase.getAllByDateValueField<ConIdType<InformeOp>>("informesOpProveedores", "idOperacion",respuesta.min, respuesta.max, "idProveedor", proforma.entidad.id)
-        .pipe(take(1)) // Toma los valores hasta que destroy$ emita
-        .subscribe(data => {
-          if(data){
-            ////console.log("data facturaOpProveedor", data);              
-            facturasOp = data.filter((fac) => {
-              return proforma.operaciones.includes(fac.idOperacion);
-            });
-            ////console.log("3) operacionFac!!!!: ", facturasOp);          
-            if(accion === "vista"){
-                this.openModalDetalleFactura(proforma, facturasOp, origen);
-            } else if (accion === "baja"){  
-              this.isLoading = true;   
-                this.dbFirebase.anularProforma(facturasOp, "proveedor", "informesOpProveedores", proforma, "proforma").then((result)=>{
-                  this.isLoading = false;
-                    //console.log("resultado: ", result);
-                    if(result.exito){
-                      this.storageService.logSimple(proforma.idInfLiq,"BAJA", "proforma", `Baja de proforma N° ${proforma.idInfLiq} del Proveedor ${this.getProveedor(proforma.entidad.id)}`, result.exito )
-                      Swal.fire({
-                        icon: "success",
-                        //title: "Oops...",
-                        text: 'La proforma se anuló con éxito.',
-                        confirmButtonColor: "#3085d6",
-                        confirmButtonText: "Confirmar",
-                        //footer: `${msj}`
-                      })
-                    }
-                });      
-            } else if (accion === "reimpresion"){
-              if(tipo === 'excel'){
-                this.excelServ.exportToExcelInforme(proforma, facturasOp, clientes, choferes, 'proforma');              
-                this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Proveedor ${proforma.entidad.razonSocial}`, proforma.idInfLiq, true);
-              }else if (tipo === 'pdf'){
-                this.pdfServ.exportToPdfInforme(proforma, facturasOp, clientes, choferes, 'proforma');
-                this.logService.logEvent("REIMPRESION", "proforma", `Reimpresion de la proforma del Proveedor ${proforma.entidad.razonSocial}`, proforma.idInfLiq, true);
-              }
-            
-            } else if( accion === 'facturar'){
-              this.facturarProforma(proforma, facturasOp, clientes, choferes, origen, tipo)
-              //this.storageService.addItem("facturaCliente", prof, prof.idFacturaCliente, "ALTA", `Alta de Factura de Cliente ${prof.razonSocial}`);        
-              
-              //this.storageService.deleteItem("proforma", proforma, proforma.idFacturaCliente, "BAJA", `Baja de proforma N° ${proforma.idFacturaCliente} del Cliente ${this.getCliente(proforma.idCliente)}`)
-              
-              
-            }
-          }
-        })         */
-
-        break;
-      default:
-        alert("error de reimpresion");
-        break;
+    if (accion === "reimpresion") {      
+      this.preguntarDescarga(proforma, accion);
+    } else if (accion === "vista") {
+      this.openModalDetalleFactura(proforma, this.informesOp, origen);
+    } else {
+      this.procesarProforma(proforma, origen, accion);
     }
+
+    
   }
 
   async consultarOperacionesSeleccionadas(
@@ -552,7 +156,7 @@ export class ProformaComponent implements OnInit {
       Swal.fire('Error', 'No hay operaciones seleccionadas.', 'error');
       return;
     } */
-    console.log("origen", origen);
+    //console.log("origen", origen);
 
     this.isLoading = true;
     let componente: string =
@@ -566,7 +170,7 @@ export class ProformaComponent implements OnInit {
         componente, // nombre de la colección
         proforma.operaciones, // array de idsOperacion
       );
-      console.log("consulta", consulta);
+      //console.log("consulta", consulta);
 
       this.informesOp = consulta.encontrados;
 
@@ -593,7 +197,7 @@ export class ProformaComponent implements OnInit {
     facturasOp: InformeOp[],
     origen: string,
   ) {
-    //console.log("lega??");
+    ////console.log("lega??");
 
     {
       const modalRef = this.modalService.open(InformeLiqDetalleComponent, {
@@ -602,7 +206,7 @@ export class ProformaComponent implements OnInit {
         scrollable: true,
         size: "lg",
       });
-      ////console.log("factura",factura);
+      //////console.log("factura",factura);
       let info = {
         modo: "proforma",
         item: factura,
@@ -619,66 +223,42 @@ export class ProformaComponent implements OnInit {
     }
   }
 
-  procesarProforma(
+  async procesarProforma(
     proforma: ConIdType<InformeLiq>,
     origen: string,
     accion: string,
-    tipo: string,
   ) {
     let titulo: string =
-      origen === "cliente"
-        ? "Cliente"
-        : origen === "chofer"
-          ? "Chofer"
-          : "Proveedor";
-    let objeto: string =
-      origen === "cliente"
-        ? this.getCliente(proforma.entidad.id)
-        : origen === "chofer"
-          ? this.getChofer(proforma.entidad.id)
-          : this.getProveedor(proforma.entidad.id);
+      proforma.tipo.charAt(0).toUpperCase() + proforma.tipo.slice(1);
 
     let proceso: string =
       accion === "baja" ? "anular" : "generar la liquidación de";
-    ////console.log("proceso", proceso);
+    //////console.log("proceso", proceso);
 
-    Swal.fire({
-      title: `¿Desea ${proceso} la proforma N° ${proforma.idInfLiq} del ${titulo} ${objeto}?`,
-      text: `${accion === "baja" ? "Esta acción revertirá las operaciones al modulo Liquidación" : ""}`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        if (accion === "facturar") {
-          this.generarNumLiquidacion(proforma, origen, accion, tipo);
-        } else {
-          this.obtenerFacturasOp(proforma, origen, accion, tipo);
+
+      Swal.fire({
+        title: `¿Desea ${proceso} la proforma N° ${proforma.idInfLiq} del ${titulo} ${proforma.entidad.razonSocial}?`,
+        text: `${accion === "baja" ? "Esta acción revertirá las operaciones al modulo Liquidación" : ""}`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          if  (accion === "baja") {
+            this.isLoading = true;
+            this.anularProforma(proforma);
+          } else if (accion === "factura") {
+            this.isLoading = true;
+            this.liquidarProforma(proforma);
+          }
         }
-      }
-    });
-  }
+      });
 
-  async generarNumLiquidacion(
-    proforma: ConIdType<InformeLiq>,
-    origen: any,
-    accion: string,
-    tipo: string,
-  ) {
-    const numInterno = await this.numeradorService.generarNumeroInterno(origen);
-    if (numInterno) {
-      proforma.numeroInterno = numInterno;
-      console.log("0) numero interno: ", proforma.numeroInterno);
-      this.obtenerFacturasOp(proforma, origen, accion, tipo);
-    } else {
-      return this.mensajesError(
-        "Error al obtener el número interno del informe",
-        "error",
-      );
-    }
+
+    
   }
 
   getCliente(idCliente: number) {
@@ -724,15 +304,14 @@ export class ProformaComponent implements OnInit {
   }
 
   editarOperacionesFac(factura: InformeOp, componente: string) {
-    ////console.log("editarOperacionesFac",factura);
-    //factura.idOperacion
+    
     let op: ConId<Operacion>;
     this.dbFirebase
       .obtenerTarifaIdTarifa("operaciones", factura.idOperacion, "idOperacion")
       .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
       .subscribe((data) => {
         op = data;
-        ////console.log("OP LIQUIDADA: ", op);
+        //////console.log("OP LIQUIDADA: ", op);
         op.estado = {
           abierta: false,
           cerrada: false,
@@ -768,7 +347,7 @@ export class ProformaComponent implements OnInit {
   }
 
   removeItem(item: any, componente: string) {
-    ////console.log("llamada al storage desde liq-cliente, deleteItem", item);
+    //////console.log("llamada al storage desde liq-cliente, deleteItem", item);
     this.storageService.deleteItem(
       componente,
       item,
@@ -778,214 +357,126 @@ export class ProformaComponent implements OnInit {
     );
   }
 
-  facturarProforma(
-    proforma: ConIdType<InformeLiq>,
-    facturasOp: ConIdType<InformeOp>[],
-    clientes: any,
-    choferes: any,
-    origen: string,
-    tipo: string,
-  ) {
-    let facOpColeccion: string =
-      origen === "cliente"
-        ? "informesOpClientes"
-        : origen === "chofer"
-          ? "informesOpChoferes"
-          : origen === "proveedor"
-            ? "informesOpProveedores"
-            : "";
-    let facOpLiqColeccion: string =
-      origen === "cliente"
-        ? "infOpLiqClientes"
-        : origen === "chofer"
-          ? "infOpLiqChoferes"
-          : origen === "proveedor"
-            ? "infOpLiqProveedores"
-            : "";
+  async liquidarProforma(proforma: ConId<InformeLiq>) {
+    await this.consultarOperacionesSeleccionadas(proforma, proforma.tipo);
 
-    this.procesarFacturacion(
-      facturasOp,
-      origen,
-      facOpLiqColeccion,
-      facOpColeccion,
+    let parametros: CrearLiquidacionParams = {
+      tipo: proforma.tipo,
+      informesOp: this.informesOp,
+      entidad: proforma.entidad,
+      descuentos: proforma.descuentos,
+      columnas: proforma.columnas,
+      mes: proforma.mes,
+      periodo: proforma.periodo,
+      modo: "factura",
+      obsInterna: proforma.observaciones ?? "",
+    };
+
+    console.log("parametros: ", parametros);
+    console.log("this.usuario.emial: ", this.usuario.email);
+
+    const operatoria = await this.liquidacionService.crearLiquidacion(
+      parametros,
+      this.usuario.email,
       proforma,
-      "resumenLiq",
-      clientes,
-      choferes,
-      tipo,
+      true,
     );
-    
-  }
+    console.log("operatoria: ", operatoria);
 
-  descargarFactura(
-    proforma: any,
-    facturasOp: ConId<InformeOp>[],
-    origen: string,
-    clientes: any,
-    choferes: any,
-    tipo: string,
-  ) {
-    let titulo: string =
-      origen === "cliente"
-        ? "Cliente"
-        : origen === "chofer"
-          ? "Chofer"
-          : "Proveedor";
-    Swal.fire({
-      title: `¿Desea imprimir el detalle del ${titulo}?`,
-      //text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        if (tipo === "excel") {
-          this.excelServ.exportToExcelInforme(
-            proforma,
-            facturasOp,
-            clientes,
-            choferes,
-            "factura",
-          );
-        } else {
-          this.pdfServ.exportToPdfInforme(
-            proforma,
-            facturasOp,
-            clientes,
-            choferes,
-            "factura",
-          );
-        }
-        /* switch(origen){
-                case 'cliente':
-                  this.excelServ.exportToExcelInforme(proforma, facturasOp, clientes, choferes, 'factura');
-                  break;
-                case 'chofer':
-                  this.excelServ.exportToExcelInforme(proforma, facturasOp, clientes, choferes, 'factura');
-                  break;
-                case 'proveedor':
-                  this.excelServ.exportToExcelInforme(proforma, facturasOp, clientes, choferes, 'factura');
-                  break;
-                default:
-                  break;
-              }    */
-      }
-    });
-  }
+    if (operatoria.informe) this.informeLiq = operatoria.informe;
+    if (operatoria.exito) {
+      this.isLoading = false;
+      this.storageService.logMultiplesOp(
+        this.informeLiq.operaciones,
+        "LIQUIDAR",
+        "operaciones",
+        `Operación del ${this.informeLiq.tipo} ${this.informeLiq.entidad.razonSocial} Liquidada`,
+        operatoria.exito,
+      );
+      this.storageService.logSimple(
+        this.informeLiq.entidad.id,
+        "ALTA",
+        this.coleccionInformeLiq,
+        `Alta de Factura del ${this.informeLiq.tipo} ${this.informeLiq.entidad.razonSocial}`,
+        operatoria.exito,
+      );
 
-  procesarFacturacion(
-    facturasOp: ConId<InformeOp>[],
-    modo: string,
-    compAlta: string,
-    compBaja: string,
-    factura: ConIdType<InformeLiq>,
-    compFactura: string,
-    clientes: any,
-    choferes: any,
-    tipo: string,
-  ) {
-    this.isLoading = true;
-    let detalleNombre: string =
-      modo === "cliente"
-        ? "Cliente"
-        : modo === "chofer"
-          ? "Chofer"
-          : "Proveedor";
-    let { id, type, ...prof } = factura;
-    prof.numeroInterno = factura.numeroInterno;
-    console.log("2a)proforma sin id ni type: ", prof);
-    console.log("2b)factura : ", factura);
-        this.dbFirebase
-      .procesarLiquidacion(
-        facturasOp,
-        modo,
-        compAlta,
-        compBaja,
-        prof,
-        compFactura,
-      )
-      .then((result) => {
-        this.isLoading = false;
-        //console.log("resultado: ", result);
-        if (result.exito) {
-          this.storageService.logMultiplesOp(
-            factura.operaciones,
-            "LIQUIDAR",
-            "operaciones",
-            `Operación del ${detalleNombre} ${factura.entidad.razonSocial} Liquidada`,
-            result.exito,
-          );
-          this.storageService.logSimple(
-            factura.entidad.id,
-            "ALTA",
-            compFactura,
-            `Alta de Factura del ${detalleNombre} ${factura.entidad.razonSocial}`,
-            result.exito,
-          );
-          this.storageService.deleteItem(
-            "proforma",
-            factura,
-            factura.entidad.id,
-            "INTERNA",
-            ``,
-          );
-          Swal.fire({
-            icon: "success",
-            //title: "Oops...",
-            text: "La liquidación se procesó con éxito.",
-            confirmButtonColor: "#3085d6",
-            confirmButtonText: "Confirmar",
-            //footer: `${msj}`
-          }).then(() => {
-            this.descargarFactura(
-              factura,
-              facturasOp,
-              modo,
-              clientes,
-              choferes,
-              tipo,
-            );
-          });
-        } else {
-          this.storageService.logMultiplesOp(
-            factura.operaciones,
-            "LIQUIDAR",
-            "operaciones",
-            `Operación del ${detalleNombre} ${factura.entidad.razonSocial} Liquidada`,
-            result.exito,
-          );
-          this.storageService.logSimple(
-            factura.entidad.id,
-            "ALTA",
-            compFactura,
-            `Alta de Factura del ${detalleNombre} ${factura.entidad.razonSocial}`,
-            result.exito,
-          );
-          this.storageService.deleteItem(
-            "proforma",
-            factura,
-            factura.entidad.id,
-            "INTERNA",
-            ``,
-          );
-          this.mensajesError(
-            `Ocurrió un error al procesar la facturación: ${result.mensaje}`,
-            "error",
-          );
-        }
-      })
-      .catch((error) => {
-        this.isLoading = false;
-        console.error(error);
-        this.mensajesError(
-          "Ocurrió un error al procesar la facturación.",
-          "error",
-        );
+      Swal.fire({
+        icon: "success",
+        //title: "Oops...",
+        text: "La liquidación se procesó con éxito.",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Confirmar",
+        //footer: `${msj}`
+      }).then(() => {
+        this.preguntarDescarga(this.informeLiq, "factura");
       });
+    } else {
+      this.storageService.logMultiplesOp(
+        proforma.operaciones,
+        "LIQUIDAR",
+        "operaciones",
+        `Error al liquidar las operaciones del ${proforma.tipo} ${proforma.entidad.razonSocial}`,
+        operatoria.exito,
+      );
+      this.storageService.logSimple(
+        proforma.entidad.id,
+        "ALTA",
+        this.coleccionInformeLiq,
+        `Error en el alta del Informe de liquidación del ${proforma.tipo} ${proforma.entidad.razonSocial}`,
+        operatoria.exito,
+      );
+
+      this.mensajesError(
+        `Ocurrió un error al procesar la liquidación: ${operatoria.mensaje}`,
+        "error",
+      );
+    }
   }
+
+  async anularProforma(proforma: ConId<InformeLiq>) {
+    let fechaAnul = new Date();
+        let fechaStr = toISODateString(fechaAnul);
+
+    const parametros : AnularParams = {
+        informesOp: this.informesOp,
+        tipo: proforma.tipo,
+        informeLiq: proforma,
+        modo: "proforma",  
+        anuladoMotivo: "Anulación de proforma",
+        anuladoPor: this.usuario.email,
+        fechaAnulacion: fechaStr,
+    }
+
+
+    const operatoria = await this.liquidacionService.anularLiquidacion(parametros);
+
+    if (operatoria.exito) {
+      this.isLoading = false;
+      this.storageService.logSimple(
+        proforma.idInfLiq,
+        "BAJA",
+        "proforma",
+        `Baja de proforma N° ${proforma.idInfLiq} del Cliente ${this.getCliente(proforma.entidad.id)}`,
+        operatoria.exito,
+      );
+      Swal.fire({
+        icon: "success",
+        //title: "Oops...",
+        text: "La proforma se anuló con éxito.",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Confirmar",
+        //footer: `${msj}`
+      });
+    } else {
+      this.isLoading = false;
+      this.mensajesError(
+        `error en anular proforma: ${operatoria.mensaje}`,
+        "error",
+      );
+    }
+  }
+
 
   mensajesError(msj: string, resultado: string) {
     Swal.fire({
@@ -994,5 +485,57 @@ export class ProformaComponent implements OnInit {
       text: `${msj}`,
       //footer: `${msj}`
     });
+  }
+
+  async preguntarDescarga(informeLiq: InformeLiq, accion: string) {
+    const result = await Swal.fire({
+      title: "¿Desea descargar el informe?",
+      text: "Seleccione el formato",
+      icon: "question",
+
+      showCancelButton: true,
+      showDenyButton: true,
+
+      confirmButtonText: "Excel",
+      denyButtonText: "PDF",
+      cancelButtonText: "No descargar",
+    });
+
+    if (result.isConfirmed) {
+      //console.log("Descargar Excel");
+      this.descargarInforme(informeLiq, accion, "excel");
+    }
+
+    if (result.isDenied) {
+      //console.log("Descargar PDF");
+      this.descargarInforme(informeLiq, accion, "pdf");
+    }
+
+    if (result.isDismissed) {
+      //console.log("No descargar");
+    }
+  }
+
+  descargarInforme(informeLiq: InformeLiq, accion: string, formato: string) {
+    //console.log("accion: ", accion);
+    //console.log("factura: ", informeLiq);
+
+    if (formato === "excel") {
+      this.excelServ.exportToExcelInforme(
+        informeLiq,
+        this.informesOp,
+        this.clientes,
+        this.choferes,
+        accion,
+      );
+    } else if (formato === "pdf") {
+      this.pdfServ.exportToPdfInforme(
+        informeLiq,
+        this.informesOp,
+        this.clientes,
+        this.choferes,
+        accion,
+      );
+    }
   }
 }

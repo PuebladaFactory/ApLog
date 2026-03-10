@@ -156,8 +156,8 @@ export class EditarInfOpComponent implements OnInit {
       let contraparteInf: ConId<InformeOp> = contraparteRes.data;
       this.informeContraParte = structuredClone(contraparteInf);
       this.contraparteColeccion = contraparteRes.coleccion;
-      //console.log("0)this.informeContraParte: ", this.informeContraParte);
-      //console.log("0)this.contraparteColeccion: ", this.contraparteColeccion);
+      console.log("0)this.informeContraParte: ", this.informeContraParte);
+      console.log("0)this.contraparteColeccion: ", this.contraparteColeccion);
       if (this.informeContraParte.liquidacion || this.contraparteColeccion === 'infOpLiqClientes' || this.contraparteColeccion === 'infOpLiqChoferes' || this.contraparteColeccion === 'infOpLiqProveedores' ) {
         const liquidado = await Swal.fire({
           title:
@@ -197,7 +197,7 @@ export class EditarInfOpComponent implements OnInit {
         "Error al obtener la tarifa de la contraparte del informe",
       );
     }
-    //console.log("this.editarContraParte: ", this.editarContraParte);
+    console.log("this.tarifaContraParte: ", this.tarifaContraParte);
   }
 
   getDatos() {

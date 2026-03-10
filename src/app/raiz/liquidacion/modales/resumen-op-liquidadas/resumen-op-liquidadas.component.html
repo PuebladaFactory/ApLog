@@ -242,7 +242,7 @@
                 ></textarea>
             </div>
             <div class="d-flex align-self-end">
-                <div class="d-flex me-3">
+                <!-- <div class="d-flex me-3">
                     <h4 class="mb-0 me-2 align-self-center">Proforma</h4>
                     <app-btn-leer
                         name="excel"
@@ -269,6 +269,12 @@
                             (click)="onSubmit('pdf', 'factura')"
                         ></app-btn-leer>
                     </div>
+                </div> -->
+                <div class="d-flex me-3">                    
+                    <button class="btn btn-warning" (click)="onSubmit('proforma')">Proforma</button>
+                </div>
+                <div class="d-flex">
+                    <button class="btn btn-success" (click)="onSubmit('factura')">Informe de Liquidación</button>
                 </div>
             </div>
         </div>
