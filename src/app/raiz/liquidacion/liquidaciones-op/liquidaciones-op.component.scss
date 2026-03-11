@@ -47,6 +47,17 @@ thead {
     width: 100%;
 }
 
+.panel-box {  
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.panel-resultados {
+  margin-top: 10px;
+  background: white;
+}
+
 /* MODAL EDICION INF OP */
 ::ng-deep .modal-xxl .modal-dialog {
   max-width: 72vw;     // Casi ancho total del viewport

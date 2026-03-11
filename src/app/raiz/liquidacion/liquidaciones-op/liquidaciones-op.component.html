@@ -1,6 +1,7 @@
 <div [ngClass]="{'isDisabled': isLoading}">
   <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por cliente">
-  <table class="table table-striped table-bordered">
+  <div class="panel-box panel-resultados">
+    <table class="table table-striped table-bordered">
     <thead>
       <tr>
         <th scope="col" style="width:3%" class=""></th>
@@ -337,6 +338,8 @@
       </tbody>
     }
   </table>
+
+  </div>  
 </div>
 @if (isLoading) {
   <app-spinner></app-spinner>

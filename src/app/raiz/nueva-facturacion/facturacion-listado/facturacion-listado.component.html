@@ -1,75 +1,180 @@
 <h2 class="mt-2">Listado de Informes Emitidos para Facturación</h2>
 
-<div class="row mb-3 column-gap-3">
-    <div class="col">
-        <label><span class="fs-5">Filtros</span></label>
-        <div class="row bg-light border rounded border-1 rounded-2 pb-2">            
-            <div class="col">
-                <label>Tipo</label>
-                <select class="form-select" [(ngModel)]="filtroTipo" (change)="aplicarFiltros()">
-                    <option value="todos">Todos</option>
-                    <option value="cliente">Clientes</option>
-                    <option value="chofer">Choferes</option>
-                    <option value="proveedor">Proveedores</option>
-                </select>
-            </div>
-            <div class="col">
-                <label>Razón Social / N° de informe / Fecha</label>
-                <input type="text" class="form-control" [(ngModel)]="filtroRazonSocial" (input)="aplicarFiltros()" placeholder="Buscar...">
-            </div>
-      </div>
-     
-    </div>
+<div class="row g-3 mb-3 justify-content-between">
+    <!-- FILTROS -->
+    <div class="col-4">
+        <div class="panel-box panel-superior">
+            <div class="panel-header mt-2"><div class="pb-2">Filtros</div></div>
 
-    <div class="col ">
-        <label><span class="fs-5">Consulta</span></label>
-        <div class="row bg-light border rounded border-1 rounded-2 pb-2">
-            <div class="col">
-                <label>Desde</label>
-                <input type="date" class="form-control" [(ngModel)]="fechaDesde">
-            </div>
-
-            <div class="col">
-                <label>Hasta</label>
-                <input type="date" class="form-control" [(ngModel)]="fechaHasta">
-            </div>
-            <div class="col align-self-end mb-1">
-                <button class="btn btn-outline-primary" (click)="cargarInformes(fechaDesde,fechaHasta )">Consultar</button>
+            <div class="row g-2">
+                <!-- tus filtros -->
+                <div class="col">
+                    <label>Tipo</label>
+                    <select
+                        class="form-select"
+                        [(ngModel)]="filtroTipo"
+                        (change)="aplicarFiltros()"
+                    >
+                        <option value="todos">Todos</option>
+                        <option value="cliente">Clientes</option>
+                        <option value="chofer">Choferes</option>
+                        <option value="proveedor">Proveedores</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Campo</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        [(ngModel)]="filtroRazonSocial"
+                        (input)="aplicarFiltros()"
+                        placeholder="Buscar..."
+                    />
+                </div>
             </div>
         </div>
-    </div>    
+    </div>
+
+    <!-- CONSULTA -->
+    <div class="col-4">
+        <div class="panel-box panel-superior">
+            <!-- TIPO DE CONSULTA -->
+            <div
+                class="panel-header align-self-center d-flex justify-content-between"
+            >
+                <span class="mt-2">Consultar por: </span>
+                <!-- radio selector -->
+                <!-- periodo / fechas -->
+                <!-- Selector de modo -->
+                <div class="btn-group" role="group">
+                    <input
+                        type="radio"
+                        class="btn-check"
+                        name="tipoConsulta"
+                        id="consultaPeriodo"
+                        [(ngModel)]="tipoConsulta"
+                        value="periodo"
+                    />
+
+                    <label
+                        class="btn btn-outline-primary"
+                        for="consultaPeriodo"
+                    >
+                        Periodo de Facturación
+                    </label>
+
+                    <input
+                        type="radio"
+                        class="btn-check"
+                        name="tipoConsulta"
+                        id="consultaFechas"
+                        [(ngModel)]="tipoConsulta"
+                        value="fechas"
+                    />
+
+                    <label class="btn btn-outline-primary" for="consultaFechas">
+                        Fechas de Informes
+                    </label>
+                </div>
+            </div>
+
+            <!-- inputs dinámicos -->
+            <!-- Contenido dinámico -->
+            <div class="row g-2 panel-resultados">
+                @if (tipoConsulta === "periodo") {                    
+                    <div class="col">
+                        <label>Periodo</label>
+
+                        <select
+                            class="form-select"
+                            [(ngModel)]="periodoSeleccionado"
+                        >
+                            <option [ngValue]="null" hidden>Seleccione</option>
+
+                            @for (p of periodos; track p.valor) {
+                                <option [value]="p.valor">
+                                    {{ p.label }}
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col align-self-end">
+                        <button
+                            class="btn btn-outline-primary mb-1"
+                            [disabled]="!periodoSeleccionado"
+                            (click)="cargarInformesPorPeriodo()"
+                        >
+                            Consultar
+                        </button>
+                    </div>
+                }
+
+                @if (tipoConsulta === "fechas") {                    
+                    <div class="col">
+                        <label>Desde</label>
+
+                        <input
+                            type="date"
+                            class="form-control"
+                            [(ngModel)]="fechaDesde"
+                        />
+                    </div>
+
+                    <div class="col">
+                        <label>Hasta</label>
+
+                        <input
+                            type="date"
+                            class="form-control"
+                            [(ngModel)]="fechaHasta"
+                        />
+                    </div>
+
+                    <div class="col align-self-end">
+                        <button
+                            class="btn btn-outline-primary mb-1"
+                            [disabled]="!fechaDesde || !fechaHasta"
+                            (click)="cargarInformes(fechaDesde, fechaHasta)"
+                        >
+                            Consultar
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
 
-@if(cargando){
-    <div class="text-center my-4">
-      <app-spinner></app-spinner>
-    </div>
-}  
-@if(!cargando && informesFiltrados.length === 0){
-    <div class="alert alert-warning">
-      No se encontraron informes con los filtros aplicados.
-    </div>
-}
 
-@if(!cargando && informesFiltrados.length > 0){
-    <div>
-        <p><strong>Total: {{ informesFiltrados.length }}</strong> informes listados</p>
+<div class="panel-box panel-resultados">
+    @if (cargando) {
+        <div class="text-center my-4">
+            <app-spinner></app-spinner>
+        </div>
+    }
+    @if (!cargando && informesFiltrados.length === 0) {
+        <div class="alert alert-warning">
+            No se encontraron informes con los filtros aplicados.
+        </div>
+    }
 
-        <app-informes-tabla
-          [items]="informesFiltrados"
-          [columnas]="columnas"
-          
-          [loading]="cargando"
-          (accionClick)="onAccion($event)"
-          (ordenar)="onOrdenar($event)">
-        </app-informes-tabla>
-    </div>
-}
- 
-  <!-- <div>
-    <button class="btn btn-outline-primary me-5" (click)="verificarFacturasDuplicados()">Duplicados</button>
-    <button class="btn btn-outline-danger me-" (click)="eliminarObjeto()">Duplicados</button>
-    <button class="btn btn-outline-warning me-5" (click)="editarObjetos()">Editar Objetos</button>
-    <button class="btn btn-outline-success me-5" (click)="actualizarObjetos()">ACtualizar Objetos</button>    
-    <button class="btn btn-info me-5" (click)="asignarNumerosInternosFaltantes()">Asignar Numeros Internos Faltantes</button>
-  </div> -->
+    @if (!cargando && informesFiltrados.length > 0) {
+        <div>
+            <p>
+                <strong>Total: {{ informesFiltrados.length }}</strong> informes
+                listados
+            </p>
+
+            <app-informes-tabla
+                [items]="informesFiltrados"
+                [columnas]="columnas"
+                [loading]="cargando"
+                (accionClick)="onAccion($event)"
+                (ordenar)="onOrdenar($event)"
+            >
+            </app-informes-tabla>
+        </div>
+    }
+</div>
+

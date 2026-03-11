@@ -7,3 +7,14 @@ th, td, input {
     cursor: not-allowed;
     opacity: 0.5; /* o cualquier otro estilo para indicar que está deshabilitado */
 }
+
+.panel-box {  
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.panel-resultados {
+  margin-top: 10px;
+  background: white;
+}

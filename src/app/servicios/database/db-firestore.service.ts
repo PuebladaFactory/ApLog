@@ -1200,9 +1200,10 @@ async actualizarMultiple(
     
       // Si existe, la agregamos al batch para actualizar
       let {id, type, ...objEdit} = obj
+      
+      
       batch.update(docRef, objEdit);
-    }
-
+    }    
     // Ejecutar el batch si todas las operaciones existen
     await batch.commit();
     return {
@@ -1588,6 +1589,29 @@ dividirEnGrupos(array: any[], tamaño: number): any[][] {
       where('estado', '==', estado),
       where('fecha', '>=', desde),
       where('fecha', '<=', hasta),
+      where('tipo', 'in', tipos),
+      orderBy('fecha', 'asc')
+    );
+
+    return getDocs(q).then(snap =>
+      snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as InformeLiq) }))
+    );
+  }
+
+
+  getInformesLiqPorPeriodo(
+    tipo: 'cliente' | 'chofer' | 'proveedor' | 'todos',
+    periodo: {mes:string, anio:number},
+    estado: string,
+  ): Promise<ConId<InformeLiq>[]> {
+    const tipos = tipo === 'todos' ? ['cliente', 'chofer', 'proveedor'] : [tipo];
+    const colRef = collection(this.firestore, '/Vantruck/datos/resumenLiq');
+
+    const q = query(
+      colRef,
+      where('estado', '==', estado),
+      where('mes', '==', periodo.mes),      
+      where('anio', '==', periodo.anio),      
       where('tipo', 'in', tipos),
       orderBy('fecha', 'asc')
     );

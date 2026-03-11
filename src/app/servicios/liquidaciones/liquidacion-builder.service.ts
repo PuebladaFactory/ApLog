@@ -39,6 +39,8 @@ export interface CrearLiquidacionParams {
 
   modo: "factura" | "proforma";
 
+  anio: number;
+
   obsInterna:string;
 }
 
@@ -100,6 +102,8 @@ export class LiquidacionBuilderService {
 
       periodo: params.periodo,
 
+      anio: params.anio,
+
       observaciones: params.obsInterna
     };
 
@@ -139,7 +143,7 @@ export class LiquidacionBuilderService {
       totalTarifaBase +
       totalAcompaniante +
       totalkmMonto +
-      totalAdExtra -
+      totalAdExtra +
       descuentoTotal;
 
     return {

@@ -6,9 +6,9 @@
     </div>
   } @else {
 
-    <table class="table table-sm table-bordered table-hover table-striped table-light">
+    <table class="table table-sm table-bordered table-hover table-striped table-light align-middle">
         <thead>
-            <tr>
+            <tr class="sticky-top">
               @for (col of columnas; track col.key) {
                 <th
                   [class.text-center]="col.align === 'center'"

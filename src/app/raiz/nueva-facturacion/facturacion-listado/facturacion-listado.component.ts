@@ -113,6 +113,12 @@ export class FacturacionListadoComponent implements OnInit {
       value: (inf) => inf.periodo ?? "",
     },
     {
+      key: "anio",
+      label: "Año",
+      sortable: true,
+      value: (inf) => inf.anio ?? 0,
+    },
+    {
       key: "razonSocial",
       label: "Razón Social",
       sortable: true,
@@ -158,6 +164,39 @@ export class FacturacionListadoComponent implements OnInit {
     { key: "anular", label: "Anular", align: "center", acciones: ["anular"] },
   ];
 
+  meses = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Noviembre",
+    "Diciembre",
+  ];
+  periodo!:
+    | "Enero"
+    | "Febrero"
+    | "Marzo"
+    | "Abril"
+    | "Mayo"
+    | "Junio"
+    | "Julio"
+    | "Agosto"
+    | "Septiembre"
+    | "Noviembre"
+    | "Diciembre";
+  consultaPeriodo: boolean = false;
+  anio!: number;
+  informesEditados: ConId<InformeLiq>[] = [];
+  periodos: { label: string; valor: string }[] = [];
+  periodoSeleccionado: string | null = null;
+  tipoConsulta: 'periodo' | 'fechas' = 'periodo';
+  filtroEstado: "facturado" | "anulado" | "cobrado" = "facturado";
+
   constructor(
     private dbService: DbFirestoreService,
     private storageService: StorageService,
@@ -175,6 +214,7 @@ export class FacturacionListadoComponent implements OnInit {
     this.clientes = this.storageService.loadInfo("clientes");
     this.choferes = this.storageService.loadInfo("choferes");
     this.proveedores = this.storageService.loadInfo("proveedores");
+    this.generarPeriodos(60);
   }
 
   async cargarInformes(desde: string, hasta: string) {
@@ -195,6 +235,63 @@ export class FacturacionListadoComponent implements OnInit {
       Swal.fire("Error", "No se pudieron obtener los informes.", "error");
     } finally {
       this.cargando = false;
+    }
+  }
+
+  async cargarInformesPorPeriodo() {
+    this.cargando = true;
+
+    console.log(this.periodoSeleccionado);
+
+    const periodo = this.getPeriodoObjeto();
+    if (periodo) {
+      try {
+        this.informesLiq = await this.dbService.getInformesLiqPorPeriodo(
+          this.filtroTipo as any,
+          periodo,
+          "emitido",
+        );
+        this.aplicarFiltros();
+      } catch (error) {
+        console.error(error);
+        Swal.fire("Error", "No se pudieron obtener los informes.", "error");
+      } finally {
+        this.cargando = false;
+      }
+    }
+  }
+
+  getPeriodoObjeto(): { mes: string; anio: number } | null {
+    if (!this.periodoSeleccionado) return null;
+
+    const [anioStr, mesStr] = this.periodoSeleccionado.split("-");
+
+    const fecha = new Date(Number(anioStr), Number(mesStr) - 1);
+
+    const mes = fecha.toLocaleDateString("es-AR", { month: "long" });
+
+    return {
+      mes: mes.charAt(0).toUpperCase() + mes.slice(1),
+      anio: Number(anioStr),
+    };
+  }
+
+  generarPeriodos(cantidadMeses: number) {
+    const hoy = new Date();
+
+    for (let i = 0; i < cantidadMeses; i++) {
+      const fecha = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+
+      const anio = fecha.getFullYear();
+      const mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
+
+      this.periodos.push({
+        valor: `${anio}-${mes}`,
+        label: fecha.toLocaleDateString("es-AR", {
+          month: "long",
+          year: "numeric",
+        }),
+      });
     }
   }
 
@@ -643,5 +740,38 @@ export class FacturacionListadoComponent implements OnInit {
     this.cargando = true;
     await this.dbService.asignarNumerosInternosFaltantes();
     this.cargando = false;    
+  } */
+
+  /* METODOS PARA AGREGAR EL AÑO A LOS INFORMES-LIQ */
+  /* async editarInformesLiq(){
+      this.informesEditados = structuredClone(this.informesLiq);
+      await this.calcularAnios(this.informesEditados)
+      
+      
+      console.log("informesEditados: ", this.informesEditados);
+      
+    }
+
+    async actualizarInformesLiq(){
+      this.cargando = true;
+      await this.dbService.actualizarMultiple(this.informesEditados, "resumenLiq")
+      this.cargando = false;
+    }
+
+    async calcularAnios(informesLiq: ConId<InformeLiq>[]) {
+  for (const informe of informesLiq) {
+
+    await this.obtenerInformesOp(informe);
+
+    if (this.informesOp.length > 0) {
+      const fecha = this.informesOp[0].fecha;
+      informe.anio = this.getAnio(fecha);
+    }
+
+  }
+}
+
+  getAnio(fechaString: any): number {
+    return new Date(fechaString).getFullYear();
   } */
 }

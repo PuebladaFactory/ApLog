@@ -82,7 +82,7 @@ export class LiquidacionesOpComponent implements OnInit {
   entidadSeleccionada!: EntidadLiq;
   mes!: any;
   usuario!: any;
-
+  anio!: number;
   private STORAGE_RANGE_KEY = "liquidaciones_range_v1";
 
   ///////////////////////VARIABLES POR ERROR DE DUPLICADAS///////////////////////////////////////////
@@ -198,6 +198,7 @@ export class LiquidacionesOpComponent implements OnInit {
         const hasta = toISODateString(r.hasta);
         this.fechasConsulta.fechaDesde = desde;
         this.fechasConsulta.fechaHasta = hasta;
+
         //console.log("0)desde:", desde, " hasta: ", hasta);
         // 1. Consultar operaciones abiertas
         this.cargarOperacionesAbiertas()
@@ -551,6 +552,7 @@ export class LiquidacionesOpComponent implements OnInit {
     //this.totalFacturasLiquidadasCliente
 
     this.mes = this.getMesCapitalizado(this.fechasConsulta.fechaDesde);
+    this.anio = this.getAnio(this.fechasConsulta.fechaDesde);
     //console.log("mes: ", this.mes);
 
     this.indiceSeleccionado;
@@ -633,6 +635,8 @@ export class LiquidacionesOpComponent implements OnInit {
       columnas: columnas,
 
       mes: this.mes,
+
+      anio: this.anio,
 
       periodo: periodo,
 
@@ -1364,6 +1368,10 @@ export class LiquidacionesOpComponent implements OnInit {
 
     const mes = this.datePipe.transform(fechaString, "MMMM");
     return this.capitalizeFirst(mes);
+  }
+
+  getAnio(fechaString: string): number {
+    return new Date(fechaString).getFullYear();
   }
 
   private capitalizeFirst(texto: string | null): string {

@@ -80,6 +80,7 @@
     }
     @if (movimientos) {
         @if (!cargando && movimientos.length > 0) {
+            <div class="panel-box panel-resultados">
             <div class="table-responsive mt-5">
                 <table class="table table-sm table-striped align-middle">
                     <thead>
@@ -288,6 +289,8 @@
                     Total listado: {{ totalMovimientos | formatearValor: "$" }}
                 </strong>
             </div>
+            </div>
+
         } @else if (!cargando && movimientos.length === 0) {
             <div class="text-muted">
                 No hay movimientos para la entidad seleccionada

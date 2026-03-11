@@ -51,6 +51,7 @@ export class ProformaComponent implements OnInit {
   choferes!: ConId<Chofer>[];
   clientes!: ConId<Cliente>[];
   proveedores!: ConId<Proveedor>[];
+  informesEditados: ConId<InformeLiq>[] = [];
 
   constructor(
     private storageService: StorageService,
@@ -127,25 +128,21 @@ export class ProformaComponent implements OnInit {
     );
   }
 
-
   async obtenerFacturasOp(
     proforma: ConIdType<InformeLiq>,
     origen: string,
     accion: string,
-    
   ) {
     this.isLoading = true;
     await this.consultarOperacionesSeleccionadas(proforma, origen); //acá se obtienen los informesOp
 
-    if (accion === "reimpresion") {      
+    if (accion === "reimpresion") {
       this.preguntarDescarga(proforma, accion);
     } else if (accion === "vista") {
       this.openModalDetalleFactura(proforma, this.informesOp, origen);
     } else {
       this.procesarProforma(proforma, origen, accion);
     }
-
-    
   }
 
   async consultarOperacionesSeleccionadas(
@@ -158,7 +155,6 @@ export class ProformaComponent implements OnInit {
     } */
     //console.log("origen", origen);
 
-    this.isLoading = true;
     let componente: string =
       origen === "cliente"
         ? "informesOpClientes"
@@ -188,7 +184,7 @@ export class ProformaComponent implements OnInit {
       console.error("'Error al consultar por los informes", error);
       Swal.fire("Error", "Falló la consulta de los informes.", "error");
     } finally {
-      this.isLoading = false;
+      //this.isLoading = false;
     }
   }
 
@@ -198,7 +194,7 @@ export class ProformaComponent implements OnInit {
     origen: string,
   ) {
     ////console.log("lega??");
-
+    this.isLoading= false;
     {
       const modalRef = this.modalService.open(InformeLiqDetalleComponent, {
         windowClass: "myCustomModalClass",
@@ -227,7 +223,7 @@ export class ProformaComponent implements OnInit {
     proforma: ConIdType<InformeLiq>,
     origen: string,
     accion: string,
-  ) {
+  ) {    
     let titulo: string =
       proforma.tipo.charAt(0).toUpperCase() + proforma.tipo.slice(1);
 
@@ -235,30 +231,26 @@ export class ProformaComponent implements OnInit {
       accion === "baja" ? "anular" : "generar la liquidación de";
     //////console.log("proceso", proceso);
 
-
-      Swal.fire({
-        title: `¿Desea ${proceso} la proforma N° ${proforma.idInfLiq} del ${titulo} ${proforma.entidad.razonSocial}?`,
-        text: `${accion === "baja" ? "Esta acción revertirá las operaciones al modulo Liquidación" : ""}`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Confirmar",
-        cancelButtonText: "Cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          if  (accion === "baja") {
-            this.isLoading = true;
-            this.anularProforma(proforma);
-          } else if (accion === "factura") {
-            this.isLoading = true;
-            this.liquidarProforma(proforma);
-          }
+    this.isLoading = false;
+    Swal.fire({
+      title: `¿Desea ${proceso} la proforma N° ${proforma.idInfLiq} del ${titulo} ${proforma.entidad.razonSocial}?`,
+      text: `${accion === "baja" ? "Esta acción revertirá las operaciones al modulo Liquidación" : ""}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isLoading= true;
+        if (accion === "baja") {                    
+          this.anularProforma(proforma);
+        } else if (accion === "factura") {          
+          this.liquidarProforma(proforma);
         }
-      });
-
-
-    
+      }
+    });
   }
 
   getCliente(idCliente: number) {
@@ -304,7 +296,6 @@ export class ProformaComponent implements OnInit {
   }
 
   editarOperacionesFac(factura: InformeOp, componente: string) {
-    
     let op: ConId<Operacion>;
     this.dbFirebase
       .obtenerTarifaIdTarifa("operaciones", factura.idOperacion, "idOperacion")
@@ -358,6 +349,7 @@ export class ProformaComponent implements OnInit {
   }
 
   async liquidarProforma(proforma: ConId<InformeLiq>) {
+    
     await this.consultarOperacionesSeleccionadas(proforma, proforma.tipo);
 
     let parametros: CrearLiquidacionParams = {
@@ -369,6 +361,7 @@ export class ProformaComponent implements OnInit {
       mes: proforma.mes,
       periodo: proforma.periodo,
       modo: "factura",
+      anio: 2026,
       obsInterna: proforma.observaciones ?? "",
     };
 
@@ -385,7 +378,6 @@ export class ProformaComponent implements OnInit {
 
     if (operatoria.informe) this.informeLiq = operatoria.informe;
     if (operatoria.exito) {
-      this.isLoading = false;
       this.storageService.logMultiplesOp(
         this.informeLiq.operaciones,
         "LIQUIDAR",
@@ -400,7 +392,7 @@ export class ProformaComponent implements OnInit {
         `Alta de Factura del ${this.informeLiq.tipo} ${this.informeLiq.entidad.razonSocial}`,
         operatoria.exito,
       );
-
+      this.isLoading = false;      
       Swal.fire({
         icon: "success",
         //title: "Oops...",
@@ -412,6 +404,7 @@ export class ProformaComponent implements OnInit {
         this.preguntarDescarga(this.informeLiq, "factura");
       });
     } else {
+      this.isLoading = false;
       this.storageService.logMultiplesOp(
         proforma.operaciones,
         "LIQUIDAR",
@@ -434,25 +427,24 @@ export class ProformaComponent implements OnInit {
     }
   }
 
-  async anularProforma(proforma: ConId<InformeLiq>) {
+  async anularProforma(proforma: ConId<InformeLiq>) {    
     let fechaAnul = new Date();
-        let fechaStr = toISODateString(fechaAnul);
+    let fechaStr = toISODateString(fechaAnul);
 
-    const parametros : AnularParams = {
-        informesOp: this.informesOp,
-        tipo: proforma.tipo,
-        informeLiq: proforma,
-        modo: "proforma",  
-        anuladoMotivo: "Anulación de proforma",
-        anuladoPor: this.usuario.email,
-        fechaAnulacion: fechaStr,
-    }
+    const parametros: AnularParams = {
+      informesOp: this.informesOp,
+      tipo: proforma.tipo,
+      informeLiq: proforma,
+      modo: "proforma",
+      anuladoMotivo: "Anulación de proforma",
+      anuladoPor: this.usuario.email,
+      fechaAnulacion: fechaStr,
+    };
 
+    const operatoria =
+      await this.liquidacionService.anularLiquidacion(parametros);
 
-    const operatoria = await this.liquidacionService.anularLiquidacion(parametros);
-
-    if (operatoria.exito) {
-      this.isLoading = false;
+    if (operatoria.exito) {      
       this.storageService.logSimple(
         proforma.idInfLiq,
         "BAJA",
@@ -460,6 +452,7 @@ export class ProformaComponent implements OnInit {
         `Baja de proforma N° ${proforma.idInfLiq} del Cliente ${this.getCliente(proforma.entidad.id)}`,
         operatoria.exito,
       );
+      this.isLoading = false;
       Swal.fire({
         icon: "success",
         //title: "Oops...",
@@ -477,7 +470,6 @@ export class ProformaComponent implements OnInit {
     }
   }
 
-
   mensajesError(msj: string, resultado: string) {
     Swal.fire({
       icon: resultado === "error" ? "error" : "success",
@@ -488,6 +480,7 @@ export class ProformaComponent implements OnInit {
   }
 
   async preguntarDescarga(informeLiq: InformeLiq, accion: string) {
+    this.isLoading = false;
     const result = await Swal.fire({
       title: "¿Desea descargar el informe?",
       text: "Seleccione el formato",
@@ -502,18 +495,19 @@ export class ProformaComponent implements OnInit {
     });
 
     if (result.isConfirmed) {
-      //console.log("Descargar Excel");
+      //console.log("Descargar Excel");      
       this.descargarInforme(informeLiq, accion, "excel");
     }
 
     if (result.isDenied) {
-      //console.log("Descargar PDF");
+      //console.log("Descargar PDF");      
       this.descargarInforme(informeLiq, accion, "pdf");
     }
 
-    if (result.isDismissed) {
+    if (result.isDismissed) {      
       //console.log("No descargar");
     }
+    
   }
 
   descargarInforme(informeLiq: InformeLiq, accion: string, formato: string) {
@@ -537,5 +531,39 @@ export class ProformaComponent implements OnInit {
         accion,
       );
     }
+  }
+
+  /* METODOS PARA AGREGAR EL AÑO A LOS INFORMES-LIQ */
+  async editarInformesLiq() {
+    this.informesEditados = structuredClone(this.proformasTodas);
+    await this.calcularAnios(this.informesEditados);
+
+    console.log("informesEditados: ", this.informesEditados);
+  }
+
+  async actualizarInformesLiq() {
+    this.isLoading = true;
+    const resultado = await this.dbFirebase.actualizarMultiple(
+      this.informesEditados,
+      "proforma",
+    );
+    this.isLoading = false;
+    console.log(resultado);
+    
+  }
+
+  async calcularAnios(informesLiq: ConId<InformeLiq>[]) {
+    for (const informe of informesLiq) {
+      await this.consultarOperacionesSeleccionadas(informe, informe.tipo);
+
+      if (this.informesOp.length > 0) {
+        const fecha = this.informesOp[0].fecha;
+        informe.anio = this.getAnio(fecha);
+      }
+    }
+  }
+
+  getAnio(fechaString: any): number {
+    return new Date(fechaString).getFullYear();
   }
 }

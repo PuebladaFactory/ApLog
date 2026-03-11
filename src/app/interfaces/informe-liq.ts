@@ -24,7 +24,8 @@ export interface InformeLiq {
 
     observaciones?: string;           // Campo libre para anotar algo manualmente
     mes?: 'Enero' | 'Febrero' | 'Marzo' | 'Abril' | 'Mayo' | 'Junio' | 'Julio' | 'Agosto' | 'Septiembre' | 'Noviembre' | 'Diciembre'
-    periodo?: 'mes' | '1° quincena' | '2° quincena' 
+    periodo?: 'mes' | '1° quincena' | '2° quincena' ;
+    anio?: number;
     facturaUrl?: string;        // ID o número de la factura fiscal (a futuro)
     factura?: FacturaQR;
     anuladoMotivo?: string;                 //motivo de anulacion
