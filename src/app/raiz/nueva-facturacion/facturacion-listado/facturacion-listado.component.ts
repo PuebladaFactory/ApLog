@@ -235,6 +235,7 @@ export class FacturacionListadoComponent implements OnInit {
       Swal.fire("Error", "No se pudieron obtener los informes.", "error");
     } finally {
       this.cargando = false;
+      this.periodoSeleccionado = null
     }
   }
 
@@ -558,8 +559,13 @@ export class FacturacionListadoComponent implements OnInit {
                 timer: 2500,
                 showConfirmButton: false,
               });
-              // 🔹 Vuelvo a consultar informes
-              this.cargarInformes(this.fechaDesde, this.fechaHasta);
+              // 🔹 Vuelvo a consultar informes;
+              if(this.periodoSeleccionado){
+                this.cargarInformesPorPeriodo()
+              } else {
+                this.cargarInformes(this.fechaDesde, this.fechaHasta);
+              }
+              
             } else {
               Swal.fire({
                 icon: "error",
