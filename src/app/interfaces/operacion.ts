@@ -28,6 +28,10 @@ export interface Operacion {
     multiplicadorCliente:number;
     multiplicadorChofer:number;
     adExtraConcepto?: string;
+    lockLiquidacion?: {
+        usuario: string
+        timestamp: number
+    }
     
 }
 

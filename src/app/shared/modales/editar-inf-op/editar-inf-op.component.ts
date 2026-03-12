@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
 import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { lowerFirst } from "lodash";
 import { Subject } from "rxjs";
 import { Chofer, Vehiculo } from "src/app/interfaces/chofer";
 import { Cliente } from "src/app/interfaces/cliente";
@@ -155,8 +156,8 @@ export class EditarInfOpComponent implements OnInit {
       let contraparteInf: ConId<InformeOp> = contraparteRes.data;
       this.informeContraParte = structuredClone(contraparteInf);
       this.contraparteColeccion = contraparteRes.coleccion;
-      //console.log("0)this.informeContraParte: ", this.informeContraParte);
-      //console.log("0)this.contraparteColeccion: ", this.contraparteColeccion);
+      console.log("0)this.informeContraParte: ", this.informeContraParte);
+      console.log("0)this.contraparteColeccion: ", this.contraparteColeccion);
       if (this.informeContraParte.liquidacion || this.contraparteColeccion === 'infOpLiqClientes' || this.contraparteColeccion === 'infOpLiqChoferes' || this.contraparteColeccion === 'infOpLiqProveedores' ) {
         const liquidado = await Swal.fire({
           title:
@@ -196,7 +197,7 @@ export class EditarInfOpComponent implements OnInit {
         "Error al obtener la tarifa de la contraparte del informe",
       );
     }
-    //console.log("this.editarContraParte: ", this.editarContraParte);
+    console.log("this.tarifaContraParte: ", this.tarifaContraParte);
   }
 
   getDatos() {
@@ -614,16 +615,9 @@ export class EditarInfOpComponent implements OnInit {
     this.recalcularValores();
   }
 
-  tarifaBaseValor() {
-    this.informeCliente.valores.tarifaBase =
-      this.formNumServ.convertirAValorNumerico(
-        this.informeCliente.valores.tarifaBase,
-      );
-    this.informeChofer.valores.tarifaBase =
-      this.formNumServ.convertirAValorNumerico(
-        this.informeChofer.valores.tarifaBase,
-      );
-    
+  tarifaBaseValor() {  
+    console.log(this.informeCliente.valores.tarifaBase)  
+
     this.emparejarDatos();
 
     this.recalcularValores();

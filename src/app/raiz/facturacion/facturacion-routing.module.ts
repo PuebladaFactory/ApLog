@@ -13,7 +13,8 @@ import { FacturacionListadoComponent } from './facturacion-listado/facturacion-l
 
 const routes: Routes = [
   {path: '', component:FacturacionControlComponent,
-    children: [        
+    children: [     
+      {path: '', redirectTo: 'gral', pathMatch: 'full' },    
       {path: 'gral', component:FacturacionGeneralComponent},       
       {path: 'emitidos', component:FacturacionListadoComponent},       
       

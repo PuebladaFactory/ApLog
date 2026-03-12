@@ -38,7 +38,7 @@ export class MovimientoFinancieroComponent implements OnInit {
   @Input() tipo!: 'cobro' | 'pago';
 
   @Input() entidad!: {
-    id: string;
+    id: number;
     tipo: 'cliente' | 'chofer' | 'proveedor';
     razonSocial: string;
   };
@@ -58,6 +58,7 @@ export class MovimientoFinancieroComponent implements OnInit {
   referencia?: string;
   observaciones?: string;
   errorDistribucion: string | null = null;
+  fechaOperacion: string = this.getFechaHoy();
 
 
   constructor(
@@ -70,7 +71,8 @@ export class MovimientoFinancieroComponent implements OnInit {
   // ---------------------------------------------------------------------------
 
   ngOnInit(): void {
-    console.log("0) this.informes: ", this.informes);
+    //console.log("0) this.informes: ", this.informes);
+    console.log("0) this.entidad: ", this.entidad);
     
     this.informesVM = this.informes.map(inf => ({
       informeLiqId: inf.id,
@@ -88,7 +90,7 @@ export class MovimientoFinancieroComponent implements OnInit {
       montoACobrar: inf.valoresFinancieros!.saldo,
       modo: 'auto'
     }));
-    console.log("1) this.informesVM: ", this.informesVM);
+    //console.log("1) this.informesVM: ", this.informesVM);
     
     // valor inicial sugerido
     this.montoTotalMovimiento = this.totalSaldo;
@@ -143,9 +145,9 @@ export class MovimientoFinancieroComponent implements OnInit {
   // ---------------------------------------------------------------------------
 
   recalcularDistribucion(): void {
-    console.log("montoTotalMovimiento", this.montoTotalMovimiento);
+    //console.log("montoTotalMovimiento", this.montoTotalMovimiento);
     this.montoTotalMovimiento = this.fomNumServ.convertirAValorNumerico(this.montoTotalMovimiento)
-    console.log("montoTotalMovimiento", this.montoTotalMovimiento);
+    //console.log("montoTotalMovimiento", this.montoTotalMovimiento);
     this.errorDistribucion = null;
 
     if (!this.montoTotalMovimiento || this.montoTotalMovimiento <= 0) {
@@ -224,6 +226,11 @@ export class MovimientoFinancieroComponent implements OnInit {
 
     this.errorDistribucion = '';
 
+    if (!this.fechaOperacion) {
+      this.errorDistribucion = 'Debe asignar una fecha para el movimiento';
+      return false;
+    }
+
     if (!this.montoTotalMovimiento || this.montoTotalMovimiento <= 0) {
       this.errorDistribucion = 'El monto total debe ser mayor a cero';
       return false;
@@ -275,7 +282,7 @@ export class MovimientoFinancieroComponent implements OnInit {
     const form: MovimientoFormVM = {
       tipo: this.tipo,
       entidad: this.entidad,
-
+      fechaOperacion: this.fechaOperacion,
       informesSeleccionados: this.informesVM
         .filter(i => i.montoACobrar > 0)
         .map(i => ({
@@ -293,13 +300,26 @@ export class MovimientoFinancieroComponent implements OnInit {
       observaciones: this.observaciones
     };
 
-    //console.log("form: ", form);    
+    ////console.log("form: ", form);    
     this.activeModal.close(form);
   }
 
   cancelar(): void {
     this.activeModal.dismiss();
   }
+
+    // ---------------------------------------------------------------------------
+  // HELPERS
+  // -
+
+  private getFechaHoy(): string {
+  const hoy = new Date();
+  return hoy.toISOString().substring(0, 10); // yyyy-mm-dd
+}
+
+get esFechaFutura(): boolean {
+  return this.fechaOperacion > this.getFechaHoy();
+}
 
 }
 

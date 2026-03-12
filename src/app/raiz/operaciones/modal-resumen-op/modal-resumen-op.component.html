@@ -231,7 +231,7 @@
                                         type="text"
                                         inputmode="numeric"
                                         (keyup.enter)="onSubmit()"
-                                        appSoloNumerosRequerido
+                                        appMonto [minimo]="0"
                                     />
                                 </div>
                             </div>
@@ -377,7 +377,7 @@
                                 Tarifa Aplicada:
                                 <span
                                     class="fw-semibold fs-4 badge"
-                                    [ngClass]="getClaseTarifa(op)"
+                                    [ngClass]="getClaseTarifa(op, 'cliente')"
                                     >{{
                                         op.tarifaTipo.eventual
                                             ? "Eventual"
@@ -433,7 +433,7 @@
                                                             op.tarifaEventual
                                                                 .cliente.valor
                                                         "
-                                                        appFormatoNumericoNgModel
+                                                        appMonto [minimo]="0"
                                                         (change)="valoresEventuales()"
                                                     />
                                                 </div>
@@ -518,7 +518,7 @@
                                                     required
                                                     type="text"
                                                     inputmode="number"
-                                                    appFormatoMonetarioControl
+                                                    appMonto [minimo]="0"
                                                     [(ngModel)]="op.tarifaPersonalizada.aCobrar"
                                                 />
                                             </div>
@@ -551,7 +551,7 @@
                                                     required
                                                     type="text"
                                                     inputmode="number"
-                                                    appFormatoMonetarioControl
+                                                    appMonto [minimo]="0"
                                                     [(ngModel)]="op.valores.cliente.tarifaBase"
                                                 />
                                             </div>
@@ -580,7 +580,7 @@
                                             required
                                             type="text"
                                             inputmode="number"
-                                            appFormatoMonetarioControl
+                                            appMonto [minimo]="0"
                                             [(ngModel)]="op.valores.cliente.acompValor"
                                         />
                                     </div>
@@ -603,7 +603,7 @@
                                             required
                                             type="text"
                                             inputmode="number"
-                                            appFormatoMonetarioControl
+                                            appMonto [minimo]="0"
                                             [ngModel]="
                                                 op.tarifaTipo.eventual ||
                                                 op.tarifaTipo.personalizada
@@ -620,7 +620,7 @@
                                 Tarifa Aplicada:
                                 <span
                                     class="fw-semibold fs-4 badge"
-                                    [ngClass]="getClaseTarifa(op)"
+                                    [ngClass]="getClaseTarifa(op, 'chofer')"
                                     >{{
                                         op.tarifaTipo.eventual
                                             ? "Eventual"
@@ -672,7 +672,7 @@
                                                         op.tarifaEventual.chofer
                                                             .valor
                                                     "
-                                                    appFormatoNumericoNgModel
+                                                    appMonto [minimo]="0"
                                                     (change)="valoresEventuales()"
                                                 />
                                             </div>
@@ -759,7 +759,7 @@
                                                     required
                                                     type="text"
                                                     inputmode="number"
-                                                    appFormatoMonetarioControl
+                                                    appMonto [minimo]="0"
                                                     [(ngModel)]="op.tarifaPersonalizada.aPagar"
                                                 />
                                             </div>
@@ -793,7 +793,7 @@
                                                     required
                                                     type="text"
                                                     inputmode="number"
-                                                    appFormatoMonetarioControl
+                                                    appMonto [minimo]="0"
                                                     [(ngModel)]="op.valores.chofer.tarifaBase"
                                                 />
                                             </div>
@@ -824,7 +824,7 @@
                                                 required
                                                 type="text"
                                                 inputmode="number"
-                                                appFormatoMonetarioControl
+                                                appMonto [minimo]="0"
                                                 [(ngModel)]="op.valores.chofer.acompValor"
                                             />
                                         </div>
@@ -847,7 +847,7 @@
                                                 required
                                                 type="text"
                                                 inputmode="number"
-                                                appFormatoMonetarioControl
+                                                appMonto [minimo]="0"
                                                 [ngModel]="
                                                     op.tarifaTipo.eventual ||
                                                     op.tarifaTipo.personalizada
@@ -899,7 +899,7 @@
                                         required
                                         type="text"
                                         inputmode="number"
-                                        appFormatoNumericoNgModel
+                                        appMonto [minimo]="0"
                                         [(ngModel)]="op.valores.cliente.adExtraValor"
                                         (change)="valoresGastosExtras()"
                                     />
@@ -924,7 +924,7 @@
                                         required
                                         type="text"
                                         inputmode="number"
-                                        appFormatoNumericoNgModel
+                                        appMonto [minimo]="0"
                                         (change)="valoresGastosExtras()"
                                         [(ngModel)]="op.valores.chofer.adExtraValor"
                                     />
@@ -959,7 +959,7 @@
                                 required
                                 type="text"
                                 inputmode="number"
-                                appFormatoMonetarioControl
+                                appMonto [minimo]="0"
                                 [(ngModel)]="this.op.valores.cliente.aCobrar"
                             />
                         </div>
@@ -981,7 +981,7 @@
                                 required
                                 type="text"
                                 inputmode="number"
-                                appFormatoMonetarioControl
+                                appMonto [minimo]="0"
                                 [(ngModel)]="this.op.valores.chofer.aPagar"
                             />
                         </div>

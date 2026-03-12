@@ -21,3 +21,74 @@ th.ordenable:hover {
   cursor: not-allowed;
   opacity:0.5;
 }
+
+.periodo-select {
+  font-weight: 500;
+}
+
+.periodo-select option {
+  font-weight: normal;
+}
+
+.periodo-select {
+  font-weight: 500;
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+}
+
+.periodo-select:focus {
+  background-color: white;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.1rem rgba(13,110,253,.25);
+}
+
+
+.btn-group .btn {
+  min-width: 120px;
+}
+
+.panel-box {
+  
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.panel-superior{
+  margin-top: 10px;
+  background: rgb(255, 255, 255);
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+}
+
+.panel-header {
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #ececec;
+  color: #6c757d;  
+}
+
+.panel-filtros {
+  background: #f8f9fa;
+}
+
+.panel-resultados {
+  margin-top: 10px;
+  background: white;
+}
+
+.filtros .form-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 2px;
+}
+
+.filtros .form-control,
+.filtros .form-select {
+  height: 34px;
+  font-size: 0.9rem;
+}

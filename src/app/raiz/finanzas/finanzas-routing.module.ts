@@ -8,7 +8,8 @@ import { MovimientoDetalleComponent } from './movimiento-detalle/movimiento-deta
 
 const routes: Routes = [
   {path: '', component:FinanzasControlComponent,
-        children: [               
+        children: [  
+          { path: '', redirectTo: 'cobros', pathMatch: 'full' },             
           {path: 'cobros', component:FinanzasCobrosComponent},
           {path: 'pagos', component:FinanzasPagosComponent},
           {path: 'historial', component:HistorialMovimientosComponent},

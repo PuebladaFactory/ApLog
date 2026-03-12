@@ -7,7 +7,7 @@ export interface MovimientoFinanciero {
   fechaOperacion?: string; // ISO yyyy-mm-dd
   /** Entidad */
   entidad: {
-    id: string;
+    id: number;
     tipo: 'cliente' | 'chofer' | 'proveedor';
     razonSocial: string;
   };
@@ -24,6 +24,12 @@ export interface MovimientoFinanciero {
 
   /** Observaciones */
   observaciones?: string;
+
+  /* Anulación */
+  estado: 'activo' | 'anulado';
+  anuladoPor?: string;
+  fechaAnulacion?: string;
+  motivoAnulacion?: string;
 
   /** Auditoría */
   creadoEn: string; // ISO datetime
@@ -44,6 +50,6 @@ export interface ImputacionMovimiento {
   /** Montos */
   totalInforme: number;
   montoImputado: number;
-  saldonInforme: number;
+  saldoInforme: number;
 }
 

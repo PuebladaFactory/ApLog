@@ -10,6 +10,8 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { MovimientoFinancieroComponent } from '../modales/movimiento-financiero/movimiento-financiero.component';
 import { MovimientoFormVM } from 'src/app/interfaces/movimiento-form-v-m';
+import { MovimientoFinancieroService } from 'src/app/servicios/finanzas/movimiento-financiero.service';
+
 
 @Component({
   selector: 'app-finanzas-cobros',
@@ -30,10 +32,10 @@ export class FinanzasCobrosComponent implements OnInit {
   informesPendientes: ConId<InformeLiq>[] = [];
   informesSeleccionados: ConId<InformeLiq>[] = [];
 
-  constructor(
-    private dbService: DbFirestoreService,
+  constructor(    
     private storageService: StorageService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private movFinancieroServ: MovimientoFinancieroService
   ) {}
 
   ngOnInit(): void {
@@ -56,7 +58,7 @@ export class FinanzasCobrosComponent implements OnInit {
     this.cargando = true;
     try {
       // 🔜 reemplazar por query real
-      const informes= await this.dbService.getInformesPendientesPorEntidad(this.clienteSeleccionadoId)
+      const informes= await this.movFinancieroServ.getInformesPendientesPorEntidad(this.clienteSeleccionadoId)
       console.log("informes", informes);
       
       this.informesPendientes = informes.map(inf =>
@@ -175,7 +177,7 @@ export class FinanzasCobrosComponent implements OnInit {
     modalRef.componentInstance.tipo = 'cobro';
 
     modalRef.componentInstance.entidad = {
-      id: String(cliente.idCliente),
+      id: cliente.idCliente,
       tipo: 'cliente',
       razonSocial: cliente.razonSocial
     };
@@ -187,7 +189,7 @@ export class FinanzasCobrosComponent implements OnInit {
         try {
           console.log("form: ", form);
           // 🔥 acá va el service real
-          const movimientoId = await this.dbService.registrarMovimientoFinanciero(
+          const movimientoId = await this.movFinancieroServ.registrarMovimientoFinanciero(
             form,
             usuario[0].email
           );

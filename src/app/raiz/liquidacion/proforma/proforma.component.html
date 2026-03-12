@@ -8,177 +8,136 @@
             [(ngModel)]="filtroCliente"
             class="form-control mb-2"
         />
-        <table class="table table-light table-striped table-bordered">
-            <thead class="sticky-top">
-                <th style="width: 21%">Cliente</th>
-                <th class="text-center">Proforma N°</th>
-                <th class="text-center">Mes</th>
-                <th class="text-center">Periodo Liq</th>
-                <th class="text-center">Cant Op</th>
-                <th>Suma a Cobrar</th>
-                <th>Suma a Pagar</th>
-                <th class="text-center">Ganancia Neta</th>
-                <th class="text-center">% Ganancia</th>
-                <th style="width: 13%" class="text-center">Acciones</th>
-            </thead>
-            <tbody>
-                @if (proformasClientes.length > 0) {
-                    @for (
-                        cliente of proformasClientes
-                            | globalFilter
-                                : filtroCliente
-                                : [
-                                      "razonSocial",
-                                      "opCerradas",
-                                      "opAbiertas",
-                                      "opSinFacturar",
-                                      "opFacturadas",
-                                      "total",
-                                      "aPagar",
-                                      "ganancia",
-                                  ];
-                        track cliente;
-                        let i = $index
-                    ) {
-                        <tr>
-                            <td>{{ cliente.entidad.razonSocial }}</td>
-                            <td class="text-center">{{ cliente.idInfLiq }}</td>
-                            <td class="text-center">{{ cliente.mes }}</td>
-                            <td class="text-center">{{ cliente.periodo }}</td>
-                            <td class="text-center">
-                                {{ cliente.operaciones.length }}
-                            </td>
-                            <td class="table-success">
-                                {{
-                                    cliente.valores.total | formatearValor: "$"
-                                }}
-                            </td>
-                            <td>
-                                {{
-                                    cliente.valores.totalContraParte
-                                        | formatearValor: "$"
-                                }}
-                            </td>
-                            <td>
-                                {{
-                                    cliente.valores.total -
+        <div class="panel-box panel-resultados">
+            <table class="table table-light table-striped table-bordered">
+                <thead class="sticky-top">
+                    <th style="width: 21%">Cliente</th>
+                    <th class="text-center">Proforma N°</th>
+                    <th class="text-center">Mes</th>
+                    <th class="text-center">Periodo Liq</th>
+                    <th class="text-center">Cant Op</th>
+                    <th>Suma a Cobrar</th>
+                    <th>Suma a Pagar</th>
+                    <th class="text-center">Ganancia Neta</th>
+                    <th class="text-center">% Ganancia</th>
+                    <th style="width: 13%" class="text-center">Acciones</th>
+                </thead>
+                <tbody>
+                    <!-- TABLA DE CLIENTES -->
+                    @if (proformasClientes.length > 0) {
+                        @for (
+                            cliente of proformasClientes
+                                | globalFilter
+                                    : filtroCliente
+                                    : [
+                                          "entidad.razonSocial",
+                                          "mes",
+                                          "periodo",
+                                          "operaciones.length",
+                                          "valores.totalContraParte",
+                                          "valores.total",
+                                          "idInfLiq"                                          
+                                      ];
+                            track cliente;
+                            let i = $index
+                        ) {
+                            <tr>
+                                <td>{{ cliente.entidad.razonSocial }}</td>
+                                <td class="text-center">
+                                    {{ cliente.idInfLiq }}
+                                </td>
+                                <td class="text-center">{{ cliente.mes }}</td>
+                                <td class="text-center">
+                                    {{ cliente.periodo }}
+                                </td>
+                                <td class="text-center">
+                                    {{ cliente.operaciones.length }}
+                                </td>
+                                <td class="table-success">
+                                    {{
+                                        cliente.valores.total
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+                                <td>
+                                    {{
                                         cliente.valores.totalContraParte
-                                        | formatearValor: "$"
-                                }}
-                            </td>
-                            <!-- <td class="text-center table-warning">{{(100-((cliente.montoFacturaChofer*100)/cliente.valores.total)) | formatearValor}} %</td> -->
-                            <td class="text-center table-warning">
-                                {{
-                                    cliente.valores.totalContraParte
-                                        | calcularPorcentaje
-                                            : cliente.valores.total
-                                            : true
-                                }}
-                            </td>
-                            <td class="d-flex">                                
-                                <app-btn-leer
-                                    name="Detalle"
-                                    class="me-2"
-                                    (click)="
-                                        obtenerFacturasOp(
-                                            cliente,
-                                            'cliente',
-                                            'vista',
-                                            ''
-                                        )
-                                    "
-                                ></app-btn-leer>
-                                <div class="dropdown m-0 p-0">
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+                                <td>
+                                    {{
+                                        cliente.valores.total -
+                                            cliente.valores.totalContraParte
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+                                <!-- <td class="text-center table-warning">{{(100-((cliente.montoFacturaChofer*100)/cliente.valores.total)) | formatearValor}} %</td> -->
+                                <td class="text-center table-warning">
+                                    {{
+                                        cliente.valores.totalContraParte
+                                            | calcularPorcentaje
+                                                : cliente.valores.total
+                                                : true
+                                    }}
+                                </td>
+                                <td class="d-flex">
+                                    <app-btn-leer
+                                        name="Detalle"
+                                        class="me-2"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                cliente,
+                                                'cliente',
+                                                'vista'
+                                            )
+                                        "
+                                    ></app-btn-leer>
                                     <app-btn-leer
                                         name="print"
                                         class="me-2"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                cliente,
+                                                'cliente',
+                                                'reimpresion'
+                                            )
+                                        "
                                     ></app-btn-leer>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    cliente,
-                                                    'cliente',
-                                                    'reimpresion',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    cliente,
-                                                    'cliente',
-                                                    'reimpresion',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
-                                <app-btn-eliminar
-                                    name="Eliminar"
-                                    class="me-2"
-                                    (click)="
-                                        procesarProforma(
-                                            cliente,
-                                            'cliente',
-                                            'baja',
-                                            ''
-                                        )
-                                    "
-                                ></app-btn-eliminar>
-                                <div class="dropdown m-0 p-0">
+                                    <app-btn-eliminar
+                                        name="Eliminar"
+                                        class="me-2"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                cliente,
+                                                'cliente',
+                                                'baja'
+                                            )
+                                        "
+                                    ></app-btn-eliminar>
                                     <app-btn-agregar
                                         name="Factura"
                                         class="me-2"
                                         type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                cliente,
+                                                'cliente',
+                                                'factura'
+                                            )
+                                        "
                                     ></app-btn-agregar>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                procesarProforma(
-                                                    cliente,
-                                                    'cliente',
-                                                    'facturar',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                procesarProforma(
-                                                    cliente,
-                                                    'cliente',
-                                                    'facturar',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
-                                <!-- <app-btn-agregar name="Factura" (click)="procesarProforma(cliente,'cliente', 'facturar')"></app-btn-agregar> -->
-                            </td>
+                                </td>
+                            </tr>
+                        }
+                    } @else {
+                        <tr>
+                            <td colspan="8">No hay proformas cargadas</td>
                         </tr>
                     }
-                } @else {
-                    <tr>
-                        <td colspan="8">No hay proformas cargadas</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <hr class="mt-5" />
@@ -190,174 +149,136 @@
             [(ngModel)]="filtroChofer"
             class="form-control mb-2"
         />
-        <table class="table table-light table-striped table-bordered">
-            <thead class="sticky-top">
-                <th style="width: 21%">Chofer</th>
-                <th class="text-center">Proforma N°</th>
-                <th class="text-center">Mes</th>
-                <th class="text-center">Periodo Liq</th>
-                <th class="text-center">Cant Op</th>
-                <th>Suma a Cobrar</th>
-                <th>Suma a Pagar</th>
-                <th class="text-center">Ganancia Neta</th>
-                <th class="text-center">% Ganancia</th>
-                <th style="width: 13%" class="text-center">Acciones</th>
-            </thead>
-            <tbody>
-                @if (proformasChoferes.length > 0) {
-                    @for (
-                        chofer of proformasChoferes
-                            | globalFilter
-                                : filtroChofer
-                                : [
-                                      "apellido",
-                                      "opCerradas",
-                                      "opAbiertas",
-                                      "opSinFacturar",
-                                      "opFacturadas",
-                                      "total",
-                                      "aCobrar",
-                                  ];
-                        track chofer;
-                        let i = $index
-                    ) {
-                        <tr>
-                            <td>{{ chofer.entidad.razonSocial }}</td>
-                            <td class="text-center">{{ chofer.idInfLiq }}</td>
-                            <td class="text-center">{{ chofer.mes }}</td>
-                            <td class="text-center">{{ chofer.periodo }}</td>
-                            <td class="text-center">
-                                {{ chofer.operaciones.length }}
-                            </td>
-                            <td>
-                                {{
-                                    chofer.valores.totalContraParte
-                                        | formatearValor: "$"
-                                }}
-                            </td>
-                            <td class="table-danger">
-                                {{ chofer.valores.total | formatearValor: "$" }}
-                            </td>
-                            <td>
-                                {{
-                                    chofer.valores.totalContraParte -
+        <div class="panel-box panel-resultados">
+            <table class="table table-light table-striped table-bordered">
+                <thead class="sticky-top">
+                    <th style="width: 21%">Chofer</th>
+                    <th class="text-center">Proforma N°</th>
+                    <th class="text-center">Mes</th>
+                    <th class="text-center">Periodo Liq</th>
+                    <th class="text-center">Cant Op</th>
+                    <th>Suma a Cobrar</th>
+                    <th>Suma a Pagar</th>
+                    <th class="text-center">Ganancia Neta</th>
+                    <th class="text-center">% Ganancia</th>
+                    <th style="width: 13%" class="text-center">Acciones</th>
+                </thead>
+                <tbody>
+                    <!-- TABLA DE CHOFERES -->
+                    @if (proformasChoferes.length > 0) {
+                        @for (
+                            chofer of proformasChoferes
+                                | globalFilter
+                                    : filtroChofer
+                                    : [
+                                          "entidad.razonSocial",
+                                          "mes",
+                                          "periodo",
+                                          "operaciones.length",
+                                          "valores.totalContraParte",
+                                          "valores.total",
+                                          "idInfLiq"                                          
+                                      ];
+                            track chofer;
+                            let i = $index
+                        ) {
+                            <tr>
+                                <td>{{ chofer.entidad.razonSocial }}</td>
+                                <td class="text-center">
+                                    {{ chofer.idInfLiq }}
+                                </td>
+                                <td class="text-center">{{ chofer.mes }}</td>
+                                <td class="text-center">
+                                    {{ chofer.periodo }}
+                                </td>
+                                <td class="text-center">
+                                    {{ chofer.operaciones.length }}
+                                </td>
+                                <td>
+                                    {{
+                                        chofer.valores.totalContraParte
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+                                <td class="table-danger">
+                                    {{
                                         chofer.valores.total
-                                        | formatearValor: "$"
-                                }}
-                            </td>
-                            <!-- <td class="text-center table-warning">{{(100-((chofer.valores.total*100)/chofer.montoFacturaCliente)) | formatearValor}} %</td> -->
-                            <td class="text-center table-warning">
-                                {{
-                                    chofer.valores.total
-                                        | calcularPorcentaje
-                                            : chofer.valores.totalContraParte
-                                            : true
-                                }}
-                            </td>
-                            <td class="d-flex">
-                                <app-btn-leer
-                                    name="Detalle"
-                                    class="me-2"
-                                    (click)="
-                                        obtenerFacturasOp(
-                                            chofer,
-                                            'chofer',
-                                            'vista',
-                                            ''
-                                        )
-                                    "
-                                ></app-btn-leer>
-                                <div class="dropdown m-0 p-0">
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+                                <td>
+                                    {{
+                                        chofer.valores.totalContraParte -
+                                            chofer.valores.total
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+                                <td class="text-center table-warning">
+                                    {{
+                                        chofer.valores.total
+                                            | calcularPorcentaje
+                                                : chofer.valores
+                                                      .totalContraParte
+                                                : true
+                                    }}
+                                </td>
+                                <td class="d-flex">
+                                    <app-btn-leer
+                                        name="Detalle"
+                                        class="me-2"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                chofer,
+                                                'chofer',
+                                                'vista'
+                                            )
+                                        "
+                                    ></app-btn-leer>
                                     <app-btn-leer
                                         name="print"
                                         class="me-2"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                chofer,
+                                                'cliente',
+                                                'reimpresion'
+                                            )
+                                        "
                                     ></app-btn-leer>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    chofer,
-                                                    'chofer',
-                                                    'reimpresion',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    chofer,
-                                                    'chofer',
-                                                    'reimpresion',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
-                                <app-btn-eliminar
-                                    name="Eliminar"
-                                    class="me-2"
-                                    (click)="
-                                        procesarProforma(
-                                            chofer,
-                                            'chofer',
-                                            'baja',
-                                            ''
-                                        )
-                                    "
-                                ></app-btn-eliminar>
-                                <div class="dropdown m-0 p-0">
+                                    <app-btn-eliminar
+                                        name="Eliminar"
+                                        class="me-2"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                chofer,
+                                                'chofer',
+                                                'baja'
+                                            )
+                                        "
+                                    ></app-btn-eliminar>
                                     <app-btn-agregar
                                         name="Factura"
                                         class="me-2"
                                         type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                chofer,
+                                                'chofer',
+                                                'factura'
+                                            )
+                                        "
                                     ></app-btn-agregar>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                procesarProforma(
-                                                    chofer,
-                                                    'chofer',
-                                                    'facturar',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                procesarProforma(
-                                                    chofer,
-                                                    'chofer',
-                                                    'facturar',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
-                                <!-- <app-btn-agregar name="Factura" (click)="procesarProforma(chofer,'chofer', 'facturar')"></app-btn-agregar> -->
-                            </td>
+                                </td>
+                            </tr>
+                        }
+                    } @else {
+                        <tr>
+                            <td colspan="8">No hay proformas cargadas</td>
                         </tr>
                     }
-                } @else {
-                    <tr>
-                        <td colspan="8">No hay proformas cargadas</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
     <hr class="mt-5" />
     <div class="mt-5">
@@ -368,174 +289,140 @@
             [(ngModel)]="filtroProveedor"
             class="form-control mb-2"
         />
-        <table class="table table-light table-striped table-bordered">
-            <thead class="sticky-top">
-                <th style="width: 21%">Proveedor</th>
-                <th class="text-center">Proforma N°</th>
-                <th class="text-center">Mes</th>
-                <th class="text-center">Periodo Liq</th>
-                <th class="text-center">Cant Op</th>
-                <th>Suma a Cobrar</th>
-                <th>Suma a Pagar</th>
-                <th class="text-center">Ganancia Neta</th>
-                <th class="text-center">% Ganancia</th>
-                <th style="width: 13%" class="text-center">Acciones</th>
-            </thead>
-            <tbody>
-                @if (proformasProveedores.length > 0) {
-                    @for (
-                        prov of proformasProveedores
-                            | globalFilter
-                                : filtroProveedor
-                                : [
-                                      "razonSocial",
-                                      "opCerradas",
-                                      "opAbiertas",
-                                      "opSinFacturar",
-                                      "opFacturadas",
-                                      "total",
-                                      "aCobrar",
-                                  ];
-                        track prov;
-                        let i = $index
-                    ) {
-                        <tr>
-                            <td>{{ prov.entidad.razonSocial }}</td>
-                            <td class="text-center">{{ prov.idInfLiq }}</td>
-                            <td class="text-center">{{ prov.mes }}</td>
-                            <td class="text-center">{{ prov.periodo }}</td>
-                            <td class="text-center">
-                                {{ prov.operaciones.length }}
-                            </td>
-                            <td>
-                                {{
-                                    prov.valores.totalContraParte
-                                        | formatearValor: "$"
-                                }}
-                            </td>
-                            <td class="table-danger">
-                                {{ prov.valores.total | formatearValor: "$" }}
-                            </td>
-                            <td>
-                                {{
-                                    prov.valores.totalContraParte -
+        <div class="panel-box panel-resultados">
+            <table class="table table-light table-striped table-bordered">
+                <thead class="sticky-top">
+                    <th style="width: 21%">Proveedor</th>
+                    <th class="text-center">Proforma N°</th>
+                    <th class="text-center">Mes</th>
+                    <th class="text-center">Periodo Liq</th>
+                    <th class="text-center">Cant Op</th>
+                    <th>Suma a Cobrar</th>
+                    <th>Suma a Pagar</th>
+                    <th class="text-center">Ganancia Neta</th>
+                    <th class="text-center">% Ganancia</th>
+                    <th style="width: 13%" class="text-center">Acciones</th>
+                </thead>
+                <tbody>
+                    <!-- TABLA DE PROVEEDORES -->
+                    @if (proformasProveedores.length > 0) {
+                        @for (
+                            prov of proformasProveedores
+                                | globalFilter
+                                    : filtroProveedor
+                                    : [
+                                          "entidad.razonSocial",
+                                          "mes",
+                                          "periodo",
+                                          "operaciones.length",
+                                          "valores.totalContraParte",
+                                          "valores.total",
+                                          "idInfLiq"                                          
+                                      ];
+                            track prov;
+                            let i = $index
+                        ) {
+                            <tr>
+                                <td>{{ prov.entidad.razonSocial }}</td>
+                                <td class="text-center">{{ prov.idInfLiq }}</td>
+                                <td class="text-center">{{ prov.mes }}</td>
+                                <td class="text-center">{{ prov.periodo }}</td>
+                                <td class="text-center">
+                                    {{ prov.operaciones.length }}
+                                </td>
+                                <td>
+                                    {{
+                                        prov.valores.totalContraParte
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+                                <td class="table-danger">
+                                    {{
                                         prov.valores.total | formatearValor: "$"
-                                }}
-                            </td>
-                            <!-- <td class="text-center table-warning">{{(100-((prov.valores.total*100)/prov.montoFacturaCliente)) | formatearValor}} %</td> -->
-                            <td class="text-center table-warning">
-                                {{
-                                    prov.valores.total
-                                        | calcularPorcentaje
-                                            : prov.valores.totalContraParte
-                                            : true
-                                }}
-                            </td>
-                            <td class="d-flex">
-                                <app-btn-leer
-                                    name="Detalle"
-                                    class="me-2"
-                                    (click)="
-                                        obtenerFacturasOp(
-                                            prov,
-                                            'proveedor',
-                                            'vista',
-                                            ''
-                                        )
-                                    "
-                                ></app-btn-leer>
-                                <div class="dropdown">
+                                    }}
+                                </td>
+                                <td>
+                                    {{
+                                        prov.valores.totalContraParte -
+                                            prov.valores.total
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+                                <td class="text-center table-warning">
+                                    {{
+                                        prov.valores.total
+                                            | calcularPorcentaje
+                                                : prov.valores.totalContraParte
+                                                : true
+                                    }}
+                                </td>
+                                <td class="d-flex">
+                                    <app-btn-leer
+                                        name="Detalle"
+                                        class="me-2"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                prov,
+                                                'proveedor',
+                                                'vista'
+                                            )
+                                        "
+                                    ></app-btn-leer>
                                     <app-btn-leer
                                         name="print"
                                         class="me-2"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                prov,
+                                                'cliente',
+                                                'reimpresion'
+                                            )
+                                        "
                                     ></app-btn-leer>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    prov,
-                                                    'proveedor',
-                                                    'reimpresion',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                obtenerFacturasOp(
-                                                    prov,
-                                                    'proveedor',
-                                                    'reimpresion',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
-                                <app-btn-eliminar
-                                    name="Eliminar"
-                                    class="me-2"
-                                    (click)="
-                                        procesarProforma(
-                                            prov,
-                                            'proveedor',
-                                            'baja',
-                                            ''
-                                        )
-                                    "
-                                ></app-btn-eliminar>
-                                <div class="dropdown m-0 p-0">
+                                    <app-btn-eliminar
+                                        name="Eliminar"
+                                        class="me-2"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                prov,
+                                                'proveedor',
+                                                'baja'
+                                            )
+                                        "
+                                    ></app-btn-eliminar>
                                     <app-btn-agregar
                                         name="Factura"
                                         class="me-2"
                                         type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
+                                        (click)="
+                                            obtenerFacturasOp(
+                                                prov,
+                                                'proveedor',
+                                                'factura'
+                                            )
+                                        "
                                     ></app-btn-agregar>
-                                    <ul class="dropdown-menu">
-                                        <app-btn-leer
-                                            name="excel"
-                                            class="me-2"
-                                            (click)="
-                                                procesarProforma(
-                                                    prov,
-                                                    'proveedor',
-                                                    'facturar',
-                                                    'excel'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                        <app-btn-leer
-                                            name="pdf"
-                                            (click)="
-                                                procesarProforma(
-                                                    prov,
-                                                    'proveedor',
-                                                    'facturar',
-                                                    'pdf'
-                                                )
-                                            "
-                                        ></app-btn-leer>
-                                    </ul>
-                                </div>
-                                <!-- <app-btn-agregar name="Factura" (click)="procesarProforma(prov,'proveedor', 'facturar')"></app-btn-agregar> -->
-                            </td>
+                                </td>
+                            </tr>
+                        }
+                    } @else {
+                        <tr>
+                            <td colspan="8">No hay proformas cargadas</td>
                         </tr>
                     }
-                } @else {
-                    <tr>
-                        <td colspan="8">No hay proformas cargadas</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
+</div>
+
+<div>
+    <button class="btn btn-warning" (click)="editarInformesLiq()">
+        Editar Proformas
+    </button>
+    <button class="btn btn-danger" (click)="actualizarInformesLiq()">
+        Actualizar Proformas
+    </button>
 </div>
 
 @if (isLoading) {

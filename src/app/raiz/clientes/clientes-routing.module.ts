@@ -11,7 +11,8 @@ import { ClientesListadoComponent } from './clientes-listado/clientes-listado.co
 
 const routes: Routes = [
   {path: '', component:ClientesControlComponent,
-  children: [        
+  children: [  
+    { path: '', redirectTo: 'listado', pathMatch: 'full' },         
     {path: 'alta', component:ClienteAltaComponent,
       canActivate: [RoleGuard],
       data: { roles: ['god', 'admin', 'manager'] }, // no se permiten usuarios

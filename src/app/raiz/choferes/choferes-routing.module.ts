@@ -11,7 +11,8 @@ import { ChoferesListadoComponent } from './choferes-listado/choferes-listado.co
 
 const routes: Routes = [
   {path: '', component:ChoferesControlComponent,
-  children: [       
+  children: [
+    { path: '', redirectTo: 'listado', pathMatch: 'full' },         
     {path: 'alta', component:ChoferesAltaComponent,
           canActivate: [RoleGuard],
           data: { roles: ['god', 'admin', 'manager'] }, // no se permiten usuarios

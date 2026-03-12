@@ -1,184 +1,105 @@
-<!-- ========================= -->
-<!-- MODO MODAL / PANTALLA    -->
-<!-- ========================= -->
+@if (loading) {
+  <div class="text-center p-5">Cargando...</div>
+}
 
 @if (!loading && movimiento) {
 
-  <div class="container-fluid">
+  <div class="acciones no-print">
+    <button class="btn btn-success  me-2" (click)="descargarPdf()">
+      Descargar
+    </button>
 
-      <div class="d-flex justify-content-between align-items-start mb-3">
-          <div>
-              <h4 class="mb-1">{{ titulo }}</h4>
-              <div class="text-muted small">
-                ID Movimiento: {{ movimiento.id }}
-              </div>
-          </div>
-
-          <div class="text-end">
-              <button class="btn btn-outline-primary btn-sm me-2"
-                      (click)="imprimir()">
-                Imprimir
-              </button>
-
-              @if(modoModal){
-                  <button class="btn btn-outline-secondary btn-sm" (click)="cerrar()">
-                    Cerrar
-                  </button>
-              }              
-          </div>
-      </div>
-
-      <!-- ===== Datos principales ===== -->
-
-      <div class="card mb-3">
-          <div class="card-body">
-
-              <div class="row g-3">
-
-                  <div class="col-md-4">
-                      <label class="form-label small text-muted">Fecha</label>
-                      <div>{{ movimiento.fecha }}</div>
-                  </div>
-
-                  <div class="col-md-4">
-                      <label class="form-label small text-muted">Tipo</label>
-                      <div class="text-capitalize">{{ movimiento.tipo }}</div>
-                  </div>
-
-                  <div class="col-md-4">
-                      <label class="form-label small text-muted">Medio de pago</label>
-                      <div class="text-capitalize">
-                        {{ movimiento.medioPago || '—' }}
-                      </div>
-                  </div>
-
-                  <div class="col-md-8">
-                      <label class="form-label small text-muted">Entidad</label>
-                      <div>
-                          {{ movimiento.entidad.razonSocial }}
-                          <span class="badge bg-secondary ms-2 text-capitalize">
-                            {{ movimiento.entidad.tipo }}
-                          </span>
-                      </div>
-                  </div>
-
-                  <div class="col-md-4">
-                      <label class="form-label small text-muted">Referencia</label>
-                      <div>{{ movimiento.referencia || '—' }}</div>
-                  </div>
-
-                  @if (movimiento.observaciones) {
-                    <div class="col-12">
-                        <label class="form-label small text-muted">Observaciones</label>
-                        <div>{{ movimiento.observaciones }}</div>
-                    </div>
-                  }
-
-              </div>
-
-          </div>
-      </div>
-
-
-      <!-- ===== Imputaciones ===== -->
-
-      <div class="card mb-3">
-          <div class="card-header">
-            Imputaciones
-          </div>
-
-          <div class="table-responsive">
-              <table class="table table-sm table-striped mb-0">
-                  <thead>
-                      <tr>
-                          <th># Informe</th>
-                          <th>Fecha</th>
-                          <th class="text-end">Total Informe</th>
-                          <th class="text-end">Imputado</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-
-                      @for (imp of movimiento.imputaciones; track imp.informeLiqId) {
-                          <tr>
-                              <td>{{ imp.numeroInterno }}</td>
-                              <td>{{ imp.fechaInforme }}</td>
-                              <td class="text-end">
-                                {{ imp.totalInforme | formatearValor:'$' }}
-                              </td>
-                              <td class="text-end fw-semibold">
-                                {{ imp.montoImputado | formatearValor:'$' }}
-                              </td>
-                          </tr>
-                      }
-
-                  </tbody>
-              </table>
-          </div>
-      </div>
-
-
-      <!-- ===== Totales ===== -->
-
-      <div class="card">
-          <div class="card-body text-end">
-              <div class="fs-5">
-                  Total movimiento:
-                  <span class="fw-bold">
-                    {{ movimiento.totalMovimiento | formatearValor:'$' }}
-                  </span>
-              </div>
-          </div>
-      </div>
-
+    <button class="btn btn-primary " (click)="imprimir()">
+      Imprimir
+    </button>
   </div>
 
-}
+  <div class="documento">
 
-@if (loading) {
-    <div class="text-center p-5">
-      Cargando movimiento...
+    <!-- HEADER -->
+    <div class="doc-header">
+      <div class="empresa">
+        <h2>Vantruck</h2>
+        <div class="subtitulo">Sistema Interno de Gestión</div>
+      </div>
+
+      <div class="comprobante">
+        <div class="tipo">
+          {{ titulo }}
+        </div>
+
+        <div class="numero">
+          N° {{ movimiento.numeroComprobante }}
+        </div>
+
+        <div class="fecha">
+          Fecha operación: {{ movimiento.fechaOperacion }}
+        </div>
+
+        <div class="estado"
+             [class.estado-anulado]="movimiento.estado === 'anulado'">
+          {{ movimiento.estado | uppercase }}
+        </div>
+      </div>
     </div>
-}
 
+    <!-- BLOQUE ANULACIÓN -->
+    @if (movimiento.estado === 'anulado') {
+      <div class="bloque-anulado">
+        DOCUMENTO ANULADO <br>
+        Motivo: {{ movimiento.motivoAnulacion }}
+      </div>
+    }
 
-<!-- ========================= -->
-<!-- BLOQUE PRINT             -->
-<!-- ========================= -->
+    <!-- DATOS PRINCIPALES -->
+    <div class="seccion">
+      <div><strong>Entidad:</strong> {{ movimiento.entidad.razonSocial }}</div>
+      <div><strong>Tipo:</strong> {{ movimiento.entidad.tipo }}</div>
+      <div><strong>Medio de pago:</strong> {{ movimiento.medioPago }}</div>
+      <div><strong>Referencia:</strong> {{ movimiento.referencia || '—' }}</div>
+      <div><strong>Observaciones:</strong> {{ movimiento.observaciones || '—' }}</div>
+    </div>
 
-<div class="print-only" *ngIf="movimiento">
+    <!-- IMPUTACIONES -->
+    <div class="seccion">
+      <h4>Imputaciones</h4>
 
-    <h2>{{ titulo }}</h2>
-
-    <p>
-      <strong>Fecha:</strong> {{ movimiento.fecha }}<br>
-      <strong>Entidad:</strong> {{ movimiento.entidad.razonSocial }}<br>
-      <strong>Tipo:</strong> {{ movimiento.tipo }}<br>
-    </p>
-
-    <table class="table table-sm">
+      <table class="tabla-imputaciones">
         <thead>
-            <tr>
-                <th>Informe</th>
-                <th>Fecha</th>
-                <th>Total</th>
-                <th>Imputado</th>
-            </tr>
+          <tr>
+            <th>Informe</th>
+            <th>Fecha</th>
+            <th>Mes</th>
+            <th>Periodo</th>
+            <th>Total Informe</th>
+            <th>Monto Imputado</th>
+          </tr>
         </thead>
+
         <tbody>
-            @for (imp of movimiento.imputaciones; track imp.informeLiqId) {
-                <tr>
-                    <td>{{ imp.numeroInterno }}</td>
-                    <td>{{ imp.fechaInforme }}</td>
-                    <td>{{ imp.totalInforme | formatearValor:'$' }}</td>
-                    <td>{{ imp.montoImputado | formatearValor:'$' }}</td>
-                </tr>
-            }
+          @for (imp of movimiento.imputaciones; track imp.informeLiqId) {
+            <tr>
+              <td>#{{ imp.numeroInterno }}</td>
+              <td>{{ imp.fechaInforme }}</td>
+              <td>{{ imp.mesLiquidado }}</td>
+              <td>{{ imp.periodoLiquidado }}</td>
+              <td>{{ imp.totalInforme | formatearValor:'$' }}</td>
+              <td>{{ imp.montoImputado | formatearValor:'$' }}</td>
+            </tr>
+          }
         </tbody>
-    </table>
+      </table>
+    </div>
 
-    <h4 class="text-end">
-      Total: {{ movimiento.totalMovimiento | formatearValor:'$' }}
-    </h4>
+    <!-- TOTAL -->
+    <div class="total">
+      TOTAL: {{ movimiento.totalMovimiento | formatearValor:'$' }}
+    </div>
 
-</div>
+    <!-- FOOTER -->
+    <div class="footer">
+      Emitido el {{ movimiento.creadoEn | date:'dd/MM/yyyy HH:mm' }}
+    </div>
+
+  </div>
+}

@@ -9,9 +9,9 @@ import { StorageService } from '../storage/storage.service';
 import { ConId } from 'src/app/interfaces/conId';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { take } from 'rxjs';
-import { forEach } from 'lodash';
-import { doc, DocumentData, Firestore, getDoc, writeBatch } from 'firebase/firestore';
-import { chunk } from 'lodash';
+
+
+
 import { InformeOp } from 'src/app/interfaces/informe-op';
 import { InformeLiq } from 'src/app/interfaces/informe-liq';
 

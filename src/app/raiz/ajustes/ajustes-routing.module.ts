@@ -8,7 +8,8 @@ import { PapeleraComponent } from './papelera/papelera.component';
 
 const routes: Routes = [
   {path: '', component:AjustesControlComponent,
-    children: [        
+    children: [ 
+      { path: '', redirectTo: 'usuarios', pathMatch: 'full' },  
       {path: 'usuarios', component:AjustesUsuariosComponent,
             canActivate: [RoleGuard],
             data: { roles: ['god', 'admin'] }, // no se permiten usuarios

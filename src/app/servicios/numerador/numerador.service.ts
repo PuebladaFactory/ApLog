@@ -1,7 +1,7 @@
 // numerador.service.ts
 import { inject, Injectable } from '@angular/core';
-import { doc, DocumentReference, runTransaction, Transaction } from 'firebase/firestore';
-import { Firestore } from '@angular/fire/firestore';
+
+import { doc, DocumentReference, Firestore, runTransaction, Transaction } from '@angular/fire/firestore';
 
 @Injectable({
   providedIn: 'root'

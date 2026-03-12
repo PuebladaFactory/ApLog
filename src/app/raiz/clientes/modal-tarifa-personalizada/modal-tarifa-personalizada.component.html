@@ -57,13 +57,13 @@
                 <td style="border-left: black 2px solid" class="align-middle">
                   <div class="input-group">
                     <span class="input-group-text" id="basic-addon1">$</span>
-                    <input type="text" class="form-control" inputmode="numeric" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoACobrar" appFormatoNumericoNgModel>
+                    <input type="text" class="form-control" inputmode="numeric" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoACobrar" appMonto [minimo]="0">
                   </div>
                 </td>
                 <td class="align-middle">
                   <div class="input-group">
                     <span class="input-group-text" id="basic-addon1">$</span>
-                    <input type="text" class="form-control" inputmode="numeric" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoAPagar" appFormatoNumericoNgModel>
+                    <input type="text" class="form-control" inputmode="numeric" [disabled]="modoAutomatico" [(ngModel)]="categoria.nuevoAPagar" appMonto [minimo]="0">
                   </div>
                 </td>
               </tr>
@@ -112,14 +112,14 @@
                   <div class="form-group" >
                     <div class="input-group">
                       <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                      <input type="text" inputmode="numeric" appFormatoNumericoNgModel [(ngModel)]="categoria.aCobrar">
+                      <input type="text" inputmode="numeric" appMonto [minimo]="0" [(ngModel)]="categoria.aCobrar">
                     </div>
                   </div>
                   <td class="align-middle">
                     <div class="form-group" >
                       <div class="input-group">
                         <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                        <input type="text" inputmode="numeric" appFormatoNumericoNgModel [(ngModel)]="categoria.aPagar">
+                        <input type="text" inputmode="numeric" appMonto [minimo]="0" [(ngModel)]="categoria.aPagar">
                       </div>
                     </div>
                   </td>

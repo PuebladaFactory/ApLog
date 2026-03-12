@@ -9,7 +9,13 @@
     <div class="d-flex">
       <div class="flex-grow-1">        
         <h3>Detalle de Operaciones de {{titulo}} </h3>
-        <h4>Mes: <span class="fw-bold">{{informeLiq.mes}}</span> - Periodo liquidado: <span class="fw-bold">{{informeLiq.periodo}}</span></h4>
+        <h4>
+          Mes: <span class="fw-bold">{{informeLiq.mes}}</span> - Periodo liquidado: <span class="fw-bold">{{informeLiq.periodo}}</span>
+          @if((fromParent.modo === 'proforma' || fromParent.accion === 'edicion')){
+              <app-btn-editar name="Editar" class="ms-3" (click)="abrirModalPeriodo()"></app-btn-editar>
+          }
+        </h4>
+        
       </div>
       @if((fromParent.modo === 'proforma' || fromParent.accion === 'edicion')){
         <div class="d-flex">

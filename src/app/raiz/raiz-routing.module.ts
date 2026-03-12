@@ -7,7 +7,7 @@ import { RoleGuard } from '../guards/role.guard';
 const routes: Routes = [
   {path: '', component: HomeComponent,
    children: [
-    { path: '', redirectTo: '/op', pathMatch: 'full' },    
+    { path: '', redirectTo: 'op', pathMatch: 'full' },
     {
       path: 'clientes',
       loadChildren: () => import('./clientes/clientes.module').then(m => m.ClientesModule),
@@ -60,7 +60,7 @@ const routes: Routes = [
       path: 'nuevaFacturacion',
       loadChildren: () => import('./nueva-facturacion/nueva-facturacion.module').then(m => m.NuevaFacturacionModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god'] },       
+      data: { roles: ['god','admin'] },       
     },
     {
       path: 'vendedores',
@@ -72,7 +72,7 @@ const routes: Routes = [
       path: 'finanzas',
       loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god'] }, // 
+      data: { roles: ['god','admin'] }, // 
     },
     
     

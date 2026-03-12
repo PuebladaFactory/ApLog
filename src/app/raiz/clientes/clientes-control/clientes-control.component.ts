@@ -37,7 +37,7 @@ export class ClientesControlComponent implements OnInit {
   constructor(private router: Router) {}
 
   ngOnInit(): void {
-    this.selectTab("tab1");
+    //this.selectTab("tab1");
   }
 
   selectTab(tabId: string) {

@@ -110,7 +110,7 @@
                         class="form-control" required
                         type="text"
                         inputmode="numeric"
-                        appFormatoNumerico
+                        appMonto [minimo]="0"
                                 [ngClass]="{ 'is-invalid': categoriaForm.get('aCobrar').invalid &&
                                 (categoriaForm.get('aCobrar').dirty || categoriaForm.get('aCobrar').touched) }"
                         >
@@ -128,7 +128,7 @@
                           class="form-control" required
                           type="text"
                           inputmode="numeric"
-                          appFormatoNumerico
+                          appMonto [minimo]="0"
                                 [ngClass]="{ 'is-invalid': categoriaForm.get('aPagar').invalid &&
                                 (categoriaForm.get('aPagar').dirty || categoriaForm.get('aPagar').touched) }"
                           >

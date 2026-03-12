@@ -56,7 +56,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   seccionElegida!: Seccion;
   categoriaElegida: number = 0;
   tarifaPersonalizadaOp!: TarifaPersonalizada;
-  tarifaPersonalizada!: ConIdType<TarifaPersonalizadaCliente>
+  tarifaPersonalizada!: ConIdType<TarifaPersonalizadaCliente>;
   tarifaTipo!: TarifaTipo;
   vista: boolean = false;
   editar: boolean = false;
@@ -81,13 +81,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     private tableroServ: TableroService,
   ) {
     this.form = this.fb.group({
-       km: [
-    '',
-    [
-      Validators.required,
-      Validators.pattern(/^[0-9]+$/)
-    ]
-  ]
+      km: ["", [Validators.required, Validators.pattern(/^[0-9]+$/)]],
     });
 
     this.formAcomp = this.fb.group({
@@ -128,15 +122,17 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
         break;
     }
     if (this.op.tarifaTipo.personalizada) {
-      let tarifas =
-        this.storageService.loadInfo("tarifasPersCliente");
+      let tarifas = this.storageService.loadInfo("tarifasPersCliente");
       //console.log("tarifas pers clientes", tarifas);
       if (tarifas) {
         this.tarifaPersonalizada = tarifas.find(
           (tarifa: ConIdType<TarifaPersonalizadaCliente>) =>
             tarifa.idCliente === this.op.cliente.idCliente,
         );
-        console.log("tarifa personalizada del cliente: ", this.tarifaPersonalizada);
+        console.log(
+          "tarifa personalizada del cliente: ",
+          this.tarifaPersonalizada,
+        );
         this.tarifaPersonalizadaOp = this.op.tarifaPersonalizada;
       } else {
         this.mensajesError("no hay tarifas personalizadas");
@@ -146,11 +142,11 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     } else {
       this.tarifaPersonalizadaOp = {
         seccion: 0,
-        categoria:0,
+        categoria: 0,
         nombre: "",
         aCobrar: 0,
         aPagar: 0,
-      }
+      };
       this.obtenerTarifas();
       this.armarForm();
     }
@@ -164,7 +160,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     //console.log('ModalFacturacionComponent - ngOnDestroy');
   }
 
-  ngAfterViewInit(): void {    
+  ngAfterViewInit(): void {
     // Establece el foco en el input de Km Recorridos al inicializar el componente
     if (this.cerrar) {
       setTimeout(() => {
@@ -179,12 +175,10 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       acompaniante: this.op.acompaniante,
     });
 
-    
-
     /* this.tEventual = this.op.tEventual; */
 
     //////////console.log("1)", this.tarifaPersonalizadaOp);
-/*     if (this.op.tarifaTipo.personalizada && this.tarifaClienteSel) {
+    /*     if (this.op.tarifaTipo.personalizada && this.tarifaClienteSel) {
       this.seccionElegida =
         this.tarifaClienteSel.secciones[
           this.op.tarifaPersonalizada.seccion - 1
@@ -239,7 +233,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   }
 
   ///////// TARIFA PERSONALIZADA /////////////
-/*   changeSecion(e: any) {
+  /*   changeSecion(e: any) {
     //////////console.log("seccion: ", e.target.value);
     this.mostrarCategoria = true;
     if (this.tarifaEventual) {
@@ -291,8 +285,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     }
   } */
 
-  
-    ///////// TARIFA PERSONALIZADA /////////////
+  ///////// TARIFA PERSONALIZADA /////////////
   changeSecion(e: any) {
     //console.log("seccion: ", e.target.value);
     this.tarifaPersonalizadaOp = {
@@ -333,7 +326,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
           this.tarifaPersonalizadaOp.aPagar,
         );
       ////console.log("tarifaPersonalizadaOp: ",this.tarifaPersonalizadaOp);
-      
+
       this.recalcularValores();
     } else {
       this.mensajesError(
@@ -341,10 +334,10 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       );
     }
   }
-  
-    onSubmit() {
+
+  onSubmit() {
     console.log(this.form.value.km);
-    
+
     if (this.cerrar) {
       if (this.form.valid) {
         this.cerrarOp();
@@ -352,7 +345,16 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
         this.mensajesError("El campo de Km recorridos no puede quedar vacio");
       }
     } else {
-      if((this.op.valores.cliente.adExtraValor && this.op.valores.chofer.adExtraValor) && (this.op.valores.cliente.adExtraValor > 0 || this.op.valores.chofer.adExtraValor > 0) && this.op.adExtraConcepto === "" ) return this.mensajesError("Debe asignar una descripción al gasto extra");
+      if (
+        this.op.valores.cliente.adExtraValor &&
+        this.op.valores.chofer.adExtraValor &&
+        (this.op.valores.cliente.adExtraValor > 0 ||
+          this.op.valores.chofer.adExtraValor > 0) &&
+        this.op.adExtraConcepto === ""
+      )
+        return this.mensajesError(
+          "Debe asignar una descripción al gasto extra",
+        );
       this.armarOp();
     }
   }
@@ -367,7 +369,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   }
 
   cerrarOp() {
-  this.op.km = this.formNumServ.convertirAValorNumerico(this.form.value.km);
+    this.op.km = this.formNumServ.convertirAValorNumerico(this.form.value.km);
     /*this.op.valores.chofer.aPagar = this.formNumServ.convertirAValorNumerico(
       this.op.valores.chofer.aPagar,
     );
@@ -397,17 +399,13 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
         : 1;
 
     console.log("this.op.acompanienteCant :", this.op.acompanienteCant); */
-    
-
 
     console.log("operacion: para cerrar", this.op);
-    this.calcularValoresfinales()
-
-
+    this.calcularValoresfinales();
   }
 
-  calcularValoresfinales(){
-        Swal.fire({
+  calcularValoresfinales() {
+    Swal.fire({
       title: "¿Desea cerrar la operación?",
       //text: "You won't be able to revert this!",
       icon: "warning",
@@ -465,7 +463,6 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     });
   }
 
-
   armarOp() {
     this.op.tarifaPersonalizada = this.tarifaPersonalizadaOp;
 
@@ -479,7 +476,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
 
     //this.op.acompanienteCant = !this.op.acompaniante ? 0 : this.op.acompanienteCant? this.op.acompanienteCant : 1;
 
-    console.log("editar op :", this.op);    
+    console.log("editar op :", this.op);
     this.updateItem();
   }
 
@@ -585,7 +582,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     this.recalcularValores();
   }
 
-  getClaseTarifa(op: Operacion): string {
+  getClaseTarifa(op: Operacion, objeto: string): string {
     if (op.tarifaTipo.eventual) {
       return "bg-warning";
     }
@@ -593,7 +590,19 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       return "bg-success";
     }
     if (op.tarifaTipo.especial) {
-      return "bg-info";
+      if (objeto === "cliente") {
+        if (op.cliente.tarifaTipo.especial) {
+          return "bg-info";
+        } else {
+          return "bg-primary";
+        }
+      } else {
+        if (op.chofer.tarifaTipo.especial) {
+          return "bg-info";
+        } else {
+          return "bg-primary";
+        }
+      }
     }
     if (op.tarifaTipo.general) {
       return "bg-primary";
@@ -751,12 +760,12 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
 
   recalcularValores() {
     this.op.valores.cliente.aCobrar =
-      (this.op.valores.cliente.tarifaBase * this.op.multiplicadorCliente) +
+      this.op.valores.cliente.tarifaBase * this.op.multiplicadorCliente +
       this.op.valores.cliente.kmAdicional +
       this.op.valores.cliente.acompValor +
       (this.op.valores.cliente.adExtraValor ?? 0);
     this.op.valores.chofer.aPagar =
-      (this.op.valores.chofer.tarifaBase * this.op.multiplicadorChofer) +
+      this.op.valores.chofer.tarifaBase * this.op.multiplicadorChofer +
       this.op.valores.chofer.kmAdicional +
       this.op.valores.chofer.acompValor +
       (this.op.valores.chofer.adExtraValor ?? 0);
