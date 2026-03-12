@@ -68,7 +68,7 @@
                             </h2>
                         </a>               
                     </li>
-                    <li>
+<!--                     <li>
                         <a [routerLink]="['/facturacion']" >
                             <h2  class="d-flex mt-3" type="button">                    
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-receipt-cutoff" viewBox="0 0 16 16">
@@ -78,7 +78,7 @@
                                 <p>Facturación</p>                       
                             </h2> 
                         </a>              
-                    </li>
+                    </li> -->
                     @if(!$usuario.roles.demo){
                         <li>
                             <a [routerLink]="['/legajos']" >
@@ -132,7 +132,7 @@
                             </a>                                        
                         </li>
                     }     
-                    @if($usuario.roles.god){
+                    @if($usuario.roles.admin || $usuario.roles.god){
                         <li>
                             <a [routerLink]="['/nuevaFacturacion']" >
                                 <h2  class="d-flex mt-3" type="button">                    
@@ -145,7 +145,7 @@
                             </a>                                     
                         </li>
                     }   
-                     @if($usuario.roles.god){
+                     @if($usuario.roles.admin || $usuario.roles.god){
                         <li>
                             <a [routerLink]="['/finanzas']" >
                                 <h2  class="d-flex mt-3" type="button">                    
