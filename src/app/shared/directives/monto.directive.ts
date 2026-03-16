@@ -7,16 +7,13 @@ import {
   forwardRef,
   OnChanges,
   SimpleChanges,
-} from '@angular/core';
-import {
-  ControlValueAccessor,
-  NG_VALUE_ACCESSOR,
-} from '@angular/forms';
-import AutoNumeric, { Options } from 'autonumeric';
+} from "@angular/core";
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
+import AutoNumeric, { Options } from "autonumeric";
 
 @Directive({
   standalone: false,
-  selector: '[appMonto]',
+  selector: "[appMonto]",
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -34,7 +31,7 @@ export class MontoDirective
   @Input() maximo?: number;
 
   // 🆕 Nuevas opciones
-  @Input() modo: 'normal' | 'porcentaje' = 'normal';
+  @Input() modo: "normal" | "porcentaje" = "normal";
   @Input() soloEntero = false;
   @Input() prefijo?: string;
 
@@ -42,6 +39,7 @@ export class MontoDirective
   private onChange = (value: any) => {};
   private onTouched = () => {};
   private initialized = false;
+  private pendingValue: any = null;
 
   constructor(private el: ElementRef<HTMLInputElement>) {}
 
@@ -49,15 +47,21 @@ export class MontoDirective
     this.initAutoNumeric();
     this.initialized = true;
 
+    // aplicar valor pendiente
+    if (this.pendingValue !== null) {
+      this.autoNumeric.set(this.pendingValue);
+      this.pendingValue = null;
+    }
+
     this.el.nativeElement.addEventListener(
-      'autoNumeric:rawValueModified',
+      "autoNumeric:rawValueModified",
       () => {
         const rawValue = this.autoNumeric.getNumber();
         this.onChange(rawValue);
-      }
+      },
     );
 
-    this.el.nativeElement.addEventListener('blur', () => {
+    this.el.nativeElement.addEventListener("blur", () => {
       this.onTouched();
     });
   }
@@ -69,9 +73,12 @@ export class MontoDirective
   }
 
   writeValue(value: any): void {
-    if (!this.autoNumeric) return;
+    if (!this.autoNumeric) {
+      this.pendingValue = value;
+      return;
+    }
 
-    if (value === null || value === undefined || value === '') {
+    if (value === null || value === undefined || value === "") {
       this.autoNumeric.clear();
       return;
     }
@@ -100,7 +107,7 @@ export class MontoDirective
   private initAutoNumeric(): void {
     this.autoNumeric = new AutoNumeric(
       this.el.nativeElement,
-      this.buildOptions()
+      this.buildOptions(),
     );
   }
 
@@ -111,18 +118,16 @@ export class MontoDirective
       this.minimo !== undefined
         ? this.minimo.toString()
         : this.permitirNegativos
-        ? '-9999999999'
-        : '0';
+          ? "-9999999999"
+          : "0";
 
     let maximumValue =
-      this.maximo !== undefined
-        ? this.maximo.toString()
-        : '9999999999';
+      this.maximo !== undefined ? this.maximo.toString() : "9999999999";
 
     const options: Partial<Options> = {
-      digitGroupSeparator: '.',
-      decimalCharacter: ',',
-      decimalCharacterAlternative: '.',
+      digitGroupSeparator: ".",
+      decimalCharacter: ",",
+      decimalCharacterAlternative: ".",
 
       decimalPlaces,
       decimalPlacesShownOnBlur: decimalPlaces,
@@ -132,20 +137,20 @@ export class MontoDirective
       maximumValue,
 
       modifyValueOnWheel: false,
-      outputFormat: 'number',
+      outputFormat: "number",
     };
 
     // 🆕 Modo porcentaje
-    if (this.modo === 'porcentaje') {
-      options.suffixText = ' %';
-      options.maximumValue = this.maximo?.toString() ?? '100';
-      options.minimumValue = this.minimo?.toString() ?? '0';
+    if (this.modo === "porcentaje") {
+      options.suffixText = " %";
+      options.maximumValue = this.maximo?.toString() ?? "100";
+      options.minimumValue = this.minimo?.toString() ?? "0";
     }
 
     // 🆕 Prefijo moneda
     if (this.prefijo) {
       options.currencySymbol = this.prefijo;
-      options.currencySymbolPlacement = 'p';
+      options.currencySymbolPlacement = "p";
     }
 
     return options;

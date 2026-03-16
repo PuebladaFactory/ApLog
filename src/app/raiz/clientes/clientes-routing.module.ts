@@ -8,6 +8,7 @@ import { ClienteTarifaEspecialComponent } from './cliente-tarifa-especial/client
 import { TarifasEventualesComponent } from 'src/app/shared/tarifas-eventuales/tarifas-eventuales.component';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { ClientesListadoComponent } from './clientes-listado/clientes-listado.component';
+import { TarifaEditorComponent } from './tarifa-editor/tarifa-editor.component';
 
 const routes: Routes = [
   {path: '', component:ClientesControlComponent,
@@ -22,6 +23,7 @@ const routes: Routes = [
     {path: 'personalizada', component:ClienteTarifaPersonalizadaComponent},
     {path: 'eventual', component:TarifasEventualesComponent},
     {path: 'listado', component:ClientesListadoComponent},
+    {path: 'personalizada/:id',component: TarifaEditorComponent}
 ]  },
   
 ];

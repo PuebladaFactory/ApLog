@@ -1,43 +1,182 @@
-
 <div class="row mt-3">
-  <div class="col-4 d-flex">
-    <h1 class="mt-2">Tarifa Personalizada</h1>
-    <div class="ms-2">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle mt-2" viewBox="0 0 16 16" type="button" (click)="mostrarInfo()">
-        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-        <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
-      </svg>
+    <div class="col-4 d-flex">
+        <h1 class="mt-2">Tarifa Personalizada</h1>
+        <div class="ms-2">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                class="bi bi-question-circle mt-2"
+                viewBox="0 0 16 16"
+                type="button"
+                (click)="mostrarInfo()"
+            >
+                <path
+                    d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+                />
+                <path
+                    d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"
+                />
+            </svg>
+        </div>
     </div>
-    <!-- <button class="btn btn-primary ms-3" (click)="actClientePers()">Actualizar Clientes Personalizados</button>  -->
-  </div>
-  <div class="col-4 mt-3">
-    <h2>Seleccionar Cliente: </h2>
-    <select class="form-select form-select-md mb-3 w-50" (change)="changeCliente($event)">
-      <option selected>Seleccione</option>
-      @for (cliente of $clientesPers; track cliente) {
-        <option [value]="cliente.idCliente">
-          {{cliente.razonSocial}}
-        </option>
-      }
-    </select>
-  </div>
-  <div class="col-4">
+    <div class="col-4 mt-3">
+        <h2>Seleccionar Cliente:</h2>
+        <select
+            class="form-select form-select-md mb-3 w-50"
+            (change)="changeCliente($event)"
+            [(ngModel)]="idCliente"
+        >
+            <option selected [value]="null" selected hidden>Seleccione</option>
+            @for (cliente of clientesPers; track cliente) {
+                <option [value]="cliente.idCliente">
+                    {{ cliente.razonSocial }}
+                </option>
+            }
+        </select>
+    </div>
+</div>
 
-  </div>
+<!-- BOTONERA -->
+@if (idCliente) {
+    <div class="mt-3 row g-3 d-flex justify-content-between">
+        <div class="col">
+            <h3>{{ clienteSeleccionado.razonSocial }}</h3>
+        </div>
+        
+        <div class="col">
+          @if(estado === 'selector-cliente'){
+            <h4>Seleccionar Cliente Destino:</h4>
+            <select
+                class="form-select form-select-md mb-3 w-50"
+                [(ngModel)]="clienteDestinoId"
+                (change)="seleccionarClienteDestino()"
+            >
+                <option selected [value]="null" selected hidden>
+                    Seleccione
+                </option>
+                @for (
+                    cliente of clientesParaDuplicar;
+                    track cliente.idCliente
+                ) {
+                    <option [value]="cliente.idCliente">
+                        {{ cliente.razonSocial }}
+                    </option>
+                }
+            </select>
+             }
+        </div>
+       
+
+        <div class="col text-end">
+            @if (estado !== "viewer" && ultTarifaCliente) {
+                <button
+                    class="btn btn-info me-2"
+                    (click)="verTarifa()"
+                    [disabled]="!clienteSeleccionado"
+                >
+                    Ultima tarifa
+                </button>
+            }
+            <button
+                class="btn btn-primary me-2"
+                (click)="crear()"
+                [disabled]="!clienteSeleccionado"
+            >
+                Nueva tarifa
+            </button>
+
+            @if (ultTarifaCliente) {
+                <button
+                    class="btn btn-outline-secondary me-2"
+                    (click)="editarTarifa()"
+                >
+                    Editar
+                </button>
+
+                <button
+                    class="btn btn-outline-success me-2"
+                    (click)="aumentarTarifa()"
+                >
+                    Aumentar
+                </button>
+
+                <button
+                    class="btn btn-outline-warning me-2"
+                    (click)="duplicarTarifa()"
+                >
+                    Duplicar
+                </button>
+
+                <button class="btn btn-outline-dark" (click)="historial()">
+                    Historial
+                </button>
+            }
+        </div>
+    </div>
+} @else {
+    <div class="alert alert-light mt-3">Seleccione un cliente.</div>
+}
+
+<!-- INFO -->
+@if (!ultTarifaCliente && idCliente) {
+    <div class="alert alert-info mt-3">
+        Este cliente todavía no tiene tarifa personalizada.
+    </div>
+}
+
+<!-- COMPONENTES -->
+
+@if (estado === "viewer" && idCliente && ultTarifaCliente) {
+    <app-cliente-tarifa-viewer [tarifa]="ultTarifaCliente">
+    </app-cliente-tarifa-viewer>
+}
+
+@if (estado === "editor" && modoEditor === "crear") {
+    <app-tarifa-editor
+        [idCliente]="clienteSeleccionado.idCliente"
+        [modo]="modoEditor"
+        (guardar)="guardarTarifa($event)"
+    >
+    </app-tarifa-editor>
+}
+
+@if ((modoEditor === "editar" && ultTarifaCliente)|| (estado === "editor" && modoEditor === "duplicar")) {
+    <app-tarifa-editor
+        [idCliente]="clienteSeleccionado.idCliente"
+        [tarifa]="ultTarifaCliente"
+        [modo]="modoEditor"
+        (guardar)="guardarTarifa($event)"
+    >
+    </app-tarifa-editor>
+}
+
+@if (modo === "aumentar") {
+    <!-- <app-tarifa-aumento
+      [tarifa]="ultimaTarifa"
+      (guardar)="guardarTarifa($event)">
+  </app-tarifa-aumento> -->
+}
+
+@if (cargando) {
+    <div class="text-center my-4">
+        <app-spinner></app-spinner>
+    </div>
+}
+
+<!-- <div>
+    <ng-template #sinSeleccion>
+        <h4>Seleccione cliente</h4>
+    </ng-template>
 </div>
 
 
-<div>
-  <ng-template #sinSeleccion>
-    <h4>Seleccione cliente</h4>
-  </ng-template>
-</div>
-
-
-@if (clienteSeleccionado !== undefined) {
+@if (clienteSeleccionado) {
   <div  class="mt-3">
     <ng-container *appRole="['god','admin', 'manager']">
       <h3>Crear Tarifario Nuevo</h3>
+      <button class="btn btn-primary"(click)="crearTarifaPErsonalizada(clienteSeleccionado.idCliente)">Crear Tarifa</button>
       <div class="border border-dark border-2 rounded-4 p-3 ">
         <div class="d-flex mb-3">
           @if (secciones.length === 0) {
@@ -177,10 +316,10 @@
               }
             </div>
           </ng-container>
-          @if ($ultTarifaCliente !== undefined) {
+          @if (ultTarifaCliente) {
             <div class="mt-4">
               <div class="d-flex justify-content-between">
-                <h2>Última Tarifa {{$ultTarifaCliente.fecha}}</h2>
+                <h2>Última Tarifa {{ultTarifaCliente.fecha}}</h2>
                 <div>
                   <app-btn-eliminar *appRole="['god','admin', 'manager']" name="Eliminar" (click)="eliminarTarifa()"></app-btn-eliminar>
                   <app-btn-editar *appRole="['god','admin', 'manager']" name="editarTarifa" class="me-3" (click)="openModal('editar')" ></app-btn-editar>
@@ -188,7 +327,7 @@
                 </div>
               </div>
               <div class="border border-dark border-2 rounded-4 p-3 mt-2">
-                @for (seccion of $ultTarifaCliente.secciones; track seccion) {
+                @for (seccion of ultTarifaCliente.secciones; track seccion) {
                   <h4>Seccion {{seccion.orden}}: {{seccion.descripcion? seccion.descripcion : ""}}</h4>
                   <table class="table table-striped">
                     <thead>
@@ -232,3 +371,4 @@
           }
         </div>
       }
+ -->

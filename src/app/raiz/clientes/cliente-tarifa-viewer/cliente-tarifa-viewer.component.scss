@@ -1,0 +1,74 @@
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.tabla-tarifa td,
+.tabla-tarifa th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+th, td, input{
+    font-size:1.3rem;
+}
+
+td:first-child{
+font-weight:500;
+}
+
+.valor {
+  text-align: right;
+}
+
+thead th {
+  text-align: center;
+  vertical-align: middle;
+}
+
+thead tr:first-child th {
+  //background: #f5f5f5;
+  font-weight: 600;
+}
+
+th.base {
+  background: #eef4ff;
+}
+
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500;
+}
+
+
+.moneda {
+  opacity: 0.7;
+  margin-right: 4px;
+}
+
+.table tbody tr:hover td {
+  background: #dfeafc;
+}
+
+.panel-resultados {
+  margin-top: 10px;
+  background: white;
+}
+
+.panel-box {  
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+
+
+
+
+
+

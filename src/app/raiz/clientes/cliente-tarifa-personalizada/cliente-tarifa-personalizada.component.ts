@@ -1,90 +1,116 @@
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, Validators} from '@angular/forms';
+import { Component, OnInit } from "@angular/core";
+import { FormArray, FormBuilder, Validators } from "@angular/forms";
 
-import { Cliente } from 'src/app/interfaces/cliente';
-import { CategoriaTarifa, Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
-import Swal from 'sweetalert2';
-import { ModalTarifaPersonalizadaComponent } from '../modal-tarifa-personalizada/modal-tarifa-personalizada.component';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { HistorialTarifasGralComponent } from 'src/app/shared/modales/historial-tarifas-gral/historial-tarifas-gral.component';
-import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
-import { Subject, takeUntil } from 'rxjs';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { ConIdType } from 'src/app/interfaces/conId';
+import { Cliente } from "src/app/interfaces/cliente";
+import {
+  CategoriaTarifa,
+  Seccion,
+  TarifaPersonalizadaCliente,
+} from "src/app/interfaces/tarifa-personalizada-cliente";
+import { StorageService } from "src/app/servicios/storage/storage.service";
+import Swal from "sweetalert2";
+import { ModalTarifaPersonalizadaComponent } from "../modal-tarifa-personalizada/modal-tarifa-personalizada.component";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { HistorialTarifasGralComponent } from "src/app/shared/modales/historial-tarifas-gral/historial-tarifas-gral.component";
+import { FormatoNumericoService } from "src/app/servicios/formato-numerico/formato-numerico.service";
+import { Subject, takeUntil } from "rxjs";
+import {
+  DbFirestoreService,
+  ResultadoConObjeto,
+} from "src/app/servicios/database/db-firestore.service";
+import { ConId, ConIdType } from "src/app/interfaces/conId";
+import { Router } from "@angular/router";
+import { TarifasService } from "src/app/servicios/tarifas/tarifas.service";
+
+export interface TarifaForm {
+  secciones: Seccion[];
+  adKmboolean: boolean;
+  adicionales: any;
+}
+
+type EstadoPantalla =
+  | "viewer"
+  | "editor"
+  | "selector-cliente"
+  | "historial"
+  | "duplicar";
 
 @Component({
-    selector: 'app-cliente-tarifa-personalizada',
-    templateUrl: './cliente-tarifa-personalizada.component.html',
-    styleUrls: ['./cliente-tarifa-personalizada.component.scss'],
-    standalone: false
+  selector: "app-cliente-tarifa-personalizada",
+  templateUrl: "./cliente-tarifa-personalizada.component.html",
+  styleUrls: ["./cliente-tarifa-personalizada.component.scss"],
+  standalone: false,
 })
 export class ClienteTarifaPersonalizadaComponent implements OnInit {
+  componente: string = "tarifasPersCliente";
+  secciones: Seccion[] = [];
+  seccion!: Seccion;
+  categorias: CategoriaTarifa[] = [];
+  categoria!: CategoriaTarifa;
+  seccionesForm!: FormArray;
+  inputSecciones!: any;
+  categoriaForm: any;
+  descripcionForm: any;
+  tarifasPersCliente!: ConId<TarifaPersonalizadaCliente>[];
+  clientes!: ConId<Cliente>[];
+  clienteSeleccionado!: ConId<Cliente>;
+  clientesPers!: ConId<Cliente>[];
+  ultTarifaCliente!: ConId<TarifaPersonalizadaCliente> | null;
+  nuevaTarifa!: TarifaPersonalizadaCliente;
+  private destroy$ = new Subject<void>();
+  adKmSelect: boolean = false;
+  cargando: boolean = false;
+  usuario!: any;
+  clienteDestinoId: number | null = null;
 
-    componente: string = "tarifasPersCliente"
-    secciones: Seccion [] = [];
-    seccion! : Seccion;
-    categorias : CategoriaTarifa[] = [];
-    categoria!: CategoriaTarifa;
-    seccionesForm!: FormArray;
-    inputSecciones!: any;
-    categoriaForm: any;
-    descripcionForm: any;
-    tarifasPersCliente!: TarifaPersonalizadaCliente[];
-    $clientes!: any;
-    clienteSeleccionado!: Cliente[];
-    $clientesPers! : Cliente [];
-    $ultTarifaCliente!: any;
-    nuevaTarifa!: TarifaPersonalizadaCliente;
-    private destroy$ = new Subject<void>();
-    
-  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, private formNumService:FormatoNumericoService, private dbFirebase: DbFirestoreService ) {
+  constructor(
+    private fb: FormBuilder,
+    private storageService: StorageService,
+    private modalService: NgbModal,
+    private formNumService: FormatoNumericoService,
+    private dbFirebase: DbFirestoreService,
+    private router: Router,
+    private tarifasService: TarifasService,
+  ) {
     this.inputSecciones = this.fb.group({
-      cantSecciones : [""],
-          })
+      cantSecciones: [""],
+    });
     this.categoriaForm = this.fb.group({
-      categoriaNum : [""],
+      categoriaNum: [""],
       nombre: ["", [Validators.required]],
       aCobrar: ["", [Validators.required]],
       aPagar: ["", [Validators.required]],
-          })
+    });
     this.seccionesForm = this.fb.array([]);
     this.descripcionForm = this.fb.group({
-      descripcion : [""],
-          })
+      descripcion: [""],
+    });
     this.secciones = [];
   }
+  idCliente: number | null = null;
+  modo: "ver" | "crear" | "editar" | "aumentar" | "duplicar" | "historial" =
+    "ver";
+  estado: EstadoPantalla = "viewer"; /*  POR AHORA NO ESTA APLICADO */
+  modoEditor: "crear" | "editar" | "aumentar" | "duplicar" =
+    "crear"; /*  POR AHORA NO ESTA APLICADO */
 
   ngOnInit(): void {
-    this.storageService.getObservable<Cliente>('clientes')
-    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-    .subscribe(data => {
-      this.$clientes = data;
-      this.$clientesPers = this.$clientes
-      .filter((c:Cliente)=>{return c.tarifaTipo.personalizada === true})
-      .sort((a:Cliente, b:Cliente) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      
-      this.storageService.getObservable<TarifaPersonalizadaCliente>("tarifasPersCliente") 
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        if (data) {
-            console.log("data: ", data);            
-            this.tarifasPersCliente = data;
-            if(this.clienteSeleccionado){
-              console.log("aca????????");              
-              this.$ultTarifaCliente = this.tarifasPersCliente.find((t:TarifaPersonalizadaCliente) => {return t.idCliente === this.clienteSeleccionado[0].idCliente})
-              console.log("ultTarifaCliente", this.$ultTarifaCliente);    
-              
-            }
-        }
-        /* if (data) {
-          this.$ultTarifaCliente = data;          
-          console.log("1) ult tarifa personalizada: ", this.$ultTarifaCliente);
-        }               */
-      });  
-     
+    this.clientes = this.storageService.loadInfo("clientes");
+    this.clientesPers = this.clientes.filter((c) => c.tarifaTipo.personalizada);
+    this.clientesPers = this.clientesPers.sort((a, b) =>
+      a.razonSocial.localeCompare(b.razonSocial),
+    );
+    let usuario = this.storageService.loadInfo("usuario");
+    this.usuario = usuario[0];
 
-    });               
+    this.storageService
+      .getObservable<ConId<TarifaPersonalizadaCliente>>("tarifasPersCliente")
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        //console.log("data-liquidaciones", data);
+
+        this.buscarTarifas();
+      });
   }
 
   ngOnDestroy(): void {
@@ -92,244 +118,235 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     this.destroy$.complete();
   }
 
-  changeCliente(e: any) {    
-    
-    let id = Number(e.target.value);      
-    console.log(id);
-    this.clienteSeleccionado = this.$clientesPers.filter((cliente:Cliente)=>{     
-      return cliente.idCliente === id
-    })   
-    //this.storageService.getElemntByIdLimit("tarifasPersCliente","idCliente","idTarifa",this.clienteSeleccionado[0].idCliente,"ultTarifaPersCliente");  
-    //this.storageService.getMostRecentItemId("tarifasPersCliente","idTarifa", "idCliente",this.clienteSeleccionado[0].idCliente);  
-    //this.storageService.syncChangesByOneElemId<TarifaPersonalizadaCliente>("tarifasPersCliente","idTarifa","idCliente",this.clienteSeleccionado[0].idCliente);  
-    //console.log("this.tarifasPersCliente", this.tarifasPersCliente);
-    this.tarifasPersCliente= this.storageService.loadInfo("tarifasPersCliente");
-    this.$ultTarifaCliente = this.tarifasPersCliente.find((t:TarifaPersonalizadaCliente) => {return t.idCliente === id})
-    console.log("this.$ultTarifaCliente", this.$ultTarifaCliente);
-    
-    
-  }
+  buscarTarifas() {
+    this.tarifasPersCliente =
+      this.storageService.loadInfo("tarifasPersCliente");
 
-  agregarSeccion() {        
-    let orden = this.secciones.length
-    this.seccion = {      
-      orden: orden + 1,
-      descripcion: "",
-      categorias: [],
-    }
-    this.secciones.push(this.seccion); 
-  }
+    if (!this.idCliente) return;
 
-  eliminarSeccion(index:number){   
-    this.secciones.splice(index, 1);    
-  }
-
-  agregarCategoria(index: number) {           
-    //console.log("1)seccion", this.secciones[index]);
-    console.log("categoria: ", this.categoriaForm.value);
-    if(this.categoriaForm.value.nombre === "" || this.categoriaForm.value.nombre === null || this.categoriaForm.value.aCobrar === "" || this.categoriaForm.value.aCobrar === null ||this.categoriaForm.value.aPagar === "" || this.categoriaForm.value.aPagar === null){
-      return this.mensajesError("Los datos de la categoria no pueden estar en blanco");
-    }
-    this.categoria = {
-      orden: this.secciones[index].categorias.length + 1,
-      nombre: this.categoriaForm.value.nombre,
-      aCobrar: this.formNumService.convertirAValorNumerico(this.categoriaForm.value.aCobrar),
-      aPagar: this.formNumService.convertirAValorNumerico(this.categoriaForm.value.aPagar),
-      nuevoACobrar: 0,
-      nuevoAPagar: 0,
-    };  
-    this.secciones[index].categorias.push(this.categoria)
-    this.categoriaForm.reset()
-    console.log("categorias: ",  this.secciones[index].categorias);
-  }
-
-/*   limpiarValorFormateado(valorFormateado: any): number {
-    if (typeof valorFormateado === 'string') {
-      // Si es un string, eliminar puntos de miles y reemplazar coma por punto
-      return parseFloat(valorFormateado.replace(/\./g, '').replace(',', '.'));
-    } else if (typeof valorFormateado === 'number') {
-      // Si ya es un número, simplemente devuélvelo
-      return valorFormateado;
+    let tPersonalizada = this.tarifasPersCliente.find(
+      (t: TarifaPersonalizadaCliente) => {
+        return t.idCliente === this.idCliente;
+      },
+    );
+    if (tPersonalizada) {
+      this.ultTarifaCliente = tPersonalizada;
     } else {
-      // Si es null o undefined, devolver 0 como fallback
-      return 0;
+      this.ultTarifaCliente = null;
     }
-  } */
-
-  eliminarCategoria(index: number, orden:number) {
-    this.secciones[index].categorias.splice(orden, 1);
   }
 
-  agregarDescripcion(index:number) {   
-    this.secciones[index].descripcion = this.descripcionForm.value.descripcion;
-    this.descripcionForm.reset();
+  changeCliente(e: any) {
+    this.estado = 'viewer';
+    this.idCliente = null;
+    this.clienteDestinoId = null;
+
+    if (!e.target.value) return (this.ultTarifaCliente = null);
+    this.idCliente = Number(e.target.value);
+
+    console.log("this.idCliente: ", this.idCliente);
+
+    let cliente = this.clientesPers.find((c) => c.idCliente === this.idCliente);
+    if (cliente) {
+      this.clienteSeleccionado = cliente;
+    } else {
+      return this.mensajesError("No se encontró el cliente seleccionado");
+    }
+
+    this.buscarTarifas();
   }
 
-  eliminarDescripcion(index:number) {    
-    this.secciones[index].descripcion = "";
-    this.descripcionForm.reset();
+  //////////////////////////////
+  /* METODOS NUEVOS */
+  //////////////////////////////
+
+  async guardarTarifa(form: TarifaForm) {
+    console.log("form", form);
+
+    this.cargando = true;
+
+    switch (this.modoEditor) {
+      case "crear":
+      case 'duplicar':
+        this.crearTarifa(form);
+        break;
+
+      case "editar":
+        this.editarTarifaSeleccionada(form);
+        break;
+
+      /* case "aumentar":
+      this.aumentarTarifa(form);
+      break;
+
+    case "duplicar":
+      this.duplicarTarifa(form);
+      break; */
+
+      default:
+        break;
+    }
   }
 
-  crearTarifa() {
-   
-    this.nuevaTarifa = {
-      //id: null,
-      idTarifa: new Date().getTime() + Math.floor(Math.random() * 1000),
-      fecha: new Date().toISOString().split('T')[0],
-      secciones: this.secciones,
-      tipo: { general: false, especial: false, eventual: false, personalizada:true },  // Ajusta según sea necesario
-      idCliente: this.clienteSeleccionado[0].idCliente,
-    };
-    
-    console.log('Tarifa guardada:', this.nuevaTarifa);
-    this.addItem();
+  async crearTarifa(form: TarifaForm) {
+    const operatoria: ResultadoConObjeto =
+      await this.tarifasService.altaTarifaPersonalizada(
+        this.clienteSeleccionado,
+        form,
+      );
+
+    if (operatoria.exito) {
+      this.cargando = false;
+      this.storageService.logSimple(
+        operatoria.objeto.idTarifa,
+        "ALTA",
+        "tarifasPersCliente",
+        `Alta de la Tarifa Personaliza N° ${operatoria.objeto.idTarifa} del Cliente ${this.clienteSeleccionado.razonSocial}`,
+        operatoria.exito,
+      );
+      Swal.fire("OK", "Tarifa dada de alta correctamente", "success");
+    } else {
+      this.cargando = false;
+      this.storageService.logSimple(
+        operatoria.objeto.idTarifa,
+        "ALTA",
+        "tarifasPersCliente",
+        `Error en el alta de la Tarifa Personaliza N° ${operatoria.objeto.idTarifa} del Cliente ${this.clienteSeleccionado.razonSocial}`,
+        operatoria.exito,
+      );
+      Swal.fire(
+        "Error",
+        `Error en el alta de la tarifa. Motivo: ${operatoria.mensaje} `,
+        "error",
+      );
+    }
+
+    this.estado = 'viewer';
   }
 
-  addItem(): void {
-    let clientes: ConIdType<Cliente> [] = this.storageService.loadInfo("clientes");
-    Swal.fire({
-      title: "¿Confirmar el alta de la tarifa?",
-      //text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar"
-    }).then((result) => {
-      if (result.isConfirmed) {  
-        if(this.$ultTarifaCliente){
-          this.storageService.addItem("historialTarifasPersCliente", this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );
-          this.storageService.deleteItem("tarifasPersCliente", this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );      
-        }        
-        this.storageService.addItem(this.componente, this.nuevaTarifa, this.nuevaTarifa.idTarifa, "ALTA", `Alta de Tarifa Personalizada para Cliente ${this.getClientePers(this.clienteSeleccionado[0].idCliente)}`);
-        if(clientes.length > 0){
-          clientes.forEach((c:ConIdType<Cliente>)=>{
-            if(c.tarifaTipo.personalizada && c.idCliente === this.clienteSeleccionado[0].idCliente && !c.tarifaAsignada){
-              c.tarifaAsignada = true;
-              let {id, type, ...cl} = c
-              this.storageService.updateItem("clientes", cl, c.idCliente, "INTERNA", "", c.id);
-            }
-          })
-      }      
-        Swal.fire({
-          title: "Confirmado",
-          text: "Alta exitosa",
-          icon: "success"
-        })   
-        this.secciones = [];
+  async editarTarifaSeleccionada(form: TarifaForm) {
+    if (!this.ultTarifaCliente) return;
+
+    const operatoria = await this.tarifasService.editarTarifaCliente(
+      this.ultTarifaCliente.idTarifa,
+      this.clienteSeleccionado.idCliente,
+      form,
+      this.usuario.email,
+    );
+
+    if (operatoria.exito) {
+      this.cargando = false;
+      this.storageService.logSimple(
+        operatoria.objeto.idTarifa,
+        "EDICION",
+        "tarifasPersCliente",
+        `Edición de la Tarifa Personaliza N° ${operatoria.objeto.idTarifa} del Cliente ${this.clienteSeleccionado.razonSocial}`,
+        operatoria.exito,
+      );
+      Swal.fire("OK", "Tarifa editada correctamente", "success");
+      this.estado = 'viewer';
+    } else {
+      this.cargando = false;
+      this.storageService.logSimple(
+        this.ultTarifaCliente.idTarifa,
+        "EDICION",
+        "tarifasPersCliente",
+        `Error en la edición de la Tarifa Personaliza N° ${this.ultTarifaCliente.idTarifa} del Cliente ${this.clienteSeleccionado.razonSocial}`,
+        operatoria.exito,
+      );
+      Swal.fire(
+        "Error",
+        `Error la edición de la tarifa. Motivo: ${operatoria.mensaje} `,
+        "error",
+      );
+      this.estado = 'viewer';
+    }
+  }
+
+  crear() {
+    this.modoEditor = "crear";
+    this.estado = "editor";
+  }
+
+  verTarifa() {
+    this.estado = "viewer";
+  }
+
+  editarTarifa() {
+    this.modoEditor = "editar";
+    this.estado = "editor";
+  }
+
+  aumentarTarifa() {
+    this.modoEditor = "aumentar";
+    this.estado = "editor";
+  }
+
+  duplicarTarifa() {
+    this.estado = "selector-cliente";
+  }
+
+  historial() {
+    this.estado = "historial";
+  }
+
+  async seleccionarClienteDestino() {
+    this.clienteDestinoId = Number(this.clienteDestinoId);
+
+    const existe = await this.tarifasService.clienteTieneTarifa(
+      this.clienteDestinoId,
+    );
+
+    if (existe) {
+      const continuar = await Swal.fire({
+        title: "El cliente ya tiene una tarifa personalizada",
+        text: "Si procede, la nueva tarfia reemplazara a la tarifa vigente. ¿Desea continuar con la duplicación?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        //confirmButtonText: "Yes, delete it!",
+      });
+      if (continuar.isConfirmed) {
+        if (this.clienteDestinoId) this.idCliente = this.clienteDestinoId;
+
+        let cliente = this.clientesPers.find(
+          (c) => c.idCliente === this.clienteDestinoId,
+        );
+
+        if (cliente) this.clienteSeleccionado = cliente;
+        this.modoEditor = "duplicar";
+        this.estado = "editor";
       }
-    });   
+      if (continuar.isDismissed) {
+        this.clienteDestinoId = null;
+        this.estado = "viewer";
+        return;
+      }
+    }
   }
 
-  mostrarInfo(){
+  get clientesParaDuplicar(): ConId<Cliente>[] {
+    return this.clientesPers.filter((c) => c.idCliente !== this.idCliente);
+  }
+
+    mensajesError(msj: string) {
+    Swal.fire({
+      icon: "error",
+      //title: "Oops...",
+      text: `${msj}`,
+      //footer: `${msj}`
+    });
+  }
+
+    mostrarInfo() {
     Swal.fire({
       position: "top-end",
       //icon: "success",
       //title: "Your work has been saved",
-      text:"Las tarifas personalizas estan compuestas por secciones, las cuales a su vez estan compuestas por categorias. Se pueden crear cuantas secciones se deseen. Y dentro de cada sección,cuantas categorias se deseen. Cada seccion tien un campo 'Descripcion', el cual es opcional y solo tiene caracter informativo. Cada categoria está numerada y compuesta por un campo 'nombre', el cual sirve para nombrar la categoria, el campo 'a cobrar', donde se debe guardar el monto a cobrar al cliente, y un campo 'a pagar', donde se debe ingresar el monto a pagar al chofer que realice el viaje.",
+      text: "Las tarifas personalizas estan compuestas por secciones, las cuales a su vez estan compuestas por categorias. Se pueden crear cuantas secciones se deseen. Y dentro de cada sección,cuantas categorias se deseen.",
       showConfirmButton: false,
-      timer: 10000
+      timer: 10000,
     });
   }
-
-  openModal(modo:string): void {      
-    {
-      const modalRef = this.modalService.open(ModalTarifaPersonalizadaComponent, {
-        windowClass: 'myCustomModalClass',
-        centered: true,
-        size: 'lg', 
-        //backdrop:"static" 
-      });     
-      
-    let razonSocial: string = this.getClientePers(this.clienteSeleccionado[0].idCliente)
-
-     let info = {
-        modo: modo,
-        item: this.$ultTarifaCliente,
-        cliente: razonSocial,
-      }  
-      ////console.log()(info); */
-      
-      modalRef.componentInstance.fromParent = info;
-      modalRef.result.then(
-        (result) => {    
-        },
-        (reason) => {}
-      );
-    }
-  }
-
-
- abrirHistorialTarifas(){
-  {
-    const modalRef = this.modalService.open(HistorialTarifasGralComponent, {
-      windowClass: 'myCustomModalClass',
-      centered: true,
-      size: 'xl', 
-      //backdrop:"static" 
-    });      
-
-  let info = {
-      modo: "personalizada",
-      tEspecial: false,
-      id: this.clienteSeleccionado[0].idCliente,
-    } 
-    //////////console.log()(info); */
-    
-    modalRef.componentInstance.fromParent = info;
-    modalRef.result.then(
-      (result) => {},
-      (reason) => {}
-    );
-  }
-}
-
-  mensajesError(msj:string){
-      Swal.fire({
-        icon: "error",
-        //title: "Oops...",
-        text: `${msj}`
-        //footer: `${msj}`
-      });
-    }
-
-  hasError(controlName: string, errorName: string): boolean {
-    const control = this.categoriaForm.get(controlName);
-    return control?.hasError(errorName) && control.touched;
-  }
-
-  getClientePers(idCliente:number){
-    let clientes : Cliente[] = [];
-
-    clientes = this.$clientes.filter((c:Cliente) => c.idCliente === idCliente);
-
-    return clientes[0].razonSocial;
-
-  }
-
-  actClientePers(){
-
-    let clientes: Cliente [] = this.storageService.loadInfo("clientes")
-    
-        
-        if(clientes.length > 0){
-            clientes.forEach((c:Cliente)=>{
-              if(c.tarifaTipo.personalizada  && c.idCliente === this.clienteSeleccionado[0].idCliente){
-                c.tarifaAsignada = true;
-                c.idTarifa = this.$ultTarifaCliente.idTarifa;
-                //this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
-              }
-            })
-        }      
-
-  }
-
-  eliminarTarifa(){
-    console.log("$ultTarifaCliente", this.$ultTarifaCliente);
-    //this.storageService.deleteItem(this.componente, this.$ultTarifaCliente, this.$ultTarifaCliente.idTarifa, "INTERNA", "" );
-    this.dbFirebase.delete(this.componente, this.$ultTarifaCliente.id);
-    
-  }
-
 }

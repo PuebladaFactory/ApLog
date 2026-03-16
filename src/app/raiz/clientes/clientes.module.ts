@@ -14,6 +14,8 @@ import { ModalTarifaPersonalizadaComponent } from './modal-tarifa-personalizada/
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { ClientesListadoComponent } from './clientes-listado/clientes-listado.component';
 import { AgGridModule } from 'ag-grid-angular';
+import { TarifaEditorComponent } from './tarifa-editor/tarifa-editor.component';
+import { ClienteTarifaViewerComponent } from './cliente-tarifa-viewer/cliente-tarifa-viewer.component';
 
 
 
@@ -33,6 +35,8 @@ import { AgGridModule } from 'ag-grid-angular';
     ModalContactoComponent, 
     ModalTarifaPersonalizadaComponent, 
     ClientesListadoComponent,    
+    TarifaEditorComponent,
+    ClienteTarifaViewerComponent
   ],
   imports: [
     CommonModule,

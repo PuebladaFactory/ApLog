@@ -1,0 +1,462 @@
+<h3>
+        @switch (modo) {
+            @case ("crear") {
+                Nueva Tarifa Personalizada
+            }
+            @case ("editar") {
+                Editar Tarifa Personalizada
+            }
+            @case ("duplicar") {
+                Duplicar Tarifa Personalizada
+            }
+        }
+    </h3>
+
+    <hr />
+
+    <form [formGroup]="form">
+        <!-- CONFIGURACION GENERAL -->
+
+        <div class="card mb-3">
+            <div class="card-header"><h4>Configuración General</h4></div>
+
+            <div class="card-body row g-3 d-flex justify-content-between">
+                <div class="col-md-3">
+                    <label class="form-label">Fecha</label>
+
+                    <input
+                        type="date"
+                        class="form-control bg-secondary-subtle"
+                        formControlName="fecha"
+                        readonly
+                    />
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check form-switch form-check-reverse">
+                        <input
+                            class="form-check-input mt-2"
+                            type="checkbox"
+                            role="switch"
+                            formControlName="adKmboolean"
+                        />
+
+                        <label class="form-check-label">
+                            <span class="fs-4">Habilitar adicional por Km</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONFIGURACION KM -->
+
+        @if (form.get("adKmboolean")?.value) {
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4>Configuración de distancia</h4>
+                </div>
+
+                <div class="card-body row g-3" formGroupName="adicionales">
+                    <div
+                        formGroupName="KmDistancia"
+                        class="card p-3"
+                        [class.border-danger]="
+                            errorActual?.campo === 'kmDistancia'
+                        "
+                    >
+                        <div class="row g-3 mt-0">
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    Primer sector
+                                </label>
+                                <div class="input-group mb-3">
+                                    <input
+                                        type="text"
+                                        inputmode="number"
+                                        class="form-control"
+                                        formControlName="primerSector"
+                                        appMonto
+                                    />
+                                    <span class="input-group-text">km</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    Intervalos siguientes
+                                </label>
+                                <div class="input-group mb-3">
+                                    <input
+                                        type="text"
+                                        inputmode="number"
+                                        class="form-control"
+                                        formControlName="sectoresSiguientes"
+                                        appMonto
+                                    />
+                                    <span class="input-group-text">km</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- SECCIONES -->
+
+        <div formArrayName="secciones">
+            @for (seccion of secciones.controls; track $index; let i = $index) {
+                <div
+                    class="card mb-4"
+                    [attr.id]="'seccion-' + i"
+                    [class.border-danger]="errorActual?.seccionIndex === i"
+                >
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="cursor-pointer" (click)="toggleSeccion(i)">
+                            <h4 class="mb-0">
+                                @if (seccionesAbiertas[i]) {
+                                    ▼
+                                } @else {
+                                    ▶
+                                }
+
+                                <strong class="ms-1"
+                                    >Sección {{ i + 1 }}</strong
+                                >
+                                <span class="ms-2 fs-5"
+                                    >({{
+                                        categorias(i).length
+                                    }}
+                                    categorías)</span
+                                >
+                            </h4>
+
+                            @if (seccion.get("descripcion")?.value) {
+                                - {{ seccion.get("descripcion")?.value }}
+                            }
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button
+                                class="btn btn-sm btn-outline-secondary"
+                                type="button"
+                                (click)="duplicarSeccion(i)"
+                                title="Duplicar sección"
+                            >
+                                Duplicar
+                            </button>
+
+                            <button
+                                class="btn btn-sm btn-outline-danger"
+                                type="button"
+                                (click)="eliminarSeccion(i)"
+                            >
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                    @if (seccionesAbiertas[i]) {
+                        <div class="card-body" [formGroupName]="i">
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+
+                                <input
+                                    class="form-control"
+                                    formControlName="descripcion"
+                                />
+                            </div>
+
+                            <!-- TABLA CATEGORIAS -->
+                            <h4>Categorías</h4>
+                            <div formArrayName="categorias">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr class="sticky-top">
+                                            <th>#</th>
+                                            <th>Nombre</th>
+                                            <th>A Cobrar</th>
+                                            <th>A Pagar</th>
+
+                                            @if (
+                                                form.get("adKmboolean")?.value
+                                            ) {
+                                                <th>Km Cobrar</th>
+                                                <th>Km Pagar</th>
+                                            }
+
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @for (
+                                            cat of categorias(i).controls;
+                                            track $index;
+                                            let j = $index
+                                        ) {
+                                            <tr
+                                                [formGroupName]="j"
+                                                [class.table-danger]="
+                                                    errorActual?.seccionIndex ===
+                                                        i &&
+                                                    errorActual?.categoriaIndex ===
+                                                        j
+                                                "
+                                            >
+                                                <td>
+                                                    {{ j + 1 }}
+                                                </td>
+
+                                                <td>
+                                                    <input
+                                                        class="form-control form-control-sm"
+                                                        formControlName="nombre"
+                                                        placeholder="nombre categoría"
+                                                    />
+                                                </td>
+
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        inputmode="number"
+                                                        class="form-control form-control-sm text-end"
+                                                        formControlName="aCobrar"
+                                                        placeholder="$"
+                                                        appMonto
+                                                        prefijo="$ "
+                                                        [class.border-warning]="
+                                                            cat.value
+                                                                .aCobrar === 0
+                                                        "
+                                                    />
+                                                </td>
+
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        inputmode="number"
+                                                        class="form-control form-control-sm text-end"
+                                                        formControlName="aPagar"
+                                                        placeholder="$"
+                                                        appMonto
+                                                        prefijo="$ "
+                                                        (keydown.enter)="
+                                                            enterNuevaCategoria(
+                                                                $event,
+                                                                i,
+                                                                j
+                                                            )
+                                                        "
+                                                        [class.border-warning]="
+                                                            cat.value.aPagar ===
+                                                            0
+                                                        "
+                                                    />
+                                                </td>
+
+                                                @if (
+                                                    form.get("adKmboolean")
+                                                        ?.value
+                                                ) {
+                                                    <td>
+                                                        <div
+                                                            formGroupName="adicionalKmACobrar"
+                                                        >
+                                                            <div
+                                                                class="d-flex gap-1"
+                                                            >
+                                                                <input
+                                                                    type="text"
+                                                                    inputmode="number"
+                                                                    class="form-control form-control-sm text-end"
+                                                                    formControlName="primerSector"
+                                                                    placeholder="1°"
+                                                                    appMonto
+                                                                    prefijo="$ "
+                                                                    [class.border-warning]="
+                                                                        cat
+                                                                            .value
+                                                                            .adicionalKmACobrar
+                                                                            .primerSector ===
+                                                                        0
+                                                                    "
+                                                                />
+
+                                                                <input
+                                                                    type="text"
+                                                                    inputmode="number"
+                                                                    class="form-control form-control-sm text-end"
+                                                                    formControlName="sectoresSiguientes"
+                                                                    placeholder="+"
+                                                                    appMonto
+                                                                    prefijo="$ "
+                                                                    [class.border-warning]="
+                                                                        cat
+                                                                            .value
+                                                                            .adicionalKmACobrar
+                                                                            .sectoresSiguientes ===
+                                                                        0
+                                                                    "
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    <td>
+                                                        <div
+                                                            formGroupName="adicionalKmAPagar"
+                                                        >
+                                                            <div
+                                                                class="d-flex gap-1"
+                                                            >
+                                                                <input
+                                                                    type="text"
+                                                                    inputmode="number"
+                                                                    class="form-control form-control-sm text-end"
+                                                                    formControlName="primerSector"
+                                                                    placeholder="1°"
+                                                                    appMonto
+                                                                    prefijo="$ "
+                                                                    [class.border-warning]="
+                                                                        cat
+                                                                            .value
+                                                                            .adicionalKmAPagar
+                                                                            .primerSector ===
+                                                                        0
+                                                                    "
+                                                                />
+
+                                                                <input
+                                                                    type="text"
+                                                                    inputmode="number"
+                                                                    class="form-control form-control-sm text-end"
+                                                                    formControlName="sectoresSiguientes"
+                                                                    placeholder="+"
+                                                                    appMonto
+                                                                    prefijo="$ "
+                                                                    (keydown.enter)="
+                                                                        enterNuevaCategoria(
+                                                                            $event,
+                                                                            i,
+                                                                            j
+                                                                        )
+                                                                    "
+                                                                    [class.border-warning]="
+                                                                        cat
+                                                                            .value
+                                                                            .adicionalKmAPagar
+                                                                            .sectoresSiguientes ===
+                                                                        0
+                                                                    "
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                }
+                                                <td
+                                                    class="text-center align-self-center"
+                                                    title="Duplicar Categoría"
+                                                >
+                                                    <svg
+                                                        type="button"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="16"
+                                                        height="16"
+                                                        fill="currentColor"
+                                                        class="bi bi-copy"
+                                                        viewBox="0 0 16 16"
+                                                        (click)="
+                                                            duplicarCategoria(
+                                                                i,
+                                                                j
+                                                            )
+                                                        "
+                                                    >
+                                                        <path
+                                                            fill-rule="evenodd"
+                                                            d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"
+                                                        />
+                                                    </svg>
+                                                </td>
+
+                                                <td
+                                                    class="text-center align-self-center"
+                                                    title="Eliminar Categoría"
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        (click)="
+                                                            eliminarCategoria(
+                                                                i,
+                                                                j
+                                                            )
+                                                        "
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                @if (existenValoresCero()) {
+                                    <div class="alert alert-warning">
+                                        Algunas categorías tienen valor $0.
+                                        Verificar antes de guardar.
+                                    </div>
+                                }
+
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-primary"
+                                    (click)="agregarCategoria(i)"
+                                >
+                                    + Agregar categoría
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <button
+            type="button"
+            class="btn btn-outline-success"
+            (click)="agregarSeccion()"
+        >
+            + Agregar sección
+        </button>
+
+        <hr />
+
+        <div class="d-flex justify-content-end gap-2">
+            <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="cancelar()"
+            >
+                Cancelar
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                (click)="guardarTarifa()"
+            >
+                @switch (modo) {
+                    @case ("crear") {
+                        Guardar tarifa
+                    }
+                    @case ("editar") {
+                        Guardar cambios
+                    }
+                    @case ("duplicar") {
+                        Crear nueva tarifa
+                    }
+                }
+            </button>
+        </div>
+    </form>
