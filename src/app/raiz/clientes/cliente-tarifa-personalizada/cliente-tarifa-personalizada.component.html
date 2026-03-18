@@ -41,10 +41,11 @@
 <!-- BOTONERA -->
 @if (idCliente) {
     <div class="mt-3 row g-3 d-flex justify-content-between">
+        <!-- TITULO -->
         <div class="col">
             <h3>{{ clienteSeleccionado.razonSocial }}</h3>
         </div>
-        
+        <!-- CLIENTE DESTINO -->
         <div class="col">
           @if(estado === 'selector-cliente'){
             <h4>Seleccionar Cliente Destino:</h4>
@@ -68,21 +69,23 @@
              }
         </div>
        
-
+        <!-- BOTONES -->
         <div class="col text-end">
             @if (estado !== "viewer" && ultTarifaCliente) {
                 <button
                     class="btn btn-info me-2"
                     (click)="verTarifa()"
-                    [disabled]="!clienteSeleccionado"
+                    [disabled]="!clienteSeleccionado"                    
                 >
-                    Ultima tarifa
+                    Tarifa Actual
                 </button>
             }
             <button
                 class="btn btn-primary me-2"
                 (click)="crear()"
-                [disabled]="!clienteSeleccionado"
+                [disabled]="!clienteSeleccionado"  
+                [disabled]="modoEditor === 'crear' || modoEditor === 'aumentar' || modoEditor === 'duplicar' || modoEditor === 'editar'"               
+
             >
                 Nueva tarifa
             </button>
@@ -91,6 +94,7 @@
                 <button
                     class="btn btn-outline-secondary me-2"
                     (click)="editarTarifa()"
+                    [disabled]="modoEditor === 'crear' || modoEditor === 'aumentar' || modoEditor === 'duplicar' || modoEditor === 'editar'"               
                 >
                     Editar
                 </button>
@@ -98,6 +102,7 @@
                 <button
                     class="btn btn-outline-success me-2"
                     (click)="aumentarTarifa()"
+                    [disabled]="modoEditor === 'crear' || modoEditor === 'aumentar' || modoEditor === 'duplicar' || modoEditor === 'editar'"               
                 >
                     Aumentar
                 </button>
@@ -105,11 +110,12 @@
                 <button
                     class="btn btn-outline-warning me-2"
                     (click)="duplicarTarifa()"
+                    [disabled]="modoEditor === 'crear' || modoEditor === 'aumentar' || modoEditor === 'duplicar' || modoEditor === 'editar'"               
                 >
                     Duplicar
                 </button>
 
-                <button class="btn btn-outline-dark" (click)="historial()">
+                <button class="btn btn-outline-dark" (click)="abrirHistorialTarifas()">
                     Historial
                 </button>
             }
@@ -133,7 +139,8 @@
     </app-cliente-tarifa-viewer>
 }
 
-@if (estado === "editor" && modoEditor === "crear") {
+@if(estado === "editor"){
+    @if (modoEditor === "crear") {
     <app-tarifa-editor
         [idCliente]="clienteSeleccionado.idCliente"
         [modo]="modoEditor"
@@ -142,7 +149,7 @@
     </app-tarifa-editor>
 }
 
-@if ((modoEditor === "editar" && ultTarifaCliente)|| (estado === "editor" && modoEditor === "duplicar")) {
+@if ((modoEditor === "editar" || modoEditor === "duplicar") && ultTarifaCliente) {
     <app-tarifa-editor
         [idCliente]="clienteSeleccionado.idCliente"
         [tarifa]="ultTarifaCliente"
@@ -152,12 +159,16 @@
     </app-tarifa-editor>
 }
 
-@if (modo === "aumentar") {
-    <!-- <app-tarifa-aumento
-      [tarifa]="ultimaTarifa"
+@if (modoEditor === "aumentar" && ultTarifaCliente) {
+    <app-cliente-tarifa-aumento
+      [tarifa]="ultTarifaCliente"
       (guardar)="guardarTarifa($event)">
-  </app-tarifa-aumento> -->
+  </app-cliente-tarifa-aumento>
 }
+
+}
+
+
 
 @if (cargando) {
     <div class="text-center my-4">
@@ -165,210 +176,3 @@
     </div>
 }
 
-<!-- <div>
-    <ng-template #sinSeleccion>
-        <h4>Seleccione cliente</h4>
-    </ng-template>
-</div>
-
-
-@if (clienteSeleccionado) {
-  <div  class="mt-3">
-    <ng-container *appRole="['god','admin', 'manager']">
-      <h3>Crear Tarifario Nuevo</h3>
-      <button class="btn btn-primary"(click)="crearTarifaPErsonalizada(clienteSeleccionado.idCliente)">Crear Tarifa</button>
-      <div class="border border-dark border-2 rounded-4 p-3 ">
-        <div class="d-flex mb-3">
-          @if (secciones.length === 0) {
-            <p class="fs-4 mb-0 me-3 align-middle">Crear seccion</p>
-          }
-          @if (secciones.length > 0) {
-            <p class="fs-4 mb-0 me-3 align-middle">Agregar seccion</p>
-          }
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" type="button" (click)="agregarSeccion()" style="color: rgb(0, 110, 255);">
-            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-          </svg>
-        </div>
-        @for (seccion of secciones; track seccion; let i = $index) {
-          <div class="border rounded-4 border-secondary border-1 p-3 mb-3">
-            <div class="row">
-              <div class="col-1 d-flex">
-                <h3 class="align-self-end mb-4">Sección {{ i + 1 }}</h3>
-              </div>
-              <div class="col-5 d-flex">
-                <form [formGroup]="descripcionForm" (ngSubmit)="agregarDescripcion(i)">
-                  <div class="input-group input-group-sm">
-                    <div class="">
-                      <label for="descripcion" class="form-label">Descripcion de la Sección (opcional):</label>
-                      <div class="input-group mb-3">
-                        <input type="text" formControlName="descripcion" class="form-control">
-                        <button class="btn agregar" type="submit" id="descripcion">Agregar</button>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-                @if (seccion.descripcion !== '') {
-                  <div class="d-flex ms-4">
-                    <h4 class="align-self-center mt-3 mb-0 me-4">Descripcion: {{seccion.descripcion}}</h4>
-                    <app-btn-eliminar name="EliminarClaro" class="align-self-center mt-3 mb-0"  (click)="eliminarDescripcion(i)"></app-btn-eliminar>
-                  </div>
-                }
-              </div>
-              <div class="col-4">
-              </div>
-              <div class="col-2 d-flex justify-content-end">
-                <app-btn-eliminar name="EliminarClaro" (click)="eliminarSeccion(i)"></app-btn-eliminar>
-              </div>
-            </div>
-            <form [formGroup]="categoriaForm" (ngSubmit)="agregarCategoria(i)">
-              <div class="input-group input-group-sm mt-2 mb-3">
-                @if (seccion.categorias.length !== undefined) {
-                  <td class="d-flex me-3"><h4 class="align-self-end mb-4">Categoria  {{seccion.categorias.length + 1}}</h4></td>
-                }
-                <td class="align-middle me-2 form-group">
-                  <label>Nombre: </label>
-                  <div class="input-group">
-                    <input
-                      formControlName="nombre"
-                      class="form-control" required
-                      type="text"
-                                [ngClass]="{ 'is-invalid': categoriaForm.get('nombre').invalid &&
-                                (categoriaForm.get('nombre').dirty || categoriaForm.get('nombre').touched) }">
-                    </div>
-                    @if (hasError('nombre', 'required')) {
-                      <div class="fs-6">El nombre de la categoria es obligatorio.</div>
-                    }
-                  </td>
-                  <td class="align-middle me-2 form-group">
-                    <label>A Cobrar: </label>
-                    <div class="input-group">
-                      <span class="input-group-text" style="font-size: 1.25rem;" id="basic-addon1">$</span>
-                      <input
-                        formControlName="aCobrar"
-                        class="form-control" required
-                        type="text"
-                        inputmode="numeric"
-                        appMonto [minimo]="0"
-                                [ngClass]="{ 'is-invalid': categoriaForm.get('aCobrar').invalid &&
-                                (categoriaForm.get('aCobrar').dirty || categoriaForm.get('aCobrar').touched) }"
-                        >
-                      </div>
-                      @if (hasError('aCobrar', 'required')) {
-                        <div  class="fs-6">El valor a cobrar es obligatorio.</div>
-                      }
-                    </td>
-                    <td class="align-middle me-2 form-group">
-                      <label>A Pagar: </label>
-                      <div class="input-group">
-                        <span class="input-group-text" style="font-size: 1.25rem;" id="basic-addon1">$</span>
-                        <input
-                          formControlName="aPagar"
-                          class="form-control" required
-                          type="text"
-                          inputmode="numeric"
-                          appMonto [minimo]="0"
-                                [ngClass]="{ 'is-invalid': categoriaForm.get('aPagar').invalid &&
-                                (categoriaForm.get('aPagar').dirty || categoriaForm.get('aPagar').touched) }"
-                          >
-                        </div>
-                        @if (hasError('aPagar', 'required')) {
-                          <div class="fs-6">El valor a pagar es obligatorio.</div>
-                        }
-                      </td>
-                      <td class="d-flex align-self-center mt-3 me-2 ">
-                        <button class="btn agregar" type="submit">Agregar Categoria</button>
-                      </td>
-                    </div>
-                  </form>
-                  @if (seccion.categorias.length > 0) {
-                    <table class="table table-striped table-hover">
-                      <thead>
-                        <tr>
-                          <th class="align-middle" style="width:20%">Categoria</th>
-                          <th class="align-middle" style="width:20%">Nombre</th>
-                          <th class="align-middle" style="width:20%">A Cobrar</th>
-                          <th class="align-middle" style="width:20%">A Pagar</th>
-                          <th class="align-middle" style="width:20%">Ganancia %</th>
-                          <th class="align-middle" style="width:20%"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (categoria of seccion.categorias; track categoria; let j = $index) {
-                          <tr>
-                            <td class="align-middle">Categoria {{categoria.orden}}</td>
-                            <td class="align-middle">{{categoria.nombre}}</td>
-                            <td class="align-middle">{{ categoria.aCobrar | formatearValor:'$' }}</td>
-                            <td class="align-middle">{{ categoria.aPagar | formatearValor:'$' }}</td>
-                            <td class="align-middle">{{ (100-((categoria.aPagar*100)/categoria.aCobrar)) | formatearValor }} %</td>
-                            <td class="align-middle"><app-btn-eliminar name="EliminarClaro" (click)="eliminarCategoria(i,j)"></app-btn-eliminar></td>
-                          </tr>
-                        }
-                      </tbody>
-                    </table>
-                  }
-                </div>
-              }
-              @if (secciones.length > 0) {
-                <div class="mb-3">
-                  <app-btn-agregar name="guardarTarifa" (click)="crearTarifa()"></app-btn-agregar>
-                </div>
-              }
-            </div>
-          </ng-container>
-          @if (ultTarifaCliente) {
-            <div class="mt-4">
-              <div class="d-flex justify-content-between">
-                <h2>Última Tarifa {{ultTarifaCliente.fecha}}</h2>
-                <div>
-                  <app-btn-eliminar *appRole="['god','admin', 'manager']" name="Eliminar" (click)="eliminarTarifa()"></app-btn-eliminar>
-                  <app-btn-editar *appRole="['god','admin', 'manager']" name="editarTarifa" class="me-3" (click)="openModal('editar')" ></app-btn-editar>
-                  <app-btn-editar *appRole="['god','admin', 'manager']" name="modificarTarifa" (click)="openModal('aumentar')"></app-btn-editar>
-                </div>
-              </div>
-              <div class="border border-dark border-2 rounded-4 p-3 mt-2">
-                @for (seccion of ultTarifaCliente.secciones; track seccion) {
-                  <h4>Seccion {{seccion.orden}}: {{seccion.descripcion? seccion.descripcion : ""}}</h4>
-                  <table class="table table-striped">
-                    <thead>
-                      <tr>
-                        <th class="align-middle" style="width:20%">Categoria</th>
-                        <th class="align-middle" style="width:20%">Nombre</th>
-                        <th class="align-middle" style="width:20%">A Cobrar</th>
-                        <th class="align-middle" style="width:20%">A pagar</th>
-                        <th class="align-middle" style="width:20%">Ganancia</th>
-                      </tr>
-                    </thead>
-                    <tbody >
-                      @for (categoria of seccion.categorias; track categoria) {
-                        <tr>
-                          <td class="align-middle" class="align-middle">Categoria {{categoria.orden}}</td>
-                          <td class="align-middle" class="align-middle">{{categoria.nombre}}</td>
-                          <td class="align-middle" class="align-middle">{{categoria.aCobrar | formatearValor:'$' }}</td>
-                          <td class="align-middle" class="align-middle">{{ categoria.aPagar | formatearValor:'$' }}</td>
-                          <td class="align-middle" class="align-middle">{{(100-((categoria.aPagar*100)/categoria.aCobrar)) | formatearValor }}  %</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                }
-              </div>
-              <hr class="mt-4">
-              <div class="mt-4">
-                <h1>
-                  Historial de tarifas
-                  <svg type="button" (click)="abrirHistorialTarifas()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle mb-1" viewBox="0 0 16 16">
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                  </svg>
-                </h1>
-              </div>
-            </div>
-          } @else {
-            <div class="mt-3">
-              <h3 >El cliente no tiene tartifas asignadas</h3>
-            </div>
-          }
-        </div>
-      }
- -->

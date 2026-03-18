@@ -22,6 +22,7 @@ import {
   Resultado,
   ResultadoConObjeto,
 } from "../database/db-firestore.service";
+import { ResumenTarifa } from "src/app/raiz/clientes/cliente-tarifa-aumento/cliente-tarifa-aumento.component";
 
 export interface ErrorTarifa {
   mensaje: string;
@@ -89,35 +90,41 @@ export class TarifasService {
   }
 
   async altaTarifaPersonalizada(
-    cliente: ConId<Cliente>,
+    cliente: any,
     form: TarifaForm,
+    resumen?: ResumenTarifa | null,
+    metadata?: any,
   ): Promise<ResultadoConObjeto> {
     const error = this.validarTarifa(form);
-
-    if (error) {
-      throw new Error(error.mensaje);
-    }
+    console.log("1)form", form);     
+    console.log("2)resumen: ", resumen);
+    console.log("3)metadata: ", metadata);
+    
+    if (error) throw new Error(error.mensaje);
 
     const tarifaNueva = this.crearObjetoTarifa(
       cliente.idCliente,
       form,
       "crear",
     );
-    console.log("tarifaNueva: ", tarifaNueva);
+
+    console.log("4)tarifaNueva: ",tarifaNueva);
 
     const resultado: Resultado = await this.guardarTarifaPersonalizada(
       tarifaNueva,
       cliente,
+      resumen,
+      metadata,
     );
-    const respuesta: ResultadoConObjeto = {
+
+    console.log("resultado: ",resultado);
+    
+    return {
       exito: resultado.exito,
       mensaje: resultado.mensaje,
       objeto: tarifaNueva,
     };
-
-    return respuesta;
   }
-
   editarTarifaPersonalizada(tarifaEditada: TarifaPersonalizadaCliente) {
     const tarifas = this.storageService.loadInfo("tarifasPersCliente") || [];
 
@@ -211,7 +218,8 @@ export class TarifasService {
     if (!form.secciones.length) {
       return { mensaje: "Debe existir al menos una sección" };
     }
-
+    console.log("validarTarifa: form: ", form);
+    
     const nombresSecciones = new Set<string>();
 
     for (let i = 0; i < form.secciones.length; i++) {
@@ -304,10 +312,13 @@ export class TarifasService {
   async guardarTarifaPersonalizada(
     tarifa: TarifaPersonalizadaCliente,
     cliente: ConId<Cliente>,
+    resumen?: ResumenTarifa | null,
+    metadata?: any,
   ): Promise<Resultado> {
     try {
       let tPersonalizadas: ConId<TarifaPersonalizadaCliente>[] =
         this.storageService.loadInfo("tarifasPersCliente");
+
       let tarifaVieja = tPersonalizadas.find(
         (t) => t.idCliente === cliente.idCliente,
       );
@@ -315,7 +326,7 @@ export class TarifasService {
       const db = this.firestore;
 
       await runTransaction(db, async (transaction) => {
-        // 1️⃣ Verificar que no exista una tarifa con el mismo idTarifa
+        // 1️⃣ Validar duplicado
         const qTarifa = query(
           collection(db, `${this.basePath}/tarifasPersCliente`),
           where("idTarifa", "==", tarifa.idTarifa),
@@ -327,38 +338,57 @@ export class TarifasService {
           throw new Error("Ya existe una tarifa con ese idTarifa");
         }
 
-        // 2️⃣ Verificar si el cliente ya tiene tarifa personalizada
-
+        // 2️⃣ Si hay tarifa previa → mover a historial
         if (tarifaVieja) {
-          // referencia a la tarifa vigente en firestore
           const refTarifaVieja = doc(
             db,
             `${this.basePath}/tarifasPersCliente`,
             tarifaVieja.id,
           );
 
-          // referencia para el historial
           const refHistorial = doc(
             collection(db, `${this.basePath}/historialTarifasPersCliente`),
           );
 
           let { id, ...tarifaSinId } = tarifaVieja;
 
-          // mover al historial
-          transaction.set(refHistorial, tarifaSinId);
+          const fecha = new Date();
+          const fechaStr = toISODateString(fecha);
 
-          // eliminar tarifa vigente
+          // 🔥 HISTORIAL ENRIQUECIDO
+          const historialData: any = {
+            ...tarifaSinId,
+            fecha:fechaStr,
+          };
+
+          // 👉 Solo si viene del flujo aumento
+          if (resumen) {
+            historialData.resumen = {
+              base: resumen.base,
+              total: resumen.total,
+              ...(resumen.km && { km: resumen.km }),
+            };
+
+            if (metadata) {
+              historialData.metadata = metadata;
+            }
+          }
+
+          // guardar en historial
+          transaction.set(refHistorial, historialData);
+
+          // eliminar vigente
           transaction.delete(refTarifaVieja);
         }
 
-        // 3️⃣ Guardar nueva tarifa
+        // 3️⃣ Guardar nueva tarifa vigente
         const refNuevaTarifa = doc(
           collection(db, `${this.basePath}/tarifasPersCliente`),
         );
 
         transaction.set(refNuevaTarifa, tarifa);
 
-        // 4️⃣ Actualizar referencia en cliente
+        // 4️⃣ Actualizar cliente
         const refCliente = doc(db, `${this.basePath}/clientes`, cliente.id);
 
         transaction.update(refCliente, {
@@ -378,7 +408,6 @@ export class TarifasService {
       };
     }
   }
-
   async editarTarifaCliente(
     idTarifa: number,
     idCliente: number,

@@ -6,54 +6,53 @@
             </div>
 
             <div>
-                <h5 class="mb-0">Fecha: {{ tarifa.fecha | date: "dd/MM/yyyy" }}</h5>
+                <h5 class="mb-0">
+                    Fecha: {{ tarifa.fecha | date: "dd/MM/yyyy" }}
+                </h5>
             </div>
         </div>
 
-        <div class="card-body">
-            @for (seccion of tarifa.secciones; track seccion.orden) {
+        @for (seccion of tarifa.secciones; track seccion.orden) {
+            <div class="card-body">
                 <div class="mb-4">
-                    <h5 class="mb-2">
-                        <strong>Sección {{ seccion.orden }} </strong>
+                    <div class="card-header">
+                        <h5 class="">
+                            <strong>Sección {{ seccion.orden }} </strong>
 
-                        @if (seccion.descripcion) {
-                            <span class="text-muted">
-                                - {{ seccion.descripcion }}</span
-                            >
-                        }
-                    </h5>
+                            @if (seccion.descripcion) {
+                                <span class="text-muted">
+                                    - {{ seccion.descripcion }}</span
+                                >
+                            }
+                        </h5>
+                    </div>
 
                     <table class="table table-sm table-bordered tabla-tarifa">
                         <thead>
-                            @if (!tarifa.adKmboolean) {
-                                <tr>
-                                    <th class="base">Nombre</th>
-                                    <th class="table-success">Cobrar</th>
-                                    <th class="table-danger">Pagar</th>
-                                </tr>
-                            } @else {
-                                <tr>
-                                    <th rowspan="2" class="base">Nombre</th>
-                                    <th colspan="2" class="base">Base</th>
+                            <tr>
+                                <th rowspan="2" class="base">Nombre</th>
+                                <th colspan="2" class="base">Base</th>
+                                @if (tarifa.adKmboolean) {
                                     <th colspan="2" class="base">
                                         Adicional KM Cobrar
                                     </th>
                                     <th colspan="2" class="base" class="base">
                                         Adicional KM Pagar
                                     </th>
-                                </tr>
+                                }
+                            </tr>
 
-                                <tr>
-                                    <th class="table-success">Cobrar</th>
-                                    <th class="table-danger">Pagar</th>
-
+                            <tr>
+                                <th class="table-success">Cobrar</th>
+                                <th class="table-danger">Pagar</th>
+                                @if (tarifa.adKmboolean) {
                                     <th class="table-success">1er</th>
                                     <th class="table-success">Sig</th>
 
                                     <th class="table-danger">1er</th>
                                     <th class="table-danger">Sig</th>
-                                </tr>
-                            }
+                                }
+                            </tr>
                         </thead>
 
                         <tbody>
@@ -91,9 +90,8 @@
                                                     ?.primerSector ?? 0
                                                     | formatearValor: "$"
                                             }}
-                                           
                                         </td>
-                                        <td class="text-end col-numero">             
+                                        <td class="text-end col-numero">
                                             {{
                                                 cat.adicionalKmAPagar
                                                     ?.sectoresSiguientes ?? 0
@@ -106,38 +104,41 @@
                         </tbody>
                     </table>
                 </div>
-            }
-        </div>
+            </div>
+        }
     </div>
 
     @if (tarifa.adKmboolean) {
         <div class="card mt-3">
-            <div class="card-header"><h5><strong>Configuración de distancia</strong></h5></div>
+            <div class="card-header">
+                <h5><strong>Configuración de distancia</strong></h5>
+            </div>
 
             <div class="card-body">
                 <div class="row">
                     <div class="col-4">
                         <h5>
-                        Primer sector:
-                        <strong
-                            >{{
-                                tarifa.adicionales?.KmDistancia?.primerSector
-                            }}
-                            km</strong
-                        >
+                            Primer sector:
+                            <strong
+                                >{{
+                                    tarifa.adicionales?.KmDistancia
+                                        ?.primerSector
+                                }}
+                                km</strong
+                            >
                         </h5>
                     </div>
 
                     <div class="col-4">
                         <h5>
-                        Intervalos:
-                        <strong
-                            >{{
-                                tarifa.adicionales?.KmDistancia
-                                    ?.sectoresSiguientes
-                            }}
-                            km</strong
-                        >
+                            Intervalos:
+                            <strong
+                                >{{
+                                    tarifa.adicionales?.KmDistancia
+                                        ?.sectoresSiguientes
+                                }}
+                                km</strong
+                            >
                         </h5>
                     </div>
                 </div>

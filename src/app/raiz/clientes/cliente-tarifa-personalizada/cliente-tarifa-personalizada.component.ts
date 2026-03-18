@@ -21,6 +21,7 @@ import {
 import { ConId, ConIdType } from "src/app/interfaces/conId";
 import { Router } from "@angular/router";
 import { TarifasService } from "src/app/servicios/tarifas/tarifas.service";
+import { ResumenTarifa, TarifaAumentoPayload } from "../cliente-tarifa-aumento/cliente-tarifa-aumento.component";
 
 export interface TarifaForm {
   secciones: Seccion[];
@@ -91,8 +92,8 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   modo: "ver" | "crear" | "editar" | "aumentar" | "duplicar" | "historial" =
     "ver";
   estado: EstadoPantalla = "viewer"; /*  POR AHORA NO ESTA APLICADO */
-  modoEditor: "crear" | "editar" | "aumentar" | "duplicar" =
-    "crear"; /*  POR AHORA NO ESTA APLICADO */
+  modoEditor: "crear" | "editar" | "aumentar" | "duplicar" | ''=
+    ""; /*  POR AHORA NO ESTA APLICADO */
 
   ngOnInit(): void {
     this.clientes = this.storageService.loadInfo("clientes");
@@ -107,7 +108,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       .getObservable<ConId<TarifaPersonalizadaCliente>>("tarifasPersCliente")
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
-        //console.log("data-liquidaciones", data);
+        //////console.log("data-liquidaciones", data);
 
         this.buscarTarifas();
       });
@@ -137,14 +138,14 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   changeCliente(e: any) {
-    this.estado = 'viewer';
+    this.estado = "viewer";
     this.idCliente = null;
     this.clienteDestinoId = null;
 
     if (!e.target.value) return (this.ultTarifaCliente = null);
     this.idCliente = Number(e.target.value);
 
-    console.log("this.idCliente: ", this.idCliente);
+    ////console.log("this.idCliente: ", this.idCliente);
 
     let cliente = this.clientesPers.find((c) => c.idCliente === this.idCliente);
     if (cliente) {
@@ -160,39 +161,62 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   /* METODOS NUEVOS */
   //////////////////////////////
 
-  async guardarTarifa(form: TarifaForm) {
-    console.log("form", form);
+  async guardarTarifa(data: TarifaForm | TarifaAumentoPayload) {
+    //console.log("0)data", data);
+    let form: TarifaForm;
+    let resumen = null;
+    let metadata = null;
+
+    if ("tarifa" in data) {
+      // viene del aumento
+      form = data.tarifa;
+      resumen = data.resumen;
+      metadata = data.metadata;
+    } else {
+      // flujo viejo
+      form = data;
+    }
+    //console.log("a)form", form);     
+    //console.log("b)resumen: ", resumen);
+    //console.log("c)metadata: ", metadata);
+    
 
     this.cargando = true;
 
     switch (this.modoEditor) {
       case "crear":
-      case 'duplicar':
+      case "duplicar":      
         this.crearTarifa(form);
         break;
-
+      
+        case 'aumentar':
+        this.crearTarifa(form, resumen, metadata);
+        break;
+      
       case "editar":
         this.editarTarifaSeleccionada(form);
         break;
-
-      /* case "aumentar":
-      this.aumentarTarifa(form);
-      break;
-
-    case "duplicar":
-      this.duplicarTarifa(form);
-      break; */
+     
 
       default:
         break;
     }
   }
 
-  async crearTarifa(form: TarifaForm) {
+  async crearTarifa(
+     form: TarifaForm,
+      resumen?: ResumenTarifa | null,
+      metadata?: any
+  ) {
+
+   
+    
     const operatoria: ResultadoConObjeto =
       await this.tarifasService.altaTarifaPersonalizada(
         this.clienteSeleccionado,
         form,
+        resumen,
+        metadata
       );
 
     if (operatoria.exito) {
@@ -221,7 +245,8 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       );
     }
 
-    this.estado = 'viewer';
+    this.estado = "viewer";
+    this.modoEditor = "";
   }
 
   async editarTarifaSeleccionada(form: TarifaForm) {
@@ -244,7 +269,8 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
         operatoria.exito,
       );
       Swal.fire("OK", "Tarifa editada correctamente", "success");
-      this.estado = 'viewer';
+      this.estado = "viewer";
+      this.modoEditor = "";
     } else {
       this.cargando = false;
       this.storageService.logSimple(
@@ -259,7 +285,8 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
         `Error la edición de la tarifa. Motivo: ${operatoria.mensaje} `,
         "error",
       );
-      this.estado = 'viewer';
+      this.estado = "viewer";
+      this.modoEditor = "";
     }
   }
 
@@ -270,6 +297,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
 
   verTarifa() {
     this.estado = "viewer";
+    this.modoEditor = "";
   }
 
   editarTarifa() {
@@ -330,7 +358,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     return this.clientesPers.filter((c) => c.idCliente !== this.idCliente);
   }
 
-    mensajesError(msj: string) {
+  mensajesError(msj: string) {
     Swal.fire({
       icon: "error",
       //title: "Oops...",
@@ -339,7 +367,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     });
   }
 
-    mostrarInfo() {
+  mostrarInfo() {
     Swal.fire({
       position: "top-end",
       //icon: "success",
@@ -348,5 +376,29 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
       showConfirmButton: false,
       timer: 10000,
     });
+  }
+
+  abrirHistorialTarifas() {
+    {
+      const modalRef = this.modalService.open(HistorialTarifasGralComponent, {
+        windowClass: "myCustomModalClass",
+        centered: true,
+        size: "xl",
+        //backdrop:"static"
+      });
+
+      let info = {
+        modo: "personalizada",
+        tEspecial: false,
+        id: this.clienteSeleccionado.idCliente,
+      };
+      //////////////console.log()(info); */
+
+      modalRef.componentInstance.fromParent = info;
+      modalRef.result.then(
+        (result) => {},
+        (reason) => {},
+      );
+    }
   }
 }

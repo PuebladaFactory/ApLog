@@ -28,7 +28,8 @@ export interface CategoriaTarifa {
     nuevoAPagar: number;   // nuevo valor calculado
     adicionalKmACobrar?: AdicionalKm;
     adicionalKmAPagar?: AdicionalKm;
-    
+    nuevoAdKmACobrar?: AdicionalKm;
+    nuevoAdKmAPagar?: AdicionalKm;
     
 }
 

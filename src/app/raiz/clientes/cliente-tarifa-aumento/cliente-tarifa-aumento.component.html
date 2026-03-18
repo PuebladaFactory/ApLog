@@ -1,0 +1,967 @@
+<div class="aumento-container">
+    <h2>Aumento de tarifa</h2>
+    <div class="card mb-3">
+        <div class="card-header">
+            <strong>Consola de aumento</strong>
+        </div>
+
+        <div class="card-body">
+            <div class="row align-items-end">
+                <div class="col-3">
+                    <label class="form-label">Modo</label>
+
+                    <select
+                        class="form-select"
+                        [(ngModel)]="modoAutomatico"
+                        (change)="cambiarModo()"
+                    >
+                        <option [ngValue]="true">Automático</option>
+                        <option [ngValue]="false">Manual</option>
+                    </select>
+                </div>
+
+                <div class="col-3">
+                    <label class="form-label">Porcentaje</label>
+
+                    <input
+                        type="text"
+                        inputmode="number"
+                        appMonto
+                        modo="porcentaje"
+                        class="form-control"
+                        [(ngModel)]="porcentajeAumento"
+                        [disabled]="!modoAutomatico"
+                        (keyup.enter)="aplicarAumento()"
+                    />
+                </div>
+
+                <div class="col-3">
+                    <button class="btn btn-primary" (click)="aplicarAumento()">
+                        Aplicar aumento
+                    </button>
+                </div>
+
+                <div class="col-3">
+                    <div class="form-check form-switch form-check-reverse">
+                        <input
+                            class="form-check-input mt-2"
+                            type="checkbox"
+                            role="switch"
+                            [checked]="usarRedondeo"
+                            (change)="
+                                usarRedondeo = $any($event.target).checked
+                            "
+                        />
+
+                        <label class="form-check-label">
+                            <span class="fs-4">Usar redondeo inteligente</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="form-label">Redondeo</label>
+
+                        <select
+                            class="form-select"
+                            [(ngModel)]="tipoRedondeo"
+                            [disabled]="!modoAutomatico || !usarRedondeo"
+                            [ngModelOptions]="{ standalone: true }"
+                        >
+                            <option value="unidad">Unidad</option>
+                            <option value="decena">Decena</option>
+                            <option value="centena">Centena</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="contenedor-secciones">
+        <div class="card">
+            @for (
+                seccion of secciones.controls;
+                track seccion;
+                let i = $index
+            ) {
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div
+                            class="card-header d-flex justify-content-between align-items-center"
+                        >
+                            <div>
+                                <h5>
+                                    <strong
+                                        >Sección
+                                        {{ seccion.value.orden }}</strong
+                                    >
+
+                                    @if (seccion.value.descripcion) {
+                                        <span class="text-muted">
+                                            - {{ seccion.value.descripcion }}
+                                        </span>
+                                    }
+                                </h5>
+                            </div>
+                            <div>
+                                @let impactoSec =
+                                    calcularImpactoSeccion(seccion);
+
+                                <span
+                                    class="badge fs-6"
+                                    [ngClass]="{
+                                        'bg-success': impactoSec > 0,
+                                        'bg-danger': impactoSec < 0,
+                                        'bg-secondary': impactoSec === 0,
+                                    }"
+                                >
+                                    {{ impactoSec | number: "1.0-1" }} %
+                                </span>
+                            </div>
+                        </div>
+
+                        <table
+                            class="table table-sm table-hover table-bordered tabla-tarifa mb-0"
+                        >
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" class="base">Nombre</th>
+
+                                    <th colspan="4" class="base">Base</th>
+
+                                    @if (tarifa.adKmboolean) {
+                                        <th colspan="4" class="base">
+                                            Adicional KM Cobrar
+                                        </th>
+
+                                        <th colspan="4" class="base">
+                                            Adicional KM Pagar
+                                        </th>
+                                    }
+                                    <th
+                                        rowspan="2"
+                                        class="text-center th-impacto"
+                                    >
+                                        Impacto
+                                    </th>
+                                    <th
+                                        rowspan="2"
+                                        class="text-center th-icono"
+                                    ></th>
+                                </tr>
+
+                                <tr>
+                                    <th class="table-success">
+                                        A Cobrar Actual
+                                    </th>
+                                    <th class="table-warning">
+                                        A Cobrar Nuevo
+                                    </th>
+
+                                    <th class="table-danger">A Pagar Actual</th>
+                                    <th class="table-warning">A Pagar Nuevo</th>
+
+                                    @if (tarifa.adKmboolean) {
+                                        <th class="table-success">1er</th>
+                                        <th class="table-warning">Nuevo 1er</th>
+
+                                        <th class="table-success">Sig</th>
+                                        <th class="table-warning">Nuevo Sig</th>
+
+                                        <th class="table-danger">1er</th>
+                                        <th class="table-warning">Nuevo 1er</th>
+
+                                        <th class="table-danger">Sig</th>
+                                        <th class="table-warning">Nuevo Sig</th>
+                                    }
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @for (
+                                    cat of getCategorias(seccion).controls;
+                                    track cat;
+                                    let j = $index
+                                ) {
+                                    <!-- FILA PRINCIPAL -->
+                                    <tr>
+                                        <td [title]="cat.value.nombre">{{ cat.value.nombre }}</td>
+
+                                        <td class="text-end col-numero">
+                                            {{
+                                                getValor(cat, "actualACobrar")
+                                                    | formatearValor: "$"
+                                            }}
+                                        </td>
+
+                                        <td class="col-input">
+                                            <input
+                                                [disabled]="modoAutomatico"
+                                                type="text"
+                                                inputmode="number"
+                                                appMonto
+                                                prefijo="$"
+                                                class="form-control form-control-sm text-end"
+                                                [formControl]="
+                                                    getControl(
+                                                        cat,
+                                                        'nuevoACobrar'
+                                                    )
+                                                "
+                                            />
+                                        </td>
+                                        <td class="text-end col-numero">
+                                            {{
+                                                getValor(cat, "actualAPagar")
+                                                    | formatearValor: "$"
+                                            }}
+                                        </td>
+
+                                        <td class="col-input">
+                                            <input
+                                                [disabled]="modoAutomatico"
+                                                type="text"
+                                                inputmode="number"
+                                                appMonto
+                                                prefijo="$"
+                                                class="form-control form-control-sm text-end"
+                                                [formControl]="
+                                                    getControl(
+                                                        cat,
+                                                        'nuevoAPagar'
+                                                    )
+                                                "
+                                            />
+                                        </td>
+
+                                        @if (tarifa.adKmboolean) {
+                                            <td class="text-end col-numero">
+                                                {{
+                                                    getValor(
+                                                        cat,
+                                                        "actualKmCobrarPrimer"
+                                                    ) | formatearValor: "$"
+                                                }}
+                                            </td>
+
+                                            <td class="col-input">
+                                                <input
+                                                    [disabled]="modoAutomatico"
+                                                    type="text"
+                                                    inputmode="number"
+                                                    appMonto
+                                                    prefijo="$"
+                                                    class="form-control form-control-sm text-end"
+                                                    [formControl]="
+                                                        getControl(
+                                                            cat,
+                                                            'nuevoKmCobrarPrimer'
+                                                        )
+                                                    "
+                                                />
+                                            </td>
+
+                                            <td class="text-end col-numero">
+                                                {{
+                                                    getValor(
+                                                        cat,
+                                                        "actualKmCobrarSig"
+                                                    ) | formatearValor: "$"
+                                                }}
+                                            </td>
+
+                                            <td class="col-input">
+                                                <input
+                                                    [disabled]="modoAutomatico"
+                                                    type="text"
+                                                    inputmode="number"
+                                                    appMonto
+                                                    prefijo="$"
+                                                    class="form-control form-control-sm text-end"
+                                                    [formControl]="
+                                                        getControl(
+                                                            cat,
+                                                            'nuevoKmCobrarSig'
+                                                        )
+                                                    "
+                                                />
+                                            </td>
+
+                                            <td class="text-end col-numero">
+                                                {{
+                                                    getValor(
+                                                        cat,
+                                                        "actualKmPagarPrimer"
+                                                    ) | formatearValor: "$"
+                                                }}
+                                            </td>
+
+                                            <td class="col-input">
+                                                <input
+                                                    [disabled]="modoAutomatico"
+                                                    type="text"
+                                                    inputmode="number"
+                                                    appMonto
+                                                    prefijo="$"
+                                                    class="form-control form-control-sm text-end"
+                                                    [formControl]="
+                                                        getControl(
+                                                            cat,
+                                                            'nuevoKmPagarPrimer'
+                                                        )
+                                                    "
+                                                />
+                                            </td>
+
+                                            <td class="text-end col-numero">
+                                                {{
+                                                    getValor(
+                                                        cat,
+                                                        "actualKmPagarSig"
+                                                    ) | formatearValor: "$"
+                                                }}
+                                            </td>
+
+                                            <td class="col-input">
+                                                <input
+                                                    [disabled]="modoAutomatico"
+                                                    type="text"
+                                                    inputmode="number"
+                                                    appMonto
+                                                    prefijo="$"
+                                                    class="form-control form-control-sm text-end"
+                                                    [formControl]="
+                                                        getControl(
+                                                            cat,
+                                                            'nuevoKmPagarSig'
+                                                        )
+                                                    "
+                                                />
+                                            </td>
+                                        }
+
+                                        <!-- IMPACTO -->
+                                        <td class="text-center">
+                                            @let impacto =
+                                                calcularImpactoCategoria(cat);
+
+                                            <span
+                                                class="badge"
+                                                [ngClass]="{
+                                                    'bg-success': impacto > 0,
+                                                    'bg-danger': impacto < 0,
+                                                    'bg-secondary':
+                                                        impacto === 0,
+                                                }"
+                                            >
+                                                {{ impacto | number: "1.0-1" }}
+                                                %
+                                            </span>
+                                        </td>
+
+                                        <td
+                                            class="text-center"
+                                            (click)="toggleDetalle(i, j)"
+                                            style="cursor: pointer"
+                                        >
+                                            <i
+                                                class="bi"
+                                                [ngClass]="
+                                                    expandedCatIndex?.seccion ===
+                                                        i &&
+                                                    expandedCatIndex?.categoria ===
+                                                        j
+                                                        ? 'bi-chevron-up'
+                                                        : 'bi-chevron-down'
+                                                "
+                                            ></i>
+                                        </td>
+                                    </tr>
+
+                                    <!-- DETALLE EXPANDIDO -->
+                                    @if (
+                                        expandedCatIndex?.seccion === i &&
+                                        expandedCatIndex?.categoria === j
+                                    ) {
+                                        <tr>
+                                            <td
+                                                [colSpan]="conSpanExt"
+                                                class="bg-light"
+                                            >
+                                                <div class="row">
+                                                    <div class="col-4">
+                                                        <div class="row g-2">
+                                                            <!-- COBRAR -->
+                                                            <div class="col">
+                                                                <strong
+                                                                    >Base
+                                                                    Cobrar</strong
+                                                                >
+
+                                                                @let dCobrar =
+                                                                    calcularDelta(
+                                                                        getValor(
+                                                                            cat,
+                                                                            "actualACobrar"
+                                                                        ),
+                                                                        getValor(
+                                                                            cat,
+                                                                            "nuevoACobrar"
+                                                                        )
+                                                                    );
+
+                                                                <div>
+                                                                    Actual:
+                                                                    {{
+                                                                        getValor(
+                                                                            cat,
+                                                                            "actualACobrar"
+                                                                        )
+                                                                            | formatearValor
+                                                                                : "$"
+                                                                    }}
+                                                                </div>
+                                                                <div>
+                                                                    Nuevo:
+                                                                    {{
+                                                                        getValor(
+                                                                            cat,
+                                                                            "nuevoACobrar"
+                                                                        )
+                                                                            | formatearValor
+                                                                                : "$"
+                                                                    }}
+                                                                </div>
+                                                                <div>
+                                                                    Δ:
+                                                                    {{
+                                                                        dCobrar.monto
+                                                                            | formatearValor
+                                                                                : "$"
+                                                                    }}
+                                                                    ({{
+                                                                        dCobrar.porcentaje
+                                                                            | number
+                                                                                : "1.0-2"
+                                                                    }}
+                                                                    %)
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- PAGAR -->
+                                                            <div class="col">
+                                                                <strong
+                                                                    >Base
+                                                                    Pagar</strong
+                                                                >
+
+                                                                @let dPagar =
+                                                                    calcularDelta(
+                                                                        getValor(
+                                                                            cat,
+                                                                            "actualAPagar"
+                                                                        ),
+                                                                        getValor(
+                                                                            cat,
+                                                                            "nuevoAPagar"
+                                                                        )
+                                                                    );
+
+                                                                <div>
+                                                                    Actual:
+                                                                    {{
+                                                                        getValor(
+                                                                            cat,
+                                                                            "actualAPagar"
+                                                                        )
+                                                                            | formatearValor
+                                                                                : "$"
+                                                                    }}
+                                                                </div>
+                                                                <div>
+                                                                    Nuevo:
+                                                                    {{
+                                                                        getValor(
+                                                                            cat,
+                                                                            "nuevoAPagar"
+                                                                        )
+                                                                            | formatearValor
+                                                                                : "$"
+                                                                    }}
+                                                                </div>
+                                                                <div>
+                                                                    Δ:
+                                                                    {{
+                                                                        dPagar.monto
+                                                                            | formatearValor
+                                                                                : "$"
+                                                                    }}
+                                                                    ({{
+                                                                        dPagar.porcentaje
+                                                                            | number
+                                                                                : "1.0-2"
+                                                                    }}
+                                                                    %)
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- KM (SI APLICA) -->
+                                                    @if (tarifa.adKmboolean) {
+                                                        <!-- KM A COBRAR-->
+                                                        <div class="col-4">
+                                                            <div class="col">
+                                                                <h4
+                                                                    class="text-center"
+                                                                >
+                                                                    <strong
+                                                                        >Adicional
+                                                                        KM a
+                                                                        Cobrar</strong
+                                                                    >
+                                                                </h4>
+                                                                <div
+                                                                    class="row g-2"
+                                                                >
+                                                                    <!--  1°-->
+                                                                    <div
+                                                                        class="col-5"
+                                                                    >
+                                                                        @let dCobrarKmP =
+                                                                            calcularDelta(
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "actualKmCobrarPrimer"
+                                                                                ),
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "nuevoKmCobrarPrimer"
+                                                                                )
+                                                                            );
+
+                                                                        <div>
+                                                                            1°
+                                                                            sector
+                                                                            actual:
+                                                                            {{
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "actualKmCobrarPrimer"
+                                                                                )
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                        </div>
+
+                                                                        <div>
+                                                                            1°
+                                                                            sector
+                                                                            Nuevo:
+                                                                            {{
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "nuevoKmCobrarPrimer"
+                                                                                )
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                        </div>
+                                                                        <div>
+                                                                            Δ:
+                                                                            {{
+                                                                                dCobrarKmP.monto
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                            ({{
+                                                                                dCobrarKmP.porcentaje
+                                                                                    | number
+                                                                                        : "1.0-2"
+                                                                            }}
+                                                                            %)
+                                                                        </div>
+                                                                    </div>
+                                                                    <!-- SIGUIENTES-->
+                                                                    <div
+                                                                        class="col-5"
+                                                                    >
+                                                                        @let dCobrarKmS =
+                                                                            calcularDelta(
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "actualKmCobrarSig"
+                                                                                ),
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "nuevoKmCobrarSig"
+                                                                                )
+                                                                            );
+
+                                                                        <div>
+                                                                            Siguientes
+                                                                            actual:
+                                                                            {{
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "actualKmCobrarSig"
+                                                                                )
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                        </div>
+
+                                                                        <div>
+                                                                            Siguientes
+                                                                            Nuevo:
+                                                                            {{
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "nuevoKmCobrarSig"
+                                                                                )
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                        </div>
+                                                                        <div>
+                                                                            Δ:
+                                                                            {{
+                                                                                dCobrarKmS.monto
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                            ({{
+                                                                                dCobrarKmS.porcentaje
+                                                                                    | number
+                                                                                        : "1.0-2"
+                                                                            }}
+                                                                            %)
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="col">
+                                                                <h4
+                                                                    class="text-center"
+                                                                >
+                                                                    <strong
+                                                                        >Adicional
+                                                                        KM a
+                                                                        Pagar</strong
+                                                                    >
+                                                                </h4>
+                                                                <div
+                                                                    class="row g-2"
+                                                                >
+                                                                    <!-- KM A PAGAR 1°-->
+                                                                    <div
+                                                                        class="col-5"
+                                                                    >
+                                                                        @let dPagarKmP =
+                                                                            calcularDelta(
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "actualKmPagarPrimer"
+                                                                                ),
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "nuevoKmPagarPrimer"
+                                                                                )
+                                                                            );
+
+                                                                        <div>
+                                                                            1°
+                                                                            sector
+                                                                            actual:
+                                                                            {{
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "actualKmPagarPrimer"
+                                                                                )
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                        </div>
+
+                                                                        <div>
+                                                                            1°
+                                                                            sector
+                                                                            Nuevo:
+                                                                            {{
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "nuevoKmPagarPrimer"
+                                                                                )
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                        </div>
+                                                                        <div>
+                                                                            Δ:
+                                                                            {{
+                                                                                dPagarKmP.monto
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                            ({{
+                                                                                dPagarKmP.porcentaje
+                                                                                    | number
+                                                                                        : "1.0-2"
+                                                                            }}
+                                                                            %)
+                                                                        </div>
+                                                                    </div>
+                                                                    <!-- KM A COBRAR SIGUIENTES-->
+                                                                    <div
+                                                                        class="col-5"
+                                                                    >
+                                                                        @let dPagarKmS =
+                                                                            calcularDelta(
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "actualKmPagarSig"
+                                                                                ),
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "nuevoKmPagarSig"
+                                                                                )
+                                                                            );
+
+                                                                        <div>
+                                                                            Siguientes
+                                                                            actual:
+                                                                            {{
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "actualKmPagarSig"
+                                                                                )
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                        </div>
+
+                                                                        <div>
+                                                                            Siguientes
+                                                                            Nuevo:
+                                                                            {{
+                                                                                getValor(
+                                                                                    cat,
+                                                                                    "nuevoKmPagarSig"
+                                                                                )
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                        </div>
+                                                                        <div>
+                                                                            Δ:
+                                                                            {{
+                                                                                dPagarKmS.monto
+                                                                                    | formatearValor
+                                                                                        : "$"
+                                                                            }}
+                                                                            ({{
+                                                                                dPagarKmS.porcentaje
+                                                                                    | number
+                                                                                        : "1.0-2"
+                                                                            }}
+                                                                            %)
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (tarifa.adKmboolean) {
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><strong>Configuración de distancia</strong></h5>
+            </div>
+
+            <div class="card-body">
+                <div [formGroup]="kmDistancia" class="row">
+                    <div class="col-4">
+                        <label class="form-label">Primer sector</label>
+
+                        <input
+                            type="number"
+                            class="form-control"
+                            formControlName="primerSector"
+                        />
+                    </div>
+
+                    <div class="col-4">
+                        <label class="form-label">Intervalos</label>
+
+                        <input
+                            type="number"
+                            class="form-control"
+                            formControlName="sectoresSiguientes"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    <div class="card mt-3">
+        <div class="card-header">
+            <strong>Resumen del aumento</strong>
+        </div>
+
+        <div class="card-body">
+            @if (hayCambios()) {
+                @let resumen = calcularResumen();
+
+                <div class="row">
+                    <!-- BASE -->
+                    <div class="col-md-4">
+                        <h4 class="">Base</h4>
+
+                        <div>
+                            <h5>
+                                Cobrar:
+                                <strong class="text-success">
+                                    {{
+                                        resumen.base.cobrar.porcentaje
+                                            | number: "1.0-2"
+                                    }}
+                                    %
+                                </strong>
+                                <small class="text-muted">
+                                    ({{
+                                        resumen.base.cobrar.monto
+                                            | formatearValor: "$"
+                                    }})
+                                </small>
+                            </h5>
+                        </div>
+
+                        <div>
+                            <h5>
+                                Pagar:
+                                <strong class="text-danger">
+                                    {{
+                                        resumen.base.pagar.porcentaje
+                                            | number: "1.0-2"
+                                    }}
+                                    %
+                                </strong>
+                                <small class="text-muted">
+                                    ({{
+                                        resumen.base.pagar.monto
+                                            | formatearValor: "$"
+                                    }})
+                                </small>
+                            </h5>
+                        </div>
+                    </div>
+
+                    <!-- KM -->
+                    @if (resumen.km) {
+                        <div class="col-md-4">
+                            <h4 class="">Adicional KM</h4>
+
+                            <div>
+                                <h5>
+                                    Cobrar:
+                                    <strong class="text-success">
+                                        {{
+                                            resumen.km.cobrar.porcentaje
+                                                | number: "1.0-2"
+                                        }}
+                                        %
+                                    </strong>
+                                    <small class="text-muted">
+                                        ({{
+                                            resumen.km.cobrar.monto
+                                                | formatearValor: "$"
+                                        }})
+                                    </small>
+                                </h5>
+                            </div>
+
+                            <div>
+                                <h5>
+                                    Pagar:
+                                    <strong class="text-danger">
+                                        {{
+                                            resumen.km.pagar.porcentaje
+                                                | number: "1.0-2"
+                                        }}
+                                        %
+                                    </strong>
+                                    <small class="text-muted">
+                                        ({{
+                                            resumen.km.pagar.monto
+                                                | formatearValor: "$"
+                                        }})
+                                    </small>
+                                </h5>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- TOTAL -->
+                    <div class="col-md-4">
+                        <h4 class="">Total</h4>
+
+                        <h4>
+                            <span
+                                class="badge"
+                                [ngClass]="{
+                                    'bg-success': resumen.total.porcentaje > 0,
+                                    'bg-danger': resumen.total.porcentaje < 0,
+                                    'bg-secondary':
+                                        resumen.total.porcentaje === 0,
+                                }"
+                            >
+                                {{ resumen.total.porcentaje | number: "1.0-2" }}
+                                %
+                            </span>
+                        </h4>
+
+                        <div class="text-muted">
+                            <h5>{{ resumen.total.monto | formatearValor: "$" }}</h5>
+                        </div>
+                    </div>
+                </div>
+            } @else {
+                <span class="text-muted"> No hay cambios aplicados </span>
+            }
+        </div>
+    </div>
+
+    <div class="acciones mt-3">
+        <button
+            (click)="guardarAumento()"
+            class="btn btn-primary me-2"
+            [disabled]="!hayCambios()"
+        >
+            Guardar aumento
+        </button>
+
+        <button
+            (click)="cancelarOperacion()"
+            class="btn btn-outline-danger me-2"
+        >
+            Cancelar
+        </button>
+
+        <button class="btn btn-outline-secondary" (click)="resetearValores()">
+            Resetear
+        </button>
+    </div>
+</div>

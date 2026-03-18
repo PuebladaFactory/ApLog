@@ -16,6 +16,7 @@ import { ClientesListadoComponent } from './clientes-listado/clientes-listado.co
 import { AgGridModule } from 'ag-grid-angular';
 import { TarifaEditorComponent } from './tarifa-editor/tarifa-editor.component';
 import { ClienteTarifaViewerComponent } from './cliente-tarifa-viewer/cliente-tarifa-viewer.component';
+import { ClienteTarifaAumentoComponent } from './cliente-tarifa-aumento/cliente-tarifa-aumento.component';
 
 
 
@@ -36,7 +37,8 @@ import { ClienteTarifaViewerComponent } from './cliente-tarifa-viewer/cliente-ta
     ModalTarifaPersonalizadaComponent, 
     ClientesListadoComponent,    
     TarifaEditorComponent,
-    ClienteTarifaViewerComponent
+    ClienteTarifaViewerComponent,
+    ClienteTarifaAumentoComponent
   ],
   imports: [
     CommonModule,
