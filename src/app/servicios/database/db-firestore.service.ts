@@ -25,6 +25,12 @@ export interface Resultado {
   mensaje: string;
 }
 
+export interface ResultadoConObjeto {
+  exito: boolean;
+  mensaje: string;
+  objeto:any;
+}
+
 export interface ResultadoEliminacion {
   success: boolean;
   mensaje: string;
@@ -45,7 +51,7 @@ export class DbFirestoreService {
   coleccion: string = '';
   componente: string = '';
   private firestore = inject(Firestore);
-  
+  basePath: string = `/Vantruck/datos`;
 
   constructor(private numeradorService: NumeradorService) {
 
@@ -2163,14 +2169,6 @@ async eliminarOperacionEInformes(
       );
 
     }
-  
-
-
-
-
-
-
-
 
 
 }

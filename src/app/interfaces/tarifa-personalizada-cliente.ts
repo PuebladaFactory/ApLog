@@ -1,3 +1,5 @@
+import { AdicionalKm, AdicionalTarifa } from "./tarifa-gral-cliente";
+
 export interface TarifaPersonalizadaCliente {
     
     idTarifa: number;
@@ -5,6 +7,10 @@ export interface TarifaPersonalizadaCliente {
     secciones: Seccion [];
     tipo: TarifaTipo;
     idCliente: number;
+    adKmboolean?: boolean; 
+    adicionales?: AdicionalTarifa;
+    fechaActualizacion?: string;
+    actualizadoPor?: string;
 }
 
 export interface Seccion {    
@@ -20,6 +26,11 @@ export interface CategoriaTarifa {
     aPagar: number;
     nuevoACobrar: number;  // nuevo valor calculado
     nuevoAPagar: number;   // nuevo valor calculado
+    adicionalKmACobrar?: AdicionalKm;
+    adicionalKmAPagar?: AdicionalKm;
+    nuevoAdKmACobrar?: AdicionalKm;
+    nuevoAdKmAPagar?: AdicionalKm;
+    
 }
 
 export interface TarifaTipo {

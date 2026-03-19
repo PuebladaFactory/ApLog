@@ -1,4 +1,4 @@
-<div  class="layout-global no-print">
+<div class="layout-global no-print">
     <h2 class="mt-2">Historial de movimientos</h2>
     <div class="card-body">
         <div
@@ -81,216 +81,230 @@
     @if (movimientos) {
         @if (!cargando && movimientos.length > 0) {
             <div class="panel-box panel-resultados">
-            <div class="table-responsive mt-5">
-                <table class="table table-sm table-striped align-middle">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Fecha</th>
-                            <th>Id</th>
-                            <th>N° Comprobante</th>
-                            <th>Tipo</th>
-                            <th>Medio</th>
-                            <th>Referencia</th>
-                            <th>Observaciones</th>
-                            <th>Cant Imputaciones</th>
-                            <th>Estado</th>
-                            <th class="text-end">Total</th>                            
-                            <th style="width: 4%"></th>
-                            <th style="width: 4%"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (m of movimientos; track m.id) {
-                            <tr
-                                [class.table-secondary]="m.estado === 'anulado'"
-                                [class.text-decoration-line-through]="
-                                    m.estado === 'anulado'
-                                "
-                            >
-                                <td>
-                                    <button
-                                        class="btn btn-sm btn-outline-secondary"
-                                        (click)="toggleDetalle(m.id)"
-                                    >
-                                        @if (estaExpandido(m.id)) {
-                                            −
-                                        } @else {
-                                            +
-                                        }
-                                    </button>
-                                </td>
-
-                                <td>{{ m.fechaOperacion }}</td>
-
-                                <td>{{ m.idMovFinanciero }}</td>
-
-                                <td>{{ m.numeroComprobante }}</td>
-
-                                <td>
-                                    <span
-                                        class="badge"
-                                        [class.bg-success]="m.tipo === 'cobro'"
-                                        [class.bg-danger]="m.tipo === 'pago'"
-                                    >
-                                        {{ m.tipo }}
-                                    </span>
-                                </td>
-
-                                <td>{{ m.medioPago || "-" }}</td>
-
-                                <td>{{ m.referencia }}</td>
-
-                                <td>{{ m.observaciones }}</td>
-
-                                <td>{{ m.imputaciones.length }}</td>
-
-                                <td>
-                                    <span
-                                        class="badge"
-                                        [class.bg-success]="
-                                            m.estado === 'activo'
-                                        "
-                                        [class.bg-danger]="
-                                            m.estado === 'anulado'
-                                        "
-                                    >
-                                        {{ m.estado }}
-                                    </span>
-                                </td>
-
-                                <td class="text-end table-success">
-                                    {{
-                                        m.totalMovimiento | formatearValor: "$"
-                                    }}
-                                </td>                               
-                                <td class="text-center align-middle">
-                                    <app-btn-reimpresion
-                                        (click)="imprimirDetalle(m)"
-                                    ></app-btn-reimpresion>
-                                </td>
-                                <td class="text-center">
-                                    <app-btn-eliminar name="EliminarColor" [ngClass]="{'isDisabled': m.estado === 'anulado'}" (click)="anular(m)"></app-btn-eliminar>     
-                                </td>
+                <div class="table-responsive mt-5">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Fecha</th>
+                                <th>Id</th>
+                                <th>N° Comprobante</th>
+                                <th>Tipo</th>
+                                <th>Medio</th>
+                                <th>Referencia</th>
+                                <th>Observaciones</th>
+                                <th>Cant Imputaciones</th>
+                                <th>Estado</th>
+                                <th class="text-end">Total</th>
+                                <th style="width: 4%"></th>
+                                <th style="width: 4%"></th>
                             </tr>
-                            @if (estaExpandido(m.id)) {
-                                <tr class="table-light">
-                                    <td colspan="13">
-                                        <table class="table table-sm mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width: 12%">
-                                                        Informe
-                                                    </th>
-                                                    <th style="width: 12%">
-                                                        Fecha
-                                                    </th>
-                                                    <th style="width: 12%">
-                                                        Mes
-                                                    </th>
-                                                    <th style="width: 12%">
-                                                        Periodo Liq
-                                                    </th>
-                                                    <th
-                                                        class="text-end"
-                                                        style="width: 17%"
-                                                    >
-                                                        Total informe
-                                                    </th>
-                                                    <th
-                                                        class="text-end"
-                                                        style="width: 17%"
-                                                    >
-                                                        Saldo informe
-                                                    </th>
-                                                    <th
-                                                        class="text-end"
-                                                        style="width: 17%"
-                                                    >
-                                                        Monto Imputado
-                                                    </th>
-                                                </tr>
-                                            </thead>
+                        </thead>
+                        <tbody>
+                            @for (m of movimientos; track m.id) {
+                                <tr
+                                    [class.table-secondary]="
+                                        m.estado === 'anulado'
+                                    "
+                                    [class.text-decoration-line-through]="
+                                        m.estado === 'anulado'
+                                    "
+                                >
+                                    <td>
+                                        <button
+                                            class="btn btn-sm btn-outline-secondary"
+                                            (click)="toggleDetalle(m.id)"
+                                        >
+                                            @if (estaExpandido(m.id)) {
+                                                −
+                                            } @else {
+                                                +
+                                            }
+                                        </button>
+                                    </td>
 
-                                            <tbody>
-                                                @for (
-                                                    imp of m.imputaciones;
-                                                    track imp.informeLiqId
-                                                ) {
-                                                    <tr>
-                                                        <td
-                                                            class="align-middle"
-                                                        >
-                                                            #{{
-                                                                imp.numeroInterno
-                                                            }}
-                                                        </td>
-                                                        <td
-                                                            class="align-middle"
-                                                        >
-                                                            {{
-                                                                imp.fechaInforme
-                                                            }}
-                                                        </td>
-                                                        <td
-                                                            class="align-middle"
-                                                        >
-                                                            {{
-                                                                imp.mesLiquidado
-                                                            }}
-                                                        </td>
-                                                        <td
-                                                            class="align-middle"
-                                                        >
-                                                            {{
-                                                                imp.periodoLiquidado
-                                                            }}
-                                                        </td>
-                                                        <td
-                                                            class="text-end table-info align-middle"
-                                                        >
-                                                            {{
-                                                                imp.totalInforme
-                                                                    | formatearValor
-                                                                        : "$"
-                                                            }}
-                                                        </td>
-                                                        <td
-                                                            class="text-end table-danger align-middle"
-                                                        >
-                                                            {{
-                                                                imp.saldoInforme
-                                                                    | formatearValor
-                                                                        : "$"
-                                                            }}
-                                                        </td>
-                                                        <td
-                                                            class="text-end table-success align-middle"
-                                                        >
-                                                            {{
-                                                                imp.montoImputado
-                                                                    | formatearValor
-                                                                        : "$"
-                                                            }}
-                                                        </td>
-                                                    </tr>
-                                                }
-                                            </tbody>
-                                        </table>
+                                    <td>{{ m.fechaOperacion }}</td>
+
+                                    <td>{{ m.idMovFinanciero }}</td>
+
+                                    <td>{{ m.numeroComprobante }}</td>
+
+                                    <td>
+                                        <span
+                                            class="badge"
+                                            [class.bg-success]="
+                                                m.tipo === 'cobro'
+                                            "
+                                            [class.bg-danger]="
+                                                m.tipo === 'pago'
+                                            "
+                                        >
+                                            {{ m.tipo }}
+                                        </span>
+                                    </td>
+
+                                    <td>{{ m.medioPago || "-" }}</td>
+
+                                    <td>{{ m.referencia }}</td>
+
+                                    <td>{{ m.observaciones }}</td>
+
+                                    <td>{{ m.imputaciones.length }}</td>
+
+                                    <td>
+                                        <span
+                                            class="badge"
+                                            [class.bg-success]="
+                                                m.estado === 'activo'
+                                            "
+                                            [class.bg-danger]="
+                                                m.estado === 'anulado'
+                                            "
+                                        >
+                                            {{ m.estado }}
+                                        </span>
+                                    </td>
+
+                                    <td class="text-end table-success">
+                                        {{
+                                            m.totalMovimiento
+                                                | formatearValor: "$"
+                                        }}
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <app-btn-reimpresion
+                                            (click)="imprimirDetalle(m)"
+                                        ></app-btn-reimpresion>
+                                    </td>
+                                    <td class="text-center">
+                                        <app-btn-eliminar
+                                            name="EliminarColor"
+                                            [ngClass]="{
+                                                isDisabled:
+                                                    m.estado === 'anulado',
+                                            }"
+                                            (click)="anular(m)"
+                                        ></app-btn-eliminar>
                                     </td>
                                 </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-2 text-end">
-                <strong>
-                    Total listado: {{ totalMovimientos | formatearValor: "$" }}
-                </strong>
-            </div>
-            </div>
+                                @if (estaExpandido(m.id)) {
+                                    <tr class="table-light">
+                                        <td colspan="13">
+                                            <table class="table table-sm mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 12%">
+                                                            Informe
+                                                        </th>
+                                                        <th style="width: 12%">
+                                                            Fecha
+                                                        </th>
+                                                        <th style="width: 12%">
+                                                            Mes
+                                                        </th>
+                                                        <th style="width: 12%">
+                                                            Periodo Liq
+                                                        </th>
+                                                        <th
+                                                            class="text-end"
+                                                            style="width: 17%"
+                                                        >
+                                                            Total informe
+                                                        </th>
+                                                        <th
+                                                            class="text-end"
+                                                            style="width: 17%"
+                                                        >
+                                                            Saldo informe
+                                                        </th>
+                                                        <th
+                                                            class="text-end"
+                                                            style="width: 17%"
+                                                        >
+                                                            Monto Imputado
+                                                        </th>
+                                                    </tr>
+                                                </thead>
 
+                                                <tbody>
+                                                    @for (
+                                                        imp of m.imputaciones;
+                                                        track imp.informeLiqId
+                                                    ) {
+                                                        <tr>
+                                                            <td
+                                                                class="align-middle"
+                                                            >
+                                                                #{{
+                                                                    imp.numeroInterno
+                                                                }}
+                                                            </td>
+                                                            <td
+                                                                class="align-middle"
+                                                            >
+                                                                {{
+                                                                    imp.fechaInforme
+                                                                }}
+                                                            </td>
+                                                            <td
+                                                                class="align-middle"
+                                                            >
+                                                                {{
+                                                                    imp.mesLiquidado
+                                                                }}
+                                                            </td>
+                                                            <td
+                                                                class="align-middle"
+                                                            >
+                                                                {{
+                                                                    imp.periodoLiquidado
+                                                                }}
+                                                            </td>
+                                                            <td
+                                                                class="text-end table-info align-middle"
+                                                            >
+                                                                {{
+                                                                    imp.totalInforme
+                                                                        | formatearValor
+                                                                            : "$"
+                                                                }}
+                                                            </td>
+                                                            <td
+                                                                class="text-end table-danger align-middle"
+                                                            >
+                                                                {{
+                                                                    imp.saldoInforme
+                                                                        | formatearValor
+                                                                            : "$"
+                                                                }}
+                                                            </td>
+                                                            <td
+                                                                class="text-end table-success align-middle"
+                                                            >
+                                                                {{
+                                                                    imp.montoImputado
+                                                                        | formatearValor
+                                                                            : "$"
+                                                                }}
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-2 text-end">
+                    <strong>
+                        Total listado:
+                        {{ totalMovimientos | formatearValor: "$" }}
+                    </strong>
+                </div>
+            </div>
         } @else if (!cargando && movimientos.length === 0) {
             <div class="text-muted">
                 No hay movimientos para la entidad seleccionada
