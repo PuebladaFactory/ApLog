@@ -57,7 +57,7 @@ export class FacturacionHistoricoComponent implements OnInit {
   columnas: ColumnaTabla<InformeLiq>[] = [
     {
       key: "fecha",
-      label: "Fecha",
+      label: "Fecha Inf",
       sortable: true,
     },
     {
@@ -71,12 +71,12 @@ export class FacturacionHistoricoComponent implements OnInit {
       sortable: true,
       value: (inf) => inf.numeroInterno ?? 0,
     },
-    {
+/*     {
       key: "id",
       label: "Id",
       sortable: true,
       value: (inf) => inf.idInfLiq ?? 0,
-    },
+    }, */
     {
       key: "mes",
       label: "Mes",

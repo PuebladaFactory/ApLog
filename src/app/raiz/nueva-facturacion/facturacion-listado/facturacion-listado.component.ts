@@ -80,7 +80,7 @@ export class FacturacionListadoComponent implements OnInit {
   columnas: ColumnaTabla<InformeLiq>[] = [
     {
       key: "fecha",
-      label: "Fecha",
+      label: "Fecha Inf",
       sortable: true,
     },
     {
@@ -94,12 +94,12 @@ export class FacturacionListadoComponent implements OnInit {
       sortable: true,
       value: (inf) => inf.numeroInterno ?? 0,
     },
-    {
+/*     {
       key: "id",
       label: "Id",
       sortable: true,
       value: (inf) => inf.idInfLiq ?? 0,
-    },
+    }, */
     {
       key: "mes",
       label: "Mes",
@@ -684,6 +684,16 @@ export class FacturacionListadoComponent implements OnInit {
     return `$ ${nuevoValor}`;
   }
 
+  
+  mensajesError(msj: string, resultado: string) {
+    Swal.fire({
+      icon: resultado === "error" ? "error" : "success",
+      //title: "Oops...",
+      text: `${msj}`,
+      //footer: `${msj}`
+    });
+  }
+
   ////////////////////////// METODOS INTERNOS DE CONTROL Y CORRECCION ////////////////////////
 
   /*   verificarFacturasDuplicados() {
@@ -749,10 +759,11 @@ export class FacturacionListadoComponent implements OnInit {
   } */
 
   /* METODOS PARA AGREGAR EL AÑO A LOS INFORMES-LIQ */
-  /* async editarInformesLiq(){
+  async editarInformesLiq(){
       this.informesEditados = structuredClone(this.informesLiq);
+      this.cargando = true;
       await this.calcularAnios(this.informesEditados)
-      
+      this.cargando = false;
       
       console.log("informesEditados: ", this.informesEditados);
       
@@ -760,8 +771,15 @@ export class FacturacionListadoComponent implements OnInit {
 
     async actualizarInformesLiq(){
       this.cargando = true;
-      await this.dbService.actualizarMultiple(this.informesEditados, "resumenLiq")
-      this.cargando = false;
+      const resul = await this.dbService.actualizarMultiple(this.informesEditados, "resumenLiq")
+      if(resul.exito){
+        this.cargando = false;
+        this.mensajesError(resul.mensaje,"success");
+      } else {
+        this.cargando = false;
+        this.mensajesError(resul.mensaje,"error");
+      }
+      
     }
 
     async calcularAnios(informesLiq: ConId<InformeLiq>[]) {
@@ -779,5 +797,6 @@ export class FacturacionListadoComponent implements OnInit {
 
   getAnio(fechaString: any): number {
     return new Date(fechaString).getFullYear();
-  } */
+  }
+
 }
