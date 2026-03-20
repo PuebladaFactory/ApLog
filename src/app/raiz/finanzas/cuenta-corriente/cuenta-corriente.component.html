@@ -1,0 +1,93 @@
+<div class="layout-global">
+    <h2>Cuenta Corriente</h2>
+
+    <!-- 🔎 Filtros -->
+    <div class="filtros">
+        <select [(ngModel)]="filtros.tipoEntidad" (change)="onFiltroChange()">
+            <option value="">Todos</option>
+            <option value="cliente">Clientes</option>
+            <option value="chofer">Choferes</option>
+            <option value="proveedor">Proveedores</option>
+        </select>
+
+        <label>
+            <input
+                type="checkbox"
+                [(ngModel)]="filtros.soloConDeuda"
+                (change)="onFiltroChange()"
+            />
+            Solo con deuda
+        </label>
+
+        <input
+            type="text"
+            placeholder="Buscar por razón social o CUIT..."
+            [(ngModel)]="filtros.search"
+            (input)="aplicarFiltros()"
+        />
+    </div>
+
+    <!-- ⏳ Loading -->
+    @if (loading) {
+        <app-spinner></app-spinner>
+    }
+
+    @if (!loading) {
+        <!-- 📊 Tabla -->
+        <table class="tabla-cuenta-corriente">
+            <thead>
+                <tr>
+                    <th>Entidad</th>
+                    <th>Tipo</th>
+                    <th>Facturado</th>
+                    <th>Cobrado</th>
+                    <th>Saldo</th>
+                    <th>Estado</th>
+                    <th>Informes</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr *ngFor="let cuenta of cuentasFiltradas">
+                    <td>
+                        <div class="entidad">
+                            <strong>{{ cuenta.razonSocial }}</strong>
+                            <small *ngIf="cuenta.cuit">{{ cuenta.cuit }}</small>
+                        </div>
+                    </td>
+
+                    <td>{{ cuenta.tipoEntidad }}</td>
+
+                    <td>{{ cuenta.totalFacturado | currency }}</td>
+
+                    <td>{{ cuenta.totalCobrado | currency }}</td>
+
+                    <td [class.deuda]="cuenta.saldoPendiente > 0">
+                        {{ cuenta.saldoPendiente | currency }}
+                    </td>
+
+                    <td>
+                        <span [ngClass]="getEstadoClass(cuenta.estado)">
+                            {{ cuenta.estado }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ cuenta.cantidadPendientes }} /
+                        {{ cuenta.cantidadInformes }}
+                    </td>
+
+                    <td>
+                        <button (click)="verDetalle(cuenta)">Ver</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    }
+
+    <!-- ❌ Sin datos -->
+    @if (!loading && cuentasFiltradas.length === 0) {
+        <div>No hay resultados</div>
+    }
+</div>

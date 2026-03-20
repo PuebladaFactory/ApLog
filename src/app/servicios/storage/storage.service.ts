@@ -289,6 +289,9 @@ export class StorageService {
   private _noOperativo$ = new BehaviorSubject<any>(this.loadInfo('noOperativo') || []);
   public noOperativo$ = this._noOperativo$.asObservable();
 
+  private _resumenFinanzas$ = new BehaviorSubject<any>(this.loadInfo('resumenFinanzas') || []);
+  public resumenFinanzas$ = this._resumenFinanzas$.asObservable();
+
   updateObservable(componente: any, data: any) {
     switch (componente) {
       case "clientes": {
@@ -699,6 +702,10 @@ export class StorageService {
         this._noOperativo$.next(data);
         break
       }
+      case 'resumenFinanzas':{
+        this._resumenFinanzas$.next(data);
+        break
+      }
       default: {
         //statements; 
         break;
@@ -1028,6 +1035,8 @@ export class StorageService {
         return this._fechasConsulta$.asObservable();
       case "noOperativo":
         return this._noOperativo$.asObservable();
+      case 'resumenFinanzas':
+        return this._resumenFinanzas$.asObservable();
       default:
         throw new Error(`Componente no reconocido: ${componente}`);
     }

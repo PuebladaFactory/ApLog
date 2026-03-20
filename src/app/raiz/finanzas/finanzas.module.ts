@@ -12,6 +12,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { MovimientoFinancieroComponent } from './modales/movimiento-financiero/movimiento-financiero.component';
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 import { MovimientoDetalleComponent } from './movimiento-detalle/movimiento-detalle.component';
+import { CuentaCorrienteComponent } from './cuenta-corriente/cuenta-corriente.component';
 
 
 @NgModule({
@@ -21,7 +22,8 @@ import { MovimientoDetalleComponent } from './movimiento-detalle/movimiento-deta
     FinanzasPagosComponent,
     MovimientoFinancieroComponent,
     HistorialMovimientosComponent,
-    MovimientoDetalleComponent
+    MovimientoDetalleComponent,
+    CuentaCorrienteComponent
   ],
   imports: [
     CommonModule,
