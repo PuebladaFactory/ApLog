@@ -23,14 +23,20 @@ import { ConId } from "src/app/interfaces/conId";
 import { NumeradorService } from "../numerador/numerador.service";
 import { SaldoEngine } from "./saldo-engine.service";
 import { MovimientoImpresionVM } from "src/app/interfaces/movimiento-impresion-v-m";
+import { ResumenFinancieroEntidad } from "src/app/interfaces/resumen-financiero-entidad";
+import { FinanzasResumenService } from "./finanzas-resumen.service";
 
 @Injectable({
   providedIn: "root",
 })
 export class MovimientoFinancieroService {
   private firestore = inject(Firestore);
+  basePath: string = '/Vantruck/datos';
 
-  constructor(private numeradorService: NumeradorService) {}
+  constructor(
+    private numeradorService: NumeradorService,
+    private finanzasResumenService: FinanzasResumenService,
+  ) {}
 
   // =====================================================
   // 🔹 CONSULTAS
@@ -39,7 +45,7 @@ export class MovimientoFinancieroService {
   async getInformesPendientesPorEntidad(
     entidadId: number,
   ): Promise<ConId<InformeLiq>[]> {
-    const colRef = collection(this.firestore, "/Vantruck/datos/resumenLiq");
+    const colRef = collection(this.firestore, `${this.basePath}/resumenLiq`);
 
     const q = query(
       colRef,
@@ -61,7 +67,7 @@ export class MovimientoFinancieroService {
   ): Promise<ConId<MovimientoFinanciero> | null> {
     const ref = doc(
       this.firestore,
-      `/Vantruck/datos/movimientos/${movimientoId}`,
+      `${this.basePath}/movimientos/${movimientoId}`,
     );
 
     const snap = await getDoc(ref);
@@ -81,7 +87,7 @@ export class MovimientoFinancieroService {
     fechaDesde?: string;
     fechaHasta?: string;
   }): Promise<(MovimientoFinanciero & { id: string })[]> {
-    const colRef = collection(this.firestore, "/Vantruck/datos/movimientos");
+    const colRef = collection(this.firestore, `${this.basePath}/movimientos`);
 
     const constraints: any[] = [
       where("entidad.tipo", "==", params.tipoEntidad),
@@ -123,7 +129,7 @@ export class MovimientoFinancieroService {
   ): Promise<number> {
     const movimientosRef = collection(
       this.firestore,
-      "/Vantruck/datos/movimientos",
+      `${this.basePath}/movimientos`,
     );
 
     const movRef = doc(movimientosRef);
@@ -147,7 +153,7 @@ export class MovimientoFinancieroService {
       for (const inf of form.informesSeleccionados) {
         const infRef = doc(
           this.firestore,
-          `/Vantruck/datos/resumenLiq/${inf.informeLiqId}`,
+          `${this.basePath}/resumenLiq/${inf.informeLiqId}`,
         );
 
         const snap = await tx.get(infRef);
@@ -220,10 +226,33 @@ export class MovimientoFinancieroService {
 
       const numeradorRef = doc(
         this.firestore,
-        `Vantruck/datos/numeradores/${prefijo}`,
+        `${this.basePath}/numeradores/${prefijo}`,
       );
 
       tx.set(numeradorRef, { ultimoNumero: numero }, { merge: true });
+
+      // 🔥 ACTUALIZAR RESUMEN (MISMA TX)
+
+      const resumenRef = doc(
+        this.firestore,
+        `${this.basePath}/resumenFinanzas/${movimiento.tipo}_${movimiento.entidad.id}`,
+      );
+
+      const snap = await tx.get(resumenRef);
+
+      if (!snap.exists()) {
+        throw new Error("Resumen financiero no existe");
+      }
+
+      const resumen = snap.data() as ResumenFinancieroEntidad;
+
+      const patch = this.finanzasResumenService.impactarMovimientoEnResumen(
+        resumen,
+        movimiento,
+        "alta",
+      );
+
+      tx.update(resumenRef, patch);
     });
 
     return idObj;
@@ -240,7 +269,7 @@ export class MovimientoFinancieroService {
   ): Promise<void> {
     const movRef = doc(
       this.firestore,
-      `/Vantruck/datos/movimientos/${movimientoId}`,
+      `${this.basePath}/movimientos/${movimientoId}`,
     );
 
     await runTransaction(this.firestore, async (tx) => {
@@ -270,7 +299,7 @@ export class MovimientoFinancieroService {
       for (const imp of movimiento.imputaciones) {
         const infRef = doc(
           this.firestore,
-          `/Vantruck/datos/resumenLiq/${imp.informeLiqId}`,
+          `${this.basePath}/resumenLiq/${imp.informeLiqId}`,
         );
 
         const snap = await tx.get(infRef);
@@ -324,6 +353,31 @@ export class MovimientoFinancieroService {
         anuladoPor: usuarioUid,
         motivoAnulacion: motivo,
       });
+
+      // ===============================
+      // 🔹 ACTUALIZAR RESUMEN (MISMA TX)
+      // ===============================     
+
+      const resumenRef = doc(
+        this.firestore,
+        `${this.basePath}/resumenFinanzas/${movimiento.tipo}_${movimiento.entidad.id}`,
+      );
+
+      const snap = await tx.get(resumenRef);
+
+      if (!snap.exists()) {
+        throw new Error("Resumen financiero no existe");
+      }
+
+      const resumen = snap.data() as ResumenFinancieroEntidad;
+
+      const patch = this.finanzasResumenService.impactarMovimientoEnResumen(
+        resumen,
+        movimiento,
+        "anulacion",
+      );
+
+      tx.update(resumenRef, patch);
     });
   }
 

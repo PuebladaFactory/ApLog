@@ -1,16 +1,20 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { ConId } from 'src/app/interfaces/conId';
-import { InformeLiq } from 'src/app/interfaces/informe-liq';
-import { AccionTabla, ColumnaTabla, EventoAccionTabla, OrdenTabla } from 'src/app/interfaces/tablas';
+import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import { ConId } from "src/app/interfaces/conId";
+import { InformeLiq } from "src/app/interfaces/informe-liq";
+import {
+  AccionTabla,
+  ColumnaTabla,
+  EventoAccionTabla,
+  OrdenTabla,
+} from "src/app/interfaces/tablas";
 
 @Component({
-  selector: 'app-informes-tabla',
+  selector: "app-informes-tabla",
   standalone: false,
-  templateUrl: './informes-tabla.component.html',
-  styleUrl: './informes-tabla.component.scss'
+  templateUrl: "./informes-tabla.component.html",
+  styleUrl: "./informes-tabla.component.scss",
 })
-export class InformesTablaComponent implements OnInit{
-
+export class InformesTablaComponent implements OnInit {
   @Input() items: ConId<InformeLiq>[] = [];
   @Input() columnas: ColumnaTabla<InformeLiq>[] = [];
   @Input() acciones: AccionTabla<InformeLiq>[] = [];
@@ -24,12 +28,10 @@ export class InformesTablaComponent implements OnInit{
 
   ordenColumna: string | null = null;
   ordenAsc = true;
-  
-  constructor(){}
-  
-  ngOnInit(): void {
-    
-  }
+
+  constructor() {}
+
+  ngOnInit(): void {}
 
   onOrdenar(col: ColumnaTabla<any>) {
     if (!col.sortable) return;
@@ -43,29 +45,34 @@ export class InformesTablaComponent implements OnInit{
 
     this.ordenar.emit({
       key: col.key,
-      asc: this.ordenAsc
+      asc: this.ordenAsc,
     });
   }
 
   obtenerValor(item: any, key: string) {
-    return item?.[key] ?? '';
+    return item?.[key] ?? "";
   }
-
 
   ejecutarAccion(accion: AccionTabla<InformeLiq>, item: ConId<InformeLiq>) {
     if (accion.disabled?.(item)) return;
 
     this.accionClick.emit({
       accion: accion.id,
-      item
+      item,
     });
   }
 
-  mostrarAccion(accion: AccionTabla<InformeLiq>, item: ConId<InformeLiq>): boolean {
+  mostrarAccion(
+    accion: AccionTabla<InformeLiq>,
+    item: ConId<InformeLiq>,
+  ): boolean {
     return accion.visible ? accion.visible(item) : true;
   }
 
-  accionDeshabilitada(accion: AccionTabla<InformeLiq>, item: ConId<InformeLiq>): boolean {
+  accionDeshabilitada(
+    accion: AccionTabla<InformeLiq>,
+    item: ConId<InformeLiq>,
+  ): boolean {
     return accion.disabled ? accion.disabled(item) : false;
   }
 
@@ -85,12 +92,12 @@ export class InformesTablaComponent implements OnInit{
     const classes: string[] = [];
 
     // alineación
-    if (col.align === 'end') classes.push('text-end');
-    if (col.align === 'center') classes.push('text-center');
+    if (col.align === "end") classes.push("text-end");
+    if (col.align === "center") classes.push("text-center");
 
     // clases dinámicas
     if (col.cellClass) {
-      if (typeof col.cellClass === 'function') {
+      if (typeof col.cellClass === "function") {
         const cls = col.cellClass(item);
         if (cls) classes.push(cls);
       } else {
@@ -100,8 +107,5 @@ export class InformesTablaComponent implements OnInit{
 
     return classes;
   }
-
-
-
 
 }

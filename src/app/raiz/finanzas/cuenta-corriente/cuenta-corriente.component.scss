@@ -1,3 +1,7 @@
+th, td, select, input {
+  font-size: 1.3rem;
+}
+
 .filtros {
   display: flex;
   gap: 12px;
@@ -25,21 +29,109 @@
   flex-direction: column;
 }
 
-.deuda {
-  color: red;
+/* 💰 Saldo */
+.saldo-deuda {
+  color: #d32f2f;
   font-weight: bold;
 }
 
-/* Estados */
-.estado-deuda {
-  color: red;
+.saldo-ok {
+  color: #2e7d32;
+}
+
+.saldo-parcial {
+  color: #FFC107;
+}
+
+/* 🧠 Badges */
+.badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-deuda {
+  background-color: #fdecea;
+  color: #d32f2f;
+}
+
+.badge-ok {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.resumen-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.card.resumen {
+  padding: 15px;
+  border-radius: 10px;
+  background: #fafafa;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.card .titulo {
+  font-size: 14px;
+  color: #666;
+}
+
+.card .valor {
+  font-size: 22px;
   font-weight: bold;
+  margin-top: 5px;
 }
 
-.estado-ok {
-  color: green;
+.card .detalle {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #888;
 }
 
-.estado-favor {
-  color: blue;
+
+/* 🟣 Neto */
+.neto-positivo .valor {
+  color: #2e7d32;
+}
+
+.neto-negativo .valor {
+  color: #d32f2f;
+}
+
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500;
+}
+
+.panel-resultados {
+  margin-top: 10px;
+  background: white;
+}
+
+.panel-box {  
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.ordenable{
+  cursor: pointer;
+  user-select: none;
+}
+
+.ordenable:hover {
+  background-color: #f5f5f5;
+}
+
+.ordenable.active {
+  font-weight: bold;
 }

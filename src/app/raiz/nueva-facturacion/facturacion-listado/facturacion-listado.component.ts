@@ -35,6 +35,7 @@ import {
   LiquidacionService,
 } from "src/app/servicios/liquidaciones/liquidacion.service";
 import { toISODateString } from "src/app/servicios/fechas/date-range.service";
+import { FinanzasResumenService } from "src/app/servicios/finanzas/finanzas-resumen.service";
 
 @Component({
   selector: "app-facturacion-listado",
@@ -94,7 +95,7 @@ export class FacturacionListadoComponent implements OnInit {
       sortable: true,
       value: (inf) => inf.numeroInterno ?? 0,
     },
-/*     {
+    /*     {
       key: "id",
       label: "Id",
       sortable: true,
@@ -194,7 +195,7 @@ export class FacturacionListadoComponent implements OnInit {
   informesEditados: ConId<InformeLiq>[] = [];
   periodos: { label: string; valor: string }[] = [];
   periodoSeleccionado: string | null = null;
-  tipoConsulta: 'periodo' | 'fechas' = 'periodo';
+  tipoConsulta: "periodo" | "fechas" = "periodo";
   filtroEstado: "facturado" | "anulado" | "cobrado" = "facturado";
 
   constructor(
@@ -205,6 +206,7 @@ export class FacturacionListadoComponent implements OnInit {
     private modalService: NgbModal,
     private supabaseStorageService: SupabaseStorageService,
     private liquidacionService: LiquidacionService,
+    private finanzasResumenService: FinanzasResumenService,
   ) {}
 
   ngOnInit(): void {
@@ -235,7 +237,7 @@ export class FacturacionListadoComponent implements OnInit {
       Swal.fire("Error", "No se pudieron obtener los informes.", "error");
     } finally {
       this.cargando = false;
-      this.periodoSeleccionado = null
+      this.periodoSeleccionado = null;
     }
   }
 
@@ -560,12 +562,11 @@ export class FacturacionListadoComponent implements OnInit {
                 showConfirmButton: false,
               });
               // 🔹 Vuelvo a consultar informes;
-              if(this.periodoSeleccionado){
-                this.cargarInformesPorPeriodo()
+              if (this.periodoSeleccionado) {
+                this.cargarInformesPorPeriodo();
               } else {
                 this.cargarInformes(this.fechaDesde, this.fechaHasta);
               }
-              
             } else {
               Swal.fire({
                 icon: "error",
@@ -684,7 +685,6 @@ export class FacturacionListadoComponent implements OnInit {
     return `$ ${nuevoValor}`;
   }
 
-  
   mensajesError(msj: string, resultado: string) {
     Swal.fire({
       icon: resultado === "error" ? "error" : "success",
@@ -759,44 +759,59 @@ export class FacturacionListadoComponent implements OnInit {
   } */
 
   /* METODOS PARA AGREGAR EL AÑO A LOS INFORMES-LIQ */
-  async editarInformesLiq(){
-      this.informesEditados = structuredClone(this.informesLiq);
-      this.cargando = true;
-      await this.calcularAnios(this.informesEditados)
+
+  async actualizarInformesLiq() {
+    this.cargando = true;
+    const resul = await this.dbService.actualizarMultiple(
+      this.informesEditados,
+      "resumenLiq",
+    );
+    if (resul.exito) {
       this.cargando = false;
-      
-      console.log("informesEditados: ", this.informesEditados);
-      
+      this.mensajesError(resul.mensaje, "success");
+    } else {
+      this.cargando = false;
+      this.mensajesError(resul.mensaje, "error");
     }
-
-    async actualizarInformesLiq(){
-      this.cargando = true;
-      const resul = await this.dbService.actualizarMultiple(this.informesEditados, "resumenLiq")
-      if(resul.exito){
-        this.cargando = false;
-        this.mensajesError(resul.mensaje,"success");
-      } else {
-        this.cargando = false;
-        this.mensajesError(resul.mensaje,"error");
-      }
-      
-    }
-
-    async calcularAnios(informesLiq: ConId<InformeLiq>[]) {
-  for (const informe of informesLiq) {
-
-    await this.obtenerInformesOp(informe);
-
-    if (this.informesOp.length > 0) {
-      const fecha = this.informesOp[0].fecha;
-      informe.anio = this.getAnio(fecha);
-    }
-
   }
-}
+
+  async calcularAnios(informesLiq: ConId<InformeLiq>[]) {
+    for (const informe of informesLiq) {
+      await this.obtenerInformesOp(informe);
+
+      if (this.informesOp.length > 0) {
+        const fecha = this.informesOp[0].fecha;
+        informe.anio = this.getAnio(fecha);
+      }
+    }
+  }
 
   getAnio(fechaString: any): number {
     return new Date(fechaString).getFullYear();
   }
 
+  async editarInformesLiq() {
+    this.informesEditados = structuredClone(this.informesLiq);
+    //this.cargando = true;
+    //await this.calcularAnios(this.informesEditados)
+    await this.construirResumenEntidad();
+    this.cargando = false;
+
+    console.log("informesEditados: ", this.informesEditados);
+  }
+
+  async construirResumenEntidad() {
+    this.cargando = true;
+    let respuestas = [];
+    for (const informe of this.informesEditados) {
+      const respuesta =
+        await this.finanzasResumenService.construirInformeEntidadPendientes(
+          informe,
+        );
+
+      respuestas.push(respuesta);
+    }
+
+    console.log("respuestas: ", respuestas);
+  }
 }

@@ -51,6 +51,7 @@ import { DecimalInputDirective } from './directives/decimal-input.directive';
 
 
 import { MontoDirective } from './directives/monto.directive';
+import { SortableDirective } from './directives/sortable.directive';
 
 
 
@@ -94,7 +95,8 @@ import { MontoDirective } from './directives/monto.directive';
     DecimalInputDirective,
     
     
-    MontoDirective
+    MontoDirective,
+    SortableDirective
     
   ],
   imports: [
@@ -145,7 +147,8 @@ import { MontoDirective } from './directives/monto.directive';
     DecimalInputDirective,
     
     
-    MontoDirective
+    MontoDirective,
+    SortableDirective
   ]
 })
 export class SharedModule { }

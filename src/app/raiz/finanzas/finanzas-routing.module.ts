@@ -6,6 +6,7 @@ import { FinanzasPagosComponent } from './finanzas-pagos/finanzas-pagos.componen
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 import { MovimientoDetalleComponent } from './movimiento-detalle/movimiento-detalle.component';
 import { CuentaCorrienteComponent } from './cuenta-corriente/cuenta-corriente.component';
+import { DetalleCuentaCorrienteComponent } from './detalle-cuenta-corriente/detalle-cuenta-corriente.component';
 
 const routes: Routes = [
   {path: '', component:FinanzasControlComponent,
@@ -16,6 +17,7 @@ const routes: Routes = [
           {path: 'historial', component:HistorialMovimientosComponent},
           {path: 'movimiento/:id',component: MovimientoDetalleComponent},          
           {path: 'cuenta-corriente',component: CuentaCorrienteComponent},
+          {path: 'cuenta-corriente/:id',component: DetalleCuentaCorrienteComponent},
                                         
       ]  },
 ];

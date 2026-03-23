@@ -20,6 +20,7 @@ import { Proveedor } from "src/app/interfaces/proveedor";
 import { Chofer } from "src/app/interfaces/chofer";
 import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
 import { ColumnaTabla } from "src/app/interfaces/tablas";
+import { FinanzasResumenService } from "src/app/servicios/finanzas/finanzas-resumen.service";
 
 @Component({
   selector: "app-facturacion-historico",
@@ -163,6 +164,7 @@ export class FacturacionHistoricoComponent implements OnInit {
     private pdfServ: PdfService,
     private modalService: NgbModal,
     private supabaseStorageService: SupabaseStorageService,
+    private finanzasResumenService: FinanzasResumenService,
   ) {}
 
   ngOnInit(): void {
@@ -567,4 +569,29 @@ export class FacturacionHistoricoComponent implements OnInit {
   getAnio(fechaString: any): number {
     return new Date(fechaString).getFullYear();
   } */
+
+      async editarInformesLiq() {
+    this.informesEditados = structuredClone(this.informesLiq);
+    //this.cargando = true;
+    //await this.calcularAnios(this.informesEditados)
+    await this.construirResumenEntidad();
+    this.cargando = false;
+
+    console.log("informesEditados: ", this.informesEditados);
+  }
+
+  async construirResumenEntidad() {
+    this.cargando = true;
+    let respuestas = [];
+    for (const informe of this.informesEditados) {
+      const respuesta =
+        await this.finanzasResumenService.construirInformeEntidadPendientes(
+          informe,
+        );
+
+      respuestas.push(respuesta);
+    }
+
+    console.log("respuestas: ", respuestas);
+  }
 }

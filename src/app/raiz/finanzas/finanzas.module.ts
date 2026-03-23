@@ -13,6 +13,7 @@ import { MovimientoFinancieroComponent } from './modales/movimiento-financiero/m
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 import { MovimientoDetalleComponent } from './movimiento-detalle/movimiento-detalle.component';
 import { CuentaCorrienteComponent } from './cuenta-corriente/cuenta-corriente.component';
+import { DetalleCuentaCorrienteComponent } from './detalle-cuenta-corriente/detalle-cuenta-corriente.component';
 
 
 @NgModule({
@@ -23,7 +24,8 @@ import { CuentaCorrienteComponent } from './cuenta-corriente/cuenta-corriente.co
     MovimientoFinancieroComponent,
     HistorialMovimientosComponent,
     MovimientoDetalleComponent,
-    CuentaCorrienteComponent
+    CuentaCorrienteComponent,
+    DetalleCuentaCorrienteComponent
   ],
   imports: [
     CommonModule,

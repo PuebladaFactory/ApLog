@@ -1,5 +1,6 @@
 import { Component, OnInit } from "@angular/core";
-import { Router } from "@angular/router";
+import { NavigationEnd, Router } from "@angular/router";
+import { filter } from "rxjs";
 
 @Component({
   selector: "app-finanzas-control",
@@ -59,15 +60,45 @@ export class FinanzasControlComponent implements OnInit {
     { id: "tab1", name: "Cobros", route: "finanzas/cobros" },
     { id: "tab2", name: "Pagos", route: "finanzas/pagos" },
     { id: "tab3", name: "Historial", route: "finanzas/historial" },
-    { id: "tab4", name: "Cuenta Corriente", route: "finanzas/cuenta-corriente" }
+    {
+      id: "tab4",
+      name: "Cuenta Corriente",
+      route: "finanzas/cuenta-corriente",
+    },
   ];
 
-  selectedTab: string = "tab1";
+  selectedTab: string = "";
 
   constructor(private router: Router) {}
 
-  ngOnInit(): void {
-    //this.selectTab('tab1');
+  ngOnInit() {
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.actualizarTabActivo();
+      });
+
+    // 👇 importante para carga inicial (nueva pestaña)
+    this.actualizarTabActivo();
+  }
+
+  actualizarTabActivo() {
+    const url = this.router.url;
+
+    if (url.includes("finanzas/movimiento")) {
+      this.selectedTab = "tab3";
+      return;
+    }
+
+    if (url.includes("finanzas/cuenta-corriente")) {
+      this.selectedTab = "tab4";
+      return;
+    }
+
+    const tab = this.tabs.find((t) => url.includes(t.route));
+    if (tab) {
+      this.selectedTab = tab.id;
+    }
   }
 
   selectTab(tabId: string) {

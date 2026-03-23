@@ -1,0 +1,247 @@
+@if (cargando) {
+    <app-spinner></app-spinner>
+} @else {
+    <!-- RESUMEN -->
+    <h3 class="mt-3">
+        Resumen de Entidad: {{ informes[0].entidad.razonSocial }}
+    </h3>
+    <div class="resumen-cards mt-2">
+        <!-- 🟢 Nos deben -->
+        <div class="card resumen positivo">
+            <div class="titulo">Total</div>
+            <div class="text-info valor">
+                {{ resumen.total | formatearValor: "$" }}
+            </div>
+            <div class="detalle">
+                {{ cantInformes.total }} informes de liquidación en total.
+            </div>
+        </div>
+
+        <!-- 🔴 Debemos -->
+        <div class="card resumen negativo">
+            <div class="titulo">Cancelado</div>
+            <div class="text-success valor">
+                {{ resumen.pagado | formatearValor: "$" }}
+            </div>
+            <div class="detalle">
+                {{ cantInformes.cancelados }} informes de liquidación cancelados
+            </div>
+        </div>
+
+        <!-- 🟣 Saldo Neto -->
+        <div
+            class="card resumen"
+            [ngClass]="{
+                'neto-positivo': resumen.saldo <= 0,
+                'neto-negativo': resumen.saldo > 0,
+            }"
+        >
+            <div class="titulo">Saldo pendiente</div>
+            <div class="valor">
+                {{ resumen.saldo | formatearValor: "$" }}
+            </div>
+            <div class="detalle">
+                {{ cantInformes.conDeuda }} informes de liquidación con deuda
+            </div>
+        </div>
+    </div>
+    <!-- TABLA -->
+    <div class="panel-box panel-resultados">
+        <label>
+            <input
+                type="checkbox"
+                [(ngModel)]="soloConDeuda"
+                (change)="aplicarFiltros()"
+            />
+            Solo con deuda
+        </label>
+        <table
+            class="table table-sm table-bordered table-hover table-sm align-middle"
+        >
+            <thead>
+                <tr>
+                    <th
+                        class="ordenable"
+                        appSortable="numero"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                    >
+                        N° Informe
+                        @if (sort.campo === "numero") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th
+                        class="ordenable"
+                        appSortable="fechaEmision"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                    >
+                        Fecha
+                        @if (sort.campo === "fechaEmision") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <!-- <th>Vencimiento</th> -->
+                    <th
+                        class="ordenable"
+                        appSortable="periodoOrden"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                    >
+                        Periodo Liquidación
+                        @if (sort.campo === "periodoOrden") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th
+                        class="ordenable"
+                        appSortable="total"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                        class="text-center"
+                    >
+                        Total
+                        @if (sort.campo === "total") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th
+                        class="ordenable"
+                        appSortable="cancelado"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                        class="text-center"
+                    >
+                        Cancelado
+                        @if (sort.campo === "cancelado") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th
+                        class="ordenable"
+                        appSortable="saldo"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                        class="text-center"
+                    >
+                        Saldo
+                        @if (sort.campo === "saldo") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th
+                        class="ordenable"
+                        appSortable="estadoFinanciero"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                        class="text-center"
+                    >
+                        Estado
+                        @if (sort.campo === "estadoFinanciero") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th class="text-center">Detalle</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @for (item of informesFiltrados; track item.numero) {
+                    <tr>
+                        <td>{{ item.numero || "-" }}</td>
+
+                        <td>{{ item.fechaEmision }}</td>
+
+                        <!-- <td>
+          @if (item.fechaVencimiento) {
+            {{ item.fechaVencimiento.toDate() | date:'dd/MM/yyyy' }}
+          } @else {
+            -
+          }
+        </td> -->
+
+                        <td>
+                            {{ item.periodoLiq }}                           
+                        </td>
+
+                        <td class="text-end col-numero">
+                            {{
+                                item.total
+                                    | formatearValor: "$"
+                            }}
+                        </td>
+
+                        <td
+                            class="text-end col-numero"
+                            [ngClass]="{
+                                'saldo-deuda':
+                                    item.estadoFinanciero === 'pendiente',
+                                'saldo-ok': item.estadoFinanciero === 'cobrado',
+                                'saldo-parcial':
+                                    item.estadoFinanciero === 'parcial',
+                            }"
+                        >
+                            {{
+                                item.cancelado
+                                    | formatearValor: "$"
+                            }}
+                        </td>
+
+                        <td
+                            class="text-end col-numero"
+                            [ngClass]="{
+                                'saldo-deuda':
+                                    item.saldo > 0,
+                                'saldo-ok': item.saldo === 0,
+                            }"
+                        >
+                            {{
+                                item.saldo
+                                    | formatearValor: "$"
+                            }}
+                        </td>
+
+                        <td class="text-end">
+                            <span
+                                class="badge"
+                                [ngClass]="
+                                    getClasesSaldo(item.estadoFinanciero)
+                                "
+                                >{{ item.estadoFinanciero }}</span
+                            >
+                        </td>
+
+                        <td class="text-center">
+                            <app-btn-leer
+                                name="DetalleColor"
+                                (click)="verInforme(item.numero)"
+                            ></app-btn-leer>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

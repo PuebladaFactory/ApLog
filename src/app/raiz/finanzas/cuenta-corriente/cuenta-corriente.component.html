@@ -1,31 +1,5 @@
 <div class="layout-global">
-    <h2>Cuenta Corriente</h2>
-
-    <!-- 🔎 Filtros -->
-    <div class="filtros">
-        <select [(ngModel)]="filtros.tipoEntidad" (change)="onFiltroChange()">
-            <option value="">Todos</option>
-            <option value="cliente">Clientes</option>
-            <option value="chofer">Choferes</option>
-            <option value="proveedor">Proveedores</option>
-        </select>
-
-        <label>
-            <input
-                type="checkbox"
-                [(ngModel)]="filtros.soloConDeuda"
-                (change)="onFiltroChange()"
-            />
-            Solo con deuda
-        </label>
-
-        <input
-            type="text"
-            placeholder="Buscar por razón social o CUIT..."
-            [(ngModel)]="filtros.search"
-            (input)="aplicarFiltros()"
-        />
-    </div>
+    <h2 class="mt-2">Cuenta Corriente</h2>
 
     <!-- ⏳ Loading -->
     @if (loading) {
@@ -33,61 +7,250 @@
     }
 
     @if (!loading) {
-        <!-- 📊 Tabla -->
-        <table class="tabla-cuenta-corriente">
-            <thead>
-                <tr>
-                    <th>Entidad</th>
-                    <th>Tipo</th>
-                    <th>Facturado</th>
-                    <th>Cobrado</th>
-                    <th>Saldo</th>
-                    <th>Estado</th>
-                    <th>Informes</th>
-                    <th></th>
-                </tr>
-            </thead>
+        <!-- RESUMEN -->
+        <div class="resumen-cards">
+            <!-- 🟢 Nos deben -->
+            <div class="card resumen positivo">
+                <div class="titulo">Deuda a Favor</div>
+                <div class="text-info valor">
+                    {{ resumen.nosDeben | formatearValor: "$" }}
+                </div>
+                <div class="detalle">
+                    {{ resumen.cantidadClientesDeudores }} clientes con deuda
+                </div>
+            </div>
 
-            <tbody>
-                <tr *ngFor="let cuenta of cuentasFiltradas">
-                    <td>
-                        <div class="entidad">
-                            <strong>{{ cuenta.razonSocial }}</strong>
-                            <small *ngIf="cuenta.cuit">{{ cuenta.cuit }}</small>
-                        </div>
-                    </td>
+            <!-- 🔴 Debemos -->
+            <div class="card resumen negativo">
+                <div class="titulo">Deuda en contra</div>
+                <div class="text-danger valor">
+                    {{ resumen.debemos | formatearValor: "$" }}
+                </div>
+                <div class="detalle">
+                    {{ resumen.cantidadProveedoresDeuda }} proveedores/choferes
+                </div>
+            </div>
 
-                    <td>{{ cuenta.tipoEntidad }}</td>
+            <!-- 🟣 Saldo Neto -->
+            <div
+                class="card resumen"
+                [ngClass]="{
+                    'neto-positivo': resumen.saldoNeto > 0,
+                    'neto-negativo': resumen.saldoNeto < 0,
+                }"
+            >
+                <div class="titulo">Saldo Neto</div>
+                <div class="valor">
+                    {{ resumen.saldoNeto | formatearValor: "$" }}
+                </div>
+                <div class="detalle">Posición global</div>
+            </div>
+        </div>
 
-                    <td>{{ cuenta.totalFacturado | currency }}</td>
+        <!-- 🔎 Filtros -->
+        <div class="filtros">
+            <select
+                class="form-select"
+                style="max-width: 200px"
+                [(ngModel)]="filtros.tipoEntidad"
+                (change)="onFiltroChange()"
+            >
+                <option value="">Todos</option>
+                <option value="cliente">Clientes</option>
+                <option value="chofer">Choferes</option>
+                <option value="proveedor">Proveedores</option>
+            </select>
 
-                    <td>{{ cuenta.totalCobrado | currency }}</td>
+            <label>
+                <input
+                    type="checkbox"
+                    [(ngModel)]="filtros.soloConDeuda"
+                    (change)="onFiltroChange()"
+                />
+                Solo con deuda
+            </label>
 
-                    <td [class.deuda]="cuenta.saldoPendiente > 0">
-                        {{ cuenta.saldoPendiente | currency }}
-                    </td>
+            <input
+                type="text"
+                placeholder="Buscar por razón social o CUIT..."
+                [(ngModel)]="filtros.search"
+                (input)="onFiltroChange()"
+            />
+        </div>
 
-                    <td>
-                        <span [ngClass]="getEstadoClass(cuenta.estado)">
-                            {{ cuenta.estado }}
-                        </span>
-                    </td>
+        <div class="panel-box panel-resultados">
+            <!-- 📊 Tabla -->
+            <table
+                class="table table-sm table-bordered table-hover table-sm align-middle"
+            >
+                <thead>
+                    <tr>
+                        <th
+                            class="ordenable"
+                            appSortable="razonSocial"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Entidad
+                            @if (sort.campo === "razonSocial") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
 
-                    <td>
-                        {{ cuenta.cantidadPendientes }} /
-                        {{ cuenta.cantidadInformes }}
-                    </td>
+                        <th
+                            class="ordenable"
+                            appSortable="tipoEntidad"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Tipo
+                            @if (sort.campo === "tipoEntidad") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
 
-                    <td>
-                        <button (click)="verDetalle(cuenta)">Ver</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    }
+                        <th
+                            class="text-center ordenable"
+                            appSortable="totalFacturado"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Total
+                            @if (sort.campo === "totalFacturado") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
 
-    <!-- ❌ Sin datos -->
-    @if (!loading && cuentasFiltradas.length === 0) {
-        <div>No hay resultados</div>
+                        <th
+                            class="text-center ordenable"
+                            appSortable="totalCobrado"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Cancelado
+                            @if (sort.campo === "totalCobrado") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
+
+                        <th
+                            class="text-center ordenable"
+                            appSortable="saldoPendiente"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Saldo
+                            @if (sort.campo === "saldoPendiente") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
+
+                        <th class="text-center">Situación</th>
+                        <th class="text-center">Informes</th>
+                        <th class="text-center">Detalle</th>
+                    </tr>
+                </thead>
+                @if (cuentasFiltradas.length > 0) {
+                    <tbody>
+                        @for (cuenta of cuentasFiltradas; track cuenta) {
+                            <tr>
+                                <!-- 🧾 Entidad -->
+                                <td>
+                                    <div class="entidad">
+                                        <strong>{{
+                                            cuenta.razonSocial
+                                        }}</strong>
+                                        @if (cuenta.cuit) {
+                                            <small>{{ cuenta.cuit }}</small>
+                                        }
+                                    </div>
+                                </td>
+
+                                <!-- 🧩 Tipo -->
+                                <td class="tipo">
+                                    {{ cuenta.tipoEntidad }}
+                                </td>
+
+                                <!-- 💰 Total -->
+                                <td class="col-numero">
+                                    {{
+                                        cuenta.totalFacturado
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+
+                                <!-- 💸 Cancelado -->
+                                <td class="col-numero"
+                                [ngClass]="{
+                                        'saldo-deuda':
+                                            cuenta.totalCobrado === 0,
+                                        'saldo-ok': cuenta.totalCobrado === cuenta.totalFacturado,
+                                        'saldo-parcial': cuenta.totalCobrado < cuenta.totalFacturado && cuenta.totalCobrado !== 0,
+                                    }">
+                                    {{
+                                        cuenta.totalCobrado
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+
+                                <!-- ⚖️ Saldo -->
+                                <td
+                                    class="col-numero"
+                                    [ngClass]="{
+                                        'saldo-deuda':
+                                            cuenta.saldoPendiente > 0,
+                                        'saldo-ok': cuenta.saldoPendiente === 0,
+                                    }"
+                                >
+                                    {{
+                                        cuenta.saldoPendiente
+                                            | formatearValor: "$"
+                                    }}
+                                </td>
+
+                                <!-- 🧠 Situación -->
+                                <td class="text-end">
+                                    <span
+                                        class="badge"
+                                        [ngClass]="getClasesSaldo(cuenta)"
+                                    >
+                                        {{ getDescripcionSaldo(cuenta) }}
+                                    </span>
+                                </td>
+
+                                <!-- 📄 Informes -->
+                                <td class="text-center">
+                                    {{ cuenta.cantidadPendientes }} /
+                                    {{ cuenta.cantidadInformes }}
+                                </td>
+
+                                <!-- 🔍 Acción -->
+                                <td class="text-center">
+                                   <app-btn-leer name="DetalleColor" (click)="verDetalle(cuenta)"></app-btn-leer>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                } @else {
+                    <!-- ❌ Sin datos -->
+                    <div class="alert alert-warning">No hay resultados.</div>
+                }
+            </table>
+        </div>
     }
 </div>

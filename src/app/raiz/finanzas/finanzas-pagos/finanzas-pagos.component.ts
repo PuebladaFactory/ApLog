@@ -9,6 +9,7 @@ import { Chofer } from "src/app/interfaces/chofer";
 import { Proveedor } from "src/app/interfaces/proveedor";
 import { MovimientoFormVM } from "src/app/interfaces/movimiento-form-v-m";
 import Swal from "sweetalert2";
+import { FinanzasResumenService } from "src/app/servicios/finanzas/finanzas-resumen.service";
 
 interface InformeSeleccionadoVM {
   id: string;
@@ -44,10 +45,13 @@ export class FinanzasPagosComponent implements OnInit {
   choferes: ConId<Chofer>[] = [];
   proveedores: ConId<Proveedor>[] = [];
 
+  usuario!:any;
+
   constructor(
     private storageService: StorageService,
     private movFinancieroServ: MovimientoFinancieroService,
     private modal: NgbModal,
+    private finanzasResumenService: FinanzasResumenService,
   ) {}
 
   ngOnInit(): void {
@@ -60,6 +64,10 @@ export class FinanzasPagosComponent implements OnInit {
       a.razonSocial.localeCompare(b.razonSocial),
     );
     this.onEntidades();
+    let user = this.storageService.loadInfo("usuario");
+    this.usuario = user[0]
+    console.log("this.usuario: ", this.usuario);
+    
   }
 
   onEntidades() {
@@ -201,8 +209,6 @@ export class FinanzasPagosComponent implements OnInit {
 
   registrarPago() {
     if (!this.puedeRegistrarPago()) return;
-    let usuario = this.storageService.loadInfo("usuario");
-    //console.log("usuario: ", usuario);
 
     let razonSocial =
       this.tipoEntidad === "chofer"
@@ -234,7 +240,7 @@ export class FinanzasPagosComponent implements OnInit {
           const movimientoId =
             await this.movFinancieroServ.registrarMovimientoFinanciero(
               form,
-              usuario[0].email,
+              this.usuario.email,
             );
           Swal.fire("OK", "Pago registrado correctamente", "success");
 
@@ -321,4 +327,36 @@ export class FinanzasPagosComponent implements OnInit {
       0,
     );
   }
+  /* ===============================
+     VERIFICACION DE LOS RESUMENES DE ENTIDAD
+     =============================== */
+
+
+  async verificarResumenEntidad(){
+    if(this.entidadId){
+      this.cargando = true;
+      const resultado = await this.finanzasResumenService.repararResumenEntidad(this.tipoEntidad, this.entidadId )
+      this.cargando = false;
+      if(resultado?.ok){
+        this.mensajesError("Resumen sin errores", resultado.ok)
+        console.log("resultado: ",resultado);
+      } else if(resultado && !resultado.ok ) {
+        this.mensajesError("Resumen con errores", resultado.ok)
+        console.log("resultado: ",resultado);
+      }
+      
+      
+      
+    }
+    
+  }
+
+    mensajesError(msj: string, resultado: boolean) {
+      Swal.fire({
+        icon: !resultado ? "error" : "success",
+        //title: "Oops...",
+        text: `${msj}`,
+        //footer: `${msj}`
+      });
+    }
 }
