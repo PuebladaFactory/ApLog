@@ -155,7 +155,7 @@
                 @for (row of operacionesVista; track row.idOperacion) {
                     <tr>
                         @for (c of columnasVisibles; track c) {
-                            <td class="align-middle">
+                            <td class="align-middle" [ngClass]="{'col-moneda': c === 'aCobrar' ||  c === 'aPagar' }">
                                 @if (c === 'estado') {
                                 <span [class]="getEstadoBadgeClass(row.estado)">
                                     {{row.estado}}

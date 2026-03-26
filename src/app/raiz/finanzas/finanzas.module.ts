@@ -14,6 +14,8 @@ import { HistorialMovimientosComponent } from './historial-movimientos/historial
 import { MovimientoDetalleComponent } from './movimiento-detalle/movimiento-detalle.component';
 import { CuentaCorrienteComponent } from './cuenta-corriente/cuenta-corriente.component';
 import { DetalleCuentaCorrienteComponent } from './detalle-cuenta-corriente/detalle-cuenta-corriente.component';
+import { InformeLiqCuentaCorrienteComponent } from './informe-liq-cuenta-corriente/informe-liq-cuenta-corriente.component';
+import { LedgerComponent } from './ledger/ledger.component';
 
 
 @NgModule({
@@ -25,7 +27,9 @@ import { DetalleCuentaCorrienteComponent } from './detalle-cuenta-corriente/deta
     HistorialMovimientosComponent,
     MovimientoDetalleComponent,
     CuentaCorrienteComponent,
-    DetalleCuentaCorrienteComponent
+    DetalleCuentaCorrienteComponent,
+    InformeLiqCuentaCorrienteComponent,
+    LedgerComponent
   ],
   imports: [
     CommonModule,

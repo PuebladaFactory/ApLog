@@ -65,6 +65,7 @@ export class FinanzasControlComponent implements OnInit {
       name: "Cuenta Corriente",
       route: "finanzas/cuenta-corriente",
     },
+    { id: "tab5", name: "Ledger x Entidad", route: "finanzas/ledger" }
   ];
 
   selectedTab: string = "";
@@ -91,6 +92,11 @@ export class FinanzasControlComponent implements OnInit {
     }
 
     if (url.includes("finanzas/cuenta-corriente")) {
+      this.selectedTab = "tab4";
+      return;
+    }
+
+    if (url.includes("finanzas/informe")) {
       this.selectedTab = "tab4";
       return;
     }

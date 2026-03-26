@@ -71,7 +71,7 @@ export class MovimientoFinancieroComponent implements OnInit {
   // ---------------------------------------------------------------------------
 
   ngOnInit(): void {
-    //console.log("0) this.informes: ", this.informes);
+    console.log("0) this.informes: ", this.informes);
     console.log("0) this.entidad: ", this.entidad);
     
     this.informesVM = this.informes.map(inf => ({
@@ -90,7 +90,7 @@ export class MovimientoFinancieroComponent implements OnInit {
       montoACobrar: inf.valoresFinancieros!.saldo,
       modo: 'auto'
     }));
-    //console.log("1) this.informesVM: ", this.informesVM);
+    console.log("1) this.informesVM: ", this.informesVM);
     
     // valor inicial sugerido
     this.montoTotalMovimiento = this.totalSaldo;
@@ -296,8 +296,8 @@ export class MovimientoFinancieroComponent implements OnInit {
         })),
 
       medioPago: this.medioPago,
-      referencia: this.referencia,
-      observaciones: this.observaciones
+      referencia: this.referencia ?? '',
+      observaciones: this.observaciones ?? ''
     };
 
     ////console.log("form: ", form);    

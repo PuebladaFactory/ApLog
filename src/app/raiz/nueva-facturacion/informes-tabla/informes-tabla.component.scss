@@ -14,3 +14,13 @@ th,td, input, select, option {
 .tabla-container {
   position: relative;
 }
+
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500 !important;  
+}

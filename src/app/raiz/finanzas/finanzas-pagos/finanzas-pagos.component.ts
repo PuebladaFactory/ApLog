@@ -56,6 +56,7 @@ export class FinanzasPagosComponent implements OnInit {
 
   ngOnInit(): void {
     this.choferes = this.storageService.loadInfo("choferes");
+    this.choferes = this.choferes.filter(c=> c.idProveedor === 0);
     this.choferes = this.choferes.sort((a, b) =>
       a.apellido.localeCompare(b.apellido),
     );
@@ -65,7 +66,7 @@ export class FinanzasPagosComponent implements OnInit {
     );
     this.onEntidades();
     let user = this.storageService.loadInfo("usuario");
-    this.usuario = user[0]
+    this.usuario = user[0];
     console.log("this.usuario: ", this.usuario);
     
   }
@@ -255,7 +256,7 @@ export class FinanzasPagosComponent implements OnInit {
           );
         } catch (err) {
           console.error(err);
-          Swal.fire("Error", "No se pudo registrar el cobro", "error");
+          Swal.fire("Error", "No se pudo registrar el pago", "error");
         }
       },
       () => {

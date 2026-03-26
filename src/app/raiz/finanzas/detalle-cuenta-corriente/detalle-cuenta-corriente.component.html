@@ -1,11 +1,14 @@
 @if (cargando) {
     <app-spinner></app-spinner>
 } @else {
+    <h2 class="mt-3">
+        <span class="badge bg-primary-subtle text-primary-emphasis">{{
+            informes[0].entidad.razonSocial
+        }}</span>
+    </h2>
     <!-- RESUMEN -->
-    <h3 class="mt-3">
-        Resumen de Entidad: {{ informes[0].entidad.razonSocial }}
-    </h3>
-    <div class="resumen-cards mt-2">
+    <h3 class="mt-3 ms-2">Cuenta Corriente:</h3>
+    <div class="resumen-cards mt-3">
         <!-- 🟢 Nos deben -->
         <div class="card resumen positivo">
             <div class="titulo">Total</div>
@@ -46,15 +49,23 @@
         </div>
     </div>
     <!-- TABLA -->
+
     <div class="panel-box panel-resultados">
-        <label>
-            <input
-                type="checkbox"
-                [(ngModel)]="soloConDeuda"
-                (change)="aplicarFiltros()"
-            />
-            Solo con deuda
-        </label>
+        <div class="d-flex justify-content-between">
+            <h4 class="mt-3">Informes de Liquidación:</h4>
+            
+            <label class="d-flex align-items-end">
+                <input
+                    class="mb-2 me-2"
+                    type="checkbox"
+                    [(ngModel)]="soloConDeuda"
+                    (change)="aplicarFiltros()"
+                />
+                <span class="mb-2">Solo con deuda</span>
+                
+            </label>
+        </div>
+
         <table
             class="table table-sm table-bordered table-hover table-sm align-middle"
         >
@@ -183,14 +194,11 @@
         </td> -->
 
                         <td>
-                            {{ item.periodoLiq }}                           
+                            {{ item.periodoLiq }}
                         </td>
 
                         <td class="text-end col-numero">
-                            {{
-                                item.total
-                                    | formatearValor: "$"
-                            }}
+                            {{ item.total | formatearValor: "$" }}
                         </td>
 
                         <td
@@ -203,29 +211,21 @@
                                     item.estadoFinanciero === 'parcial',
                             }"
                         >
-                            {{
-                                item.cancelado
-                                    | formatearValor: "$"
-                            }}
+                            {{ item.cancelado | formatearValor: "$" }}
                         </td>
 
                         <td
                             class="text-end col-numero"
                             [ngClass]="{
-                                'saldo-deuda':
-                                    item.saldo > 0,
+                                'saldo-deuda': item.saldo > 0,
                                 'saldo-ok': item.saldo === 0,
                             }"
                         >
-                            {{
-                                item.saldo
-                                    | formatearValor: "$"
-                            }}
+                            {{ item.saldo | formatearValor: "$" }}
                         </td>
 
-                        <td class="text-end">
+                        <td class="text-center">
                             <span
-                                class="badge"
                                 [ngClass]="
                                     getClasesSaldo(item.estadoFinanciero)
                                 "

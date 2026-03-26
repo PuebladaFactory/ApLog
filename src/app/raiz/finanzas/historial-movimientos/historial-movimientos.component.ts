@@ -51,6 +51,7 @@ export class HistorialMovimientosComponent implements OnInit {
       a.razonSocial.localeCompare(b.razonSocial),
     );
     this.choferes = this.storageService.loadInfo("choferes");
+    this.choferes = this.choferes.filter(c=> c.idProveedor === 0);
     this.choferes = this.choferes.sort((a, b) =>
       a.apellido.localeCompare(b.apellido),
     );
@@ -141,7 +142,7 @@ export class HistorialMovimientosComponent implements OnInit {
 
     const url = this.router.serializeUrl(
       this.router.createUrlTree(
-        ['/raiz/finanzas/movimiento', mov.id]
+        ['/raiz/finanzas/movimiento', mov.numeroComprobante]
       )
     );
 

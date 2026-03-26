@@ -46,6 +46,7 @@ export class InformeLiqDetalleComponent implements OnInit {
   isLoading: boolean = false;
   periodoBoolean: boolean = true;
   periodo!: 'mes' | '1° quincena' | '2° quincena';
+  tipoCliente!: boolean;
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -72,6 +73,7 @@ export class InformeLiqDetalleComponent implements OnInit {
     this.informeLiq = this.fromParent.item;
     this.titulo = this.fromParent.item.entidad.razonSocial;
     this.periodo = this.informeLiq.periodo ?? "mes";
+    this.tipoCliente = this.fromParent.tipo === 'cliente' ? true: false;
   }
 
   getChofer(idChofer: number) {
@@ -559,5 +561,29 @@ export class InformeLiqDetalleComponent implements OnInit {
     console.log("dayv: ", day);
     // Determinar si está en la primera o segunda quincena
     return day <= 15 ? "1° quincena" : "2° quincena";    
+  }
+
+  getEncabezados(accion:string):string{
+    let respuesta = "";
+    if(accion === 'entidadContraParte') respuesta = this.fromParent.tipo === 'cliente' ? 'Chofer' : 'Cliente';
+    if(accion === 'accionContraParte') respuesta = this.fromParent.tipo === 'cliente' ? 'A Pagar' : 'A Cobrar';
+    if(accion === 'accionPrincipal') respuesta = this.fromParent.tipo === 'cliente' ? 'A Cobrar' : 'A Pagar'
+    return respuesta;
+  }
+
+  getEntidadContraParte(infOp: ConId<InformeOp>):string{
+    
+    let respuesta = this.fromParent.tipo === 'cliente' ? this.getChofer(infOp.idChofer) : this.getCliente(infOp.idCliente);
+    
+    
+    return respuesta;
+  }
+
+  getPorcentaje():boolean{    
+    if(this.fromParent.tipo === 'cliente'){
+      return false;
+    } else {
+      return true;
+    }
   }
 }

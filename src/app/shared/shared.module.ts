@@ -52,6 +52,7 @@ import { DecimalInputDirective } from './directives/decimal-input.directive';
 
 import { MontoDirective } from './directives/monto.directive';
 import { SortableDirective } from './directives/sortable.directive';
+import { CalcularPorcentajeV2Pipe } from './pipes/calcular-porcentaje-v2.pipe';
 
 
 
@@ -96,7 +97,8 @@ import { SortableDirective } from './directives/sortable.directive';
     
     
     MontoDirective,
-    SortableDirective
+    SortableDirective,
+    CalcularPorcentajeV2Pipe
     
   ],
   imports: [
@@ -148,7 +150,8 @@ import { SortableDirective } from './directives/sortable.directive';
     
     
     MontoDirective,
-    SortableDirective
+    SortableDirective,
+    CalcularPorcentajeV2Pipe
   ]
 })
 export class SharedModule { }

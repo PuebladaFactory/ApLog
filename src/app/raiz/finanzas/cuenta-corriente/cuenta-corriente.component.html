@@ -1,6 +1,5 @@
 <div class="layout-global">
     <h2 class="mt-2">Cuenta Corriente</h2>
-
     <!-- ⏳ Loading -->
     @if (loading) {
         <app-spinner></app-spinner>
@@ -101,7 +100,7 @@
                         </th>
 
                         <th
-                            class="ordenable"
+                            class="text-center ordenable"
                             appSortable="tipoEntidad"
                             [activo]="sort.campo"
                             [direccion]="sort.direccion"
@@ -182,7 +181,7 @@
                                 </td>
 
                                 <!-- 🧩 Tipo -->
-                                <td class="tipo">
+                                <td class="text-center">
                                     {{ cuenta.tipoEntidad }}
                                 </td>
 
@@ -211,11 +210,7 @@
                                 <!-- ⚖️ Saldo -->
                                 <td
                                     class="col-numero"
-                                    [ngClass]="{
-                                        'saldo-deuda':
-                                            cuenta.saldoPendiente > 0,
-                                        'saldo-ok': cuenta.saldoPendiente === 0,
-                                    }"
+                                    [ngClass]="getClasesSaldo(cuenta)"
                                 >
                                     {{
                                         cuenta.saldoPendiente
@@ -224,10 +219,10 @@
                                 </td>
 
                                 <!-- 🧠 Situación -->
-                                <td class="text-end">
+                                <td class="text-center">
                                     <span
-                                        class="badge"
-                                        [ngClass]="getClasesSaldo(cuenta)"
+                                        class="badge rounded-pill"
+                                        [ngClass]="getBadgeClasesSaldo(cuenta)"
                                     >
                                         {{ getDescripcionSaldo(cuenta) }}
                                     </span>

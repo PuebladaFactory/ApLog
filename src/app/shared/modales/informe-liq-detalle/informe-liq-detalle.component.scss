@@ -14,6 +14,16 @@ color: green;
 color: red;
 }
 
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500;
+}
+
 
 ::ng-deep .modal-xxl .modal-dialog {
   max-width: 72vw;     // Casi ancho total del viewport

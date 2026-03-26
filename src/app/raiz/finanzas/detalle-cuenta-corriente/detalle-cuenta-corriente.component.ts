@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from "@angular/core";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { DetalleVistaCuentaCorriente } from "src/app/interfaces/cuenta-corriente-resumen";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import { CuentaCorrienteService } from "src/app/servicios/cuenta-corriente/cuenta-corriente.service";
@@ -35,7 +35,10 @@ export class DetalleCuentaCorrienteComponent implements OnInit {
     direccion: "asc" as "asc" | "desc",
   };
 
-  constructor(private ccService: CuentaCorrienteService) {}
+  constructor(
+    private ccService: CuentaCorrienteService,
+    private router: Router,
+  ) {}
 
   async ngOnInit() {
     this.cargando = true;
@@ -73,19 +76,24 @@ export class DetalleCuentaCorrienteComponent implements OnInit {
     this.resumen = { total, pagado, saldo };
   }
 
-  verInforme(id: string) {}
+  verInforme(id: string) {
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree(["/raiz/finanzas/informe", id]),
+    );
+
+    window.open(url, "_blank");
+  }
 
   getClasesSaldo(estadoFinanciero: any) {
     let clase = "";
-    if (estadoFinanciero === "cobrado") clase = "bg-success";
-    if (estadoFinanciero === "parcial") clase = "bg-warning";
-    if (estadoFinanciero === "pendiente") clase = "bg-danger";
+    if (estadoFinanciero === "cobrado") clase = "badge rounded-pill text bg-success";
+    if (estadoFinanciero === "parcial") clase = "badge rounded-pill text-bg-warning";
+    if (estadoFinanciero === "pendiente") clase = "badge rounded-pill text bg-danger";
 
     return clase;
   }
 
-  aplicarFiltros() {    
-
+  aplicarFiltros() {
     let data = [...this.informes];
 
     // 🔎 tipo entidad
@@ -125,5 +133,4 @@ export class DetalleCuentaCorrienteComponent implements OnInit {
       return 0;
     });
   }
-  
 }

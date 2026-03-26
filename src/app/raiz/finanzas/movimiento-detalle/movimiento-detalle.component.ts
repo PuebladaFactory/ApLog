@@ -35,7 +35,7 @@ export class MovimientoDetalleComponent implements OnInit {
   async ngOnInit() {
     const id = this.movimientoId ?? this.route.snapshot.paramMap.get("id");
 
-    console.log("id: ", id);
+    console.log(id);
 
     if (!id) return;
 

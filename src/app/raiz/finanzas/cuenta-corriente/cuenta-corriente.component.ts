@@ -153,7 +153,7 @@ export class CuentaCorrienteComponent implements OnInit {
     }
   }
 
-  getClasesSaldo(cuenta: CuentaCorrienteResumen) {
+  getBadgeClasesSaldo(cuenta: CuentaCorrienteResumen) {
     if (cuenta.saldoPendiente === 0) {
       return "bg-success";
     } else {
@@ -161,6 +161,18 @@ export class CuentaCorrienteComponent implements OnInit {
         return "bg-info";
       } else {
         return "bg-danger";
+      }
+    }
+  }
+
+  getClasesSaldo(cuenta: CuentaCorrienteResumen) {
+    if (cuenta.saldoPendiente === 0) {
+      return "text-success";
+    } else {
+      if (cuenta.tipoEntidad === "cliente") {
+        return "text-info";
+      } else {
+        return "text-danger";
       }
     }
   }
@@ -230,4 +242,5 @@ export class CuentaCorrienteComponent implements OnInit {
       return 0;
     });
   }
+
 }

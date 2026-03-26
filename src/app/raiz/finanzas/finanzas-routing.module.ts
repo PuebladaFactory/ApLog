@@ -7,6 +7,8 @@ import { HistorialMovimientosComponent } from './historial-movimientos/historial
 import { MovimientoDetalleComponent } from './movimiento-detalle/movimiento-detalle.component';
 import { CuentaCorrienteComponent } from './cuenta-corriente/cuenta-corriente.component';
 import { DetalleCuentaCorrienteComponent } from './detalle-cuenta-corriente/detalle-cuenta-corriente.component';
+import { InformeLiqCuentaCorrienteComponent } from './informe-liq-cuenta-corriente/informe-liq-cuenta-corriente.component';
+import { LedgerComponent } from './ledger/ledger.component';
 
 const routes: Routes = [
   {path: '', component:FinanzasControlComponent,
@@ -18,6 +20,8 @@ const routes: Routes = [
           {path: 'movimiento/:id',component: MovimientoDetalleComponent},          
           {path: 'cuenta-corriente',component: CuentaCorrienteComponent},
           {path: 'cuenta-corriente/:id',component: DetalleCuentaCorrienteComponent},
+          {path: 'informe/:id', component: InformeLiqCuentaCorrienteComponent },
+          {path: 'ledger', component: LedgerComponent},
                                         
       ]  },
 ];
