@@ -292,7 +292,7 @@
                                             [ngValue]="sec.orden"
                                             title="Sección {{ sec.orden }}"
                                         >
-                                            Sección {{ sec.orden }}
+                                            Sección {{ sec.orden }} @if(sec.descripcion) {- {{ sec.descripcion }}}
                                         </option>
                                     }
                                 </select>

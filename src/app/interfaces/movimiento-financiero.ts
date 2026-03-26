@@ -14,6 +14,7 @@ export interface MovimientoFinanciero {
 
   /** Imputaciones */
   imputaciones: ImputacionMovimiento[];
+  informeLiqIds: string[];
 
   /** Totales */
   totalMovimiento: number;

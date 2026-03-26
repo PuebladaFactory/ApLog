@@ -1,171 +1,338 @@
-import { Injectable } from '@angular/core';
+import { Injectable } from "@angular/core";
 import {
   Firestore,
   Timestamp,
+  collection,
   doc,
-  runTransaction
-} from '@angular/fire/firestore';
-import { InformeLiq } from 'src/app/interfaces/informe-liq';
-import { ResumenFinancieroEntidad } from 'src/app/interfaces/resumen-financiero-entidad';
+  getDoc,
+  getDocs,
+  query,
+  runTransaction,
+  updateDoc,
+  where,
+} from "@angular/fire/firestore";
+import { ConId } from "src/app/interfaces/conId";
+import { InformeLiq } from "src/app/interfaces/informe-liq";
+import { MovimientoFinanciero } from "src/app/interfaces/movimiento-financiero";
+import { ResumenFinancieroEntidad } from "src/app/interfaces/resumen-financiero-entidad";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class FinanzasResumenService {
+  basePath: string = `/Vantruck/datos`;
 
   constructor(private firestore: Firestore) {}
 
-async aplicarNuevaLiquidacion(informe: InformeLiq): Promise<void> {
+  async aplicarNuevaLiquidacion(informe: InformeLiq): Promise<void> {
+    const entidadKey = `${informe.tipo}_${informe.entidad.id}`;
 
-  const entidadKey = `${informe.tipo}_${informe.entidad.id}`;
+    const ref = doc(
+      this.firestore,
+      `${this.basePath}/resumenFinanzas/${entidadKey}`,
+    );
 
-  const ref = doc(
-    this.firestore,
-    `/Vantruck/datos/resumenFinanzas/${entidadKey}`
-  );
+    await runTransaction(this.firestore, async (tx) => {
+      const snap = await tx.get(ref);
 
-  await runTransaction(this.firestore, async (tx) => {
+      const monto = informe.valores.total;
 
-    const snap = await tx.get(ref);
+      if (!snap.exists()) {
+        const nuevoResumen: ResumenFinancieroEntidad = {
+          entidadId: informe.entidad.id.toString(),
 
-    const monto = informe.valores.total;
+          tipoEntidad: informe.tipo,
 
-    if (!snap.exists()) {
+          razonSocial: informe.entidad.razonSocial,
 
-      const nuevoResumen: ResumenFinancieroEntidad = {
+          cuit: informe.entidad.cuit?.toString(),
 
-        entidadId: informe.entidad.id.toString(),
+          totalFacturado: monto,
 
-        tipoEntidad: informe.tipo,
+          totalCobrado: 0,
 
-        razonSocial: informe.entidad.razonSocial,
+          saldoPendiente: monto,
 
-        cuit: informe.entidad.cuit?.toString(),
+          cantidadInformes: 1,
 
-        totalFacturado: monto,
+          cantidadPendientes: 1,
 
-        totalCobrado: 0,
+          createdAt: Timestamp.now(),
 
-        saldoPendiente: monto,
+          updatedAt: Timestamp.now(),
+        };
 
-        cantidadInformes: 1,
+        tx.set(ref, nuevoResumen);
 
-        cantidadPendientes: 1,
+        return;
+      }
 
-        createdAt: Timestamp.now(),
+      const data = snap.data() as ResumenFinancieroEntidad;
 
-        updatedAt: Timestamp.now()
+      tx.update(ref, {
+        totalFacturado: data.totalFacturado + monto,
 
+        saldoPendiente: data.saldoPendiente + monto,
+
+        cantidadInformes: data.cantidadInformes + 1,
+
+        cantidadPendientes: data.cantidadPendientes + 1,
+
+        updatedAt: Timestamp.now(),
+      });
+    });
+  }
+
+  async aplicarPago(
+    tipoEntidad: "cliente" | "chofer" | "proveedor",
+    entidadId: number,
+    monto: number,
+    informeCancelado: boolean,
+  ): Promise<void> {
+    const ref = doc(
+      this.firestore,
+      `${this.basePath}/resumenFinanzas/${tipoEntidad}_${entidadId}`,
+    );
+
+    await runTransaction(this.firestore, async (tx) => {
+      const snap = await tx.get(ref);
+
+      if (!snap.exists()) {
+        throw new Error("No existe resumen financiero de la entidad");
+      }
+
+      const data = snap.data() as ResumenFinancieroEntidad;
+
+      const updateData: any = {
+        totalCobrado: data.totalCobrado + monto,
+
+        saldoPendiente: data.saldoPendiente - monto,
+
+        updatedAt: Timestamp.now(),
       };
 
-      tx.set(ref, nuevoResumen);
+      if (informeCancelado) {
+        updateData.cantidadPendientes = data.cantidadPendientes - 1;
+      }
 
-      return;
+      tx.update(ref, updateData);
+    });
+  }
 
-    }
+  async revertirLiquidacion(informe: InformeLiq): Promise<void> {
+    const ref = doc(
+      this.firestore,
+      `${this.basePath}/resumenFinanzas/${informe.tipo}_${informe.entidad.id}`,
+    );
 
-    const data = snap.data() as ResumenFinancieroEntidad;
+    await runTransaction(this.firestore, async (tx) => {
+      const snap = await tx.get(ref);
 
-    tx.update(ref, {
+      if (!snap.exists()) {
+        throw new Error("Resumen financiero inexistente");
+      }
 
-      totalFacturado: data.totalFacturado + monto,
+      const data = snap.data() as ResumenFinancieroEntidad;
 
-      saldoPendiente: data.saldoPendiente + monto,
+      const updateData: any = {
+        totalFacturado: data.totalFacturado - informe.valores.total,
 
-      cantidadInformes: data.cantidadInformes + 1,
+        saldoPendiente: data.saldoPendiente - informe.valoresFinancieros.saldo,
 
-      cantidadPendientes: data.cantidadPendientes + 1,
+        cantidadInformes: data.cantidadInformes - 1,
 
-      updatedAt: Timestamp.now()
+        updatedAt: Timestamp.now(),
+      };
 
+      if (informe.estadoFinanciero !== "cobrado") {
+        updateData.cantidadPendientes = data.cantidadPendientes - 1;
+      }
+
+      tx.update(ref, updateData);
+    });
+  }
+
+  /*   async impactarMovimiento(
+    movimiento: MovimientoFinanciero,
+    tipo: "alta" | "anulacion",
+  ) {
+    const factor = tipo === "alta" ? 1 : -1;
+
+    const totalImpacto = movimiento.imputaciones.reduce(
+      (acc, imp) => acc + imp.montoImputado,
+      0,
+    );
+
+    const resumenRef = doc(
+      this.firestore,
+      `resumenFinanciero/${movimiento.entidad.id}`,
+    );
+
+    await runTransaction(this.firestore, async (tx) => {
+      const snap = await tx.get(resumenRef);
+
+      if (!snap.exists()) {
+        throw new Error("Resumen financiero no existe");
+      }
+
+      const data = snap.data() as ResumenFinancieroEntidad;
+
+      const nuevoTotalCobrado = data.totalCobrado + totalImpacto * factor;
+
+      const nuevoSaldo = data.totalFacturado - nuevoTotalCobrado;
+
+      tx.update(resumenRef, {
+        totalCobrado: nuevoTotalCobrado,
+        saldoPendiente: nuevoSaldo,
+        updatedAt: new Date(),
+      });
+    });
+  } */
+
+  impactarMovimientoEnResumen(
+    resumen: ResumenFinancieroEntidad,
+    movimiento: MovimientoFinanciero,
+    tipo: "alta" | "anulacion",
+  ) {
+    const factor = tipo === "alta" ? 1 : -1;
+
+    const totalImpacto = movimiento.imputaciones.reduce(
+      (acc, imp) => acc + imp.montoImputado,
+      0,
+    );
+
+    const nuevoTotalCobrado = resumen.totalCobrado + totalImpacto * factor;
+
+    const nuevoSaldo = resumen.totalFacturado - nuevoTotalCobrado;
+
+    return {
+      totalCobrado: nuevoTotalCobrado,
+      saldoPendiente: nuevoSaldo,
+      updatedAt: Timestamp.now(),
+    };
+  }
+
+  async repararResumenEntidad(tipo: string, entidadId: number) {
+    const result = await this.validarConsistenciaEntidad(
+      tipo as any,
+      entidadId,
+    );
+
+    if (result.ok) return;
+
+    const resumenRef = doc(
+      this.firestore,
+      `${this.basePath}/resumenFinanzas/${tipo}_${entidadId}`,
+    );
+
+    await updateDoc(resumenRef, {
+      totalFacturado: result.calculado.totalFacturado,
+      totalCobrado: result.calculado.totalCobrado,
+      saldoPendiente: result.calculado.saldoPendiente,
+      cantidadInformes: result.calculado.cantidadInformes,
+      cantidadPendientes: result.calculado.cantidadPendientes,
+      updatedAt: Timestamp.now(),
     });
 
-  });
+    return result
+  }
 
-}
+  async validarConsistenciaEntidad(
+    tipo: "cliente" | "chofer" | "proveedor",
+    entidadId: number,
+  ) {
+    // 1. traer resumen
+    const resumenRef = doc(
+      this.firestore,
+      `${this.basePath}/resumenFinanzas/${tipo}_${entidadId}`,
+    );
 
-async aplicarPago(
-  tipoEntidad: 'cliente' | 'chofer' | 'proveedor',
-  entidadId: number,
-  monto: number,
-  informeCancelado: boolean
-): Promise<void> {
+    const resumenSnap = await getDoc(resumenRef);
 
-  const ref = doc(
-    this.firestore,
-    `/Vantruck/datos/resumenFinanzas/${tipoEntidad}_${entidadId}`
-  );
-
-  await runTransaction(this.firestore, async (tx) => {
-
-    const snap = await tx.get(ref);
-
-    if (!snap.exists()) {
-      throw new Error('No existe resumen financiero de la entidad');
+    if (!resumenSnap.exists()) {      
+      throw new Error("Resumen no existe");
     }
 
-    const data = snap.data() as ResumenFinancieroEntidad;
+    const resumen = resumenSnap.data() as ResumenFinancieroEntidad;
 
-    const updateData: any = {
+    // 2. traer informes reales
+    const q = query(
+      collection(this.firestore, `${this.basePath}/resumenLiq`),
+      where("tipo", "==", tipo),
+      where("entidad.id", "==", entidadId),
+      where("estado", "!=", "anulado"),
+    );
 
-      totalCobrado: data.totalCobrado + monto,
+    const snap = await getDocs(q);
 
-      saldoPendiente: data.saldoPendiente - monto,
+    let totalFacturado = 0;
+    let totalCobrado = 0;
+    let cantidadInformes = 0;
+    let cantidadPendientes = 0;
 
-      updatedAt: Timestamp.now()
+    snap.docs.forEach((doc) => {
+      const inf = doc.data() as InformeLiq;
 
+      totalFacturado += inf.valoresFinancieros.total;
+      totalCobrado += inf.valoresFinancieros.totalCobrado;
+
+      cantidadInformes++;
+
+      if (inf.estadoFinanciero !== "cobrado") {
+        cantidadPendientes++;
+      }
+    });
+
+    console.log("totalFacturado: ", totalFacturado + " /totalCobrado: ", totalCobrado);
+    console.log("cantidadInformes: ", cantidadInformes + " /cantidadPendientes: ", cantidadPendientes);
+    
+
+    const saldoPendiente = totalFacturado - totalCobrado;
+    console.log("saldoPendiente: ", saldoPendiente);
+    
+
+    // 3. comparar
+
+    const diferencias = {
+      totalFacturado: resumen.totalFacturado - totalFacturado,
+      totalCobrado: resumen.totalCobrado - totalCobrado,
+      saldoPendiente: resumen.saldoPendiente - saldoPendiente,
+      cantidadInformes: resumen.cantidadInformes - cantidadInformes,
+      cantidadPendientes: resumen.cantidadPendientes - cantidadPendientes,
     };
 
-    if (informeCancelado) {
-      updateData.cantidadPendientes = data.cantidadPendientes - 1;
-    }
+    const hayErrores = Object.values(diferencias).some((v) => v !== 0);
 
-    tx.update(ref, updateData);
-
-  });
-
-}
-
-async revertirLiquidacion(informe: InformeLiq): Promise<void> {
-
-  const ref = doc(
-    this.firestore,
-    `/Vantruck/datos/resumenFinanzas/${informe.tipo}_${informe.entidad.id}`
-  );
-
-  await runTransaction(this.firestore, async (tx) => {
-
-    const snap = await tx.get(ref);
-
-    if (!snap.exists()) {
-      throw new Error('Resumen financiero inexistente');
-    }
-
-    const data = snap.data() as ResumenFinancieroEntidad;
-
-    const updateData: any = {
-
-      totalFacturado: data.totalFacturado - informe.valores.total,
-
-      saldoPendiente: data.saldoPendiente - informe.valoresFinancieros.saldo,
-
-      cantidadInformes: data.cantidadInformes - 1,
-
-      updatedAt: Timestamp.now()
-
+    return {
+      ok: !hayErrores,
+      resumen,
+      calculado: {
+        totalFacturado,
+        totalCobrado,
+        saldoPendiente,
+        cantidadInformes,
+        cantidadPendientes,
+      },
+      diferencias,
     };
+  }
 
-    if (informe.estadoFinanciero !== 'cobrado') {
+  async construirInformeEntidadPendientes(informeLiq: ConId<InformeLiq>){
+    // 1. traer resumen
+    const resumenRef = doc(
+      this.firestore,
+      `${this.basePath}/resumenFinanzas/${informeLiq.tipo}_${informeLiq.entidad.id}`,
+    );
 
-      updateData.cantidadPendientes =
-        data.cantidadPendientes - 1;
+    const resumenSnap = await getDoc(resumenRef);
 
+    if (!resumenSnap.exists()) {      
+      //throw new Error("Resumen no existe");
+      await this.aplicarNuevaLiquidacion(informeLiq);      
     }
+    const result = await this.repararResumenEntidad(informeLiq.tipo, informeLiq.entidad.id)
+    return result
 
-    tx.update(ref, updateData);
-
-  });
-
-}
-
+  }
+  
 }

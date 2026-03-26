@@ -8,9 +8,11 @@
   <div class="modal-body">
     <div class="d-flex">
       <div class="flex-grow-1">        
-        <h3>Detalle de Operaciones de {{titulo}} </h3>
+        <h3>Detalle de Operaciones de  <span class="badge bg-primary-subtle text-primary-emphasis">{{
+            titulo
+        }}</span> </h3>
         <h4>
-          Mes: <span class="fw-bold">{{informeLiq.mes}}</span> - Periodo liquidado: <span class="fw-bold">{{informeLiq.periodo}}</span>
+          Periodo de liquidación: <span class="fw-bold">{{informeLiq.mes}} {{informeLiq.anio}}</span> - {{informeLiq.periodo}}
           @if((fromParent.modo === 'proforma' || fromParent.accion === 'edicion')){
               <app-btn-editar name="Editar" class="ms-3" (click)="abrirModalPeriodo()"></app-btn-editar>
           }
@@ -40,10 +42,10 @@
             @if (fromParent.tipo === 'proveedor') {
               <th class="text-center">Chofer</th>
             }
-            <th class="text-center">{{fromParent.tipo === 'cliente' ? 'Chofer' : 'Cliente'}}</th>
-            <th class="text-center">{{fromParent.tipo === 'cliente' ? 'A Pagar' : 'A Cobrar'}}</th>
+            <th class="text-center">{{getEncabezados('entidadContraParte')}}</th>
+            <th class="text-center">{{getEncabezados('accionContraParte')}}</th>
             <th class="text-center">Porcentaje</th>
-            <th class="text-end">{{fromParent.tipo === 'cliente' ? 'A Cobrar' : 'A Pagar'}}</th>
+            <th class="text-end">{{getEncabezados('accionPrincipal')}}</th>
             @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
               <th class="text-end"></th>
             }
@@ -57,11 +59,10 @@
               @if (fromParent.tipo === 'proveedor') {
                 <td class="text-center">{{getChofer(fac.idChofer)}}</td>
               }
-              <td>{{fromParent.tipo === 'cliente' ? getChofer(fac.idChofer) : getCliente(fac.idCliente)}}</td>
-              <td class="text-end">{{fac.contraParteMonto | formatearValor : "$"}}</td>
-              <!-- <td class="text-end">{{fromParent.tipo === 'clientes' ? ((fac.valores.total - fac.contraParteMonto)*100/fac.valores.total | formatearValor) : (fac.contraParteMonto - fac.valores.total)*100/fac.contraParteMonto | formatearValor }} %</td> -->
-              <td class="text-end">{{fromParent.tipo === 'cliente' ? (fac.contraParteMonto | calcularPorcentaje:fac.valores.total:true) : (fac.valores.total | calcularPorcentaje:fac.contraParteMonto:true) }}</td>
-              <td class="text-end">{{fac.valores.total | formatearValor : "$"}}</td>
+              <td>{{getEntidadContraParte(fac)}}</td>
+              <td class="text-end col-numero" [ngClass]="{'text-danger': tipoCliente, 'text-success':!tipoCliente}">{{fac.contraParteMonto | formatearValor : "$"}}</td>              
+              <td class="text-end">{{(fac.contraParteMonto | calcularPorcentajeV2:fac.valores.total:getPorcentaje())}}</td>
+              <td class="text-end col-numero" [ngClass]="{'text-danger': !tipoCliente, 'text-success':tipoCliente}">{{fac.valores.total | formatearValor : "$"}}</td>
               @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
                 <td class="text-end"><app-btn-editar name="Editar" (click)="editarFacOp(fac)"></app-btn-editar> </td>
               }
@@ -96,7 +97,7 @@
                 @if (fromParent.tipo !== 'proveedor') {
                   <td colspan="5"><span class="ms-3">{{desc.concepto}}</span></td>
                 }
-                <td class="text-end" [ngClass]="desc.valor >= 0 ? 'positivo' : 'negativo'"> {{desc.valor | formatearValor : "$"}}</td>               
+                <td class="text-end col-numero" [ngClass]="desc.valor >= 0 ? 'positivo' : 'negativo'"> {{desc.valor | formatearValor : "$"}}</td>               
               </tr>
             }
           }
@@ -112,7 +113,7 @@
             @if (fromParent.tipo !== 'proveedor') {
               <th colspan="5"><span class="ms-3">Total</span></th>
             }
-            <th class="text-end">{{informeLiq.valores.total | formatearValor : "$"}}</th>
+            <th class="text-end ">{{informeLiq.valores.total | formatearValor : "$"}}</th>
           </tr>
         </tfoot>
       </table>

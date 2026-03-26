@@ -180,8 +180,10 @@
                                             @if (
                                                 form.get("adKmboolean")?.value
                                             ) {
-                                                <th>Km Cobrar</th>
-                                                <th>Km Pagar</th>
+                                                <th>Km - Cobrar 1°</th>
+                                                <th>Km - Cobrar sig</th>
+                                                <th>Km - Pagar 1°</th>
+                                                <th>Km - Pagar sig</th>
                                             }
 
                                             <th></th>
@@ -282,6 +284,14 @@
                                                                         0
                                                                     "
                                                                 />
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div
+                                                            formGroupName="adicionalKmACobrar"
+                                                        >   
+                                                        <div>
 
                                                                 <input
                                                                     type="text"
@@ -326,6 +336,16 @@
                                                                         0
                                                                     "
                                                                 />
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                      <td>
+                                                        <div
+                                                            formGroupName="adicionalKmAPagar"
+                                                        >
+                                                            <div
+                                                                class="d-flex gap-1"
+                                                            >
 
                                                                 <input
                                                                     type="text"

@@ -547,13 +547,13 @@ private resizeStartWidth = 0;
 
   getEstadoBadgeClass(estado:string) {
     switch (estado) {
-      case 'Abierta': return 'badge bg-success';
-      case 'Cerrada': return 'badge bg-danger';
-      case 'Proforma': return 'badge bg-warning text-dark';
-      case 'Cliente Fac': return 'badge bg-info text-dark';
-      case 'Chofer Fac': return 'badge bg-secondary';
-      case 'Facturada': return 'badge bg-primary';
-      default: return 'badge bg-light text-secondary';
+      case 'Abierta': return 'ms-2 align-middle badge rounded-pill bg-success';
+      case 'Cerrada': return 'ms-2 align-middle badge rounded-pill bg-danger';
+      case 'Proforma': return 'ms-2 align-middle badge rounded-pill bg-warning text-dark';
+      case 'Cliente Fac': return 'ms-2 align-middle badge rounded-pill bg-info text-dark';
+      case 'Chofer Fac': return 'ms-2 align-middle badge rounded-pill bg-secondary';
+      case 'Facturada': return 'ms-2 align-middle badge rounded-pill bg-primary';
+      default: return 'ms-2 align-middle badge rounded-pill bg-light text-secondary';
     }
   }
 

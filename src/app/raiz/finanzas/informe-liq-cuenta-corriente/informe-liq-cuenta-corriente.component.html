@@ -1,0 +1,89 @@
+
+
+@if (cargando) {
+    <app-spinner></app-spinner>
+} @else {
+      <h2 class="mt-3">
+        <span class="badge bg-primary-subtle text-primary-emphasis">{{
+            informe.entidad.razonSocial
+        }}</span>
+    </h2>
+    <div class="panel-box panel-resultados">
+        <h3>Evolución de la deuda del informe {{informe.numeroInterno}}</h3>
+
+        @if (timeline.length === 0) {
+            <div class="sin-datos">Sin movimientos</div>
+        } @else {
+            <table
+                class="table table-sm table-bordered table-hover table-sm align-middle"
+            >
+                <thead>
+                    <tr>
+                        <th class="text-center">Fecha</th>
+                        <th class="text-center">Movimiento</th>
+                        <th class="text-center">Id</th>
+                        <th class="text-center">Descripción</th>
+                        <th class="text-center">Medio de Pago</th>
+                        <th class="text-center">Impacto</th>
+                        <th class="text-center">Saldo</th>
+                        <th class="text-center">Informe</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (item of timeline; track item) {
+                        <tr>
+                            <td class="text-center">
+                                {{ item.fecha | date: "dd/MM/yyyy" }}
+                            </td>
+
+                            <td class="text-center">
+                                {{ item.descripcion }}
+                            </td>
+
+                            <td class="text-center">
+                                {{ item.id }}
+                            </td>
+
+                            <td class="text-center">
+                                {{ capitalizarPrimeraLetra(item.tipo) }}
+                            </td>
+
+                            <td class="text-center">
+                                {{ item.medioPago }}
+                            </td>
+
+                            <td
+                                class="col-numero"
+                                [ngClass]="{
+                                    positivo: item.signo === 1,
+                                    negativo: item.signo === -1,
+                                }"
+                            >
+                                {{
+                                    item.monto * item.signo
+                                        | formatearValor: "$"
+                                }}
+                            </td>
+
+                            <td
+                                class="col-numero"
+                                [ngClass]="{ 'text-info': item.saldo === 0 }"
+                            >
+                                {{ item.saldo | formatearValor: "$" }}
+                            </td>
+
+                            <td class="text-center">
+                                <app-btn-leer
+                                    name="DetalleColor"
+                                    (click)="verInforme(item.tipo, item.id)"
+                                ></app-btn-leer>
+                            </td>
+                        </tr>
+                     
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+}

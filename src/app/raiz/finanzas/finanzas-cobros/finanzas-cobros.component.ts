@@ -11,6 +11,7 @@ import Swal from 'sweetalert2';
 import { MovimientoFinancieroComponent } from '../modales/movimiento-financiero/movimiento-financiero.component';
 import { MovimientoFormVM } from 'src/app/interfaces/movimiento-form-v-m';
 import { MovimientoFinancieroService } from 'src/app/servicios/finanzas/movimiento-financiero.service';
+import { FinanzasResumenService } from 'src/app/servicios/finanzas/finanzas-resumen.service';
 
 
 @Component({
@@ -31,16 +32,20 @@ export class FinanzasCobrosComponent implements OnInit {
   clientes: ConId<Cliente>[] = [];
   informesPendientes: ConId<InformeLiq>[] = [];
   informesSeleccionados: ConId<InformeLiq>[] = [];
+  usuario:any;
 
   constructor(    
     private storageService: StorageService,
     private modalService: NgbModal,
-    private movFinancieroServ: MovimientoFinancieroService
+    private movFinancieroServ: MovimientoFinancieroService,
+    private finanzasResumenService: FinanzasResumenService,
   ) {}
 
   ngOnInit(): void {
     this.clientes = this.storageService.loadInfo('clientes');
     this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
+    let user = this.storageService.loadInfo("usuario");
+    this.usuario = user[0];
   }
 
   /* ===============================
@@ -210,13 +215,38 @@ export class FinanzasCobrosComponent implements OnInit {
     );
   }
 
-  mensajesError(msj:string){
-    Swal.fire({
-      icon: "error",
-      //title: "Oops...",
-      text: `${msj}`
-      //footer: `${msj}`
-    });
-  }
+    mensajesError(msj: string, resultado: boolean) {
+      Swal.fire({
+        icon: !resultado ? "error" : "success",
+        //title: "Oops...",
+        text: `${msj}`,
+        //footer: `${msj}`
+      });
+    }
+
+  /* ===============================
+       VERIFICACION DE LOS RESUMENES DE ENTIDAD
+       =============================== */
+  
+  
+    async verificarResumenEntidad(){
+      if(this.clienteSeleccionadoId){
+        this.cargando = true;
+        const resultado = await this.finanzasResumenService.repararResumenEntidad('cliente', this.clienteSeleccionadoId )
+        this.cargando = false;
+        if(resultado?.ok){
+          this.mensajesError("Resumen sin errores", resultado.ok)
+          console.log("resultado: ",resultado);
+        } else if(resultado && !resultado.ok ) {
+          this.mensajesError("Resumen con errores", resultado.ok)
+          console.log("resultado: ",resultado);
+        }
+        
+        
+        
+      }
+      
+    }
+  
   
 }

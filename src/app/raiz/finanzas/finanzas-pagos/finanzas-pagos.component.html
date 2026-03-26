@@ -35,6 +35,12 @@
                 }
             </select>
         </div>
+        @if (usuario.roles.god) {
+            <div class="col-4 d-flex justify-content-end">
+                <button class="btn btn-danger" (click)="verificarResumenEntidad()">Verificar Resumen de Entidad</button>
+            </div>
+        }
+        
     </div>
 
     <!-- Spinner -->

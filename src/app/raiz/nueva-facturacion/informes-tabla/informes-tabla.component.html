@@ -34,7 +34,7 @@
                       <td
                         [class.text-center]="col.align === 'center'"
                         [class.text-end]="col.align === 'end'"
-                        [ngClass]="getCellClasses(col, item)"
+                        [ngClass]="getCellClasses(col, item)"                        
                       >
                         @if (col.acciones) {
                             <app-informes-acciones-cell
@@ -43,7 +43,7 @@
                               (accion)="accionClick.emit($event)">
                             </app-informes-acciones-cell>
                           } @else {
-                            {{ getValor(col, item) }}
+                            <span [ngClass]="{'col-numero': col.key === 'total'}">{{ getValor(col, item) }}</span>
                           }
 
                       </td>

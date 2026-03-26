@@ -1,0 +1,102 @@
+@if (cargando) {
+    <app-spinner></app-spinner>
+} @else {
+    <!-- Selección de entidad -->
+    <div class="row mb-3">
+        <!-- Tipo de entidad -->
+        <div class="col-4">
+            <label>Tipo entidad</label>
+            <select
+                class="form-select"
+                [(ngModel)]="tipoEntidad"
+                (change)="onEntidades()"
+            >
+                <option [ngValue]="null" selected hidden>Seleccione</option>
+                <option value="cliente">Clientes</option>
+                <option value="chofer">Choferes</option>
+                <option value="proveedor">Proveedores</option>
+            </select>
+        </div>
+
+        <!-- Selección de la entidad -->
+
+        <div class="col-4">
+            <label>{{ tipoEntidad | titlecase }}</label>
+            <select
+                class="form-select"
+                [disabled]="!tipoEntidad"
+                [(ngModel)]="entidadSeleccionada"
+                (ngModelChange)="onEntidadSeleccionada($event)"
+            >
+                <option [ngValue]="null" hidden>Seleccione</option>
+
+                @for (e of entidadesSeleccionadas; track $index) {
+                    <option [ngValue]="e">
+                        {{ getEntidad(e) }}
+                    </option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="panel-box panel-resultados">
+        <h3>Evolución de la deuda del informe</h3>
+         @if (entidadSeleccionada) {
+        <table
+            class="table table-sm table-bordered table-hover table-sm align-middle"
+        >
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Acción</th>
+                    <th>Id</th>
+                    <th>Impacto</th>
+                    <th>Saldo</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+            @if (ledger.length > 0) {
+                <tbody>
+                    @for (item of ledger; track item) {
+                        <tr>
+                            <td>{{ item.fecha }}</td>
+
+                            <td>{{ capitalizarPrimeraLetra(item.tipo) }}</td>
+
+                            <td>{{ capitalizarPrimeraLetra(item.accion) }}</td>
+
+                            <td>{{ item.id }}</td>
+
+                            <td
+                                [ngClass]="{
+                                    positivo: item.impacto > 0,
+                                    negativo: item.impacto < 0,
+                                }"
+                            >
+                                {{ item.impacto | currency }}
+                            </td>
+
+                            <td>
+                                {{ item.saldo | currency }}
+                            </td>
+                            <td class="text-center">
+                              <app-btn-leer name="DetalleColor" (click)="verInforme(item.tipo, item.id)"></app-btn-leer>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            } @else {
+                <div class="alert alert-info w-100">
+                    El {{ tipoEntidad }} no tiene movimientos financieros.
+                </div>
+            }
+        </table>
+    } @else {
+        <div class="alert alert-info">
+            Seleccione una entidad para consultar.
+        </div>
+    }
+    </div>
+
+   
+}

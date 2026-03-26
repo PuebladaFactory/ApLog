@@ -5,6 +5,10 @@ import { FinanzasCobrosComponent } from './finanzas-cobros/finanzas-cobros.compo
 import { FinanzasPagosComponent } from './finanzas-pagos/finanzas-pagos.component';
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 import { MovimientoDetalleComponent } from './movimiento-detalle/movimiento-detalle.component';
+import { CuentaCorrienteComponent } from './cuenta-corriente/cuenta-corriente.component';
+import { DetalleCuentaCorrienteComponent } from './detalle-cuenta-corriente/detalle-cuenta-corriente.component';
+import { InformeLiqCuentaCorrienteComponent } from './informe-liq-cuenta-corriente/informe-liq-cuenta-corriente.component';
+import { LedgerComponent } from './ledger/ledger.component';
 
 const routes: Routes = [
   {path: '', component:FinanzasControlComponent,
@@ -13,7 +17,11 @@ const routes: Routes = [
           {path: 'cobros', component:FinanzasCobrosComponent},
           {path: 'pagos', component:FinanzasPagosComponent},
           {path: 'historial', component:HistorialMovimientosComponent},
-          {path: 'movimiento/:id',component: MovimientoDetalleComponent}
+          {path: 'movimiento/:id',component: MovimientoDetalleComponent},          
+          {path: 'cuenta-corriente',component: CuentaCorrienteComponent},
+          {path: 'cuenta-corriente/:id',component: DetalleCuentaCorrienteComponent},
+          {path: 'informe/:id', component: InformeLiqCuentaCorrienteComponent },
+          {path: 'ledger', component: LedgerComponent},
                                         
       ]  },
 ];
