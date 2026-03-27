@@ -355,4 +355,22 @@ export class CuentaCorrienteService {
 
     return eventos;
   }
+
+  async obtenerInformeLiq(id:string) : Promise<{ id: string; data: InformeLiq } | null> {
+    const ref = collection(this.firestore, `${this.basePath}/resumenLiq`);
+
+    const q = query(ref, where("numeroInterno", "==", id));
+
+    const snap = await getDocs(q);
+
+    if (snap.empty) return null;
+
+    const docSnap = snap.docs[0];
+
+    return {
+      id: docSnap.id,
+      data: docSnap.data() as InformeLiq,
+    };
+
+  }
 }

@@ -2,12 +2,12 @@ th, td, select, option {
     font-size: 1.4rem;
 }
 
-.positivo {
+.negativo {
   color: red; // deuda
   font-weight: 500;
 }
 
-.negativo {
+.positivo {
   color: green; // pago
   font-weight: 500;
 }
@@ -21,4 +21,27 @@ th, td, select, option {
   border: 1px solid #e6e6e6;
   border-radius: 8px;
   padding: 16px;
+}
+
+.ordenable{
+  cursor: pointer;
+  user-select: none;
+}
+
+.ordenable:hover {
+  background-color: #f5f5f5;
+}
+
+.ordenable.active {
+  font-weight: bold;
+}
+
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500;
 }

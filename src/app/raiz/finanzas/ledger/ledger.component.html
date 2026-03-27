@@ -1,8 +1,9 @@
 @if (cargando) {
     <app-spinner></app-spinner>
 } @else {
+    <h3 class="mt-3 mb-3">Evolución de la deuda</h3>
     <!-- Selección de entidad -->
-    <div class="row mb-3">
+    <div class="row mb-3 mt-2">
         <!-- Tipo de entidad -->
         <div class="col-4">
             <label>Tipo entidad</label>
@@ -38,65 +39,219 @@
             </select>
         </div>
     </div>
-    <div class="panel-box panel-resultados">
-        <h3>Evolución de la deuda del informe</h3>
-         @if (entidadSeleccionada) {
-        <table
-            class="table table-sm table-bordered table-hover table-sm align-middle"
-        >
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Tipo</th>
-                    <th>Acción</th>
-                    <th>Id</th>
-                    <th>Impacto</th>
-                    <th>Saldo</th>
-                    <th>Detalle</th>
-                </tr>
-            </thead>
-            @if (ledger.length > 0) {
-                <tbody>
-                    @for (item of ledger; track item) {
-                        <tr>
-                            <td>{{ item.fecha }}</td>
-
-                            <td>{{ capitalizarPrimeraLetra(item.tipo) }}</td>
-
-                            <td>{{ capitalizarPrimeraLetra(item.accion) }}</td>
-
-                            <td>{{ item.id }}</td>
-
-                            <td
-                                [ngClass]="{
-                                    positivo: item.impacto > 0,
-                                    negativo: item.impacto < 0,
-                                }"
-                            >
-                                {{ item.impacto | currency }}
-                            </td>
-
-                            <td>
-                                {{ item.saldo | currency }}
-                            </td>
-                            <td class="text-center">
-                              <app-btn-leer name="DetalleColor" (click)="verInforme(item.tipo, item.id)"></app-btn-leer>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            } @else {
-                <div class="alert alert-info w-100">
-                    El {{ tipoEntidad }} no tiene movimientos financieros.
+    @if (entidadSeleccionada) {
+        <div class="panel-box panel-resultados">
+            <div class="row g-2">
+                <div class="col d-flex align-items-center">
+                    <h2 class="">
+                        <span
+                            class="badge bg-primary-subtle text-primary-emphasis"
+                            >{{ getEntidad(entidadSeleccionada) }}</span
+                        >
+                    </h2>
                 </div>
-            }
-        </table>
+                <div class="col d-flex align-items-center">
+                    <h3 class="d-flex align-items-center">
+                        Deuda Actual:
+                        <span [ngClass]="{
+                                        'text-success fw-bold':
+                                            getSaldoTotal() === 0,
+                                    }"></span>{{ getSaldoTotal() | formatearValor: "$" }}
+
+                        <span
+                            class="badge rounded-pill ms-3"
+                            [ngClass]="getBadgeClasesSaldo(getSaldoTotal())"
+                        >
+                            {{ getDescripcionSaldo(getSaldoTotal()) }}
+                        </span>
+                    </h3>
+                </div>
+                <div class="col">
+                    <div>
+                        <label
+                            for="exampleFormControlInput1"
+                            class="form-label mb-0"
+                            >Buscar por campo</label
+                        >
+                        <input
+                            class="form-control"
+                            type="text"
+                            [(ngModel)]="searchText"
+                            placeholder="Buscar por campo"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <table
+                class="table table-sm table-bordered table-hover table-sm align-middle"
+            >
+                <thead>
+                    <tr>
+                        <th
+                            class="ordenable"
+                            appSortable="fecha"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Fecha
+                            @if (sort.campo === "fecha") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
+                        <th
+                            class="ordenable"
+                            appSortable="tipo"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Tipo
+                            @if (sort.campo === "tipo") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
+                        <th
+                            class="ordenable"
+                            appSortable="accion"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Acción
+                            @if (sort.campo === "accion") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
+                        <th
+                            class="ordenable"
+                            appSortable="id"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Id
+                            @if (sort.campo === "id") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
+                        <th
+                            class="ordenable text-center"
+                            appSortable="impacto"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Impacto
+                            @if (sort.campo === "impacto") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
+                        <th
+                            class="ordenable text-center"
+                            appSortable="saldo"
+                            [activo]="sort.campo"
+                            [direccion]="sort.direccion"
+                            (sortChange)="onSort($event)"
+                        >
+                            Saldo
+                            @if (sort.campo === "saldo") {
+                                <span>
+                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                                </span>
+                            }
+                        </th>
+                        <th class="text-center">Situación</th>
+                        <th class="text-center">Detalle</th>
+                    </tr>
+                </thead>
+                @if (ledger.length > 0) {
+                    <tbody>
+                        @for (
+                            item of ledger
+                                | globalFilter
+                                    : searchText
+                                    : [
+                                          "fecha",
+                                          "tipo",
+                                          "accion",
+                                          "id",
+                                          "impacto",
+                                          "saldo",
+                                      ];
+                            track item
+                        ) {
+                            <tr>
+                                <td>{{ item.fecha }}</td>
+
+                                <td>
+                                    {{ capitalizarPrimeraLetra(item.tipo) }}
+                                </td>
+
+                                <td>
+                                    {{ capitalizarPrimeraLetra(item.accion) }}
+                                </td>
+
+                                <td>{{ item.id }}</td>
+
+                                <td
+                                    class="col-numero"
+                                    [ngClass]="{
+                                        positivo: item.impacto > 0,
+                                        negativo: item.impacto < 0,
+                                    }"
+                                >
+                                    {{ item.impacto | formatearValor: "$" }}
+                                </td>
+
+                                <td
+                                    class="col-numero"
+                                    [ngClass]="{
+                                        'text-success fw-bold':
+                                            item.saldo === 0,
+                                    }"
+                                >
+                                    {{ item.saldo | formatearValor: "$" }}
+                                </td>
+                                <!-- 🧠 Situación -->
+                                <td class="text-center">
+                                    <span
+                                        class="badge rounded-pill"
+                                        [ngClass]="getBadgeClasesAccion(item)"
+                                    >
+                                        {{ getDescripcionAccion(item) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <app-btn-leer
+                                        name="DetalleColor"
+                                        (click)="verInforme(item)"
+                                    ></app-btn-leer>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                } @else {
+                    <div class="alert alert-info w-100">
+                        El {{ tipoEntidad }} no tiene movimientos financieros.
+                    </div>
+                }
+            </table>
+        </div>
     } @else {
         <div class="alert alert-info">
             Seleccione una entidad para consultar.
         </div>
     }
-    </div>
-
-   
 }
