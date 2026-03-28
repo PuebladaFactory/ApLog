@@ -59,7 +59,7 @@ export class FinanzasControlComponent implements OnInit {
   tabs = [
     { id: "tab1", name: "Cobros", route: "finanzas/cobros" },
     { id: "tab2", name: "Pagos", route: "finanzas/pagos" },
-    { id: "tab3", name: "Historial", route: "finanzas/historial" },
+    { id: "tab3", name: "Historial de Movimientos", route: "finanzas/historial" },
     {
       id: "tab4",
       name: "Cuenta Corriente",

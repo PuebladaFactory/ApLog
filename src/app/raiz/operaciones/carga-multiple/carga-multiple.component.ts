@@ -306,7 +306,7 @@ export class CargaMultipleComponent implements OnInit {
       };
     }
 
-    if (cliente.tarifaTipo?.especial) {
+    if (cliente.tarifaTipo?.especial || chofer.tarifaTipo?.especial) {
       return {
         general: false,
         especial: true,

@@ -138,7 +138,7 @@ export class ValoresOpChoferService {
       resultado: true,
       msj: "",
     };
-    console.log("Factura OP chofer ", this.facturaOpChofer)
+    console.log("Factura OP chofer ", this.facturaOpChofer);
     return respuesta;
     ////////console.log("Factura OP cliente ", this.facturaOpCliente)
     //return this.facturaOpChofer
@@ -202,24 +202,27 @@ export class ValoresOpChoferService {
 
     let montoTotal = 0;
 
-    // Verifica si los kilómetros recorridos son menores o iguales al primer sector
-    if (op.km < tarifa.adicionales.KmDistancia.primerSector) {
-      return montoTotal; // No se cobra adicional
+    if (tarifa.adicionales.KmDistancia.primerSector > 0) {
+      // Verifica si los kilómetros recorridos son menores o iguales al primer sector
+      if (op.km < tarifa.adicionales.KmDistancia.primerSector) {
+        return montoTotal; // No se cobra adicional
+      }
+
+      // Si supera el primer sector, se cobra el valor del primer sector
+      montoTotal = catCg[0].adicionalKm.primerSector;
+
+      // Calcula cuántos kilómetros adicionales quedan luego del primer sector
+      let kmRestantes = op.km - tarifa.adicionales.KmDistancia.primerSector;
+
+      // Calcula cuántos sectores adicionales completos se recorren
+      let sectoresAdicionales = Math.floor(
+        kmRestantes / tarifa.adicionales.KmDistancia.sectoresSiguientes,
+      );
+
+      // Suma el costo de los sectores adicionales
+      montoTotal +=
+        sectoresAdicionales * catCg[0].adicionalKm.sectoresSiguientes;
     }
-
-    // Si supera el primer sector, se cobra el valor del primer sector
-    montoTotal = catCg[0].adicionalKm.primerSector;
-
-    // Calcula cuántos kilómetros adicionales quedan luego del primer sector
-    let kmRestantes = op.km - tarifa.adicionales.KmDistancia.primerSector;
-
-    // Calcula cuántos sectores adicionales completos se recorren
-    let sectoresAdicionales = Math.floor(
-      kmRestantes / tarifa.adicionales.KmDistancia.sectoresSiguientes,
-    );
-
-    // Suma el costo de los sectores adicionales
-    montoTotal += sectoresAdicionales * catCg[0].adicionalKm.sectoresSiguientes;
 
     return montoTotal;
   }
@@ -340,7 +343,10 @@ export class ValoresOpChoferService {
     return catCG[0].valor;
   }
 
-  $calcularKmTarifaPersonalizada(op: Operacion, tarifa: TarifaPersonalizadaCliente) {
+  $calcularKmTarifaPersonalizada(
+    op: Operacion,
+    tarifa: TarifaPersonalizadaCliente,
+  ) {
     let catCg = op.tarifaPersonalizada.categoria;
     let seccion = op.tarifaPersonalizada.seccion;
     ////////console.log("catCg: ", catCg);
@@ -353,7 +359,9 @@ export class ValoresOpChoferService {
       }
 
       // Si supera el primer sector, se cobra el valor del primer sector
-      montoTotal = tarifa.secciones[seccion-1].categorias[catCg-1].adicionalKmAPagar?.primerSector ?? 0;
+      montoTotal =
+        tarifa.secciones[seccion - 1].categorias[catCg - 1].adicionalKmAPagar
+          ?.primerSector ?? 0;
 
       // Calcula cuántos kilómetros adicionales quedan luego del primer sector
       let kmRestantes = op.km - tarifa.adicionales.KmDistancia.primerSector;
@@ -365,7 +373,9 @@ export class ValoresOpChoferService {
 
       // Suma el costo de los sectores adicionales
       montoTotal +=
-        sectoresAdicionales * (tarifa.secciones[seccion-1].categorias[catCg-1].adicionalKmAPagar?.sectoresSiguientes ?? 0);
+        sectoresAdicionales *
+        (tarifa.secciones[seccion - 1].categorias[catCg - 1].adicionalKmAPagar
+          ?.sectoresSiguientes ?? 0);
     }
 
     return montoTotal;
