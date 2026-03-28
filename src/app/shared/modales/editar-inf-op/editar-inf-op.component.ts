@@ -158,7 +158,12 @@ export class EditarInfOpComponent implements OnInit {
       this.contraparteColeccion = contraparteRes.coleccion;
       console.log("0)this.informeContraParte: ", this.informeContraParte);
       console.log("0)this.contraparteColeccion: ", this.contraparteColeccion);
-      if (this.informeContraParte.liquidacion || this.contraparteColeccion === 'infOpLiqClientes' || this.contraparteColeccion === 'infOpLiqChoferes' || this.contraparteColeccion === 'infOpLiqProveedores' ) {
+      if (
+        this.informeContraParte.liquidacion ||
+        this.contraparteColeccion === "infOpLiqClientes" ||
+        this.contraparteColeccion === "infOpLiqChoferes" ||
+        this.contraparteColeccion === "infOpLiqProveedores"
+      ) {
         const liquidado = await Swal.fire({
           title:
             "La contra parte del informe ya fue liquidada y no puede ser modificada desde esta pantalla. ¿Desea continuar con la edición?",
@@ -431,7 +436,7 @@ export class EditarInfOpComponent implements OnInit {
       infOriginal: this.infOpDetallada,
       contraparte: this.informeContraParte,
     };
-    
+
     return respuesta;
   }
 
@@ -615,8 +620,8 @@ export class EditarInfOpComponent implements OnInit {
     this.recalcularValores();
   }
 
-  tarifaBaseValor() {  
-    console.log(this.informeCliente.valores.tarifaBase)  
+  tarifaBaseValor() {
+    console.log(this.informeCliente.valores.tarifaBase);
 
     this.emparejarDatos();
 
@@ -673,23 +678,40 @@ export class EditarInfOpComponent implements OnInit {
 
   recalcularValores() {
     //console.log("recalcularValores: ", this.editarContraParte);
-
-    this.infOpDetallada.valores.total =
-      this.formNumServ.convertirAValorNumerico(
-        this.infOpDetallada.valores.tarifaBase * this.multiplicadorOriginal,
-      ) +
-      this.infOpDetallada.valores.kmMonto +
-      this.infOpDetallada.valores.acompaniante +
-      (this.infOpDetallada.valores.adExtra ?? 0);
-    if (this.editarContraParte) {
-      this.informeContraParte.valores.total =
+    if (this.multiplicadorOriginal === 0) {
+      this.infOpDetallada.valores = {
+        tarifaBase: 0,
+        kmMonto: 0,
+        acompaniante: 0,
+        total: 0,
+      };
+    } else {
+      this.infOpDetallada.valores.total =
         this.formNumServ.convertirAValorNumerico(
-          this.informeContraParte.valores.tarifaBase *
-            this.multiplicadorContraParte,
+          this.infOpDetallada.valores.tarifaBase * this.multiplicadorOriginal,
         ) +
-        this.informeContraParte.valores.kmMonto +
-        this.informeContraParte.valores.acompaniante +
-        (this.informeContraParte.valores.adExtra ?? 0);
+        this.infOpDetallada.valores.kmMonto +
+        this.infOpDetallada.valores.acompaniante +
+        (this.infOpDetallada.valores.adExtra ?? 0);
+      if (this.editarContraParte) {
+        if (this.multiplicadorContraParte === 0) {
+          this.informeContraParte.valores = {
+            tarifaBase: 0,
+            kmMonto: 0,
+            acompaniante: 0,
+            total: 0,
+          };
+        } else {
+          this.informeContraParte.valores.total =
+            this.formNumServ.convertirAValorNumerico(
+              this.informeContraParte.valores.tarifaBase *
+                this.multiplicadorContraParte,
+            ) +
+            this.informeContraParte.valores.kmMonto +
+            this.informeContraParte.valores.acompaniante +
+            (this.informeContraParte.valores.adExtra ?? 0);
+        }
+      }
     }
 
     this.emparejarVista();
@@ -803,28 +825,36 @@ export class EditarInfOpComponent implements OnInit {
     }
   }
 
-   ///////// TARIFA EVENTUAL /////////////
-   changeTarifaEVentual(){
-      this.operacion.tarifaEventual.cliente.valor = this.formNumServ.convertirAValorNumerico(this.operacion.tarifaEventual.cliente.valor);
-      this.operacion.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(this.operacion.tarifaEventual.chofer.valor);
-      this.operacion.valores.cliente.tarifaBase = this.operacion.tarifaEventual.cliente.valor;
-      this.operacion.valores.chofer.tarifaBase = this.operacion.tarifaEventual.chofer.valor;
-      if (this.fromParent.origen === "cliente") {
-        this.informeCliente.valores.tarifaBase =
-          this.operacion.valores.cliente.tarifaBase;
-        if (this.editarContraParte) {
-          this.informeChofer.valores.tarifaBase =
-            this.operacion.valores.chofer.tarifaBase;
-        }
-      } else {
-        if (this.editarContraParte) {
-          this.informeCliente.valores.tarifaBase =
-            this.operacion.valores.cliente.tarifaBase;
-        }
+  ///////// TARIFA EVENTUAL /////////////
+  changeTarifaEVentual() {
+    this.operacion.tarifaEventual.cliente.valor =
+      this.formNumServ.convertirAValorNumerico(
+        this.operacion.tarifaEventual.cliente.valor,
+      );
+    this.operacion.tarifaEventual.chofer.valor =
+      this.formNumServ.convertirAValorNumerico(
+        this.operacion.tarifaEventual.chofer.valor,
+      );
+    this.operacion.valores.cliente.tarifaBase =
+      this.operacion.tarifaEventual.cliente.valor;
+    this.operacion.valores.chofer.tarifaBase =
+      this.operacion.tarifaEventual.chofer.valor;
+    if (this.fromParent.origen === "cliente") {
+      this.informeCliente.valores.tarifaBase =
+        this.operacion.valores.cliente.tarifaBase;
+      if (this.editarContraParte) {
         this.informeChofer.valores.tarifaBase =
           this.operacion.valores.chofer.tarifaBase;
       }
-      this.emparejarDatos();
-      this.recalcularValores();
-   }
+    } else {
+      if (this.editarContraParte) {
+        this.informeCliente.valores.tarifaBase =
+          this.operacion.valores.cliente.tarifaBase;
+      }
+      this.informeChofer.valores.tarifaBase =
+        this.operacion.valores.chofer.tarifaBase;
+    }
+    this.emparejarDatos();
+    this.recalcularValores();
+  }
 }

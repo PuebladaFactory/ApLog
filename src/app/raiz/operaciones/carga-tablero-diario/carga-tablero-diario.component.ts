@@ -240,7 +240,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
       };
     }
 
-    if (cliente.tarifaTipo?.especial) {
+    if (cliente.tarifaTipo?.especial || chofer.tarifaTipo?.especial) {
       return {
         general: false,
         especial: true,
