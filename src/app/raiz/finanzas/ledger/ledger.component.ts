@@ -70,7 +70,7 @@ export class LedgerComponent implements OnInit {
     this.onEntidades();
     let user = this.storageService.loadInfo("usuario");
     this.usuario = user[0];
-    console.log("this.usuario: ", this.usuario);
+    //console.log("this.usuario: ", this.usuario);
   }
 
   async consultarDatos(id: number) {
@@ -83,6 +83,8 @@ export class LedgerComponent implements OnInit {
   }
 
   onEntidades() {
+    this.ledger = [];
+    this.entidadSeleccionada = null;
     this.entidadesSeleccionadas =
       this.tipoEntidad === "cliente"
         ? this.clientes
@@ -92,7 +94,7 @@ export class LedgerComponent implements OnInit {
   }
 
   getEntidad(ent: any): string {
-    ////console.log("getEntidad: ",ent);
+    //////console.log("getEntidad: ",ent);
     let razonSocial;
     let chofer;
     let proveedor;
@@ -125,8 +127,8 @@ export class LedgerComponent implements OnInit {
   }
 
   async onEntidadSeleccionada(e: any) {
-    this.cargando = true;
-    console.log("e: ", e);
+    this.cargando = true;    
+    //console.log("e: ", e);
     if (!e || !this.tipoEntidad) {
       this.entidadId = null;
       return;
@@ -146,10 +148,10 @@ export class LedgerComponent implements OnInit {
     if (this.tipoEntidad === "cliente") {
       this.entidadId = e.idCliente;
     }
-    console.log("this.entidadId: ", this.entidadId);
+    //console.log("this.entidadId: ", this.entidadId);
 
-    console.log("this.entidadSeleccionada: ", this.entidadSeleccionada);
-    //console.log("aca?");
+    //console.log("this.entidadSeleccionada: ", this.entidadSeleccionada);
+    ////console.log("aca?");
 
     if (this.entidadId) await this.consultarDatos(this.entidadId);
   }
@@ -185,7 +187,7 @@ export class LedgerComponent implements OnInit {
         scrollable: true,
         size: "lg",
       });
-      console.log("informesLiq", informe);
+      //console.log("informesLiq", informe);
       let info = {
         modo: "facturacion",
         item: informe,
@@ -216,7 +218,7 @@ export class LedgerComponent implements OnInit {
         coleccion, // nombre de la colección
         informesLiq.operaciones, // array de idsOperacion
       );
-      console.log("consulta", consulta);
+      //console.log("consulta", consulta);
 
       this.informesOp = consulta.encontrados;
 
@@ -248,7 +250,7 @@ export class LedgerComponent implements OnInit {
 
     if (!campo) return;
 
-    this.ledger.sort((a: any, b: any) => {
+    this.ledger = [...this.ledger].sort((a: any, b: any) => {
       const valorA = a[campo];
       const valorB = b[campo];
 
@@ -265,6 +267,8 @@ export class LedgerComponent implements OnInit {
       return 0;
     });
   }
+
+
 
   getBadgeClasesSaldo(total: number) {
     if (total === 0) {
@@ -299,7 +303,7 @@ export class LedgerComponent implements OnInit {
   }
 
   getBadgeClasesAccion(item:Ledger){
-    console.log("item: ", item);
+    //console.log("item: ", item);
     
     if (item.saldo === 0) {
       return "bg-success";

@@ -42,6 +42,7 @@
     @if (entidadSeleccionada) {
         <div class="panel-box panel-resultados">
             <div class="row g-2">
+                <!-- RAZON SOCIAL -->
                 <div class="col d-flex align-items-center">
                     <h2 class="">
                         <span
@@ -50,7 +51,8 @@
                         >
                     </h2>
                 </div>
-                <div class="col d-flex align-items-center">
+                <!-- RESUMEN-->
+                <div class="col d-flex align-items-center  justify-content-center">
                     <h3 class="d-flex align-items-center">
                         Deuda Actual:
                         <span [ngClass]="{
@@ -66,8 +68,9 @@
                         </span>
                     </h3>
                 </div>
-                <div class="col">
-                    <div>
+                <!-- BUSQUEDA-->
+                <div class="col d-flex justify-content-end">
+                    <div class="w-50">
                         <label
                             for="exampleFormControlInput1"
                             class="form-label mb-0"
