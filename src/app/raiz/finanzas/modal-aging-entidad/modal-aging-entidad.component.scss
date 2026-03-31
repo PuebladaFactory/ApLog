@@ -1,0 +1,61 @@
+
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500;
+}
+
+.ok {
+  color: #28a745;
+}
+
+.medio {
+  color: #ffc107;
+}
+
+.alerta {
+  color: #fd7e14;
+}
+
+.critico {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.aging-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.segment {
+  height: 100%;
+}
+
+.ok { background-color: #28a745 !important; }
+.medio { background-color: #ffc107 !important; }
+.alerta { background-color: #fd7e14 !important; }
+.critico { background-color: #dc3545 !important; }
+.critico-intenso { background-color: #a70000 !important; }
+
+.invisible{
+  visibility: hidden;
+}
+
+.card.resumen {  
+  background: #fafafa; 
+}
+
+.card .detalle {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #888;
+}
+
+

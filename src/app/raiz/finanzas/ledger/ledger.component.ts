@@ -1,6 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { AgingResumen } from "src/app/interfaces/aging-resumen";
 import { Chofer } from "src/app/interfaces/chofer";
 import { Cliente } from "src/app/interfaces/cliente";
 import { ConId } from "src/app/interfaces/conId";
@@ -44,6 +45,8 @@ export class LedgerComponent implements OnInit {
 
   searchText: string = " ";
 
+  aging!: AgingResumen;
+
 
   constructor(
     private cuentaCorrienteService: CuentaCorrienteService,
@@ -75,6 +78,8 @@ export class LedgerComponent implements OnInit {
 
   async consultarDatos(id: number) {
     this.ledger = await this.cuentaCorrienteService.obtenerLedgerEntidad(id);
+    let consultas = await this.cuentaCorrienteService.obtenerDetalleEntidad(id);
+    this.aging = consultas.aging;
     this.cargando = false;
   }
 
@@ -329,4 +334,21 @@ export class LedgerComponent implements OnInit {
     }
 
   }
+
+    getEstadoAging(aging: AgingResumen): string {
+      const total = aging.total || 1;
+  
+      const porcentajeCritico = aging.bucket90mas / total;
+      const porcentajeGrave = aging.bucket61_90 / total;
+      const porcentajeMedio = aging.bucket31_60 / total;
+      
+  
+      if (porcentajeCritico > 0.4) return "critico-intenso";
+      if (porcentajeCritico > 0.2) return "critico";
+      if (porcentajeGrave > 0.2) return "alerta";
+      if (porcentajeMedio > 0.2) return "medio";
+      return "ok";
+    }
+
+    
 }

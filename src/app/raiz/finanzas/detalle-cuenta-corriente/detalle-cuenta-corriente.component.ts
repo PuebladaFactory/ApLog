@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
+import { AgingResumen } from "src/app/interfaces/aging-resumen";
 import { DetalleVistaCuentaCorriente } from "src/app/interfaces/cuenta-corriente-resumen";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import { CuentaCorrienteService } from "src/app/servicios/cuenta-corriente/cuenta-corriente.service";
@@ -35,6 +36,8 @@ export class DetalleCuentaCorrienteComponent implements OnInit {
     direccion: "asc" as "asc" | "desc",
   };
 
+  aging!: AgingResumen;
+
   constructor(
     private ccService: CuentaCorrienteService,
     private router: Router,
@@ -45,8 +48,11 @@ export class DetalleCuentaCorrienteComponent implements OnInit {
     let id = this.route.snapshot.paramMap.get("id");
     let entidadId = Number(id);
 
-    this.informes = await this.ccService.obtenerDetalleEntidad(entidadId);
+    let consulta = await this.ccService.obtenerDetalleEntidad(entidadId);
+    this.informes = consulta.detalle;
+    this.aging = consulta.aging;
     console.log("informes: ", this.informes);
+    console.log("aging: ", this.aging);
     this.informesFiltrados = this.informes.sort((a, b) =>
       a.numero.localeCompare(b.numero),
     );
@@ -86,9 +92,12 @@ export class DetalleCuentaCorrienteComponent implements OnInit {
 
   getClasesSaldo(estadoFinanciero: any) {
     let clase = "";
-    if (estadoFinanciero === "cobrado") clase = "badge rounded-pill text bg-success";
-    if (estadoFinanciero === "parcial") clase = "badge rounded-pill text-bg-warning";
-    if (estadoFinanciero === "pendiente") clase = "badge rounded-pill text bg-danger";
+    if (estadoFinanciero === "cobrado")
+      clase = "badge rounded-pill text bg-success";
+    if (estadoFinanciero === "parcial")
+      clase = "badge rounded-pill text-bg-warning";
+    if (estadoFinanciero === "pendiente")
+      clase = "badge rounded-pill text bg-danger";
 
     return clase;
   }
@@ -132,5 +141,15 @@ export class DetalleCuentaCorrienteComponent implements OnInit {
 
       return 0;
     });
+  }
+
+  getEstadoAging(aging: AgingResumen): string {
+    const total = aging.total || 1;
+
+    const porcentajeCritico = aging.bucket90mas / total;
+
+    if (porcentajeCritico > 0.4) return "badge rounded-pill text-bg-danger";
+    if (porcentajeCritico > 0.2) return "badge rounded-pill text-bg-warning";
+    return "badge rounded-pill text-bg-success";
   }
 }

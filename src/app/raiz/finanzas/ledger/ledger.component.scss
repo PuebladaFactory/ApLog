@@ -45,3 +45,85 @@ th, td, select, option {
   padding-right: 0.4rem !important;
   font-weight: 500;
 }
+
+
+.resumen-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.card.resumen {
+  padding: 15px;
+  border-radius: 10px;
+  background: #fafafa;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.card .titulo {
+  font-size: 14px;
+  color: #666;
+}
+
+.card .valor {
+  font-size: 22px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.card .detalle {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #888;
+}
+
+
+/* 🟣 Neto */
+.neto-positivo .valor {
+  color: #2e7d32;
+}
+
+.neto-negativo .valor {
+  color: #d32f2f;
+}
+
+.ok {
+  color: #28a745;
+}
+
+.medio {
+  color: #ffc107;
+}
+
+.alerta {
+  color: #fd7e14;
+}
+
+.critico {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.aging-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.segment {
+  height: 100%;
+}
+
+.ok { background-color: #28a745 !important; }
+.medio { background-color: #ffc107 !important; }
+.alerta { background-color: #fd7e14 !important; }
+.critico { background-color: #dc3545 !important; }
+
+.invisible{
+  visibility: hidden;
+}
+
+

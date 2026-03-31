@@ -2,43 +2,80 @@
     <app-spinner></app-spinner>
 } @else {
     <h3 class="mt-3 mb-3">Evolución de la deuda</h3>
-    <!-- Selección de entidad -->
-    <div class="row mb-3 mt-2">
-        <!-- Tipo de entidad -->
-        <div class="col-4">
-            <label>Tipo entidad</label>
-            <select
-                class="form-select"
-                [(ngModel)]="tipoEntidad"
-                (change)="onEntidades()"
-            >
-                <option [ngValue]="null" selected hidden>Seleccione</option>
-                <option value="cliente">Clientes</option>
-                <option value="chofer">Choferes</option>
-                <option value="proveedor">Proveedores</option>
-            </select>
+    <div class="resumen-cards">
+        <div class="card resumen">
+            <!-- Selección de entidad -->
+            <div class="row mb-3 mt-2">
+                <!-- Tipo de entidad -->
+                <div class="">
+                    <label>Tipo entidad</label>
+                    <select
+                        class="form-select"
+                        [(ngModel)]="tipoEntidad"
+                        (change)="onEntidades()"
+                    >
+                        <option [ngValue]="null" selected hidden>
+                            Seleccione
+                        </option>
+                        <option value="cliente">Clientes</option>
+                        <option value="chofer">Choferes</option>
+                        <option value="proveedor">Proveedores</option>
+                    </select>
+                </div>
+
+                <!-- Selección de la entidad -->
+
+                <div class="">
+                    <label>{{ tipoEntidad | titlecase }}</label>
+                    <select
+                        class="form-select"
+                        [disabled]="!tipoEntidad"
+                        [(ngModel)]="entidadSeleccionada"
+                        (ngModelChange)="onEntidadSeleccionada($event)"
+                    >
+                        <option [ngValue]="null" hidden>Seleccione</option>
+
+                        @for (e of entidadesSeleccionadas; track $index) {
+                            <option [ngValue]="e">
+                                {{ getEntidad(e) }}
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div
+            class="card resumen"
+            [ngClass]="{
+                'neto-positivo': getSaldoTotal() <= 0,
+                'neto-negativo': getSaldoTotal() > 0,
+                'invisible': !entidadSeleccionada,
+            }"
+        >
+            @if (entidadSeleccionada) {
+                <div class="titulo">Saldo pendiente</div>
+                <div class="valor">
+                    {{ getSaldoTotal() | formatearValor: "$" }}
+                </div>
+                <div class="detalle">
+                    <span
+                        class="badge rounded-pill ms-3"
+                        [ngClass]="getBadgeClasesSaldo(getSaldoTotal())"
+                    >
+                        {{ getDescripcionSaldo(getSaldoTotal()) }}
+                    </span>
+                </div>
+            }
         </div>
 
-        <!-- Selección de la entidad -->
-
-        <div class="col-4">
-            <label>{{ tipoEntidad | titlecase }}</label>
-            <select
-                class="form-select"
-                [disabled]="!tipoEntidad"
-                [(ngModel)]="entidadSeleccionada"
-                (ngModelChange)="onEntidadSeleccionada($event)"
-            >
-                <option [ngValue]="null" hidden>Seleccione</option>
-
-                @for (e of entidadesSeleccionadas; track $index) {
-                    <option [ngValue]="e">
-                        {{ getEntidad(e) }}
-                    </option>
-                }
-            </select>
+        <!-- AGING -->
+        <div class="card resumen" [ngClass]="{'invisible': !entidadSeleccionada}">
+            @if (entidadSeleccionada) {
+                <app-modal-aging-entidad [aging]="aging"></app-modal-aging-entidad>
+            }
         </div>
     </div>
+
     @if (entidadSeleccionada) {
         <div class="panel-box panel-resultados">
             <div class="row g-2">
@@ -51,23 +88,7 @@
                         >
                     </h2>
                 </div>
-                <!-- RESUMEN-->
-                <div class="col d-flex align-items-center  justify-content-center">
-                    <h3 class="d-flex align-items-center">
-                        Deuda Actual:
-                        <span [ngClass]="{
-                                        'text-success fw-bold':
-                                            getSaldoTotal() === 0,
-                                    }"></span>{{ getSaldoTotal() | formatearValor: "$" }}
 
-                        <span
-                            class="badge rounded-pill ms-3"
-                            [ngClass]="getBadgeClasesSaldo(getSaldoTotal())"
-                        >
-                            {{ getDescripcionSaldo(getSaldoTotal()) }}
-                        </span>
-                    </h3>
-                </div>
                 <!-- BUSQUEDA-->
                 <div class="col d-flex justify-content-end">
                     <div class="w-50">

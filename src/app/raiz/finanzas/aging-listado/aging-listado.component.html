@@ -1,0 +1,43 @@
+@if(cargando){
+    <app-spinner></app-spinner>
+} @else {
+<table>
+
+  <thead>
+    <tr>
+      <th>Entidad</th>
+      <th>Total</th>
+      <th>0-30</th>
+      <th>31-60</th>
+      <th>61-90</th>
+      <th>+90</th>
+    </tr>
+  </thead>
+
+  <tbody>
+
+    @for (item of aging; track item) {
+      <tr>
+
+        <td>{{ item.entidadId }}</td>
+
+        <td>{{ item.total | currency }}</td>
+
+        <td>{{ item.bucket0_30 | currency }}</td>
+
+        <td>{{ item.bucket31_60 | currency }}</td>
+
+        <td>{{ item.bucket61_90 | currency }}</td>
+
+        <td class="critico">
+          {{ item.bucket90mas | currency }}
+        </td>
+
+      </tr>
+    }
+
+  </tbody>
+
+</table>
+}
+

@@ -90,3 +90,50 @@ th, td {
   border-radius: 8px;
   padding: 16px;
 }
+
+.ok {
+  color: #28a745;
+}
+
+.medio {
+  color: #ffc107;
+}
+
+.alerta {
+  color: #fd7e14;
+}
+
+.critico {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.aging-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.segment {
+  height: 100%;
+}
+
+.ok { background: #28a745; }
+.medio { background: #ffc107; }
+.alerta { background: #fd7e14; }
+.critico { background: #dc3545; }
+
+.estado-aging.ok {
+  color: #28a745;
+}
+
+.estado-aging.medio {
+  color: #ffc107;
+}
+
+.estado-aging.critico {
+  color: #dc3545;
+  font-weight: bold;
+}
