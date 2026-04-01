@@ -1,43 +1,220 @@
-@if(cargando){
+@if (cargando) {
     <app-spinner></app-spinner>
 } @else {
-<table>
+    <h2 class="mt-3 ms-2">Antigüedad de la deuda</h2>
+    <div class="panel-box panel-resultados">
+        <!-- 🔎 Filtros -->
+        <div class="filtros">
+            <select
+                class="form-select"
+                style="max-width: 200px"
+                [(ngModel)]="filtros.tipoEntidad"
+                (change)="onFiltroChange()"
+            >
+                <option value="">Todos</option>
+                <option value="cliente">Clientes</option>
+                <option value="chofer">Choferes</option>
+                <option value="proveedor">Proveedores</option>
+            </select>
 
-  <thead>
-    <tr>
-      <th>Entidad</th>
-      <th>Total</th>
-      <th>0-30</th>
-      <th>31-60</th>
-      <th>61-90</th>
-      <th>+90</th>
-    </tr>
-  </thead>
+            <input
+                type="text"
+                placeholder="Buscar por campo o valor..."
+                [(ngModel)]="filtros.search"
+                (input)="onFiltroChange()"
+            />
+        </div>
 
-  <tbody>
+        <table
+            class="table table-sm table-bordered table-hover table-sm align-middle align-middle"
+        >
+            <thead>
+                <tr>
+                    <th
+                        class="ordenable"
+                        appSortable="razonSocial"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                    >
+                        Entidad
+                        @if (sort.campo === "razonSocial") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>                    
+                    <th
+                        class="ordenable"
+                        appSortable="tipo"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                    >
+                        Tipo
+                        @if (sort.campo === "tipo") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th class="text-center">Tipo Deuda</th>
+                    <th
+                        class="ordenable text-center"
+                        appSortable="total"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                    >
+                        Total
+                        @if (sort.campo === "total") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th
+                        class="ordenable text-center"
+                        appSortable="bucket0_30"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                    >
+                        0-30 días
+                        @if (sort.campo === "bucket0_30") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th
+                        class="ordenable text-center"
+                        appSortable="bucket31_60"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                    >
+                        31-60 días
+                        @if (sort.campo === "bucket31_60") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th
+                        class="ordenable text-center"
+                        appSortable="bucket61_90"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                    >
+                        61-90 días
+                        @if (sort.campo === "bucket61_90") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th
+                        class="ordenable text-center"
+                        appSortable="bucket90mas"
+                        [activo]="sort.campo"
+                        [direccion]="sort.direccion"
+                        (sortChange)="onSort($event)"
+                    >
+                        +90 días
+                        @if (sort.campo === "bucket90mas") {
+                            <span>
+                                {{ sort.direccion === "asc" ? "▲" : "▼" }}
+                            </span>
+                        }
+                    </th>
+                    <th class="text-center">Situacion</th>
+                    <th class="text-center">Estado</th>
+                </tr>
+            </thead>
 
-    @for (item of aging; track item) {
-      <tr>
+            <tbody>
+                @for (item of agingFiltrado; track item) {
+                    <tr>
+                        <td>{{ item.razonSocial }}</td>
 
-        <td>{{ item.entidadId }}</td>
+                        <td>{{ item.tipo }}</td>
 
-        <td>{{ item.total | currency }}</td>
+                        <!-- 🧠 Situación -->
+                        <td class="text-center">
+                            <span
+                                class="badge rounded-pill"
+                                [ngClass]="getBadgeClasesSaldo(item)"
+                            >
+                                {{ getDescripcionSaldo(item) }}
+                            </span>
+                        </td>
 
-        <td>{{ item.bucket0_30 | currency }}</td>
+                        <td class="col-numero fw-bold">
+                            {{ item.total | formatearValor: "$" }}
+                        </td>
 
-        <td>{{ item.bucket31_60 | currency }}</td>
+                        <td class="col-numero valores-ok">
+                            {{ item.bucket0_30 | formatearValor: "$" }}
+                        </td>
 
-        <td>{{ item.bucket61_90 | currency }}</td>
+                        <td class="col-numero valores-medio">
+                            {{ item.bucket31_60 | formatearValor: "$" }}
+                        </td>
 
-        <td class="critico">
-          {{ item.bucket90mas | currency }}
-        </td>
+                        <td class="col-numero valores-alerta">
+                            {{ item.bucket61_90 | formatearValor: "$" }}
+                        </td>
 
-      </tr>
-    }
+                        <td class="col-numero valores-critico">
+                            {{ item.bucket90mas | formatearValor: "$" }}
+                        </td>
+                        
+                        <td class="aging-bar">
+                            @if (item.total > 0) {
+                                <span
+                                    class="segment ok"
+                                    [style.width.%]="
+                                        (item.bucket0_30 / item.total) * 100
+                                    "
+                                ></span>
 
-  </tbody>
+                                <span
+                                    class="segment medio"
+                                    [style.width.%]="
+                                        (item.bucket31_60 / item.total) * 100
+                                    "
+                                ></span>
 
-</table>
+                                <span
+                                    class="segment alerta"
+                                    [style.width.%]="
+                                        (item.bucket61_90 / item.total) * 100
+                                    "
+                                ></span>
+
+                                <span
+                                    class="segment critico"
+                                    [style.width.%]="
+                                        (item.bucket90mas / item.total) * 100
+                                    "
+                                ></span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <span
+                                class="mt-2 fs-5 badge rounded-pill text-dark"
+                                [ngClass]="[
+                                    'badge rounded-pill fs-5',
+                                    getEstadoAging(item),
+                                ]"
+                                >{{ getLabelEstado(item) }}</span
+                            >
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
-

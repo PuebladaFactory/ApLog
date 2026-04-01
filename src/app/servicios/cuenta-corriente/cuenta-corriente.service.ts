@@ -443,7 +443,7 @@ export class CuentaCorrienteService {
     const map = new Map<number, AgingResumen>();
 
     snap.docs.forEach((docSnap) => {
-      const data = docSnap.data() as any;
+      const data = docSnap.data() as InformeLiq;
 
       if (data.estadoFinanciero === "cobrado") return;
 
@@ -454,7 +454,9 @@ export class CuentaCorrienteService {
 
       if (!map.has(entidadId)) {
         map.set(entidadId, {
-          entidadId,
+          entidadId: entidadId,
+          tipo: data.tipo,
+          razonSocial: data.entidad.razonSocial,
           total: 0,
           bucket0_30: 0,
           bucket31_60: 0,
@@ -541,8 +543,10 @@ export class CuentaCorrienteService {
   calcularAging(informes: InformeLiq[]): AgingResumen {
     const hoy = new Date();
 
-    const resultado: AgingResumen = {
-      entidadId: informes[0]?.entidad.id ?? 0,
+    const resultado: AgingResumen = {      
+      entidadId: informes[0]?.entidad.id,
+      razonSocial: informes[0]?.entidad.razonSocial,
+      tipo: informes[0].tipo,
       total: 0,
       bucket0_30: 0,
       bucket31_60: 0,

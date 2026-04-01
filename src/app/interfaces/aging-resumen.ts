@@ -1,6 +1,9 @@
+import { EntidadLiq } from "./informe-liq";
+
 export interface AgingResumen {
   entidadId: number;
-
+  razonSocial: string;
+  tipo: 'cliente' | 'chofer' | 'proveedor';
   total: number;
 
   bucket0_30: number;

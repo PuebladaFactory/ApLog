@@ -49,70 +49,7 @@
         </div>
         <!-- AGING -->
         <div class="card resumen">
-            <!-- <h3 class="">Aging</h3>
-            <div class="row">
-                <div class="aging-bar">
-                    @if (aging.total > 0) {
-                        <div
-                            class="segment ok"
-                            [style.width.%]="
-                                (aging.bucket0_30 / aging.total) * 100
-                            "
-                        ></div>
-
-                        <div
-                            class="segment medio"
-                            [style.width.%]="
-                                (aging.bucket31_60 / aging.total) * 100
-                            "
-                        ></div>
-
-                        <div
-                            class="segment alerta"
-                            [style.width.%]="
-                                (aging.bucket61_90 / aging.total) * 100
-                            "
-                        ></div>
-
-                        <div
-                            class="segment critico"
-                            [style.width.%]="
-                                (aging.bucket90mas / aging.total) * 100
-                            "
-                        ></div>
-                    }
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-4">
-                    <div class="detalle">0-30 días</div>
-
-                    <div class="detalle">31-60 días</div>
-                    <div class="detalle">61-90 días</div>
-                    <div class="detalle">+90 días</div>
-                </div>
-                <div class="col">
-                    <div class="detalle ok  text-end">
-                        <span class="fw-bold text-black me-2">{{ aging.bucket0_30 | formatearValor: "$" }}</span>
-                    </div>
-
-                    <div class="detalle medio  text-end">
-                        <span class="fw-bold text-black me-2">{{ aging.bucket31_60 | formatearValor: "$" }}</span>
-                    </div>
-
-                    <div class="detalle alerta  text-end">
-                        <span class="fw-bold text-black me-2">{{ aging.bucket61_90 | formatearValor: "$" }}</span>
-                    </div>
-
-                    <div class="detalle critico text-end">
-                        <span class="fw-bold text-black me-2">{{ aging.bucket90mas | formatearValor: "$" }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-2 text-center">
-                <span class="mt-2 fs-5" [ngClass]="getEstadoAging(aging)">Estado financiero</span>
-            </div> -->
-            <app-modal-aging-entidad [aging]="aging"></app-modal-aging-entidad>
+            <app-aging-entidad [aging]="aging"></app-aging-entidad>
         </div>
     </div>
     <!-- TABLA -->

@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ModalAgingEntidadComponent } from './modal-aging-entidad.component';
+import { AgingEntidadComponent } from './aging-entidad.component';
 
 describe('ModalAgingEntidadComponent', () => {
-  let component: ModalAgingEntidadComponent;
-  let fixture: ComponentFixture<ModalAgingEntidadComponent>;
+  let component: AgingEntidadComponent;
+  let fixture: ComponentFixture<AgingEntidadComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ModalAgingEntidadComponent]
+      imports: [AgingEntidadComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ModalAgingEntidadComponent);
+    fixture = TestBed.createComponent(AgingEntidadComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -1,9 +1,12 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, TemplateRef } from "@angular/core";
 import { Router } from "@angular/router";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { Subject, takeUntil } from "rxjs";
+import { AgingResumen } from "src/app/interfaces/aging-resumen";
 import { CuentaCorrienteResumen } from "src/app/interfaces/cuenta-corriente-resumen";
 import { CuentaCorrienteService } from "src/app/servicios/cuenta-corriente/cuenta-corriente.service";
 import { StorageService } from "src/app/servicios/storage/storage.service";
+import { AgingEntidadComponent } from "../aging-entidad/aging-entidad.component";
 
 type EstadoCuenta = "saldado" | "con_deuda";
 
@@ -40,24 +43,40 @@ export class CuentaCorrienteComponent implements OnInit {
     direccion: "asc" as "asc" | "desc",
   };
 
+  agingMap: any;
+  agingGlobal: AgingResumen[] = [];
+  agingEntidad: AgingResumen | null = null;
+
+  cargando: boolean = false;
+
   constructor(
     private cuentaCorrienteService: CuentaCorrienteService,
     private router: Router,
     private storageService: StorageService,
+    private modalService: NgbModal,
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
+    this.cargando = true;
     this.storageService.listenForChanges("resumenFinanzas");
+    this.agingGlobal = await this.cuentaCorrienteService.obtenerAgingGlobal();
+    this.agingMap = new Map(
+      this.agingGlobal.map((a: AgingResumen) => [a.entidadId.toString(), a]),
+    );
+    console.log("this.agingMap: ", this.agingMap);
 
     this.cuentaCorrienteService
       .getCuentaCorriente$(this.filtrosNormalizados)
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
+        this.cargando = true;
         this.cuentas = data;
         this.cuentas = this.cuentas.sort((a, b) =>
           a.razonSocial.localeCompare(b.razonSocial),
         );
+        console.log("cuentas: ", this.cuentas);
         this.aplicarFiltros();
+        this.cargando = false;
       });
   }
 
@@ -103,14 +122,15 @@ export class CuentaCorrienteComponent implements OnInit {
     this.aplicarFiltros();
   }
 
-  verDetalle(cuenta: CuentaCorrienteResumen) {   
-     const url = this.router.serializeUrl(
-      this.router.createUrlTree(
-        ['/raiz/finanzas/cuenta-corriente', cuenta.entidadId]
-      )
+  verDetalle(cuenta: CuentaCorrienteResumen) {
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree([
+        "/raiz/finanzas/cuenta-corriente",
+        cuenta.entidadId,
+      ]),
     );
 
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   }
 
   getEstadoClass(estado: string): string {
@@ -135,20 +155,14 @@ export class CuentaCorrienteComponent implements OnInit {
   }
 
   getDescripcionSaldo(cuenta: CuentaCorrienteResumen): string {
-    /*     if (cuenta.saldoPendiente === 0) return "Saldado";
-
-    if (cuenta.tipoEntidad === "cliente") {
-      return cuenta.saldoPendiente > 0 ? "Nos deben" : "A favor del cliente";
-    }
-
-    return cuenta.saldoPendiente > 0 ? "Debemos" : "A favor nuestro"; */
+   
     if (cuenta.saldoPendiente === 0) {
       return "Saldado";
     } else {
       if (cuenta.tipoEntidad === "cliente") {
-        return "Deuda a favor";
+        return "A favor";
       } else {
-        return "Deuda en contra";
+        return "En contra";
       }
     }
   }
@@ -243,4 +257,18 @@ export class CuentaCorrienteComponent implements OnInit {
     });
   }
 
+  verAging(cuenta: CuentaCorrienteResumen, modalRef: TemplateRef<any>) {
+    let aging = this.agingGlobal.find(
+      (a) => a.entidadId.toString() === cuenta.entidadId,
+    );
+    if (aging) this.agingEntidad = aging;
+    console.log("agingEntidad", this.agingEntidad);
+    const modal = this.modalService.open(modalRef, {
+      centered: true,
+      size: "sm",
+    });
+    modal.result.finally(() => {
+      this.agingEntidad = null;
+    });
+  }
 }

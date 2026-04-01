@@ -159,9 +159,11 @@
                             }
                         </th>
 
-                        <th class="text-center">Situación</th>
+                        <th class="text-center">Tipo Deuda</th>
                         <th class="text-center">Informes</th>
+                        <th class="text-center">+90 dias</th>
                         <th class="text-center">Detalle</th>
+                        <th class="text-center">Aging</th>
                     </tr>
                 </thead>
                 @if (cuentasFiltradas.length > 0) {
@@ -194,13 +196,20 @@
                                 </td>
 
                                 <!-- 💸 Cancelado -->
-                                <td class="col-numero"
-                                [ngClass]="{
+                                <td
+                                    class="col-numero"
+                                    [ngClass]="{
                                         'saldo-deuda':
                                             cuenta.totalCobrado === 0,
-                                        'saldo-ok': cuenta.totalCobrado === cuenta.totalFacturado,
-                                        'saldo-parcial': cuenta.totalCobrado < cuenta.totalFacturado && cuenta.totalCobrado !== 0,
-                                    }">
+                                        'saldo-ok':
+                                            cuenta.totalCobrado ===
+                                            cuenta.totalFacturado,
+                                        'saldo-parcial':
+                                            cuenta.totalCobrado <
+                                                cuenta.totalFacturado &&
+                                            cuenta.totalCobrado !== 0,
+                                    }"
+                                >
                                     {{
                                         cuenta.totalCobrado
                                             | formatearValor: "$"
@@ -234,9 +243,47 @@
                                     {{ cuenta.cantidadInformes }}
                                 </td>
 
+                                <td class="col-numero" [ngClass]="{'text-danger':  agingMap.get(cuenta.entidadId)
+                                            ?.bucket90mas > 0}">
+                                    {{
+                                        agingMap.get(cuenta.entidadId)
+                                            ?.bucket90mas ?? '0'| formatearValor: "$"
+                                    }}
+                                </td>
+
                                 <!-- 🔍 Acción -->
                                 <td class="text-center">
-                                   <app-btn-leer name="DetalleColor" (click)="verDetalle(cuenta)"></app-btn-leer>
+                                    <app-btn-leer
+                                        name="DetalleColor"
+                                        (click)="verDetalle(cuenta)"
+                                    ></app-btn-leer>
+                                </td>
+
+                                <!-- 🔍 Aging -->
+                                <td class="text-center">
+                                    <button
+                                        type="button"
+                                        (click)="verAging(cuenta, modalAging)"                                        
+                                        class="btn aging"
+                                        [ngClass]="{'btn-secondary': !agingMap.get(cuenta.entidadId), 'btn-warning': agingMap.get(cuenta.entidadId) }"
+                                        [disabled]="!agingMap.get(cuenta.entidadId)"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="16"
+                                            height="16"
+                                            fill="currentColor"
+                                            class="bi bi-file-bar-graph"
+                                            viewBox="0 0 16 16"
+                                        >
+                                            <path
+                                                d="M4.5 12a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5zm3 0a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5zm3 0a.5.5 0 0 1-.5-.5v-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-.5.5z"
+                                            />
+                                            <path
+                                                d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1"
+                                            />
+                                        </svg>
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -249,3 +296,17 @@
         </div>
     }
 </div>
+
+
+<!-- MODAL -->
+<ng-template #modalAging let-modal>
+    @if(agingEntidad){
+       <div class="card resumen">
+            <div class="modal-header mb-2"><button type="button" class="btn-close" aria-label="Cerrar" (click)="modal.dismiss()"></button></div>
+            
+            <app-aging-entidad [aging]="agingEntidad"></app-aging-entidad>
+        </div>
+    }
+
+  
+</ng-template>

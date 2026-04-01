@@ -2,12 +2,12 @@ import { Component, Input, OnInit } from "@angular/core";
 import { AgingResumen } from "src/app/interfaces/aging-resumen";
 
 @Component({
-  selector: "app-modal-aging-entidad",
+  selector: "app-aging-entidad",
   standalone: false,
-  templateUrl: "./modal-aging-entidad.component.html",
-  styleUrl: "./modal-aging-entidad.component.scss",
+  templateUrl: "./aging-entidad.component.html",
+  styleUrl: "./aging-entidad.component.scss",
 })
-export class ModalAgingEntidadComponent implements OnInit {
+export class AgingEntidadComponent implements OnInit {
   @Input() aging!: AgingResumen;
 
   ngOnInit(): void {}
@@ -21,7 +21,7 @@ export class ModalAgingEntidadComponent implements OnInit {
     case 'critico': return 'Alto riesgo';
     case 'alerta': return 'En riesgo';
     case 'medio': return 'Atención';
-    default: return 'Saludable';
+    default: return 'Ok';
   }
 }
 

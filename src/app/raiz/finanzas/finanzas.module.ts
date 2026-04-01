@@ -17,7 +17,7 @@ import { DetalleCuentaCorrienteComponent } from './detalle-cuenta-corriente/deta
 import { InformeLiqCuentaCorrienteComponent } from './informe-liq-cuenta-corriente/informe-liq-cuenta-corriente.component';
 import { LedgerComponent } from './ledger/ledger.component';
 import { AgingListadoComponent } from './aging-listado/aging-listado.component';
-import { ModalAgingEntidadComponent } from './modal-aging-entidad/modal-aging-entidad.component';
+import { AgingEntidadComponent } from './aging-entidad/aging-entidad.component';
 
 
 @NgModule({
@@ -33,7 +33,7 @@ import { ModalAgingEntidadComponent } from './modal-aging-entidad/modal-aging-en
     InformeLiqCuentaCorrienteComponent,
     LedgerComponent,
     AgingListadoComponent,
-    ModalAgingEntidadComponent,
+    AgingEntidadComponent,
   ],
   imports: [
     CommonModule,
