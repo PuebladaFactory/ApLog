@@ -1,7 +1,7 @@
 @if (cargando) {
     <app-spinner></app-spinner>
 } @else {
-    <h2 class="mt-3 mb-3">Evolución de la deuda</h2>
+    <h2 class="mt-3 mb-3 ms-2">Evolución de la deuda</h2>
     <div class="resumen-cards">
         <div class="card resumen">
             <!-- Selección de entidad -->
@@ -49,10 +49,10 @@
             [ngClass]="{
                 'neto-positivo': getSaldoTotal() <= 0,
                 'neto-negativo': getSaldoTotal() > 0,
-                'invisible': !entidadSeleccionada,
+                invisible: !entidadSeleccionada || ledger.length === 0,
             }"
         >
-            @if (entidadSeleccionada) {
+            @if (entidadSeleccionada && ledger.length > 0) {
                 <div class="titulo">Saldo pendiente</div>
                 <div class="valor">
                     {{ getSaldoTotal() | formatearValor: "$" }}
@@ -69,8 +69,11 @@
         </div>
 
         <!-- AGING -->
-        <div class="card resumen" [ngClass]="{'invisible': !entidadSeleccionada}">
-            @if (entidadSeleccionada) {
+        <div
+            class="card resumen"
+            [ngClass]="{ invisible: !entidadSeleccionada || ledger.length === 0 }"
+        >
+            @if (entidadSeleccionada && ledger.length > 0) {
                 <app-aging-entidad [aging]="aging"></app-aging-entidad>
             }
         </div>
@@ -78,129 +81,142 @@
 
     @if (entidadSeleccionada) {
         <div class="panel-box panel-resultados">
-            <div class="row g-2">
-                <!-- RAZON SOCIAL -->
-                <div class="col d-flex align-items-center">
-                    <h2 class="">
-                        <span
-                            class="badge bg-primary-subtle text-primary-emphasis"
-                            >{{ getEntidad(entidadSeleccionada) }}</span
-                        >
-                    </h2>
-                </div>
+            @if (ledger.length > 0) {
+                <div class="row g-2">
+                    <!-- RAZON SOCIAL -->
+                    <div class="col d-flex align-items-center">
+                        <h2 class="">
+                            <span
+                                class="badge bg-primary-subtle text-primary-emphasis"
+                                >{{ getEntidad(entidadSeleccionada) }}</span
+                            >
+                        </h2>
+                    </div>
 
-                <!-- BUSQUEDA-->
-                <div class="col d-flex justify-content-end">
-                    <div class="w-50">
-                        <label
-                            for="exampleFormControlInput1"
-                            class="form-label mb-0"
-                            >Buscar por campo</label
-                        >
-                        <input
-                            class="form-control"
-                            type="text"
-                            [(ngModel)]="searchText"
-                            placeholder="Buscar por campo"
-                        />
+                    <!-- BUSQUEDA-->
+                    <div class="col d-flex justify-content-end">
+                        <div class="w-50">
+                            <label
+                                for="exampleFormControlInput1"
+                                class="form-label mb-0"
+                                >Buscar por campo</label
+                            >
+                            <input
+                                class="form-control"
+                                type="text"
+                                [(ngModel)]="searchText"
+                                placeholder="Buscar por campo"
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <table
-                class="table table-sm table-bordered table-hover table-sm align-middle"
-            >
-                <thead>
-                    <tr>
-                        <th
-                            class="ordenable"
-                            appSortable="fecha"
-                            [activo]="sort.campo"
-                            [direccion]="sort.direccion"
-                            (sortChange)="onSort($event)"
-                        >
-                            Fecha
-                            @if (sort.campo === "fecha") {
-                                <span>
-                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
-                                </span>
-                            }
-                        </th>
-                        <th
-                            class="ordenable"
-                            appSortable="tipo"
-                            [activo]="sort.campo"
-                            [direccion]="sort.direccion"
-                            (sortChange)="onSort($event)"
-                        >
-                            Tipo
-                            @if (sort.campo === "tipo") {
-                                <span>
-                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
-                                </span>
-                            }
-                        </th>
-                        <th
-                            class="ordenable"
-                            appSortable="accion"
-                            [activo]="sort.campo"
-                            [direccion]="sort.direccion"
-                            (sortChange)="onSort($event)"
-                        >
-                            Acción
-                            @if (sort.campo === "accion") {
-                                <span>
-                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
-                                </span>
-                            }
-                        </th>
-                        <th
-                            class="ordenable"
-                            appSortable="id"
-                            [activo]="sort.campo"
-                            [direccion]="sort.direccion"
-                            (sortChange)="onSort($event)"
-                        >
-                            Id
-                            @if (sort.campo === "id") {
-                                <span>
-                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
-                                </span>
-                            }
-                        </th>
-                        <th
-                            class="ordenable text-center"
-                            appSortable="impacto"
-                            [activo]="sort.campo"
-                            [direccion]="sort.direccion"
-                            (sortChange)="onSort($event)"
-                        >
-                            Impacto
-                            @if (sort.campo === "impacto") {
-                                <span>
-                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
-                                </span>
-                            }
-                        </th>
-                        <th
-                            class="ordenable text-center"
-                            appSortable="saldo"
-                            [activo]="sort.campo"
-                            [direccion]="sort.direccion"
-                            (sortChange)="onSort($event)"
-                        >
-                            Saldo
-                            @if (sort.campo === "saldo") {
-                                <span>
-                                    {{ sort.direccion === "asc" ? "▲" : "▼" }}
-                                </span>
-                            }
-                        </th>
-                        <th class="text-center">Situación</th>
-                        <th class="text-center">Detalle</th>
-                    </tr>
-                </thead>
-                @if (ledger.length > 0) {
+                <table
+                    class="table table-sm table-bordered table-hover table-sm align-middle"
+                >
+                    <thead>
+                        <tr>
+                            <th
+                                class="ordenable"
+                                appSortable="fecha"
+                                [activo]="sort.campo"
+                                [direccion]="sort.direccion"
+                                (sortChange)="onSort($event)"
+                            >
+                                Fecha
+                                @if (sort.campo === "fecha") {
+                                    <span>
+                                        {{
+                                            sort.direccion === "asc" ? "▲" : "▼"
+                                        }}
+                                    </span>
+                                }
+                            </th>
+                            <th
+                                class="ordenable"
+                                appSortable="tipo"
+                                [activo]="sort.campo"
+                                [direccion]="sort.direccion"
+                                (sortChange)="onSort($event)"
+                            >
+                                Tipo
+                                @if (sort.campo === "tipo") {
+                                    <span>
+                                        {{
+                                            sort.direccion === "asc" ? "▲" : "▼"
+                                        }}
+                                    </span>
+                                }
+                            </th>
+                            <th
+                                class="ordenable"
+                                appSortable="accion"
+                                [activo]="sort.campo"
+                                [direccion]="sort.direccion"
+                                (sortChange)="onSort($event)"
+                            >
+                                Acción
+                                @if (sort.campo === "accion") {
+                                    <span>
+                                        {{
+                                            sort.direccion === "asc" ? "▲" : "▼"
+                                        }}
+                                    </span>
+                                }
+                            </th>
+                            <th
+                                class="ordenable"
+                                appSortable="id"
+                                [activo]="sort.campo"
+                                [direccion]="sort.direccion"
+                                (sortChange)="onSort($event)"
+                            >
+                                Id
+                                @if (sort.campo === "id") {
+                                    <span>
+                                        {{
+                                            sort.direccion === "asc" ? "▲" : "▼"
+                                        }}
+                                    </span>
+                                }
+                            </th>
+                            <th
+                                class="ordenable text-center"
+                                appSortable="impacto"
+                                [activo]="sort.campo"
+                                [direccion]="sort.direccion"
+                                (sortChange)="onSort($event)"
+                            >
+                                Impacto
+                                @if (sort.campo === "impacto") {
+                                    <span>
+                                        {{
+                                            sort.direccion === "asc" ? "▲" : "▼"
+                                        }}
+                                    </span>
+                                }
+                            </th>
+                            <th
+                                class="ordenable text-center"
+                                appSortable="saldo"
+                                [activo]="sort.campo"
+                                [direccion]="sort.direccion"
+                                (sortChange)="onSort($event)"
+                            >
+                                Saldo
+                                @if (sort.campo === "saldo") {
+                                    <span>
+                                        {{
+                                            sort.direccion === "asc" ? "▲" : "▼"
+                                        }}
+                                    </span>
+                                }
+                            </th>
+                            <th class="text-center">Situación</th>
+                            <th class="text-center">Detalle</th>
+                        </tr>
+                    </thead>
+
                     <tbody>
                         @for (
                             item of ledger
@@ -266,12 +282,12 @@
                             </tr>
                         }
                     </tbody>
-                } @else {
-                    <div class="alert alert-info w-100">
-                        El {{ tipoEntidad }} no tiene movimientos financieros.
-                    </div>
-                }
-            </table>
+                </table>
+            } @else {
+                <div class="alert alert-info w-100">
+                    El {{ tipoEntidad }} no tiene movimientos financieros.
+                </div>
+            }
         </div>
     } @else {
         <div class="alert alert-info">

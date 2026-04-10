@@ -18,6 +18,8 @@ import { InformeLiqCuentaCorrienteComponent } from './informe-liq-cuenta-corrien
 import { LedgerComponent } from './ledger/ledger.component';
 import { AgingListadoComponent } from './aging-listado/aging-listado.component';
 import { AgingEntidadComponent } from './aging-entidad/aging-entidad.component';
+import { RankingMorososComponent } from './ranking-morosos/ranking-morosos.component';
+import { AgingGlobalComponent } from './aging-global/aging-global.component';
 
 
 @NgModule({
@@ -34,6 +36,8 @@ import { AgingEntidadComponent } from './aging-entidad/aging-entidad.component';
     LedgerComponent,
     AgingListadoComponent,
     AgingEntidadComponent,
+    RankingMorososComponent,
+    AgingGlobalComponent,
   ],
   imports: [
     CommonModule,

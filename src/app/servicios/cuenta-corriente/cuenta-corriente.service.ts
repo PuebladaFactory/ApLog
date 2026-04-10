@@ -11,14 +11,17 @@ import { InformeLiq } from "src/app/interfaces/informe-liq";
 import {
   Firestore,
   collection,
+  doc,
   getDocs,
   query,
+  updateDoc,
   where,
   writeBatch,
 } from "@angular/fire/firestore";
 import { athena } from "@cloudinary/url-gen/qualifiers/artisticFilter";
 import { Ledger } from "src/app/interfaces/ledger";
-import { AgingResumen } from "src/app/interfaces/aging-resumen";
+import { AgingGlobal, AgingResumen } from "src/app/interfaces/aging-resumen";
+import { RankingMoroso } from "src/app/interfaces/ranking-moroso";
 
 @Injectable({
   providedIn: "root",
@@ -94,54 +97,6 @@ export class CuentaCorrienteService {
       estado,
     };
   }
-  /* 
-  async obtenerDetalleEntidad(
-    entidadId: number,
-  ): Promise<DetalleVistaCuentaCorriente[]> {
-    //console.log("entidadId: ", entidadId);
-
-    const ref = collection(this.firestore, `${this.basePath}/resumenLiq`);
-
-    const q = query(
-      ref,
-      where("entidad.id", "==", entidadId),
-      where("estado", "!=", "anulado"),
-    );
-
-    const snap = await getDocs(q);
-
-    const resultados: DetalleVistaCuentaCorriente[] = snap.docs.map((doc) => {
-      const data = doc.data() as InformeLiq;
-      console.log("data: ", data);
-      let periodoLiq = "";
-      let periodoOrden = 0;
-      if (data.mes && data.periodo && data.anio) {
-        periodoLiq = `${data.mes} ${data.anio} - ${data.periodo}`;
-        periodoOrden = this.getOrdenPeriodo(periodoLiq);
-      }
-
-      return {
-        numero: data.numeroInterno,
-        fechaEmision:
-          typeof data.fecha === "string"
-            ? data.fecha
-            : data.fecha.toISOString().substring(0, 10),
-
-        //fechaVencimiento: data.fechaVencimiento,
-        entidad: data.entidad,
-        total: data.valoresFinancieros.total,
-        cancelado: data.valoresFinancieros.totalCobrado,
-        saldo: data.valoresFinancieros.saldo,
-        //formaPago: data.formaPago ?? "",               // Efectivo, transferencia, etc. (opcional)
-        //fechaCobro: data.fechaCobro ?? "",       // Fecha en que se registró el cobro
-        periodoLiq: periodoLiq,
-        periodoOrden: periodoOrden,
-        estadoFinanciero: data.estadoFinanciero,
-      };
-    });
-
-    return resultados;
-  } */
 
   getOrdenPeriodo(periodo: string): number {
     if (!periodo) return 0;
@@ -375,57 +330,6 @@ export class CuentaCorrienteService {
       data: docSnap.data() as InformeLiq,
     };
   }
-  /* 
-  async obtenerAgingEntidad(entidadId: number): Promise<AgingResumen> {
-    const ref = collection(this.firestore, `${this.basePath}/resumenLiq`);
-
-    const q = query(
-      ref,
-      where("entidad.id", "==", entidadId),
-      where("estado", "!=", "anulado"),
-    );
-
-    const snap = await getDocs(q);
-
-    const hoy = new Date();
-
-    const resultado: AgingResumen = {
-      entidadId,
-      total: 0,
-      bucket0_30: 0,
-      bucket31_60: 0,
-      bucket61_90: 0,
-      bucket90mas: 0,
-    };
-
-    snap.docs.forEach((docSnap) => {
-      const data = docSnap.data() as any;
-
-      // 🔥 ignorar los totalmente cobrados
-      if (data.estadoFinanciero === "cobrado") return;
-
-      const saldo = data.valoresFinancieros?.saldo || 0;
-      if (saldo <= 0) return;
-
-      const fecha = new Date(data.fecha);
-      const diffMs = hoy.getTime() - fecha.getTime();
-      const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      resultado.total += saldo;
-
-      if (dias <= 30) {
-        resultado.bucket0_30 += saldo;
-      } else if (dias <= 60) {
-        resultado.bucket31_60 += saldo;
-      } else if (dias <= 90) {
-        resultado.bucket61_90 += saldo;
-      } else {
-        resultado.bucket90mas += saldo;
-      }
-    });
-
-    return resultado;
-  } */
 
   ///////////////////
   /* AGING */
@@ -457,6 +361,7 @@ export class CuentaCorrienteService {
           entidadId: entidadId,
           tipo: data.tipo,
           razonSocial: data.entidad.razonSocial,
+
           total: 0,
           bucket0_30: 0,
           bucket31_60: 0,
@@ -543,7 +448,7 @@ export class CuentaCorrienteService {
   calcularAging(informes: InformeLiq[]): AgingResumen {
     const hoy = new Date();
 
-    const resultado: AgingResumen = {      
+    const resultado: AgingResumen = {
       entidadId: informes[0]?.entidad.id,
       razonSocial: informes[0]?.entidad.razonSocial,
       tipo: informes[0].tipo,
@@ -572,5 +477,101 @@ export class CuentaCorrienteService {
     }
 
     return resultado;
+  }
+
+  async obtenerRankingMorosos(): Promise<RankingMoroso[]> {
+    const resumenRef = collection(
+      this.firestore,
+      `${this.basePath}/resumenFinanzas`,
+    );
+
+    const snap = await getDocs(resumenRef);
+
+    const resumenMap = new Map<number, ResumenFinancieroEntidad>();
+    let resumenesFinancieros: ResumenFinancieroEntidad[] = [];
+
+    snap.docs.forEach((doc) => {
+      const data = doc.data() as ResumenFinancieroEntidad;
+      resumenesFinancieros.push(data);
+    });
+
+    //const resúmenes = await this.obtenerResumenCuentaCorriente();
+    const agingGlobal = await this.obtenerAgingGlobal();
+
+    return resumenesFinancieros
+      .map((r) => {
+        const aging = agingGlobal.find((a) => a.entidadId === r.entidadId);
+
+        if (!aging || aging.total === 0) return null;
+
+        const score = this.calcularScore(aging);
+
+        const deudaVencida =
+          (aging.bucket61_90 + aging.bucket90mas) / aging.total;
+
+        return {
+          entidadId: r.entidadId,
+          razonSocial: r.razonSocial,
+          tipoEntidad: r.tipoEntidad,
+
+          deudaTotal: aging.total,
+          score,
+
+          deudaVencidaPorc: deudaVencida,
+
+          bucket0_30: aging.bucket0_30,
+          bucket31_60: aging.bucket31_60,
+          bucket61_90: aging.bucket61_90,
+          bucket90mas: aging.bucket90mas,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b!.score - a!.score) as RankingMoroso[];
+  }
+
+  calcularScore(aging: AgingResumen): number {
+    const total = aging.total || 1;
+
+    const p0_30 = aging.bucket0_30 / total;
+    const p31_60 = aging.bucket31_60 / total;
+    const p61_90 = aging.bucket61_90 / total;
+    const p90 = aging.bucket90mas / total;
+
+    const scoreRiesgo = p0_30 * 10 + p31_60 * 30 + p61_90 * 60 + p90 * 100;
+
+    // impacto económico moderado (no dominante)
+    /*     const impacto = Math.log10(total + 1);
+
+    const scoreFinal = scoreRiesgo * impacto;
+
+    return Math.round(scoreFinal); */
+    return Math.round(scoreRiesgo);
+  }
+
+  async obtenerAgingResumenGlobal(): Promise<AgingGlobal> {
+    const agingPorEntidad = await this.obtenerAgingGlobal();
+
+    const acumulado: AgingGlobal = {
+      bucket0_30: 0,
+      bucket31_60: 0,
+      bucket61_90: 0,
+      bucket90mas: 0,
+      total: 0,
+    };
+
+    for (const aging of agingPorEntidad) {
+      acumulado.bucket0_30 += aging.bucket0_30;
+      acumulado.bucket31_60 += aging.bucket31_60;
+      acumulado.bucket61_90 += aging.bucket61_90;
+      acumulado.bucket90mas += aging.bucket90mas;
+    }
+
+    acumulado.total =
+      acumulado.bucket0_30 +
+      acumulado.bucket31_60 +
+      acumulado.bucket61_90 +
+      acumulado.bucket90mas;
+
+    return acumulado;
   }
 }

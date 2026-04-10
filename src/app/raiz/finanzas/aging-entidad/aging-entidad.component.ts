@@ -13,31 +13,34 @@ export class AgingEntidadComponent implements OnInit {
   ngOnInit(): void {}
 
   getLabelEstado(aging: AgingResumen): string {
+    const estado = this.getEstadoAging(aging);
 
-  const estado = this.getEstadoAging(aging);
-
-  switch (estado) {
-    case 'critico-intenso': return 'Crítico';
-    case 'critico': return 'Alto riesgo';
-    case 'alerta': return 'En riesgo';
-    case 'medio': return 'Atención';
-    default: return 'Ok';
+    switch (estado) {
+      case "critico-intenso":
+        return "Crítico";
+      case "critico":
+        return "Alto riesgo";
+      case "alerta":
+        return "En riesgo";
+      case "medio":
+        return "Atención";
+      default:
+        return "Ok";
+    }
   }
-}
 
-getEstadoAging(aging: AgingResumen): string {
+  getEstadoAging(aging: AgingResumen): string {
+    const total = aging.total || 1;
 
-  const total = aging.total || 1;
+    const p90 = aging.bucket90mas / total;
+    const pVencido = (aging.bucket61_90 + aging.bucket90mas) / total;
 
-  const p90 = aging.bucket90mas / total;
-  const pVencido = (aging.bucket61_90 + aging.bucket90mas) / total;
+    if (p90 > 0.4) return "critico-intenso";
+    if (p90 > 0.2) return "critico";
 
-  if (p90 > 0.4) return 'critico-intenso';
-  if (p90 > 0.2) return 'critico';
+    if (pVencido > 0.5) return "alerta";
+    if (pVencido > 0.3) return "medio";
 
-  if (pVencido > 0.5) return 'alerta';
-  if (pVencido > 0.3) return 'medio';
-
-  return 'ok';
-}
+    return "ok";
+  }
 }

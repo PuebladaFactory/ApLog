@@ -2,7 +2,7 @@ import { Timestamp } from "firebase/firestore";
 import { EntidadLiq, ValoresFinancieros } from "./informe-liq";
 
 export interface CuentaCorrienteResumen {
-  entidadId: string;
+  entidadId: number;
   tipoEntidad: "cliente" | "chofer" | "proveedor";
 
   razonSocial: string;

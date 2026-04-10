@@ -39,7 +39,7 @@ export class FinanzasResumenService {
 
       if (!snap.exists()) {
         const nuevoResumen: ResumenFinancieroEntidad = {
-          entidadId: informe.entidad.id.toString(),
+          entidadId: informe.entidad.id,
 
           tipoEntidad: informe.tipo,
 

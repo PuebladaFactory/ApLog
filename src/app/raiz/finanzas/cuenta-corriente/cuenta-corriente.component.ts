@@ -2,11 +2,14 @@ import { Component, OnInit, TemplateRef } from "@angular/core";
 import { Router } from "@angular/router";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { Subject, takeUntil } from "rxjs";
-import { AgingResumen } from "src/app/interfaces/aging-resumen";
+import { AgingGlobal, AgingResumen } from "src/app/interfaces/aging-resumen";
 import { CuentaCorrienteResumen } from "src/app/interfaces/cuenta-corriente-resumen";
 import { CuentaCorrienteService } from "src/app/servicios/cuenta-corriente/cuenta-corriente.service";
 import { StorageService } from "src/app/servicios/storage/storage.service";
 import { AgingEntidadComponent } from "../aging-entidad/aging-entidad.component";
+import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
+import { ResumenFinancieroEntidad } from "src/app/interfaces/resumen-financiero-entidad";
+import Swal from "sweetalert2";
 
 type EstadoCuenta = "saldado" | "con_deuda";
 
@@ -19,8 +22,6 @@ type EstadoCuenta = "saldado" | "con_deuda";
 export class CuentaCorrienteComponent implements OnInit {
   cuentas: CuentaCorrienteResumen[] = [];
   cuentasFiltradas: CuentaCorrienteResumen[] = [];
-
-  loading = false;
 
   filtros = {
     tipoEntidad: "" as "" | "cliente" | "chofer" | "proveedor",
@@ -46,6 +47,7 @@ export class CuentaCorrienteComponent implements OnInit {
   agingMap: any;
   agingGlobal: AgingResumen[] = [];
   agingEntidad: AgingResumen | null = null;
+  agingGeneral!: AgingGlobal;
 
   cargando: boolean = false;
 
@@ -53,7 +55,7 @@ export class CuentaCorrienteComponent implements OnInit {
     private cuentaCorrienteService: CuentaCorrienteService,
     private router: Router,
     private storageService: StorageService,
-    private modalService: NgbModal,
+    private modalService: NgbModal,    
   ) {}
 
   async ngOnInit() {
@@ -61,9 +63,10 @@ export class CuentaCorrienteComponent implements OnInit {
     this.storageService.listenForChanges("resumenFinanzas");
     this.agingGlobal = await this.cuentaCorrienteService.obtenerAgingGlobal();
     this.agingMap = new Map(
-      this.agingGlobal.map((a: AgingResumen) => [a.entidadId.toString(), a]),
+      this.agingGlobal.map((a: AgingResumen) => [a.entidadId, a]),
     );
     console.log("this.agingMap: ", this.agingMap);
+    this.agingGeneral = this.calcularAgingResumenGlobal(this.agingGlobal);
 
     this.cuentaCorrienteService
       .getCuentaCorriente$(this.filtrosNormalizados)
@@ -259,7 +262,7 @@ export class CuentaCorrienteComponent implements OnInit {
 
   verAging(cuenta: CuentaCorrienteResumen, modalRef: TemplateRef<any>) {
     let aging = this.agingGlobal.find(
-      (a) => a.entidadId.toString() === cuenta.entidadId,
+      (a) => a.entidadId === cuenta.entidadId,
     );
     if (aging) this.agingEntidad = aging;
     console.log("agingEntidad", this.agingEntidad);
@@ -271,4 +274,29 @@ export class CuentaCorrienteComponent implements OnInit {
       this.agingEntidad = null;
     });
   }
+
+  calcularAgingResumenGlobal(lista: AgingResumen[]): AgingGlobal {
+    return lista.reduce((acc, aging) => {
+      acc.bucket0_30 += aging.bucket0_30;
+      acc.bucket31_60 += aging.bucket31_60;
+      acc.bucket61_90 += aging.bucket61_90;
+      acc.bucket90mas += aging.bucket90mas;
+
+      acc.total =
+        acc.bucket0_30 +
+        acc.bucket31_60 +
+        acc.bucket61_90 +
+        acc.bucket90mas;
+
+      return acc;
+    }, {
+      bucket0_30: 0,
+      bucket31_60: 0,
+      bucket61_90: 0,
+      bucket90mas: 0,
+      total: 0
+    });
+  }
+
+
 }

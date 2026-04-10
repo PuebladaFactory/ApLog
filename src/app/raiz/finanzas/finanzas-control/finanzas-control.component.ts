@@ -67,6 +67,7 @@ export class FinanzasControlComponent implements OnInit {
     },
     { id: "tab5", name: "Ledger Entidad", route: "finanzas/ledger" },
     { id: "tab6", name: "Aging Listado", route: "finanzas/aging" },     
+    { id: "tab7", name: "Riesgo Financiero", route: "finanzas/ranking" }, 
   ];
 
   selectedTab: string = "";

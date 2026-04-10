@@ -29,7 +29,7 @@
 .aging-bar {
   display: flex;
   height: 10px;
-  border-radius: 5px;
+  border-radius: 10px;
   overflow: hidden;
   margin-bottom: 10px;
 }
@@ -38,15 +38,12 @@
   height: 100%;
 }
 
-.ok { background-color: #28a745 !important; }
-.medio { background-color: #ffc107 !important; }
-.alerta { background-color: #fd7e14 !important; }
-.critico { background-color: #dc3545 !important; }
-.critico-intenso { background-color: #a70000 !important; }
+.ok { background: #28a745 !important; }
+.medio { background: #ffc107 !important; }
+.alerta { background: #fd7e14 !important; }
+.critico { background: #dc3545 !important; }
+.critico-intenso { background: #a70000 !important; }
 
-.invisible{
-  visibility: hidden;
-}
 
 .card.resumen {  
   background: #fafafa; 

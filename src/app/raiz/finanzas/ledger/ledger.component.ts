@@ -47,7 +47,6 @@ export class LedgerComponent implements OnInit {
 
   aging!: AgingResumen;
 
-
   constructor(
     private cuentaCorrienteService: CuentaCorrienteService,
     private storageService: StorageService,
@@ -78,9 +77,16 @@ export class LedgerComponent implements OnInit {
 
   async consultarDatos(id: number) {
     this.ledger = await this.cuentaCorrienteService.obtenerLedgerEntidad(id);
-    let consultas = await this.cuentaCorrienteService.obtenerDetalleEntidad(id);
-    this.aging = consultas.aging;
-    this.cargando = false;
+    console.log("ledger: ", this.ledger);
+    if (this.ledger.length > 0) {
+      let consultas =
+        await this.cuentaCorrienteService.obtenerDetalleEntidad(id);
+      console.log("consultas: ", consultas);
+      this.aging = consultas.aging;
+      this.cargando = false;
+    } else{
+      this.cargando = false;
+    }
   }
 
   capitalizarPrimeraLetra(palabra: string): string {
@@ -132,7 +138,7 @@ export class LedgerComponent implements OnInit {
   }
 
   async onEntidadSeleccionada(e: any) {
-    this.cargando = true;    
+    this.cargando = true;
     //console.log("e: ", e);
     if (!e || !this.tipoEntidad) {
       this.entidadId = null;
@@ -273,8 +279,6 @@ export class LedgerComponent implements OnInit {
     });
   }
 
-
-
   getBadgeClasesSaldo(total: number) {
     if (total === 0) {
       return "bg-success";
@@ -299,56 +303,51 @@ export class LedgerComponent implements OnInit {
     }
   }
 
-  getSaldoTotal(): number{
-    let total = 0
-    this.ledger.map(l=>{
+  getSaldoTotal(): number {
+    let total = 0;
+    this.ledger.map((l) => {
       total += l.impacto;
-    })
-    return total
+    });
+    return total;
   }
 
-  getBadgeClasesAccion(item:Ledger){
+  getBadgeClasesAccion(item: Ledger) {
     //console.log("item: ", item);
-    
+
     if (item.saldo === 0) {
       return "bg-success";
     } else {
-      if (item.accion === 'cobro' || item.accion === 'pago') {
+      if (item.accion === "cobro" || item.accion === "pago") {
         return "bg-danger";
       } else {
         return "bg-info";
       }
     }
-
   }
 
-  getDescripcionAccion(item:Ledger){
+  getDescripcionAccion(item: Ledger) {
     if (item.saldo === 0) {
       return "Deuda saldada";
     } else {
-      if (item.accion === 'cobro' || item.accion === 'pago') {        
+      if (item.accion === "cobro" || item.accion === "pago") {
         return "Disminución de deuda";
       } else {
         return "Incremento de deuda";
       }
     }
-
   }
 
-    getEstadoAging(aging: AgingResumen): string {
-      const total = aging.total || 1;
-  
-      const porcentajeCritico = aging.bucket90mas / total;
-      const porcentajeGrave = aging.bucket61_90 / total;
-      const porcentajeMedio = aging.bucket31_60 / total;
-      
-  
-      if (porcentajeCritico > 0.4) return "critico-intenso";
-      if (porcentajeCritico > 0.2) return "critico";
-      if (porcentajeGrave > 0.2) return "alerta";
-      if (porcentajeMedio > 0.2) return "medio";
-      return "ok";
-    }
+  getEstadoAging(aging: AgingResumen): string {
+    const total = aging.total || 1;
 
-    
+    const porcentajeCritico = aging.bucket90mas / total;
+    const porcentajeGrave = aging.bucket61_90 / total;
+    const porcentajeMedio = aging.bucket31_60 / total;
+
+    if (porcentajeCritico > 0.4) return "critico-intenso";
+    if (porcentajeCritico > 0.2) return "critico";
+    if (porcentajeGrave > 0.2) return "alerta";
+    if (porcentajeMedio > 0.2) return "medio";
+    return "ok";
+  }
 }

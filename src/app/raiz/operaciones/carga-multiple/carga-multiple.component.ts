@@ -67,12 +67,12 @@ export class CargaMultipleComponent implements OnInit {
   operacionesAgrupadas: GrupoTabla[] = [];
   operacionesFinales: Operacion[] = [];
 
-    // No disponibilidad
-    noDisponibilidades: NoDisponibilidadChofer[] = [];
-    // Resultado por fecha
-    choferesNoOperativos: Chofer[] = [];
-    choferesDisponibles: Chofer[] = [];
-    noOperativosSet = new Set<number>()
+  // No disponibilidad
+  noDisponibilidades: NoDisponibilidadChofer[] = [];
+  // Resultado por fecha
+  choferesNoOperativos: Chofer[] = [];
+  choferesDisponibles: Chofer[] = [];
+  noOperativosSet = new Set<number>();
 
   tarifaGeneral!: TarifaGralCliente;
 
@@ -133,13 +133,13 @@ export class CargaMultipleComponent implements OnInit {
           a.apellido.localeCompare(b.apellido),
         );
         this.choferesActivos = this.choferes.filter((c) => c.activo);
-        this.choferesInactivos = this.choferes.filter((c) => !c.activo);        
-        this.separarChoferes()
+        this.choferesInactivos = this.choferes.filter((c) => !c.activo);
+        this.separarChoferes();
       });
   }
 
-  cargarNoOperativos(){
-     // 👇 Buscar tablero existente en base de datos
+  cargarNoOperativos() {
+    // 👇 Buscar tablero existente en base de datos
     //this.cargarTableroDiario();
     this.storageService
       .getObservable<NoDisponibilidadChofer>("noOperativo")
@@ -160,7 +160,6 @@ export class CargaMultipleComponent implements OnInit {
           this.calcularChoferesNoOperativosPorFecha();
         }
       });
-
   }
 
   selectTab(id: VistaTab) {
@@ -189,7 +188,7 @@ export class CargaMultipleComponent implements OnInit {
 
   crearOperaciones() {
     console.log("cliente: ", this.clienteSeleccionado);
-    
+
     if (!this.fechaSeleccionada) {
       return this.error("Debe seleccionar una fecha");
     }
@@ -413,7 +412,7 @@ export class CargaMultipleComponent implements OnInit {
       // sync runtime → legacy flags
       this.operaciones.forEach((op) => this.syncFlags(op));
 
-      this.operaciones.forEach(op => {            
+      this.operaciones.forEach((op) => {
         delete (op as any).originalEventual;
       });
 
@@ -421,9 +420,7 @@ export class CargaMultipleComponent implements OnInit {
       this.operacionesFinales = this.operaciones.map((op) => {
         const { tarifaBase, tarifaOverride, ...clean } = op;
         return clean as Operacion;
-      });      
-
-      
+      });
 
       this.operacionesFinales = this.operacionesFinales.map((op) => {
         return this.valoresIniciales(op);
@@ -456,15 +453,20 @@ export class CargaMultipleComponent implements OnInit {
       op.valores.chofer.aPagar = op.tarifaPersonalizada.aPagar;
     }
     if (op.tarifaTipo.eventual) {
-      op.tarifaEventual.cliente.valor = this.formNumServ.convertirAValorNumerico(op.tarifaEventual.cliente.valor);
-      op.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(op.tarifaEventual.chofer.valor);
+      op.tarifaEventual.cliente.valor =
+        this.formNumServ.convertirAValorNumerico(
+          op.tarifaEventual.cliente.valor,
+        );
+      op.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(
+        op.tarifaEventual.chofer.valor,
+      );
       op.valores.cliente.aCobrar = op.tarifaEventual.cliente.valor;
       op.valores.chofer.aPagar = op.tarifaEventual.chofer.valor;
     }
     op.valores.cliente.tarifaBase = op.valores.cliente.aCobrar;
     op.valores.chofer.tarifaBase = op.valores.chofer.aPagar;
 
-    if(op.acompaniante) {
+    if (op.acompaniante) {
       op = this.valoresServ.valoresOpAcompaniante(op);
     }
     op = this.valoresServ.recalcularValores(op);
@@ -518,7 +520,6 @@ export class CargaMultipleComponent implements OnInit {
      CHOFERES  NO OPERATIVOS 
   ========================= */
 
-
   openModalNoOperativos() {
     {
       const modalRef = this.modalService.open(
@@ -532,7 +533,7 @@ export class CargaMultipleComponent implements OnInit {
     }
   }
 
-    public calcularChoferesNoOperativosPorFecha(): void {
+  public calcularChoferesNoOperativosPorFecha(): void {
     this.noOperativosSet.clear();
     this.choferesNoOperativos = [];
     this.choferesDisponibles = [];
@@ -554,25 +555,44 @@ export class CargaMultipleComponent implements OnInit {
       }
     }
 
-    this.separarChoferes()
+    this.separarChoferes();
   }
 
-  separarChoferes(){
-    if(this.fechaSeleccionada){
- // 2️⃣ Separar choferes activos
-    for (const chofer of this.choferesActivos) {
-      if (this.noOperativosSet.has(chofer.idChofer)) {
-        this.choferesNoOperativos.push(chofer);
-      } else {
-        this.choferesDisponibles.push(chofer);
+  separarChoferes() {
+    if (this.fechaSeleccionada) {
+      // 2️⃣ Separar choferes activos
+      for (const chofer of this.choferesActivos) {
+        if (this.noOperativosSet.has(chofer.idChofer)) {
+          this.choferesNoOperativos.push(chofer);
+        } else {
+          this.choferesDisponibles.push(chofer);
+        }
+      }
+    } else {
+      this.choferesDisponibles = this.choferesActivos;
+    }
+
+    this.choferesDisponibles = this.ordenarVerticalmente(
+      this.choferesDisponibles,
+      3, // porque usás col-md-4
+    );
+  }
+
+  ordenarVerticalmente(lista: any[], columnas: number): any[] {
+    const filas = Math.ceil(lista.length / columnas);
+    const resultado: any[] = [];
+
+    for (let i = 0; i < filas; i++) {
+      for (let j = 0; j < columnas; j++) {
+        const index = j * filas + i;
+        if (index < lista.length) {
+          resultado.push(lista[index]);
+        }
       }
     }
-    } else {
-      this.choferesDisponibles = this.choferesActivos
-    }
-   
-  }
 
+    return resultado;
+  }
 
   /* =========================
      HELPERS UI
@@ -603,7 +623,6 @@ export class CargaMultipleComponent implements OnInit {
     "bg-dark text-white",
   ];
 
-  
   // =========================
   // VALIDACION (usa runtime)
   // =========================
@@ -631,8 +650,8 @@ export class CargaMultipleComponent implements OnInit {
         errores.push("Categoría personalizada faltante");
     }
 
-    if(op.acompaniante && op.acompanienteCant === 0){
-      errores.push("La cantidad de acompañantes no puede ser 0")
+    if (op.acompaniante && op.acompanienteCant === 0) {
+      errores.push("La cantidad de acompañantes no puede ser 0");
     }
 
     return errores;

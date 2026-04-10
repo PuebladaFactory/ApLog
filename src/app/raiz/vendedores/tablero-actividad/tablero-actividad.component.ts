@@ -1,20 +1,24 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { filter, Subject, takeUntil } from 'rxjs';
-import { Chofer } from 'src/app/interfaces/chofer';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { ConId } from 'src/app/interfaces/conId';
-import { InformeVenta } from 'src/app/interfaces/informe-venta';
-import { Operacion } from 'src/app/interfaces/operacion';
-import { Proveedor } from 'src/app/interfaces/proveedor';
-import { ResumenVenta } from 'src/app/interfaces/resumen-venta';
-import { Vendedor } from 'src/app/interfaces/vendedor';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
-import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
-import Swal from 'sweetalert2';
+import { Component, OnDestroy, OnInit } from "@angular/core";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { filter, Subject, takeUntil } from "rxjs";
+import { Chofer } from "src/app/interfaces/chofer";
+import { Cliente } from "src/app/interfaces/cliente";
+import { ConId } from "src/app/interfaces/conId";
+import { InformeVenta } from "src/app/interfaces/informe-venta";
+import { Operacion } from "src/app/interfaces/operacion";
+import { Proveedor } from "src/app/interfaces/proveedor";
+import { OpVenta, ResumenVenta } from "src/app/interfaces/resumen-venta";
+import { Vendedor } from "src/app/interfaces/vendedor";
+import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
+import {
+  DateRange,
+  DateRangeService,
+  toISODateString,
+} from "src/app/servicios/fechas/date-range.service";
+import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
+import { PdfService } from "src/app/servicios/informes/pdf/pdf.service";
+import { StorageService } from "src/app/servicios/storage/storage.service";
+import Swal from "sweetalert2";
 
 interface ClienteGrupo {
   cliente: Cliente;
@@ -29,7 +33,7 @@ interface VendedorGrupo {
   vendedor: ConId<Vendedor>;
   clientes: ClienteGrupo[];
   totalVendedor: number;
-  estadoPago: boolean ;
+  estadoPago: boolean;
 }
 
 interface InformeVentaExtendido extends InformeVenta {
@@ -38,15 +42,14 @@ interface InformeVentaExtendido extends InformeVenta {
 }
 
 @Component({
-  selector: 'app-tablero-actividad',
+  selector: "app-tablero-actividad",
   standalone: false,
-  templateUrl: './tablero-actividad.component.html',
-  styleUrl: './tablero-actividad.component.scss',  
+  templateUrl: "./tablero-actividad.component.html",
+  styleUrl: "./tablero-actividad.component.scss",
 })
-export class TableroActividadComponent implements OnInit, OnDestroy{
-
+export class TableroActividadComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  componenteOp: string = "informesVenta"
+  componenteOp: string = "informesVenta";
   choferes: ConId<Chofer>[] = [];
   clientes: ConId<Cliente>[] = [];
   proveedores: ConId<Proveedor>[] = [];
@@ -54,37 +57,42 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
     fechaDesde: 0,
     fechaHasta: 0,
   };
-  operaciones:ConId<Operacion>[]=[];
+  operaciones: ConId<Operacion>[] = [];
   vendedorGrupos!: VendedorGrupo[];
   informesVenta!: ConId<InformeVenta>[];
   vendedores!: ConId<Vendedor>[];
   isLoading: boolean = false;
 
-  constructor(    
+  constructor(
     private storageService: StorageService,
-    private excelServ: ExcelService, 
-    private pdfServ: PdfService, 
-    private modalService: NgbModal, 
+    private excelServ: ExcelService,
+    private pdfServ: PdfService,
+    private modalService: NgbModal,
     private dbFirebase: DbFirestoreService,
-    private dateRangeService:DateRangeService
-  ){}
+    private dateRangeService: DateRangeService,
+  ) {}
 
-    ngOnInit(): void {
-      
-      
-  
-      /// CHOFERES/CLIENTES/PROVEEDORES
-      this.choferes = this.storageService.loadInfo('choferes');
-      this.choferes = this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-      this.clientes = this.storageService.loadInfo('clientes');
-      this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      this.proveedores = this.storageService.loadInfo('proveedores');
-      this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      this.vendedores = this.storageService.loadInfo('vendedores');
-      this.vendedores = this.vendedores.sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido)); // Ordena por el nombre del chofer
-  
-      ////////// FECHAS E INFORMES OP ///////////////
-/*       this.storageService.fechasConsulta$
+  ngOnInit(): void {
+    /// CHOFERES/CLIENTES/PROVEEDORES
+    this.choferes = this.storageService.loadInfo("choferes");
+    this.choferes = this.choferes.sort((a, b) =>
+      a.apellido.localeCompare(b.apellido),
+    ); // Ordena por el nombre del chofer
+    this.clientes = this.storageService.loadInfo("clientes");
+    this.clientes = this.clientes.sort((a, b) =>
+      a.razonSocial.localeCompare(b.razonSocial),
+    ); // Ordena por el nombre del chofer
+    this.proveedores = this.storageService.loadInfo("proveedores");
+    this.proveedores = this.proveedores.sort((a, b) =>
+      a.razonSocial.localeCompare(b.razonSocial),
+    ); // Ordena por el nombre del chofer
+    this.vendedores = this.storageService.loadInfo("vendedores");
+    this.vendedores = this.vendedores.sort((a, b) =>
+      a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido),
+    ); // Ordena por el nombre del chofer
+
+    ////////// FECHAS E INFORMES OP ///////////////
+    /*       this.storageService.fechasConsulta$
       .pipe(takeUntil(this.destroy$))
       .subscribe(fechas => {
         this.fechasConsulta = fechas;
@@ -116,63 +124,63 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
                 }
               });
       }); */
-          this.dateRangeService.range$
-          .pipe(
-            filter((r): r is DateRange => r !== null),
-            takeUntil(this.destroy$)
-          )
-          .subscribe(r => {
-            //this.consultarOperaciones(r.desde, r.hasta);
-            this.isLoading = true;
-            const desde = toISODateString(r.desde);
-            const hasta = toISODateString(r.hasta);
-            console.log("0)desde:", desde, " hasta: ", hasta);
-             // 2. Una vez obtenidas, sincronizar informes
-            this.storageService.syncChangesDateValue<InformeVenta>(
-              this.componenteOp,
-              "fecha",
-              desde,
-              hasta,
-              "desc"
-            );
-  
-            
-  
-            this.storageService.getObservable<ConId<InformeVenta>>(this.componenteOp)
-              .pipe(takeUntil(this.destroy$))
-              .subscribe(data => {
-                console.log("data: ", data);
-                
-                this.informesVenta = data;
-                if (this.informesVenta) {
-                  console.log("informesVenta: ", this.informesVenta);
-                    // 👉 REARMAR LOS GRUPOS
-                    this.cargarDatos();
-                    this.isLoading = false;
-                } else {
-                  this.isLoading = false;
-                  this.mensajesError("error: informesVenta", "error");
-                }
-              });
-            
+    this.dateRangeService.range$
+      .pipe(
+        filter((r): r is DateRange => r !== null),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((r) => {
+        //this.consultarOperaciones(r.desde, r.hasta);
+        this.isLoading = true;
+        const desde = toISODateString(r.desde);
+        const hasta = toISODateString(r.hasta);
+        this.fechasConsulta.fechaDesde = desde;
+        this.fechasConsulta.fechaHasta = hasta;
+        console.log("0)desde:", desde, " hasta: ", hasta);
+        // 2. Una vez obtenidas, sincronizar informes
+        this.storageService.syncChangesDateValue<InformeVenta>(
+          this.componenteOp,
+          "fecha",
+          desde,
+          hasta,
+          "desc",
+        );
+
+        this.storageService
+          .getObservable<ConId<InformeVenta>>(this.componenteOp)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe((data) => {
+            console.log("data: ", data);
+
+            this.informesVenta = data;
+            if (this.informesVenta) {
+              console.log("informesVenta: ", this.informesVenta);
+              // 👉 REARMAR LOS GRUPOS
+              this.cargarDatos();
+              this.isLoading = false;
+            } else {
+              this.isLoading = false;
+              this.mensajesError("error: informesVenta", "error");
+            }
           });
-    }
-  
-    ngOnDestroy(): void {
-      this.destroy$.next();
-      this.destroy$.complete();
-    }
-
-    mensajesError(msj:string, resultado:string){
-      Swal.fire({
-        icon: resultado === 'error' ? "error" : "success",
-        //title: "Oops...",
-        text: `${msj}`
-        //footer: `${msj}`
       });
-    }
+  }
 
-    // ============================================================
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  mensajesError(msj: string, resultado: string) {
+    Swal.fire({
+      icon: resultado === "error" ? "error" : "success",
+      //title: "Oops...",
+      text: `${msj}`,
+      //footer: `${msj}`
+    });
+  }
+
+  // ============================================================
   //   CARGA Y PROCESA TODOS LOS DATOS
   // ============================================================
   cargarDatos() {
@@ -181,9 +189,8 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
     const groups: VendedorGrupo[] = [];
 
     for (const vend of this.vendedores) {
-
       const informesVendedor = this.informesVenta.filter(
-        i => i.idVendedor === vend.idVendedor
+        (i) => i.idVendedor === vend.idVendedor,
       );
 
       if (informesVendedor.length === 0) continue;
@@ -191,23 +198,28 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
       const clientesGroup: ClienteGrupo[] = [];
 
       for (const asig of vend.asignaciones) {
-
-        const clienteInfo = this.clientes.find(c => c.idCliente === asig.idCliente);
+        const clienteInfo = this.clientes.find(
+          (c) => c.idCliente === asig.idCliente,
+        );
         if (!clienteInfo) continue;
 
         const informesCliente = informesVendedor.filter(
-          i => i.idCliente === asig.idCliente
+          (i) => i.idCliente === asig.idCliente,
         );
 
         if (informesCliente.length === 0) continue;
 
         const cantidadOperaciones = informesCliente.length;
 
-        const totalCobrar = informesCliente
-          .reduce((acc, i) => acc + i.valoresOp.totalCliente, 0);
+        const totalCobrar = informesCliente.reduce(
+          (acc, i) => acc + i.valoresOp.totalCliente,
+          0,
+        );
 
-        const totalPagar = informesCliente
-          .reduce((acc, i) => acc + i.valoresOp.totalChofer, 0);
+        const totalPagar = informesCliente.reduce(
+          (acc, i) => acc + i.valoresOp.totalChofer,
+          0,
+        );
 
         const valorComision = (totalCobrar * asig.porcentaje) / 100;
 
@@ -217,7 +229,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
           totalCobrar,
           totalPagar,
           comision: asig.porcentaje,
-          valorComision
+          valorComision,
         });
       }
 
@@ -225,7 +237,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
 
       const totalVendedor = clientesGroup.reduce(
         (acc, cg) => acc + cg.valorComision,
-        0
+        0,
       );
 
       // 🔥 Determinar si TODOS los informes del vendedor tienen pago=true
@@ -235,71 +247,71 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
         vendedor: vend,
         clientes: clientesGroup,
         totalVendedor,
-        estadoPago
+        estadoPago,
       });
-
     }
 
     this.vendedorGrupos = groups;
   }
 
-
   // ============================================================
   //   CALCULA VALORES DERIVADOS DEL INFORME
   // ============================================================
-  extenderInforme(inf: InformeVenta, porcentaje: number): InformeVentaExtendido {
+  extenderInforme(
+    inf: InformeVenta,
+    porcentaje: number,
+  ): InformeVentaExtendido {
     const valorComision = (inf.valoresOp.totalCliente * porcentaje) / 100;
 
     return {
       ...inf,
       porcentajeComision: porcentaje,
-      valorComision
+      valorComision,
     };
   }
-
 
   // ============================================================
   //   ACCIONES
   // ============================================================
 
-  verDetalleCliente() {
-    
-  }
+  verDetalleCliente() {}
 
   marcarComoPago(inf: InformeVentaExtendido) {
-    console.log('Marcar como pago', inf);
+    console.log("Marcar como pago", inf);
     // acá después hacemos el update Firestore
   }
 
-  private calcularPagoVendedor(
-    informesVendedor: InformeVenta[]
-  ): boolean {
+  private calcularPagoVendedor(informesVendedor: InformeVenta[]): boolean {
     if (!informesVendedor || informesVendedor.length === 0) return false;
 
-    return informesVendedor.every(i => i.pago === true);
+    return informesVendedor.every((i) => i.pago === true);
   }
 
   private generarResumenVenta(
-    vg: VendedorGrupo, 
-    informes: ConId<InformeVenta>[], 
+    vg: VendedorGrupo,
+    informes: ConId<InformeVenta>[],
     periodo: {
-        mes: number;
-        anio: number;
-    }
+      mes: number;
+      anio: number;
+    },
   ): ResumenVenta {
-  
     const idResumen = new Date().getTime() + Math.floor(Math.random() * 1000);
-    const fecha = new Date().toISOString().split('T')[0];
+    const fecha = new Date().toISOString().split("T")[0];
 
     // ids de los informes
-    const idsInfVenta = informes.map(i => i.idInfVenta);
-
+    const idsInfVenta = informes.map((i) => i.idInfVenta);
+    const operaciones: OpVenta[] = this.armarOpVenta(informes);
     // Asignaciones extendidas
-    const asignacionesExt = vg.vendedor.asignaciones.map(asig => {
+    const asignacionesExt = vg.vendedor.asignaciones.map((asig) => {
       // encontrar los informes de este cliente
-      const informesCliente = informes.filter(i => i.idCliente === asig.idCliente);
+      const informesCliente = informes.filter(
+        (i) => i.idCliente === asig.idCliente,
+      );
 
-      const totalCliente = informesCliente.reduce((acc, inf) => acc + inf.valoresOp.totalCliente, 0);
+      const totalCliente = informesCliente.reduce(
+        (acc, inf) => acc + inf.valoresOp.totalCliente,
+        0,
+      );
 
       const totalComision = informesCliente.reduce((acc, inf) => {
         const com = (inf.valoresOp.totalCliente * asig.porcentaje) / 100;
@@ -309,7 +321,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
       return {
         ...asig,
         totalCliente,
-        totalComision
+        totalComision,
       };
     });
 
@@ -323,50 +335,53 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
       periodo,
       idsInfVenta,
       asignacionesExt,
-      total
+      total,
+      operaciones,
     };
   }
 
   async pagarVendedor(vg: VendedorGrupo) {
-
     const res = await Swal.fire({
       title: `¿Confirmar pago a ${vg.vendedor.datosPersonales.apellido} ${vg.vendedor.datosPersonales.nombre}?`,
       text: "Esto generará un Resumen de Venta y marcará todas los informes de venta como pagados.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Sí, pagar",
-      cancelButtonText: "Cancelar"
+      cancelButtonText: "Cancelar",
     });
 
     if (!res.isConfirmed) return;
     this.isLoading = true;
     // obtener todos los informes del vendedor
     const informesVendedor = this.informesVenta.filter(
-      inf => inf.idVendedor === vg.vendedor.idVendedor
+      (inf) => inf.idVendedor === vg.vendedor.idVendedor,
     );
+    console.log(this.fechasConsulta);
+
+    console.log("informesVendedor: ", informesVendedor);
 
     // 2) generar resumen
-     const periodo = this.obtenerPeriodo(this.fechasConsulta);
+    const periodo = this.obtenerPeriodo(this.fechasConsulta);
 
-      const resumen = this.generarResumenVenta(
-        vg,
-        this.informesVenta.filter(i => i.idVendedor === vg.vendedor.idVendedor),
-        periodo
-      );
+    const resumen = this.generarResumenVenta(
+      vg,
+      this.informesVenta.filter((i) => i.idVendedor === vg.vendedor.idVendedor),
+      periodo,
+    );
 
-      console.log("ResumenVenta generado:", resumen);
+    console.log("ResumenVenta generado:", resumen);
 
     // 3) modificar los informes localmente
-    const informesActualizados = informesVendedor.map(inf => ({
+    const informesActualizados = informesVendedor.map((inf) => ({
       ...inf,
-      pago: true
+      pago: true,
     }));
     console.log("informesActualizados", informesActualizados);
 
     // 4) guardamos el resumen (por ahora simulado)
     const resumenArray = [];
     resumenArray.push(resumen);
-    const respuestaResumen = await this.dbFirebase.guardarMultipleGeneral(resumenArray, "resumenVenta", "idResumen", resumen.idResumen );
+     const respuestaResumen = await this.dbFirebase.guardarMultipleGeneral(resumenArray, "resumenVenta", "idResumen", resumen.idResumen );
 
     if (!respuestaResumen.exito) {
       this.isLoading = false
@@ -379,28 +394,71 @@ export class TableroActividadComponent implements OnInit, OnDestroy{
     const respuestaInf = await this.dbFirebase.actualizarMultiple(informesActualizados, "informesVenta")
     if(respuestaInf.exito){
       this.isLoading = false
-      Swal.fire("OK", "El vendedor fue pagado correctamente.", "success");
+      Swal.fire("OK", "El pago fue procesado correctamente.", "success");
     } else {
       this.isLoading = false
       Swal.fire("Error", "No se puedo actualizar los informes de venta correctamente.", "error");
     }
-    
     
   }
 
   private obtenerPeriodo(fechas: { fechaHasta: string }) {
     const d = new Date(fechas.fechaHasta);
 
+    console.log("mes: ", d.getMonth() + 1, "anio: ", d.getFullYear());
+
     return {
-      mes: d.getMonth() + 1,   // 1 a 12
-      anio: d.getFullYear()    // 2025, etc.
+      mes: d.getMonth() + 1, // 1 a 12
+      anio: d.getFullYear(), // 2025, etc.
     };
   }
 
-/*   private aplicarActualizacionInformes(informesAct: InformeVenta[]) {
+  /*   private aplicarActualizacionInformes(informesAct: InformeVenta[]) {
     for (let actualizado of informesAct) {
       const idx = this.informesVenta.findIndex(i => i.idInfVenta === actualizado.idInfVenta);
       if (idx !== -1) this.informesVenta[idx] = actualizado;
     }
   } */
+
+  armarOpVenta(informes: ConId<InformeVenta>[]): OpVenta[] {
+    let operaciones: OpVenta[] = [];
+    informes.map((i) => {
+      let op: OpVenta = {
+        fecha: i.fecha,
+        idOp: i.idOperacion,
+        idCliente: i.idCliente,
+        totalCliente: i.valoresOp.totalCliente,
+        totalChofer: i.valoresOp.totalChofer,
+      };
+
+      operaciones.push(op);
+    });
+    return operaciones;
+  }
+
+  corregirInfVenta(vg: VendedorGrupo ){
+    //console.log("vg: ", vg);
+    let infCorrecion = this.informesVenta.filter(i=> {return i.idVendedor === vg.vendedor.idVendedor});
+    console.log("infCorrecion: ", infCorrecion);
+    infCorrecion.map(i=>{
+      i.pago = false;
+    });
+    this.actualizarMultiple(infCorrecion)
+    
+    
+  }
+
+  actualizarMultiple(inf: ConId<InformeVenta>[]){
+    this.isLoading = true;
+    this.dbFirebase
+      .actualizarMultiple(inf, "informesVenta")
+      .then((result) => {
+        this.isLoading = false;
+        if (result.exito) {
+          alert("actualizado correctamente");
+        } else {
+          alert(`error actualizando. errr: ${result.mensaje}`);
+        }
+      });
+  }
 }

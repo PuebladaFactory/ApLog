@@ -1,11 +1,11 @@
 <div class="layout-global">
-    <h2 class="mt-2">Cuenta Corriente</h2>
+    <h2 class="mt-3 ms-2 mb-2">Cuenta Corriente</h2>
     <!-- ⏳ Loading -->
-    @if (loading) {
+    @if (cargando) {
         <app-spinner></app-spinner>
     }
 
-    @if (!loading) {
+    @if (!cargando) {
         <!-- RESUMEN -->
         <div class="resumen-cards">
             <!-- 🟢 Nos deben -->
@@ -44,6 +44,13 @@
                 </div>
                 <div class="detalle">Posición global</div>
             </div>
+            <!-- Aging general -->
+            <div
+                class="card resumen"                
+            >
+                <div class="titulo">Aging Global</div>
+                <app-aging-global [aging]=agingGeneral></app-aging-global>
+            </div>
         </div>
 
         <!-- 🔎 Filtros -->
@@ -76,6 +83,7 @@
                 (input)="onFiltroChange()"
             />
         </div>
+
 
         <div class="panel-box panel-resultados">
             <!-- 📊 Tabla -->
