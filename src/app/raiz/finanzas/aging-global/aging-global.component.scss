@@ -1,0 +1,37 @@
+.barra {
+  display: flex;
+  height: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.segment.ok { background: #28a745; }
+.segment.medio { background: #ffc107; }
+.segment.alerta { background: #fd7e14; }
+.segment.critico { background: #dc3545; }
+
+.card.resumen {  
+  background: #fafafa; 
+}
+
+.card .detalle {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #888;
+}
+
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500;
+}
+
+.ok { background: #28a745 !important; }
+.medio { background: #ffc107 !important; }
+.alerta { background: #fd7e14 !important; }
+.critico { background: #dc3545 !important; }
+.critico-intenso { background: #a70000 !important; }

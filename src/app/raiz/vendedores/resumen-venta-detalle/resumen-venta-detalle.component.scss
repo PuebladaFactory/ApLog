@@ -1,0 +1,50 @@
+td, th, select, input {
+    font-size: 1.4rem ;
+}
+
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500;
+}
+
+.iconos:hover{
+    
+    color: blue !important;;
+}
+
+
+/* .resumen-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.card.resumen {
+  padding: 15px;
+  border-radius: 10px;
+  background: #fafafa;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.card .titulo {
+  font-size: 14px;
+  color: #666;
+}
+
+.card .valor {
+  font-size: 22px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.card .detalle {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #888;
+} */

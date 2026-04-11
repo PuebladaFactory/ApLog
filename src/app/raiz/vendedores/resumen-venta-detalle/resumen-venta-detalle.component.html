@@ -1,0 +1,192 @@
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+        @if (resumenVenta) {
+            <div class="modal-header">
+                <h3 class="modal-title">Resumen Venta</h3>
+                <button
+                    type="button"
+                    class="btn-close"
+                    aria-label="Cerrar"
+                    (click)="activeModal.close()"
+                ></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col text-start">
+                        <h3>{{ getVendedor(resumenVenta.idVendedor) }}</h3>
+                    </div>
+                    <div class="col">
+                        <h3 class="mt-0 mb-2 text-center">
+                            Periodo: {{ resumenVenta.periodo.mes }}/{{
+                                resumenVenta.periodo.anio
+                            }}
+                        </h3>
+                    </div>
+                    <div class="col">
+                        <h3 class="text-end">
+                            Total:
+                            <span class="fw-bold">{{ resumenVenta.total | formatearValor: "$" }}</span>
+                        </h3>
+                    </div>
+                </div>
+
+                @for (asig of resumenVenta.asignacionesExt; track asig) {
+                    <div class="resumen-cards mb-3">
+                        <div class="card resumen">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col fs-4">
+
+                                        Cliente  :<br />
+                                        <span class="fw-bold">{{
+                                            getCliente(asig.idCliente)
+                                        }}</span>
+                                                                                @if (
+                                                estaColapsado(asig.idCliente)
+                                            ) {
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="16"
+                                                    height="16"
+                                                    fill="currentColor"
+                                                    class="bi bi-plus-circle text-info ms-2 mb-2 iconos"
+                                                    type="button"
+                                                    (click)="
+                                                        toggleCliente(
+                                                            asig.idCliente
+                                                        )
+                                                    "
+                                                    viewBox="0 0 16 16"
+                                                >
+                                                    <path
+                                                        d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+                                                    />
+                                                    <path
+                                                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"
+                                                    />
+                                                </svg>
+                                            } @else {
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="16"
+                                                    height="16"
+                                                    fill="currentColor"
+                                                    class="bi bi-dash-circle text-info ms-2 mb-2 iconos"
+                                                    type="button"
+                                                    (click)="
+                                                        toggleCliente(
+                                                            asig.idCliente
+                                                        )
+                                                    "
+                                                    viewBox="0 0 16 16"
+                                                >
+                                                    <path
+                                                        d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+                                                    />
+                                                    <path
+                                                        d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"
+                                                    />
+                                                </svg>
+                                            }
+                                    </div>
+                                    <div class="col fs-4 text-center">
+                                        <div>
+                                            Total Cliente:<br />
+                                            <span class="fw-bold">{{
+                                                asig.totalCliente
+                                                    | formatearValor: "$"
+                                            }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col fs-4 text-center">
+                                        Comision:<br />
+                                        <span class="fw-bold"
+                                            >{{
+                                                asig.porcentaje
+                                                    | formatearValor
+                                            }}%</span
+                                        >
+                                    </div>
+                                    <div class="col fs-4 text-end">
+                                        Pago Vendedor:<br />
+                                        <span class="fw-bold">{{
+                                            asig.totalComision
+                                                | formatearValor: "$"
+                                        }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <table
+                                class="table table-sm table-bordered table-hover table-sm align-middle mb-0"
+                            >
+                                <thead>
+                                    <tr class="sticky-top">
+                                        <th>Fecha</th>
+                                        <th>Id Operación</th>
+                                        <th class="text-center">Total Op</th>
+                                        <th class="text-center">
+                                            Comisión Vendedor
+                                        </th>
+                                    </tr>
+                                </thead>
+                                @if (!estaColapsado(asig.idCliente)) {
+                                    <tbody class="table-group-divider">
+                                        @for (
+                                            op of getOpCliente(asig.idCliente);
+                                            track op
+                                        ) {
+                                            <tr>
+                                                <td>
+                                                    {{ op.fecha }}
+                                                </td>
+                                                <td>
+                                                    {{ op.idOp }}
+                                                </td>
+                                                <td class="col-numero">
+                                                    {{
+                                                        op.totalCliente
+                                                            | formatearValor
+                                                                : "$"
+                                                    }}
+                                                </td>
+                                                <td
+                                                    class="col-numero text-success"
+                                                >
+                                                    {{
+                                                        (op.totalCliente *
+                                                            asig.porcentaje) /
+                                                            100
+                                                            | formatearValor
+                                                                : "$"
+                                                    }}
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                }
+
+                                <tfoot class="table-group-divider">
+                                    <tr>
+                                        <th colspan="3">Total Vendedor</th>
+                                        <th class="col-numero fw-bold">
+                                            {{
+                                                getTotalOpCliente(
+                                                    asig.idCliente,
+                                                    asig.porcentaje
+                                                ) | formatearValor: "$"
+                                            }}
+                                        </th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        } @else {
+            <div class="alert alert-warning">
+                Error al cargar el resumen de venta
+            </div>
+        }
+    </div>
+</div>

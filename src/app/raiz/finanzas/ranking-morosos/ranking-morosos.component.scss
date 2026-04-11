@@ -1,0 +1,59 @@
+th, td, select, input {
+  font-size: 1.4rem;
+}
+
+.panel-resultados {
+  margin-top: 10px;
+  background: white;
+}
+
+.panel-box {  
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.ok { background-color: #28a745; color: white; }
+.medio { background-color: #ffc107; color: black; }
+.alerta { background-color: #fd7e14; color: white; }
+.critico { background-color: #dc3545; color: white; }
+.critico-intenso { background-color: #7a0000; color: white; }
+
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500;
+}
+
+.ordenable{
+  cursor: pointer;
+  user-select: none;
+}
+
+.ordenable:hover {
+  background-color: #f5f5f5;
+}
+
+.ordenable.active {
+  font-weight: bold;
+}
+
+.aging-bar {
+  display: flex;
+  height: 100%;
+  border-radius: 5px;
+  overflow: hidden;    
+  text-align: center !important;
+  //margin-bottom: 10px;
+}
+
+.segment {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  height: 15px;  
+  text-align: center !important;
+}
