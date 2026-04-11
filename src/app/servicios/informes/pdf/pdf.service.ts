@@ -722,6 +722,11 @@ export class PdfService {
           fillColor: [217, 217, 217],
           halign: "center",
         },
+        // 👇 CLAVE
+        columnStyles: {
+          1: { halign: "right" }, // Total Op
+          2: { halign: "right" }, // Comisión
+        },
         didDrawPage: (data) => {
           // 👉 repetir header de tabla en cada página
           doc.setFontSize(9);
