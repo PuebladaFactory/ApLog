@@ -2,7 +2,7 @@ import { Timestamp } from "firebase/firestore";
 
 export interface ResumenFinancieroEntidad {
 
-  entidadId: string;
+  entidadId: number;
 
   tipoEntidad: 'cliente' | 'chofer' | 'proveedor';
 

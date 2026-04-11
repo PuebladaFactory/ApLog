@@ -247,6 +247,7 @@ export class FinanzasCobrosComponent implements OnInit {
       }
       
     }
+    
   
   
 }

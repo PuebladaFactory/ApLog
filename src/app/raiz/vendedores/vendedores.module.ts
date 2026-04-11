@@ -12,6 +12,8 @@ import { VendedorAltaComponent } from './vendedor-alta/vendedor-alta.component';
 import { VendedoresListadoComponent } from './vendedores-listado/vendedores-listado.component';
 import { VendedorHistorialComponent } from './vendedor-historial/vendedor-historial.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
+import { ResumenVentaDetalleComponent } from './resumen-venta-detalle/resumen-venta-detalle.component';
+import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 
 
 @NgModule({
@@ -20,7 +22,8 @@ import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
     TableroActividadComponent,
     VendedorAltaComponent,
     VendedoresListadoComponent,
-    VendedorHistorialComponent
+    VendedorHistorialComponent,
+    ResumenVentaDetalleComponent,
   ],
   imports: [
     CommonModule,
@@ -29,7 +32,7 @@ import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
     ReactiveFormsModule,
     SharedModule,
     FilterPipeModule,
-    
+    NgbDatepickerModule,
     AgGridModule 
   ],
   providers: [DateRangeService]

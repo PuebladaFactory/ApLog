@@ -2,13 +2,13 @@ export interface MovimientoFinanciero {
   /** Metadata */
   fecha: string; // ISO yyyy-mm-dd
   idMovFinanciero: number;
-  numeroComprobante: string
-  tipo: 'cobro' | 'pago';
+  numeroComprobante: string;
+  tipo: "cobro" | "pago";
   fechaOperacion?: string; // ISO yyyy-mm-dd
   /** Entidad */
   entidad: {
     id: number;
-    tipo: 'cliente' | 'chofer' | 'proveedor';
+    tipo: "cliente" | "chofer" | "proveedor";
     razonSocial: string;
   };
 
@@ -20,14 +20,18 @@ export interface MovimientoFinanciero {
   totalMovimiento: number;
 
   /** Medio / referencia */
-  medioPago?: 'efectivo' | 'transferencia' | 'cheque' | 'otro';
+  medioPago?: "efectivo" | "transferencia" | "cheque" | "otro";
+  medioPagoDetalle?: {
+    tipo: "efectivo" | "transferencia" | "cheque" | "otro";
+    data?: any;
+  };
   referencia?: string; // nro comprobante, operación bancaria, etc.
 
   /** Observaciones */
   observaciones?: string;
 
   /* Anulación */
-  estado: 'activo' | 'anulado';
+  estado: "activo" | "anulado";
   anuladoPor?: string;
   fechaAnulacion?: string;
   motivoAnulacion?: string;
@@ -53,4 +57,3 @@ export interface ImputacionMovimiento {
   montoImputado: number;
   saldoInforme: number;
 }
-

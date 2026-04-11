@@ -1,9 +1,9 @@
-<h2 class="mt-2">Registro de Cobros</h2>
+<h2 class="mt-3 ms-1">Registro de Cobros</h2>
 
 <!-- Selección de cliente -->
 <div class="row mb-3">
     <div class="col-4">
-        <label>Cliente</label>
+        <label class="ms-1">Cliente</label>
         <select
             class="form-select"
             [(ngModel)]="clienteSeleccionadoId"
@@ -26,12 +26,6 @@
         <app-spinner></app-spinner>
     </div>
 }
-
-        @if (usuario.roles.god) {
-            <div class="col-4 d-flex justify-content-end">
-                <button class="btn btn-danger" (click)="verificarResumenEntidad()">Verificar Resumen de Entidad</button>
-            </div>
-        }
 
 
 

@@ -1,0 +1,83 @@
+th, td, select, input, span {
+  font-size: 1.3rem;
+}
+
+.valores-ok {
+  color: #28a745;
+}
+
+.valores-medio {
+  color: #ffc107;
+}
+
+.valores-alerta {
+  color: #fd7e14;
+}
+
+.valores-critico {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.aging-bar {
+  display: flex;
+  height: 100%;
+  border-radius: 5px;
+  overflow: hidden;    
+  text-align: center !important;
+  //margin-bottom: 10px;
+}
+
+.segment {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  height: 15px;  
+  text-align: center !important;
+}
+
+.panel-resultados {
+  margin-top: 10px;
+  background: white;
+}
+
+.panel-box {  
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.ordenable{
+  cursor: pointer;
+  user-select: none;
+}
+
+.ordenable:hover {
+  background-color: #f5f5f5;
+}
+
+.ordenable.active {
+  font-weight: bold;
+}
+
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500;
+}
+
+.filtros {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.ok { background-color: #28a745 !important; }
+.medio { background-color: #ffc107 !important; }
+.alerta { background-color: #fd7e14 !important; }
+.critico { background-color: #dc3545 !important; }
+.critico-intenso { background-color: #a70000 !important; }

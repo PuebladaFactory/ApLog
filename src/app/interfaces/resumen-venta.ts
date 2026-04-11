@@ -9,6 +9,7 @@ export interface ResumenVenta {
         anio: number;
     };
     idsInfVenta: number[];
+    operaciones: OpVenta[];
     asignacionesExt: AsignacionExtendida[];
     total: number;
     
@@ -17,4 +18,12 @@ export interface ResumenVenta {
 interface AsignacionExtendida extends Asignacion {
   totalCliente: number;
   totalComision: number;
+}
+
+export interface OpVenta {
+    fecha: any;
+    idOp: number;
+    idCliente:number;
+    totalCliente: number;
+    totalChofer: number;
 }

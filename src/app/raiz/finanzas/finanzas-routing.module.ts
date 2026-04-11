@@ -9,6 +9,9 @@ import { CuentaCorrienteComponent } from './cuenta-corriente/cuenta-corriente.co
 import { DetalleCuentaCorrienteComponent } from './detalle-cuenta-corriente/detalle-cuenta-corriente.component';
 import { InformeLiqCuentaCorrienteComponent } from './informe-liq-cuenta-corriente/informe-liq-cuenta-corriente.component';
 import { LedgerComponent } from './ledger/ledger.component';
+import { AgingListadoComponent } from './aging-listado/aging-listado.component';
+import { RankingMorososComponent } from './ranking-morosos/ranking-morosos.component';
+
 
 const routes: Routes = [
   {path: '', component:FinanzasControlComponent,
@@ -22,6 +25,8 @@ const routes: Routes = [
           {path: 'cuenta-corriente/:id',component: DetalleCuentaCorrienteComponent},
           {path: 'informe/:id', component: InformeLiqCuentaCorrienteComponent },
           {path: 'ledger', component: LedgerComponent},
+          {path: 'aging', component: AgingListadoComponent},
+          {path: 'ranking', component: RankingMorososComponent},          
                                         
       ]  },
 ];

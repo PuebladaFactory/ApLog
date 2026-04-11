@@ -27,6 +27,7 @@
                             </span>
                         </div>
                     </div>
+                    <!-- <div><button class="btn btn-outline-info" (click)="corregirInfVenta(vg)">Corregir Informes</button></div> -->
                     @if(!vg.estadoPago){
                         <div class="me-3 mt-2">
                             <app-btn-agregar name="Pagar" (click)="pagarVendedor(vg)"></app-btn-agregar>
@@ -98,9 +99,9 @@
             </div>
         } 
     } @else {
-        <tbody>
-            <tr><td colspan="15">Sin Datos</td></tr>
-        </tbody>
+        <div class="alert alert-info">
+            Sin datos.
+        </div>
     }
 
 </div>
