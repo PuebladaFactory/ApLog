@@ -74,7 +74,12 @@ const routes: Routes = [
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
       data: { roles: ['god','admin'] }, // 
     },
-    
+    {
+      path: 'reportes',
+      loadChildren: () => import('./reportes/reportes.module').then(m => m.ReportesModule),
+      canActivate: [RoleGuard], // Protege acceso dentro del módulo
+      data: { roles: ['god','admin'] }, // 
+    },
     
     
     

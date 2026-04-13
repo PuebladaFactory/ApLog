@@ -16,6 +16,7 @@ import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
 
 // =====================
 // MODELOS
@@ -134,6 +135,7 @@ private resizeStartWidth = 0;
     private tableroServ: TableroService,
     private formatoNum: FormatoNumericoService,
     private excelServ: ExcelService,
+    private reportesOp: ReportesOpService
   ) {}
 
   // =====================
@@ -830,6 +832,39 @@ onResizeEnd = () => {
 
   puedeEliminar(op: any): boolean {
     return op.estado === 'Abierta';
+  }
+
+  async crearResumenOp(){
+    console.log(this.operacionesPeriodo.length);
+    
+    this.isLoading = true;
+    const res = await this.reportesOp.reconstruirResumenes(this.operacionesPeriodo);
+
+    if (!res.exito) {
+      this.isLoading = false;
+      console.warn(res.mensaje);
+      console.table(this.reportesOp.getErrores());
+    }
+    if(res.exito){
+      this.isLoading = false;
+      console.info(res.mensaje);
+    }
+  }
+
+  totalACobrar(){
+    let opAcomp = 0;
+    let cantAcomp = 0;
+    let total = 0;
+    this.operacionesPeriodo.map(op=>{
+     /* if(op.acompaniante) {
+        opAcomp ++ ;
+        cantAcomp += op.acompanienteCant ?? 1; 
+     }  */
+    total += op.valores.cliente.aCobrar
+    })
+    //console.log("opAcomp: ", opAcomp, "totalAcomp: ", cantAcomp );
+    console.log("total: ", total);
+    
   }
 
 }

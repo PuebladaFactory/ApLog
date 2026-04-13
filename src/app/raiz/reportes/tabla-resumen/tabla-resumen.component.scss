@@ -1,0 +1,32 @@
+.tabla-resumen {
+  font-size: 1.2rem;
+}
+
+.tabla-resumen th {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.tabla-resumen td {
+  font-size: 1.1rem;  
+}
+
+.col-cliente {
+  background-color: #e7f1ff;
+}
+
+.col-chofer {
+  background-color: #f1f3f5;
+}
+
+.col-moneda {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+
+  font-weight: 400;
+  font-size: 0.95rem; /* 👈 ojo acá */
+}
