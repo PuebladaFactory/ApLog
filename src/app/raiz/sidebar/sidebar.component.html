@@ -285,7 +285,7 @@
                             </a>
                         </li>
                     }
-                    @if ($usuario.roles.god || $usuario.roles.god || $usuario.roles.demo) {
+                    @if ($usuario.roles.god || $usuario.roles.admin || $usuario.roles.demo) {
                         <li>
                             <a [routerLink]="['/reportes']">
                                 <h2 class="d-flex mt-3" type="button">
