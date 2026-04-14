@@ -17,7 +17,7 @@
         <div class="col-4">
             <!-- Entidad -->
             <select
-                class="form-select "
+                class="form-select"
                 [(ngModel)]="entidadSeleccionada"
                 (change)="onEntidadChange()"
             >
@@ -37,24 +37,35 @@
         </div>
     </div>
 </div>
+@if (entidadSeleccionada) {
+        <div class="d-flex justify-content-between">
+            <div class="d-flex">
+                <app-filtro-periodo (periodoChange)="onPeriodoChange($event)" class="align-self-end mb-2">
+                </app-filtro-periodo>
+            </div>
+            <div>
+                
+                    <h2 class="mt-3 ms-2 mb-2">
+                        <span
+                            class="badge bg-primary-subtle text-primary-emphasis"
+                            >{{ getRazonSocial(entidadSeleccionada) }}</span
+                        >
+                    </h2>
+                
+            </div>
+        </div>
+        @if (resumenes$ | async; as resumenes) { 
 
-@if (resumenes$ | async; as resumenes) {
-    <div class="panel-box panel-resultados">
-        @if (entidadSeleccionada) {
-            <h2 class="mt-3 ms-2 mb-2">
-                <span class="badge bg-primary-subtle text-primary-emphasis">{{
-                    getRazonSocial(entidadSeleccionada)
-                }}</span>
-            </h2>
-        }
 
         <app-tabla-resumen
-            [resumenes]="resumenes"            
+            [resumenes]="resumenes"
             [tituloPeriodo]="tituloPeriodo"
             [razonSocial]="razonSocial"
             [tipo]="tipo"
             [tipoEntidad]="tipoEntidad"
         >
         </app-tabla-resumen>
-    </div>
+  
 }
+}
+

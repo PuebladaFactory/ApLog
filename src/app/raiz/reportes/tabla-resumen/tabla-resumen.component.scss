@@ -1,14 +1,16 @@
-.tabla-resumen {
-  font-size: 1.2rem;
+
+td,td{
+  height: 30px;
 }
 
 .tabla-resumen th {
-  font-size: 1.2rem;
+  font-size: 1.2rem !important;
   font-weight: 600;
 }
 
 .tabla-resumen td {
-  font-size: 1.1rem;  
+  font-size: 1.1rem !important;  
+  font-weight: 400 !important;
 }
 
 .col-cliente {
@@ -27,8 +29,8 @@
   padding-left: 0.4rem !important;
   padding-right: 0.4rem !important;
 
-  font-weight: 400;
-  font-size: 0.95rem; /* 👈 ojo acá */
+  
+  //font-size: 1.1rem !important; /* 👈 ojo acá */
 }
 
 .bg-success-soft {

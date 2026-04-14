@@ -86,6 +86,7 @@ export class ValoresOpClienteService {
       ////console.log("acompañante valor: ", this.acompaniante);
       this.kmValor = 0;
       op.valores.cliente.kmAdicional = 0;
+      op.valores.cliente.adExtraValor = 0;
       op.valores.cliente.aCobrar = 0;
     } else {
       this.tarifaBase =
@@ -101,7 +102,7 @@ export class ValoresOpClienteService {
       this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
       op.valores.cliente.kmAdicional = this.kmValor;
       op.valores.cliente.aCobrar =
-        this.tarifaBase + this.acompaniante + this.kmValor;
+        this.tarifaBase + this.acompaniante + this.kmValor + (op.valores.cliente.adExtraValor ?? 0);
     }
 
     ////console.log("km valor: ", this.kmValor);
@@ -128,6 +129,18 @@ export class ValoresOpClienteService {
       resultado: boolean;
       msj: string;
     };
+    if (op.multiplicadorCliente === 0) {
+      this.tarifaBase = 0;
+      op.valores.cliente.tarifaBase = 0;
+      ////console.log("tarifa base: " ,this.tarifaBase);
+      this.acompaniante = 0;
+      op.valores.cliente.acompValor = 0;
+      ////console.log("acompañante valor: ", this.acompaniante);
+      this.kmValor = 0;
+      op.valores.cliente.kmAdicional = 0;
+      op.valores.cliente.adExtraValor = 0;
+      op.valores.cliente.aCobrar = 0;
+    } else { 
 
     this.tarifaBase =
       this.$calcularCGPersonalizada(tarifa, op) * op.multiplicadorCliente;
@@ -142,6 +155,10 @@ export class ValoresOpClienteService {
     } else {
       this.kmValor = 0;
     }
+    op.valores.cliente.aCobrar =
+        this.tarifaBase + this.acompaniante + this.kmValor + (op.valores.cliente.adExtraValor ?? 0);
+    }
+
 
     //console.log("tarifa base: " ,this.tarifaBase);
     this.$crearFacturaOpCliente(op, tarifa.idTarifa);
@@ -165,7 +182,19 @@ export class ValoresOpClienteService {
       msj: string;
     };
 
-    this.tarifaBase = op.tarifaEventual.cliente.valor * op.multiplicadorCliente;
+        if (op.multiplicadorCliente === 0) {
+      this.tarifaBase = 0;
+      op.valores.cliente.tarifaBase = 0;
+      ////console.log("tarifa base: " ,this.tarifaBase);
+      this.acompaniante = 0;
+      op.valores.cliente.acompValor = 0;
+      ////console.log("acompañante valor: ", this.acompaniante);
+      this.kmValor = 0;
+      op.valores.cliente.kmAdicional = 0;
+      op.valores.cliente.adExtraValor = 0;      
+      op.valores.cliente.aCobrar = 0;
+    } else {
+this.tarifaBase = op.tarifaEventual.cliente.valor * op.multiplicadorCliente;
     op.valores.cliente.tarifaBase = this.tarifaBase;
     //this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
     this.acompaniante = op.acompaniante
@@ -173,6 +202,10 @@ export class ValoresOpClienteService {
       : 0;
     op.valores.cliente.acompValor = this.acompaniante;
     this.kmValor = 0;
+    op.valores.cliente.aCobrar =
+        this.tarifaBase + this.acompaniante + this.kmValor + (op.valores.cliente.adExtraValor ?? 0);
+    }
+    
     this.$crearFacturaOpCliente(op, 0);
     respuesta = {
       op: op,
@@ -252,7 +285,8 @@ export class ValoresOpClienteService {
         tarifaBase: this.tarifaBase,
         acompaniante: this.acompaniante,
         kmMonto: this.kmValor,
-        total: this.tarifaBase + this.acompaniante + this.kmValor,
+        adExtra: op.valores.cliente.adExtraValor ?? 0 , 
+        total: this.tarifaBase + this.acompaniante + this.kmValor + (op.valores.cliente.adExtraValor ?? 0),
       },
       km: op.km,
       liquidacion: false,

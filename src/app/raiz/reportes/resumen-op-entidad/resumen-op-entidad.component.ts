@@ -22,12 +22,12 @@ export class ResumenOpEntidadComponent implements OnInit {
 
   resumenes$!: Observable<ResumenOpBase[]> | null;
 
-  tipo: "general" | "entidad" = 'entidad';
+  tipo: "general" | "entidad" = "entidad";
   entidadId?: number;
 
   tituloPeriodo: string = "";
 
-  razonSocial:string = "";
+  razonSocial: string = "";
 
   constructor(
     private storageService: StorageService,
@@ -45,27 +45,25 @@ export class ResumenOpEntidadComponent implements OnInit {
     if (this.tipoEntidad === "cliente") {
       this.entidades = this.storageService.loadInfo("clientes") || [];
       this.entidades = this.entidades.sort((a, b) =>
-      a.razonSocial.localeCompare(b.razonSocial),
-    );
+        a.razonSocial.localeCompare(b.razonSocial),
+      );
     }
 
     if (this.tipoEntidad === "chofer") {
       this.entidades = this.storageService.loadInfo("choferes") || [];
       this.entidades = this.entidades.sort((a, b) =>
-      a.apellido.localeCompare(b.apellido),
-    );
+        a.apellido.localeCompare(b.apellido),
+      );
     }
 
     if (this.tipoEntidad === "proveedor") {
       this.entidades = this.storageService.loadInfo("proveedores") || [];
       this.entidades = this.entidades.sort((a, b) =>
-      a.razonSocial.localeCompare(b.razonSocial),
-    );
+        a.razonSocial.localeCompare(b.razonSocial),
+      );
     }
     console.log("this.entidades: ", this.entidades);
-    
   }
- 
 
   onTipoEntidadChange() {
     this.cargarEntidades();
@@ -80,15 +78,15 @@ export class ResumenOpEntidadComponent implements OnInit {
 
   cargarDatos() {
     if (!this.entidadSeleccionada) return;
-    console.log("this.periodo: ", this.periodo);
-    console.log("this.tipo: ", this.tipo);
-    console.log("this.entidadSeleccionada: ", this.entidadSeleccionada);
+    //console.log("this.periodo: ", this.periodo);
+    //console.log("this.tipo: ", this.tipo);
+    //console.log("this.entidadSeleccionada: ", this.entidadSeleccionada);
 
     this.resumenes$ = this.reportesOp.getResumen(
       this.periodo,
       this.tipo,
       this.entidadSeleccionada,
-      this.tipoEntidad
+      this.tipoEntidad,
     );
   }
 
@@ -147,34 +145,51 @@ export class ResumenOpEntidadComponent implements OnInit {
     });
   }
 
-  getRazonSocial(id:number): string{
-    this.razonSocial = ""; 
-    let entidad:any
-    switch(this.tipoEntidad){
-      case 'cliente': {
-        entidad = this.entidades.find(e=> e.idCliente === id);
-        if(entidad) this.razonSocial = entidad.razonSocial;
-        break
+  getRazonSocial(id: number): string {
+    this.razonSocial = "";
+    let entidad: any;
+    switch (this.tipoEntidad) {
+      case "cliente": {
+        entidad = this.entidades.find((e) => e.idCliente === id);
+        if (entidad) this.razonSocial = entidad.razonSocial;
+        break;
       }
-      case 'chofer': {
-        entidad = this.entidades.find(e=> e.idChofer === id);
-        if(entidad) this.razonSocial = entidad.apellido + " " + entidad.nombre;
-        break
+      case "chofer": {
+        entidad = this.entidades.find((e) => e.idChofer === id);
+        if (entidad) this.razonSocial = entidad.apellido + " " + entidad.nombre;
+        break;
       }
-      case 'proveedor': {
-        entidad = this.entidades.find(e=> e.idProveedor === id);
-        if(entidad) this.razonSocial = entidad.razonSocial;
-        break
+      case "proveedor": {
+        entidad = this.entidades.find((e) => e.idProveedor === id);
+        if (entidad) this.razonSocial = entidad.razonSocial;
+        break;
       }
-      default:{
+      default: {
         entidad = null;
-        break
+        break;
       }
     }
 
     return this.razonSocial;
+  }
 
+  onPeriodoChange(p: PeriodoFiltro) {
+    this.periodo = p;
+    console.log("this.periodo", p);
+
+    this.tituloPeriodo = this.armarTitulo(p);
+
+    if (!this.periodoValido(this.periodo)) {
+      this.resumenes$ = of([]); // 👈 devolvés vacío
+      this.mensajesError(
+        'El período "desde" no puede ser mayor a "hasta"',
+        false,
+      );
+      return;
     }
 
-  
+    //this.resumenes$ = this.reportesOp.getResumen(this.periodo);
+
+    this.cargarDatos();
+  }
 }

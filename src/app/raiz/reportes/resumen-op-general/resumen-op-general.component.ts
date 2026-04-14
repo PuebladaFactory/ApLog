@@ -42,7 +42,7 @@ export class ResumenOpGeneralComponent implements OnInit {
 
     this.resumenes$ = this.reportesOp.getResumenGeneral(this.periodo);
 
-    this.cargarDatos();
+    //this.cargarDatos();
   }
 
   private cargarDatos() {
