@@ -12,15 +12,15 @@ const routes: Routes = [
       { path: '', redirectTo: 'usuarios', pathMatch: 'full' },  
       {path: 'usuarios', component:AjustesUsuariosComponent,
             canActivate: [RoleGuard],
-            data: { roles: ['god', 'admin'] }, // no se permiten usuarios
+            data: { roles: ['god', 'admin', 'demo'] }, // no se permiten usuarios
       },          
       {path: 'registro', component:RegistroComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['god', 'admin'] }, // no se permiten usuarios
+        data: { roles: ['god', 'admin', 'demo'] }, // no se permiten usuarios
       },
       {path: 'papelera', component:PapeleraComponent,
         canActivate: [RoleGuard],
-        data: { roles: ['god', 'admin'] }, // no se permiten usuarios
+        data: { roles: ['god', 'admin', 'demo'] }, // no se permiten usuarios
       },
   ]}
 ];

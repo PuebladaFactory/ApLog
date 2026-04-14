@@ -48,19 +48,19 @@ const routes: Routes = [
       path: 'legajos',
       loadChildren: () => import('./legajos/legajos.module').then(m => m.LegajosModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin','manager','user'] }, // Accesible para todos los roles
+      data: { roles: ['god','admin','manager','user', 'demo'] }, // Accesible para todos los roles
     },
     {
       path: 'ajustes',
       loadChildren: () => import('./ajustes/ajustes.module').then(m => m.AjustesModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin',] }, // Accesible para todos los roles
+      data: { roles: ['god','admin', 'demo'] }, // Accesible para todos los roles
     },
     {
       path: 'nuevaFacturacion',
       loadChildren: () => import('./nueva-facturacion/nueva-facturacion.module').then(m => m.NuevaFacturacionModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] },       
+      data: { roles: ['god','admin', 'demo'] },       
     },
     {
       path: 'vendedores',
@@ -78,7 +78,7 @@ const routes: Routes = [
       path: 'reportes',
       loadChildren: () => import('./reportes/reportes.module').then(m => m.ReportesModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god','admin'] }, // 
+      data: { roles: ['god','admin', 'demo'] }, // 
     },
     
     

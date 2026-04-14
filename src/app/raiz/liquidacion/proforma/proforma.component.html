@@ -84,7 +84,7 @@
                                 <td class="d-flex">
                                     <app-btn-leer
                                         name="Detalle"
-                                        class="me-2"
+                                        class="me-2"                                        
                                         (click)="
                                             obtenerFacturasOp(
                                                 cliente,
@@ -96,6 +96,7 @@
                                     <app-btn-leer
                                         name="print"
                                         class="me-2"
+                                         [ngClass]="{'isDisabled':usuario.roles.demo}"
                                         (click)="
                                             obtenerFacturasOp(
                                                 cliente,
@@ -107,6 +108,7 @@
                                     <app-btn-eliminar
                                         name="Eliminar"
                                         class="me-2"
+                                         [ngClass]="{'isDisabled':usuario.roles.demo}"
                                         (click)="
                                             obtenerFacturasOp(
                                                 cliente,
@@ -119,6 +121,7 @@
                                         name="Factura"
                                         class="me-2"
                                         type="button"
+                                         [ngClass]="{'isDisabled':usuario.roles.demo}"
                                         (click)="
                                             obtenerFacturasOp(
                                                 cliente,
@@ -237,6 +240,7 @@
                                     <app-btn-leer
                                         name="print"
                                         class="me-2"
+                                         [ngClass]="{'isDisabled':usuario.roles.demo}"
                                         (click)="
                                             obtenerFacturasOp(
                                                 chofer,
@@ -248,6 +252,7 @@
                                     <app-btn-eliminar
                                         name="Eliminar"
                                         class="me-2"
+                                         [ngClass]="{'isDisabled':usuario.roles.demo}"
                                         (click)="
                                             obtenerFacturasOp(
                                                 chofer,
@@ -260,6 +265,7 @@
                                         name="Factura"
                                         class="me-2"
                                         type="button"
+                                         [ngClass]="{'isDisabled':usuario.roles.demo}"
                                         (click)="
                                             obtenerFacturasOp(
                                                 chofer,
@@ -371,6 +377,7 @@
                                     <app-btn-leer
                                         name="print"
                                         class="me-2"
+                                         [ngClass]="{'isDisabled':usuario.roles.demo}"
                                         (click)="
                                             obtenerFacturasOp(
                                                 prov,
@@ -382,6 +389,7 @@
                                     <app-btn-eliminar
                                         name="Eliminar"
                                         class="me-2"
+                                         [ngClass]="{'isDisabled':usuario.roles.demo}"
                                         (click)="
                                             obtenerFacturasOp(
                                                 prov,
@@ -394,6 +402,7 @@
                                         name="Factura"
                                         class="me-2"
                                         type="button"
+                                         [ngClass]="{'isDisabled':usuario.roles.demo}"
                                         (click)="
                                             obtenerFacturasOp(
                                                 prov,

@@ -64,7 +64,8 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
     filtroEstado: 'visibles' | 'todos' = 'visibles';
     proveedoresMockeados: ConIdType<Proveedor>[] = [];
     isLoading: boolean = false;
-  
+    usuario:any;
+
     constructor(
       private storageService: StorageService, 
       private modalService: NgbModal,
@@ -92,6 +93,8 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy{
             this.$proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
             this.aplicarFiltro(); // 👈 clave
       });
+      let user = this.storageService.loadInfo('usuario');
+      this.usuario = user[0];
   }
 
   aplicarFiltro(): void {

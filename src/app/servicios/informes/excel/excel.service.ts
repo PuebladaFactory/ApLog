@@ -19,6 +19,11 @@ import { InformeOp } from "src/app/interfaces/informe-op";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import { OpVenta, ResumenVenta } from "src/app/interfaces/resumen-venta";
 import { Workbook } from "exceljs";
+import { ResumenOpBase } from "src/app/interfaces/resumen-op-base";
+import {
+  ColumnaResumen,
+  ModoVista,
+} from "../../reportes/reportes-op/tabla-resumen-config.service";
 
 type ChoferAsignado = ConIdType<Chofer> & {
   categoriaAsignada: Categoria;
@@ -1467,7 +1472,7 @@ export class ExcelService {
 
     // opcional: ocultarla visualmente
     //headerGlobal.hidden = true;
-    headerGlobal.font = { color: { argb: 'FFFFFFFF' } }; // blanco
+    headerGlobal.font = { color: { argb: "FFFFFFFF" } }; // blanco
 
     worksheet.pageSetup = {
       printTitlesRow: `$${headerTablaGlobalRow}:$${headerTablaGlobalRow}`,
@@ -1686,5 +1691,389 @@ export class ExcelService {
       0,
     );
     return total;
+  }
+
+  ////////////////////////////////////////
+  /* EXPORTAR RESUMEN DE OP */
+  ///////////////////////////////////////
+  async exportarResumenOperaciones(
+    resumenes: ResumenOpBase[],
+    columnas: ColumnaResumen[],
+    periodo: string,
+    razonSocial: string,
+    tipo: "general" | "entidad",
+    tipoEntidad?: "cliente" | "chofer" | "proveedor",
+  ): Promise<void> {
+    const workbook = new ExcelJS.Workbook();
+
+    await this.crearHoja(
+      workbook,
+      "Totales",
+      resumenes,
+      columnas,
+      "totales",
+      periodo,
+      razonSocial,
+      tipo,
+      tipoEntidad,
+    );
+    await this.crearHoja(
+      workbook,
+      "Promedios",
+      resumenes,
+      columnas,
+      "promedios",
+      periodo,
+      razonSocial,
+      tipo,
+      tipoEntidad,
+    );
+    await this.crearHoja(
+      workbook,
+      "Porcentajes",
+      resumenes,
+      columnas,
+      "porcentajes",
+      periodo,
+      razonSocial,
+      tipo,
+      tipoEntidad,
+    );
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    saveAs(new Blob([buffer]), `Resumen_op_${razonSocial}_${periodo}.xlsx`);
+  }
+  private async crearHoja(
+    workbook: ExcelJS.Workbook,
+    nombre: string,
+    resumenes: ResumenOpBase[],
+    columnas: ColumnaResumen[],
+    modo: ModoVista,
+    periodo: string,
+    razonSocial: string,
+    tipo: "general" | "entidad",
+    tipoEntidad?: "cliente" | "chofer" | "proveedor",
+  ) {
+    const ws = workbook.addWorksheet(nombre);
+    const esGeneral = columnas.length > 12; // o mejor: pasar tipo explícito
+
+    // =========================
+    // 🧠 TÍTULO
+    // =========================
+
+    const ultimaCol = esGeneral ? 16 : 12; // P o L
+    const lastColLetter = ws.getColumn(ultimaCol).letter;
+
+    // 🔥 FILA 1 → TÍTULO
+    ws.mergeCells(`A1:C1`);
+    const tituloCell = ws.getCell("A1");
+    const tituloLabel = esGeneral
+      ? `Resumen ${razonSocial} de Operaciones `
+      : `Resumen de Operaciones de ${razonSocial}`;
+
+    tituloCell.value = tituloLabel;
+    tituloCell.font = { bold: true, size: 14 };
+    tituloCell.alignment = { horizontal: "left" };
+
+    // 🔥 FILA 2 → SUBTÍTULO
+    ws.mergeCells(`A2:C2`);
+    const subCell = ws.getCell("A2");
+    const subtituloLabel = periodo;
+
+    subCell.value = subtituloLabel; // periodo
+    subCell.font = { size: 11 };
+    subCell.alignment = { horizontal: "left" };
+
+    // =========================
+    // 🧠 HEADER AGRUPADO (FILA 2)
+    // =========================
+
+    this.construirHeaderAgrupado(ws, tipo, tipoEntidad);
+
+    // =========================
+    // 🧾 HEADERS REALES (FILA 3)
+    // =========================
+    const headers = ["Periodo", ...columnas.map((c) => c.label)];
+    ws.getRow(4).alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    // =========================
+    // 📊 FILAS
+    // =========================
+    const rows = resumenes.map((r) => {
+      const periodo = `${r.mes.toString().padStart(2, "0")}-${r.anio}`;
+
+      return [
+        periodo,
+        ...columnas.map((c) => {
+          let val = c.valueFn(r, modo);
+
+          // 🔥 CORRECCIÓN PORCENTAJES
+          if (modo === "porcentajes" && val !== null && val !== undefined) {
+            val = val; // ya corregiste esto
+          }
+
+          return val ?? undefined;
+        }),
+      ];
+    });
+
+    // =========================
+    // 📊 TABLA
+    // =========================
+    ws.addTable({
+      name: `Tabla_${nombre}`,
+      ref: "A5",
+      headerRow: true,
+      style: {
+        theme: "TableStyleMedium2",
+        //theme: "TableStyleLight1",
+        showRowStripes: true,
+      },
+      columns: headers.map((h) => ({ name: h })),
+      rows,
+    });
+
+    // =========================
+    // 🎨 FORMATOS
+    // =========================
+    this.formatearColumnas(ws, columnas, modo);
+
+    // =========================
+    // SEPARADORES
+    // =========================
+
+    this.aplicarSeparadores(ws, esGeneral);
+
+    // =========================
+    // COLORES COLUMNAS
+    // =========================
+
+    //this.colorearSecciones(ws); // opcional
+
+    // =========================
+    // 💬 TOOLTIP
+    // =========================
+    this.agregarComentarios(ws, columnas, modo);
+
+    // =========================
+    // 🔧 AJUSTE COLUMNAS
+    // =========================
+    this.autoWidth(ws);
+
+    // =========================
+    // 🧊 FREEZE
+    // =========================
+    ws.views = [{ state: "frozen", ySplit: 5 }];
+  }
+
+  private autoWidth(ws: ExcelJS.Worksheet) {
+    ws.columns.forEach((column) => {
+      let maxLength = 0;
+
+      column.eachCell?.({ includeEmpty: true }, (cell) => {
+        let value = cell.value;
+
+        if (value === null || value === undefined) return;
+
+        let text = "";
+
+        if (typeof value === "number") {
+          // 🔥 estimación más realista
+          text = value.toLocaleString("es-AR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+        } else {
+          text = value.toString();
+        }
+
+        const length = text.length;
+
+        if (length > maxLength) {
+          maxLength = length;
+        }
+      });
+
+      const min = 8;
+      const max = 25; // 🔥 más margen
+
+      column.width = Math.min(Math.max(maxLength + 3, min), max);
+    });
+  }
+
+  private formatearColumnas(
+    ws: ExcelJS.Worksheet,
+    columnas: ColumnaResumen[],
+    modo: ModoVista,
+  ) {
+    columnas.forEach((col, i) => {
+      const column = ws.getColumn(i + 2);
+
+      // 🔥 PRIORIDAD: porcentajes
+      if (modo === "porcentajes") {
+        column.numFmt = "0.00%";
+        column.alignment = { horizontal: "right" };
+        return;
+      }
+
+      // 💰 moneda
+      if (col.tipo === "currency") {
+        column.numFmt = '"$"#,##0.00';
+      } else {
+        column.numFmt = "#,##0.00";
+      }
+
+      column.alignment = { horizontal: "right" };
+    });
+  }
+
+  private agregarComentarios(
+    ws: ExcelJS.Worksheet,
+    columnas: ColumnaResumen[],
+    modo: ModoVista,
+  ) {
+    columnas.forEach((col, i) => {
+      if (!col.tooltip) return;
+
+      const cell = ws.getCell(5, i + 2);
+
+      cell.note = col.tooltip(modo);
+    });
+  }
+
+  private aplicarSeparadores(ws: ExcelJS.Worksheet, esGeneral: boolean) {
+    const separadores = esGeneral ? [5, 8, 12] : [5, 8];
+
+    ws.eachRow((row, rowNumber) => {
+      if (rowNumber < 3) return; // opcional: evitar header superior
+
+      separadores.forEach((colIndex) => {
+        const cell = row.getCell(colIndex);
+
+        cell.border = {
+          ...cell.border,
+          right: { style: "medium" }, // 🔥 borde grueso
+        };
+      });
+    });
+  }
+
+  private colorearSecciones(ws: ExcelJS.Worksheet) {
+    const colores = {
+      operacion: "FFF2F2F2",
+      totales: "FFE8F4FF",
+      cliente: "FFEAF7EA",
+      chofer: "FFFFF4E5",
+    };
+
+    ws.eachRow((row, rowNumber) => {
+      if (rowNumber < 3) return;
+
+      // Operación (B–E)
+      for (let i = 2; i <= 5; i++) {
+        row.getCell(i).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: colores.operacion },
+        };
+      }
+
+      // Totales (F–H)
+      for (let i = 6; i <= 8; i++) {
+        row.getCell(i).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: colores.totales },
+        };
+      }
+
+      // Cliente (I–L)
+      for (let i = 9; i <= 12; i++) {
+        row.getCell(i).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: colores.cliente },
+        };
+      }
+
+      // Chofer (M–P)
+      for (let i = 13; i <= 16; i++) {
+        row.getCell(i).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: colores.chofer },
+        };
+      }
+    });
+  }
+
+  private construirHeaderAgrupado(
+    ws: ExcelJS.Worksheet,
+    tipo: "general" | "entidad",
+    tipoEntidad?: string,
+  ) {
+    if (tipo === "general") {
+      ws.getRow(4).values = [
+        "",
+        "Operación",
+        "",
+        "",
+        "",
+        "Totales",
+        "",
+        "",
+        "Cliente",
+        "",
+        "",
+        "",
+        "Chofer",
+        "",
+        "",
+        "",
+      ];
+
+      ws.mergeCells("B4:E4");
+      ws.mergeCells("F4:H4");
+      ws.mergeCells("I4:L4");
+      ws.mergeCells("M4:P4");
+    } else {
+      const label = this.capitalize(tipoEntidad ?? "Entidad");
+
+      ws.getRow(4).values = [
+        "",
+        "Operación",
+        "",
+        "",
+        "",
+        "Totales",
+        "",
+        "",
+        label,
+        "",
+        "",
+        "",
+      ];
+
+      ws.mergeCells("B4:E4");
+      ws.mergeCells("F4:H4");
+      ws.mergeCells("I4:L4");
+    }
+
+    // 🔥 centrar correctamente
+    ["B4", "F4", "I4", "M4"].forEach((ref) => {
+      const cell = ws.getCell(ref);
+      if (cell) {
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.font = { bold: true };
+      }
+    });
+  }
+
+  private capitalize(text: string): string {
+    return text.charAt(0).toUpperCase() + text.slice(1);
   }
 }

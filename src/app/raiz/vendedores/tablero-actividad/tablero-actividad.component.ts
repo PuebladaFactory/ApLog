@@ -62,6 +62,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
   informesVenta!: ConId<InformeVenta>[];
   vendedores!: ConId<Vendedor>[];
   isLoading: boolean = false;
+  usuario:any;
 
   constructor(
     private storageService: StorageService,
@@ -164,6 +165,8 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
             }
           });
       });
+            let user = this.storageService.loadInfo('usuario');
+      this.usuario = user[0];
   }
 
   ngOnDestroy(): void {

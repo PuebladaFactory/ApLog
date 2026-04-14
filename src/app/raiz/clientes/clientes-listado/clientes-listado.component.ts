@@ -62,6 +62,7 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
 
   clientesFiltrados: ConId<Cliente>[] = [];
   filtroEstado: 'visibles' | 'todos' = 'visibles';
+  usuario:any
 
   constructor(
     private storageService: StorageService, 
@@ -82,6 +83,8 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
         );
         this.aplicarFiltro(); // 👈 clave
       });
+      let user = this.storageService.loadInfo('usuario');
+      this.usuario = user[0];
   }
 
   aplicarFiltro(): void {

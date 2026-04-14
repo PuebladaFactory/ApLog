@@ -64,6 +64,7 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
 
     choferesMock: ConIdType<Chofer>[] = [];
     isLoading: boolean = false;
+    usuario:any;
   
     constructor(
       private storageService: StorageService, 
@@ -89,7 +90,9 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
               this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
               this.aplicarFiltro(); // 👈 clave
             }
-      });                     
+      });    
+            let user = this.storageService.loadInfo('usuario');
+      this.usuario = user[0];                 
     }
 
     aplicarFiltro(): void {

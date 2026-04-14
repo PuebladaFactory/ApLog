@@ -12,18 +12,20 @@ import {
 import { ConId } from "src/app/interfaces/conId";
 import { Operacion } from "src/app/interfaces/operacion";
 import {
-  PeriodoFiltro,
   ResumenOpBase,
   ResumenOpGeneralMensual,
 } from "src/app/interfaces/resumen-op-base";
 import { ResumenBuilderService } from "./resumen-builder.service";
 import { Resultado } from "../../database/db-firestore.service";
 import { Observable } from "rxjs";
+import { PeriodoFiltro } from "src/app/interfaces/periodo-filtro";
 
-type TipoResumen = "cliente" | "chofer" | "proveedor" | "general";
+type TipoEntidad = "cliente" | "chofer" | "proveedor";
+type Tipo = "general" | "entidad";
 
 export interface KeyResumen {
-  tipo: TipoResumen;
+  tipo: Tipo;
+  tipoEntidad?: TipoEntidad
   entidadId?: number;
   anio: number;
   mes: number;
@@ -93,7 +95,8 @@ export class ReportesOpService {
         this.procesarOperacion(
           map,
           {
-            tipo: "cliente",
+            tipo:'entidad',
+            tipoEntidad: "cliente",
             entidadId: op.cliente.idCliente,
             anio,
             mes,
@@ -106,7 +109,8 @@ export class ReportesOpService {
           this.procesarOperacion(
             map,
             {
-              tipo: "proveedor",
+              tipo:'entidad',
+              tipoEntidad: "proveedor",
               entidadId: op.chofer.idProveedor,
               anio,
               mes,
@@ -117,7 +121,8 @@ export class ReportesOpService {
           this.procesarOperacion(
             map,
             {
-              tipo: "chofer",
+              tipo:'entidad',
+              tipoEntidad: "chofer",
               entidadId: op.chofer.idChofer,
               anio,
               mes,
@@ -130,7 +135,7 @@ export class ReportesOpService {
         this.procesarOperacion(
           map,
           {
-            tipo: "general",
+            tipo: 'general',
             anio,
             mes,
           },
@@ -177,7 +182,12 @@ export class ReportesOpService {
   // 🔹 BUILD KEY
   // =========================
   private buildKey(k: KeyResumen): string {
-    return `${k.anio}_${k.mes}_${k.tipo}_${k.entidadId ?? "0"}`;
+
+    if (k.tipo === 'general') {
+      return `general_${k.anio}_${k.mes}`;
+    }
+
+    return `${k.tipoEntidad}_${k.entidadId}_${k.anio}_${k.mes}`;
   }
 
   // =========================
@@ -202,7 +212,7 @@ export class ReportesOpService {
 
       res.cliente.acompValor += c.acompValor;
       res.cliente.kmAdicional += c.kmAdicional;
-      res.cliente.tarifaBase += c.tarifaBase;      
+      res.cliente.tarifaBase += c.tarifaBase;
       res.cliente.adExtraValor += c.adExtraValor ?? 0;
 
       // chofer
@@ -211,13 +221,13 @@ export class ReportesOpService {
 
       res.chofer.acompValor += ch.acompValor;
       res.chofer.kmAdicional += ch.kmAdicional;
-      res.chofer.tarifaBase += ch.tarifaBase;      
+      res.chofer.tarifaBase += ch.tarifaBase;
       res.chofer.adExtraValor += ch.adExtraValor ?? 0;
 
       // totales
-      res.cliente.total += c.aCobrar 
+      res.cliente.total += c.aCobrar;
 
-      res.chofer.total += ch.aPagar 
+      res.chofer.total += ch.aPagar;
 
       res.ganancia = res.cliente.total - res.chofer.total;
     } catch (error: any) {
@@ -298,7 +308,7 @@ export class ReportesOpService {
     const hasta = periodo.hasta.anio * 100 + periodo.hasta.mes;
 
     console.log("desde: ", desde, "hasta: ", hasta);
-    
+
     const ref = collection(this.firestore, `${this.basePath}/resumenOpMensual`);
 
     const q = query(
@@ -306,10 +316,43 @@ export class ReportesOpService {
       where("tipo", "==", "general"),
       where("periodo", ">=", desde),
       where("periodo", "<=", hasta),
-      orderBy('anio', 'desc'),
-      orderBy('mes', 'desc')
-    );    
-    
+      orderBy("anio", "desc"),
+      orderBy("mes", "desc"),
+    );
+
     return collectionData(q) as Observable<ResumenOpGeneralMensual[]>;
+  }
+
+  getResumen(
+    periodo: PeriodoFiltro,
+    tipo: "general" | "entidad",
+    entidadId?: number,
+    tipoEntidad?: 'cliente' | 'chofer' | 'proveedor',
+  ): Observable<ResumenOpBase[]> {
+    const desde = periodo.desde.anio * 100 + periodo.desde.mes;
+    const hasta = periodo.hasta.anio * 100 + periodo.hasta.mes;
+
+    const ref = collection(this.firestore, `${this.basePath}/resumenOpMensual`);
+
+    const condiciones: any[] = [
+      where("periodo", ">=", desde),
+      where("periodo", "<=", hasta),
+      orderBy("anio", "desc"),
+      orderBy("mes", "desc"),
+    ];
+
+    if (tipo === "general") {
+      condiciones.push(where("tipo", "==", "general"));
+    }
+
+    if (tipo === 'entidad' && entidadId !== undefined) {
+      condiciones.push(where('tipo', '==', tipo));
+      condiciones.push(where('entidadId', '==', entidadId));
+      condiciones.push(where('tipoEntidad', '==', tipoEntidad));
+    }
+
+    const q = query(ref, ...condiciones);
+
+    return collectionData(q) as Observable<ResumenOpBase[]>;
   }
 }

@@ -1,5 +1,9 @@
-th,td, input, select, option {
-    font-size: 1.3rem;
+th,
+td,
+input,
+select,
+option {
+  font-size: 1.3rem;
 }
 
 .sortable {
@@ -22,5 +26,17 @@ th,td, input, select, option {
   font-family: "Inter", system-ui, sans-serif !important;
   padding-left: 0.4rem !important;
   padding-right: 0.4rem !important;
-  font-weight: 500 !important;  
+  font-weight: 500 !important;
+}
+
+.isDisabled {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.5;
+  /* o cualquier otro estilo para indicar que está deshabilitado */
+}
+
+.isDisabled:hover {
+  cursor: not-allowed;
+  opacity: 0.5;
 }

@@ -1,7 +1,8 @@
 import { Injectable } from "@angular/core";
 import { ResumenOpBase } from "src/app/interfaces/resumen-op-base";
 
-export type TipoVistaResumen = "cliente" | "chofer" | "proveedor" | "general";
+export type TipoVistaResumen = "entidad" | "general";
+export type TipoEntidadResumen = "cliente" | "chofer" | "proveedor";
 export type ModoVista = "totales" | "promedios" | "porcentajes";
 
 export interface ColumnaResumen {
@@ -18,16 +19,21 @@ export class TablaResumenConfigService {
   // =========================
   // 🔹 PUBLIC API
   // =========================
-  getColumnas(tipo: TipoVistaResumen): ColumnaResumen[] {
-    switch (tipo) {
-      case "cliente":
-        return this.columnasCliente();
-      case "chofer":
-      case "proveedor":
-        return this.columnasChofer();
-      case "general":
-        return this.columnasGeneral();
-    }
+  getColumnas(
+    tipo: TipoVistaResumen,
+    tipoEntidad?: TipoEntidadResumen,
+  ): ColumnaResumen[] | null {
+    if (tipo === "general") {
+      return this.columnasGeneral();
+    } else if(tipoEntidad) {
+      switch (tipoEntidad) {
+        case "cliente":
+          return this.columnasCliente();
+        case "chofer":
+        case "proveedor":
+          return this.columnasChofer();
+      }
+    }else return null
   }
 
   formatValue(valor: number | null, tipo: string, modo: ModoVista): string {
@@ -145,10 +151,10 @@ export class TablaResumenConfigService {
               return "Cantidad total de op con acompañante";
 
             case "promedios":
-              return "Promedio de op con acompañante";
+              return "No aplica";
 
             case "porcentajes":
-              return "No aplica";
+              return "Porcentaje de las op con acompañantes en relación al total de op";
           }
         },
       },
@@ -185,98 +191,6 @@ export class TablaResumenConfigService {
           }
         },
       },
-    ];
-  }
-
-  // =========================
-  // 🔹 CLIENTE
-  // =========================
-  private columnasCliente(): ColumnaResumen[] {
-    return [
-      ...this.columnasBase(),
-
-      // FACTURADO
-      {
-        key: "facturado",
-        label: "Facturado",
-        tipo: "currency",
-        visible: true,
-        valueFn: (r, modo) => {
-          switch (modo) {
-            case "totales":
-              return r.cliente.total;
-            case "promedios":
-              return this.promedio(r.cliente.total, r.cantidadOps);
-            case "porcentajes":
-              return 1; // base 100%
-          }
-        },
-        tooltip: (modo) => {
-          switch (modo) {
-            case "totales":
-              return "Facturación total de las op en el mes";
-
-            case "promedios":
-              return "Promedio de facturación por op";
-
-            case "porcentajes":
-              return "Representa el 100% del total";
-          }
-        },
-      },
-
-      // DESGLOSE
-      ...this.columnasValores("cliente", (r) => r.cliente.total),
-    ];
-  }
-
-  // =========================
-  // 🔹 CHOFER / PROVEEDOR
-  // =========================
-  private columnasChofer(): ColumnaResumen[] {
-    return [
-      ...this.columnasBase(),
-
-      {
-        key: "costo",
-        label: "Costo",
-        tipo: "currency",
-        visible: true,
-        valueFn: (r, modo) => {
-          switch (modo) {
-            case "totales":
-              return r.chofer.total;
-            case "promedios":
-              return this.promedio(r.chofer.total, r.cantidadOps);
-            case "porcentajes":
-              return 1;
-          }
-        },
-        tooltip: (modo) => {
-          switch (modo) {
-            case "totales":
-              return "Costo total de las op en el mes";
-
-            case "promedios":
-              return "Promedio del costo por op";
-
-            case "porcentajes":
-              return "Representa el 100% del total";
-          }
-        },
-      },
-
-      ...this.columnasValores("chofer", (r) => r.chofer.total),
-    ];
-  }
-
-  // =========================
-  // 🔹 GENERAL
-  // =========================
-  private columnasGeneral(): ColumnaResumen[] {
-    return [
-      ...this.columnasBase(),
-
       {
         key: "facturado",
         label: "Facturado",
@@ -330,7 +244,7 @@ export class TablaResumenConfigService {
               return "Promedio del costo por op";
 
             case "porcentajes":
-              return "Promedio del costo en relación a la facturación total";
+              return "Porcentaje del costo en relación a la facturación total";
           }
         },
       },
@@ -363,6 +277,97 @@ export class TablaResumenConfigService {
           }
         },
       },
+    ];
+  }
+
+  // =========================
+  // 🔹 CLIENTE
+  // =========================
+  private columnasCliente(): ColumnaResumen[] {
+    return [
+      ...this.columnasBase(),
+      /* 
+      // FACTURADO
+      {
+        key: "facturado",
+        label: "Facturado",
+        tipo: "currency",
+        visible: true,
+        valueFn: (r, modo) => {
+          switch (modo) {
+            case "totales":
+              return r.cliente.total;
+            case "promedios":
+              return this.promedio(r.cliente.total, r.cantidadOps);
+            case "porcentajes":
+              return 1; // base 100%
+          }
+        },
+        tooltip: (modo) => {
+          switch (modo) {
+            case "totales":
+              return "Facturación total de las op en el mes";
+
+            case "promedios":
+              return "Promedio de facturación por op";
+
+            case "porcentajes":
+              return "Representa el 100% del total";
+          }
+        },
+      }, */
+
+      // DESGLOSE
+      ...this.columnasValores("cliente", (r) => r.cliente.total),
+    ];
+  }
+
+  // =========================
+  // 🔹 CHOFER / PROVEEDOR
+  // =========================
+  private columnasChofer(): ColumnaResumen[] {
+    return [
+      ...this.columnasBase(),
+      /* 
+      {
+        key: "costo",
+        label: "Costo",
+        tipo: "currency",
+        visible: true,
+        valueFn: (r, modo) => {
+          switch (modo) {
+            case "totales":
+              return r.chofer.total;
+            case "promedios":
+              return this.promedio(r.chofer.total, r.cantidadOps);
+            case "porcentajes":
+              return 1;
+          }
+        },
+        tooltip: (modo) => {
+          switch (modo) {
+            case "totales":
+              return "Costo total de las op en el mes";
+
+            case "promedios":
+              return "Promedio del costo por op";
+
+            case "porcentajes":
+              return "Representa el 100% del total";
+          }
+        },
+      }, */
+
+      ...this.columnasValores("chofer", (r) => r.chofer.total),
+    ];
+  }
+
+  // =========================
+  // 🔹 GENERAL
+  // =========================
+  private columnasGeneral(): ColumnaResumen[] {
+    return [
+      ...this.columnasBase(),
 
       // desglose cliente (ingresos)
       ...this.columnasValores("cliente", (r) => r.cliente.total),
@@ -398,13 +403,13 @@ export class TablaResumenConfigService {
         tooltip: (modo) => {
           switch (modo) {
             case "totales":
-              return "Facturación de la tarifa base de las op en el mes";
+              return "Facturación de la tarifa base por las op en el mes";
 
             case "promedios":
-              return "Promedio de facturación de la tarifa base por op";
+              return "Promedio de facturación por op de la tarifa base";
 
             case "porcentajes":
-              return "Porcentaje de la tarfia base en relación a la facturación total";
+              return "Porcentaje en relación a la facturación total de la tarfia base";
           }
         },
       },
@@ -429,13 +434,13 @@ export class TablaResumenConfigService {
         tooltip: (modo) => {
           switch (modo) {
             case "totales":
-              return "Facturación del adicional por km de las op en el mes";
+              return "Facturación del adicional por km por las op en el mes";
 
             case "promedios":
-              return "Promedio de facturación del adicional por km por op";
+              return "Promedio de facturación por op del adicional por km";
 
             case "porcentajes":
-              return "Porcentaje del adicional por km en relación a la facturación total";
+              return "Porcentaje en relación a la facturación total del adicional por km";
           }
         },
       },
@@ -460,13 +465,13 @@ export class TablaResumenConfigService {
         tooltip: (modo) => {
           switch (modo) {
             case "totales":
-              return "Facturación del adicional por acompañante de las op en el mes";
+              return "Facturación del adicional por acompañante por las op en el mes";
 
             case "promedios":
-              return "Promedio de facturación del adicional por acompañante por op con acompñante";
+              return "Promedio de facturación por op con acompñante del adicional por acompañante";
 
             case "porcentajes":
-              return "Porcentaje del adicional por acompañante en relación a la facturación total";
+              return "Porcentaje en relación a la facturación total del adicional por acompañante";
           }
         },
       },
@@ -491,13 +496,13 @@ export class TablaResumenConfigService {
         tooltip: (modo) => {
           switch (modo) {
             case "totales":
-              return "Facturación del adicional extra de las op en el mes";
+              return "Facturación del adicional extra por las op en el mes";
 
             case "promedios":
-              return "Promedio de facturación del adicional extra por op";
+              return "Promedio de facturación por op del adicional extra";
 
             case "porcentajes":
-              return "Porcentaje del adicional por extra en relación a la facturación total";
+              return "Porcentaje en relación a la facturación total del adicional por extra";
           }
         },
       },

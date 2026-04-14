@@ -40,7 +40,9 @@
                             <app-informes-acciones-cell
                               [item]="item"
                               [acciones]="col.acciones"
-                              (accion)="accionClick.emit($event)">
+                              (accion)="accionClick.emit($event)"
+                              [ngClass]="disbledDemo(col)"
+                              >
                             </app-informes-acciones-cell>
                           } @else {
                             <span [ngClass]="{'col-numero': col.key === 'total'}">{{ getValor(col, item) }}</span>

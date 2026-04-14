@@ -2,7 +2,7 @@
 <div class="d-flex justify-content-between">
     <div class="d-flex" >  
         <div class="align-self-start mt-3 me-2">
-            <app-btn-leer class="align-items-end" name="Proveedor" (click)="openModal('alta')"></app-btn-leer>        
+            <app-btn-leer class="align-items-end" name="Proveedor" (click)="openModal('alta')" [ngClass]="{'isDisabled':usuario.roles.demo}"></app-btn-leer>        
         </div>
         <div class="align-self-start mt-3 mb-1">
             <button  class="btn btn-primary boton-alta" type="button" id="" (click)="descargarProveedores()">
@@ -10,7 +10,7 @@
             </button>
         </div>
         <div class="align-self-start ms-2 mt-3 mb-1">
-            <button  class="btn btn-primary boton-alta" type="button" id="" (click)="visibilidadProveedores()">
+            <button  class="btn btn-primary boton-alta" type="button" id="" (click)="visibilidadProveedores()" [ngClass]="{'isDisabled':usuario.roles.demo}">
                 Proveedores Visibles
             </button>
         </div>

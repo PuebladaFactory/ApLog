@@ -3,7 +3,7 @@
 
     <div class="d-flex" >  
         <div class="align-self-start mt-3 me-2">
-            <app-btn-leer class="align-items-end" name="Chofer" (click)="openModal('alta')"></app-btn-leer>
+            <app-btn-leer class="align-items-end" name="Chofer" (click)="openModal('alta')" [ngClass]="{'isDisabled':usuario.roles.demo}"></app-btn-leer>
         </div>
         <div class="align-self-start mt-3 mb-1">
             <button  class="btn btn-primary boton-alta" type="button" id="" (click)="descargarChoferes()">
@@ -11,7 +11,7 @@
             </button>
         </div>
         <div class="align-self-start ms-2 mt-3 mb-1">
-            <button  class="btn btn-primary boton-alta" type="button" id="" (click)="visibilidadChoferes()">
+            <button  class="btn btn-primary boton-alta" type="button" id="" (click)="visibilidadChoferes()" [ngClass]="{'isDisabled':usuario.roles.demo}">
                 Choferes Visibles
             </button>
         </div>

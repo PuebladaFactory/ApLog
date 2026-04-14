@@ -4,7 +4,7 @@ export interface ResumenOpBase {
   
   anio: number;
   mes: number;
-  tipo: 'cliente' | 'chofer' | 'proveedor' | 'general';
+  tipo: 'general' | 'entidad';
   cantidadOps: number;
   kmRecorridos: number;
 
@@ -39,11 +39,13 @@ export interface ResumenOpBase {
 }
 
 export interface ResumenOpEntidadMensual extends ResumenOpBase {
-  entidadId: number;    
+  entidadId: number; 
+  tipoEntidad: 'cliente' | 'chofer' | 'proveedor';   
 }
 
 export interface ResumenOpGeneralMensual extends ResumenOpBase {    
   // vacío a propósito
+  
 }
 
 export interface PeriodoFiltro {

@@ -43,8 +43,12 @@ export class TableroLegajosComponent implements OnInit {
   $choferesFiltrados!: ConIdType<Chofer>[];
   $legajosFiltrados: ConIdType<Legajo>[] = [];
   isLoading: boolean = false;
+  usuario:any;
 
-  constructor(private storageService: StorageService, private modalService: NgbModal){}  
+  constructor(
+    private storageService: StorageService, 
+    private modalService: NgbModal
+  ){}  
   
   ngOnInit(): void {
     this.storageService.listenForChanges<Legajo>("legajos");
@@ -83,6 +87,8 @@ export class TableroLegajosComponent implements OnInit {
     
     //this.crearLegajos()  
     //this.storageService.syncChanges("legajos");
+          let usuario = this.storageService.loadInfo("usuario");
+    this.usuario = usuario[0];
   }
 
   ngOnDestroy(): void {

@@ -74,7 +74,7 @@ export class ReportesControlComponent implements OnInit{
       });
 
     // 👇 importante para carga inicial (nueva pestaña) */
-    //this.actualizarTabActivo();
+    this.actualizarTabActivo();
   }
 
   actualizarTabActivo() {

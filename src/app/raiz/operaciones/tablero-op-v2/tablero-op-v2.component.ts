@@ -128,6 +128,8 @@ private resizingCol: string | null = null;
 private resizeStartX = 0;
 private resizeStartWidth = 0;
 
+usuario:any;
+
   constructor(
     private storage: StorageService,
     private dateRange: DateRangeService,
@@ -177,6 +179,9 @@ private resizeStartWidth = 0;
         this.storage.syncChangesDateValue('operaciones','fecha',desde,hasta,'desc');
         this.escucharOperaciones();
       });
+      let user = this.storage.loadInfo('usuario');
+      this.usuario = user[0];
+      console.log(this.usuario.roles.demo);
       
   }
 
