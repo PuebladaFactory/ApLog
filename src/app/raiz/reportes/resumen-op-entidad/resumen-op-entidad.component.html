@@ -1,0 +1,71 @@
+<h2>Resumen de Op por Entidad</h2>
+<div class="card p-3">
+    <div class="row d-flex justify-content-start">
+        <div class="col-1">
+            <!-- Tipo entidad -->
+            <select
+                class="form-select w-auto"
+                [(ngModel)]="tipoEntidad"
+                (change)="onTipoEntidadChange()"
+            >
+                <option value="cliente">Cliente</option>
+                <option value="chofer">Chofer</option>
+                <option value="proveedor">Proveedor</option>
+            </select>
+        </div>
+
+        <div class="col-4">
+            <!-- Entidad -->
+            <select
+                class="form-select"
+                [(ngModel)]="entidadSeleccionada"
+                (change)="onEntidadChange()"
+            >
+                <option [ngValue]="undefined">Seleccionar...</option>
+
+                @for (
+                    e of entidades;
+                    track e.idCliente ?? e.idChofer ?? e.idProveedor
+                ) {
+                    <option
+                        [ngValue]="e.idCliente ?? e.idChofer ?? e.idProveedor"
+                    >
+                        {{ e.razonSocial ?? e.apellido + " " + e.nombre }}
+                    </option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+@if (entidadSeleccionada) {
+        <div class="d-flex justify-content-between">
+            <div class="d-flex">
+                <app-filtro-periodo (periodoChange)="onPeriodoChange($event)" class="align-self-end mb-2">
+                </app-filtro-periodo>
+            </div>
+            <div>
+                
+                    <h2 class="mt-3 ms-2 mb-2">
+                        <span
+                            class="badge bg-primary-subtle text-primary-emphasis"
+                            >{{ getRazonSocial(entidadSeleccionada) }}</span
+                        >
+                    </h2>
+                
+            </div>
+        </div>
+        @if (resumenes$ | async; as resumenes) { 
+
+
+        <app-tabla-resumen
+            [resumenes]="resumenes"
+            [tituloPeriodo]="tituloPeriodo"
+            [razonSocial]="razonSocial"
+            [tipo]="tipo"
+            [tipoEntidad]="tipoEntidad"
+        >
+        </app-tabla-resumen>
+  
+}
+}
+

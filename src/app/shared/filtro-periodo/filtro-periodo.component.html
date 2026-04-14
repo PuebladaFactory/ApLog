@@ -1,0 +1,49 @@
+<div class="d-flex gap-2 align-items-center flex-wrap">
+    <!-- Tipo -->
+    <select class="form-select w-auto" [(ngModel)]="tipo" (change)="emitir()">
+        <option value="ultimos-12">Últimos 12 meses</option>
+        <option value="anio">Año</option>
+        <option value="rango">Rango</option>
+    </select>
+
+    @if (tipo === "anio") {
+        <input
+            type="number"
+            class="form-control w-auto"
+            [(ngModel)]="anio"
+            (change)="emitir()"
+        />
+    }
+
+    @if (tipo === "rango") {
+        <span>Desde</span>
+
+        <select [(ngModel)]="desdeMes" (change)="emitir()">
+            @for (m of meses; track m.valor) {
+                <option [ngValue]="m.valor">{{ m.nombre }}</option>
+            }
+        </select>
+
+        <input
+            type="number"
+            class="form-control w-auto"
+            [(ngModel)]="desdeAnio"
+            (change)="emitir()"
+        />
+
+        <span>Hasta</span>
+
+        <select [(ngModel)]="hastaMes" (change)="emitir()">
+            @for (m of meses; track m.valor) {
+                <option [ngValue]="m.valor">{{ m.nombre }}</option>
+            }
+        </select>
+
+        <input
+            type="number"
+            class="form-control w-auto"
+            [(ngModel)]="hastaAnio"
+            (change)="emitir()"
+        />
+    }
+</div>

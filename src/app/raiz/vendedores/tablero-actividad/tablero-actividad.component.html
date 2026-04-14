@@ -30,7 +30,7 @@
                     <!-- <div><button class="btn btn-outline-info" (click)="corregirInfVenta(vg)">Corregir Informes</button></div> -->
                     @if(!vg.estadoPago){
                         <div class="me-3 mt-2">
-                            <app-btn-agregar name="Pagar" (click)="pagarVendedor(vg)"></app-btn-agregar>
+                            <app-btn-agregar name="Pagar" (click)="pagarVendedor(vg)" [ngClass]="{'isDisabled':usuario.roles.demo}"></app-btn-agregar>
                         </div>
                     }
 

@@ -47,6 +47,7 @@ export class InformeLiqDetalleComponent implements OnInit {
   periodoBoolean: boolean = true;
   periodo!: 'mes' | '1° quincena' | '2° quincena';
   tipoCliente!: boolean;
+  usuario:any;
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -74,6 +75,8 @@ export class InformeLiqDetalleComponent implements OnInit {
     this.titulo = this.fromParent.item.entidad.razonSocial;
     this.periodo = this.informeLiq.periodo ?? "mes";
     this.tipoCliente = this.fromParent.tipo === 'cliente' ? true: false;
+    let user = this.storageService.loadInfo('usuario');
+    this.usuario = user[0];
   }
 
   getChofer(idChofer: number) {

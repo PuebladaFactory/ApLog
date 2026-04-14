@@ -25,6 +25,7 @@ export class VendedoresListadoComponent implements OnInit {
   componente: string = "vendedores";
   isLoading: boolean = false;
   clientesModificados: ConId<Cliente>[] = [];
+  usuario:any
 
   constructor(
     private storageService: StorageService, 
@@ -45,6 +46,8 @@ export class VendedoresListadoComponent implements OnInit {
       });
     //this.vendedores = this.storageService.loadInfo('vendedores')
     this.clientes = this.storageService.loadInfo('clientes')
+          let user = this.storageService.loadInfo('usuario');
+      this.usuario = user[0];
   }
 
   ngOnDestroy(): void {

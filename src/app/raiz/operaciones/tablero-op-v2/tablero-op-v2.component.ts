@@ -16,6 +16,7 @@ import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
 
 // =====================
 // MODELOS
@@ -127,6 +128,8 @@ private resizingCol: string | null = null;
 private resizeStartX = 0;
 private resizeStartWidth = 0;
 
+usuario:any;
+
   constructor(
     private storage: StorageService,
     private dateRange: DateRangeService,
@@ -134,6 +137,7 @@ private resizeStartWidth = 0;
     private tableroServ: TableroService,
     private formatoNum: FormatoNumericoService,
     private excelServ: ExcelService,
+    private reportesOp: ReportesOpService
   ) {}
 
   // =====================
@@ -175,6 +179,9 @@ private resizeStartWidth = 0;
         this.storage.syncChangesDateValue('operaciones','fecha',desde,hasta,'desc');
         this.escucharOperaciones();
       });
+      let user = this.storage.loadInfo('usuario');
+      this.usuario = user[0];
+      console.log(this.usuario.roles.demo);
       
   }
 
@@ -831,5 +838,76 @@ onResizeEnd = () => {
   puedeEliminar(op: any): boolean {
     return op.estado === 'Abierta';
   }
+
+  async crearResumenOp(){
+    console.log(this.operacionesPeriodo.length);
+    
+    this.isLoading = true;
+    const res = await this.reportesOp.reconstruirResumenes(this.operacionesPeriodo);
+
+    if (!res.exito) {
+      this.isLoading = false;
+      console.warn(res.mensaje);
+      console.table(this.reportesOp.getErrores());
+    }
+    if(res.exito){
+      this.isLoading = false;
+      console.info(res.mensaje);
+    }
+  }
+
+  totalACobrar(){
+    let opAcomp = 0;
+    let cantAcomp = 0;
+    let total = 0;
+    this.operacionesPeriodo.map(op=>{
+     /* if(op.acompaniante) {
+        opAcomp ++ ;
+        cantAcomp += op.acompanienteCant ?? 1; 
+     }  */
+    total += op.valores.cliente.aCobrar
+    })
+    //console.log("opAcomp: ", opAcomp, "totalAcomp: ", cantAcomp );
+    console.log("total: ", total);
+    
+  }
+
+  validarOperaciones(): void {
+  const operacionesConError: number[] = [];
+
+  this.operacionesPeriodo.forEach(op => {
+    const v = op.valores;
+
+    // Cliente
+    const totalCliente =
+      (v.cliente.acompValor || 0) +
+      (v.cliente.kmAdicional || 0) +
+      (v.cliente.tarifaBase || 0) +
+      (v.cliente.adExtraValor || 0);
+
+    // Chofer
+    const totalChofer =
+      (v.chofer.acompValor || 0) +
+      (v.chofer.kmAdicional || 0) +
+      (v.chofer.tarifaBase || 0) +
+      (v.chofer.adExtraValor || 0);
+
+    const errorCliente = totalCliente !== v.cliente.aCobrar;
+    const errorChofer = totalChofer !== v.chofer.aPagar;
+
+    if (errorCliente || errorChofer) {
+      operacionesConError.push(op.idOperacion);
+    }
+  });
+
+  // Resultado final
+  if (operacionesConError.length === 0) {
+    alert('✅ Todas las operaciones son consistentes');
+  } else {
+    alert(
+      `❌ Se encontraron errores en las operaciones:\n${operacionesConError.join(', ')}`
+    );
+  }
+}
 
 }

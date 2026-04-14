@@ -1,0 +1,46 @@
+
+td,td{
+  height: 30px;
+}
+
+.tabla-resumen th {
+  font-size: 1.2rem !important;
+  font-weight: 600;
+}
+
+.tabla-resumen td {
+  font-size: 1.1rem !important;  
+  font-weight: 400 !important;
+}
+
+.col-cliente {
+  background-color: #e7f1ff;
+}
+
+.col-chofer {
+  background-color: #f1f3f5;
+}
+
+.col-moneda {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+
+  
+  //font-size: 1.1rem !important; /* 👈 ojo acá */
+}
+
+.bg-success-soft {
+  background-color: rgba(25, 135, 84, 0.1);
+}
+
+.bg-danger-soft {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.bg-warning-soft {
+  background-color: rgba(255, 193, 7, 0.15);
+}

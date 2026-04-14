@@ -14,7 +14,7 @@
         <h4>
           Periodo de liquidación: <span class="fw-bold">{{informeLiq.mes}} {{informeLiq.anio}}</span> - {{informeLiq.periodo}}
           @if((fromParent.modo === 'proforma' || fromParent.accion === 'edicion')){
-              <app-btn-editar name="Editar" class="ms-3" (click)="abrirModalPeriodo()"></app-btn-editar>
+              <app-btn-editar name="Editar" class="ms-3" (click)="abrirModalPeriodo()" [ngClass]="{'isDisabled':usuario.roles.demo}"></app-btn-editar>
           }
         </h4>
         
@@ -22,7 +22,7 @@
       @if((fromParent.modo === 'proforma' || fromParent.accion === 'edicion')){
         <div class="d-flex">
           <h4 class="me-3">Ajustes</h4>
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" type="button" (click)="editarDesc()" style="color: rgb(0, 110, 255);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16" type="button" (click)="editarDesc()" style="color: rgb(0, 110, 255);" [ngClass]="{'isDisabled':usuario.roles.demo}">
             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
           </svg>
@@ -64,7 +64,7 @@
               <td class="text-end">{{(fac.contraParteMonto | calcularPorcentajeV2:fac.valores.total:getPorcentaje())}}</td>
               <td class="text-end col-numero" [ngClass]="{'text-danger': !tipoCliente, 'text-success':tipoCliente}">{{fac.valores.total | formatearValor : "$"}}</td>
               @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
-                <td class="text-end"><app-btn-editar name="Editar" (click)="editarFacOp(fac)"></app-btn-editar> </td>
+                <td class="text-end"><app-btn-editar name="Editar" (click)="editarFacOp(fac)" [ngClass]="{'isDisabled':usuario.roles.demo}"></app-btn-editar> </td>
               }
             </tr>
           }
@@ -86,7 +86,7 @@
                 <th colspan="6"><span>Ajustes</span></th>
               }
               @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
-                <th class="text-end"><app-btn-editar name="Editar" (click)="editarDesc()"></app-btn-editar></th>
+                <th class="text-end"><app-btn-editar name="Editar" (click)="editarDesc()" [ngClass]="{'isDisabled':usuario.roles.demo}"></app-btn-editar></th>
               }              
             </tr>
             @for (desc of informeLiq.descuentos; track desc) {
@@ -126,7 +126,7 @@
             <textarea name="" id="" [value]="informeLiq.observaciones" disabled  rows="1" class="w-100"></textarea>
         </div>
         @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
-          <td class="text-end align-self-end"><app-btn-editar name="Editar" (click)="abrirModalObs(modalEditarObs)"></app-btn-editar> </td>
+          <td class="text-end align-self-end"><app-btn-editar name="Editar" (click)="abrirModalObs(modalEditarObs)" [ngClass]="{'isDisabled':usuario.roles.demo}"></app-btn-editar> </td>
         }
     </div>    
     @if(informeLiq.estado === "anulado"){

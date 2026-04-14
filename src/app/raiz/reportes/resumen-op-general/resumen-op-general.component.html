@@ -1,0 +1,16 @@
+<h2>Resumen General de Operaciones</h2>
+<app-filtro-periodo
+  (periodoChange)="onPeriodoChange($event)">
+</app-filtro-periodo>
+
+@if (resumenes$ | async; as resumenes) {
+    <app-tabla-resumen
+    [resumenes]="resumenes"
+    [tipo]="'general'"
+    [tituloPeriodo]="tituloPeriodo"
+    [razonSocial]="'General'"
+    >
+  </app-tabla-resumen>
+} @else {
+    <app-spinner></app-spinner>
+}

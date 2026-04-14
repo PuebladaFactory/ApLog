@@ -20,6 +20,7 @@ import { Component, Input, OnInit } from '@angular/core';
 export class BtnReimpresionComponent implements OnInit {
 
   @Input() nombre?: string;
+  @Input() disabled!: boolean;
   constructor() { }
 
   ngOnInit(): void {

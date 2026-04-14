@@ -1,0 +1,197 @@
+@if (resumenes.length > 0) {
+    <div class="card">
+        <div
+            class="card-header d-flex justify-content-between align-items-center"
+        >
+            <h4>
+                Resumen:
+                <span class="fw-bold">
+                    {{ tituloPeriodo }}
+                </span>
+            </h4>
+            <div>
+                <button
+                    class="btn btn-sm btn-outline-info"
+                    (click)="exportarExcel()"
+                >
+                    Descargar
+                </button>
+                <button
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="toggleModo()"
+                >
+                    {{ modo }}
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table
+                class="table table-sm table-hover table-border mb-0 tabla-resumen align-middle"
+            >
+                <thead>
+                    <!-- FILA 1 -->
+                    <tr>
+                        <th class="text-center bg-light"></th>
+
+                        <!-- Operación -->
+                        <th colspan="4" class="text-center bg-light">
+                            Operación
+                        </th>
+
+                        <!-- Totales -->
+                        <th colspan="3" class="text-center bg-info">Totales</th>
+
+                        @if (esGeneral) {
+                            <th
+                                colspan="4"
+                                class="text-center bg-primary text-white"
+                            >
+                                Cliente
+                            </th>
+
+                            <th
+                                colspan="4"
+                                class="text-center bg-secondary text-white"
+                            >
+                                Chofer
+                            </th>
+                        } @else {
+                            <th
+                                colspan="4"
+                                class="text-center text-white"
+                                [ngClass]="{
+                                    'bg-primary': tipoEntidad === 'cliente',
+                                    'bg-secondary':
+                                        tipoEntidad === 'chofer' ||
+                                        tipoEntidad === 'proveedor',
+                                }"
+                            >
+                                Valores
+                            </th>
+                        }
+                    </tr>
+                    <!-- FILA 2 -->
+                    <tr>
+                        <th class="text-start bg-info-subtle">Periodo</th>
+                        <!-- Operación -->
+                        <!--                     <th class="text-center">
+                        Ops
+                        <i
+                            class="bi bi-info-circle ms-1"
+                            [attr.title]="getTooltip('ops')"
+                        ></i>
+                    </th>
+                    <th class="text-center">
+                        Km
+                        <i
+                            class="bi bi-info-circle ms-1"
+                            [attr.title]="getTooltip('km')"
+                        ></i>
+                    </th>
+                    <th class="text-center">
+                        Acomp Ops
+                        <i
+                            class="bi bi-info-circle ms-1"
+                            [attr.title]="getTooltip('acompOps')"
+                        ></i>
+                    </th>
+                    <th class="text-center">
+                        Acomp Prom
+                        <i
+                            class="bi bi-info-circle ms-1"
+                            [attr.title]="getTooltip('acompCant')"
+                        ></i>
+                    </th>
+ -->
+                        <!-- Totales -->
+                        <!--                     <th class="text-center">
+                        Facturado
+                        <i
+                            class="bi bi-info-circle ms-1"
+                            [attr.title]="getTooltip('facturado')"
+                        ></i>
+                    </th>
+                    <th class="text-center">
+                        Costo
+                        <i
+                            class="bi bi-info-circle ms-1"
+                            [attr.title]="getTooltip('costo')"
+                        ></i>
+                    </th>
+                    <th class="text-center">
+                        Ganancia
+                        <i
+                            class="bi bi-info-circle ms-1"
+                            [attr.title]="getTooltip('ganancia')"
+                        ></i>
+                    </th> -->
+
+                        <!-- Dinámicos -->
+                        @for (col of columnas; track col.key) {
+                            <th class="text-center">
+                                {{ col.label }}
+                                <i
+                                    class="bi bi-info-circle ms-1"
+                                    [attr.title]="col.tooltip?.(modo)"
+                                ></i>
+                            </th>
+                        }
+                        <!--    @if (esGeneral) {
+                        @for (col of columnasCliente; track col.key) {
+                            <th class="text-center">
+                                {{ col.label }}
+                                <i
+                                    class="bi bi-info-circle ms-1"
+                                    [attr.title]="col.tooltip?.(modo)"
+                                ></i>
+                            </th>
+                        }
+
+                        @for (col of columnasChofer; track col.key) {
+                            <th class="text-center">
+                                {{ col.label }}
+                                <i
+                                    class="bi bi-info-circle ms-1"
+                                    [attr.title]="col.tooltip?.(modo)"
+                                ></i>
+                            </th>
+                        }
+                    }  -->
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (r of resumenes; track r.mes) {
+                        <tr>
+                            <td>{{ formatearPeriodo(r) }}</td>
+                            @for (col of columnas; track col.key) {
+                                @if (col.visible) {
+                                    <td
+                                        [class.col-moneda]="
+                                            col.tipo === 'currency'
+                                        "
+                                        [class.text-center]="
+                                            col.tipo !== 'currency'
+                                        "
+                                        [ngClass]="getCellClasses(col, r)"
+                                        [style]="getSylesCeldas(col)"
+                                    >
+                                        {{
+                                            format(
+                                                col.valueFn(r, modo),
+                                                col.tipo
+                                            )
+                                        }}
+                                    </td>
+                                }
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+} @else {
+    <div class="alert alert-info">Sin datos.</div>
+}

@@ -3,16 +3,16 @@
         <!-- Dropdowns Izquierda -->
         <div class="d-flex align-items-center justify-content-start">
             <!-- Choferes Activos -->
-            <button class="btn btn-primary boton-choferes me-1" type="button" (click)="openModalActivos('choferes')" >
+            <button class="btn btn-primary boton-choferes me-1" type="button" (click)="openModalActivos('choferes')" [disabled]="usuario.roles.demo" >
                   Choferes Activos
             </button>
             <!-- Clientes Activos -->
             
-            <button class="btn btn-primary celeste-fijo  me-1" type="button" (click)="openModalActivos('clientes')">
+            <button class="btn btn-primary celeste-fijo  me-1" type="button" (click)="openModalActivos('clientes')" [disabled]="usuario.roles.demo">
               Clientes Activos
             </button>
 
-            <button class="btn btn-secondary gris-fijo  me-1" type="button" (click)="openModalNoOperativos()">
+            <button class="btn btn-secondary gris-fijo  me-1" type="button" (click)="openModalNoOperativos()" [disabled]="usuario.roles.demo">
               Choferes No Operativos
             </button>
             
@@ -32,6 +32,7 @@
                 </button> 
                 <div>                  
                   <input
+                    [disabled]="usuario.roles.demo"
                     id="fechaSeleccionada"
                     type="date"
                     [(ngModel)]="fechaSeleccionada"
@@ -40,6 +41,7 @@
                   />
                 </div>
                 <button class="btn btn-outline-primary"
+                        [disabled]="usuario.roles.demo"
                         (click)="cambiarDia(1)"
                         [disabled]="!fechaSeleccionada">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
@@ -73,18 +75,18 @@
         <!-- Botones derechos -->
         <div class="d-flex justify-content-end">
             <button class="btn botonera boton-alta me-1" (click)="altaOp()" [disabled]="tablero?.asignado" [title]="tablero?.asignado ? 'EL tablero ya fue dado de alta' : ''"
-            [ngClass]="{'boton-alta' :  !tablero?.asignado, 'btn-secondary':tablero?.asignado, 'boton-anulado':tablero?.asignado}">                
+            [ngClass]="{'boton-alta' :  !tablero?.asignado, 'btn-secondary':tablero?.asignado, 'boton-anulado':tablero?.asignado}" [disabled]="usuario.roles.demo">                
                 Alta de Op
             </button>
-            <button class="btn botonera boton-guardar me-1" type="button" id="" (click)="guardarTableroDiario()">               
+            <button class="btn botonera boton-guardar me-1" type="button" id="" (click)="guardarTableroDiario()" [disabled]="usuario.roles.demo">               
                 💾Guardar
             </button>
             <button class="btn botonera me-1" type="button" id="" (click)="generarInfDiario()" [disabled]="!tablero?.asignado"
             [title]="!tablero?.asignado ? 'Debe dar de alta las operaciones antes de descargar' : 'Descargar informe'"
-            [ngClass]="{'boton-descargar' :  tablero?.asignado, 'btn-secondary':!tablero?.asignado, 'boton-anulado':!tablero?.asignado}">                
+            [ngClass]="{'boton-descargar' :  tablero?.asignado, 'btn-secondary':!tablero?.asignado, 'boton-anulado':!tablero?.asignado}" [disabled]="usuario.roles.demo">                
                 ⬇️Descargar
             </button>
-            <button class="btn botonera boton-baja" (click)="limpiarAsignaciones()">🧹Limpiar</button>
+            <button class="btn botonera boton-baja" (click)="limpiarAsignaciones()" [disabled]="usuario.roles.demo">🧹Limpiar</button>
         </div>
     </div>
 </nav>

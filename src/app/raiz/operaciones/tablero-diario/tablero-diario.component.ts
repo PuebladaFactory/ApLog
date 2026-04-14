@@ -93,6 +93,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   choferesDisponibles: Chofer[] = [];
   // Lookup rápido
   noOperativosSet = new Set<number>();
+  usuario:any
 
   constructor(
     private storageService: StorageService,
@@ -186,6 +187,8 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
           this.calcularChoferesNoOperativosPorFecha(this.fechaSeleccionada);
         }
       });
+      let user = this.storageService.loadInfo('usuario');
+      this.usuario = user[0];
   }
   ngOnDestroy(): void {
     this.destroy$.next();

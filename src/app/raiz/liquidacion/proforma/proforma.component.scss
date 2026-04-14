@@ -8,6 +8,11 @@ th, td, input {
     opacity: 0.5; /* o cualquier otro estilo para indicar que está deshabilitado */
 }
 
+.isDisabled:hover {
+    cursor: not-allowed;
+    opacity:0.5;
+}
+
 .panel-box {  
   border: 1px solid #e6e6e6;
   border-radius: 8px;

@@ -66,7 +66,7 @@ export class ValoresOpChoferService {
     );
     ////console.log("1c) vehiculo: ", vehiculo);
 
-    if (op.multiplicadorCliente === 0) {
+    if (op.multiplicadorChofer === 0) {
       this.tarifaBase = 0;
       op.valores.chofer.tarifaBase = 0;
       //////console.log("tarifa base: " ,this.tarifaBase);
@@ -75,6 +75,7 @@ export class ValoresOpChoferService {
       //////console.log("acompañante valor: ", this.acompaniante);
       this.kmValor = 0;
       op.valores.chofer.kmAdicional = 0;
+      op.valores.chofer.adExtraValor = 0;
       op.valores.chofer.aPagar = 0;
     } else {
       this.tarifaBase =
@@ -90,7 +91,7 @@ export class ValoresOpChoferService {
       this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
       op.valores.chofer.kmAdicional = this.kmValor;
       op.valores.chofer.aPagar =
-        this.tarifaBase + this.acompaniante + this.kmValor;
+        this.tarifaBase + this.acompaniante + this.kmValor +(op.valores.chofer.adExtraValor ?? 0);
     }
 
     ////////console.log("km valor: ", this.kmValor);
@@ -117,6 +118,20 @@ export class ValoresOpChoferService {
       resultado: boolean;
       msj: string;
     };
+
+        if (op.multiplicadorChofer === 0) {
+      this.tarifaBase = 0;
+      op.valores.chofer.tarifaBase = 0;
+      //////console.log("tarifa base: " ,this.tarifaBase);
+      this.acompaniante = 0;
+      op.valores.chofer.acompValor = 0;
+      //////console.log("acompañante valor: ", this.acompaniante);
+      this.kmValor = 0;
+      op.valores.chofer.kmAdicional = 0;
+      op.valores.chofer.adExtraValor = 0;
+      op.valores.chofer.aPagar = 0;
+    } else {
+
     this.tarifaBase =
       this.$calcularCGPersonalizada(tarifa, op) * op.multiplicadorChofer;
     op.valores.chofer.tarifaBase = this.tarifaBase;
@@ -130,6 +145,10 @@ export class ValoresOpChoferService {
     } else {
       this.kmValor = 0;
     }
+    op.valores.chofer.aPagar =
+        this.tarifaBase + this.acompaniante + this.kmValor +(op.valores.chofer.adExtraValor ?? 0);
+    }
+
     //////console.log("tarifa base: " ,this.tarifaBase);
     this.$crearFacturaOpChofer(op, tarifa.idTarifa, idProveedor);
     respuesta = {
@@ -155,7 +174,19 @@ export class ValoresOpChoferService {
       resultado: boolean;
       msj: string;
     };
-    this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
+            if (op.multiplicadorChofer === 0) {
+      this.tarifaBase = 0;
+      op.valores.chofer.tarifaBase = 0;
+      //////console.log("tarifa base: " ,this.tarifaBase);
+      this.acompaniante = 0;
+      op.valores.chofer.acompValor = 0;
+      //////console.log("acompañante valor: ", this.acompaniante);
+      this.kmValor = 0;
+      op.valores.chofer.kmAdicional = 0;
+      op.valores.chofer.adExtraValor = 0;
+      op.valores.chofer.aPagar = 0;
+    }else {
+this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
     op.valores.chofer.tarifaBase = this.tarifaBase;
     //this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
     this.acompaniante = op.acompaniante
@@ -163,6 +194,10 @@ export class ValoresOpChoferService {
       : 0;
     op.valores.chofer.acompValor = this.acompaniante;
     this.kmValor = 0;
+    op.valores.chofer.aPagar =
+        this.tarifaBase + this.acompaniante + this.kmValor +(op.valores.chofer.adExtraValor ?? 0);
+    }
+    
     this.$crearFacturaOpChofer(op, 0, idProveedor);
     respuesta = {
       op: op,
@@ -240,7 +275,8 @@ export class ValoresOpChoferService {
         tarifaBase: this.tarifaBase,
         acompaniante: this.acompaniante,
         kmMonto: this.kmValor,
-        total: this.tarifaBase + this.acompaniante + this.kmValor,
+        adExtra: op.valores.chofer.adExtraValor ?? 0,
+        total: this.tarifaBase + this.acompaniante + this.kmValor + (op.valores.chofer.adExtraValor ?? 0),
       },
       km: op.km,
       liquidacion: false,
