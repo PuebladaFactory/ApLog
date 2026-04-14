@@ -872,4 +872,42 @@ onResizeEnd = () => {
     
   }
 
+  validarOperaciones(): void {
+  const operacionesConError: number[] = [];
+
+  this.operacionesPeriodo.forEach(op => {
+    const v = op.valores;
+
+    // Cliente
+    const totalCliente =
+      (v.cliente.acompValor || 0) +
+      (v.cliente.kmAdicional || 0) +
+      (v.cliente.tarifaBase || 0) +
+      (v.cliente.adExtraValor || 0);
+
+    // Chofer
+    const totalChofer =
+      (v.chofer.acompValor || 0) +
+      (v.chofer.kmAdicional || 0) +
+      (v.chofer.tarifaBase || 0) +
+      (v.chofer.adExtraValor || 0);
+
+    const errorCliente = totalCliente !== v.cliente.aCobrar;
+    const errorChofer = totalChofer !== v.chofer.aPagar;
+
+    if (errorCliente || errorChofer) {
+      operacionesConError.push(op.idOperacion);
+    }
+  });
+
+  // Resultado final
+  if (operacionesConError.length === 0) {
+    alert('✅ Todas las operaciones son consistentes');
+  } else {
+    alert(
+      `❌ Se encontraron errores en las operaciones:\n${operacionesConError.join(', ')}`
+    );
+  }
+}
+
 }
