@@ -114,7 +114,7 @@ export class InformesTablaComponent implements OnInit {
   }
 
   disbledDemo(col:ColumnaTabla<InformeLiq>):string{
-    if(col.key === 'fElectrónica' || col.key === 'anular' || col.key === 'editar'){
+    if(this.usuario.roles.demo && (col.key === 'fElectrónica' || col.key === 'anular' || col.key === 'editar')){
       return 'isDisabled'
     }
     return "";
