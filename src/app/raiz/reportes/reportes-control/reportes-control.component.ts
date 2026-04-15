@@ -8,7 +8,7 @@ import { filter } from "rxjs";
   template: `
     <div class="layout-global no-print">
       <div class="mt-3">
-        <h1 class="text-start w-100">Finanzas</h1>
+        <h1 class="text-start w-100">Reportes</h1>
       </div>
       <div class="tab-container">
         @for (tab of tabs; track tab) {
