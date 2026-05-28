@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { Observable, of } from "rxjs";
 import { PeriodoFiltro } from "src/app/interfaces/periodo-filtro";
-import { ResumenOpBase } from "src/app/interfaces/resumen-op-base";
+import { ResumenOpBase, ResumenOpEntidadMensual } from "src/app/interfaces/resumen-op-base";
 import { ReportesOpService } from "src/app/servicios/reportes/reportes-op/reportes-op.service";
 import { StorageService } from "src/app/servicios/storage/storage.service";
 import Swal from "sweetalert2";
@@ -20,7 +20,7 @@ export class ResumenOpEntidadComponent implements OnInit {
 
   periodo!: PeriodoFiltro;
 
-  resumenes$!: Observable<ResumenOpBase[]> | null;
+  resumenes$!: Observable<ResumenOpEntidadMensual[]> | null;
 
   tipo: "general" | "entidad" = "entidad";
   entidadId?: number;
@@ -62,7 +62,7 @@ export class ResumenOpEntidadComponent implements OnInit {
         a.razonSocial.localeCompare(b.razonSocial),
       );
     }
-    console.log("this.entidades: ", this.entidades);
+    //console.log("this.entidades: ", this.entidades);
   }
 
   onTipoEntidadChange() {
@@ -78,16 +78,17 @@ export class ResumenOpEntidadComponent implements OnInit {
 
   cargarDatos() {
     if (!this.entidadSeleccionada) return;
-    //console.log("this.periodo: ", this.periodo);
-    //console.log("this.tipo: ", this.tipo);
-    //console.log("this.entidadSeleccionada: ", this.entidadSeleccionada);
+    ////console.log("this.periodo: ", this.periodo);
+    ////console.log("this.tipo: ", this.tipo);
+    ////console.log("this.entidadSeleccionada: ", this.entidadSeleccionada);
 
     this.resumenes$ = this.reportesOp.getResumen(
       this.periodo,
       this.tipo,
       this.entidadSeleccionada,
       this.tipoEntidad,
-    );
+    );    
+    
   }
 
   private getUltimos12Meses(): PeriodoFiltro {
@@ -175,7 +176,7 @@ export class ResumenOpEntidadComponent implements OnInit {
 
   onPeriodoChange(p: PeriodoFiltro) {
     this.periodo = p;
-    console.log("this.periodo", p);
+    //console.log("this.periodo", p);
 
     this.tituloPeriodo = this.armarTitulo(p);
 

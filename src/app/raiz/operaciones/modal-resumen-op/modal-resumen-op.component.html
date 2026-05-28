@@ -201,6 +201,7 @@
                                 >
                                     <textarea                                        
                                         class="form-control edicion border-info"
+                                        rows="4"
                                         [(ngModel)]="op.observaciones"
                                     ></textarea>
                                 </div>
@@ -345,6 +346,8 @@
                                 >
                                     <textarea
                                         disabled
+                                        [title]=op.observaciones
+                                        rows="4"
                                         [(ngModel)]="op.observaciones"
                                         class="form-control edicion border-info"
                                     ></textarea>

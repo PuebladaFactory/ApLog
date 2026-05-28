@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges, OnInit } from "@angular/core";
-import { ResumenOpBase } from "src/app/interfaces/resumen-op-base";
+import { ResumenOp, ResumenOpBase } from "src/app/interfaces/resumen-op-base";
 import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
 import {
   ColumnaResumen,
@@ -15,7 +15,7 @@ import {
   templateUrl: "./tabla-resumen.component.html",
 })
 export class TablaResumenComponent implements OnChanges, OnInit {
-  @Input() resumenes: ResumenOpBase[] = [];
+  @Input() resumenes: ResumenOp[] = [];
   @Input() tipo: 'general' | 'entidad' = "general";
   @Input() tituloPeriodo: string = "";
   @Input() razonSocial: string = "";
@@ -32,17 +32,17 @@ export class TablaResumenComponent implements OnChanges, OnInit {
     private excelService: ExcelService,
   ) {}
   ngOnInit(): void {
-    console.log("tipo: ", this.tipo);
+    //console.log("tipo: ", this.tipo);
   }
 
   ngOnChanges() {
     let columnasServicio = this.config.getColumnas(this.tipo, this.tipoEntidad);
     if(columnasServicio) this.columnas = columnasServicio
-    console.log("this.columnas:  ", this.columnas);
+    //console.log("this.columnas:  ", this.columnas);
 
     /*     this.columnasMap.clear();
     this.columnas.forEach((c) => this.columnasMap.set(c.key, c));
-    this.columnas.forEach((c) => console.log("key: ", c.key));
+    this.columnas.forEach((c) => //console.log("key: ", c.key));
     
      */
   }

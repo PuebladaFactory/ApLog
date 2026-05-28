@@ -12,24 +12,32 @@ import {
 import { ConId } from "src/app/interfaces/conId";
 import { Operacion } from "src/app/interfaces/operacion";
 import {
+  ResumenOp,
   ResumenOpBase,
+  ResumenOpEntidadMensual,
   ResumenOpGeneralMensual,
 } from "src/app/interfaces/resumen-op-base";
 import { ResumenBuilderService } from "./resumen-builder.service";
 import { Resultado } from "../../database/db-firestore.service";
-import { Observable } from "rxjs";
+import { map, Observable } from "rxjs";
 import { PeriodoFiltro } from "src/app/interfaces/periodo-filtro";
 
 type TipoEntidad = "cliente" | "chofer" | "proveedor";
 type Tipo = "general" | "entidad";
 
-export interface KeyResumen {
-  tipo: Tipo;
-  tipoEntidad?: TipoEntidad
-  entidadId?: number;
-  anio: number;
-  mes: number;
-}
+export type KeyResumen =
+  | {
+      tipo: "general";
+      anio: number;
+      mes: number;
+    }
+  | {
+      tipo: "entidad";
+      tipoEntidad: "cliente" | "chofer" | "proveedor";
+      entidadId: number;
+      anio: number;
+      mes: number;
+    };
 
 @Injectable({
   providedIn: "root",
@@ -95,7 +103,7 @@ export class ReportesOpService {
         this.procesarOperacion(
           map,
           {
-            tipo:'entidad',
+            tipo: "entidad",
             tipoEntidad: "cliente",
             entidadId: op.cliente.idCliente,
             anio,
@@ -109,7 +117,7 @@ export class ReportesOpService {
           this.procesarOperacion(
             map,
             {
-              tipo:'entidad',
+              tipo: "entidad",
               tipoEntidad: "proveedor",
               entidadId: op.chofer.idProveedor,
               anio,
@@ -121,7 +129,7 @@ export class ReportesOpService {
           this.procesarOperacion(
             map,
             {
-              tipo:'entidad',
+              tipo: "entidad",
               tipoEntidad: "chofer",
               entidadId: op.chofer.idChofer,
               anio,
@@ -135,7 +143,7 @@ export class ReportesOpService {
         this.procesarOperacion(
           map,
           {
-            tipo: 'general',
+            tipo: "general",
             anio,
             mes,
           },
@@ -182,8 +190,7 @@ export class ReportesOpService {
   // 🔹 BUILD KEY
   // =========================
   private buildKey(k: KeyResumen): string {
-
-    if (k.tipo === 'general') {
+    if (k.tipo === "general") {
       return `general_${k.anio}_${k.mes}`;
     }
 
@@ -326,9 +333,21 @@ export class ReportesOpService {
   getResumen(
     periodo: PeriodoFiltro,
     tipo: "general" | "entidad",
+  ): Observable<ResumenOpGeneralMensual[]>;
+
+  getResumen(
+    periodo: PeriodoFiltro,
+    tipo: "general" | "entidad",
+    entidadId: number,
+    tipoEntidad: "cliente" | "chofer" | "proveedor",
+  ): Observable<ResumenOpEntidadMensual[]>;
+
+  getResumen(
+    periodo: PeriodoFiltro,
+    tipo: "general" | "entidad",
     entidadId?: number,
-    tipoEntidad?: 'cliente' | 'chofer' | 'proveedor',
-  ): Observable<ResumenOpBase[]> {
+    tipoEntidad?: "cliente" | "chofer" | "proveedor",
+  ): Observable<ResumenOp[]> {
     const desde = periodo.desde.anio * 100 + periodo.desde.mes;
     const hasta = periodo.hasta.anio * 100 + periodo.hasta.mes;
 
@@ -345,14 +364,127 @@ export class ReportesOpService {
       condiciones.push(where("tipo", "==", "general"));
     }
 
-    if (tipo === 'entidad' && entidadId !== undefined) {
-      condiciones.push(where('tipo', '==', tipo));
-      condiciones.push(where('entidadId', '==', entidadId));
-      condiciones.push(where('tipoEntidad', '==', tipoEntidad));
+    if (tipo === "entidad" && entidadId !== undefined) {
+      condiciones.push(where("tipo", "==", tipo));
+      condiciones.push(where("entidadId", "==", entidadId));
+      condiciones.push(where("tipoEntidad", "==", tipoEntidad));
     }
 
     const q = query(ref, ...condiciones);
 
-    return collectionData(q) as Observable<ResumenOpBase[]>;
+return collectionData(q).pipe(
+  map((data: any[]) => data.map((d) => this.normalizarResumen(d))),
+  map((resumenes: ResumenOp[]) =>
+    this.completarPeriodos(resumenes, periodo, tipo, entidadId, tipoEntidad)
+  )
+) as Observable<ResumenOp[]>;
   }
+
+  private normalizarResumen(r: any): ResumenOp {
+    const base = this.resumenBuilder.buildBase(r);
+
+    if (r.tipo === "general") {
+      return {
+        ...base,
+        tipo: "general",
+      } as ResumenOpGeneralMensual;
+    }
+
+    return {
+      ...base,
+      tipo: "entidad",
+      entidadId: r.entidadId ?? 0,
+      tipoEntidad: r.tipoEntidad ?? "cliente",
+    } as ResumenOpEntidadMensual;
+  }
+
+private completarPeriodos(
+  resumenes: ResumenOp[],
+  periodo: PeriodoFiltro,
+  tipo: 'general' | 'entidad',
+  entidadId?: number,
+  tipoEntidad?: 'cliente' | 'chofer' | 'proveedor'
+): ResumenOp[] {
+    const map = new Map<string, ResumenOpBase>();
+
+    // indexar lo existente
+    for (const r of resumenes) {
+      const key = `${r.anio}-${r.mes}`;
+      map.set(key, r);
+    }
+
+    const resultado: ResumenOpBase[] = [];
+
+    const cursor = new Date(periodo.desde.anio, periodo.desde.mes - 1);
+    const hasta = new Date(periodo.hasta.anio, periodo.hasta.mes - 1);
+
+    while (cursor <= hasta) {
+      const anio = cursor.getFullYear();
+      const mes = cursor.getMonth() + 1;
+
+      const key = `${anio}-${mes}`;
+
+      if (map.has(key)) {
+        resultado.push(map.get(key)!);
+      } else {
+        resultado.push(this.crearResumenVacio(anio, mes, tipo, entidadId, tipoEntidad ));
+      }
+
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    return resultado.sort((a, b) =>
+      b.anio !== a.anio ? b.anio - a.anio : b.mes - a.mes,
+    );
+  }
+
+private crearResumenVacio(
+  anio: number,
+  mes: number,
+  tipo: 'general' | 'entidad',
+  entidadId?: number,
+  tipoEntidad?: 'cliente' | 'chofer' | 'proveedor'
+): ResumenOp {
+  return {
+    anio,
+    mes,
+    periodo: anio * 100 + mes,
+    tipo,
+
+    ...(tipo === 'entidad' && {
+      entidadId,
+      tipoEntidad,
+    }),
+
+    cantidadOps: 0,
+    kmRecorridos: 0,
+    acompanianteOps: 0,
+    acompanianteCantidadTotal: 0,
+
+    cliente: {
+      acompValor: 0,
+      kmAdicional: 0,
+      tarifaBase: 0,
+      adExtraValor: 0,
+      total: 0,
+    },
+
+    chofer: {
+      acompValor: 0,
+      kmAdicional: 0,
+      tarifaBase: 0,
+      adExtraValor: 0,
+      total: 0,
+    },
+
+    tarifaTipo: {
+      general: 0,
+      especial: 0,
+      eventual: 0,
+      personalizada: 0,
+    },
+
+    ganancia: 0,
+  };
+}
 }

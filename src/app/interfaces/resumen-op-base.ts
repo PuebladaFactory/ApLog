@@ -35,6 +35,7 @@ export interface ResumenOpBase {
   };
 
   ganancia: number;
+  updatedAt?:number
 
 }
 
@@ -52,3 +53,7 @@ export interface PeriodoFiltro {
   desde: { anio: number; mes: number };
   hasta: { anio: number; mes: number };
 }
+
+export type ResumenOp =
+  | ResumenOpGeneralMensual
+  | ResumenOpEntidadMensual;
