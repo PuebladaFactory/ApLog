@@ -398,6 +398,8 @@ export class ExcelService {
     choferSel = choferesStorage.filter((c: Chofer) => {
       return c.idChofer === idChofer;
     });
+    console.log("choferSel: ", choferSel, " idChofer: ", idChofer);
+    
     veh = choferSel[0].vehiculo.filter((v: Vehiculo) => {
       return v.dominio === patente;
     });

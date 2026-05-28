@@ -27,7 +27,7 @@ export class ResumenOpGeneralComponent implements OnInit {
 
   onPeriodoChange(p: PeriodoFiltro) {
     this.periodo = p;
-    console.log("this.periodo", p);
+    //console.log("this.periodo", p);
 
     this.tituloPeriodo = this.armarTitulo(p);
 
@@ -40,13 +40,13 @@ export class ResumenOpGeneralComponent implements OnInit {
       return;
     }
 
-    this.resumenes$ = this.reportesOp.getResumenGeneral(this.periodo);
+    this.resumenes$ = this.reportesOp.getResumen(this.periodo, 'general');
 
     //this.cargarDatos();
   }
 
   private cargarDatos() {
-    this.resumenes$ = this.reportesOp.getResumenGeneral(this.periodo);
+    this.resumenes$ = this.reportesOp.getResumen(this.periodo, 'general');
   }
 
   private getUltimos12Meses(): PeriodoFiltro {

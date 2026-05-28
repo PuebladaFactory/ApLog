@@ -19,6 +19,7 @@ import { EditarInfOpComponent } from "../editar-inf-op/editar-inf-op.component";
 import { DescuentosComponent } from "../descuentos/descuentos.component";
 import Swal from "sweetalert2";
 import { PeriodoModalComponent } from "src/app/raiz/liquidacion/modales/periodo-modal/periodo-modal.component";
+import { BuscarTarifaService } from "src/app/servicios/buscarTarifa/buscar-tarifa.service";
 
 @Component({
   selector: "app-modal-factura",
@@ -54,6 +55,7 @@ export class InformeLiqDetalleComponent implements OnInit {
     private storageService: StorageService,
     private dbFirebase: DbFirestoreService,
     private modalService: NgbModal,
+    private buscarTarifaServ: BuscarTarifaService,
   ) {}
 
   ngOnInit(): void {
@@ -77,6 +79,8 @@ export class InformeLiqDetalleComponent implements OnInit {
     this.tipoCliente = this.fromParent.tipo === 'cliente' ? true: false;
     let user = this.storageService.loadInfo('usuario');
     this.usuario = user[0];
+    console.log(this.fromParent);
+    
   }
 
   getChofer(idChofer: number) {
@@ -114,9 +118,15 @@ export class InformeLiqDetalleComponent implements OnInit {
     this.openModalDescuentos();
   }
 
-  buscarTarifa(facturaOp: ConIdType<InformeOp>) {
+  async buscarTarifa(informeOp: ConIdType<InformeOp>) {
     ////console.log("0)",facturaOp);
-    let coleccionHistorialTarfGral: string =
+    this.tarifaAplicada = await this.buscarTarifaServ.buscarTarifa(
+      informeOp,
+      this.fromParent.item.tipo,
+    );
+
+
+/*     let coleccionHistorialTarfGral: string =
       this.fromParent.tipo === "cliente"
         ? "historialTarifasGralCliente"
         : this.fromParent.tipo === "chofer"
@@ -193,7 +203,8 @@ export class InformeLiqDetalleComponent implements OnInit {
         this.tarifaAplicada = this.tarifaPers;
       }
       this.buscarOperacion(facturaOp);
-    }
+    } */
+    this.buscarOperacion(informeOp);
   }
 
   async openModalEditarInfOp(informeOp: ConIdType<InformeOp>) {

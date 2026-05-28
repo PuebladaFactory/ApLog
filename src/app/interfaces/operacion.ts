@@ -32,6 +32,7 @@ export interface Operacion {
         usuario: string
         timestamp: number
     }
+    resumenProcesado?: boolean;
     
 }
 
