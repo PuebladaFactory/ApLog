@@ -148,7 +148,7 @@ export class TableroService {
 
   private getCategoriaDesdeOperacion(op: Operacion): Categoria {
     const patente = op.patenteChofer;
-    const vehiculo = op.chofer.vehiculo.find(v => v.dominio === patente);
+    const vehiculo = ((op.chofer as any).vehiculo ?? []).find((v: any) => v.dominio === patente);
     return vehiculo?.categoria ?? { catOrden: 0, nombre: 'Sin categoría' };
   }
 

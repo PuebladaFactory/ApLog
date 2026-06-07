@@ -263,15 +263,15 @@ export class PdfService {
   getChofer(idChofer: number, choferes: Chofer[]) {
     let chofer: Chofer[];
     chofer = choferes.filter((c: Chofer) => {
-      return c.idChofer === idChofer;
+      return c.idChofer === String(idChofer);
     });
-    return chofer[0].apellido + " " + chofer[0].nombre;
+    return chofer[0].datosPersonales.apellido + " " + chofer[0].datosPersonales.nombre;
   }
 
   getCliente(idCliente: number, clientes: Cliente[]) {
     let cliente: Cliente[];
     cliente = clientes.filter((c: Cliente) => {
-      return c.idCliente === idCliente;
+      return c.idCliente === String(idCliente);
     });
     return cliente[0].razonSocial;
   }
@@ -280,9 +280,9 @@ export class PdfService {
     let veh: Vehiculo[];
     let choferSel: Chofer[];
     choferSel = choferes.filter((c: Chofer) => {
-      return c.idChofer === idChofer;
+      return c.idChofer === String(idChofer);
     });
-    veh = choferSel[0].vehiculo.filter((v: Vehiculo) => {
+    veh = ((choferSel[0] as any).vehiculo ?? []).filter((v: Vehiculo) => {
       return v.dominio === patente;
     });
     return veh[0].categoria.nombre;

@@ -62,7 +62,7 @@
             <td>{{tarifa.cliente.concepto}}</td>
             <td class="table-success" >$ {{formatearValor(tarifa.cliente.valor)}}</td>
             @if (moduloOrigen !== 'choferes') {
-              <td>{{getChofer(tarifa.idChofer)}}</td>
+              <td>{{getChofer('' + tarifa.idChofer)}}</td>
             }
             <td>{{tarifa.chofer.concepto}}</td>
             <td class="table-danger">$ {{formatearValor(tarifa.chofer.valor)}}</td>

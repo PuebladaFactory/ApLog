@@ -104,13 +104,11 @@ export class EditarTarifaOpComponent implements OnInit {
   
     getChofer(){
       this.choferOp = this.$choferes.filter((chofer:Chofer)=>{
-        return chofer.idChofer === this.facDetallada.idChofer;
+        return chofer.idChofer === String(this.facDetallada.idChofer);
       })
       ////console.log("4.25)this.choferOp: ", this.choferOp);
-      
-      this.vehiculoOp = this.choferOp[0].vehiculo.filter((vehiculo:Vehiculo)=>{
-        return vehiculo.dominio === this.operacion.patenteChofer.toUpperCase()
-      })
+
+      this.vehiculoOp = [];
       ////console.log("4.5)vehiculoOp: ", this.vehiculoOp);
       
   
@@ -268,7 +266,7 @@ export class EditarTarifaOpComponent implements OnInit {
       switch(this.fromParent.origen){
         case "cliente":{
           let{id, ...facOp} = this.facContraParte;
-          if(this.operacion.chofer.idProveedor === 0){            
+          if(this.operacion.chofer.contratacion.tipo === 'directo'){
             this.storageService.updateItem("informesOpChoferes", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
           } else {
             this.storageService.updateItem("informesOpProveedores", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
@@ -298,7 +296,7 @@ export class EditarTarifaOpComponent implements OnInit {
       
       switch(this.fromParent.origen){
         case "cliente":{
-            if(this.operacion.chofer.idProveedor === 0){
+            if(this.operacion.chofer.contratacion.tipo === 'directo'){
               this.dbFirebase
                   .obtenerTarifaIdTarifa("informesOpChoferes",this.facDetallada.contraParteId, "idInfOp")
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
@@ -369,17 +367,17 @@ export class EditarTarifaOpComponent implements OnInit {
 
     getClienteId(idCliente:number){
       //console.log("aca si tiene que llegar");   
-      let clientes: Cliente [] = this.$clientes.filter((c:Cliente) => {return c.idCliente === idCliente});
+      let clientes: Cliente [] = this.$clientes.filter((c:Cliente) => {return String(c.idCliente) === String(idCliente)});
       return clientes[0].razonSocial;
     }
 
     getChoferId(idChofer:number){
-      let choferes: Chofer [] = this.$choferes.filter((c:Chofer) => { return c.idChofer === idChofer});
-      return choferes[0].apellido + " " + choferes[0].nombre;
+      let choferes: Chofer [] = this.$choferes.filter((c:Chofer) => { return c.idChofer === String(idChofer)});
+      return choferes[0].datosPersonales.apellido + " " + choferes[0].datosPersonales.nombre;
     }
 
-    getProveedorId(idProveedor:number){
-      //console.log("no tiene que llegar aca?");      
+    getProveedorId(idProveedor: string){
+      //console.log("no tiene que llegar aca?");
       let prov: Proveedor [] = this.$proveedores.filter((p:Proveedor) => {return p.idProveedor === idProveedor});
       return prov ? prov[0].razonSocial : "";
     }

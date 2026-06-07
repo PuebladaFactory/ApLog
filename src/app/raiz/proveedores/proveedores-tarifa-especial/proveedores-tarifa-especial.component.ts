@@ -68,14 +68,14 @@ export class ProveedoresTarifaEspecialComponent implements OnInit {
 
   changeProveedor(e: any) {    
     console.log(e.target.value);    
-    let id = Number(e.target.value);
-    ////console.log()("1)",id);    
+    let id = String(e.target.value);
+    ////console.log()("1)",id);
     this.proveedorSeleccionado = this.$proveedoresEsp.filter((proveedor:Proveedor)=>{
       ////console.log()("2", cliente.idCliente, id);
       return proveedor.idProveedor === id;
     })
     //this.tEspecial = true;
-    this.idProveedorEsp = id 
+    this.idProveedorEsp = id
     this.consultaProveedor.push(this.idProveedorEsp);    
     this.storageService.setInfo("proveedorSeleccionado", this.consultaProveedor);   
     this.consultaProveedor = [];
@@ -91,7 +91,7 @@ export class ProveedoresTarifaEspecialComponent implements OnInit {
       id = Number(e.target.value);
       this.clienteSeleccionado = this.$clientes.filter((cliente:Cliente)=>{
         ////console.log()("2", cliente.idCliente, id);
-        return cliente.idCliente === id;
+        return String(cliente.idCliente) === String(id);
       })      
       this.idClienteEsp = id; 
       console.log("id cliente eso: ", this.idClienteEsp);

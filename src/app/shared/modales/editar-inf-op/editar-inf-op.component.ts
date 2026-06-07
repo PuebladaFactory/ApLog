@@ -188,7 +188,7 @@ export class EditarInfOpComponent implements OnInit {
       this.fromParent.origen === "chofer" ||
       this.fromParent.origen === "proveedor"
         ? "cliente"
-        : this.operacion.chofer.idProveedor === 0
+        : this.operacion.chofer.contratacion.tipo === 'directo'
           ? "chofer"
           : "proveedor";
     let tarifa = await this.buscarTarifaServ.buscarTarifa(
@@ -219,11 +219,11 @@ export class EditarInfOpComponent implements OnInit {
   getChofer() {
     let vehiculoOp;
     let choferOp = this.choferes.find((chofer: Chofer) => {
-      return chofer.idChofer === this.infOpDetallada.idChofer;
+      return chofer.idChofer === String(this.infOpDetallada.idChofer);
     });
     ////////console.log("4.25)this.choferOp: ", this.choferOp);
     if (choferOp) {
-      vehiculoOp = choferOp.vehiculo.find((vehiculo: Vehiculo) => {
+      vehiculoOp = ((choferOp as any).vehiculo ?? []).find((vehiculo: Vehiculo) => {
         return vehiculo.dominio === this.operacion.patenteChofer.toUpperCase();
       });
       if (vehiculoOp) {
@@ -578,8 +578,8 @@ export class EditarInfOpComponent implements OnInit {
   }
 
   calcularKmValores() {
-    let vehiculo = this.operacion.chofer.vehiculo.find(
-      (v) => v.dominio === this.operacion.patenteChofer,
+    let vehiculo = ((this.operacion.chofer as any).vehiculo ?? []).find(
+      (v: any) => v.dominio === this.operacion.patenteChofer,
     );
 
     if (vehiculo) {

@@ -52,8 +52,8 @@ export class ConsultaLegajosComponent implements OnInit {
     .subscribe(data => {
       this.$choferes = data;     
       this.$choferes = this.$choferes      
-      .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-    })     
+      .sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido));
+    })
     this.storageService.legajos$
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
@@ -69,8 +69,8 @@ export class ConsultaLegajosComponent implements OnInit {
 
   changeChofer(e: any) {    
     console.log(e.target.value);    
-    let id = Number(e.target.value);    
-    ////console.log()("1)",id);    
+    const id = e.target.value;
+    ////console.log()("1)",id);
     let choferSel: ConIdType<Chofer>[];
     choferSel = this.$choferes.filter((chofer:Chofer)=>{
       ////console.log()("2", cliente.idCliente, id);
@@ -188,7 +188,7 @@ export class ConsultaLegajosComponent implements OnInit {
     }
   
     const zip = new JSZip();
-    const carpeta = zip.folder(this.choferSeleccionado.apellido + '_' + this.choferSeleccionado.nombre);
+    const carpeta = zip.folder(this.choferSeleccionado.datosPersonales.apellido + '_' + this.choferSeleccionado.datosPersonales.nombre);
     const promises: Promise<any>[] = [];
   
     this.legajoSeleccionado.documentacion.forEach((doc) => {
@@ -229,7 +229,7 @@ export class ConsultaLegajosComponent implements OnInit {
         }
         zip.generateAsync({ type: 'blob' })
           .then((contenido: string | Blob) => {
-            saveAs(contenido, `${this.choferSeleccionado.apellido}_${this.choferSeleccionado.nombre}_legajo.zip`);
+            saveAs(contenido, `${this.choferSeleccionado.datosPersonales.apellido}_${this.choferSeleccionado.datosPersonales.nombre}_legajo.zip`);
           });
       })
       .catch((error) => {

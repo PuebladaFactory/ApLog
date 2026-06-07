@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RaizRoutingModule } from './raiz-routing.module';
 import { HomeComponent } from './home/home.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
+import { MigracionComponent } from '../componentes/migracion/migracion.component';
 
 import { ChoferesModule } from './choferes/choferes.module';
 
@@ -27,6 +28,7 @@ import { ReportesModule } from './reportes/reportes.module';
     declarations: [
         HomeComponent,
         SidebarComponent,
+        MigracionComponent,
     ],
     exports: [
         HomeComponent,

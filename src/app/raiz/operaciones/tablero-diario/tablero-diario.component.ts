@@ -30,7 +30,7 @@ type ChoferAsignado = ConIdType<Chofer> & {
 };
 
 export interface ChoferAsignadoBase {
-  idChofer: number;
+  idChofer: string;
   tEventual: boolean;
   categoriaAsignada?: Categoria;
   observaciones?: string;
@@ -41,7 +41,7 @@ export interface ChoferAsignadoBase {
 export interface TableroDiario {
   id: string;
   fecha: string; // formato "YYYY-MM-DD"
-  asignaciones: { [idCliente: number]: ChoferAsignadoBase[] };
+  asignaciones: { [idCliente: string]: ChoferAsignadoBase[] };
   timestamp: number; // nuevo: guarda el momento exacto del guardado
   asignado: boolean;
 }
@@ -55,7 +55,7 @@ export interface TableroDiario {
 export class TableroDiarioComponent implements OnInit, OnDestroy {
   clientes: ConIdType<Cliente>[] = [];
   choferes: ConIdType<Chofer>[] = [];
-  asignaciones: { [idCliente: number]: ChoferAsignado[] } = {};
+  asignaciones: { [idCliente: string]: ChoferAsignado[] } = {};
   connectedDropListsIds: string[] = [];
   destroy$ = new Subject<void>();
   hovering = false;
@@ -92,7 +92,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   choferesNoOperativos: Chofer[] = [];
   choferesDisponibles: Chofer[] = [];
   // Lookup rápido
-  noOperativosSet = new Set<number>();
+  noOperativosSet = new Set<string>();
   usuario:any
 
   constructor(
@@ -115,7 +115,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         this.choferes = data.sort((a, b) =>
-          a.apellido.localeCompare(b.apellido),
+          a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
         );
         this.choferesActivos = this.choferes.filter((c) => c.activo);
         this.choferesInactivos = this.choferes.filter((c) => !c.activo);
@@ -140,7 +140,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
         );
 
         this.clientesVisibles.forEach((cliente) => {
-          this.asignaciones[cliente.idCliente] = [];
+          this.asignaciones[Number(cliente.idCliente)] = [];
         });
       });
 
@@ -220,8 +220,8 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
       const choferesDeCategoria: ConId<Chofer>[] = [];
 
       for (const chofer of this.choferesActivos) {
-        const tieneVehiculoDeCategoria = chofer.vehiculo?.some(
-          (v) => v.categoria?.catOrden === catOrden,
+        const tieneVehiculoDeCategoria = (chofer as any).vehiculo?.some(
+          (v: any) => v.categoria?.catOrden === catOrden,
         );
 
         if (tieneVehiculoDeCategoria) {
@@ -244,7 +244,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     this.choferesAgrupadosPorCategoria = agrupados;
   }
 
-  onDropChoferEnCliente(event: CdkDragDrop<any>, clienteId: number): void {
+  onDropChoferEnCliente(event: CdkDragDrop<any>, clienteId: number|string): void {
     if (!this.fechaSeleccionada)
       return this.mensajesError("Antes debe seleccionar una fecha");
     if (this.tablero?.asignado)
@@ -350,7 +350,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     );
   }
 
-  async quitarChoferDeCliente(idCliente: number, index: number): Promise<void> {
+  async quitarChoferDeCliente(idCliente: number|string, index: number): Promise<void> {
     //console.log("this.tablero: ", this.tablero);
 
     const chofer = this.asignaciones[idCliente][index];
@@ -474,7 +474,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     const nombresClientes: string[] = [];
 
     for (const cliente of this.clientes) {
-      const lista = this.asignaciones[cliente.idCliente] || [];
+      const lista = this.asignaciones[Number(cliente.idCliente)] || [];
       if (lista.some((c) => c.idChofer === chofer.idChofer)) {
         nombresClientes.push(cliente.razonSocial);
       }
@@ -499,7 +499,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
         );
 
         this.clientesVisibles.forEach((cliente) => {
-          this.asignaciones[cliente.idCliente] = [];
+          this.asignaciones[Number(cliente.idCliente)] = [];
         });
         return;
       }
@@ -543,9 +543,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     this.asignaciones = {};
 
     // 🔹 1. Obtener IDs de clientes con asignaciones guardadas en el tablero
-    const idsClientesEnTablero = Object.keys(tablero.asignaciones).map(
-      (id) => +id,
-    );
+    const idsClientesEnTablero = Object.keys(tablero.asignaciones);
 
     // 🔹 2. Obtener los clientes visibles = activos + los que tengan asignaciones guardadas
     const clientesGuardados = this.clientes.filter((c) =>
@@ -568,8 +566,8 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     );
 
     for (const cliente of this.clientesVisibles) {
-      if (!this.asignaciones[cliente.idCliente]) {
-        this.asignaciones[cliente.idCliente] = [];
+      if (!this.asignaciones[Number(cliente.idCliente)]) {
+        this.asignaciones[Number(cliente.idCliente)] = [];
       }
     }
 
@@ -794,7 +792,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
   }
 
   getColorClassForChofer(chofer: Chofer): string {
-    const categoriasChofer = chofer.vehiculo.map((v) => v.categoria.catOrden);
+    const categoriasChofer = ((chofer as any).vehiculo ?? []).map((v: any) => v.categoria.catOrden);
     // Buscar la primera categoría del chofer que esté en la tarifa
     for (let categoria of this.tarifaGeneral.cargasGenerales) {
       if (categoriasChofer.includes(categoria.orden)) {
@@ -1028,11 +1026,11 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
     }
   }
 
-  isChoferNoOperativo(idChofer: number): boolean {
+  isChoferNoOperativo(idChofer: string): boolean {
     return this.noOperativosSet.has(idChofer);
   }
 
-  getMotivoNoDisponibilidad(idChofer: number): string {
+  getMotivoNoDisponibilidad(idChofer: string): string {
     const fecha = this.fechaSeleccionada;
 
     const nd = this.noDisponibilidades.find((n) => {

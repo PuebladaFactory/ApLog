@@ -132,3 +132,54 @@ Cada entidad (cliente, chofer, proveedor) tiene tres niveles: general (`Gral`), 
 
 - Desarrollador autodidacta — primer proyecto serio.
 - Se planean apps complementarias futuras: depósito, ruteos, app para choferes.
+
+## Patrones de refactorización establecidos
+
+### Servicios por entidad
+Cada entidad tiene dos servicios dedicados:
+- `XxxService`: maneja estado en memoria (BehaviorSubject), operaciones de escritura
+  coordinadas y lógica de negocio específica del dominio
+- `XxxFactoryService`: construye y valida objetos tipados a partir de datos del formulario
+
+### IDs
+Todos los IDs son string (Firebase document ID).
+- El campo `idXxx` se asigna en `XxxService` desde `ConIdType.id` al recibir datos de Firestore
+- `toFirestore()` excluye `idXxx`, `id` y `type` antes de escribir en Firestore
+- Los IDs numéricos legacy tienen comentario TODO en las interfaces no migradas
+
+### Estado en memoria
+- BehaviorSubject en XxxService, nunca en localStorage para datos de colecciones
+- `init()` se llama desde HomeComponent al arrancar la app
+- Los componentes se suscriben directamente al observable del servicio
+
+### Escritura en Firestore
+Siempre pasar por StorageService para mantener el log centralizado:
+- Alta: `addItemAndGetId()` — retorna el ID generado
+- Edición: `updateItemAsync()`
+- Baja simple: `deleteItemAsync()`
+- Baja con papelera: `deleteItemPapeleraCompuestoAsync()` con objeto compuesto
+  que incluye todas las entidades relacionadas
+
+### Operaciones compuestas
+Las operaciones que afectan múltiples entidades viven en XxxService, no en el componente:
+- `guardarXxxConRelaciones()`: alta/edición de entidad principal + entidades relacionadas
+- `eliminarXxxConRelaciones()`: baja en cascada + papelera
+
+### Tablas
+`TablaGenericaComponent` para todos los listados:
+- El componente padre define `columnas: ColumnaTabla[]`, arma `filas: any[]`
+  con los datos aplanados y `_objeto` como referencia al original,
+  y define `acciones: AccionTabla[]` con handlers
+- El filtro de visibilidad (visibles/todos) lo maneja el padre
+- Los botones del toolbar (alta, descarga, visibilidad) quedan fuera de la tabla
+
+### Formularios en modo vista
+Usar `form.disable()` y `formTipoTarifa.disable()` en ngOnInit cuando
+`fromParent.modo === 'vista'`, no clases CSS.
+
+### Migración de datos
+Cada módulo tiene su XxxMigrationService con:
+- Backup previo via MigrationBackupService
+- Transformación de documentos con mapeo viejo→nuevo de IDs
+- Verificación final de cantidad de documentos
+- Métodos de corrección separados para limpiar campos residuales

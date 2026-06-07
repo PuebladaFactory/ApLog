@@ -549,17 +549,17 @@ onGenerarNuevaTarifaAutomatica() {
       if(proveedores.length > 0){
         proveedores.forEach((p:ConIdType<Proveedor>)=>{
           if(p.tarifaTipo.general){
-            p.tarifaAsignada = true;            
-            p.idTarifa = this.nuevaTarifaGral.idTarifa;
+            p.tarifaAsignada = true;
+            p.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let {id, type, ...proveedor } = p
-            this.storageService.updateItem("proveedores", proveedor, p.idProveedor,"INTERNA", "", p.id);            
+            this.storageService.updateItem("proveedores", proveedor, p.idProveedor,"INTERNA", "", p.id);
           }
         })
         choferes.forEach((c:ConIdType<Chofer>)=>{
           if(c.tarifaTipo.general){
-            c.idTarifa = this.nuevaTarifaGral.idTarifa;
+            c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let{id, type, ...ch} = c
-            this.storageService.updateItem("proveedores", ch, c.idChofer,"INTERNA", "", c.id);       
+            this.storageService.updateItem("proveedores", ch, c.idChofer,"INTERNA", "", c.id);
           }
         })
     }      
@@ -580,15 +580,15 @@ onGenerarNuevaTarifaAutomatica() {
       if(proveedores.length > 0){
         proveedores.forEach((p:ConIdType<Proveedor>)=>{
           if(p.tarifaTipo.especial  && p.idProveedor === this.idProveedorEsp[0]){
-            p.tarifaAsignada = true;            
-            p.idTarifa = this.nuevaTarifaGral.idTarifa;
+            p.tarifaAsignada = true;
+            p.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let {id, type, ...proveedor } = p
             this.storageService.updateItem("proveedores", proveedor, p.idProveedor,"INTERNA", "", p.id);
           }
         })
         choferes.forEach((c:ConIdType<Chofer>)=>{
-          if(c.tarifaTipo.especial && c.idProveedor === this.idProveedorEsp[0]){
-            c.idTarifa = this.nuevaTarifaGral.idTarifa;
+          if(c.tarifaTipo.especial && (c.contratacion as any).idProveedor === this.idProveedorEsp[0]){
+            c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let{id, type, ...ch} = c
             this.storageService.updateItem("proveedores", ch, c.idChofer,"INTERNA", "", c.id);       
           }
@@ -653,7 +653,7 @@ onGenerarNuevaTarifaAutomatica() {
   }
 
   getCliente(idCliente: number){
-    let cliente:Cliente[] = this.$clientes.filter((c:Cliente) => c.idCliente === idCliente)
+    let cliente:Cliente[] = this.$clientes.filter((c:Cliente) => c.idCliente === String(idCliente))
     if (cliente.length > 0){
       return cliente[0].razonSocial;
     } else {
@@ -685,7 +685,7 @@ onGenerarNuevaTarifaAutomatica() {
     }
   }
 
-  getProveedorEsp(idProveedor:number){
+  getProveedorEsp(idProveedor: string){
     let prov : Proveedor[] = this.$proveedores.filter(p => p.idProveedor === idProveedor);
     console.log("porveedor razon social: ", prov[0].razonSocial);
     
@@ -700,7 +700,7 @@ onGenerarNuevaTarifaAutomatica() {
             proveedores.forEach((c:Proveedor)=>{
                 if(c.tarifaTipo.general){
                   c.tarifaAsignada = true;
-                  c.idTarifa = this.ultTarifaGralProveedor.idTarifa;
+                  c.idTarifa = String(this.ultTarifaGralProveedor.idTarifa);
                   //this.storageService.updateItem("proveedores", c, c.idProveedor, "INTERNA", "");
                 }
               })
@@ -717,7 +717,7 @@ onGenerarNuevaTarifaAutomatica() {
             proveedores.forEach((c:Proveedor)=>{
                 if(c.tarifaTipo.especial  && c.idProveedor === this.idProveedorEsp[0] && this.ultTarifaEspecial){
                   c.tarifaAsignada = true;
-                  c.idTarifa = this.ultTarifaEspecial.idTarifa;
+                  c.idTarifa = String(this.ultTarifaEspecial.idTarifa);
                   //this.storageService.updateItem("proveedores", c, c.idProveedor, "INTERNA", "");
                 }
               })

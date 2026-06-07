@@ -147,7 +147,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
 
     ////console.log("this.idCliente: ", this.idCliente);
 
-    let cliente = this.clientesPers.find((c) => c.idCliente === this.idCliente);
+    let cliente = this.clientesPers.find((c) => String(c.idCliente) === String(this.idCliente));
     if (cliente) {
       this.clienteSeleccionado = cliente;
     } else {
@@ -252,9 +252,10 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   async editarTarifaSeleccionada(form: TarifaForm) {
     if (!this.ultTarifaCliente) return;
 
+    // TODO: actualizar cuando se refactorice este módulo
     const operatoria = await this.tarifasService.editarTarifaCliente(
       this.ultTarifaCliente.idTarifa,
-      this.clienteSeleccionado.idCliente,
+      Number(this.clienteSeleccionado.idCliente),
       form,
       this.usuario.email,
     );
@@ -339,7 +340,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
         if (this.clienteDestinoId) this.idCliente = this.clienteDestinoId;
 
         let cliente = this.clientesPers.find(
-          (c) => c.idCliente === this.clienteDestinoId,
+          (c) => String(c.idCliente) === String(this.clienteDestinoId),
         );
 
         if (cliente) this.clienteSeleccionado = cliente;
@@ -355,7 +356,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
   }
 
   get clientesParaDuplicar(): ConId<Cliente>[] {
-    return this.clientesPers.filter((c) => c.idCliente !== this.idCliente);
+    return this.clientesPers.filter((c) => String(c.idCliente) !== String(this.idCliente));
   }
 
   mensajesError(msj: string) {

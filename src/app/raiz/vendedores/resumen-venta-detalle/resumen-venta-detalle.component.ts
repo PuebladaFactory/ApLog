@@ -63,7 +63,7 @@ estaColapsado(idCliente: number): boolean {
 
   getCliente(id:number){
     let cliente
-    cliente = this.clientes.find(c=> c.idCliente === id)
+    cliente = this.clientes.find(c=> String(c.idCliente) === String(id))
     if(cliente){
       return cliente.razonSocial
     } else {

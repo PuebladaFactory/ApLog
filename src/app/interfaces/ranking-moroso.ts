@@ -1,4 +1,5 @@
 export interface RankingMoroso {
+  // TODO: migrar a string cuando se refactorice este módulo (ID unificado con ConIdType.id)
   entidadId: number;
   razonSocial: string;
   tipoEntidad: string;

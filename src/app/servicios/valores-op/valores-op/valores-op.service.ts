@@ -57,9 +57,9 @@ export class ValoresOpService {
     this.informesVenta = [];
     try {
       this.$proveedores = this.storageService.loadInfo("proveedores");
-      if (op.chofer.idProveedor !== 0) {
+      if (op.chofer.contratacion.tipo === 'proveedor') {
         this.proveedorSeleccionado = this.$proveedores.find(
-          (p) => p.idProveedor === op.chofer.idProveedor,
+          (p) => p.idProveedor === (op.chofer.contratacion as any).idProveedor,
         );
       }
 
@@ -159,7 +159,7 @@ export class ValoresOpService {
       this.operacion.valores.cliente = respuesta.op.valores.cliente;
       this.facturaOpCliente = respuesta.factura;
 
-      if (op.chofer.idProveedor === 0) {
+      if (op.chofer.contratacion.tipo === 'directo') {
         await this.$facturarOpChofer(op);
       } else {
         await this.$facturarOpProveedor(op);
@@ -198,7 +198,7 @@ export class ValoresOpService {
           }
           if (
             this.$ultTarifaEspChofer.idCliente === 0 ||
-            this.$ultTarifaEspChofer.idCliente === op.cliente.idCliente
+            String(this.$ultTarifaEspChofer.idCliente) === String(op.cliente.idCliente)
           ) {
             //tarifa especial gral o especifica al cliente de la op
             respuesta = this.facturacionChofer.$facturarOpChofer(
@@ -245,7 +245,7 @@ export class ValoresOpService {
         respuesta = this.facturacionChofer.$facturarOpPersChofer(
           op,
           this.$ultTarifaPersCliente,
-          0,
+          '',
           this.$ultTarifaGralChofer,
         );
       } else if (op.tarifaTipo.eventual) {
@@ -253,7 +253,7 @@ export class ValoresOpService {
         /////////TARIFA EVENTUAL CHOFER /////////////////////////
         respuesta = this.facturacionChofer.$facturarOpEveChofer(
           op,
-          0,
+          '',
           this.$ultTarifaGralChofer,
         );
       } else {
@@ -298,7 +298,7 @@ export class ValoresOpService {
           }
           if (
             this.$ultTarifaEspProveedor.idCliente === 0 ||
-            this.$ultTarifaEspProveedor.idCliente === op.cliente.idCliente
+            String(this.$ultTarifaEspProveedor.idCliente) === String(op.cliente.idCliente)
           ) {
             //tarifa especial gral o especifica al cliente de la op
             respuesta = this.facturacionChofer.$facturarOpProveedor(
@@ -375,7 +375,7 @@ export class ValoresOpService {
   async $armarFacturasOp(op: ConId<Operacion>) {
     try {
       // lógica de armado
-      if (op.chofer.idProveedor === 0) {
+      if (op.chofer.contratacion.tipo === 'directo') {
         if (this.facturaOpCliente !== null && this.facturaOpChofer !== null) {
           op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
           op.valores.chofer.aPagar = this.facturaOpChofer.valores.total;
@@ -438,7 +438,7 @@ export class ValoresOpService {
 
     try {
       let result;
-      if (op.chofer.idProveedor === 0) {
+      if (op.chofer.contratacion.tipo === 'directo') {
         result = await this.dbFirebase.guardarFacturasOp(
           "informesOpClientes",
           this.facturaOpCliente,
@@ -485,9 +485,9 @@ export class ValoresOpService {
         eventual: true,
         personalizada: false,
       },
-      idCliente: op.cliente.idCliente,
-      idChofer: op.chofer.idChofer,
-      idProveedor: op.chofer.idProveedor,
+      idCliente: Number(op.cliente.idCliente),
+      idChofer: Number(op.chofer.idChofer),
+      idProveedor: (op.chofer.contratacion as any).idProveedor ?? 0,
       idOperacion: op.idOperacion,
       km: op.km,
     };
@@ -496,20 +496,20 @@ export class ValoresOpService {
       this.tarifaEventual,
       this.tarifaEventual.idTarifa,
       "ALTA",
-      `Alta de Tarifa Eventual ${this.tarifaEventual.idTarifa}, Cliente ${op.cliente.razonSocial}, Chofer ${op.chofer.apellido} ${op.chofer.nombre} `,
+      `Alta de Tarifa Eventual ${this.tarifaEventual.idTarifa}, Cliente ${op.cliente.razonSocial}, Chofer ${op.chofer.datosPersonales.apellido} ${op.chofer.datosPersonales.nombre} `,
     );
   }
 
   asignacionComisionVenta(op: ConId<Operacion>) {
     this.informesVenta = [];
-    op.cliente.vendedor?.forEach((idVend: number) => {
+    op.cliente.vendedor?.forEach((idVend: string) => {
       let informeVenta: InformeVenta;
       informeVenta = {
         idInfVenta: new Date().getTime() + Math.floor(Math.random() * 1000),
         fecha: op.fecha,
         idOperacion: op.idOperacion,
-        idCliente: op.cliente.idCliente,
-        idVendedor: idVend,
+        idCliente: Number(op.cliente.idCliente),
+        idVendedor: Number(idVend), // TODO: migrar a string cuando se refactorice este módulo
         valoresOp: {
           totalCliente: op.valores.cliente.aCobrar,
           totalChofer: op.valores.chofer.aPagar,
@@ -563,11 +563,11 @@ export class ValoresOpService {
     );
 
     if (op.chofer.tarifaTipo.especial) {
-      if (op.chofer.idProveedor === 0) {
+      if (op.chofer.contratacion.tipo === 'directo') {
         let tEsp = tarifasEspecialesChofer.find(
-          (t) => t.idChofer === op.chofer.idChofer,
+          (t) => String(t.idChofer) === op.chofer.idChofer,
         );
-        if (tEsp.idCliente === 0 || tEsp.idCliente === op.cliente.idCliente) {
+        if (tEsp.idCliente === 0 || String(tEsp.idCliente) === String(op.cliente.idCliente)) {
           tarifa = tEsp;
           //////console.log("2A) tarifa esp chofer a pagar: ", tarifa);
         } else {
@@ -576,9 +576,9 @@ export class ValoresOpService {
         }
       } else {
         let tEsp = tarifasEspecialesProveedor.find(
-          (t) => t.idProveedor === op.chofer.idProveedor,
+          (t) => t.idProveedor === (op.chofer.contratacion as any).idProveedor,
         );
-        if (tEsp.idCliente === 0 || tEsp.idCliente === op.cliente.idCliente) {
+        if (tEsp.idCliente === 0 || String(tEsp.idCliente) === String(op.cliente.idCliente)) {
           tarifa = tEsp;
           //////console.log("2A) tarifa esp chofer a pagar: ", tarifa);
         } else {
@@ -588,7 +588,7 @@ export class ValoresOpService {
       }
     } else {
       tarifa =
-        op.chofer.idProveedor === 0
+        op.chofer.contratacion.tipo === 'directo'
           ? tarifaGralChofer[0]
           : tarifaGralProveedor[0];
     }
@@ -635,7 +635,7 @@ export class ValoresOpService {
       let tEspecial = tarifas.find((t) => t.idChofer === op.chofer.idChofer);
       if (
         tEspecial.idCliente === 0 ||
-        tEspecial.idCliente === op.cliente.idCliente
+        String(tEspecial.idCliente) === String(op.cliente.idCliente)
       ) {
         tarifaAplicada = tEspecial;
       } else {

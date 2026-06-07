@@ -4,7 +4,7 @@ import * as FileSaver from "file-saver";
 import {
   Categoria,
   Chofer,
-  Dirección,
+  Direccion,
   Vehiculo,
 } from "src/app/interfaces/chofer";
 import { Cliente, Contacto } from "src/app/interfaces/cliente";
@@ -368,20 +368,20 @@ export class ExcelService {
   getChofer(idChofer: number, choferes: Chofer[]) {
     let chofer: Chofer[];
     chofer = choferes.filter((c: Chofer) => {
-      return c.idChofer === idChofer;
+      return c.idChofer === String(idChofer);
     });
-    return chofer[0].apellido + " " + chofer[0].nombre;
+    return chofer[0].datosPersonales.apellido + " " + chofer[0].datosPersonales.nombre;
   }
 
   getCliente(idCliente: number, clientes: Cliente[]) {
     let cliente: Cliente[];
     cliente = clientes.filter((c: Cliente) => {
-      return c.idCliente === idCliente;
+      return c.idCliente === String(idCliente);
     });
     return cliente[0].razonSocial;
   }
 
-  getProveedor(idProveedor: number) {
+  getProveedor(idProveedor: string) {
     let proveedores: Proveedor[] = this.storageService.loadInfo("proveedores");
     let proveedorOp: Proveedor[];
 
@@ -396,11 +396,11 @@ export class ExcelService {
     let choferSel: Chofer[];
     let choferesStorage: Chofer[] = this.storageService.loadInfo("choferes");
     choferSel = choferesStorage.filter((c: Chofer) => {
-      return c.idChofer === idChofer;
+      return c.idChofer === String(idChofer);
     });
     console.log("choferSel: ", choferSel, " idChofer: ", idChofer);
-    
-    veh = choferSel[0].vehiculo.filter((v: Vehiculo) => {
+
+    veh = ((choferSel[0] as any).vehiculo ?? []).filter((v: Vehiculo) => {
       return v.dominio === patente;
     });
     console.log(veh[0]);
@@ -673,7 +673,7 @@ export class ExcelService {
 
     // Obtener clientes CON asignaciones (array no vacío)
     const clientesConAsignaciones = todosClientes.filter((cliente) => {
-      const asignacionesCliente = asignaciones[cliente.idCliente];
+      const asignacionesCliente = asignaciones[Number(cliente.idCliente)];
       return asignacionesCliente && asignacionesCliente.length > 0;
     });
 
@@ -701,7 +701,7 @@ export class ExcelService {
       const dataRow = worksheet.getRow(4 + i);
 
       clientesConAsignaciones.forEach((cliente, colIndex) => {
-        const asignacionesCliente = asignaciones[cliente.idCliente] || [];
+        const asignacionesCliente = asignaciones[Number(cliente.idCliente)] || [];
         const choferAsignado = asignacionesCliente[i];
         const cell = dataRow.getCell(colIndex + 1);
 
@@ -730,7 +730,7 @@ export class ExcelService {
 
     // 5. Clientes SIN asignaciones (a la derecha, con columna en blanco)
     const clientesSinAsignaciones = todosClientes.filter((cliente) => {
-      const asignacionesCliente = asignaciones[cliente.idCliente];
+      const asignacionesCliente = asignaciones[Number(cliente.idCliente)];
       return !asignacionesCliente || asignacionesCliente.length === 0;
     });
     // 5. Clientes SIN asignaciones (organizados en columnas según espacio)
@@ -849,7 +849,7 @@ export class ExcelService {
               sectionColorClasses,
             );
           } else {
-            cell.value = chofer.apellido + " " + chofer.nombre;
+            cell.value = chofer.datosPersonales?.apellido + " " + chofer.datosPersonales?.nombre;
             // Mantener estilos existentes para choferes no asignados
             cell.fill = {
               type: "pattern",
@@ -889,7 +889,7 @@ export class ExcelService {
       worksheet.getCell(
         filaInicioCategorias + 1 + index,
         columnaInicioInactivos,
-      ).value = chofer.apellido + " " + chofer.nombre;
+      ).value = chofer.datosPersonales?.apellido + " " + chofer.datosPersonales?.nombre;
     });
 
     // Ajustar anchos de columnas
@@ -970,7 +970,7 @@ export class ExcelService {
     sectionColorClasses: string[], // Nuevo parámetro
   ) {
     // 1. Valor principal visible
-    cell.value = `${chofer.apellido}, ${chofer.nombre}`;
+    cell.value = `${chofer.datosPersonales?.apellido}, ${chofer.datosPersonales?.nombre}`;
 
     // 2. Comentario con metadata
     cell.note = `📝 Observaciones: ${chofer.observaciones}\n🗺 Hoja de Ruta: ${chofer.hojaDeRuta}`;
@@ -1048,7 +1048,7 @@ export class ExcelService {
       if (rowNumber === 1) return; // Saltar encabezados
 
       choferes.push({
-        idChofer: Number(row.getCell(1).value),
+        idChofer: row.getCell(1).value?.toString() ?? '',
         observaciones: row.getCell(2).value?.toString(),
         hojaDeRuta: row.getCell(3).value?.toString(),
         // Nota: Esto devuelve Partial<ChoferAsignado>
@@ -1211,7 +1211,7 @@ export class ExcelService {
     );
   }
 
-  private formatearDireccion(dir: Dirección): string {
+  private formatearDireccion(dir: Direccion): string {
     return `${dir.domicilio}, ${dir.localidad}, ${dir.municipio}, ${dir.provincia}`;
   }
 
@@ -1272,19 +1272,19 @@ export class ExcelService {
     // Filas base (vehículos después)
     // ----------------------------
     const filas = choferes.map((ch) => [
-      ch.apellido,
-      ch.nombre,
-      ch.cuit.toString(),
-      ch.celularContacto,
-      ch.celularEmergencia,
-      ch.contactoEmergencia,
+      ch.datosPersonales.apellido,
+      ch.datosPersonales.nombre,
+      ch.datosPersonales.cuit.toString(),
+      ch.datosPersonales.celularContacto,
+      ch.datosPersonales.celularEmergencia,
+      ch.datosPersonales.contactoEmergencia,
       // 👇 Dirección desagregada
-      ch.direccion?.domicilio ?? "",
-      ch.direccion?.localidad ?? "",
-      ch.direccion?.municipio ?? "",
-      ch.direccion?.provincia ?? "",
-      ch.email,
-      this.formatearFecha(ch.fechaNac),
+      ch.datosPersonales.direccion?.domicilio ?? "",
+      ch.datosPersonales.direccion?.localidad ?? "",
+      ch.datosPersonales.direccion?.municipio ?? "",
+      ch.datosPersonales.direccion?.provincia ?? "",
+      ch.datosPersonales.email,
+      this.formatearFecha(ch.datosPersonales.fechaNac),
       ch.condFiscal,
       "", // vehículos luego
     ]);
@@ -1316,7 +1316,7 @@ export class ExcelService {
 
       // Vehículos (dominio en negrita)
       worksheet.getCell(rowNumber, 14).value = this.formatearVehiculosRich(
-        chofer.vehiculo,
+        (chofer as any).vehiculo,
       );
     });
 

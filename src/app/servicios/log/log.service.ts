@@ -17,7 +17,7 @@ export class LogService {
     accion: string,
     coleccion: string,
     detalle: string,
-    idObjeto: number,
+    idObjeto: string | number,
     resultado: boolean
   ): Promise<void> {
     try {
@@ -38,7 +38,7 @@ export class LogService {
     accion: string,
     coleccion: string,
     detalle: string,
-    idObjeto: number,
+    idObjeto: string | number,
     resultado: boolean,
     incremento: number
   ): LogEntry {
@@ -65,7 +65,7 @@ export class LogService {
     accion: string,
     coleccion: string,
     detalle: string,
-    idObjeto: number,
+    idObjeto: string | number,
     objeto: any,
     resultado: boolean,
     motivo: string

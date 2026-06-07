@@ -54,6 +54,8 @@ import { MontoDirective } from './directives/monto.directive';
 import { SortableDirective } from './directives/sortable.directive';
 import { CalcularPorcentajeV2Pipe } from './pipes/calcular-porcentaje-v2.pipe';
 import { FiltroPeriodoComponent } from './filtro-periodo/filtro-periodo.component';
+import { TablaAccionesComponent } from './tabla/tabla-acciones/tabla-acciones.component';
+import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.component';
 
 
 
@@ -100,8 +102,10 @@ import { FiltroPeriodoComponent } from './filtro-periodo/filtro-periodo.componen
     MontoDirective,
     SortableDirective,
     CalcularPorcentajeV2Pipe,
-    FiltroPeriodoComponent
-    
+    FiltroPeriodoComponent,
+    TablaAccionesComponent,
+    TablaGenericaComponent
+
   ],
   imports: [
     CommonModule,
@@ -154,7 +158,9 @@ import { FiltroPeriodoComponent } from './filtro-periodo/filtro-periodo.componen
     MontoDirective,
     SortableDirective,
     CalcularPorcentajeV2Pipe,
-    FiltroPeriodoComponent
+    FiltroPeriodoComponent,
+    TablaAccionesComponent,
+    TablaGenericaComponent
   ]
 })
 export class SharedModule { }

@@ -105,15 +105,15 @@
                 @for (op of grupo.operaciones; track op.idOperacion) {
                     <tr [class.fila-error]="tieneErrores(op)" class="op-row">
                         <td>
-                            {{ op.chofer.apellido }}, {{ op.chofer.nombre }}
+                            {{ op.chofer.datosPersonales.apellido }}, {{ op.chofer.datosPersonales.nombre }}
                         </td>
 
                         <!-- Vehiculo -->
                         <td>
-                            @if (op.chofer.vehiculo.length === 1) {
+                            @if ($any(op.chofer)?.vehiculo?.length === 1) {
                                 <input
                                     class="form-control form-control-sm isDisabled"
-                                    [value]="op.chofer.vehiculo[0].dominio"
+                                    [value]="$any(op.chofer)?.vehiculo?.[0]?.dominio"
                                 />
                             } @else {
                                 <select
@@ -122,7 +122,7 @@
                                 >
                                     <option value="">Seleccione</option>
                                     @for (
-                                        v of op.chofer.vehiculo;
+                                        v of $any(op.chofer)?.vehiculo ?? [];
                                         track v.dominio
                                     ) {
                                         <option [value]="v.dominio">

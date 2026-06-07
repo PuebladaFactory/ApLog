@@ -48,7 +48,7 @@ export class ClienteTarifaEspecialComponent implements OnInit {
     
     this.clienteSeleccionado = this.$clientesEsp.filter((cliente:Cliente)=>{
       //////console.log()("2", cliente.idCliente, id);
-      return cliente.idCliente === id
+      return String(cliente.idCliente) === String(id)
     })
     this.tEspecial = true;
     this.idClienteEsp = id;

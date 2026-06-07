@@ -65,7 +65,7 @@ export class InformeLiqDetalleComponent implements OnInit {
     ); // Ordena por el nombre del chofer
     this.choferes = this.storageService.loadInfo("choferes");
     this.choferes = this.choferes.sort((a, b) =>
-      a.apellido.localeCompare(b.apellido),
+      a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
     ); // Ordena por el nombre del chofer
     this.proveedores = this.storageService.loadInfo("proveedores");
     this.proveedores = this.proveedores.sort((a, b) =>
@@ -86,10 +86,10 @@ export class InformeLiqDetalleComponent implements OnInit {
   getChofer(idChofer: number) {
     let chofer: Chofer[];
     chofer = this.choferes.filter((chofer: Chofer) => {
-      return chofer.idChofer === idChofer;
+      return chofer.idChofer === String(idChofer);
     });
     if (chofer[0]) {
-      return chofer[0].apellido + " " + chofer[0].nombre;
+      return chofer[0].datosPersonales.apellido + " " + chofer[0].datosPersonales.nombre;
     } else {
       return `Chofer dado de baja. idChofer ${idChofer}`;
     }
@@ -98,7 +98,7 @@ export class InformeLiqDetalleComponent implements OnInit {
   getCliente(idCliente: number) {
     let cliente: Cliente[];
     cliente = this.clientes.filter((cliente: Cliente) => {
-      return cliente.idCliente === idCliente;
+      return cliente.idCliente === String(idCliente);
     });
     if (cliente[0]) {
       return cliente[0].razonSocial;

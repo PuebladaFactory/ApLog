@@ -1092,7 +1092,7 @@ export class StorageService {
 
 
      
-      public addItem(componente: string, item: any, idItem:number, accion:string, msj: string): void {
+      public addItem(componente: string, item: any, idItem:any, accion:string, msj: string): void {
         let user = this.loadInfo('usuario');
         //let accion: string = "ALTA";
         let regLog:boolean = this.controlLog(componente, accion);
@@ -1140,7 +1140,7 @@ export class StorageService {
           console.log(e.message)});
       }
 
-      public deleteItemPapelera(componente: string, item: any,  idItem:number, accion:string, msj:string, motivo:string): void {
+      public deleteItemPapelera(componente: string, item: any,  idItem:any, accion:string, msj:string, motivo:string): void {
         let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
@@ -1166,7 +1166,7 @@ export class StorageService {
 
       }
     
-      public updateItem(componente: string, item: any, idItem:number, accion:string, msj: string, uid:any): void {
+      public updateItem(componente: string, item: any, idItem:any, accion:string, msj: string, uid:any): void {
         //////console.log("storage update item", componente, item);
         let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
@@ -1373,7 +1373,7 @@ export class StorageService {
     const fechaMs = new Date(fecha + 'T00:00:00').getTime();
 
     // 1️⃣ Armar set de choferes NO disponibles para esa fecha
-    const noDisponiblesSet = new Set<number>();
+    const noDisponiblesSet = new Set<string>();
 
     for (const nd of noDisponibilidades || []) {
       if (!nd.activa) continue;
@@ -1393,5 +1393,124 @@ export class StorageService {
     );
   }
 
-     
+  public addItemAndGetId(
+    componente: string,
+    item: any,
+    accion: string,
+    msj: string
+  ): Promise<string> {
+    let user = this.loadInfo('usuario');
+    let regLog = this.controlLog(componente, accion);
+    return this.dbFirebase.createAndGetId(componente, item)
+      .then((id) => {
+        if (!user[0].roles.god && regLog) {
+          this.logService.logEvent(accion, componente, msj, id, true);
+        }
+        return id;
+      })
+      .catch((e) => {
+        if (!user[0].roles.god && regLog) {
+          this.logService.logEvent(accion, componente, msj, '', false);
+        }
+        console.log(e.message);
+        throw e;
+      });
+  }
+
+  public async updateItemAsync(
+    componente: string,
+    item: any,
+    idItem: string,
+    accion: string,
+    msj: string,
+  ): Promise<void> {
+    let user = this.loadInfo('usuario');
+    let regLog = this.controlLog(componente, accion);
+    try {
+      await this.dbFirebase.update(componente, item, idItem);
+      if (!user[0].roles.god && regLog) {
+        this.logService.logEvent(accion, componente, msj, idItem, true);
+      }
+    } catch (e: any) {
+      if (!user[0].roles.god && regLog) {
+        this.logService.logEvent(accion, componente, msj, idItem, false);
+      }
+      console.log(e.message);
+      throw e;
+    }
+  }
+
+  public async deleteItemPapeleraAsync(
+    componente: string,
+    item: any,
+    idItem: string,
+    accion: string,
+    msj: string,
+    motivo: string,
+  ): Promise<void> {
+    let user = this.loadInfo('usuario');
+    let regLog = this.controlLog(componente, accion);
+    try {
+      await this.dbFirebase.delete(componente, item.id);
+      if (!user[0].roles.god && regLog) {
+        await this.logService.logEventDoc(accion, componente, msj, idItem, item, true, motivo);
+      }
+    } catch (e: any) {
+      if (!user[0].roles.god && regLog) {
+        this.logService.logEvent(accion, componente, msj, idItem, false);
+      }
+      console.log(e.message);
+      throw e;
+    }
+  }
+
+  public async deleteItemAsync(
+    componente: string,
+    id: string,
+    idItem: string,
+    accion: string,
+    msj: string,
+  ): Promise<void> {
+    let user = this.loadInfo('usuario');
+    let regLog = this.controlLog(componente, accion);
+    try {
+      await this.dbFirebase.delete(componente, id);
+      if (!user[0].roles.god && regLog) {
+        this.logService.logEvent(accion, componente, msj, idItem, true);
+      }
+    } catch (e: any) {
+      if (!user[0].roles.god && regLog) {
+        this.logService.logEvent(accion, componente, msj, idItem, false);
+      }
+      console.log(e.message);
+      throw e;
+    }
+  }
+
+  public async deleteItemPapeleraCompuestoAsync(
+    componente: string,
+    itemId: string,
+    objetoPapelera: any,
+    accion: string,
+    msj: string,
+    motivo: string,
+  ): Promise<void> {
+    let user = this.loadInfo('usuario');
+    let regLog = this.controlLog(componente, accion);
+    try {
+      await this.dbFirebase.delete(componente, itemId);
+      if (!user[0].roles.god && regLog) {
+        await this.logService.logEventDoc(
+          accion, componente, msj, itemId, objetoPapelera, true, motivo
+        );
+      }
+    } catch (e: any) {
+      if (!user[0].roles.god && regLog) {
+        this.logService.logEvent(accion, componente, msj, itemId, false);
+      }
+      console.log(e.message);
+      throw e;
+    }
+  }
+
 }

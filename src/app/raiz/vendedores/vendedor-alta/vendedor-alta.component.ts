@@ -187,9 +187,9 @@ export class VendedorAltaComponent implements OnInit{
     const modal = this.modalService.open(modalRef, { centered: true });
   }
 
-  getCliente(id:number){
+  getCliente(id:number){ // TODO: migrar a string cuando se refactorice este módulo
     let cliente
-    cliente = this.clientes.find(c=> c.idCliente === id)
+    cliente = this.clientes.find(c=> String(c.idCliente) === String(id)) // TODO: migrar a string cuando se refactorice este módulo
     if(cliente){
       return cliente.razonSocial
     } else {
@@ -201,7 +201,7 @@ export class VendedorAltaComponent implements OnInit{
     //////////console.log()(e.target.value)
     
     let clienteSelec = this.clientes.find( c=> { 
-        return c.idCliente === Number(e.target.value)
+        return String(c.idCliente) === String(Number(e.target.value)) // TODO: migrar a string cuando se refactorice este módulo
     });   
     
     if(clienteSelec) this.clienteSeleccionado = clienteSelec;                
@@ -231,19 +231,19 @@ export class VendedorAltaComponent implements OnInit{
     if (this.clienteSeleccionado && this.porcentajeAsignado && this.accionCliente === 'alta') {
       this.asignacion = {
         idAsignacion: new Date().getTime() + Math.floor(Math.random() * 1000),
-        idCliente : this.clienteSeleccionado.idCliente,
+        idCliente : Number(this.clienteSeleccionado.idCliente), // TODO: migrar a string cuando se refactorice este módulo
         porcentaje: this.porcentajeAsignado
       }
       this.asignaciones.push(this.asignacion)
       console.log("this.asignacion", this.asignacion);
-      
+
     } else if(this.accionCliente === 'edicion'){
       const index = this.asignaciones.findIndex(obj => obj.idAsignacion === this.asignacionEditar.idAsignacion);
       if (index !== -1) {
         this.asignaciones.splice(index, 1);
         this.asignacion = {
           idAsignacion: new Date().getTime() + Math.floor(Math.random() * 1000),
-          idCliente : this.clienteSeleccionado.idCliente,
+          idCliente : Number(this.clienteSeleccionado.idCliente), // TODO: migrar a string cuando se refactorice este módulo
           porcentaje: this.porcentajeAsignado
         }
         this.asignaciones.push(this.asignacion)
@@ -286,7 +286,7 @@ export class VendedorAltaComponent implements OnInit{
       this.porcentajeAsignado = asignacion.porcentaje;
       this.nuevaAsignacion = false;
       let clienteSel = this.clientes.find( c=> { 
-        return c.idCliente === asignacion.idCliente
+        return String(c.idCliente) === String(asignacion.idCliente) // TODO: migrar a string cuando se refactorice este módulo
       });   
       if(clienteSel){this.clienteSeleccionado = clienteSel}
       this.openModal(modalRef, 'edicion')
@@ -299,7 +299,7 @@ export class VendedorAltaComponent implements OnInit{
       
       this.vendedor.asignaciones.map(a=>{
         let clienteSel = this.clientes.find( c=> { 
-          return c.idCliente === a.idCliente
+          return String(c.idCliente) === String(a.idCliente) // TODO: migrar a string cuando se refactorice este módulo
         }); 
         console.log("EDITAR CLIENTE => clienteSel", clienteSel);
                  
@@ -309,11 +309,11 @@ export class VendedorAltaComponent implements OnInit{
           }
 
           // Verificar si ya existe
-          const existe = clienteSel.vendedor.includes(this.vendedor.idVendedor);
+          const existe = clienteSel.vendedor.includes(String(this.vendedor.idVendedor)); // TODO: migrar a string cuando se refactorice este módulo
 
           // Agregar si no existe
           if (!existe) {
-            clienteSel.vendedor.push(this.vendedor.idVendedor);
+            clienteSel.vendedor.push(String(this.vendedor.idVendedor)); // TODO: migrar a string cuando se refactorice este módulo
           }
           this.clientesModificados.push(clienteSel);
           

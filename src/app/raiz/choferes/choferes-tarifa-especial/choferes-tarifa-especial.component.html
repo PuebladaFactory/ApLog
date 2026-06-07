@@ -10,7 +10,7 @@
         <option selected>Seleccione</option>
         @for (chofer of $choferesEsp; track chofer) {
           <option [value]="chofer.idChofer">
-            {{chofer.apellido}} {{chofer.nombre}}
+            {{chofer.datosPersonales.apellido}} {{chofer.datosPersonales.nombre}}
           </option>
         }
       </select>

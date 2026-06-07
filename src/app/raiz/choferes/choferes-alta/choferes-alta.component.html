@@ -1,287 +1,601 @@
 <div class="modal-content">
-  <div class="modal-header">
-    <h1 >Alta Chofer</h1>
-    <button type="button" class="btn-close btn" id="cerrar" (click)="activeModal.close()"></button>
-  </div>
-  <div class="modal-body">
-    <div class="row">
-      <div class="col">
-        <h2>Datos Personales</h2>
-      </div>
-      <div class="col">
-        <h2 class="">Dirección:</h2>
-      </div>
-      <div class="col">
-        <h2 class=""></h2>
-      </div>
+    <div class="modal-header">
+        <h1>Alta Chofer</h1>
+        <button
+            type="button"
+            class="btn-close btn"
+            id="cerrar"
+            (click)="activeModal.close()"
+        ></button>
     </div>
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" >
-      <div class="row">
-        <div class="col">
-          <div class="form-group mb-2">
-            <label for="Nombre">Nombre</label>
-            <div class="input-group">
-              <input formControlName="nombre" class="form-control edicion" required type="text" [ngClass]="{ 'is-invalid': form.get('nombre').invalid && (form.get('nombre').dirty || form.get('nombre').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloLetras >
+    <div class="modal-body">
+        <div class="row">
+            <div class="col">
+                <h2>Datos Personales</h2>
             </div>
-            @if (hasError('nombre', 'required')) {
-              <div>El nombre es obligatorio.</div>
-            }
-            @if (hasError('nombre', 'maxlength')) {
-              <div>El nombre no debe exceder 30 caracteres.</div>
-            }
-          </div>
-          <div class="form-grou mb-2">
-            <label for="Apellido">Apellido</label>
-            <div class="input-group">
-              <input formControlName="apellido" class="form-control" required type="text"  [ngClass]="{ 'is-invalid': form.get('apellido').invalid && (form.get('apellido').dirty || form.get('apellido').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloLetras>
+            <div class="col">
+                <h2 class="">Dirección:</h2>
             </div>
-            @if (hasError('apellido', 'required')) {
-              <div>El apellido es obligatorio.</div>
-            }
-            @if (hasError('apellido', 'maxlength')) {
-              <div>El apellido no debe exceder 30 caracteres.</div>
-            }
-          </div>
-          <div class="form-group mb-2">
-            <label for="FechaNac">Fecha Nacimiento</label>
-            <div class="input-group">
-              <input formControlName="fechaNac" class="form-control" required type="date" [ngClass]="{ 'is-invalid': form.get('fechaNac').invalid && (form.get('fechaNac').dirty || form.get('fechaNac').touched) }" [ngClass]="{'isDisabled': soloVista}">
+            <div class="col">
+                <h2 class=""></h2>
             </div>
-            @if (hasError('fechaNac', 'required')) {
-              <div>La fecha de nacimiento es obligatoria.</div>
-            }
-          </div>
-          <div class="form-group mb-2">
-            <label for="Celular de contacto">Celular de Contacto</label>
-            <div class="input-group">
-              <input formControlName="celularContacto" class="form-control" required type="text" [placeholder]="'ej: 1154776234'"  [ngClass]="{ 'is-invalid': form.get('celularContacto').invalid && (form.get('celularContacto').dirty || form.get('celularContacto').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloNumeros>
-            </div>
-            @if (hasError('celularContacto', 'required')) {
-              <div>El celular de contacto es obligatorio.</div>
-            }
-            @if (hasError('celularContacto', 'minlength')) {
-              <div>El número de celular debe tener al menos 10 dígitos.</div>
-            }
-            @if (hasError('celularContacto', 'maxlength')) {
-              <div>El número de celular no debe exceder 10 dígitos.</div>
-            }
-          </div>
-          <div class="form-group mb-2">
-            <label for="Celular de emergencia">Celular de Emergencia</label>
-            <div class="input-group">
-              <input formControlName="celularEmergencia" class="form-control" type="text" [placeholder]="'ej: 1154776234'" [ngClass]="{ 'is-invalid': form.get('celularEmergencia').invalid && (form.get('celularEmergencia').dirty || form.get('celularEmergencia').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloNumeros>
-            </div>
-            @if (hasError('celularEmergencia', 'minlength')) {
-              <div>El número de celular debe tener al menos 10 dígitos.</div>
-            }
-            @if (hasError('celularEmergencia', 'maxlength')) {
-              <div>El número de celular no debe exceder 10 dígitos.</div>
-            }
-          </div>
-          <div class="form-group ">
-            <label for="Contacto">Contacto de Emergencia</label>
-            <div class="input-group">
-              <input formControlName="contactoEmergencia" class="form-control" type="text"  [ngClass]="{ 'is-invalid': form.get('contactoEmergencia').invalid && (form.get('contactoEmergencia').dirty || form.get('contactoEmergencia').touched) }" [ngClass]="{'isDisabled': soloVista}" appSoloLetras>
-            </div>
-
-            @if (hasError('contactoEmergencia', 'maxlength')) {
-              <div>El contacto no debe exceder 60 caracteres.</div>
-            }
-          </div>
         </div>
-        <div class="col">
-          <div class="form-group mb-2">
-            <label>Provincia</label>
-            <select id="selectProvincias"     class="form-select form-select-md" (change)="selectProvincia($event)">
-              <option [value]="$provinciaSeleccionada"> {{$provinciaSeleccionada === "" ? "Elige una provincia" : $provinciaSeleccionada }}</option>
-              @for (prov of $provincias; track prov) {
-                <option [value]="prov.nombre">{{prov.nombre}}</option>
-              }
-            </select>
-            <span></span>
-          </div>
-          <div class="form-group mb-2">
-            <label>Municipio</label>
-            <select id="selectMunicipios" class="form-select form-select-md"  (change)="selectMunicipio($event)">
-              <option [value]="$municipioSeleccionado"> {{$municipioSeleccionado === "" ? "Elige un municipio" : $municipioSeleccionado }}</option>
-              @for (mun of $municipios; track mun) {
-                <option [value]="mun.nombre">{{mun.nombre}}</option>
-              }
-            </select>
-            <span></span>
-          </div>
-          <div class="form-group mb-2">
-            <label>Localidad</label>
-            <select id="selectLocalidades" class="form-select form-select-md" (change)="selectLocalidad($event)">
-              <option [value]="$localidadSeleccionada"> {{$localidadSeleccionada === "" ? "Elige una localidad" : $localidadSeleccionada }}</option>
-              @for (loc of $localidades; track loc) {
-                <option [value]="loc.nombre">{{loc.nombre}}</option>
-              }
-            </select>
-          </div>
-          <div class="form-group mb-2">
-            <label for="Direccion">Domicilio</label>
-            <div class="input-group">
-              <input formControlName="direccion" class="form-control" required type="text" [ngClass]="{ 'is-invalid': form.get('direccion').invalid && (form.get('direccion').dirty || form.get('direccion').touched) }" [ngClass]="{'isDisabled': soloVista}">
-            </div>
-            @if (hasError('direccion', 'required')) {
-              <div>El domicilio es obligatorio.</div>
-            }
-            @if (hasError('direccion', 'maxlength')) {
-              <div>El domicilio no debe exceder 100 caracteres.</div>
-            }
-          </div>
-          <div class="form-group">
-            <label for="Email">Email</label>
-            <div class="input-group">
-              <input formControlName="email" class="form-control" type="email"[placeholder]="'ej: davidcortes@gmail.com'" [ngClass]="{ 'is-invalid': form.get('email').invalid && (form.get('email').dirty || form.get('email').touched) }" [ngClass]="{'isDisabled': soloVista}">
-            </div>
-            <!-- <div *ngIf="hasError('email', 'required')">El mail es obligatorio.</div> -->
-            @if (hasError('email', 'email')) {
-              <div>El formato no es correcto</div>
-            }
-          </div>
-        </div>
-        <div class="col">
-          <div class="form-group mb-2">
-            <label for="Cuit">CUIT/CUIL</label>
-            <div class="input-group">
-              <input
-                formControlName="cuit"
-                class="form-control edicion"
-                required
-                type="text"
-                appCuitFormat
-                [placeholder]="'ej: 20-12345678-9'"
-                          [ngClass]="{
-                            'is-invalid': form.get('cuit').invalid && (form.get('cuit').dirty || form.get('cuit').touched),
-                            'isDisabled': soloVista
-                          }">
-              </div>
-              @if (hasError('cuit','required')) {
-                <div>El CUIT/CUIL es obligatorio.</div>
-              }
-              @if (hasError('cuit','cuitInvalido')) {
-                <div>El CUIT/CUIL debe tener el formato xx-xxxxxxxx-x.</div>
-              }
-            </div>
-            <div class="form-group mb-2">
-              <label for="Proveedor">Condición Fiscal</label>
-              <select class="form-select form-select-md" (change)="changeCondFiscal($event)" required [ngClass]="{'isDisabled': soloVista}">
-                <option [value]="condFiscal"> {{condFiscal === "" ? "Elegir Cond. Fiscal" : condFiscal }}</option>
-                <option value="Responsable Inscripto - Factura A">Responsable Inscripto - Factura A</option>
-                <option value="Monotributista - Factura C">Monotributista - Factura C</option>
-                <!-- <option value="Autónomo - Factura A">Autónomo - Factura A</option>
-                <option value="Autónomo - Factura B">Autónomo - Factura B</option>                             -->
-              </select>
-            </div>
-            <div class="form-group mb-2">
-              <label for="Proveedor">Proveedor</label>
-              <select class="form-select form-select-md" (change)="changeProveedor($event)" required [ngClass]="{'isDisabled': soloVista}">
-                <option>{{fromParent.modo === "alta" ? "Seleccione": chofer.idProveedor === 0 ? "No" : getProveedor(chofer.idProveedor)}}</option>
-                <option value="1">No</option>
-                @for (proveedor of $proveedores; track proveedor) {
-                  <option [value]="proveedor.idProveedor">
-                    {{proveedor.razonSocial}}
-                  </option>
-                }
-              </select>
-            </div>
-            @if ((idProveedor === 0 || idProveedor === undefined )) {
-              <div class="form-group mt-3" [ngClass]="{'isDisabled': soloVista}">
-                <h3 class="my-2">Tipo de Tarifa</h3>
-                <form [formGroup]="formTipoTarifa" (ngSubmit)="onSubmit()" class="d-flex mt-2">
-                  <div class="form-check form-switch form-check-reverse ms-2 me-4">
-                    <input formControlName="general" class="form-check-input" type="checkbox"
-                      (change)="onTarifaTipoChange('general')" id="tarifaGeneral" checked>
-                      <label class="form-check-label" for="tarifaGeneral">General</label>
-                    </div>
-                    <div class="form-check form-switch form-check-reverse me-4">
-                      <input formControlName="especial" class="form-check-input" type="checkbox"
-                        (change)="onTarifaTipoChange('especial')" id="tarifaEspecial">
-                        <label class="form-check-label" for="tarifaEspecial">Especial</label>
-                      </div>
-                      <div class="form-check form-switch form-check-reverse me-4">
-                        <input formControlName="eventual" class="form-check-input" type="checkbox"
-                          (change)="onTarifaTipoChange('eventual')" id="tarifaEventual">
-                          <label class="form-check-label" for="tarifaEventual">Eventual</label>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="row">
+                <div class="col">
+                    <div class="form-group mb-2">
+                        <label for="Nombre">Nombre</label>
+                        <div class="input-group">
+                            <input
+                                formControlName="nombre"
+                                class="form-control edicion"
+                                required
+                                type="text"
+                                [ngClass]="{
+                                    'is-invalid':
+                                        form.get('nombre').invalid &&
+                                        (form.get('nombre').dirty ||
+                                            form.get('nombre').touched),
+                                }"
+                                [ngClass]="{ isDisabled: soloVista }"
+                                appSoloLetras
+                            />
                         </div>
-                        <!-- <div class="form-check form-switch form-check-reverse me-4">
+                        @if (hasError("nombre", "required")) {
+                            <div>El nombre es obligatorio.</div>
+                        }
+                        @if (hasError("nombre", "maxlength")) {
+                            <div>El nombre no debe exceder 30 caracteres.</div>
+                        }
+                    </div>
+                    <div class="form-grou mb-2">
+                        <label for="Apellido">Apellido</label>
+                        <div class="input-group">
+                            <input
+                                formControlName="apellido"
+                                class="form-control"
+                                required
+                                type="text"
+                                [ngClass]="{
+                                    'is-invalid':
+                                        form.get('apellido').invalid &&
+                                        (form.get('apellido').dirty ||
+                                            form.get('apellido').touched),
+                                }"
+                                [ngClass]="{ isDisabled: soloVista }"
+                                appSoloLetras
+                            />
+                        </div>
+                        @if (hasError("apellido", "required")) {
+                            <div>El apellido es obligatorio.</div>
+                        }
+                        @if (hasError("apellido", "maxlength")) {
+                            <div>
+                                El apellido no debe exceder 30 caracteres.
+                            </div>
+                        }
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="FechaNac">Fecha Nacimiento</label>
+                        <div class="input-group">
+                            <input
+                                formControlName="fechaNac"
+                                class="form-control"
+                                required
+                                type="date"
+                                [ngClass]="{
+                                    'is-invalid':
+                                        form.get('fechaNac').invalid &&
+                                        (form.get('fechaNac').dirty ||
+                                            form.get('fechaNac').touched),
+                                }"
+                                [ngClass]="{ isDisabled: soloVista }"
+                            />
+                        </div>
+                        @if (hasError("fechaNac", "required")) {
+                            <div>La fecha de nacimiento es obligatoria.</div>
+                        }
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="Celular de contacto"
+                            >Celular de Contacto</label
+                        >
+                        <div class="input-group">
+                            <input
+                                formControlName="celularContacto"
+                                class="form-control"
+                                required
+                                type="text"
+                                [placeholder]="'ej: 1154776234'"
+                                [ngClass]="{
+                                    'is-invalid':
+                                        form.get('celularContacto').invalid &&
+                                        (form.get('celularContacto').dirty ||
+                                            form.get('celularContacto')
+                                                .touched),
+                                }"
+                                [ngClass]="{ isDisabled: soloVista }"
+                                appSoloNumeros
+                            />
+                        </div>
+                        @if (hasError("celularContacto", "required")) {
+                            <div>El celular de contacto es obligatorio.</div>
+                        }
+                        @if (hasError("celularContacto", "minlength")) {
+                            <div>
+                                El número de celular debe tener al menos 10
+                                dígitos.
+                            </div>
+                        }
+                        @if (hasError("celularContacto", "maxlength")) {
+                            <div>
+                                El número de celular no debe exceder 10 dígitos.
+                            </div>
+                        }
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="Celular de emergencia"
+                            >Celular de Emergencia</label
+                        >
+                        <div class="input-group">
+                            <input
+                                formControlName="celularEmergencia"
+                                class="form-control"
+                                type="text"
+                                [placeholder]="'ej: 1154776234'"
+                                [ngClass]="{
+                                    'is-invalid':
+                                        form.get('celularEmergencia').invalid &&
+                                        (form.get('celularEmergencia').dirty ||
+                                            form.get('celularEmergencia')
+                                                .touched),
+                                }"
+                                [ngClass]="{ isDisabled: soloVista }"
+                                appSoloNumeros
+                            />
+                        </div>
+                        @if (hasError("celularEmergencia", "minlength")) {
+                            <div>
+                                El número de celular debe tener al menos 10
+                                dígitos.
+                            </div>
+                        }
+                        @if (hasError("celularEmergencia", "maxlength")) {
+                            <div>
+                                El número de celular no debe exceder 10 dígitos.
+                            </div>
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label for="Contacto">Contacto de Emergencia</label>
+                        <div class="input-group">
+                            <input
+                                formControlName="contactoEmergencia"
+                                class="form-control"
+                                type="text"
+                                [ngClass]="{
+                                    'is-invalid':
+                                        form.get('contactoEmergencia')
+                                            .invalid &&
+                                        (form.get('contactoEmergencia').dirty ||
+                                            form.get('contactoEmergencia')
+                                                .touched),
+                                }"
+                                [ngClass]="{ isDisabled: soloVista }"
+                                appSoloLetras
+                            />
+                        </div>
+
+                        @if (hasError("contactoEmergencia", "maxlength")) {
+                            <div>
+                                El contacto no debe exceder 60 caracteres.
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group mb-2">
+                        <label>Provincia</label>
+                        <select
+                            id="selectProvincias"
+                            class="form-select form-select-md"
+                            (change)="selectProvincia($event)"
+                            [ngClass]="{ isDisabled: soloVista }"
+                        >
+                            <option [value]="$provinciaSeleccionada">
+                                {{
+                                    $provinciaSeleccionada === ""
+                                        ? "Elige una provincia"
+                                        : $provinciaSeleccionada
+                                }}
+                            </option>
+                            @for (prov of $provincias; track prov) {
+                                <option [value]="prov.nombre">
+                                    {{ prov.nombre }}
+                                </option>
+                            }
+                        </select>
+                        <span></span>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label>Municipio</label>
+                        <select
+                            id="selectMunicipios"
+                            class="form-select form-select-md"
+                            (change)="selectMunicipio($event)"
+                            [ngClass]="{ isDisabled: soloVista }"
+                        >
+                            <option [value]="$municipioSeleccionado">
+                                {{
+                                    $municipioSeleccionado === ""
+                                        ? "Elige un municipio"
+                                        : $municipioSeleccionado
+                                }}
+                            </option>
+                            @for (mun of $municipios; track mun) {
+                                <option [value]="mun.nombre">
+                                    {{ mun.nombre }}
+                                </option>
+                            }
+                        </select>
+                        <span></span>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label>Localidad</label>
+                        <select
+                            id="selectLocalidades"
+                            class="form-select form-select-md"
+                            (change)="selectLocalidad($event)"
+                            [ngClass]="{ isDisabled: soloVista }"
+                        >
+                            <option [value]="$localidadSeleccionada">
+                                {{
+                                    $localidadSeleccionada === ""
+                                        ? "Elige una localidad"
+                                        : $localidadSeleccionada
+                                }}
+                            </option>
+                            @for (loc of $localidades; track loc) {
+                                <option [value]="loc.nombre">
+                                    {{ loc.nombre }}
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="Direccion">Domicilio</label>
+                        <div class="input-group">
+                            <input
+                                formControlName="direccion"
+                                class="form-control"
+                                required
+                                type="text"
+                                [ngClass]="{
+                                    'is-invalid':
+                                        form.get('direccion').invalid &&
+                                        (form.get('direccion').dirty ||
+                                            form.get('direccion').touched),
+                                }"
+                                [ngClass]="{ isDisabled: soloVista }"
+                            />
+                        </div>
+                        @if (hasError("direccion", "required")) {
+                            <div>El domicilio es obligatorio.</div>
+                        }
+                        @if (hasError("direccion", "maxlength")) {
+                            <div>
+                                El domicilio no debe exceder 100 caracteres.
+                            </div>
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label for="Email">Email</label>
+                        <div class="input-group">
+                            <input
+                                formControlName="email"
+                                class="form-control"
+                                type="email"
+                                [placeholder]="'ej: davidcortes@gmail.com'"
+                                [ngClass]="{
+                                    'is-invalid':
+                                        form.get('email').invalid &&
+                                        (form.get('email').dirty ||
+                                            form.get('email').touched),
+                                }"
+                                [ngClass]="{ isDisabled: soloVista }"
+                            />
+                        </div>
+                        <!-- <div *ngIf="hasError('email', 'required')">El mail es obligatorio.</div> -->
+                        @if (hasError("email", "email")) {
+                            <div>El formato no es correcto</div>
+                        }
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group mb-2">
+                        <label for="Cuit">CUIT/CUIL</label>
+                        <div class="input-group">
+                            <input
+                                formControlName="cuit"
+                                class="form-control edicion"
+                                required
+                                type="text"
+                                appCuitFormat
+                                [placeholder]="'ej: 20-12345678-9'"
+                                [ngClass]="{
+                                    'is-invalid':
+                                        form.get('cuit').invalid &&
+                                        (form.get('cuit').dirty ||
+                                            form.get('cuit').touched),
+                                    isDisabled: soloVista,
+                                }"
+                            />
+                        </div>
+                        @if (hasError("cuit", "required")) {
+                            <div>El CUIT/CUIL es obligatorio.</div>
+                        }
+                        @if (hasError("cuit", "cuitInvalido")) {
+                            <div>
+                                El CUIT/CUIL debe tener el formato
+                                xx-xxxxxxxx-x.
+                            </div>
+                        }
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="Proveedor">Condición Fiscal</label>
+                        <select
+                            class="form-select form-select-md"
+                            (change)="changeCondFiscal($event)"
+                            required
+                            [ngClass]="{ isDisabled: soloVista }"
+                        >
+                            <option [value]="condFiscal">
+                                {{
+                                    condFiscal === ""
+                                        ? "Elegir Cond. Fiscal"
+                                        : condFiscal
+                                }}
+                            </option>
+                            <option value="Responsable Inscripto - Factura A">
+                                Responsable Inscripto - Factura A
+                            </option>
+                            <option value="Monotributista - Factura C">
+                                Monotributista - Factura C
+                            </option>
+                            <!-- <option value="Autónomo - Factura A">Autónomo - Factura A</option>
+                <option value="Autónomo - Factura B">Autónomo - Factura B</option>                             -->
+                        </select>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="Proveedor">Proveedor</label>
+                        <select
+                            class="form-select form-select-md"
+                            (change)="changeProveedor($event)"
+                            required
+                            [ngClass]="{ isDisabled: soloVista }"
+                        >
+                            <option>
+                                {{
+                                    fromParent.modo === "alta"
+                                        ? "Seleccione"
+                                        : chofer.contratacion?.tipo ===
+                                            "directo"
+                                          ? "No"
+                                          : getProveedor(
+                                                $any(chofer.contratacion)
+                                                    .idProveedor
+                                            )
+                                }}
+                            </option>
+                            <option value="directo">No</option>
+                            @for (proveedor of $proveedores; track proveedor) {
+                                <option [value]="proveedor.idProveedor">
+                                    {{ proveedor.razonSocial }}
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    @if (
+                        contratacion?.tipo === "directo" ||
+                        contratacion === undefined
+                    ) {
+                        <div
+                            class="form-group mt-3"
+                            [ngClass]="{ isDisabled: soloVista }"
+                        >
+                            <h3 class="my-2">Tipo de Tarifa</h3>
+                            <form
+                                [formGroup]="formTipoTarifa"
+                                (ngSubmit)="onSubmit()"
+                                class="d-flex mt-2"
+                            >
+                                <div
+                                    class="form-check form-switch form-check-reverse ms-2 me-4"
+                                >
+                                    <input
+                                        formControlName="general"
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        (change)="onTarifaTipoChange('general')"
+                                        id="tarifaGeneral"
+                                        checked
+                                    />
+                                    <label
+                                        class="form-check-label"
+                                        for="tarifaGeneral"
+                                        >General</label
+                                    >
+                                </div>
+                                <div
+                                    class="form-check form-switch form-check-reverse me-4"
+                                >
+                                    <input
+                                        formControlName="especial"
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        (change)="
+                                            onTarifaTipoChange('especial')
+                                        "
+                                        id="tarifaEspecial"
+                                    />
+                                    <label
+                                        class="form-check-label"
+                                        for="tarifaEspecial"
+                                        >Especial</label
+                                    >
+                                </div>
+                                <div
+                                    class="form-check form-switch form-check-reverse me-4"
+                                >
+                                    <input
+                                        formControlName="eventual"
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        (change)="
+                                            onTarifaTipoChange('eventual')
+                                        "
+                                        id="tarifaEventual"
+                                    />
+                                    <label
+                                        class="form-check-label"
+                                        for="tarifaEventual"
+                                        >Eventual</label
+                                    >
+                                </div>
+                                <!-- <div class="form-check form-switch form-check-reverse me-4">
                         <input formControlName="personalizada" class="form-check-input" type="checkbox"
                           (change)="onTarifaTipoChange('personalizada')" id="tarifaPersonalizada" [ngClass]="{'isDisabled': soloVista}">
                           <label class="form-check-label" for="tarifaPersonalizada">Personalizada</label>
                         </div> -->
-                      </form>
-                    </div>
-                  } @else {
-                    <div>
-                      <h4>Se aplica la tarifa del proveedor</h4>
-                    </div>
-                  }
+                            </form>
+                        </div>
+                    } @else {
+                        <div>
+                            <h4>Se aplica la tarifa del proveedor</h4>
+                        </div>
+                    }
                 </div>
-              </div>
-            </form>
-            <hr>
-              <div class="row mt-3">
+            </div>
+        </form>
+        <hr />
+        @if (contratacion?.tipo === 'directo' || (fromParent.modo !== 'alta' && contratacion === undefined)) {
+            <div class="row mt-3">
                 <div class="d-flex justify-content-between">
-                  <h2 class="w-25">Vehiculos</h2>
-                  @if (!soloVista) {
-                    <button class="btn azul" (click)="openModal()"> Agregar Vehiculo
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                      </svg>
-                    </button>
-                  }
+                    <h2 class="w-25">Vehiculos</h2>
+                    @if (!soloVista) {
+                        <button class="btn azul" (click)="openModal()">
+                            Agregar Vehiculo
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                fill="currentColor"
+                                class="bi bi-plus-circle"
+                                viewBox="0 0 16 16"
+                            >
+                                <path
+                                    d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+                                />
+                                <path
+                                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"
+                                />
+                            </svg>
+                        </button>
+                    }
                 </div>
                 <div class="mt-3">
-                  <table class="table table-bordered border-primary table-hover">
-                    <thead>
-                      <th>Categoria</th>
-                      <th>Dominio</th>
-                      <th>Marca</th>
-                      <th>Modelo</th>
-                      <th>Tipo Comb</th>
-                      <th>Tarj Comb</th>
-                      <th>Publicidad</th>
-                      <th>Satelital</th>
-                      @if (!soloVista) {
-                        <th style="width: 80px;" >Acciones</th>
-                      }
-                    </thead>
-                    @if (vehiculos.length > 0) {
-                      <tbody>
-                        @for (vehiculo of vehiculos; track vehiculo; let i = $index) {
-                          <tr [ngClass]="{'isDisabled': soloVista}">
-                            <td class="align-middle">{{vehiculo.categoria.nombre}}</td>
-                            <td class="align-middle">{{vehiculo.dominio}}</td>
-                            <td class="align-middle">{{vehiculo.marca}}</td>
-                            <td class="align-middle">{{vehiculo.modelo}}</td>
-                            <td class="align-middle">{{vehiculo.tipoCombustible}}</td>
-                            <td class="align-middle">{{vehiculo.tarjetaCombustible ? "Si" : "No"}}</td>
-                            <td class="align-middle">{{vehiculo.publicidad ? "Si" : "No"}}</td>
-                            <td class="align-middle">{{!vehiculo.segSat ? "No" : vehiculo.satelital}}</td>
+                    <table class="table table-bordered border-primary table-hover">
+                        <thead>
+                            <th>Categoria</th>
+                            <th>Dominio</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Tipo Comb</th>
+                            <th>Tarj Comb</th>
+                            <th>Publicidad</th>
+                            <th>Satelital</th>
                             @if (!soloVista) {
-                              <td class="align-middle">
-                                <app-btn-editar name="EditarClaro" (click)="editarVehiculo(i)"></app-btn-editar>
-                                <app-btn-eliminar name="EliminarClaro" (click)="eliminarVehiculo(i)"></app-btn-eliminar>
-                              </td>
+                                <th style="width: 80px">Acciones</th>
                             }
-                          </tr>
+                        </thead>
+                        @if (vehiculos.length > 0) {
+                            <tbody>
+                                @for (
+                                    vehiculo of vehiculos;
+                                    track vehiculo;
+                                    let i = $index
+                                ) {
+                                    <tr [ngClass]="{ isDisabled: soloVista }">
+                                        <td class="align-middle">
+                                            {{ vehiculo.categoria.nombre }}
+                                        </td>
+                                        <td class="align-middle">
+                                            {{ vehiculo.dominio }}
+                                        </td>
+                                        <td class="align-middle">
+                                            {{ vehiculo.marca }}
+                                        </td>
+                                        <td class="align-middle">
+                                            {{ vehiculo.modelo }}
+                                        </td>
+                                        <td class="align-middle">
+                                            {{ vehiculo.tipoCombustible }}
+                                        </td>
+                                        <td class="align-middle">
+                                            {{
+                                                vehiculo.tarjetaCombustible
+                                                    ? "Si"
+                                                    : "No"
+                                            }}
+                                        </td>
+                                        <td class="align-middle">
+                                            {{ vehiculo.publicidad ? "Si" : "No" }}
+                                        </td>
+                                        <td class="align-middle">
+                                            {{
+                                                !vehiculo.segSat
+                                                    ? "No"
+                                                    : vehiculo.satelital
+                                            }}
+                                        </td>
+                                        @if (!soloVista) {
+                                            <td class="align-middle">
+                                                <app-btn-editar
+                                                    name="EditarClaro"
+                                                    (click)="editarVehiculo(i)"
+                                                ></app-btn-editar>
+                                                <app-btn-eliminar
+                                                    name="EliminarClaro"
+                                                    (click)="eliminarVehiculo(i)"
+                                                ></app-btn-eliminar>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        } @else {
+                            <tbody>
+                                <tr>
+                                    Sin Datos
+                                </tr>
+                            </tbody>
                         }
-                      </tbody>
-                    } @else {
-                      <tbody>
-                        <tr>Sin Datos</tr>
-                      </tbody>
-                    }
-                  </table>
+                    </table>
                 </div>
-              </div>
             </div>
-            @if (!soloVista) {
-              <div class="modal-footer" [ngClass]="{'isDisabled': form.invalid}">
-                <app-btn-agregar name="Guardar"  type="button" (click)="onSubmit()"></app-btn-agregar>
-              </div>
-            }
-          </div>
+        }
+    </div>
+    @if (!soloVista) {
+        <div class="modal-footer" [ngClass]="{ isDisabled: form.invalid }">
+            <app-btn-agregar
+                name="Guardar"
+                type="button"
+                (click)="onSubmit()"
+            ></app-btn-agregar>
+        </div>
+    }
+</div>
+
+@if (cargando) {
+    <app-spinner></app-spinner>
+}

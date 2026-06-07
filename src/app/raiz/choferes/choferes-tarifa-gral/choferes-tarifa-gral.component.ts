@@ -82,7 +82,7 @@ export class ChoferesTarifaGralComponent implements OnInit {
                 return chofer.idChofer === this.idChoferEsp[0];
               });
               //////////console.log("chofer seleccionado: ", this.chofer);
-              this.vehiculos = this.chofer[0].vehiculo
+              this.vehiculos = []
             });       
            
           });
@@ -705,7 +705,7 @@ onGenerarNuevaTarifaAutomatica() {
         choferes.forEach((c:ConIdType<Chofer>)=>{
           if(c.tarifaTipo.general){
             c.tarifaAsignada = true;
-            c.idTarifa = this.nuevaTarifaGral.idTarifa;
+            c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let {id, type, ...chofer } = c
             this.storageService.updateItem("choferes", chofer, c.idChofer, "INTERNA", "", c.id);
           }
@@ -726,9 +726,9 @@ onGenerarNuevaTarifaAutomatica() {
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(choferes.length > 0){
         choferes.forEach((c:ConIdType<Chofer>)=>{
-          if(c.tarifaTipo.especial  && c.idChofer === this.idChoferEsp[0]){
+          if(c.tarifaTipo.especial  && c.idChofer === String(this.idChoferEsp[0])){
             c.tarifaAsignada = true;
-            c.idTarifa = this.nuevaTarifaGral.idTarifa;
+            c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let {id, type, ...chofer } = c
             this.storageService.updateItem("choferes", chofer, c.idChofer, "INTERNA", "", c.id);
           }
@@ -829,7 +829,7 @@ onGenerarNuevaTarifaAutomatica() {
   }
 
   getCliente(idCliente: number){
-    let cliente:Cliente[] = this.$clientes.filter((c:Cliente) => c.idCliente === idCliente)
+    let cliente:Cliente[] = this.$clientes.filter((c:Cliente) => c.idCliente === String(idCliente))
     if (cliente.length > 0){
       return cliente[0].razonSocial;
     } else {
@@ -864,9 +864,9 @@ onGenerarNuevaTarifaAutomatica() {
   getChoferEsp(idChofer:number){
     let choferes : Chofer[] = [];
 
-    choferes = this.$choferes.filter(c => c.idChofer === idChofer);
+    choferes = this.$choferes.filter(c => c.idChofer === String(idChofer));
 
-    return choferes[0].apellido + " " + choferes[0].nombre;
+    return choferes[0].datosPersonales.apellido + " " + choferes[0].datosPersonales.nombre;
 
   }
 
@@ -875,9 +875,9 @@ onGenerarNuevaTarifaAutomatica() {
     
         if(choferes.length > 0){
           choferes.forEach((c:Chofer)=>{
-              if(c.tarifaTipo.general && c.idProveedor === 0){
+              if(c.tarifaTipo.general && c.contratacion.tipo === 'directo'){
                 c.tarifaAsignada = true;
-                c.idTarifa = this.ultTarifaGralChofer.idTarifa;
+                c.idTarifa = String(this.ultTarifaGralChofer.idTarifa);
                 //this.storageService.updateItem("choferes", c, c.idChofer, "INTERNA", "");
               }
             })
@@ -892,9 +892,9 @@ onGenerarNuevaTarifaAutomatica() {
         
         if(choferes.length > 0 ){
           choferes.forEach((c:Chofer)=>{
-              if(c.tarifaTipo.especial  && c.idChofer === this.idChoferEsp[0] && this.ultTarifaEspecial){
+              if(c.tarifaTipo.especial  && c.idChofer === String(this.idChoferEsp[0]) && this.ultTarifaEspecial){
                 c.tarifaAsignada = true;
-                c.idTarifa = this.ultTarifaEspecial.idTarifa;
+                c.idTarifa = String(this.ultTarifaEspecial.idTarifa);
                 //this.storageService.updateItem("choferes", c, c.idChofer, "INTERNA", "");
               }
             })

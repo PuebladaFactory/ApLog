@@ -10,6 +10,11 @@ import { ModalContactoProveedoresComponent } from '../modal-contacto-proveedores
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
+import { ProveedorFactoryService, ProveedorFormData } from 'src/app/servicios/proveedores/proveedor-factory.service';
+import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
+import { AsignacionVehiculo, Vehiculo } from 'src/app/interfaces/chofer';
+import { ModalVehiculoComponent } from '../../choferes/modal-vehiculo/modal-vehiculo.component';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'app-proveedores-alta',
@@ -42,9 +47,12 @@ export class ProveedoresAltaComponent implements OnInit {
   $municipioSeleccionadoO:string = "";
   $localidadesO!:any;
   $localidadSeleccionadaO:string = "";
-  direccionOperativaCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};  
+  direccionOperativaCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};
+  vehiculos: ConIdType<Vehiculo>[] = [];
+  private destroy$ = new Subject<void>();
+  cargando: boolean = false;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private domicilioServ:  DomicilioService) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private domicilioServ: DomicilioService, private proveedorFactoryService: ProveedorFactoryService, private proveedorService: ProveedorService) {
     this.form = this.fb.group({      
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
       cuit: [
@@ -73,8 +81,10 @@ export class ProveedoresAltaComponent implements OnInit {
     let proveedorOriginal = this.fromParent.item
     this.proveedorEditar = structuredClone(proveedorOriginal)
     if(this.fromParent.modo === "vista"){
-      this.soloVista = true;      
-      this.armarForm()
+      this.soloVista = true;
+      this.armarForm();
+      this.form.disable();
+      this.formTipoTarifa.disable();
     }else if(this.fromParent.modo === "edicion"){
       this.soloVista = false;      
       this.armarForm()
@@ -94,72 +104,35 @@ export class ProveedoresAltaComponent implements OnInit {
     
    }
 
-    onSubmit(){
-    ////console.log()(new Date().getTime()); 
-    let tarifaGeneral: TarifaGralCliente [] = this.storageService.loadInfo("tarifasGralProveedor");   
-    if(this.$provinciaSeleccionadaF === "" || this.$municipioSeleccionadoF === "" || this.$localidadSeleccionadaF === ""){ return this.mensajesError("Debe completar el domicilio fiscal")};
-    if(this.$provinciaSeleccionadaO === "" || this.$municipioSeleccionadoO === "" || this.$localidadSeleccionadaO === ""){ return this.mensajesError("Debe completar el domicilio operativo")};
-    if(this.condFiscal === ""){ return this.mensajesError("Debe seleccionar una condición fiscal")};
-    const tarifaSeleccionada = this.getTarifaTipo();    
+  onSubmit(): void {
+    const tarifaGeneral = this.storageService.loadInfo('tarifasGralProveedor');
+    if (this.$provinciaSeleccionadaF === '' || this.$municipioSeleccionadoF === '' || this.$localidadSeleccionadaF === '') {
+      return this.mensajesError('Debe completar el domicilio fiscal');
+    }
+    if (this.$provinciaSeleccionadaO === '' || this.$municipioSeleccionadoO === '' || this.$localidadSeleccionadaO === '') {
+      return this.mensajesError('Debe completar el domicilio operativo');
+    }
+    if (this.condFiscal === '') {
+      return this.mensajesError('Debe seleccionar una condición fiscal');
+    }
     if (this.form.valid) {
-      if(this.fromParent.modo === "edicion"){
-        let formValue = this.form.value;
-        // Eliminar los guiones del CUIT
-        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));   
-        this.direccionFiscalCompleta = {provincia: this.$provinciaSeleccionadaF, municipio: this.$municipioSeleccionadoF, localidad: this.$localidadSeleccionadaF, domicilio: this.form.value.direccionFiscal};
-        this.direccionOperativaCompleta = {provincia: this.$provinciaSeleccionadaO, municipio: this.$municipioSeleccionadoO, localidad: this.$localidadSeleccionadaO, domicilio: this.form.value.direccionOperativa};
-        this.proveedor = {
-          ...formValue,
-          cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
-          direccionFiscal: this.direccionFiscalCompleta,
-          direccionOperativa: this.direccionOperativaCompleta,
-        };                        
-        this.proveedor.idProveedor = this.proveedorEditar.idProveedor;
-        this.proveedor.id = this.proveedorEditar.id;
-        this.proveedor.contactos = this.contactos;
-        //console.log()(this.cliente);     
-        this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        this.proveedor.condFiscal = this.condFiscal;
-        this.proveedor.tarifaAsignada = this.proveedorEditar.tarifaAsignada;
-        this.proveedor.idTarifa = this.proveedorEditar.idTarifa;
-       console.log(this.proveedor);      
-        this.addItem("Edicion");        
-        this.activeModal.close();    
-      }else{
-        let formValue = this.form.value;
-        // Eliminar los guiones del CUIT
-        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));  
-        this.direccionFiscalCompleta = {provincia: this.$provinciaSeleccionadaF, municipio: this.$municipioSeleccionadoF, localidad: this.$localidadSeleccionadaF, domicilio: this.form.value.direccionFiscal};
-        this.direccionOperativaCompleta = {provincia: this.$provinciaSeleccionadaO, municipio: this.$municipioSeleccionadoO, localidad: this.$localidadSeleccionadaO, domicilio: this.form.value.direccionOperativa};             
-        this.proveedor = {
-          ...formValue,
-          cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
-          direccionFiscal: this.direccionFiscalCompleta,
-          direccionOperativa: this.direccionOperativaCompleta,
-        };                
-        this.proveedor.idProveedor = new Date().getTime() + Math.floor(Math.random() * 1000);
-        this.proveedor.contactos = this.contactos;
-        //console.log()(this.cliente);     
-        this.proveedor.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        this.proveedor.condFiscal = this.condFiscal;
-        this.proveedor.tarifaAsignada = tarifaSeleccionada.general ? tarifaGeneral[0] === null ? false : true : false;
-        this.proveedor.idTarifa = tarifaSeleccionada.general? tarifaGeneral[0] === null ? 0 : tarifaGeneral[0].idTarifa : 0;
-        console.log(this.proveedor);      
-        this.addItem("Alta");        
-        this.activeModal.close();    
-      }      
-    } else{
-      //alert("error en el formulario")
-      Swal.fire({
-        icon: "error",
-        
-        text: "El formulario contiene errores ",
-//        
-      });
-
-    } 
-    
-   }
+      if (this.fromParent.modo !== 'edicion') {
+        const cuitIngresado = Number(this.form.value.cuit.replace(/-/g, ''));
+        const proveedorExistente = this.proveedorService.verificarCuitDuplicado(cuitIngresado);
+        if (proveedorExistente) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'CUIT duplicado',
+            text: `El CUIT ingresado ya está asignado al proveedor ${proveedorExistente.razonSocial}.`,
+          });
+          return;
+        }
+      }
+      this.addItem();
+    } else {
+      this.mensajesError('El formulario contiene errores');
+    }
+  }
 
     armarForm(){
       this.form.patchValue({
@@ -182,7 +155,8 @@ export class ProveedoresAltaComponent implements OnInit {
       this.$localidadSeleccionadaO = this.proveedorEditar.direccionOperativa.localidad;
       this.contactos = this.proveedorEditar.contactos;
       this.condFiscal = this.proveedorEditar.condFiscal;
-    }    
+      this.cargarVehiculosProveedor();
+    }
 
     changeCondFiscal(e:any){          
       this.condFiscal = e.target.value
@@ -213,44 +187,62 @@ export class ProveedoresAltaComponent implements OnInit {
       }
    
 
-   addItem(modo:string): void {
-    let titulo = "";
-    if(modo === "Alta"){
-      titulo = "el alta"
-    } else if (modo === "Edicion"){
-      titulo = "la edicion"
-    }
-
-
+  addItem(): void {
+    const titulo = this.fromParent.modo === 'edicion' ? 'la edición' : 'el alta';
     Swal.fire({
       title: `¿Confirmar ${titulo} del Proveedor?`,
-      //text: "You won't be able to revert this!",
-      icon: "warning",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar"
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar',
     }).then((result) => {
-      if (result.isConfirmed) {     
-        if(modo === "Alta")   {
-          this.storageService.addItem(this.componente, this.proveedor, this.proveedor.idProveedor, "ALTA", `Alta de Proveedor ${this.proveedor.razonSocial}`)
-        } else if (modo === "Edicion"){
-          let {id, type, ...proveedor } = this.proveedor
-          this.storageService.updateItem(this.componente, proveedor, this.proveedor.idProveedor, "EDITAR", `Edición de Proveedor ${this.proveedor.razonSocial} editado`, this.proveedor.id)          
-        }              
-        Swal.fire({
-          title: "Confirmado",
-          text: `${modo} exitosa`,
-          icon: "success"
-        }).then((result)=>{
-          if (result.isConfirmed) {
-            this.activeModal.close();
-          }
-        });   
-        
+      if (result.isConfirmed) {
+        this.cargando = true;
+        const data: ProveedorFormData = {
+          razonSocial: this.form.value.razonSocial,
+          cuit: this.form.value.cuit,
+          condFiscal: this.condFiscal,
+          provinciaFiscal: this.$provinciaSeleccionadaF,
+          municipioFiscal: this.$municipioSeleccionadoF,
+          localidadFiscal: this.$localidadSeleccionadaF,
+          domicilioFiscal: this.form.value.direccionFiscal,
+          provinciaOperativa: this.$provinciaSeleccionadaO,
+          municipioOperativa: this.$municipioSeleccionadoO,
+          localidadOperativa: this.$localidadSeleccionadaO,
+          domicilioOperativa: this.form.value.direccionOperativa,
+          tarifaTipo: this.getTarifaTipo(),
+          contactos: this.contactos,
+        };
+
+        if (this.fromParent.modo === 'edicion') {
+          const proveedorEditado = {
+            ...this.proveedorFactoryService.editarProveedor(this.proveedorEditar, data),
+            id: this.proveedorEditar.id,
+            type: this.proveedorEditar.type,
+          } as ConIdType<Proveedor>;
+          this.proveedorService.guardarProveedor(proveedorEditado, 'edicion')
+            .then(() => {
+              Swal.fire('Confirmado', 'Cambios guardados', 'success').then(() => {
+                this.cargando = false;
+                this.activeModal.close();
+              });
+            })
+            .catch(e => this.mensajesError(`Error al guardar: ${e.message}`));
+        } else {
+          const proveedorNuevo = this.proveedorFactoryService.crearProveedor(data) as ConIdType<Proveedor>;
+          this.proveedorService.guardarProveedor(proveedorNuevo, 'alta')
+            .then(() => {
+              Swal.fire('Confirmado', 'Alta exitosa', 'success').then(() => {
+                this.cargando = false;
+                this.activeModal.close();
+              });
+            })
+            .catch(e => this.mensajesError(`Error al guardar: ${e.message}`));
+        }
       }
-    });   
+    });
   }
 
   toggle() {
@@ -309,6 +301,50 @@ export class ProveedoresAltaComponent implements OnInit {
         },
         (reason) => {}
       );
+    }
+  }
+
+  openModalVehiculo(): void {
+    const modalRef = this.modalService.open(ModalVehiculoComponent, {
+      windowClass: 'myCustomModalClass',
+      centered: true,
+      size: 'sm',
+    });
+    const asignadoA: AsignacionVehiculo = {
+      tipo: 'proveedor',
+      idProveedor: this.proveedorEditar?.idProveedor ?? '',
+    };
+    modalRef.componentInstance.asignadoA = asignadoA;
+    modalRef.result.then(result => {
+      if (result !== undefined) { this.vehiculos.push(result); }
+    }, () => {});
+  }
+
+  editarVehiculo(i: number): void {
+    const vehiculo = this.vehiculos[i];
+    const modalRef = this.modalService.open(ModalVehiculoComponent, {
+      windowClass: 'myCustomModalClass',
+      centered: true,
+      size: 'sm',
+    });
+    modalRef.componentInstance.fromParent = vehiculo;
+    modalRef.componentInstance.asignadoA = vehiculo.asignadoA;
+    modalRef.result.then(result => {
+      if (result !== undefined) { this.vehiculos[i] = result; }
+    }, () => {});
+  }
+
+  eliminarVehiculo(indice: number): void {
+    this.vehiculos.splice(indice, 1);
+  }
+
+  cargarVehiculosProveedor(): void {
+    if (this.proveedorEditar?.idProveedor) {
+      this.proveedorService.getVehiculosPorProveedor(this.proveedorEditar.idProveedor)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(vehiculos => {
+          this.vehiculos = vehiculos;
+        });
     }
   }
 
@@ -440,4 +476,9 @@ export class ProveedoresAltaComponent implements OnInit {
             //footer: `${msj}`
           });
         }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 }

@@ -2272,7 +2272,7 @@ export class DbFirestoreService {
     if (esCliente) {
       // El original es del cliente ⇒ buscar chofer o proveedor
       targets =
-        informeOriginal.idProveedor === 0 ? COLS.choferes : COLS.proveedores;
+        informeOriginal.idProveedor === '' ? COLS.choferes : COLS.proveedores;
     } else {
       // El original es del chofer o proveedor ⇒ buscar cliente
       targets = COLS.clientes;
@@ -2499,7 +2499,7 @@ export class DbFirestoreService {
       // Agregar al batch
       batch.delete(clienteSnapRef);
 
-      if (op.chofer.idProveedor === 0) {
+      if (op.chofer.contratacion.tipo === 'directo') {
         const colRef = collection(
           this.firestore,
           `Vantruck/datos/informesOpChoferes`,
@@ -2767,5 +2767,31 @@ export class DbFirestoreService {
         })),
       ),
     );
+  }
+
+  createAndGetId(componente: string, item: any): Promise<string> {
+    const dataCollection = collection(
+      this.firestore,
+      `/Vantruck/datos/${componente}`
+    );
+    const docRef = doc(dataCollection);
+    return setDoc(docRef, item).then(() => {
+      console.log('CreateAndGetId. Escritura en: ', componente, ' id: ', docRef.id);
+      return docRef.id;
+    });
+  }
+
+  async getByField<T>(
+    componente: string,
+    campo: string,
+    valor: any,
+  ): Promise<{ id: string; data: T }[]> {
+    const colRef = collection(
+      this.firestore,
+      `/Vantruck/datos/${componente}`,
+    );
+    const q = query(colRef, where(campo, '==', valor));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => ({ id: d.id, data: d.data() as T }));
   }
 }

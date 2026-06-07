@@ -2,6 +2,7 @@ import { Timestamp } from "firebase/firestore";
 
 export interface ResumenFinancieroEntidad {
 
+  // TODO: migrar a string cuando se refactorice este módulo (ID unificado con ConIdType.id)
   entidadId: number;
 
   tipoEntidad: 'cliente' | 'chofer' | 'proveedor';

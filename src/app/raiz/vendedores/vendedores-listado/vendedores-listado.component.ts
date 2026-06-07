@@ -72,7 +72,7 @@ export class VendedoresListadoComponent implements OnInit {
   }
 
   getCliente(id:number):string{
-    let cliente = this.clientes.find(c=> c.idCliente === id);
+    let cliente = this.clientes.find(c=> String(c.idCliente) === String(id));
     return cliente? cliente.razonSocial : 'Sin datos'
   }
 
@@ -139,7 +139,7 @@ export class VendedoresListadoComponent implements OnInit {
     
     this.vendedorEditar.asignaciones.map(a=>{
       let clienteSel = this.clientes.find( c=> { 
-        return c.idCliente === a.idCliente
+        return String(c.idCliente) === String(a.idCliente)
       }); 
       console.log("EDITAR CLIENTE => clienteSel", clienteSel);
                 
@@ -149,7 +149,7 @@ export class VendedoresListadoComponent implements OnInit {
         }
 
         // Buscar el indice del idVendedor en el cliente
-        const index = clienteSel.vendedor.indexOf(this.vendedorEditar.idVendedor);
+        const index = clienteSel.vendedor.indexOf(String(this.vendedorEditar.idVendedor));
 
         // 3) Si no existe → error
         if (index === -1) {

@@ -1,15 +1,14 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { Subject, takeUntil } from 'rxjs';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { ConId } from 'src/app/interfaces/conId';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { ColumnaTabla, AccionTabla } from 'src/app/interfaces/tabla';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-renderers/acciones-cell-renderer/acciones-cell-renderer.component';
+import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import Swal from 'sweetalert2';
 import { ClienteAltaComponent } from '../cliente-alta/cliente-alta.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
-import { forEach } from 'lodash';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
@@ -22,69 +21,59 @@ import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad
 })
 export class ClientesListadoComponent implements OnInit, OnDestroy {
 
-  rowData: any[] = [];
-  paginatedRows: any[] = [];
-  private gridApi!: GridApi;  
-  visibleColumns: string[] = [];
-  ajustes = false;
+  columnas: ColumnaTabla[] = [];
+  filas: any[] = [];
+  accionesTabla: AccionTabla[] = [];
   componente: string = 'clientes';
-  //context = { componentParent: this };
-  allColumnDefs: ColDef[] = [
-    { field: 'idCliente', headerName: 'Id Cliente', hide: true, flex: 2 },
-    { field: 'razonSocial', headerName: 'Razon Social', flex: 3 },
-    { field: 'cuit', headerName: 'CUIT', flex: 2 },
-    { field: 'condFiscal', headerName: 'Condición Fiscal', hide: true, flex: 2 },
-    { field: 'direccionFiscal', headerName: 'Direccion Fiscal', flex: 2 },
-    { field: 'direccionOperativa', headerName: 'Direccion Operativa', flex: 2 },
-    { field: 'tarifa', headerName: 'Tarifa', flex: 2 },
-    { field: 'contacto', headerName: 'Contacto', hide: true, flex: 2 },
-    { field: 'puesto', headerName: 'Puesto', hide: true, flex: 2 },
-    { field: 'telefono', headerName: 'N° Contacto', hide: true, flex: 2 },
-    { field: 'correo', headerName: 'Correo', flex: 2 },   
-  ];
-
-  agColumnDefs: ColDef[] = [];
-
-  defaultColDef: ColDef = {
-    sortable: true,
-    filter: true,
-    floatingFilter: false,
-    resizable: true,
-  };
-
-  $clientes: ConId<Cliente>[] = [];
-  clienteEditar!: ConId<Cliente>;
-  //firstFilter: string = '';
-  //secondFilter: string = '';
+  $clientes: ConIdType<Cliente>[] = [];
   private destroy$ = new Subject<void>();
   clientesActivo: ConId<Cliente>[] = [];
   isLoading: boolean = false;
-
-  clientesFiltrados: ConId<Cliente>[] = [];
+  clientesFiltrados: ConIdType<Cliente>[] = [];
   filtroEstado: 'visibles' | 'todos' = 'visibles';
   usuario:any
 
   constructor(
-    private storageService: StorageService, 
+    private storageService: StorageService,
     private modalService: NgbModal,
     private dbFirestore: DbFirestoreService,
     private excelServ: ExcelService,
+    private clienteService: ClienteService,
   ) {}
 
   ngOnInit(): void {
-    this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
-    this.construirColumnDefs();         // Ahora sí, construye columnas visibles
-    this.storageService
-      .getObservable<ConId<Cliente>>('clientes')
+    this.clienteService.clientes$
       .pipe(takeUntil(this.destroy$))
-      .subscribe((data) => {
+      .subscribe(data => {
         this.$clientes = data.sort((a, b) =>
           a.razonSocial.localeCompare(b.razonSocial)
         );
-        this.aplicarFiltro(); // 👈 clave
+        this.aplicarFiltro();
       });
-      let user = this.storageService.loadInfo('usuario');
-      this.usuario = user[0];
+
+    this.columnas = [
+      { field: 'id', header: 'Id', visible: false, width: 110 },
+      { field: 'razonSocial', header: 'Razón Social', visible: true, width: 200 },
+      { field: 'cuit', header: 'CUIT', visible: true, width: 90 },
+      { field: 'condFiscal', header: 'Cond. Fiscal', visible: false, width: 180 },
+      { field: 'direccionFiscal', header: 'Dirección Fiscal', visible: true, width: 220 },
+      { field: 'direccionOperativa', header: 'Dirección Operativa', visible: true, width: 220 },
+      { field: 'tarifa', header: 'Tarifa', visible: true, width: 80 },
+      { field: 'estado', header: 'Estado', visible: false, width: 80 },
+      /* { field: 'contacto', header: 'Contacto', visible: false, width: 150 },
+      { field: 'puesto', header: 'Puesto', visible: false, width: 120 },
+      { field: 'telefono', header: 'Teléfono', visible: false, width: 120 },
+      { field: 'correo', header: 'Correo', visible: true, width: 180 }, */
+    ];
+
+    this.accionesTabla = [
+      { tipo: 'ver', handler: (fila) => this.abrirVista(fila._objeto) },
+      { tipo: 'editar', handler: (fila) => this.abrirEdicion(fila._objeto) },
+      { tipo: 'eliminar', handler: (fila) => this.eliminarCliente(fila._objeto) },
+    ];
+
+    let user = this.storageService.loadInfo('usuario');
+    this.usuario = user[0];
   }
 
   aplicarFiltro(): void {
@@ -98,25 +87,20 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
   }
 
   armarTabla(): void {
-    this.rowData = this.clientesFiltrados.map((cliente) => ({
-      idCliente: cliente.idCliente,
-      razonSocial: cliente.razonSocial,
-      cuit: this.formatCuit(cliente.cuit),
-      condFiscal: cliente.condFiscal,
-      direccionFiscal: `${cliente.direccionFiscal.domicilio}, ${cliente.direccionFiscal.municipio}, ${cliente.direccionFiscal.provincia}`,
-      direccionOperativa: `${cliente.direccionOperativa.domicilio}, ${cliente.direccionOperativa.municipio}, ${cliente.direccionOperativa.provincia}`,
-      tarifa: cliente.tarifaTipo.general
-        ? 'General'
-        : cliente.tarifaTipo.especial
-        ? 'Especial'
-        : cliente.tarifaTipo.personalizada
-        ? 'Personalizada'
-        : 'Eventual',
-      contacto: cliente.contactos[0]?.apellido || 'Sin Datos',
-      puesto: cliente.contactos[0]?.puesto || 'Sin Datos',
-      telefono: cliente.contactos[0]?.telefono || 'Sin Datos',
-      correo: cliente.contactos[0]?.email || 'Sin Datos',
-      cliente: cliente, // guardamos el objeto para acciones
+    this.filas = this.clientesFiltrados.map(c => ({
+      id: c.idCliente,
+      razonSocial: c.razonSocial,
+      cuit: this.formatCuit(c.cuit),
+      condFiscal: c.condFiscal,
+      direccionFiscal: `${c.direccionFiscal.domicilio}, ${c.direccionFiscal.municipio}, ${c.direccionFiscal.provincia}`,
+      direccionOperativa: `${c.direccionOperativa.domicilio}, ${c.direccionOperativa.municipio}, ${c.direccionOperativa.provincia}`,
+      tarifa: c.tarifaTipo.general ? 'General' : c.tarifaTipo.especial ? 'Especial' : c.tarifaTipo.personalizada ? 'Personalizada' : 'Eventual',
+      estado: c.activo ? "Activo" : "Inactivo",
+      /* contacto: c.contactos[0]?.apellido ?? 'Sin Datos',
+      puesto: c.contactos[0]?.puesto ?? 'Sin Datos',
+      telefono: c.contactos[0]?.telefono ?? 'Sin Datos',
+      correo: c.contactos[0]?.email ?? 'Sin Datos', */
+      _objeto: c,
     }));
   }
 
@@ -125,105 +109,18 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
     this.aplicarFiltro();
   }
 
-  private cargarConfiguracionColumnas(): void {
-    const saved = this.storageService.loadInfo('columnasVisiblesClientes');
-    console.log("saved", saved);
-    
-    if (Array.isArray(saved) && saved.length) {
-      this.visibleColumns = saved;
-    } else {
-      // Mostrar por defecto las columnas deseadas
-      this.visibleColumns = [
-        'razonSocial', 'cuit', 'direccionFiscal', 'direccionOperativa', 'tarifa',
-        'correo'
-      ];
-    }
+
+
+
+  abrirVista(cliente: ConIdType<Cliente>): void {
+    this.openModal('vista', cliente);
   }
 
-private construirColumnDefs(): void {
-  const columnas: ColDef[] = [];
-
-  // Clonamos y marcamos si debe ocultarse
-  const definidas = this.allColumnDefs.map(col => ({
-    ...col,
-    hide: !this.visibleColumns.includes(col.field!)
-  }));
-
-  columnas.push(...definidas);
-
-  // Agregamos columna de acciones al final
-  columnas.push({
-    headerName: 'Acciones',
-    field: 'acciones',
-    cellRenderer: AccionesCellRendererComponent,
-    cellRendererParams: {
-      buttons: ['detalle', 'editar', 'eliminar'],
-      onDetalle: (row: any) => this.abrirVista(row),
-      onEditar: (row: any) => this.abrirEdicion(row),
-      onEliminar: (row: any) => this.eliminarCliente(row),
-    },
-    flex: 2,
-    filter: false,
-  });
-
-  this.agColumnDefs = columnas;
-
-  // Si el grid ya está listo, volver a aplicar definiciones
-  if (this.gridApi) {
-    this.gridApi.getColumnDefs();
-  }
-}
-
-  onGridReady(params: GridReadyEvent): void {
-    this.gridApi = params.api;
+  abrirEdicion(cliente: ConIdType<Cliente>): void {
+    this.openModal('edicion', cliente);
   }
 
-  onFirstDataRendered(): void {
-    // Opcional: aplicar estilos adicionales al header si querés
-    const header = document.querySelector('.ag-header') as HTMLElement;
-    if (header) {
-      header.classList.add('sticky-top'); // Solo si usás Bootstrap
-    }
-  }
-
-toggleColumnVisibility(colId: string): void {
-  const isVisible = this.visibleColumns.includes(colId);
-  if (isVisible) {
-    this.visibleColumns = this.visibleColumns.filter(c => c !== colId);
-  } else {
-    this.visibleColumns.push(colId);
-  }
-
-  this.storageService.setInfo('columnasVisiblesClientes', this.visibleColumns);
-  this.construirColumnDefs(); // reconstruir las columnas visibles y aplicar al grid
-}
-
-
-   toogleAjustes(){      
-      this.ajustes = !this.ajustes;
-    }
-
-    limpiarFiltros(): void {
-      if (this.gridApi) {
-        this.gridApi.setFilterModel(null);       // Limpia todos los filtros aplicados
-        this.gridApi.onFilterChanged();          // Fuerza actualización del grid
-      }
-    }
- 
-
-  abrirVista(row: any) {
-    this.clienteEditar = row.cliente;
-    this.openModal('vista');
-  }
-
-  abrirEdicion(row: any) {
-    this.clienteEditar = row.cliente;
-    this.openModal('edicion');
-  }
-
-  eliminarCliente(row: any) {
-    this.clienteEditar = row.cliente;
-
+  eliminarCliente(cliente: ConIdType<Cliente>): void {
     Swal.fire({
       title: '¿Eliminar el Cliente?',
       text: 'No se podrá revertir esta acción',
@@ -233,52 +130,46 @@ toggleColumnVisibility(colId: string): void {
       cancelButtonText: 'Cancelar',
     }).then((result) => {
       if (result.isConfirmed) {
-        this.openModalBaja(row.idCliente);
+        this.openModalBaja(cliente);
       }
     });
   }
 
-  openModal(modo: string) {
+  openModal(modo: string, cliente?: ConIdType<Cliente>): void {
     const modalRef = this.modalService.open(ClienteAltaComponent, {
       windowClass: 'myCustomModalClass',
       centered: true,
       size: 'lg',
     });
-
     modalRef.componentInstance.fromParent = {
       modo,
-      item: this.clienteEditar,
+      item: cliente ?? null,
     };
   }
 
-  openModalBaja(idCliente: number) {
+  openModalBaja(cliente: ConIdType<Cliente>): void {
     const modalRef = this.modalService.open(BajaObjetoComponent, {
       windowClass: 'myCustomModalClass',
       centered: true,
       scrollable: true,
       size: 'sm',
     });
-
     modalRef.componentInstance.fromParent = {
       modo: 'Cliente',
-      item: this.clienteEditar,
+      item: cliente,
     };
-
-    modalRef.result.then((result) => {
-      if (result !== undefined) {
-        this.storageService.deleteItemPapelera(
-          this.componente,
-          this.clienteEditar,
-          this.clienteEditar.idCliente,
-          'BAJA',
-          `Baja de Cliente ${this.clienteEditar.razonSocial}`,
-          result
-        );
-        Swal.fire({
-          title: 'Confirmado',
-          text: 'El Cliente ha sido dado de baja',
-          icon: 'success',
-        });
+    modalRef.result.then((motivo) => {
+      if (motivo !== undefined) {
+        this.isLoading = true;
+        this.clienteService.eliminarCliente(cliente, motivo)
+          .then(() => {
+            this.isLoading = false;
+            Swal.fire('Confirmado', 'El Cliente ha sido dado de baja', 'success');
+          })
+          .catch(e => {
+            this.isLoading = false;
+            Swal.fire('Error', `No se pudo dar de baja el cliente: ${e.message}`, 'error');
+          });
       }
     });
   }

@@ -54,7 +54,7 @@ export class TableroLegajosComponent implements OnInit {
     this.storageService.listenForChanges<Legajo>("legajos");
     this.$choferes = this.storageService.loadInfo("choferes");
     this.$choferes = this.$choferes      
-      .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+      .sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido));
     this.$choferesFiltrados = structuredClone(this.$choferes);
       //console.log("1)choferes especiales: ", this.$choferes);
     this.$proveedores = this.storageService.loadInfo("proveedores");
@@ -73,6 +73,8 @@ export class TableroLegajosComponent implements OnInit {
     .pipe(takeUntil(this.destroy$))
     .subscribe(data => {
       this.$legajos = [...data]; // aseguramos nuevo array
+      console.log("this.$legajos: ", this.$legajos);
+      
       this.filtrarLegajosConChoferes();
       this.verificarYActualizarEstadosLegajos(); // ← Aquí se ejecuta la verificación al iniciar
     });
@@ -97,7 +99,7 @@ export class TableroLegajosComponent implements OnInit {
     this.destroy$.complete();
   }
 
-  actualizarLegajo(idChofer: number){
+  actualizarLegajo(idChofer: string){
     let legajo = this.getLegajo(idChofer);
     console.log("legajo antes", legajo);
     legajo = {
@@ -145,34 +147,32 @@ export class TableroLegajosComponent implements OnInit {
     })
   }  */
   
-    getChofer(id:number):string {
-      let chofer: Chofer[] = this.$choferes.filter(c=> c.idChofer=== id);
-      return chofer[0].apellido + " " + chofer[0].nombre;
+    getChofer(id:string):string {
+      let chofer: Chofer[] = this.$choferes.filter(c=> c.idChofer === id);
+      return chofer[0].datosPersonales.apellido + " " + chofer[0].datosPersonales.nombre;
     }
 
-    getLegajo(id:number):ConIdType<Legajo> {
-      let legajo: ConIdType<Legajo>[] = this.$legajos.filter(l=> l.idChofer=== id);
+    getLegajo(id:string):ConIdType<Legajo> {
+      let legajo: ConIdType<Legajo>[] = this.$legajos.filter(l=> l.idChofer === id);
       return legajo[0];
     }
 
-    getProveedor(idProveedor:string):string {
-      let id = Number(idProveedor);  
-      let proveedor = this.$proveedores?.filter(p => p.idProveedor === id);  
-      if(id === 0) {
+    getProveedor(idProveedor: string): string {
+      if (!idProveedor || idProveedor === '0') {
         return "";
       } else {
-        let proveedor: Proveedor[] = this.$proveedores.filter(p=> p.idProveedor=== id);
+        let proveedor: Proveedor[] = this.$proveedores.filter(p => p.idProveedor === idProveedor);
         return proveedor[0].razonSocial;
       }
       
     }
 
-  filtrarChoferes(idProveedor: number, razonSocial:string) {   
+  filtrarChoferes(idProveedor: string, razonSocial:string) {   
     this.$choferesFiltrados = this.$choferes;
 
-    if (idProveedor !== 0) {
+    if (idProveedor !== "") {
       this.filtrosProveedores = razonSocial;
-      this.$choferesFiltrados = this.$choferesFiltrados.filter(c => c.idProveedor === idProveedor);
+      this.$choferesFiltrados = this.$choferesFiltrados.filter(c => c.contratacion.tipo === 'proveedor' && (c.contratacion as any).idProveedor === String(idProveedor));
     } else {
       this.filtrosProveedores = "";
     }
@@ -232,8 +232,8 @@ export class TableroLegajosComponent implements OnInit {
 
         if (!choferA || !choferB) return 0;
 
-        const nombreCompletoA = `${choferA.apellido} ${choferA.nombre}`.toLowerCase();
-        const nombreCompletoB = `${choferB.apellido} ${choferB.nombre}`.toLowerCase();
+        const nombreCompletoA = `${choferA.datosPersonales.apellido} ${choferA.datosPersonales.nombre}`.toLowerCase();
+        const nombreCompletoB = `${choferB.datosPersonales.apellido} ${choferB.datosPersonales.nombre}`.toLowerCase();
 
         return nombreCompletoA.localeCompare(nombreCompletoB);
       });

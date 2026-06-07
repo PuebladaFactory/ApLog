@@ -41,7 +41,7 @@ export class BuscarTarifaService {
 
   $getACobrar(tarifa: TarifaGralCliente, chofer: Chofer, patente: string){
     let vehiculo
-    vehiculo  = chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
+    vehiculo  = ((chofer as any).vehiculo ?? []).filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === patente;
     });
     let categoria = vehiculo[0].categoria.catOrden
@@ -53,7 +53,7 @@ export class BuscarTarifaService {
 
   $getAPagar(tarifa:TarifaGralCliente, chofer: Chofer, patente:string){
     let vehiculo
-    vehiculo  = chofer.vehiculo.filter((vehiculo:Vehiculo)=>{
+    vehiculo  = ((chofer as any).vehiculo ?? []).filter((vehiculo:Vehiculo)=>{
         return vehiculo.dominio === patente;
     });
     let categoria = vehiculo[0].categoria.catOrden

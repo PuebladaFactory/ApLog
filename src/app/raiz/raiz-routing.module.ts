@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { RoleGuard } from '../guards/role.guard';
+import { MigracionComponent } from '../componentes/migracion/migracion.component';
 
 
 const routes: Routes = [
@@ -80,10 +81,16 @@ const routes: Routes = [
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
       data: { roles: ['god','admin', 'demo'] }, // 
     },
-    
-    
-    
-]  },  
+    {
+      path: 'migracion',
+      component: MigracionComponent,
+      canActivate: [RoleGuard],
+      data: { roles: ['god'] },
+    },
+
+
+
+]  },
 
 ];
 

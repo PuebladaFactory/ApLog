@@ -76,7 +76,7 @@ export class VendedorHistorialComponent implements OnInit, OnDestroy {
     /// CHOFERES/CLIENTES/PROVEEDORES
     this.choferes = this.storageService.loadInfo("choferes");
     this.choferes = this.choferes.sort((a, b) =>
-      a.apellido.localeCompare(b.apellido),
+      a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
     ); // Ordena por el nombre del chofer
     this.clientes = this.storageService.loadInfo("clientes");
     this.clientes = this.clientes.sort((a, b) =>
@@ -163,9 +163,9 @@ export class VendedorHistorialComponent implements OnInit, OnDestroy {
     });
   }
 
-  getCliente(id: number) {
+  getCliente(id: number) { // TODO: migrar a string cuando se refactorice este módulo
     let cliente;
-    cliente = this.clientes.find((c) => c.idCliente === id);
+    cliente = this.clientes.find((c) => String(c.idCliente) === String(id));
     if (cliente) {
       return cliente.razonSocial;
     } else {

@@ -163,7 +163,7 @@ export class FinanzasCobrosComponent implements OnInit {
     console.log("usuario: ", usuario);
     
     const cliente = this.clientes.find(
-      c => c.idCliente === this.clienteSeleccionadoId
+      c => String(c.idCliente) === String(this.clienteSeleccionadoId)
     );
 
     if (!cliente) {

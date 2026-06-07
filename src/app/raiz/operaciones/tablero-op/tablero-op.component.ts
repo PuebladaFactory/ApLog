@@ -1,602 +1,714 @@
-import { Component, OnInit, OnDestroy, ViewChild  } from '@angular/core';
-import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { Operacion } from 'src/app/interfaces/operacion';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { filter, Subject, takeUntil } from 'rxjs';
-import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { ConId } from 'src/app/interfaces/conId';
+import { Operacion } from 'src/app/interfaces/operacion';
+import { Cliente } from 'src/app/interfaces/cliente';
+import { Chofer } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { EstadoCellRendererComponent } from 'src/app/shared/estado-cell-renderer/estado-cell-renderer.component';
-import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-renderers/acciones-cell-renderer/acciones-cell-renderer.component';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalResumenOpComponent } from '../modal-resumen-op/modal-resumen-op.component';
-import Swal from 'sweetalert2';
-import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
-import { ModalOpAltaComponent } from '../modal-op-alta/modal-op-alta.component';
 import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
-import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { Cliente } from 'src/app/interfaces/cliente';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
-import { InformeVenta } from 'src/app/interfaces/informe-venta';
-import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
+import Swal from 'sweetalert2';
+import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
+import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
+import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
 
+// =====================
+// MODELOS
+// =====================
+interface OpRow {
+  indice: number;
+  fecha: string;
+  estado: string;
+  idOperacion: number;
+  cliente: string;
+  idCliente: number;
+  chofer: string;
+  idChofer: number;
+  categoria: string;
+  patente: string;
+  acomp: string;
+  tarifa: string;
+  aCobrar: string;      // formateado
+  aPagar: string;       // formateado
+  aCobrarNum: number;   // numérico real
+  aPagarNum: number;    // numérico real
+  hojaRuta: string | number | null;
+  proveedor: string;
+  observaciones: string | null;
+  _raw: ConId<Operacion>;
+  [key: string]: any;
+}
+interface FiltrosState {
+  textoGlobal: string | null;
+  columnas: Record<string,string>;
+  clienteId: number | null;
+  choferId: number | null;
+  principal: 'cliente'|'chofer'|null;
+  sortCampo: string | null;
+  sortDir: 'asc'|'desc'|null;
+}
+
+
+
+// =====================
+// COMPONENTE
+// =====================
 
 @Component({
-  selector: 'app-tablero-op',
+  selector: 'app-tablero-op-v2',
   standalone: false,
   templateUrl: './tablero-op.component.html',
-  styleUrls: ['./tablero-op.component.scss']
+  styleUrls: ['./tablero-op.component.scss'],
 })
 export class TableroOpComponent implements OnInit, OnDestroy {
-  
-  paginatedRows: any[] = [];
-  private gridApi!: GridApi;  
-  visibleColumns: string[] = [];
-  // Definición original completa para visibilidad
-  allColumnDefs: ColDef[] = [
-    { headerName: 'Fecha', field: 'fecha', flex: 2 },
-    { headerName: 'IdOperacion', field: 'idOperacion', flex: 2 },
-    { headerName: 'Cliente', field: 'cliente', flex: 2 },
-    { headerName: 'Chofer', field: 'chofer', flex: 2 },
-    { headerName: 'Categoria', field: 'categoria', flex: 2 },
-    { headerName: 'Patente', field: 'patente', flex: 2 },
-    { headerName: 'Acompaniante', field: 'acompaniante', flex: 2 },
-    { headerName: 'Tarifa', field: 'tarifa', flex: 2 },
-    { headerName: 'A Cobrar', field: 'aCobrar', flex: 2 },
-    { headerName: 'A Pagar', field: 'aPagar', flex: 2 },
-    { headerName: 'Hoja Ruta', field: 'hojaRuta', flex: 2 },
-    { headerName: 'proveedor', field: 'proveedor', flex: 2 },
-    { headerName: 'observaciones', field: 'observaciones', flex: 3 },
+
+  private destroy$ = new Subject<void>();
+
+  operacionesPeriodo: ConId<Operacion>[] = [];
+  operacionesVista: OpRow[] = [];
+  opSeleccionada!: ConId<Operacion> | null;
+
+  columnasDisponibles = [
+    'estado','fecha','idOperacion','cliente','chofer','categoria','patente',
+    'acomp','tarifa','aCobrar','aPagar','hojaRuta','proveedor','observaciones'
   ];
 
-  agColumnDefs: ColDef[] = [];
-  defaultColDef: ColDef = {
-    resizable: true,
-    sortable: true,
-    filter: true,
-    floatingFilter: false
-  };   
-  context = { componentParent: this };
-///////////////////////////////////////////////////////
-  private destroy$ = new Subject<void>();
-  opEditar!: ConId<Operacion>;
-  componente:string = "operaciones";
-  $opActivas: ConId<Operacion>[] = [];
-  $opFiltradas: ConId<Operacion>[] = [];  
-  isLoading: boolean = false;
-  fechasConsulta!: any;
-  modo : string = "operaciones";
-  btnConsulta:boolean = false;
-  respuestaOp!:any;
-  titulo: string = "operaciones";
-  ajustes: boolean = false;
-  cantPorPagina: boolean = false; ////  ESTO  NO SE SI SIGUE APLICANDO
-  $clientes!: ConIdType<Cliente>[];
-  $choferes!: ConIdType<Chofer>[];
-  $proveedores!: ConIdType<Proveedor>[];
-  clientesEnPeriodo: ConIdType<Cliente>[] = [];
-  choferesEnPeriodo: ConIdType<Chofer>[] = [];  
-  clienteSeleccionado: ConIdType<Cliente> | null = null;
-  choferSeleccionado: ConIdType<Chofer> | null = null;
-  objetoEditado: ConId<Operacion>[] = [];
-  totalFiltrado: number = 0;
-  filtroPrincipal: 'cliente' | 'chofer' | null = null;
-  private modeloFiltrosPrevio: any = null;
-  informesVenta: InformeVenta[] = []
-  usuario!: any;
+  columnasVisibles: string[] = [];
+
+  filtros: FiltrosState = {
+    textoGlobal: null,
+    columnas: {},
+    clienteId: null,
+    choferId: null,
+    principal: null,
+    sortCampo: null,
+    sortDir: null
+  };
+
+  clientesDropdown: any[] = [];
+  choferesDropdown: any[] = [];
+
+  clienteSeleccionado: number | null = null;
+  choferSeleccionado: number | null = null;
+
+  private readonly STORAGE_FILTROS_KEY = 'tablero_op_filtros_v2';
+  private STORAGE_RANGE_KEY = 'tablero_op_range_v1';
+
+  // UI estado
+  columnasDropdownOpen = false;
+
+
+  isLoading = false;
+
+  // catálogos
+  clientes: ConId<Cliente>[] = [];
+  choferes: ConId<Chofer>[] = [];
+  proveedores: ConId<Proveedor>[] = [];
+
+  fechaDesde:any;
+  fechaHasta:any;
+
+
+
+// -----------------------------
+// STATE COLUMNAS
+// -----------------------------
+
+
+columnWidths: Record<string, number> = {};
+private STORAGE_COL_WIDTH_KEY = 'tablero_op_colwidth_v1';
+
+private resizingCol: string | null = null;
+private resizeStartX = 0;
+private resizeStartWidth = 0;
+
+usuario:any;
 
   constructor(
-    private storageService: StorageService,
-    private dbFirebase: DbFirestoreService,
+    private storage: StorageService,
+    private dateRange: DateRangeService,
     private modalService: NgbModal,
-    private excelServ: ExcelService,
     private tableroServ: TableroService,
-    private dateRangeService:DateRangeService
+    private formatoNum: FormatoNumericoService,
+    private excelServ: ExcelService,
+    private reportesOp: ReportesOpService
   ) {}
 
+  // =====================
+  // INIT
+  // =====================
+
   ngOnInit(): void {
-    let usuarioLogueado = this.storageService.loadInfo("usuario");
-    this.usuario = structuredClone(usuarioLogueado[0]);
-      this.storageService.getObservable<ConIdType<Chofer>>("choferes")
-        .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-        .subscribe(data => {
-          this.$choferes = data;
-          this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-      });
-      
-      this.storageService.getObservable<ConIdType<Cliente>>("clientes")
-        .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-        .subscribe(data => {
-          this.$clientes = data;
-          this.$clientes = this.$clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-      });   
-        
-      this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
-        .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-        .subscribe(data => {
-          this.$proveedores = data;
-      });
-      this.dateRangeService.range$
-          .pipe(
+
+    this.cargarColumnasVisibles();
+    this.cargarFiltrosDeStorage();
+    this.restaurarRangoPropio(); 
+
+    this.choferes = this.storage.loadInfo('choferes');
+    this.choferes = this.choferes.sort((a, b) => a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido)); // Ordena por el nombre del chofer
+    this.clientes = this.storage.loadInfo('clientes');
+    this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+    this.proveedores = this.storage.loadInfo('proveedores');
+    this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
+    this.loadColumnWidths();
+    this.dateRange.range$
+      .pipe(
         filter((r): r is DateRange => r !== null),
-        takeUntil(this.destroy$)
-      )
+        takeUntil(this.destroy$))
       .subscribe(r => {
-        //this.consultarOperaciones(r.desde, r.hasta);
         this.isLoading = true;
-        //console.log("this.isLoading", this.isLoading);
-        
+        localStorage.setItem(
+          this.STORAGE_RANGE_KEY,
+          JSON.stringify({
+            desde: r.desde.toISOString(),
+            hasta: r.hasta.toISOString(),
+            tipo: r.tipo
+          })
+        );
         const desde = toISODateString(r.desde);
         const hasta = toISODateString(r.hasta);
-        this.fechasConsulta = {
-          fechaDesde: desde,
-          fechaHasta: hasta,
-        }
-        //console.log("0)desde:", desde, " hasta: ", hasta);
-        this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", desde, hasta, 'desc');
-        this.restaurarEstadoFiltros();
-        this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
-        this.construirColumnDefs();         // Ahora sí, construye columnas visibles
-        this.cargarDatos();        
+        this.fechaDesde = desde;
+        this.fechaHasta = hasta;
+        
+        this.storage.syncChangesDateValue('operaciones','fecha',desde,hasta,'desc');
+        this.escucharOperaciones();
       });
+      let user = this.storage.loadInfo('usuario');
+      this.usuario = user[0];
+      console.log(this.usuario.roles.demo);
       
-
   }
 
-  ngOnDestroy(): void {
-    if (this.gridApi) {
-      const colState = this.gridApi.getColumnState();
-      localStorage.setItem('tableroOpColumnState', JSON.stringify(colState));
-    }
+  ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  onGridReady(params: GridReadyEvent): void {
-    this.gridApi = params.api;
-
-    const savedFilters = localStorage.getItem('filtrosTableroOp');
-    if (savedFilters) {
-      const parsedModel = JSON.parse(savedFilters);
-      this.gridApi.setFilterModel(parsedModel);
-    }
-
-    // Actualizar cantidad y dropdowns iniciales
-    this.actualizarEstadoFiltrado();
-  }
-
-  toggleColumnVisibility(colId: string): void {
-    const isVisible = this.visibleColumns.includes(colId);
-
-    if (isVisible) {
-      this.visibleColumns = this.visibleColumns.filter(c => c !== colId);
-    } else {
-      this.visibleColumns.push(colId);
-    }
-
-    this.storageService.setInfo('columnasVisiblesTablero', this.visibleColumns);
-    this.construirColumnDefs(); // reconstruir las columnas
-  }
-
-  private cargarConfiguracionColumnas(): void {
-    const saved = this.storageService.loadInfo('columnasVisiblesTablero');
-
-    if (Array.isArray(saved) && saved.length) {
-      this.visibleColumns = saved;
-    } else {
-      // Mostrar por defecto las columnas deseadas
-      this.visibleColumns = [
-        'estado', 'fecha', 'cliente', 'chofer', 'categoria',
-        'aCobrar', 'aPagar', 'hojaRuta', 'observaciones'
-      ];
-    }
-  }
-
-  private construirColumnDefs(): void {
-    const columnas: ColDef[] = [];
-
-    // Estado
-    columnas.push({
-      headerName: 'Estado',
-      field: 'estado',
-      cellRenderer: EstadoCellRendererComponent,
-      sortable: true,
-      filter: true,
-      flex: 2
-    });
-
-    // Dinámicas según visibilidad
-    const visibles = this.allColumnDefs.filter(col =>
-      this.visibleColumns.includes(col.field!)
-    );
-    columnas.push(...visibles);
-
-    // Acciones
-    columnas.push({
-      headerName: 'Acciones',
-      field: 'acciones',
-      cellRenderer: AccionesCellRendererComponent,
-      cellRendererParams: {
-        buttons: ['detalle', 'editar', 'eliminar', 'factura'],
-        disableOn: {
-          editar: 'Abierta',
-          eliminar: 'Abierta',
-          factura: 'Abierta',
-        },
-        onDetalle: (row: any) => this.abrirVista(row),
-        onEditar: (row: any) => this.abrirEdicion(row),
-        onEliminar: (row: any) => this.eliminarOperacion(row),
-        onFactura: (row: any) => this.crearFacturaOp(row),
-      },
-      flex: 3,
-      filter: false,
-    });
-
-
-    this.agColumnDefs = columnas;
-  }
-
-  cargarDatos(): void {
-    this.isLoading = true; 
-    if (this.gridApi) {
-      // ✅ Guarda los filtros activos ANTES de que llegue nueva data
-      this.modeloFiltrosPrevio = this.gridApi.getFilterModel();
-    }
-
-    this.storageService.getObservable<ConId<Operacion>>("operaciones")
+  escucharOperaciones() {
+    this.storage.getObservable<ConId<Operacion>>('operaciones')
       .pipe(takeUntil(this.destroy$))
-      .subscribe((ops: ConId<Operacion>[]) => {
-               
-        this.$opActivas = ops;
-        this.$opFiltradas = ops;        
-        this.armarTabla();      
-          
-        setTimeout(() => {
-          // ✅ Reaplica el filtro anterior si existe
-          if (this.gridApi && this.modeloFiltrosPrevio) {
-            this.gridApi.setFilterModel(this.modeloFiltrosPrevio);
-            this.gridApi.onFilterChanged();
-            this.modeloFiltrosPrevio = null;
-          }
-
-          // ✅ Actualiza dropdowns y contador
-          if (this.gridApi) {
-            this.actualizarEstadoFiltrado();
-          }
-        }, 0);
-        setTimeout(()=>{this.isLoading = false;}, 1000)
-        
-      });  
-      
+      .subscribe(ops => {
+        //this.isLoading = true;
+        this.operacionesPeriodo = ops;
+        this.rebuildDropdownsBase();
+        this.syncFiltroLabels();   // 👈 importante
+        this.aplicarFiltros();
+        setTimeout(()=>{this.isLoading = false;}, 500)
+      });
   }
 
+  private restaurarRangoPropio() {
+    const s = localStorage.getItem(this.STORAGE_RANGE_KEY);
+    if (!s) return;
 
-  aplicarFiltros(filtros: string[]): void {
-    if (!filtros.length) {
-      this.$opFiltradas = [...this.$opActivas];
-    } else {
-      this.$opFiltradas = this.$opActivas.filter(op =>
-        filtros.some(key => (op.estado as any)[key])
-      );
+    const r = JSON.parse(s);
+
+    this.dateRange.setRange({
+      desde: new Date(r.desde),
+      hasta: new Date(r.hasta),
+      tipo: r.tipo
+    });
+  }
+
+  private loadColumnWidths() {
+    const s = localStorage.getItem(this.STORAGE_COL_WIDTH_KEY);
+    if (s) this.columnWidths = JSON.parse(s);
     }
-    this.armarTabla();
+
+
+  private saveColumnWidths() {
+    localStorage.setItem(
+    this.STORAGE_COL_WIDTH_KEY,
+    JSON.stringify(this.columnWidths)
+    );
   }
 
-  armarTabla(): void {
-    let indice = 0;
-    this.paginatedRows = this.$opFiltradas.map((op) => ({
-      indice: indice++,
+// ===================== MAPEO =====================
+
+  private mapOp(op: ConId<Operacion>, i:number): OpRow {
+    const aCobrarNum = op.valores.cliente.aCobrar ?? 0;
+    const aPagarNum  = op.valores.chofer.aPagar ?? 0;
+
+    return {
+      indice: i+1,
       fecha: op.fecha,
-      estado: op.estado.abierta ? "Abierta" : op.estado.cerrada ? "Cerrada" :
-              op.estado.proformaCl || op.estado.proformaCh ? "Proforma" :
-              op.estado.facCliente ? "Cliente Fac" :
-              op.estado.facChofer ? "Chofer Fac" :
-              op.estado.facturada ? "Facturada" : "Sin Datos",
+      estado:
+        op.estado.abierta ? 'Abierta' :
+        op.estado.cerrada ? 'Cerrada' :
+        (op.estado.proformaCl || op.estado.proformaCh) ? 'Proforma' :
+        op.estado.facCliente ? 'Cliente Fac' :
+        op.estado.facChofer ? 'Chofer Fac' :
+        op.estado.facturada ? 'Facturada' : 'Sin datos',
       idOperacion: op.idOperacion,
       cliente: op.cliente.razonSocial,
-      idCliente: op.cliente.idCliente,
-      chofer: `${op.chofer.apellido} ${op.chofer.nombre}`,
-      idChofer: op.chofer.idChofer,
+      idCliente: Number(op.cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
+      chofer: `${op.chofer.datosPersonales.apellido} ${op.chofer.datosPersonales.nombre}`,
+      idChofer: op.chofer.idChofer as any,
       categoria: this.getCategoria(op),
       patente: op.patenteChofer,
-      acompaniante: op.acompaniante ? 'Sí' : 'No',
-      tarifa: op.tarifaTipo.especial ? "Especial" :
-              op.tarifaTipo.eventual ? "Eventual" :
-              op.tarifaTipo.personalizada ? "Personalizada" : "General",
-      aCobrar: this.formatearValor(op.valores.cliente.aCobrar),
-      aPagar: this.formatearValor(op.valores.chofer.aPagar),
+      acomp: op.acompaniante ? 'Sí':'No',
+      tarifa: this.getTarifa(op),
+      aCobrar: `$${this.formatoNum.convertirAValorFormateado(aCobrarNum)}`,
+      aPagar: `$${this.formatoNum.convertirAValorFormateado(aPagarNum)}`,
+      aCobrarNum,
+      aPagarNum,
       hojaRuta: op.hojaRuta,
-      proveedor: this.getProveedor(op.chofer.idProveedor),
+      proveedor: this.getProveedor((op.chofer.contratacion as any).idProveedor),
       observaciones: op.observaciones,
-    }));
-
-    this.clientesEnPeriodo = this.obtenerClientesFiltrados(this.$opFiltradas);
-    this.choferesEnPeriodo = this.obtenerChoferesFiltrados(this.$opFiltradas);    
-  }
-
-  private obtenerClientesFiltrados(operaciones: ConId<Operacion>[]): ConIdType<Cliente>[] {
-    const idsClientes = new Set(operaciones.map(op => op.cliente.idCliente));
-    return this.$clientes.filter(c => idsClientes.has(c.idCliente));
-  }
-
-  private obtenerChoferesFiltrados(operaciones: ConId<Operacion>[]): ConIdType<Chofer>[] {
-    const idsChoferes = new Set(operaciones.map(op => op.chofer.idChofer));
-    return this.$choferes.filter(c => idsChoferes.has(c.idChofer));
-  }
-
-
-  filtrarPorCliente(cliente: ConIdType<Cliente>) {
-    this.clienteSeleccionado = cliente;
-    this.guardarEstadoFiltros(); // <<<< guardar estado
-    const currentFilters = this.gridApi.getFilterModel();
-
-    // Establecer jerarquía si no hay filtro principal aún
-    if (!this.filtroPrincipal) {
-      this.filtroPrincipal = 'cliente';
-    }
-
-    // Si cliente es principal y ya hay un chofer seleccionado, eliminar temporalmente el filtro de chofer
-    //
-    if (this.choferSeleccionado && this.filtroPrincipal === 'cliente') {
-      //filtroTemporalChofer = currentFilters['chofer'];
-      delete currentFilters['chofer'];
-      this.choferSeleccionado = null;
-    }
-
-    // Aplicar filtro de cliente
-    currentFilters['cliente'] = { type: 'equals', filter: cliente.razonSocial };
-    this.gridApi.setFilterModel(currentFilters);
-    this.gridApi.onFilterChanged();
-
-    // Solo actualizar listado de choferes si el cliente es el filtro principal
-    if (this.filtroPrincipal === 'cliente') {
-      const visibles = this.getFilasVisibles();
-      this.choferesEnPeriodo = this.filtrarChoferesDesdeFilas(visibles);
-    }
-
-  }
-
-
-  filtrarPorChofer(chofer: ConIdType<Chofer>) {
-    this.choferSeleccionado = chofer;
-    this.guardarEstadoFiltros(); // <<<< guardar estado
-  
-    const currentFilters = this.gridApi.getFilterModel();
-
-    // Establecer jerarquía si no hay filtro principal aún
-    if (!this.filtroPrincipal) {
-      this.filtroPrincipal = 'chofer';
-    }
-
-    // Si chofer es principal y ya hay un cliente seleccionado, eliminar temporalmente el filtro de cliente
-    //let filtroTemporalCliente: any = null;
-    if (this.clienteSeleccionado && this.filtroPrincipal === 'chofer') {
-      //filtroTemporalCliente = currentFilters['cliente'];
-      delete currentFilters['cliente'];
-      this.clienteSeleccionado = null;
-    }
-
-    // Aplicar filtro de chofer
-    currentFilters['chofer'] = {
-      type: 'equals',
-      filter: `${chofer.apellido} ${chofer.nombre}`,
+      _raw: op
     };
-    this.gridApi.setFilterModel(currentFilters);
-    this.gridApi.onFilterChanged();
-
-    // Solo actualizar listado de clientes si chofer es el filtro principal
-    if (this.filtroPrincipal === 'chofer') {
-      const visibles = this.getFilasVisibles();
-      this.clientesEnPeriodo = this.filtrarClientesDesdeFilas(visibles);
-    }
-
   }
 
+ // ===================== FILTROS =====================
 
+  aplicarFiltros() {
+    let data = this.operacionesPeriodo.map((o,i)=>this.mapOp(o,i));
 
-  private getFilasVisibles(): any[] {
-    const visibles: any[] = [];
-    if (!this.gridApi) return visibles;
-
-    for (let i = 0; i < this.gridApi.getDisplayedRowCount(); i++) {
-      const node = this.gridApi.getDisplayedRowAtIndex(i);
-      if (node?.data) visibles.push(node.data);
+    if (this.filtros.clienteId) {
+      data = data.filter(r=>r.idCliente === this.filtros.clienteId);
     }
 
-    return visibles;
-  }
-
-  private actualizarEstadoFiltrado(): void {
-    this.totalFiltrado = this.gridApi.getDisplayedRowCount();
-    const visibleRows: any[] = [];
-
-    for (let i = 0; i < this.gridApi.getDisplayedRowCount(); i++) {
-      const rowNode = this.gridApi.getDisplayedRowAtIndex(i);
-      if (rowNode?.data) {
-        visibleRows.push(rowNode.data);
-      }
+    if (this.filtros.choferId) {
+      data = data.filter(r=>r.idChofer === this.filtros.choferId);
     }
-    //this.clientesEnPeriodo = this.filtrarClientesDesdeFilas(visibleRows);
-    //this.choferesEnPeriodo = this.filtrarChoferesDesdeFilas(visibleRows);
-    this.actualizarDropdowns();
-  }
 
-/*   private actualizarDropdowns(visibleRows: any[]): void {
-    // Solo regenerar los dropdowns si NO hay selecciones cruzadas
-    if (!this.clienteSeleccionado) {
-      this.clientesEnPeriodo = this.filtrarClientesDesdeFilas(visibleRows);
-    }
-    if (!this.choferSeleccionado) {
-      this.choferesEnPeriodo = this.filtrarChoferesDesdeFilas(visibleRows);
-    }
-  } */
- 
-  private actualizarDropdowns(): void {
-    if (!this.gridApi) return;
+    for (const c in this.filtros.columnas) {
+      const v = this.filtros.columnas[c];
+      if (!v) continue;
 
-    const allData = this.$opFiltradas; // operaciones filtradas por periodo
-    let baseData: any[] = [];
-
-    const model = this.gridApi.getFilterModel();
-
-    // Si no hay filtros, usar todas las del periodo
-    if (!model || Object.keys(model).length === 0) {
-      baseData = [...allData];
-    } else if (this.filtroPrincipal === 'cliente' && this.clienteSeleccionado) {
-      baseData = allData.filter(op => op.cliente.idCliente === this.clienteSeleccionado?.idCliente);
-    } else if (this.filtroPrincipal === 'chofer' && this.choferSeleccionado) {
-      baseData = allData.filter(op => op.chofer.idChofer === this.choferSeleccionado?.idChofer);
-    } else {
-      // fallback: usar lo visible en la tabla
-      for (let i = 0; i < this.gridApi.getDisplayedRowCount(); i++) {
-        const rowNode = this.gridApi.getDisplayedRowAtIndex(i);
-        if (rowNode?.data) {
-          baseData.push(rowNode.data);
+      if (c === 'aCobrar') {
+        const num = Number(v.replace(',', '.'));
+        if (!isNaN(num)) {
+          data = data.filter(r => r.aCobrarNum === num);
+          continue;
         }
       }
-    }
-    ////console.log("baseData", baseData);
-    
 
-    // Actualizar dropdowns según jerarquía
-    if (!this.filtroPrincipal) {
-      this.clientesEnPeriodo = this.obtenerClientesFiltrados(baseData);
-      this.choferesEnPeriodo = this.obtenerChoferesFiltrados(baseData);
-    } else if (this.filtroPrincipal === 'cliente') {
-      this.choferesEnPeriodo = this.obtenerChoferesFiltrados(baseData);
-    } else if (this.filtroPrincipal === 'chofer') {
-      this.clientesEnPeriodo = this.obtenerClientesFiltrados(baseData);
+      if (c === 'aPagar') {
+        const num = Number(v.replace(',', '.'));
+        if (!isNaN(num)) {
+          data = data.filter(r => r.aPagarNum === num);
+          continue;
+        }
+      }
+
+      data = data.filter(r =>
+        String(r[c]).toLowerCase().includes(v.toLowerCase())
+      );
+    }
+
+    if (this.filtros.textoGlobal) {
+      const t = this.filtros.textoGlobal.toLowerCase();
+      data = data.filter(r =>
+        Object.values(r).some(v =>
+          String(v).toLowerCase().includes(t)
+        )
+      );
+    }
+
+    if (this.filtros.sortCampo) {
+      const c = this.filtros.sortCampo;
+      const d = this.filtros.sortDir === 'asc' ? 1 : -1;
+
+      data.sort((a,b)=>{
+
+        if (c === 'aCobrar') return (a.aCobrarNum - b.aCobrarNum) * d;
+        if (c === 'aPagar')  return (a.aPagarNum  - b.aPagarNum)  * d;
+
+        const v1 = a[c];
+        const v2 = b[c];
+        if (v1==null) return 1;
+        if (v2==null) return -1;
+        if (v1>v2) return d;
+        if (v1<v2) return -d;
+        return 0;
+      });
+    }
+
+    this.operacionesVista = data;
+    this.rebuildDropdownsDesdeFiltradas();
+    this.guardarFiltrosEnStorage();
+  }
+
+  private guardarFiltrosEnStorage() {
+    const data = {
+      filtros: this.filtros,
+      clienteSeleccionado: this.clienteSeleccionado,
+      choferSeleccionado: this.choferSeleccionado
+    };
+
+    localStorage.setItem(
+      this.STORAGE_FILTROS_KEY,
+      JSON.stringify(data)
+    );
+  }
+
+  private cargarFiltrosDeStorage() {
+    const s = localStorage.getItem(this.STORAGE_FILTROS_KEY);
+    if (!s) return;
+
+    try {
+      const data = JSON.parse(s);
+
+      this.filtros = {
+        ...this.filtros,
+        ...data.filtros
+      };
+
+      this.clienteSeleccionado = data.clienteSeleccionado ?? null;
+      this.choferSeleccionado = data.choferSeleccionado ?? null;
+
+    } catch {
+      localStorage.removeItem(this.STORAGE_FILTROS_KEY);
     }
   }
 
-  limpiarFiltrosCruzados(): void {
+  limpiarFiltrosTotales() {
+
+    this.filtros = {
+      textoGlobal: null,
+      columnas: {},
+      clienteId: null,
+      choferId: null,
+      principal: null,
+      sortCampo: null,
+      sortDir: null
+    };
+
     this.clienteSeleccionado = null;
     this.choferSeleccionado = null;
-    this.filtroPrincipal = null;
 
-    if (!this.gridApi) return;
+    localStorage.removeItem(this.STORAGE_FILTROS_KEY);
 
-    const currentFilters = this.gridApi.getFilterModel();
-
-    delete currentFilters['cliente'];
-    delete currentFilters['chofer'];
-
-    this.gridApi.setFilterModel(currentFilters);
-    this.gridApi.onFilterChanged();
-
-    const visibles = this.getFilasVisibles();
-    this.actualizarDropdowns();
+    this.rebuildDropdownsBase();
+    this.aplicarFiltros();
   }
 
-  
+  onFiltroColumna(col:string, val:string) {
+    if (val) this.filtros.columnas[col] = val;
+    else delete this.filtros.columnas[col];
+
+    this.aplicarFiltros();
+  }
+
+  private syncFiltroLabels() {
+
+    if (this.filtros.clienteId) {
+      this.clienteSeleccionado =
+        this.clientesDropdown.find(c =>
+          c.idCliente === this.filtros.clienteId
+        ) ?? null;
+    }
+
+    if (this.filtros.choferId) {
+      this.choferSeleccionado =
+        this.choferesDropdown.find(c =>
+          c.idChofer === this.filtros.choferId
+        ) ?? null;
+    }
+  }
+
+
+
+
+  // ===================== SORT =====================
+
+  sortBy(col:string) {
+    if (this.filtros.sortCampo !== col) {
+      this.filtros.sortCampo = col;
+      this.filtros.sortDir = 'asc';
+    } else if (this.filtros.sortDir === 'asc') {
+      this.filtros.sortDir = 'desc';
+    } else {
+      this.filtros.sortCampo = null;
+      this.filtros.sortDir = null;
+    }
+    this.aplicarFiltros();
+  }
+
+
+// ===================== COLUMNAS UI =====================
+
+  toggleColumnasDropdown() {
+    this.columnasDropdownOpen = !this.columnasDropdownOpen;
+  }
+
+  isColVisible(c:string) {
+    return this.columnasVisibles.includes(c);
+  }
+
+  toggleCol(c:string) {
+    const i = this.columnasVisibles.indexOf(c);
+    if (i>=0) this.columnasVisibles.splice(i,1);
+    else this.columnasVisibles.push(c);
+    localStorage.setItem('op_cols', JSON.stringify(this.columnasVisibles));
+  }
+
+  private cargarColumnasVisibles() {
+    const s = localStorage.getItem('op_cols');
+    this.columnasVisibles = s ? JSON.parse(s) : [
+      'estado','fecha','cliente','chofer','categoria','aCobrar','aPagar','hojaRuta','observaciones'
+    ];
+  }
+
+  // ===================== ANCHOS =====================
+
+
+  getColWidth(col:string): string | null {
+    const map: Record<string,string> = {
+    estado: '9rem',
+    fecha: '11rem',
+    cliente: '15rem',
+    chofer: '15rem',
+    idOperacion: '12rem',
+    categoria: '10rem',
+    hojaRuta: '12rem',
+    aCobrar: '10rem',
+    aPagar: '12rem',
+    observaciones: '10rem'
+    };
+    return map[col] ?? null;
+  }
+
+
+  // ===================== FILTROS CRUZADOS UI =====================
+
+  seleccionarCliente(id:number|null) {
+    this.clienteSeleccionado = id;
+    this.filtros.clienteId = id;
+    if (id) this.filtros.principal = 'cliente';
+    this.aplicarFiltros();
+  }
+
+  seleccionarChofer(id:number|null) {
+    this.choferSeleccionado = id;
+    this.filtros.choferId = id;
+    if (id) this.filtros.principal = 'chofer';
+    this.aplicarFiltros();
+  }
+
+  limpiarFiltrosCruzados() {
+    this.clienteSeleccionado = null;
+    this.choferSeleccionado = null;
+    this.filtros.clienteId = null;
+    this.filtros.choferId = null;
+    this.filtros.principal = null;
+    this.rebuildDropdownsBase();
+    this.aplicarFiltros();
+  }
+
+  private rebuildDropdownsBase() {
+    const mapC = new Map<string,string>();
+    const mapCh = new Map<string,string>();
+
+    for (const o of this.operacionesPeriodo) {
+      mapC.set(o.cliente.idCliente, o.cliente.razonSocial);
+      mapCh.set(o.chofer.idChofer, `${o.chofer.datosPersonales.apellido} ${o.chofer.datosPersonales.nombre}`);
+    }
+
+    this.clientesDropdown = [...mapC.entries()].map(([id,n])=>({id,n}));
+    this.choferesDropdown = [...mapCh.entries()].map(([id,n])=>({id,n}));
+
+    this.clientesDropdown = [...mapC.entries()]
+      .map(([id,n]) => ({id,n}))
+      .sort((a,b) =>
+        a.n.localeCompare(b.n, 'es', { sensitivity: 'base' })
+      );
+
+    this.choferesDropdown = [...mapCh.entries()]
+      .map(([id,n]) => ({id,n}))
+      .sort((a,b) =>
+        a.n.localeCompare(b.n, 'es', { sensitivity: 'base' })
+    );
+
+
+  }
+
+  private rebuildDropdownsDesdeFiltradas() {
+    if (this.filtros.principal === 'cliente' && this.filtros.clienteId) {
+      const set = new Map<number,string>();
+      for (const r of this.operacionesVista) {
+        set.set(r.idChofer, r.chofer);
+      }
+      this.choferesDropdown = [...set.entries()].map(([id,n])=>({id,n}));
+    }
+
+    if (this.filtros.principal === 'chofer' && this.filtros.choferId) {
+      const set = new Map<number,string>();
+      for (const r of this.operacionesVista) {
+        set.set(r.idCliente, r.cliente);
+      }
+      this.clientesDropdown = [...set.entries()].map(([id,n])=>({id,n}));
+    }
+  }
+
+
+
+  // ===================== BADGES ESTADO =====================
+
+  getEstadoBadgeClass(estado:string) {
+    switch (estado) {
+      case 'Abierta': return 'ms-2 align-middle badge rounded-pill bg-success';
+      case 'Cerrada': return 'ms-2 align-middle badge rounded-pill bg-danger';
+      case 'Proforma': return 'ms-2 align-middle badge rounded-pill bg-warning text-dark';
+      case 'Cliente Fac': return 'ms-2 align-middle badge rounded-pill bg-info text-dark';
+      case 'Chofer Fac': return 'ms-2 align-middle badge rounded-pill bg-secondary';
+      case 'Facturada': return 'ms-2 align-middle badge rounded-pill bg-primary';
+      default: return 'ms-2 align-middle badge rounded-pill bg-light text-secondary';
+    }
+  }
+
+  // ===================== HEADERS LABEL =====================
+
+  headerLabel(col:string): string {
+    const map: Record<string,string> = {
+      aCobrar: 'A Cobrar',
+      aPagar: 'A Pagar',
+      hojaRuta: 'Hoja Ruta'
+    };
+
+    if (map[col]) return map[col];
+    return col.charAt(0).toUpperCase() + col.slice(1);
+  }
+
+  // ===================== HELPERS =====================
+
   getCategoria(op: Operacion): string {
-    const vehiculo = op.chofer.vehiculo.find(v => v.dominio === op.patenteChofer);
+    const vehiculo = ((op.chofer as any).vehiculo ?? []).find((v: any) => v.dominio === op.patenteChofer);
     return vehiculo?.categoria.nombre ?? 'Sin categoría';
   }
 
-  formatearValor(valor: number): string {
-    return `$${new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(valor)}`;
+  getTarifa(op:Operacion) {
+    if (op.tarifaTipo.especial) return 'Especial';
+    if (op.tarifaTipo.eventual) return 'Eventual';
+    if (op.tarifaTipo.personalizada) return 'Personalizada';
+    return 'General';
   }
 
-  getProveedor(idProveedor: number): string {
-    if (!this.$proveedores || idProveedor === 0) return 'No';
-    const proveedor = this.$proveedores.find(p => p.idProveedor === idProveedor);
+  getProveedor(idProveedor: string): string {
+    if (!this.proveedores || !idProveedor || idProveedor === '0') return 'No';
+    const proveedor = this.proveedores.find(p => p.idProveedor === idProveedor);
     return proveedor?.razonSocial ?? 'Proveedor dado de baja';
   }
 
-  // Renderers
+  // -----------------------------
+// WIDTH GETTER
+// -----------------------------
 
-  estadoRenderer(params: any): HTMLElement {
-    const span = document.createElement('span');
-    span.innerText = params.value;
 
-    const clasesEstado: Record<string, string> = {
-      'Abierta': 'estado-abierta',
-      'Cerrada': 'estado-cerrada',
-      'Cliente Fac': 'estado-facCliente',
-      'Chofer Fac': 'estado-facChofer',
-      'Facturada': 'estado-facturada',
-      'Proforma': 'estado-proforma'
-    };
+getColWidthPx(col: string): number {
+  if (this.columnWidths[col]) return this.columnWidths[col];
 
-    span.className = clasesEstado[params.value] ?? '';
-    return span;
+
+  switch (col) {
+    case 'estado': return 95;
+    case 'fecha': return 110;    
+    case 'proveedor':
+    case 'tarifa': 
+    case 'aCobrar':
+    case 'aPagar': return 120;
+    case 'hojaRuta': return 100;
+    case 'categoria':
+    case 'observaciones': return 115;
+    case 'acciones': return 260;
+    case 'idOperacion': return 160;
+    case 'patente': 
+    case 'acomp': return 90;
+    default: return 180;
+  }
+}
+
+
+getColWidthStyle(col: string) {
+  return { width: this.getColWidthPx(col) + 'px' };
+}
+
+
+// -----------------------------
+// RESIZE LOGIC
+// -----------------------------
+
+
+startResize(event: MouseEvent, col: string) {
+  event.preventDefault();
+  event.stopPropagation();
+
+
+  this.resizingCol = col;
+  this.resizeStartX = event.clientX;
+  this.resizeStartWidth = this.getColWidthPx(col);
+
+
+  document.addEventListener('mousemove', this.onResizeMove);
+  document.addEventListener('mouseup', this.onResizeEnd);
+}
+
+
+onResizeMove = (event: MouseEvent) => {
+  if (!this.resizingCol) return;
+
+
+  const delta = event.clientX - this.resizeStartX;
+  const newWidth = Math.max(70, this.resizeStartWidth + delta);
+
+
+  this.columnWidths[this.resizingCol] = newWidth;
+};
+
+
+onResizeEnd = () => {
+  if (!this.resizingCol) return;
+
+
+  this.saveColumnWidths();
+  this.resizingCol = null;
+
+
+  document.removeEventListener('mousemove', this.onResizeMove);
+  document.removeEventListener('mouseup', this.onResizeEnd);
+};
+
+  // ===================== ACCIONES =====================
+
+  seleccionarOp(idOp:number){    
+    let op = this.operacionesPeriodo.find(o=>{return o.idOperacion === idOp});
+    if(op){
+      return op
+    } else {
+      return null
+    }  
+  }
+  
+  abrirModalDetalle(idOp:number, accion:string) {
+  // emitir evento o abrir modal
+    this.opSeleccionada = this.seleccionarOp(idOp);
+    this.modalDetalle(accion);
   }
 
-  accionesRenderer(params: any): HTMLElement {
-    const estado = params.data.estado;
-    const container = document.createElement('div');
-
-    const botones = [
-      { name: 'Detalle', handler: () => this.abrirVista(params.data) },
-      { name: 'Editar', handler: () => this.abrirEdicion(params.data), disabled: estado !== 'Abierta' },
-      { name: 'Eliminar', handler: () => this.eliminarOperacion(params.data), disabled: estado !== 'Abierta' },
-      { name: 'Factura', handler: () => this.crearFacturaOp(params.data), disabled: estado !== 'Abierta' }
-    ];
-
-    botones.forEach(b => {
-      const btn = document.createElement('button');
-      btn.innerText = b.name;
-      btn.className = `btn btn-sm mx-1 ${b.disabled ? 'isDisabled' : ''}`;
-      btn.disabled = !!b.disabled;
-      btn.addEventListener('click', b.handler);
-      container.appendChild(btn);
-    });
-
-    return container;
+  eliminar(idOp:number) {
+    this.opSeleccionada = this.seleccionarOp(idOp);
+    Swal.fire({
+              title: "¿Desea dar de baja la operación?",
+              //text: "No se podrá revertir esta acción",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Confirmar",
+              cancelButtonText: "Cancelar"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.openModalBaja();    
+              }
+            }); 
   }
 
-  onFirstDataRendered(): void {
-    // Opcional: aplicar estilos adicionales al header si querés
-    const header = document.querySelector('.ag-header') as HTMLElement;
-    /* if (header) {
-      header.classList.add('sticky-top'); // Solo si usás Bootstrap
-    } */
-  }
-
-  seleccionarOp(op:any){    
-    //let seleccion = this.$opActivas.filter((operacion:Operacion)=>{
-    let seleccion = this.$opFiltradas.filter((operacion:Operacion)=>{
-      
-      return operacion.idOperacion === op.idOperacion
-    })
-    this.opEditar = seleccion[0];    
-  }
-
-  abrirVista(row:any) {
-    this.seleccionarOp(row);   
-    this.openModal("vista")
-  }
-  abrirEdicion(row:any):void {        
-    this.seleccionarOp(row);   
-    this.openModal("edicion");      
-  }
-  eliminarOperacion(row: any){
-      this.seleccionarOp(row)
-      Swal.fire({
-        title: "¿Desea dar de baja la operación?",
-        //text: "No se podrá revertir esta acción",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Confirmar",
-        cancelButtonText: "Cancelar"
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.openModalBaja(row.idOperacion)    
-        }
-      });       
-      
-    }
-  crearFacturaOp(op:any){    
-    this.seleccionarOp(op);    
-    this.openModal("cerrar");
-    //this.opCerrada = this.detalleOp;
-  }
-
-  openModal(modo: string){
+  modalDetalle(modo: string){
     {
       const modalRef = this.modalService.open(ModalResumenOpComponent, {
         windowClass: 'myCustomModalClass',
@@ -607,7 +719,7 @@ export class TableroOpComponent implements OnInit, OnDestroy {
 
      let info = {
         modo: modo,
-        item: this.opEditar,
+        item: this.opSeleccionada,
       } 
 
       modalRef.componentInstance.fromParent = info;
@@ -620,7 +732,7 @@ export class TableroOpComponent implements OnInit, OnDestroy {
     }
   }
 
-  async openModalBaja(idOp:number){
+  async openModalBaja(){
     {
       const modalRef = this.modalService.open(BajaObjetoComponent, {
         windowClass: 'myCustomModalClass',
@@ -628,12 +740,10 @@ export class TableroOpComponent implements OnInit, OnDestroy {
         scrollable: true, 
         size: 'sm',     
       });   
-      
-      let operacion:ConId<Operacion> [] = this.$opActivas.filter(o => o.idOperacion === idOp);
 
       let info = {
         modo: "operaciones",
-        item: operacion[0]
+        item: this.opSeleccionada,
       }  
       //////////////console.log()(info); */
       
@@ -641,12 +751,20 @@ export class TableroOpComponent implements OnInit, OnDestroy {
       try {
         const motivo = await modalRef.result;
         if(!motivo) return
-        await this.tableroServ.anularOperacionYActualizarTablero(operacion[0], motivo, 'Baja de operación desde el tablero-op');
-        Swal.fire({
-          icon: 'success',
-          title: 'Operación eliminada',
-          text: 'La operación fue dada de baja y se actualizó el tablero.'
-        });
+        if(this.opSeleccionada){
+          this.isLoading = true; 
+          await this.tableroServ.anularOperacionYActualizarTablero(this.opSeleccionada, motivo, 'Baja de operación desde el tablero-op');
+             
+          const confirmacion = await Swal.fire({
+            icon: 'success',
+            title: 'Operación eliminada',
+            text: 'La operación fue dada de baja y se actualizó el tablero.'
+          });
+          if(confirmacion.isConfirmed){
+            this.escucharOperaciones()
+          }
+          
+        }   
 
       } catch (e) {
         console.warn("El modal fue cancelado o falló:", e);
@@ -655,32 +773,13 @@ export class TableroOpComponent implements OnInit, OnDestroy {
     }
   }
 
-  modalAltaOp(){
-      {
-        const modalRef = this.modalService.open(ModalOpAltaComponent, {
-          windowClass: 'custom-modal-top-right',        
-  
-          scrollable: true,    
-          backdrop:"static"   
-  
-        });      
-      
-        modalRef.result.then(
-          (result) => {
-            
-          },
-          (reason) => {}
-        );
-      }
-  }
-
   modalCargaMultiple(){
     {
       const modalRef = this.modalService.open(CargaMultipleComponent, {
-        windowClass: 'myCustomModalClass',
+        windowClass: "modal-super-xl",
         centered: true,
-        size: 'xl', 
-        backdrop:"static" 
+        size: "xl",
+        backdrop: true,
       });      
 
       /* let info = {
@@ -700,279 +799,95 @@ export class TableroOpComponent implements OnInit, OnDestroy {
   }
 
   descargarOp(){
-      this.excelServ.generarInformeOperaciones(this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta,this.$opFiltradas)
+    this.excelServ.generarInformeOperaciones(this.fechaDesde, this.fechaHasta,this.operacionesPeriodo)
   }
 
-/*   getMsg(e:any) {
-      this.btnConsulta = e
-      ////////////console.log("getMsg: ", this.btnConsulta);                  
-      if(this.btnConsulta){          
-        this.consultarOp();            
-      }
-  } */
-     
-  toogleAjustes(){      
-    this.ajustes = !this.ajustes;
+
+  // --- VISIBILIDAD DE ACCIONES POR ESTADO ---
+
+  puedeEditar(op: any): boolean {
+    return op.estado === 'Abierta';
   }
 
-  // NUEVO: Guarda el filtro en localStorage
-  onFilterChanged(): void {
-    if (!this.gridApi) return;
 
-    // ✅ Actualiza el contador
-    this.totalFiltrado = this.gridApi.getDisplayedRowCount();
+  puedeCerrar(op: any): boolean {
+    return op.estado === 'Abierta';
+  }
 
-    // ✅ Extrae filas visibles
-    const visibleRows: any[] = [];
 
-    for (let i = 0; i < this.gridApi.getDisplayedRowCount(); i++) {
-      const rowNode = this.gridApi.getDisplayedRowAtIndex(i);
-      if (rowNode?.data) {
-        visibleRows.push(rowNode.data);
-      }
+  puedeEliminar(op: any): boolean {
+    return op.estado === 'Abierta';
+  }
+
+  async crearResumenOp(){
+    console.log(this.operacionesPeriodo.length);
+    
+    this.isLoading = true;
+    const res = await this.reportesOp.reconstruirResumenes(this.operacionesPeriodo);
+
+    if (!res.exito) {
+      this.isLoading = false;
+      console.warn(res.mensaje);
+      console.table(this.reportesOp.getErrores());
     }
-
-    // ✅ Reemplazamos por la función que respeta reglas
-    this.actualizarDropdowns();
-
-    // ✅ Guarda filtro para persistencia
-    const model = this.gridApi.getFilterModel();
-    localStorage.setItem('filtrosTableroOp', JSON.stringify(model));
-  }
-
-
-  private filtrarClientesDesdeFilas(filas: any[]): ConIdType<Cliente>[] {
-    const idsClientes = new Set(filas.map(f => f.idCliente));
-    return this.$clientes.filter(c => idsClientes.has(c.idCliente));
-  }
-
-  private filtrarChoferesDesdeFilas(filas: any[]): ConIdType<Chofer>[] {
-    const idsChoferes = new Set(filas.map(f => f.idChofer));
-    return this.$choferes.filter(c => idsChoferes.has(c.idChofer));
-  }
-
-  limpiarFiltros(): void {
-    this.clienteSeleccionado = null;
-    this.choferSeleccionado = null;
-    this.filtroPrincipal = null;
-    if (this.gridApi) {
-      this.gridApi.setFilterModel(null);
-      this.gridApi.onFilterChanged();
-      localStorage.removeItem('filtrosTableroOp');
-    }      
-  }
-
-  private guardarEstadoFiltros() {
-    const estado = {
-      clienteId: this.clienteSeleccionado?.idCliente || null,
-      choferId: this.choferSeleccionado?.idChofer || null,
-      filtroPrincipal: this.filtroPrincipal || null
-    };
-    localStorage.setItem('estadoFiltrosTableroOp', JSON.stringify(estado));
-  }
-
-  private restaurarEstadoFiltros() {
-    const estadoRaw = localStorage.getItem('estadoFiltrosTableroOp');
-    if (!estadoRaw) return;
-
-    try {
-    const estado = JSON.parse(estadoRaw);
-
-    // Restaurar filtro principal
-    this.filtroPrincipal = estado.filtroPrincipal;
-
-    // Restaurar cliente
-    if (estado.clienteId) {
-      this.clienteSeleccionado = this.$clientes.find(c => c.idCliente === estado.clienteId) || null;
-    }
-
-    // Restaurar chofer
-    if (estado.choferId) {
-      this.choferSeleccionado = this.$choferes.find(c => c.idChofer === estado.choferId) || null;
-    }
-
-    // Aplicar los filtros guardados en ag-grid
-    setTimeout(() => {
-      const currentFilters = this.gridApi?.getFilterModel() || {};
-
-      if (this.clienteSeleccionado) {
-        currentFilters['cliente'] = { type: 'equals', filter: this.clienteSeleccionado.razonSocial };
-      }
-      if (this.choferSeleccionado) {
-        currentFilters['chofer'] = { type: 'equals', filter: `${this.choferSeleccionado.apellido} ${this.choferSeleccionado.nombre}` };
-      }
-
-        this.gridApi?.setFilterModel(currentFilters);
-        this.gridApi?.onFilterChanged();
-        this.actualizarDropdowns(); // reconstruir listados
-    }, 0);
-
-    } catch (e) {
-      console.error('Error restaurando estado de filtros', e);
+    if(res.exito){
+      this.isLoading = false;
+      console.info(res.mensaje);
     }
   }
 
-////////////////////////////////////////////////MÉTODOS PARA PRUEBAS Y CORRECCION DE ERRORES///////////////////////////
-  consultarOp(){
-    const modoStorage = this.storageService.loadInfo("filtroOp");
-    ////////console.log("ngOnInit: modoStorage ", modoStorage);
-    
-    /* if (modoStorage) {
-      modoStorage.forEach((key: string) => {
-        this.estadoSeleccionado[key] = true;
-      });
-    } */
-
-    //this.aplicarFiltros();
-    ////////////console.log("2)aca??: ");            
-/*     this.storageService.respuestaOp$
-      .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-      .subscribe(data => {
-        if(data){
-          ////////////console.log("respuestaOp data: ", data);
-          
-          this.respuestaOp = data
-          this.fechasConsulta = this.respuestaOp[0].fechas;
-          //////////console.log("fechasConsulta: ", this.fechasConsulta);
-          //this.rango = this.respuestaOp[0].rango ////ESTO NO SE SI SIGUE APLICANDO
-          //////////console.log("rango: ", this.rango);
-          this.storageService.syncChangesDateValue<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
-          //this.storageService.listenForChangesDate<Operacion>(this.titulo, "fecha", this.fechasConsulta.fechaDesde, this.fechasConsulta.fechaHasta, 'desc');
-          //this.aplicarFiltros()   ////ESTO NO SE SI SIGUE APLICANDO 
-        }
-        //////////////console.log("TABLERO OP: fechas consulta: ",this.fechasConsulta);      
-        //this.getMsg()
-    }); */
+  totalACobrar(){
+    let opAcomp = 0;
+    let cantAcomp = 0;
+    let total = 0;
+    this.operacionesPeriodo.map(op=>{
+     /* if(op.acompaniante) {
+        opAcomp ++ ;
+        cantAcomp += op.acompanienteCant ?? 1; 
+     }  */
+    total += op.valores.cliente.aCobrar
+    })
+    //console.log("opAcomp: ", opAcomp, "totalAcomp: ", cantAcomp );
+    console.log("total: ", total);
     
   }
 
-  editarObjeto(){
-    //////console.log("1)this.opActivas", this.$opActivas);
-    this.objetoEditado= this.editarCampo(this.$opActivas);        
-    //this.objetoEditado= this.$opActivas;
-    //console.log("2)this.objetoEditado", this.objetoEditado);
+  validarOperaciones(): void {
+  const operacionesConError: number[] = [];
+
+  this.operacionesPeriodo.forEach(op => {
+    const v = op.valores;
+
+    // Cliente
+    const totalCliente =
+      (v.cliente.acompValor || 0) +
+      (v.cliente.kmAdicional || 0) +
+      (v.cliente.tarifaBase || 0) +
+      (v.cliente.adExtraValor || 0);
+
+    // Chofer
+    const totalChofer =
+      (v.chofer.acompValor || 0) +
+      (v.chofer.kmAdicional || 0) +
+      (v.chofer.tarifaBase || 0) +
+      (v.chofer.adExtraValor || 0);
+
+    const errorCliente = totalCliente !== v.cliente.aCobrar;
+    const errorChofer = totalChofer !== v.chofer.aPagar;
+
+    if (errorCliente || errorChofer) {
+      operacionesConError.push(op.idOperacion);
+    }
+  });
+
+  // Resultado final
+  if (operacionesConError.length === 0) {
+    alert('✅ Todas las operaciones son consistentes');
+  } else {
+    alert(
+      `❌ Se encontraron errores en las operaciones:\n${operacionesConError.join(', ')}`
+    );
   }
-
-  razonZocial(op:any):string{
-    return "Andesmar"
-  }
-
-  editarCampo(operaciones: any[]): ConId<Operacion>[] {
-    operaciones = operaciones.filter((o:Operacion)=>{
-      return o.cliente.idCliente === 1737814865336;
-    })
-    return operaciones.map(operacion => {
-        /* operacion.estado ={
-          abierta: true,
-          cerrada: false,
-          facCliente: false,
-          facChofer: false,
-          facturada: false,
-          proformaCl: false,
-          proformaCh: false,
-        }
-        operacion.km = 0;
-        operacion.facturaChofer = 0;
-        operacion.facturaChofer = 0; */
-        operacion.cliente.vendedor = [1766498633336]
-        
-        return operacion
-    });
-  }
-
-  actualizarObjeto(){
-    this.isLoading = true
-    this.dbFirebase.actualizarOperacionesBatch(this.objetoEditado, "operaciones").then((result)=>{
-      this.isLoading = false
-      if(result.exito){
-        alert("actualizado correctamente")
-      } else {
-        alert(`error actualizando. errr: ${result.mensaje}`)
-      }
-    })
-  }
-
-  eliminarObjeto(){
-    this.isLoading = true
-    this.dbFirebase.eliminarMultiple(this.objetoEditado, "operaciones").then((result)=>{
-      this.isLoading = false
-      if(result.exito){
-        alert("actualizado correctamente")
-      } else {
-        alert(`error actualizando. errr: ${result.mensaje}`)
-      }
-    })
-  }
-
-  descargarComoJSON() {
-    const jsonStr = JSON.stringify(this.objetoEditado, null, 2); // 'null, 2' para formato legible
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `operaciones.json`;
-    a.click();
-
-    window.URL.revokeObjectURL(url); // Limpieza
-  }
-
-  cargarOperacionesDesdeArchivo(event: any) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      const contenido = e.target.result;
-      const operaciones: Operacion[] = JSON.parse(contenido);
-      
-      //console.log('Operaciones cargadas:', operaciones);
-
-      // ahora podés trabajar con ellas
-      //this.probarErroresConOperaciones(operaciones);
-    };
-    reader.readAsText(file);
-  }
-
-  actualizarInformeVenta(){
-    this.objetoEditado.map(o=>{
-      this.asignacionComisionVenta(o)
-    })
-    //console.log("this.informesVenta: ",this.informesVenta);
-    
-  }
-
-  asignacionComisionVenta(op:ConId<Operacion>){
-    this.informesVenta = [];
-    op.cliente.vendedor?.forEach((idVend: number)=>{
-      let informeVenta: InformeVenta;
-      informeVenta = {
-        idInfVenta: new Date().getTime() + Math.floor(Math.random() * 1000),
-        fecha: op.fecha,
-        idOperacion: op.idOperacion,
-        idCliente: op.cliente.idCliente,
-        idVendedor: idVend,
-        valoresOp: {
-          totalCliente: op.valores.cliente.aCobrar,
-          totalChofer: op.valores.chofer.aPagar,
-        },
-        pago: false,
-      };
-      this.informesVenta.push(informeVenta);
-    })
-  }
-
-  async guardarInformeVenta(){
-    //this.isLoading = true;
-    const resp = await this.dbFirebase.guardarMultipleGeneral(this.informesVenta, 'informesVenta', 'idInfVenta', this.informesVenta[0].idInfVenta)
-    if(resp.exito){
-      alert("actualizado correctamente")
-    } else {
-      alert(`error actualizando. errr: ${resp.mensaje}`)
-    }  
-  }
-
-  
-
+}
 
 }

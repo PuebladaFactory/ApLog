@@ -1,0 +1,162 @@
+<div class="d-flex justify-content-end mb-1 gap-2 position-relative">
+    <button class="btn btn-sm btn-outline-secondary" (click)="limpiarFiltros()">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            fill="currentColor"
+            class="bi bi-eraser"
+            viewBox="0 0 16 16"
+        >
+            <path
+                d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293z"
+            />
+        </svg>
+    </button>
+    <button
+        class="btn btn-sm btn-outline-secondary"
+        (click)="mostrarPanelColumnas = !mostrarPanelColumnas"
+    >
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            fill="currentColor"
+            class="bi bi-gear"
+            viewBox="0 0 16 16"
+        >
+            <path
+                d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"
+            />
+            <path
+                d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52z"
+            />
+        </svg>
+    </button>
+
+    @if (mostrarPanelColumnas) {
+        <div class="panel-columnas mt-5">
+            <strong class="d-block mb-2" style="font-size: 0.85rem"
+                >Columnas visibles</strong
+            >
+            @for (col of columnas; track col.field) {
+                <div class="form-check">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        [id]="'col-' + col.field"
+                        [checked]="col.visible"
+                        (change)="toggleColumna(col)"
+                    />
+                    <label class="form-check-label" [for]="'col-' + col.field">
+                        {{ col.header }}
+                    </label>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<div class="tabla-wrapper">
+    <table class="table table-bordered table-striped table-hover mb-0">
+        @if (filtroKey >= 0) {
+            <thead>
+                <tr>
+                    @for (
+                        col of columnasVisibles;
+                        track col.field;
+                        let i = $index
+                    ) {
+                        <th
+                            [style.width.px]="col.width"
+                            [style.min-width.px]="col.width"
+                            draggable="true"
+                            (dragstart)="onDragStart(i)"
+                            (dragover)="onDragOver($event, i)"
+                            (drop)="onDrop(i)"
+                            (dragend)="onDragEnd()"
+                            
+                        >
+                            <div
+                                class="th-inner"
+                                (click)="ordenarPor(col.field)"
+                            >
+                                <span
+                                    class="th-drag"
+                                    (click)="$event.stopPropagation()"
+                                    >⠿</span
+                                >
+                                <span class="th-label">{{ col.header }}</span>
+                                @if (col.sortable !== false) {
+                                    <span class="th-orden">{{
+                                        iconoOrden(col.field)
+                                    }}</span>
+                                }
+                            </div>
+                            <div class="th-filter">
+                                <input
+                                    type="text"
+                                    placeholder="Buscar..."
+                                    [value]="filtros[col.field] ?? ''"
+                                    (input)="
+                                        onFiltroChange(
+                                            col.field,
+                                            $any($event.target).value
+                                        )
+                                    "
+                                    (click)="$event.stopPropagation()"
+                                />
+                            </div>
+                            <div
+                                class="th-resize"
+                                (mousedown)="onResizeStart($event, i)"
+                                (click)="$event.stopPropagation()"
+                            ></div>
+                        </th>
+                    }
+                    <th
+                        class="th-acciones"
+                        style="
+                            width: 125px !important ;
+                            max-width: 130px !important;
+                        "
+                    >
+                        <span class="th-inner">Acciones</span>
+                    </th>
+                </tr>
+            </thead>
+        }
+        <tbody class="table-group-divider">
+            @if (filasFiltradas.length > 0) {
+                @for (fila of filasFiltradas; track $index) {
+                    <tr>
+                        @for (col of columnasVisibles; track col.field) {
+                            <td [style.max-width.px]="col.width">
+                                {{ fila[col.field] }}
+                            </td>
+                        }
+                        <td
+                            
+                            style="right: 0; background: white"
+                        >
+                            <app-tabla-acciones
+                                [fila]="fila"
+                                [acciones]="acciones"
+                            >
+                            </app-tabla-acciones>
+                        </td>
+                    </tr>
+                }
+            } @else {
+                <tr>
+                    <td
+                        [attr.colspan]="columnasVisibles.length + 1"
+                        class="text-center text-muted py-3"
+                    >
+                        Sin resultados
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

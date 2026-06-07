@@ -1,0 +1,103 @@
+<div style="padding: 2rem;">
+  <h2>Herramienta de Migración</h2>
+
+  <div style="margin-bottom: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem;">
+    <h4>Migración inicial</h4>
+    <button
+      (click)="migrarChoferes()"
+      [disabled]="ejecutando"
+      class="btn btn-warning me-2">
+      Migrar Choferes
+    </button>
+    <p *ngIf="estadoChoferes" style="margin-top: 0.5rem;">{{ estadoChoferes }}</p>
+  </div>
+
+  <div style="margin-bottom: 1rem;">
+    <button
+      (click)="migrarClientes()"
+      [disabled]="ejecutando"
+      class="btn btn-warning me-2">
+      Migrar Clientes
+    </button>
+    <p *ngIf="estadoClientes" style="margin-top: 0.5rem;">{{ estadoClientes }}</p>
+  </div>
+
+  <div style="margin-bottom: 1rem;">
+    <button
+      (click)="migrarProveedores()"
+      [disabled]="ejecutando"
+      class="btn btn-warning me-2">
+      Migrar Proveedores
+    </button>
+    <p *ngIf="estadoProveedores" style="margin-top: 0.5rem;">{{ estadoProveedores }}</p>
+  </div>
+
+  <div style="margin-bottom: 1rem;">
+    <button
+      (click)="migrarVehiculosProveedores()"
+      [disabled]="ejecutando"
+      class="btn btn-warning me-2">
+      Migrar Vehículos de Proveedores
+    </button>
+    <p *ngIf="estadoVehiculosProveedores" style="margin-top: 0.5rem;">{{ estadoVehiculosProveedores }}</p>
+  </div>
+
+  <div style="margin-bottom: 2rem;">
+    <h4>Correcciones</h4>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="corregirIdChoferes()"
+        [disabled]="ejecutando"
+        class="btn btn-secondary me-2">
+        Eliminar idChofer de documentos
+      </button>
+      <p *ngIf="estadoCorreccionChoferes" style="margin-top: 0.5rem;">{{ estadoCorreccionChoferes }}</p>
+    </div>
+    <div>
+      <button
+        (click)="corregirIdVehiculos()"
+        [disabled]="ejecutando"
+        class="btn btn-secondary me-2">
+        Eliminar idVehiculo de documentos
+      </button>
+      <p *ngIf="estadoCorreccionVehiculos" style="margin-top: 0.5rem;">{{ estadoCorreccionVehiculos }}</p>
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="corregirIdClientes()"
+        [disabled]="ejecutando"
+        class="btn btn-secondary me-2">
+        Eliminar idCliente de documentos
+      </button>
+      <p *ngIf="estadoCorreccionClientes" style="margin-top: 0.5rem;">
+        {{ estadoCorreccionClientes }}
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+    <h4>Verificaciones previas</h4>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="verificarCuits()"
+        [disabled]="ejecutando"
+        class="btn btn-info me-2">
+        Verificar unicidad de CUITs
+      </button>
+      <p *ngIf="estadoVerificacionCuits" style="margin-top: 0.5rem;">
+        {{ estadoVerificacionCuits }}
+      </p>
+      <div *ngIf="duplicadosCuits.length > 0" style="margin-top: 0.5rem;">
+        <p><strong>CUITs duplicados encontrados:</strong></p>
+        <ul>
+          <li *ngFor="let d of duplicadosCuits">
+            <strong>CUIT {{ d.cuit }}:</strong>
+            <ul>
+              <li *ngFor="let ch of d.choferes">{{ ch }}</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

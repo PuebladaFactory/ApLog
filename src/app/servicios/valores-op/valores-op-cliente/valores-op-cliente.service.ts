@@ -72,8 +72,8 @@ export class ValoresOpClienteService {
     };
 
     //console.log("$facturarOpCliente) op: ", op, " tarifa: ", tarifa);
-    let vehiculo = op.chofer.vehiculo.filter(
-      (vehiculo) => vehiculo.dominio === op.patenteChofer,
+    let vehiculo = ((op.chofer as any).vehiculo ?? []).filter(
+      (vehiculo: any) => vehiculo.dominio === op.patenteChofer,
     );
     ////console.log("1c) vehiculo: ", vehiculo);
 
@@ -276,9 +276,9 @@ this.tarifaBase = op.tarifaEventual.cliente.valor * op.multiplicadorCliente;
     this.facturaOpCliente = {
       idInfOp: new Date().getTime() + Math.floor(Math.random() * 1000),
       idOperacion: op.idOperacion,
-      idCliente: op.cliente.idCliente,
-      idChofer: op.chofer.idChofer,
-      idProveedor: op.chofer.idProveedor,
+      idCliente: Number(op.cliente.idCliente),
+      idChofer: Number(op.chofer.idChofer),
+      idProveedor: (op.chofer.contratacion as any).idProveedor ?? 0,
       idTarifa: idTarifa,
       fecha: op.fecha,
       valores: {
@@ -318,7 +318,7 @@ this.tarifaBase = op.tarifaEventual.cliente.valor * op.multiplicadorCliente;
 
   valoresInicialesTarifaGral(op: Operacion, tarifa: TarifaGralCliente) {
     let vehiculo;
-    vehiculo = op.chofer.vehiculo.filter((vehiculo: Vehiculo) => {
+    vehiculo = ((op.chofer as any).vehiculo ?? []).filter((vehiculo: Vehiculo) => {
       return vehiculo.dominio === op.patenteChofer;
     });
     let categoria = vehiculo[0].categoria.catOrden;

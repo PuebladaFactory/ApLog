@@ -136,8 +136,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
             aCobrar: 0,
             aPagar: 0,
           },
-          patenteChofer:
-            chofer.vehiculo.length === 1 ? chofer.vehiculo[0].dominio : "",
+          patenteChofer: "",
           estado: {
             abierta: true,
             cerrada: false,
@@ -258,7 +257,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
   }
 
   agruparOperacionesPorCliente(): void {
-    const mapa = new Map<number, OperacionRuntime[]>();
+    const mapa = new Map<string, OperacionRuntime[]>();
 
     for (const op of this.operaciones) {
       if (!mapa.has(op.cliente.idCliente)) mapa.set(op.cliente.idCliente, []);
@@ -269,7 +268,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
       ([clienteId, operaciones]) => {
         const razonSocial = operaciones[0].cliente.razonSocial;
         const tipo = this.getTarifaActiva(operaciones[0]);
-        return { clienteId, razonSocial, tipo, operaciones };
+        return { clienteId: Number(clienteId), razonSocial, tipo, operaciones }; // TODO: migrar a string cuando se refactorice este módulo
       },
     );
   }
@@ -282,7 +281,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     const errores: string[] = [];
 
     if (!op.patenteChofer?.trim()) {
-      errores.push(`Debe seleccionar patente — ${op.chofer.apellido}`);
+      errores.push(`Debe seleccionar patente — ${op.chofer.datosPersonales.apellido}`);
     }
 
     const activa = this.getTarifaActiva(op);
@@ -344,7 +343,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     }).then((result) => {
       if (result.isConfirmed) {
 
-        const asignaciones: { [idCliente: number]: ChoferAsignadoBase[] } = {};
+        const asignaciones: { [idCliente: string]: ChoferAsignadoBase[] } = {};
 
         for (const op of this.operaciones) {
           const idCliente = op.cliente.idCliente;
@@ -420,28 +419,17 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
   
   private limpiarPropiedadesChoferEnOperaciones(operaciones: Operacion[]): void {
     operaciones.map(op => {
-      const choferOriginal: Chofer = {
+      op.chofer = {
         idChofer: op.chofer.idChofer,
-        nombre: op.chofer.nombre,
-        apellido: op.chofer.apellido,
-        cuit: op.chofer.cuit,
-        celularContacto: op.chofer.celularContacto,
-        celularEmergencia: op.chofer.celularEmergencia,
-        contactoEmergencia: op.chofer.contactoEmergencia,
-        direccion: op.chofer.direccion,
-        email: op.chofer.email,
-        fechaNac: op.chofer.fechaNac,
-        vehiculo: op.chofer.vehiculo,
+        datosPersonales: op.chofer.datosPersonales,
         condFiscal: op.chofer.condFiscal,
-        idProveedor: op.chofer.idProveedor,
+        contratacion: op.chofer.contratacion,
         tarifaTipo: op.chofer.tarifaTipo,
         tarifaAsignada: op.chofer.tarifaAsignada,
         idTarifa: op.chofer.idTarifa,
         activo: op.chofer.activo,
-        visible: op.chofer.visible ?? false
+        visible: op.chofer.visible ?? false,
       };
-
-      op.chofer = choferOriginal;
     });
   }
 }

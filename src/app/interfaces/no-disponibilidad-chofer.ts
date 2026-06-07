@@ -1,8 +1,8 @@
 export interface NoDisponibilidadChofer {
-    idNoDisponibilidad: number;     
-    idChofer: number;
-    desde: string; // YYYY-MM-DD
-    hasta: string | null;   // null = sin definir
+    idNoDisponibilidad: string;
+    idChofer: string;
+    desde: string;
+    hasta: string | null;
     motivo?: string;
     activa: boolean;
 }

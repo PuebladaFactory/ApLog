@@ -15,7 +15,7 @@ export class BuscarPorChoferPipe implements PipeTransform {
     return legajos.filter(l => {
       const chofer = choferes.find(c => c.idChofer === l.idChofer);
       if (!chofer) return false;
-      return `${chofer.apellido} ${chofer.nombre}`.toLowerCase().includes(search);
+      return `${chofer.datosPersonales.apellido} ${chofer.datosPersonales.nombre}`.toLowerCase().includes(search);
     });
   }
 }

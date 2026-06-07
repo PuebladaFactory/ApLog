@@ -51,9 +51,9 @@ export class HistorialMovimientosComponent implements OnInit {
       a.razonSocial.localeCompare(b.razonSocial),
     );
     this.choferes = this.storageService.loadInfo("choferes");
-    this.choferes = this.choferes.filter(c=> c.idProveedor === 0);
+    this.choferes = this.choferes.filter(c=> c.contratacion?.tipo === 'directo');
     this.choferes = this.choferes.sort((a, b) =>
-      a.apellido.localeCompare(b.apellido),
+      a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
     );
     this.proveedores = this.storageService.loadInfo("proveedores");
     this.proveedores = this.proveedores.sort((a, b) =>

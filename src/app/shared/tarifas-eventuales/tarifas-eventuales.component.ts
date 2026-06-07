@@ -20,7 +20,7 @@ export class TarifasEventualesComponent implements OnInit {
   $choferes!: Chofer[];
   $proveedores!: Proveedor[];
   objetos!: any [];
-  idConsulta!: number;
+  idConsulta!: any;
   limite: number = 5;
   seleccion: string = "";
   tarifasEventuales!: TarifaEventual[];
@@ -41,7 +41,7 @@ export class TarifasEventualesComponent implements OnInit {
     .subscribe(data => {
       if (data) {        
         this.$choferes = data;
-        this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));        
+        this.$choferes.sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido));        
       }
     });    
     this.storageService.getObservable<ConIdType<Cliente>>('clientes')
@@ -179,17 +179,17 @@ export class TarifasEventualesComponent implements OnInit {
   }
 
   getCliente(id: number){
-    let cliente: Cliente[] = this.$clientes.filter(c=>c.idCliente === id);
+    let cliente: Cliente[] = this.$clientes.filter(c=>c.idCliente === String(id));
     return cliente[0].razonSocial;
   }
 
-  getChofer(id: number){
+  getChofer(id: string){
     let chofer: Chofer[] = this.$choferes.filter(c=>c.idChofer === id);
-    return chofer[0].apellido + " " + chofer[0].nombre;
+    return chofer[0].datosPersonales.apellido + " " + chofer[0].datosPersonales.nombre;
   }
 
-  getProveedor(id:number){
-    let proveedor: Proveedor[] = this.$proveedores.filter(p=>p.idProveedor === id);
+  getProveedor(id: string | number){
+    let proveedor: Proveedor[] = this.$proveedores.filter(p=>p.idProveedor === String(id));
     return proveedor[0].razonSocial;
   }
 

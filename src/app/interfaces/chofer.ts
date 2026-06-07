@@ -1,55 +1,65 @@
-import { Proveedor } from "./proveedor";
-import { TarifaTipo } from "./tarifa-gral-cliente";
+export interface Chofer {
+    idChofer: string;
+    datosPersonales: DatosPersonales;
+    condFiscal: string;
+    contratacion: ContratacionChofer;
+    tarifaTipo: TarifaTipo;
+    tarifaAsignada: boolean;
+    idTarifa: string;
+    activo: boolean;
+    visible?: boolean;
+}
 
-export interface Chofer {    
-    idChofer: number;
+export type ContratacionChofer =
+    | { tipo: 'directo' }
+    | { tipo: 'proveedor'; idProveedor: string };
+
+export interface DatosPersonales {
     nombre: string;
     apellido: string;
     cuit: number;
+    fechaNac: Date;
+    email: string;
     celularContacto: number;
     celularEmergencia: number;
     contactoEmergencia: string;
-    direccion: Dirección;
-    email: string;
-    fechaNac: Date;
-    vehiculo: Vehiculo[];
-    condFiscal: string;
-    idProveedor: number;
-    tarifaTipo: TarifaTipo;
-    tarifaAsignada: boolean;
-    idTarifa:number;
-    activo:boolean;
-    visible?:boolean;
+    direccion: Direccion;
 }
 
 export interface Vehiculo {
+    idVehiculo: string;
     dominio: string;
-    marca:string;
+    marca: string;
     modelo: string;
-    tipoCombustible: string[];    
+    tipoCombustible: string[];
     categoria: Categoria;
     segSat: boolean;
-    //satelital: SeguimientoSatelital | null;
     satelital: string;
     tarjetaCombustible: boolean;
-    refrigeracion: boolean|null;
+    refrigeracion: boolean | null;
     publicidad: boolean;
+    asignadoA: AsignacionVehiculo;
 }
 
-export interface SeguimientoSatelital {
-    proveedor: string;
-    marcaGps: string;
-}
+export type AsignacionVehiculo =
+    | { tipo: 'chofer'; idChofer: string }
+    | { tipo: 'proveedor'; idProveedor: string };
 
 export interface Categoria {
-    catOrden:number;
-    nombre: string;    
+    catOrden: number;
+    nombre: string;
 }
 
-export interface Dirección {
+export interface Direccion {
     provincia: string;
     municipio: string;
     localidad: string;
     domicilio: string;
 }
 
+export interface TarifaTipo {
+    general: boolean;
+    especial: boolean;
+    eventual: boolean;
+    personalizada: boolean;
+}

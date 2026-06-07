@@ -189,7 +189,7 @@ export class ObjetoPapeleraComponent implements OnInit {
       
     }
 
-    getProveedor(id:number){
+    getProveedor(id: string){
       let proveedor:Proveedor[];
       proveedor = this.$proveedores.filter((p:Proveedor)=>{
         return p.idProveedor === id;
@@ -209,7 +209,7 @@ export class ObjetoPapeleraComponent implements OnInit {
 
     getCliente(id:number){
       let cliente
-      cliente = this.$clientes.find(c=> c.idCliente === id)
+      cliente = this.$clientes.find(c=> c.idCliente === String(id))
       if(cliente){
         return cliente.razonSocial
       } else {

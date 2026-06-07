@@ -93,7 +93,7 @@ export class ModalDetalleComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
     .subscribe(data => {
       this.$choferes = data;
-      this.$choferes = this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+      this.$choferes = this.$choferes.sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido)); // Ordena por el nombre del chofer
     });
     this.storageService.getObservable<ConIdType<Cliente>>("clientes")
     .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita

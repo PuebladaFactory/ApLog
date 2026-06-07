@@ -77,7 +77,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
     /// CHOFERES/CLIENTES/PROVEEDORES
     this.choferes = this.storageService.loadInfo("choferes");
     this.choferes = this.choferes.sort((a, b) =>
-      a.apellido.localeCompare(b.apellido),
+      a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
     ); // Ordena por el nombre del chofer
     this.clientes = this.storageService.loadInfo("clientes");
     this.clientes = this.clientes.sort((a, b) =>
@@ -202,7 +202,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
 
       for (const asig of vend.asignaciones) {
         const clienteInfo = this.clientes.find(
-          (c) => c.idCliente === asig.idCliente,
+          (c) => String(c.idCliente) === String(asig.idCliente), // TODO: migrar a string cuando se refactorice este módulo
         );
         if (!clienteInfo) continue;
 

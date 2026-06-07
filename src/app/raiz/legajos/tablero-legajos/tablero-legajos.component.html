@@ -14,7 +14,7 @@
                 @for (p of $proveedores ; track p) {
                   <li class="dropdown-item" (click)="filtrarChoferes(p.idProveedor, p.razonSocial)">{{p.razonSocial}}</li>
                 }
-                <li class="dropdown-item" (click)="filtrarChoferes(0, '')">Limpiar Filtro</li>
+                <li class="dropdown-item" (click)="filtrarChoferes('', '')">Limpiar Filtro</li>
             </ul>
         </div>
     </div>

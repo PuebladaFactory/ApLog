@@ -128,7 +128,7 @@
                                 [title]="clientesAsignados(chofer).join(', ')"
                                 
                               >
-                                {{ chofer.apellido }}, {{ chofer.nombre }}
+                                {{ chofer.datosPersonales.apellido }}, {{ chofer.datosPersonales.nombre }}
                                 <span *ngIf="asignacionesMultiples(chofer) > 1" class="badge bg-secondary ms-1">
                                   x{{ asignacionesMultiples(chofer) }}
                                 </span>
@@ -165,7 +165,7 @@
                             style="cursor: pointer"
                             (dblclick)="abrirEdicionChofer(chofer, modalEditarChofer)"
                           >                  
-                              <span>{{chofer.apellido}} {{chofer.nombre}}</span>
+                              <span>{{chofer.datosPersonales?.apellido}} {{chofer.datosPersonales?.nombre}}</span>
                               <span *ngIf="chofer.observaciones || chofer.hojaDeRuta" class="ms-2 text-info" title="Tiene información">
                                 📝
                               </span>
@@ -194,7 +194,7 @@
                             
 
                             <div class="chofer-card" *ngFor="let chofer of choferesNoOperativos" class="mb-2 p-2 rounded chofer-ubicado d-flex justify-content-between fw-bold bg-light" [title]="getMotivoNoDisponibilidad(chofer.idChofer)">
-                              {{ chofer.apellido }}, {{ chofer.nombre }}
+                              {{ chofer.datosPersonales.apellido }}, {{ chofer.datosPersonales.nombre }}
                             </div>
                         </div>
                     </div>
@@ -212,7 +212,7 @@
     <div *ngIf="choferEditable">
         <div class="modal-header">
             <h3 class="modal-title">
-              {{ choferEditable.apellido }}, {{ choferEditable.nombre }}
+              {{ choferEditable.datosPersonales?.apellido }}, {{ choferEditable.datosPersonales?.nombre }}
             </h3>
             <button type="button" class="btn-close" aria-label="Cerrar" (click)="modal.dismiss()"></button>
         </div>

@@ -320,7 +320,7 @@ export class TarifasService {
         this.storageService.loadInfo("tarifasPersCliente");
 
       let tarifaVieja = tPersonalizadas.find(
-        (t) => t.idCliente === cliente.idCliente,
+        (t) => String(t.idCliente) === String(cliente.idCliente),
       );
 
       const db = this.firestore;

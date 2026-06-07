@@ -34,6 +34,7 @@ export interface InformeLiq {
 }
 
 export interface EntidadLiq {
+    // TODO: migrar a string cuando se refactorice este módulo (ID unificado con ConIdType.id)
     id: number;                       // ID del cliente/chofer/proveedor
     razonSocial: string;                  // Nombre o razón social    
     cuit?: number;                   // Opcional, dependiendo si es persona física o no

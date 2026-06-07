@@ -1,0 +1,14 @@
+<div class="d-flex gap-1">
+  @if (tieneAccion('vehiculos')) {
+    <app-btn-leer name="Vehiculos" (click)="ejecutar('vehiculos')"></app-btn-leer>
+  }
+  @if (tieneAccion('ver')) {
+    <app-btn-leer name="DetalleColor" (click)="ejecutar('ver')"></app-btn-leer>
+  }
+  @if (tieneAccion('editar')) {
+    <app-btn-editar name="EditarColor" (click)="ejecutar('editar')"></app-btn-editar>
+  }
+  @if (tieneAccion('eliminar')) {
+    <app-btn-eliminar name="EliminarColor" (click)="ejecutar('eliminar')"></app-btn-eliminar>
+  }
+</div>

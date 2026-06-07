@@ -61,7 +61,7 @@ export class CargaMultipleComponent implements OnInit {
   fechaSeleccionada: string | null = null;
   clienteSeleccionado: Cliente | null = null;
 
-  choferesSeleccionadosIds = new Set<number>();
+  choferesSeleccionadosIds = new Set<string>();
 
   operaciones: OperacionRuntime[] = [];
   operacionesAgrupadas: GrupoTabla[] = [];
@@ -72,7 +72,7 @@ export class CargaMultipleComponent implements OnInit {
   // Resultado por fecha
   choferesNoOperativos: Chofer[] = [];
   choferesDisponibles: Chofer[] = [];
-  noOperativosSet = new Set<number>();
+  noOperativosSet = new Set<string>();
 
   tarifaGeneral!: TarifaGralCliente;
 
@@ -130,7 +130,7 @@ export class CargaMultipleComponent implements OnInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         this.choferes = data.sort((a, b) =>
-          a.apellido.localeCompare(b.apellido),
+          a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
         );
         this.choferesActivos = this.choferes.filter((c) => c.activo);
         this.choferesInactivos = this.choferes.filter((c) => !c.activo);
@@ -171,7 +171,7 @@ export class CargaMultipleComponent implements OnInit {
      Chofer selection
   ========================= */
 
-  toggleChofer(idChofer: number, checked: boolean) {
+  toggleChofer(idChofer: string, checked: boolean) {
     if (checked) this.choferesSeleccionadosIds.add(idChofer);
     else this.choferesSeleccionadosIds.delete(idChofer);
   }
@@ -257,8 +257,7 @@ export class CargaMultipleComponent implements OnInit {
         chofer: { concepto: "", valor: 0 },
         cliente: { concepto: "", valor: 0 },
       },
-      patenteChofer:
-        chofer.vehiculo.length === 1 ? chofer.vehiculo[0].dominio : "",
+      patenteChofer: "",
       estado: {
         abierta: true,
         cerrada: false,
@@ -355,7 +354,7 @@ export class CargaMultipleComponent implements OnInit {
 
     this.operacionesAgrupadas = [
       {
-        clienteId: cliente.idCliente,
+        clienteId: Number(cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
         razonSocial: cliente.razonSocial,
         tipo: this.getTarifaActiva(this.operaciones[0]),
         operaciones: this.operaciones,
@@ -631,7 +630,7 @@ export class CargaMultipleComponent implements OnInit {
     const errores: string[] = [];
 
     if (!op.patenteChofer?.trim()) {
-      errores.push(`Debe seleccionar patente — ${op.chofer.apellido}`);
+      errores.push(`Debe seleccionar patente — ${op.chofer.datosPersonales.apellido}`);
     }
 
     const activa = this.getTarifaActiva(op);

@@ -61,8 +61,8 @@ export class ValoresOpChoferService {
       msj: string;
     };
     ////console.log("1)Chofer Serv:  op: ", op, " tarifa: ", tarifa);
-    let vehiculo = op.chofer.vehiculo.filter(
-      (vehiculo) => vehiculo.dominio === op.patenteChofer,
+    let vehiculo = ((op.chofer as any).vehiculo ?? []).filter(
+      (vehiculo: any) => vehiculo.dominio === op.patenteChofer,
     );
     ////console.log("1c) vehiculo: ", vehiculo);
 
@@ -95,7 +95,7 @@ export class ValoresOpChoferService {
     }
 
     ////////console.log("km valor: ", this.kmValor);
-    this.$crearFacturaOpChofer(op, tarifa.idTarifa, 0);
+    this.$crearFacturaOpChofer(op, tarifa.idTarifa, '');
     respuesta = {
       op: op,
       factura: this.facturaOpChofer,
@@ -109,7 +109,7 @@ export class ValoresOpChoferService {
   $facturarOpPersChofer(
     op: Operacion,
     tarifa: TarifaPersonalizadaCliente,
-    idProveedor: number,
+    idProveedor: string,
     tGeneral: TarifaGralCliente,
   ) {
     let respuesta: {
@@ -165,7 +165,7 @@ export class ValoresOpChoferService {
 
   $facturarOpEveChofer(
     op: Operacion,
-    idProveedor: number,
+    idProveedor: string,
     tGeneral: TarifaGralCliente,
   ) {
     let respuesta: {
@@ -262,12 +262,12 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
     return montoTotal;
   }
 
-  $crearFacturaOpChofer(op: Operacion, idTarifa: number, idProveedor: number) {
+  $crearFacturaOpChofer(op: Operacion, idTarifa: number, idProveedor: string) {
     this.facturaOpChofer = {
       idInfOp: new Date().getTime() + Math.floor(Math.random() * 1000),
       idOperacion: op.idOperacion,
-      idCliente: op.cliente.idCliente,
-      idChofer: op.chofer.idChofer,
+      idCliente: Number(op.cliente.idCliente),
+      idChofer: Number(op.chofer.idChofer),
       idProveedor: idProveedor,
       idTarifa: idTarifa,
       fecha: op.fecha,
@@ -317,7 +317,7 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
   $facturarOpProveedor(
     op: Operacion,
     tarifa: TarifaGralCliente,
-    idProveedor: number,
+    idProveedor: string,
   ) {
     let respuesta: {
       op: Operacion;
@@ -326,8 +326,8 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
       msj: string;
     };
     ////console.log("1)Proveedor Serv:  op: ", op, " tarifa: ", tarifa);
-    let vehiculo = op.chofer.vehiculo.filter(
-      (vehiculo) => vehiculo.dominio === op.patenteChofer,
+    let vehiculo = ((op.chofer as any).vehiculo ?? []).filter(
+      (vehiculo: any) => vehiculo.dominio === op.patenteChofer,
     );
     ////////console.log("1c) vehiculo: ", vehiculo);
 
@@ -369,7 +369,7 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
 
   valoresInicialesTarifaGral(op: Operacion, tarifa: TarifaGralCliente) {
     let vehiculo;
-    vehiculo = op.chofer.vehiculo.filter((vehiculo: Vehiculo) => {
+    vehiculo = ((op.chofer as any).vehiculo ?? []).filter((vehiculo: Vehiculo) => {
       return vehiculo.dominio === op.patenteChofer;
     });
     let categoria = vehiculo[0].categoria.catOrden;

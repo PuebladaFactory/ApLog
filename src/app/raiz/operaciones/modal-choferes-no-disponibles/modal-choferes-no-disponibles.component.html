@@ -23,7 +23,7 @@
               <option value="">Seleccione chofer</option>
               @for (c of choferes; track c) {
                 <option [value]="c.idChofer">
-                    {{ c.apellido }}, {{ c.nombre }}
+                    {{ c.datosPersonales.apellido }}, {{ c.datosPersonales.nombre }}
                 </option>
               }
               

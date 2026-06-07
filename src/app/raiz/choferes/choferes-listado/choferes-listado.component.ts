@@ -1,457 +1,371 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
-import { Subject, takeUntil } from 'rxjs';
-import { Chofer } from 'src/app/interfaces/chofer';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { Proveedor } from 'src/app/interfaces/proveedor';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { AccionesCellRendererComponent } from 'src/app/shared/tabla/ag-cell-renderers/acciones-cell-renderer/acciones-cell-renderer.component';
-import Swal from 'sweetalert2';
-import { ChoferesAltaComponent } from '../choferes-alta/choferes-alta.component';
-import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
-import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
+import { Component, OnDestroy, OnInit } from "@angular/core";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { Subject, takeUntil } from "rxjs";
+import { Chofer, Vehiculo } from "src/app/interfaces/chofer";
+import { Cliente } from "src/app/interfaces/cliente";
+import { ConId, ConIdType } from "src/app/interfaces/conId";
+import { Proveedor } from "src/app/interfaces/proveedor";
+import { StorageService } from "src/app/servicios/storage/storage.service";
+import { ColumnaTabla, AccionTabla } from "src/app/interfaces/tabla";
+import Swal from "sweetalert2";
+import { ChoferesAltaComponent } from "../choferes-alta/choferes-alta.component";
+import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
+import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
+import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
+import { VisibilidadListadosComponent } from "src/app/shared/modales/visibilidad-listados/visibilidad-listados.component";
+import { ChoferService } from "src/app/servicios/choferes/chofer.service";
+import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
 
 @Component({
-  selector: 'app-choferes-listado',
+  selector: "app-choferes-listado",
   standalone: false,
-  templateUrl: './choferes-listado.component.html',
-  styleUrl: './choferes-listado.component.scss'
+  templateUrl: "./choferes-listado.component.html",
+  styleUrl: "./choferes-listado.component.scss",
 })
 export class ChoferesListadoComponent implements OnInit, OnDestroy {
+  componente: string = "choferes";
+  $choferes!: ConIdType<Chofer>[];
+  $proveedores!: ConIdType<Proveedor>[];
+  choferesActualizados: any[] = [];
+  private destroy$ = new Subject<void>();
 
-  rowData: any[] = [];
-    paginatedRows: any[] = [];
-    private gridApi!: GridApi;  
-    visibleColumns: string[] = [];
-    ajustes = false;
-    componente: string = 'choferes';
-    //context = { componentParent: this };
-    allColumnDefs: ColDef[] = [
-      { field: 'idChofer', headerName: 'Id Chofer', hide: true, flex: 2 },
-      { field: 'apellido', headerName: 'Apellido', flex: 2 },
-      { field: 'nombre', headerName: 'Nombre', flex: 2 },      
-      { field: 'celular', headerName: 'Celular', flex: 2 },
-      { field: 'celularEmergencia', headerName: 'Cel Emergencia', hide: true, flex: 2 },
-      { field: 'direccion', headerName: 'Dirección', flex: 2 },
-      { field: 'cuit', headerName: 'CUIT', flex: 2 },
-      { field: 'condFiscal', headerName: 'Condición Fiscal', hide:true, flex: 2 },
-      { field: 'proveedor', headerName: 'Proveedor', flex: 2 },
-      { field: 'tarifa', headerName: 'Tarifa', flex: 2 },            
-      { field: 'correo', headerName: 'Correo', flex: 2 },   
-      { field: 'fechaNac', headerName: 'Fecha Nac', hide: true, flex: 2 },
+  choferesFiltrados: ConIdType<Chofer>[] = [];
+  filtroEstado: "visibles" | "todos" = "visibles";
+
+  choferesMock: ConIdType<Chofer>[] = [];
+  isLoading: boolean = false;
+  usuario: any;
+  $vehiculos!: ConIdType<Vehiculo>[];
+
+  columnas: ColumnaTabla[] = [];
+  filas: any[] = [];
+  accionesTabla: AccionTabla[] = [];
+
+  constructor(
+    private storageService: StorageService,
+    private modalService: NgbModal,
+    private dbFirebase: DbFirestoreService,
+    private excelServ: ExcelService,
+    private choferService: ChoferService,
+    private proveedorService: ProveedorService,
+  ) {}
+
+  ngOnInit(): void {
+    this.proveedorService.proveedores$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        this.$proveedores = data;
+        console.log("aca proveedores: ", this.$proveedores);
+      });
+    this.choferService.choferes$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        this.$choferes = data;
+        this.$choferes.sort((a, b) =>
+          a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido),
+        );
+        this.aplicarFiltro(); // 👈 clave
+        console.log("aca choferes: ", this.$choferes);
+      });
+    this.choferService.vehiculos$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        this.$vehiculos = data;
+        console.log("aca vehiculos: ", this.$vehiculos);
+      });
+    let user = this.storageService.loadInfo("usuario");
+    this.usuario = user[0];
+
+    this.columnas = [
+      { field: 'idChofer', header: 'Id', visible: false, width: 100 },
+      { field: 'apellido', header: 'Apellido', visible: true, width: 150 },
+      { field: 'nombre', header: 'Nombre', visible: true, width: 150 },      
+      { field: 'cuit', header: 'CUIT', visible: true, width: 90 },      
+      { field: 'celular', header: 'Celular', visible: true, width: 90 },
+      { field: 'email', header: 'Email', visible: true, width: 140 },
+      //{ field: 'contratacion', header: 'Contratación', visible: true, width: 120 },
+      { field: 'proveedor', header: 'Proveedor', visible: true, width: 120 },
+      { field: 'tarifa', header: 'Tarifa', visible: true, width: 90 },
+      { field: 'activo', header: 'Estado', visible: false, width: 90 },      
+      
     ];
-  
-    agColumnDefs: ColDef[] = [];
-  
-    defaultColDef: ColDef = {
-      sortable: true,
-      filter: true,
-      floatingFilter: false,
-      resizable: true,
-    };
-    $choferes!: ConIdType<Chofer>[] ;
-    $proveedores!: ConId<Proveedor>[];    
-    choferEditar!: ConIdType<Chofer>;
-    choferesActualizados: any[] = [];
-    private destroy$ = new Subject<void>();
 
-    choferesFiltrados: ConIdType<Chofer>[] = [];
-    filtroEstado: 'visibles' | 'todos' = 'visibles';
-
-    choferesMock: ConIdType<Chofer>[] = [];
-    isLoading: boolean = false;
-    usuario:any;
-  
-    constructor(
-      private storageService: StorageService, 
-      private modalService: NgbModal, 
-      private dbFirebase: DbFirestoreService,
-      private excelServ: ExcelService
-    ) {}
-  
-    ngOnInit(): void {
-      this.cargarConfiguracionColumnas(); // Esto setea visibleColumns
-      this.construirColumnDefs();         // Ahora sí, construye columnas visibles
-      this.storageService.getObservable<ConId<Proveedor>>('proveedores')
-          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-          .subscribe(data => {
-            this.$proveedores = data;
-      }); 
-      this.storageService.getObservable<ConIdType<Chofer>>('choferes')
-          .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-          .subscribe(data => {
-            if (data) {
-              console.log('Datos choferes actualizados:', data);
-              this.$choferes = data; // Clona el array para evitar problemas con referencias
-              this.$choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
-              this.aplicarFiltro(); // 👈 clave
-            }
-      });    
-            let user = this.storageService.loadInfo('usuario');
-      this.usuario = user[0];                 
-    }
-
-    aplicarFiltro(): void {
-      if (this.filtroEstado === 'visibles') {
-        this.choferesFiltrados = this.$choferes.filter(c => c.visible === true);
-      } else {
-        this.choferesFiltrados = [...this.$choferes];
-      }
-
-      this.armarTabla();
-    }
-  
-    armarTabla(): void {
-      let indice = 0
-      this.rowData = this.choferesFiltrados.map((chofer:ConIdType<Chofer>) => ({
-        indice: indice ++,
-        idChofer: chofer.idChofer,
-        apellido: chofer.apellido,
-        nombre: chofer.nombre,
-        celular: chofer.celularContacto,
-        celularEmergencia: chofer.celularEmergencia,
-        direccion: `${chofer.direccion.domicilio}, ${chofer.direccion.localidad}, ${chofer.direccion.provincia} `,
-        cuit: this.formatCuit(chofer.cuit),
-        condFiscal: chofer.condFiscal,
-        proveedor: chofer.idProveedor === 0 ? "No" : this.getProveedor(chofer.idProveedor),
-        tarifa: chofer.idProveedor !== 0 ? "Tarifa Proveedor" : chofer.tarifaTipo?.general ? "General" : chofer.tarifaTipo?.especial ? "Especial" : chofer.tarifaTipo?.personalizada ? "Personalizada" : "Eventual",
-        correo: chofer.email,
-        fechaNac: chofer.fechaNac,
-        chofer: chofer, // guardamos el objeto para acciones
-      }));
-    }
-
-    cambiarFiltro(valor: 'visibles' | 'todos'): void {
-      this.filtroEstado = valor;
-      this.aplicarFiltro();
-    }
-  
-    private cargarConfiguracionColumnas(): void {
-      const saved = this.storageService.loadInfo('columnasVisiblesChoferes');
-      console.log("saved", saved);
-      
-      if (Array.isArray(saved) && saved.length) {
-        this.visibleColumns = saved;
-      } else {
-        // Mostrar por defecto las columnas deseadas
-        this.visibleColumns = [
-          'apellido', 'nombre', 'celular', 'direccion', 'cuit', 'proveedor',
-          'tarifa', 'correo'
-        ];
-      }
-    }
-  
-  private construirColumnDefs(): void {
-    const columnas: ColDef[] = [];
-  
-    // Clonamos y marcamos si debe ocultarse
-    const definidas = this.allColumnDefs.map(col => ({
-      ...col,
-      hide: !this.visibleColumns.includes(col.field!)
-    }));
-  
-    columnas.push(...definidas);
-  
-    // Agregamos columna de acciones al final
-    columnas.push({
-      headerName: 'Acciones',
-      field: 'acciones',
-      cellRenderer: AccionesCellRendererComponent,
-      cellRendererParams: {
-        buttons: ['detalle', 'editar', 'eliminar'],
-        onDetalle: (row: any) => this.abrirVista(row),
-        onEditar: (row: any) => this.abrirEdicion(row),
-        onEliminar: (row: any) => this.eliminarChofer(row),
-      },
-      flex: 2,
-      filter: false,
-    });
-  
-    this.agColumnDefs = columnas;
-  
-    // Si el grid ya está listo, volver a aplicar definiciones
-    if (this.gridApi) {
-      this.gridApi.getColumnDefs();
-    }
+    this.accionesTabla = [
+      { tipo: 'ver', handler: (fila) => this.abrirVista(fila._objeto) },
+      { tipo: 'editar', handler: (fila) => this.abrirEdicion(fila._objeto) },
+      { tipo: 'eliminar', handler: (fila) => this.eliminarChofer(fila._objeto) },
+    ];
   }
-  
-    onGridReady(params: GridReadyEvent): void {
-      this.gridApi = params.api;
-    }
-  
-    onFirstDataRendered(): void {
-      // Opcional: aplicar estilos adicionales al header si querés
-      const header = document.querySelector('.ag-header') as HTMLElement;
-      if (header) {
-        header.classList.add('sticky-top'); // Solo si usás Bootstrap
-      }
-    }
-  
-  toggleColumnVisibility(colId: string): void {
-    const isVisible = this.visibleColumns.includes(colId);
-    if (isVisible) {
-      this.visibleColumns = this.visibleColumns.filter(c => c !== colId);
+
+  aplicarFiltro(): void {
+    if (this.filtroEstado === "visibles") {
+      this.choferesFiltrados = this.$choferes.filter((c) => c.visible === true);
     } else {
-      this.visibleColumns.push(colId);
+      this.choferesFiltrados = [...this.$choferes];
     }
-  
-    this.storageService.setInfo('columnasVisiblesChoferes', this.visibleColumns);
-    this.construirColumnDefs(); // reconstruir las columnas visibles y aplicar al grid
+
+    this.armarTabla();
   }
-  
-  
-     toogleAjustes(){      
-        this.ajustes = !this.ajustes;
+
+  armarTabla(): void {
+    this.filas = this.choferesFiltrados.map(c => ({
+      idChofer: c.idChofer,
+      apellido: c.datosPersonales.apellido,
+      nombre: c.datosPersonales.nombre,
+      cuit: this.formatCuit(c.datosPersonales.cuit),
+      celular: c.datosPersonales.celularContacto,
+      email: c.datosPersonales.email,
+      //contratacion: c.contratacion.tipo === 'directo' ? 'Directo' : 'Proveedor',
+      proveedor: c.contratacion.tipo === 'directo' ? 'No' : this.getProveedor(c.contratacion.idProveedor),
+      tarifa: c.contratacion.tipo === 'proveedor' ? 'Tarifa Proveedor' : c.tarifaTipo.general ? 'General' : c.tarifaTipo.especial ? 'Especial' : c.tarifaTipo.eventual ? 'Eventual' : 'Error',
+      activo: c.activo ? 'Activo' : 'Inactivo',
+      _objeto: c,
+    }));
+  }
+
+  cambiarFiltro(valor: "visibles" | "todos"): void {
+    this.filtroEstado = valor;
+    this.aplicarFiltro();
+  }
+
+  limpiarFiltros(): void {
+  }
+
+  abrirVista(chofer: ConIdType<Chofer>): void {
+    this.openModal('vista', chofer);
+  }
+
+  abrirEdicion(chofer: ConIdType<Chofer>): void {
+    this.openModal('edicion', chofer);
+  }
+
+  eliminarChofer(row: any): void {    
+    
+    const chofer = row as ConIdType<Chofer>;
+    console.log("chofer: ", chofer);
+    Swal.fire({
+      title: "¿Eliminar el Chofer?",
+      text: "No se podrá revertir esta acción",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.openModalBaja(chofer);
       }
-  
-      limpiarFiltros(): void {
-        if (this.gridApi) {
-          this.gridApi.setFilterModel(null);       // Limpia todos los filtros aplicados
-          this.gridApi.onFilterChanged();          // Fuerza actualización del grid
-        }
-      }
-   
-  
-    abrirVista(row: any) {
-      this.choferEditar = row.chofer;
-      this.openModal('vista');
-    }
-  
-    abrirEdicion(row: any) {
-      this.choferEditar = row.chofer;
-      this.openModal('edicion');
-    }
-  
-    eliminarChofer(row: any) {
-      this.choferEditar = row.chofer;
-      console.log("this.choferEditar", this.choferEditar);
-      
-      Swal.fire({
-        title: '¿Eliminar el Chofer?',
-        text: 'No se podrá revertir esta acción',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Confirmar',
-        cancelButtonText: 'Cancelar',
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.openModalBaja(row.idChofer);
-        }
-      });
-    }
-  
-    openModal(modo: string) {
-      const modalRef = this.modalService.open(ChoferesAltaComponent, {
-        windowClass: 'myCustomModalClass',
-        centered: true,
-        size: 'lg',
-      });
-  
-      modalRef.componentInstance.fromParent = {
-        modo,
-        item: this.choferEditar,
-      };
-    }
-  
-    openModalBaja(idCliente: number) {
-      const modalRef = this.modalService.open(BajaObjetoComponent, {
-        windowClass: 'myCustomModalClass',
-        centered: true,
-        scrollable: true,
-        size: 'sm',
-      });
-  
-      modalRef.componentInstance.fromParent = {
-        modo: 'Chofer',
-        item: this.choferEditar,
-      };
-      //let {id, type, ...chBaja} = this.choferEditar
-  
-      modalRef.result.then((result) => {
-        if (result !== undefined) {
-          this.storageService.deleteItemPapelera(
-            this.componente,
-            this.choferEditar,
-            this.choferEditar.idChofer,
-            'BAJA',
-            `Baja de Chofer ${this.choferEditar.apellido} ${this.choferEditar.nombre}`,
-            result
-          );
-          Swal.fire({
-            title: 'Confirmado',
-            text: 'El Chofer ha sido dado de baja',
-            icon: 'success',
+    });
+  }
+
+  openModal(modo: string, chofer?: ConIdType<Chofer>): void {
+    const modalRef = this.modalService.open(ChoferesAltaComponent, {
+      windowClass: "myCustomModalClass",
+      centered: true,
+      size: "lg",
+    });
+    modalRef.componentInstance.fromParent = {
+      modo,
+      item: chofer ?? null,
+    };
+  }
+
+  openModalBaja(chofer: ConIdType<Chofer>): void {
+    console.log("chofer: ", chofer);
+    const modalRef = this.modalService.open(BajaObjetoComponent, {
+      windowClass: "myCustomModalClass",
+      centered: true,
+      scrollable: true,
+      size: "sm",
+    });
+
+    modalRef.componentInstance.fromParent = {
+      modo: "Chofer",
+      item: chofer,
+    };
+
+    modalRef.result.then((motivo) => {
+      if (motivo !== undefined) {
+        this.isLoading = true;
+        this.choferService
+          .eliminarChoferConVehiculos(chofer, motivo)
+          .then(() => {
+            this.isLoading = false;
+            Swal.fire(
+              "Confirmado",
+              "El Chofer ha sido dado de baja",
+              "success",
+            );
+          })
+          .catch((e) => {
+            this.isLoading = false;
+            Swal.fire(
+              "Error",
+              `No se pudo dar de baja el chofer: ${e.message}`,
+              "error",
+            );
           });
-        }
-      });
-    }
-  
-    formatCuit(cuitNumber: number | string): string {
-      const cuitString = cuitNumber.toString();
-      if (cuitString.length !== 11 || isNaN(Number(cuitString))) {
-        return 'Formato inválido';
       }
-      return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
-    }
+    });
+  }
 
-    getProveedor(idProveedor:number) {    
-      let proveedor:Proveedor[] = [];
-      proveedor = this.$proveedores.filter((p:Proveedor)=>{
-        return p.idProveedor === idProveedor;
-      });    
-      return proveedor[0].razonSocial
+  formatCuit(cuitNumber: number | string): string {
+    const cuitString = cuitNumber.toString();
+    if (cuitString.length !== 11 || isNaN(Number(cuitString))) {
+      return "Formato inválido";
     }
-  
-    ngOnDestroy(): void {
-      this.destroy$.next();
-      this.destroy$.complete();
-    }
+    return `${cuitString.slice(0, 2)}-${cuitString.slice(2, 10)}-${cuitString.slice(10)}`;
+  }
 
-    editarChoferes(){
-      
-      this.choferesActualizados = this.agregarCampoActivo(this.$choferes);
-      console.log("choferesActualizados", this.choferesActualizados);
-      
+  getProveedor(idProveedor: string) {
+    let proveedor: ConIdType<Proveedor> | undefined;
+    proveedor = this.$proveedores.find((p: Proveedor) => {
+      return p.idProveedor === idProveedor;
+    });
+    if (proveedor) {
+      return proveedor.razonSocial;
+    } else {
+      return "sin datos del proveedor";
     }
+  }
 
-    agregarCampoActivo(choferes: any): ConIdType<Chofer>[] {
-      return choferes.map((chofer:any) => {
-        return {
-          ...chofer,
-          activo: true
-        };
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  editarChoferes() {
+    this.choferesActualizados = this.agregarCampoActivo(this.$choferes);
+    console.log("choferesActualizados", this.choferesActualizados);
+  }
+
+  agregarCampoActivo(choferes: any): ConIdType<Chofer>[] {
+    return choferes.map((chofer: any) => {
+      return {
+        ...chofer,
+        activo: true,
+      };
+    });
+  }
+
+  actualizarChoferes() {
+    this.dbFirebase.actualizarMultiple(this.choferesActualizados, "choferes");
+  }
+
+  descargarChoferes() {
+    this.excelServ.exportarChoferesTablaExcel(this.choferesFiltrados);
+  }
+
+  visibilidadChoferes() {
+    {
+      const modalRef = this.modalService.open(VisibilidadListadosComponent, {
+        windowClass: "myCustomModalClass",
+        centered: true,
+        size: "md",
+        //backdrop:"static"
       });
-    }
-
-    actualizarChoferes(){
-      this.dbFirebase.actualizarMultiple(this.choferesActualizados, "choferes")
-    }
-
-
-    descargarChoferes(){
-       this.excelServ.exportarChoferesTablaExcel(this.choferesFiltrados)
-    }
-
-    visibilidadChoferes(){
-      {
-        const modalRef = this.modalService.open(VisibilidadListadosComponent, {
-          windowClass: 'myCustomModalClass',
-          centered: true,
-          size: 'md', 
-          //backdrop:"static" 
-        });      
 
       let info = {
-          tipo: 'choferes',
-          objetos: this.$choferes,
-        } 
-        //console.log()(info); */
-        
-        modalRef.componentInstance.info = info;
-        modalRef.result.then(
+        tipo: "choferes",
+        objetos: this.$choferes,
+      };
+      //console.log()(info); */
 
-          () => {
-            // modal cancelado → no hacemos nada
-          }
-        );
-      }
+      modalRef.componentInstance.info = info;
+      modalRef.result.then(() => {
+        // modal cancelado → no hacemos nada
+      });
     }
+  }
 
-    editarChoferesMock(){
+  editarChoferesMock() {
     this.choferesMock = structuredClone(this.$choferes);
     this.choferesMock = this.anonimizarChoferes(this.choferesMock);
-   
-    console.log("this.clientesActivo", this.choferesMock);   
-    
+
+    console.log("this.clientesActivo", this.choferesMock);
   }
 
-  public anonimizarChoferes(choferes: ConIdType<Chofer>[]): ConIdType<Chofer>[] {
-  return choferes.map(chofer => ({
-    ...chofer,
+  public anonimizarChoferes(
+    choferes: ConIdType<Chofer>[],
+  ): ConIdType<Chofer>[] {
+    return choferes.map((chofer) => ({
+      ...chofer,
 
-    nombre: this.randomString(10),
-    apellido: this.randomString(10),
-    cuit: this.randomNumber(11),
-    celularContacto: this.randomNumber(10),
-    celularEmergencia: this.randomNumber(10),
-    contactoEmergencia: this.randomString(10),
+      nombre: this.randomString(10),
+      apellido: this.randomString(10),
+      cuit: this.randomNumber(11),
+      celularContacto: this.randomNumber(10),
+      celularEmergencia: this.randomNumber(10),
+      contactoEmergencia: this.randomString(10),
 
-    direccion: {
-      ...chofer.direccion,
-      domicilio: this.randomString(10),
-    },
+      direccion: {
+        ...chofer.datosPersonales.direccion,
+        domicilio: this.randomString(10),
+      },
 
-    email: this.randomEmail(10),
+      email: this.randomEmail(10),
 
-    fechaNac: this.randomDate(),
+      fechaNac: this.randomDate(),
 
-    vehiculo: chofer.vehiculo.map(v => ({
+      /*     vehiculo: chofer.vehiculo.map(v => ({
       ...v,
       dominio: this.randomDominio(),
-    }))
-  }));
-}
-
-private randomString(length: number): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    })) */
+    }));
   }
-  return result;
-}
 
-private randomNumber(length: number): number {
-  const min = Math.pow(10, length - 1);
-  const max = Math.pow(10, length) - 1;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-private randomEmail(length: number): string {
-  return `${this.randomString(length)}@mail.com`;
-}
-
-private randomDate(): Date {
-  const start = new Date(1960, 0, 1).getTime();
-  const end = new Date(2005, 11, 31).getTime();
-  return new Date(start + Math.random() * (end - start));
-}
-
-private randomDominio(): string {
-  const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const numeros = '0123456789';
-
-  const l = () => letras.charAt(Math.floor(Math.random() * letras.length));
-  const n = () => numeros.charAt(Math.floor(Math.random() * numeros.length));
-
-  return `${l()}${l()}${l()}${n()}${n()}${n()}`;
-}
-
-  async actualizarActivos(){
-    this.isLoading = true;    
-    const resp = await this.dbFirebase.actualizarMultiple(this.choferesMock, "choferes");
-    if(resp){
-      this.isLoading = false;
-      this.mensajesError(resp.mensaje)
+  private randomString(length: number): string {
+    const chars = "abcdefghijklmnopqrstuvwxyz";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    
+    return result;
   }
 
-  mensajesError(msj:string){
+  private randomNumber(length: number): number {
+    const min = Math.pow(10, length - 1);
+    const max = Math.pow(10, length) - 1;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  private randomEmail(length: number): string {
+    return `${this.randomString(length)}@mail.com`;
+  }
+
+  private randomDate(): Date {
+    const start = new Date(1960, 0, 1).getTime();
+    const end = new Date(2005, 11, 31).getTime();
+    return new Date(start + Math.random() * (end - start));
+  }
+
+  private randomDominio(): string {
+    const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numeros = "0123456789";
+
+    const l = () => letras.charAt(Math.floor(Math.random() * letras.length));
+    const n = () => numeros.charAt(Math.floor(Math.random() * numeros.length));
+
+    return `${l()}${l()}${l()}${n()}${n()}${n()}`;
+  }
+
+  async actualizarActivos() {
+    this.isLoading = true;
+    const resp = await this.dbFirebase.actualizarMultiple(
+      this.choferesMock,
+      "choferes",
+    );
+    if (resp) {
+      this.isLoading = false;
+      this.mensajesError(resp.mensaje);
+    }
+  }
+
+  mensajesError(msj: string) {
     Swal.fire({
       icon: "error",
       //title: "Oops...",
-      text: `${msj}`
+      text: `${msj}`,
       //footer: `${msj}`
     });
   }
-
-
-
-
-
 }

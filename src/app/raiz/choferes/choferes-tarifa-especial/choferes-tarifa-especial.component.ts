@@ -33,8 +33,8 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
     .subscribe(data => {
       this.$choferes = data;     
       this.$choferesEsp = this.$choferes
-      .filter((c:Chofer)=>{return c.tarifaTipo.especial === true && c.idProveedor === 0})
-      .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+      .filter((c:Chofer)=>{return c.tarifaTipo.especial === true && c.contratacion.tipo === 'directo'})
+      .sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido));
       console.log("1)choferes especiales: ", this.$choferesEsp);      
       this.tEspecial = false;
     })             
@@ -57,8 +57,8 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
 
   changeChofer(e: any) {    
     console.log(e.target.value);    
-    let id = Number(e.target.value);
-    ////console.log()("1)",id);    
+    const id = e.target.value;
+    ////console.log()("1)",id);
     this.choferSeleccionado = this.$choferesEsp.filter((chofer:Chofer)=>{
       ////console.log()("2", cliente.idCliente, id);
       return chofer.idChofer === id;
@@ -80,8 +80,8 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
       id = Number(e.target.value);
       this.clienteSeleccionado = this.$clientes.filter((cliente:Cliente)=>{
         ////console.log()("2", cliente.idCliente, id);
-        return cliente.idCliente === id;
-      })      
+        return String(cliente.idCliente) === String(id);
+      })
       this.idClienteEsp = id; 
       console.log("id cliente eso: ", this.idClienteEsp);
       

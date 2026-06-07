@@ -90,7 +90,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
     ); // Ordena por el nombre del chofer
     this.choferes = this.storageService.loadInfo("choferes");
     this.choferes = this.choferes.sort((a, b) =>
-      a.apellido.localeCompare(b.apellido),
+      a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
     ); // Ordena por el nombre del chofer
     this.proveedores = this.storageService.loadInfo("proveedores");
     this.proveedores = this.proveedores.sort((a, b) =>
@@ -120,7 +120,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
       }
       case "chofer": {
         this.getChofer();
-        this.titulo = this.choferSel.apellido + " " + this.choferSel.nombre;
+        this.titulo = this.choferSel.datosPersonales.apellido + " " + this.choferSel.datosPersonales.nombre;
         this.actualizarColumnasSeleccionadas(); // Inicializar la lista de columnas seleccionadas
         break;
       }
@@ -149,7 +149,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
   getCliente() {
     let clienteArray;
     clienteArray = this.clientes.filter((cliente: Cliente) => {
-      return cliente.idCliente === this.facLiquidadas[0].idCliente;
+      return String(cliente.idCliente) === String(this.facLiquidadas[0].idCliente);
     });
     this.clienteSel = clienteArray[0];
   }
@@ -157,7 +157,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
   getChofer() {
     let choferArray;
     choferArray = this.choferes.filter((c: Chofer) => {
-      return c.idChofer === this.facLiquidadas[0].idChofer;
+      return c.idChofer === String(this.facLiquidadas[0].idChofer);
     });
     this.choferSel = choferArray[0];
   }
@@ -173,7 +173,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
   getClienteId(idCliente: number) {
     let clienteArray;
     clienteArray = this.clientes.filter((c: Cliente) => {
-      return c.idCliente === idCliente;
+      return String(c.idCliente) === String(idCliente);
     });
     return clienteArray[0].razonSocial;
   }
@@ -181,12 +181,12 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
   getChoferId(idChofer: number) {
     let choferArray;
     choferArray = this.choferes.filter((c: Chofer) => {
-      return c.idChofer === idChofer;
+      return c.idChofer === String(idChofer);
     });
-    return choferArray[0].apellido + " " + choferArray[0].nombre;
+    return choferArray[0].datosPersonales.apellido + " " + choferArray[0].datosPersonales.nombre;
   }
 
-  getProveedorId(idProveedor: number) {
+  getProveedorId(idProveedor: string) {
     let proveedorArray;
     proveedorArray = this.proveedores.filter((p: Proveedor) => {
       return p.idProveedor === idProveedor;
@@ -426,12 +426,10 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
     let veh: Vehiculo[];
     let choferSel: Chofer[];
     choferSel = this.choferes.filter((c: Chofer) => {
-      return c.idChofer === fac.idChofer;
+      return c.idChofer === String(fac.idChofer);
     });
-    veh = choferSel[0].vehiculo.filter((v: Vehiculo) => {
-      return v.dominio === fac.patente;
-    });
-    return veh[0].categoria.nombre;
+    veh = ((choferSel[0] as any)?.vehiculo ?? []).filter((v: Vehiculo) => v.dominio === fac.patente);
+    return veh[0]?.categoria?.nombre ?? '';
   }
 
   async generarInformeLiquidacion(
@@ -455,13 +453,13 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
       this.fromParent.origen === "cliente"
         ? this.clienteSel.razonSocial
         : this.fromParent.origen === "chofer"
-          ? this.choferSel.apellido + " " + this.choferSel.nombre
+          ? this.choferSel.datosPersonales.apellido + " " + this.choferSel.datosPersonales.nombre
           : this.proveedorSel.razonSocial;
     let cuit =
       this.fromParent.origen === "cliente"
         ? this.clienteSel.cuit
         : this.fromParent.origen === "chofer"
-          ? this.choferSel.cuit
+          ? this.choferSel.datosPersonales.cuit
           : this.proveedorSel.cuit;
     this.periodo = this.periodoBoolean
       ? "mes"

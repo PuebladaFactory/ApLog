@@ -1,29 +1,25 @@
-import { Dirección } from "./chofer";
-import { TarifaTipo } from "./tarifa-gral-cliente";
+import { Direccion } from "./chofer";
+import { TarifaTipo } from "./chofer";
 
 export interface Proveedor {
-       
-    idProveedor: number;
+    idProveedor: string;
     razonSocial: string;
-    cuit: number;    
+    cuit: number;
     condFiscal: string;
-    //direccion: Dirección;
-    direccionFiscal: Dirección;
-    direccionOperativa: Dirección;
-    contactos: Contacto [];
+    direccionFiscal: Direccion;
+    direccionOperativa: Direccion;
+    contactos: Contacto[];
     tarifaTipo: TarifaTipo;
     tarifaAsignada: boolean;
-    idTarifa:number;
-    visible?:boolean;
+    idTarifa: string;
+    activo: boolean;
+    visible?: boolean;
 }
 
-export interface Contacto {    
-    puesto:string;
+export interface Contacto {
+    puesto: string;
     apellido: string;
-    nombre:string;
-    telefono:number;
-    email:string;
-    
-    
+    nombre: string;
+    telefono: number;
+    email: string;
 }
-

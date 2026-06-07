@@ -52,7 +52,7 @@ export class OperacionesTableComponent {
     return this.getTarifaActiva(op) === 'personalizada';
   }
 
-  getTarifaPersonalizada(idCliente: number): TarifaPersonalizadaCliente | null {
+  getTarifaPersonalizada(idCliente: number | string): TarifaPersonalizadaCliente | null {
     return this.tarifasPersonalizadas.find(t => t.idCliente === idCliente) || null;
   }
 
@@ -153,7 +153,8 @@ export class OperacionesTableComponent {
   getCategoriasDisponibles(op: OperacionRuntime): CategoriaTarifa[] {
     if (!this.esPersonalizada(op)) return [];
 
-    const tarifa = this.getTarifaPersonalizada(op.cliente.idCliente);
+    // TODO: actualizar cuando se refactorice este módulo
+    const tarifa = this.getTarifaPersonalizada(Number(op.cliente.idCliente));
     const seccion = tarifa?.secciones.find(s => s.orden === +op.tarifaPersonalizada.seccion);
     return seccion?.categorias || [];
   }
@@ -161,7 +162,8 @@ export class OperacionesTableComponent {
   onCategoriaChange(op: OperacionRuntime) {
     op.tarifaPersonalizada.categoria = Number(op.tarifaPersonalizada.categoria);
 
-    const tarifa = this.getTarifaPersonalizada(op.cliente.idCliente);
+    // TODO: actualizar cuando se refactorice este módulo
+    const tarifa = this.getTarifaPersonalizada(Number(op.cliente.idCliente));
     if (!tarifa) return;
 
     const sec = tarifa.secciones.find(s => s.orden === +op.tarifaPersonalizada.seccion);
@@ -209,7 +211,8 @@ export class OperacionesTableComponent {
   }
 
   getSeccionSeleccionadaLabel(op: OperacionRuntime): string {
-    const tarifa = this.getTarifaPersonalizada(op.cliente.idCliente);
+    // TODO: actualizar cuando se refactorice este módulo
+    const tarifa = this.getTarifaPersonalizada(Number(op.cliente.idCliente));
     const sec = tarifa?.secciones.find(s => s.orden === op.tarifaPersonalizada.seccion);
     return sec ? `Sección ${sec.orden}` : '';
   }

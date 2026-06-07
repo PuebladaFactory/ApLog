@@ -3,11 +3,13 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
-import { Categoria, Vehiculo } from 'src/app/interfaces/chofer';
+import { AsignacionVehiculo, Categoria, Vehiculo } from 'src/app/interfaces/chofer';
+import { ConIdType } from 'src/app/interfaces/conId';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
+import { VehiculoFactoryService, VehiculoFormData } from 'src/app/servicios/choferes/vehiculo-factory.service';
 import Swal from 'sweetalert2';
 
 
@@ -20,6 +22,7 @@ import Swal from 'sweetalert2';
 export class ModalVehiculoComponent implements OnInit {
   
   @Input() fromParent: any;
+  @Input() asignadoA!: AsignacionVehiculo;
 
   $proveedores!: Proveedor;  
   tarifaGralCliente!: TarifaGralCliente;
@@ -38,7 +41,7 @@ export class ModalVehiculoComponent implements OnInit {
   edicion:boolean = false;
   private destroy$ = new Subject<void>();
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal){
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private vehiculoFactoryService: VehiculoFactoryService){
     this.vehiculoForm = this.fb.group({
       dominio: ["", [Validators.required, Validators.minLength(6), Validators.maxLength(8), ValidarService.validarDominio]],
       marca:["",[Validators.required, Validators.maxLength(50)]], 
@@ -185,30 +188,31 @@ export class ModalVehiculoComponent implements OnInit {
  
   }
 
-  armarVehiculo(){ 
-    this.categoria = {
+  armarVehiculo(): void {
+    const categoria: Categoria = {
       catOrden: this.ordCat,
-      nombre : this.vehiculoForm.value.categoria,
-    }  
-     // Convertir dominio a mayúsculas
-    const vehiculoFormValue = { ...this.vehiculoForm.value }; // Clonar el formulario
-    vehiculoFormValue.dominio = vehiculoFormValue.dominio?.toUpperCase(); // Convertir dominio
-
-    this.vehiculo = vehiculoFormValue;
-    //this.vehiculo.categoria = this.categoriaSeleccionada;
-    this.vehiculo.categoria = this.categoria;
-    this.vehiculo.tipoCombustible = this.tipoCombustible;
-    this.vehiculo.tarjetaCombustible = this.tarjetaCombustible;
-    this.vehiculo.publicidad = this.publicidad;
-    if(this.seguimiento){
-      this.vehiculo.segSat = true;
-      this.vehiculo.satelital = this.seguimientoForm.value.proveedor;
-    }else{
-      this.vehiculo.segSat = false;
-      this.vehiculo.satelital = "";
+      nombre: this.vehiculoForm.value.categoria,
+    };
+    const data: VehiculoFormData = {
+      dominio: this.vehiculoForm.value.dominio,
+      marca: this.vehiculoForm.value.marca,
+      modelo: this.vehiculoForm.value.modelo,
+      categoria,
+      tipoCombustible: this.tipoCombustible,
+      tarjetaCombustible: this.tarjetaCombustible,
+      publicidad: this.publicidad,
+      segSat: this.seguimiento,
+      satelital: this.seguimiento ? this.seguimientoForm.value.proveedor : '',
+      refrigeracion: null,
+      asignadoA: this.asignadoA,
+    };
+    if (this.edicion && this.vehiculo) {
+      this.vehiculo = this.vehiculoFactoryService.editarVehiculo(
+        this.vehiculo as ConIdType<Vehiculo>, data
+      );
+    } else {
+      this.vehiculo = this.vehiculoFactoryService.crearVehiculo(data);
     }
-    this.vehiculo.refrigeracion = null;
-    //console.log(this.vehiculo);    
   }
 
   armarForms() {

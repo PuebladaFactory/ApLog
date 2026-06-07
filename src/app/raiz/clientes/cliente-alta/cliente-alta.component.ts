@@ -9,6 +9,8 @@ import { ModalContactoComponent } from '../modal-contacto/modal-contacto.compone
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
+import { ClienteFactoryService, ClienteFormData } from 'src/app/servicios/clientes/cliente-factory.service';
+import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 
 @Component({
     selector: 'app-cliente-alta',
@@ -45,8 +47,9 @@ export class ClienteAltaComponent implements OnInit {
   $localidadesO!:any;
   $localidadSeleccionadaO:string = "";
   direccionOperativaCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};  
+  cargando: boolean = false;
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private domicilioServ:  DomicilioService) {
+  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private domicilioServ: DomicilioService, private clienteFactoryService: ClienteFactoryService, private clienteService: ClienteService) {
     this.form = this.fb.group({      
       razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
       cuit: [
@@ -78,8 +81,10 @@ export class ClienteAltaComponent implements OnInit {
       let clienteOriginal = this.fromParent.item
       this.clienteEditar = structuredClone(clienteOriginal)
       if(this.fromParent.modo === "vista"){
-        this.soloVista = true;        
+        this.soloVista = true;
         this.armarForm()
+        this.form.disable();
+        this.formTipoTarifa.disable();
       }else if(this.fromParent.modo === "edicion"){
         this.soloVista = false;        
         console.log("2) this.clienteEditar: ", this.clienteEditar);
@@ -101,66 +106,34 @@ export class ClienteAltaComponent implements OnInit {
       
    }
 
-   onSubmit(){
-    //////console.log()(new Date().getTime());   
-    if(this.$provinciaSeleccionadaF === "" || this.$municipioSeleccionadoF === "" || this.$localidadSeleccionadaF === ""){ return this.mensajesError("Debe completar el domicilio fiscal")};
-    if(this.$provinciaSeleccionadaO === "" || this.$municipioSeleccionadoO === "" || this.$localidadSeleccionadaO === ""){ return this.mensajesError("Debe completar el domicilio operativo")};
-    if(this.condFiscal === ""){ return this.mensajesError("Debe seleccionar una condición fiscal")};
-    const tarifaSeleccionada = this.getTarifaTipo();    
-    let tarifaGeneral: TarifaGralCliente [] = this.storageService.loadInfo("tarifasGralCliente")
+  onSubmit(): void {
+    if (this.$provinciaSeleccionadaF === '' || this.$municipioSeleccionadoF === '' || this.$localidadSeleccionadaF === '') {
+      return this.mensajesError('Debe completar el domicilio fiscal');
+    }
+    if (this.$provinciaSeleccionadaO === '' || this.$municipioSeleccionadoO === '' || this.$localidadSeleccionadaO === '') {
+      return this.mensajesError('Debe completar el domicilio operativo');
+    }
+    if (this.condFiscal === '') {
+      return this.mensajesError('Debe seleccionar una condición fiscal');
+    }
     if (this.form.valid) {
-      if(this.fromParent.modo === "edicion"){         ///edicion del cliente
-        let formValue = this.form.value;
-        // Eliminar los guiones del CUIT
-        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));       
-        this.direccionFiscalCompleta = {provincia: this.$provinciaSeleccionadaF, municipio: this.$municipioSeleccionadoF, localidad: this.$localidadSeleccionadaF, domicilio: this.form.value.direccionFiscal};
-        this.direccionOperativaCompleta = {provincia: this.$provinciaSeleccionadaO, municipio: this.$municipioSeleccionadoO, localidad: this.$localidadSeleccionadaO, domicilio: this.form.value.direccionOperativa};
-        this.cliente = {
-          ...formValue,
-          cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
-          direccionFiscal: this.direccionFiscalCompleta,
-          direccionOperativa: this.direccionOperativaCompleta,
-        };                
-        this.cliente.idCliente = this.clienteEditar.idCliente;  
-        this.cliente.id = this.clienteEditar.id;       
-        this.cliente.contactos = this.contactos;
-        ////console.log()(this.cliente);     
-        this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        this.cliente.condFiscal = this.condFiscal;
-        this.cliente.tarifaAsignada = this.clienteEditar.tarifaAsignada;
-        this.cliente.idTarifa = this.clienteEditar.idTarifa;
-        console.log("asi se edito el cliente: ", this.cliente);      
-        this.addItem("Edicion");        
-        this.activeModal.close();    
-      }else{            ///alta del cliente
-        let formValue = this.form.value;
-        // Eliminar los guiones del CUIT
-        let cuitSinGuiones = Number(formValue.cuit.replace(/-/g, ''));   
-        this.direccionFiscalCompleta = {provincia: this.$provinciaSeleccionadaF, municipio: this.$municipioSeleccionadoF, localidad: this.$localidadSeleccionadaF, domicilio: this.form.value.direccionFiscal};
-        this.direccionOperativaCompleta = {provincia: this.$provinciaSeleccionadaO, municipio: this.$municipioSeleccionadoO, localidad: this.$localidadSeleccionadaO, domicilio: this.form.value.direccionOperativa};
-        this.cliente = {
-          ...formValue,
-          cuit: cuitSinGuiones, // Reemplazar el CUIT con el valor numérico
-          direccionFiscal: this.direccionFiscalCompleta,
-          direccionOperativa: this.direccionOperativaCompleta,
-        };                
-        //this.cliente = this.form.value
-        this.cliente.idCliente = new Date().getTime() + Math.floor(Math.random() * 1000);
-        this.cliente.contactos = this.contactos;
-        this.cliente.condFiscal = this.condFiscal;
-        ////console.log()(this.cliente);     
-        this.cliente.tarifaTipo = tarifaSeleccionada; // Asigna el tipo de tarifa
-        this.cliente.tarifaAsignada = tarifaSeleccionada.general? tarifaGeneral[0] === null ? false : true : false;
-        this.cliente.idTarifa = tarifaSeleccionada.general? tarifaGeneral[0] === null ? 0 : tarifaGeneral[0].idTarifa : 0;
-        ////console.log(this.cliente);      
-        this.addItem("Alta");        
-        this.activeModal.close();    
-      }      
-    } else{
-      this.mensajesError("El formulario contiene errores");      
-    } 
-    
-   }
+      if (this.fromParent.modo !== 'edicion') {
+        const cuitIngresado = Number(this.form.value.cuit.replace(/-/g, ''));
+        const clienteExistente = this.clienteService.verificarCuitDuplicado(cuitIngresado);
+        if (clienteExistente) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'CUIT duplicado',
+            text: `El CUIT ingresado ya está asignado al cliente ${clienteExistente.razonSocial}.`,
+          });
+          return;
+        }
+      }
+      this.addItem();
+    } else {
+      this.mensajesError('El formulario contiene errores');
+    }
+  }
 
    onTarifaTipoChange(tipoSeleccionado: string) {
     // Resetea los demás switches a false, excepto el seleccionado
@@ -190,43 +163,66 @@ export class ClienteAltaComponent implements OnInit {
       
      }  
 
-   addItem(modo:string): void {
-    let titulo = "";
-    if(modo === "Alta"){
-      titulo = "el alta"
-    } else if (modo === "Edicion"){
-      titulo = "la edicion"
-    }
-    console.log("this.cliente: ", this.cliente);    
+  addItem(): void {
+    const titulo = this.fromParent.modo === 'edicion' ? 'la edición' : 'el alta';
     Swal.fire({
       title: `¿Confirmar ${titulo} del Cliente?`,
-      //text: "You won't be able to revert this!",
-      icon: "warning",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar"
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar',
     }).then((result) => {
-      if (result.isConfirmed) {     
-        if(modo === "Alta")   {
-          let {id, type, ...cliente } = this.cliente
-          this.storageService.addItem(this.componente, cliente, this.cliente.idCliente, "ALTA", `Alta de Cliente ${this.cliente.razonSocial}`)
-        } else if (modo === "Edicion"){
-          let {id, type, ...cliente } = this.cliente
-          this.storageService.updateItem(this.componente, cliente, this.cliente.idCliente, "EDITAR", `Cliente ${this.cliente.razonSocial} editado`, this.cliente.id)
-        }        
-        Swal.fire({
-          title: "Confirmado",
-          text: `${modo} exitosa`,
-          icon: "success"
-        }).then((result)=>{
-          if (result.isConfirmed) {
-            this.activeModal.close();
-          }
-        });           
+      this.cargando = true;
+      if (result.isConfirmed) {
+        const data: ClienteFormData = {
+          razonSocial: this.form.value.razonSocial,
+          cuit: this.form.value.cuit,
+          condFiscal: this.condFiscal,
+          provinciaFiscal: this.$provinciaSeleccionadaF,
+          municipioFiscal: this.$municipioSeleccionadoF,
+          localidadFiscal: this.$localidadSeleccionadaF,
+          domicilioFiscal: this.form.value.direccionFiscal,
+          provinciaOperativa: this.$provinciaSeleccionadaO,
+          municipioOperativa: this.$municipioSeleccionadoO,
+          localidadOperativa: this.$localidadSeleccionadaO,
+          domicilioOperativa: this.form.value.direccionOperativa,
+          tarifaTipo: this.getTarifaTipo(),
+          contactos: this.contactos,
+        };
+
+        if (this.fromParent.modo === 'edicion') {
+          const clienteEditado = {
+            ...this.clienteFactoryService.editarCliente(this.clienteEditar as ConIdType<Cliente>, data),
+            id: this.clienteEditar.id,
+            type: (this.clienteEditar as any).type,
+          } as ConIdType<Cliente>;
+          this.clienteService.guardarCliente(clienteEditado, 'edicion')
+            .then(() => {
+              this.cargando = false;
+              Swal.fire('Confirmado', 'Cambios guardados', 'success').then(() => {
+                this.activeModal.close();
+              });
+            })
+            .catch(e => {
+              this.cargando = false;
+              this.mensajesError(`Error al guardar: ${e.message}`)});
+        } else {
+          const clienteNuevo = this.clienteFactoryService.crearCliente(data) as ConIdType<Cliente>;
+          this.clienteService.guardarCliente(clienteNuevo, 'alta')
+            .then(() => {
+              this.cargando = false;
+              Swal.fire('Confirmado', 'Alta exitosa', 'success').then(() => {
+                this.activeModal.close();
+              });
+            })
+            .catch(e => {
+              this.cargando = false; 
+              this.mensajesError(`Error al guardar: ${e.message}`)});
+        }
       }
-    });   
+    });
   }
 
   toggle() {

@@ -138,13 +138,13 @@
 
                                 <div class="">
                                     <span class="me-2 fs-4"
-                                        >{{ ch.apellido }},
-                                        {{ ch.nombre }} :</span
+                                        >{{ ch.datosPersonales.apellido }},
+                                        {{ ch.datosPersonales.nombre }} :</span
                                     >
                                 </div>
                                 <div>
                                     <label class="form-check-label">
-                                        @for (v of ch.vehiculo; track v) {
+                                        @for (v of $any(ch)?.vehiculo ?? []; track v) {
                                             <span
                                                 class="badge me-2 f-4"
                                                 [ngClass]="
@@ -193,13 +193,13 @@
 
                                     <div class="">
                                         <span class="me-2 fs-4 noOperativo"
-                                            >{{ ch.apellido }},
-                                            {{ ch.nombre }} :</span
+                                            >{{ ch.datosPersonales.apellido }},
+                                            {{ ch.datosPersonales.nombre }} :</span
                                         >
                                     </div>
                                     <div>
                                         <label class="form-check-label">
-                                            @for (v of ch.vehiculo; track v) {
+                                            @for (v of $any(ch)?.vehiculo ?? []; track v) {
                                                 <span
                                                     class="badge me-2 f-4"
                                                     [ngClass]="

@@ -63,7 +63,7 @@ export class CargarDocumentosComponent implements OnInit {
     .subscribe(data => {
       this.$choferes = data;     
       this.$choferes = this.$choferes      
-      .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
+      .sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido));
       console.log("1)choferes especiales: ", this.$choferes);      
       
     })     
@@ -82,8 +82,8 @@ export class CargarDocumentosComponent implements OnInit {
 
   changeChofer(e: any) {    
     console.log(e.target.value);    
-    let id = Number(e.target.value);    
-    ////console.log()("1)",id);    
+    const id = e.target.value;
+    ////console.log()("1)",id);
     let choferSel: ConIdType<Chofer>[];
     choferSel = this.$choferes.filter((chofer:Chofer)=>{
       ////console.log()("2", cliente.idCliente, id);

@@ -61,7 +61,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
   
   ngOnInit(): void {
     this.choferes = this.storageService.loadInfo('choferes');
-    this.choferes.sort((a, b) => a.apellido.localeCompare(b.apellido));
+    this.choferes.sort((a, b) => a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido));
     //this.noDisponibilidades = this.storageService.loadInfo('noOperativo')
     this.cargarDatos()
   }
@@ -99,8 +99,8 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       const value = this.form.value;
 
       const data: NoDisponibilidadChofer = {
-        idNoDisponibilidad: this.idEditando ?? new Date().getTime() + Math.floor(Math.random() * 1000),
-        idChofer: +value.idChofer,
+        idNoDisponibilidad: String(this.idEditando ?? new Date().getTime() + Math.floor(Math.random() * 1000)),
+        idChofer: value.idChofer,
         desde: value.desde,
         hasta: value.hasta ?? null,
         motivo: value.motivo,
@@ -166,14 +166,14 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
     
   }
 
-  getNombreChofer(idChofer: number): string {
+  getNombreChofer(idChofer: string): string {
     const c = this.choferes.find(ch => ch.idChofer === idChofer);
-    return c ? `${c.apellido}, ${c.nombre}` : 'Chofer no encontrado';
+    return c ? `${c.datosPersonales.apellido}, ${c.datosPersonales.nombre}` : 'Chofer no encontrado';
   }
 
   editar(n: ConIdType<NoDisponibilidadChoferView>): void {
     this.editando = true;
-    this.idEditando = n.idNoDisponibilidad;
+    this.idEditando = Number(n.idNoDisponibilidad);
     this.bajaOp = n;
 
     this.form.patchValue({
@@ -253,7 +253,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
       return {
         ...baja,
         nombreChofer: chofer
-          ? `${chofer.apellido} ${chofer.nombre}`
+          ? `${chofer.datosPersonales.apellido} ${chofer.datosPersonales.nombre}`
           : 'Chofer desconocido'
       };
     });

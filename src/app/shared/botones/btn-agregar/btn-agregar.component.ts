@@ -66,6 +66,12 @@ import { Component, Input, OnInit } from '@angular/core';
   </button>
 }
 
+@if (name === 'Confirmar') {
+  <button class="btn azul mt-2" type="submit">
+    Confirmar
+  </button>
+}
+
 @if (name === 'Agregar Contacto') {
   <button class="btn btn-secondary mt-2" type="submit">
     Agregar Contacto

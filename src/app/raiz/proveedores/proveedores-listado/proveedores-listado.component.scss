@@ -1,3 +1,6 @@
+td,th{
+  font-size: 1.2rem;
+}
 .boton-alta{
   width: 18rem;
   background: #002b5c;
@@ -19,4 +22,18 @@
 .isDisabled:hover {
     cursor: not-allowed;
     opacity:0.5;
+}
+
+.celeste{
+  background-color: rgb(121, 174, 192);
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
+}
+
+.celeste:hover{
+  background-color: rgb(73, 160, 189);;
+  color: white;
+  border-color: blue;
+  font-size: 1.3rem;
 }

@@ -127,7 +127,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       if (tarifas) {
         this.tarifaPersonalizada = tarifas.find(
           (tarifa: ConIdType<TarifaPersonalizadaCliente>) =>
-            tarifa.idCliente === this.op.cliente.idCliente,
+            String(tarifa.idCliente) === String(this.op.cliente.idCliente),
         );
         console.log(
           "tarifa personalizada del cliente: ",
@@ -654,7 +654,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     );
 
     if (this.op.chofer.tarifaTipo.especial) {
-      if (this.op.chofer.idProveedor === 0) {
+      if (this.op.chofer.contratacion.tipo === 'directo') {
         tarifas = this.storageService.loadInfo("tarifasEspChofer");
         let tEspecial = tarifas.find(
           (t) => t.idChofer === this.op.chofer.idChofer,
@@ -662,7 +662,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
         if (tEspecial) {
           if (
             tEspecial.idCliente === 0 ||
-            tEspecial.idCliente === this.op.cliente.idCliente
+            String(tEspecial.idCliente) === String(this.op.cliente.idCliente)
           ) {
             tarfiaAplicada = tEspecial;
             ////console.log("2A) tarifa esp chofer a pagar: ", tarifa);
@@ -676,12 +676,12 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       } else {
         tarifas = this.storageService.loadInfo("tarifasEspProveedor");
         let tEspecial = tarifas.find(
-          (t) => t.idProveedor === this.op.chofer.idProveedor,
+          (t) => t.idProveedor === (this.op.chofer.contratacion as any).idProveedor,
         );
         if (tEspecial) {
           if (
             tEspecial.idCliente === 0 ||
-            tEspecial.idCliente === this.op.cliente.idCliente
+            String(tEspecial.idCliente) === String(this.op.cliente.idCliente)
           ) {
             tarfiaAplicada = tEspecial;
             ////console.log("2A) tarifa esp chofer a pagar: ", tarifa);
@@ -695,7 +695,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       }
     } else {
       tarfiaAplicada =
-        this.op.chofer.idProveedor === 0
+        this.op.chofer.contratacion.tipo === 'directo'
           ? tarifaGralChofer[0]
           : tarifaGralProveedor[0];
     }

@@ -58,8 +58,8 @@ export class LiquidacionesOpComponent implements OnInit {
   opAbiertas!: ConId<Operacion>[];
   isLoading: boolean = false;
   proformas: ConId<any>[] = [];
-  informesDetalladoPorObjeto: Map<number, InformeOp[]> = new Map<
-    number,
+  informesDetalladoPorObjeto: Map<string | number, InformeOp[]> = new Map<
+    string | number,
     InformeOp[]
   >();
   mostrarTabla: boolean[] = [];
@@ -129,7 +129,7 @@ export class LiquidacionesOpComponent implements OnInit {
     /// CHOFERES/CLIENTES/PROVEEDORES
     this.choferes = this.storageService.loadInfo("choferes");
     this.choferes = this.choferes.sort((a, b) =>
-      a.apellido.localeCompare(b.apellido),
+      a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
     ); // Ordena por el nombre del chofer
     this.clientes = this.storageService.loadInfo("clientes");
     this.clientes = this.clientes.sort((a, b) =>
@@ -257,7 +257,7 @@ export class LiquidacionesOpComponent implements OnInit {
   }
 
   procesarDatosParaTabla() {
-    const informesMap = new Map<number, any>();
+    const informesMap = new Map<string | number, any>();
 
     if (this.informesOp !== null) {
       ////////////////console.log()("Facturas OP CLiente: ", this.$facturasOpCliente);
@@ -320,7 +320,7 @@ export class LiquidacionesOpComponent implements OnInit {
             ? op.cliente.idCliente
             : this.llamadaOrigen === "chofer"
               ? op.chofer.idChofer
-              : op.chofer.idProveedor;
+              : (op.chofer.contratacion as any).idProveedor;
         return idObjeto === id;
       });
 
@@ -330,19 +330,19 @@ export class LiquidacionesOpComponent implements OnInit {
     }
   }
 
-  getRazonSocial(id: number): string {
+  getRazonSocial(id: string | number): string {
     let razonSocial =
       this.llamadaOrigen === "cliente"
-        ? this.getCliente(id)
+        ? this.getCliente(id as number)
         : this.llamadaOrigen === "chofer"
-          ? this.getChofer(id)
-          : this.getProveedor(id);
+          ? this.getChofer(id as string)
+          : this.getProveedor(id as string);
     return razonSocial;
   }
 
   getCliente(id: number): string {
     let cliente = this.clientes.find((cliente: Cliente) => {
-      return cliente.idCliente === id;
+      return cliente.idCliente === String(id);
     });
     if (cliente) {
       return cliente.razonSocial;
@@ -351,18 +351,18 @@ export class LiquidacionesOpComponent implements OnInit {
     }
   }
 
-  getChofer(id: number): string {
+  getChofer(id: string): string {
     let chofer = this.choferes.find((chofer: Chofer) => {
       return chofer.idChofer === id;
     });
     if (chofer) {
-      return chofer.apellido + " " + chofer.nombre;
+      return chofer.datosPersonales.apellido + " " + chofer.datosPersonales.nombre;
     } else {
       return `Chofer dado de baja. idChofer ${id}`;
     }
   }
 
-  getProveedor(id: number): string {
+  getProveedor(id: string): string {
     let proveedor = this.proveedores.find((proveedor: Proveedor) => {
       return proveedor.idProveedor === id;
     });
@@ -1077,10 +1077,10 @@ export class LiquidacionesOpComponent implements OnInit {
         this.isLoading = true;
         let coleccionContraParte =
           this.llamadaOrigen === "cliente" &&
-          this.operacion.chofer.idProveedor === 0
+          this.operacion.chofer.contratacion.tipo === 'directo'
             ? "informesOpChoferes"
             : this.llamadaOrigen === "cliente" &&
-                this.operacion.chofer.idProveedor !== 0
+                this.operacion.chofer.contratacion.tipo === 'proveedor'
               ? "informesOpProveedores"
               : "informesOpClientes";
         const resultado = await this.dbFirebase.eliminarOperacionEInformes(
@@ -1394,13 +1394,13 @@ export class LiquidacionesOpComponent implements OnInit {
     let objeto: any;
     switch (this.llamadaOrigen) {
       case "cliente":
-        objeto = this.clientes.find((c) => c.idCliente === id);
+        objeto = this.clientes.find((c) => String(c.idCliente) === String(id));
         break;
       case "chofer":
-        objeto = this.choferes.find((c) => c.idChofer === id);
+        objeto = this.choferes.find((c) => c.idChofer === String(id));
         break;
       case "proveedor":
-        objeto = this.proveedores.find((c) => c.idProveedor === id);
+        objeto = this.proveedores.find((c) => c.idProveedor === String(id));
         break;
       default:
         this.mensajesError("Error al obtener la entidad", "error");

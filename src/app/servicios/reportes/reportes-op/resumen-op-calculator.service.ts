@@ -45,7 +45,7 @@ export class ResumenOpCalculatorService {
     const keyCliente: KeyResumen = {
       tipo: "entidad",
       tipoEntidad: "cliente",
-      entidadId: op.cliente.idCliente,
+      entidadId: Number(op.cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
       anio,
       mes,
     };
@@ -55,11 +55,11 @@ export class ResumenOpCalculatorService {
     // =========================
     // CHOFER / PROVEEDOR
     // =========================
-    if (op.chofer.idProveedor && op.chofer.idProveedor !== 0) {
+    if (op.chofer.contratacion.tipo === 'proveedor') {
       const keyProveedor: KeyResumen = {
         tipo: "entidad",
         tipoEntidad: "proveedor",
-        entidadId: op.chofer.idProveedor,
+        entidadId: Number((op.chofer.contratacion as any).idProveedor),
         anio,
         mes,
       };
@@ -69,7 +69,7 @@ export class ResumenOpCalculatorService {
       const keyChofer: KeyResumen = {
         tipo: "entidad",
         tipoEntidad: "chofer",
-        entidadId: op.chofer.idChofer,
+        entidadId: Number(op.chofer.idChofer),
         anio,
         mes,
       };
@@ -182,14 +182,14 @@ export class ResumenOpCalculatorService {
       key: {
         tipo: "entidad",
         tipoEntidad: "cliente",
-        entidadId: op.cliente.idCliente,
+        entidadId: Number(op.cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
         anio,
         mes,
       },
       path: this.buildPath({
         tipo: "entidad",
         tipoEntidad: "cliente",
-        entidadId: op.cliente.idCliente,
+        entidadId: Number(op.cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
         anio,
         mes,
       }),
@@ -199,37 +199,39 @@ export class ResumenOpCalculatorService {
     // =========================
     // CHOFER / PROVEEDOR
     // =========================
-    if (op.chofer.idProveedor && op.chofer.idProveedor !== 0) {
+    if (op.chofer.contratacion.tipo === 'proveedor') {
+      const provId = Number((op.chofer.contratacion as any).idProveedor);
       updates.push({
         key: {
           tipo: "entidad",
           tipoEntidad: "proveedor",
-          entidadId: op.chofer.idProveedor,
+          entidadId: provId,
           anio,
           mes,
         },
         path: this.buildPath({
           tipo: "entidad",
           tipoEntidad: "proveedor",
-          entidadId: op.chofer.idProveedor,
+          entidadId: provId,
           anio,
           mes,
         }),
         data: baseData,
       });
     } else {
+      const choId = Number(op.chofer.idChofer);
       updates.push({
         key: {
           tipo: "entidad",
           tipoEntidad: "chofer",
-          entidadId: op.chofer.idChofer,
+          entidadId: choId,
           anio,
           mes,
         },
         path: this.buildPath({
           tipo: "entidad",
           tipoEntidad: "chofer",
-          entidadId: op.chofer.idChofer,
+          entidadId: choId,
           anio,
           mes,
         }),

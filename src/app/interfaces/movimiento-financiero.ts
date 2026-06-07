@@ -7,6 +7,7 @@ export interface MovimientoFinanciero {
   fechaOperacion?: string; // ISO yyyy-mm-dd
   /** Entidad */
   entidad: {
+    // TODO: migrar a string cuando se refactorice este módulo (ID unificado con ConIdType.id)
     id: number;
     tipo: "cliente" | "chofer" | "proveedor";
     razonSocial: string;

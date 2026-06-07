@@ -14,16 +14,16 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { ModalResumenOpComponent } from './modal-resumen-op/modal-resumen-op.component';
 import { CargaMultipleComponent } from './carga-multiple/carga-multiple.component';
-import { ModalOpAltaComponent } from './modal-op-alta/modal-op-alta.component';
+
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AgGridModule } from 'ag-grid-angular';
-import { TableroOpComponent } from './tablero-op/tablero-op.component';
+
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TableroDiarioComponent } from './tablero-diario/tablero-diario.component';
 import { CargaTableroDiarioComponent } from './carga-tablero-diario/carga-tablero-diario.component';
 import { ModalObjetosActivosComponent } from './modal-objetos-activos/modal-objetos-activos.component';
 import { ModalChoferesNoDisponiblesComponent } from './modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
-import { TableroOpV2Component } from './tablero-op-v2/tablero-op-v2.component';
+import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 import { OperacionesTableComponent } from './operaciones-table/operaciones-table.component';
 import { ɵɵDir } from "@angular/cdk/scrolling";
@@ -33,17 +33,14 @@ import { ɵɵDir } from "@angular/cdk/scrolling";
 
 @NgModule({
   declarations: [
-    OpControlComponent,      
-    
-    ModalResumenOpComponent, 
+    OpControlComponent,     
+    ModalResumenOpComponent,
     CargaMultipleComponent, 
-    ModalOpAltaComponent,
-    TableroOpComponent,
     TableroDiarioComponent,
     CargaTableroDiarioComponent,
     ModalObjetosActivosComponent,
     ModalChoferesNoDisponiblesComponent,
-    TableroOpV2Component,
+    TableroOpComponent,
     OperacionesTableComponent,    
     
   ],

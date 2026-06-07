@@ -5,6 +5,6 @@ export interface LogEntry {
     action: string;          // Tipo de acción
     coleccion: string       //
     details: string;         // Detalles específicos del evento
-    idObjet: number;        //    
+    idObjet: string | number;
     status: 'SUCCESS' | 'ERROR'; // Resultado del evento
 }

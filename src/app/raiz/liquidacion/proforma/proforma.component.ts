@@ -82,7 +82,7 @@ export class ProformaComponent implements OnInit {
     /// CHOFERES/CLIENTES/PROVEEDORES
     this.choferes = this.storageService.loadInfo("choferes");
     this.choferes = this.choferes.sort((a, b) =>
-      a.apellido.localeCompare(b.apellido),
+      a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
     ); // Ordena por el nombre del chofer
     this.clientes = this.storageService.loadInfo("clientes");
     this.clientes = this.clientes.sort((a, b) =>
@@ -258,7 +258,7 @@ export class ProformaComponent implements OnInit {
       this.storageService.loadInfo("clientes");
     let cliente: ConIdType<Cliente>[];
     cliente = clientes.filter((cliente: ConIdType<Cliente>) => {
-      return cliente.idCliente === idCliente;
+      return String(cliente.idCliente) === String(idCliente);
     });
     if (cliente[0]) {
       return cliente[0].razonSocial;
@@ -272,16 +272,16 @@ export class ProformaComponent implements OnInit {
       this.storageService.loadInfo("choferes");
     let chofer: ConIdType<Chofer>[];
     chofer = choferes.filter((chofer: Chofer) => {
-      return chofer.idChofer === idChofer;
+      return chofer.idChofer === String(idChofer);
     });
     if (chofer[0]) {
-      return chofer[0].apellido + " " + chofer[0].nombre;
+      return chofer[0].datosPersonales.apellido + " " + chofer[0].datosPersonales.nombre;
     } else {
       return `Chofer dado de baja. idChofer ${idChofer}`;
     }
   }
 
-  getProveedor(idProveedor: number) {
+  getProveedor(idProveedor: string) {
     let proveedores: ConIdType<Proveedor>[] =
       this.storageService.loadInfo("proveedores");
     let proveedor: Proveedor[];

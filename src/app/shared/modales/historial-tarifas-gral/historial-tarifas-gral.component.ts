@@ -190,17 +190,17 @@ export class HistorialTarifasGralComponent implements OnInit {
   getNombre(id:number){
     switch(this.fromParent.modo){
       case 'clientes':
-        let cliente = this.$clientes.filter((c)=>c.idCliente === id)
+        let cliente = this.$clientes.filter((c)=>c.idCliente === String(id))
         return cliente[0].razonSocial
         ;
 
       case "choferes":{
-        let chofer = this.$choferes.filter((c)=>c.idChofer === id)
-        return chofer[0].apellido + " " + chofer[0].nombre
+        let chofer = this.$choferes.filter((c)=>c.idChofer === String(id))
+        return chofer[0].datosPersonales.apellido + " " + chofer[0].datosPersonales.nombre
         ;
       };
       case "proveedores":{
-        let proveedor = this.$proveedores.filter((c)=>c.idProveedor === id)
+        let proveedor = this.$proveedores.filter((c)=>c.idProveedor === String(id))
         return proveedor[0].razonSocial
         ;
       }
@@ -306,7 +306,7 @@ export class HistorialTarifasGralComponent implements OnInit {
   }
 
   getCliente(id:number){
-    let cliente = this.$clientes.filter((c)=> c.idCliente === id)
+    let cliente = this.$clientes.filter((c)=> c.idCliente === String(id))
     console.log(cliente[0].razonSocial);
     
     return cliente[0].razonSocial

@@ -1,24 +1,22 @@
 export interface Legajo {
-    
-    idLegajo: number;
-    idChofer: number;    
-    documentacion: Documentacion [];
+    idLegajo: string;
+    idChofer: string;
+    documentacion: Documentacion[];
     estadoGral: Estado;
-    visible:boolean
+    visible: boolean;
 }
 
-export interface Documentacion {    
+export interface Documentacion {
     titulo: string;
     sinVto: boolean;
     fechaVto: string | null;
     estado: Estado;
-    imagenes: { nombre: string; url: string }[]; // Especificamos el tipo
+    imagenes: { nombre: string; url: string }[];
 }
 
 export interface Estado {
     enFecha: boolean;
     porVencer: boolean;
-    vencido: boolean;    
+    vencido: boolean;
     vacio: boolean;
 }
-

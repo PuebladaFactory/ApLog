@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TableroOpComponent } from './tablero-op.component';
 
-describe('NuevaTablaComponent', () => {
+describe('TableroOpV2Component', () => {
   let component: TableroOpComponent;
   let fixture: ComponentFixture<TableroOpComponent>;
 

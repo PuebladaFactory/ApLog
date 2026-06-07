@@ -10,6 +10,9 @@ import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personaliz
 import { Vendedor } from 'src/app/interfaces/vendedor';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
+import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
+import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 
 let version = 'v0.0.0'; // fallback por defecto
 
@@ -35,9 +38,12 @@ export class HomeComponent implements OnInit {
   tarifas$!: Observable<any>;
   private destroy$ = new Subject<void>();
   
-  constructor(private storageService: StorageService, private legajoServ: LegajosService, private router: Router) { }
+  constructor(private storageService: StorageService, private legajoServ: LegajosService, private router: Router, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService) { }
 
   ngOnInit(): void {
+    this.choferService.init();
+    this.proveedorService.init();
+    this.clienteService.init();
     this.setInitialSidebarState();
     window.addEventListener('resize', this.onResize);
     this.storageService.legajos$
@@ -66,21 +72,7 @@ export class HomeComponent implements OnInit {
       this.storageService.listenForChanges<Vendedor>("vendedores");
       this.storageService.listenForChangesField<NoDisponibilidadChofer>("noOperativo", "activa", true);
       
-      
 
-/*       this.storageService.getObservable("ruta")
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data=>{
-        if(data){
-          //console.log("ruta", data);
-          this.router.navigate([data[0]]);    
-        }
-      })
-      this.router.navigate(['op']); */
-      //this.storageService.setInfo("ruta", ["op"])
-      //this.storageService.syncChangesTarifasGral<TarifaGralCliente>('tarifasEspCliente');
-      //this.storageService.syncChangesTarifasGral<TarifaPersonalizadaCliente>('tarifasPersCliente');
-      //this.storageService.syncChangesTarifasEspCliente<TarifaPersonalizadaCliente>('tarifasPersCliente');
   }
 
   ngOnDestroy(): void {

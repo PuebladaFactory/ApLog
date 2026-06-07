@@ -15,10 +15,10 @@ export class LegajosService {
 
   constructor(private storageService: StorageService, private dbFirebase: DbFirestoreService) { }
 
-  crearLegajo(idChofer:number){
+  crearLegajo(idChofer:string){
     this.legajo ={
       
-      idLegajo:new Date().getTime() + Math.floor(Math.random() * 1000),
+      idLegajo:"",
       idChofer: idChofer,      
       estadoGral:{
         enFecha: false,
@@ -153,20 +153,24 @@ export class LegajosService {
     };
   }
 
-  eliminarLegajo(idChofer:number, motivo: string){
-    
-    let legajo: Legajo[];
-    this.dbFirebase.getByFieldValue<Legajo>("legajos", "idChofer", idChofer)
-    .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-    .pipe(take(1))
-    .subscribe(data=>{
-      if(data){
-        let legajo: any = data;
-        console.log("legajo", legajo);
-        this.storageService.deleteItemPapelera("legajos", legajo[0], legajo[0].idLegajo, "BAJA", "Baja de Legajo", `Baja de legajo: ${motivo}`);
-      }      
-      
-    })
+  async eliminarLegajo(idChofer: string, motivo: string): Promise<Legajo | null> {
+    const resultados = await this.dbFirebase.getByField<Legajo>(
+      'legajos', 'idChofer', idChofer
+    );
+    if (resultados.length === 0) {
+      console.warn(`No se encontró legajo para el chofer ${idChofer}`);
+      return null;
+    }
+    const legajo = resultados[0];
+    await this.storageService.deleteItemPapeleraAsync(
+      'legajos',
+      { id: legajo.id },
+      legajo.id,
+      'BAJA',
+      'Baja de Legajo',
+      `Baja de legajo: ${motivo}`,
+    );
+    return legajo.data;
   }
 }
 

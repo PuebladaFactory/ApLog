@@ -56,9 +56,9 @@ export class FinanzasPagosComponent implements OnInit {
 
   ngOnInit(): void {
     this.choferes = this.storageService.loadInfo("choferes");
-    this.choferes = this.choferes.filter(c=> c.idProveedor === 0);
+    this.choferes = this.choferes.filter(c=> c.contratacion?.tipo === 'directo');
     this.choferes = this.choferes.sort((a, b) =>
-      a.apellido.localeCompare(b.apellido),
+      a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
     );
     this.proveedores = this.storageService.loadInfo("proveedores");
     this.proveedores = this.proveedores.sort((a, b) =>
@@ -87,7 +87,7 @@ export class FinanzasPagosComponent implements OnInit {
     if (this.tipoEntidad === "chofer") {
       chofer = this.choferes.find((c) => c.idChofer === ent.idChofer);
       if (chofer) {
-        razonSocial = chofer.apellido + " " + chofer.nombre;
+        razonSocial = chofer.datosPersonales.apellido + " " + chofer.datosPersonales.nombre;
       } else {
         razonSocial = "";
       }

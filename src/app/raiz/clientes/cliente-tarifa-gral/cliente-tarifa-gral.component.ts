@@ -581,7 +581,7 @@ onGenerarNuevaTarifaAutomatica() {
             clientes.forEach((c:ConIdType<Cliente>)=>{
               if(c.tarifaTipo.general){
                 c.tarifaAsignada = true;
-                c.idTarifa = this.nuevaTarifaGral.idTarifa;
+                c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
                 let {id, type, ...cliente } = c
                 this.storageService.updateItem("clientes", cliente, c.idCliente, "INTERNA", "", c.id);
               }
@@ -602,7 +602,7 @@ onGenerarNuevaTarifaAutomatica() {
         clientes.forEach((c:ConIdType<Cliente>)=>{
           if(c.tarifaTipo.especial  && c.idCliente === this.idClienteEsp[0]){
             c.tarifaAsignada = true;
-            c.idTarifa = this.nuevaTarifaGral.idTarifa;
+            c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let {id, type, ...cliente } = c
             this.storageService.updateItem("clientes", cliente, c.idCliente, "INTERNA", "", c.id);            
           }
@@ -732,7 +732,7 @@ onGenerarNuevaTarifaAutomatica() {
   getClienteEsp(idCliente:number){
     let clientes : Cliente[] = [];
 
-    clientes = this.$clientesEsp.filter(c => c.idCliente === idCliente);
+    clientes = this.$clientesEsp.filter(c => c.idCliente === String(idCliente));
 
     return clientes[0].razonSocial;
 
@@ -745,7 +745,7 @@ onGenerarNuevaTarifaAutomatica() {
             clientes.forEach((c:Cliente)=>{
               if(c.tarifaTipo.general){
                 c.tarifaAsignada = true;
-                c.idTarifa = this.tarifaGeneral.idTarifa;
+                c.idTarifa = String(this.tarifaGeneral.idTarifa);
                 //this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
               }
             })

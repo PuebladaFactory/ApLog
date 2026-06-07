@@ -27,7 +27,7 @@ import { ConId } from "src/app/interfaces/conId";
   styleUrl: "./tarifa-editor.component.scss",
 })
 export class TarifaEditorComponent implements OnInit {
-  @Input() idCliente!: number;
+  @Input() idCliente!: number|string;
   @Input() tarifa?: ConId<TarifaPersonalizadaCliente> | null;
   @Input() modo: "crear" | "editar" | "duplicar" = "crear";
   @Output() guardar = new EventEmitter<TarifaForm>();
