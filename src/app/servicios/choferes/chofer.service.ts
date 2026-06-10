@@ -228,6 +228,11 @@ export class ChoferService implements OnDestroy {
     return choferes.find(c => c.datosPersonales.cuit === cuit) ?? null;
   }
 
+  /** Devuelve el array actual de choferes sin suscribirse. */
+  getChoferesActuales(): ConIdType<Chofer>[] {
+    return this._choferes$.getValue();
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();

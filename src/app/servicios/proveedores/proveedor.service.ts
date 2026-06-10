@@ -55,6 +55,11 @@ export class ProveedorService implements OnDestroy {
     return proveedores.find(p => p.cuit === cuit) ?? null;
   }
 
+  /** Devuelve el array actual de proveedores sin suscribirse. */
+  getProveedoresActuales(): ConIdType<Proveedor>[] {
+    return this._proveedores$.getValue();
+  }
+
   toFirestore(proveedor: ConIdType<Proveedor>): Omit<Proveedor, 'idProveedor'> {
     // Excluimos id y type (metadata de ConIdType) e idProveedor
     // (se almacena solo como ID del documento, no como campo)
@@ -164,9 +169,9 @@ export class ProveedorService implements OnDestroy {
     );
 
     // 2. Obtener choferes del proveedor desde memoria
-    const choferes = (this.choferService as any)._choferes$.getValue().filter((c: any) =>
-      c.contratacion?.tipo === 'proveedor' &&
-      c.contratacion?.idProveedor === proveedor.idProveedor
+    const choferes = this.choferService.getChoferesActuales().filter(c =>
+      c.contratacion.tipo === 'proveedor' &&
+      c.contratacion.idProveedor === proveedor.idProveedor
     );
 
     // 3. Obtener legajos de cada chofer

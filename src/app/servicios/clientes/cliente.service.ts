@@ -50,6 +50,11 @@ export class ClienteService implements OnDestroy {
     return clientes.find(c => c.cuit === cuit) ?? null;
   }
 
+  /** Devuelve el array actual de clientes sin suscribirse. */
+  getClientesActuales(): ConIdType<Cliente>[] {
+    return this._clientes$.getValue();
+  }
+
   toFirestore(cliente: ConIdType<Cliente>): Omit<Cliente, 'idCliente'> {
     // Excluimos id y type (metadata de ConIdType) e idCliente
     // (se almacena solo como ID del documento, no como campo)
