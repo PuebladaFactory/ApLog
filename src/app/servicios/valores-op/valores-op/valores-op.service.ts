@@ -57,9 +57,10 @@ export class ValoresOpService {
     this.informesVenta = [];
     try {
       this.$proveedores = this.storageService.loadInfo("proveedores");
-      if (op.chofer.contratacion.tipo === 'proveedor') {
+      if (op.proveedor !== null) {
+        // TODO: refactor Tarifas — idProveedor desde snapshot op.proveedor
         this.proveedorSeleccionado = this.$proveedores.find(
-          (p) => p.idProveedor === (op.chofer.contratacion as any).idProveedor,
+          (p) => p.idProveedor === op.proveedor!.id,
         );
       }
 
@@ -91,7 +92,9 @@ export class ValoresOpService {
     try {
       let respuesta;
 
-      if (op.tarifaTipo.general) {
+      if (op.tarifaTipo.general || op.tarifaTipo.especial) {
+        // TODO: refactor Tarifas — 'especial' tratado como 'general' temporalmente
+        // (ver bloque especial comentado abajo).
         //tarifa general
         ////////////// TARIFA GENERAL CLIENTE ///////////////////////
         //////console.log("1)A.1) tarifa GENERAL CLIENTE: ", this.$ultTarifaGralCliente);
@@ -100,38 +103,43 @@ export class ValoresOpService {
           this.$ultTarifaGralCliente,
         );
         ////////////console.log("1)A.2)Factura OP cliente ", this.facturaOpCliente);
-      } else if (op.tarifaTipo.especial) {
-        //tarifa especial cliente
-        if (op.cliente.tarifaTipo.especial) {
-          ////////////// TARIFA ESPECIAL CLIENTE ///////////////////////
-          const tarifas = this.storageService.loadInfo("tarifasEspCliente");
-          this.$ultTarifaEspCliente = tarifas.find(
-            (t) => t.idCliente === op.cliente.idCliente,
-          );
-          //////console.log("1)A.2) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);
-          if (
-            !this.$ultTarifaEspCliente ||
-            !this.$ultTarifaEspCliente.cargasGenerales?.length
-          ) {
-            throw new Error("Tarifa especial del cliente no válida o vacía");
-          }
-          respuesta = this.facturacionCliente.$facturarOpCliente(
-            op,
-            this.$ultTarifaEspCliente,
-          );
-        } else {
-          //tarifa especial solo del chofer. aplica tarifa general al cliente
-          respuesta = this.facturacionCliente.$facturarOpCliente(
-            op,
-            this.$ultTarifaGralCliente,
-          );
-        }
+      // TODO: refactor Tarifas — rama de tarifa especial deshabilitada.
+      // Conflicto: lee op.cliente.tarifaTipo.especial, pero op.cliente es RefCliente (sin tarifaTipo).
+      // Con la estructura actual, una op es 'especial' si al menos una entidad tiene tarifa especial;
+      // identificar ese caso requiere el tipo de tarifa de la entidad viva. Se difiere al refactor de
+      // Tarifas; mientras tanto 'especial' se factura como 'general' (rama unida en el if de arriba).
+      // } else if (op.tarifaTipo.especial) {
+      //   //tarifa especial cliente
+      //   if (op.cliente.tarifaTipo.especial) {
+      //     ////////////// TARIFA ESPECIAL CLIENTE ///////////////////////
+      //     const tarifas = this.storageService.loadInfo("tarifasEspCliente");
+      //     this.$ultTarifaEspCliente = tarifas.find(
+      //       (t) => t.idCliente === op.cliente.idCliente,
+      //     );
+      //     //////console.log("1)A.2) tarifa ESPECIAL CLIENTE: ", this.$ultTarifaEspCliente);
+      //     if (
+      //       !this.$ultTarifaEspCliente ||
+      //       !this.$ultTarifaEspCliente.cargasGenerales?.length
+      //     ) {
+      //       throw new Error("Tarifa especial del cliente no válida o vacía");
+      //     }
+      //     respuesta = this.facturacionCliente.$facturarOpCliente(
+      //       op,
+      //       this.$ultTarifaEspCliente,
+      //     );
+      //   } else {
+      //     //tarifa especial solo del chofer. aplica tarifa general al cliente
+      //     respuesta = this.facturacionCliente.$facturarOpCliente(
+      //       op,
+      //       this.$ultTarifaGralCliente,
+      //     );
+      //   }
       } else if (op.tarifaTipo.personalizada) {
         //tarifa personalizada
         ////////////// TARIFA PERSONALIZADA CLIENTE ///////////////////////
         const tarifas = this.storageService.loadInfo("tarifasPersCliente");
         this.$ultTarifaPersCliente = tarifas.find(
-          (t) => t.idCliente === op.cliente.idCliente,
+          (t) => String(t.idCliente) === op.cliente.id,
         );
         //////console.log("1)A.3) tarifa PERSONALIZADA CLIENTE: ", this.$ultTarifaPersCliente);
         if (
@@ -159,7 +167,7 @@ export class ValoresOpService {
       this.operacion.valores.cliente = respuesta.op.valores.cliente;
       this.facturaOpCliente = respuesta.factura;
 
-      if (op.chofer.contratacion.tipo === 'directo') {
+      if (op.proveedor === null) {
         await this.$facturarOpChofer(op);
       } else {
         await this.$facturarOpProveedor(op);
@@ -173,7 +181,8 @@ export class ValoresOpService {
     try {
       let respuesta;
 
-      if (op.tarifaTipo.general) {
+      if (op.tarifaTipo.general || op.tarifaTipo.especial) {
+        // TODO: refactor Tarifas — 'especial' tratado como 'general' temporalmente.
         //tarifa general
         /////////TARIFA GENERAL CHOFER /////////////////////////
         //////console.log("1)B.1) tarifa GENERAL CHOFER: ", this.$ultTarifaGralChofer);
@@ -181,57 +190,62 @@ export class ValoresOpService {
           op,
           this.$ultTarifaGralChofer,
         );
-      } else if (op.tarifaTipo.especial) {
-        //tarifa especial chofer
-        if (op.chofer.tarifaTipo.especial) {
-          /////////TARIFA ESPECIAL CHOFER /////////////////////////
-          const tarifas = this.storageService.loadInfo("tarifasEspChofer");
-          this.$ultTarifaEspChofer = tarifas.find(
-            (t) => t.idChofer === op.chofer.idChofer,
-          );
-          //////console.log("1)B.2) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);
-          if (
-            !this.$ultTarifaEspChofer ||
-            !this.$ultTarifaEspChofer.cargasGenerales?.length
-          ) {
-            throw new Error("Tarifa especial del chofer no válida o vacía");
-          }
-          if (
-            this.$ultTarifaEspChofer.idCliente === 0 ||
-            String(this.$ultTarifaEspChofer.idCliente) === String(op.cliente.idCliente)
-          ) {
-            //tarifa especial gral o especifica al cliente de la op
-            respuesta = this.facturacionChofer.$facturarOpChofer(
-              op,
-              this.$ultTarifaEspChofer,
-            );
-          } else {
-            ////este caso es donde la tarifa especial no aplica
-            //aca le cambio el tipo de tarifa pq usa una tarifa especial no aplica
-            respuesta = this.facturacionChofer.$facturarOpChofer(
-              op,
-              this.$ultTarifaGralChofer,
-            );
-            respuesta.factura.tarifaTipo = {
-              general: true,
-              especial: false,
-              eventual: false,
-              personalizada: false,
-            };
-          }
-        } else {
-          //tarifa especial solo del cliente. aplica tarifa general al chofer
-          respuesta = this.facturacionChofer.$facturarOpChofer(
-            op,
-            this.$ultTarifaGralChofer,
-          );
-        }
+      // TODO: refactor Tarifas — rama de tarifa especial deshabilitada.
+      // Conflicto: lee op.chofer.tarifaTipo.especial, pero op.chofer es RefChofer (sin tarifaTipo).
+      // Con la estructura actual, una op es 'especial' si al menos una entidad tiene tarifa especial;
+      // identificar ese caso requiere el tipo de tarifa de la entidad viva. Se difiere al refactor de
+      // Tarifas; mientras tanto 'especial' se factura como 'general' (rama unida en el if de arriba).
+      // } else if (op.tarifaTipo.especial) {
+      //   //tarifa especial chofer
+      //   if (op.chofer.tarifaTipo.especial) {
+      //     /////////TARIFA ESPECIAL CHOFER /////////////////////////
+      //     const tarifas = this.storageService.loadInfo("tarifasEspChofer");
+      //     this.$ultTarifaEspChofer = tarifas.find(
+      //       (t) => t.idChofer === op.chofer.idChofer,
+      //     );
+      //     //////console.log("1)B.2) tarifa ESPECIAL CHOFER: ", this.$ultTarifaEspChofer);
+      //     if (
+      //       !this.$ultTarifaEspChofer ||
+      //       !this.$ultTarifaEspChofer.cargasGenerales?.length
+      //     ) {
+      //       throw new Error("Tarifa especial del chofer no válida o vacía");
+      //     }
+      //     if (
+      //       this.$ultTarifaEspChofer.idCliente === 0 ||
+      //       String(this.$ultTarifaEspChofer.idCliente) === String(op.cliente.idCliente)
+      //     ) {
+      //       //tarifa especial gral o especifica al cliente de la op
+      //       respuesta = this.facturacionChofer.$facturarOpChofer(
+      //         op,
+      //         this.$ultTarifaEspChofer,
+      //       );
+      //     } else {
+      //       ////este caso es donde la tarifa especial no aplica
+      //       //aca le cambio el tipo de tarifa pq usa una tarifa especial no aplica
+      //       respuesta = this.facturacionChofer.$facturarOpChofer(
+      //         op,
+      //         this.$ultTarifaGralChofer,
+      //       );
+      //       respuesta.factura.tarifaTipo = {
+      //         general: true,
+      //         especial: false,
+      //         eventual: false,
+      //         personalizada: false,
+      //       };
+      //     }
+      //   } else {
+      //     //tarifa especial solo del cliente. aplica tarifa general al chofer
+      //     respuesta = this.facturacionChofer.$facturarOpChofer(
+      //       op,
+      //       this.$ultTarifaGralChofer,
+      //     );
+      //   }
       } else if (op.tarifaTipo.personalizada) {
         //tarifa personalizada
         /////////TARIFA PERSONALIZADA CHOFER /////////////////////////
         const tarifas = this.storageService.loadInfo("tarifasPersCliente");
         this.$ultTarifaPersCliente = tarifas.find(
-          (t) => t.idCliente === op.cliente.idCliente,
+          (t) => String(t.idCliente) === op.cliente.id,
         );
         //////console.log("1)B.3) tarifa PERSONALIZADA CHOFER: ", this.$ultTarifaPersCliente);
         if (
@@ -274,67 +288,72 @@ export class ValoresOpService {
       let respuesta;
       if (!this.proveedorSeleccionado) throw new Error("Proveedor no definido");
 
-      if (op.tarifaTipo.general) {
+      if (op.tarifaTipo.general || op.tarifaTipo.especial) {
+        // TODO: refactor Tarifas — 'especial' tratado como 'general' temporalmente.
         //////console.log("3)C.1) tarifa GENERAL Proveedor: ", this.$ultTarifaGralProveedor);
         respuesta = this.facturacionChofer.$facturarOpProveedor(
           op,
           this.$ultTarifaGralProveedor,
           this.proveedorSeleccionado.idProveedor,
         );
-      } else if (op.tarifaTipo.especial) {
-        //tarifa especial proveedor
-        if (this.proveedorSeleccionado.tarifaTipo.especial) {
-          ///////////// TARIFA ESPECIAL PROVEEDOR ///////////////////
-          const tarifas = this.storageService.loadInfo("tarifasEspProveedor");
-          this.$ultTarifaEspProveedor = tarifas.find(
-            (t) => t.idChofer === op.chofer.idChofer,
-          );
-          //////console.log("3)C.2) tarifa ESPECIAL Proveedor: ", this.$ultTarifaGralProveedor);
-          if (
-            !this.$ultTarifaEspProveedor ||
-            !this.$ultTarifaEspProveedor.cargasGenerales?.length
-          ) {
-            throw new Error("Tarifa especial del proveedor no válida o vacía");
-          }
-          if (
-            this.$ultTarifaEspProveedor.idCliente === 0 ||
-            String(this.$ultTarifaEspProveedor.idCliente) === String(op.cliente.idCliente)
-          ) {
-            //tarifa especial gral o especifica al cliente de la op
-            respuesta = this.facturacionChofer.$facturarOpProveedor(
-              op,
-              this.$ultTarifaEspProveedor,
-              this.proveedorSeleccionado.idProveedor,
-            );
-          } else {
-            ////este caso es donde la tarifa especial no aplica
-            //aca le cambio el tipo de tarifa pq usa una tarifa especial no aplica
-            respuesta = this.facturacionChofer.$facturarOpProveedor(
-              op,
-              this.$ultTarifaGralProveedor,
-              this.proveedorSeleccionado.idProveedor,
-            );
-            respuesta.factura.tarifaTipo = {
-              general: true,
-              especial: false,
-              eventual: false,
-              personalizada: false,
-            };
-          }
-        } else {
-          //tarifa especial solo del cliente. aplica tarifa general al chofer
-          respuesta = this.facturacionChofer.$facturarOpProveedor(
-            op,
-            this.$ultTarifaGralProveedor,
-            this.proveedorSeleccionado.idProveedor,
-          );
-        }
+      // TODO: refactor Tarifas — rama de tarifa especial deshabilitada.
+      // Conflicto: lee this.proveedorSeleccionado.tarifaTipo.especial y op.chofer.idChofer,
+      // pero op.chofer es RefChofer (sin idChofer legacy). Se difiere al refactor de Tarifas;
+      // mientras tanto 'especial' se factura como 'general' (rama unida en el if de arriba).
+      // } else if (op.tarifaTipo.especial) {
+      //   //tarifa especial proveedor
+      //   if (this.proveedorSeleccionado.tarifaTipo.especial) {
+      //     ///////////// TARIFA ESPECIAL PROVEEDOR ///////////////////
+      //     const tarifas = this.storageService.loadInfo("tarifasEspProveedor");
+      //     this.$ultTarifaEspProveedor = tarifas.find(
+      //       (t) => t.idChofer === op.chofer.idChofer,
+      //     );
+      //     //////console.log("3)C.2) tarifa ESPECIAL Proveedor: ", this.$ultTarifaGralProveedor);
+      //     if (
+      //       !this.$ultTarifaEspProveedor ||
+      //       !this.$ultTarifaEspProveedor.cargasGenerales?.length
+      //     ) {
+      //       throw new Error("Tarifa especial del proveedor no válida o vacía");
+      //     }
+      //     if (
+      //       this.$ultTarifaEspProveedor.idCliente === 0 ||
+      //       String(this.$ultTarifaEspProveedor.idCliente) === String(op.cliente.idCliente)
+      //     ) {
+      //       //tarifa especial gral o especifica al cliente de la op
+      //       respuesta = this.facturacionChofer.$facturarOpProveedor(
+      //         op,
+      //         this.$ultTarifaEspProveedor,
+      //         this.proveedorSeleccionado.idProveedor,
+      //       );
+      //     } else {
+      //       ////este caso es donde la tarifa especial no aplica
+      //       //aca le cambio el tipo de tarifa pq usa una tarifa especial no aplica
+      //       respuesta = this.facturacionChofer.$facturarOpProveedor(
+      //         op,
+      //         this.$ultTarifaGralProveedor,
+      //         this.proveedorSeleccionado.idProveedor,
+      //       );
+      //       respuesta.factura.tarifaTipo = {
+      //         general: true,
+      //         especial: false,
+      //         eventual: false,
+      //         personalizada: false,
+      //       };
+      //     }
+      //   } else {
+      //     //tarifa especial solo del cliente. aplica tarifa general al chofer
+      //     respuesta = this.facturacionChofer.$facturarOpProveedor(
+      //       op,
+      //       this.$ultTarifaGralProveedor,
+      //       this.proveedorSeleccionado.idProveedor,
+      //     );
+      //   }
       } else if (op.tarifaTipo.personalizada) {
         //tarifa personalizada
         /////////TARIFA PERSONALIZADA PROVEEDOR /////////////////////////
         const tarifas = this.storageService.loadInfo("tarifasPersCliente");
         this.$ultTarifaPersCliente = tarifas.find(
-          (t) => t.idCliente === op.cliente.idCliente,
+          (t) => String(t.idCliente) === op.cliente.id,
         );
         //////console.log("3)C.3) tarifa PERSONALIZADA Proveedor: ", this.$ultTarifaPersCliente);
         if (
@@ -375,21 +394,17 @@ export class ValoresOpService {
   async $armarFacturasOp(op: ConId<Operacion>) {
     try {
       // lógica de armado
-      if (op.chofer.contratacion.tipo === 'directo') {
+      if (op.proveedor === null) {
         if (this.facturaOpCliente !== null && this.facturaOpChofer !== null) {
           op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
           op.valores.chofer.aPagar = this.facturaOpChofer.valores.total;
           op.estado = {
-            abierta: false,
-            cerrada: true,
-            facCliente: false,
-            facChofer: false,
-            facturada: false,
-            proformaCl: false,
-            proformaCh: false,
+            ciclo: 'cerrada',
+            liquidacion: { cliente: false, chofer: false },
+            proforma: { cliente: false, chofer: false },
           };
-          op.facturaCliente = this.facturaOpCliente.idInfOp;
-          op.facturaChofer = this.facturaOpChofer.idInfOp;
+          op.informeOpCliente = this.facturaOpCliente.idInfOp;
+          op.informeOpChofer = this.facturaOpChofer.idInfOp;
           this.facturaOpCliente.contraParteMonto =
             this.facturaOpChofer.valores.total;
           this.facturaOpChofer.contraParteMonto =
@@ -406,16 +421,12 @@ export class ValoresOpService {
           op.valores.cliente.aCobrar = this.facturaOpCliente.valores.total;
           op.valores.chofer.aPagar = this.facturaOpProveedor.valores.total;
           op.estado = {
-            abierta: false,
-            cerrada: true,
-            facCliente: false,
-            facChofer: false,
-            facturada: false,
-            proformaCl: false,
-            proformaCh: false,
+            ciclo: 'cerrada',
+            liquidacion: { cliente: false, chofer: false },
+            proforma: { cliente: false, chofer: false },
           };
-          op.facturaCliente = this.facturaOpCliente.idInfOp;
-          op.facturaChofer = this.facturaOpProveedor.idInfOp;
+          op.informeOpCliente = this.facturaOpCliente.idInfOp;
+          op.informeOpChofer = this.facturaOpProveedor.idInfOp;
           this.facturaOpCliente.contraParteMonto =
             this.facturaOpProveedor.valores.total;
           this.facturaOpProveedor.contraParteMonto =
@@ -438,7 +449,7 @@ export class ValoresOpService {
 
     try {
       let result;
-      if (op.chofer.contratacion.tipo === 'directo') {
+      if (op.proveedor === null) {
         result = await this.dbFirebase.guardarFacturasOp(
           "informesOpClientes",
           this.facturaOpCliente,
@@ -471,13 +482,14 @@ export class ValoresOpService {
     this.tarifaEventual = {
       idTarifa: new Date().getTime() + Math.floor(Math.random() * 1000),
       fecha: op.fecha,
+      // TODO: refactor Tarifas — invariante: eventual ⟺ datosTarifaEventual !== null
       cliente: {
-        concepto: op.tarifaEventual.cliente.concepto,
-        valor: op.tarifaEventual.cliente.valor,
+        concepto: op.datosTarifaEventual!.cliente.concepto,
+        valor: op.datosTarifaEventual!.cliente.valor,
       },
       chofer: {
-        concepto: op.tarifaEventual.chofer.concepto,
-        valor: op.tarifaEventual.chofer.valor,
+        concepto: op.datosTarifaEventual!.chofer.concepto,
+        valor: op.datosTarifaEventual!.chofer.valor,
       },
       tipo: {
         general: false,
@@ -485,9 +497,9 @@ export class ValoresOpService {
         eventual: true,
         personalizada: false,
       },
-      idCliente: Number(op.cliente.idCliente),
-      idChofer: Number(op.chofer.idChofer),
-      idProveedor: (op.chofer.contratacion as any).idProveedor ?? 0,
+      idCliente: Number(op.cliente.id), // TODO: migrar a string cuando se refactorice este módulo
+      idChofer: Number(op.chofer.id),   // TODO: migrar a string cuando se refactorice este módulo
+      idProveedor: Number(op.proveedor?.id ?? 0), // TODO: refactor Tarifas — idProveedor desde snapshot
       idOperacion: op.idOperacion,
       km: op.km,
     };
@@ -496,7 +508,7 @@ export class ValoresOpService {
       this.tarifaEventual,
       this.tarifaEventual.idTarifa,
       "ALTA",
-      `Alta de Tarifa Eventual ${this.tarifaEventual.idTarifa}, Cliente ${op.cliente.razonSocial}, Chofer ${op.chofer.datosPersonales.apellido} ${op.chofer.datosPersonales.nombre} `,
+      `Alta de Tarifa Eventual ${this.tarifaEventual.idTarifa}, Cliente ${op.cliente.razonSocial}, Chofer ${op.chofer.apellido} ${op.chofer.nombre} `,
     );
   }
 
@@ -508,7 +520,7 @@ export class ValoresOpService {
         idInfVenta: new Date().getTime() + Math.floor(Math.random() * 1000),
         fecha: op.fecha,
         idOperacion: op.idOperacion,
-        idCliente: Number(op.cliente.idCliente),
+        idCliente: Number(op.cliente.id), // TODO: migrar a string cuando se refactorice este módulo
         idVendedor: Number(idVend), // TODO: migrar a string cuando se refactorice este módulo
         valoresOp: {
           totalCliente: op.valores.cliente.aCobrar,
@@ -531,15 +543,15 @@ export class ValoresOpService {
   aCobrarOp(op: Operacion) {
     let tarifa: any;
     let tarifaGral = this.storageService.loadInfo("tarifasGralCliente");
-    let tarifasEspeciales = this.storageService.loadInfo("tarifasEspCliente");
+    // let tarifasEspeciales = this.storageService.loadInfo("tarifasEspCliente"); // (rama especial comentada abajo)
 
-    if (op.cliente.tarifaTipo.especial) {
-      tarifa = tarifasEspeciales.find(
-        (t) => t.idCliente === op.cliente.idCliente,
-      );
-    } else {
-      tarifa = tarifaGral[0];
-    }
+    // TODO: refactor Tarifas — rama especial deshabilitada: op.cliente es RefCliente (sin tarifaTipo).
+    // Mientras tanto se aplica siempre tarifa general. Recuperar al reestructurar Tarifas.
+    // if (op.cliente.tarifaTipo.especial) {
+    //   tarifa = tarifasEspeciales.find((t) => String(t.idCliente) === op.cliente.id);
+    // } else {
+    tarifa = tarifaGral[0];
+    // }
 
     if (tarifa) {
       op.valores.cliente.aCobrar =
@@ -556,42 +568,35 @@ export class ValoresOpService {
     let tarifaGralProveedor = this.storageService.loadInfo(
       "tarifasGralProveedor",
     );
-    let tarifasEspecialesChofer =
-      this.storageService.loadInfo("tarifasEspChofer");
-    let tarifasEspecialesProveedor = this.storageService.loadInfo(
-      "tarifasEspProveedor",
-    );
+    // let tarifasEspecialesChofer = this.storageService.loadInfo("tarifasEspChofer"); // (rama especial comentada abajo)
+    // let tarifasEspecialesProveedor = this.storageService.loadInfo("tarifasEspProveedor"); // (rama especial comentada abajo)
 
-    if (op.chofer.tarifaTipo.especial) {
-      if (op.chofer.contratacion.tipo === 'directo') {
-        let tEsp = tarifasEspecialesChofer.find(
-          (t) => String(t.idChofer) === op.chofer.idChofer,
-        );
-        if (tEsp.idCliente === 0 || String(tEsp.idCliente) === String(op.cliente.idCliente)) {
-          tarifa = tEsp;
-          //////console.log("2A) tarifa esp chofer a pagar: ", tarifa);
-        } else {
-          tarifa = tarifaGralChofer[0];
-          //////console.log("2B) tarifa gral chofer a pagar: ", tarifa);
-        }
-      } else {
-        let tEsp = tarifasEspecialesProveedor.find(
-          (t) => t.idProveedor === (op.chofer.contratacion as any).idProveedor,
-        );
-        if (tEsp.idCliente === 0 || String(tEsp.idCliente) === String(op.cliente.idCliente)) {
-          tarifa = tEsp;
-          //////console.log("2A) tarifa esp chofer a pagar: ", tarifa);
-        } else {
-          tarifa = tarifaGralProveedor[0];
-          //////console.log("2B) tarifa gral chofer a pagar: ", tarifa);
-        }
-      }
-    } else {
-      tarifa =
-        op.chofer.contratacion.tipo === 'directo'
-          ? tarifaGralChofer[0]
-          : tarifaGralProveedor[0];
-    }
+    // TODO: refactor Tarifas — rama especial deshabilitada: op.chofer es RefChofer (sin tarifaTipo).
+    // Toda la lógica de tarifa especial chofer/proveedor (selección por idCliente, etc.) queda
+    // comentada. Mientras tanto se aplica siempre tarifa general (chofer o proveedor según op.proveedor).
+    // Recuperar al reestructurar Tarifas.
+    // if (op.chofer.tarifaTipo.especial) {
+    //   if (op.chofer.contratacion.tipo === 'directo') {
+    //     let tEsp = tarifasEspecialesChofer.find((t) => String(t.idChofer) === op.chofer.idChofer);
+    //     if (tEsp.idCliente === 0 || String(tEsp.idCliente) === String(op.cliente.idCliente)) {
+    //       tarifa = tEsp;
+    //     } else {
+    //       tarifa = tarifaGralChofer[0];
+    //     }
+    //   } else {
+    //     let tEsp = tarifasEspecialesProveedor.find((t) => t.idProveedor === (op.chofer.contratacion as any).idProveedor);
+    //     if (tEsp.idCliente === 0 || String(tEsp.idCliente) === String(op.cliente.idCliente)) {
+    //       tarifa = tEsp;
+    //     } else {
+    //       tarifa = tarifaGralProveedor[0];
+    //     }
+    //   }
+    // } else {
+    tarifa =
+      op.proveedor === null
+        ? tarifaGralChofer[0]
+        : tarifaGralProveedor[0];
+    // }
 
     if (tarifa) {
       op.valores.chofer.aPagar =
@@ -612,40 +617,37 @@ export class ValoresOpService {
   clienteAcompaniante(op: Operacion): number {
     let tarifas;
     let tarifaAplicada: TarifaGralCliente;
-    if (op.cliente.tarifaTipo.especial) {
-      tarifas = this.storageService.loadInfo("tarifasEspCliente");
-      tarifaAplicada = tarifas.find(
-        (t) => t.idCliente === op.cliente.idCliente,
-      );
-    } else {
-      tarifas = this.storageService.loadInfo("tarifasGralCliente");
-      tarifaAplicada = tarifas[0];
-    }
+    // TODO: refactor Tarifas — rama especial deshabilitada (op.cliente sin tarifaTipo). Siempre general.
+    // if (op.cliente.tarifaTipo.especial) {
+    //   tarifas = this.storageService.loadInfo("tarifasEspCliente");
+    //   tarifaAplicada = tarifas.find((t) => String(t.idCliente) === op.cliente.id);
+    // } else {
+    tarifas = this.storageService.loadInfo("tarifasGralCliente");
+    tarifaAplicada = tarifas[0];
+    // }
 
-    return tarifaAplicada.adicionales.acompaniante * (op.acompanienteCant ?? 1);
+    return tarifaAplicada.adicionales.acompaniante * (op.acompanianteCant ?? 1);
   }
 
   choferAcompaniante(op: Operacion): number {
-    let tarifas;
+    // let tarifas; // (rama especial comentada abajo)
     let tGralChofer = this.storageService.loadInfo("tarifasGralChofer");
     let tarifaAplicada: TarifaGralCliente;
 
-    if (op.chofer.tarifaTipo.especial) {
-      tarifas = this.storageService.loadInfo("tarifasEspChofer");
-      let tEspecial = tarifas.find((t) => t.idChofer === op.chofer.idChofer);
-      if (
-        tEspecial.idCliente === 0 ||
-        String(tEspecial.idCliente) === String(op.cliente.idCliente)
-      ) {
-        tarifaAplicada = tEspecial;
-      } else {
-        tarifaAplicada = tGralChofer[0];
-      }
-    } else {
-      tarifaAplicada = tGralChofer[0];
-    }
+    // TODO: refactor Tarifas — rama especial deshabilitada (op.chofer sin tarifaTipo). Siempre general.
+    // if (op.chofer.tarifaTipo.especial) {
+    //   tarifas = this.storageService.loadInfo("tarifasEspChofer");
+    //   let tEspecial = tarifas.find((t) => String(t.idChofer) === op.chofer.id);
+    //   if (tEspecial.idCliente === 0 || String(tEspecial.idCliente) === String(op.cliente.id)) {
+    //     tarifaAplicada = tEspecial;
+    //   } else {
+    //     tarifaAplicada = tGralChofer[0];
+    //   }
+    // } else {
+    tarifaAplicada = tGralChofer[0];
+    // }
 
-    return tarifaAplicada.adicionales.acompaniante * (op.acompanienteCant ?? 1);
+    return tarifaAplicada.adicionales.acompaniante * (op.acompanianteCant ?? 1);
   }
 
   recalcularValores(op: Operacion): Operacion {

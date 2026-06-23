@@ -295,47 +295,7 @@ export class ProformaComponent implements OnInit {
     }
   }
 
-  editarOperacionesFac(factura: InformeOp, componente: string) {
-    let op: ConId<Operacion>;
-    this.dbFirebase
-      .obtenerTarifaIdTarifa("operaciones", factura.idOperacion, "idOperacion")
-      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe((data) => {
-        op = data;
-        //////console.log("OP LIQUIDADA: ", op);
-        op.estado = {
-          abierta: false,
-          cerrada: false,
-          facCliente:
-            componente === "facturaOpCliente" ? true : op.estado.facCliente,
-          facChofer:
-            componente === "facturaOpChofer" ||
-            componente === "facturaOpProveedor"
-              ? true
-              : op.estado.facChofer,
-          facturada:
-            componente === "facturaOpCliente" && op.estado.facChofer
-              ? true
-              : componente === "facturaOpChofer" && op.estado.facCliente
-                ? true
-                : componente === "facturaOpProveedor" && op.estado.facCliente
-                  ? true
-                  : false,
-          proformaCl: op.estado.proformaCl,
-          proformaCh: op.estado.proformaCh,
-        };
-        let { id, ...opp } = op;
-        this.storageService.updateItem(
-          "operaciones",
-          opp,
-          op.idOperacion,
-          "LIQUIDAR",
-          `Operación de Cliente ${op.cliente.razonSocial} Liquidada`,
-          op.id,
-        );
-        this.removeItem(factura, componente);
-      });
-  }
+
 
   removeItem(item: any, componente: string) {
     //////console.log("llamada al storage desde liq-cliente, deleteItem", item);

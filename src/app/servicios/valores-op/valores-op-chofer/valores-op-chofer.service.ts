@@ -4,7 +4,7 @@ import { StorageService } from "../../storage/storage.service";
 import { DbFirestoreService } from "../../database/db-firestore.service";
 
 import { Operacion } from "src/app/interfaces/operacion";
-import { Chofer, Vehiculo } from "src/app/interfaces/chofer";
+import { Chofer } from "src/app/interfaces/chofer";
 import { Proveedor } from "src/app/interfaces/proveedor";
 
 import {
@@ -61,9 +61,9 @@ export class ValoresOpChoferService {
       msj: string;
     };
     ////console.log("1)Chofer Serv:  op: ", op, " tarifa: ", tarifa);
-    let vehiculo = ((op.chofer as any).vehiculo ?? []).filter(
-      (vehiculo: any) => vehiculo.dominio === op.patenteChofer,
-    );
+    // TODO: refactor Tarifas — antes buscaba en el array embebido del chofer (ya inexistente);
+    // ahora el vehículo de la op está en op.vehiculo (RefVehiculo).
+    const vehiculo = op.vehiculo;
     ////console.log("1c) vehiculo: ", vehiculo);
 
     if (op.multiplicadorChofer === 0) {
@@ -79,16 +79,16 @@ export class ValoresOpChoferService {
       op.valores.chofer.aPagar = 0;
     } else {
       this.tarifaBase =
-        this.$calcularCG(tarifa, vehiculo[0]) * op.multiplicadorChofer;
+        this.$calcularCG(tarifa, vehiculo) * op.multiplicadorChofer;
       op.valores.chofer.tarifaBase = this.tarifaBase;
       ////////console.log("tarifa base: " ,this.tarifaBase);
       //this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0 ;
       this.acompaniante = op.acompaniante
-        ? tarifa.adicionales.acompaniante * (op.acompanienteCant ?? 1)
+        ? tarifa.adicionales.acompaniante * (op.acompanianteCant ?? 1)
         : 0;
       op.valores.chofer.acompValor = this.acompaniante;
       ////////console.log("acompañante valor: ", this.acompaniante);
-      this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
+      this.kmValor = this.$calcularKm(op, tarifa, vehiculo);
       op.valores.chofer.kmAdicional = this.kmValor;
       op.valores.chofer.aPagar =
         this.tarifaBase + this.acompaniante + this.kmValor +(op.valores.chofer.adExtraValor ?? 0);
@@ -137,7 +137,7 @@ export class ValoresOpChoferService {
     op.valores.chofer.tarifaBase = this.tarifaBase;
     //this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
     this.acompaniante = op.acompaniante
-      ? tGeneral.adicionales.acompaniante * (op.acompanienteCant ?? 1)
+      ? tGeneral.adicionales.acompaniante * (op.acompanianteCant ?? 1)
       : 0;
     op.valores.chofer.acompValor = this.acompaniante;
     if (tarifa.adKmboolean) {
@@ -186,11 +186,12 @@ export class ValoresOpChoferService {
       op.valores.chofer.adExtraValor = 0;
       op.valores.chofer.aPagar = 0;
     }else {
-this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
+// TODO: refactor Tarifas — invariante: eventual ⟺ datosTarifaEventual !== null
+this.tarifaBase = op.datosTarifaEventual!.chofer.valor * op.multiplicadorChofer;
     op.valores.chofer.tarifaBase = this.tarifaBase;
     //this.acompaniante = op.acompaniante ? tGeneral.adicionales.acompaniante : 0 ;
     this.acompaniante = op.acompaniante
-      ? tGeneral.adicionales.acompaniante * (op.acompanienteCant ?? 1)
+      ? tGeneral.adicionales.acompaniante * (op.acompanianteCant ?? 1)
       : 0;
     op.valores.chofer.acompValor = this.acompaniante;
     this.kmValor = 0;
@@ -210,7 +211,8 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
     //return this.facturaOpChofer
   }
 
-  $calcularCG(tarifa: TarifaGralCliente, vehiculo: Vehiculo) {
+  // TODO: refactor Tarifas — firma ampliada a tipo estructural mínimo (solo usa categoria.catOrden).
+  $calcularCG(tarifa: TarifaGralCliente, vehiculo: { categoria: { catOrden: number } }) {
     let catCg = tarifa.cargasGenerales.filter((cat: CategoriaTarifa) => {
       return cat.orden === vehiculo.categoria.catOrden;
     });
@@ -220,16 +222,18 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
   }
 
   $calcularCGPersonalizada(tarifa: TarifaPersonalizadaCliente, op: Operacion) {
+    // TODO: refactor Tarifas — invariante: personalizada ⟺ datosTarifaPersonalizada !== null
     let seccionPers: Seccion[] = tarifa.secciones.filter((seccion: Seccion) => {
-      return seccion.orden === Number(op.tarifaPersonalizada.seccion);
+      return seccion.orden === Number(op.datosTarifaPersonalizada!.seccion);
     });
     let categoria: any[] = seccionPers[0].categorias.filter((cat: any) => {
-      return cat.orden === Number(op.tarifaPersonalizada.categoria);
+      return cat.orden === Number(op.datosTarifaPersonalizada!.categoria);
     });
     return categoria[0].aPagar;
   }
 
-  $calcularKm(op: Operacion, tarifa: TarifaGralCliente, vehiculo: Vehiculo) {
+  // TODO: refactor Tarifas — firma ampliada a tipo estructural mínimo (solo usa categoria.catOrden).
+  $calcularKm(op: Operacion, tarifa: TarifaGralCliente, vehiculo: { categoria: { catOrden: number } }) {
     let catCg = tarifa.cargasGenerales.filter((cat: CategoriaTarifa) => {
       return cat.orden === vehiculo.categoria.catOrden;
     });
@@ -266,8 +270,8 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
     this.facturaOpChofer = {
       idInfOp: new Date().getTime() + Math.floor(Math.random() * 1000),
       idOperacion: op.idOperacion,
-      idCliente: Number(op.cliente.idCliente),
-      idChofer: Number(op.chofer.idChofer),
+      idCliente: Number(op.cliente.id), // TODO: migrar a string cuando se refactorice este módulo
+      idChofer: Number(op.chofer.id),   // TODO: migrar a string cuando se refactorice este módulo
       idProveedor: idProveedor,
       idTarifa: idTarifa,
       fecha: op.fecha,
@@ -282,32 +286,21 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
       liquidacion: false,
       contraParteMonto: 0,
       contraParteId: 0,
-      tarifaTipo: {
-        general: op.tarifaTipo.eventual
-          ? false
-          : op.tarifaTipo.personalizada
-            ? false
-            : op.tarifaTipo.especial
-              ? op.chofer.tarifaTipo.general
-              : op.chofer.tarifaTipo.general,
-        especial: op.tarifaTipo.eventual
-          ? false
-          : op.tarifaTipo.personalizada
-            ? false
-            : op.chofer.tarifaTipo.especial,
-        eventual: op.tarifaTipo.eventual,
-        personalizada: op.tarifaTipo.personalizada,
-      },
+      // TODO: refactor Tarifas — antes derivaba general/especial del chofer (op.chofer.tarifaTipo,
+      // inexistente en RefChofer). Se simplifica a copiar el tipo de la op. En el caso 'especial'
+      // ya no deriva del chofer; revisar en el rediseño de Tarifas.
+      tarifaTipo: { ...op.tarifaTipo },
       observaciones: op.observaciones,
       hojaRuta: op.hojaRuta,
-      patente: op.patenteChofer,
+      patente: op.vehiculo.dominio, // TODO: refactor Tarifas
       proforma: false,
       contraParteProforma: false,
     };
   }
 
+  // TODO: refactor Tarifas — posiblemente huérfano (sin callers detectados).
   $getTarifaTipoChofer(op: Operacion) {
-    if (op.chofer.tarifaTipo?.especial) {
+    if ((op.chofer as any).tarifaTipo?.especial) { // TODO: refactor Tarifas — tarifaTipo no existe en RefChofer
       return true;
     } else {
       return false;
@@ -326,9 +319,9 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
       msj: string;
     };
     ////console.log("1)Proveedor Serv:  op: ", op, " tarifa: ", tarifa);
-    let vehiculo = ((op.chofer as any).vehiculo ?? []).filter(
-      (vehiculo: any) => vehiculo.dominio === op.patenteChofer,
-    );
+    // TODO: refactor Tarifas — antes buscaba en el array embebido del chofer (ya inexistente);
+    // ahora el vehículo de la op está en op.vehiculo (RefVehiculo).
+    const vehiculo = op.vehiculo;
     ////////console.log("1c) vehiculo: ", vehiculo);
 
     if (op.multiplicadorCliente === 0) {
@@ -343,13 +336,13 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
       op.valores.chofer.aPagar = 0;
     } else {
       this.tarifaBase =
-        this.$calcularCG(tarifa, vehiculo[0]) * op.multiplicadorChofer;
+        this.$calcularCG(tarifa, vehiculo) * op.multiplicadorChofer;
       op.valores.chofer.tarifaBase = this.tarifaBase;
       ////////console.log("tarifa base: " ,this.tarifaBase);
       this.acompaniante = op.acompaniante ? tarifa.adicionales.acompaniante : 0;
       op.valores.chofer.acompValor = this.acompaniante;
       ////////console.log("acompañante valor: ", this.acompaniante);
-      this.kmValor = this.$calcularKm(op, tarifa, vehiculo[0]);
+      this.kmValor = this.$calcularKm(op, tarifa, vehiculo);
       op.valores.chofer.kmAdicional = this.kmValor;
       op.valores.chofer.aPagar =
         this.tarifaBase + this.acompaniante + this.kmValor;
@@ -368,11 +361,8 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
   }
 
   valoresInicialesTarifaGral(op: Operacion, tarifa: TarifaGralCliente) {
-    let vehiculo;
-    vehiculo = ((op.chofer as any).vehiculo ?? []).filter((vehiculo: Vehiculo) => {
-      return vehiculo.dominio === op.patenteChofer;
-    });
-    let categoria = vehiculo[0].categoria.catOrden;
+    // TODO: refactor Tarifas — vehículo de la op desde el snapshot op.vehiculo.
+    const categoria = op.vehiculo.categoria.catOrden;
     let catCG = tarifa.cargasGenerales.filter((cat: CategoriaTarifa) => {
       return cat.orden === categoria;
     });
@@ -383,8 +373,9 @@ this.tarifaBase = op.tarifaEventual.chofer.valor * op.multiplicadorChofer;
     op: Operacion,
     tarifa: TarifaPersonalizadaCliente,
   ) {
-    let catCg = op.tarifaPersonalizada.categoria;
-    let seccion = op.tarifaPersonalizada.seccion;
+    // TODO: refactor Tarifas — invariante: personalizada ⟺ datosTarifaPersonalizada !== null
+    let catCg = op.datosTarifaPersonalizada!.categoria;
+    let seccion = op.datosTarifaPersonalizada!.seccion;
     ////////console.log("catCg: ", catCg);
 
     let montoTotal = 0;

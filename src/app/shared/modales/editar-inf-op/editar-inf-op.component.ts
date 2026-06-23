@@ -3,11 +3,11 @@ import { FormBuilder, Validators } from "@angular/forms";
 import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { lowerFirst } from "lodash";
 import { Subject } from "rxjs";
-import { Chofer, Vehiculo } from "src/app/interfaces/chofer";
+import { Chofer } from "src/app/interfaces/chofer";
 import { Cliente } from "src/app/interfaces/cliente";
 import { ConId, ConIdType } from "src/app/interfaces/conId";
 import { InformeOp } from "src/app/interfaces/informe-op";
-import { Operacion, TarifaPersonalizada } from "src/app/interfaces/operacion";
+import { Operacion, DatosTarifaPersonalizada, RefVehiculo } from "src/app/interfaces/operacion";
 import { Proveedor } from "src/app/interfaces/proveedor";
 import {
   CategoriaTarifa,
@@ -43,7 +43,7 @@ export class EditarInfOpComponent implements OnInit {
   clientes!: ConIdType<Cliente>[];
   proveedores!: ConIdType<Proveedor>[];
   choferOp!: ConIdType<Chofer>[];
-  vehiculoOp!: Vehiculo;
+  vehiculoOp!: RefVehiculo;
   operacion!: ConId<Operacion>;
   tarifaPersonalizada!: ConIdType<TarifaPersonalizadaCliente>;
   coleccionInformeOp: string = "";
@@ -75,7 +75,7 @@ export class EditarInfOpComponent implements OnInit {
   mostrarCategoria: boolean = false;
   seccionElegida!: Seccion;
   categoriaElegida: number = 0;
-  tarifaPersonalizadaOp!: TarifaPersonalizada;
+  tarifaPersonalizadaOp!: DatosTarifaPersonalizada;
   tarifaTipo!: TarifaTipo;
   editarContraParte: boolean = false;
   editarChofer: boolean = true;
@@ -188,7 +188,7 @@ export class EditarInfOpComponent implements OnInit {
       this.fromParent.origen === "chofer" ||
       this.fromParent.origen === "proveedor"
         ? "cliente"
-        : this.operacion.chofer.contratacion.tipo === 'directo'
+        : this.operacion.proveedor === null
           ? "chofer"
           : "proveedor";
     let tarifa = await this.buscarTarifaServ.buscarTarifa(
@@ -213,24 +213,13 @@ export class EditarInfOpComponent implements OnInit {
       this.operacion.valores.cliente.adExtraValor ?? 0;
     this.informeChofer.valores.adExtra =
       this.operacion.valores.chofer.adExtraValor ?? 0;
-    this.operacion.acompanienteCant = this.operacion.acompanienteCant ?? 0;
+    this.operacion.acompanianteCant = this.operacion.acompanianteCant ?? 0;
   }
 
   getChofer() {
-    let vehiculoOp;
-    let choferOp = this.choferes.find((chofer: Chofer) => {
-      return chofer.idChofer === String(this.infOpDetallada.idChofer);
-    });
-    ////////console.log("4.25)this.choferOp: ", this.choferOp);
-    if (choferOp) {
-      vehiculoOp = ((choferOp as any).vehiculo ?? []).find((vehiculo: Vehiculo) => {
-        return vehiculo.dominio === this.operacion.patenteChofer.toUpperCase();
-      });
-      if (vehiculoOp) {
-        this.vehiculoOp = structuredClone(vehiculoOp);
-      }
-    }
-    ////////console.log("4.5)vehiculoOp: ", this.vehiculoOp);
+    // El vehículo de la op ya está en el snapshot op.vehiculo (RefVehiculo).
+    // El modelo viejo lo buscaba en el array embebido del chofer (ya inexistente).
+    this.vehiculoOp = structuredClone(this.operacion.vehiculo);
   }
 
   getCategoriaNombre(): string {
@@ -280,7 +269,7 @@ export class EditarInfOpComponent implements OnInit {
       this.tarifaPersonalizada = this.fromParent.tarifaAplicada;
       ////console.log("this.tarifaPersonalizada: ", this.tarifaPersonalizada);
       this.tarifaPersonalizadaOp = structuredClone(
-        this.operacion.tarifaPersonalizada,
+        this.operacion.datosTarifaPersonalizada!, // TODO: refactor Tarifas — invariante: personalizada ⟺ datosTarifaPersonalizada !== null
       );
     }
     let tarifasGralCliente = this.storageService.loadInfo("tarifasGralCliente");
@@ -491,16 +480,17 @@ export class EditarInfOpComponent implements OnInit {
         },
       },
       km: this.formNumServ.convertirAValorNumerico(this.operacion.km),
-      acompanienteCant: this.formNumServ.convertirAValorNumerico(
-        this.operacion.acompanienteCant,
+      acompanianteCant: this.formNumServ.convertirAValorNumerico(
+        this.operacion.acompanianteCant,
       ),
       observaciones: this.operacion.observaciones,
       hojaRuta: this.operacion.hojaRuta,
     };
     if (this.operacion.tarifaTipo.personalizada) {
-      this.operacion.tarifaPersonalizada.aCobrar =
+      // TODO: refactor Tarifas — invariante: personalizada ⟺ datosTarifaPersonalizada !== null
+      this.operacion.datosTarifaPersonalizada!.aCobrar =
         this.operacion.valores.cliente.tarifaBase;
-      this.operacion.tarifaPersonalizada.aPagar =
+      this.operacion.datosTarifaPersonalizada!.aPagar =
         this.operacion.valores.chofer.tarifaBase;
     }
     return this.operacion;
@@ -513,9 +503,9 @@ export class EditarInfOpComponent implements OnInit {
     this.operacion.acompaniante = event.target.value.toLowerCase() == "true";
     //////////console.log(this.acompaniante);
     if (this.operacion.acompaniante) {
-      this.operacion.acompanienteCant = 1;
+      this.operacion.acompanianteCant = 1;
     } else {
-      this.operacion.acompanienteCant = 0;
+      this.operacion.acompanianteCant = 0;
     }
 
     this.valoresAcompaniantes();
@@ -523,12 +513,12 @@ export class EditarInfOpComponent implements OnInit {
 
   changeCantAcompaniantes(event: any) {
     ////console.log(event.target.value);
-    this.operacion.acompanienteCant = Number(event.target.value);
-    ////console.log(this.operacion.acompanienteCant);
-    if (this.operacion.acompanienteCant === 0) {
+    this.operacion.acompanianteCant = Number(event.target.value);
+    ////console.log(this.operacion.acompanianteCant);
+    if (this.operacion.acompanianteCant === 0) {
       this.operacion.acompaniante = false;
     }
-    if (this.operacion.acompanienteCant > 0) {
+    if (this.operacion.acompanianteCant > 0) {
       this.operacion.acompaniante = true;
     }
     this.formAcomp.patchValue({
@@ -541,14 +531,14 @@ export class EditarInfOpComponent implements OnInit {
     if (this.operacion.acompaniante) {
       this.infOpDetallada.valores.acompaniante = this.tarifaDefaultAcomp
         ? this.tarifaDefaultAcomp?.adicionales.acompaniante *
-          (this.operacion.acompanienteCant ?? 1)
+          (this.operacion.acompanianteCant ?? 1)
         : 0;
 
       if (this.editarContraParte) {
         this.informeContraParte.valores.acompaniante = this
           .tarifaDefaultContraParte
           ? this.tarifaDefaultContraParte?.adicionales.acompaniante *
-            (this.operacion.acompanienteCant ?? 1)
+            (this.operacion.acompanianteCant ?? 1)
           : 0;
       }
     } else {
@@ -578,9 +568,8 @@ export class EditarInfOpComponent implements OnInit {
   }
 
   calcularKmValores() {
-    let vehiculo = ((this.operacion.chofer as any).vehiculo ?? []).find(
-      (v: any) => v.dominio === this.operacion.patenteChofer,
-    );
+    // op.vehiculo (RefVehiculo) es el vehículo de la op; $calcularKm solo usa categoria.catOrden.
+    const vehiculo = this.operacion.vehiculo;
 
     if (vehiculo) {
       this.infOpDetallada.valores.kmMonto = this.valoresOpCliente.$calcularKm(
@@ -790,7 +779,7 @@ export class EditarInfOpComponent implements OnInit {
         aPagar: categoria.aPagar,
       };
       ////////console.log("tarifa personalizada: ", this.tPersonalizada);
-      this.operacion.tarifaPersonalizada = this.tarifaPersonalizadaOp;
+      this.operacion.datosTarifaPersonalizada = this.tarifaPersonalizadaOp;
       this.operacion.valores.cliente.tarifaBase =
         this.formNumServ.convertirAValorNumerico(
           this.tarifaPersonalizadaOp.aCobrar,
@@ -827,18 +816,22 @@ export class EditarInfOpComponent implements OnInit {
 
   ///////// TARIFA EVENTUAL /////////////
   changeTarifaEVentual() {
-    this.operacion.tarifaEventual.cliente.valor =
+    // TODO: refactor Tarifas — invariante: eventual ⟺ datosTarifaEventual !== null.
+    // Guard defensivo: si no hay datos eventuales, el handler no opera.
+    if (!this.operacion.datosTarifaEventual) return;
+
+    this.operacion.datosTarifaEventual.cliente.valor =
       this.formNumServ.convertirAValorNumerico(
-        this.operacion.tarifaEventual.cliente.valor,
+        this.operacion.datosTarifaEventual.cliente.valor,
       );
-    this.operacion.tarifaEventual.chofer.valor =
+    this.operacion.datosTarifaEventual.chofer.valor =
       this.formNumServ.convertirAValorNumerico(
-        this.operacion.tarifaEventual.chofer.valor,
+        this.operacion.datosTarifaEventual.chofer.valor,
       );
     this.operacion.valores.cliente.tarifaBase =
-      this.operacion.tarifaEventual.cliente.valor;
+      this.operacion.datosTarifaEventual.cliente.valor;
     this.operacion.valores.chofer.tarifaBase =
-      this.operacion.tarifaEventual.chofer.valor;
+      this.operacion.datosTarifaEventual.chofer.valor;
     if (this.fromParent.origen === "cliente") {
       this.informeCliente.valores.tarifaBase =
         this.operacion.valores.cliente.tarifaBase;

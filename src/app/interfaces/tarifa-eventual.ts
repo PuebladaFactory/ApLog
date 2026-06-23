@@ -12,7 +12,7 @@ export interface TarifaEventual {
     // TODO: migrar a string cuando se refactorice este módulo (ID unificado con ConIdType.id)
     idChofer: number;
     idProveedor: number;
-    idOperacion: number;
+    idOperacion: string;
     km: number;
 }
 

@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { OpControlComponent } from './op-control/op-control.component';
 import { TableroDiarioComponent } from './tablero-diario/tablero-diario.component';
 import { TableroOpComponent } from './tablero-op/tablero-op.component';
+import { TableroAsignacionesComponent } from './tablero-asignaciones/tablero-asignaciones.component';
 
 
 const routes: Routes = [
@@ -11,6 +12,7 @@ const routes: Routes = [
         {path: '', redirectTo: 'tablero', pathMatch: 'full' },      
         {path: 'diario', component:TableroDiarioComponent},             
         {path: 'tablero', component:TableroOpComponent}, 
+        {path: 'asignaciones', component:TableroAsignacionesComponent}, 
     ]  },
   
     

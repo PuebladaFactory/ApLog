@@ -12,7 +12,7 @@ import { ConId, ConIdType } from "src/app/interfaces/conId";
 import { StorageService } from "src/app/servicios/storage/storage.service";
 import {
   Operacion,
-  TarifaEventual,
+  DatosTarifaEventual,
   Valores,
 } from "src/app/interfaces/operacion";
 import {
@@ -27,7 +27,11 @@ import { ChoferAsignadoBase } from "../tablero-diario/tablero-diario.component";
 import { ValoresOpService } from "src/app/servicios/valores-op/valores-op/valores-op.service";
 
 // 🔹 Tipo runtime SOLO para este componente — no rompe interfaz persistida
-type OperacionRuntime = Operacion & {
+type OperacionRuntime = Omit<Operacion, 'chofer'> & {
+  // TODO: refactor Carga/Tablero — runtime carga Chofer completo (legacy). El refactor migrará a RefChofer.
+  chofer: Chofer;
+  // TODO: refactor Carga/Tablero — campo legacy; la selección de vehículo debe migrar a op.vehiculo.
+  patenteChofer?: string;
   tarifaBase: "general" | "especial" | "personalizada";
   tarifaOverride: "eventual" | null;
 };
@@ -109,9 +113,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
         const tarifaTipo = this.getTarifaTipo(cliente, chofer);
 
         const timestamp = Date.now();
-        const idOperacion = Number(
-          `${timestamp}${(contadorInterno++).toString().padStart(3, "0")}`,
-        );
+        const idOperacion = `${timestamp}${(contadorInterno++).toString().padStart(3, "0")}`;
 
         const op = {
           idOperacion,
@@ -122,14 +124,14 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
           observaciones: chofer.observaciones || "",
           hojaRuta: chofer.hojaDeRuta || "",
           acompaniante: false,
-          acompanienteCant: 0,
-          facturaCliente: 0,
-          facturaChofer: 0,
-          tarifaEventual: {
+          acompanianteCant: 0,
+          informeOpCliente: 0,
+          informeOpChofer: 0,
+          datosTarifaEventual: {
             chofer: { concepto: "", valor: 0 },
             cliente: { concepto: "", valor: 0 },
           },
-          tarifaPersonalizada: {
+          datosTarifaPersonalizada: {
             seccion: 0,
             categoria: 0,
             nombre: "",
@@ -210,8 +212,9 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     op.tarifaOverride = value ? "eventual" : null;
 
     if (!value) {
-      op.tarifaEventual.chofer = { concepto: "", valor: 0 };
-      op.tarifaEventual.cliente = { concepto: "", valor: 0 };
+      // TODO: refactor Tarifas — datosTarifaEventual inicializado por la factory (nunca null en runtime).
+      op.datosTarifaEventual!.chofer = { concepto: "", valor: 0 };
+      op.datosTarifaEventual!.cliente = { concepto: "", valor: 0 };
     }
 
     this.syncTarifaFlags(op);
@@ -260,8 +263,8 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     const mapa = new Map<string, OperacionRuntime[]>();
 
     for (const op of this.operaciones) {
-      if (!mapa.has(op.cliente.idCliente)) mapa.set(op.cliente.idCliente, []);
-      mapa.get(op.cliente.idCliente)!.push(op);
+      if (!mapa.has(op.cliente.id)) mapa.set(op.cliente.id, []);
+      mapa.get(op.cliente.id)!.push(op);
     }
 
     this.operacionesAgrupadas = Array.from(mapa.entries()).map(
@@ -287,20 +290,20 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
     const activa = this.getTarifaActiva(op);
 
     if (activa === "eventual") {
-      if (!op.tarifaEventual.chofer.concepto)
+      if (!op.datosTarifaEventual!.chofer.concepto)
         errores.push("Concepto chofer eventual faltante");
-      if (!op.tarifaEventual.cliente.concepto)
+      if (!op.datosTarifaEventual!.cliente.concepto)
         errores.push("Concepto cliente eventual faltante");
     }
 
     if (activa === "personalizada") {
-      if (op.tarifaPersonalizada.seccion <= 0)
+      if (op.datosTarifaPersonalizada!.seccion <= 0)
         errores.push("Sección personalizada faltante");
-      if (op.tarifaPersonalizada.categoria <= 0)
+      if (op.datosTarifaPersonalizada!.categoria <= 0)
         errores.push("Categoría personalizada faltante");
     }
 
-    if(op.acompaniante && op.acompanienteCant === 0){
+    if(op.acompaniante && op.acompanianteCant === 0){
       errores.push("La cantidad de acompañantes no puede ser 0")
     }
 
@@ -346,10 +349,10 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
         const asignaciones: { [idCliente: string]: ChoferAsignadoBase[] } = {};
 
         for (const op of this.operaciones) {
-          const idCliente = op.cliente.idCliente;
+          const idCliente = op.cliente.id;
 
           const a: ChoferAsignadoBase = {
-            idChofer: op.chofer.idChofer,
+            idChofer: (op.chofer as ConId<Chofer>).id,
             categoriaAsignada: (op as any).categoriaAsignada,
             observaciones: op.observaciones,
             hojaDeRuta: op.hojaRuta,
@@ -371,7 +374,7 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
 
         const operacionesFinales: Operacion[] = this.operaciones.map((op) => {
           const { tarifaBase, tarifaOverride, ...persistible } = op;
-          return persistible;
+          return persistible as unknown as Operacion;
         });
 
 
@@ -379,7 +382,9 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
           op = this.valoresIniciales(op);
         });
 
-        this.limpiarPropiedadesChoferEnOperaciones(operacionesFinales);
+        // TODO: refactor Tablero de asignaciones — método del modelo viejo (Chofer embebido).
+        // Las ops ya llevan RefChofer; el componente destino guarda con ese snapshot. Sin propósito actual.
+        // this.limpiarPropiedadesChoferEnOperaciones(operacionesFinales);
         console.log("operacionesFinales: ", operacionesFinales);
         console.log("asignaciones: ", asignaciones);
 
@@ -396,14 +401,16 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
       op = this.valoresServ.valoresIniciales(op);
     }
     if (op.tarifaTipo.personalizada) {
-      op.valores.cliente.aCobrar = op.tarifaPersonalizada.aCobrar;
-      op.valores.chofer.aPagar = op.tarifaPersonalizada.aPagar;
+      // TODO: refactor Tarifas — invariante: personalizada ⟺ datosTarifaPersonalizada !== null
+      op.valores.cliente.aCobrar = op.datosTarifaPersonalizada!.aCobrar;
+      op.valores.chofer.aPagar = op.datosTarifaPersonalizada!.aPagar;
     }
     if (op.tarifaTipo.eventual) {
-      op.tarifaEventual.cliente.valor = this.formNumServ.convertirAValorNumerico(op.tarifaEventual.cliente.valor);
-      op.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(op.tarifaEventual.chofer.valor);
-      op.valores.cliente.aCobrar = op.tarifaEventual.cliente.valor;
-      op.valores.chofer.aPagar = op.tarifaEventual.chofer.valor;
+      // TODO: refactor Tarifas — invariante: eventual ⟺ datosTarifaEventual !== null
+      op.datosTarifaEventual!.cliente.valor = this.formNumServ.convertirAValorNumerico(op.datosTarifaEventual!.cliente.valor);
+      op.datosTarifaEventual!.chofer.valor = this.formNumServ.convertirAValorNumerico(op.datosTarifaEventual!.chofer.valor);
+      op.valores.cliente.aCobrar = op.datosTarifaEventual!.cliente.valor;
+      op.valores.chofer.aPagar = op.datosTarifaEventual!.chofer.valor;
     }
     op.valores.cliente.tarifaBase = op.valores.cliente.aCobrar;
     op.valores.chofer.tarifaBase = op.valores.chofer.aPagar;
@@ -417,19 +424,22 @@ export class CargaTableroDiarioComponent implements OnInit, OnDestroy {
   }
 
   
-  private limpiarPropiedadesChoferEnOperaciones(operaciones: Operacion[]): void {
-    operaciones.map(op => {
-      op.chofer = {
-        idChofer: op.chofer.idChofer,
-        datosPersonales: op.chofer.datosPersonales,
-        condFiscal: op.chofer.condFiscal,
-        contratacion: op.chofer.contratacion,
-        tarifaTipo: op.chofer.tarifaTipo,
-        tarifaAsignada: op.chofer.tarifaAsignada,
-        idTarifa: op.chofer.idTarifa,
-        activo: op.chofer.activo,
-        visible: op.chofer.visible ?? false,
-      };
-    });
-  }
+  // TODO: refactor Tablero de asignaciones — método del modelo viejo, reconstruía un Chofer
+  // completo desde el snapshot. Las ops ahora llevan RefChofer; el método no tiene propósito y
+  // accede a campos inexistentes en RefChofer. Comentado hasta el refactor del Tablero.
+  // private limpiarPropiedadesChoferEnOperaciones(operaciones: Operacion[]): void {
+  //   operaciones.map(op => {
+  //     op.chofer = {
+  //       idChofer: op.chofer.idChofer,
+  //       datosPersonales: op.chofer.datosPersonales,
+  //       condFiscal: op.chofer.condFiscal,
+  //       contratacion: op.chofer.contratacion,
+  //       tarifaTipo: op.chofer.tarifaTipo,
+  //       tarifaAsignada: op.chofer.tarifaAsignada,
+  //       idTarifa: op.chofer.idTarifa,
+  //       activo: op.chofer.activo,
+  //       visible: op.chofer.visible ?? false,
+  //     };
+  //   });
+  // }
 }

@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Operacion, EstadoOp } from 'src/app/interfaces/operacion';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { Chofer } from 'src/app/interfaces/chofer';
+import { Chofer, TarifaTipo, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { TarifaTipo } from 'src/app/interfaces/chofer';
 import { ConId } from 'src/app/interfaces/conId';
 
 export interface DatosCrearOperacion {
   cliente:     ConId<Cliente>;
-  chofer:      ConId<Chofer>;
+  chofer:      ConId<Chofer>    | null;   // null = pendiente (caso proveedor sin chofer asignado)
+  vehiculo:    ConId<Vehiculo>  | null;   // null = pendiente (se resuelve en operaciones-table)
   proveedor:   ConId<Proveedor> | null;
-  fecha:       string;   // 'YYYY-MM-DD'
+  fecha:       string;                    // 'YYYY-MM-DD'
   observacion: string;
   hojaDeRuta:  string;
 }
@@ -24,7 +24,7 @@ export class OperacionFactoryService {
    * valores en cero, multiplicadores en 1. El usuario completa el resto al editar.
    */
   crearOperacionBase(datos: DatosCrearOperacion): Operacion {
-    const { cliente, chofer, proveedor, fecha, observacion, hojaDeRuta } = datos;
+    const { cliente, chofer, vehiculo, proveedor, fecha, observacion, hojaDeRuta } = datos;
 
     const tarifaTipo = this.getTarifaTipo(cliente, chofer);
 
@@ -41,18 +41,21 @@ export class OperacionFactoryService {
         id:           cliente.id,
         razonSocial:  cliente.razonSocial,
         cuit:         cliente.cuit,
+        // TODO: refactor Vendedores — poblar vendedor en el RefCliente desde el cliente vivo al
+        // crear la op (comisión histórica por operación). Hasta entonces queda undefined y la
+        // asignación de comisiones no corre para ops nuevas (acceso protegido por && en valores-op).
       },
-      chofer: {
-        id:       chofer.id,
-        nombre:   chofer.datosPersonales.nombre,
-        apellido: chofer.datosPersonales.apellido,
-        cuit:     chofer.datosPersonales.cuit,
-      },
-      vehiculo: {
-        id:       '',
-        dominio:  '',
-        categoria: { catOrden: 0, nombre: '' },
-      },
+      chofer: chofer
+        ? {
+            id:       chofer.id,
+            nombre:   chofer.datosPersonales.nombre,
+            apellido: chofer.datosPersonales.apellido,
+            cuit:     chofer.datosPersonales.cuit,
+          }
+        : { id: '', nombre: '', apellido: '', cuit: 0 },   // pendiente, se completa en operaciones-table
+      vehiculo: vehiculo
+        ? { id: vehiculo.id, dominio: vehiculo.dominio, categoria: vehiculo.categoria }
+        : { id: '', dominio: '', categoria: { catOrden: 0, nombre: '' } },
       proveedor: proveedor
         ? { id: proveedor.id, razonSocial: proveedor.razonSocial, cuit: proveedor.cuit }
         : null,
@@ -97,14 +100,16 @@ export class OperacionFactoryService {
    * eventual > personalizada > especial > general.
    * TODO: refactor Tarifas — esta lógica migrará al sistema de tarifas unificado.
    */
-  private getTarifaTipo(cliente: Cliente, chofer: ConId<Chofer>): TarifaTipo {
-    if (cliente.tarifaTipo?.eventual || chofer.tarifaTipo?.eventual) {
+  private getTarifaTipo(cliente: Cliente, chofer: ConId<Chofer> | null): TarifaTipo {
+    // TODO: refactor Tarifas — con chofer null las ramas eventual/especial por chofer
+    // quedan en false; se recalculan al completar el chofer en operaciones-table.
+    if (cliente.tarifaTipo?.eventual || chofer?.tarifaTipo?.eventual) {
       return { general: false, especial: false, eventual: true,  personalizada: false };
     }
     if (cliente.tarifaTipo?.personalizada) {
       return { general: false, especial: false, eventual: false, personalizada: true  };
     }
-    if (cliente.tarifaTipo?.especial || chofer.tarifaTipo?.especial) {
+    if (cliente.tarifaTipo?.especial || chofer?.tarifaTipo?.especial) {
       return { general: false, especial: true,  eventual: false, personalizada: false };
     }
     return   { general: true,  especial: false, eventual: false, personalizada: false };

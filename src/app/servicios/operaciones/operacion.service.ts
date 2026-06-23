@@ -3,23 +3,35 @@ import { BehaviorSubject, Subject, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { ConId } from 'src/app/interfaces/conId';
+import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { Asignacion } from 'src/app/interfaces/asignacion';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { Asignacion, AsignacionItem } from 'src/app/interfaces/asignacion';
+import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
+import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.service';
+import { ValoresOpService } from 'src/app/servicios/valores-op/valores-op/valores-op.service';
+import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
+import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
+import { LogService } from 'src/app/servicios/log/log.service';
+import { Resultado } from 'src/app/interfaces/resultado';
+
+export interface OperacionCreada {
+  item:      AsignacionItem;
+  operacion: Operacion;
+}
 
 export interface ResultadoCreacionOps {
-  operaciones: Operacion[];
+  creadas: OperacionCreada[];
   errores: ErrorCreacionOp[];
 }
 
 export interface ErrorCreacionOp {
+  idItem:    string;
   idCliente: string;
-  idChofer: string;
-  motivo: string;
+  motivo:    string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -32,11 +44,16 @@ export class OperacionService implements OnDestroy {
   private cancelarRango$ = new Subject<void>();
 
   constructor(
-    private db: DbFirestoreService,
-    private clienteService: ClienteService,
-    private choferService: ChoferService,
+    private db:               DbFirestoreService,
+    private clienteService:   ClienteService,
+    private choferService:    ChoferService,
     private proveedorService: ProveedorService,
     private operacionFactory: OperacionFactoryService,
+    private valoresServ:      ValoresOpService,
+    private formNumServ:      FormatoNumericoService,
+    private numeradorService: NumeradorService,
+    private asignacionService: AsignacionService,
+    private logService:       LogService,
   ) {}
 
   /**
@@ -63,75 +80,245 @@ export class OperacionService implements OnDestroy {
   }
 
   /**
-   * Crea las operaciones base a partir de una estructura de asignaciones.
-   * Resuelve cliente/chofer/proveedor por ID contra los services en memoria y delega
-   * la construcción al factory. NO persiste. Devuelve las operaciones creadas y la lista
-   * de asignaciones que no se pudieron resolver (para que el componente avise al usuario).
+   * Construye las operaciones base a partir de una lista de items de asignación.
+   * Resuelve cliente/chofer/proveedor/vehículo por ID contra los services en memoria
+   * y delega la construcción al factory. NO persiste. Devuelve las operaciones creadas
+   * y la lista de items que no se pudieron resolver (para que el componente avise).
    */
-  crearOperacionesDesdeAsignacion(asignacion: Asignacion): ResultadoCreacionOps {
-    const operaciones: Operacion[] = [];
+  crearOperacionesDesdeAsignacion(items: AsignacionItem[], fecha: string): ResultadoCreacionOps {
+    const creadas: OperacionCreada[] = [];
     const errores: ErrorCreacionOp[] = [];
 
-    const clientes   = this.clienteService.getClientesActuales();
-    const choferes   = this.choferService.getChoferesActuales();
+    const clientes    = this.clienteService.getClientesActuales();
+    const choferes    = this.choferService.getChoferesActuales();
     const proveedores = this.proveedorService.getProveedoresActuales();
+    const vehiculos   = this.choferService.getVehiculosActuales();
 
-    for (const base of asignacion.asignaciones) {
-      const cliente = clientes.find(c => c.id === base.idCliente);
-
+    for (const item of items) {
+      const cliente = clientes.find(c => c.id === item.idCliente);
       if (!cliente) {
-        for (const ac of base.asignacionesChofer) {
-          errores.push({
-            idCliente: base.idCliente,
-            idChofer:  ac.idChofer,
-            motivo:    `Cliente ${base.idCliente} no encontrado`,
-          });
-        }
+        errores.push({ idItem: item.idItem, idCliente: item.idCliente, motivo: `Cliente ${item.idCliente} no encontrado` });
         continue;
       }
 
-      for (const ac of base.asignacionesChofer) {
-        const chofer = choferes.find(c => c.id === ac.idChofer);
+      // Extraer sujeto como const para que TypeScript estreche la union discriminada en el switch.
+      const sujeto = item.sujeto;
 
-        if (!chofer) {
-          errores.push({
-            idCliente: base.idCliente,
-            idChofer:  ac.idChofer,
-            motivo:    `Chofer ${ac.idChofer} no encontrado`,
-          });
+      // Resolver vehículo (común a ambos tipos de sujeto).
+      let vehiculo: ConId<Vehiculo> | null = null;
+      if (sujeto.idVehiculo !== null) {
+        const v = vehiculos.find(v => v.id === sujeto.idVehiculo);
+        if (!v) {
+          errores.push({ idItem: item.idItem, idCliente: item.idCliente, motivo: `Vehículo ${sujeto.idVehiculo} no encontrado` });
           continue;
         }
+        vehiculo = v;
+      }
 
-        // Resolver proveedor solo si la contratación del chofer es vía proveedor.
-        let proveedor: ConId<Proveedor> | null = null;
-        if (chofer.contratacion.tipo === 'proveedor') {
-          const idProv = chofer.contratacion.idProveedor;
-          const provEncontrado = proveedores.find(p => p.id === idProv);
-          if (!provEncontrado) {
-            errores.push({
-              idCliente: base.idCliente,
-              idChofer:  ac.idChofer,
-              motivo:    `Proveedor ${idProv} del chofer ${ac.idChofer} no encontrado`,
-            });
+      let chofer: ConId<Chofer> | null = null;
+      let proveedor: ConId<Proveedor> | null = null;
+
+      switch (sujeto.tipo) {
+        case 'directo': {
+          const c = choferes.find(c => c.id === sujeto.idChofer);
+          if (!c) {
+            errores.push({ idItem: item.idItem, idCliente: item.idCliente, motivo: `Chofer ${sujeto.idChofer} no encontrado` });
             continue;
           }
-          proveedor = provEncontrado;
+          chofer = c;
+          break;
         }
+        case 'proveedor': {
+          const p = proveedores.find(p => p.id === sujeto.idProveedor);
+          if (!p) {
+            errores.push({ idItem: item.idItem, idCliente: item.idCliente, motivo: `Proveedor ${sujeto.idProveedor} no encontrado` });
+            continue;
+          }
+          proveedor = p;
+          if (sujeto.idChofer !== null) {
+            const c = choferes.find(c => c.id === sujeto.idChofer);
+            if (!c) {
+              errores.push({ idItem: item.idItem, idCliente: item.idCliente, motivo: `Chofer ${sujeto.idChofer} del proveedor no encontrado` });
+              continue;
+            }
+            chofer = c;
+          }
+          break;
+        }
+      }
 
-        const op = this.operacionFactory.crearOperacionBase({
-          cliente,
-          chofer,
-          proveedor,
-          fecha:       asignacion.fecha,
-          observacion: ac.observacion,
-          hojaDeRuta:  ac.hojaDeRuta,
-        });
+      const op = this.operacionFactory.crearOperacionBase({
+        cliente,
+        chofer,
+        vehiculo,
+        proveedor,
+        fecha,
+        observacion: item.observacion,
+        hojaDeRuta:  item.hojaDeRuta,
+      });
 
-        operaciones.push(op);
+      creadas.push({ item, operacion: op });
+    }
+
+    return { creadas, errores };
+  }
+
+  /** Calcula los valores iniciales (aCobrar/aPagar y derivados) de una op según su
+   *  tipo de tarifa. Centraliza lo que antes estaba partido entre el componente de
+   *  carga y ValoresOpService.
+   *  TODO: refactor Tarifas — esta operatoria de ramas debe mudarse por completo a
+   *  ValoresOpService, dejando este método como orquestador delgado (op, tarifa) →
+   *  op con valores. Hoy replica el flujo actual del componente. */
+  calcularValoresIniciales(op: Operacion): Operacion {
+    if (op.tarifaTipo.general || op.tarifaTipo.especial) {
+      op = this.valoresServ.valoresIniciales(op);
+    }
+    if (op.tarifaTipo.personalizada) {
+      // TODO: refactor Tarifas — invariante: personalizada ⟺ datosTarifaPersonalizada !== null
+      op.valores.cliente.aCobrar = op.datosTarifaPersonalizada!.aCobrar;
+      op.valores.chofer.aPagar   = op.datosTarifaPersonalizada!.aPagar;
+    }
+    if (op.tarifaTipo.eventual) {
+      // TODO: refactor Tarifas — invariante: eventual ⟺ datosTarifaEventual !== null
+      op.datosTarifaEventual!.cliente.valor = this.formNumServ.convertirAValorNumerico(op.datosTarifaEventual!.cliente.valor);
+      op.datosTarifaEventual!.chofer.valor  = this.formNumServ.convertirAValorNumerico(op.datosTarifaEventual!.chofer.valor);
+      op.valores.cliente.aCobrar = op.datosTarifaEventual!.cliente.valor;
+      op.valores.chofer.aPagar   = op.datosTarifaEventual!.chofer.valor;
+    }
+    op.valores.cliente.tarifaBase = op.valores.cliente.aCobrar;
+    op.valores.chofer.tarifaBase  = op.valores.chofer.aPagar;
+
+    if (op.acompaniante) {
+      op = this.valoresServ.valoresOpAcompaniante(op);
+    }
+    op = this.valoresServ.recalcularValores(op);
+    return op;
+  }
+
+  /** Alta atómica de N operaciones + el tablero de la fecha, desde OperacionCreada[].
+   *  Recibe las ops FINALES (completadas en operaciones-table). Calcula valores,
+   *  reconstruye el sujeto del item desde la op y persiste atómicamente.
+   *  NOTA anti-duplicado: el bloqueo del botón durante la llamada es responsabilidad
+   *  del COMPONENTE (no acá). */
+  async altaDesdeAsignacion(
+    fecha: string,
+    creadas: OperacionCreada[],
+  ): Promise<Resultado<{ creadas: OperacionCreada[]; errores: ErrorCreacionOp[] }>> {
+
+    // 3. CALCULAR VALORES + RECONSTRUIR SUJETO DESDE OP FINAL (un solo recorrido, antes de tocar red)
+    for (const c of creadas) {
+      c.operacion = this.calcularValoresIniciales(c.operacion);
+
+      const op   = c.operacion;
+      const tipo = this.choferService.getTipoContratacion(op.chofer.id);
+
+      if (!tipo) {
+        return {
+          exito: false,
+          mensaje: `No se pudo resolver la contratación del chofer ${op.chofer.id}. ` +
+                   `No se guardó ninguna operación.`,
+          objeto: { creadas, errores: [] },
+        };
+      }
+
+      if (tipo === 'proveedor') {
+        if (!op.proveedor) {
+          return {
+            exito: false,
+            mensaje: `La operación de un chofer de proveedor no tiene proveedor ` +
+                     `asignado. No se guardó ninguna operación.`,
+            objeto: { creadas, errores: [] },
+          };
+        }
+        c.item.sujeto = {
+          tipo: 'proveedor',
+          idProveedor: op.proveedor.id,
+          idChofer:    op.chofer.id,
+          idVehiculo:  op.vehiculo.id,
+        };
+      } else {
+        c.item.sujeto = {
+          tipo: 'directo',
+          idChofer:   op.chofer.id,
+          idVehiculo: op.vehiculo.id,
+        };
       }
     }
 
-    return { operaciones, errores };
+    // 4. VALIDAR PENDIENTES — al alta, chofer y vehículo deben estar resueltos SIEMPRE
+    const pendientes = creadas.filter(c => !c.operacion.chofer.id || !c.operacion.vehiculo.id);
+    if (pendientes.length > 0) {
+      return {
+        exito: false,
+        mensaje: `Hay ${pendientes.length} operación(es) sin chofer o vehículo asignado. ` +
+                 `Complete la selección antes de dar de alta.`,
+        objeto: { creadas, errores: [] },
+      };
+    }
+
+    try {
+      // 5. IDS + NÚMEROS (toca red: 1 transacción para los números)
+      const numeros = await this.numeradorService.reservarRangoOperaciones(creadas.length);
+
+      creadas.forEach((c, i) => {
+        c.operacion.idOperacion     = this.db.generarId('operaciones'); // doc id real, sin escribir
+        c.operacion.numeroOperacion = numeros[i];                       // posicional: rango ordenado
+        c.item.idOperacion          = c.operacion.idOperacion;          // liga item↔op (item por referencia)
+      });
+
+      // 6. ARMAR TABLERO — items ya tienen idOperacion y sujeto reconstruido
+      const asignacion = this.asignacionService.confirmarTablero(fecha, creadas.map(c => c.item));
+
+      // 7. ESCRIBIR (batch atómico): ops 'crear', tablero 'reemplazar'
+      const escrituras: EscrituraBatch[] = [
+        ...creadas.map(c => ({
+          coleccion: 'operaciones',
+          id: c.operacion.idOperacion,
+          data: this.opToFirestore(c.operacion),
+          modo: 'crear' as const,
+        })),
+        {
+          coleccion: 'asignaciones',
+          id: fecha,
+          data: this.asignacionService.asignacionToFirestore(asignacion),
+          modo: 'reemplazar' as const,
+        },
+      ];
+
+      await this.db.commitBatch(escrituras);
+
+      // 8. LOG — un registro por el alta (acción principal)
+      // TODO: refactor Roles — exclusión de 'god' del log pendiente (igual que AsignacionService)
+      this.logService.logEvent(
+        'ALTA', 'operaciones',
+        `Alta de ${creadas.length} operación(es) — tablero ${fecha}`,
+        fecha, true,
+      );
+
+      // 9. RESULTADO
+      return {
+        exito: true,
+        mensaje: `${creadas.length} operación(es) dada(s) de alta correctamente.`,
+        objeto: { creadas, errores: [] },
+      };
+
+    } catch (e: any) {
+      this.logService.logEvent(
+        'ALTA', 'operaciones',
+        `Error en alta de operaciones — tablero ${fecha}: ${e?.message ?? e}`,
+        fecha, false,
+      );
+      return {
+        exito: false,
+        mensaje: `Error al guardar las operaciones: ${e?.message ?? e}. No se guardó ninguna.`,
+        objeto: { creadas, errores: [] },
+      };
+    }
+  }
+
+  private opToFirestore(op: Operacion): Omit<Operacion, 'idOperacion'> {
+    const { idOperacion, ...resto } = op;
+    return resto;
   }
 
   ngOnDestroy(): void {

@@ -25,7 +25,7 @@
                         />
                     </div>
                 </div>
-                @if (op.estado.cerrada || op.estado.facturada) {
+                <!-- @if (op.estado.cerrada || op.estado.facturada) {
                     <div class="form-group isDisabled">
                         <label for="Patente" class="fs-5">Patente: </label>
                         <div
@@ -39,7 +39,7 @@
                             />
                         </div>
                     </div>
-                }
+                } -->
             </div>
             <div class="col-4">
                 <div class="form-group">
@@ -56,7 +56,7 @@
                 <div class="form-group">
                     <label for="Cliente" class="fs-5">Tarifa Cliente</label>
                     <div class="input-group">
-                        <input  
+                        <!-- <input  
                             disabled
                             class="form-control edicion border-warning"
                             type="text"
@@ -69,6 +69,12 @@
                                         ? 'Personalizada'
                                         : 'General'
                             "
+                        /> -->
+                        <input  
+                            disabled
+                            class="form-control edicion border-warning"
+                            type="text"
+                            
                         />
                     </div>
                 </div>
@@ -77,20 +83,26 @@
                 <div class="form-group">
                     <label for="Chofer" class="fs-5">Chofer</label>
                     <div class="input-group">
-                        <input      
+                        <!-- <input      
                             disabled
                             class="form-control edicion border-primary"
                             type="text"
                             [value]="
                                 op.chofer.datosPersonales.apellido + ' ' + op.chofer.datosPersonales.nombre
                             "
+                        /> -->
+                        <input      
+                            disabled
+                            class="form-control edicion border-primary"
+                            type="text"
+                            
                         />
                     </div>
                 </div>
                 <div class="form-group isDisabled">
                     <label for="Cliente" class="fs-5">Tarifa Chofer</label>
                     <div class="input-group">
-                        <input  
+                        <!-- <input  
                             disabled
                             class="form-control edicion border-primary"
                             type="text"
@@ -103,6 +115,12 @@
                                         ? 'Personalizada'
                                         : 'General'
                             "
+                        /> -->
+                        <input  
+                            disabled
+                            class="form-control edicion border-primary"
+                            type="text"
+                            
                         />
                     </div>
                 </div>
@@ -113,7 +131,7 @@
             <!-- DETALLES KM / ACOMPAÑANTE -->
             <div class="col-4">
                 <!-- OPERACION ABIERTA -->
-                @if (op.estado.abierta) {
+<!--                 @if (op.estado.abierta) {
                     <div
                         class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded altura"
                     >
@@ -250,9 +268,9 @@
                             </div>
                         
                     </div>
-                }
+                } -->
                 <!-- OPERACION CERRADA -->
-                @if (!op.estado.abierta) {
+<!--                 @if (!op.estado.abierta) {
                     <div
                         class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded isDisabled altura"
                     >
@@ -355,10 +373,10 @@
                             </div>
                         
                     </div>
-                }
+                } -->
             </div>
             <!-- DETALLES TARIFAS -->
-            <div
+            <!-- <div
                 class="col-8"
                 [ngClass]="{
                     isDisabled:
@@ -367,6 +385,10 @@
                         op.estado.cerrada ||
                         op.estado.facturada,
                 }"
+            > -->
+            <div
+                class="col-8"
+                
             >
                 <div
                     class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100"
@@ -378,7 +400,7 @@
                             <h2>Cliente</h2>
                             <h4 class="my-2 mt-2">
                                 Tarifa Aplicada:
-                                <span
+<!--                                 <span
                                     class="fw-semibold fs-4 badge"
                                     [ngClass]="getClaseTarifa(op, 'cliente')"
                                     >{{
@@ -389,7 +411,7 @@
                                               : op.cliente.tarifaTipo.general
                                                 ? "General"
                                                 : "Especial"
-                                    }}</span
+                                    }}</span -->
                                 >
                             </h4>
                             <!-- OPERACIONES EVENTUALES-->
@@ -402,7 +424,7 @@
                                                     >Tarifa Eventual
                                                     Concepto</label
                                                 >
-                                                <div class="input-group">
+<!--                                                 <div class="input-group">
                                                     <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                         class="form-control edicion border-warning"
                                                         required
@@ -413,7 +435,7 @@
                                                                 .concepto
                                                         "
                                                     />
-                                                </div>
+                                                </div> -->
                                             </div>
                                             <div class="form-group mt-3">
                                                 <label for="Fecha" class="fs-5"
@@ -427,7 +449,7 @@
                                                         style="width: 30px"
                                                         >$</span
                                                     >
-                                                    <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+<!--                                                     <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                         class="form-control edicion border-warning"
                                                         required
                                                         type="text"
@@ -438,7 +460,7 @@
                                                         "
                                                         appMonto [minimo]="0"
                                                         (change)="valoresEventuales()"
-                                                    />
+                                                    /> -->
                                                 </div>
                                             </div>
                                         </div>
@@ -459,7 +481,7 @@
                                                     <label for="Cliente"
                                                         >Sección</label
                                                     >
-                                                    <select  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+<!--                                                     <select  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                         class="form-select mb-3 border-success"
                                                         (change)="
                                                             changeSecion($event)
@@ -495,7 +517,7 @@
                                                             }}
                                                             </option>
                                                         }
-                                                    </select>
+                                                    </select> -->
                                                 </div>
                                             }
                                         </form>
@@ -515,7 +537,7 @@
                                                     style="width: 30px"
                                                     >$</span
                                                 >
-                                                <input  
+                                               <!--  <input  
                                                     class="form-control edicion isDisabled border-warning"
                                                     disabled
                                                     required
@@ -523,7 +545,7 @@
                                                     inputmode="number"
                                                     appMonto [minimo]="0"
                                                     [(ngModel)]="op.tarifaPersonalizada.aCobrar"
-                                                />
+                                                /> -->
                                             </div>
                                         </div>
                                     </div>
@@ -621,7 +643,7 @@
                             <h2>Chofer</h2>
                             <h4>
                                 Tarifa Aplicada:
-                                <span
+                                <!-- <span
                                     class="fw-semibold fs-4 badge"
                                     [ngClass]="getClaseTarifa(op, 'chofer')"
                                     >{{
@@ -632,6 +654,12 @@
                                               : op.chofer.tarifaTipo.general
                                                 ? "General"
                                                 : "Especial"
+                                    }}</span -->
+                                    <span
+                                    class="fw-semibold fs-4 badge"
+                                    [ngClass]="getClaseTarifa(op, 'chofer')"
+                                    >{{
+                                        "General"
                                     }}</span
                                 >
                             </h4>
@@ -644,7 +672,7 @@
                                                 >Tarifa Eventual Concepto</label
                                             >
                                             <div class="input-group">
-                                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                                                <!-- <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                     class="form-control edicion border-primary"
                                                     required
                                                     type="text"
@@ -652,7 +680,7 @@
                                                         op.tarifaEventual.chofer
                                                             .concepto
                                                     "
-                                                />
+                                                /> -->
                                             </div>
                                         </div>
                                         <div class="form-group mt-3">
@@ -666,7 +694,7 @@
                                                     style="width: 30px"
                                                     >$</span
                                                 >
-                                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                                                <!-- <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                     class="form-control edicion border-primary"
                                                     required
                                                     type="text"
@@ -677,7 +705,7 @@
                                                     "
                                                     appMonto [minimo]="0"
                                                     (change)="valoresEventuales()"
-                                                />
+                                                /> -->
                                             </div>
                                         </div>
                                     </div>
@@ -696,7 +724,7 @@
                                                 <label for="Categoria"
                                                     >Categoria</label
                                                 >
-                                                <select  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                                                <!-- <select  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                                     class="form-select mb-3 border-success"
                                                     (change)="
                                                         changeCategoria($event)
@@ -737,7 +765,7 @@
                                                             }}
                                                         </option>
                                                     }
-                                                </select>
+                                                </select> -->
                                             </div>
                                         </form>
                                     </div>
@@ -756,7 +784,7 @@
                                                     style="width: 30px"
                                                     >$</span
                                                 >
-                                                <input  
+                                                <!-- <input  
                                                     disabled
                                                     class="form-control edicion isDisabled border-primary"
                                                     required
@@ -764,6 +792,15 @@
                                                     inputmode="number"
                                                     appMonto [minimo]="0"
                                                     [(ngModel)]="op.tarifaPersonalizada.aPagar"
+                                                /> -->
+                                                <input  
+                                                    disabled
+                                                    class="form-control edicion isDisabled border-primary"
+                                                    required
+                                                    type="text"
+                                                    inputmode="number"
+                                                    appMonto [minimo]="0"
+                                                    
                                                 />
                                             </div>
                                         </div>
@@ -875,10 +912,10 @@
                                 class="input-group"
                                 [ngClass]="{ isDisabled: vista }"
                             >
-                                <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+<!--                                 <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                     class="form-control edicion border-info"
                                     [(ngModel)]="op.adExtraConcepto"
-                                />
+                                /> -->
                             </div>
                         </div>
                     </div>
@@ -897,7 +934,7 @@
                                         style="width: 30px"
                                         >$</span
                                     >
-                                    <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                                   <!--  <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                         class="form-control edicion border-warning"
                                         required
                                         type="text"
@@ -905,7 +942,7 @@
                                         appMonto [minimo]="0"
                                         [(ngModel)]="op.valores.cliente.adExtraValor"
                                         (change)="valoresGastosExtras()"
-                                    />
+                                    /> -->
                                 </div>
                             </div>
                         </div>
@@ -922,7 +959,7 @@
                                         style="width: 30px"
                                         >$</span
                                     >
-                                    <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                                    <!-- <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                         class="form-control edicion border-primary"
                                         required
                                         type="text"
@@ -930,7 +967,7 @@
                                         appMonto [minimo]="0"
                                         (change)="valoresGastosExtras()"
                                         [(ngModel)]="op.valores.chofer.adExtraValor"
-                                    />
+                                    /> -->
                                 </div>
                             </div>
                         </div>
@@ -999,7 +1036,7 @@
                             <span class="input-group-text" id="basic-addon1"
                                 >Multiplicador Cliente</span
                             >
-                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                            <!-- <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
                                 type="text"
                                 class="form-control border-warning"
                                 [(ngModel)]="op.multiplicadorCliente"
@@ -1009,7 +1046,7 @@
                                 [max]="2"
                                 [decimals]="2"
                                 (input)="changeMultiCliente($event)"
-                            />
+                            /> -->
                         </div>
                     </div>
                 </div>
@@ -1019,7 +1056,18 @@
                             <span class="input-group-text" id="basic-addon1"
                                 >Multiplicador Chofer</span
                             >
-                            <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                            <!-- <input  [disabled]="fromParent.modo === 'cerrar' || !op.estado.abierta"
+                                type="text"
+                                class="form-control border-primary"
+                                [(ngModel)]="op.multiplicadorChofer"
+                                name="multiplicadorChofer"
+                                appDecimalInput
+                                [min]="0"
+                                [max]="2"
+                                [decimals]="2"
+                                (input)="changeMultiChofer($event)"
+                            /> -->
+                            <input  [disabled]="fromParent.modo === 'cerrar'"
                                 type="text"
                                 class="form-control border-primary"
                                 [(ngModel)]="op.multiplicadorChofer"

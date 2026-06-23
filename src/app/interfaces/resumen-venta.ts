@@ -22,7 +22,7 @@ interface AsignacionExtendida extends Asignacion {
 
 export interface OpVenta {
     fecha: any;
-    idOp: number;
+    idOp: string;
     idCliente:number;
     totalCliente: number;
     totalChofer: number;

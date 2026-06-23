@@ -26,7 +26,7 @@ type ChoferAsignado = ConIdType<Chofer> & {
   observaciones: string;
   hojaDeRuta: string;
   tEventual: boolean;
-  idOperacion?: number; // 👈 NUEVO
+  idOperacion?: string; // 👈 NUEVO
 };
 
 export interface ChoferAsignadoBase {
@@ -35,7 +35,7 @@ export interface ChoferAsignadoBase {
   categoriaAsignada?: Categoria;
   observaciones?: string;
   hojaDeRuta?: string;
-  idOperacion?: number; // 👈 NUEVO
+  idOperacion?: string; // 👈 NUEVO
 }
 
 export interface TableroDiario {
@@ -381,7 +381,12 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
 
       if (!operacion) return;
 
-      if(operacion.estado.facChofer || operacion.estado.facCliente || operacion.estado.proformaCh || operacion.estado.proformaCl || operacion.estado.facturada ){
+      if (
+        operacion.estado.liquidacion.cliente ||
+        operacion.estado.liquidacion.chofer ||
+        operacion.estado.proforma.cliente ||
+        operacion.estado.proforma.chofer
+      ) {
         Swal.fire({
             icon: "error",
             title: "Operación Liquidada",
@@ -591,7 +596,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
           tEventual: base.tEventual,
           observaciones: base.observaciones ?? "",
           hojaDeRuta: base.hojaDeRuta ?? "",
-          idOperacion: base.idOperacion ?? 0,
+          idOperacion: base.idOperacion ?? '',
         });
       }
 
@@ -675,7 +680,7 @@ export class TableroDiarioComponent implements OnInit, OnDestroy {
           
           await this.tableroServ.guardarTablero(this.tablero, "ALTA");
 
-          const arrayOp: number[] = result.operaciones.map(
+          const arrayOp: string[] = result.operaciones.map(
             (op) => op.idOperacion,
           );
           this.storageService.logMultiplesOp(

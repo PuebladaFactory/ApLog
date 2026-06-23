@@ -32,6 +32,7 @@ import {
 } from "src/app/servicios/fechas/date-range.service";
 import { CrearLiquidacionParams } from "src/app/servicios/liquidaciones/liquidacion-builder.service";
 import { LiquidacionService } from "src/app/servicios/liquidaciones/liquidacion.service";
+import { ChoferService } from "src/app/servicios/choferes/chofer.service";
 @Component({
   selector: "app-liquidaciones-op",
   standalone: false,
@@ -102,6 +103,7 @@ export class LiquidacionesOpComponent implements OnInit {
     private datePipe: DatePipe,
     private dateRangeService: DateRangeService,
     private liquidacionService: LiquidacionService,
+    private choferService: ChoferService,
   ) {}
 
   ngOnInit(): void {
@@ -312,15 +314,18 @@ export class LiquidacionesOpComponent implements OnInit {
     ////console.log("this.datosTabla: ", this.datosTabla);
   }
 
-  getOpAbiertas(id: number) {
+  getOpAbiertas(id: string) {
     if (this.opAbiertas !== undefined) {
       let cantOpAbiertas = this.opAbiertas.filter((op: Operacion) => {
-        let idObjeto =
-          this.llamadaOrigen === "cliente"
-            ? op.cliente.idCliente
-            : this.llamadaOrigen === "chofer"
-              ? op.chofer.idChofer
-              : (op.chofer.contratacion as any).idProveedor;
+        let idObjeto: string | undefined;
+        if (this.llamadaOrigen === "cliente") {
+          idObjeto = op.cliente.id;
+        } else if (this.llamadaOrigen === "chofer") {
+          idObjeto = op.chofer.id;
+        } else {
+          const contratacion = this.choferService.getContratacionChofer(op.chofer.id);
+          idObjeto = contratacion?.tipo === 'proveedor' ? contratacion.idProveedor : undefined;
+        }
         return idObjeto === id;
       });
 
@@ -758,163 +763,6 @@ export class LiquidacionesOpComponent implements OnInit {
     }
   }
 
-  procesarFacturacion(accion: string) {
-    this.isLoading = true;
-    // Validar que todos los idOperacion sean únicos
-    const ids = this.informesLiquidados.map((infOp) => infOp.idOperacion);
-    const idsDuplicados = ids.filter((id, index) => ids.indexOf(id) !== index);
-    if (idsDuplicados.length > 0) {
-      return this.mensajesError(
-        "Se encontraron informes con idOperacion duplicado:",
-        "error",
-      );
-    }
-
-    this.dbFirebase
-      .procesarLiquidacion(
-        this.informesLiquidados,
-        this.llamadaOrigen,
-        this.componenteAlta,
-        this.componente,
-        this.informeDeLiquidacion,
-        this.compInformeLiquidacion,
-      )
-      .then((result) => {
-        this.isLoading = false;
-        ////////console.log("resultado: ", result);
-        if (result.exito) {
-          this.storageService.logMultiplesOp(
-            this.informeDeLiquidacion.operaciones,
-            "LIQUIDAR",
-            "operaciones",
-            `Operación del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial} Liquidada`,
-            result.exito,
-          );
-          this.storageService.logSimple(
-            this.informeDeLiquidacion.idInfLiq,
-            "ALTA",
-            this.compInformeLiquidacion,
-            `Alta de Factura del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`,
-            result.exito,
-          );
-          Swal.fire({
-            icon: "success",
-            //title: "Oops...",
-            text: "La liquidación se procesó con éxito.",
-            confirmButtonColor: "#3085d6",
-            confirmButtonText: "Confirmar",
-            //footer: `${msj}`
-          }).then(() => {
-            this.preguntarDescarga(accion);
-          });
-          this.mostrarMasDatos(this.indiceSeleccionado);
-          this.procesarDatosParaTabla();
-        } else {
-          this.storageService.logMultiplesOp(
-            this.informeDeLiquidacion.operaciones,
-            "LIQUIDAR",
-            "operaciones",
-            `Operación del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial} Liquidada`,
-            result.exito,
-          );
-          this.storageService.logSimple(
-            this.informeDeLiquidacion.idInfLiq,
-            "ALTA",
-            this.compInformeLiquidacion,
-            `Alta de Factura del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`,
-            result.exito,
-          );
-          this.mensajesError(
-            `Ocurrió un error al procesar la facturación: ${result.mensaje}`,
-            "error",
-          );
-        }
-      })
-      .catch((error) => {
-        this.isLoading = false;
-        console.error(error);
-        this.mensajesError(
-          "Ocurrió un error al procesar la facturación.",
-          "error",
-        );
-      });
-  }
-
-  procesarProforma(accion: string) {
-    this.isLoading = true;
-
-    this.dbFirebase
-      .procesarProforma(
-        this.informesLiquidados,
-        this.llamadaOrigen,
-        this.componente,
-        this.informeDeLiquidacion,
-        "proforma",
-      )
-      .then((result) => {
-        this.isLoading = false;
-        ////////console.log("resultado: ", result);
-        if (result.exito) {
-          this.storageService.logMultiplesOp(
-            this.informeDeLiquidacion.operaciones,
-            "PROFORMA",
-            "operaciones",
-            `Proforma de operación del Cliente ${this.informeDeLiquidacion.entidad.razonSocial}`,
-            result.exito,
-          );
-          this.storageService.logSimple(
-            this.informeDeLiquidacion.idInfLiq,
-            "ALTA",
-            "proforma",
-            `Alta de Proforma del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`,
-            result.exito,
-          );
-          Swal.fire({
-            icon: "success",
-            //title: "Oops...",
-            text: "La proforma se generó con éxito.",
-            confirmButtonColor: "#3085d6",
-            confirmButtonText: "Confirmar",
-            //footer: `${msj}`
-          }).then(() => {
-            this.preguntarDescarga(accion);
-
-          });
-          //this.mostrarMasDatos(this.indiceSeleccionado);
-          //this.procesarDatosParaTabla()
-        } else {
-          this.storageService.logMultiplesOp(
-            this.informeDeLiquidacion.operaciones,
-            "PROFORMA",
-            "operaciones",
-            `Proforma de operación del Cliente ${this.informeDeLiquidacion.entidad.razonSocial}`,
-            result.exito,
-          );
-          this.storageService.logSimple(
-            this.informeDeLiquidacion.idInfLiq,
-            "ALTA",
-            "proforma",
-            `Alta de Proforma del ${this.llamadaOrigen} ${this.informeDeLiquidacion.entidad.razonSocial}`,
-            result.exito,
-          );
-          this.mensajesError(
-            `Ocurrió un error al procesar la proforma: ${result.mensaje}`,
-            "error",
-          );
-          //this.mostrarMasDatos(this.indiceSeleccionado);
-          //this.procesarDatosParaTabla()
-        }
-      })
-      .catch((error) => {
-        this.isLoading = false;
-        console.error(error);
-        this.mensajesError(
-          "Ocurrió un error al procesar la proforma.",
-          "error",
-        );
-      });
-  }
-
   async editarInformeOp(informe: ConId<InformeOp>, i: number) {
     this.informeDetallado = informe;
     await this.buscarTarifa(i);
@@ -1075,21 +923,35 @@ export class LiquidacionesOpComponent implements OnInit {
         const motivo = await modalRef.result;
         if (!motivo) return;
         this.isLoading = true;
-        let coleccionContraParte =
-          this.llamadaOrigen === "cliente" &&
-          this.operacion.chofer.contratacion.tipo === 'directo'
+
+        let coleccionContraParte: string;
+        if (this.llamadaOrigen === "cliente") {
+          const tipoContratacion = this.choferService.getTipoContratacion(this.operacion.chofer.id);
+          // TODO: refactor Papelera — chofer en papelera → no se puede resolver la colección
+          // contraparte. Solución futura: resolver contra la papelera (id + colección de origen).
+          if (tipoContratacion === undefined) {
+            this.isLoading = false;
+            Swal.fire({
+              title: "Error",
+              text: "No se pudo resolver la contratación del chofer (posible chofer en papelera). La operación no fue anulada.",
+              icon: "error",
+            });
+            return;
+          }
+          coleccionContraParte = tipoContratacion === 'directo'
             ? "informesOpChoferes"
-            : this.llamadaOrigen === "cliente" &&
-                this.operacion.chofer.contratacion.tipo === 'proveedor'
-              ? "informesOpProveedores"
-              : "informesOpClientes";
+            : "informesOpProveedores";
+        } else {
+          // origen chofer o proveedor: la contraparte es siempre el cliente
+          coleccionContraParte = "informesOpClientes";
+        }
         const resultado = await this.dbFirebase.eliminarOperacionEInformes(
           this.operacion,
           this.componente,
           coleccionContraParte,
         );
         if (resultado.success) {
-          await this.tableroServ.anularOpEnTablero(this.operacion);
+          await this.tableroServ.anularOpEnTablero(this.operacion, motivo);
           await this.storageService.addSimpleLogPapelera(
             "operaciones",
             this.operacion,
@@ -1217,7 +1079,7 @@ export class LiquidacionesOpComponent implements OnInit {
   ///////////////////////////////METODO POR ERROR DE DUPLICADAS//////////////////////////////////////////////////////////////////////////////////////
 
   verificarDuplicados() {
-    const seenIds = new Set<number>();
+    const seenIds = new Set<string>();
     this.$facturasOpDuplicadas = [];
     this.informesOp = this.informesOp.filter((factura: ConId<InformeOp>) => {
       if (seenIds.has(factura.idOperacion)) {

@@ -13,8 +13,8 @@ import { Chofer } from "src/app/interfaces/chofer";
 import { ConId, ConIdType } from "src/app/interfaces/conId";
 import {
   Operacion,
-  TarifaEventual,
-  TarifaPersonalizada,
+  DatosTarifaEventual,
+  DatosTarifaPersonalizada,
 } from "src/app/interfaces/operacion";
 import {
   TarifaGralCliente,
@@ -55,7 +55,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   mostrarCategoria: boolean = false;
   seccionElegida!: Seccion;
   categoriaElegida: number = 0;
-  tarifaPersonalizadaOp!: TarifaPersonalizada;
+  tarifaPersonalizadaOp!: DatosTarifaPersonalizada;
   tarifaPersonalizada!: ConIdType<TarifaPersonalizadaCliente>;
   tarifaTipo!: TarifaTipo;
   vista: boolean = false;
@@ -63,7 +63,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   cerrar: boolean = false;
   aCobrar: any;
   aPagar: any;
-  tarifaEventual!: TarifaEventual;
+  tarifaEventual!: DatosTarifaEventual;
   tarifaCliente!: TarifaGralCliente | null;
   tarifaChofer!: TarifaGralCliente | null;
 
@@ -102,7 +102,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     //////console.log("cerrar: ",this.cerrar);
     this.opOriginal = this.fromParent.item;
     this.op = structuredClone(this.opOriginal);
-    this.op.acompanienteCant = this.op.acompanienteCant ?? 0;
+    this.op.acompanianteCant = this.op.acompanianteCant ?? 0;
     this.op.adExtraConcepto = this.op.adExtraConcepto ?? "";
     this.op.valores.cliente.adExtraValor =
       this.op.valores.cliente.adExtraValor ?? 0;
@@ -127,13 +127,14 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       if (tarifas) {
         this.tarifaPersonalizada = tarifas.find(
           (tarifa: ConIdType<TarifaPersonalizadaCliente>) =>
-            String(tarifa.idCliente) === String(this.op.cliente.idCliente),
+            String(tarifa.idCliente) === this.op.cliente.id,
         );
         console.log(
           "tarifa personalizada del cliente: ",
           this.tarifaPersonalizada,
         );
-        this.tarifaPersonalizadaOp = this.op.tarifaPersonalizada;
+        // TODO: refactor Tarifas — invariante: personalizada ⟺ datosTarifaPersonalizada !== null
+        this.tarifaPersonalizadaOp = this.op.datosTarifaPersonalizada!;
       } else {
         this.mensajesError("no hay tarifas personalizadas");
       }
@@ -181,7 +182,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     /*     if (this.op.tarifaTipo.personalizada && this.tarifaClienteSel) {
       this.seccionElegida =
         this.tarifaClienteSel.secciones[
-          this.op.tarifaPersonalizada.seccion - 1
+          this.op.datosTarifaPersonalizada.seccion - 1
         ];
       //this.tPersonalizada = this.op.tPersonalizada;
     } */
@@ -208,9 +209,9 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     this.op.acompaniante = event.target.value.toLowerCase() == "true";
     //////console.log(this.acompaniante);
     if (this.op.acompaniante) {
-      this.op.acompanienteCant = 1;
+      this.op.acompanianteCant = 1;
     } else {
-      this.op.acompanienteCant = 0;
+      this.op.acompanianteCant = 0;
     }
 
     this.valoresAcompaniantes();
@@ -218,12 +219,12 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
 
   changeCantAcompaniantes(event: any) {
     console.log(event.target.value);
-    this.op.acompanienteCant = Number(event.target.value);
-    console.log(this.op.acompanienteCant);
-    if (this.op.acompanienteCant === 0) {
+    this.op.acompanianteCant = Number(event.target.value);
+    console.log(this.op.acompanianteCant);
+    if (this.op.acompanianteCant === 0) {
       this.op.acompaniante = false;
     }
-    if (this.op.acompanienteCant > 0) {
+    if (this.op.acompanianteCant > 0) {
       this.op.acompaniante = true;
     }
     this.formAcomp.patchValue({
@@ -276,7 +277,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
             .categorias[e.target.value - 1].aPagar,
       };
       //////console.log("tarifa personalizada: ", this.tPersonalizada);
-      this.op.tarifaPersonalizada = this.tarifaPersonalizadaOp;
+      this.op.datosTarifaPersonalizada = this.tarifaPersonalizadaOp;
       this.op.valores.cliente.tarifaBase = this.tarifaPersonalizadaOp.aCobrar;
       this.op.valores.chofer.tarifaBase = this.tarifaPersonalizadaOp.aPagar;
       this.recalcularValores();
@@ -316,7 +317,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
         aPagar: categoria.aPagar,
       };
       ////////console.log("tarifa personalizada: ", this.tPersonalizada);
-      this.op.tarifaPersonalizada = this.tarifaPersonalizadaOp;
+      this.op.datosTarifaPersonalizada = this.tarifaPersonalizadaOp;
       this.op.valores.cliente.tarifaBase =
         this.formNumServ.convertirAValorNumerico(
           this.tarifaPersonalizadaOp.aCobrar,
@@ -384,21 +385,21 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
       this.formNumServ.convertirAValorNumerico(
         this.op.valores.cliente.tarifaBase,
       );
-    this.op.tarifaEventual.chofer.valor =
+    this.op.datosTarifaEventual.chofer.valor =
       this.formNumServ.convertirAValorNumerico(
-        this.op.tarifaEventual.chofer.valor,
+        this.op.datosTarifaEventual.chofer.valor,
       );
-    this.op.tarifaEventual.cliente.valor =
+    this.op.datosTarifaEventual.cliente.valor =
       this.formNumServ.convertirAValorNumerico(
-        this.op.tarifaEventual.cliente.valor,
+        this.op.datosTarifaEventual.cliente.valor,
       );
-    this.op.acompanienteCant = !this.op.acompaniante
+    this.op.acompanianteCant = !this.op.acompaniante
       ? 0
-      : this.op.acompanienteCant
-        ? this.op.acompanienteCant
+      : this.op.acompanianteCant
+        ? this.op.acompanianteCant
         : 1;
 
-    console.log("this.op.acompanienteCant :", this.op.acompanienteCant); */
+    console.log("this.op.acompanianteCant :", this.op.acompanianteCant); */
 
     console.log("operacion: para cerrar", this.op);
     this.calcularValoresfinales();
@@ -421,7 +422,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
         this.valoresOpServ.facturarOperacion(this.op).then((result: any) => {
           //this.isLoading = false;
           //console.log("modal facturacion: respuesta: ", result);
-          let idOp: number[] = [];
+          let idOp: string[] = [];
           idOp.push(this.op.idOperacion);
           if (result.exito) {
             this.storageService.logMultiplesOp(
@@ -464,7 +465,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   }
 
   armarOp() {
-    this.op.tarifaPersonalizada = this.tarifaPersonalizadaOp;
+    this.op.datosTarifaPersonalizada = this.tarifaPersonalizadaOp;
 
     if (this.op.tarifaTipo.personalizada) {
       this.op.valores.cliente.aCobrar = this.tarifaPersonalizadaOp.aCobrar;
@@ -474,7 +475,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     }
     ////console.log("op: ", this.op);
 
-    //this.op.acompanienteCant = !this.op.acompaniante ? 0 : this.op.acompanienteCant? this.op.acompanienteCant : 1;
+    //this.op.acompanianteCant = !this.op.acompaniante ? 0 : this.op.acompanianteCant? this.op.acompanianteCant : 1;
 
     console.log("editar op :", this.op);
     this.updateItem();
@@ -589,20 +590,24 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     if (op.tarifaTipo.personalizada) {
       return "bg-success";
     }
+    // TODO: refactor Tarifas — rama especial deshabilitada: op.cliente/op.chofer son snapshots
+    // (sin tarifaTipo). Mientras tanto 'especial' se muestra como 'general' (bg-primary),
+    // coherente con que la facturación trata especial como general. Recuperar al refactor de Tarifas.
     if (op.tarifaTipo.especial) {
-      if (objeto === "cliente") {
-        if (op.cliente.tarifaTipo.especial) {
-          return "bg-info";
-        } else {
-          return "bg-primary";
-        }
-      } else {
-        if (op.chofer.tarifaTipo.especial) {
-          return "bg-info";
-        } else {
-          return "bg-primary";
-        }
-      }
+      return "bg-primary";
+      // if (objeto === "cliente") {
+      //   if (op.cliente.tarifaTipo.especial) {
+      //     return "bg-info";
+      //   } else {
+      //     return "bg-primary";
+      //   }
+      // } else {
+      //   if (op.chofer.tarifaTipo.especial) {
+      //     return "bg-info";
+      //   } else {
+      //     return "bg-primary";
+      //   }
+      // }
     }
     if (op.tarifaTipo.general) {
       return "bg-primary";
@@ -629,15 +634,14 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   obtenerTCliente() {
     let tarifas;
     let tarfiaAplicada;
-    if (this.op.cliente.tarifaTipo.especial) {
-      tarifas = this.storageService.loadInfo("tarifasEspCliente");
-      tarfiaAplicada = tarifas.find(
-        (t) => t.idCliente === this.op.cliente.idCliente,
-      );
-    } else {
-      tarifas = this.storageService.loadInfo("tarifasGralCliente");
-      tarfiaAplicada = tarifas[0];
-    }
+    // TODO: refactor Tarifas — rama especial deshabilitada (op.cliente sin tarifaTipo). Siempre general.
+    // if (this.op.cliente.tarifaTipo.especial) {
+    //   tarifas = this.storageService.loadInfo("tarifasEspCliente");
+    //   tarfiaAplicada = tarifas.find((t) => String(t.idCliente) === this.op.cliente.id);
+    // } else {
+    tarifas = this.storageService.loadInfo("tarifasGralCliente");
+    tarfiaAplicada = tarifas[0];
+    // }
     if (tarfiaAplicada) {
       return tarfiaAplicada;
     } else {
@@ -646,59 +650,48 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   }
 
   obtenerTChofer() {
-    let tarifas;
+    // let tarifas; // (rama especial comentada abajo)
     let tarfiaAplicada;
     let tarifaGralChofer = this.storageService.loadInfo("tarifasGralChofer");
     let tarifaGralProveedor = this.storageService.loadInfo(
       "tarifasGralProveedor",
     );
 
-    if (this.op.chofer.tarifaTipo.especial) {
-      if (this.op.chofer.contratacion.tipo === 'directo') {
-        tarifas = this.storageService.loadInfo("tarifasEspChofer");
-        let tEspecial = tarifas.find(
-          (t) => t.idChofer === this.op.chofer.idChofer,
-        );
-        if (tEspecial) {
-          if (
-            tEspecial.idCliente === 0 ||
-            String(tEspecial.idCliente) === String(this.op.cliente.idCliente)
-          ) {
-            tarfiaAplicada = tEspecial;
-            ////console.log("2A) tarifa esp chofer a pagar: ", tarifa);
-          } else {
-            tarfiaAplicada = tarifaGralChofer[0];
-            ////console.log("2B) tarifa gral chofer a pagar: ", tarifa);
-          }
-        } else {
-          tarfiaAplicada = null;
-        }
-      } else {
-        tarifas = this.storageService.loadInfo("tarifasEspProveedor");
-        let tEspecial = tarifas.find(
-          (t) => t.idProveedor === (this.op.chofer.contratacion as any).idProveedor,
-        );
-        if (tEspecial) {
-          if (
-            tEspecial.idCliente === 0 ||
-            String(tEspecial.idCliente) === String(this.op.cliente.idCliente)
-          ) {
-            tarfiaAplicada = tEspecial;
-            ////console.log("2A) tarifa esp chofer a pagar: ", tarifa);
-          } else {
-            tarfiaAplicada = tarifaGralProveedor[0];
-            ////console.log("2B) tarifa gral chofer a pagar: ", tarifa);
-          }
-        } else {
-          tarfiaAplicada = null;
-        }
-      }
-    } else {
-      tarfiaAplicada =
-        this.op.chofer.contratacion.tipo === 'directo'
-          ? tarifaGralChofer[0]
-          : tarifaGralProveedor[0];
-    }
+    // TODO: refactor Tarifas — rama especial deshabilitada (op.chofer sin tarifaTipo).
+    // Toda la lógica de tarifa especial chofer/proveedor queda comentada. Siempre tarifa general
+    // (chofer o proveedor según op.proveedor). Recuperar al refactor de Tarifas.
+    // if (this.op.chofer.tarifaTipo.especial) {
+    //   if (this.op.chofer.contratacion.tipo === 'directo') {
+    //     tarifas = this.storageService.loadInfo("tarifasEspChofer");
+    //     let tEspecial = tarifas.find((t) => String(t.idChofer) === this.op.chofer.id);
+    //     if (tEspecial) {
+    //       if (tEspecial.idCliente === 0 || String(tEspecial.idCliente) === this.op.cliente.id) {
+    //         tarfiaAplicada = tEspecial;
+    //       } else {
+    //         tarfiaAplicada = tarifaGralChofer[0];
+    //       }
+    //     } else {
+    //       tarfiaAplicada = null;
+    //     }
+    //   } else {
+    //     tarifas = this.storageService.loadInfo("tarifasEspProveedor");
+    //     let tEspecial = tarifas.find((t) => t.idProveedor === this.op.proveedor?.id);
+    //     if (tEspecial) {
+    //       if (tEspecial.idCliente === 0 || String(tEspecial.idCliente) === this.op.cliente.id) {
+    //         tarfiaAplicada = tEspecial;
+    //       } else {
+    //         tarfiaAplicada = tarifaGralProveedor[0];
+    //       }
+    //     } else {
+    //       tarfiaAplicada = null;
+    //     }
+    //   }
+    // } else {
+    tarfiaAplicada =
+      this.op.proveedor === null
+        ? tarifaGralChofer[0]
+        : tarifaGralProveedor[0];
+    // }
     return tarfiaAplicada;
   }
 
@@ -706,11 +699,11 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     if (this.op.acompaniante) {
       this.op.valores.cliente.acompValor = this.tarifaCliente
         ? this.tarifaCliente?.adicionales.acompaniante *
-          (this.op.acompanienteCant ?? 1)
+          (this.op.acompanianteCant ?? 1)
         : 0;
       this.op.valores.chofer.acompValor = this.tarifaChofer
         ? this.tarifaChofer?.adicionales.acompaniante *
-          (this.op.acompanienteCant ?? 1)
+          (this.op.acompanianteCant ?? 1)
         : 0;
     } else {
       this.op.valores.cliente.acompValor = 0;
@@ -720,22 +713,24 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
   }
 
   valoresEventuales() {
+    // TODO: refactor Tarifas — invariante: eventual ⟺ datosTarifaEventual !== null
+    if (!this.op.datosTarifaEventual) return;
     console.log(
       "eventual-cliente: ",
-      this.op.tarifaEventual.cliente.valor,
+      this.op.datosTarifaEventual.cliente.valor,
       "eventual-chofer: ",
-      this.op.tarifaEventual.chofer.valor,
+      this.op.datosTarifaEventual.chofer.valor,
     );
-    this.op.tarifaEventual.cliente.valor =
+    this.op.datosTarifaEventual.cliente.valor =
       this.formNumServ.convertirAValorNumerico(
-        this.op.tarifaEventual.cliente.valor,
+        this.op.datosTarifaEventual.cliente.valor,
       );
-    this.op.tarifaEventual.chofer.valor =
+    this.op.datosTarifaEventual.chofer.valor =
       this.formNumServ.convertirAValorNumerico(
-        this.op.tarifaEventual.chofer.valor,
+        this.op.datosTarifaEventual.chofer.valor,
       );
-    this.op.valores.cliente.tarifaBase = this.op.tarifaEventual.cliente.valor;
-    this.op.valores.chofer.tarifaBase = this.op.tarifaEventual.chofer.valor;
+    this.op.valores.cliente.tarifaBase = this.op.datosTarifaEventual.cliente.valor;
+    this.op.valores.chofer.tarifaBase = this.op.datosTarifaEventual.chofer.valor;
     this.recalcularValores();
   }
 

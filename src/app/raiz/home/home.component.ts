@@ -59,9 +59,9 @@ export class HomeComponent implements OnInit {
       });
       let usuarioLogueado = this.storageService.loadInfo("usuario");
       this.$usuario = structuredClone(usuarioLogueado[0]);      
-      this.storageService.listenForChanges<Cliente>("clientes");
-      this.storageService.listenForChanges<Chofer>("choferes");
-      this.storageService.listenForChanges<Chofer>("proveedores");
+      //this.storageService.listenForChanges<Cliente>("clientes");
+      //this.storageService.listenForChanges<Chofer>("choferes");
+      //this.storageService.listenForChanges<Chofer>("proveedores");
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasGralCliente");
       this.storageService.listenForChanges<TarifaGralCliente>("tarifasEspCliente");
       this.storageService.listenForChanges<TarifaPersonalizadaCliente>('tarifasPersCliente');

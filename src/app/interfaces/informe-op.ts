@@ -2,7 +2,7 @@ import { TarifaTipo } from "./tarifa-gral-cliente";
 
 export interface InformeOp {
     idInfOp: number;    
-    idOperacion: number
+    idOperacion: string
     fecha: string | Date;        
     idCliente: number;
     // TODO: migrar a string cuando se refactorice este módulo (ID unificado con ConIdType.id)

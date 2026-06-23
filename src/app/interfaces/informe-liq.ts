@@ -7,7 +7,7 @@ export interface InformeLiq {
     fecha: Date | string;              // Fecha de generación del informe
     entidad: EntidadLiq;              // Información básica de cliente/chofer/proveedor
 
-    operaciones: number[];            // Array de IDs de operaciones incluidas
+    operaciones: string[];            // Array de IDs de operaciones incluidas
 
     valores: Valores;              // Detalle de los montos calculados
     valoresFinancieros: ValoresFinancieros;

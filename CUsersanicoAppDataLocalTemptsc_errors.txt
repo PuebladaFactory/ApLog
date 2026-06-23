@@ -1,0 +1,237 @@
+src/app/raiz/liquidacion/liquidaciones-op/liquidaciones-op.component.ts(320,26): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/liquidacion/liquidaciones-op/liquidaciones-op.component.ts(322,27): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/raiz/liquidacion/liquidaciones-op/liquidaciones-op.component.ts(323,28): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/raiz/liquidacion/liquidaciones-op/liquidaciones-op.component.ts(923,33): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/raiz/liquidacion/liquidaciones-op/liquidaciones-op.component.ts(926,39): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/raiz/liquidacion/modales/editar-tarifa-op/editar-tarifa-op.component.ts(269,36): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/raiz/liquidacion/modales/editar-tarifa-op/editar-tarifa-op.component.ts(299,38): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(355,35): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(449,36): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(450,34): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(453,7): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(455,11): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(457,7): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(458,9): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(460,36): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(461,34): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(630,13): error TS2339: Property 'patenteChofer' does not exist on type 'OperacionRuntime'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(631,60): error TS2339: Property 'datosPersonales' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(637,12): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(639,12): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(644,11): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/carga-multiple/carga-multiple.component.ts(646,11): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(211,7): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(212,7): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(261,32): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(261,64): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(262,27): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(281,13): error TS2339: Property 'patenteChofer' does not exist on type 'OperacionRuntime'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(282,60): error TS2339: Property 'datosPersonales' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(288,12): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(290,12): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(295,11): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(297,11): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(347,40): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(350,33): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(397,36): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(398,34): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(401,7): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(401,87): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(402,7): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(402,86): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(403,36): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(404,34): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(421,9): error TS2353: Object literal may only specify known properties, and 'idChofer' does not exist in type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(421,29): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(422,36): error TS2339: Property 'datosPersonales' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(423,31): error TS2339: Property 'condFiscal' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(424,33): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(425,31): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(426,35): error TS2339: Property 'tarifaAsignada' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(427,29): error TS2339: Property 'idTarifa' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(428,27): error TS2339: Property 'activo' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/carga-tablero-diario/carga-tablero-diario.component.ts(429,28): error TS2339: Property 'visible' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(130,65): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(136,9): error TS2322: Type 'DatosTarifaPersonalizada | null' is not assignable to type 'DatosTarifaPersonalizada'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(594,24): error TS2339: Property 'tarifaTipo' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(600,23): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(632,25): error TS2339: Property 'tarifaTipo' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(635,48): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(656,24): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(657,26): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(660,48): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(665,68): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(679,52): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(684,68): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(698,24): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(725,7): error TS2531: Object is possibly 'null'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(727,7): error TS2531: Object is possibly 'null'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(729,5): error TS2531: Object is possibly 'null'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(731,9): error TS2531: Object is possibly 'null'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(733,5): error TS2531: Object is possibly 'null'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(735,9): error TS2531: Object is possibly 'null'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(737,42): error TS2531: Object is possibly 'null'.
+src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component.ts(738,41): error TS2531: Object is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(94,5): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(95,5): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(99,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(100,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(101,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(102,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(103,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(115,13): error TS2339: Property 'patenteChofer' does not exist on type 'OperacionRuntime'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(120,11): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(121,11): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(125,12): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(126,12): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(145,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(145,50): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(146,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(147,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(148,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(149,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(157,66): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(158,62): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(163,5): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(163,52): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(166,66): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(169,57): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(170,56): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(173,7): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(174,7): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(175,7): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(209,44): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(215,66): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(216,57): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(226,19): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/operaciones-table/operaciones-table.component.ts(227,19): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/tablero-diario/tablero-diario.component.ts(384,27): error TS2339: Property 'facChofer' does not exist on type 'EstadoOp'.
+src/app/raiz/operaciones/tablero-diario/tablero-diario.component.ts(384,57): error TS2339: Property 'facCliente' does not exist on type 'EstadoOp'.
+src/app/raiz/operaciones/tablero-diario/tablero-diario.component.ts(384,88): error TS2551: Property 'proformaCh' does not exist on type 'EstadoOp'. Did you mean 'proforma'?
+src/app/raiz/operaciones/tablero-diario/tablero-diario.component.ts(384,119): error TS2551: Property 'proformaCl' does not exist on type 'EstadoOp'. Did you mean 'proforma'?
+src/app/raiz/operaciones/tablero-diario/tablero-diario.component.ts(384,150): error TS2339: Property 'facturada' does not exist on type 'EstadoOp'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(241,19): error TS2339: Property 'abierta' does not exist on type 'EstadoOp'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(242,19): error TS2339: Property 'cerrada' does not exist on type 'EstadoOp'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(243,20): error TS2551: Property 'proformaCl' does not exist on type 'EstadoOp'. Did you mean 'proforma'?
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(243,44): error TS2551: Property 'proformaCh' does not exist on type 'EstadoOp'. Did you mean 'proforma'?
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(244,19): error TS2339: Property 'facCliente' does not exist on type 'EstadoOp'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(245,19): error TS2339: Property 'facChofer' does not exist on type 'EstadoOp'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(246,19): error TS2339: Property 'facturada' does not exist on type 'EstadoOp'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(249,36): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(250,28): error TS2339: Property 'datosPersonales' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(250,66): error TS2339: Property 'datosPersonales' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(251,27): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(253,19): error TS2339: Property 'patenteChofer' does not exist on type 'ConId<Operacion>'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(261,47): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(510,26): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(511,26): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(511,48): error TS2339: Property 'datosPersonales' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(511,85): error TS2339: Property 'datosPersonales' does not exist on type 'RefChofer'.
+src/app/raiz/operaciones/tablero-op/tablero-op.component.ts(582,92): error TS2339: Property 'patenteChofer' does not exist on type 'Operacion'.
+src/app/servicios/database/db-firestore.service.ts(1921,21): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/reportes/reportes-op/reportes-op.service.ts(98,23): error TS2339: Property 'abierta' does not exist on type 'EstadoOp'.
+src/app/servicios/reportes/reportes-op/reportes-op.service.ts(108,42): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/reportes/reportes-op/reportes-op.service.ts(116,23): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/reportes/reportes-op/reportes-op.service.ts(122,44): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/reportes/reportes-op/reportes-op.service.ts(134,43): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/reportes/reportes-op/resumen-op-calculator.service.ts(48,36): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/reportes/reportes-op/resumen-op-calculator.service.ts(58,19): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/reportes/reportes-op/resumen-op-calculator.service.ts(62,38): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/reportes/reportes-op/resumen-op-calculator.service.ts(72,37): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/reportes/reportes-op/resumen-op-calculator.service.ts(185,38): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/reportes/reportes-op/resumen-op-calculator.service.ts(192,38): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/reportes/reportes-op/resumen-op-calculator.service.ts(202,19): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/reportes/reportes-op/resumen-op-calculator.service.ts(203,40): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/reportes/reportes-op/resumen-op-calculator.service.ts(222,38): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/tablero/tablero.service.ts(51,34): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/tablero/tablero.service.ts(64,27): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/tablero/tablero.service.ts(98,18): error TS2339: Property 'cerrada' does not exist on type 'EstadoOp'.
+src/app/servicios/tablero/tablero.service.ts(150,24): error TS2339: Property 'patenteChofer' does not exist on type 'Operacion'.
+src/app/servicios/tablero/tablero.service.ts(179,38): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/tablero/tablero.service.ts(184,31): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/tablero/tablero.service.ts(227,34): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(65,50): error TS2339: Property 'patenteChofer' does not exist on type 'Operacion'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(189,19): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(224,39): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(227,35): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(269,36): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(270,34): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(291,27): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(292,27): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(297,25): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(303,19): error TS2339: Property 'patenteChofer' does not exist on type 'Operacion'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(310,19): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(330,50): error TS2339: Property 'patenteChofer' does not exist on type 'Operacion'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(373,38): error TS2339: Property 'patenteChofer' does not exist on type 'Operacion'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(386,17): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service.ts(387,19): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(76,50): error TS2339: Property 'patenteChofer' does not exist on type 'Operacion'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(197,19): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(231,39): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(236,35): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(279,36): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(280,34): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(281,31): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(301,28): error TS2339: Property 'tarifaTipo' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(302,28): error TS2339: Property 'tarifaTipo' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(307,26): error TS2339: Property 'tarifaTipo' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(313,19): error TS2339: Property 'patenteChofer' does not exist on type 'Operacion'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(322,38): error TS2339: Property 'patenteChofer' does not exist on type 'Operacion'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(335,17): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/servicios/valores-op/valores-op-cliente/valores-op-cliente.service.ts(336,19): error TS18047: 'op.datosTarifaPersonalizada' is possibly 'null'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(60,21): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(62,47): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(78,22): error TS2339: Property 'vendedor' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(78,45): error TS2339: Property 'vendedor' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(105,24): error TS2339: Property 'tarifaTipo' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(109,47): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(134,45): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(162,21): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(186,23): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(190,45): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(201,78): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(234,45): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(290,45): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(301,81): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(337,45): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(378,21): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(383,13): error TS2353: Object literal may only specify known properties, and 'abierta' does not exist in type 'EstadoOp'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(409,13): error TS2353: Object literal may only specify known properties, and 'abierta' does not exist in type 'EstadoOp'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(441,21): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(475,19): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(476,16): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(479,19): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(480,16): error TS18047: 'op.datosTarifaEventual' is possibly 'null'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(488,36): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(489,34): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(490,31): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(499,119): error TS2339: Property 'datosPersonales' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(499,157): error TS2339: Property 'datosPersonales' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(505,16): error TS2339: Property 'vendedor' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(511,38): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(536,20): error TS2339: Property 'tarifaTipo' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(538,43): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(565,19): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(566,21): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(568,51): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(570,82): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(579,47): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(581,82): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(591,19): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(615,20): error TS2339: Property 'tarifaTipo' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(618,43): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(633,19): error TS2339: Property 'tarifaTipo' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(635,68): error TS2339: Property 'idChofer' does not exist on type 'RefChofer'.
+src/app/servicios/valores-op/valores-op/valores-op.service.ts(638,59): error TS2339: Property 'idCliente' does not exist on type 'RefCliente'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(191,33): error TS2339: Property 'contratacion' does not exist on type 'RefChofer'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(227,52): error TS2339: Property 'patenteChofer' does not exist on type 'ConId<Operacion>'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(282,7): error TS2322: Type 'DatosTarifaPersonalizada | null' is not assignable to type 'DatosTarifaPersonalizada'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(501,7): error TS2531: Object is possibly 'null'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(503,7): error TS2531: Object is possibly 'null'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(582,48): error TS2339: Property 'patenteChofer' does not exist on type 'ConId<Operacion>'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(830,5): error TS2531: Object is possibly 'null'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(832,9): error TS2531: Object is possibly 'null'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(834,5): error TS2531: Object is possibly 'null'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(836,9): error TS2531: Object is possibly 'null'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(839,7): error TS2531: Object is possibly 'null'.
+src/app/shared/modales/editar-inf-op/editar-inf-op.component.ts(841,7): error TS2531: Object is possibly 'null'.

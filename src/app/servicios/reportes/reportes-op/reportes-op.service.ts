@@ -48,7 +48,9 @@ export class ReportesOpService {
   private firestore = inject(Firestore);
   basePath: string = "/Vantruck/datos";
 
-  constructor(private resumenBuilder: ResumenBuilderService) {}
+  constructor(
+    private resumenBuilder: ResumenBuilderService,
+  ) {}
 
   // =========================
   // 🔹 MÉTODO PRINCIPAL
@@ -95,7 +97,7 @@ export class ReportesOpService {
 
     for (const op of ops) {
       try {
-        if (op.estado.abierta) continue;
+        if (op.estado.ciclo === 'abierta') continue;
 
         const { anio, mes } = this.parseFechaLocal(op.fecha);
 
@@ -105,7 +107,7 @@ export class ReportesOpService {
           {
             tipo: "entidad",
             tipoEntidad: "cliente",
-            entidadId: Number(op.cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
+            entidadId: Number(op.cliente.id), // TODO: migrar a string cuando se refactorice este módulo
             anio,
             mes,
           },
@@ -113,13 +115,13 @@ export class ReportesOpService {
         );
 
         // CHOFER / PROVEEDOR
-        if (op.chofer.contratacion.tipo === 'proveedor') {
+        if (op.proveedor !== null) {
           this.procesarOperacion(
             map,
             {
               tipo: "entidad",
               tipoEntidad: "proveedor",
-              entidadId: Number((op.chofer.contratacion as any).idProveedor),
+              entidadId: Number(op.proveedor.id), // TODO: migrar a string cuando se refactorice este módulo
               anio,
               mes,
             },
@@ -131,7 +133,7 @@ export class ReportesOpService {
             {
               tipo: "entidad",
               tipoEntidad: "chofer",
-              entidadId: Number(op.chofer.idChofer),
+              entidadId: Number(op.chofer.id), // TODO: migrar a string cuando se refactorice este módulo
               anio,
               mes,
             },
@@ -207,7 +209,7 @@ export class ReportesOpService {
 
       if (op.acompaniante) {
         res.acompanianteOps++;
-        res.acompanianteCantidadTotal += op.acompanienteCant ?? 1;
+        res.acompanianteCantidadTotal += op.acompanianteCant ?? 1;
       }
 
       const tipo = this.getTipoTarifa(op);

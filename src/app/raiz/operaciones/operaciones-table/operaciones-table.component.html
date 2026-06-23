@@ -145,10 +145,16 @@
                         </td>
 
                         <td>
-                            <input
+                            <!-- <input
                                 type="number"
                                 class="form-control form-control-sm" (change)="configurarCantAcompaniante(op)"
                                 [(ngModel)]="op.acompanienteCant"
+                                [ngClass]="{ isDisabled: !op.acompaniante }"
+                            /> -->
+                            <input
+                                type="number"
+                                class="form-control form-control-sm" (change)="configurarCantAcompaniante(op)"
+                                
                                 [ngClass]="{ isDisabled: !op.acompaniante }"
                             />
                         </td>
@@ -212,11 +218,15 @@
                             }"
                             class="col-eventual-border-left align-middle col-eventual-concepto"
                         >
-                            <input
+                            <!-- <input
                                 [disabled]="!esEventualActiva(op)"
                                 class="form-control form-control-sm"
                                 [(ngModel)]="op.tarifaEventual.chofer.concepto"
                                 title="{{ op.tarifaEventual.chofer.concepto }}"
+                            /> -->
+                            <input
+                                [disabled]="!esEventualActiva(op)"
+                                class="form-control form-control-sm"                                
                             />
                         </td>
 
@@ -226,12 +236,20 @@
                                 'bg-eventual-cell': esEventualActiva(op),
                             }"
                         >
-                            <input
+                            <!-- <input
                                 [disabled]="!esEventualActiva(op)"
                                 type="text"
                                 inputmode="number"
                                 class="form-control form-control-sm"
                                 [(ngModel)]="op.tarifaEventual.chofer.valor"
+                                appMonto [minimo]="0"
+                            /> -->
+                            <input
+                                [disabled]="!esEventualActiva(op)"
+                                type="text"
+                                inputmode="number"
+                                class="form-control form-control-sm"
+                                
                                 appMonto [minimo]="0"
                             />
                         </td>
@@ -242,10 +260,15 @@
                                 'bg-eventual-cell': esEventualActiva(op),
                             }"
                         >
-                            <input
+                            <!-- <input
                                 [disabled]="!esEventualActiva(op)"
                                 class="form-control form-control-sm"
                                 [(ngModel)]="op.tarifaEventual.cliente.concepto"
+                            /> -->
+                            <input
+                                [disabled]="!esEventualActiva(op)"
+                                class="form-control form-control-sm"
+                                
                             />
                         </td>
 
@@ -255,12 +278,20 @@
                             }"
                             class="col-eventual-border-right align-middle col-eventual-valor"
                         >
-                            <input
+                            <!-- <input
                                 [disabled]="!esEventualActiva(op)"
                                 type="text"
                                 inputmode="number"
                                 class="form-control form-control-sm"
                                 [(ngModel)]="op.tarifaEventual.cliente.valor"
+                                appMonto [minimo]="0"
+                            /> -->
+                            <input
+                                [disabled]="!esEventualActiva(op)"
+                                type="text"
+                                inputmode="number"
+                                class="form-control form-control-sm"
+                                
                                 appMonto [minimo]="0"
                             />
                         </td>
@@ -274,7 +305,7 @@
                             class="col-personalizada-border-left align-middle col-seccion"
                         >
                             @if (esPersonalizadaActiva(op)) {
-                                <select
+                                <!-- <select
                                     [disabled]="!esPersonalizadaActiva(op)"
                                     class="form-select form-select-sm"
                                     [(ngModel)]="op.tarifaPersonalizada.seccion"
@@ -285,6 +316,28 @@
                                     @for (
                                         sec of getTarifaPersonalizada(
                                             op.cliente.idCliente
+                                        )?.secciones;
+                                        track sec.orden
+                                    ) {
+                                        <option
+                                            [ngValue]="sec.orden"
+                                            title="Sección {{ sec.orden }}"
+                                        >
+                                            Sección {{ sec.orden }} @if(sec.descripcion) {- {{ sec.descripcion }}}
+                                        </option>
+                                    }
+                                </select> -->
+                                <select
+                                    [disabled]="!esPersonalizadaActiva(op)"
+                                    class="form-select form-select-sm"
+                                    
+                                    
+                                    [title]="getSeccionSeleccionadaLabel(op)"
+                                >
+                                    <option value="">Seleccione</option>
+                                    @for (
+                                        sec of getTarifaPersonalizada(
+                                            op.cliente.id
                                         )?.secciones;
                                         track sec.orden
                                     ) {
@@ -310,17 +363,15 @@
                             class="col-personalizada-border-right align-middle col-categoria"
                         >
                             @if (
-                                op.tarifaTipo.personalizada &&
-                                op.tarifaPersonalizada.seccion
+                                op.tarifaTipo.personalizada
+                                
                             ) {
                                 <select
                                     [disabled]="
                                         getTarifaActiva(op) !== 'personalizada'
                                     "
                                     class="form-select form-select-sm"
-                                    [(ngModel)]="
-                                        op.tarifaPersonalizada.categoria
-                                    "
+                                    
                                     (ngModelChange)="onCategoriaChange(op)"
                                     [title]="getCategoriaSeleccionadaLabel(op)"
                                 >
@@ -347,7 +398,7 @@
                         <td class="text-center align-middle">
                             <app-btn-eliminar
                                 name="Eliminar"
-                                (click)="eliminarOperacion(grupo, op)"
+                                
                                 title="Eliminar operación"
                                 class="btn-delete"
                             ></app-btn-eliminar>

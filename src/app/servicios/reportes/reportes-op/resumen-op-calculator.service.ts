@@ -45,7 +45,7 @@ export class ResumenOpCalculatorService {
     const keyCliente: KeyResumen = {
       tipo: "entidad",
       tipoEntidad: "cliente",
-      entidadId: Number(op.cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
+      entidadId: Number(op.cliente.id), // TODO: migrar a string cuando se refactorice este módulo
       anio,
       mes,
     };
@@ -55,11 +55,11 @@ export class ResumenOpCalculatorService {
     // =========================
     // CHOFER / PROVEEDOR
     // =========================
-    if (op.chofer.contratacion.tipo === 'proveedor') {
+    if (op.proveedor !== null) {
       const keyProveedor: KeyResumen = {
         tipo: "entidad",
         tipoEntidad: "proveedor",
-        entidadId: Number((op.chofer.contratacion as any).idProveedor),
+        entidadId: Number(op.proveedor.id), // TODO: migrar a string cuando se refactorice este módulo
         anio,
         mes,
       };
@@ -69,7 +69,7 @@ export class ResumenOpCalculatorService {
       const keyChofer: KeyResumen = {
         tipo: "entidad",
         tipoEntidad: "chofer",
-        entidadId: Number(op.chofer.idChofer),
+        entidadId: Number(op.chofer.id), // TODO: migrar a string cuando se refactorice este módulo
         anio,
         mes,
       };
@@ -96,7 +96,7 @@ export class ResumenOpCalculatorService {
       kmRecorridos: increment(op.km),
 
       acompanianteOps: increment(op.acompaniante ? 1 : 0),
-      acompanianteCantidadTotal: increment(op.acompanienteCant ?? 0),
+      acompanianteCantidadTotal: increment(op.acompanianteCant ?? 0),
 
       // cliente
       "cliente.acompValor": increment(op.valores.cliente.acompValor),
@@ -182,14 +182,14 @@ export class ResumenOpCalculatorService {
       key: {
         tipo: "entidad",
         tipoEntidad: "cliente",
-        entidadId: Number(op.cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
+        entidadId: Number(op.cliente.id), // TODO: migrar a string cuando se refactorice este módulo
         anio,
         mes,
       },
       path: this.buildPath({
         tipo: "entidad",
         tipoEntidad: "cliente",
-        entidadId: Number(op.cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
+        entidadId: Number(op.cliente.id), // TODO: migrar a string cuando se refactorice este módulo
         anio,
         mes,
       }),
@@ -199,8 +199,8 @@ export class ResumenOpCalculatorService {
     // =========================
     // CHOFER / PROVEEDOR
     // =========================
-    if (op.chofer.contratacion.tipo === 'proveedor') {
-      const provId = Number((op.chofer.contratacion as any).idProveedor);
+    if (op.proveedor !== null) {
+      const provId = Number(op.proveedor.id); // TODO: migrar a string cuando se refactorice este módulo
       updates.push({
         key: {
           tipo: "entidad",
@@ -219,7 +219,7 @@ export class ResumenOpCalculatorService {
         data: baseData,
       });
     } else {
-      const choId = Number(op.chofer.idChofer);
+      const choId = Number(op.chofer.id); // TODO: migrar a string cuando se refactorice este módulo
       updates.push({
         key: {
           tipo: "entidad",
@@ -315,7 +315,7 @@ export class ResumenOpCalculatorService {
 
       acompanianteOps: op.acompaniante ? 1 : 0,
       acompanianteCantidadTotal: op.acompaniante
-        ? (op.acompanienteCant ?? 1)
+        ? (op.acompanianteCant ?? 1)
         : 0,
 
       // cliente

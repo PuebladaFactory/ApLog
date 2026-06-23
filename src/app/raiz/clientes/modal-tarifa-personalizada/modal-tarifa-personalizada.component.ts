@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { TarifaPersonalizada } from 'src/app/interfaces/operacion';
+import { DatosTarifaPersonalizada } from 'src/app/interfaces/operacion';
 import { CategoriaTarifa, Seccion, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';

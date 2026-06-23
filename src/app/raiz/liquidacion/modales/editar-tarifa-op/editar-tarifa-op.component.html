@@ -73,28 +73,28 @@
               <div class="form-group mb-2">
                 <label for="Categoria" class="fs-5">Concepto</label>
                 <div class="input-group">
-                  <input class="w-100" type="text" [value]="operacion.tarifaEventual.cliente.concepto">
+                  <!-- <input class="w-100" type="text" [value]="operacion.tarifaEventual.cliente.concepto"> -->
                 </div>
               </div>
               <div class="form-group mb-2">
                 <label for="km" class="fs-5">Valor</label>
                 <div class="input-group">
                   <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                  <input class="form-control" type="text" [value]="operacion.tarifaEventual.cliente.valor | formatearValor">
+                  <!-- <input class="form-control" type="text" [value]="operacion.tarifaEventual.cliente.valor | formatearValor"> -->
                 </div>
               </div>
               <h4 class="mt-4">Chofer: </h4>
               <div class="form-group mb-2">
                 <label for="km" class="fs-5">Concepto</label>
                 <div class="input-group">
-                  <input class="w-100" type="text" [value]="operacion.tarifaEventual.chofer.concepto">
+                  <!-- <input class="w-100" type="text" [value]="operacion.tarifaEventual.chofer.concepto"> -->
                 </div>
               </div>
               <div class="form-group mb-2">
                 <label for="km" class="fs-5">Valor</label>
                 <div class="input-group">
                   <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                  <input class="form-control" type="text" [value]="operacion.tarifaEventual.chofer.valor | formatearValor">
+                  <!-- <input class="form-control" type="text" [value]="operacion.tarifaEventual.chofer.valor | formatearValor"> -->
                 </div>
               </div>
             </div>
@@ -103,28 +103,28 @@
           @if (facDetallada.tarifaTipo.personalizada) {
             <div class="border border-dark border-1 rounded-4 shadow p-3 mb-3 bg-body-tertiary rounded h-100 sectores">
               <div class="form-group mt-3 mb-2">
-                <label for="Seccion" class="fs-5">Sección: {{tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].descripcion}}</label>
+                <!-- <label for="Seccion" class="fs-5">Sección: {{tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].descripcion}}</label> -->
                 <div class="input-group">
-                  <input class="w-100" type="text" [value]="'Seccion ' +  tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].orden">
+                  <!-- <input class="w-100" type="text" [value]="'Seccion ' +  tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].orden"> -->
                 </div>
                 <div class="form-group mt-2 mb-2">
-                  <label for="Categoria" class="fs-5">Categoria : {{tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].orden}}</label>
+                  <!-- <label for="Categoria" class="fs-5">Categoria : {{tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].orden}}</label> -->
                   <div class="input-group">
-                    <input class="w-100" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].nombre">
+                    <!-- <input class="w-100" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].nombre"> -->
                   </div>
                 </div>
                 <div class="form-group mt-2 mb-2">
                   <label for="aCobrar" class="fs-5">A Cobrar</label>
                   <div class="input-group">
                     <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                    <input class="form-control" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].aCobrar | formatearValor">
+                    <!-- <input class="form-control" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].aCobrar | formatearValor"> -->
                   </div>
                 </div>
                 <div class="form-group mt-2 mb-2">
                   <label for="aPagar" class="fs-5">A Pagar</label>
                   <div class="input-group">
                     <span class="input-group-text" id="basic-addon1" style="width:30px">$</span>
-                    <input class="form-control" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].aPagar | formatearValor">
+                    <!-- <input class="form-control" type="text" [value]="tarifaPersonalizada.secciones[operacion.tarifaPersonalizada.seccion - 1].categorias[operacion.tarifaPersonalizada.categoria - 1].aPagar | formatearValor"> -->
                   </div>
                 </div>
               </div>
@@ -146,7 +146,7 @@
                 <div class="form-group mb-2 isDisabled">
                   <label for="Chofer" class="fs-5">Chofer</label>
                   <div class="input-group">
-                    <input class="w-100" type="text" [value]="operacion.chofer.datosPersonales.apellido + ' ' + operacion.chofer.datosPersonales.nombre ">
+                    <!-- <input class="w-100" type="text" [value]="operacion.chofer.datosPersonales.apellido + ' ' + operacion.chofer.datosPersonales.nombre "> -->
                   </div>
                 </div>
                 <div class="form-group mb-2 isDisabled">

@@ -75,7 +75,7 @@ export class LiquidacionService {
     proforma?: ConId<InformeLiq>,
     liqProforma?: boolean,
   ): Promise<{ exito: boolean; mensaje: string; informe: any }> {
-    let operaciones: Map<number, OperacionRef> | null = null;
+    let operaciones: Map<string, OperacionRef> | null = null;
     console.log("usuarioId: ", usuarioId);
 
     try {
@@ -184,7 +184,7 @@ export class LiquidacionService {
   async procesarInformeLiq(
     params: ProcesarParams,
     batch: WriteBatch,
-    operaciones: Map<number, OperacionRef>,
+    operaciones: Map<string, OperacionRef>,
   ): Promise<{ exito: boolean; mensaje: string }> {
     await this.verificarInformesOpOrigen(
       params.informesOp,
@@ -201,7 +201,7 @@ export class LiquidacionService {
       params.componenteInfLiq,
     );
 
-    let contrapartes: Map<number, DocumentReference> | null = null;
+    let contrapartes: Map<string, DocumentReference> | null = null;
     if (params.tipo !== "cliente") {
       const ids = params.informesOp.map((i) => i.idOperacion);
       contrapartes = await this.obtenerContrapartes(ids);
@@ -273,7 +273,7 @@ export class LiquidacionService {
   async procesarProforma(
     params: ProcesarParams,
     batch: WriteBatch,
-    operaciones: Map<number, OperacionRef>,    
+    operaciones: Map<string, OperacionRef>,    
   ): Promise<{ exito: boolean; mensaje: string }> {
     await this.verificarInformesOpOrigen(
       params.informesOp,
@@ -285,7 +285,7 @@ export class LiquidacionService {
       params.componenteInfLiq,
     );
 
-    let contrapartes: Map<number, DocumentReference> | null = null;
+    let contrapartes: Map<string, DocumentReference> | null = null;
     if (params.tipo !== "cliente") {
       const ids = params.informesOp.map((i) => i.idOperacion);
       contrapartes = await this.obtenerContrapartes(ids);
@@ -372,8 +372,8 @@ export class LiquidacionService {
 
   async obtenerOperaciones(
     informesOp: InformeOp[],
-  ): Promise<Map<number, OperacionRef>> {
-    const operacionesMap = new Map<number, OperacionRef>();
+  ): Promise<Map<string, OperacionRef>> {
+    const operacionesMap = new Map<string, OperacionRef>();
 
     const ids = [...new Set(informesOp.map((i) => i.idOperacion))];
 
@@ -485,9 +485,9 @@ export class LiquidacionService {
   // CONTRAPARTE
   // =====================================================
 
-  async obtenerContrapartes(idsOperacion: number[]) {
+  async obtenerContrapartes(idsOperacion: string[]) {
     const bloques = chunk(idsOperacion, 10);
-    const map = new Map<number, DocumentReference>();
+    const map = new Map<string, DocumentReference>();
 
     for (const bloque of bloques) {
       const q = query(
@@ -511,7 +511,7 @@ export class LiquidacionService {
     batch: WriteBatch,
     informe: ConId<InformeOp>,
     modo: "factura" | "proforma",
-    contrapartes: Map<number, DocumentReference>,
+    contrapartes: Map<string, DocumentReference>,
   ) {
     const contraRef = contrapartes.get(informe.idOperacion);
 
@@ -529,19 +529,19 @@ export class LiquidacionService {
   // =====================================================
 
   actualizarOperacionProforma(
-    estado: any,
+    estado: EstadoOp,
     modo: "cliente" | "chofer" | "proveedor",
   ) {
-    const nuevoEstado = { ...estado };
+    const nuevoEstado: EstadoOp = {
+      ...estado,
+      proforma: { ...estado.proforma },
+      liquidacion: { ...estado.liquidacion },
+    };
 
     if (modo === "cliente") {
-      nuevoEstado.cerrada = false;
-      nuevoEstado.proformaCl = true;
-      nuevoEstado.proformaCh = false;
+      nuevoEstado.proforma.cliente = true;
     } else {
-      nuevoEstado.cerrada = false;
-      nuevoEstado.proformaCl = false;
-      nuevoEstado.proformaCh = true;
+      nuevoEstado.proforma.chofer = true;
     }
 
     return nuevoEstado;
@@ -551,24 +551,22 @@ export class LiquidacionService {
     estado: EstadoOp,
     modo: "cliente" | "chofer" | "proveedor",
   ) {
-    const nuevoEstado = { ...estado };
+    const nuevoEstado: EstadoOp = {
+      ...estado,
+      proforma: { ...estado.proforma },
+      liquidacion: { ...estado.liquidacion },
+    };
 
     if (modo === "cliente") {
-      nuevoEstado.cerrada = false;
-      nuevoEstado.facCliente = true;
+      nuevoEstado.liquidacion.cliente = true;
+      nuevoEstado.proforma.cliente = false;
     } else {
-      nuevoEstado.cerrada = false;
-      nuevoEstado.facChofer = true;
+      nuevoEstado.liquidacion.chofer = true;
+      nuevoEstado.proforma.chofer = false;
     }
 
-    nuevoEstado.proformaCh = false;
-    nuevoEstado.proformaCl = false;
-
-    nuevoEstado.facturada = nuevoEstado.facCliente && nuevoEstado.facChofer;
-
-    if (nuevoEstado.facturada) {
-      nuevoEstado.facCliente = false;
-      nuevoEstado.facChofer = false;
+    if (nuevoEstado.liquidacion.cliente && nuevoEstado.liquidacion.chofer) {
+      nuevoEstado.ciclo = "liquidada";
     }
 
     return nuevoEstado;
@@ -614,13 +612,13 @@ export class LiquidacionService {
   async revertirProforma(
     parametros: ProcesarParams,
     batch: WriteBatch,
-    operaciones: Map<number, OperacionRef>,
+    operaciones: Map<string, OperacionRef>,
     proforma: ConId<InformeLiq>
   ) : Promise<{ exito: boolean; mensaje: string }>  {    
 
     const ids = [...new Set(parametros.informesOp.map((i) => i.idOperacion))];
 
-    let contrapartes: Map<number, DocumentReference> | null = null;
+    let contrapartes: Map<string, DocumentReference> | null = null;
     if (parametros.tipo !== "cliente") {
       contrapartes = await this.obtenerContrapartes(ids);
     }    
@@ -632,19 +630,21 @@ export class LiquidacionService {
         throw new Error(`Operacion ${informeOp.idOperacion} no encontrada`);
       }
 
-      const nuevoEstado = { ...op.data.estado };
+      const nuevoEstado: EstadoOp = {
+        ...op.data.estado,
+        proforma: { ...op.data.estado.proforma },
+        liquidacion: { ...op.data.estado.liquidacion },
+      };
 
-        nuevoEstado.cerrada = nuevoEstado.facCliente
-          ? false
-          : nuevoEstado.facChofer
-            ? false
-            : true;
-        nuevoEstado.proformaCl = false;
-        nuevoEstado.proformaCh = false;
+      if (parametros.tipo === "cliente") {
+        nuevoEstado.proforma.cliente = false;
+      } else {
+        nuevoEstado.proforma.chofer = false;
+      }
 
-        batch.update(op.ref, {
-          estado: nuevoEstado,
-        });
+      batch.update(op.ref, {
+        estado: nuevoEstado,
+      });
 
       const origenRef = doc(
         this.firestore,
@@ -680,7 +680,7 @@ export class LiquidacionService {
   async revertirInformeLiq(
     parametros: ProcesarParams,
     batch: WriteBatch,
-    operaciones: Map<number, OperacionRef>,
+    operaciones: Map<string, OperacionRef>,
     informeLiq: ConId<InformeLiq>,
     anuladorPor: string,
     anuladoMotivo:string,
@@ -688,7 +688,7 @@ export class LiquidacionService {
   ): Promise<{ exito: boolean; mensaje: string }> {
     const ids = [...new Set(parametros.informesOp.map((i) => i.idOperacion))];
 
-    let contrapartes: Map<number, DocumentReference> | null = null;
+    let contrapartes: Map<string, DocumentReference> | null = null;
     if (parametros.tipo !== "cliente") {
       contrapartes = await this.obtenerContrapartes(ids);
     }
@@ -699,18 +699,19 @@ export class LiquidacionService {
         throw new Error(`Operacion ${informeOp.idOperacion} no encontrada`);
       }
 
-      const nuevoEstado = { ...op.data.estado };
-      // 🔸 Reaplicar lógica de actualización de estados
-      if (nuevoEstado.facturada) {
-        nuevoEstado.facturada = false;
-        if (informeLiq.tipo === 'cliente') nuevoEstado.facChofer = true;
-        else nuevoEstado.facCliente = true;
-      } else {
-        if (informeLiq.tipo === 'cliente') nuevoEstado.facCliente = false;
-        else nuevoEstado.facChofer = false;
+      const nuevoEstado: EstadoOp = {
+        ...op.data.estado,
+        proforma: { ...op.data.estado.proforma },
+        liquidacion: { ...op.data.estado.liquidacion },
+      };
 
-        if (!nuevoEstado.proformaCl && !nuevoEstado.proformaCh) nuevoEstado.cerrada = true;
+      if (informeLiq.tipo === "cliente") {
+        nuevoEstado.liquidacion.cliente = false;
+      } else {
+        nuevoEstado.liquidacion.chofer = false;
       }
+
+      nuevoEstado.ciclo = "cerrada";
 
       batch.update(op.ref, {
         estado: nuevoEstado,
@@ -762,7 +763,7 @@ export class LiquidacionService {
   // =====================================================
 
   async bloquearOperaciones(
-    operaciones: Map<number, OperacionRef>,
+    operaciones: Map<string, OperacionRef>,
     usuario: string,
   ) {
     const now = Date.now();
@@ -805,7 +806,7 @@ export class LiquidacionService {
     await Promise.all(updates);
   }
 
-  async desbloquearOperaciones(operaciones: Map<number, OperacionRef>) {
+  async desbloquearOperaciones(operaciones: Map<string, OperacionRef>) {
     const updates = [];
 
     for (const op of operaciones.values()) {
@@ -868,11 +869,11 @@ export class LiquidacionService {
   async anularLiquidacion(    
     params: AnularParams
   ): Promise<{ exito: boolean; mensaje: string; informe: any }> {
-    let operaciones: Map<number, OperacionRef> | null = null;    
+    let operaciones: Map<string, OperacionRef> | null = null;
 
     try {
       /* BLOQUEO DE LAS OPERACIONES*/
-      operaciones = await this.obtenerOperaciones(params.informesOp);      
+      operaciones = await this.obtenerOperaciones(params.informesOp);
       await this.bloquearOperaciones(operaciones, params.anuladoPor);
 
       let {id, ...infLiqSinId} = params.informeLiq;

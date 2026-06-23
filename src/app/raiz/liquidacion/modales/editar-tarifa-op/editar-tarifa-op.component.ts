@@ -13,6 +13,7 @@ import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personaliz
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -44,7 +45,7 @@ export class EditarTarifaOpComponent implements OnInit {
     facContraParte!: ConId<InformeOp>;
      private destroy$ = new Subject<void>();
   
-    constructor(private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private formNumServ: FormatoNumericoService, private dbFirebase: DbFirestoreService){
+    constructor(private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private formNumServ: FormatoNumericoService, private dbFirebase: DbFirestoreService, private choferService: ChoferService){
      
     }
     
@@ -266,11 +267,22 @@ export class EditarTarifaOpComponent implements OnInit {
       switch(this.fromParent.origen){
         case "cliente":{
           let{id, ...facOp} = this.facContraParte;
-          if(this.operacion.chofer.contratacion.tipo === 'directo'){
+
+          const tipoContratacion = this.choferService.getTipoContratacion(this.operacion.chofer.id);
+          // TODO: refactor Papelera — chofer en papelera → undefined; este throw lo hace visible.
+          // Solución futura: resolver contra la papelera (id + colección de origen).
+          if (tipoContratacion === undefined) {
+            throw new Error(
+              `No se pudo resolver la contratación del chofer ${this.operacion.chofer.id} ` +
+              `(posible chofer en papelera).`,
+            );
+          }
+
+          if(tipoContratacion === 'directo'){
             this.storageService.updateItem("informesOpChoferes", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
           } else {
             this.storageService.updateItem("informesOpProveedores", facOp, this.facContraParte.idInfOp, "INTERNA", "", this.facContraParte.id);
-          }          
+          }
           break;
         };
         case "chofer":{
@@ -296,11 +308,21 @@ export class EditarTarifaOpComponent implements OnInit {
       
       switch(this.fromParent.origen){
         case "cliente":{
-            if(this.operacion.chofer.contratacion.tipo === 'directo'){
+            const tipoContratacion = this.choferService.getTipoContratacion(this.operacion.chofer.id);
+            // TODO: refactor Papelera — chofer en papelera → undefined; este throw lo hace visible.
+            // Solución futura: resolver contra la papelera (id + colección de origen).
+            if (tipoContratacion === undefined) {
+              throw new Error(
+                `No se pudo resolver la contratación del chofer ${this.operacion.chofer.id} ` +
+                `(posible chofer en papelera).`,
+              );
+            }
+
+            if(tipoContratacion === 'directo'){
               this.dbFirebase
                   .obtenerTarifaIdTarifa("informesOpChoferes",this.facDetallada.contraParteId, "idInfOp")
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-                  .subscribe(data => {      
+                  .subscribe(data => {
                       this.facContraParte = data || {};
                       //////console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){
@@ -312,7 +334,7 @@ export class EditarTarifaOpComponent implements OnInit {
               this.dbFirebase
                   .obtenerTarifaIdTarifa("informesOpProveedores",this.facDetallada.contraParteId, "idInfOp")
                   .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-                  .subscribe(data => {      
+                  .subscribe(data => {
                       this.facContraParte = data || {};
                       //////console.log("factura contraparte: ", this.facContraParte);
                       if(this.facContraParte !== undefined){

@@ -14,7 +14,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 export interface FacturaOp {
 
     idFacturaOp: number;    
-    idOperacion: number
+    idOperacion: string
     fecha: string | Date;        
     idCliente: number;
     idChofer: number;
@@ -89,7 +89,7 @@ export class MigrarDatosComponent {
   opToogle:boolean = false;
   docuNuevaColeccion: any[] = [];
   operaciones: Operacion[] = [];
-  idsOp: number[] = [];
+  idsOp: string[] = [];
   infOpLiq: InformeOp[] = [];
   opErrores: Operacion[] = [];
   infOpErrores: InformeOp[] = [];
@@ -194,7 +194,7 @@ async guardarTransformados() {
   }
 
   this.cargando = true;
-  let omitidos: number[] = [];
+  let omitidos: string[] = [];
 
   try {
     const loteTamaño = 500;
@@ -243,7 +243,7 @@ async guardarTransformados() {
 
   verificarDuplicados() {
       this.informesOpDuplicadas=[]
-    const seenIds = new Set<number>();
+    const seenIds = new Set<string>();
 
     this.datosOrigen = this.datosOrigen.filter((factura:InformeOp) => {
         if (seenIds.has(factura.idOperacion)) {

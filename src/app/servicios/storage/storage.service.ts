@@ -1155,7 +1155,7 @@ export class StorageService {
           console.log(e.message)});
       }
 
-      async addSimpleLogPapelera(componente: string, item: any,  idItem:number, accion:string, msj:string, motivo:string){
+      async addSimpleLogPapelera(componente: string, item: any,  idItem:number|string, accion:string, msj:string, motivo:string){
         let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);      
@@ -1228,19 +1228,19 @@ export class StorageService {
       }
 
       logMultiplesOp(
-        idOperaciones: number[],
+        idOperaciones: string[],
         accion: string,
         coleccion: string,
-        detalle: string,        
+        detalle: string,
         resultado: boolean
       ){        ///metodo para crear multiples LogEntry
         let arryLog: LogEntry[] = [];
         let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
-        if (!user[0].roles.god) { 
+        if (!user[0].roles.god) {
           let incremento = 0
 
-          idOperaciones.forEach((idOp: number)=>{
+          idOperaciones.forEach((idOp: string)=>{
           let logEntry: LogEntry = this.logService.createLogEntry(accion, coleccion, detalle, idOp, resultado, incremento);
           incremento++
           arryLog.push(logEntry)

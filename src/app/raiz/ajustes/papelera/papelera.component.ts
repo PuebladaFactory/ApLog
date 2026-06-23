@@ -125,13 +125,12 @@ export class PapeleraComponent implements OnInit {
       case "operaciones":
         id = logDoc.objeto.idOperacion;
         titulo = "Operación";
-        logDoc.objeto.estado = {
-          abierta: true,
-          cerrada: false,
-          facturada: false,
-        };
-        logDoc.objeto.km = 0;
-
+        // TODO: refactor restaurarOperacion — el estado inicial y km los reinicia
+        // ahora la fachada (TableroService.altaOperacionYActualizarTablero) vía
+        // OperacionFactoryService.estadoInicial(). Se comenta la mutación al EstadoOp
+        // viejo (7 flags) que producía un estado inválido.
+        // logDoc.objeto.estado = { abierta: true, cerrada: false, facturada: false };
+        // logDoc.objeto.km = 0;
         break;
       case "clientes":
         id = logDoc.objeto.idCliente;

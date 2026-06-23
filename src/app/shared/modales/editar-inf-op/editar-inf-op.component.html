@@ -203,13 +203,18 @@
                                             >Concepto</label
                                         >
                                         <div class="input-group">
-                                            <input
+                                            <!-- <input
                                                 class="form-control border-warning"
                                                 type="text"
                                                 [(ngModel)]="
                                                     operacion.tarifaEventual
                                                         .cliente.concepto
                                                 "
+                                            /> -->
+                                            <input
+                                                class="form-control border-warning"
+                                                type="text"
+                                                
                                             />
                                         </div>
                                     </div>
@@ -226,7 +231,7 @@
                                                 style="width: 30px"
                                                 >$</span
                                             >
-                                            <input
+                                            <!-- <input
                                                 class="form-control border-warning"
                                                 type="text"
                                                 inputmode="number"
@@ -236,6 +241,17 @@
                                                     operacion.tarifaEventual
                                                         .cliente.valor
                                                 "
+                                                (change)="
+                                                    changeTarifaEVentual()
+                                                "
+                                            /> -->
+                                                                                        <input
+                                                class="form-control border-warning"
+                                                type="text"
+                                                inputmode="number"
+                                                appMonto
+                                                [minimo]="0"
+                                                
                                                 (change)="
                                                     changeTarifaEVentual()
                                                 "
@@ -252,13 +268,18 @@
                                             >Concepto</label
                                         >
                                         <div class="input-group">
-                                            <input
+                                            <!-- <input
                                                 class="form-control border-warning"
                                                 type="text"
                                                 [(ngModel)]="
                                                     operacion.tarifaEventual
                                                         .chofer.concepto
                                                 "
+                                            /> -->
+                                            <input
+                                                class="form-control border-warning"
+                                                type="text"
+                                               
                                             />
                                         </div>
                                     </div>
@@ -275,7 +296,7 @@
                                                 style="width: 30px"
                                                 >$</span
                                             >
-                                            <input
+<!--                                             <input
                                                 class="form-control border-warning"
                                                 type="text"
                                                 inputmode="number"
@@ -285,6 +306,16 @@
                                                     operacion.tarifaEventual
                                                         .chofer.valor
                                                 "
+                                                (change)="
+                                                    changeTarifaEVentual()
+                                                "
+                                            /> -->
+                                            <input
+                                                class="form-control border-warning"
+                                                type="text"
+                                                inputmode="number"
+                                                appMonto
+                                                [minimo]="0"                                                
                                                 (change)="
                                                     changeTarifaEVentual()
                                                 "
@@ -545,7 +576,7 @@
                                             class="fs-5"
                                             >Cantidad acompañantes</label
                                         >
-                                        <input
+                                        <!-- <input
                                             class="form-control edicion border-info"
                                             type="number"
                                             (change)="
@@ -554,6 +585,13 @@
                                             [(ngModel)]="
                                                 operacion.acompanienteCant
                                             "
+                                        /> -->
+                                        <input
+                                            class="form-control edicion border-info"
+                                            type="number"
+                                            (change)="
+                                                changeCantAcompaniantes($event)
+                                            "                                            
                                         />
                                     </div>
                                     <div class="form-group mb-3">
@@ -845,7 +883,7 @@
                                             >Chofer</label
                                         >
                                         <div class="input-group">
-                                            <input
+<!--                                             <input
                                                 disabled
                                                 class="form-control border-info"
                                                 type="text"
@@ -854,6 +892,11 @@
                                                     ' ' +
                                                     operacion.chofer.datosPersonales.nombre
                                                 "
+                                            /> -->
+                                                                                        <input
+                                                disabled
+                                                class="form-control border-info"
+                                                type="text"
                                             />
                                         </div>
                                     </div>

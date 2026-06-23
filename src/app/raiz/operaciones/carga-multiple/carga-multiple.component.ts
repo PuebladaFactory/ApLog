@@ -25,7 +25,14 @@ import { LogService } from "src/app/servicios/log/log.service";
 
 export type TarifaBase = "general" | "especial" | "personalizada";
 
-export type OperacionRuntime = Operacion & {
+export type OperacionRuntime = Omit<Operacion, 'chofer'> & {
+  // TODO: refactor Carga/Tablero — el runtime carga un Chofer completo (legacy,
+  // con datosPersonales y array vehiculo). El refactor migrará a RefChofer + selección
+  // de vehículo contra ChoferService.getVehiculosPorChofer y poblado de op.vehiculo.
+  chofer: Chofer;
+  // TODO: refactor Carga/Tablero — campo legacy; la selección de vehículo debe migrar
+  // a poblar op.vehiculo (RefVehiculo) en vez de este string.
+  patenteChofer?: string;
   tarifaBase: TarifaBase;
   tarifaOverride: "eventual" | null;
 };
@@ -221,9 +228,7 @@ export class CargaMultipleComponent implements OnInit {
     const tarifaBase = this.getTarifaBase(tarifaTipo);
     const override = tarifaTipo.eventual ? "eventual" : null;
     const timestamp = Date.now();
-    const idOperacion = Number(
-      `${timestamp}${(this.contadorInterno++).toString().padStart(3, "0")}`,
-    );
+    const idOperacion = `${timestamp}${(this.contadorInterno++).toString().padStart(3, "0")}`;
 
     const op = {
       idOperacion: idOperacion,
@@ -236,9 +241,9 @@ export class CargaMultipleComponent implements OnInit {
       observaciones: "",
       hojaRuta: "",
       acompaniante: false,
-      acompanienteCant: 0,
-      facturaCliente: 0,
-      facturaChofer: 0,
+      acompanianteCant: 0,
+      informeOpCliente: 0,
+      informeOpChofer: 0,
       valores: {
         cliente: { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aCobrar: 0 },
         chofer: { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aPagar: 0 },
@@ -246,14 +251,14 @@ export class CargaMultipleComponent implements OnInit {
       tarifaTipo,
 
       // flags legacy esperados por otros componentes
-      tarifaPersonalizada: {
+      datosTarifaPersonalizada: {
         seccion: 0,
         categoria: 0,
         nombre: "",
         aCobrar: 0,
         aPagar: 0,
       },
-      tarifaEventual: {
+      datosTarifaEventual: {
         chofer: { concepto: "", valor: 0 },
         cliente: { concepto: "", valor: 0 },
       },
@@ -354,7 +359,7 @@ export class CargaMultipleComponent implements OnInit {
 
     this.operacionesAgrupadas = [
       {
-        clienteId: Number(cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
+        clienteId: Number(cliente.id), // TODO: migrar a string cuando se refactorice este módulo
         razonSocial: cliente.razonSocial,
         tipo: this.getTarifaActiva(this.operaciones[0]),
         operaciones: this.operaciones,
@@ -418,7 +423,7 @@ export class CargaMultipleComponent implements OnInit {
       // strip runtime props
       this.operacionesFinales = this.operaciones.map((op) => {
         const { tarifaBase, tarifaOverride, ...clean } = op;
-        return clean as Operacion;
+        return clean as unknown as Operacion; // TODO: refactor Carga/Tablero — chofer es Chofer en runtime, RefChofer en Operacion
       });
 
       this.operacionesFinales = this.operacionesFinales.map((op) => {
@@ -448,19 +453,21 @@ export class CargaMultipleComponent implements OnInit {
       op = this.valoresServ.valoresIniciales(op);
     }
     if (op.tarifaTipo.personalizada) {
-      op.valores.cliente.aCobrar = op.tarifaPersonalizada.aCobrar;
-      op.valores.chofer.aPagar = op.tarifaPersonalizada.aPagar;
+      // TODO: refactor Tarifas — invariante: personalizada ⟺ datosTarifaPersonalizada !== null
+      op.valores.cliente.aCobrar = op.datosTarifaPersonalizada!.aCobrar;
+      op.valores.chofer.aPagar = op.datosTarifaPersonalizada!.aPagar;
     }
     if (op.tarifaTipo.eventual) {
-      op.tarifaEventual.cliente.valor =
+      // TODO: refactor Tarifas — invariante: eventual ⟺ datosTarifaEventual !== null
+      op.datosTarifaEventual!.cliente.valor =
         this.formNumServ.convertirAValorNumerico(
-          op.tarifaEventual.cliente.valor,
+          op.datosTarifaEventual!.cliente.valor,
         );
-      op.tarifaEventual.chofer.valor = this.formNumServ.convertirAValorNumerico(
-        op.tarifaEventual.chofer.valor,
+      op.datosTarifaEventual!.chofer.valor = this.formNumServ.convertirAValorNumerico(
+        op.datosTarifaEventual!.chofer.valor,
       );
-      op.valores.cliente.aCobrar = op.tarifaEventual.cliente.valor;
-      op.valores.chofer.aPagar = op.tarifaEventual.chofer.valor;
+      op.valores.cliente.aCobrar = op.datosTarifaEventual!.cliente.valor;
+      op.valores.chofer.aPagar = op.datosTarifaEventual!.chofer.valor;
     }
     op.valores.cliente.tarifaBase = op.valores.cliente.aCobrar;
     op.valores.chofer.tarifaBase = op.valores.chofer.aPagar;
@@ -636,20 +643,22 @@ export class CargaMultipleComponent implements OnInit {
     const activa = this.getTarifaActiva(op);
 
     if (activa === "eventual") {
-      if (!op.tarifaEventual.chofer.concepto)
+      // TODO: refactor Tarifas — invariante: eventual ⟺ datosTarifaEventual !== null
+      if (!op.datosTarifaEventual!.chofer.concepto)
         errores.push("Concepto chofer eventual faltante");
-      if (!op.tarifaEventual.cliente.concepto)
+      if (!op.datosTarifaEventual!.cliente.concepto)
         errores.push("Concepto cliente eventual faltante");
     }
 
     if (activa === "personalizada") {
-      if (op.tarifaPersonalizada.seccion <= 0)
+      // TODO: refactor Tarifas — invariante: personalizada ⟺ datosTarifaPersonalizada !== null
+      if (op.datosTarifaPersonalizada!.seccion <= 0)
         errores.push("Sección personalizada faltante");
-      if (op.tarifaPersonalizada.categoria <= 0)
+      if (op.datosTarifaPersonalizada!.categoria <= 0)
         errores.push("Categoría personalizada faltante");
     }
 
-    if (op.acompaniante && op.acompanienteCant === 0) {
+    if (op.acompaniante && op.acompanianteCant === 0) {
       errores.push("La cantidad de acompañantes no puede ser 0");
     }
 

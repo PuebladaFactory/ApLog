@@ -43,6 +43,41 @@ export class NumeradorService {
     }
   }
 
+  /** Reserva N números de operación consecutivos en una transacción atómica.
+   *  El contador solo AVANZA: si el alta posterior falla, los números quedan como
+   *  hueco (aceptable — numeroOperacion es correlativo visible, no id técnico).
+   *  @param n cantidad de números a reservar (= cantidad de operaciones del alta)
+   *  @returns array de n números consecutivos [inicio, ..., inicio+n-1]
+   */
+  async reservarRangoOperaciones(n: number): Promise<number[]> {
+    if (n <= 0) return [];
+
+    const docRef: DocumentReference = doc(this.firestore, `Vantruck/datos/numeradores/OPER`);
+
+    try {
+      return await runTransaction(this.firestore, async (transaction) => {
+        const docSnap = await transaction.get(docRef);
+        const actual = docSnap.exists()
+          ? (docSnap.data() as { ultimoNumero: number }).ultimoNumero
+          : 0;
+        const fin = actual + n;
+
+        if (docSnap.exists()) {
+          transaction.update(docRef, { ultimoNumero: fin });
+        } else {
+          transaction.set(docRef, { ultimoNumero: fin });
+        }
+
+        const numeros: number[] = [];
+        for (let num = actual + 1; num <= fin; num++) numeros.push(num);
+        return numeros;
+      });
+    } catch (error) {
+      console.error('Error en transacción para reservar rango de operaciones:', error);
+      throw new Error('No se pudo reservar el rango de números de operación');
+    }
+  }
+
   async leerProximoNumeroMovimiento(
     tx: Transaction,
     tipo: 'cobro' | 'pago'

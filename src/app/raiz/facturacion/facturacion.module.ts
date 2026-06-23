@@ -2,34 +2,25 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { FacturacionRoutingModule } from './facturacion-routing.module';
-import { FacturacionClienteComponent } from './facturacion-cliente/facturacion-cliente.component';
-import { FacturacionChoferComponent } from './facturacion-chofer/facturacion-chofer.component';
-import { FacturacionGeneralComponent } from './facturacion-general/facturacion-general.component';
-import { FacturacionConsultaComponent } from './facturacion-consulta/facturacion-consulta.component';
+
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { FacturacionProveedorComponent } from './facturacion-proveedor/facturacion-proveedor.component';
+
 import { ModalDetalleComponent } from './modal-detalle/modal-detalle.component';
 import { FacturacionControlComponent } from './facturacion-control/facturacion-control.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
-import { FacturacionListadoComponent } from './facturacion-listado/facturacion-listado.component';
+
 import { ModalVincularFacturaComponent } from './modales/modal-vincular-factura/modal-vincular-factura.component';
 
 
 
 
 @NgModule({
-  declarations: [
-    FacturacionClienteComponent,
-    FacturacionChoferComponent,
-    FacturacionGeneralComponent,
-    FacturacionConsultaComponent,
-    FacturacionProveedorComponent,
+  declarations: [    
     ModalDetalleComponent,
-    FacturacionControlComponent,
-    FacturacionListadoComponent,
+    FacturacionControlComponent,    
     ModalVincularFacturaComponent
     
   ],
@@ -44,8 +35,7 @@ import { ModalVincularFacturaComponent } from './modales/modal-vincular-factura/
     
 
   ],
-  exports:[
-    FacturacionConsultaComponent,       
+  exports:[          
   ]
 })
 export class FacturacionModule { }

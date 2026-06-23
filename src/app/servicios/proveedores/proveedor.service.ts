@@ -60,6 +60,12 @@ export class ProveedorService implements OnDestroy {
     return this._proveedores$.getValue();
   }
 
+  /** Devuelve el proveedor con ese id desde memoria, o undefined si no está
+   *  (p. ej. en papelera). */
+  getProveedorPorId(id: string): ConIdType<Proveedor> | undefined {
+    return this.getProveedoresActuales().find(p => p.idProveedor === id);
+  }
+
   toFirestore(proveedor: ConIdType<Proveedor>): Omit<Proveedor, 'idProveedor'> {
     // Excluimos id y type (metadata de ConIdType) e idProveedor
     // (se almacena solo como ID del documento, no como campo)

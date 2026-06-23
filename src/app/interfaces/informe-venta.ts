@@ -2,7 +2,7 @@ export interface InformeVenta {
 
     idInfVenta: number;
     fecha: any;
-    idOperacion: number;
+    idOperacion: string;
     idCliente: number;
     idVendedor: number;
     valoresOp: ValoresOp;

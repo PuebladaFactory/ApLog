@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { filter, Subject, takeUntil } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
-import { Operacion } from 'src/app/interfaces/operacion';
+import { EstadoOp, Operacion } from 'src/app/interfaces/operacion';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
@@ -24,7 +24,7 @@ interface OpRow {
   indice: number;
   fecha: string;
   estado: string;
-  idOperacion: number;
+  idOperacion: string;
   cliente: string;
   idCliente: number;
   chofer: string;
@@ -237,20 +237,14 @@ usuario:any;
     return {
       indice: i+1,
       fecha: op.fecha,
-      estado:
-        op.estado.abierta ? 'Abierta' :
-        op.estado.cerrada ? 'Cerrada' :
-        (op.estado.proformaCl || op.estado.proformaCh) ? 'Proforma' :
-        op.estado.facCliente ? 'Cliente Fac' :
-        op.estado.facChofer ? 'Chofer Fac' :
-        op.estado.facturada ? 'Facturada' : 'Sin datos',
+      estado: this.getEstadoLabel(op.estado),
       idOperacion: op.idOperacion,
       cliente: op.cliente.razonSocial,
-      idCliente: Number(op.cliente.idCliente), // TODO: migrar a string cuando se refactorice este módulo
-      chofer: `${op.chofer.datosPersonales.apellido} ${op.chofer.datosPersonales.nombre}`,
-      idChofer: op.chofer.idChofer as any,
+      idCliente: Number(op.cliente.id), // TODO: migrar a string cuando se refactorice este módulo
+      chofer: `${op.chofer.apellido} ${op.chofer.nombre}`,
+      idChofer: Number(op.chofer.id), // TODO: migrar a string cuando se refactorice este módulo
       categoria: this.getCategoria(op),
-      patente: op.patenteChofer,
+      patente: op.vehiculo.dominio,
       acomp: op.acompaniante ? 'Sí':'No',
       tarifa: this.getTarifa(op),
       aCobrar: `$${this.formatoNum.convertirAValorFormateado(aCobrarNum)}`,
@@ -258,7 +252,7 @@ usuario:any;
       aCobrarNum,
       aPagarNum,
       hojaRuta: op.hojaRuta,
-      proveedor: this.getProveedor((op.chofer.contratacion as any).idProveedor),
+      proveedor: op.proveedor?.razonSocial ?? 'No',
       observaciones: op.observaciones,
       _raw: op
     };
@@ -507,8 +501,8 @@ usuario:any;
     const mapCh = new Map<string,string>();
 
     for (const o of this.operacionesPeriodo) {
-      mapC.set(o.cliente.idCliente, o.cliente.razonSocial);
-      mapCh.set(o.chofer.idChofer, `${o.chofer.datosPersonales.apellido} ${o.chofer.datosPersonales.nombre}`);
+      mapC.set(o.cliente.id, o.cliente.razonSocial);
+      mapCh.set(o.chofer.id, `${o.chofer.apellido} ${o.chofer.nombre}`);
     }
 
     this.clientesDropdown = [...mapC.entries()].map(([id,n])=>({id,n}));
@@ -551,15 +545,27 @@ usuario:any;
 
   // ===================== BADGES ESTADO =====================
 
-  getEstadoBadgeClass(estado:string) {
+  private getEstadoLabel(e: EstadoOp): string {
+    if (e.proforma.chofer)  return 'Proforma CH';
+    if (e.proforma.cliente) return 'Proforma CL';
+    if (e.liquidacion.cliente && e.liquidacion.chofer) return 'Liquidada';
+    if (e.liquidacion.cliente) return 'Liq CL';
+    if (e.liquidacion.chofer)  return 'Liq CH';
+    if (e.ciclo === 'cerrada') return 'Cerrada';
+    if (e.ciclo === 'abierta') return 'Abierta';
+    return 'Sin datos';
+  }
+
+  getEstadoBadgeClass(estado: string) {
     switch (estado) {
-      case 'Abierta': return 'ms-2 align-middle badge rounded-pill bg-success';
-      case 'Cerrada': return 'ms-2 align-middle badge rounded-pill bg-danger';
-      case 'Proforma': return 'ms-2 align-middle badge rounded-pill bg-warning text-dark';
-      case 'Cliente Fac': return 'ms-2 align-middle badge rounded-pill bg-info text-dark';
-      case 'Chofer Fac': return 'ms-2 align-middle badge rounded-pill bg-secondary';
-      case 'Facturada': return 'ms-2 align-middle badge rounded-pill bg-primary';
-      default: return 'ms-2 align-middle badge rounded-pill bg-light text-secondary';
+      case 'Abierta':     return 'ms-2 align-middle badge rounded-pill bg-success';
+      case 'Cerrada':     return 'ms-2 align-middle badge rounded-pill bg-danger';
+      case 'Proforma CL': return 'ms-2 align-middle badge rounded-pill bg-warning text-dark';
+      case 'Proforma CH': return 'ms-2 align-middle badge rounded-pill bg-warning text-dark';
+      case 'Liq CL':      return 'ms-2 align-middle badge rounded-pill bg-info text-dark';
+      case 'Liq CH':      return 'ms-2 align-middle badge rounded-pill bg-secondary';
+      case 'Liquidada':   return 'ms-2 align-middle badge rounded-pill bg-primary';
+      default:            return 'ms-2 align-middle badge rounded-pill bg-light text-secondary';
     }
   }
 
@@ -579,8 +585,8 @@ usuario:any;
   // ===================== HELPERS =====================
 
   getCategoria(op: Operacion): string {
-    const vehiculo = ((op.chofer as any).vehiculo ?? []).find((v: any) => v.dominio === op.patenteChofer);
-    return vehiculo?.categoria.nombre ?? 'Sin categoría';
+    // TODO: refactor Tablero — la categoría ya está en op.vehiculo (RefVehiculo).
+    return op.vehiculo.categoria.nombre ?? 'Sin categoría';
   }
 
   getTarifa(op:Operacion) {
@@ -675,7 +681,7 @@ onResizeEnd = () => {
 
   // ===================== ACCIONES =====================
 
-  seleccionarOp(idOp:number){    
+  seleccionarOp(idOp:string){    
     let op = this.operacionesPeriodo.find(o=>{return o.idOperacion === idOp});
     if(op){
       return op
@@ -684,13 +690,13 @@ onResizeEnd = () => {
     }  
   }
   
-  abrirModalDetalle(idOp:number, accion:string) {
+  abrirModalDetalle(idOp:string, accion:string) {
   // emitir evento o abrir modal
     this.opSeleccionada = this.seleccionarOp(idOp);
     this.modalDetalle(accion);
   }
 
-  eliminar(idOp:number) {
+  eliminar(idOp:string) {
     this.opSeleccionada = this.seleccionarOp(idOp);
     Swal.fire({
               title: "¿Desea dar de baja la operación?",
@@ -843,7 +849,7 @@ onResizeEnd = () => {
     this.operacionesPeriodo.map(op=>{
      /* if(op.acompaniante) {
         opAcomp ++ ;
-        cantAcomp += op.acompanienteCant ?? 1; 
+        cantAcomp += op.acompanianteCant ?? 1; 
      }  */
     total += op.valores.cliente.aCobrar
     })
@@ -853,7 +859,7 @@ onResizeEnd = () => {
   }
 
   validarOperaciones(): void {
-  const operacionesConError: number[] = [];
+  const operacionesConError: string[] = [];
 
   this.operacionesPeriodo.forEach(op => {
     const v = op.valores;

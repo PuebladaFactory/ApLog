@@ -74,7 +74,7 @@ Las rutas declaran roles requeridos en `data: { roles: [...] }`. `RoleGuard` ver
 El refactor arquitectónico está migrando el manejo de estado desde un store central
 único hacia servicios por entidad. Conviven dos esquemas según el módulo:
 
-**Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso):
+**Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; fase de conexión con `tablero-diario` completada mediante el componente nuevo `tablero-asignaciones`; pendientes `operaciones-table` y `carga-multiple`; coordinadores `bajaOperacion`/`editarOperacion`/`restaurarOperacion` en OperacionService pendientes):
 cada entidad tiene su `XxxService` con un BehaviorSubject propio que mantiene el estado
 en memoria (NO en localStorage). El `init()` del servicio abre el listener de Firestore
 y se llama al arrancar la app. Los componentes se suscriben directamente al observable
@@ -270,3 +270,188 @@ Cada módulo tiene su XxxMigrationService con:
 - Transformación de documentos con mapeo viejo→nuevo de IDs
 - Verificación final de cantidad de documentos
 - Métodos de corrección separados para limpiar campos residuales
+
+### Fase D: resolución de tipado Operaciones (objetos embebidos → snapshots)
+
+#### Resolución de datos: snapshot vs. servicio vivo
+
+Tras el rediseño de `Operacion` (objetos embebidos → snapshots `RefCliente`/`RefChofer`/`RefVehiculo`/`RefProveedor`), el acceso a datos relacionados sigue esta jerarquía:
+
+1. **Si el dato está en el snapshot de la op, leerlo de ahí.** Aplica a datos de exhibición histórica (razón social, nombre, apellido, patente, dominio, CUIT) Y a datos que la op congela como hecho histórico: `op.proveedor` (qué proveedor para esta op), `op.vehiculo` (qué vehículo). Para registros históricos el snapshot es lo **correcto**, no solo lo conveniente: resolver contra el vivo daría el estado actual, no el de la op.
+
+2. **Si el dato NO está en el snapshot, resolver por ID contra el servicio vivo.** Aplica a datos de cálculo estables que no se congelan (ej. `contratacion` del chofer). Cada `XxxService` expone getters síncronos para esto:
+   - `getChoferPorId(id): ConIdType<Chofer> | undefined`
+   - `getTipoContratacion(idChofer): 'directo' | 'proveedor' | undefined`
+   - `getContratacionChofer(idChofer): ContratacionChofer | undefined`
+
+   **No usar helper genérico de resolución** ni inyectar XxxService en la capa de datos (`DbFirestoreService`) — produce dependencia circular. Cuando la capa de datos necesita un dato resuelto, recibe el valor ya resuelto como parámetro desde la capa de negocio (ver `eliminarInformesPorIdOperacion`: TableroService resuelve `tipoContratacion` y lo pasa).
+
+**Regla práctica:** antes de meter un `getXxxPorId`, verificar si el dato ya está en el snapshot de la op (`op.proveedor`, `op.vehiculo`). Si está, leerlo de ahí.
+
+#### Política de fallo cuando el dato no resuelve (papelera)
+
+Las entidades eliminadas van a papelera (otra colección), por lo que `getXxxPorId` puede devolver `undefined` para ops históricas de entidades dadas de baja — es un caso REAL, no defensivo. Tratamiento por contexto:
+
+| Contexto | Tratamiento del `undefined` |
+|---|---|
+| Exhibición (tablas, dropdowns, reportes) | Fallback al snapshot (datos congelados); `—`/etiqueta para datos no disponibles; en filtros/contadores, excluir el ítem (degradación silenciosa) |
+| Cálculo en servicios `valores-op*` | `op.datosTarifaX!` + `// TODO: refactor Tarifas` |
+| Cálculo/cascada viva (borrados, batch) | `throw` explícito o `Swal + return` — NUNCA dejar caer en rama por defecto (riesgo de borrar/escribir colección equivocada) |
+
+Solución futura: resolver contra la papelera (guarda id + colección de origen). Todos los puntos marcados con `// TODO: refactor Papelera`.
+
+#### Nullable de tarifa (datosTarifaEventual / datosTarifaPersonalizada)
+
+Ahora son `| null`. Invariante confirmado: `datosTarifaEventual !== null ⟺ tarifaTipo.eventual` (idem personalizada). Tratamiento por contexto:
+- **Cálculo:** `op.datosTarifaX!` + `// TODO: refactor Tarifas`.
+- **Exhibición que lee un valor:** `op.datosTarifaX?.… ?? 0/'—'`.
+- **Getter de exhibición:** guard `if (!op.datosTarifaX) return ''/[]`.
+- **Múltiples accesos en un método de una sola tarifa:** guard al inicio (`if (!op.datosTarifaX) return;`) que estrecha todo el cuerpo, en vez de `!` repetido.
+
+#### OperacionRuntime: divergencia runtime-vs-tipo
+
+Los componentes de carga (`carga-multiple`, `carga-tablero-diario`, `operaciones-table`) usan un tipo local `OperacionRuntime`. La factory mete un `Chofer` COMPLETO en runtime, pese a que `Operacion.chofer` es `RefChofer`. El tipo se redefine para reflejar el runtime:
+```typescript
+type OperacionRuntime = Omit<Operacion, 'chofer'> & {
+  chofer: Chofer;            // runtime: chofer completo (legacy)
+  patenteChofer?: string;    // legacy del modelo viejo
+  tarifaBase: ...;
+  tarifaOverride: ...;
+};
+```
+**Principio general:** cuando el runtime y el tipo divergen (factory mete X, tipo dice Y, tapado con `as unknown as`), alinear el tipo con el runtime (`Omit & redeclare`), NO forzar el acceso al tipo equivocado.
+
+#### vendedor en RefCliente
+
+Se agregó `vendedor?: string[]` a `RefCliente` (snapshot). La comisión de vendedor es **por operación** (histórica), no del vendedor vigente del cliente → va al snapshot, congelada al alta. Opcional porque las ops históricas no lo tienen. **Pendiente:** el factory (`OperacionFactoryService`) debe poblar `vendedor` al crear la op (TODO marcado); hasta entonces queda `undefined` y la asignación de comisiones no corre para ops nuevas (acceso protegido por `&&`).
+
+#### Métodos/bloques comentados (código muerto del modelo viejo)
+
+- `limpiarPropiedadesChoferEnOperaciones` (carga-tablero-diario): reconstruía un Chofer completo desde el snapshot; comentado entero + su llamada. Recuperar/eliminar en el refactor del Tablero de asignaciones.
+- `getCategoriaDesdeOperacion` (tablero.service) y `getCategoria` (tablero-op): colapsados a `op.vehiculo.categoria` (la categoría ya está en el snapshot).
+
+### Operatoria compleja atómica (Operaciones en adelante)
+
+Los módulos con operatorias que afectan varias entidades de forma atómica (alta de N ops + tablero) no pasan por el esquema "una acción a la vez vía StorageService". Su servicio escribe **directo a `DbFirestoreService`** mediante un batch atómico (`commitBatch`), e informa al log llamando directo a `LogService`.
+
+**Distinción clave:**
+- *CRUD por entidad* (Choferes/Clientes/Proveedores): escritura vía `StorageService`, log acoplado a cada escritura.
+- *Operatoria compleja atómica* (Operaciones en adelante): escritura directa + batch + log en el coordinador.
+
+**Reglas:**
+- **Log:** una transacción atómica = UN registro (la acción principal del usuario). Los movimientos derivados no loguean por separado. El log vive en el método coordinador, no en las piezas.
+- **Coordinación entre servicios:** el servicio primario (`OperacionService`) inyecta al secundario (`AsignacionService`), nunca al revés. El coordinador decide el CONTENIDO del batch (negocio); `DbFirestoreService` EJECUTA el batch (mecánica Firestore).
+- **Pre-generación de id:** para que un documento referencie el id de otro dentro de un batch, se pre-genera el doc id (`generarId`) antes del commit.
+- **Punto de entrada único:** el componente llama al coordinador (`altaDesdeAsignacion`), no a los servicios parciales por separado.
+
+> Candidato a retro-aplicarse a los casos compuestos de módulos ya refactorizados (ej. alta de chofer + legajo + vehículos, hoy hecha acción por acción) cuando se revise `StorageService`.
+
+### Ownership por entidad primaria (acciones que encadenan varias entidades)
+
+Cuando un gesto del usuario toca varias entidades, lo administra el servicio de la
+**entidad primaria** del gesto — identificada por el sustantivo de la acción ("dar de
+baja una OPERACIÓN", "restaurar una OPERACIÓN"), no por el módulo desde donde se
+dispara ni por las entidades secundarias que toca.
+
+- **El módulo de origen** (liquidaciones, papelera, tablero-op) es solo el LUGAR del clic;
+  no es el dueño de la acción. Dispara y muestra el resultado.
+- **El servicio dueño orquesta:** arma las escrituras, las ejecuta atómico (`commitBatch`
+  multi-colección donde se pueda), y loguea UNA vez (la acción principal del usuario).
+- **Entidades secundarias con su propio servicio:** el dueño las inyecta y les pide su
+  parte. Dirección única (primaria → secundaria), nunca en ciclo.
+  Ej.: `OperacionService` → `AsignacionService`.
+- **Servicios de apoyo de bajo nivel** (papelera, log, db): son tontos respecto al dominio.
+  La papelera mueve documentos, NO sabe restaurar una op/chofer/legajo; cada servicio de
+  entidad tiene su `restaurarXxx` con sus reglas. Esto evita que un servicio de apoyo se
+  vuelva un dios que conoce todos los dominios.
+- **Segmentación por GESTO, no por mecánica:** un método coordinador por gesto del usuario
+  (`bajaOperacion`, `editarOperacion`, `restaurarOperacion`, `altaDesdeAsignacion`),
+  nombrado por la intención, atómico. NO un `procesarXxx(tipo)` genérico con switch.
+- **Atomicidad sin Cloud Functions:** meter en un `commitBatch` todo lo posible; lo que no
+  entre, secuenciar con orden cuidado (reversible primero, irreversible al final).
+
+### Decisiones de arquitectura — frente tablero-asignaciones
+
+Patrones fijados en la sesión de migración de `tablero-diario`; aplican a sesiones futuras.
+
+**Componente nuevo al lado del viejo (patrón de migración con cambio estructural profundo).**
+En vez de reescribir in-place, se crea el componente nuevo en su propia carpeta y se lo declara
+en el módulo. El componente viejo queda intacto. El switch (activar ruta + eliminar viejo) es
+atómico y reversible, y solo ocurre cuando el nuevo está operativo end-to-end. Aplicado en
+`tablero-asignaciones`; candidato para `carga-multiple`.
+
+**Dos modos por estado del tablero (`'edicion'` / `'visor'`) según un flag de persistencia.**
+Borrador local + lectura one-shot para el estado editable; listener vivo solo-lectura para el
+estado confirmado. Disuelve la tensión borrador-vs-listener: no es uno u otro según la pantalla,
+sino según el estado del documento. Transición one-way al confirmar. Variable `modo` explícita
+en el componente (no derivada del template).
+
+**Viewmodel de exhibición construido en el componente, no en un service.**
+La resolución para EXHIBIR (construir `VehiculoPool` desde `vehiculos$` + `choferes$` +
+`proveedores$`) vive donde se exhibe (el componente), no en un service compartido. La resolución
+para PERSISTIR (puente `crearOperacionesDesdeAsignacion`) vive en el service. Regla: no inyectar
+services cruzados (ChoferService ↔ ProveedorService) al servicio de entidad para servir UI.
+
+**Color por identidad estable (posición en lista ordenada), no por índice de iteración.**
+El color de una categoría depende de su posición en `categoriasOrdenadas` (lista fija), no de
+en qué posición aparece en el array que itera el template. Garantiza que el color no cambie al
+reordenar, filtrar o agregar categorías intermedias.
+
+**Flujo de alta de dos caminos (tablero / carga-multiple) que convergen.**
+Los dos caminos de alta convergen en `operaciones-table` (editor de ops finales) y luego en
+`altaDesdeAsignacion` (persistencia). La tabla completa los datos que el usuario introduce; el
+servicio hace el procesamiento final (valores, sujeto, validación, persistencia).
+`altaDesdeAsignacion` es el paso FINAL de persistencia, no el único del flujo.
+
+## Deuda conocida
+
+Deuda técnica activa. Actualizar cuando se salda.
+
+### Deuda crítica — tablero-asignaciones (bloquea el switch a producción)
+
+**Switch diferido:** activar la ruta a `tablero-asignaciones` + eliminar `tablero-diario` +
+limpiar métodos viejos de `TableroService` (`getTableroPorFecha` viejo, `guardarTablero`,
+`altaMultipleOperacionesYActualizarTablero`, `getCategoriaDesdeOperacion`, `deleteTablero`) +
+interfaces `TableroDiario`/`ChoferAsignadoBase`. NO hacer hasta que `operaciones-table` esté
+migrado: el alta no cierra end-to-end antes.
+
+**Control de rol demo ausente:** `tablero-asignaciones` no carga `usuario`; los botones de
+acción no tienen `[disabled]="usuario.roles.demo"`. Debe entrar antes o como parte del switch
+(protección de producción).
+
+**Cast `as any` en `fromParent`** (modal `operaciones-table` en `altaOp()`): temporal hasta
+migrar `operaciones-table` al contrato nuevo. Buscar: `// as any temporal`.
+
+### Deuda menor — tablero-asignaciones
+
+**Informe Excel (`descargar`):** inerte, muestra aviso. `generarInformeAsignaciones` recibía
+estructuras del modelo viejo; reescribir para `AsignacionItem[]`. Diferido a cierre de módulo.
+
+**No-disponibilidad sin probar end-to-end:** la atenuación de vehículos de proveedor está
+correctamente ausente en el tablero (diferida a operaciones-table), pero verificar la atenuación
+de directos al integrar con datos reales al migrar operaciones-table.
+
+### Contrato definitivo de operaciones-table (próximo frente)
+
+Lo que `operaciones-table` deberá cumplir al migrarse. Cableado en `altaOp()` con el cast
+temporal `as any`. Al migrar, quitar el cast y ajustar el componente a este contrato.
+
+**Entrada:**
+```typescript
+modalRef.componentInstance.fromParent = { operacionesCreadas: OperacionCreada[] };
+// lista PLANA; el componente agrupa por item.idCliente internamente.
+```
+
+**Salida (`modalRef.result`):**
+- resuelve con `OperacionCreada[]` finales → usuario confirmó
+- rechaza (dismiss) → usuario canceló
+
+**Responsabilidades del componente:**
+- Agrupar por `item.idCliente` internamente (NO recibe pre-agrupado).
+- Eliminar una op = excluirla del resultado; NO es baja de Firestore. Nada persiste hasta
+  `altaDesdeAsignacion`.
+- Resolver chofer de proveedor (`sujeto.idChofer null`) y vehículo pendiente
+  (`idVehiculo null`); recalcular `tarifaTipo` al resolver el chofer del proveedor.
+- Eliminar `OperacionRuntime` y `patenteChofer`.
+- Es pantalla de edición compleja, no tabla genérica tonta: maneja su propia lógica
+  (agrupar, eliminar, resolver pendientes).

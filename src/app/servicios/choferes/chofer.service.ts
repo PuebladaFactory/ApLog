@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { Chofer, ContratacionChofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -231,6 +231,31 @@ export class ChoferService implements OnDestroy {
   /** Devuelve el array actual de choferes sin suscribirse. */
   getChoferesActuales(): ConIdType<Chofer>[] {
     return this._choferes$.getValue();
+  }
+
+  /** Devuelve el chofer con ese id desde memoria, o undefined si no está (p. ej. en papelera). */
+  getChoferPorId(id: string): ConIdType<Chofer> | undefined {
+    return this.getChoferesActuales().find(c => c.id === id);
+  }
+
+  /** Devuelve el array actual de vehículos sin suscribirse. */
+  getVehiculosActuales(): ConIdType<Vehiculo>[] {
+    return this._vehiculos$.getValue();
+  }
+
+  /** Devuelve el vehículo con ese id desde memoria, o undefined si no está. */
+  getVehiculoPorId(id: string): ConIdType<Vehiculo> | undefined {
+    return this._vehiculos$.getValue().find(v => v.id === id);
+  }
+
+  /** Resuelve la contratación del chofer por id. undefined si el chofer no está en memoria. */
+  getTipoContratacion(idChofer: string): 'directo' | 'proveedor' | undefined {
+    return this.getChoferPorId(idChofer)?.contratacion.tipo;
+  }
+
+  /** Devuelve la contratación viva del chofer por id, o undefined si no está (p. ej. en papelera). */
+  getContratacionChofer(idChofer: string): ContratacionChofer | undefined {
+    return this.getChoferPorId(idChofer)?.contratacion;
   }
 
   ngOnDestroy(): void {
