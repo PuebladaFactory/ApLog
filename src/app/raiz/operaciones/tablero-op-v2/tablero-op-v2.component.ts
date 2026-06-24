@@ -17,6 +17,8 @@ import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
+import { ValoresOpChoferService } from 'src/app/servicios/valores-op/valores-op-chofer/valores-op-chofer.service';
+import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 
 // =====================
 // MODELOS
@@ -130,6 +132,15 @@ private resizeStartWidth = 0;
 
 usuario:any;
 
+// -----------------------------
+// CALCULO NUEVA TARIFA PROVEEDORES
+// -----------------------------
+
+opProveedores: ConId<Operacion>[] = [];
+
+proveedorSeleccinado!: ConId<Proveedor>;
+searchTextProveedor: string = "";
+
   constructor(
     private storage: StorageService,
     private dateRange: DateRangeService,
@@ -137,7 +148,9 @@ usuario:any;
     private tableroServ: TableroService,
     private formatoNum: FormatoNumericoService,
     private excelServ: ExcelService,
-    private reportesOp: ReportesOpService
+    private reportesOp: ReportesOpService,
+    private valoresOp: ValoresOpChoferService,
+    private dbService: DbFirestoreService,
   ) {}
 
   // =====================
@@ -910,4 +923,61 @@ onResizeEnd = () => {
   }
 }
 
+
+// -----------------------------
+// CALCULO NUEVA TARIFA PROVEEDORES
+// -----------------------------
+
+  changeProveedor(e:any){          
+    let id = Number(e.target.value);
+    console.log(id);
+    let proveedor: ConId<Proveedor> | undefined   
+
+    proveedor = this.proveedores.find(p=> {return p.idProveedor === id});
+    console.log("proveedor: ", proveedor);
+    
+    if(proveedor){
+      this.proveedorSeleccinado = proveedor;
+      this.opProveedores = this.operacionesPeriodo.filter(o=> {return o.chofer.idProveedor === this.proveedorSeleccinado.idProveedor});
+    } else {
+      this.opProveedores = []
+    }   
+  }  
+
+  editarOpProeveedor(){
+    let tarifa = this.storage.loadInfo("tarifasGralProveedor")
+    console.log("tarifa: ", tarifa);
+    let respuesta
+    
+    if(this.opProveedores.length === 0){
+      return this.mensajesError("Las op del proveedor están vacias", false)
+    } else {
+      this.opProveedores.map(op=>{
+        respuesta = this.valoresOp.$facturarOpChofer(op, tarifa[0]);
+        console.log(respuesta);
+        op.valores.chofer = respuesta.op.valores.chofer
+        
+      })
+    }
+  }
+
+  async actualizarOpProeveedor(){
+    this.isLoading = true;
+    const respuesta = await this.dbService.actualizarMultiple(this.opProveedores, "operaciones");
+    this.isLoading = false;
+
+    this.mensajesError(respuesta.mensaje, respuesta.exito);
+
+  }
+
+    mensajesError(msj: string, resultado: boolean) {
+      Swal.fire({
+        icon: !resultado  ? "error" : "success",
+        //title: "Oops...",
+        text: `${msj}`,
+        //footer: `${msj}`
+      });
+    }
+
+  
 }
