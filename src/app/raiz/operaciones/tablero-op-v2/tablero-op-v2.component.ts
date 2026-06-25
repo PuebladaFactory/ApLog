@@ -939,6 +939,8 @@ onResizeEnd = () => {
     if(proveedor){
       this.proveedorSeleccinado = proveedor;
       this.opProveedores = this.operacionesPeriodo.filter(o=> {return o.chofer.idProveedor === this.proveedorSeleccinado.idProveedor});
+      this.opProveedores = this.opProveedores.filter(o=> {return !o.tarifaTipo.eventual});
+      this.opProveedores = this.opProveedores.filter(o=> {return !o.tarifaTipo.personalizada});
     } else {
       this.opProveedores = []
     }   
