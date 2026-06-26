@@ -84,13 +84,13 @@ export class DbFirestoreService {
     private resumenOpCalculator: ResumenOpCalculatorService,
   ) {}
 
-  /*   getAll(componente:string) {
+    getAll(componente:string) {
     let dataCollection = collection(this.firestore, `/Vantruck/datos/${componente}`);
         
     return collectionData(dataCollection, {
       idField: 'id',
     }) as Observable<any[]>;
-  } */
+  }
 
   ////////////////////////////////////////////////////////////////////////////////////
   getAllColectionUsers<T>(coleccion: string): Observable<ConIdType<T>[]> {

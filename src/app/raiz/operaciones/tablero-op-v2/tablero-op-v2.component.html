@@ -317,7 +317,8 @@
             </div>
             <div class="col">
                 <button class="btn btn-outline-info me-2" (click)="editarOpProeveedor()">Editar Op Proveedor</button>
-                <button class="btn btn-outline-danger" (click)="actualizarOpProeveedor()">Guardar Op Proveedor</button>
+                <!-- <button class="btn btn-outline-danger" (click)="actualizarOpProeveedor('operaciones')">Guardar Op Proveedor</button> -->
+                 <!-- <button class="btn btn-outline-danger" (click)="actualizarDocumentos('informesOpProveedores')">Guardar Op Proveedor</button> -->
             </div>
         </div>
         
@@ -329,7 +330,7 @@
             <thead>
                 <tr>
                     <th>Proveedor</th>
-                    <!-- <th>idOp</th> -->
+                    <th>idOp</th>
                     <th>Fecha Op</th>
                     <th>Km</th>
                     <th>Obs</th>
@@ -348,7 +349,7 @@
                 @for (p of opProveedores| globalFilter:searchTextProveedor:['idOperacion']; track p) {
                     <tr>
                         <td>{{ getProveedor(p.chofer.idProveedor) }}</td>
-                        <!-- <td>{{ p.idOperacion}}</td> -->
+                        <td>{{ p.idOperacion}}</td>
                         <td>{{ p.fecha }}</td>
                         <td>{{ p.km }}</td>
                         <td>{{ p.observaciones }}</td>
@@ -361,6 +362,67 @@
                         <td>{{ p.valores.chofer.kmAdicional }}</td>
                         <td>{{ p.valores.chofer.adExtraValor }}</td>
                         <td>{{ p.valores.chofer.aPagar }}</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div>
+    <h3>InformesOp</h3>
+    <div>
+
+
+           
+            <div class="col-4">
+                <div>
+                    Total InformesOp: {{opProveedores.length}}
+                </div>
+            </div>
+            <div class="col">
+                <button class="btn btn-outline-info me-2" (click)="editarInformesOp()">Editar InformesOp</button>
+                <!-- <button class="btn btn-outline-danger" (click)="actualizarOpProeveedor('operaciones')">Guardar Op Proveedor</button> -->
+                <button class="btn btn-outline-danger" (click)="actualizarDocumentos('informesOpProveedores')">Guardar Informes Op</button>
+            </div>
+       
+        
+    </div>
+    <input class="form-control" type="text" [(ngModel)]="searchTextInformesOp" placeholder="Buscar por op">
+    <div>
+        <table class="table table-sm table-striped table-hover"
+        style="table-layout: fixed">
+            <thead>
+                <tr>
+                    <th>idOp</th>
+                    <th>Proveedor</th>
+                    <th>id</th>
+                    <th>Fecha Op</th>
+                    <th>Km</th>
+                    <th>Obs</th>
+                    <th>Hoja Ruta</th>                    
+                    <th>Tarifa Base</th>
+                    <th>Acomp</th>
+                    <th>Ad Km</th>
+                    <th>Extra</th>
+                    <th>A Pagar</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (p of infOpEditados| globalFilter:searchTextInformesOp:['idOperacion']; track p) {
+                    <tr>
+                        <td>{{ p.idOperacion}}</td>
+                        <td>{{ getProveedor(p.idProveedor) }}</td>
+                        <td>{{ p.idInfOp}}</td>
+                        <td>{{ p.fecha }}</td>
+                        <td>{{ p.km }}</td>
+                        <td>{{ p.observaciones }}</td>
+                        <td>{{ p.hojaRuta }}</td>                        
+                        <td>{{ p.valores.tarifaBase }}</td>
+                        <td>{{ p.valores.acompaniante }}</td>
+                        <td>{{ p.valores.kmMonto }}</td>
+                        <td>{{ p.valores.adExtra }}</td>
+                        <td>{{ p.valores.total }}</td>
                     </tr>
                 }
             </tbody>
