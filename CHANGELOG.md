@@ -467,9 +467,60 @@ Cancelar el modal es inofensivo: ops básicas en memoria, nada persistido hasta 
 
 ---
 
+#### Módulo Operaciones — Componente operaciones-editor (migración de operaciones-table)
+
+Componente nuevo creado de cero, reemplaza a `operaciones-table` (que queda intacto hasta el
+switch). Ubicación: `src/app/raiz/operaciones/operaciones-editor/`. Cierra el alta
+end-to-end desde tablero-asignaciones.
+
+**Contrato cumplido:** `@Input() operacionesCreadas: OperacionCreada[]` (plano, tipado) in /
+`OperacionCreada[]` out por `modalRef.result`. Agrupa por `item.idCliente` internamente.
+
+**Resolución de pendientes en la tabla:**
+- Chofer de proveedor (`op.chofer.id === ''`): selector con `getChoferesPorProveedor`;
+  recalcula tarifaTipo con la tarifa del PROVEEDOR.
+- Vehículo (`op.vehiculo.id === ''`): selector con vehículos del dueño (proveedor o chofer).
+
+**Eliminar = excluir del resultado (Opción B):** `Set<idItem>`, sin mutar el input, sin tocar
+Firestore. Cancelar el modal es inocuo.
+
+**Toggle eventual:** `OperacionRuntime` ELIMINADO. El tipo original se guarda en un
+`Map<idItem, TarifaTipo>` del componente (estado de UI); la mutación coherente vive en el
+factory.
+
+**Servicios — getters síncronos nuevos:**
+- `ChoferService.getChoferesPorProveedor(idProveedor)`
+- `ProveedorService.getTarifaTipo(idProveedor)` — fuente de verdad de la tarifa heredada por
+  choferes de proveedor (reemplaza leer `chofer.tarifaTipo` para ese caso).
+- `ClienteService.getClientePorId(id)`
+
+**OperacionFactoryService — refactor + 3 métodos:**
+- `getTarifaTipo` privado reemplazado por `resolverJerarquiaTarifa(cliente, tarifaSecundaria)`
+  (jerarquía parametrizada, una sola fuente de verdad). `crearOperacionBase` sin cambio de
+  comportamiento.
+- `recalcularTarifaTipo(cliente, tarifaSecundaria)` — público, para el recálculo al resolver
+  chofer de proveedor.
+- `aplicarTarifaEventual(op, activar, tarifaOriginal)` — toggle eventual con invariante
+  datosTarifaX.
+- `aplicarTarifaTipo(op, tipo)` — aplica un tipo resuelto con invariante datosTarifaX.
+
+**Integración:** `tablero-asignaciones.altaOp()` abre `OperacionesEditorComponent` directo
+(`componentInstance.operacionesCreadas = opsBasicas`). Eliminado el `as any` y el TODO del
+contrato provisorio.
+
+**Deuda registrada:**
+- `idCliente` de TarifaPersonalizadaCliente: interfaz dice `number`, datos corregidos a string
+  en Firestore; `getTarifaPersonalizada(idCliente: any)`. Verificar alta/edición de tarifas
+  personalizadas al refactor de Tarifas.
+- Estilos SCSS duplicados de operaciones-table (consolidar en el switch).
+
+---
+
 ### Pendiente
 
-- Módulo Operaciones — fase de conexión: `operaciones-table` y `carga-multiple`; switch (activar ruta `tablero-asignaciones`, eliminar `tablero-diario`) diferido hasta migrar `operaciones-table`
+- Módulo Operaciones — fase de conexión: `carga-multiple` (operaciones-editor YA migrado);
+  switch (activar ruta `tablero-asignaciones`, eliminar `tablero-diario` + `operaciones-table`)
+  diferido hasta migrar `carga-multiple` y resolver control de rol demo
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)
 - Módulo Liquidaciones
 - Módulo Facturación

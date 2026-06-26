@@ -1,10 +1,255 @@
 <div class="modal-header">
-  <h4 class="modal-title">Editor de operaciones</h4>
+  <h3 class="modal-title">Completar las operaciones del dia: {{fecha}}</h3>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="cancelar()"></button>
 </div>
+
 <div class="modal-body">
-  <p>Placeholder — template real en Chunk 3. Grupos: {{ grupos.length }}</p>
+
+  @if (grupos.length === 0) {
+    <p class="text-muted">No hay operaciones para completar.</p>
+  }
+
+  @for (grupo of grupos; track grupo.idCliente) {
+    <div class="grupo-container mb-4 shadow-sm rounded border p-2">
+      <h5 class="mt-2">
+        {{ grupo.razonSocial }} — Tarifa Cliente:
+        <span class="badge align-middle mb-1"
+          [ngClass]="{
+            'bg-primary': grupo.tipoCliente === 'general',
+            'bg-info':    grupo.tipoCliente === 'especial',
+            'bg-success': grupo.tipoCliente === 'personalizada',
+            'bg-warning': grupo.tipoCliente === 'eventual'
+          }">
+          {{ grupo.tipoCliente }}
+        </span>
+      </h5>
+
+      <table class="table table-bordered table-sm mt-2">
+        <thead class="table-light text-center align-middle">
+          <tr>
+            <th rowspan="2" class="col-chofer">Chofer</th>
+            <th rowspan="2" class="col-vehiculo">Vehículo</th>
+            <th rowspan="2" class="col-acomp">Acomp</th>
+            <th rowspan="2" class="col-acomp">Cant</th>
+            <th rowspan="2" class="col-tarifa">Tarifa Ch</th>
+            <th rowspan="2" class="col-hojaRuta">Hoja Ruta</th>
+            <th rowspan="2" class="obs-chofer">Obs</th>
+            <th rowspan="2" class="col-eventual-toogle">Eventual</th>
+            <th colspan="4" class="text-center col-eventual-border-right col-eventual-border-left">Tarifa Eventual</th>
+            <th colspan="2" class="text-center col-personalizada-border-right col-personalizada-border-left">Tarifa Personalizada</th>
+            <th rowspan="2" class="col-anular">Quitar</th>
+          </tr>
+          <tr>
+            <th [ngClass]="{
+                            'bg-eventual-header': grupo.tipoCliente === 'eventual',
+                        }"
+                        class="col-eventual-border-left col-eventual-concepto">Concepto Ch</th>
+            <th [ngClass]="{
+                            'bg-eventual-header': grupo.tipoCliente === 'eventual',
+                        }"
+                        class="col-eventual-valor">Valor Ch</th>
+            <th  [ngClass]="{
+                            'bg-eventual-header': grupo.tipoCliente === 'eventual',
+                        }"
+                        class="col-eventual-concepto">Concepto Cl</th>
+            <th [ngClass]="{
+                            'bg-eventual-header': grupo.tipoCliente === 'eventual',
+                        }"
+                        class="col-eventual-border-right col-eventual-valor">Valor Cl</th>
+            <th [ngClass]="{
+                            'bg-personalizada-header':
+                                grupo.tipoCliente === 'personalizada',
+                        }"
+                        class="col-personalizada-border-left col-seccion">Sección</th>
+            <th [ngClass]="{
+                            'bg-personalizada-header':
+                                grupo.tipoCliente === 'personalizada',
+                        }"
+                        class="col-personalizada-border-right col-categoria">Categoría</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (c of grupo.creadas; track c.item.idItem) {
+            <tr [class.fila-error]="tieneErrores(c.operacion)" class="op-row">
+
+              <!-- CHOFER: pendiente (proveedor) → selector; resuelto → texto -->
+              <td>
+                @if (choferPendiente(c.operacion)) {
+                  <select class="form-select form-select-sm"
+                    [class.is-invalid]="c.operacion.chofer.id === ''"
+                    (change)="onChoferSeleccionado(c, $any($event.target).value)">
+                    <option value="">Seleccione chofer</option>
+                    @for (ch of choferesDisponibles(c.operacion); track ch.id) {
+                      <option [value]="ch.id">
+                        {{ ch.datosPersonales.apellido }}, {{ ch.datosPersonales.nombre }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  {{ c.operacion.chofer.apellido }}, {{ c.operacion.chofer.nombre }}
+                }
+              </td>
+
+              <!-- VEHÍCULO: pendiente → selector; resuelto → dominio -->
+              <td>
+                @if (vehiculoPendiente(c.operacion)) {
+                  <select class="form-select form-select-sm"
+                    [class.is-invalid]="c.operacion.vehiculo.id === ''"
+                    (change)="onVehiculoSeleccionado(c.operacion, $any($event.target).value)">
+                    <option value="">Seleccione vehículo</option>
+                    @for (v of vehiculosDisponibles(c.operacion); track v.id) {
+                      <option [value]="v.id">{{ v.categoria.nombre }} — {{ v.dominio }}</option>
+                    }
+                  </select>
+                } @else {
+                  <input class="form-control form-control-sm" [value]="c.operacion.vehiculo.dominio" disabled />
+                }
+              </td>
+
+              <!-- ACOMPAÑANTE -->
+              <td>
+                <select class="form-select form-select-sm"
+                  [(ngModel)]="c.operacion.acompaniante"
+                  (change)="configurarAcompaniante(c.operacion)">
+                  <option [ngValue]="true">Sí</option>
+                  <option [ngValue]="false">No</option>
+                </select>
+              </td>
+              <td>
+                <input type="number" class="form-control form-control-sm"
+                  [(ngModel)]="c.operacion.acompanianteCant"
+                  (change)="configurarCantAcompaniante(c.operacion)"
+                  [disabled]="!c.operacion.acompaniante" />
+              </td>
+
+              <!-- BADGE TARIFA CHOFER (informativo) -->
+              <td class="text-center align-middle">
+                <span class="badge"
+                  [ngClass]="{
+                    'bg-primary': getChoferTarifaTipo(c.operacion) === 'General',
+                    'bg-info':    getChoferTarifaTipo(c.operacion) === 'Especial',
+                    'bg-warning': getChoferTarifaTipo(c.operacion) === 'Eventual'
+                  }">
+                  {{ getChoferTarifaTipo(c.operacion) }}
+                </span>
+              </td>
+
+              <!-- HOJA RUTA -->
+              <td>
+                <input class="form-control form-control-sm"
+                  [(ngModel)]="c.operacion.hojaRuta" [title]="c.operacion.hojaRuta" />
+              </td>
+
+              <!-- OBS -->
+              <td class="align-middle">
+                <textarea class="form-control form-control-sm" rows="1"
+                  [(ngModel)]="c.operacion.observaciones" [title]="c.operacion.observaciones"></textarea>
+              </td>
+
+              <!-- EVENTUAL TOGGLE -->
+              <td class="text-center align-middle">
+                <select class="form-select form-select-sm"
+                  [ngModel]="esEventual(c.operacion)"
+                  (ngModelChange)="onEventualToggle(c, $event)">
+                  <option [ngValue]="true">Sí</option>
+                  <option [ngValue]="false">No</option>
+                </select>
+              </td>
+
+              <!-- TARIFA EVENTUAL: concepto/valor chofer y cliente -->
+              <td [ngClass]="{ 'bg-eventual-cell': esEventual(c.operacion) }">
+                @if (c.operacion.datosTarifaEventual) {
+                  <input class="form-control form-control-sm"
+                    [(ngModel)]="c.operacion.datosTarifaEventual.chofer.concepto" />
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td [ngClass]="{ 'bg-eventual-cell': esEventual(c.operacion) }">
+                @if (c.operacion.datosTarifaEventual) {
+                  <input type="text" inputmode="numeric" class="form-control form-control-sm"
+                    [(ngModel)]="c.operacion.datosTarifaEventual.chofer.valor" appMonto [minimo]="0" />
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td [ngClass]="{ 'bg-eventual-cell': esEventual(c.operacion) }">
+                @if (c.operacion.datosTarifaEventual) {
+                  <input class="form-control form-control-sm"
+                    [(ngModel)]="c.operacion.datosTarifaEventual.cliente.concepto" />
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td [ngClass]="{ 'bg-eventual-cell': esEventual(c.operacion) }">
+                @if (c.operacion.datosTarifaEventual) {
+                  <input type="text" inputmode="numeric" class="form-control form-control-sm"
+                    [(ngModel)]="c.operacion.datosTarifaEventual.cliente.valor" appMonto [minimo]="0" />
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+
+              <!-- TARIFA PERSONALIZADA: sección / categoría -->
+              <td [ngClass]="{ 'bg-personalizada-cell': esPersonalizada(c.operacion) }">
+                @if (esPersonalizada(c.operacion)) {
+                  <select class="form-select form-select-sm"
+                    [(ngModel)]="c.operacion.datosTarifaPersonalizada!.seccion"
+                    (ngModelChange)="onSeccionChange(c.operacion)"
+                    [title]="getSeccionSeleccionadaLabel(c.operacion)">
+                    <option [ngValue]="0">Seleccione</option>
+                    @for (sec of getTarifaPersonalizada(c.operacion.cliente.id)?.secciones; track sec.orden) {
+                      <option [ngValue]="sec.orden" title="Sección {{ sec.orden }}">
+                        Sección {{ sec.orden }}@if (sec.descripcion) { - {{ sec.descripcion }}}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+              <td [ngClass]="{ 'bg-personalizada-cell': esPersonalizada(c.operacion) }">
+                @if (esPersonalizada(c.operacion)) {
+                  <select class="form-select form-select-sm"
+                    [(ngModel)]="c.operacion.datosTarifaPersonalizada!.categoria"
+                    (ngModelChange)="onCategoriaChange(c.operacion)"
+                    [title]="getCategoriaSeleccionadaLabel(c.operacion)">
+                    <option [ngValue]="0">Seleccione</option>
+                    @for (cat of getCategoriasDisponibles(c.operacion); track cat.orden) {
+                      <option [ngValue]="cat.orden" title="Categoría {{ cat.orden }}: {{ cat.nombre }}">
+                        {{ cat.nombre }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  <span class="text-muted">—</span>
+                }
+              </td>
+
+              <!-- QUITAR -->
+              <!-- <td class="text-center align-middle">
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                  title="Quitar operación" (click)="eliminarOperacion(c)">
+                  ✕
+                </button>
+              </td> -->
+              <td class="text-center align-middle">
+                            <app-btn-eliminar
+                                name="Eliminar"    
+                                class="btn-delete"
+                                title="Quitar operación" (click)="eliminarOperacion(c)"
+                            ></app-btn-eliminar>
+                        </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 </div>
+
 <div class="modal-footer">
   <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
-  <button type="button" class="btn btn-primary" (click)="confirmar()">Confirmar</button>
+  <button type="button" class="btn btn-primary" (click)="confirmar()">Confirmar alta</button>
 </div>

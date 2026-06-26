@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { Operacion, RefChofer, RefVehiculo } from 'src/app/interfaces/operacion';
+import { Operacion } from 'src/app/interfaces/operacion';
 import { AsignacionItem } from 'src/app/interfaces/asignacion';
 import { Chofer, Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
@@ -48,6 +48,8 @@ export class OperacionesEditorComponent implements OnInit {
    *  TODO: refactor Tarifas — leer del sistema unificado en vez de StorageService. */
   tarifasPersonalizadas: TarifaPersonalizadaCliente[] = [];
 
+  fecha: string = "";
+
   constructor(
     public  activeModal:      NgbActiveModal,
     private operacionFactory: OperacionFactoryService,
@@ -62,6 +64,9 @@ export class OperacionesEditorComponent implements OnInit {
   // ===========================================================================
 
   ngOnInit(): void {
+    console.log("operacionesCreadas: ", this.operacionesCreadas);
+    this.fecha = this.operacionesCreadas[0].operacion.fecha;
+    
     this.tarifasPersonalizadas = this.storageService.loadInfo('tarifasPersCliente') || [];
 
     // Sembrar el tipo original de cada op (antes de cualquier toggle).
@@ -82,10 +87,13 @@ export class OperacionesEditorComponent implements OnInit {
       const idCliente = c.item.idCliente;
       let grupo = mapa.get(idCliente);
       if (!grupo) {
+        const clienteVivo = this.clienteService.getClientePorId(idCliente);
         grupo = {
           idCliente,
           razonSocial: c.operacion.cliente.razonSocial,
-          tipoCliente: this.tipoClienteLabel(c.operacion.tarifaTipo),
+          tipoCliente: clienteVivo
+            ? this.tipoClienteLabel(clienteVivo.tarifaTipo)
+            : this.tipoClienteLabel(c.operacion.tarifaTipo),  // fallback: cliente en papelera
           creadas: [],
         };
         mapa.set(idCliente, grupo);
@@ -94,6 +102,8 @@ export class OperacionesEditorComponent implements OnInit {
     }
 
     this.grupos = Array.from(mapa.values());
+    console.log("this.grupos: ", this.grupos);
+    
   }
 
   /** Etiqueta del badge de cliente. NOTA: usa el tarifaTipo de la PRIMERA op del
@@ -146,9 +156,7 @@ export class OperacionesEditorComponent implements OnInit {
       const nuevoTipo = this.operacionFactory.recalcularTarifaTipo(cliente, tarifaProveedor);
 
       // Aplicar el nuevo tipo manteniendo el invariante de datosTarifaX.
-      // Reusamos aplicarTarifaEventual: si el tipo recalculado NO es eventual, lo
-      // aplicamos como "desactivar eventual hacia nuevoTipo"; si ES eventual, "activar".
-      this.operacionFactory.aplicarTarifaEventual(op, nuevoTipo.eventual, nuevoTipo);
+      this.operacionFactory.aplicarTarifaTipo(op, nuevoTipo);
 
       // Re-sembrar el tipo original (este pasa a ser el nuevo punto de retorno del toggle).
       this.tarifaOriginal.set(c.item.idItem, { ...nuevoTipo });
@@ -215,8 +223,9 @@ export class OperacionesEditorComponent implements OnInit {
 
   /** TODO: refactor Tarifas — idCliente de TarifaPersonalizadaCliente es number (módulo
    *  no migrado); se cruza con op.cliente.id (string) vía Number(). Quitar al unificar. */
-  getTarifaPersonalizada(idCliente: string): TarifaPersonalizadaCliente | null {
-    return this.tarifasPersonalizadas.find(t => t.idCliente === Number(idCliente)) || null;
+  /* Hasta refactorizar Tarifas utilizo idCliente:any para forzar la igual sin romper la interfaz */
+  getTarifaPersonalizada(idCliente: any): TarifaPersonalizadaCliente | null {
+    return this.tarifasPersonalizadas.find(t => t.idCliente === idCliente) || null;
   }
 
   getCategoriasDisponibles(op: Operacion): CategoriaTarifa[] {

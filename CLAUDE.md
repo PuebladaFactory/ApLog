@@ -74,7 +74,7 @@ Las rutas declaran roles requeridos en `data: { roles: [...] }`. `RoleGuard` ver
 El refactor arquitectónico está migrando el manejo de estado desde un store central
 único hacia servicios por entidad. Conviven dos esquemas según el módulo:
 
-**Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; fase de conexión con `tablero-diario` completada mediante el componente nuevo `tablero-asignaciones`; pendientes `operaciones-table` y `carga-multiple`; coordinadores `bajaOperacion`/`editarOperacion`/`restaurarOperacion` en OperacionService pendientes):
+**Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; fase de conexión con `tablero-diario` completada mediante el componente nuevo `tablero-asignaciones`; pendiente `carga-multiple`; coordinadores `bajaOperacion`/`editarOperacion`/`restaurarOperacion` en OperacionService pendientes):
 cada entidad tiene su `XxxService` con un BehaviorSubject propio que mantiene el estado
 en memoria (NO en localStorage). El `init()` del servicio abre el listener de Firestore
 y se llama al arrancar la app. Los componentes se suscriben directamente al observable
@@ -410,10 +410,11 @@ Deuda técnica activa. Actualizar cuando se salda.
 ### Deuda crítica — tablero-asignaciones (bloquea el switch a producción)
 
 **Switch diferido:** activar la ruta a `tablero-asignaciones` + eliminar `tablero-diario` +
-limpiar métodos viejos de `TableroService` (`getTableroPorFecha` viejo, `guardarTablero`,
-`altaMultipleOperacionesYActualizarTablero`, `getCategoriaDesdeOperacion`, `deleteTablero`) +
-interfaces `TableroDiario`/`ChoferAsignadoBase`. NO hacer hasta que `operaciones-table` esté
-migrado: el alta no cierra end-to-end antes.
+eliminar `operaciones-table` + limpiar métodos viejos de `TableroService` (`getTableroPorFecha`
+viejo, `guardarTablero`, `altaMultipleOperacionesYActualizarTablero`, `getCategoriaDesdeOperacion`,
+`deleteTablero`) + interfaces `TableroDiario`/`ChoferAsignadoBase`. `operaciones-editor` YA
+migrado (el alta cierra end-to-end); el switch ya no está bloqueado por eso. Sigue pendiente
+`carga-multiple` y el control de rol demo en tablero-asignaciones.
 
 **Control de rol demo ausente:** `tablero-asignaciones` no carga `usuario`; los botones de
 acción no tienen `[disabled]="usuario.roles.demo"`. Debe entrar antes o como parte del switch
@@ -431,27 +432,64 @@ estructuras del modelo viejo; reescribir para `AsignacionItem[]`. Diferido a cie
 correctamente ausente en el tablero (diferida a operaciones-table), pero verificar la atenuación
 de directos al integrar con datos reales al migrar operaciones-table.
 
-### Contrato definitivo de operaciones-table (próximo frente)
+### Deuda — operaciones-editor / Tarifas
 
-Lo que `operaciones-table` deberá cumplir al migrarse. Cableado en `altaOp()` con el cast
-temporal `as any`. Al migrar, quitar el cast y ajustar el componente a este contrato.
+**`idCliente` de TarifaPersonalizadaCliente: tipo vs dato divergen.** La interfaz declara
+`idCliente: number`, pero los datos en Firestore se corrigieron a string (consola Firestore)
+para cruzar con `op.cliente.id` (string). `getTarifaPersonalizada(idCliente: any)` usa `any`
+para forzar la igualdad sin romper la interfaz. RIESGO: el alta/edición de tarifas
+personalizadas en el módulo viejo lee `idCliente` esperando number — verificar al refactor de
+Tarifas. Marcado `// TODO: refactor Tarifas`.
 
-**Entrada:**
-```typescript
-modalRef.componentInstance.fromParent = { operacionesCreadas: OperacionCreada[] };
-// lista PLANA; el componente agrupa por item.idCliente internamente.
-```
+**Estilos duplicados:** las clases SCSS de tarifa eventual/personalizada se copiaron de
+operaciones-table a operaciones-editor. Al eliminar operaciones-table en el switch, consolidar.
 
-**Salida (`modalRef.result`):**
-- resuelve con `OperacionCreada[]` finales → usuario confirmó
-- rechaza (dismiss) → usuario canceló
+**Celdas de tarifa en el template:** los bindings a `datosTarifaEventual`/`datosTarifaPersonalizada`
+usan guarda `@if (objeto)` (no `[disabled]` + `!`): el `disabled` NO impide que Angular evalúe
+el binding, y el `!` revienta en runtime cuando el objeto es null. Patrón a respetar en
+cualquier template que bindee tarifas nullable.
 
-**Responsabilidades del componente:**
-- Agrupar por `item.idCliente` internamente (NO recibe pre-agrupado).
-- Eliminar una op = excluirla del resultado; NO es baja de Firestore. Nada persiste hasta
-  `altaDesdeAsignacion`.
-- Resolver chofer de proveedor (`sujeto.idChofer null`) y vehículo pendiente
-  (`idVehiculo null`); recalcular `tarifaTipo` al resolver el chofer del proveedor.
-- Eliminar `OperacionRuntime` y `patenteChofer`.
-- Es pantalla de edición compleja, no tabla genérica tonta: maneja su propia lógica
-  (agrupar, eliminar, resolver pendientes).
+### Componente operaciones-editor (migración de operaciones-table — COMPLETADA)
+
+`operaciones-table` migrado a un componente NUEVO `operaciones-editor`
+(`src/app/raiz/operaciones/operaciones-editor/`), construido de cero al lado del viejo
+(patrón de migración estructural profunda). `operaciones-table` queda INTACTO hasta el
+switch. Declarado en OperacionesModule junto al viejo.
+
+**Contrato (cumplido):**
+- Entrada: `@Input() operacionesCreadas: OperacionCreada[]` (lista PLANA, tipada — NO
+  `fromParent` con cast). El caller setea `modalRef.componentInstance.operacionesCreadas`.
+- Salida: `modalRef.result` resuelve con `OperacionCreada[]` finales (sin las eliminadas);
+  dismiss = cancela.
+- Agrupa por `item.idCliente` internamente (viewmodel efímero `GrupoEditor`).
+
+**Resolución de pendientes:**
+- Chofer (caso proveedor, `op.chofer.id === ''`): selector con
+  `ChoferService.getChoferesPorProveedor(idProveedor)`. Al resolver, recalcula `tarifaTipo`
+  con la tarifa del PROVEEDOR (`ProveedorService.getTarifaTipo`, NO `chofer.tarifaTipo`) vía
+  `OperacionFactoryService.recalcularTarifaTipo` + `aplicarTarifaTipo`.
+- Vehículo (`op.vehiculo.id === ''`): selector con vehículos del dueño (proveedor si
+  `op.proveedor`, chofer si directo), filtro síncrono sobre `getVehiculosActuales()`.
+
+**Eliminar = excluir del resultado (Opción B):** `Set<idItem>` de eliminadas; se ocultan
+del render y se excluyen del array devuelto. NO muta `operacionesCreadas` (cancelar reabre
+desde cero, inocuo). NO toca Firestore.
+
+**Toggle eventual reversible:** `tarifaOriginal: Map<idItem, TarifaTipo>` guarda el tipo
+original (estado de UI, no ensucia la Operacion — reemplaza el viejo `OperacionRuntime`).
+La mutación coherente (tarifaTipo + datosTarifaX, manteniendo el invariante) vive en
+`OperacionFactoryService.aplicarTarifaEventual`.
+
+**Badge tarifa de cliente:** inmune a toggles — leído del cliente vivo
+(`ClienteService.getClientePorId(idCliente)?.tarifaTipo`), con fallback al snapshot si el
+cliente está en papelera.
+
+**Badge tarifa de chofer (informativo):** resuelto por ID, no congelado. Directo →
+`chofer.tarifaTipo`; proveedor → `ProveedorService.getTarifaTipo`. Solo display.
+
+**El editor NO calcula valores ni persiste:** edita un snapshot en memoria y devuelve.
+`calcularValoresIniciales` + persistencia siguen en `altaDesdeAsignacion`. Sin suscripciones
+(resolución síncrona puntual): edita, no observa.
+
+`OperacionRuntime` y `patenteChofer` ELIMINADOS en operaciones-editor (siguen vivos en el
+viejo operaciones-table hasta el switch).

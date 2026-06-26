@@ -144,6 +144,25 @@ export class OperacionFactoryService {
    *
    * TODO: refactor Tarifas — la mutación de datosTarifaX migrará al sistema unificado.
    */
+  /**
+   * Aplica un tarifaTipo ya resuelto sobre una op, manteniendo el invariante de
+   * datosTarifaX (eventual ⟺ datosTarifaEventual; personalizada ⟺ datosTarifaPersonalizada).
+   * Lo usa operaciones-editor al resolver el chofer de un proveedor (el tipo se
+   * recalcula con recalcularTarifaTipo y se aplica acá). Muta la op in-place.
+   * TODO: refactor Tarifas — la mutación de datosTarifaX migrará al sistema unificado.
+   */
+  aplicarTarifaTipo(op: Operacion, tipo: TarifaTipo): void {
+    op.tarifaTipo = { ...tipo };
+    op.datosTarifaEventual = tipo.eventual
+      ? (op.datosTarifaEventual
+         ?? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } })
+      : null;
+    op.datosTarifaPersonalizada = tipo.personalizada
+      ? (op.datosTarifaPersonalizada
+         ?? { seccion: 0, categoria: 0, nombre: '', aCobrar: 0, aPagar: 0 })
+      : null;
+  }
+
   aplicarTarifaEventual(
     op: Operacion,
     activar: boolean,

@@ -16,7 +16,7 @@ import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.servic
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.service';
 import { OperacionService, OperacionCreada, ResultadoCreacionOps, ErrorCreacionOp } from 'src/app/servicios/operaciones/operacion.service';
-import { OperacionesTableComponent } from 'src/app/raiz/operaciones/operaciones-table/operaciones-table.component';
+import { OperacionesEditorComponent } from 'src/app/raiz/operaciones/operaciones-editor/operaciones-editor.component';
 import { StorageService } from 'src/app/servicios/storage/storage.service'; // TODO: refactor Tarifas
 
 interface VehiculoPool {
@@ -472,16 +472,11 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
 
     const opsBasicas: OperacionCreada[] = resultadoCreacion.creadas;
 
-    // ETAPA 2 — abrir operaciones-table (modal) con las ops básicas
-    // TODO: operaciones-table — contrato nuevo (fromParent.operacionesCreadas:
-    //       OperacionCreada[] in / OperacionCreada[] out). El componente aún usa el
-    //       modelo viejo (grupos/OperacionRuntime); el alta no cierra hasta migrarlo.
-    const modalRef = this.modal.open(OperacionesTableComponent, {
+    // ETAPA 2 — abrir operaciones-editor (modal) con las ops básicas
+    const modalRef = this.modal.open(OperacionesEditorComponent, {
       windowClass: 'modal-super-xl', centered: true, size: 'xl',
     });
-    // as any temporal: OperacionesTableComponent aún no declara fromParent (modelo viejo).
-    // Quitar el cast cuando se migre operaciones-table al contrato nuevo.
-    (modalRef.componentInstance as any).fromParent = { operacionesCreadas: opsBasicas };
+    modalRef.componentInstance.operacionesCreadas = opsBasicas;
 
     let opsFinales: OperacionCreada[];
     try {
