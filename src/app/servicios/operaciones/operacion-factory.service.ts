@@ -26,7 +26,7 @@ export class OperacionFactoryService {
   crearOperacionBase(datos: DatosCrearOperacion): Operacion {
     const { cliente, chofer, vehiculo, proveedor, fecha, observacion, hojaDeRuta } = datos;
 
-    const tarifaTipo = this.getTarifaTipo(cliente, chofer);
+    const tarifaTipo = this.resolverJerarquiaTarifa(cliente, chofer?.tarifaTipo);
 
     return {
       idOperacion:      '',
@@ -96,22 +96,74 @@ export class OperacionFactoryService {
   }
 
   /**
-   * Determina el tarifaTipo del esqueleto según la jerarquía:
-   * eventual > personalizada > especial > general.
+   * Jerarquía de tarifas: eventual > personalizada > especial > general.
+   * `tarifaSecundaria` es la tarifa de la entidad que acompaña al cliente:
+   * para chofer directo, chofer.tarifaTipo; para chofer de proveedor, la tarifa
+   * del proveedor (resuelta por quien llama vía ProveedorService.getTarifaTipo).
+   * undefined cuando todavía no hay chofer/proveedor resuelto (alta con pendiente).
+   * Personalizada es exclusiva del cliente; no la aporta la tarifa secundaria.
    * TODO: refactor Tarifas — esta lógica migrará al sistema de tarifas unificado.
    */
-  private getTarifaTipo(cliente: Cliente, chofer: ConId<Chofer> | null): TarifaTipo {
-    // TODO: refactor Tarifas — con chofer null las ramas eventual/especial por chofer
-    // quedan en false; se recalculan al completar el chofer en operaciones-table.
-    if (cliente.tarifaTipo?.eventual || chofer?.tarifaTipo?.eventual) {
+  private resolverJerarquiaTarifa(
+    cliente: Cliente,
+    tarifaSecundaria: TarifaTipo | undefined,
+  ): TarifaTipo {
+    if (cliente.tarifaTipo?.eventual || tarifaSecundaria?.eventual) {
       return { general: false, especial: false, eventual: true,  personalizada: false };
     }
     if (cliente.tarifaTipo?.personalizada) {
       return { general: false, especial: false, eventual: false, personalizada: true  };
     }
-    if (cliente.tarifaTipo?.especial || chofer?.tarifaTipo?.especial) {
+    if (cliente.tarifaTipo?.especial || tarifaSecundaria?.especial) {
       return { general: false, especial: true,  eventual: false, personalizada: false };
     }
     return   { general: true,  especial: false, eventual: false, personalizada: false };
+  }
+
+  /**
+   * Recalcula el tarifaTipo de una op cuando se resuelve el chofer pendiente
+   * (caso proveedor). Quien llama resuelve la tarifa secundaria y la pasa ya
+   * resuelta: para chofer directo, chofer.tarifaTipo; para chofer de proveedor,
+   * ProveedorService.getTarifaTipo(idProveedor). El factory NO inyecta services.
+   * Devuelve el nuevo TarifaTipo; NO muta la op (la mutación coherente, con
+   * datosTarifaX, la hace aplicarTarifaTipo más abajo si hace falta).
+   */
+  recalcularTarifaTipo(cliente: Cliente, tarifaSecundaria: TarifaTipo | undefined): TarifaTipo {
+    return this.resolverJerarquiaTarifa(cliente, tarifaSecundaria);
+  }
+
+  /**
+   * Aplica o revierte la tarifa eventual sobre una op, manteniendo el invariante
+   * de datosTarifaX. Estado de UI de operaciones-editor.
+   *
+   *  - activar=true: pasa la op a eventual. Crea datosTarifaEventual en cero si
+   *    no existía y anula datosTarifaPersonalizada. (El tipo original lo guarda el
+   *    componente en su Map para poder volver atrás.)
+   *  - activar=false: restaura tarifaOriginal y reconstruye datosTarifaX según
+   *    corresponda (eventual→null, personalizada→objeto en cero, resto→ambos null).
+   *
+   * TODO: refactor Tarifas — la mutación de datosTarifaX migrará al sistema unificado.
+   */
+  aplicarTarifaEventual(
+    op: Operacion,
+    activar: boolean,
+    tarifaOriginal: TarifaTipo,
+  ): void {
+    if (activar) {
+      op.tarifaTipo = { general: false, especial: false, eventual: true, personalizada: false };
+      op.datosTarifaEventual = op.datosTarifaEventual
+        ?? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } };
+      op.datosTarifaPersonalizada = null;
+    } else {
+      op.tarifaTipo = { ...tarifaOriginal };
+      op.datosTarifaEventual = tarifaOriginal.eventual
+        ? (op.datosTarifaEventual
+           ?? { chofer: { concepto: '', valor: 0 }, cliente: { concepto: '', valor: 0 } })
+        : null;
+      op.datosTarifaPersonalizada = tarifaOriginal.personalizada
+        ? (op.datosTarifaPersonalizada
+           ?? { seccion: 0, categoria: 0, nombre: '', aCobrar: 0, aPagar: 0 })
+        : null;
+    }
   }
 }

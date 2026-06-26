@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { Vehiculo } from 'src/app/interfaces/chofer';
+import { Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
@@ -64,6 +64,15 @@ export class ProveedorService implements OnDestroy {
    *  (p. ej. en papelera). */
   getProveedorPorId(id: string): ConIdType<Proveedor> | undefined {
     return this.getProveedoresActuales().find(p => p.idProveedor === id);
+  }
+
+  /** Devuelve el tarifaTipo del proveedor por id, o undefined si no está.
+   *  Fuente de verdad de la tarifa heredada por los choferes de proveedor.
+   *  TODO: refactor Tarifas — eliminar el campo tarifaTipo de la interfaz Chofer
+   *  (hoy duplicado al crear el chofer); los choferes de proveedor deben resolver
+   *  su tarifa SIEMPRE por acá, no por chofer.tarifaTipo. */
+  getTarifaTipo(idProveedor: string): TarifaTipo | undefined {
+    return this.getProveedorPorId(idProveedor)?.tarifaTipo;
   }
 
   toFirestore(proveedor: ConIdType<Proveedor>): Omit<Proveedor, 'idProveedor'> {

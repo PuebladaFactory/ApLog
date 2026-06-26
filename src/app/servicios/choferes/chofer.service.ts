@@ -258,6 +258,15 @@ export class ChoferService implements OnDestroy {
     return this.getChoferPorId(idChofer)?.contratacion;
   }
 
+  /** Devuelve los choferes de un proveedor desde memoria (síncrono).
+   *  Para poblar el selector de chofer pendiente en operaciones-editor. */
+  getChoferesPorProveedor(idProveedor: string): ConIdType<Chofer>[] {
+    return this.getChoferesActuales().filter(c =>
+      c.contratacion.tipo === 'proveedor' &&
+      c.contratacion.idProveedor === idProveedor
+    );
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();

@@ -55,6 +55,12 @@ export class ClienteService implements OnDestroy {
     return this._clientes$.getValue();
   }
 
+  /** Devuelve el cliente con ese id desde memoria, o undefined si no está
+   *  (p. ej. en papelera). Gemelo de getChoferPorId / getProveedorPorId. */
+  getClientePorId(id: string): ConIdType<Cliente> | undefined {
+    return this.getClientesActuales().find(c => c.id === id);
+  }
+
   toFirestore(cliente: ConIdType<Cliente>): Omit<Cliente, 'idCliente'> {
     // Excluimos id y type (metadata de ConIdType) e idCliente
     // (se almacena solo como ID del documento, no como campo)

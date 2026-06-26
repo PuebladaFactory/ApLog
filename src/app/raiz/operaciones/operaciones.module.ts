@@ -27,6 +27,7 @@ import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 import { OperacionesTableComponent } from './operaciones-table/operaciones-table.component';
 import { TableroAsignacionesComponent } from './tablero-asignaciones/tablero-asignaciones.component';
+import { OperacionesEditorComponent } from './operaciones-editor/operaciones-editor.component';
 import { ɵɵDir } from "@angular/cdk/scrolling";
 
 
@@ -44,6 +45,7 @@ import { ɵɵDir } from "@angular/cdk/scrolling";
     TableroOpComponent,
     OperacionesTableComponent,
     TableroAsignacionesComponent,
+    OperacionesEditorComponent,
   ],
   imports: [
     CommonModule,
