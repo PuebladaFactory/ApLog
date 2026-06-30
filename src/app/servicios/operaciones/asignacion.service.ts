@@ -5,6 +5,11 @@ import { Asignacion, AsignacionItem, EstadoAsignacion } from 'src/app/interfaces
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { LogService } from 'src/app/servicios/log/log.service';
 
+interface BorradorEnCurso {
+  fecha: string;
+  items: AsignacionItem[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AsignacionService implements OnDestroy {
 
@@ -15,6 +20,8 @@ export class AsignacionService implements OnDestroy {
 
   private destroy$       = new Subject<void>();
   private cancelarFecha$ = new Subject<void>();
+
+  private _borradorEnCurso: BorradorEnCurso | null = null;
 
   constructor(
     private db:         DbFirestoreService,
@@ -189,6 +196,26 @@ export class AsignacionService implements OnDestroy {
   private toFirestore(a: Asignacion): Omit<Asignacion, 'idAsignacion'> {
     const { idAsignacion, ...resto } = a;
     return resto;
+  }
+
+  // ---- Borrador en curso (buffer en memoria; no toca Firestore) ----
+
+  /** Guarda en memoria el borrador que el usuario está editando (no toca Firestore).
+   *  Lo llama el componente al destruirse, para sobrevivir a la navegación. */
+  setBorradorEnCurso(fecha: string, items: AsignacionItem[]): void {
+    this._borradorEnCurso = { fecha, items };
+  }
+
+  /** Devuelve el borrador en curso, o null si no hay. Lo lee el componente al
+   *  montarse para rehidratar lo que estaba editando. */
+  getBorradorEnCurso(): BorradorEnCurso | null {
+    return this._borradorEnCurso;
+  }
+
+  /** Limpia el borrador en curso. Se llama cuando el trabajo se persistió
+   *  (guardar/alta) o se descartó (limpiar) — ya no hay nada "en curso". */
+  limpiarBorradorEnCurso(): void {
+    this._borradorEnCurso = null;
   }
 
   ngOnDestroy(): void {

@@ -26,18 +26,6 @@ label, input, textarea, .chofer-item, .chofer-ubicado{
   min-height: 50px;
 }
 
-.boton-choferes{
-  width: 15rem;
-  background: #002b5c;
-  color: white;
-  opacity: 0.8;
-  font-size: 1.3rem;
-}
-
-.boton-choferes:hover{
-  background: #0d6efd;
-}
-
 .celeste-fijo{
   background-color: lightblue;
   color: white;
@@ -109,6 +97,15 @@ label, input, textarea, .chofer-item, .chofer-ubicado{
   pointer-events: none;
   cursor: not-allowed;
   opacity:0.5;
+}
+
+
+.btn-chofer{ 
+  background: #002b5c;
+}
+
+.btn-chofer:hover{
+  background: #0d6efd;
 }
 
 .titulo-choferes{

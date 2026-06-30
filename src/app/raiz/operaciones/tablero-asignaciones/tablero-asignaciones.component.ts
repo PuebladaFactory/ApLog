@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, TemplateRef } from '@angular/core';
 import { Subject, Subscription, combineLatest } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -54,6 +54,11 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   idsColumnas: string[] = [];                    // IDs de cdkDropList de columnas cliente
   private visorSub: Subscription | null = null;  // suscripción del listener (modo visor)
 
+  // ---- item en edición (modal de observación / hoja de ruta) ----
+  itemEnEdicion: AsignacionItem | null = null;
+  edicionObservacion = '';
+  edicionHojaDeRuta = '';
+
   // ---- Navegación de fecha ----
   fechaSeleccionada = '';
   fechaAnterior: string | null = null;
@@ -103,6 +108,16 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
         .map(cat => ({ catOrden: cat.orden, nombre: cat.nombre }));
     }
 
+    const enCurso = this.asignacionService.getBorradorEnCurso();
+    if (enCurso) {
+      this.fechaSeleccionada = enCurso.fecha;
+      this.fechaAnterior    = enCurso.fecha;
+      this.itemsBorrador    = enCurso.items;
+      this.modo             = 'edicion';
+      this.borradorSucio    = true;
+      this.calcularChoferesNoOperativosPorFecha(enCurso.fecha);
+    }
+
     // Columnas destino: clientes activos ordenados por razón social.
     // idsColumnas se actualiza junto con clientesVisibles para que cdkDropListConnectedTo
     // sea siempre coherente con las columnas renderizadas.
@@ -147,6 +162,9 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.modo === 'edicion' && this.itemsBorrador.length > 0) {
+      this.asignacionService.setBorradorEnCurso(this.fechaSeleccionada, this.itemsBorrador);
+    }
     this.visorSub?.unsubscribe();
     this.destroy$.next();
     this.destroy$.complete();
@@ -188,6 +206,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
         this.fechaSeleccionada = this.fechaAnterior!;
         return;
       }
+      this.asignacionService.limpiarBorradorEnCurso();
     }
 
     this.fechaAnterior = this.fechaSeleccionada;
@@ -387,6 +406,35 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   }
 
   // ---------------------------------------------------------------------------
+  // Modal de observación / hoja de ruta
+  // ---------------------------------------------------------------------------
+
+  abrirEdicionItem(item: AsignacionItem, modalRef: TemplateRef<any>): void {
+    this.itemEnEdicion = item;
+    this.edicionObservacion = item.observacion;
+    this.edicionHojaDeRuta = item.hojaDeRuta;
+
+    const modal = this.modal.open(modalRef, { centered: true });
+    modal.result.finally(() => {
+      this.itemEnEdicion = null;
+      this.edicionObservacion = '';
+      this.edicionHojaDeRuta = '';
+    });
+  }
+
+  guardarEdicionItem(modal: any): void {
+    if (this.modo !== 'edicion' || !this.itemEnEdicion) { modal.close(); return; }
+    const id = this.itemEnEdicion.idItem;
+    this.itemsBorrador = this.itemsBorrador.map(it =>
+      it.idItem === id
+        ? { ...it, observacion: this.edicionObservacion, hojaDeRuta: this.edicionHojaDeRuta }
+        : it
+    );
+    this.borradorSucio = true;
+    modal.close();
+  }
+
+  // ---------------------------------------------------------------------------
   // Acciones de persistencia
   // ---------------------------------------------------------------------------
 
@@ -415,6 +463,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     try {
       await this.asignacionService.guardarBorrador(this.fechaSeleccionada, this.itemsBorrador);
+      this.asignacionService.limpiarBorradorEnCurso();
       // Recargar: la máquina de estados actualiza modo + apaga borradorSucio.
       await this.cargarTablero(this.fechaSeleccionada);
       Swal.fire({ icon: 'success', title: 'Guardado',
@@ -499,6 +548,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
         this.fechaSeleccionada, opsFinales);
 
       if (resultado.exito) {
+        this.asignacionService.limpiarBorradorEnCurso();
         Swal.fire({ icon: 'success', title: 'Operaciones creadas',
           text: resultado.mensaje });
         await this.cargarTablero(this.fechaSeleccionada);
@@ -536,6 +586,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
         this.itemsBorrador = [];
         this.borradorSucio = false;
         this.tablero = null;
+        this.asignacionService.limpiarBorradorEnCurso();
         Swal.fire({ icon: 'success', title: 'Borrador eliminado' });
       } catch (e) {
         console.error(e);
@@ -560,6 +611,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     }
     this.itemsBorrador = [];
     this.borradorSucio = false;
+    this.asignacionService.limpiarBorradorEnCurso();
   }
 
   // El informe Excel debe reescribirse para AsignacionItem[] (modelo nuevo).
@@ -680,5 +732,24 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   // se elige en operaciones-table, y su disponibilidad se gestiona allí.
   vehiculoNoOperativo(v: VehiculoPool): boolean {
     return v.asignadoA.tipo === 'chofer' && this.isChoferNoOperativo(v.asignadoA.idChofer);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Modales de visibilidad (stubs — pendiente migración de modales)
+  // ---------------------------------------------------------------------------
+
+  // TODO: migrar modales de visibilidad. La llamada al modal queda comentada
+  //       hasta migrar ModalObjetosActivosComponent / ModalChoferesNoDisponiblesComponent
+  //       al modelo nuevo. El impacto de la visibilidad sobre el tablero se maneja
+  //       en un paso posterior.
+  openModalActivos(_modo: 'choferes' | 'proveedores' | 'clientes'): void {
+    // const modalRef = this.modal.open(ModalObjetosActivosComponent, { ... });
+    // modalRef.componentInstance...
+    // (pendiente: definir qué se envía/recibe al migrar el modal)
+  }
+
+  openModalNoOperativos(): void {
+    // const modalRef = this.modal.open(ModalChoferesNoDisponiblesComponent, { ... });
+    // (pendiente: migrar el modal)
   }
 }

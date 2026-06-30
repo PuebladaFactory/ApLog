@@ -403,6 +403,14 @@ Los dos caminos de alta convergen en `operaciones-table` (editor de ops finales)
 servicio hace el procesamiento final (valores, sujeto, validación, persistencia).
 `altaDesdeAsignacion` es el paso FINAL de persistencia, no el único del flujo.
 
+**Estado de larga vida en un service singleton, no en el componente ni en localStorage.**
+El borrador en curso (trabajo no persistido que debe sobrevivir a salir/entrar de un componente)
+vive en el service de la entidad (`AsignacionService`), no en el componente (se destruye con la
+navegación) ni en localStorage (eliminado del frente). El componente espeja al destruirse y
+rehidrata al montarse. El borrador en curso tiene prioridad sobre Firestore al rehidratar (es lo
+más reciente). Patrón aplicable a cualquier componente con trabajo en curso que deba sobrevivir
+navegación.
+
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
@@ -431,6 +439,10 @@ estructuras del modelo viejo; reescribir para `AsignacionItem[]`. Diferido a cie
 **No-disponibilidad sin probar end-to-end:** la atenuación de vehículos de proveedor está
 correctamente ausente en el tablero (diferida a operaciones-table), pero verificar la atenuación
 de directos al integrar con datos reales al migrar operaciones-table.
+
+**Persistencia del borrador en F5:** el borrador en curso vive en memoria del service; un F5 lo
+pierde. Si se requiere, persistir solo la fecha en localStorage y recuperar de Firestore (cubre
+tableros guardados/dados de alta, no el borrador local no guardado). DIFERIDO.
 
 ### Deuda — operaciones-editor / Tarifas
 

@@ -465,6 +465,41 @@ Cancelar el modal es inofensivo: ops básicas en memoria, nada persistido hasta 
 
 **Prerequisito agregado:** `ProveedorService.getProveedorPorId(id)` — patrón de `getChoferPorId`.
 
+**Borrador en curso (persistencia en memoria entre navegaciones).**
+Problema: al salir y volver al componente, Angular lo destruye y recrea; el borrador
+local no guardado (`itemsBorrador`) se perdía. El viejo lo preservaba vía localStorage,
+que eliminamos.
+
+Solución: el borrador en curso vive en `AsignacionService` (singleton, sobrevive a la
+destrucción del componente), NO en localStorage ni en Firestore. Es un buffer en memoria
+del trabajo en curso, distinto del listener (`cargarFecha`) y del borrador persistido
+(`guardarBorrador`).
+
+- `AsignacionService`: interfaz local `BorradorEnCurso { fecha, items }` + campo privado
+  `_borradorEnCurso` + tres métodos (objeto plano + getter síncrono, NO `BehaviorSubject`:
+  un solo consumidor que lo lee una vez al montarse, no se observa en vivo):
+  `setBorradorEnCurso`, `getBorradorEnCurso`, `limpiarBorradorEnCurso`.
+- `tablero-asignaciones`:
+  · `ngOnInit` rehidrata: si hay borrador en curso, setea fecha/items/`modo='edicion'`/
+    `borradorSucio=true` y NO va a Firestore (el borrador en curso tiene prioridad sobre
+    Firestore: es lo más reciente que tocó el usuario).
+  · `ngOnDestroy` espeja: si `modo==='edicion' && itemsBorrador.length>0`, llama
+    `setBorradorEnCurso`. (En visor o vacío no espeja nada.)
+  · `limpiarBorradorEnCurso` en: `guardarBorrador` (éxito), `altaOp` (éxito), `limpiar`
+    (casos A y B), y al confirmar descartar en cambio de fecha. El trabajo persistido o
+    descartado no debe reaparecer.
+
+Alcance: cubre navegación (salir/entrar del componente). NO cubre F5/recarga de página
+(el service singleton se reinicia con la app). Si se requiere F5, combinar con persistir
+solo la fecha en localStorage — DIFERIDO, registrado como mejora futura.
+
+Comportamiento por escenario:
+- Borrador sin guardar → salir → volver: reaparece (rehidratado del service).
+- Guardar borrador → salir → volver: NO reaparece del buffer (se limpió); el usuario
+  elige fecha y `cargarTablero` lo levanta desde Firestore. Gana Firestore.
+- Alta → salir → volver: NO reaparece (buffer limpio, quedó en visor/Firestore).
+- Limpiar → salir → volver: NO reaparece (buffer limpio).
+
 ---
 
 #### Módulo Operaciones — Componente operaciones-editor (migración de operaciones-table)
