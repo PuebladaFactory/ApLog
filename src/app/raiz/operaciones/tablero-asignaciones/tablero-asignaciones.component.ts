@@ -5,6 +5,8 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import Swal from 'sweetalert2';
 
+import { ModalObjetosActivosComponent } from 'src/app/raiz/operaciones/modal-objetos-activos/modal-objetos-activos.component';
+
 import { Asignacion, AsignacionItem, AsignacionRef, EstadoAsignacion, SujetoAsignacion } from 'src/app/interfaces/asignacion';
 import { Categoria, Vehiculo, Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
@@ -18,6 +20,7 @@ import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.serv
 import { OperacionService, OperacionCreada, ResultadoCreacionOps, ErrorCreacionOp } from 'src/app/servicios/operaciones/operacion.service';
 import { OperacionesEditorComponent } from 'src/app/raiz/operaciones/operaciones-editor/operaciones-editor.component';
 import { StorageService } from 'src/app/servicios/storage/storage.service'; // TODO: refactor Tarifas
+import { ModalChoferesNoDisponiblesComponent } from '../modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
 
 interface VehiculoPool {
   idVehiculo: string;
@@ -50,8 +53,7 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   tablero: Asignacion | null = null;
   itemsBorrador: AsignacionItem[] = [];
   borradorSucio = false;
-  clientesVisibles: ConIdType<Cliente>[] = [];
-  idsColumnas: string[] = [];                    // IDs de cdkDropList de columnas cliente
+  private clientesActivos: ConIdType<Cliente>[] = [];
   private visorSub: Subscription | null = null;  // suscripción del listener (modo visor)
 
   // ---- item en edición (modal de observación / hoja de ruta) ----
@@ -118,16 +120,11 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
       this.calcularChoferesNoOperativosPorFecha(enCurso.fecha);
     }
 
-    // Columnas destino: clientes activos ordenados por razón social.
-    // idsColumnas se actualiza junto con clientesVisibles para que cdkDropListConnectedTo
-    // sea siempre coherente con las columnas renderizadas.
+    // Clientes activos: base para clientesVisibles (getter derivado).
     this.clienteService.getActivos()
       .pipe(takeUntil(this.destroy$))
       .subscribe(data => {
-        this.clientesVisibles = [...data].sort((a, b) =>
-          a.razonSocial.localeCompare(b.razonSocial)
-        );
-        this.idsColumnas = this.clientesVisibles.map(c => `cliente-drop-${c.idCliente}`);
+        this.clientesActivos = [...data];
       });
 
     // Pool reactivo: se recompone cuando cambian vehículos, choferes o proveedores.
@@ -286,6 +283,26 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
 
   private itemsActuales(): AsignacionItem[] {
     return this.modo === 'edicion' ? this.itemsBorrador : (this.tablero?.items ?? []);
+  }
+
+  // Activos ∪ clientes con asignaciones (inactivos con items no desaparecen).
+  get clientesVisibles(): ConIdType<Cliente>[] {
+    const idsConItems = new Set(this.itemsActuales().map(it => it.idCliente));
+    const mapa = new Map<string, ConIdType<Cliente>>();
+    for (const c of this.clientesActivos) mapa.set(c.idCliente, c);
+    for (const id of idsConItems) {
+      if (!mapa.has(id)) {
+        const cli = this.clienteService.getClientePorId(id);
+        if (cli) mapa.set(id, cli);
+        // si no resuelve (papelera): sin columna, item existe en borrador
+        // TODO: refactor Papelera — resolver contra papelera cuando esté disponible.
+      }
+    }
+    return [...mapa.values()].sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
+  }
+
+  get idsColumnas(): string[] {
+    return this.clientesVisibles.map(c => `cliente-drop-${c.idCliente}`);
   }
 
   itemsDeCliente(idCliente: string): AsignacionItem[] {
@@ -670,19 +687,28 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
       .map(cat => ({
         catOrden: cat.catOrden,
         nombre: cat.nombre,
-        vehiculos: vehiculosPool.filter(v => v.categoria.catOrden === cat.catOrden),
+        vehiculos: vehiculosPool
+          .filter(v => v.categoria.catOrden === cat.catOrden)
+          .sort((a, b) => this.claveOrdenPool(a).localeCompare(this.claveOrdenPool(b))),
       }))
       .filter(g => g.vehiculos.length > 0); // omitir grupos vacíos
 
     // Vehículos cuya categoría no figura en el catálogo → grupo "Sin categoría" al final.
     // Catálogo incompleto es un caso real (categoría eliminada/renombrada).
     const catOrdenesConocidos = new Set(this.categoriasOrdenadas.map(c => c.catOrden));
-    const sinCategoria = vehiculosPool.filter(v => !catOrdenesConocidos.has(v.categoria.catOrden));
+    const sinCategoria = vehiculosPool
+      .filter(v => !catOrdenesConocidos.has(v.categoria.catOrden))
+      .sort((a, b) => this.claveOrdenPool(a).localeCompare(this.claveOrdenPool(b)));
     if (sinCategoria.length > 0) {
       grupos.push({ catOrden: -1, nombre: 'Sin categoría', vehiculos: sinCategoria });
     }
 
     return grupos;
+  }
+
+  private claveOrdenPool(v: VehiculoPool): string {
+    const a = v.asignadoA;
+    return a.tipo === 'chofer' ? `${a.apellido} ${a.nombre}` : a.razonSocial;
   }
 
   // ---------------------------------------------------------------------------
@@ -735,21 +761,18 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   }
 
   // ---------------------------------------------------------------------------
-  // Modales de visibilidad (stubs — pendiente migración de modales)
+  // Modales de visibilidad
   // ---------------------------------------------------------------------------
 
-  // TODO: migrar modales de visibilidad. La llamada al modal queda comentada
-  //       hasta migrar ModalObjetosActivosComponent / ModalChoferesNoDisponiblesComponent
-  //       al modelo nuevo. El impacto de la visibilidad sobre el tablero se maneja
-  //       en un paso posterior.
-  openModalActivos(_modo: 'choferes' | 'proveedores' | 'clientes'): void {
-    // const modalRef = this.modal.open(ModalObjetosActivosComponent, { ... });
-    // modalRef.componentInstance...
-    // (pendiente: definir qué se envía/recibe al migrar el modal)
+  openModalActivos(modo: 'choferes' | 'proveedores' | 'clientes'): void {
+    const modalRef = this.modal.open(ModalObjetosActivosComponent, {
+      centered: true, size: 'lg',
+    });
+    modalRef.componentInstance.modo = modo;
   }
 
   openModalNoOperativos(): void {
-    // const modalRef = this.modal.open(ModalChoferesNoDisponiblesComponent, { ... });
-    // (pendiente: migrar el modal)
+    // TODO: migrar ModalChoferesNoDisponiblesComponent al modelo nuevo (frente aparte).
+    const modalRef = this.modal.open(ModalChoferesNoDisponiblesComponent, { centered: true, size: 'lg', });
   }
 }

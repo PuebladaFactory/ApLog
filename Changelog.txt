@@ -13,6 +13,11 @@
 **DBFirestoreService** — métodos nuevos agregados:
 - `createAndGetId`: crea documento con ID pre-generado por Firestore
 - `getByField`: consulta documentos por campo y valor
+- `updateConResultado(coleccion, id, data)`: update con retorno de Resultado ({exito,
+  mensaje}); primer método de la familia CRUD-con-Resultado. Usa la interfaz Resultado
+  LOCAL de db-firestore (no la genérica Resultado<T> de interfaces — deuda de
+  unificación pendiente). El caller loguea según el Resultado (TODO: refactor Log).
+  Familia futura: createConResultado, deleteConResultado
 
 **TablaGenericaComponent** (`src/app/shared/tabla/tabla-generica/`)
 - Reemplaza ag-grid en módulos refactorizados
@@ -212,6 +217,58 @@
   (tablero-op para la carga; carga-tablero-diario / carga-multiple para la creación)
 - Generación de numeroOperacion vía servicio contador (al guardar)
 - Verificar en código la regla de bloqueo "proforma de chofer impide liquidar cliente"
+
+---
+
+### Ajustes finales — tablero-asignaciones (Julio 2026)
+
+**Estética y UX:**
+- Tarjetas del pool y de items: jerarquía invertida — nombre del chofer / razón social del
+  proveedor como valor principal, dominio como secundario; ambos centrados. Badge "x{veces}"
+  reubicado a esquina absoluta para no descentrar.
+- Columnas de clientes: grilla con wrap (col-6 col-md-4 col-lg-3 col-xl-2) que entra en el
+  ancho de pantalla; el pool queda como columna fija a la izquierda. Reemplaza la fila
+  horizontal con overflow que se desbordaba. MEJORA FUTURA: priorizar/condensar clientes sin
+  asignación (solo 6-9 de 16 operan por día).
+- Nav en tres zonas: izquierda botones de visibilidad, centro fecha+badges, derecha acciones
+  del tablero.
+- Modal de observación / hoja de ruta por item (botón ✏️ + doble-click): editable en modo
+  edición, solo-lectura en visor. Edición inmutable por idItem sobre itemsBorrador.
+
+**Pool ordenado:** dentro de cada categoría, vehículos ordenados alfabéticamente por nombre
+del dueño (chofer: apellido+nombre; proveedor: razonSocial) vía claveOrdenPool.
+
+**Cliente fantasma resuelto:** `clientesVisibles` pasó de `getActivos()` a getter derivado
+= clientes activos ∪ clientes (aunque inactivos) con items en el estado actual. Elimina el
+fantasma (items ocultos de un cliente desactivado que se darían de alta sin verse). Ordenados
+alfabéticamente por razonSocial, intercalados. `idsColumnas` también getter
+(`cdkDropListConnectedTo`) — verificado que el drag&drop sigue funcionando. `clientesActivos`
+guardado como campo desde la suscripción a `getActivos()`. TODO: refactor Papelera — un item
+cuyo cliente fue BORRADO (no solo desactivado) no tendría columna (getClientePorId devuelve
+undefined); caso extremo marcado.
+
+**Visibilidad de entidades (ModalObjetosActivosComponent migrado al modelo nuevo):**
+- Recibe `@Input() modo ('choferes'|'clientes'|'proveedores')`, resuelve la lista COMPLETA
+  desde el observable del service (choferes$/clientes$/proveedores$), deriva inactivos por
+  el flag `activo`. El caller solo pasa el modo.
+- CAMBIO de comportamiento: listado izquierdo muestra TODOS (activos con check, inactivos sin
+  check) — antes solo activos, lo que hacía imposible reactivar un inactivo. Listado derecho
+  = inactivos (solo lectura). Ordenados alfabéticamente.
+- Reactivo: al togglear, el listener de Firestore re-emite y la lista se reordena sola.
+  Eliminado el verificarObjetos manual. NO se muta el objeto local antes de persistir.
+- Persistencia del toggle vía `DbFirestoreService.updateConResultado` (update parcial
+  `{ activo }`). Impacto en el tablero automático: desactivar un chofer/proveedor recompone
+  el pool (combineLatest); clientes, vía `getActivos()`/`clientesVisibles`.
+
+**Chofer/proveedor inactivo con asignación existente:** comportamiento correcto (no bug):
+la asignación sobrevive aunque el dueño se desactive (habilita el caso "activar un chofer
+para un solo viaje"). Una asignación existente siempre es visible, independiente del estado
+activo de sus entidades.
+
+**No-disponibilidad — arreglo mínimo:** `ModalChoferesNoDisponiblesComponent` — cambiada
+la fuente de choferes (`StorageService.loadInfo('choferes')` →
+`ChoferService.getChoferesActuales()`). Escrituras, id y UI sin tocar. El tablero refleja
+correctamente la no-disponibilidad de choferes directos.
 
 ---
 

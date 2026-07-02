@@ -411,6 +411,23 @@ rehidrata al montarse. El borrador en curso tiene prioridad sobre Firestore al r
 más reciente). Patrón aplicable a cualquier componente con trabajo en curso que deba sobrevivir
 navegación.
 
+**Modal genérico autónomo por modo:** un modal que sirve a varias entidades recibe solo
+un discriminante (`modo`) y resuelve sus datos desde el service correspondiente; el
+componente que lo abre no pre-mastica arrays. Resolución de exhibición vive en el modal.
+Aplicado en `ModalObjetosActivosComponent`.
+
+**CRUD-con-Resultado en la capa de datos:** las escrituras CRUD directas a DbFirestore
+devuelven `Resultado` (éxito/error) para alimentar el log, reemplazando progresivamente
+las escrituras vía StorageService. `updateConResultado` es el primer caso. El caller
+loguea según el Resultado (TODO: refactor Log). Familia futura: `createConResultado`,
+`deleteConResultado`. La interfaz `Resultado` local de db-firestore ({exito, mensaje})
+difiere de la genérica `Resultado<T>` de interfaces — deuda de unificación pendiente.
+
+**Una asignación existente siempre es visible**, independiente del estado activo de sus
+entidades (cliente inactivo con items → columna visible; chofer inactivo asignado →
+tarjeta visible). El estado activo controla disponibilidad FUTURA, no borra hechos ya
+cargados.
+
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
@@ -505,3 +522,17 @@ cliente está en papelera.
 
 `OperacionRuntime` y `patenteChofer` ELIMINADOS en operaciones-editor (siguen vivos en el
 viejo operaciones-table hasta el switch).
+
+### Deuda — no-disponibilidad y tablero
+
+**Rediseño de no-disponibilidad (frente propio):** modelo rico con sujeto discriminado
+(chofer-entidad / proveedor-entidad / vehiculo / chofer-de-proveedor), fecha desde +
+hasta|null, motivo, activa. Lógica derivada "si el único vehículo no está, la entidad
+no está". Rehace la interfaz `NoDisponibilidadChofer`, el modal completo y el consumo del
+tablero; toca `operaciones-editor` (no-disp de choferes de proveedor se resuelve allá).
+El modal actual quedó con arreglo mínimo hasta entonces.
+
+**`clientesVisibles` getter "con trabajo"** (arma Map + ordena en cada acceso): candidato
+a cachear si hubiera cientos de clientes. Hoy trivial.
+
+**Item con cliente borrado** (papelera) sin columna: `// TODO: refactor Papelera`.

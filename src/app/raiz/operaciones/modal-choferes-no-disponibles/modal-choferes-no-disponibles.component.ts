@@ -5,6 +5,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
+import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
@@ -46,9 +47,10 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private storageService: StorageService,    
-    public activeModal: NgbActiveModal,  
+    private storageService: StorageService,
+    public activeModal: NgbActiveModal,
     private dbFirestore: DbFirestoreService,
+    private choferService: ChoferService,
   ){
     this.form = this.fb.group({
     idChofer: ['', Validators.required],
@@ -60,7 +62,7 @@ export class ModalChoferesNoDisponiblesComponent implements OnInit {
   }
   
   ngOnInit(): void {
-    this.choferes = this.storageService.loadInfo('choferes');
+    this.choferes = this.choferService.getChoferesActuales();
     this.choferes.sort((a, b) => a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido));
     //this.noDisponibilidades = this.storageService.loadInfo('noOperativo')
     this.cargarDatos()

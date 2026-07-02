@@ -973,6 +973,21 @@ export class DbFirestoreService {
     return updateDoc(estacionamiento1DocumentReference, { ...item });
   }
 
+  /** Update parcial de un documento devolviendo Resultado (éxito/error), para que
+   *  el caller registre el log según el resultado. Primer método de la familia
+   *  CRUD-con-Resultado (createConResultado / deleteConResultado vendrán igual).
+   *  Reemplaza progresivamente las escrituras vía StorageService.
+   *  TODO: refactor Log — el log centralizado de StorageService no aplica acá; el
+   *  caller debe loguear según el Resultado. */
+  async updateConResultado(coleccion: string, id: string, data: any): Promise<Resultado> {
+    try {
+      await this.update(coleccion, data, id);
+      return { exito: true, mensaje: 'Actualizado correctamente' };
+    } catch (e: any) {
+      return { exito: false, mensaje: `Error al actualizar ${coleccion}/${id}: ${e?.message ?? e}` };
+    }
+  }
+
   delete(componente: string, id: string) {
     //this.dataCollection = collection(this.firestore, `/estacionamiento/datos/${componente}`);
     const estacionamiento1DocumentReference = doc(
