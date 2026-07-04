@@ -74,7 +74,7 @@ Las rutas declaran roles requeridos en `data: { roles: [...] }`. `RoleGuard` ver
 El refactor arquitectónico está migrando el manejo de estado desde un store central
 único hacia servicios por entidad. Conviven dos esquemas según el módulo:
 
-**Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; fase de conexión con `tablero-diario` completada mediante el componente nuevo `tablero-asignaciones`; pendiente `carga-multiple`; coordinadores `bajaOperacion`/`editarOperacion`/`restaurarOperacion` en OperacionService pendientes):
+**Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; fase de conexión con `tablero-diario` completada mediante el componente nuevo `tablero-asignaciones`; `carga-multiple` migrado a `carga-asignacion` y switch completado (carga-multiple eliminado); pendiente decidir nuevo call site en tablero-op; coordinadores `bajaOperacion`/`editarOperacion`/`restaurarOperacion` en OperacionService pendientes):
 cada entidad tiene su `XxxService` con un BehaviorSubject propio que mantiene el estado
 en memoria (NO en localStorage). El `init()` del servicio abre el listener de Firestore
 y se llama al arrancar la app. Los componentes se suscriben directamente al observable
@@ -435,11 +435,14 @@ Deuda técnica activa. Actualizar cuando se salda.
 ### Deuda crítica — tablero-asignaciones (bloquea el switch a producción)
 
 **Switch diferido:** activar la ruta a `tablero-asignaciones` + eliminar `tablero-diario` +
-eliminar `operaciones-table` + limpiar métodos viejos de `TableroService` (`getTableroPorFecha`
-viejo, `guardarTablero`, `altaMultipleOperacionesYActualizarTablero`, `getCategoriaDesdeOperacion`,
-`deleteTablero`) + interfaces `TableroDiario`/`ChoferAsignadoBase`. `operaciones-editor` YA
-migrado (el alta cierra end-to-end); el switch ya no está bloqueado por eso. Sigue pendiente
-`carga-multiple` y el control de rol demo en tablero-asignaciones.
+eliminar `operaciones-table` + limpiar métodos viejos de `TableroService`
+(`getTableroPorFecha` viejo, `guardarTablero`, `altaMultipleOperacionesYActualizarTablero`,
+`getCategoriaDesdeOperacion`, `deleteTablero`) + interfaces `TableroDiario`/`ChoferAsignadoBase`.
+`operaciones-editor` YA migrado, `carga-asignacion` YA migrado Y `carga-multiple` YA
+ELIMINADO (ver sección propia). Sigue pendiente: decidir qué abre
+`tablero-op.component.ts` en lugar de `carga-multiple` (hoy no hay caller — el import
+fue eliminado sin reemplazo), control de rol demo en tablero-asignaciones, y la
+migración de tablero-diario/operaciones-table.
 
 **Control de rol demo ausente:** `tablero-asignaciones` no carga `usuario`; los botones de
 acción no tienen `[disabled]="usuario.roles.demo"`. Debe entrar antes o como parte del switch
@@ -522,6 +525,97 @@ cliente está en papelera.
 
 `OperacionRuntime` y `patenteChofer` ELIMINADOS en operaciones-editor (siguen vivos en el
 viejo operaciones-table hasta el switch).
+
+### Componente carga-asignacion (migración de carga-multiple — COMPLETADA)
+
+`carga-multiple` migrado a un componente NUEVO `carga-asignacion`
+(`src/app/raiz/operaciones/carga-asignacion/`), construido de cero al lado del viejo (mismo
+patrón que `tablero-asignaciones`/`operaciones-editor`). `carga-multiple` ELIMINADO en sesión
+posterior (ver "Eliminado en esta sesión" más abajo).
+
+**Selección sin pool de vehículos:** a diferencia de `tablero-asignaciones` (que arrastra
+vehículos concretos), acá se elige CHOFER DIRECTO o PROVEEDOR (checkboxes), sin resolver
+vehículo. `armarItems()` arma cada `AsignacionItem` con `sujeto.idVehiculo: null` siempre —
+la resolución de vehículo (único candidato o varios) queda enteramente para
+`operaciones-editor`. El `item.ref` que arma este componente es un placeholder
+(`dominio: ''`, `categoria: {catOrden:0, nombre:''}`); ver más abajo cómo se corrige.
+
+**`AsignacionRef` placeholder corregido en `altaDesdeAsignacion`:** `OperacionService.altaDesdeAsignacion`
+(`servicios/operaciones/operacion.service.ts`) reconstruye `c.item.ref` con los datos reales
+de la op final en el mismo loop donde ya reconstruye `c.item.sujeto` (paso 3). Para
+`tablero-asignaciones` es idempotente (el ref ya viene correcto desde el pool de vehículos).
+Para `carga-asignacion` corrige el placeholder una vez que `operaciones-editor` resolvió el
+vehículo pendiente. Es el único punto de verdad para "cómo se ve un `AsignacionItem`
+persistido" — no reconstruir `ref` en ningún otro caller.
+
+**Fusión con tablero existente y bloqueo de borrador ajeno (agregado en la sesión de
+carga-asignacion):** `altaDesdeAsignacion(fecha, creadas, siExisteBorrador: 'reemplazar'|'bloquear' = 'reemplazar')`.
+Antes de armar el tablero final, lee el existente: si `asignado===true`, fusiona
+(`existente.items ++ creadas`) — habilita altas parciales repetidas sobre la misma fecha ya
+confirmada. Si `asignado===false` (borrador) y `siExisteBorrador==='bloquear'`, aborta sin
+escribir con mensaje explicando que debe resolverse desde el Tablero de Asignaciones. El
+default `'reemplazar'` preserva el comportamiento de `tablero-asignaciones` (que ya manda su
+`itemsBorrador` completo, no un delta — fusionar ahí duplicaría). La validación de
+pendientes (chofer/vehículo) sigue aplicando solo a `creadas`, nunca a los items previos que
+arrastra la fusión. `ref` del item también se reconstruye en este mismo paso (junto con
+`sujeto`) desde los datos finales de la op — idempotente para `tablero-asignaciones`,
+corrige el placeholder de `carga-asignacion`.
+
+**Filtro defensivo asimétrico (choferes directos vs. proveedores):** `choferesDirectosBase`
+excluye choferes directos sin vehículos (`vehiculos.length === 0`) porque tener vehículo es
+requisito de alta de chofer directo — es un seguro, no una regla de negocio activa.
+`proveedoresBase` NO aplica ese filtro: un proveedor sin vehículos es un caso válido a
+mostrar (el chofer/vehículo del proveedor se resuelve después, en operaciones-editor).
+
+**Flujo de alta:** igual a `tablero-asignaciones.altaOp()` en 3 etapas (crear ops básicas vía
+`crearOperacionesDesdeAsignacion` → editar en `operaciones-editor` modal → `altaDesdeAsignacion`
+con `siExisteBorrador: 'bloquear'`), pero sin borrador ni modo edición/visor: no hay estado de
+larga vida que sobreviva navegación. El componente arma items en memoria y delega el resto a
+`OperacionService`; sí usa `AsignacionService`, pero solo para la consulta de lectura de
+`existeBorradorSinConfirmar` (ver más abajo), no para estado persistente propio.
+
+**Pre-resolución de vehículo único:** al armar los items (`armarItems()`), si el chofer
+directo o proveedor seleccionado tiene exactamente UN vehículo asociado, se resuelve de
+inmediato: `sujeto.idVehiculo` y `ref` (dominio, categoria) se completan con los datos reales
+en ese momento, en vez de nacer vacíos. Con 2+ vehículos, sigue diferido a
+`operaciones-editor` sin cambios. El viewmodel `ChoferDirectoSeleccionable`/
+`ProveedorSeleccionable` pasó de guardar `categorias: Categoria[]` a
+`vehiculos: ConIdType<Vehiculo>[]` (las categorías para los badges se derivan de ahí). El
+filtro defensivo de choferes directos sin vehículo ahora chequea `vehiculos.length === 0`
+(antes `categorias.length === 0`), mismo criterio.
+
+**Orden alfabético:** `clientesActivos`, `choferesDirectosBase` y `proveedoresBase` se
+ordenan por `localeCompare` (`razonSocial` / `apellido`) al construirse — antes llegaban en
+el orden crudo de sus respectivos observables.
+
+**Detección temprana de borrador sin confirmar:** `AsignacionService.existeBorradorSinConfirmar(fecha)`
+— nuevo método, indica si existe un tablero `asignado:false` para la fecha. Se consulta en
+`onFechaChange()` (async) antes de que el usuario invierta tiempo armando una selección que
+`altaDesdeAsignacion` bloquearía igual al final. Si detecta un borrador: `bloqueadoPorBorrador
+= true`, deshabilita select de cliente + checkboxes + botón de alta, y muestra un banner de
+alerta persistente en el body (no solo un Swal transitorio) indicando que debe resolverse
+desde el Tablero de Asignaciones. No reemplaza la validación de `altaDesdeAsignacion` (que
+sigue siendo la protección real) — es una advertencia temprana adicional.
+
+**Layout: altura del modal y tarjetas parejas:** fix de altura aplicado en
+`tablero-op.component.scss` (único caller actual del modal, `windowClass modal-super-xl`) con
+`.modal-content > *` (`display:flex`/`flex-direction:column`/`flex:1 1 auto`/`min-height:0`),
+para que el host del componente se estire dentro del modal y el footer quede pegado al fondo
+(antes flotaba a mitad de altura). Las cards de choferes/proveedores usan
+`flex-grow-1`/`h-100` para igualar alturas entre sí. DEUDA: el fix está scopeado a
+`tablero-op.component.scss`, no es global — si otro caller futuro abre este modal (o
+`carga-asignacion`) sin pasar por `tablero-op`, hay que replicarlo ahí. `operaciones-editor`
+también se beneficia por compartir módulo lazy-loaded, pero no fue verificado a fondo, solo
+visualmente de paso.
+
+**Eliminado en esta sesión:** `carga-multiple.component.ts/.html/.scss/.spec.ts` borrados
+completos, entrada quitada de `OperacionesModule`, import muerto quitado de
+`tablero-op.component.ts`. Diagnóstico previo confirmó sin referencias cruzadas
+(`OperacionRuntime`/`TarifaBase`/`GrupoTabla` eran copias locales en
+`carga-tablero-diario`/`operaciones-table`, no compartidas). Sigue sin haber ningún caller
+que abra `carga-asignacion` — `tablero-op.component.ts` quedó con el método
+`modalCargaMultiple()` sin la línea de apertura del modal viejo; decidir en sesión futura si
+se abre `carga-asignacion` ahí o se rediseña el punto de entrada.
 
 ### Deuda — no-disponibilidad y tablero
 

@@ -1,0 +1,271 @@
+<div class="modal-header">
+    <h3 class="modal-title">Carga de operaciones</h3>
+    <button
+        type="button"
+        class="btn-close"
+        aria-label="Cerrar"
+        (click)="activeModal.dismiss()"
+    ></button>
+</div>
+
+<div class="modal-body">
+    @if (bloqueadoPorBorrador) {
+        <div class="alert alert-warning" role="alert">
+            Ya existe un tablero sin confirmar para el {{ fechaSeleccionada }}.
+            Resuélvalo desde el Tablero de Asignaciones antes de continuar.
+        </div>
+    }
+
+    <!-- Filtros: fecha + cliente -->
+    <div class="row g-2 mb-3">
+        <div class="col-5 d-flex align-items-end">
+            <!-- IZQUIERDA: botones de visibilidad (stubs) -->
+            <div class="d-flex justify-content-start">
+                <button
+                    class="btn btn-outline-secondary botonera btn-chofer"
+                    (click)="openModalActivos('choferes')"
+                >
+                    Choferes
+                </button>
+                <button
+                    class="btn btn-outline-secondary botonera btn-chofer"
+                    (click)="openModalActivos('proveedores')"
+                >
+                    Proveedores
+                </button>
+                <button
+                    class="btn btn-outline-secondary botonera btn-chofer"
+                    (click)="openModalActivos('clientes')"
+                >
+                    Clientes
+                </button>
+                <button
+                    class="btn btn-outline-secondary botonera btn-chofer"
+                    (click)="openModalNoOperativos()"
+                >
+                    No Operativos
+                </button>
+            </div>
+        </div>
+        <div class="col-2">
+            <label class="form-label fw-bold">Fecha</label>
+            <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="fechaSeleccionada"
+                (change)="onFechaChange()"
+            />
+        </div>
+        <div class="col-5">
+            <label class="form-label fw-bold">Cliente</label>
+            <select
+                class="form-select"
+                [(ngModel)]="clienteSeleccionado"
+                [disabled]="bloqueadoPorBorrador"
+            >
+                <option [ngValue]="null">Seleccione un cliente...</option>
+                @for (cliente of clientesActivos; track cliente.idCliente) {
+                    <option [ngValue]="cliente">
+                        {{ cliente.razonSocial }}
+                    </option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="row g-2 flex-grow-1" style="min-height: 0">
+        <!-- Choferes directos disponibles -->
+        <div class="col-6 d-flex flex-column h-100">
+            <div class="card flex-grow-1" style="min-height: 0">
+                <div class="card-header fw-bold">
+                    Choferes directos disponibles
+                </div>
+                <div
+                    class="card-body flex-grow-1"
+                    style="overflow-y: auto; min-height: 0"
+                >
+                    @for (
+                        x of choferesDirectosDisponibles;
+                        track x.chofer.idChofer
+                    ) {
+                        <div
+                            class="form-check d-flex align-items-center justify-content-between mb-1"
+                        >
+                            <div class="form-check">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    [id]="'chofer-' + x.chofer.idChofer"
+                                    [checked]="
+                                        choferesSeleccionadosIds.has(
+                                            x.chofer.idChofer
+                                        )
+                                    "
+                                    [disabled]="bloqueadoPorBorrador"
+                                    (change)="
+                                        toggleChofer(
+                                            x.chofer.idChofer,
+                                            $any($event.target).checked
+                                        )
+                                    "
+                                />
+                                <label
+                                    class="form-check-label entidad"
+                                    [for]="'chofer-' + x.chofer.idChofer"
+                                >
+                                    {{ x.chofer.datosPersonales.apellido }},
+                                    {{ x.chofer.datosPersonales.nombre }}
+                                </label>
+                            </div>
+                            <div>
+                                @for (v of x.vehiculos; track v.id) {
+                                    @let estilo =
+                                        getEstiloCategoria(
+                                            v.categoria.catOrden
+                                        );
+                                    <span
+                                        class="badge categoria-badge ms-1"
+                                        [ngClass]="estilo.clase"
+                                        [ngStyle]="estilo.estilo"
+                                        >{{ v.categoria.nombre }}</span
+                                    >
+                                }
+                            </div>
+                        </div>
+                    } @empty {
+                        <p class="text-muted small mb-0">
+                            Sin choferes directos disponibles.
+                        </p>
+                    }
+                </div>
+            </div>
+
+            @if (choferesDirectosNoOperativos.length > 0) {
+                <div class="card mt-2 flex-grow-1" style="min-height: 0">
+                    <div class="card-header fw-bold">
+                        Choferes directos no operativos
+                    </div>
+                    <div
+                        class="card-body flex-grow-1"
+                        style="overflow-y: auto; min-height: 0"
+                    >
+                        @for (
+                            x of choferesDirectosNoOperativos;
+                            track x.chofer.idChofer
+                        ) {
+                            <div
+                                class="form-check d-flex align-items-center justify-content-between mb-1 opacity-50"
+                                [title]="
+                                    getMotivoNoDisponibilidad(x.chofer.idChofer)
+                                "
+                            >
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        disabled
+                                    />
+                                    <label class="form-check-label entidad">
+                                        {{ x.chofer.datosPersonales.apellido }},
+                                        {{ x.chofer.datosPersonales.nombre }}
+                                    </label>
+                                </div>
+                                <span class="small text-muted fs-5"
+                                    >No disponible</span
+                                >
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Proveedores activos -->
+        <div class="col-6 h-100">
+            <div class="card h-100">
+                <div class="card-header fw-bold">Proveedores activos</div>
+                <div
+                    class="card-body flex-grow-1"
+                    style="overflow-y: auto; min-height: 0"
+                >
+                    @for (x of proveedoresBase; track x.proveedor.idProveedor) {
+                        <div
+                            class="form-check d-flex align-items-center justify-content-between mb-1"
+                        >
+                            <div class="form-check">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    [id]="
+                                        'proveedor-' + x.proveedor.idProveedor
+                                    "
+                                    [checked]="
+                                        proveedoresSeleccionadosIds.has(
+                                            x.proveedor.idProveedor
+                                        )
+                                    "
+                                    [disabled]="bloqueadoPorBorrador"
+                                    (change)="
+                                        toggleProveedor(
+                                            x.proveedor.idProveedor,
+                                            $any($event.target).checked
+                                        )
+                                    "
+                                />
+                                <label
+                                    class="form-check-label"
+                                    [for]="
+                                        'proveedor-' + x.proveedor.idProveedor
+                                    "
+                                >
+                                    {{ x.proveedor.razonSocial }}
+                                </label>
+                            </div>
+                            <div>
+                                @for (v of x.vehiculos; track v.id) {
+                                    @let estilo =
+                                        getEstiloCategoria(
+                                            v.categoria.catOrden
+                                        );
+                                    <span
+                                        class="badge categoria-badge ms-1"
+                                        [ngClass]="estilo.clase"
+                                        [ngStyle]="estilo.estilo"
+                                        >{{ v.categoria.nombre }}</span
+                                    >
+                                }
+                            </div>
+                        </div>
+                    } @empty {
+                        <p class="text-muted small mb-0">
+                            Sin proveedores activos.
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading) {
+        <app-spinner></app-spinner>
+    }
+</div>
+
+<div class="modal-footer">
+    <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="activeModal.dismiss()"
+        [disabled]="isLoading"
+    >
+        Cancelar
+    </button>
+    <button
+        type="button"
+        class="btn btn-primary"
+        (click)="altaOp()"
+        [disabled]="isLoading || bloqueadoPorBorrador"
+    >
+        Crear y dar de alta
+    </button>
+</div>

@@ -52,6 +52,12 @@ export class AsignacionService implements OnDestroy {
     return data ? { ...data, idAsignacion: fecha } : null;
   }
 
+  /** Indica si existe un tablero para la fecha que aún no fue confirmado (asignado:false). */
+  async existeBorradorSinConfirmar(fecha: string): Promise<boolean> {
+    const actual = await this.getTableroPorFecha(fecha);
+    return actual !== null && actual.asignado === false;
+  }
+
   // ---- Confirmación (NO persiste; arma para el batch del coordinador) ----
 
   /** Construye la Asignacion lista para persistir con asignado:true. NO escribe. */

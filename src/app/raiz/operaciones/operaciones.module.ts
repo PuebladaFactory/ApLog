@@ -13,7 +13,6 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
 import { ModalResumenOpComponent } from './modal-resumen-op/modal-resumen-op.component';
-import { CargaMultipleComponent } from './carga-multiple/carga-multiple.component';
 
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AgGridModule } from 'ag-grid-angular';
@@ -28,6 +27,7 @@ import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 import { OperacionesTableComponent } from './operaciones-table/operaciones-table.component';
 import { TableroAsignacionesComponent } from './tablero-asignaciones/tablero-asignaciones.component';
 import { OperacionesEditorComponent } from './operaciones-editor/operaciones-editor.component';
+import { CargaAsignacionComponent } from './carga-asignacion/carga-asignacion.component';
 import { ɵɵDir } from "@angular/cdk/scrolling";
 
 
@@ -37,7 +37,6 @@ import { ɵɵDir } from "@angular/cdk/scrolling";
   declarations: [
     OpControlComponent,     
     ModalResumenOpComponent,
-    CargaMultipleComponent, 
     TableroDiarioComponent,
     CargaTableroDiarioComponent,
     ModalObjetosActivosComponent,
@@ -46,6 +45,7 @@ import { ɵɵDir } from "@angular/cdk/scrolling";
     OperacionesTableComponent,
     TableroAsignacionesComponent,
     OperacionesEditorComponent,
+    CargaAsignacionComponent,
   ],
   imports: [
     CommonModule,

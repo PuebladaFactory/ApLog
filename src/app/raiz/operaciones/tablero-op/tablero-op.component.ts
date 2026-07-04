@@ -9,13 +9,13 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalResumenOpComponent } from '../modal-resumen-op/modal-resumen-op.component';
-import { CargaMultipleComponent } from '../carga-multiple/carga-multiple.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { TableroService } from 'src/app/servicios/tablero/tablero.service';
 import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
+import { CargaAsignacionComponent } from '../carga-asignacion/carga-asignacion.component';
 
 // =====================
 // MODELOS
@@ -781,7 +781,8 @@ onResizeEnd = () => {
 
   modalCargaMultiple(){
     {
-      const modalRef = this.modalService.open(CargaMultipleComponent, {
+      
+      const modalRef = this.modalService.open(CargaAsignacionComponent, {
         windowClass: "modal-super-xl",
         centered: true,
         size: "xl",

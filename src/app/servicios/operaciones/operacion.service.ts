@@ -197,15 +197,16 @@ export class OperacionService implements OnDestroy {
 
   /** Alta atómica de N operaciones + el tablero de la fecha, desde OperacionCreada[].
    *  Recibe las ops FINALES (completadas en operaciones-table). Calcula valores,
-   *  reconstruye el sujeto del item desde la op y persiste atómicamente.
+   *  reconstruye el sujeto y el ref del item desde la op y persiste atómicamente.
    *  NOTA anti-duplicado: el bloqueo del botón durante la llamada es responsabilidad
    *  del COMPONENTE (no acá). */
   async altaDesdeAsignacion(
     fecha: string,
     creadas: OperacionCreada[],
+    siExisteBorrador: 'reemplazar' | 'bloquear' = 'reemplazar',
   ): Promise<Resultado<{ creadas: OperacionCreada[]; errores: ErrorCreacionOp[] }>> {
 
-    // 3. CALCULAR VALORES + RECONSTRUIR SUJETO DESDE OP FINAL (un solo recorrido, antes de tocar red)
+    // 3. CALCULAR VALORES + RECONSTRUIR SUJETO/REF DESDE OP FINAL (un solo recorrido, antes de tocar red)
     for (const c of creadas) {
       c.operacion = this.calcularValoresIniciales(c.operacion);
 
@@ -243,6 +244,32 @@ export class OperacionService implements OnDestroy {
           idVehiculo: op.vehiculo.id,
         };
       }
+
+      // Reconstruye el ref con los datos reales de la op final. Para tablero-asignaciones
+      // es idempotente (ya viene correcto desde el pool). Para carga-multiple (o cualquier
+      // caller que no conozca el vehículo específico al armar el item), corrige el
+      // placeholder inicial (dominio:'', categoria:{catOrden:0,nombre:''}) con los datos
+      // reales una vez que operaciones-editor resolvió el vehículo pendiente. Único punto
+      // de verdad para "cómo se ve un AsignacionItem persistido".
+      c.item.ref = {
+        dominio:   op.vehiculo.dominio,
+        categoria: op.vehiculo.categoria,
+        asignadoA: tipo === 'proveedor'
+          ? { tipo: 'proveedor', idProveedor: op.proveedor!.id, razonSocial: op.proveedor!.razonSocial }
+          : { tipo: 'chofer', idChofer: op.chofer.id, nombre: op.chofer.nombre, apellido: op.chofer.apellido },
+      };
+    }
+
+    // 3.5. TABLERO EXISTENTE — leer para decidir si hay que bloquear por borrador sin confirmar
+    const existente = await this.asignacionService.getTableroPorFecha(fecha);
+    if (existente !== null && existente.asignado === false && siExisteBorrador === 'bloquear') {
+      return {
+        exito: false,
+        mensaje: `Existe un borrador de tablero sin confirmar para el ${fecha}. ` +
+                 `Para dar de alta estas operaciones primero debe resolver ese borrador ` +
+                 `desde el Tablero de Asignaciones (guardarlo, confirmarlo o eliminarlo).`,
+        objeto: { creadas, errores: [] },
+      };
     }
 
     // 4. VALIDAR PENDIENTES — al alta, chofer y vehículo deben estar resueltos SIEMPRE
@@ -267,7 +294,9 @@ export class OperacionService implements OnDestroy {
       });
 
       // 6. ARMAR TABLERO — items ya tienen idOperacion y sujeto reconstruido
-      const asignacion = this.asignacionService.confirmarTablero(fecha, creadas.map(c => c.item));
+      const itemsPrevios = (existente && existente.asignado === true) ? existente.items : [];
+      const asignacion = this.asignacionService.confirmarTablero(
+        fecha, [...itemsPrevios, ...creadas.map(c => c.item)]);
 
       // 7. ESCRIBIR (batch atómico): ops 'crear', tablero 'reemplazar'
       const escrituras: EscrituraBatch[] = [

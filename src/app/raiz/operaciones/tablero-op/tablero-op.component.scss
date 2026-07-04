@@ -108,6 +108,13 @@ table tbody tr {
   background-color: rgba(0, 0, 0, 0.4);
 }
 
+::ng-deep .modal-super-xl .modal-content > * {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .no-operativo {
   opacity: 0.5;
   filter: grayscale(1);

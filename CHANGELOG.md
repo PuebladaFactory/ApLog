@@ -551,11 +551,86 @@ contrato provisorio.
 
 ---
 
+#### Módulo Operaciones — Componente carga-asignacion (migración de carga-multiple)
+
+Componente nuevo creado de cero, reemplaza a `carga-multiple` (ELIMINADO en esta
+misma sesión — ver más abajo). Ubicación:
+`src/app/raiz/operaciones/carga-asignacion/`. Declarado en OperacionesModule.
+
+**Selección sin pool de vehículos:** a diferencia de `tablero-asignaciones`
+(que arrastra vehículos concretos vía drag&drop), acá se eligen CHOFERES
+DIRECTOS o PROVEEDORES (checkboxes, dos listas separadas — no choferes de
+proveedor sueltos como en el viejo). Filtro defensivo asimétrico: choferes
+directos sin vehículo asociado se excluyen (tener vehículo es requisito de
+alta de chofer directo — seguro, no regla activa); proveedores sin vehículo
+NO se excluyen (caso válido, se resuelve después).
+
+**Pre-resolución de vehículo único:** si la entidad seleccionada tiene
+exactamente un vehículo, `armarItems()` completa `sujeto.idVehiculo` y `ref`
+(dominio, categoria) de inmediato — sin necesidad de elegir en
+operaciones-editor. Con 2+ vehículos, queda pendiente como antes.
+
+**Detección temprana de borrador sin confirmar:** nuevo método
+`AsignacionService.existeBorradorSinConfirmar(fecha)`. Al cambiar de fecha,
+si existe un tablero borrador para esa fecha, deshabilita todo el formulario
+y muestra aviso — evita que el usuario arme una selección que
+`altaDesdeAsignacion` bloquearía igual al final.
+
+**Flujo de alta:** igual a `tablero-asignaciones.altaOp()` en 3 etapas
+(`crearOperacionesDesdeAsignacion` → modal `operaciones-editor` →
+`altaDesdeAsignacion(fecha, opsFinales, 'bloquear')`), sin borrador propio ni
+modo edición/visor — no hay estado de larga vida entre navegaciones.
+
+**Orden alfabético** en las tres listas de selección (clientes, choferes
+directos, proveedores).
+
+**`OperacionService.altaDesdeAsignacion` extendido:**
+- Nuevo parámetro `siExisteBorrador: 'reemplazar' | 'bloquear' = 'reemplazar'`.
+- Antes de armar el tablero final, lee el existente vía `getTableroPorFecha`:
+  si `asignado === true`, fusiona `existente.items` con `creadas` (habilita
+  altas parciales repetidas sobre una fecha ya confirmada — necesario para que
+  `carga-asignacion` pueda agregar operaciones a un tablero ya dado de alta
+  desde `tablero-asignaciones`). Si `asignado === false` (borrador) y el modo
+  es `'bloquear'`, aborta sin escribir nada.
+- `c.item.ref` ahora se reconstruye en el mismo paso donde ya se reconstruía
+  `c.item.sujeto`, usando los datos finales de la op. Idempotente para
+  `tablero-asignaciones` (el ref ya nacía correcto desde el pool); corrige el
+  placeholder (`dominio:''`, `categoria:{catOrden:0,nombre:''}`) que nace en
+  `carga-asignacion` cuando el vehículo queda pendiente hasta operaciones-editor.
+
+**Layout del modal:** fix de altura flex (`.modal-content > *`) agregado en
+`tablero-op.component.scss` (único caller actual de `modal-super-xl`) — el
+host del componente ahora se estira para ocupar el alto fijo del modal,
+corrigiendo que el footer quedara a mitad de altura. Cards de choferes/
+proveedores igualadas en alto (flex-grow-1/h-100). DEUDA: fix scopeado a ese
+archivo, no global — replicar si otro caller abre el mismo modal sin pasar
+por tablero-op.
+
+**Eliminación de `carga-multiple` (mismo frente, cierre):**
+- Diagnóstico previo confirmó sin referencias cruzadas: `OperacionRuntime`,
+  `TarifaBase`, `GrupoTabla` eran definiciones/copias locales de
+  `carga-multiple.component.ts`, sin uso externo. Las copias de
+  `OperacionRuntime` en `carga-tablero-diario` y `operaciones-table` son
+  independientes (ya documentado en Fase D), no importan del archivo eliminado.
+- Eliminados: `carga-multiple.component.ts/.html/.scss/.spec.ts` completos.
+- `OperacionesModule`: quitado import + declaración.
+- `tablero-op.component.ts`: quitado import muerto (el call site ya abría
+  `CargaAsignacionComponent` desde antes de esta limpieza).
+- `carga-asignacion` queda SIN CALLER: nada abre el modal todavía. Decidir en
+  sesión futura qué reemplaza la apertura en `tablero-op`.
+- Switch PARCIAL, no el switch completo de la deuda crítica: `tablero-diario`,
+  `operaciones-table` y los métodos viejos de `TableroService` siguen
+  pendientes e intactos.
+
+---
+
 ### Pendiente
 
-- Módulo Operaciones — fase de conexión: `carga-multiple` (operaciones-editor YA migrado);
-  switch (activar ruta `tablero-asignaciones`, eliminar `tablero-diario` + `operaciones-table`)
-  diferido hasta migrar `carga-multiple` y resolver control de rol demo
+- Módulo Operaciones — fase de conexión: `carga-multiple` ELIMINADO,
+  `carga-asignacion` y `operaciones-editor` YA migrados, sin caller que abra
+  `carga-asignacion` todavía; switch (activar ruta `tablero-asignaciones`,
+  eliminar `tablero-diario` + `operaciones-table`) diferido hasta migrar esos
+  dos componentes y resolver control de rol demo
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)
 - Módulo Liquidaciones
 - Módulo Facturación
