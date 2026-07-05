@@ -18,13 +18,10 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AgGridModule } from 'ag-grid-angular';
 
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { TableroDiarioComponent } from './tablero-diario/tablero-diario.component';
-import { CargaTableroDiarioComponent } from './carga-tablero-diario/carga-tablero-diario.component';
 import { ModalObjetosActivosComponent } from './modal-objetos-activos/modal-objetos-activos.component';
 import { ModalChoferesNoDisponiblesComponent } from './modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
 import { TableroOpComponent } from './tablero-op/tablero-op.component';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
-import { OperacionesTableComponent } from './operaciones-table/operaciones-table.component';
 import { TableroAsignacionesComponent } from './tablero-asignaciones/tablero-asignaciones.component';
 import { OperacionesEditorComponent } from './operaciones-editor/operaciones-editor.component';
 import { CargaAsignacionComponent } from './carga-asignacion/carga-asignacion.component';
@@ -35,14 +32,11 @@ import { ɵɵDir } from "@angular/cdk/scrolling";
 
 @NgModule({
   declarations: [
-    OpControlComponent,     
+    OpControlComponent,
     ModalResumenOpComponent,
-    TableroDiarioComponent,
-    CargaTableroDiarioComponent,
     ModalObjetosActivosComponent,
     ModalChoferesNoDisponiblesComponent,
     TableroOpComponent,
-    OperacionesTableComponent,
     TableroAsignacionesComponent,
     OperacionesEditorComponent,
     CargaAsignacionComponent,

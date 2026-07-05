@@ -616,21 +616,71 @@ por tablero-op.
 - `OperacionesModule`: quitado import + declaración.
 - `tablero-op.component.ts`: quitado import muerto (el call site ya abría
   `CargaAsignacionComponent` desde antes de esta limpieza).
-- `carga-asignacion` queda SIN CALLER: nada abre el modal todavía. Decidir en
-  sesión futura qué reemplaza la apertura en `tablero-op`.
 - Switch PARCIAL, no el switch completo de la deuda crítica: `tablero-diario`,
   `operaciones-table` y los métodos viejos de `TableroService` siguen
   pendientes e intactos.
+
+(Corrección de redacción: una versión anterior de esta entrada afirmaba
+erróneamente que carga-asignacion no tenía caller — sí lo tenía, ver
+CLAUDE.md sección 'Switch completado' para el estado confirmado.)
+
+---
+
+#### Switch completo — eliminación de tablero-diario / carga-tablero-diario / operaciones-table
+
+Cierre del frente de migración a Asignaciones. Diagnóstico previo (mismo
+criterio ya aplicado a carga-multiple) confirmó que los tres formaban un
+bloque único: operaciones-table se usa como selector embebido
+(app-operaciones-table) dentro de carga-tablero-diario, que a su vez solo
+es abierto como modal desde tablero-diario — ningún componente eliminable
+por separado.
+
+**Eliminados** (archivos completos, .ts/.html/.scss/.spec.ts):
+- tablero-diario
+- carga-tablero-diario
+- operaciones-table
+
+**Interfaces eliminadas** (definidas en tablero-diario.component.ts,
+sin consumidores fuera del bloque): TableroDiario, ChoferAsignadoBase.
+
+**Métodos eliminados** (sin caller externo al bloque, confirmado por
+diagnóstico):
+- TableroService: getTableroPorFecha (viejo, sobre colección tableroDiario
+  — no confundir con el de AsignacionService), guardarTablero,
+  altaMultipleOperacionesYActualizarTablero (ya @deprecated),
+  getCategoriaDesdeOperacion (sin caller propio, solo interno al anterior),
+  deleteTablero (ya comentado).
+- DbFirestoreService.getTableroPorFecha: no contemplado en el alcance
+  original — detectado durante la ejecución al quedar con import roto
+  (TableroDiario) tras la eliminación de tablero-diario.component.ts.
+  Verificado sin caller propio antes de eliminar.
+
+**Routing y UI:**
+- Ruta 'diario' quitada de operaciones-routing.module.ts.
+- Pestaña "Tablero Diario" quitada del array tabs de OpControlComponent
+  (shell de Operaciones). Única pestaña de tablero de asignaciones activa:
+  "Tablero Asignaciones" → tablero-asignaciones.
+
+**Corrección de diagnóstico durante la sesión:** un diagnóstico previo
+había calificado a operaciones-table como "huérfano, eliminable de forma
+aislada" — incorrecto: solo se había buscado por nombre de clase/modal.open(),
+no por selector en templates. Corregido antes de ejecutar ningún borrado.
+Mismo error de método se repitió al evaluar si '/diario'/'asignaciones'
+tenían acceso de UI real: la búsqueda inicial solo cubrió routerLink
+literal, sin detectar la navegación programática (router.navigate()) que
+arma OpControlComponent — ambas rutas sí eran alcanzables por pestaña,
+no solo por URL manual. Corregido antes de decidir el alcance del switch.
+
+**Deuda nueva detectada (no resuelta, no bloqueante):** desincronización
+entre `selectedTab` y la ruta activa en OpControlComponent — el resaltado
+de pestaña no se sincroniza con la URL real al refrescar o entrar por
+deep-link. Mismo patrón shell-con-pestañas se repite en ~12 componentes
+*-control del proyecto. Ver CLAUDE.md para detalle.
 
 ---
 
 ### Pendiente
 
-- Módulo Operaciones — fase de conexión: `carga-multiple` ELIMINADO,
-  `carga-asignacion` y `operaciones-editor` YA migrados, sin caller que abra
-  `carga-asignacion` todavía; switch (activar ruta `tablero-asignaciones`,
-  eliminar `tablero-diario` + `operaciones-table`) diferido hasta migrar esos
-  dos componentes y resolver control de rol demo
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)
 - Módulo Liquidaciones
 - Módulo Facturación

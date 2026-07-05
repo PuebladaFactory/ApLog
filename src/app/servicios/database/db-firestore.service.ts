@@ -32,7 +32,6 @@ import { Operacion } from "src/app/interfaces/operacion";
 import Swal from "sweetalert2";
 import { Firestore } from "@angular/fire/firestore";
 import { inject } from "@angular/core";
-import { TableroDiario } from "src/app/raiz/operaciones/tablero-diario/tablero-diario.component";
 import { InformeOp } from "src/app/interfaces/informe-op";
 import { InformeLiq, ValoresFinancieros } from "src/app/interfaces/informe-liq";
 import { NumeradorService } from "../numerador/numerador.service";
@@ -1417,13 +1416,6 @@ export class DbFirestoreService {
     const docRef = doc(this.firestore, `Vantruck/datos/${coleccion}/${id}`);
     const cleanData = { ...data, id }; // fuerza que el id del objeto coincida con el del doc
     return await setDoc(docRef, cleanData);
-  }
-
-  async getTableroPorFecha(fecha: string): Promise<TableroDiario | null> {
-    const docRef = doc(this.firestore, `Vantruck/datos/tableroDiario/${fecha}`);
-    const snapshot = await getDoc(docRef);
-    if (!snapshot.exists()) return null;
-    return snapshot.data() as TableroDiario;
   }
 
   async getItemByField<T>(

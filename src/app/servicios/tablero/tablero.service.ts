@@ -5,10 +5,8 @@ import { ChoferService } from '../choferes/chofer.service';
 import { LogService } from '../log/log.service';
 import { AsignacionService } from '../operaciones/asignacion.service';
 import { OperacionFactoryService } from '../operaciones/operacion-factory.service';
-import { ChoferAsignadoBase, TableroDiario } from 'src/app/raiz/operaciones/tablero-diario/tablero-diario.component';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { ConId } from 'src/app/interfaces/conId';
-import { Categoria } from 'src/app/interfaces/chofer';
 
 @Injectable({
   providedIn: 'root'
@@ -23,77 +21,6 @@ export class TableroService {
     private asignacionService: AsignacionService,
     private operacionFactory:  OperacionFactoryService,
   ) {}
-
-  // ---- Métodos del modelo viejo: siguen activos (callers externos aún no migrados) ----
-
-  /** @deprecated Modelo viejo (tableroDiario). Caller: tablero-diario.component. */
-  async getTableroPorFecha(fecha: string): Promise<TableroDiario | null> {
-    return await this.dbFirestore.getTableroPorFecha(fecha);
-  }
-
-  /** @deprecated Modelo viejo (tableroDiario). Caller: tablero-diario.component. */
-  async guardarTablero(tablero: TableroDiario, accion: string): Promise<void> {
-    await this.dbFirestore.setItem<TableroDiario>('tableroDiario', tablero.id, tablero);
-    this.storageService.logSimple(
-      tablero.timestamp,
-      accion,
-      'tableroDiario',
-      `Tablero Diario del dia ${tablero.fecha}, guardado`,
-      true,
-    );
-  }
-
-  /** @deprecated Modelo viejo (tableroDiario). Caller: carga-multiple.component. */
-  async altaMultipleOperacionesYActualizarTablero(operaciones: Operacion[]): Promise<{ exito: boolean; mensaje: string }> {
-    try {
-      if (!operaciones.length) {
-        return { exito: false, mensaje: 'No hay operaciones para procesar.' };
-      }
-
-      const fechaStr = (typeof operaciones[0].fecha === 'string')
-        ? operaciones[0].fecha
-        : new Date(operaciones[0].fecha).toISOString().split('T')[0];
-
-      let tablero: TableroDiario = await this.getTableroPorFecha(fechaStr) ?? {
-        id: fechaStr,
-        fecha: fechaStr,
-        asignaciones: {},
-        timestamp: Date.now(),
-        asignado: true,
-      };
-
-      await this.dbFirestore.guardarMultiple(operaciones, 'operaciones', 'idOperacion', 'operaciones');
-
-      for (const op of operaciones) {
-        const idCliente = op.cliente.id;
-        const categoria = this.getCategoriaDesdeOperacion(op);
-        const asignacion: ChoferAsignadoBase = {
-          idChofer:          op.chofer.id,
-          categoriaAsignada: categoria,
-          tEventual:         op.tarifaTipo.eventual,
-          observaciones:     op.observaciones ?? '',
-          hojaDeRuta:        op.hojaRuta ?? '',
-          idOperacion:       op.idOperacion,
-        };
-        if (!tablero.asignaciones[idCliente]) {
-          tablero.asignaciones[idCliente] = [];
-        }
-        tablero.asignaciones[idCliente].push(asignacion);
-      }
-
-      tablero.timestamp = Date.now();
-      await this.guardarTablero(tablero, 'ACTUALIZACION');
-
-      const ids = operaciones.map(op => op.idOperacion);
-      this.storageService.logMultiplesOp(ids, 'ALTA', 'operaciones', 'Alta de Operación', true);
-
-      return { exito: true, mensaje: 'Operaciones y tablero guardados correctamente.' };
-
-    } catch (error) {
-      console.error('Error en alta múltiple:', error);
-      return { exito: false, mensaje: 'Error al guardar operaciones o actualizar tablero.' };
-    }
-  }
 
   // ---- Fachada hacia el modelo nuevo (AsignacionService) ----
 
@@ -171,19 +98,4 @@ export class TableroService {
   private normalizarFecha(fecha: string): string {
     return typeof fecha === 'string' ? fecha : new Date(fecha).toISOString().split('T')[0];
   }
-
-  private getCategoriaDesdeOperacion(op: Operacion): Categoria {
-    // TODO: refactor Tablero — la categoría ya está en op.vehiculo (RefVehiculo).
-    // Con las nuevas entidades del tablero este método puede desaparecer.
-    return op.vehiculo.categoria ?? { catOrden: 0, nombre: 'Sin categoría' };
-  }
-
-  // ---- Sin callers tras la reescritura — comentado hasta decidir eliminación ----
-
-  // /** @deprecated Sin callers externos tras la fachada. Los métodos de baja del modelo
-  //  *  viejo lo llamaban internamente; la fachada usa marcarItemAnulado en su lugar.
-  //  *  TODO: decidir si se necesita al migrar tablero-diario al modelo nuevo. */
-  // async deleteTablero(id: string): Promise<void> {
-  //   return this.dbFirestore.deleteItem('tableroDiario', id);
-  // }
 }

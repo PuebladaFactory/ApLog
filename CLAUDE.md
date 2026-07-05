@@ -74,7 +74,7 @@ Las rutas declaran roles requeridos en `data: { roles: [...] }`. `RoleGuard` ver
 El refactor arquitectónico está migrando el manejo de estado desde un store central
 único hacia servicios por entidad. Conviven dos esquemas según el módulo:
 
-**Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; fase de conexión con `tablero-diario` completada mediante el componente nuevo `tablero-asignaciones`; `carga-multiple` migrado a `carga-asignacion` y switch completado (carga-multiple eliminado); pendiente decidir nuevo call site en tablero-op; coordinadores `bajaOperacion`/`editarOperacion`/`restaurarOperacion` en OperacionService pendientes):
+**Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; switch completo de `tablero-diario` → `tablero-asignaciones` (tablero-diario, carga-tablero-diario y operaciones-table eliminados); `carga-multiple` migrado a `carga-asignacion` y switch completado (carga-multiple eliminado), con caller confirmado en tablero-op (`modalCargaMultiple()`); coordinadores `bajaOperacion`/`editarOperacion`/`restaurarOperacion` en OperacionService pendientes):
 cada entidad tiene su `XxxService` con un BehaviorSubject propio que mantiene el estado
 en memoria (NO en localStorage). El `init()` del servicio abre el listener de Firestore
 y se llama al arrancar la app. Los componentes se suscriben directamente al observable
@@ -310,7 +310,7 @@ Ahora son `| null`. Invariante confirmado: `datosTarifaEventual !== null ⟺ tar
 
 #### OperacionRuntime: divergencia runtime-vs-tipo
 
-Los componentes de carga (`carga-multiple`, `carga-tablero-diario`, `operaciones-table`) usan un tipo local `OperacionRuntime`. La factory mete un `Chofer` COMPLETO en runtime, pese a que `Operacion.chofer` es `RefChofer`. El tipo se redefine para reflejar el runtime:
+Los componentes de carga del modelo viejo (`carga-multiple`, `carga-tablero-diario`, `operaciones-table` — los tres eliminados, ver "Deuda conocida") usaban un tipo local `OperacionRuntime`. La factory metía un `Chofer` COMPLETO en runtime, pese a que `Operacion.chofer` es `RefChofer`. El tipo se redefinía para reflejar el runtime (ejemplo histórico — el principio general de la última línea sigue vigente):
 ```typescript
 type OperacionRuntime = Omit<Operacion, 'chofer'> & {
   chofer: Chofer;            // runtime: chofer completo (legacy)
@@ -327,8 +327,8 @@ Se agregó `vendedor?: string[]` a `RefCliente` (snapshot). La comisión de vend
 
 #### Métodos/bloques comentados (código muerto del modelo viejo)
 
-- `limpiarPropiedadesChoferEnOperaciones` (carga-tablero-diario): reconstruía un Chofer completo desde el snapshot; comentado entero + su llamada. Recuperar/eliminar en el refactor del Tablero de asignaciones.
-- `getCategoriaDesdeOperacion` (tablero.service) y `getCategoria` (tablero-op): colapsados a `op.vehiculo.categoria` (la categoría ya está en el snapshot).
+- `limpiarPropiedadesChoferEnOperaciones` (carga-tablero-diario): reconstruía un Chofer completo desde el snapshot; estaba comentado entero + su llamada. Resuelto: el archivo entero (`carga-tablero-diario`) fue eliminado en el switch de Asignaciones — ya no existe.
+- `getCategoria` (tablero-op): colapsado a `op.vehiculo.categoria` (la categoría ya está en el snapshot) — sigue vigente. `getCategoriaDesdeOperacion` (tablero.service) tuvo el mismo colapso primero y luego fue eliminado por completo en el switch de Asignaciones (sin caller externo).
 
 ### Operatoria compleja atómica (Operaciones en adelante)
 
@@ -397,11 +397,12 @@ El color de una categoría depende de su posición en `categoriasOrdenadas` (lis
 en qué posición aparece en el array que itera el template. Garantiza que el color no cambie al
 reordenar, filtrar o agregar categorías intermedias.
 
-**Flujo de alta de dos caminos (tablero / carga-multiple) que convergen.**
-Los dos caminos de alta convergen en `operaciones-table` (editor de ops finales) y luego en
-`altaDesdeAsignacion` (persistencia). La tabla completa los datos que el usuario introduce; el
-servicio hace el procesamiento final (valores, sujeto, validación, persistencia).
-`altaDesdeAsignacion` es el paso FINAL de persistencia, no el único del flujo.
+**Flujo de alta de dos caminos (tablero-asignaciones / carga-asignacion) que convergen.**
+Los dos caminos de alta convergen en `operaciones-editor` (editor de ops finales — reemplazó a
+`operaciones-table`, eliminado) y luego en `altaDesdeAsignacion` (persistencia). El editor
+completa los datos que el usuario introduce; el servicio hace el procesamiento final (valores,
+sujeto, validación, persistencia). `altaDesdeAsignacion` es el paso FINAL de persistencia, no el
+único del flujo.
 
 **Estado de larga vida en un service singleton, no en el componente ni en localStorage.**
 El borrador en curso (trabajo no persistido que debe sobrevivir a salir/entrar de un componente)
@@ -432,24 +433,39 @@ cargados.
 
 Deuda técnica activa. Actualizar cuando se salda.
 
-### Deuda crítica — tablero-asignaciones (bloquea el switch a producción)
+### Switch completado — tablero-asignaciones / operaciones-editor / carga-asignacion
 
-**Switch diferido:** activar la ruta a `tablero-asignaciones` + eliminar `tablero-diario` +
-eliminar `operaciones-table` + limpiar métodos viejos de `TableroService`
-(`getTableroPorFecha` viejo, `guardarTablero`, `altaMultipleOperacionesYActualizarTablero`,
-`getCategoriaDesdeOperacion`, `deleteTablero`) + interfaces `TableroDiario`/`ChoferAsignadoBase`.
-`operaciones-editor` YA migrado, `carga-asignacion` YA migrado Y `carga-multiple` YA
-ELIMINADO (ver sección propia). Sigue pendiente: decidir qué abre
-`tablero-op.component.ts` en lugar de `carga-multiple` (hoy no hay caller — el import
-fue eliminado sin reemplazo), control de rol demo en tablero-asignaciones, y la
-migración de tablero-diario/operaciones-table.
+tablero-diario, carga-tablero-diario y operaciones-table (y su modal embebido) fueron
+eliminados junto con sus interfaces exclusivas (TableroDiario, ChoferAsignadoBase) y los
+métodos acotados de TableroService/DbFirestoreService que solo ellos usaban
+(getTableroPorFecha viejo, guardarTablero, altaMultipleOperacionesYActualizarTablero,
+getCategoriaDesdeOperacion, deleteTablero — el último ya estaba comentado).
 
-**Control de rol demo ausente:** `tablero-asignaciones` no carga `usuario`; los botones de
-acción no tienen `[disabled]="usuario.roles.demo"`. Debe entrar antes o como parte del switch
-(protección de producción).
+Única ruta de tablero de asignaciones activa hoy: tablero-asignaciones (pestaña 'Tablero
+Asignaciones' en el shell de Operaciones). La pestaña 'Tablero Diario' fue quitada de
+op-control.component.ts. La ruta 'diario' fue quitada del routing — /op/diario ya no
+resuelve a ningún componente.
 
-**Cast `as any` en `fromParent`** (modal `operaciones-table` en `altaOp()`): temporal hasta
-migrar `operaciones-table` al contrato nuevo. Buscar: `// as any temporal`.
+Los dos caminos de alta activos son tablero-asignaciones (principal) y carga-asignacion
+(caso especial — agregar a fecha ya confirmada o alta puntual), ambos convergiendo en
+operaciones-editor + altaDesdeAsignacion.
+
+Nota (no bloqueante, no priorizada): tablero-asignaciones no aplica `[disabled]` por rol
+demo en sus botones de acción. Se abordará, si corresponde, cuando se encare el refactor
+general de Roles.
+
+### Deuda — desincronización selectedTab vs. ruta activa (patrón shell-con-pestañas)
+
+**Desincronización selectedTab vs. ruta activa (OpControlComponent y patrón
+shell-con-pestañas):** el resaltado de la pestaña activa depende solo de clicks previos en
+la sesión del componente (selectedTab), no de la URL real. Al refrescar (F5) o entrar por
+deep-link a una ruta hija (ej. /op/asignaciones), el router-outlet renderiza el componente
+correcto pero la pestaña resaltada queda desincronizada (siempre vuelve a 'Tablero de
+Operaciones'). Detectado en op-control.component.ts durante el switch de Asignaciones; el
+mismo patrón se repite en los otros ~12 componentes *-control del proyecto (uno por módulo
+bajo raiz/). No resuelto, no bloqueante — candidato a frente propio si se decide atacarlo
+(ActivatedRoute + Router.events para sincronizar selectedTab con la URL real, en vez de
+solo con clicks).
 
 ### Deuda menor — tablero-asignaciones
 
@@ -457,8 +473,8 @@ migrar `operaciones-table` al contrato nuevo. Buscar: `// as any temporal`.
 estructuras del modelo viejo; reescribir para `AsignacionItem[]`. Diferido a cierre de módulo.
 
 **No-disponibilidad sin probar end-to-end:** la atenuación de vehículos de proveedor está
-correctamente ausente en el tablero (diferida a operaciones-table), pero verificar la atenuación
-de directos al integrar con datos reales al migrar operaciones-table.
+correctamente ausente en el tablero (diferida a operaciones-editor), pero verificar la
+atenuación de directos al integrar con datos reales en operaciones-editor.
 
 **Persistencia del borrador en F5:** el borrador en curso vive en memoria del service; un F5 lo
 pierde. Si se requiere, persistir solo la fecha en localStorage y recuperar de Firestore (cubre
@@ -474,7 +490,9 @@ personalizadas en el módulo viejo lee `idCliente` esperando number — verifica
 Tarifas. Marcado `// TODO: refactor Tarifas`.
 
 **Estilos duplicados:** las clases SCSS de tarifa eventual/personalizada se copiaron de
-operaciones-table a operaciones-editor. Al eliminar operaciones-table en el switch, consolidar.
+operaciones-table a operaciones-editor. operaciones-table ya fue eliminado en el switch de
+Asignaciones (Bloques 13-19) — pendiente ahora consolidar los estilos duplicados en
+operaciones-editor (ya no hay original que mantenga la copia sincronizada).
 
 **Celdas de tarifa en el template:** los bindings a `datosTarifaEventual`/`datosTarifaPersonalizada`
 usan guarda `@if (objeto)` (no `[disabled]` + `!`): el `disabled` NO impide que Angular evalúe
@@ -485,8 +503,8 @@ cualquier template que bindee tarifas nullable.
 
 `operaciones-table` migrado a un componente NUEVO `operaciones-editor`
 (`src/app/raiz/operaciones/operaciones-editor/`), construido de cero al lado del viejo
-(patrón de migración estructural profunda). `operaciones-table` queda INTACTO hasta el
-switch. Declarado en OperacionesModule junto al viejo.
+(patrón de migración estructural profunda). `operaciones-table` fue eliminado por completo
+en el switch de Asignaciones (Bloques 13-19) — ya no está declarado en OperacionesModule.
 
 **Contrato (cumplido):**
 - Entrada: `@Input() operacionesCreadas: OperacionCreada[]` (lista PLANA, tipada — NO
@@ -523,8 +541,9 @@ cliente está en papelera.
 `calcularValoresIniciales` + persistencia siguen en `altaDesdeAsignacion`. Sin suscripciones
 (resolución síncrona puntual): edita, no observa.
 
-`OperacionRuntime` y `patenteChofer` ELIMINADOS en operaciones-editor (siguen vivos en el
-viejo operaciones-table hasta el switch).
+`OperacionRuntime` y `patenteChofer` ELIMINADOS en operaciones-editor. El viejo
+operaciones-table (que sí los usaba) fue eliminado por completo en el switch de
+Asignaciones — no quedan copias vivas de estos tipos en ningún componente.
 
 ### Componente carga-asignacion (migración de carga-multiple — COMPLETADA)
 
@@ -612,10 +631,12 @@ visualmente de paso.
 completos, entrada quitada de `OperacionesModule`, import muerto quitado de
 `tablero-op.component.ts`. Diagnóstico previo confirmó sin referencias cruzadas
 (`OperacionRuntime`/`TarifaBase`/`GrupoTabla` eran copias locales en
-`carga-tablero-diario`/`operaciones-table`, no compartidas). Sigue sin haber ningún caller
-que abra `carga-asignacion` — `tablero-op.component.ts` quedó con el método
-`modalCargaMultiple()` sin la línea de apertura del modal viejo; decidir en sesión futura si
-se abre `carga-asignacion` ahí o se rediseña el punto de entrada.
+`carga-tablero-diario`/`operaciones-table`, no compartidas — ambos componentes fueron, a su
+vez, eliminados en una sesión posterior junto con `tablero-diario`, ver "Switch completado").
+
+**Caller confirmado:** `tablero-op.component.ts`, método `modalCargaMultiple()` (nombre
+heredado del componente viejo, no renombrado — el cuerpo ya abre `CargaAsignacionComponent`).
+Candidato a renombrar el método en una sesión futura por claridad, no urgente.
 
 ### Deuda — no-disponibilidad y tablero
 
