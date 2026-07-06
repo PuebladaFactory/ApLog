@@ -195,6 +195,8 @@ usuario:any;
       .subscribe(ops => {
         //this.isLoading = true;
         this.operacionesPeriodo = ops;
+        console.log("this.operacionesPeriodo: ", this.operacionesPeriodo);
+        
         this.rebuildDropdownsBase();
         this.syncFiltroLabels();   // 👈 importante
         this.aplicarFiltros();

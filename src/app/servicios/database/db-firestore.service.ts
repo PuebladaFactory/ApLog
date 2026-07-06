@@ -55,7 +55,7 @@ export interface ResultadoConObjeto {
   objeto: any;
 }
 
-export type ModoEscritura = 'crear' | 'reemplazar';
+export type ModoEscritura = 'crear' | 'reemplazar' | 'eliminar';
 
 export interface EscrituraBatch {
   coleccion: string;
@@ -1358,6 +1358,7 @@ export class DbFirestoreService {
    *  El campo 'modo' declara la INTENCIÓN del llamador:
    *   - 'crear'      → escritura que no debería duplicarse (ej. operaciones).
    *   - 'reemplazar' → escritura que sobrescribe deliberadamente (ej. tablero del día).
+   *   - 'eliminar'   → hace batch.delete(ref); 'data' se ignora.
    *  TODO: anti-duplicado — el SDK web (firebase v11) NO expone batch.create(), que
    *  daría "fallar si el id ya existe" de forma atómica. Por ahora AMBOS modos
    *  ejecutan batch.set(). El riesgo de colisión es ínfimo porque los ids de
@@ -1384,8 +1385,10 @@ export class DbFirestoreService {
         // 'crear' debería fallar si el id ya existe. Hoy ambos modos usan set.
         if (e.modo === 'crear') {
           batch.set(ref, e.data);
-        } else {
+        } else if (e.modo === 'reemplazar') {
           batch.set(ref, e.data);
+        } else {
+          batch.delete(ref);
         }
       }
 

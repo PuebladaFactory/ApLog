@@ -17,6 +17,7 @@ import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/forma
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
 import { LogService } from 'src/app/servicios/log/log.service';
 import { Resultado } from 'src/app/interfaces/resultado';
+import { LogDoc } from 'src/app/interfaces/log-doc';
 
 export interface OperacionCreada {
   item:      AsignacionItem;
@@ -343,6 +344,152 @@ export class OperacionService implements OnDestroy {
         objeto: { creadas, errores: [] },
       };
     }
+  }
+
+  /** Baja atómica de una operación NO liquidada (papelera + informes si
+   *  corresponde + anulación del item de asignación). Ownership: OperacionService
+   *  es el dueño (entidad primaria = Operación), AsignacionService es secundario.
+   *  Alcance: SOLO ciclo 'abierta' | 'cerrada'. Liquidadas quedan fuera (revertir
+   *  la liquidación es un gesto previo, propio de LiquidacionService). */
+  async bajaOperacion(op: ConId<Operacion>, motivo: string): Promise<Resultado<void>> {
+
+    if (op.estado.liquidacion.cliente || op.estado.liquidacion.chofer) {
+      return {
+        exito: false,
+        mensaje: `La operación ${op.idOperacion} tiene liquidación en curso o ` +
+                 `completa. Debe revertir la liquidación antes de darla de baja.`,
+      };
+    }
+
+    const tipo = this.choferService.getTipoContratacion(op.chofer.id);
+    if (!tipo) {
+      return {
+        exito: false,
+        mensaje: `No se pudo resolver la contratación del chofer ${op.chofer.id}. ` +
+                 `No se dio de baja la operación.`,
+      };
+    }
+
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: 'operaciones', id: op.idOperacion, data: null, modo: 'eliminar' },
+    ];
+
+    // Informes: SOLO si 'cerrada'. Ausencia = inconsistencia real, aborta todo.
+    if (op.estado.ciclo === 'cerrada') {
+      const infoCliente = await this.db.getByField<any>('informesOpClientes', 'idOperacion', op.idOperacion);
+      if (infoCliente.length === 0) {
+        return {
+          exito: false,
+          mensaje: `Inconsistencia: la operación ${op.idOperacion} está cerrada ` +
+                   `pero no tiene informe en informesOpClientes. Baja abortada.`,
+        };
+      }
+      const coleccionSecundaria = tipo === 'directo' ? 'informesOpChoferes' : 'informesOpProveedores';
+      const infoSecundario = await this.db.getByField<any>(coleccionSecundaria, 'idOperacion', op.idOperacion);
+      if (infoSecundario.length === 0) {
+        return {
+          exito: false,
+          mensaje: `Inconsistencia: la operación ${op.idOperacion} está cerrada ` +
+                   `pero no tiene informe en ${coleccionSecundaria}. Baja abortada.`,
+        };
+      }
+      escrituras.push(
+        { coleccion: 'informesOpClientes', id: infoCliente[0].id, data: null, modo: 'eliminar' },
+        { coleccion: coleccionSecundaria, id: infoSecundario[0].id, data: null, modo: 'eliminar' },
+      );
+    }
+
+    const fecha = op.fecha;
+    const tablero = await this.asignacionService.getTableroPorFecha(fecha);
+    if (!tablero) {
+      return {
+        exito: false,
+        mensaje: `Inconsistencia: no existe tablero de asignaciones para la fecha ` +
+                 `${fecha} de la operación ${op.idOperacion}. Baja abortada.`,
+      };
+    }
+    const items = this.asignacionService.anularItemEnLista(tablero.items, op.idOperacion, motivo);
+
+    const logEntry = this.logService.createLogEntry('BAJA', 'operaciones',
+      `Baja de operación ${op.idOperacion}`, op.idOperacion, true, 0);
+    const idPapelera = this.db.generarId('papelera');
+    const logDoc: LogDoc = { idDoc: logEntry.timestamp, logEntry, objeto: op, motivoBaja: motivo };
+
+    escrituras.push(
+      { coleccion: 'papelera', id: idPapelera, data: logDoc, modo: 'crear' },
+      {
+        coleccion: 'asignaciones', id: fecha,
+        data: this.asignacionService.asignacionToFirestore({ ...tablero, items }),
+        modo: 'reemplazar',
+      },
+    );
+
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      this.logService.logEvent('BAJA', 'operaciones',
+        `Error en baja de operación ${op.idOperacion}: ${e?.message ?? e}`, op.idOperacion, false);
+      return { exito: false, mensaje: `Error al dar de baja la operación: ${e?.message ?? e}.` };
+    }
+
+    this.logService.logEvent('BAJA', 'operaciones',
+      `Operación ${op.idOperacion} dada de baja`, op.idOperacion, true);
+
+    return { exito: true, mensaje: `Operación ${op.idOperacion} dada de baja correctamente.` };
+  }
+
+  /** Restaura una operación desde papelera. SIEMPRE queda 'abierta' — los
+   *  InformeOp no se reconstruyen (fueron eliminados en la baja, no archivados).
+   *  Si la op estaba 'cerrada' antes de la baja, hay que volver a cerrarla
+   *  manualmente después de restaurar. */
+  async restaurarOperacion(logDoc: LogDoc): Promise<Resultado<void>> {
+
+    const papeleraDocs = await this.db.getByField<LogDoc>('papelera', 'idDoc', logDoc.idDoc);
+    if (papeleraDocs.length === 0) {
+      return {
+        exito: false,
+        mensaje: `No se encontró el registro de papelera para idDoc ${logDoc.idDoc}. ` +
+                 `Restauración abortada.`,
+      };
+    }
+    const idPapelera = papeleraDocs[0].id;
+
+    const op: ConId<Operacion> = logDoc.objeto;
+    op.estado = this.operacionFactory.estadoInicial();
+    op.km = 0;
+
+    const tablero = await this.asignacionService.getTableroPorFecha(op.fecha);
+    if (!tablero) {
+      return {
+        exito: false,
+        mensaje: `Inconsistencia: no existe tablero de asignaciones para la fecha ` +
+                 `${op.fecha} de la operación ${op.idOperacion}. Restauración abortada.`,
+      };
+    }
+    const items = this.asignacionService.reactivarItemEnLista(tablero.items, op.idOperacion);
+
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: 'papelera', id: idPapelera, data: null, modo: 'eliminar' },
+      { coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), modo: 'crear' },
+      {
+        coleccion: 'asignaciones', id: op.fecha,
+        data: this.asignacionService.asignacionToFirestore({ ...tablero, items }),
+        modo: 'reemplazar',
+      },
+    ];
+
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      this.logService.logEvent('ALTA', 'operaciones',
+        `Error al restaurar operación ${op.idOperacion}: ${e?.message ?? e}`, op.idOperacion, false);
+      return { exito: false, mensaje: `Error al restaurar la operación: ${e?.message ?? e}.` };
+    }
+
+    this.logService.logEvent('ALTA', 'operaciones',
+      `Operación ${op.idOperacion} restaurada desde papelera`, op.idOperacion, true);
+
+    return { exito: true, mensaje: `Operación ${op.idOperacion} restaurada correctamente.` };
   }
 
   private opToFirestore(op: Operacion): Omit<Operacion, 'idOperacion'> {

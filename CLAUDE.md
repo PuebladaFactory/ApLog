@@ -74,7 +74,8 @@ Las rutas declaran roles requeridos en `data: { roles: [...] }`. `RoleGuard` ver
 El refactor arquitectónico está migrando el manejo de estado desde un store central
 único hacia servicios por entidad. Conviven dos esquemas según el módulo:
 
-**Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; switch completo de `tablero-diario` → `tablero-asignaciones` (tablero-diario, carga-tablero-diario y operaciones-table eliminados); `carga-multiple` migrado a `carga-asignacion` y switch completado (carga-multiple eliminado), con caller confirmado en tablero-op (`modalCargaMultiple()`); coordinadores `bajaOperacion`/`editarOperacion`/`restaurarOperacion` en OperacionService pendientes):
+**Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; switch completo de `tablero-diario` → `tablero-asignaciones` (tablero-diario, carga-tablero-diario y operaciones-table eliminados); `carga-multiple` migrado a `carga-asignacion` y switch completado (carga-multiple eliminado), con caller confirmado en tablero-op (`modalCargaMultiple()`); coordinadores `bajaOperacion`/`restaurarOperacion` en OperacionService completos (atómicos,
+batch + log único); `editarOperacion` pendiente, depende del refactor de Tarifas):
 cada entidad tiene su `XxxService` con un BehaviorSubject propio que mantiene el estado
 en memoria (NO en localStorage). El `init()` del servicio abre el listener de Firestore
 y se llama al arrancar la app. Los componentes se suscriben directamente al observable
@@ -370,6 +371,36 @@ dispara ni por las entidades secundarias que toca.
 - **Atomicidad sin Cloud Functions:** meter en un `commitBatch` todo lo posible; lo que no
   entre, secuenciar con orden cuidado (reversible primero, irreversible al final).
 
+#### Coordinadores bajaOperacion / restaurarOperacion (Operaciones)
+
+- **Alcance:** SOLO operaciones NO liquidadas (`estado.liquidacion.cliente` y `.chofer`
+  ambos `false`). Liquidadas quedan fuera — revertir la liquidación
+  (`LiquidacionService.revertirInformeLiq`) es un gesto previo y separado.
+- **Regla de ciclo en la baja:** `ciclo === 'abierta'` → no busca informes. `ciclo === 'cerrada'`
+  → DEBE existir informe en `informesOpClientes` y en `informesOpChoferes`/`Proveedores` (según
+  `tipoContratacion`); si falta alguno, ABORTA toda la operatoria sin escribir nada (es una
+  inconsistencia real, no un caso vacío legítimo). Corrige el bug del código legacy
+  (`eliminarInformesPorIdOperacion`) donde el `throw` quedaba atrapado en un try/catch que solo
+  hacía `console.error` sin re-lanzar.
+- **Atomicidad real:** un solo `commitBatch` con delete de la operación (+ informes si
+  corresponde) + crear entrada de papelera + reemplazar tablero del día. Reemplaza las 3
+  escrituras independientes sin rollback del código legacy
+  (`TableroService.anularOperacionYActualizarTablero` + `eliminarInformesPorIdOperacion`).
+- **restaurarOperacion** SIEMPRE deja la op en `'abierta'` (estado vía
+  `OperacionFactoryService.estadoInicial()`, `km:0`). Los `InformeOp` NO se reconstruyen — se
+  eliminaron en la baja, no se archivaron. Si la op estaba `'cerrada'` antes de la baja, hay que
+  volver a cerrarla manualmente tras restaurar.
+- **Item de asignación:** nunca se borra, se anula/reactiva vía métodos puros nuevos en
+  `AsignacionService` (`anularItemEnLista`/`reactivarItemEnLista` — arman la lista, no
+  escriben), consumidos directo por el batch del coordinador. `marcarItemAnulado`/
+  `reactivarItem` (los async existentes) pasaron a ser wrappers finos sobre estos puros — mismo
+  comportamiento externo, sin duplicar lógica.
+- **EscrituraBatch/commitBatch** (`DbFirestoreService`) extendido con un tercer modo
+  `'eliminar'` (`batch.delete`), aditivo — no cambia `'crear'`/`'reemplazar'`.
+- **Caller legacy** (`TableroService.anularOperacionYActualizarTablero`,
+  `DbFirestoreService.eliminarInformesPorIdOperacion`) queda INTACTO, no migrado en esta
+  sesión — candidato a eliminar en sesión futura de integración de callers.
+
 ### Decisiones de arquitectura — frente tablero-asignaciones
 
 Patrones fijados en la sesión de migración de `tablero-diario`; aplican a sesiones futuras.
@@ -432,6 +463,22 @@ cargados.
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
+
+### Deuda — integración de callers para bajaOperacion/restaurarOperacion
+
+Los coordinadores existen y son atómicos (ver "Coordinadores bajaOperacion / restaurarOperacion
+(Operaciones)" más arriba) pero NO tienen caller nuevo todavía. Pendiente:
+- `PapeleraComponent.addItem` (caso `'operaciones'`): hoy llama a
+  `TableroService.altaOperacionYActualizarTablero` (no atómico) — migrar a
+  `OperacionService.restaurarOperacion(logDoc)`. Requiere resolver el id real del doc de
+  papelera vía `getByField('papelera','idDoc',...)` porque `PapeleraComponent` solo tiene
+  `LogDoc` plano, no el id de Firestore.
+- Baja de operación paso a paso (liquidaciones-op / tablero-op, lugar exacto a confirmar):
+  migrar a `OperacionService.bajaOperacion(op, motivo)`.
+- Al migrar ambos callers: evaluar eliminar `TableroService.anularOperacionYActualizarTablero`
+  y `DbFirestoreService.eliminarInformesPorIdOperacion` (único caller).
+- `editarOperacion` sigue diferido al refactor de Tarifas (sin cambios respecto a la deuda ya
+  registrada).
 
 ### Switch completado — tablero-asignaciones / operaciones-editor / carga-asignacion
 

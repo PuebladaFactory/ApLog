@@ -102,6 +102,24 @@ export class AsignacionService implements OnDestroy {
     }
   }
 
+  /** Puro: devuelve items con el idOperacion dado marcado como anulado. Sin efectos de red. */
+  anularItemEnLista(items: AsignacionItem[], idOperacion: string, motivo: string): AsignacionItem[] {
+    return items.map(it =>
+      it.idOperacion === idOperacion
+        ? { ...it, estado: { estado: 'anulada', motivo, timestamp: Date.now() } as EstadoAsignacion }
+        : it
+    );
+  }
+
+  /** Puro: devuelve items con el idOperacion dado reactivado (estado → 'activa'). Sin efectos de red. */
+  reactivarItemEnLista(items: AsignacionItem[], idOperacion: string): AsignacionItem[] {
+    return items.map(it =>
+      it.idOperacion === idOperacion
+        ? { ...it, estado: { estado: 'activa' } as EstadoAsignacion }
+        : it
+    );
+  }
+
   /** Marca un item como anulado por idOperacion. NUNCA filtra ni borra. Log: EDITAR. */
   async marcarItemAnulado(fecha: string, idOperacion: string, motivo: string): Promise<void> {
     // TODO: refactor Log — si esta anulación es parte de una baja de op atómica
@@ -111,11 +129,7 @@ export class AsignacionService implements OnDestroy {
     const actual = await this.getTableroPorFecha(fecha);
     if (!actual) throw new Error(`No existe tablero para la fecha ${fecha}`);
 
-    const items = actual.items.map(it =>
-      it.idOperacion === idOperacion
-        ? { ...it, estado: { estado: 'anulada', motivo, timestamp: Date.now() } as EstadoAsignacion }
-        : it
-    );
+    const items = this.anularItemEnLista(actual.items, idOperacion, motivo);
     const asignacion: Asignacion = { ...actual, items, timestamp: Date.now() };
     try {
       await this.db.setDocSinId(this.COLECCION, fecha, this.toFirestore(asignacion));
@@ -136,11 +150,7 @@ export class AsignacionService implements OnDestroy {
     const actual = await this.getTableroPorFecha(fecha);
     if (!actual) throw new Error(`No existe tablero para la fecha ${fecha}`);
 
-    const items = actual.items.map(it =>
-      it.idOperacion === idOperacion
-        ? { ...it, estado: { estado: 'activa' } as EstadoAsignacion }
-        : it
-    );
+    const items = this.reactivarItemEnLista(actual.items, idOperacion);
     const asignacion: Asignacion = { ...actual, items, timestamp: Date.now() };
     try {
       await this.db.setDocSinId(this.COLECCION, fecha, this.toFirestore(asignacion));

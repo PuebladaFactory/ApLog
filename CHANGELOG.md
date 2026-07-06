@@ -679,6 +679,25 @@ deep-link. Mismo patrón shell-con-pestañas se repite en ~12 componentes
 
 ---
 
+#### Coordinadores OperacionService.bajaOperacion / restaurarOperacion
+
+- Dos coordinadores nuevos, mismo patrón de `altaDesdeAsignacion`: ownership por entidad
+  primaria, batch atómico, log único, `Resultado<T>` como retorno.
+- `bajaOperacion`: valida liquidación (fuera de alcance si en curso), resuelve
+  `tipoContratacion`, busca informes SOLO si ciclo `'cerrada'` (aborta si no existen), arma
+  `LogDoc` de papelera con `LogService.createLogEntry` (método puro, sin escribir), anula el
+  item de asignación con el nuevo método puro, todo en un `commitBatch`.
+- `restaurarOperacion`: resuelve id real de papelera vía `getByField`, reinicia estado/km,
+  reactiva el item de asignación, mismo `commitBatch`.
+- `AsignacionService`: agregados `anularItemEnLista`/`reactivarItemEnLista` (puros);
+  `marcarItemAnulado`/`reactivarItem` refactorizados para delegarles la lógica sin cambiar su
+  comportamiento externo.
+- `DbFirestoreService`: `EscrituraBatch` admite modo `'eliminar'` (`batch.delete`), aditivo.
+- Deuda registrada: caller de PapeleraComponent y de la baja paso a paso siguen sin migrar a
+  estos coordinadores (ver CLAUDE.md).
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)
