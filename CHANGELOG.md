@@ -698,6 +698,54 @@ deep-link. Mismo patrón shell-con-pestañas se repite en ~12 componentes
 
 ---
 
+#### Componente tablero-op — migración a servicios nuevos + conexión de bajaOperacion
+
+Migración de consultas y catálogos del modelo viejo (`StorageService`) al esquema de
+servicios por entidad, y conexión del coordinador `bajaOperacion` como caller real.
+
+**Consultas de operaciones:**
+- Reemplazado `StorageService.syncChangesDateValue` + `storage.getObservable` por
+  `OperacionService.cargarOperaciones(desde, hasta, 'desc')` + suscripción única a
+  `operacionService.operaciones$`.
+- La suscripción a `operaciones$` se movió a `ngOnInit`, **fuera** del callback de
+  `dateRange.range$` (que ahora solo llama `cargarOperaciones`). Corrige una fuga de
+  suscripciones preexistente: antes cada cambio de rango agregaba una suscripción nueva
+  a `storage.getObservable` sin liberar la anterior (todas vivían hasta `destroy$`).
+- Como `getAllByDateValue` usa un listener vivo de Firestore, ya no hace falta
+  re-disparar una carga manual después de la baja: el listener refleja el borrado solo.
+
+**Catálogos de clientes/choferes/proveedores eliminados del componente:**
+Se confirmó que ningún método del componente los consumía — los datos que se muestran
+(nombre de cliente, chofer, proveedor) salen de los snapshots (`RefCliente`/`RefChofer`/
+`RefProveedor`) de cada operación, no de un catálogo completo. Se sacaron las
+propiedades `choferes`/`clientes`/`proveedores`, su carga en `ngOnInit`, y los imports
+correspondientes (`ChoferService`/`ClienteService`/`ProveedorService` no se inyectan en
+este componente).
+
+**`getProveedor(idProveedor)` eliminado:** confirmado huérfano (CLAUDE.md ya lo tenía
+marcado como sin caller); se borró en vez de solo mantenerlo marcado.
+
+**Tipado de IDs corregido:** `OpRow.idCliente`/`idChofer` y `FiltrosState.clienteId`/
+`choferId` pasaron de `number` a `string` (venían con `Number(op.cliente.id)` /
+`Number(op.chofer.id)` marcados con TODO desde la Fase D). Ajustado en cascada:
+`seleccionarCliente`/`seleccionarChofer`, `rebuildDropdownsDesdeFiltradas` (`Map<string,string>`),
+y el binding en el HTML de los `<select>` de filtro cruzado (se sacó el cast a `+number`).
+
+**Baja conectada a `OperacionService.bajaOperacion`:** `openModalBaja()` reemplazó el
+llamado a `TableroService.anularOperacionYActualizarTablero` por
+`OperacionService.bajaOperacion(opSeleccionada, motivo)`, manejando `Resultado<void>`
+(Swal de error con `resultado.mensaje` si `exito:false`). `TableroService` dejó de
+inyectarse en este componente (sin otros usos acá).
+
+**Alcance confirmado (decisión de negocio):** el botón de baja sigue habilitado solo
+para operaciones en `'Abierta'` (`puedeEliminar()` sin cambios) — las cerradas se anulan
+desde el módulo de Liquidaciones, no desde tablero-op.
+
+**Fuera de esta sesión (sin tocar):** edición, cierre, e informe Excel de `descargarOp()`
+— siguen dependiendo del refactor de Tarifas / verificación aparte.
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)

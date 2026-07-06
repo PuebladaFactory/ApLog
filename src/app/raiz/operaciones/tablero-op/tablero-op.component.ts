@@ -2,15 +2,12 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { filter, Subject, takeUntil } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
 import { EstadoOp, Operacion } from 'src/app/interfaces/operacion';
-import { Cliente } from 'src/app/interfaces/cliente';
-import { Chofer } from 'src/app/interfaces/chofer';
-import { Proveedor } from 'src/app/interfaces/proveedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalResumenOpComponent } from '../modal-resumen-op/modal-resumen-op.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
-import { TableroService } from 'src/app/servicios/tablero/tablero.service';
+import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
 import Swal from 'sweetalert2';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
@@ -26,9 +23,9 @@ interface OpRow {
   estado: string;
   idOperacion: string;
   cliente: string;
-  idCliente: number;
+  idCliente: string;
   chofer: string;
-  idChofer: number;
+  idChofer: string;
   categoria: string;
   patente: string;
   acomp: string;
@@ -46,8 +43,8 @@ interface OpRow {
 interface FiltrosState {
   textoGlobal: string | null;
   columnas: Record<string,string>;
-  clienteId: number | null;
-  choferId: number | null;
+  clienteId: string | null;
+  choferId: string | null;
   principal: 'cliente'|'chofer'|null;
   sortCampo: string | null;
   sortDir: 'asc'|'desc'|null;
@@ -93,8 +90,8 @@ export class TableroOpComponent implements OnInit, OnDestroy {
   clientesDropdown: any[] = [];
   choferesDropdown: any[] = [];
 
-  clienteSeleccionado: number | null = null;
-  choferSeleccionado: number | null = null;
+  clienteSeleccionado: string | null = null;
+  choferSeleccionado: string | null = null;
 
   private readonly STORAGE_FILTROS_KEY = 'tablero_op_filtros_v2';
   private STORAGE_RANGE_KEY = 'tablero_op_range_v1';
@@ -104,11 +101,6 @@ export class TableroOpComponent implements OnInit, OnDestroy {
 
 
   isLoading = false;
-
-  // catálogos
-  clientes: ConId<Cliente>[] = [];
-  choferes: ConId<Chofer>[] = [];
-  proveedores: ConId<Proveedor>[] = [];
 
   fechaDesde:any;
   fechaHasta:any;
@@ -133,7 +125,7 @@ usuario:any;
     private storage: StorageService,
     private dateRange: DateRangeService,
     private modalService: NgbModal,
-    private tableroServ: TableroService,
+    private operacionService: OperacionService,
     private formatoNum: FormatoNumericoService,
     private excelServ: ExcelService,
     private reportesOp: ReportesOpService
@@ -147,14 +139,8 @@ usuario:any;
 
     this.cargarColumnasVisibles();
     this.cargarFiltrosDeStorage();
-    this.restaurarRangoPropio(); 
+    this.restaurarRangoPropio();
 
-    this.choferes = this.storage.loadInfo('choferes');
-    this.choferes = this.choferes.sort((a, b) => a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido)); // Ordena por el nombre del chofer
-    this.clientes = this.storage.loadInfo('clientes');
-    this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
-    this.proveedores = this.storage.loadInfo('proveedores');
-    this.proveedores = this.proveedores.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     this.loadColumnWidths();
     this.dateRange.range$
       .pipe(
@@ -175,33 +161,28 @@ usuario:any;
         this.fechaDesde = desde;
         this.fechaHasta = hasta;
         
-        this.storage.syncChangesDateValue('operaciones','fecha',desde,hasta,'desc');
-        this.escucharOperaciones();
+        this.operacionService.cargarOperaciones(desde, hasta, 'desc');
       });
+
+      this.operacionService.operaciones$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(ops => {
+          this.operacionesPeriodo = ops;
+          this.rebuildDropdownsBase();
+          this.syncFiltroLabels();
+          this.aplicarFiltros();
+          setTimeout(() => { this.isLoading = false; }, 500);
+        });
+
       let user = this.storage.loadInfo('usuario');
       this.usuario = user[0];
       console.log(this.usuario.roles.demo);
-      
+
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  escucharOperaciones() {
-    this.storage.getObservable<ConId<Operacion>>('operaciones')
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(ops => {
-        //this.isLoading = true;
-        this.operacionesPeriodo = ops;
-        console.log("this.operacionesPeriodo: ", this.operacionesPeriodo);
-        
-        this.rebuildDropdownsBase();
-        this.syncFiltroLabels();   // 👈 importante
-        this.aplicarFiltros();
-        setTimeout(()=>{this.isLoading = false;}, 500)
-      });
   }
 
   private restaurarRangoPropio() {
@@ -242,9 +223,9 @@ usuario:any;
       estado: this.getEstadoLabel(op.estado),
       idOperacion: op.idOperacion,
       cliente: op.cliente.razonSocial,
-      idCliente: Number(op.cliente.id), // TODO: migrar a string cuando se refactorice este módulo
+      idCliente: op.cliente.id,
       chofer: `${op.chofer.apellido} ${op.chofer.nombre}`,
-      idChofer: Number(op.chofer.id), // TODO: migrar a string cuando se refactorice este módulo
+      idChofer: op.chofer.id,
       categoria: this.getCategoria(op),
       patente: op.vehiculo.dominio,
       acomp: op.acompaniante ? 'Sí':'No',
@@ -474,14 +455,14 @@ usuario:any;
 
   // ===================== FILTROS CRUZADOS UI =====================
 
-  seleccionarCliente(id:number|null) {
+  seleccionarCliente(id: string | null) {
     this.clienteSeleccionado = id;
     this.filtros.clienteId = id;
     if (id) this.filtros.principal = 'cliente';
     this.aplicarFiltros();
   }
 
-  seleccionarChofer(id:number|null) {
+  seleccionarChofer(id: string | null) {
     this.choferSeleccionado = id;
     this.filtros.choferId = id;
     if (id) this.filtros.principal = 'chofer';
@@ -527,7 +508,7 @@ usuario:any;
 
   private rebuildDropdownsDesdeFiltradas() {
     if (this.filtros.principal === 'cliente' && this.filtros.clienteId) {
-      const set = new Map<number,string>();
+      const set = new Map<string,string>();
       for (const r of this.operacionesVista) {
         set.set(r.idChofer, r.chofer);
       }
@@ -535,7 +516,7 @@ usuario:any;
     }
 
     if (this.filtros.principal === 'chofer' && this.filtros.choferId) {
-      const set = new Map<number,string>();
+      const set = new Map<string,string>();
       for (const r of this.operacionesVista) {
         set.set(r.idCliente, r.cliente);
       }
@@ -596,12 +577,6 @@ usuario:any;
     if (op.tarifaTipo.eventual) return 'Eventual';
     if (op.tarifaTipo.personalizada) return 'Personalizada';
     return 'General';
-  }
-
-  getProveedor(idProveedor: string): string {
-    if (!this.proveedores || !idProveedor || idProveedor === '0') return 'No';
-    const proveedor = this.proveedores.find(p => p.idProveedor === idProveedor);
-    return proveedor?.razonSocial ?? 'Proveedor dado de baja';
   }
 
   // -----------------------------
@@ -758,21 +733,18 @@ onResizeEnd = () => {
       modalRef.componentInstance.fromParent = info;
       try {
         const motivo = await modalRef.result;
-        if(!motivo) return
-        if(this.opSeleccionada){
-          this.isLoading = true; 
-          await this.tableroServ.anularOperacionYActualizarTablero(this.opSeleccionada, motivo, 'Baja de operación desde el tablero-op');
-             
-          const confirmacion = await Swal.fire({
-            icon: 'success',
-            title: 'Operación eliminada',
-            text: 'La operación fue dada de baja y se actualizó el tablero.'
-          });
-          if(confirmacion.isConfirmed){
-            this.escucharOperaciones()
+        if (!motivo) return;
+        if (this.opSeleccionada) {
+          this.isLoading = true;
+          const resultado = await this.operacionService.bajaOperacion(this.opSeleccionada, motivo);
+          this.isLoading = false;
+
+          if (!resultado.exito) {
+            await Swal.fire({ icon: 'error', title: 'No se pudo dar de baja', text: resultado.mensaje });
+            return;
           }
-          
-        }   
+          await Swal.fire({ icon: 'success', title: 'Operación eliminada', text: resultado.mensaje });
+        }
 
       } catch (e) {
         console.warn("El modal fue cancelado o falló:", e);

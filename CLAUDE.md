@@ -75,7 +75,8 @@ El refactor arquitectónico está migrando el manejo de estado desde un store ce
 único hacia servicios por entidad. Conviven dos esquemas según el módulo:
 
 **Módulos refactorizados** (Choferes, Proveedores, Clientes; Operaciones en progreso — subsistema Asignaciones: capa de servicios y fachada completas; switch completo de `tablero-diario` → `tablero-asignaciones` (tablero-diario, carga-tablero-diario y operaciones-table eliminados); `carga-multiple` migrado a `carga-asignacion` y switch completado (carga-multiple eliminado), con caller confirmado en tablero-op (`modalCargaMultiple()`); coordinadores `bajaOperacion`/`restaurarOperacion` en OperacionService completos (atómicos,
-batch + log único); `editarOperacion` pendiente, depende del refactor de Tarifas):
+batch + log único), con `tablero-op` ya usando `bajaOperacion` como caller para la baja
+de operaciones abiertas; `editarOperacion` pendiente, depende del refactor de Tarifas):
 cada entidad tiene su `XxxService` con un BehaviorSubject propio que mantiene el estado
 en memoria (NO en localStorage). El `init()` del servicio abre el listener de Firestore
 y se llama al arrancar la app. Los componentes se suscriben directamente al observable
@@ -479,6 +480,13 @@ Los coordinadores existen y son atómicos (ver "Coordinadores bajaOperacion / re
   y `DbFirestoreService.eliminarInformesPorIdOperacion` (único caller).
 - `editarOperacion` sigue diferido al refactor de Tarifas (sin cambios respecto a la deuda ya
   registrada).
+- `tablero-op` ya usa `OperacionService.bajaOperacion` para la baja de operaciones
+  abiertas (sesión de migración de tablero-op). Sigue pendiente:
+  - Caller de `restaurarOperacion` desde `PapeleraComponent` (sin cambios respecto a
+    lo ya registrado).
+  - Caller de `bajaOperacion` para operaciones **cerradas** desde el módulo de
+    Liquidaciones (hoy la baja de una op cerrada sigue el camino paso a paso legacy,
+    lugar exacto a confirmar en esa sesión).
 
 ### Switch completado — tablero-asignaciones / operaciones-editor / carga-asignacion
 
@@ -698,3 +706,40 @@ El modal actual quedó con arreglo mínimo hasta entonces.
 a cachear si hubiera cientos de clientes. Hoy trivial.
 
 **Item con cliente borrado** (papelera) sin columna: `// TODO: refactor Papelera`.
+
+### Frente futuro — persistencia de filtros/rango de fechas vs. listener en background
+
+**Síntoma reportado (sin confirmar con pruebas propias):** en `tablero-op`, al cambiar
+de pestaña del navegador (o abrir otra app) y volver después de un rato, el rango de
+fechas y los filtros siguen mostrando la selección correcta, pero los datos de la tabla
+no corresponden a ese período/filtro.
+
+**Hipótesis de causa:** no es un problema de dónde se guarda la preferencia de UI
+(`localStorage` es el mecanismo correcto para eso, y sigue siendo así — funciona bien
+para navegación interna salir/entrar del componente). El sospechoso real es que el
+listener vivo de Firestore (`onSnapshot`/`collectionData`, usado por
+`OperacionService.cargarOperaciones` vía `getAllByDateValue`) se corta o queda mudo
+mientras la pestaña está en background (throttling del navegador, expiración de token
+de Auth, error transitorio de reconexión), y ninguna suscripción a `operaciones$` tiene
+manejo de error — si el observable interno emite error, la suscripción de RxJS se corta
+sin aviso visible y los datos quedan congelados en el último estado recibido, mientras
+el rango/filtros (que viven en variables locales del componente) siguen mostrando la
+selección correcta. Posible causa adicional a confirmar: carrera de inicialización entre
+`DateRangeService`/`app-tablero-fechas` (que puede calcular su propio rango por defecto)
+y la restauración de rango desde `localStorage` — no verificada, requiere revisar ese
+código si se encara este frente.
+
+**Quedó descartado como solución:** migrar la persistencia de filtros/rango de
+`localStorage` a una colección de Firestore. Eso resolvería una persistencia de
+preferencia de UI que ya funciona bien; no toca la causa real (listener silencioso).
+
+**Líneas de acción para cuando se encare:**
+- Manejo de error explícito + reintento/reconexión en las suscripciones a `operaciones$`
+  (y futuros observables de catálogos).
+- Escuchar `document.visibilitychange`/`window.focus` para re-disparar
+  `cargarOperaciones()` con el rango actual al volver de background, en vez de confiar
+  en que el listener siga vivo.
+- Si se toca la persistencia de preferencias (filtros, rango, ancho de columnas, hoy
+  desparramados en 4 claves de `localStorage` manejadas inline en `tablero-op`),
+  encapsularlas en un servicio chico dedicado — sigue siendo `localStorage` por debajo,
+  correcto para sobrevivir F5; solo cambia dónde vive el acceso.

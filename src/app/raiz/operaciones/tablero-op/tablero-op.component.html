@@ -22,7 +22,7 @@
 
               <select class="form-select align-self-end" style="width:150px"
                       [(ngModel)]="filtros.clienteId"
-                      (change)="seleccionarCliente($any($event.target).value ? +$any($event.target).value : null)">
+                      (change)="seleccionarCliente($any($event.target).value || null)">
                   <option [ngValue]="null">Cliente</option>
                   @for (c of clientesDropdown; track c.id) {
                       <option [value]="c.id">{{c.n}}</option>
@@ -33,7 +33,7 @@
 
               <select class="form-select align-self-end" style="width:150px"
                       [(ngModel)]="filtros.choferId"
-                      (change)="seleccionarChofer($any($event.target).value ? +$any($event.target).value : null)">
+                      (change)="seleccionarChofer($any($event.target).value || null)">
                   <option [ngValue]="null">Chofer</option>
                   @for (c of choferesDropdown; track c.id) {
                       <option [value]="c.id">{{c.n}}</option>
