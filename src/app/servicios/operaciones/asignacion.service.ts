@@ -23,6 +23,8 @@ export class AsignacionService implements OnDestroy {
 
   private _borradorEnCurso: BorradorEnCurso | null = null;
 
+  private _ultimaFechaVista: string | null = null;
+
   constructor(
     private db:         DbFirestoreService,
     private logService: LogService,
@@ -232,6 +234,24 @@ export class AsignacionService implements OnDestroy {
    *  (guardar/alta) o se descartó (limpiar) — ya no hay nada "en curso". */
   limpiarBorradorEnCurso(): void {
     this._borradorEnCurso = null;
+  }
+
+  // ---- Última fecha vista (buffer en memoria; no toca Firestore) ----
+
+  /** Guarda la fecha del tablero que el usuario estaba viendo (cualquier estado),
+   *  para reabrirlo al volver al componente. */
+  setUltimaFechaVista(fecha: string): void {
+    this._ultimaFechaVista = fecha;
+  }
+
+  /** Devuelve la última fecha vista, o null si no hay. */
+  getUltimaFechaVista(): string | null {
+    return this._ultimaFechaVista;
+  }
+
+  /** Limpia la última fecha vista. */
+  limpiarUltimaFechaVista(): void {
+    this._ultimaFechaVista = null;
   }
 
   ngOnDestroy(): void {

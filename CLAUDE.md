@@ -444,6 +444,15 @@ rehidrata al montarse. El borrador en curso tiene prioridad sobre Firestore al r
 más reciente). Patrón aplicable a cualquier componente con trabajo en curso que deba sobrevivir
 navegación.
 
+**Dos memorias separadas para el estado del tablero al navegar:** borrador en curso (solo
+trabajo local no guardado, se espeja solo si `borradorSucio`) y última fecha vista (la
+fecha en cualquier estado). Al volver: borrador en curso tiene prioridad (rehidrata
+local); si no hay, la última fecha vista reconstruye el estado vía `cargarTablero` (que
+pasa por la máquina de estados y setea badges/modo/tablero correctamente). Principio: NO
+reconstruir el estado a mano al rehidratar; delegar en la máquina de estados
+(`cargarTablero`) salvo el borrador local puro, que no está en Firestore y es el único que
+se rehidrata de memoria.
+
 **Modal genérico autónomo por modo:** un modal que sirve a varias entidades recibe solo
 un discriminante (`modo`) y resuelve sus datos desde el service correspondiente; el
 componente que lo abre no pre-mastica arrays. Resolución de exhibición vive en el modal.

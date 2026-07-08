@@ -112,12 +112,23 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
 
     const enCurso = this.asignacionService.getBorradorEnCurso();
     if (enCurso) {
+      // CASO LOCAL no guardado: el borrador no está en Firestore, se rehidrata de memoria.
       this.fechaSeleccionada = enCurso.fecha;
       this.fechaAnterior    = enCurso.fecha;
       this.itemsBorrador    = enCurso.items;
       this.modo             = 'edicion';
       this.borradorSucio    = true;
+      this.tablero          = null;
       this.calcularChoferesNoOperativosPorFecha(enCurso.fecha);
+    } else {
+      // NO hay borrador local. ¿Había una fecha vista (persistido o alta)?
+      const ultima = this.asignacionService.getUltimaFechaVista();
+      if (ultima) {
+        this.fechaSeleccionada = ultima;
+        this.fechaAnterior    = ultima;
+        this.cargarTablero(ultima); // reconstruye modo/tablero/badges/sucio desde Firestore
+      }
+      // si no hay ninguna de las dos → arranca sin fecha (flujo normal), como hoy.
     }
 
     // Clientes activos: base para clientesVisibles (getter derivado).
@@ -159,8 +170,17 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.modo === 'edicion' && this.itemsBorrador.length > 0) {
+    // 1. Espejar el borrador en curso SOLO si es trabajo local sin guardar (borradorSucio).
+    //    itemsBorrador.length>0 no alcanza: tras guardarBorrador() itemsBorrador queda
+    //    poblado (clon de lo persistido) pero borradorSucio es false — mirroring por
+    //    length reintroduciría el bug de badges incorrectos al volver.
+    if (this.modo === 'edicion' && this.borradorSucio) {
       this.asignacionService.setBorradorEnCurso(this.fechaSeleccionada, this.itemsBorrador);
+    }
+    // 2. Recordar la última fecha vista siempre que haya una fecha seleccionada
+    //    (cualquier modo/estado: borrador local, persistido o alta).
+    if (this.fechaSeleccionada) {
+      this.asignacionService.setUltimaFechaVista(this.fechaSeleccionada);
     }
     this.visorSub?.unsubscribe();
     this.destroy$.next();
@@ -604,6 +624,11 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
         this.borradorSucio = false;
         this.tablero = null;
         this.asignacionService.limpiarBorradorEnCurso();
+        this.asignacionService.limpiarUltimaFechaVista();
+        // Sin esto, ngOnDestroy volvería a grabar esta fecha como "última fecha vista"
+        // (fechaSeleccionada sigue truthy), deshaciendo el limpiarUltimaFechaVista recién hecho.
+        this.fechaSeleccionada = '';
+        this.fechaAnterior = null;
         Swal.fire({ icon: 'success', title: 'Borrador eliminado' });
       } catch (e) {
         console.error(e);

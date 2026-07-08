@@ -500,6 +500,62 @@ Comportamiento por escenario:
 - Alta → salir → volver: NO reaparece (buffer limpio, quedó en visor/Firestore).
 - Limpiar → salir → volver: NO reaparece (buffer limpio).
 
+**Memoria del tablero al salir/entrar — corrección de badges y recuerdo del alta.**
+El borrador en curso (arriba) cubría el trabajo local no guardado, pero dejaba dos casos
+mal al volver al componente:
+- Borrador PERSISTIDO: al volver mostraba badges incorrectos ("Sin tablero para esta
+  fecha" + "Cambios sin guardar") aunque el tablero existiera guardado, porque la
+  rehidratación seteaba `itemsBorrador` pero dejaba `this.tablero=null` y forzaba
+  `borradorSucio=true`, saltándose `cargarTablero`.
+- Tablero DADO DE ALTA: no se recordaba al volver — `ngOnDestroy` solo espejaba en modo
+  edición; no existía recuerdo de la fecha en visor.
+
+Solución (enfoque B — dos memorias separadas):
+- Borrador en curso (ya existía): SOLO trabajo local no guardado.
+- Última fecha vista (nueva, en `AsignacionService`): la fecha en cualquier estado.
+
+`AsignacionService`: agregado `_ultimaFechaVista` con `setUltimaFechaVista` /
+`getUltimaFechaVista` / `limpiarUltimaFechaVista` — memoria en el singleton, sobrevive
+navegación (no F5), mismo patrón que el borrador en curso.
+
+`tablero-asignaciones`:
+- `ngOnInit`: prioridad (1) borrador en curso → rehidrata local (`tablero=null`,
+  `borradorSucio=true`, correcto para trabajo no guardado); si no hay, (2) última fecha
+  vista → `cargarTablero(fecha)`, que reconstruye modo/tablero/badges/`borradorSucio`
+  correctamente desde Firestore porque pasa por la máquina de estados en vez de saltarla.
+  Los badges se corrigen justamente por dejar que `cargarTablero` haga su trabajo.
+- `ngOnDestroy`: (1) espeja el borrador en curso SOLO si `modo==='edicion' &&
+  borradorSucio` (corrección respecto al diseño inicial, que usaba
+  `itemsBorrador.length>0`: tras guardar, los items quedan poblados pero limpios, y
+  `length>0` reproducía el bug original — `borradorSucio` es el criterio correcto de
+  "trabajo local sin guardar"); (2) recuerda la última fecha vista siempre que haya
+  `fechaSeleccionada` (cualquier modo/estado).
+- `limpiar()` caso A (descartar borrador persistido): además de `limpiarBorradorEnCurso`,
+  llama `limpiarUltimaFechaVista()` y resetea `fechaSeleccionada=''` y
+  `fechaAnterior=null` (el tablero de esa fecha ya no existe → el componente vuelve a
+  estado inicial; además evita que `ngOnDestroy` regrabe la fecha descartada).
+- `guardarBorrador` y `altaOp`: mantienen `limpiarBorradorEnCurso` (tras persistir, el
+  trabajo está en Firestore → al volver cae en última fecha vista → estado correcto). NO
+  limpian la última fecha vista (el tablero sigue existiendo en esa fecha, se puede volver
+  a él).
+
+Comportamiento por escenario (verificado):
+- Borrador local no guardado → salir → volver: reaparece, badge "sin tablero" + sucio
+  (correcto para local).
+- Guardar borrador → salir → volver: reaparece, badge "Borrador guardado, sin alta", SIN
+  "cambios sin guardar". (corrige el bug principal)
+- Tablero dado de alta → salir → volver: reaparece en modo visor, badge "Dado de alta".
+  (corrige el caso no cubierto)
+- Descartar borrador persistido → salir → volver: NO reaparece, arranca sin fecha.
+
+**Limitación conocida y aceptada (no es bug pendiente):** borrador PERSISTIDO + cambios
+locales sin guardar → al volver muestra badges "sin tablero / cambios sin guardar". Causa:
+hay borrador en curso (los cambios sin guardar), que tiene prioridad y rehidrata como
+local, perdiendo visualmente que había una versión persistida debajo. Es coherente (hay
+trabajo sin guardar, el estado real ES "sucio"). Resolverlo requeriría guardar en el
+borrador en curso también el tablero persistido — la fragilidad del enfoque A que se
+descartó. Se deja así deliberadamente.
+
 ---
 
 #### Módulo Operaciones — Componente operaciones-editor (migración de operaciones-table)
