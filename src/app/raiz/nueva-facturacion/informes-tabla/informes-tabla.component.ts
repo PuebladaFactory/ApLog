@@ -7,7 +7,7 @@ import {
   EventoAccionTabla,
   OrdenTabla,
 } from "src/app/interfaces/tablas";
-import { StorageService } from "src/app/servicios/storage/storage.service";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 
 @Component({
   selector: "app-informes-tabla",
@@ -29,14 +29,12 @@ export class InformesTablaComponent implements OnInit {
 
   ordenColumna: string | null = null;
   ordenAsc = true;
-  usuario: any;
 
-  constructor(private storageService: StorageService) {}
+  constructor(
+    private usuarioSesion: UsuarioSesionService,
+  ) {}
 
-  ngOnInit(): void {
-    let usuario = this.storageService.loadInfo("usuario");
-    this.usuario = usuario[0];
-  }
+  ngOnInit(): void {}
 
   onOrdenar(col: ColumnaTabla<any>) {
     if (!col.sortable) return;
@@ -114,7 +112,7 @@ export class InformesTablaComponent implements OnInit {
   }
 
   disbledDemo(col:ColumnaTabla<InformeLiq>):string{
-    if(this.usuario.roles.demo && (col.key === 'fElectrónica' || col.key === 'anular' || col.key === 'editar')){
+    if(this.usuarioSesion.esRol('demo') && (col.key === 'fElectrónica' || col.key === 'anular' || col.key === 'editar')){
       return 'isDisabled'
     }
     return "";

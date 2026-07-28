@@ -4,7 +4,7 @@
             <app-btn-leer
                 name="Proveedor"
                 (click)="openModal('alta')"
-                [ngClass]="{ isDisabled: usuario.roles.demo }"
+                [ngClass]="{ isDisabled: usuarioSesion.esRol('demo') }"
             >
             </app-btn-leer>
         </div>
@@ -22,7 +22,7 @@
                 class="btn btn-primary boton-alta"
                 type="button"
                 (click)="visibilidadProveedores()"
-                [ngClass]="{ isDisabled: usuario.roles.demo }"
+                [ngClass]="{ isDisabled: usuarioSesion.esRol('demo') }"
             >
                 Proveedores Visibles
             </button>

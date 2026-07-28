@@ -13,7 +13,7 @@
             <div class="my-2">
                 <p class="ms-0">
                     Usuario: <br />
-                    {{ $usuario.name }}
+                    {{ $usuario?.name }}
                 </p>
             </div>
             <hr />
@@ -216,7 +216,7 @@
                         </a>
                     </li>
 
-                    @if ($usuario.roles.admin || $usuario.roles.god || $usuario.roles.demo ) {
+                    @if (usuarioSesion.esRol('admin','dev','demo')) {
                         <li>
                             <a [routerLink]="['/ajustes']">
                                 <h2 class="d-flex mt-3" type="button">
@@ -240,7 +240,7 @@
                             </a>
                         </li>
                     }
-                    @if ($usuario.roles.admin || $usuario.roles.god || $usuario.roles.demo ) {
+                    @if (usuarioSesion.esRol('admin','dev','demo')) {
                         <li>
                             <a [routerLink]="['/nuevaFacturacion']">
                                 <h2 class="d-flex mt-3" type="button">
@@ -264,7 +264,7 @@
                             </a>
                         </li>
                     }
-                    @if ($usuario.roles.god) {
+                    @if (usuarioSesion.esRol('dev')) {
                         <li>
                             <a [routerLink]="['/finanzas']">
                                 <h2 class="d-flex mt-3" type="button">
@@ -285,7 +285,7 @@
                             </a>
                         </li>
                     }
-                    @if ($usuario.roles.god || $usuario.roles.admin || $usuario.roles.demo) {
+                    @if (usuarioSesion.esRol('dev','admin','demo')) {
                         <li>
                             <a [routerLink]="['/reportes']">
                                 <h2 class="d-flex mt-3" type="button">

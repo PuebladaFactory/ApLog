@@ -102,7 +102,7 @@ export class DbFirestoreService {
   getAllColectionUsers<T>(coleccion: string): Observable<ConIdType<T>[]> {
     const dataCollectionPath = `${coleccion}`;
     const colRef = collection(this.firestore, dataCollectionPath);
-    const q = query(colRef, where("roles.god", "==", false));
+    const q = query(colRef, where("role", "!=", "dev"));
 
     return new Observable<ConIdType<T>[]>((observer) => {
       const unsubscribe = onSnapshot(

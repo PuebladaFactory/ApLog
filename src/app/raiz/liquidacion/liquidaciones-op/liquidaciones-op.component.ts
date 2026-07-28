@@ -33,6 +33,7 @@ import {
 import { CrearLiquidacionParams } from "src/app/servicios/liquidaciones/liquidacion-builder.service";
 import { LiquidacionService } from "src/app/servicios/liquidaciones/liquidacion.service";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 @Component({
   selector: "app-liquidaciones-op",
   standalone: false,
@@ -104,6 +105,7 @@ export class LiquidacionesOpComponent implements OnInit {
     private dateRangeService: DateRangeService,
     private liquidacionService: LiquidacionService,
     private choferService: ChoferService,
+    public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
@@ -238,8 +240,7 @@ export class LiquidacionesOpComponent implements OnInit {
           });
       });
 
-    let usuario = this.storageService.loadInfo("usuario");
-    this.usuario = usuario[0];
+    this.usuario = this.usuarioSesion.getUsuarioActual();
   }
 
   ngOnDestroy(): void {

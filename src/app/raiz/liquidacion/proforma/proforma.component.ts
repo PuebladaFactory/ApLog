@@ -25,6 +25,7 @@ import {
   ProcesarParams,
 } from "src/app/servicios/liquidaciones/liquidacion.service";
 import { toISODateString } from "src/app/servicios/fechas/date-range.service";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 
 @Component({
   selector: "app-proforma",
@@ -62,6 +63,7 @@ export class ProformaComponent implements OnInit {
     private pdfServ: PdfService,
 
     private liquidacionService: LiquidacionService,
+    public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
@@ -77,8 +79,7 @@ export class ProformaComponent implements OnInit {
           this.separarFacturas();
         }
       });
-    let usuario = this.storageService.loadInfo("usuario");
-    this.usuario = usuario[0];
+    this.usuario = this.usuarioSesion.getUsuarioActual();
     /// CHOFERES/CLIENTES/PROVEEDORES
     this.choferes = this.storageService.loadInfo("choferes");
     this.choferes = this.choferes.sort((a, b) =>

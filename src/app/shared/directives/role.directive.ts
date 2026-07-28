@@ -1,24 +1,17 @@
-import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
-import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
+import { Directive, Input, ViewContainerRef, TemplateRef } from '@angular/core';
+import { UsuarioSesionService } from '../../servicios/usuario-sesion/usuario-sesion.service';
+import { RolUsuario } from '../../interfaces/usuario';
 
-
-@Directive({
-    selector: '[appRole]',
-    standalone: false
-})
+@Directive({ selector: '[appRole]', standalone: false })
 export class RoleDirective {
-  private currentRoles: any;
-
   constructor(
-    private authService: AuthService,
+    private usuarioSesion: UsuarioSesionService,
     private viewContainer: ViewContainerRef,
     private templateRef: TemplateRef<any>
-  ) {
-    this.currentRoles = this.authService.currentUserRoles();
-  }
+  ) {}
 
-  @Input() set appRole(allowedRoles: string[]) {
-    if (allowedRoles.some(role => this.currentRoles[role])) {
+  @Input() set appRole(rolesPermitidos: RolUsuario[]) {
+    if (this.usuarioSesion.esRol(...rolesPermitidos)) {
       this.viewContainer.createEmbeddedView(this.templateRef);
     } else {
       this.viewContainer.clear();

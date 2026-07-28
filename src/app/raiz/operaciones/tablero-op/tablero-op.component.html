@@ -2,7 +2,7 @@
 <div class="row">
     <div class="col-4 flex-column">
         <div class="mb-3 mt-2">
-            <button  class="btn btn-primary boton-alta me-2" type="button" id="" (click)="modalCargaMultiple()" [disabled]="usuario.roles.demo">
+            <button  class="btn btn-primary boton-alta me-2" type="button" id="" (click)="modalCargaMultiple()" [disabled]="usuarioSesion.esRol('demo')">
                 Alta de Operacion
             </button>            
             <!-- <app-btn-editar name="cargaMultiple" class="" (click)="modalCargaMultiple()"  ></app-btn-editar> -->
@@ -176,23 +176,23 @@
                             </app-btn-leer>
                             
                             <app-btn-editar                                                                
-                                [ngClass]="{'isDisabled':!puedeEditar(row)|| usuario.roles.demo}"
+                                [ngClass]="{'isDisabled':!puedeEditar(row)|| usuarioSesion.esRol('demo')}"
                                 name="EditarColor"
                                 (click)="abrirModalDetalle(row.idOperacion, 'edicion')">
                             </app-btn-editar>
                             
                             
                             <app-btn-eliminar
-                                [disabled]="usuario.roles.demo"
+                                [disabled]="usuarioSesion.esRol('demo')"
                                 name="EliminarColor"
-                                [ngClass]="{'isDisabled':!puedeEliminar(row)|| usuario.roles.demo}"
+                                [ngClass]="{'isDisabled':!puedeEliminar(row)|| usuarioSesion.esRol('demo')}"
                                 (click)="eliminar(row.idOperacion)">
                             </app-btn-eliminar>
                             
                             
                             <app-btn-agregar
-                                [disabled]="usuario.roles.demo"
-                                name="FacturaColor" [ngClass]="{'isDisabled':!puedeCerrar(row)|| usuario.roles.demo}"
+                                [disabled]="usuarioSesion.esRol('demo')"
+                                name="FacturaColor" [ngClass]="{'isDisabled':!puedeCerrar(row)|| usuarioSesion.esRol('demo')}"
                                 (click)="abrirModalDetalle(row.idOperacion, 'cerrar')">
                             </app-btn-agregar>
                     

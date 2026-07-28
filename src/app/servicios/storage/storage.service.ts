@@ -11,6 +11,7 @@ import * as _ from 'lodash';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { LogEntry } from 'src/app/interfaces/log-entry';
 import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
+import { UsuarioSesionService } from '../usuario-sesion/usuario-sesion.service';
 
 
 
@@ -29,8 +30,9 @@ export class StorageService {
 
 
   constructor(
-    private dbFirebase: DbFirestoreService, 
-    private logService: LogService
+    private dbFirebase: DbFirestoreService,
+    private logService: LogService,
+    private usuarioSesion: UsuarioSesionService,
   ) { }
 
   private destroy$ = new Subject<void>();
@@ -45,9 +47,6 @@ export class StorageService {
   
   private _proveedores$ = new BehaviorSubject<any>(this.loadInfo('proveedores') || []);
   public proveedores$ = this._proveedores$.asObservable();
-
-  private _usuario$ = new BehaviorSubject<any>(this.loadInfo('usuario') || [] || null);
-  public usuario$ = this._usuario$.asObservable()
 
   private _operaciones$ = new BehaviorSubject<any>(this.loadInfo('operaciones') || []);
   public operaciones$ = this._operaciones$.asObservable()
@@ -305,11 +304,6 @@ export class StorageService {
         this._choferes$.next(data)
         break;
       }
-      case "usuario": {
-        this._usuario$.next(data)
-        break;
-      }
-
       case "operaciones": {
         this._operaciones$.next(data)
         break;
@@ -776,17 +770,9 @@ export class StorageService {
 
   // metodo initializer si el rol es admin
   initializerAdmin() {
-    ////console.log("me llamaron???");
-    
-    //this.getAll<Cliente>("clientes");
-    //this.getAll<Chofer>("choferes");
-    //this.getAll<Proveedor>("proveedores");
-    //this.getAll<Proveedor>("tarifasGralCliente");
-    //this.getMostRecentItem<TarifaGralCliente>("tarifasGralCliente", "idTarifa");
-    //this.getMostRecentItem<TarifaGralCliente>("tarifasGralChofer", "idTarifa");
-    //this.getMostRecentItem<TarifaGralCliente>("tarifasGralProveedor", "idTarifa");
-    this.getAllColection<any>("users");    
-    //this.getAllSorted("legajos", 'idLegajo', 'asc');    
+    if (this.usuarioSesion.esRol('dev', 'admin')) {
+      this.getAllColection<any>("users");
+    }
   }
 
 
@@ -992,8 +978,6 @@ export class StorageService {
         return this._tarifasEspProveedor$.asObservable();            
       case 'users':
         return this._users$.asObservable(); 
-      case 'usuario':
-        return this._usuario$.asObservable(); 
       case 'operaciones':
         return this._operaciones$.asObservable(); 
       case 'todasTarifasEspCliente':
@@ -1093,92 +1077,67 @@ export class StorageService {
 
      
       public addItem(componente: string, item: any, idItem:any, accion:string, msj: string): void {
-        let user = this.loadInfo('usuario');
         //let accion: string = "ALTA";
         let regLog:boolean = this.controlLog(componente, accion);
-        this.dbFirebase.create(componente, item).then(() => {        
-          if (!user[0].roles.god && regLog){            
-            this.logService.logEvent(accion, componente, msj, idItem, true);           
-          }          
-          
-        }).catch((e) => {          
-          if (!user[0].roles.god && regLog){
+        this.dbFirebase.create(componente, item).then(() => {
+          if (!this.usuarioSesion.esRol('dev') && regLog){
+            this.logService.logEvent(accion, componente, msj, idItem, true);
+          }
+
+        }).catch((e) => {
+          if (!this.usuarioSesion.esRol('dev') && regLog){
             this.logService.logEvent(accion, componente, msj, idItem, false);
           }
           console.log(e.message)});
       }
 
-/*       public addLogItem(componente: string, item: any, idItem:number, accion:string, msj: string): void {
-        let user = this.loadInfo('usuario');
-        //let accion: string = "ALTA";
-        let regLog:boolean = this.controlLog(componente, accion);
-        this.dbFirebase.create(componente, item).then(() => {        
-          if (!user[0].roles.god && regLog){            
-            this.logService.logEvent(accion, componente, msj, idItem, true);           
-          }          
-          
-        }).catch((e) => {          
-          if (!user[0].roles.god && regLog){
-            this.logService.logEvent(accion, componente, msj, idItem, false);
-          }
-          console.log(e.message)});
-      } */
-    
       public deleteItem(componente: string, item: any,  idItem:number, accion:string, msj:string): void {
         //console.log(" storage deleteItem ", componente)
-        let user = this.loadInfo('usuario');
-        //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
         this.dbFirebase.delete(componente, item.id).then(() => {
-          if (!user[0].roles.god && regLog) {             
+          if (!this.usuarioSesion.esRol('dev') && regLog) {
             this.logService.logEvent(accion, componente, msj, idItem, true);
-          }                 
+          }
         }).catch((e) => {
-          if (!user[0].roles.god && regLog){
+          if (!this.usuarioSesion.esRol('dev') && regLog){
             this.logService.logEvent(accion, componente, msj, idItem, false);
           }
           console.log(e.message)});
       }
 
       public deleteItemPapelera(componente: string, item: any,  idItem:any, accion:string, msj:string, motivo:string): void {
-        let user = this.loadInfo('usuario');
-        //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
         this.dbFirebase.delete(componente, item.id).then(() => {
-          if (!user[0].roles.god && regLog) {             
+          if (!this.usuarioSesion.esRol('dev') && regLog) {
             this.logService.logEventDoc(accion, componente, msj, idItem, item, true, motivo);
-          }                 
+          }
         }).catch((e) => {
-          if (!user[0].roles.god && regLog){
+          if (!this.usuarioSesion.esRol('dev') && regLog){
             this.logService.logEvent(accion, componente, msj, idItem, false);
           }
           console.log(e.message)});
       }
 
       async addSimpleLogPapelera(componente: string, item: any,  idItem:number|string, accion:string, msj:string, motivo:string){
-        let user = this.loadInfo('usuario');
-        //let accion: string = "BAJA";
-        let regLog:boolean = this.controlLog(componente, accion);      
-        if (!user[0].roles.god && regLog){  
-          console.log("aca?");                    
-          this.logService.logEventDoc(accion, componente, msj, idItem, item,  true, motivo);           
-        }         
+        let regLog:boolean = this.controlLog(componente, accion);
+        if (!this.usuarioSesion.esRol('dev') && regLog){
+          console.log("aca?");
+          this.logService.logEventDoc(accion, componente, msj, idItem, item,  true, motivo);
+        }
 
       }
-    
+
       public updateItem(componente: string, item: any, idItem:any, accion:string, msj: string, uid:any): void {
         //////console.log("storage update item", componente, item);
-        let user = this.loadInfo('usuario');
-        //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
         //console.log("regLog", regLog);
-        
+
         this.dbFirebase.update(componente, item, uid).then(() => {
-          if (!user[0].roles.god && regLog) { 
+          if (!this.usuarioSesion.esRol('dev') && regLog) {
             this.logService.logEvent(accion, componente, msj, idItem, true);
-          }      
+          }
         }).catch((e) => {
-          if (!user[0].roles.god && regLog){
+          if (!this.usuarioSesion.esRol('dev') && regLog){
             this.logService.logEvent(accion, componente, msj, idItem, false);
           }
           console.log(e.message)});
@@ -1186,34 +1145,30 @@ export class StorageService {
 
       public updateUser(componente: string, item: any, accion:string): void {
         //////console.log("storage update item", componente, item);
-        let user = this.loadInfo('usuario');
-        //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
         this.dbFirebase.updateUser(item).then(() => {
-          if (!user[0].roles.god && regLog) { 
+          if (!this.usuarioSesion.esRol('dev') && regLog) {
             this.logService.logEvent(accion, componente, `Edición de Usuario ${item.email}`, item.uid, true);
-          }   
+          }
         }).catch((e) => {
-          if (!user[0].roles.god && regLog) { 
+          if (!this.usuarioSesion.esRol('dev') && regLog) {
             this.logService.logEvent(accion, componente, `Edición de Usuario ${item.email}`, item.uid, false);
-          }  
+          }
           //console.log(e.message)
         });
       }
 
       public deleteUser(componente: string, item: any, accion: string): void {
         //////console.log("storage delete item", componente, item);
-        let user = this.loadInfo('usuario');
-        //let accion: string = "BAJA";
         let regLog:boolean = this.controlLog(componente, accion);
         this.dbFirebase.deleteUser(item.id).then(() => {
-          if (!user[0].roles.god && regLog) { 
+          if (!this.usuarioSesion.esRol('dev') && regLog) {
             this.logService.logEvent(accion, componente, `Baja de Usuario ${item.email}`, item.uid, true);
-          }  
+          }
         }).catch((e) => {
-          if (!user[0].roles.god && regLog) { 
+          if (!this.usuarioSesion.esRol('dev') && regLog) {
             this.logService.logEvent(accion, componente, `Baja de Usuario ${item.email}`, item.uid, false);
-          }  
+          }
           //console.log(e.message)
         });
       }
@@ -1235,9 +1190,8 @@ export class StorageService {
         resultado: boolean
       ){        ///metodo para crear multiples LogEntry
         let arryLog: LogEntry[] = [];
-        let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
-        if (!user[0].roles.god) {
+        if (!this.usuarioSesion.esRol('dev')) {
           let incremento = 0
 
           idOperaciones.forEach((idOp: string)=>{
@@ -1261,9 +1215,8 @@ export class StorageService {
         resultado: boolean
       ){ ///metodo para guardar multiples LogEntry
         let arryLog: LogEntry[] = [];
-        let user = this.loadInfo('usuario');
         //let accion: string = "BAJA";
-        if (!user[0].roles.god) { 
+        if (!this.usuarioSesion.esRol('dev')) {
           let logEntry: LogEntry = this.logService.createLogEntry(accion, coleccion, detalle, idObjeto, resultado,0);
           arryLog.push(logEntry)
         console.log("Storage Service: arraLog: ", arryLog);        
@@ -1399,17 +1352,16 @@ export class StorageService {
     accion: string,
     msj: string
   ): Promise<string> {
-    let user = this.loadInfo('usuario');
     let regLog = this.controlLog(componente, accion);
     return this.dbFirebase.createAndGetId(componente, item)
       .then((id) => {
-        if (!user[0].roles.god && regLog) {
+        if (!this.usuarioSesion.esRol('dev') && regLog) {
           this.logService.logEvent(accion, componente, msj, id, true);
         }
         return id;
       })
       .catch((e) => {
-        if (!user[0].roles.god && regLog) {
+        if (!this.usuarioSesion.esRol('dev') && regLog) {
           this.logService.logEvent(accion, componente, msj, '', false);
         }
         console.log(e.message);
@@ -1424,15 +1376,14 @@ export class StorageService {
     accion: string,
     msj: string,
   ): Promise<void> {
-    let user = this.loadInfo('usuario');
     let regLog = this.controlLog(componente, accion);
     try {
       await this.dbFirebase.update(componente, item, idItem);
-      if (!user[0].roles.god && regLog) {
+      if (!this.usuarioSesion.esRol('dev') && regLog) {
         this.logService.logEvent(accion, componente, msj, idItem, true);
       }
     } catch (e: any) {
-      if (!user[0].roles.god && regLog) {
+      if (!this.usuarioSesion.esRol('dev') && regLog) {
         this.logService.logEvent(accion, componente, msj, idItem, false);
       }
       console.log(e.message);
@@ -1448,15 +1399,14 @@ export class StorageService {
     msj: string,
     motivo: string,
   ): Promise<void> {
-    let user = this.loadInfo('usuario');
     let regLog = this.controlLog(componente, accion);
     try {
       await this.dbFirebase.delete(componente, item.id);
-      if (!user[0].roles.god && regLog) {
+      if (!this.usuarioSesion.esRol('dev') && regLog) {
         await this.logService.logEventDoc(accion, componente, msj, idItem, item, true, motivo);
       }
     } catch (e: any) {
-      if (!user[0].roles.god && regLog) {
+      if (!this.usuarioSesion.esRol('dev') && regLog) {
         this.logService.logEvent(accion, componente, msj, idItem, false);
       }
       console.log(e.message);
@@ -1471,15 +1421,14 @@ export class StorageService {
     accion: string,
     msj: string,
   ): Promise<void> {
-    let user = this.loadInfo('usuario');
     let regLog = this.controlLog(componente, accion);
     try {
       await this.dbFirebase.delete(componente, id);
-      if (!user[0].roles.god && regLog) {
+      if (!this.usuarioSesion.esRol('dev') && regLog) {
         this.logService.logEvent(accion, componente, msj, idItem, true);
       }
     } catch (e: any) {
-      if (!user[0].roles.god && regLog) {
+      if (!this.usuarioSesion.esRol('dev') && regLog) {
         this.logService.logEvent(accion, componente, msj, idItem, false);
       }
       console.log(e.message);
@@ -1495,17 +1444,16 @@ export class StorageService {
     msj: string,
     motivo: string,
   ): Promise<void> {
-    let user = this.loadInfo('usuario');
     let regLog = this.controlLog(componente, accion);
     try {
       await this.dbFirebase.delete(componente, itemId);
-      if (!user[0].roles.god && regLog) {
+      if (!this.usuarioSesion.esRol('dev') && regLog) {
         await this.logService.logEventDoc(
           accion, componente, msj, itemId, objetoPapelera, true, motivo
         );
       }
     } catch (e: any) {
-      if (!user[0].roles.god && regLog) {
+      if (!this.usuarioSesion.esRol('dev') && regLog) {
         this.logService.logEvent(accion, componente, msj, itemId, false);
       }
       console.log(e.message);

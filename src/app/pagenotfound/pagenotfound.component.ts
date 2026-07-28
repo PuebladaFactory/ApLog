@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { StorageService } from '../servicios/storage/storage.service';
+import { UsuarioSesionService } from '../servicios/usuario-sesion/usuario-sesion.service';
 
 @Component({
     selector: 'app-pagenotfound',
@@ -10,22 +10,18 @@ import { StorageService } from '../servicios/storage/storage.service';
 })
 export class PagenotfoundComponent implements OnInit {
 
-  usuario!: any;
-
-  constructor(private router: Router, private storageService: StorageService ) { }
+  constructor(private router: Router, private usuarioSesion: UsuarioSesionService) { }
 
   ngOnInit(): void {
-    let usuarioLogueado = this.storageService.loadInfo("usuario");
-    this.usuario = structuredClone(usuarioLogueado[0])
   }
 
   volver() {
-    if(this.usuario.hasOwnProperty('roles')){
+    if (this.usuarioSesion.getUsuarioActual() !== null) {
       this.router.navigate(['op']);
-    }else {
+    } else {
       this.router.navigate(['login']);
     }
-    
+
   }
 
 

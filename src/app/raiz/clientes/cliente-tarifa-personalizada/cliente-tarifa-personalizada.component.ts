@@ -22,6 +22,7 @@ import { ConId, ConIdType } from "src/app/interfaces/conId";
 import { Router } from "@angular/router";
 import { TarifasService } from "src/app/servicios/tarifas/tarifas.service";
 import { ResumenTarifa, TarifaAumentoPayload } from "../cliente-tarifa-aumento/cliente-tarifa-aumento.component";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 
 export interface TarifaForm {
   secciones: Seccion[];
@@ -72,6 +73,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     private dbFirebase: DbFirestoreService,
     private router: Router,
     private tarifasService: TarifasService,
+    public usuarioSesion: UsuarioSesionService,
   ) {
     this.inputSecciones = this.fb.group({
       cantSecciones: [""],
@@ -101,8 +103,7 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
     this.clientesPers = this.clientesPers.sort((a, b) =>
       a.razonSocial.localeCompare(b.razonSocial),
     );
-    let usuario = this.storageService.loadInfo("usuario");
-    this.usuario = usuario[0];
+    this.usuario = this.usuarioSesion.getUsuarioActual();
 
     this.storageService
       .getObservable<ConId<TarifaPersonalizadaCliente>>("tarifasPersCliente")

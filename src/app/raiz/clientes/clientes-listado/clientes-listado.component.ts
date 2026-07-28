@@ -12,6 +12,7 @@ import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-obj
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 @Component({
   selector: 'app-listado-nuevo',
@@ -31,7 +32,6 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
   isLoading: boolean = false;
   clientesFiltrados: ConIdType<Cliente>[] = [];
   filtroEstado: 'visibles' | 'todos' = 'visibles';
-  usuario:any
 
   constructor(
     private storageService: StorageService,
@@ -39,6 +39,7 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
     private dbFirestore: DbFirestoreService,
     private excelServ: ExcelService,
     private clienteService: ClienteService,
+    public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
@@ -71,9 +72,6 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
       { tipo: 'editar', handler: (fila) => this.abrirEdicion(fila._objeto) },
       { tipo: 'eliminar', handler: (fila) => this.eliminarCliente(fila._objeto) },
     ];
-
-    let user = this.storageService.loadInfo('usuario');
-    this.usuario = user[0];
   }
 
   aplicarFiltro(): void {

@@ -11,7 +11,11 @@
       <div class="authBlock">
         <h2>Thank You for Registering</h2>
 
-        @if (authService.userData; as user) {
+        <!-- TODO: AuthService ya no expone userData (campo sin uso, eliminado en la
+             migración de roles). No hay hoy una fuente para el email recién
+             registrado; revisar si hace falta reponerlo cuando se rediseñe el alta
+             de usuarios (Bloque C). -->
+        <!-- @if (authService.userData; as user) {
           <div class="formGroup">
             <p class="text-center">
               We have sent a confirmation email to <strong>{{ user.email }}</strong
@@ -22,14 +26,14 @@
               address.
             </p>
           </div>
-        }
+        } -->
 
-        <!-- Calling SendVerificationMail() method using authService Api -->
+        <!-- Calling SendVerificationMail() method del componente -->
         <div class="formGroup">
           <button
             type="button"
             class="btn btnPrimary"
-            (click)="authService.SendVerificationMail()"
+            (click)="SendVerificationMail()"
             >
             <i class="fas fa-redo-alt"></i>
             Resend Verification Email

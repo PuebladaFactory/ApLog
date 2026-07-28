@@ -5,6 +5,7 @@ import { UsuariosEdicionComponent } from '../modales/usuarios-edicion/usuarios-e
 import { AnimationKeyframesSequenceMetadata } from '@angular/animations';
 import Swal from 'sweetalert2';
 import { Subject, takeUntil } from 'rxjs';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 @Component({
     selector: 'app-ajustes-usuarios',
@@ -16,15 +17,15 @@ export class AjustesUsuariosComponent implements OnInit {
   
   searchText: string = "";
   $usuariosTodos: any[] = [];
-  $usuario!: any;
   private destroy$ = new Subject<void>();
 
-  constructor(private storageService: StorageService, private modalService: NgbModal){}
+  constructor(
+    private storageService: StorageService,
+    private modalService: NgbModal,
+    public usuarioSesion: UsuarioSesionService,
+  ){}
 
   ngOnInit(): void {
-    let usuarioLogueado = this.storageService.loadInfo("usuario");
-    this.$usuario = structuredClone(usuarioLogueado[0]);
-    //console.log("this.usuario2: ", this.$usuario);
     this.storageService.users$
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {

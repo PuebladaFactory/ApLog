@@ -20,6 +20,7 @@ import { DescuentosComponent } from "../descuentos/descuentos.component";
 import Swal from "sweetalert2";
 import { PeriodoModalComponent } from "src/app/raiz/liquidacion/modales/periodo-modal/periodo-modal.component";
 import { BuscarTarifaService } from "src/app/servicios/buscarTarifa/buscar-tarifa.service";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 
 @Component({
   selector: "app-modal-factura",
@@ -48,7 +49,6 @@ export class InformeLiqDetalleComponent implements OnInit {
   periodoBoolean: boolean = true;
   periodo!: 'mes' | '1° quincena' | '2° quincena';
   tipoCliente!: boolean;
-  usuario:any;
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -56,6 +56,7 @@ export class InformeLiqDetalleComponent implements OnInit {
     private dbFirebase: DbFirestoreService,
     private modalService: NgbModal,
     private buscarTarifaServ: BuscarTarifaService,
+    public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
@@ -77,8 +78,6 @@ export class InformeLiqDetalleComponent implements OnInit {
     this.titulo = this.fromParent.item.entidad.razonSocial;
     this.periodo = this.informeLiq.periodo ?? "mes";
     this.tipoCliente = this.fromParent.tipo === 'cliente' ? true: false;
-    let user = this.storageService.loadInfo('usuario');
-    this.usuario = user[0];
     console.log(this.fromParent);
     
   }

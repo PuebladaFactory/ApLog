@@ -1,157 +1,163 @@
-import { Injectable, inject, NgZone } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, User, reload } from 'firebase/auth';
+import {
+  Auth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
+  sendPasswordResetEmail,
+  User,
+  reload
+} from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc, updateDoc } from '@angular/fire/firestore';
-import { DbFirestoreService } from '../database/db-firestore.service';
+import Swal from 'sweetalert2';
 import { StorageService } from '../storage/storage.service';
 import { LogService } from '../log/log.service';
-import { environment } from '../../../environments/environment';
-import { Auth } from '@angular/fire/auth';
-
+import { UsuarioSesionService } from '../usuario-sesion/usuario-sesion.service';
+import { Usuario } from '../../interfaces/usuario';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  userData: any;
-  usuario: any;
-
   private auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
 
   constructor(
-    public router: Router,
-    public ngZone: NgZone,
+    private router: Router,
     private storage: StorageService,
-    private dbFirebase: DbFirestoreService,
-    private logService: LogService
-  ) { }
+    private logService: LogService,
+    private usuarioSesion: UsuarioSesionService
+  ) {}
 
-  async SignIn(email: string, password: string): Promise<void> {
+  async iniciarSesion(email: string, password: string): Promise<void> {
     try {
       const result = await signInWithEmailAndPassword(this.auth, email, password);
-      const userData = await this.GetUserData(result.user!.uid);
+      const resultado = await this.obtenerDatosUsuario(result.user.uid);
 
-      if (userData === null) {
+      if (resultado === null) {
         this.router.navigate(['/unauthorized']);
-      } else {
-        this.checkEmailVerification();
-        this.usuario = userData;
-        this.storage.setInfo('usuario', [userData]);
-
-        if (!this.usuario.roles.god) {
-          await this.logService.logEvent(
-            'LOGIN',
-            'users',
-            `Usuario ${result.user!.email} inició sesión.`,
-            0,
-            true
-          );
-        }
-
-        if (this.usuario.hasOwnProperty('roles')) {
-          this.router.navigate(['/carga']);
-        } else {
-          this.router.navigate(['/unauthorized']);
-        }
+        return;
       }
+
+      if (resultado === 'sin-rol') {
+        this.router.navigate(['/limbo']);
+        return;
+      }
+
+      const usuario = resultado;
+      this.chequearVerificacionEmail();
+      this.usuarioSesion.setUsuario(usuario);
+
+      if (usuario.role !== 'dev') {
+        await this.logService.logEvent(
+          'LOGIN',
+          'users',
+          `Usuario ${usuario.email} inició sesión.`,
+          0,
+          true
+        );
+      }
+
+      this.router.navigate(['/carga']);
     } catch (error: any) {
       console.error(error.message);
-      this.logService.logEvent(
+      await this.logService.logEvent(
         'LOGIN',
         'users',
         `Error al iniciar sesión: ${error.message}`,
         0,
         false
       );
-      window.alert(error.message);
+      Swal.fire('Error', error.message, 'error');
     }
   }
 
-  async GetUserData(uid: string): Promise<any> {
+  private async obtenerDatosUsuario(uid: string): Promise<Usuario | 'sin-rol' | null> {
     const docRef = doc(this.firestore, `users/${uid}`);
     const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return docSnap.data();
-    } else {
-      console.error('No user data found!');
+    if (!docSnap.exists()) {
+      console.error('No se encontró el documento de usuario.');
       return null;
     }
-  }
-
-  checkEmailVerification(): void {
-    const user = this.auth.currentUser;
-    if (user) {
-      reload(user).then(() => {
-        if (user.emailVerified) {
-          this.updateEmailVerifiedStatus(user.uid);
-        }
-      });
+    const data = docSnap.data();
+    if (!data['role']) {
+      return 'sin-rol';
     }
+    return data as Usuario;
   }
 
-  private updateEmailVerifiedStatus(uid: string): void {
-    const userRef = doc(this.firestore, `users/${uid}`);
-    updateDoc(userRef, { emailVerified: true }).then(() => {
-      console.log('Email verification status updated successfully in Firestore.');
+  private chequearVerificacionEmail(): void {
+    const user = this.auth.currentUser;
+    if (!user) return;
+    reload(user).then(() => {
+      if (user.emailVerified) {
+        this.actualizarEmailVerificado(user.uid);
+      }
     });
   }
 
-  async SignUp(email: string, password: string): Promise<void> {
+  private actualizarEmailVerificado(uid: string): void {
+    const userRef = doc(this.firestore, `users/${uid}`);
+    updateDoc(userRef, { emailVerified: true });
+  }
+
+  async registrarUsuario(email: string, password: string): Promise<void> {
     try {
       const result = await createUserWithEmailAndPassword(this.auth, email, password);
-      await this.SendVerificationMail();
-      const initialRoles = { god: false, admin: false, manager: false, user: false };
-      await this.SetUserData(result.user, initialRoles);
+      await this.enviarEmailVerificacion();
+      await this.crearDocumentoUsuarioSinRol(result.user);
     } catch (error: any) {
-      window.alert(error.message);
+      Swal.fire('Error', error.message, 'error');
     }
   }
 
-SendVerificationMail(): Promise<void> {
-  return sendEmailVerification(this.auth.currentUser!)
-    .then(() => {
+  private async crearDocumentoUsuarioSinRol(user: User): Promise<void> {
+    const userRef = doc(this.firestore, `users/${user.uid}`);
+    const userData = {
+      uid: user.uid,
+      email: user.email ?? '',
+      displayName: user.displayName || '',
+      photoURL: user.photoURL || '',
+      emailVerified: user.emailVerified,
+      name: ''
+      // sin 'role' a propósito: queda incompleto hasta que dev/admin le
+      // asigne uno manualmente en Firestore. Vigente hasta Bloque C
+      // (alta de usuarios por Cloud Function).
+    };
+    return setDoc(userRef, userData, { merge: true });
+  }
+
+  enviarEmailVerificacion(): Promise<void> {
+    if (!this.auth.currentUser) return Promise.resolve();
+    return sendEmailVerification(this.auth.currentUser).then(() => {
       this.router.navigate(['verify-email-address']);
-    })
-    .then(() => {}); // fuerza Promise<void>
-}
-
-  ForgotPassword(passwordResetEmail: string): Promise<void> {
-    return sendPasswordResetEmail(this.auth, passwordResetEmail)
-      .then(() => window.alert('Password reset email sent, check your inbox.'))
-      .catch((error) => window.alert(error));
+    });
   }
 
-  GoogleAuth(): Promise<void> {
-    return this.AuthLogin(new GoogleAuthProvider());
+  resetearPassword(email: string): Promise<void> {
+    return sendPasswordResetEmail(this.auth, email)
+      .then(() => { Swal.fire('Listo', 'Revisá tu casilla de correo.', 'success'); })
+      .catch((error) => { Swal.fire('Error', error.message, 'error'); });
   }
 
-  AuthLogin(provider: GoogleAuthProvider): Promise<void> {
-    return signInWithPopup(this.auth, provider)
-      .then((result) => {
-        this.SetUserData(result.user);
-      })
-      .catch((error) => {
-        window.alert(error);
-      });
-  }
-
-  async SignOut(): Promise<void> {
+  async cerrarSesion(): Promise<void> {
+    const usuario = this.usuarioSesion.getUsuarioActual();
     try {
-      const usuario = this.storage.loadInfo('usuario');
-      if (usuario[0] && !usuario[0].roles.god) {
+      await signOut(this.auth);
+      if (usuario && usuario.role !== 'dev') {
         await this.logService.logEvent(
           'LOGOUT',
           'users',
-          `Usuario ${usuario[0].email} cerró sesión.`,
+          `Usuario ${usuario.email} cerró sesión.`,
           0,
           true
         );
       }
-      localStorage.clear();
+      this.storage.clearAllLocalStorage();
+      this.usuarioSesion.limpiar();
       this.router.navigate(['/login']);
-      console.log('Cierre de sesión exitoso.');
-      await signOut(this.auth);
     } catch (error: any) {
       console.error('Error al cerrar sesión:', error);
       await this.logService.logEvent(
@@ -162,24 +168,5 @@ SendVerificationMail(): Promise<void> {
         false
       );
     }
-  }
-
-  async SetUserData(user: User, roles: { god?: boolean; admin?: boolean; manager?: boolean; user?: boolean } = { admin: false, manager: false, user: false }) {
-    const userRef = doc(this.firestore, `users/${user.uid}`);
-    const userData: any = {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName || '',
-      photoURL: user.photoURL || '',
-      emailVerified: user.emailVerified,
-      roles: roles,
-      name: (user as any).name || '',
-    };
-    return setDoc(userRef, userData, { merge: true });
-  }
-
-  currentUserRoles() {
-    const user = JSON.parse(localStorage.getItem('usuario')!);
-    return user ? user[0].roles : { god: false, admin: false, manager: false, user: false };
   }
 }

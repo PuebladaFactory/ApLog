@@ -18,6 +18,7 @@ import {
 import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
 import { PdfService } from "src/app/servicios/informes/pdf/pdf.service";
 import { StorageService } from "src/app/servicios/storage/storage.service";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 import Swal from "sweetalert2";
 
 interface ClienteGrupo {
@@ -62,7 +63,6 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
   informesVenta!: ConId<InformeVenta>[];
   vendedores!: ConId<Vendedor>[];
   isLoading: boolean = false;
-  usuario:any;
 
   constructor(
     private storageService: StorageService,
@@ -71,6 +71,7 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
     private modalService: NgbModal,
     private dbFirebase: DbFirestoreService,
     private dateRangeService: DateRangeService,
+    public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
@@ -165,8 +166,6 @@ export class TableroActividadComponent implements OnInit, OnDestroy {
             }
           });
       });
-            let user = this.storageService.loadInfo('usuario');
-      this.usuario = user[0];
   }
 
   ngOnDestroy(): void {

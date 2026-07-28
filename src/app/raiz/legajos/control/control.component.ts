@@ -1,6 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
-import { StorageService } from "src/app/servicios/storage/storage.service";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 
 @Component({
   selector: "app-control",
@@ -20,7 +20,7 @@ import { StorageService } from "src/app/servicios/storage/storage.service";
         class="tab"
         [class.active]="selectedTab === 'tab2'"
         (click)="selectTab('tab2')"
-        [ngClass]="{ isDisabled: usuario.roles.demo }"
+        [ngClass]="{ isDisabled: usuarioSesion.esRol('demo') }"
       >
         Cargar Documentos
       </div>
@@ -39,17 +39,14 @@ import { StorageService } from "src/app/servicios/storage/storage.service";
 })
 export class ControlComponent implements OnInit {
   selectedTab: string = "tab1";
-  usuario: any;
 
   constructor(
     private router: Router,
-    private storageService: StorageService,
+    public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
     //this.selectTab("tab1");
-    let usuario = this.storageService.loadInfo("usuario");
-    this.usuario = usuario[0];
   }
 
   selectTab(tab: string) {

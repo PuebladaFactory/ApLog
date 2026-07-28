@@ -15,10 +15,9 @@ export class UsuariosEdicionComponent implements OnInit {
   usuario!: any;
   correoVerificado!: boolean;
   nombre:string = "";
-  roles: any = {god:false, admin:false, manager:false, user:false}
 
   constructor(public activeModal: NgbActiveModal, private storageService: StorageService){}
-  
+
   ngOnInit(): void {
     let user = this.fromParent.item;
     this.usuario = structuredClone(user);
@@ -29,39 +28,25 @@ export class UsuariosEdicionComponent implements OnInit {
   armarUsuario(): void {
     this.correoVerificado = this.usuario.emailVerified;
     this.nombre = this.usuario.name;
-    this.roles = this.usuario.roles
   }
 
   verificarCorreo(e:any){
-    this.correoVerificado = e.target.value.toLowerCase() == 'true';   
+    this.correoVerificado = e.target.value.toLowerCase() == 'true';
   }
 
+  // TODO: refactor alta de usuarios (Bloque C) — este flujo armaba el viejo mapa
+  // de booleanos { god, admin, manager, user }. Con role: string único, asignar
+  // un rol a OTRO usuario desde esta pantalla necesita rediseño (no es un simple
+  // cambio de sintaxis), así que queda sin efecto hasta ese frente.
   asignarRoles(e:any){
-    //console.log("roles: ", e.target.value);
-    switch(e.target.value){
-      case 'admin' :{
-        this.roles = {god:false, admin:true, manager: false, user: false};
-        break;
-      }
-      case 'manager' :{
-        this.roles = {god:false, admin:false, manager: true, user: false};
-        break;
-      }
-      case 'user' :{
-        this.roles = {god:false, admin:false, manager: false, user: true};
-        break;
-      }
-      default:{
-        console.log("error");        
-        break
-      }
-    }
+    console.log("asignarRoles: pendiente de rediseño (Bloque C), valor recibido:", e.target.value);
   }
 
   updateUser(){
     this.usuario.emailVerified = this.correoVerificado;
     this.usuario.name = this.nombre ? this.nombre : "";
-    this.usuario.roles = this.roles;
+    // TODO: refactor alta de usuarios (Bloque C) — no se reasigna this.usuario.role
+    // acá; ver nota en asignarRoles().
     console.log("usuario a editar:", this.usuario);
     Swal.fire({
               title: "¿Desea guardar los cambios?",

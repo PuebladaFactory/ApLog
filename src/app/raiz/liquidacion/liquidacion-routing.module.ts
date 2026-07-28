@@ -17,7 +17,7 @@ const routes: Routes = [
       {path: 'proveedor', component:LiquidacionesOpComponent},
       {path: 'migrar', component:MigrarDatosComponent,
       canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['god'] }, // Accesible para todos los roles
+      data: { roles: ['dev'] }, // Accesible para todos los roles
       },
     ]
   },  

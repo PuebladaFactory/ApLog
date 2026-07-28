@@ -13,6 +13,7 @@ import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/forma
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
 import { CargaAsignacionComponent } from '../carga-asignacion/carga-asignacion.component';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 // =====================
 // MODELOS
@@ -119,8 +120,6 @@ private resizingCol: string | null = null;
 private resizeStartX = 0;
 private resizeStartWidth = 0;
 
-usuario:any;
-
   constructor(
     private storage: StorageService,
     private dateRange: DateRangeService,
@@ -128,7 +127,8 @@ usuario:any;
     private operacionService: OperacionService,
     private formatoNum: FormatoNumericoService,
     private excelServ: ExcelService,
-    private reportesOp: ReportesOpService
+    private reportesOp: ReportesOpService,
+    public usuarioSesion: UsuarioSesionService
   ) {}
 
   // =====================
@@ -173,10 +173,6 @@ usuario:any;
           this.aplicarFiltros();
           setTimeout(() => { this.isLoading = false; }, 500);
         });
-
-      let user = this.storage.loadInfo('usuario');
-      this.usuario = user[0];
-      console.log(this.usuario.roles.demo);
 
   }
 

@@ -1,0 +1,146 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    function rol() {
+      return request.auth.token.role;
+    }
+
+    function moduloDe(coleccion) {
+      return {
+        'clientes': 'entidades', 'choferes': 'entidades',
+        'proveedores': 'entidades', 'vehiculos': 'entidades',
+
+        'legajos': 'legajos',
+        'vendedores': 'vendedores',
+
+        'operaciones': 'operaciones', 'asignaciones': 'operaciones',
+        'informesVenta': 'operaciones',
+
+        'tarifasGralCliente': 'tarifas', 'tarifasEspCliente': 'tarifas',
+        'tarifasPersCliente': 'tarifas', 'tarifasGralChofer': 'tarifas',
+        'tarifasEspChofer': 'tarifas', 'tarifasGralProveedor': 'tarifas',
+        'tarifasEspProveedor': 'tarifas', 'tarifasEventuales': 'tarifas',
+
+        'historialTarifasGralCliente': 'tarifasHistorial',
+        'historialTarifasEspCliente': 'tarifasHistorial',
+        'historialTarifasPersCliente': 'tarifasHistorial',
+        'historialTarifasGralChofer': 'tarifasHistorial',
+        'historialTarifasEspChofer': 'tarifasHistorial',
+        'historialTarifasGralProveedor': 'tarifasHistorial',
+        'historialTarifasEspProveedor': 'tarifasHistorial',
+
+        'resumenLiq': 'finanzas', 'proforma': 'finanzas',
+        'informesOpClientes': 'finanzas', 'informesOpChoferes': 'finanzas',
+        'informesOpProveedores': 'finanzas',
+        'infOpLiqClientes': 'finanzas', 'infOpLiqChoferes': 'finanzas',
+        'infOpLiqProveedores': 'finanzas',
+        'resumenOpMensual': 'finanzas', 'resumenFinanzas': 'finanzas',
+        'movimientos': 'finanzas',
+
+        // Legado activo — solo lectura a propósito (ver CLAUDE.md)
+        'facturaCliente': 'legacySoloLectura', 'facturaChofer': 'legacySoloLectura',
+        'facturaProveedor': 'legacySoloLectura',
+        'facturaOpCliente': 'legacySoloLectura', 'facturaOpChofer': 'legacySoloLectura',
+        'facturaOpProveedor': 'legacySoloLectura',
+        'facOpLiqCliente': 'legacySoloLectura', 'facOpLiqChofer': 'legacySoloLectura',
+        'facOpLiqProveedor': 'legacySoloLectura',
+        'resumenLiqClientes': 'legacySoloLectura', 'resumenLiqChoferes': 'legacySoloLectura',
+        'resumenLiqProveedores': 'legacySoloLectura',
+
+        // Código muerto confirmado — solo lectura hasta eliminar
+        'tableroDiario': 'legacySoloLectura', 'tarifasChofer': 'legacySoloLectura',
+        'tarifasCliente': 'legacySoloLectura', 'tarifasProveedor': 'legacySoloLectura',
+
+        'numeradores': 'numeradores',
+        'logs': 'logs',
+        'papelera': 'papelera',
+      }[coleccion];
+    }
+
+    // Matriz rol × módulo × acción
+    function permitido(modulo, accion) {
+      let r = rol();
+      return
+        (modulo == 'entidades' && (
+          r in ['dev','admin'] ||
+          (r == 'user' && accion in ['leer','crear','editar']) ||
+          (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'legajos' && (
+          r in ['dev','admin'] ||
+          (r == 'user' && accion in ['leer','editar']) ||
+          (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'vendedores' && (
+          r in ['dev','admin'] || (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'operaciones' && (
+          r in ['dev','admin'] ||
+          (r == 'user' && accion in ['leer','crear','editar']) ||
+          (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'tarifas' && (
+          r in ['dev','admin'] || (r in ['user','demo'] && accion == 'leer')
+        )) ||
+        (modulo == 'tarifasHistorial' && (
+          (r in ['dev','admin'] && accion in ['leer','crear']) ||
+          (r in ['user','demo'] && accion == 'leer')
+        )) ||
+        (modulo == 'finanzas' && (
+          r in ['dev','admin'] || (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'legacySoloLectura' && accion == 'leer') ||
+        (modulo == 'numeradores' && (
+          r in ['dev','admin','user'] && accion in ['leer','crear','editar']
+        )) ||
+        (modulo == 'logs' && (
+          r == 'dev' ||
+          (r in ['admin','user'] && accion in ['leer','crear']) ||
+          (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'papelera' && (
+          r == 'dev' ||
+          (r == 'admin' && accion in ['leer','crear','eliminar']) ||
+          (r == 'user' && accion == 'crear')
+        ));
+    }
+
+    function esBackup(coleccion) {
+      return coleccion.matches('_backup_.*');
+    }
+
+    // ---------- Reglas ----------
+
+    match /Vantruck/datos/{coleccion}/{docId} {
+      allow read: if autenticado() && (
+        (esBackup(coleccion) && rol() == 'dev') ||
+        (!esBackup(coleccion) && permitido(moduloDe(coleccion), 'leer'))
+      );
+      allow create: if autenticado() && (
+        (esBackup(coleccion) && rol() == 'dev') ||
+        (!esBackup(coleccion) && permitido(moduloDe(coleccion), 'crear'))
+      );
+      allow update: if autenticado() && (
+        (esBackup(coleccion) && rol() == 'dev') ||
+        (!esBackup(coleccion) && permitido(moduloDe(coleccion), 'editar'))
+      );
+      allow delete: if autenticado() && (
+        (esBackup(coleccion) && rol() == 'dev') ||
+        (!esBackup(coleccion) && permitido(moduloDe(coleccion), 'eliminar'))
+      );
+    }
+
+    match /users/{uid} {
+      allow read: if autenticado() && rol() in ['dev','admin'];
+      allow write: if autenticado() && rol() == 'dev';
+    }
+  }
+}

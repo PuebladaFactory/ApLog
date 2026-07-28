@@ -36,6 +36,7 @@ import {
 } from "src/app/servicios/liquidaciones/liquidacion.service";
 import { toISODateString } from "src/app/servicios/fechas/date-range.service";
 import { FinanzasResumenService } from "src/app/servicios/finanzas/finanzas-resumen.service";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 
 @Component({
   selector: "app-facturacion-listado",
@@ -207,6 +208,7 @@ export class FacturacionListadoComponent implements OnInit {
     private supabaseStorageService: SupabaseStorageService,
     private liquidacionService: LiquidacionService,
     private finanzasResumenService: FinanzasResumenService,
+    private usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
@@ -461,7 +463,7 @@ export class FacturacionListadoComponent implements OnInit {
 
       modalRef.componentInstance.fromParent = info;
       try {
-        let usuario = this.storageService.loadInfo("usuario");
+        const usuario = this.usuarioSesion.getUsuarioActual();
         const motivo = await modalRef.result;
         console.log("motivo", motivo);
 
@@ -475,7 +477,7 @@ export class FacturacionListadoComponent implements OnInit {
           informeLiq: informeLiq,
           modo: "factura",
           anuladoMotivo: motivo, //motivo de anulacion
-          anuladoPor: usuario[0].email, //usuario que realizó la anulación
+          anuladoPor: usuario?.email ?? '', //usuario que realizó la anulación
           fechaAnulacion: fechaStr,
         };
         console.log("informesLiq anulado", informeLiq);

@@ -33,7 +33,6 @@ export class LedgerComponent implements OnInit {
   clientes: ConId<Cliente>[] = [];
   choferes: ConId<Chofer>[] = [];
   proveedores: ConId<Proveedor>[] = [];
-  usuario!: any;
   cargando: boolean = false;
 
   informesOp: ConId<InformeOp>[] = [];
@@ -70,9 +69,6 @@ export class LedgerComponent implements OnInit {
       a.razonSocial.localeCompare(b.razonSocial),
     );
     this.onEntidades();
-    let user = this.storageService.loadInfo("usuario");
-    this.usuario = user[0];
-    //console.log("this.usuario: ", this.usuario);
   }
 
   async consultarDatos(id: number) {

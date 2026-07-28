@@ -15,7 +15,7 @@ const routes: Routes = [
     { path: '', redirectTo: 'listado', pathMatch: 'full' },         
     {path: 'alta', component:ChoferesAltaComponent,
           canActivate: [RoleGuard],
-          data: { roles: ['god', 'admin', 'manager'] }, // no se permiten usuarios
+          data: { roles: ['dev', 'admin', 'manager'] }, // no se permiten usuarios
     },        
     {path: 'general', component:ChoferesTarifaGralComponent},
     {path: 'especial', component:ChoferesTarifaEspecialComponent},

@@ -34,7 +34,6 @@ export class HomeComponent implements OnInit {
   appVersion = version;
   activo!:boolean;
   $legajos!:Legajo[];
-  $usuario!: any;
   tarifas$!: Observable<any>;
   private destroy$ = new Subject<void>();
   
@@ -57,8 +56,6 @@ export class HomeComponent implements OnInit {
         //this.router.navigate(['admin']);
         
       });
-      let usuarioLogueado = this.storageService.loadInfo("usuario");
-      this.$usuario = structuredClone(usuarioLogueado[0]);      
       //this.storageService.listenForChanges<Cliente>("clientes");
       //this.storageService.listenForChanges<Chofer>("choferes");
       //this.storageService.listenForChanges<Chofer>("proveedores");

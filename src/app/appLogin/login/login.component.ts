@@ -35,12 +35,6 @@ export class LoginComponent implements OnInit {
   }
 
 
-  loginWithGoogle() {
-    this.authService
-      .GoogleAuth()
-      .catch((e) => console.log(e.message));
-  }
-
   /* accionAsincrona = async () => {
     console.log("pasa por aca 1?");
     this.spinner = true;
@@ -59,7 +53,7 @@ export class LoginComponent implements OnInit {
 
       onKeydown(event: KeyboardEvent, username: string, password: string) {
         if (event.key === 'Enter') {
-          this.authService.SignIn(username, password);
+          this.authService.iniciarSesion(username, password);
         }
       }
 

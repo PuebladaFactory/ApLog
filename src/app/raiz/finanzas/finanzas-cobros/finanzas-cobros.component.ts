@@ -12,6 +12,7 @@ import { MovimientoFinancieroComponent } from '../modales/movimiento-financiero/
 import { MovimientoFormVM } from 'src/app/interfaces/movimiento-form-v-m';
 import { MovimientoFinancieroService } from 'src/app/servicios/finanzas/movimiento-financiero.service';
 import { FinanzasResumenService } from 'src/app/servicios/finanzas/finanzas-resumen.service';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 
 @Component({
@@ -32,20 +33,18 @@ export class FinanzasCobrosComponent implements OnInit {
   clientes: ConId<Cliente>[] = [];
   informesPendientes: ConId<InformeLiq>[] = [];
   informesSeleccionados: ConId<InformeLiq>[] = [];
-  usuario:any;
 
-  constructor(    
+  constructor(
     private storageService: StorageService,
     private modalService: NgbModal,
     private movFinancieroServ: MovimientoFinancieroService,
     private finanzasResumenService: FinanzasResumenService,
+    private usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
     this.clientes = this.storageService.loadInfo('clientes');
     this.clientes = this.clientes.sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
-    let user = this.storageService.loadInfo("usuario");
-    this.usuario = user[0];
   }
 
   /* ===============================
@@ -159,9 +158,9 @@ export class FinanzasCobrosComponent implements OnInit {
 
   registrarCobro(): void {
     if (!this.puedeRegistrarCobro()) return;
-    let usuario = this.storageService.loadInfo('usuario')
+    const usuario = this.usuarioSesion.getUsuarioActual();
     console.log("usuario: ", usuario);
-    
+
     const cliente = this.clientes.find(
       c => String(c.idCliente) === String(this.clienteSeleccionadoId)
     );
@@ -196,7 +195,7 @@ export class FinanzasCobrosComponent implements OnInit {
           // 🔥 acá va el service real
           const movimientoId = await this.movFinancieroServ.registrarMovimientoFinanciero(
             form,
-            usuario[0].email
+            usuario?.email ?? ''
           );
           Swal.fire('OK', 'Cobro registrado correctamente', 'success');
           

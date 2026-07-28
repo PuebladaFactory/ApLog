@@ -129,7 +129,7 @@
 
     <div class="col-4">
         <!-- DERECHA: botones de acción -->
-        <!-- TODO: agregar [disabled]="usuario.roles.demo" cuando se cargue el usuario -->
+        <!-- TODO: agregar [disabled]="usuarioSesion.esRol('demo')" cuando se cargue el usuario -->
         <div class="d-flex gap-1 justify-content-end">
             @if (modo === "edicion") {
                 <button

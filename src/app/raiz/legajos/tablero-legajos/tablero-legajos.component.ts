@@ -8,6 +8,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 
 import { ConIdType } from 'src/app/interfaces/conId';
 import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 @Component({
     selector: 'app-tablero-legajos',
@@ -43,12 +44,12 @@ export class TableroLegajosComponent implements OnInit {
   $choferesFiltrados!: ConIdType<Chofer>[];
   $legajosFiltrados: ConIdType<Legajo>[] = [];
   isLoading: boolean = false;
-  usuario:any;
 
   constructor(
-    private storageService: StorageService, 
-    private modalService: NgbModal
-  ){}  
+    private storageService: StorageService,
+    private modalService: NgbModal,
+    public usuarioSesion: UsuarioSesionService,
+  ){}
   
   ngOnInit(): void {
     this.storageService.listenForChanges<Legajo>("legajos");
@@ -87,10 +88,8 @@ export class TableroLegajosComponent implements OnInit {
     });
     console.log(this.$proveedores); */
     
-    //this.crearLegajos()  
+    //this.crearLegajos()
     //this.storageService.syncChanges("legajos");
-          let usuario = this.storageService.loadInfo("usuario");
-    this.usuario = usuario[0];
   }
 
   ngOnDestroy(): void {

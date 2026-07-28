@@ -5,6 +5,7 @@ import { LogDoc } from "src/app/interfaces/log-doc";
 import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
 import { StorageService } from "src/app/servicios/storage/storage.service";
 import { TableroService } from "src/app/servicios/tablero/tablero.service";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 import { ObjetoPapeleraComponent } from "src/app/shared/modales/objeto-papelera/objeto-papelera.component";
 import Swal from "sweetalert2";
 
@@ -23,13 +24,13 @@ export class PapeleraComponent implements OnInit {
   private destroy$ = new Subject<void>();
   isLoading: boolean = false;
   idObjConsulta: any;
-  usuario:any;
 
   constructor(
     private dbFirebase: DbFirestoreService,
     private storageService: StorageService,
     private modalService: NgbModal,
     private tableroServ: TableroService,
+    public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
@@ -42,8 +43,6 @@ export class PapeleraComponent implements OnInit {
       });
     this.consultarPapelera();
     this.storageService.syncChangesLimit("papelera", "idDoc", this.limite);
-    let usuario = this.storageService.loadInfo("usuario");
-    this.usuario = usuario[0];
   }
 
   getUsuario(email: string) {

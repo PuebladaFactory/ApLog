@@ -20,6 +20,7 @@ import { DbFirestoreService } from "src/app/servicios/database/db-firestore.serv
 import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
 import { ModalVehiculoComponent } from "../../choferes/modal-vehiculo/modal-vehiculo.component";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 
 @Component({
   selector: "app-proveedores-listado",
@@ -40,7 +41,6 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
   filtroEstado: "visibles" | "todos" = "visibles";
   proveedoresMockeados: ConIdType<Proveedor>[] = [];
   isLoading: boolean = false;
-  usuario: any;
 
   columnas: ColumnaTabla[] = [];
   filas: any[] = [];
@@ -55,6 +55,7 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
     private dbFirestore: DbFirestoreService,
     private proveedorService: ProveedorService,
     private choferService: ChoferService,
+    public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
@@ -78,9 +79,6 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
         );
         this.aplicarFiltro();
       });
-    let user = this.storageService.loadInfo("usuario");
-    this.usuario = user[0];
-
     this.columnas = [
       { field: "id", header: "Id", visible: false, width: 110 },
       {

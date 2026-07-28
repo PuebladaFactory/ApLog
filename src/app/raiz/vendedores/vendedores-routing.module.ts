@@ -13,7 +13,7 @@ const routes: Routes = [
     {path: '', redirectTo: 'tableroVendedores', pathMatch: 'full' },                                    
     {path: 'alta', component:VendedorAltaComponent,
           canActivate: [RoleGuard],
-          data: { roles: ['god', 'admin', 'manager'] }, // no se permiten usuarios
+          data: { roles: ['dev', 'admin', 'manager'] }, // no se permiten usuarios
         },        
     {path: 'listado', component:VendedoresListadoComponent},    
     {path: 'tableroVendedores', component:TableroActividadComponent},    

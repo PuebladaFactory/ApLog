@@ -38,11 +38,11 @@
                     <td>Rol</td>
                     <td>                    
                         <select class="form-select" aria-label="Default select example" (change)="asignarRoles($event)" >
-                            <option [value]="roles">{{roles.admin ? "Administrador" : roles.manager ? "Manager" : roles.user ? "Usuario" : "Sin rol asignado"}}</option>
+                            <option [value]="usuario.role">{{usuario.role === 'admin' ? "Administrador" : usuario.role === 'manager' ? "Manager" : usuario.role === 'user' ? "Usuario" : "Sin rol asignado"}}</option>
                             <option value="admin">Administrador</option>
                             <option value="manager">Manager</option>
                             <option value="user">Usuario</option>
-                        </select>                                                
+                        </select>                                              
                     </td>
                 </tr>
             </tbody>

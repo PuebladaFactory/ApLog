@@ -11,7 +11,7 @@
   <div class="col-4">
 
   </div>
-  <ng-container *appRole="['god','admin', 'manager']">
+  <ng-container *appRole="['dev','admin', 'manager']">
     <app-consola-tarifa  class="col-4 "></app-consola-tarifa>
   </ng-container>
 
@@ -107,8 +107,8 @@
         </tr>
       }
     </table>
-    <app-btn-editar *appRole="['god','admin', 'manager']" name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
-    <app-btn-agregar *appRole="['god','admin', 'manager']" name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
+    <app-btn-editar *appRole="['dev','admin', 'manager']" name="editarTarifa" class="me-3" (click)="openModalEdicion()" ></app-btn-editar>
+    <app-btn-agregar *appRole="['dev','admin', 'manager']" name="guardarTarifa" (click)="guardarTarifa()"></app-btn-agregar>
   </form>
   <hr class="mt-4">
   <div class="mt-4">

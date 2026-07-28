@@ -4,7 +4,7 @@
       <app-btn-leer
         name="Cliente"
         (click)="openModal('alta')"
-        [ngClass]="{'isDisabled': usuario.roles.demo}">
+        [ngClass]="{'isDisabled': usuarioSesion.esRol('demo')}">
       </app-btn-leer>
     </div>
     <div class="align-self-start mt-3 mb-1">
@@ -17,7 +17,7 @@
         class="btn btn-primary boton-alta"
         type="button"
         (click)="visibilidadClientes()"
-        [ngClass]="{'isDisabled': usuario.roles.demo}">
+        [ngClass]="{'isDisabled': usuarioSesion.esRol('demo')}">
         Clientes Visibles
       </button>
     </div>

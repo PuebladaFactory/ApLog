@@ -318,7 +318,7 @@ export class OperacionService implements OnDestroy {
       await this.db.commitBatch(escrituras);
 
       // 8. LOG — un registro por el alta (acción principal)
-      // TODO: refactor Roles — exclusión de 'god' del log pendiente (igual que AsignacionService)
+      // TODO: refactor Roles — exclusión de 'dev' del log pendiente (igual que AsignacionService)
       this.logService.logEvent(
         'ALTA', 'operaciones',
         `Alta de ${creadas.length} operación(es) — tablero ${fecha}`,

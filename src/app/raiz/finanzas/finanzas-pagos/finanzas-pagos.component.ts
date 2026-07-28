@@ -10,6 +10,7 @@ import { Proveedor } from "src/app/interfaces/proveedor";
 import { MovimientoFormVM } from "src/app/interfaces/movimiento-form-v-m";
 import Swal from "sweetalert2";
 import { FinanzasResumenService } from "src/app/servicios/finanzas/finanzas-resumen.service";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 
 interface InformeSeleccionadoVM {
   id: string;
@@ -45,13 +46,12 @@ export class FinanzasPagosComponent implements OnInit {
   choferes: ConId<Chofer>[] = [];
   proveedores: ConId<Proveedor>[] = [];
 
-  usuario!:any;
-
   constructor(
     private storageService: StorageService,
     private movFinancieroServ: MovimientoFinancieroService,
     private modal: NgbModal,
     private finanzasResumenService: FinanzasResumenService,
+    private usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
@@ -65,10 +65,6 @@ export class FinanzasPagosComponent implements OnInit {
       a.razonSocial.localeCompare(b.razonSocial),
     );
     this.onEntidades();
-    let user = this.storageService.loadInfo("usuario");
-    this.usuario = user[0];
-    console.log("this.usuario: ", this.usuario);
-    
   }
 
   onEntidades() {
@@ -241,7 +237,7 @@ export class FinanzasPagosComponent implements OnInit {
           const movimientoId =
             await this.movFinancieroServ.registrarMovimientoFinanciero(
               form,
-              this.usuario.email,
+              this.usuarioSesion.getUsuarioActual()?.email ?? '',
             );
           Swal.fire("OK", "Pago registrado correctamente", "success");
 

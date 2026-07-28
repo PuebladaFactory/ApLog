@@ -4,6 +4,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import Swal from 'sweetalert2';
 
 let version = 'v0.0.0'; // fallback por defecto
@@ -30,7 +31,11 @@ export class SidebarComponent implements OnInit {
   appVersion = version;
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
 
-  constructor(private authService: AuthService, private storageService: StorageService) { }
+  constructor(
+    private authService: AuthService,
+    private storageService: StorageService,
+    public usuarioSesion: UsuarioSesionService,
+  ) { }
 
   ngOnInit(): void {
     this.storageService.getObservable<Legajo>("legajos")
@@ -39,11 +44,8 @@ export class SidebarComponent implements OnInit {
       this.$legajos = data;     
       this.buscarAlertas();
     });
-    //this.$usuario = this.storageService.loadInfo("usuario")
-    ////console.log("this.usuario: ", this.$usuario);
-    let usuarioLogueado = this.storageService.loadInfo("usuario");
-    this.$usuario = structuredClone(usuarioLogueado[0]);
-    
+    this.$usuario = this.usuarioSesion.getUsuarioActual();
+
   }
 
   ngOnDestroy(): void {
@@ -65,7 +67,7 @@ export class SidebarComponent implements OnInit {
       cancelButtonText: "Cancelar"
     }).then((result) => {
       if (result.isConfirmed) {
-        this.authService.SignOut()
+        this.authService.cerrarSesion()
         //this.router.navigate(['login'])      
         /* Swal.fire({
           title: "Confirmado",

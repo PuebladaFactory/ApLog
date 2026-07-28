@@ -8,8 +8,6 @@ import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
     standalone: false
 })
 export class VerifyEmailComponent implements OnInit {
-  router: any;
-  afAuth: any;
 
   constructor(public authService: AuthService) {}
 
@@ -18,10 +16,6 @@ export class VerifyEmailComponent implements OnInit {
   ngOnInit(): void {
   }
   SendVerificationMail() {
-    return this.afAuth.currentUser
-      .then((u: any) => u.sendEmailVerification())
-      .then(() => {
-        this.router.navigate(['verify-email-address']);
-      });
+    return this.authService.enviarEmailVerificacion();
   }
 }

@@ -200,9 +200,9 @@ export class AsignacionService implements OnDestroy {
   // ---- Helpers privados ----
 
   private registrarLog(accion: string, detalle: string, idTablero: string, exito: boolean): void {
-    // TODO: refactor Roles — la exclusión del rol 'god' del log vivía en StorageService
+    // TODO: refactor Roles — la exclusión del rol 'dev' del log vivía en StorageService
     // y se pierde al llamar directo a LogService. Redefinir (probablemente en LogService)
-    // al refactorizar roles. Por ahora se loguea todo, incluido god.
+    // al refactorizar roles. Por ahora se loguea todo, incluido dev.
     this.logService.logEvent(accion, this.COLECCION, detalle, idTablero, exito);
   }
 

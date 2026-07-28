@@ -9,6 +9,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import Swal from 'sweetalert2';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 @Component({
   selector: 'app-vendedores-listado',
@@ -25,12 +26,12 @@ export class VendedoresListadoComponent implements OnInit {
   componente: string = "vendedores";
   isLoading: boolean = false;
   clientesModificados: ConId<Cliente>[] = [];
-  usuario:any
 
   constructor(
-    private storageService: StorageService, 
+    private storageService: StorageService,
     private modalService: NgbModal,
     private dbFirestore: DbFirestoreService,
+    public usuarioSesion: UsuarioSesionService,
   ){}
 
   ngOnInit(): void {   
@@ -46,8 +47,6 @@ export class VendedoresListadoComponent implements OnInit {
       });
     //this.vendedores = this.storageService.loadInfo('vendedores')
     this.clientes = this.storageService.loadInfo('clientes')
-          let user = this.storageService.loadInfo('usuario');
-      this.usuario = user[0];
   }
 
   ngOnDestroy(): void {

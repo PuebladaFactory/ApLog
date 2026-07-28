@@ -2,13 +2,14 @@ import { inject, Injectable } from '@angular/core';
 import { Firestore, collection, doc, setDoc } from '@angular/fire/firestore';
 import { LogEntry } from 'src/app/interfaces/log-entry';
 import { LogDoc } from 'src/app/interfaces/log-doc';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LogService {
   private firestore = inject(Firestore);
-  private usuario: any;
+  private usuarioSesion = inject(UsuarioSesionService);
 
   /**
    * Registra un evento en la colección `logs`.
@@ -42,14 +43,12 @@ export class LogService {
     resultado: boolean,
     incremento: number
   ): LogEntry {
-    const jsonData = localStorage.getItem('usuario') || '';
-    let usuarioLogueado = JSON.parse(jsonData);
-    this.usuario = structuredClone(usuarioLogueado[0]);
+    const usuario = this.usuarioSesion.getUsuarioActual();
 
     return {
       timestamp: Date.now() + incremento,
-      userId: this.usuario?.uid || 'Desconocido',
-      userEmail: this.usuario?.email || 'Desconocido',
+      userId: usuario?.uid || 'Desconocido',
+      userEmail: usuario?.email || 'Desconocido',
       action: accion,
       coleccion: coleccion,
       details: detalle,

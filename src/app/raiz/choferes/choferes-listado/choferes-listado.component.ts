@@ -15,6 +15,7 @@ import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
 import { VisibilidadListadosComponent } from "src/app/shared/modales/visibilidad-listados/visibilidad-listados.component";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
 import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
+import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 
 @Component({
   selector: "app-choferes-listado",
@@ -34,7 +35,6 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
 
   choferesMock: ConIdType<Chofer>[] = [];
   isLoading: boolean = false;
-  usuario: any;
   $vehiculos!: ConIdType<Vehiculo>[];
 
   columnas: ColumnaTabla[] = [];
@@ -48,6 +48,7 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
     private excelServ: ExcelService,
     private choferService: ChoferService,
     private proveedorService: ProveedorService,
+    public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
@@ -73,9 +74,6 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
         this.$vehiculos = data;
         console.log("aca vehiculos: ", this.$vehiculos);
       });
-    let user = this.storageService.loadInfo("usuario");
-    this.usuario = user[0];
-
     this.columnas = [
       { field: 'idChofer', header: 'Id', visible: false, width: 100 },
       { field: 'apellido', header: 'Apellido', visible: true, width: 150 },
