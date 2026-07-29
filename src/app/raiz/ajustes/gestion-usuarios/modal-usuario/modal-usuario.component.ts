@@ -37,6 +37,11 @@ interface EditarEmailResponse {
   link: string;
 }
 
+export interface ResultadoModalUsuario {
+  refrescar: boolean;
+  cambioDeRol?: boolean;
+}
+
 @Component({
   selector: 'app-modal-usuario',
   standalone: false,
@@ -118,7 +123,7 @@ export class ModalUsuarioComponent implements OnInit {
           'editarUsuario',
         );
         await llamarEditarUsuario(payload);
-        this.activeModal.close(true);
+        this.activeModal.close({ refrescar: true, cambioDeRol: !this.rolDeshabilitado });
       }
     } catch (error: any) {
       this.errorMsg = error.message;
@@ -171,9 +176,11 @@ export class ModalUsuarioComponent implements OnInit {
 
   cerrarConExito(): void {
     if (this.esCambioEmailPropio) {
+      // La sesión propia se cierra: no hay tabla para refrescar del otro lado.
+      this.activeModal.close({ refrescar: false });
       this.authService.cerrarSesion();
     } else {
-      this.activeModal.close(true);
+      this.activeModal.close({ refrescar: true });
     }
   }
 }

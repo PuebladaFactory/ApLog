@@ -6,7 +6,7 @@ import { Usuario } from 'src/app/interfaces/usuario';
 import { ColumnaTabla, AccionTabla } from 'src/app/interfaces/tabla';
 import { GestionUsuariosService } from 'src/app/servicios/gestion-usuarios/gestion-usuarios.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
-import { ModalUsuarioComponent } from './modal-usuario/modal-usuario.component';
+import { ModalUsuarioComponent, ResultadoModalUsuario } from './modal-usuario/modal-usuario.component';
 
 @Component({
   selector: 'app-gestion-usuarios',
@@ -95,8 +95,8 @@ export class GestionUsuariosComponent implements OnInit {
       keyboard: false,
     });
     modalRef.componentInstance.modo = 'alta';
-    modalRef.result.then((refrescar) => {
-      if (refrescar) this.cargarUsuarios();
+    modalRef.result.then((resultado: ResultadoModalUsuario) => {
+      if (resultado?.refrescar) this.cargarUsuarios();
     });
   }
 
@@ -108,8 +108,18 @@ export class GestionUsuariosComponent implements OnInit {
     });
     modalRef.componentInstance.modo = 'edicion';
     modalRef.componentInstance.usuario = usuario;
-    modalRef.result.then((refrescar) => {
-      if (refrescar) this.cargarUsuarios();
+    modalRef.result.then((resultado: ResultadoModalUsuario) => {
+      if (!resultado?.refrescar) return;
+      this.cargarUsuarios();
+      if (resultado.cambioDeRol) {
+        Swal.fire(
+          'Usuario actualizado',
+          'El cambio de rol puede tardar hasta 1 hora en aplicarse, o el usuario puede cerrar sesión y volver a entrar para verlo de inmediato.',
+          'success',
+        );
+      } else {
+        Swal.fire('Usuario actualizado', '', 'success');
+      }
     });
   }
 

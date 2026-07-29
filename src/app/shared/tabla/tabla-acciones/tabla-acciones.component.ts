@@ -11,6 +11,7 @@ export class TablaAccionesComponent {
   @Input() acciones: AccionTabla[] = [];
 
   ejecutar(tipo: string): void {
+    if (this.estaDeshabilitada(tipo)) return;
     const accion = this.acciones.find(a => a.tipo === tipo);
     if (accion) accion.handler(this.fila);
   }

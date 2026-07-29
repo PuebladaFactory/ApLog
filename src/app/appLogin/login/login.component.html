@@ -1,15 +1,13 @@
-
-
 @if (!spinner) {
-  <div class="container d-flex justify-content-center mt-2">
-    <div class="caja">
-      <app-login-header></app-login-header>
-      <div class="displayTable w-100 mt-3">
-        <div class="displayTableCell">
-          <br/><br/>
-          <div class="authBlock">
-            <h2> Iniciar Sesión</h2>
-            <!-- <div class="formGroup">
+    <div class="container d-flex justify-content-center mt-2">
+        <div class="caja">
+            <app-login-header></app-login-header>
+            <div class="displayTable w-100 mt-3">
+                <div class="displayTableCell">
+                    <br /><br />
+                    <div class="authBlock">
+                        <h2>Iniciar Sesión</h2>
+                        <!-- <div class="formGroup">
             <i class="fa fa-user"></i>
             <input  type="icon-username" type="text" class="formControl" placeholder="Username" #userName required>
           </div>
@@ -17,27 +15,56 @@
             <i class="fa fa-lock"></i>
             <input type="password" class="formControl" placeholder="Password" #userPassword required>
           </div> -->
-          <div class="formGroup">
-            <i class="fa fa-user"></i>
-            <input type="text" class="formControl" placeholder="Username" #userName required>
-          </div>
-          <div class="formGroup">
-            <i class="fa fa-lock"></i>
-            <input type="password" class="formControl" placeholder="Password" #userPassword (keydown)="onKeydown($event, userName.value, userPassword.value)" required>
-          </div>
-          <!-- Calling SignIn Api from AuthService -->
-          <div class="formGroup">
-            <input type="button" class="btn btnPrimary" value="Log in"
-              (click)="authService.iniciarSesion(userName.value, userPassword.value)">
+                        <div class="formGroup">
+                            <i class="fa fa-user"></i>
+                            <input
+                                type="text"
+                                class="formControl"
+                                placeholder="Username"
+                                #userName
+                                required
+                            />
+                        </div>
+                        <div class="formGroup">
+                            <i class="fa fa-lock"></i>
+                            <input
+                                type="password"
+                                class="formControl"
+                                placeholder="Password"
+                                #userPassword
+                                (keydown)="
+                                    onKeydown(
+                                        $event,
+                                        userName.value,
+                                        userPassword.value
+                                    )
+                                "
+                                required
+                            />
+                        </div>
+                        <!-- Calling SignIn Api from AuthService -->
+                        <div class="formGroup">
+                            <input
+                                type="button"
+                                class="btn btnPrimary"
+                                value="Log in"
+                                (click)="
+                                    authService.iniciarSesion(
+                                        userName.value,
+                                        userPassword.value
+                                    )
+                                "
+                            />
+                        </div>
+                        <div class="forgotPassword">
+                            <span routerLink="/forgot-password"
+                                >Olvide mi contraseña</span
+                            >
+                        </div>
+                    </div>
+                    <br /><br />
+                </div>
             </div>
-            <div class="forgotPassword">
-              <span routerLink="/forgot-password">Olvide mi contraseña</span>
-            </div>
-          </div>
-          </div>
         </div>
-      </div>
     </div>
-  } @else {
-  }
-
+} @else {}
