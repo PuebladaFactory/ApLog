@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AjustesControlComponent } from './ajustes-control/ajustes-control.component';
-import { AjustesUsuariosComponent } from './ajustes-usuarios/ajustes-usuarios.component';
+import { GestionUsuariosComponent } from './gestion-usuarios/gestion-usuarios.component';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { RegistroComponent } from './registro/registro.component';
 import { PapeleraComponent } from './papelera/papelera.component';
@@ -10,10 +10,10 @@ const routes: Routes = [
   {path: '', component:AjustesControlComponent,
     children: [ 
       { path: '', redirectTo: 'usuarios', pathMatch: 'full' },  
-      {path: 'usuarios', component:AjustesUsuariosComponent,
+      {path: 'usuarios', component:GestionUsuariosComponent,
             canActivate: [RoleGuard],
-            data: { roles: ['dev', 'admin', 'demo'] }, // no se permiten usuarios
-      },          
+            data: { roles: ['dev', 'admin'] },
+      },
       {path: 'registro', component:RegistroComponent,
         canActivate: [RoleGuard],
         data: { roles: ['dev', 'admin', 'demo'] }, // no se permiten usuarios

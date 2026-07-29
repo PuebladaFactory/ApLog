@@ -9,4 +9,5 @@ export interface ColumnaTabla {
 export interface AccionTabla {
   tipo: 'ver' | 'editar' | 'eliminar' | 'vehiculos';
   handler: (fila: any) => void;
+  disabled?: (fila: any) => boolean;
 }

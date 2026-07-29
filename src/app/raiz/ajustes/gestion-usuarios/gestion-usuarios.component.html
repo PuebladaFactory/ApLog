@@ -1,0 +1,21 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="m-0">Usuarios</h2>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-secondary" type="button" (click)="cargarUsuarios()">
+      Actualizar
+    </button>
+    <button class="btn btn-primary" type="button" (click)="abrirNuevo()">
+      Nuevo usuario
+    </button>
+  </div>
+</div>
+
+<app-tabla-generica
+  [columnas]="columnas"
+  [filas]="filas"
+  [acciones]="accionesTabla">
+</app-tabla-generica>
+
+@if (isLoading) {
+  <app-spinner></app-spinner>
+}

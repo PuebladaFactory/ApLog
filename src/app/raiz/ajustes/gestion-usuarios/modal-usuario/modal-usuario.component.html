@@ -1,0 +1,113 @@
+<div class="modal-header">
+  <h4 class="modal-title">
+    @if (vista === 'exito') {
+      Listo
+    } @else if (vista === 'cambioEmail') {
+      Cambiar email
+    } @else if (modo === 'alta') {
+      Nuevo usuario
+    } @else {
+      Editar usuario
+    }
+  </h4>
+  <button type="button" class="btn-close" [disabled]="vista === 'exito' && !yaCopioAlgunaVez" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+
+  @if (vista === 'formulario') {
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" class="form-control" formControlName="name" />
+      </div>
+
+      @if (modo === 'alta') {
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" formControlName="email" />
+        </div>
+      }
+
+      <div class="mb-3">
+        <label class="form-label">Rol</label>
+        <select class="form-select" formControlName="role">
+          <option value="" disabled>Seleccionar rol...</option>
+          @for (rol of rolesAsignables; track rol) {
+            <option [value]="rol">{{ rol }}</option>
+          }
+        </select>
+        @if (rolDeshabilitado) {
+          <small class="text-muted">No podés cambiar tu propio rol.</small>
+        }
+      </div>
+
+      @if (errorMsg) {
+        <div class="alert alert-danger py-2">{{ errorMsg }}</div>
+      }
+
+      @if (modo === 'edicion') {
+        <button type="button" class="btn btn-link p-0 mb-3" (click)="abrirCambioEmail()">
+          Cambiar email
+        </button>
+      }
+
+      <div class="d-flex justify-content-end gap-2 mt-3">
+        <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="form.invalid || cargando">
+          Guardar
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (vista === 'cambioEmail') {
+    <div class="mb-3">
+      <label class="form-label">Nuevo email</label>
+      <input type="email" class="form-control" [(ngModel)]="nuevoEmail" name="nuevoEmail" />
+    </div>
+
+    @if (errorEmail) {
+      <div class="alert alert-danger py-2">{{ errorEmail }}</div>
+    }
+
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button type="button" class="btn btn-outline-secondary" (click)="vista = 'formulario'">
+        Volver
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="!nuevoEmail || cargando" (click)="confirmarCambioEmail()">
+        Confirmar
+      </button>
+    </div>
+  }
+
+  @if (vista === 'exito') {
+    <p>
+      @if (modo === 'alta') {
+        El usuario fue creado. Compartile este link para que establezca su contraseña:
+      } @else if (esCambioEmailPropio) {
+        El email fue actualizado. Copiá el link — tu sesión se cerrará al continuar:
+      } @else {
+        El email fue actualizado. Compartile este link para que establezca su contraseña:
+      }
+    </p>
+    <div class="input-group mb-3">
+      <input type="text" class="form-control" readonly [value]="link" />
+      <button type="button" class="btn btn-outline-secondary" (click)="copiarLink()">
+        {{ copiado ? '¡Copiado!' : 'Copiar' }}
+      </button>
+    </div>
+
+    <div class="d-flex flex-column align-items-end gap-1">
+      <button type="button" class="btn btn-primary" [disabled]="!yaCopioAlgunaVez" (click)="cerrarConExito()">
+        Cerrar
+      </button>
+      @if (!yaCopioAlgunaVez) {
+        <small class="text-muted">Copiá el link antes de cerrar</small>
+      }
+    </div>
+  }
+
+</div>

@@ -18,4 +18,9 @@ export class TablaAccionesComponent {
   tieneAccion(tipo: string): boolean {
     return this.acciones.some(a => a.tipo === tipo);
   }
+
+  estaDeshabilitada(tipo: string): boolean {
+    const accion = this.acciones.find(a => a.tipo === tipo);
+    return accion?.disabled ? accion.disabled(this.fila) : false;
+  }
 }
