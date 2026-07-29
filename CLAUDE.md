@@ -61,13 +61,91 @@ Todos los módulos bajo `raiz/` son lazy-loaded.
 
 ### Autenticación y roles
 
-Firebase Auth (email/password + Google). Al autenticarse, se lee `/Vantruck/datos/users/{uid}` en Firestore para obtener el objeto `roles`.
+Firebase Auth (email/password). Google Auth fue removido (sin uso
+real). Al autenticarse, se lee `/users/{uid}` en Firestore (top-level,
+NO bajo `/Vantruck/datos/` — única excepción a ese árbol) para obtener
+el rol.
 
-Jerarquía: `god > admin > manager > user > demo`
+**Modelo de rol:** campo único `role: 'dev'|'admin'|'manager'|'user'|'demo'`
+(interfaz `Usuario` en `interfaces/usuario.ts`). Reemplaza al modelo
+viejo (`roles: {god, admin, manager, user}`, mapa de booleanos,
+`god` renombrado a `dev`). Sin jerarquía en código: cada guard/directiva
+enumera explícitamente los roles permitidos: `'dev'` no implica acceso
+automático a rutas que no lo listen.
 
-Flujo: login → `/carga` (resuelve roles) → `/raiz` o `/limbo`.
+**`UsuarioSesionService`** (`servicios/usuario-sesion/`): fuente única
+de la sesión en memoria (sin observable — no hace falta reactividad en
+vivo, es sesión local). Getter síncrono `getUsuarioActual()`, más
+`esRol(...roles)` para chequeos. Persiste en `localStorage` bajo la
+clave `usuarioSesion` (propia, distinta de la vieja `usuario` que
+`StorageService` dejó de poblar). `AuthService` es responsable solo de
+Firebase Auth (login/logout); separa "autenticarse" de "quién soy y qué
+puedo hacer".
 
-Las rutas declaran roles requeridos en `data: { roles: [...] }`. `RoleGuard` verifica acceso. La directiva `*appRole` oculta/muestra elementos de UI según el rol.
+**`RoleGuard`/`*appRole`**: comparación plana contra `usuario.role`
+(`rolesEsperados.includes(usuario.role)` / `esRol(...)`), sin jerarquía.
+Sin sesión → `/unauthorized`. Con sesión pero sin acceso a la ruta →
+`/limbo` (misma pantalla que antes esperaba verificación de email; hoy
+es genéricamente "sesión válida, sin acceso a esto").
+
+**Custom Claims + Cloud Function `syncRoleClaim`:** trigger `onWrite` en
+`users/{uid}` que sincroniza `role` al Custom Claim de Firebase Auth
+(`functions/src/syncRoleClaim.ts`), con guard para evitar escrituras
+redundantes. El Custom Claim solo lo consumen las Security Rules — el
+cliente Angular sigue leyendo el documento de Firestore (vía
+`UsuarioSesionService`), no el token, para no depender de refresh de
+token para reactividad de UI.
+
+⚠️ **Ventana de propagación conocida y aceptada:** un cambio de rol
+tarda hasta 1 hora en reflejarse en el token de una sesión ya abierta
+(comportamiento estándar de Firebase, sin mitigación agregada — decisión
+consciente, bajo volumen de usuarios). Si hace falta inmediato, la
+persona debe cerrar sesión y volver a entrar.
+
+**Alta/edición/baja de usuarios — exclusiva de `dev`/`admin`, vía Cloud
+Functions** (`functions/src/gestionUsuarios.ts`), NO por escritura
+directa a Firestore (`firestore.rules` mantiene `write` de `/users/{uid}`
+restringido a `dev` únicamente; `admin` opera solo a través de estas
+funciones, que corren con Admin SDK y validan autorización en código,
+no en reglas declarativas):
+- `crearUsuario(email, name, role)`: crea en Auth con
+  `emailVerified: true` (el admin da fe del mail, no hace falta
+  verificación out-of-band), crea el documento en Firestore (dispara
+  `syncRoleClaim` solo), devuelve un link de "establecer contraseña"
+  (`generatePasswordResetLink`) que se comunica manualmente — sin envío
+  automático de mail, no se justifica para 4-5 usuarios totales.
+  `role` nunca puede ser `'dev'`.
+- `editarUsuario(uid, name?, role?)`, `editarEmailUsuario(uid, nuevoEmail)`,
+  `eliminarUsuario(uid)`: mismo patrón de autorización, centralizado en
+  el helper `exigirObjetivoEditable` — único lugar a tocar si la regla
+  de jerarquía cambia. Matriz: un usuario `'dev'` nunca es tocable desde
+  la app (siempre por consola); un `'admin'` solo es tocable por `'dev'`
+  o por sí mismo (y nunca puede cambiarse su propio rol); el resto,
+  libre para `dev`/`admin`.
+- Cambiar el email de un usuario invalida automáticamente su sesión
+  (comportamiento nativo de Firebase Auth ante cambios de email o
+  contraseña — no requiere código adicional para revocar). Si el cambio
+  es sobre la propia cuenta, la UI fuerza `cerrarSesion()` explícito en
+  vez de esperar a que el token falle solo.
+- Sin envío automático del link, el modal de alta/cambio de email no
+  puede cerrarse sin haber copiado el link al menos una vez (botón
+  Cerrar deshabilitado, sin cierre por backdrop/Escape) — perder el
+  link deja a esa persona sin forma de acceder.
+
+**Pantalla:** `raiz/ajustes/gestion-usuarios/` (reemplaza a
+`ajustes-usuarios`/`usuarios-edicion`, eliminados). Lectura puntual de
+`/users` (sin listener — mismo patrón que
+`CuentaCorrienteService.obtenerRankingMorosos()`, sin `ConId` porque el
+doc ya trae su propio `uid`), filtrando `role !== 'dev'` siempre —
+`dev` no se lista ni gestiona desde la app, exclusivamente por consola.
+
+**Autoregistro cerrado:** `register-user` (ex `sign-up`) y
+`verify-email-address` eliminados junto con toda la maquinaria de
+verificación de email que dependía de ellos
+(`enviarEmailVerificacion`/`chequearVerificacionEmail`/
+`actualizarEmailVerificado`) — innecesaria una vez que el alta la hace
+`dev`/`admin` dando fe del mail. `resetearPassword` (recuperación de
+contraseña de un usuario existente) es independiente y se mantiene.
 
 ### State management
 
@@ -147,6 +225,7 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | Servicio | Responsabilidad |
 |---|---|
 | `autentificacion/` | Firebase Auth, sesión de usuario |
+| `usuario-sesion/` | Fuente única de la sesión en memoria (rol, uid, email del usuario logueado). Sin listener — no reactivo en vivo. |
 | `database/` | CRUD Firestore |
 | `storage/` | Estado de módulos no migrados (BehaviorSubjects + localStorage) y capa de escritura/logging centralizada para todos los módulos |
 | `log/` | Log de actividad (ALTA / EDITAR / BAJA) |
@@ -165,6 +244,62 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `development` | `pf-logistics` | Dev local |
 | `demo` | demo project | Staging |
 | `vantruck` | `lplog-31164` | Producción |
+
+### Cloud Functions
+
+Primera incorporación al proyecto (hasta ahora toda la lógica corría en
+el cliente). Carpeta `functions/`, TypeScript, 2nd gen
+(`firebase-functions/v2`), un solo codebase compartido entre los
+proyectos `demo` y `vantruck` (mismo código, deploy independiente por
+proyecto vía `--project`).
+
+- `syncRoleClaim`: ver "Autenticación y roles".
+- `crearUsuario`/`editarUsuario`/`editarEmailUsuario`/`eliminarUsuario`:
+  ver "Autenticación y roles".
+
+**Orden de deploy obligatorio** (evita ventanas de bloqueo): funciones
+primero (`firebase deploy --only functions --project <alias>`), esperar
+a que los claims existentes se sincronicen, recién después
+`firestore.rules` (`firebase deploy --only firestore:rules --project <alias>`).
+Si las reglas se despliegan antes de que los claims existan, todo el
+proyecto queda bloqueado hasta que se sincronicen.
+
+Verificación previa a cualquier deploy real: emulador local
+(`firebase emulators:start --only firestore,auth,functions`, requiere
+JRE instalado por el emulador de Firestore). Scripts de prueba
+reproducibles: `functions/test-emulator.mjs` (sync de claims + reglas
+básicas), `functions/test-gestion-usuarios.mjs` (las 4 funciones de
+gestión, 12 casos cubriendo la matriz de autorización completa).
+
+### Security Rules (`firestore.rules`)
+
+Reemplaza el modelo anterior (`allow read, write: if request.auth != null`,
+sin ninguna restricción real por colección, rol, ni método — toda la
+seguridad vivía únicamente en Angular/UI). Matriz rol × módulo × acción
+vía función `permitido()`, consumiendo el Custom Claim (`request.auth.token.role`).
+Colecciones sin mapeo explícito quedan denegadas por defecto (fail-safe:
+cualquier colección nueva debe agregarse a `moduloDe()` explícitamente
+antes de usarse en producción, o queda bloqueada).
+
+Categorías especiales:
+- `legacySoloLectura`: colecciones legado con escritura real confirmada
+  en código vivo pero fuera del alcance de este refactor
+  (`facturaCliente`/`facturaChofer`/`facturaProveedor`,
+  `facturaOpCliente`/.../`facturaOpProveedor`,
+  `facOpLiqCliente`/.../`facOpLiqProveedor`,
+  `resumenLiqClientes`/.../`resumenLiqProveedores`), y código muerto
+  confirmado sin caller (`tableroDiario`,
+  `tarifasChofer`/`tarifasCliente`/`tarifasProveedor` singular). Tratadas
+  como solo lectura A PROPÓSITO, ni siquiera `dev` puede escribir — para
+  que cualquier escritura remanente falle visiblemente en `demo` y se
+  detecte antes de llegar a producción, en vez de heredar permisos
+  amplios "por las dudas". Ver deuda abajo.
+- `_backup_*` (prefijo dinámico de colecciones de migración): solo
+  `dev`, ni lectura para el resto.
+- `/users/{uid}`: excepción de path (no vive bajo `/Vantruck/datos/`).
+  Lectura: `dev`/`admin`, o el propio usuario sobre su propio documento
+  (imprescindible para poder loguear). Escritura directa: solo `dev` —
+  `admin` opera exclusivamente vía las Cloud Functions de gestión.
 
 ## Convenciones
 
@@ -752,3 +887,24 @@ preferencia de UI que ya funciona bien; no toca la causa real (listener silencio
   desparramados en 4 claves de `localStorage` manejadas inline en `tablero-op`),
   encapsularlas en un servicio chico dedicado — sigue siendo `localStorage` por debajo,
   correcto para sobrevivir F5; solo cambia dónde vive el acceso.
+
+### Deuda — control de permisos de UI disperso, sin fuente única
+
+Detectado durante las pruebas del refactor de Roles: las Security Rules
+nuevas bloquean correctamente acciones que la UI todavía muestra como
+disponibles (ej. botón de baja de Operación/Cliente visible y clickeable
+para rol `user`, que la regla rechaza — comportamiento seguro, pero mala
+UX: el usuario ve un error de permisos en vez de no ver la opción).
+
+Causa: el control de qué se muestra vive disperso en `*appRole` puntual
+por template, sin relación con la matriz real de Security Rules — son
+dos fuentes de verdad independientes, mantenidas a mano, que ya
+divergieron al menos en los dos casos detectados (sin auditoría
+exhaustiva del resto de los módulos).
+
+Candidato a frente propio: un servicio tipo `PermisosService` que
+replique en TypeScript la misma matriz rol × módulo × acción de
+`firestore.rules`, consumido por los templates en vez de `*appRole` con
+roles hardcodeados por caso. No abordado en este frente — quedó
+señalado, sin exhaustividad de qué otros módulos tienen el mismo
+desajuste.

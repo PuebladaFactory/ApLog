@@ -3,14 +3,10 @@ import { Router } from '@angular/router';
 import {
   Auth,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
   signOut,
   sendPasswordResetEmail,
-  User,
-  reload
 } from '@angular/fire/auth';
-import { Firestore, doc, getDoc, setDoc, updateDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
 import { StorageService } from '../storage/storage.service';
 import { LogService } from '../log/log.service';
@@ -47,7 +43,6 @@ export class AuthService {
       }
 
       const usuario = resultado;
-      this.chequearVerificacionEmail();
       this.usuarioSesion.setUsuario(usuario);
 
       if (usuario.role !== 'dev') {
@@ -86,54 +81,6 @@ export class AuthService {
       return 'sin-rol';
     }
     return data as Usuario;
-  }
-
-  private chequearVerificacionEmail(): void {
-    const user = this.auth.currentUser;
-    if (!user) return;
-    reload(user).then(() => {
-      if (user.emailVerified) {
-        this.actualizarEmailVerificado(user.uid);
-      }
-    });
-  }
-
-  private actualizarEmailVerificado(uid: string): void {
-    const userRef = doc(this.firestore, `users/${uid}`);
-    updateDoc(userRef, { emailVerified: true });
-  }
-
-  async registrarUsuario(email: string, password: string): Promise<void> {
-    try {
-      const result = await createUserWithEmailAndPassword(this.auth, email, password);
-      await this.enviarEmailVerificacion();
-      await this.crearDocumentoUsuarioSinRol(result.user);
-    } catch (error: any) {
-      Swal.fire('Error', error.message, 'error');
-    }
-  }
-
-  private async crearDocumentoUsuarioSinRol(user: User): Promise<void> {
-    const userRef = doc(this.firestore, `users/${user.uid}`);
-    const userData = {
-      uid: user.uid,
-      email: user.email ?? '',
-      displayName: user.displayName || '',
-      photoURL: user.photoURL || '',
-      emailVerified: user.emailVerified,
-      name: ''
-      // sin 'role' a propósito: queda incompleto hasta que dev/admin le
-      // asigne uno manualmente en Firestore. Vigente hasta Bloque C
-      // (alta de usuarios por Cloud Function).
-    };
-    return setDoc(userRef, userData, { merge: true });
-  }
-
-  enviarEmailVerificacion(): Promise<void> {
-    if (!this.auth.currentUser) return Promise.resolve();
-    return sendEmailVerification(this.auth.currentUser).then(() => {
-      this.router.navigate(['verify-email-address']);
-    });
   }
 
   resetearPassword(email: string): Promise<void> {

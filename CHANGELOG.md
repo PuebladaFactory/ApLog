@@ -802,6 +802,126 @@ desde el módulo de Liquidaciones, no desde tablero-op.
 
 ---
 
+### Refactor de Roles y Seguridad — Julio 2026
+
+Primer frente que toca autenticación/autorización desde el arranque del
+proyecto (adaptado de un proyecto anterior, sin revisión previa) y
+primera incorporación de Cloud Functions. Hasta este frente, toda la
+seguridad era de UI (`RoleGuard`/`*appRole`); Firestore no tenía
+ninguna restricción real por rol.
+
+**Modelo de datos:**
+- `roles: {god, admin, manager, user}` (mapa de booleanos) → `role: 'dev'|'admin'|'manager'|'user'|'demo'`
+  (string único). `god` renombrado a `dev` en código y en los valores
+  reales de Firestore. Migración de documentos reales hecha manualmente
+  por el desarrollador (pocos usuarios, no ameritaba
+  `XxxMigrationService`).
+- Nueva interfaz `Usuario` (`interfaces/usuario.ts`), primera interfaz
+  tipada para el usuario (antes todo `any`).
+
+**Servicios nuevos:**
+- `UsuarioSesionService`: fuente única de la sesión en memoria,
+  reemplaza el caché disperso de `StorageService` bajo la clave
+  `'usuario'` (que `AuthService` dejó de poblar — se auditaron y
+  corrigieron ~14 puntos de lectura de ese caché que hubieran quedado
+  rotos en producción, incluyendo `LogService.createLogEntry`,
+  transversal a todas las escrituras del proyecto).
+- `GestionUsuariosService`: lectura puntual de `/users` (sin listener),
+  siguiendo el precedente ya existente de
+  `CuentaCorrienteService.obtenerRankingMorosos()`.
+
+**`AuthService` reescrito de cero:**
+- Métodos renombrados a español (`iniciarSesion`, `cerrarSesion`,
+  `resetearPassword`).
+- Eliminado: login con Google (`GoogleAuth`/`AuthLogin`, sin uso real,
+  además estaba incompleto/roto — no navegaba ni poblaba sesión tras
+  loguear).
+- Corregido bug real: `VerifyEmailComponent.SendVerificationMail` usaba
+  `this.afAuth.currentUser` nunca inyectado (`afAuth: any` sin asignar)
+  — no funcionaba nunca. Corregido en su momento, luego el componente
+  entero fue eliminado al cerrar el autoregistro (ver más abajo).
+- Corregido: `StorageService.initializerAdmin()` traía la colección
+  completa de `users` (emails, roles) al navegador de CUALQUIER usuario
+  logueado sin chequear rol — bug de exposición de datos activo desde
+  antes de este frente, sin relación directa con el refactor pero
+  detectado y corregido en el camino porque las Security Rules nuevas
+  lo iban a exponer como error en runtime para roles no autorizados.
+- `SignOut`: orden de operaciones corregido (cerrar sesión en Firebase
+  antes de limpiar storage, no al revés). `Swal` reemplaza
+  `window.alert` en toda mensajería de error, consistente con el resto
+  del proyecto.
+
+**`RoleGuard`/`*appRole`:** migrados a comparación contra `role` string.
+Sin jerarquía (confirmado por auditoría que no existía en código, pese a
+la jerarquía documentada como intención en `CLAUDE.md` desde el inicio
+del proyecto) — se preserva el comportamiento plano ya existente, no se
+introduce jerarquía nueva.
+
+**Migración de ~30 puntos de lectura de `roles.xxx`** en toda la app
+(componentes, templates, `StorageService`, `LogService`, directiva
+`*appRole` en 11 archivos adicionales detectados por el chequeo de
+tipos de TypeScript al migrar `RolUsuario`) a `usuarioSesion.esRol(...)`.
+Incluye rename `god`→`dev` en 7 routing modules y en la query Firestore
+de `getAllColectionUsers`.
+
+**Cloud Functions (primera incorporación al proyecto):**
+- Proyecto `functions/` inicializado (TypeScript, 2nd gen, codebase
+  único compartido entre `demo`/`vantruck`).
+- `syncRoleClaim`: sincroniza `role` del documento al Custom Claim de
+  Auth, con guard anti-escrituras-redundantes.
+- `crearUsuario`/`editarUsuario`/`editarEmailUsuario`/`eliminarUsuario`:
+  gestión completa de usuarios por `dev`/`admin`, autorización validada
+  en código (Admin SDK, no depende de Security Rules). Detalle completo
+  en `CLAUDE.md` → "Autenticación y roles".
+- Verificado end-to-end contra el emulador de Firebase antes de
+  cualquier deploy real: sincronización de claims, matriz de
+  autorización completa (12 casos), rechazo/permiso de escritura por
+  rol contra las reglas nuevas.
+
+**`firestore.rules` reescrito de cero:** de
+`allow read, write: if request.auth != null` (sin restricción real) a
+matriz rol × módulo × acción. Fail-safe por defecto (colección sin
+mapear → denegada). Detalle completo de categorías y excepciones en
+`CLAUDE.md` → "Security Rules". Desplegado y verificado en `demo`
+(encontró y expuso un bug real de UI preexistente: botones de baja
+visibles para rol `user` en Operaciones/Clientes que las reglas
+bloquean correctamente — ver deuda en `CLAUDE.md`).
+
+**Pantalla de gestión de usuarios** (`raiz/ajustes/gestion-usuarios/`):
+reemplaza a `ajustes-usuarios`/`usuarios-edicion` (eliminados
+completos). Alta con generación de link de contraseña
+(`generatePasswordResetLink`, comunicado manualmente, sin envío
+automático de mail), edición de nombre/rol, cambio de email como acción
+secundaria, eliminación con confirmación. Protecciones agregadas tras
+pruebas: modal no cerrable sin haber copiado el link generado
+(`backdrop: 'static'`, `keyboard: false`, botón Cerrar y botón × del
+header deshabilitados hasta copiar) — perder el link sin copiarlo deja
+a esa persona sin forma de generar contraseña. Cambiar el email de la
+propia cuenta fuerza cierre de sesión inmediato (Firebase invalida el
+refresh token automáticamente ante cambios de email; se adelanta el
+cierre en vez de esperar a que el token falle solo).
+
+**Cierre de autoregistro:** `register-user` (ex `sign-up`) y
+`verify-email-address` eliminados junto con toda la maquinaria de
+verificación de email asociada (innecesaria: el alta ahora la hace
+`dev`/`admin`, que da fe del mail al crearlo con `emailVerified: true`
+directo). `LimboComponent` se mantiene, cambia de propósito (de
+"esperando verificación" a "sesión válida sin rol/acceso"; ya era el
+mismo componente usado por `RoleGuard`). `resetearPassword` no se toca,
+es independiente.
+
+**Deuda nueva registrada** (detalle en `CLAUDE.md` → Deuda conocida):
+control de permisos de UI disperso en `*appRole` por componente, sin
+relación con la matriz real de Security Rules — candidato a
+`PermisosService` centralizado, no abordado en este frente.
+
+**Pendiente de este frente:**
+- Réplica completa en `vantruck` (funciones → esperar propagación →
+  reglas → código Angular + migración manual de documentos reales de
+  producción), una vez validado el comportamiento en `demo`.
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)

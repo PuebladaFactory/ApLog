@@ -13,32 +13,50 @@ actual del proyecto (ver CLAUDE.md / CHANGELOG.md) y el roadmap de apps compleme
 
 ---
 
-## 1. Roles y seguridad — el frente más urgente
+## 1. Roles y seguridad — COMPLETADO (Julio 2026)
 
-**Problema actual**: según CLAUDE.md, toda la lógica de negocio corre en el cliente y los
-roles (`god > admin > manager > user > demo`) se resuelven vía `RoleGuard` (protege rutas
-de Angular) y `*appRole` (oculta UI). Ninguno de los dos protege la escritura directa a
-Firestore — si las Security Rules actuales no restringen por rol, cualquier usuario
-autenticado puede escribir en cualquier colección saltándose Angular por completo
-(herramientas de desarrollador del navegador).
+Implementado. Detalle completo en CLAUDE.md → "Autenticación y roles" y
+"Security Rules", y en CHANGELOG.md → "Refactor de Roles y Seguridad".
 
-**Solución con Blaze**: Custom Claims + Cloud Function trigger.
-- Trigger `onWrite` en `/Vantruck/datos/users/{uid}` que, al cambiar el campo `roles`,
-  llama a `admin.auth().setCustomUserClaims(uid, {role})`.
-- Las Security Rules leen el rol desde `request.auth.token.role` (viaja en el token) en
-  vez de hacer un `get()` a la colección `users` en cada evaluación de regla — evita una
-  lectura de Firestore oculta y no reflejada en las métricas de la app por cada chequeo
-  de permiso.
-- Recién con esto las reglas pueden aplicar restricciones reales por colección
-  (ej. `demo` no puede escribir en `liquidaciones` o `tarifasGralCliente`).
+Resumen de lo ejecutado, para contraste con lo que este documento
+proponía originalmente:
+- Custom Claims + Cloud Function `syncRoleClaim` (trigger `onWrite`):
+  implementado tal como se planteaba acá, con un ajuste de path — el
+  documento de usuario vive en `/users/{uid}` (top-level), NO en
+  `/Vantruck/datos/users/{uid}` como este roadmap asumía originalmente
+  (dato que ya estaba desactualizado en CLAUDE.md antes de este frente,
+  corregido en el proceso).
+- Security Rules: no quedaron en un chequeo simple por colección
+  (`demo` no puede escribir en `liquidaciones`) sino en una matriz
+  completa rol × módulo × acción (Variante A: mapeo rol→permisos dentro
+  del propio `firestore.rules`, sin jerarquía de niveles). Cubre las 40+
+  colecciones reales del proyecto, con categorías especiales para
+  colecciones legado con escritura activa fuera de alcance
+  (`legacySoloLectura`) y backups (`dev`-only).
+- Alcance adicional no contemplado en la propuesta original de este
+  roadmap: gestión completa de usuarios (alta/edición/baja) vía Cloud
+  Functions dedicadas (`crearUsuario`/`editarUsuario`/
+  `editarEmailUsuario`/`eliminarUsuario`), y cierre del autoregistro
+  abierto (`register-user`) que existía desde el inicio del proyecto.
 
-**Independiente del resto del roadmap.** No depende de Tarifas ni de ningún otro frente.
-Conviene resolverlo antes de exponer más colecciones sensibles (Finanzas, Facturación) en
-producción.
+Deuda nueva que dejó este frente (no bloqueante, ver CLAUDE.md → Deuda
+conocida): falta de un mecanismo centralizado de permisos en el
+cliente — el control de qué botones/acciones se muestran sigue disperso
+en `*appRole` por componente, sin relación automática con la matriz de
+Security Rules (ya se detectaron casos divergentes: UI mostrando
+acciones que las reglas bloquean correctamente).
 
 ---
 
 ## 2. Cloud Functions como capa de API compartida (para el ecosistema de apps futuras)
+
+> **Actualización (Julio 2026):** la infraestructura de Cloud Functions
+> ya existe (`functions/`, TypeScript, 2nd gen, codebase único
+> compartido entre `demo`/`vantruck`), incorporada como parte del
+> frente de Roles y Seguridad (ver punto 1, completado). Este punto 2
+> ya no arranca de cero — se trata de agregar los callables nuevos al
+> proyecto existente, no de inicializar nada. La secuenciación (después
+> de Tarifas, antes de la primera app complementaria) no cambia.
 
 **Motivación**: las apps complementarias (depósito, ruteos, chofer) van a necesitar la
 misma lógica de negocio que hoy vive solo en servicios Angular (`OperacionFactoryService`,
