@@ -7,8 +7,8 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import {setGlobalOptions} from "firebase-functions";
-import {initializeApp} from "firebase-admin/app";
+import { setGlobalOptions } from 'firebase-functions';
+import { initializeApp } from 'firebase-admin/app';
 
 initializeApp();
 
@@ -25,6 +25,7 @@ initializeApp();
 // functions should each use functions.runWith({ maxInstances: 10 }) instead.
 // In the v1 API, each function can only serve one request per container, so
 // this will be the maximum concurrent request count.
-setGlobalOptions({maxInstances: 10});
+setGlobalOptions({ maxInstances: 10 });
 
-export {syncRoleClaim} from "./syncRoleClaim";
+export { syncRoleClaim } from './syncRoleClaim';
+export { crearUsuario, editarUsuario, editarEmailUsuario, eliminarUsuario } from './gestionUsuarios';

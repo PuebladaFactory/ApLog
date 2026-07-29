@@ -1,6 +1,6 @@
-import {onDocumentWritten} from "firebase-functions/v2/firestore";
-import * as logger from "firebase-functions/logger";
-import {getAuth} from "firebase-admin/auth";
+import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import * as logger from 'firebase-functions/logger';
+import { getAuth } from 'firebase-admin/auth';
 
 /**
  * Mantiene sincronizado el Custom Claim `role` de Firebase Auth con el
@@ -8,7 +8,7 @@ import {getAuth} from "firebase-admin/auth";
  * Rules leen `request.auth.token.role`, no el documento, así que este
  * claim es la única fuente de verdad que las reglas pueden consultar.
  */
-export const syncRoleClaim = onDocumentWritten("users/{uid}", async (event) => {
+export const syncRoleClaim = onDocumentWritten('users/{uid}', async (event) => {
   const uid = event.params.uid;
 
   const after = event.data?.after;
@@ -18,7 +18,7 @@ export const syncRoleClaim = onDocumentWritten("users/{uid}", async (event) => {
     return;
   }
 
-  const role = after.data()?.["role"];
+  const role = after.data()?.['role'];
   if (role === undefined) {
     // Usuario recién autoregistrado sin rol asignado todavía
     // (AuthService.crearDocumentoUsuarioSinRol). No hay nada que
@@ -28,13 +28,13 @@ export const syncRoleClaim = onDocumentWritten("users/{uid}", async (event) => {
 
   try {
     const usuarioAuth = await getAuth().getUser(uid);
-    if (usuarioAuth.customClaims?.["role"] === role) {
+    if (usuarioAuth.customClaims?.['role'] === role) {
       // El claim ya coincide: evitar una escritura innecesaria en cada
       // write del documento (ej. editar solo el name).
       return;
     }
 
-    await getAuth().setCustomUserClaims(uid, {role});
+    await getAuth().setCustomUserClaims(uid, { role });
     logger.info(`Claim de rol sincronizado para ${uid}: role=${role}`);
   } catch (error) {
     // Ej.: el uid ya no existe en Auth aunque el documento de Firestore

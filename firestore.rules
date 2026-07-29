@@ -139,7 +139,9 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if autenticado() && rol() in ['dev','admin'];
+      allow read: if autenticado() && (
+        rol() in ['dev','admin'] || request.auth.uid == uid
+      );
       allow write: if autenticado() && rol() == 'dev';
     }
   }
