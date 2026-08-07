@@ -9,7 +9,7 @@ import {
 } from "src/app/interfaces/chofer";
 import { ConId, ConIdType } from "src/app/interfaces/conId";
 import { Proveedor } from "src/app/interfaces/proveedor";
-import { ColumnaTabla, AccionTabla } from "src/app/interfaces/tabla";
+import { ColumnaTablaGenerica, AccionTablaGenerica } from "src/app/interfaces/tabla-generica";
 import { StorageService } from "src/app/servicios/storage/storage.service";
 import Swal from "sweetalert2";
 import { ProveedoresAltaComponent } from "../proveedores-alta/proveedores-alta.component";
@@ -42,9 +42,9 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
   proveedoresMockeados: ConIdType<Proveedor>[] = [];
   isLoading: boolean = false;
 
-  columnas: ColumnaTabla[] = [];
+  columnas: ColumnaTablaGenerica[] = [];
   filas: any[] = [];
-  accionesTabla: AccionTabla[] = [];
+  accionesTabla: AccionTablaGenerica[] = [];
   vehiculosProveedor: ConIdType<Vehiculo>[] = [];
   contratacion!: AsignacionVehiculo;
 

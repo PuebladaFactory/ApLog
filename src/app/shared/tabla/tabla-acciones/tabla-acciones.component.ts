@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
-import { AccionTabla } from 'src/app/interfaces/tabla';
+import { AccionTablaGenerica } from 'src/app/interfaces/tabla-generica';
+import { ModuloPermiso } from 'src/app/interfaces/permiso';
 
 @Component({
   selector: 'app-tabla-acciones',
@@ -8,7 +9,8 @@ import { AccionTabla } from 'src/app/interfaces/tabla';
 })
 export class TablaAccionesComponent {
   @Input() fila!: any;
-  @Input() acciones: AccionTabla[] = [];
+  @Input() acciones: AccionTablaGenerica[] = [];
+  @Input() modulo?: ModuloPermiso;
 
   ejecutar(tipo: string): void {
     if (this.estaDeshabilitada(tipo)) return;

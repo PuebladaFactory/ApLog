@@ -40,8 +40,8 @@
                             <app-informes-acciones-cell
                               [item]="item"
                               [acciones]="col.acciones"
+                              [modulo]="modulo"
                               (accion)="accionClick.emit($event)"
-                              [ngClass]="disbledDemo(col)"
                               >
                             </app-informes-acciones-cell>
                           } @else {

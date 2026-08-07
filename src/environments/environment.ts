@@ -21,18 +21,6 @@ export const environment = {
   }
 };
 
-// ENVIROMENT PARA PRODUCCION
-/* export const environment = {
-  production: false,
-  firebase: {
-    projectId: 'lplog-31164',
-    appId: '1:665246214539:web:230a8899ff2995db53e78e',
-    storageBucket: 'lplog-31164.appspot.com',
-    apiKey: 'AIzaSyC_8_UyQNPIX6-nm02Al1hFuuz3O-OSDMo',
-    authDomain: 'lplog-31164.firebaseapp.com',
-    messagingSenderId: '665246214539',
-  }
-}; */
 /*
  * For easier debugging in development mode, you can import the following file
  * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.

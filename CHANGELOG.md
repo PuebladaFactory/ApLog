@@ -922,6 +922,475 @@ relación con la matriz real de Security Rules — candidato a
 
 ---
 
+### Botones y Permisos — Julio 2026 (en progreso)
+
+Frente de auditoría y rediseño del sistema de botones de acción
+(`app-btn-*`) y del chequeo de rol disperso en `*appRole`/`esRol()`,
+continuación del refactor de Roles y Seguridad.
+
+**`BtnReimpresionComponent` eliminado** (`shared/botones/btn-reimpresion/`):
+reemplazado por `app-btn-leer name="print"` en su único caller
+(`finanzas/historial-movimientos.component.html`). No era código
+muerto — el botón se renderizaba igual (sin `@if` sobre `nombre`) y su
+`(click)="imprimirDetalle(m)"` era funcional — pero sus dos `@Input()`
+(`nombre`, `disabled`) nunca se leían en el template: un componente con
+Inputs muertos, no un componente sin uso.
+
+**Bloque 1 — fundaciones de `PermisosService`/`*appPermiso` (sin conectar):**
+infraestructura nueva agregada sin tocar ningún consumidor — el árbol
+compila igual que antes, ningún `*appRole` existente fue reemplazado.
+Detalle completo de la arquitectura de 4 capas acordada (dominio /
+gating / presentación / consumidores) en `CLAUDE.md` → "Frente Botones
+y Permisos".
+
+- Interfaces de tabla renombradas (colisión de nombres detectada por la
+  auditoría — dos `AccionTabla`/`ColumnaTabla` distintas e
+  incompatibles convivían en el proyecto): `interfaces/tabla.ts` →
+  `interfaces/tabla-generica.ts` (`ColumnaTablaGenerica`,
+  `AccionTablaGenerica`), `interfaces/tablas.ts` →
+  `interfaces/informes-tabla.ts` (`ColumnaInformesTabla<T>`,
+  `AccionInformesTabla<T>`, `EventoInformesTabla<T>`,
+  `OrdenInformesTabla`). Solo nombres, campos sin cambios. Imports
+  actualizados en los 9 consumidores (`TablaGenericaComponent`,
+  `TablaAccionesComponent`, `gestion-usuarios`,
+  `choferes/clientes/proveedores-listado`, `InformesTablaComponent`,
+  `facturacion-listado`, `facturacion-historico`).
+- `interfaces/permiso.ts` (nuevo): `ModuloPermiso` (unión cerrada, 11
+  módulos reales) y `AccionPermiso` (unión abierta a propósito).
+- `PermisosService` (`servicios/permisos/`, nuevo): `matrizBase`
+  traducida literal de `permitido()` en `firestore.rules`, granularidad
+  por módulo (no por acción). `liquidaciones`/`facturacion`/`reportes`
+  espejan `finanzas` 1:1 — sus colecciones reales comparten el mismo
+  módulo `'finanzas'` en `moduloDe()`, sin distinción propia en las
+  reglas hoy (confirmado con el desarrollador antes de asumir).
+  `overrides` (por `'modulo.accion'`) queda vacío, listo para casos
+  reales en frentes futuros. Hallazgo de la traducción: el rol
+  `'manager'` no tiene ningún acceso real en `firestore.rules`
+  (`permitido()` no lo menciona en ningún módulo), pese a que la UI lo
+  habilita ampliamente vía `*appRole` — traducido literal (`false`).
+  Resuelto como decisión explícita en el Bloque 2 (ver abajo), no deuda.
+- `*appPermiso` (`shared/directives/permiso.directive.ts`, nuevo):
+  calco de `RoleDirective`, sintaxis `'modulo'` o `'modulo.accion'`.
+  Declarada en `SharedModule` junto a `RoleDirective`. Sin consumidores.
+
+**Bloque 2 — los 4 `app-btn-*` consumen `PermisosService` (sin conectar
+todavía):** ningún caller pasa `modulo`/`accion` todavía, comportamiento
+visible idéntico a antes salvo la corrección de bug descrita abajo.
+
+- **Bug de `disabled` inerte corregido** (independiente de permisos):
+  20 de 40 ramas `@if` con `<button>` real entre los 4 componentes
+  recibían `@Input() disabled` pero nunca lo bindeaban al `<button>`
+  interno. Agregado `[disabled]=disabled` en 13 variantes de
+  `BtnAgregarComponent` (Cerrar, Guardar, Descargar Legajo,
+  GuardarClaro, GuardarCambios, GuardarCambiosClaro, guardarTarifa,
+  Agregar, Confirmar, 'Agregar Contacto', AgregarContactoClaro,
+  Facturar, Pagar) y 7 de `BtnLeerComponent` (DetalleColor, Detalle,
+  Vehiculos, Imprimir, excel, pdf, print). `BtnEditarComponent`/
+  `BtnEliminarComponent` ya estaban bien. La rama muerta `editarTarifa`
+  de `BtnAgregarComponent` (0 invocaciones, valor real vive en
+  `BtnEditarComponent`) quedó intacta a propósito, fuera de este
+  arreglo. Caller real que este fix pone a funcionar por primera vez:
+  `modal-contacto-proveedores.component.html` pasa
+  `[disabled]="formContacto.invalid"` a `app-btn-agregar name="Agregar"`
+  — antes el formulario inválido no bloqueaba el submit pese a la
+  intención explícita del caller.
+- **Inputs `modulo?: ModuloPermiso` / `accion?: AccionPermiso`**
+  agregados a `BtnAgregarComponent`/`BtnEditarComponent`/
+  `BtnEliminarComponent`/`BtnLeerComponent`, mismo patrón en los
+  cuatro: inyectan `PermisosService`, getter `visible` (`!modulo ||
+  permisosService.puede(modulo, accion)`) — sin `modulo`, siempre
+  `true`, compatibilidad total con los ~90 sitios de uso existentes.
+- Las 40 ramas `@if` de los 4 componentes envueltas con `&& visible`,
+  sin excepción (incluidas variantes sin caller activo detectadas por
+  la auditoría).
+- **Decisión sobre `'manager'`:** rol teórico sin uso actual, sin
+  ningún usuario real asignado. `PermisosService` lo deniega en los 11
+  módulos a propósito. La migración de `*appRole`→`*appPermiso` en
+  bloques futuros le va a quitar también el acceso visible en la UI
+  (hoy incluido en varios `*appRole` de tarifas generales) — no se
+  mantiene como botón visible sin respaldo real en las reglas. Detalle
+  en `CLAUDE.md` → "Frente Botones y Permisos".
+
+**Bloque 3 — `AccionGenericaComponent` (capa de Presentación, sin
+conectar todavía):** componente nuevo (`shared/botones/accion-generica/`,
+selector `app-accion-generica`) para botones crudos `<button>` repetidos
+por la app que no encajan en el catálogo semántico cerrado de los 4
+`app-btn-*` (ej. los de `tablero-asignaciones`) — no los reemplaza,
+cubre un caso distinto.
+
+- `label`/`variante`/`tamano`/`disabled` como inputs; `claseCompleta`
+  arma `btn btn-${variante}` + `btn-${tamano}` si se pasa. `disabled`
+  bindeado real al `<button>`, mismo criterio que los otros 4 (nunca
+  `ngClass`). `<ng-content select="[icono]">` para ícono opcional.
+- Mismo patrón de permisos que los otros 4: `modulo?`/`accion?`,
+  `PermisosService` inyectado, getter `visible`.
+- Sin `@Output()` — `(click)` se bindea directo en el host, igual que
+  los otros 4 `app-btn-*` (burbujea del `<button>` interno).
+- Declarado en `SharedModule`. Cero callers — se conecta en un bloque
+  posterior.
+
+**Bloque 4 — `TablaAccionesComponent` conectado a `PermisosService`, con
+callers reales.** No es funcionalidad nueva: cierra en producción el
+hallazgo de la auditoría "ningún `accionesTabla` de los 3 listados CRUD
+vía `TablaAccionesComponent` aplica chequeo de rol a editar/eliminar"
+(deuda ya registrada en `CLAUDE.md`).
+
+- `TablaAccionesComponent`/`TablaGenericaComponent` reciben
+  `@Input() modulo?: ModuloPermiso` y lo reenvían en cascada hasta los
+  4 `app-btn-*`, con `accion` fija por bloque (`ver`/`editar`/
+  `eliminar`/`vehiculos` — coinciden 1:1 con `AccionPermiso`, sin
+  rename necesario). El `[disabled]="estaDeshabilitada(tipo)"` de
+  editar/eliminar no se tocó, sigue siendo la regla de negocio por
+  fila.
+- 4 callers con `modulo` conectado: `clientes-listado="clientes"`,
+  `choferes-listado="choferes"`, `proveedores-listado="proveedores"`,
+  `gestion-usuarios="usuarios"`.
+- **Efecto real al momento de este bloque** (`matrizBase` todavía
+  colapsada por módulo, ver corrección abajo): `manager` pierde
+  ver/editar/eliminar/vehiculos en los 3 listados CRUD (antes sin
+  chequeo alguno); `gestion-usuarios` además oculta editar/eliminar
+  para `user`/`demo` (antes solo corría la regla de jerarquía
+  dev/admin, sin filtro de acceso al módulo). En ese momento, sin
+  cambios para `user`/`demo` en los 3 listados CRUD — eso lo corrige el
+  bloque siguiente. Sin cambios para `dev`/`admin`, antes ni después.
+- No tocado: botón de alta crudo de cada listado (esquema `*appRole`
+  viejo, migra después); `InformesTablaComponent`/
+  `InformesAccionesCellComponent` (bloque aparte, necesita rename).
+
+**Corrección (no es un bloque nuevo — corrige el Bloque 1):**
+`matrizBase` de `PermisosService` rediseñada. El diseño original
+colapsaba a un solo booleano por `[modulo][rol]`; pruebas manuales
+post-Bloque 4 encontraron que `user`/`demo` heredaban `eliminar` en
+clientes/choferes/proveedores por tener `leer` permitido en el
+módulo — el mismo bug que este frente busca cerrar. Firma pública
+`puede(modulo, accion?)` sin cambios; los Bloques 2-4 no requirieron
+ningún ajuste.
+
+- `matrizBase` pasa a `Record<ModuloReglas, Record<AccionCrud,
+  Record<RolUsuario, boolean>>>` — transcripción literal, entrada por
+  entrada, de `permitido()` en `firestore.rules` (11 módulos reales +
+  `'usuarios'` como caso especial). `AccionCrud`
+  (`'leer'|'crear'|'editar'|'eliminar'`) nuevo en
+  `interfaces/permiso.ts`.
+- `mapaModuloReglas` (`ModuloPermiso` → módulo real de las reglas) y
+  `mapaAccionCrud` (`AccionPermiso` → `AccionCrud`) nuevos, privados en
+  `PermisosService`.
+- `usuarios` poblado directo (Opción A): `dev`/`admin` `true` en las 4
+  acciones, resto `false` — no pasa por `permitido()`/`moduloDe()`
+  (regla propia `/users/{uid}`). La jerarquía fina por fila
+  (`editarDeshabilitado`/`eliminarDeshabilitado` en
+  `gestion-usuarios.component.ts`) no se toca.
+- Sin `accion`: default `'leer'` (gating de sección completa = "¿puede
+  al menos leer?").
+- El caso de deuda `operaciones.eliminar` para `user` (citado desde el
+  Bloque 1) queda resuelto por la matriz sin necesitar `override` —
+  pendiente solo de cablear `tablero-op` a `PermisosService`, no de
+  lógica.
+
+**Bloque 5 — Facturación: reglas de negocio ya escritas, cableadas por
+primera vez.** No son reglas nuevas: `puede()`/`puedeAnular()`/
+`puedeVincularFactura()` en `facturacion-listado` y `puede()` en
+`facturacion-historico` (usando `informe-liq.rules.ts`) existían desde
+la creación de ambos componentes pero nunca se llamaban desde ningún
+template — el único gating real era `disbledDemo()` (3 columnas
+enteras, solo rol `demo`, sin distinguir fila ni estado). Corrección de
+un mecanismo roto desde su creación, no funcionalidad nueva.
+
+- `InformesTablaComponent`: eliminado código muerto confirmado
+  (`@Input() acciones` a nivel de componente, nunca poblado por ningún
+  caller; `ejecutarAccion()`/`mostrarAccion()`/`accionDeshabilitada()`,
+  nunca en el camino real de render; import de `EventoInformesTabla`
+  sin uso; `disbledDemo()` y su `UsuarioSesionService` inyectado).
+- `ColumnaInformesTabla<T>.acciones`: `string[]` → `AccionInformesTabla<T>[]`
+  (interfaz ya existente, uso real por primera vez).
+- `AccionInformesTabla<T>` gana `accionPermiso?: AccionPermiso` (campo
+  nuevo, no interfaz nueva): `id` es la identidad de negocio (lo que
+  lee `onAccion()`), `accionPermiso` la desambigua cuando no coincide
+  con el `AccionPermiso` real para `PermisosService` — primer caso:
+  `excel`/`pdf` (dos ids distintos, necesarios para que `onAccion()`
+  siga eligiendo el formato correcto) comparten `accionPermiso:
+  'reimprimir'`. Fallback `accion.accionPermiso ?? accion.id` para el
+  resto (donde sí coinciden).
+- Ids renombrados para alinear con `AccionInformeLiq`: `detalle`→`ver`
+  (ambos componentes); `factura`→`vincularFactura` en
+  `facturacion-listado`; `factura`→`verFactura` en
+  `facturacion-historico` (acción de negocio distinta pese a compartir
+  botón visual hoy). `onAccion()` actualizado en cascada.
+- `columnas[].acciones` de ambos componentes pobladas con `disabled`
+  real conectado a los métodos ya existentes (`puede`/`puedeAnular`/
+  `puedeVincularFactura`), sin reescribirlos.
+- `InformesAccionesCellComponent` reescrito: itera `acciones` en vez
+  de `@if (acciones.includes(...))` fijo por string; mismo mapeo
+  visual id→botón que antes; pasa `disabled` real +
+  `modulo`/`accion` a cada `app-btn-*`.
+- Cascada de `modulo="facturacion"` (mismo patrón que Bloque 4):
+  ambos callers → `InformesTablaComponent` → `InformesAccionesCellComponent`
+  → cada `app-btn-*`.
+- ⚠️ Gap residual conocido, fuera de alcance (`app-btn-*` no se toca
+  en este bloque): la rama `'electronica'` de `BtnAgregarComponent`
+  (usada por vincularFactura/verFactura) no bindea `[disabled]` al
+  `<button>` — no estaba en las 13 variantes corregidas en el Bloque 2.
+  El click sigue bloqueado igual (`ejecutar()` no emite si
+  `disabled` es `true`), pero el botón no se ve gris. Pendiente:
+  sumarla a la lista de variantes corregidas. **Corregido, ver más
+  abajo.**
+- **Verificado:** informe `anulado` (`REGLAS_ESTADO_INFORME.anulado =
+  ['ver']`) ahora deshabilita correctamente reimprimir/verFactura en
+  `facturacion-historico` — antes quedaban clickeables sin importar el
+  estado del informe.
+
+**Corrección de alcance incompleto del Bloque 2:** `BtnAgregarComponent`,
+rama `'electronica'`, quedó afuera de las 13 variantes corregidas por
+error de conteo al enumerarlas — mismo bug de `disabled` inerte que las
+otras 13, no un caso nuevo. Agregado `[disabled]=disabled` al
+`<button>`. Efecto visible: el botón de vincularFactura/verFactura en
+Facturación ahora se ve gris cuando el informe no permite la acción,
+consistente con el bloqueo de click que ya funcionaba por el guard en
+`ejecutar()` (Bloque 5).
+
+**Bloque 6 (sub-bloque 1) — barrido de `*appRole`/`esRol()`/`ngClass`
+sueltos: `tablero-op.component.html`.** Caso más enredado de la
+auditoría: `[disabled]` nativo + `[ngClass]` + regla de negocio +
+`esRol('demo')` repetido en los 3 botones de acción de la fila, más un
+botón crudo de alta con su propio `esRol('demo')` inline.
+
+- `AccionPermiso` gana `'cerrar'`; `mapaAccionCrud['cerrar'] =
+  'editar'` (cerrar una operación actualiza `EstadoOp.ciclo`, no crea
+  ni elimina).
+- Los 4 botones de la fila (`DetalleColor`/`EditarColor`/
+  `EliminarColor`/`FacturaColor`) reciben `modulo="operaciones"` +
+  `accion` (`ver`/`editar`/`eliminar`/`cerrar`). `[ngClass]`/`[disabled]`
+  con `esRol('demo')` mezclado quitados; `[disabled]` queda como única
+  fuente, apuntando solo a la regla de negocio existente
+  (`puedeEditar`/`puedeEliminar`/`puedeCerrar`).
+- Botón crudo "Alta de Operación": `[disabled]="esRol('demo')"` →
+  `*appPermiso="'operaciones.agregar'"`.
+- `UsuarioSesionService` (inyección + import) eliminado de
+  `tablero-op.component.ts` — sin otros usos confirmados antes de
+  quitarla.
+- ⚠️ **Efecto real para `demo`, más amplio que "verse igual pero
+  bloqueado":** `demo` solo tiene `leer` en `operaciones` — `modulo`/
+  `accion` oculta el botón entero si no hay permiso (no solo lo
+  deshabilita), así que Editar/Eliminar/Cerrar dejan de verse para
+  `demo` (antes se veían grises); solo queda visible Ver. Mismo efecto
+  para `user` en Eliminar específicamente (el caso de deuda
+  `operaciones.eliminar`/`user` ya cerrado en la corrección de
+  `PermisosService`, ahora reflejado en la UI). `dev`/`admin` sin
+  cambios.
+
+**Corrección — bug estructural preexistente en los 5 `app-btn-*`/
+`AccionGenericaComponent`:** encontrado en pruebas manuales del
+sub-bloque anterior, no específico de Operaciones ni introducido por
+este frente. Con rol `admin`, una operación `'Cerrada'` (`disabled`
+correctamente presente en el `<button>` interno) igual ejecutaba
+`eliminar()` al hacer clic en el margen del botón. Causa: `(click)` se
+declara sobre el tag host en los ~95 call sites (estos componentes
+nunca definieron `@Output() click`, Angular lo trata como listener DOM
+nativo del host); `[disabled]` en el `<button>` interno bloquea clics
+en su propia caja pero no en el `margin: 10px`, que es layout del host
+— un clic ahí cae directo sobre el host y dispara la acción igual. El
+Bloque 2 corrigió que `disabled` llegara al `<button>`, pero eso nunca
+iba a alcanzar: el problema vive un nivel más arriba.
+
+- `@HostBinding('style.pointer-events')` agregado a los 5 componentes
+  (`'none'` si `disabled`, si no `null`) — `pointer-events` se hereda,
+  así que el `<button>` interno también queda fuera del hit-testing
+  cuando corresponde. Ningún clic en la caja del host llega al
+  listener. Sin `@Output()` nuevo, sin tocar `(click)="..."` en ningún
+  caller.
+- ⚠️ Este bug pudo haber afectado cualquier sitio de la app con
+  `disabled` ya cableado antes de este frente, no solo los migrados acá
+  — sin forma práctica de auditar retroactivamente cada caso histórico.
+  De acá en más queda blindado en la base para todos, migrados o no.
+
+**Bloque 6 (sub-bloque 2) — `proforma.component`.** A diferencia de
+`tablero-op`/Facturación, acá no existía ningún método `puedeXxx` de
+regla de negocio — el único gating eran 9 `[ngClass]` de
+`esRol('demo')` (3 tablas × `print`/`Eliminar`/`Factura`); `Detalle`
+sin gating de ningún tipo. Solo se conecta permiso, no hay regla de
+negocio que cablear porque no existe.
+
+- `AccionPermiso` gana `'liquidar'` (crea un `InformeLiq` nuevo desde
+  una proforma, distinto de `vincularFactura`/`anular`);
+  `mapaAccionCrud['liquidar'] = 'crear'`.
+- Las 3 tablas: `Detalle`→`accion="ver"` (nuevo), `print`→
+  `accion="reimprimir"`, `Eliminar`→`accion="anular"`,
+  `Factura`→`accion="liquidar"`, `modulo="liquidaciones"` en los 4.
+  `ngClass` de `esRol('demo')` quitado en los 9 sitios que lo tenían.
+  Sin `[disabled]` en ninguno (no hay regla de negocio). `usuarioSesion`
+  se mantiene inyectada (uso real confirmado en `ngOnInit`).
+- ⚠️ **Efecto real por rol, con matices:** `liquidaciones` espeja
+  `finanzas`. `Detalle`: antes abierto para los 5 roles, ahora oculto
+  para `manager`/`user`. `print`: antes bloqueado visual solo para
+  `demo`, ahora oculto para `manager`/`user` y **habilitado para
+  `demo`** (`reimprimir`→`leer`, que `demo` sí tiene — desbloqueo real,
+  no solo restricción). `Eliminar`/`Factura`: antes **sin ningún
+  gating** para `manager`/`user` (podían anular proformas y liquidar
+  sin restricción alguna) — ahora visibles solo para `dev`/`admin`,
+  cierra una exposición real no señalada como deuda hasta ahora.
+  `dev`/`admin` sin cambios.
+
+**Bloque 6 (sub-bloque 3) — `liquidaciones-op.component`** (reusado por
+cliente/chofer/proveedor vía `llamadaOrigen`). Dos columnas usaban
+`*appRole` sobre `<td>` completo (SVG crudo, no `app-btn-*`); el botón
+"Liquidar" mezclaba `[ngClass]` con `||` de regla de UI + rol sobre un
+`<button>` crudo. Reutiliza `'editar'`/`'eliminar'`/`'liquidar'` — sin
+extender `AccionPermiso`.
+
+- Botón "Liquidar": envuelto en `<ng-container
+  *appPermiso="'liquidaciones.liquidar'">` (dos directivas
+  estructurales no van en el mismo elemento). `[disabled]="!mostrarTabla[i]"`
+  como única fuente; `esRol('demo')` quitado del `ngClass`.
+- Columnas editar/eliminar de `informeOp`: `*appRole="['dev','admin','manager']"`
+  → `*appPermiso="'liquidaciones.editar'"` / `'liquidaciones.eliminar'`
+  — quitando `'manager'` (decisión ya tomada en el frente). Header
+  combinado con `colspan="2"`: un solo `*appPermiso="'liquidaciones.editar'"`
+  alcanza porque ambas columnas comparten rol hoy.
+- Checkboxes de selección (armado local, no escriben en Firestore): sin
+  gating, `ngClass` de `esRol('demo')` quitado sin reemplazo — mismo
+  criterio que `Detalle` en proforma.
+- `usuarioSesion` se mantiene (otro uso real confirmado).
+- ⚠️ **Efecto real, en los 3 orígenes:** Editar/Eliminar — `manager`
+  los pierde (estaba en el `*appRole`), `user`/`demo` sin cambio (nunca
+  los vieron). Liquidar — `demo` pasa de gris a oculto (el caso
+  señalado), pero **`manager`/`user` también lo pierden por completo**
+  (antes sin ninguna restricción para ellos, no solo `demo` — efecto
+  adicional no cubierto por el pedido original). Checkboxes — `demo`
+  gana acceso (antes bloqueado, ahora libre). `dev`/`admin` sin
+  cambios.
+
+**Bloque 6 (sub-bloque 4, ÚLTIMO) — botón de alta de los 4 listados
+CRUD, `vendedores-listado`, `sidebar`, `nueva-facturacion/modal-detalle`.**
+Cierra el barrido de `*appRole`/`esRol()`/`ngClass` sueltos.
+
+- Botón de alta de los 4 listados: `ngClass` de `esRol('demo')`
+  quitado, `modulo`/`accion="agregar"` agregado. `'Descargar X'`/
+  `'X Visibles'` sin tocar (decisión ya tomada, incluye el `ngClass`
+  de `demo` en `'Visibles'`).
+- `vendedores-listado` (cards, no `TablaGenericaComponent`):
+  Editar/Eliminar conectados a `modulo="vendedores"`.
+- `sidebar`: 4 `@if (esRol(...))` → `*appPermiso` sobre el `<li>`
+  completo. Configuración/Facturación/Reportes coinciden 1:1 con el
+  comportamiento anterior (verificado contra la matriz). **Finanzas
+  cambia a propósito:** antes solo `dev`, ahora fiel a
+  `matrizBase.finanzas.leer` — `admin` y `demo` ganan el link. Resto
+  del sidebar sin gating (protegido por `RoleGuard` de ruta).
+- `nueva-facturacion/modal-detalle`: único `*appRole` del archivo →
+  `*appPermiso="'facturacion.eliminar'"`, quitando `'manager'`.
+
+**Bloque 6 CERRADO.** Verificado por grep: el único `*appRole` restante
+en toda la app son los 6 sitios de Tarifas (cliente/choferes/proveedores
+× gral/especial) — frente aparte, pendiente. (`facturacion/modal-detalle`
+legacy comentado y `acciones-cell-renderer` sin caller también usan
+`*appRole` pero por código muerto/orfandad, no por ser Tarifas.)
+
+### Bloque 7 (ÚLTIMO) — `tablero-asignaciones`, primer uso real de
+`overrides` en `PermisosService`
+
+8 botones crudos sin gating hasta ahora (4 modales de gestión + Alta de
+Op/Guardar/Descargar/Limpiar, esta última con el TODO comentado ya
+señalado como deuda). Requisito de negocio: `user` (único empleado
+activo en producción) conserva los 8 sin excepción; `demo` no ve
+ninguno.
+
+- `AccionPermiso` gana `'descargarTablero'`/`'limpiarTablero'`;
+  `mapaAccionCrud`: `descargarTablero→'leer'`, `limpiarTablero→'eliminar'`.
+- Primeros dos `overrides` reales (vacío desde el Bloque 1):
+  `'operaciones.descargarTablero': { demo: false }` (bloquea la
+  descarga del tablero para `demo` sin afectar `'reimprimir'` en
+  Facturación) y `'operaciones.limpiarTablero': { user: true }`
+  (`user` conserva la acción pese a que `'eliminar'` general le daría
+  `false`).
+- 4 botones de gestión (izquierda) → `*appPermiso="'operaciones.editar'"`
+  en los 4. 4 de acción (derecha): Alta de Op→`'operaciones.agregar'`,
+  Guardar→`'operaciones.editar'`, Descargar→`'operaciones.descargarTablero'`,
+  Limpiar→`'operaciones.limpiarTablero'`. `[disabled]` propio de cada
+  botón (UI/negocio) intacto. TODO de `esRol('demo')` eliminado.
+- **Verificado contra la matriz, exacto:** `user` ve y usa los 8;
+  `demo` no ve ninguno; `dev`/`admin` sin cambios.
+
+## FRENTE BOTONES Y PERMISOS — CERRADO
+
+4 capas operativas de punta a punta: `PermisosService` (matriz real +
+overrides reales) → `*appPermiso`/`modulo`+`accion` en los 4 `app-btn-*`
+→ catálogo semántico + `AccionGenericaComponent` (con el bug
+estructural de `pointer-events` corregido en los 5) → wrappers de tabla
++ ~15 componentes migrados directamente. Único `*appRole` restante en
+toda la app: los 6 sitios de Tarifas, frente aparte no iniciado. Detalle
+completo de los 7 bloques y las 3 correcciones intercaladas en
+`CLAUDE.md` → "Frente Botones y Permisos".
+
+### Fix post-cierre — `firestore.rules`: `asignaciones` desacoplado de `operaciones`
+
+Bug real reportado en producción: `user` recibía "Missing or
+insufficient permissions" al usar "Limpiar" (caso A, borrar un
+borrador) en `tablero-asignaciones`. El gating del cliente (Bloque 7)
+ya estaba correcto — el servidor no lo reflejaba: `moduloDe()` mapeaba
+`asignaciones` al mismo módulo que `operaciones`, heredando su
+`eliminar=false` para `user`. Son colecciones con perfil de riesgo
+distinto (un tablero borrador es descartable; una `Operacion` real no)
+y debían desacoplarse.
+
+- `firestore.rules`: `asignaciones` con categoría propia en
+  `moduloDe()`; nueva rama en `permitido()` —
+  `dev`/`admin`/`user` con las 4 acciones sin distinción, `demo`/`manager`
+  denegados por completo (fail-safe).
+- `PermisosService`: `matrizBase.asignaciones` agregada (mismos
+  valores) por fidelidad de transcripción con `firestore.rules`, aunque
+  ningún `ModuloPermiso` de Angular la consume todavía — evita dejar
+  una categoría real de las reglas sin representar en el servicio,
+  causa raíz de esta clase de bug. Sin más cambios en Angular: el
+  gating de `tablero-asignaciones` (Bloque 7) ya era correcto.
+- Verificado contra el emulador (`functions/test-asignaciones-rules.mjs`,
+  mismo patrón que `test-emulator.mjs`) antes de deploy: `user`
+  leer/crear/eliminar en `asignaciones` — OK; `demo` sin ningún acceso
+  — OK; `admin` sin cambios — OK. 6/6 PASS.
+- Deploy de `firestore.rules` a `demo` (`demoapplog`) únicamente —
+  alias confirmado contra `.firebaserc` antes de ejecutar. **NO
+  desplegado a Vantruck/producción** — la réplica queda diferida hasta
+  cerrar la restructuración completa del proyecto, según el proceso ya
+  establecido. Smoke test real en demo con un usuario `user` real
+  queda pendiente de confirmación manual (sin credenciales ni browser
+  automation disponibles en este entorno para hacerlo de punta a
+  punta).
+
+### Limpieza — proyecto Firebase remanente `lplog-31164` (sin relación con el frente de Botones y Permisos)
+
+Discrepancia detectada durante ese frente entre `CLAUDE.md` (tabla
+"Entornos de build": `vantruck` → `lplog-31164`) y la config real
+(`environment.ts` usa `pf-logistics` como producción). Confirmado por
+el desarrollador: `lplog-31164` es remanente de pruebas viejas con un
+tercer proyecto Firebase, sin uso actual. Los dos proyectos reales son
+`demo` (`demoapplog`) y `vantruck`/producción (`pf-logistics`).
+
+Auditoría de solo lectura previa (grep de `lplog-31164` en todo el
+repo, 6 ocurrencias en 3 archivos) antes de tocar nada, confirmando
+puntualmente: `.firebaserc` sin ningún alias apuntando a
+`lplog-31164` (los reales: `demo`→`demoapplog`, `default`→`demoapplog`,
+`vantruck`→`pf-logistics`); `deploy:demo`/`deploy:vantruck` en
+`package.json` usan `firebase use <alias> && firebase deploy`, no
+`ng deploy` — confirmado que ningún script invoca el builder
+`@angular/fire:deploy` de `angular.json` antes de tocarlo; dos bloques
+comentados distintos en `environment.ts` (uno con `lplog-31164` mal
+etiquetado "PARA PRODUCCION", otro separado con `pf-logistics` que es
+el interruptor manual intencional de debug local, sin tocar).
+
+- `src/environments/environment.ts`: bloque comentado de `lplog-31164`
+  eliminado. Bloque de `pf-logistics` (debug local) intacto.
+- `angular.json`: bloque `"deploy"` (builder `@angular/fire:deploy`,
+  apuntaba a `lplog-31164`) eliminado — sin invocador confirmado.
+- `.firebaserc`: sin cambios, no tenía ninguna referencia a
+  `lplog-31164`.
+- `build:demo`/`build:vantruck` verificados sin errores tras la
+  limpieza.
+- `CLAUDE.md`: tabla "Entornos de build" corregida — `vantruck` →
+  `pf-logistics` (no `lplog-31164`); aclarado que `development` apunta
+  a `demo` por defecto, y que el bloque de `pf-logistics` en
+  `environment.ts` es un interruptor manual existente para debug
+  local, no un tercer entorno.
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)

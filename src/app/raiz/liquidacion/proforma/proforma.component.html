@@ -84,7 +84,9 @@
                                 <td class="d-flex">
                                     <app-btn-leer
                                         name="Detalle"
-                                        class="me-2"                                        
+                                        class="me-2"
+                                        modulo="liquidaciones"
+                                        accion="ver"
                                         (click)="
                                             obtenerFacturasOp(
                                                 cliente,
@@ -96,7 +98,8 @@
                                     <app-btn-leer
                                         name="print"
                                         class="me-2"
-                                         [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"
+                                        modulo="liquidaciones"
+                                        accion="reimprimir"
                                         (click)="
                                             obtenerFacturasOp(
                                                 cliente,
@@ -108,7 +111,8 @@
                                     <app-btn-eliminar
                                         name="Eliminar"
                                         class="me-2"
-                                         [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"
+                                        modulo="liquidaciones"
+                                        accion="anular"
                                         (click)="
                                             obtenerFacturasOp(
                                                 cliente,
@@ -121,7 +125,8 @@
                                         name="Factura"
                                         class="me-2"
                                         type="button"
-                                         [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"
+                                        modulo="liquidaciones"
+                                        accion="liquidar"
                                         (click)="
                                             obtenerFacturasOp(
                                                 cliente,
@@ -229,6 +234,8 @@
                                     <app-btn-leer
                                         name="Detalle"
                                         class="me-2"
+                                        modulo="liquidaciones"
+                                        accion="ver"
                                         (click)="
                                             obtenerFacturasOp(
                                                 chofer,
@@ -240,7 +247,8 @@
                                     <app-btn-leer
                                         name="print"
                                         class="me-2"
-                                         [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"
+                                        modulo="liquidaciones"
+                                        accion="reimprimir"
                                         (click)="
                                             obtenerFacturasOp(
                                                 chofer,
@@ -252,7 +260,8 @@
                                     <app-btn-eliminar
                                         name="Eliminar"
                                         class="me-2"
-                                         [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"
+                                        modulo="liquidaciones"
+                                        accion="anular"
                                         (click)="
                                             obtenerFacturasOp(
                                                 chofer,
@@ -265,7 +274,8 @@
                                         name="Factura"
                                         class="me-2"
                                         type="button"
-                                         [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"
+                                        modulo="liquidaciones"
+                                        accion="liquidar"
                                         (click)="
                                             obtenerFacturasOp(
                                                 chofer,
@@ -366,6 +376,8 @@
                                     <app-btn-leer
                                         name="Detalle"
                                         class="me-2"
+                                        modulo="liquidaciones"
+                                        accion="ver"
                                         (click)="
                                             obtenerFacturasOp(
                                                 prov,
@@ -377,7 +389,8 @@
                                     <app-btn-leer
                                         name="print"
                                         class="me-2"
-                                         [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"
+                                        modulo="liquidaciones"
+                                        accion="reimprimir"
                                         (click)="
                                             obtenerFacturasOp(
                                                 prov,
@@ -389,7 +402,8 @@
                                     <app-btn-eliminar
                                         name="Eliminar"
                                         class="me-2"
-                                         [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"
+                                        modulo="liquidaciones"
+                                        accion="anular"
                                         (click)="
                                             obtenerFacturasOp(
                                                 prov,
@@ -402,7 +416,8 @@
                                         name="Factura"
                                         class="me-2"
                                         type="button"
-                                         [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"
+                                        modulo="liquidaciones"
+                                        accion="liquidar"
                                         (click)="
                                             obtenerFacturasOp(
                                                 prov,

@@ -19,7 +19,7 @@ import { Cliente } from "src/app/interfaces/cliente";
 import { Proveedor } from "src/app/interfaces/proveedor";
 import { Chofer } from "src/app/interfaces/chofer";
 import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
-import { ColumnaTabla } from "src/app/interfaces/tablas";
+import { ColumnaInformesTabla } from "src/app/interfaces/informes-tabla";
 import { FinanzasResumenService } from "src/app/servicios/finanzas/finanzas-resumen.service";
 
 @Component({
@@ -55,7 +55,7 @@ export class FacturacionHistoricoComponent implements OnInit {
   proveedores: ConId<Proveedor>[] = [];
   coleccion: string = "resumenLiq";
 
-  columnas: ColumnaTabla<InformeLiq>[] = [
+  columnas: ColumnaInformesTabla<InformeLiq>[] = [
     {
       key: "fecha",
       label: "Fecha Inf",
@@ -134,19 +134,26 @@ export class FacturacionHistoricoComponent implements OnInit {
       key: "detalle",
       label: "Detalle",
       align: "center",
-      acciones: ["detalle"],
+      acciones: [
+        { id: "ver", label: "Detalle" },
+      ],
     },
     {
       key: "descargar",
       label: "Decargar",
       align: "center",
-      acciones: ["reimprimir"],
+      acciones: [
+        { id: "excel", label: "Excel", accionPermiso: "reimprimir", disabled: (inf) => !this.puede(inf, "reimprimir") },
+        { id: "pdf", label: "Pdf", accionPermiso: "reimprimir", disabled: (inf) => !this.puede(inf, "reimprimir") },
+      ],
     },
     {
       key: "fElectrónica",
       label: "F. Electrónica",
       align: "center",
-      acciones: ["factura"],
+      acciones: [
+        { id: "verFactura", label: "Ver Factura", disabled: (inf) => !this.puede(inf, "verFactura") },
+      ],
     },
   ];
 
@@ -415,14 +422,14 @@ export class FacturacionHistoricoComponent implements OnInit {
 
   onAccion(e: { accion: string; item: ConId<InformeLiq> }) {
     switch (e.accion) {
-      case "detalle":
+      case "ver":
         this.verDetalle(e.item, "vista");
         break;
       case "excel":
       case "pdf":
         this.reimprimirLiq(e.item, e.accion);
         break;
-      case "factura":
+      case "verFactura":
         this.verPdf(e.item);
         break;
     }

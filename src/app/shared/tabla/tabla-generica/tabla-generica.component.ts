@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges } from '@angular/core';
-import { AccionTabla, ColumnaTabla } from 'src/app/interfaces/tabla';
+import { AccionTablaGenerica, ColumnaTablaGenerica } from 'src/app/interfaces/tabla-generica';
+import { ModuloPermiso } from 'src/app/interfaces/permiso';
 
 interface FilaFiltrada {
   [key: string]: any;
@@ -13,11 +14,12 @@ interface FilaFiltrada {
 })
 export class TablaGenericaComponent implements OnChanges {
 
-  @Input() columnas: ColumnaTabla[] = [];
+  @Input() columnas: ColumnaTablaGenerica[] = [];
   @Input() filas: any[] = [];
-  @Input() acciones: AccionTabla[] = [];
+  @Input() acciones: AccionTablaGenerica[] = [];
+  @Input() modulo?: ModuloPermiso;
 
-  columnasVisibles: ColumnaTabla[] = [];
+  columnasVisibles: ColumnaTablaGenerica[] = [];
   filasFiltradas: FilaFiltrada[] = [];
   filtros: { [field: string]: string } = {};
   ordenField: string | null = null;
@@ -104,7 +106,7 @@ export class TablaGenericaComponent implements OnChanges {
 
   // --- Columnas visibles ---
 
-  toggleColumna(col: ColumnaTabla): void {
+  toggleColumna(col: ColumnaTablaGenerica): void {
     col.visible = !col.visible;
     this.columnasVisibles = this.columnas
       .filter(c => c.visible)

@@ -6,8 +6,8 @@ import { SharedRoutingModule } from './shared-routing.module';
 import { BtnAgregarComponent } from './botones/btn-agregar/btn-agregar.component';
 import { BtnEditarComponent } from './botones/btn-editar/btn-editar.component';
 import { BtnEliminarComponent } from './botones/btn-eliminar/btn-eliminar.component';
-import { BtnReimpresionComponent } from './botones/btn-reimpresion/btn-reimpresion.component';
 import { BtnLeerComponent } from './botones/btn-leer/btn-leer.component';
+import { AccionGenericaComponent } from './botones/accion-generica/accion-generica.component';
 import { ConsolaTarifaComponent } from './consola-tarifa/consola-tarifa.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TableroCalendarioComponent } from './tablero-calendario/tablero-calendario.component';
@@ -26,6 +26,7 @@ import { SoloLetrasDirective } from './directives/solo-letras.directive';
 
 import { TarigaGralEdicionComponent } from './modales/tariga-gral-edicion/tariga-gral-edicion.component';
 import { RoleDirective } from './directives/role.directive';
+import { PermisoDirective } from './directives/permiso.directive';
 
 import { BajaObjetoComponent } from './modales/baja-objeto/baja-objeto.component';
 import { ObjetoPapeleraComponent } from './modales/objeto-papelera/objeto-papelera.component';
@@ -64,8 +65,8 @@ import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.co
     BtnAgregarComponent,
     BtnEditarComponent,
     BtnEliminarComponent,
-    BtnReimpresionComponent,
     BtnLeerComponent,
+    AccionGenericaComponent,
     ConsolaTarifaComponent,
     TableroCalendarioComponent,
     HistorialTarifasGralComponent,
@@ -79,7 +80,7 @@ import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.co
     SoloLetrasDirective,
     
     TarigaGralEdicionComponent,    
-    RoleDirective, BajaObjetoComponent, 
+    RoleDirective, PermisoDirective, BajaObjetoComponent,
     ObjetoPapeleraComponent, 
     FechaValidaDirective, 
     InformeLiqDetalleComponent, 
@@ -123,10 +124,10 @@ import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.co
     BtnAgregarComponent,
     BtnEditarComponent,
     BtnEliminarComponent,
-    BtnReimpresionComponent,
     BtnLeerComponent,
+    AccionGenericaComponent,
     ConsolaTarifaComponent,
-    TableroCalendarioComponent, 
+    TableroCalendarioComponent,
     HistorialTarifasGralComponent, 
     TarifasEventualesComponent, 
     CarruselComponent,
@@ -138,6 +139,7 @@ import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.co
     
     TarigaGralEdicionComponent,
     RoleDirective,
+    PermisoDirective,
     BajaObjetoComponent,
     FechaValidaDirective,
     InformeLiqDetalleComponent, 

@@ -1,4 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, HostBinding, Input, OnInit } from '@angular/core';
+import { ModuloPermiso, AccionPermiso } from 'src/app/interfaces/permiso';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 
 @Component({
     selector: 'app-btn-agregar',
@@ -12,92 +14,92 @@ import { Component, Input, OnInit } from '@angular/core';
 </button> -->
 
 
-@if (name === 'Cerrar') {
-  <button class="btn azul mt-2" type="submit">
+@if (name === 'Cerrar' && visible) {
+  <button class="btn azul mt-2" type="submit" [disabled]=disabled>
     Cerrar Operación
   </button>
 }
 
-@if (name === 'Guardar') {
-  <button class="btn azul mt-2" type="submit">
+@if (name === 'Guardar' && visible) {
+  <button class="btn azul mt-2" type="submit" [disabled]=disabled>
     Guardar
   </button>
 }
 
-@if (name === 'Descargar Legajo') {
-  <button class="btn azul mt-2" type="submit">
+@if (name === 'Descargar Legajo' && visible) {
+  <button class="btn azul mt-2" type="submit" [disabled]=disabled>
     Descargar Legajo
   </button>
 }
 
-@if (name === 'GuardarClaro') {
-  <button class="btn btn-outline-secondary mt-2" type="submit">
+@if (name === 'GuardarClaro' && visible) {
+  <button class="btn btn-outline-secondary mt-2" type="submit" [disabled]=disabled>
     Guardar
   </button>
 }
 
-@if (name === 'GuardarCambios') {
-  <button class="btn btn-secondary mt-2" type="submit">
+@if (name === 'GuardarCambios' && visible) {
+  <button class="btn btn-secondary mt-2" type="submit" [disabled]=disabled>
     Guardar los cambios
   </button>
 }
 
-@if (name === 'GuardarCambiosClaro') {
-  <button class="btn azul  mt-2" type="submit">
+@if (name === 'GuardarCambiosClaro' && visible) {
+  <button class="btn azul  mt-2" type="submit" [disabled]=disabled>
     Guardar los cambios
   </button>
 }
 
-@if (name === 'guardarTarifa') {
-  <button class="btn azul  mt-2" type="submit">
+@if (name === 'guardarTarifa' && visible) {
+  <button class="btn azul  mt-2" type="submit" [disabled]=disabled>
     Guardar Nueva Tarifa
   </button>
 }
 
-@if (name === 'editarTarifa') {
+@if (name === 'editarTarifa' && visible) {
   <button class="btn azul  mt-2" type="submit">
     Editar última Tarifa
   </button>
 }
 
-@if (name === 'Agregar') {
-  <button class="btn azul mt-2" type="submit">
+@if (name === 'Agregar' && visible) {
+  <button class="btn azul mt-2" type="submit" [disabled]=disabled>
     Agregar
   </button>
 }
 
-@if (name === 'Confirmar') {
-  <button class="btn azul mt-2" type="submit">
+@if (name === 'Confirmar' && visible) {
+  <button class="btn azul mt-2" type="submit" [disabled]=disabled>
     Confirmar
   </button>
 }
 
-@if (name === 'Agregar Contacto') {
-  <button class="btn btn-secondary mt-2" type="submit">
+@if (name === 'Agregar Contacto' && visible) {
+  <button class="btn btn-secondary mt-2" type="submit" [disabled]=disabled>
     Agregar Contacto
   </button>
 }
 
-@if (name === 'AgregarContactoClaro') {
-  <button class="btn btn-outline-secondary mt-2" type="submit">
+@if (name === 'AgregarContactoClaro' && visible) {
+  <button class="btn btn-outline-secondary mt-2" type="submit" [disabled]=disabled>
     Agregar Contacto
   </button>
 }
 
-@if (name === 'Facturar') {
-  <button class="btn btn-secondary mt-2" type="submit">
+@if (name === 'Facturar' && visible) {
+  <button class="btn btn-secondary mt-2" type="submit" [disabled]=disabled>
     Facturar
   </button>
 }
 
-@if (name === 'Pagar') {
-  <button class="btn btn-primary mt-2" type="submit">
+@if (name === 'Pagar' && visible) {
+  <button class="btn btn-primary mt-2" type="submit" [disabled]=disabled>
     Pagar
   </button>
 }
 
 
-@if (name === 'Factura') {
+@if (name === 'Factura' && visible) {
   <button class="btn btn-light m-0 verde"  style="border-radius: 10%;  margin: 10px;"
     [disabled]=disabled>
     <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16">
@@ -106,7 +108,7 @@ import { Component, Input, OnInit } from '@angular/core';
   </button>
 }
 
-@if (name === 'FacturaColor') {
+@if (name === 'FacturaColor' && visible) {
   <button class="btn btn-success success m-0"  style="border-radius: 10%;  margin: 10px;"
     [disabled]=disabled>
     <svg  xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16">
@@ -114,8 +116,8 @@ import { Component, Input, OnInit } from '@angular/core';
     </svg>
   </button>
 }
-@if (name === 'electronica'){
-  <button class="btn btn-success success m-0">
+@if (name === 'electronica' && visible){
+  <button class="btn btn-success success m-0" [disabled]=disabled>
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-card-list" viewBox="0 0 16 16">
       <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2z"/>
       <path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8m0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m-1-5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0M4 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0m0 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0"/>
@@ -158,7 +160,25 @@ export class BtnAgregarComponent implements OnInit {
 
   @Input() name?: string;
   @Input() disabled!: boolean;
-  constructor() { }
+  @Input() modulo?: ModuloPermiso;
+  @Input() accion?: AccionPermiso;
+
+  constructor(private permisosService: PermisosService) { }
+
+  get visible(): boolean {
+    return !this.modulo || this.permisosService.puede(this.modulo, this.accion);
+  }
+
+  // El (click) de los ~95 call sites está en el host, no en el <button>
+  // interno (estos componentes nunca definieron @Output() click — Angular
+  // lo trata como listener DOM nativo del host). El <button [disabled]>
+  // bloquea clics dentro de su propia caja, pero el margen del botón es
+  // layout del host: un clic ahí no toca el <button> y el listener del
+  // host lo dispara igual. pointer-events:none en el host cierra ese
+  // agujero sin tocar la sintaxis (click)="..." existente.
+  @HostBinding('style.pointer-events') get pointerEvents(): string | null {
+    return this.disabled ? 'none' : null;
+  }
 
   ngOnInit(): void {
   }

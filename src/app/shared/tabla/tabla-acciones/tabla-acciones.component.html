@@ -1,14 +1,14 @@
 <div class="d-flex gap-1">
   @if (tieneAccion('vehiculos')) {
-    <app-btn-leer name="Vehiculos" (click)="ejecutar('vehiculos')"></app-btn-leer>
+    <app-btn-leer name="Vehiculos" [modulo]="modulo" accion="vehiculos" (click)="ejecutar('vehiculos')"></app-btn-leer>
   }
   @if (tieneAccion('ver')) {
-    <app-btn-leer name="DetalleColor" (click)="ejecutar('ver')"></app-btn-leer>
+    <app-btn-leer name="DetalleColor" [modulo]="modulo" accion="ver" (click)="ejecutar('ver')"></app-btn-leer>
   }
   @if (tieneAccion('editar')) {
-    <app-btn-editar name="EditarColor" [disabled]="estaDeshabilitada('editar')" (click)="ejecutar('editar')"></app-btn-editar>
+    <app-btn-editar name="EditarColor" [modulo]="modulo" accion="editar" [disabled]="estaDeshabilitada('editar')" (click)="ejecutar('editar')"></app-btn-editar>
   }
   @if (tieneAccion('eliminar')) {
-    <app-btn-eliminar name="EliminarColor" [disabled]="estaDeshabilitada('eliminar')" (click)="ejecutar('eliminar')"></app-btn-eliminar>
+    <app-btn-eliminar name="EliminarColor" [modulo]="modulo" accion="eliminar" [disabled]="estaDeshabilitada('eliminar')" (click)="ejecutar('eliminar')"></app-btn-eliminar>
   }
 </div>

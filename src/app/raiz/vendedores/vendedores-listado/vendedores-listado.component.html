@@ -1,6 +1,6 @@
 <div>
     <div class="align-self-start mt-3 mb-2">  
-        <app-btn-leer class="align-items-end" name="Vendedor" (click)="openModal('alta')" [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"></app-btn-leer>
+        <app-btn-leer class="align-items-end" name="Vendedor" modulo="vendedores" accion="agregar" (click)="openModal('alta')"></app-btn-leer>
     </div>
     <div>
         <div class="row justify-content-start">
@@ -13,8 +13,8 @@
                                     <h4>{{vendedor.datosPersonales.apellido}} {{vendedor.datosPersonales.nombre}}</h4>
                                 </div>
                                 <div>
-                                    <app-btn-editar name="Editar" (click)="editarVendedor(vendedor)" [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}" ></app-btn-editar>
-                                    <app-btn-eliminar name="Eliminar"  (click)="eliminarVendedor(vendedor)" [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"></app-btn-eliminar>
+                                    <app-btn-editar name="Editar" modulo="vendedores" accion="editar" (click)="editarVendedor(vendedor)"></app-btn-editar>
+                                    <app-btn-eliminar name="Eliminar" modulo="vendedores" accion="eliminar" (click)="eliminarVendedor(vendedor)"></app-btn-eliminar>
                                 </div>
                             </div>
                             

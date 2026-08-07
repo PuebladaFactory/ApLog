@@ -3,8 +3,9 @@
         <div class="align-self-start mt-3 me-2">
             <app-btn-leer
                 name="Proveedor"
+                modulo="proveedores"
+                accion="agregar"
                 (click)="openModal('alta')"
-                [ngClass]="{ isDisabled: usuarioSesion.esRol('demo') }"
             >
             </app-btn-leer>
         </div>
@@ -62,6 +63,7 @@
     [columnas]="columnas"
     [filas]="filas"
     [acciones]="accionesTabla"
+    modulo="proveedores"
 >
 </app-tabla-generica>
 

@@ -3,7 +3,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import Swal from 'sweetalert2';
 import { Usuario } from 'src/app/interfaces/usuario';
-import { ColumnaTabla, AccionTabla } from 'src/app/interfaces/tabla';
+import { ColumnaTablaGenerica, AccionTablaGenerica } from 'src/app/interfaces/tabla-generica';
 import { GestionUsuariosService } from 'src/app/servicios/gestion-usuarios/gestion-usuarios.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { ModalUsuarioComponent, ResultadoModalUsuario } from './modal-usuario/modal-usuario.component';
@@ -19,12 +19,12 @@ export class GestionUsuariosComponent implements OnInit {
   filas: any[] = [];
   isLoading = false;
 
-  columnas: ColumnaTabla[] = [
+  columnas: ColumnaTablaGenerica[] = [
     { field: 'name', header: 'Nombre', visible: true, width: 220 },
     { field: 'email', header: 'Email', visible: true, width: 260 },
     { field: 'role', header: 'Rol', visible: true, width: 130 },
   ];
-  accionesTabla: AccionTabla[] = [];
+  accionesTabla: AccionTablaGenerica[] = [];
 
   constructor(
     private gestionUsuariosService: GestionUsuariosService,

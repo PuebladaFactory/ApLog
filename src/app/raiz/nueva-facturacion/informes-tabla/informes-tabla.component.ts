@@ -2,12 +2,10 @@ import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { ConId } from "src/app/interfaces/conId";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import {
-  AccionTabla,
-  ColumnaTabla,
-  EventoAccionTabla,
-  OrdenTabla,
-} from "src/app/interfaces/tablas";
-import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
+  ColumnaInformesTabla,
+  OrdenInformesTabla,
+} from "src/app/interfaces/informes-tabla";
+import { ModuloPermiso } from "src/app/interfaces/permiso";
 
 @Component({
   selector: "app-informes-tabla",
@@ -17,26 +15,22 @@ import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-s
 })
 export class InformesTablaComponent implements OnInit {
   @Input() items: ConId<InformeLiq>[] = [];
-  @Input() columnas: ColumnaTabla<InformeLiq>[] = [];
-  @Input() acciones: AccionTabla<InformeLiq>[] = [];
+  @Input() columnas: ColumnaInformesTabla<InformeLiq>[] = [];
   @Input() loading = false;
+  @Input() modulo?: ModuloPermiso;
 
   @Output() accionClick = new EventEmitter<{
     accion: string;
     item: any;
   }>();
-  @Output() ordenar = new EventEmitter<OrdenTabla>();
+  @Output() ordenar = new EventEmitter<OrdenInformesTabla>();
 
   ordenColumna: string | null = null;
   ordenAsc = true;
 
-  constructor(
-    private usuarioSesion: UsuarioSesionService,
-  ) {}
-
   ngOnInit(): void {}
 
-  onOrdenar(col: ColumnaTabla<any>) {
+  onOrdenar(col: ColumnaInformesTabla<any>) {
     if (!col.sortable) return;
 
     if (this.ordenColumna === col.key) {
@@ -56,30 +50,7 @@ export class InformesTablaComponent implements OnInit {
     return item?.[key] ?? "";
   }
 
-  ejecutarAccion(accion: AccionTabla<InformeLiq>, item: ConId<InformeLiq>) {
-    if (accion.disabled?.(item)) return;
-
-    this.accionClick.emit({
-      accion: accion.id,
-      item,
-    });
-  }
-
-  mostrarAccion(
-    accion: AccionTabla<InformeLiq>,
-    item: ConId<InformeLiq>,
-  ): boolean {
-    return accion.visible ? accion.visible(item) : true;
-  }
-
-  accionDeshabilitada(
-    accion: AccionTabla<InformeLiq>,
-    item: ConId<InformeLiq>,
-  ): boolean {
-    return accion.disabled ? accion.disabled(item) : false;
-  }
-
-  getValor(col: ColumnaTabla<any>, item: any): string | number | null {
+  getValor(col: ColumnaInformesTabla<any>, item: any): string | number | null {
     if (col.value) {
       return col.value(item);
     }
@@ -91,7 +62,7 @@ export class InformesTablaComponent implements OnInit {
     return item[col.key as keyof typeof item] ?? null;
   }
 
-  getCellClasses(col: ColumnaTabla<InformeLiq>, item: InformeLiq): string[] {
+  getCellClasses(col: ColumnaInformesTabla<InformeLiq>, item: InformeLiq): string[] {
     const classes: string[] = [];
 
     // alineación
@@ -109,12 +80,5 @@ export class InformesTablaComponent implements OnInit {
     }
 
     return classes;
-  }
-
-  disbledDemo(col:ColumnaTabla<InformeLiq>):string{
-    if(this.usuarioSesion.esRol('demo') && (col.key === 'fElectrónica' || col.key === 'anular' || col.key === 'editar')){
-      return 'isDisabled'
-    }
-    return "";
   }
 }

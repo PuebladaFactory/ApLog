@@ -216,8 +216,7 @@
                         </a>
                     </li>
 
-                    @if (usuarioSesion.esRol('admin','dev')) {
-                        <li>
+                    <li *appPermiso="'usuarios.ver'">
                             <a [routerLink]="['/ajustes']">
                                 <h2 class="d-flex mt-3" type="button">
                                     <svg
@@ -239,9 +238,7 @@
                                 </h2>
                             </a>
                         </li>
-                    }
-                    @if (usuarioSesion.esRol('admin','dev','demo')) {
-                        <li>
+                    <li *appPermiso="'facturacion.ver'">
                             <a [routerLink]="['/nuevaFacturacion']">
                                 <h2 class="d-flex mt-3" type="button">
                                     <svg
@@ -263,9 +260,7 @@
                                 </h2>
                             </a>
                         </li>
-                    }
-                    @if (usuarioSesion.esRol('dev')) {
-                        <li>
+                    <li *appPermiso="'finanzas.ver'">
                             <a [routerLink]="['/finanzas']">
                                 <h2 class="d-flex mt-3" type="button">
                                     <svg
@@ -284,9 +279,7 @@
                                 </h2>
                             </a>
                         </li>
-                    }
-                    @if (usuarioSesion.esRol('dev','admin','demo')) {
-                        <li>
+                    <li *appPermiso="'reportes.ver'">
                             <a [routerLink]="['/reportes']">
                                 <h2 class="d-flex mt-3" type="button">
                                     <svg
@@ -308,7 +301,6 @@
                                 </h2>
                             </a>
                         </li>
-                    }
                     <li>
                             <a [routerLink]="['/migracion']">
                                 <h2 class="d-flex mt-3" type="button">

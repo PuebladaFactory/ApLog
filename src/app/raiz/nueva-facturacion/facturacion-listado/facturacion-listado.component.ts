@@ -29,7 +29,7 @@ import {
   AccionInformeLiq,
   puedeEjecutarAccion,
 } from "src/app/reglas/informe-liq.rules";
-import { ColumnaTabla, OrdenTabla } from "src/app/interfaces/tablas";
+import { ColumnaInformesTabla, OrdenInformesTabla } from "src/app/interfaces/informes-tabla";
 import {
   AnularParams,
   LiquidacionService,
@@ -79,7 +79,7 @@ export class FacturacionListadoComponent implements OnInit {
   ordenColumna: string = "";
   ordenAsc: boolean = true;
 
-  columnas: ColumnaTabla<InformeLiq>[] = [
+  columnas: ColumnaInformesTabla<InformeLiq>[] = [
     {
       key: "fecha",
       label: "Fecha Inf",
@@ -148,22 +148,43 @@ export class FacturacionListadoComponent implements OnInit {
       key: "detalle",
       label: "Detalle",
       align: "center",
-      acciones: ["detalle"],
+      acciones: [
+        { id: "ver", label: "Detalle" },
+      ],
     },
-    { key: "editar", label: "Editar", align: "center", acciones: ["editar"] },
+    {
+      key: "editar",
+      label: "Editar",
+      align: "center",
+      acciones: [
+        { id: "editar", label: "Editar", disabled: (inf) => !this.puede(inf, "editar") },
+      ],
+    },
     {
       key: "descargar",
       label: "Descargar",
       align: "center",
-      acciones: ["reimprimir"],
+      acciones: [
+        { id: "excel", label: "Excel", accionPermiso: "reimprimir", disabled: (inf) => !this.puede(inf, "reimprimir") },
+        { id: "pdf", label: "Pdf", accionPermiso: "reimprimir", disabled: (inf) => !this.puede(inf, "reimprimir") },
+      ],
     },
     {
       key: "fElectrónica",
       label: "F. Electrónica",
       align: "center",
-      acciones: ["factura"],
+      acciones: [
+        { id: "vincularFactura", label: "F. Electrónica", disabled: (inf) => !this.puedeVincularFactura(inf) },
+      ],
     },
-    { key: "anular", label: "Anular", align: "center", acciones: ["anular"] },
+    {
+      key: "anular",
+      label: "Anular",
+      align: "center",
+      acciones: [
+        { id: "anular", label: "Anular", disabled: (inf) => !this.puedeAnular(inf) },
+      ],
+    },
   ];
 
   meses = [
@@ -639,7 +660,7 @@ export class FacturacionListadoComponent implements OnInit {
 
   onAccion(e: { accion: string; item: ConId<InformeLiq> }) {
     switch (e.accion) {
-      case "detalle":
+      case "ver":
         this.verDetalle(e.item, "vista");
         break;
       case "editar":
@@ -649,7 +670,7 @@ export class FacturacionListadoComponent implements OnInit {
       case "pdf":
         this.reimprimirLiq(e.item, e.accion);
         break;
-      case "factura":
+      case "vincularFactura":
         this.vincularFacElec(e.item);
         break;
       case "anular":

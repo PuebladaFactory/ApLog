@@ -5,30 +5,38 @@
     <div class="col-4">
         <!-- IZQUIERDA: botones de visibilidad (stubs) -->
         <div class="d-flex align-items-center justify-content-start">
-            <button
-                class="btn btn-outline-secondary botonera btn-chofer"
-                (click)="openModalActivos('choferes')"
-            >
-                Choferes
-            </button>
-            <button
-                class="btn btn-outline-secondary botonera btn-chofer"
-                (click)="openModalActivos('proveedores')"
-            >
-                Proveedores
-            </button>
-            <button
-                class="btn btn-outline-secondary botonera btn-chofer"
-                (click)="openModalActivos('clientes')"
-            >
-                Clientes
-            </button>
-            <button
-                class="btn btn-outline-secondary botonera btn-chofer"
-                (click)="openModalNoOperativos()"
-            >
-                No Operativos
-            </button>
+            <ng-container *appPermiso="'operaciones.editar'">
+                <button
+                    class="btn btn-outline-secondary botonera btn-chofer"
+                    (click)="openModalActivos('choferes')"
+                >
+                    Choferes
+                </button>
+            </ng-container>
+            <ng-container *appPermiso="'operaciones.editar'">
+                <button
+                    class="btn btn-outline-secondary botonera btn-chofer"
+                    (click)="openModalActivos('proveedores')"
+                >
+                    Proveedores
+                </button>
+            </ng-container>
+            <ng-container *appPermiso="'operaciones.editar'">
+                <button
+                    class="btn btn-outline-secondary botonera btn-chofer"
+                    (click)="openModalActivos('clientes')"
+                >
+                    Clientes
+                </button>
+            </ng-container>
+            <ng-container *appPermiso="'operaciones.editar'">
+                <button
+                    class="btn btn-outline-secondary botonera btn-chofer"
+                    (click)="openModalNoOperativos()"
+                >
+                    No Operativos
+                </button>
+            </ng-container>
         </div>
     </div>
 
@@ -129,50 +137,57 @@
 
     <div class="col-4">
         <!-- DERECHA: botones de acción -->
-        <!-- TODO: agregar [disabled]="usuarioSesion.esRol('demo')" cuando se cargue el usuario -->
         <div class="d-flex gap-1 justify-content-end">
             @if (modo === "edicion") {
-                <button
-                    class="btn botonera boton-alta"
-                    (click)="altaOp()"
-                    [disabled]="isLoading || itemsBorrador.length === 0"
-                    title="Dar de alta las operaciones del tablero"
-                >
-                    Alta de Op
-                </button>
+                <ng-container *appPermiso="'operaciones.agregar'">
+                    <button
+                        class="btn botonera boton-alta"
+                        (click)="altaOp()"
+                        [disabled]="isLoading || itemsBorrador.length === 0"
+                        title="Dar de alta las operaciones del tablero"
+                    >
+                        Alta de Op
+                    </button>
+                </ng-container>
 
-                <button
-                    class="btn botonera boton-guardar"
-                    (click)="guardarBorrador()"
-                    [disabled]="isLoading || itemsBorrador.length === 0"
-                    title="Guardar borrador para continuar luego"
-                >
-                    💾 Guardar
-                </button>
+                <ng-container *appPermiso="'operaciones.editar'">
+                    <button
+                        class="btn botonera boton-guardar"
+                        (click)="guardarBorrador()"
+                        [disabled]="isLoading || itemsBorrador.length === 0"
+                        title="Guardar borrador para continuar luego"
+                    >
+                        💾 Guardar
+                    </button>
+                </ng-container>
             }
 
-            <button
-                class="btn botonera boton-descargar"
-                (click)="descargar()"
-                [disabled]="!tablero"
-                title="{{
-                    tablero
-                        ? 'Descargar informe'
-                        : 'Debe cargar un tablero antes de descargar'
-                }}"
-            >
-                ⬇ Descargar
-            </button>
+            <ng-container *appPermiso="'operaciones.descargarTablero'">
+                <button
+                    class="btn botonera boton-descargar"
+                    (click)="descargar()"
+                    [disabled]="!tablero"
+                    title="{{
+                        tablero
+                            ? 'Descargar informe'
+                            : 'Debe cargar un tablero antes de descargar'
+                    }}"
+                >
+                    ⬇ Descargar
+                </button>
+            </ng-container>
 
             @if (modo === "edicion") {
-                <button
-                    class="btn botonera boton-baja"
-                    (click)="limpiar()"
-                    [disabled]="isLoading"
-                    title="Limpiar asignaciones"
-                >
-                    🧹 Limpiar
-                </button>
+                <ng-container *appPermiso="'operaciones.limpiarTablero'">
+                    <button
+                        class="btn botonera boton-baja"
+                        (click)="limpiar()"
+                        [disabled]="isLoading"
+                        title="Limpiar asignaciones"
+                    >
+                        🧹 Limpiar
+                    </button>
+                </ng-container>
             }
         </div>
     </div>

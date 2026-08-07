@@ -13,7 +13,6 @@ import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/forma
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
 import { CargaAsignacionComponent } from '../carga-asignacion/carga-asignacion.component';
-import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 // =====================
 // MODELOS
@@ -127,8 +126,7 @@ private resizeStartWidth = 0;
     private operacionService: OperacionService,
     private formatoNum: FormatoNumericoService,
     private excelServ: ExcelService,
-    private reportesOp: ReportesOpService,
-    public usuarioSesion: UsuarioSesionService
+    private reportesOp: ReportesOpService
   ) {}
 
   // =====================
@@ -793,6 +791,8 @@ onResizeEnd = () => {
 
 
   puedeEliminar(op: any): boolean {
+    console.log("op", op);
+    
     return op.estado === 'Abierta';
   }
 

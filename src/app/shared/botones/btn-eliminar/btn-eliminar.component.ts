@@ -1,4 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, HostBinding, Input, OnInit } from '@angular/core';
+import { ModuloPermiso, AccionPermiso } from 'src/app/interfaces/permiso';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 
 @Component({
     selector: 'app-btn-eliminar',
@@ -15,13 +17,13 @@ import { Component, Input, OnInit } from '@angular/core';
 -->
 
 
-@if (name === 'Cerrar') {
+@if (name === 'Cerrar' && visible) {
   <button class="btn btn-secondary mt-2" type="button" >
     Cerrar
   </button>
 }
 
-@if (name === 'Eliminar') {
+@if (name === 'Eliminar' && visible) {
   <button class="btn btn-light m-0" style="border-radius: 10%; margin: 10px ; "
     [disabled]=disabled>
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
@@ -32,7 +34,7 @@ import { Component, Input, OnInit } from '@angular/core';
   </button>
 }
 
-@if (name === 'EliminarClaro') {
+@if (name === 'EliminarClaro' && visible) {
   <button class="btn btn-outline-secondary m-0" style="border-radius: 10%; margin: 10px ; "
     [disabled]=disabled>
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
@@ -43,7 +45,7 @@ import { Component, Input, OnInit } from '@angular/core';
   </button>
 }
 
-@if (name === 'x') {
+@if (name === 'x' && visible) {
   <button class="btn btn-outline-secondary m-0">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
       <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
@@ -52,7 +54,7 @@ import { Component, Input, OnInit } from '@angular/core';
   </button>
 }
 
-@if (name === 'EliminarColor') {
+@if (name === 'EliminarColor' && visible) {
   <button class="btn btn-danger m-0" id="danger" style="border-radius: 10%; margin: 10px ; "
     [disabled]=disabled>
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
@@ -87,7 +89,21 @@ export class BtnEliminarComponent implements OnInit {
 
   @Input() name?: string;
   @Input() disabled! : boolean;
-  constructor() { }
+  @Input() modulo?: ModuloPermiso;
+  @Input() accion?: AccionPermiso;
+
+  constructor(private permisosService: PermisosService) { }
+
+  get visible(): boolean {
+    return !this.modulo || this.permisosService.puede(this.modulo, this.accion);
+  }
+
+  // Ver nota en BtnAgregarComponent: el (click) vive en el host, no en el
+  // <button> interno, así que [disabled] por sí solo no basta para bloquear
+  // clics en el margen del botón.
+  @HostBinding('style.pointer-events') get pointerEvents(): string | null {
+    return this.disabled ? 'none' : null;
+  }
 
   ngOnInit(): void {
   }

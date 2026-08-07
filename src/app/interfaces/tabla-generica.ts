@@ -1,4 +1,4 @@
-export interface ColumnaTabla {
+export interface ColumnaTablaGenerica {
   field: string;
   header: string;
   visible: boolean;
@@ -6,7 +6,7 @@ export interface ColumnaTabla {
   width?: number;
 }
 
-export interface AccionTabla {
+export interface AccionTablaGenerica {
   tipo: 'ver' | 'editar' | 'eliminar' | 'vehiculos';
   handler: (fila: any) => void;
   disabled?: (fila: any) => boolean;

@@ -3,7 +3,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
-import { ColumnaTabla, AccionTabla } from 'src/app/interfaces/tabla';
+import { ColumnaTablaGenerica, AccionTablaGenerica } from 'src/app/interfaces/tabla-generica';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import Swal from 'sweetalert2';
@@ -22,9 +22,9 @@ import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-s
 })
 export class ClientesListadoComponent implements OnInit, OnDestroy {
 
-  columnas: ColumnaTabla[] = [];
+  columnas: ColumnaTablaGenerica[] = [];
   filas: any[] = [];
-  accionesTabla: AccionTabla[] = [];
+  accionesTabla: AccionTablaGenerica[] = [];
   componente: string = 'clientes';
   $clientes: ConIdType<Cliente>[] = [];
   private destroy$ = new Subject<void>();

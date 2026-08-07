@@ -21,8 +21,14 @@ service cloud.firestore {
         'legajos': 'legajos',
         'vendedores': 'vendedores',
 
-        'operaciones': 'operaciones', 'asignaciones': 'operaciones',
+        'operaciones': 'operaciones',
         'informesVenta': 'operaciones',
+
+        // Tablero de asignaciones: trabajo descartable/editable por
+        // naturaleza (borrador), distinto perfil de riesgo que la
+        // Operacion real ya persistida — no hereda las restricciones
+        // de 'operaciones'. Ver permitido() y CLAUDE.md → "Security Rules".
+        'asignaciones': 'asignaciones',
 
         'tarifasGralCliente': 'tarifas', 'tarifasEspCliente': 'tarifas',
         'tarifasPersCliente': 'tarifas', 'tarifasGralChofer': 'tarifas',
@@ -86,6 +92,9 @@ service cloud.firestore {
           r in ['dev','admin'] ||
           (r == 'user' && accion in ['leer','crear','editar']) ||
           (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'asignaciones' && (
+          r in ['dev','admin','user']
         )) ||
         (modulo == 'tarifas' && (
           r in ['dev','admin'] || (r in ['user','demo'] && accion == 'leer')

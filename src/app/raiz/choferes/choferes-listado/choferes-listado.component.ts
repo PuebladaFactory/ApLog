@@ -6,7 +6,7 @@ import { Cliente } from "src/app/interfaces/cliente";
 import { ConId, ConIdType } from "src/app/interfaces/conId";
 import { Proveedor } from "src/app/interfaces/proveedor";
 import { StorageService } from "src/app/servicios/storage/storage.service";
-import { ColumnaTabla, AccionTabla } from "src/app/interfaces/tabla";
+import { ColumnaTablaGenerica, AccionTablaGenerica } from "src/app/interfaces/tabla-generica";
 import Swal from "sweetalert2";
 import { ChoferesAltaComponent } from "../choferes-alta/choferes-alta.component";
 import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
@@ -37,9 +37,9 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
   isLoading: boolean = false;
   $vehiculos!: ConIdType<Vehiculo>[];
 
-  columnas: ColumnaTabla[] = [];
+  columnas: ColumnaTablaGenerica[] = [];
   filas: any[] = [];
-  accionesTabla: AccionTabla[] = [];
+  accionesTabla: AccionTablaGenerica[] = [];
 
   constructor(
     private storageService: StorageService,

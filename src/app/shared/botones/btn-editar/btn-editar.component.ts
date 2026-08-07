@@ -1,4 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, HostBinding, Input, OnInit } from '@angular/core';
+import { ModuloPermiso, AccionPermiso } from 'src/app/interfaces/permiso';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 
 @Component({
     selector: 'app-btn-editar',
@@ -24,25 +26,25 @@ import { Component, Input, OnInit } from '@angular/core';
 
   {{name || "Editar"}}
 </button>  -->
-@if (name === 'editarTarifa') {
+@if (name === 'editarTarifa' && visible) {
   <button type="button" class="btn celeste-fijo mt-2" [disabled]=disabled>
     Editar última Tarifa
   </button>
 }
 
-@if (name === 'agregarCategoria') {
+@if (name === 'agregarCategoria' && visible) {
   <button type="button" class="btn celeste-fijo mt-2" [disabled]=disabled>
     Agregar Categoria
   </button>
 }
 
-@if (name === 'cargaMultiple') {
+@if (name === 'cargaMultiple' && visible) {
   <button type="button" class="btn celeste-fijo" [disabled]=disabled>
     Carga Múltiple
   </button>
 }
 
-@if (name === 'Editar') {
+@if (name === 'Editar' && visible) {
   <button  class="btn btn-light m-0 celeste" style="border-radius: 10%;  margin: 10px;" [disabled]=disabled >    <!-- <i class="bi bi-pencil"></i> -->
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
     <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
@@ -51,7 +53,7 @@ import { Component, Input, OnInit } from '@angular/core';
 </button>
 }
 
-@if (name === 'EditarClaro') {
+@if (name === 'EditarClaro' && visible) {
   <button  class="btn btn-outline-secondary m-0 celeste" style="border-radius: 10%;  margin: 10px;" [disabled]=disabled >
     <!-- <i class="bi bi-pencil"></i> -->
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
@@ -61,13 +63,13 @@ import { Component, Input, OnInit } from '@angular/core';
   </button>
 }
 
-@if (name === 'modificarTarifa') {
+@if (name === 'modificarTarifa' && visible) {
   <button  class="btn azul mt-2" [disabled]=disabled>
     Aumentar Tarifa
   </button>
 }
 
-@if (name === 'EditarColor') {
+@if (name === 'EditarColor' && visible) {
   <button  class="btn btn-warning m-0 warning " style="border-radius: 10%;  margin: 10px;" [disabled]=disabled >    <!-- <i class="bi bi-pencil"></i> -->
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
     <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
@@ -127,7 +129,21 @@ export class BtnEditarComponent implements OnInit {
 
   @Input() name?: string;
   @Input() disabled!: boolean;
-  constructor() { }
+  @Input() modulo?: ModuloPermiso;
+  @Input() accion?: AccionPermiso;
+
+  constructor(private permisosService: PermisosService) { }
+
+  get visible(): boolean {
+    return !this.modulo || this.permisosService.puede(this.modulo, this.accion);
+  }
+
+  // Ver nota en BtnAgregarComponent: el (click) vive en el host, no en el
+  // <button> interno, así que [disabled] por sí solo no basta para bloquear
+  // clics en el margen del botón.
+  @HostBinding('style.pointer-events') get pointerEvents(): string | null {
+    return this.disabled ? 'none' : null;
+  }
 
   ngOnInit(): void {
   }

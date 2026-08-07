@@ -2,13 +2,10 @@
 <div class="row">
     <div class="col-4 flex-column">
         <div class="mb-3 mt-2">
-            <button  class="btn btn-primary boton-alta me-2" type="button" id="" (click)="modalCargaMultiple()" [disabled]="usuarioSesion.esRol('demo')">
+            <button *appPermiso="'operaciones.agregar'" class="btn btn-primary boton-alta me-2" type="button" id="" (click)="modalCargaMultiple()">
                 Alta de Operacion
-            </button>            
-            <!-- <app-btn-editar name="cargaMultiple" class="" (click)="modalCargaMultiple()"  ></app-btn-editar> -->
-             <button class="btn btn-outline-danger" (click)="crearResumenOp()">Crear Resumenes de Op</button>
-              <!-- <button class="btn btn-outline-info" (click)="totalACobrar()">Calcular total a cobrar</button>
-              <button class="btn btn-outline-info" (click)="validarOperaciones()">Verificar Op</button> -->
+            </button>
+
         </div>
         <div class="d-flex align-items-end">            
             <!-- busqueda general -->
@@ -170,29 +167,36 @@
                         }
                         <td class="text-nowrap align-middle" >
 
-                            <app-btn-leer                                
+                            <app-btn-leer
                                 name="DetalleColor"
+                                modulo="operaciones"
+                                accion="ver"
                                 (click)="abrirModalDetalle(row.idOperacion, 'vista')">
                             </app-btn-leer>
-                            
-                            <app-btn-editar                                                                
-                                [ngClass]="{'isDisabled':!puedeEditar(row)|| usuarioSesion.esRol('demo')}"
+
+                            <app-btn-editar
+                                [disabled]="!puedeEditar(row)"
                                 name="EditarColor"
+                                modulo="operaciones"
+                                accion="editar"
                                 (click)="abrirModalDetalle(row.idOperacion, 'edicion')">
                             </app-btn-editar>
-                            
-                            
+
+
                             <app-btn-eliminar
-                                [disabled]="usuarioSesion.esRol('demo')"
+                                [disabled]="!puedeEliminar(row)"
                                 name="EliminarColor"
-                                [ngClass]="{'isDisabled':!puedeEliminar(row)|| usuarioSesion.esRol('demo')}"
+                                modulo="operaciones"
+                                accion="eliminar"
                                 (click)="eliminar(row.idOperacion)">
                             </app-btn-eliminar>
-                            
-                            
+
+
                             <app-btn-agregar
-                                [disabled]="usuarioSesion.esRol('demo')"
-                                name="FacturaColor" [ngClass]="{'isDisabled':!puedeCerrar(row)|| usuarioSesion.esRol('demo')}"
+                                [disabled]="!puedeCerrar(row)"
+                                name="FacturaColor"
+                                modulo="operaciones"
+                                accion="cerrar"
                                 (click)="abrirModalDetalle(row.idOperacion, 'cerrar')">
                             </app-btn-agregar>
                     

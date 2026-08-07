@@ -3,8 +3,9 @@
     <div class="align-self-start mt-3 me-2">
       <app-btn-leer
         name="Cliente"
-        (click)="openModal('alta')"
-        [ngClass]="{'isDisabled': usuarioSesion.esRol('demo')}">
+        modulo="clientes"
+        accion="agregar"
+        (click)="openModal('alta')">
       </app-btn-leer>
     </div>
     <div class="align-self-start mt-3 mb-1">
@@ -51,7 +52,8 @@
 <app-tabla-generica
   [columnas]="columnas"
   [filas]="filas"
-  [acciones]="accionesTabla">
+  [acciones]="accionesTabla"
+  modulo="clientes">
 </app-tabla-generica>
 
 @if (isLoading) {
