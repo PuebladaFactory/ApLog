@@ -7,7 +7,6 @@ import { Proveedor } from "src/app/interfaces/proveedor";
 import {
   CategoriaTarifa,
   TarifaGralCliente,
-  TarifaTipo,
 } from "src/app/interfaces/tarifa-gral-cliente";
 import { StorageService } from "src/app/servicios/storage/storage.service";
 import Swal from "sweetalert2";
@@ -17,7 +16,6 @@ import { ConId, ConIdType } from "src/app/interfaces/conId";
 import { Subject, takeUntil } from "rxjs";
 import { DomicilioService } from "src/app/servicios/domicilio/domicilio.service";
 import {
-  ChoferFactoryService,
   ChoferFormData,
 } from "src/app/servicios/choferes/chofer-factory.service";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
@@ -26,6 +24,7 @@ import {
   AsignacionVehiculo,
 } from "src/app/interfaces/chofer";
 import { ProveedorService } from "src/app/servicios/proveedores/proveedor.service";
+import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from "src/app/interfaces/tarifa-habilitada";
 
 @Component({
   selector: "app-choferes-alta",
@@ -80,13 +79,13 @@ export class ChoferesAltaComponent implements OnInit {
   condFiscal: string = "";
   tarifaAsignada: boolean = false;
   cargando: boolean = false;
+  private tarifasHabilitadasOriginal: RefTarifaHabilitada[] = [];
 
   constructor(
     private fb: FormBuilder,
     public activeModal: NgbActiveModal,
     private modalService: NgbModal,
     private domicilioServ: DomicilioService,
-    private choferFactoryService: ChoferFactoryService,
     private choferService: ChoferService,
     private proveedorService: ProveedorService,
   ) {
@@ -138,8 +137,9 @@ export class ChoferesAltaComponent implements OnInit {
     this.categoriasForm = this.fb.group({
       categorias: this.fb.array([]),
     });
+    // Alta: nada tildado por defecto — el usuario elige explícitamente.
     this.formTipoTarifa = this.fb.group({
-      general: [true], // Seleccionado por defecto
+      general: [false],
       especial: [false],
       eventual: [false],
       personalizada: [false],
@@ -148,6 +148,7 @@ export class ChoferesAltaComponent implements OnInit {
 
   ngOnInit(): void {
     console.log("1)", this.fromParent);
+    this.componente = "choferes";
     let choferOriginal = this.fromParent?.item;
     this.chofer = structuredClone(choferOriginal);
     if (this.fromParent.modo !== "alta") this.getVehiculos();
@@ -202,14 +203,64 @@ export class ChoferesAltaComponent implements OnInit {
       });
   }
 
-  onTarifaTipoChange(tipoSeleccionado: string) {
-    // Resetea los demás switches a false, excepto el seleccionado
-    this.formTipoTarifa.patchValue({
-      general: tipoSeleccionado === "general",
-      especial: tipoSeleccionado === "especial",
-      eventual: tipoSeleccionado === "eventual",
-      personalizada: tipoSeleccionado === "personalizada",
-    });
+  /** Tildar 'eventual' destilda y deshabilita los otros 3 (excluyente). */
+  onEventualChange(checked: boolean): void {
+    if (checked) {
+      this.formTipoTarifa.patchValue(
+        { general: false, especial: false, personalizada: false, eventual: true },
+        { emitEvent: false },
+      );
+    }
+    this.actualizarDisabledTarifa();
+  }
+
+  /** Tildar cualquiera de los otros 3 deshabilita 'eventual' mientras haya alguno activo. */
+  onOtraTarifaChange(): void {
+    this.actualizarDisabledTarifa();
+  }
+
+  /** Aplica la regla "eventual excluyente" al estado enabled/disabled de los 4 switches,
+   *  según el valor actual del form. Reusado por onEventualChange/onOtraTarifaChange/armarForm().
+   *  Solo tiene sentido para chofer directo — de proveedor el form entero queda disabled aparte. */
+  private actualizarDisabledTarifa(): void {
+    const v = this.formTipoTarifa.getRawValue();
+    if (v.eventual) {
+      this.formTipoTarifa.get('general')!.disable({ emitEvent: false });
+      this.formTipoTarifa.get('especial')!.disable({ emitEvent: false });
+      this.formTipoTarifa.get('personalizada')!.disable({ emitEvent: false });
+      this.formTipoTarifa.get('eventual')!.enable({ emitEvent: false });
+    } else {
+      this.formTipoTarifa.get('general')!.enable({ emitEvent: false });
+      this.formTipoTarifa.get('especial')!.enable({ emitEvent: false });
+      this.formTipoTarifa.get('personalizada')!.enable({ emitEvent: false });
+      const algunaActiva = v.general || v.especial || v.personalizada;
+      const eventualControl = this.formTipoTarifa.get('eventual')!;
+      algunaActiva ? eventualControl.disable({ emitEvent: false }) : eventualControl.enable({ emitEvent: false });
+    }
+  }
+
+  /** Arma la lista de tarifas habilitadas desde el form, preservando el idTarifa
+   *  existente (edición) para especial/personalizada si no se destildaron. */
+  getTarifasHabilitadas(): RefTarifaHabilitada[] {
+    const v = this.formTipoTarifa.getRawValue();
+    if (v.eventual) return [{ nivel: 'eventual' }];
+    const lista: RefTarifaHabilitada[] = [];
+    if (v.general) lista.push({ nivel: 'general' });
+    if (v.especial) {
+      const previa = this.tarifasHabilitadasOriginal.find(t => t.nivel === 'especial');
+      lista.push({
+        nivel: 'especial',
+        idTarifa: previa && previa.nivel === 'especial' ? previa.idTarifa : '',
+      });
+    }
+    if (v.personalizada) {
+      const previa = this.tarifasHabilitadasOriginal.find(t => t.nivel === 'personalizada');
+      lista.push({
+        nivel: 'personalizada',
+        idTarifa: previa && previa.nivel === 'personalizada' ? previa.idTarifa : '',
+      });
+    }
+    return lista;
   }
 
   armarForm() {
@@ -225,12 +276,20 @@ export class ChoferesAltaComponent implements OnInit {
       contactoEmergencia: this.chofer.datosPersonales.contactoEmergencia,
       direccion: this.chofer.datosPersonales.direccion.domicilio,
     });
-    this.formTipoTarifa.patchValue({
-      general: this.chofer.tarifaTipo.general,
-      especial: this.chofer.tarifaTipo.especial,
-      eventual: this.chofer.tarifaTipo.eventual,
-      personalizada: this.chofer.tarifaTipo.personalizada,
-    });
+    if (this.chofer.contratacion.tipo === "directo") {
+      this.tarifasHabilitadasOriginal = this.chofer.tarifasHabilitadas ?? [];
+      const tipoTarifaChofer = tarifaTipoDesdeHabilitadas(this.tarifasHabilitadasOriginal);
+      this.formTipoTarifa.patchValue({
+        general: tipoTarifaChofer.general,
+        especial: tipoTarifaChofer.especial,
+        eventual: tipoTarifaChofer.eventual,
+        personalizada: tipoTarifaChofer.personalizada,
+      });
+      this.actualizarDisabledTarifa();
+    } else {
+      // Chofer de proveedor: hereda la tarifa, el selector no aplica.
+      this.formTipoTarifa.disable();
+    }
     this.$provinciaSeleccionada =
       this.chofer.datosPersonales.direccion.provincia;
     this.$municipioSeleccionado =
@@ -271,6 +330,12 @@ export class ChoferesAltaComponent implements OnInit {
     if (this.condFiscal === "") {
       return this.mensajesError("Debe seleccionar una condición fiscal");
     }
+    if (
+      this.contratacion.tipo === "directo" &&
+      this.getTarifasHabilitadas().length === 0
+    ) {
+      return this.mensajesError("Debe habilitar al menos un tipo de tarifa");
+    }
     if (this.form.valid) {
       if (this.fromParent.modo !== "edicion") {
         const cuitIngresado = Number(this.form.value.cuit.replace(/-/g, ""));
@@ -286,17 +351,18 @@ export class ChoferesAltaComponent implements OnInit {
         }
       }
       this.cargando = true;
-      this.armarChofer();
       this.addItem();
     } else {
       this.mensajesError("Error en el formulario");
     }
   }
 
-  armarChofer(): void {
-    this.componente = "choferes";
-    const tarifaSeleccionada = this.getTarifaTipo();
-    const data: ChoferFormData = {
+  private armarDatosChofer(): ChoferFormData {
+    // Chofer de proveedor: hereda la tarifa del proveedor, no tiene switches propios.
+    const tarifasHabilitadas = this.contratacion.tipo === "proveedor"
+      ? null
+      : this.getTarifasHabilitadas();
+    return {
       nombre: this.form.value.nombre,
       apellido: this.form.value.apellido,
       cuit: this.form.value.cuit,
@@ -311,36 +377,14 @@ export class ChoferesAltaComponent implements OnInit {
       domicilio: this.form.value.direccion,
       condFiscal: this.condFiscal,
       contratacion: this.contratacion,
-      tarifaTipo: tarifaSeleccionada,
+      tarifasHabilitadas,
     };
-    if (this.fromParent.modo === "edicion") {
-      this.chofer = {
-        ...this.choferFactoryService.editarChofer(this.chofer, data),
-        id: this.chofer.id,
-        type: this.chofer.type,
-      } as ConIdType<Chofer>;
-    } else {
-      this.chofer = this.choferFactoryService.crearChofer(
-        data,
-      ) as ConIdType<Chofer>;
-    }
-  }
-
-  // Método para obtener la selección actual del formulario
-  getTarifaTipo(): TarifaTipo {
-    const formValue = this.formTipoTarifa.value;
-    const tarifaTipo: TarifaTipo = {
-      general: formValue.general,
-      especial: formValue.especial,
-      eventual: formValue.eventual,
-      personalizada: formValue.personalizada,
-    };
-    return tarifaTipo;
   }
 
   addItem(): void {
-    const apellido = this.chofer.datosPersonales.apellido;
-    const nombre = this.chofer.datosPersonales.nombre;
+    const apellido = this.form.value.apellido;
+    const nombre = this.form.value.nombre;
+    const data = this.armarDatosChofer();
 
     if (this.fromParent.modo === "edicion") {
       Swal.fire({
@@ -352,9 +396,9 @@ export class ChoferesAltaComponent implements OnInit {
         confirmButtonText: "Confirmar",
         cancelButtonText: "Cancelar",
       }).then((result) => {
-        if (result.isConfirmed) {          
+        if (result.isConfirmed) {
           this.choferService
-            .guardarChoferConVehiculos(this.chofer, this.vehiculos, "edicion")
+            .editarChofer(this.chofer, data, this.vehiculos)
             .then(() => {
               this.cargando = false;
               Swal.fire("Confirmado", "Cambios guardados", "success").then(
@@ -385,7 +429,7 @@ export class ChoferesAltaComponent implements OnInit {
       }).then((result) => {
         if (result.isConfirmed) {
           this.choferService
-            .guardarChoferConVehiculos(this.chofer, this.vehiculos, "alta")
+            .altaChofer(data, this.vehiculos)
             .then(() => {
               this.cargando = true;
               Swal.fire("Confirmado", "Alta exitosa", "success").then(() => {
@@ -410,9 +454,11 @@ export class ChoferesAltaComponent implements OnInit {
     const valor = e.target.value;
     if (valor === "directo") {
       this.contratacion = { tipo: "directo" };
+      this.actualizarDisabledTarifa();
     } else {
       this.contratacion = { tipo: "proveedor", idProveedor: valor };
       this.vehiculos = [];
+      this.formTipoTarifa.disable();
     }
   }
 

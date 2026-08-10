@@ -8,6 +8,7 @@ import {
 } from '@angular/fire/firestore';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { MigrationBackupService } from './migration-backup.service';
+import { habilitadasDesdeTarifaTipoMigracion } from './tarifa-habilitada-migracion.util';
 
 @Injectable({ providedIn: 'root' })
 export class ProveedorMigrationService {
@@ -260,5 +261,29 @@ export class ProveedorMigrationService {
     } else {
       console.log('✅ Todos los choferes de proveedor fueron procesados correctamente.');
     }
+  }
+
+  async migrarTarifasHabilitadas(): Promise<void> {
+    console.log('--- Inicio migración tarifasHabilitadas: proveedores ---');
+    const proveedoresRef = collection(this.firestore, '/Vantruck/datos/proveedores');
+    const snapshot = await getDocs(proveedoresRef);
+
+    if (snapshot.empty) {
+      console.warn('La colección proveedores está vacía.');
+      return;
+    }
+
+    let actualizados = 0;
+    for (const documento of snapshot.docs) {
+      const { tarifaTipo, ...resto } = documento.data() as any;
+      const proveedorActualizado = {
+        ...resto,
+        tarifasHabilitadas: habilitadasDesdeTarifaTipoMigracion(tarifaTipo),
+      };
+      await setDoc(doc(proveedoresRef, documento.id), proveedorActualizado);
+      actualizados++;
+    }
+
+    console.log(`Corrección completada: ${actualizados} documentos actualizados en proveedores.`);
   }
 }

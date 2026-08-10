@@ -1,5 +1,5 @@
 import { Direccion } from "./chofer";
-import { TarifaTipo } from "./chofer";
+import { RefTarifaHabilitada } from "./tarifa-habilitada";
 
 export interface Proveedor {
     idProveedor: string;
@@ -9,8 +9,10 @@ export interface Proveedor {
     direccionFiscal: Direccion;
     direccionOperativa: Direccion;
     contactos: Contacto[];
-    tarifaTipo: TarifaTipo;
+    tarifasHabilitadas: RefTarifaHabilitada[];
+    // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
     tarifaAsignada: boolean;
+    // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
     idTarifa: string;
     activo: boolean;
     visible?: boolean;

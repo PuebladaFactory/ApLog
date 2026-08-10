@@ -2,12 +2,14 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
-import { ConIdType } from 'src/app/interfaces/conId';
+import { Chofer, Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
+import { ConId, ConIdType } from 'src/app/interfaces/conId';
+import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
+import { ProveedorFactoryService, ProveedorFormData } from 'src/app/servicios/proveedores/proveedor-factory.service';
 
 @Injectable({ providedIn: 'root' })
 export class ProveedorService implements OnDestroy {
@@ -22,6 +24,7 @@ export class ProveedorService implements OnDestroy {
     private storageService: StorageService,
     private choferService: ChoferService,
     private legajosService: LegajosService,
+    private proveedorFactoryService: ProveedorFactoryService,
   ) {}
 
   init(): void {
@@ -68,11 +71,25 @@ export class ProveedorService implements OnDestroy {
 
   /** Devuelve el tarifaTipo del proveedor por id, o undefined si no está.
    *  Fuente de verdad de la tarifa heredada por los choferes de proveedor.
-   *  TODO: refactor Tarifas — eliminar el campo tarifaTipo de la interfaz Chofer
+   *  TODO: refactor Tarifas — eliminar el campo tarifasHabilitadas de la interfaz Chofer
    *  (hoy duplicado al crear el chofer); los choferes de proveedor deben resolver
-   *  su tarifa SIEMPRE por acá, no por chofer.tarifaTipo. */
+   *  su tarifa SIEMPRE por acá, no por tarifaTipoDesdeHabilitadas(chofer.tarifasHabilitadas). */
   getTarifaTipo(idProveedor: string): TarifaTipo | undefined {
-    return this.getProveedorPorId(idProveedor)?.tarifaTipo;
+    const proveedor = this.getProveedorPorId(idProveedor);
+    return proveedor ? tarifaTipoDesdeHabilitadas(proveedor.tarifasHabilitadas) : undefined;
+  }
+
+  /** Resuelve las tarifas habilitadas de un chofer sin importar su contratación.
+   *  Directo: lee del propio chofer. Proveedor: hereda del proveedor — nunca se
+   *  copian al chofer, para no duplicar un estado que habría que sincronizar
+   *  ante cada cambio del proveedor.
+   *  TODO: refactor Papelera — si el proveedor está en papelera (chofer histórico
+   *  de un proveedor eliminado), esto devuelve []. */
+  resolverTarifasHabilitadasChofer(chofer: ConId<Chofer>): RefTarifaHabilitada[] {
+    if (chofer.contratacion.tipo === 'directo') {
+      return chofer.tarifasHabilitadas ?? [];
+    }
+    return this.getProveedorPorId(chofer.contratacion.idProveedor)?.tarifasHabilitadas ?? [];
   }
 
   toFirestore(proveedor: ConIdType<Proveedor>): Omit<Proveedor, 'idProveedor'> {
@@ -105,6 +122,20 @@ export class ProveedorService implements OnDestroy {
         `Edición de Proveedor ${nombre}`,
       );
     }
+  }
+
+  async altaProveedor(data: ProveedorFormData): Promise<void> {
+    const proveedor = this.proveedorFactoryService.crearProveedor(data) as ConIdType<Proveedor>;
+    await this.guardarProveedor(proveedor, 'alta');
+  }
+
+  async editarProveedor(original: ConIdType<Proveedor>, data: ProveedorFormData): Promise<void> {
+    const proveedorEditado = {
+      ...this.proveedorFactoryService.editarProveedor(original, data),
+      id: original.id,
+      type: original.type,
+    } as ConIdType<Proveedor>;
+    await this.guardarProveedor(proveedorEditado, 'edicion');
   }
 
   getVehiculosPorProveedor(idProveedor: string): Observable<ConIdType<Vehiculo>[]> {

@@ -54,8 +54,9 @@ export class ProveedoresTarifaEspecialComponent implements OnInit {
     .subscribe(data => {
       this.$proveedores = data;      
       console.log("2)proveedores: ", this.$proveedores);      
+      // TODO: eliminar en frente Tarifas — módulo completo a reescribir
       this.$proveedoresEsp = this.$proveedores
-      .filter((p:Proveedor)=>{return p.tarifaTipo.especial === true})
+      .filter((p:Proveedor)=>{return false /* p.tarifaTipo.especial === true */})
       .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
     })   
 

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Cliente, Contacto } from 'src/app/interfaces/cliente';
-import { Direccion, TarifaTipo } from 'src/app/interfaces/chofer';
+import { Direccion } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
+import { RefTarifaHabilitada, validarTarifasHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 
 export interface ClienteFormData {
   razonSocial: string;
@@ -15,7 +16,7 @@ export interface ClienteFormData {
   municipioOperativa: string;
   localidadOperativa: string;
   domicilioOperativa: string;
-  tarifaTipo: TarifaTipo;
+  tarifasHabilitadas: RefTarifaHabilitada[];
   contactos: Contacto[];
 }
 
@@ -23,6 +24,8 @@ export interface ClienteFormData {
 export class ClienteFactoryService {
 
   crearCliente(data: ClienteFormData): Cliente {
+    const tarifasHabilitadas = data.tarifasHabilitadas;
+    validarTarifasHabilitadas(tarifasHabilitadas);
     return {
       idCliente: '',
       razonSocial: data.razonSocial,
@@ -37,7 +40,7 @@ export class ClienteFactoryService {
         data.localidadOperativa, data.domicilioOperativa
       ),
       contactos: data.contactos,
-      tarifaTipo: data.tarifaTipo,
+      tarifasHabilitadas,
       tarifaAsignada: false,
       idTarifa: '',
       // TODO: asignar vendedores cuando se refactorice ese módulo
@@ -48,6 +51,8 @@ export class ClienteFactoryService {
   }
 
   editarCliente(original: ConIdType<Cliente>, data: ClienteFormData): Cliente {
+    const tarifasHabilitadas = data.tarifasHabilitadas;
+    validarTarifasHabilitadas(tarifasHabilitadas);
     return {
       ...original,
       razonSocial: data.razonSocial,
@@ -62,7 +67,7 @@ export class ClienteFactoryService {
         data.localidadOperativa, data.domicilioOperativa
       ),
       contactos: data.contactos,
-      tarifaTipo: data.tarifaTipo,
+      tarifasHabilitadas,
     };
   }
 

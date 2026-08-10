@@ -28,8 +28,9 @@ export class ClienteTarifaEspecialComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario  
     .subscribe(data => {
       this.$clientes = data;     
+      // TODO: eliminar en frente Tarifas — módulo completo a reescribir
       this.$clientesEsp = this.$clientes
-      .filter((c:Cliente)=>{return c.tarifaTipo.especial === true})
+      .filter((c:Cliente)=>{return false /* c.tarifaTipo.especial === true */})
       .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial)); // Ordena por el nombre del chofer
       //console.log(this.$clientesEsp);      
       this.tEspecial = false;

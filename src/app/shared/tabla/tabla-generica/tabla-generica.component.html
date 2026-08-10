@@ -131,7 +131,10 @@
                 @for (fila of filasFiltradas; track $index) {
                     <tr>
                         @for (col of columnasVisibles; track col.field) {
-                            <td [style.max-width.px]="col.width">
+                            <td
+                                [style.max-width.px]="col.width"
+                                [title]="fila[col.field]"
+                            >
                                 {{ fila[col.field] }}
                             </td>
                         }

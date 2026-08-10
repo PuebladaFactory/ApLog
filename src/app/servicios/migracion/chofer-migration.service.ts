@@ -8,6 +8,7 @@ import {
 } from '@angular/fire/firestore';
 import { ContratacionChofer, Vehiculo, AsignacionVehiculo } from 'src/app/interfaces/chofer';
 import { MigrationBackupService } from './migration-backup.service';
+import { habilitadasDesdeTarifaTipoMigracion } from './tarifa-habilitada-migracion.util';
 
 @Injectable({ providedIn: 'root' })
 export class ChoferMigrationService {
@@ -257,5 +258,37 @@ export class ChoferMigrationService {
     }
 
     console.log(`Corrección completada: ${corregidos} documentos actualizados en vehiculos.`);
+  }
+
+  async migrarTarifasHabilitadas(): Promise<void> {
+    console.log('--- Inicio migración tarifasHabilitadas: choferes ---');
+    const choferesRef = collection(this.firestore, '/Vantruck/datos/choferes');
+    const snapshot = await getDocs(choferesRef);
+
+    if (snapshot.empty) {
+      console.warn('La colección choferes está vacía.');
+      return;
+    }
+
+    let actualizadosDirecto = 0;
+    let actualizadosProveedor = 0;
+
+    for (const documento of snapshot.docs) {
+      const { tarifaTipo, ...resto } = documento.data() as any;
+      const esProveedor = resto.contratacion?.tipo === 'proveedor';
+      const choferActualizado = {
+        ...resto,
+        tarifasHabilitadas: esProveedor
+          ? null
+          : habilitadasDesdeTarifaTipoMigracion(tarifaTipo),
+      };
+      await setDoc(doc(choferesRef, documento.id), choferActualizado);
+      esProveedor ? actualizadosProveedor++ : actualizadosDirecto++;
+    }
+
+    console.log(
+      `Corrección completada: ${actualizadosDirecto + actualizadosProveedor} documentos actualizados en choferes ` +
+      `(${actualizadosDirecto} directos, ${actualizadosProveedor} de proveedor → tarifasHabilitadas: null).`,
+    );
   }
 }

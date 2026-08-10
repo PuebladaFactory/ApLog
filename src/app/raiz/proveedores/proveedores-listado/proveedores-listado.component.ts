@@ -140,6 +140,17 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
     this.armarTabla();
   }
 
+  private readonly ETIQUETAS_TARIFA: Record<string, string> = {
+    general: "General",
+    especial: "Especial",
+    personalizada: "Personalizada",
+    eventual: "Eventual",
+  };
+
+  private tarifaLabel(p: ConIdType<Proveedor>): string {
+    return p.tarifasHabilitadas.map(t => this.ETIQUETAS_TARIFA[t.nivel]).join(", ");
+  }
+
   armarTabla(): void {
     this.filas = this.proveedoresFiltrados.map((p) => ({
       id: p.idProveedor,
@@ -148,13 +159,7 @@ export class ProveedoresListadoComponent implements OnInit, OnDestroy {
       condFiscal: p.condFiscal,
       direccionFiscal: `${p.direccionFiscal.domicilio}, ${p.direccionFiscal.municipio}, ${p.direccionFiscal.provincia}`,
       direccionOperativa: `${p.direccionOperativa.domicilio}, ${p.direccionOperativa.municipio}, ${p.direccionOperativa.provincia}`,
-      tarifa: p.tarifaTipo.general
-        ? "General"
-        : p.tarifaTipo.especial
-          ? "Especial"
-          : p.tarifaTipo.personalizada
-            ? "Personalizada"
-            : "Eventual",
+      tarifa: this.tarifaLabel(p),
       estado: p.activo ? "Activo" : "Inactivo",
       /* contacto: p.contactos.length > 0 ? p.contactos[0].apellido : 'Sin Datos',
       puesto: p.contactos.length > 0 ? p.contactos[0].puesto : 'Sin Datos',

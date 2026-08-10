@@ -5,6 +5,7 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ClienteFactoryService, ClienteFormData } from 'src/app/servicios/clientes/cliente-factory.service';
 
 @Injectable({ providedIn: 'root' })
 export class ClienteService implements OnDestroy {
@@ -17,6 +18,7 @@ export class ClienteService implements OnDestroy {
   constructor(
     private db: DbFirestoreService,
     private storageService: StorageService,
+    private clienteFactoryService: ClienteFactoryService,
   ) {}
 
   init(): void {
@@ -91,6 +93,20 @@ export class ClienteService implements OnDestroy {
         `Edición de Cliente ${nombre}`,
       );
     }
+  }
+
+  async altaCliente(data: ClienteFormData): Promise<void> {
+    const cliente = this.clienteFactoryService.crearCliente(data) as ConIdType<Cliente>;
+    await this.guardarCliente(cliente, 'alta');
+  }
+
+  async editarCliente(original: ConIdType<Cliente>, data: ClienteFormData): Promise<void> {
+    const clienteEditado = {
+      ...this.clienteFactoryService.editarCliente(original, data),
+      id: original.id,
+      type: (original as any).type,
+    } as ConIdType<Cliente>;
+    await this.guardarCliente(clienteEditado, 'edicion');
   }
 
   async eliminarCliente(

@@ -87,8 +87,9 @@ export class ClienteTarifaGralComponent implements OnInit {
                         .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
                         .subscribe(data => {
                         this.$clientes = data;
+                        // TODO: eliminar en frente Tarifas — módulo completo a reescribir
                         this.$clientesEsp = this.$clientes.filter((cliente:Cliente)=>{
-                          return cliente.tarifaTipo.especial === true 
+                          return false; // cliente.tarifaTipo.especial === true
                         })
                       //////////////////////console.log(this.$clientesEsp);            
                         this.clienteSeleccionado = this.$clientesEsp.filter((cliente:Cliente)=>{
@@ -579,14 +580,15 @@ onGenerarNuevaTarifaAutomatica() {
         this.storageService.setInfo("consolaTarifa", this.consolaTarifa);        
         if(clientes.length > 0){
             clientes.forEach((c:ConIdType<Cliente>)=>{
-              if(c.tarifaTipo.general){
+              // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+              /* if(c.tarifaTipo.general){
                 c.tarifaAsignada = true;
                 c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
                 let {id, type, ...cliente } = c
                 this.storageService.updateItem("clientes", cliente, c.idCliente, "INTERNA", "", c.id);
-              }
+              } */
             })
-        }      
+        }
     }else if(this.tEspecial){  ///TARIFA ESPECIAL
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
       this.nuevaTarifaGral.tipo.general = false;
@@ -600,16 +602,17 @@ onGenerarNuevaTarifaAutomatica() {
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(clientes.length > 0){
         clientes.forEach((c:ConIdType<Cliente>)=>{
-          if(c.tarifaTipo.especial  && c.idCliente === this.idClienteEsp[0]){
+          // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+          /* if(c.tarifaTipo.especial  && c.idCliente === this.idClienteEsp[0]){
             c.tarifaAsignada = true;
             c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let {id, type, ...cliente } = c
-            this.storageService.updateItem("clientes", cliente, c.idCliente, "INTERNA", "", c.id);            
-          }
+            this.storageService.updateItem("clientes", cliente, c.idCliente, "INTERNA", "", c.id);
+          } */
         });
-      
-    }      
-         
+
+    }
+
     }
 
     //console.log("Tarifa nueva: ", this.nuevaTarifaGral);
@@ -743,13 +746,14 @@ onGenerarNuevaTarifaAutomatica() {
     
         if(clientes.length > 0){
             clientes.forEach((c:Cliente)=>{
-              if(c.tarifaTipo.general){
+              // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+              /* if(c.tarifaTipo.general){
                 c.tarifaAsignada = true;
                 c.idTarifa = String(this.tarifaGeneral.idTarifa);
                 //this.storageService.updateItem("clientes", c, c.idCliente, "INTERNA", "");
-              }
+              } */
             })
-        }      
+        }
     
     
   }

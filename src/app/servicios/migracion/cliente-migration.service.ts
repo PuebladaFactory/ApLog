@@ -7,6 +7,7 @@ import {
   setDoc,
 } from '@angular/fire/firestore';
 import { MigrationBackupService } from './migration-backup.service';
+import { habilitadasDesdeTarifaTipoMigracion } from './tarifa-habilitada-migracion.util';
 
 @Injectable({ providedIn: 'root' })
 export class ClienteMigrationService {
@@ -89,5 +90,29 @@ export class ClienteMigrationService {
     }
 
     console.log(`Corrección completada: ${corregidos} documentos actualizados en clientes.`);
+  }
+
+  async migrarTarifasHabilitadas(): Promise<void> {
+    console.log('--- Inicio migración tarifasHabilitadas: clientes ---');
+    const clientesRef = collection(this.firestore, '/Vantruck/datos/clientes');
+    const snapshot = await getDocs(clientesRef);
+
+    if (snapshot.empty) {
+      console.warn('La colección clientes está vacía.');
+      return;
+    }
+
+    let actualizados = 0;
+    for (const documento of snapshot.docs) {
+      const { tarifaTipo, ...resto } = documento.data() as any;
+      const clienteActualizado = {
+        ...resto,
+        tarifasHabilitadas: habilitadasDesdeTarifaTipoMigracion(tarifaTipo),
+      };
+      await setDoc(doc(clientesRef, documento.id), clienteActualizado);
+      actualizados++;
+    }
+
+    console.log(`Corrección completada: ${actualizados} documentos actualizados en clientes.`);
   }
 }

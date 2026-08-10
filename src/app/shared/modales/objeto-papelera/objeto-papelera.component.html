@@ -247,7 +247,7 @@
                               </div>
                               <div class="form-group mb-2">
                                 <label for="Proveedor">Tipo de Tarifa</label>
-                                <input class="form-control edicion" type="text" [value]="objeto.tarifaTipo.general ? 'General' : objeto.tarifaTipo.especial ? 'Especial' : objeto.tarifaTipo.personalizada ? 'Personalizada' : 'Eventual' ">
+                                <input class="form-control edicion" type="text" [value]="getTarifaLabel(objeto)">
                               </div>
                             </div>
                             <div class="col">
@@ -431,7 +431,7 @@
                 </div>
                 <div class="form-group mb-2">
                   <label for="Proveedor">Tipo de Tarifa</label>
-                  <input class="form-control edicion" type="text" [value]="objeto.tarifaTipo.general ? 'General' : objeto.tarifaTipo.especial ? 'Especial' : objeto.tarifaTipo.personalizada ? 'Personalizada' : 'Eventual' ">
+                  <input class="form-control edicion" type="text" [value]="getTarifaLabel(objeto)">
                 </div>
               </div>
             </div>

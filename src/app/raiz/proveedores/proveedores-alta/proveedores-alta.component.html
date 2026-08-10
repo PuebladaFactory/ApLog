@@ -130,12 +130,9 @@
                                                 class="form-check-input"
                                                 type="checkbox"
                                                 (change)="
-                                                    onTarifaTipoChange(
-                                                        'general'
-                                                    )
+                                                    onOtraTarifaChange()
                                                 "
                                                 id="tarifaGeneral"
-                                                checked
                                             />
                                             <label
                                                 class="form-check-label"
@@ -151,9 +148,7 @@
                                                 class="form-check-input"
                                                 type="checkbox"
                                                 (change)="
-                                                    onTarifaTipoChange(
-                                                        'especial'
-                                                    )
+                                                    onOtraTarifaChange()
                                                 "
                                                 id="tarifaEspecial"
                                             />
@@ -173,9 +168,7 @@
                                                 class="form-check-input"
                                                 type="checkbox"
                                                 (change)="
-                                                    onTarifaTipoChange(
-                                                        'eventual'
-                                                    )
+                                                    onEventualChange($any($event.target).checked)
                                                 "
                                                 id="tarifaEventual"
                                             />

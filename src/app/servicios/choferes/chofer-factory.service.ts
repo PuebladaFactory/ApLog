@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import {
   Chofer, ContratacionChofer, DatosPersonales,
-  Direccion, TarifaTipo
+  Direccion
 } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
+import { RefTarifaHabilitada, validarTarifasHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 
 export interface ChoferFormData {
   nombre: string;
@@ -20,19 +21,23 @@ export interface ChoferFormData {
   domicilio: string;
   condFiscal: string;
   contratacion: ContratacionChofer;
-  tarifaTipo: TarifaTipo;
+  tarifasHabilitadas: RefTarifaHabilitada[] | null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class ChoferFactoryService {
 
   crearChofer(data: ChoferFormData): Chofer {
+    const tarifasHabilitadas = data.tarifasHabilitadas;
+    if (tarifasHabilitadas !== null) {
+      validarTarifasHabilitadas(tarifasHabilitadas);
+    }
     return {
       idChofer: '',
       datosPersonales: this.buildDatosPersonales(data),
       condFiscal: data.condFiscal,
       contratacion: data.contratacion,
-      tarifaTipo: data.tarifaTipo,
+      tarifasHabilitadas,
       tarifaAsignada: false,
       idTarifa: '',
       activo: true,
@@ -41,12 +46,16 @@ export class ChoferFactoryService {
   }
 
   editarChofer(original: ConIdType<Chofer>, data: ChoferFormData): Chofer {
+    const tarifasHabilitadas = data.tarifasHabilitadas;
+    if (tarifasHabilitadas !== null) {
+      validarTarifasHabilitadas(tarifasHabilitadas);
+    }
     return {
       ...original,
       datosPersonales: this.buildDatosPersonales(data),
       condFiscal: data.condFiscal,
       contratacion: data.contratacion,
-      tarifaTipo: data.tarifaTipo,
+      tarifasHabilitadas,
     };
   }
 

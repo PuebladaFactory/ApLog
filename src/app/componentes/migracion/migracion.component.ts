@@ -23,6 +23,10 @@ export class MigracionComponent {
   estadoClientes: string = '';
   estadoCorreccionClientes: string = '';
 
+  estadoTarifasClientes: string = '';
+  estadoTarifasChoferes: string = '';
+  estadoTarifasProveedores: string = '';
+
   constructor(
     private choferMigration: ChoferMigrationService,
     private proveedorMigration: ProveedorMigrationService,
@@ -122,6 +126,48 @@ export class MigracionComponent {
     } catch (e: any) {
       this.estadoCorreccionClientes = `Error: ${e.message}`;
       console.error('Error en corrección de clientes:', e);
+    } finally {
+      this.ejecutando = false;
+    }
+  }
+
+  async migrarTarifasClientes(): Promise<void> {
+    this.ejecutando = true;
+    this.estadoTarifasClientes = 'Migrando tarifasHabilitadas de clientes...';
+    try {
+      await this.clienteMigration.migrarTarifasHabilitadas();
+      this.estadoTarifasClientes = 'Migración completada. Revisá la consola para el detalle.';
+    } catch (e: any) {
+      this.estadoTarifasClientes = `Error: ${e.message}`;
+      console.error('Error en migración de tarifasHabilitadas (clientes):', e);
+    } finally {
+      this.ejecutando = false;
+    }
+  }
+
+  async migrarTarifasChoferes(): Promise<void> {
+    this.ejecutando = true;
+    this.estadoTarifasChoferes = 'Migrando tarifasHabilitadas de choferes...';
+    try {
+      await this.choferMigration.migrarTarifasHabilitadas();
+      this.estadoTarifasChoferes = 'Migración completada. Revisá la consola para el detalle.';
+    } catch (e: any) {
+      this.estadoTarifasChoferes = `Error: ${e.message}`;
+      console.error('Error en migración de tarifasHabilitadas (choferes):', e);
+    } finally {
+      this.ejecutando = false;
+    }
+  }
+
+  async migrarTarifasProveedores(): Promise<void> {
+    this.ejecutando = true;
+    this.estadoTarifasProveedores = 'Migrando tarifasHabilitadas de proveedores...';
+    try {
+      await this.proveedorMigration.migrarTarifasHabilitadas();
+      this.estadoTarifasProveedores = 'Migración completada. Revisá la consola para el detalle.';
+    } catch (e: any) {
+      this.estadoTarifasProveedores = `Error: ${e.message}`;
+      console.error('Error en migración de tarifasHabilitadas (proveedores):', e);
     } finally {
       this.ejecutando = false;
     }

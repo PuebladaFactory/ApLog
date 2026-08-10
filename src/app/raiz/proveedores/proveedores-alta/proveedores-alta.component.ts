@@ -3,18 +3,16 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Contacto, Proveedor } from 'src/app/interfaces/proveedor';
-import { TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoProveedoresComponent } from '../modal-contacto-proveedores/modal-contacto-proveedores.component';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
-import { ProveedorFactoryService, ProveedorFormData } from 'src/app/servicios/proveedores/proveedor-factory.service';
+import { ProveedorFormData } from 'src/app/servicios/proveedores/proveedor-factory.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
-import { AsignacionVehiculo, Vehiculo } from 'src/app/interfaces/chofer';
-import { ModalVehiculoComponent } from '../../choferes/modal-vehiculo/modal-vehiculo.component';
-import { Subject, takeUntil } from 'rxjs';
+import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 
 @Component({
     selector: 'app-proveedores-alta',
@@ -48,13 +46,12 @@ export class ProveedoresAltaComponent implements OnInit {
   $localidadesO!:any;
   $localidadSeleccionadaO:string = "";
   direccionOperativaCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};
-  vehiculos: ConIdType<Vehiculo>[] = [];
-  private destroy$ = new Subject<void>();
   cargando: boolean = false;
+  private tarifasHabilitadasOriginal: RefTarifaHabilitada[] = [];
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private domicilioServ: DomicilioService, private proveedorFactoryService: ProveedorFactoryService, private proveedorService: ProveedorService) {
-    this.form = this.fb.group({      
-      razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router: Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private domicilioServ: DomicilioService, private proveedorService: ProveedorService) {
+    this.form = this.fb.group({
+      razonSocial: ["",[Validators.required, Validators.maxLength(30)]],
       cuit: [
               "",
               [
@@ -68,12 +65,13 @@ export class ProveedoresAltaComponent implements OnInit {
       direccionOperativa: [""],
     });
 
+    // Alta: nada tildado por defecto — el usuario elige explícitamente.
     this.formTipoTarifa = this.fb.group({
-      general: [true],  // Seleccionado por defecto
+      general: [false],
       especial: [false],
       eventual: [false],
       personalizada: [false],
-    })    
+    })
    }
 
    ngOnInit(): void {
@@ -115,6 +113,9 @@ export class ProveedoresAltaComponent implements OnInit {
     if (this.condFiscal === '') {
       return this.mensajesError('Debe seleccionar una condición fiscal');
     }
+    if (this.getTarifasHabilitadas().length === 0) {
+      return this.mensajesError('Debe habilitar al menos un tipo de tarifa');
+    }
     if (this.form.valid) {
       if (this.fromParent.modo !== 'edicion') {
         const cuitIngresado = Number(this.form.value.cuit.replace(/-/g, ''));
@@ -141,12 +142,15 @@ export class ProveedoresAltaComponent implements OnInit {
         direccionOperativa: this.proveedorEditar.direccionOperativa.domicilio,
         cuit: this.formatCuit(this.proveedorEditar.cuit),
       });
+      this.tarifasHabilitadasOriginal = this.proveedorEditar.tarifasHabilitadas;
+      const tipoTarifaProveedor = tarifaTipoDesdeHabilitadas(this.proveedorEditar.tarifasHabilitadas);
       this.formTipoTarifa.patchValue({
-          general: this.proveedorEditar.tarifaTipo.general, 
-          especial: this.proveedorEditar.tarifaTipo.especial,
-          eventual: this.proveedorEditar.tarifaTipo.eventual,
-          personalizada: this.proveedorEditar.tarifaTipo.personalizada,      
+          general: tipoTarifaProveedor.general,
+          especial: tipoTarifaProveedor.especial,
+          eventual: tipoTarifaProveedor.eventual,
+          personalizada: tipoTarifaProveedor.personalizada,
       });
+      this.actualizarDisabledTarifa();
       this.$provinciaSeleccionadaF = this.proveedorEditar.direccionFiscal.provincia;
       this.$municipioSeleccionadoF = this.proveedorEditar.direccionFiscal.municipio;
       this.$localidadSeleccionadaF = this.proveedorEditar.direccionFiscal.localidad;
@@ -155,7 +159,6 @@ export class ProveedoresAltaComponent implements OnInit {
       this.$localidadSeleccionadaO = this.proveedorEditar.direccionOperativa.localidad;
       this.contactos = this.proveedorEditar.contactos;
       this.condFiscal = this.proveedorEditar.condFiscal;
-      this.cargarVehiculosProveedor();
     }
 
     changeCondFiscal(e:any){          
@@ -164,28 +167,65 @@ export class ProveedoresAltaComponent implements OnInit {
       
      }  
 
-    onTarifaTipoChange(tipoSeleccionado: string) {
-      // Resetea los demás switches a false, excepto el seleccionado
-      this.formTipoTarifa.patchValue({
-        general: tipoSeleccionado === 'general',
-        especial: tipoSeleccionado === 'especial',
-        eventual: tipoSeleccionado === 'eventual',
-        personalizada: tipoSeleccionado === 'personalizada'
-      });
-    }    
-  
-      // Método para obtener la selección actual del formulario
-      getTarifaTipo(): TarifaTipo {
-        const formValue = this.formTipoTarifa.value;
-        const tarifaTipo: TarifaTipo = {
-          general: formValue.general,
-          especial: formValue.especial,
-          eventual: formValue.eventual,
-          personalizada: formValue.personalizada
-        };
-        return tarifaTipo;
+    /** Tildar 'eventual' destilda y deshabilita los otros 3 (excluyente). */
+    onEventualChange(checked: boolean): void {
+      if (checked) {
+        this.formTipoTarifa.patchValue(
+          { general: false, especial: false, personalizada: false, eventual: true },
+          { emitEvent: false },
+        );
       }
-   
+      this.actualizarDisabledTarifa();
+    }
+
+    /** Tildar cualquiera de los otros 3 deshabilita 'eventual' mientras haya alguno activo. */
+    onOtraTarifaChange(): void {
+      this.actualizarDisabledTarifa();
+    }
+
+    /** Aplica la regla "eventual excluyente" al estado enabled/disabled de los 4 switches,
+     *  según el valor actual del form. Reusado por onEventualChange/onOtraTarifaChange/armarForm(). */
+    private actualizarDisabledTarifa(): void {
+      const v = this.formTipoTarifa.getRawValue();
+      if (v.eventual) {
+        this.formTipoTarifa.get('general')!.disable({ emitEvent: false });
+        this.formTipoTarifa.get('especial')!.disable({ emitEvent: false });
+        this.formTipoTarifa.get('personalizada')!.disable({ emitEvent: false });
+        this.formTipoTarifa.get('eventual')!.enable({ emitEvent: false });
+      } else {
+        this.formTipoTarifa.get('general')!.enable({ emitEvent: false });
+        this.formTipoTarifa.get('especial')!.enable({ emitEvent: false });
+        this.formTipoTarifa.get('personalizada')!.enable({ emitEvent: false });
+        const algunaActiva = v.general || v.especial || v.personalizada;
+        const eventualControl = this.formTipoTarifa.get('eventual')!;
+        algunaActiva ? eventualControl.disable({ emitEvent: false }) : eventualControl.enable({ emitEvent: false });
+      }
+    }
+
+    /** Arma la lista de tarifas habilitadas desde el form, preservando el idTarifa
+     *  existente (edición) para especial/personalizada si no se destildaron. */
+    getTarifasHabilitadas(): RefTarifaHabilitada[] {
+      const v = this.formTipoTarifa.getRawValue();
+      if (v.eventual) return [{ nivel: 'eventual' }];
+      const lista: RefTarifaHabilitada[] = [];
+      if (v.general) lista.push({ nivel: 'general' });
+      if (v.especial) {
+        const previa = this.tarifasHabilitadasOriginal.find(t => t.nivel === 'especial');
+        lista.push({
+          nivel: 'especial',
+          idTarifa: previa && previa.nivel === 'especial' ? previa.idTarifa : '',
+        });
+      }
+      if (v.personalizada) {
+        const previa = this.tarifasHabilitadasOriginal.find(t => t.nivel === 'personalizada');
+        lista.push({
+          nivel: 'personalizada',
+          idTarifa: previa && previa.nivel === 'personalizada' ? previa.idTarifa : '',
+        });
+      }
+      return lista;
+    }
+
 
   addItem(): void {
     const titulo = this.fromParent.modo === 'edicion' ? 'la edición' : 'el alta';
@@ -212,17 +252,12 @@ export class ProveedoresAltaComponent implements OnInit {
           municipioOperativa: this.$municipioSeleccionadoO,
           localidadOperativa: this.$localidadSeleccionadaO,
           domicilioOperativa: this.form.value.direccionOperativa,
-          tarifaTipo: this.getTarifaTipo(),
+          tarifasHabilitadas: this.getTarifasHabilitadas(),
           contactos: this.contactos,
         };
 
         if (this.fromParent.modo === 'edicion') {
-          const proveedorEditado = {
-            ...this.proveedorFactoryService.editarProveedor(this.proveedorEditar, data),
-            id: this.proveedorEditar.id,
-            type: this.proveedorEditar.type,
-          } as ConIdType<Proveedor>;
-          this.proveedorService.guardarProveedor(proveedorEditado, 'edicion')
+          this.proveedorService.editarProveedor(this.proveedorEditar, data)
             .then(() => {
               Swal.fire('Confirmado', 'Cambios guardados', 'success').then(() => {
                 this.cargando = false;
@@ -231,8 +266,7 @@ export class ProveedoresAltaComponent implements OnInit {
             })
             .catch(e => this.mensajesError(`Error al guardar: ${e.message}`));
         } else {
-          const proveedorNuevo = this.proveedorFactoryService.crearProveedor(data) as ConIdType<Proveedor>;
-          this.proveedorService.guardarProveedor(proveedorNuevo, 'alta')
+          this.proveedorService.altaProveedor(data)
             .then(() => {
               Swal.fire('Confirmado', 'Alta exitosa', 'success').then(() => {
                 this.cargando = false;
@@ -301,50 +335,6 @@ export class ProveedoresAltaComponent implements OnInit {
         },
         (reason) => {}
       );
-    }
-  }
-
-  openModalVehiculo(): void {
-    const modalRef = this.modalService.open(ModalVehiculoComponent, {
-      windowClass: 'myCustomModalClass',
-      centered: true,
-      size: 'sm',
-    });
-    const asignadoA: AsignacionVehiculo = {
-      tipo: 'proveedor',
-      idProveedor: this.proveedorEditar?.idProveedor ?? '',
-    };
-    modalRef.componentInstance.asignadoA = asignadoA;
-    modalRef.result.then(result => {
-      if (result !== undefined) { this.vehiculos.push(result); }
-    }, () => {});
-  }
-
-  editarVehiculo(i: number): void {
-    const vehiculo = this.vehiculos[i];
-    const modalRef = this.modalService.open(ModalVehiculoComponent, {
-      windowClass: 'myCustomModalClass',
-      centered: true,
-      size: 'sm',
-    });
-    modalRef.componentInstance.fromParent = vehiculo;
-    modalRef.componentInstance.asignadoA = vehiculo.asignadoA;
-    modalRef.result.then(result => {
-      if (result !== undefined) { this.vehiculos[i] = result; }
-    }, () => {});
-  }
-
-  eliminarVehiculo(indice: number): void {
-    this.vehiculos.splice(indice, 1);
-  }
-
-  cargarVehiculosProveedor(): void {
-    if (this.proveedorEditar?.idProveedor) {
-      this.proveedorService.getVehiculosPorProveedor(this.proveedorEditar.idProveedor)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(vehiculos => {
-          this.vehiculos = vehiculos;
-        });
     }
   }
 
@@ -476,9 +466,4 @@ export class ProveedoresAltaComponent implements OnInit {
             //footer: `${msj}`
           });
         }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
 }

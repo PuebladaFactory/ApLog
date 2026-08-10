@@ -1389,6 +1389,140 @@ el interruptor manual intencional de debug local, sin tocar).
   `environment.ts` es un interruptor manual existente para debug
   local, no un tercer entorno.
 
+### Mini-frente — Multiplicidad de tarifas por entidad (`RefTarifaHabilitada`) — Agosto 2026
+
+Frente derivado del refactor grande de Tarifas (diseñado en chat aparte, aún no
+iniciado). Resuelve la pieza específica de cómo Cliente/Chofer/Proveedor administran
+múltiples tarifas habilitadas a la vez, reemplazando el viejo `tarifaTipo: TarifaTipo`
+(4 booleanos, selección única). El resto del frente de Tarifas (interfaces
+`Tarifa`/`TarifaEspecial`/`TarifaEventual`, el cálculo, el módulo de administración de
+tarifas en sí) sigue sin iniciar — ver `CLAUDE.md` → "Sistema de tarifas".
+
+**Modelo nuevo:**
+
+```typescript
+export type RefTarifaHabilitada =
+  | { nivel: 'general' }
+  | { nivel: 'especial'; idTarifa: string }       // '' = habilitado, tarifa aún no creada
+  | { nivel: 'personalizada'; idTarifa: string }  // '' = habilitado, tarifa aún no creada
+  | { nivel: 'eventual' };
+```
+
+`Cliente`/`Proveedor`: `tarifasHabilitadas: RefTarifaHabilitada[]`. `Chofer`:
+`tarifasHabilitadas: RefTarifaHabilitada[] | null` — `null` para
+`contratacion.tipo === 'proveedor'` (hereda la tarifa del proveedor, nunca se copia al
+chofer — ver más abajo).
+
+**Reglas de negocio** (validadas en los 3 factories, `interfaces/tarifa-habilitada.ts` →
+`validarTarifasHabilitadas`): `'eventual'` solo es válida como única entrada de la
+lista; debe haber al menos una tarifa habilitada (lista vacía inválida).
+
+**Chofer de proveedor — resolución centralizada, no duplicada:**
+`ProveedorService.resolverTarifasHabilitadasChofer(chofer)` es la única fuente de
+verdad — directo lee `chofer.tarifasHabilitadas`, proveedor resuelve por ID contra el
+proveedor vivo (`getProveedorPorId`). Reemplaza el patrón viejo donde `ChoferFormData`
+copiaba `tarifaTipo` también para choferes de proveedor (dato duplicado, ya señalado
+como deuda en un comentario preexistente de `ProveedorService.getTarifaTipo` antes de
+este frente). Consumido por `OperacionFactoryService.crearOperacionBase`,
+`operaciones-editor` (badge de chofer), `choferes-listado`, `objeto-papelera`.
+
+**Shim de compatibilidad, vigente:** `tarifaTipoDesdeHabilitadas(lista):  TarifaTipo`
+(en `interfaces/tarifa-habilitada.ts`) reconstruye los 4 booleanos legacy para
+consumidores que todavía no resuelven multiplicidad real:
+`OperacionFactoryService` (`crearOperacionBase`, `resolverJerarquiaTarifa`,
+`recalcularTarifaTipo`, `aplicarTarifaTipo`, `aplicarTarifaEventual`),
+`operaciones-editor` (badges), `ProveedorService.getTarifaTipo`. Marcados
+`// TODO: refactor Tarifas — operaciones-editor con multiplicidad` — la resolución real
+de "qué pasa cuando cliente Y chofer tienen múltiples tarifas a la vez" es problema
+propio, explícitamente fuera de alcance de este mini-frente, a encarar en el frente
+grande de Tarifas.
+
+**El puente inverso `habilitadasDesdeTarifaTipo` (temporal) ya NO existe** — se usó
+solo mientras los formularios producían selección única, y se eliminó al conectar los
+3 componentes de alta al modelo real de lista (ver "Componentes" más abajo).
+
+**Servicios — reordenamiento Component→Service→Factory (aprovechado de paso):**
+`ClienteService`/`ChoferService`/`ProveedorService` ganan `altaXxx`/`editarXxx`, que
+invocan al factory internamente y persisten — los 3 componentes de alta dejan de
+inyectar `XxxFactoryService` directo. Efecto colateral no buscado pero bienvenido:
+antes del reordenamiento, un `throw` del factory (p. ej. `validarTarifasHabilitadas`)
+quedaba como promise rejection no manejada, porque el `.catch()` del componente colgaba
+solo de la promesa de `guardarXxx`, no de la construcción vía factory. Con la llamada
+al factory dentro de la función `async` del servicio, el `throw` se propaga
+correctamente al `.catch()` del componente.
+
+**Componentes — switches multi-select:** `formTipoTarifa` pasa de comportarse como
+radio (`onTarifaTipoChange`, un solo `true` a la vez) a switches independientes.
+`'eventual'` es excluyente: tildarlo destilda y deshabilita los otros 3; tildar
+cualquier otro deshabilita `'eventual'` mientras haya al menos uno activo
+(`onEventualChange`/`onOtraTarifaChange`). Alta: arranca sin nada tildado (antes
+`general: true` por defecto) — coherente con que general ya no es implícito en el
+modelo de datos. Guard nuevo en `onSubmit()`: bloquea si los 4 switches están
+apagados. **Preservación de `idTarifa` al editar:** cada componente guarda
+`tarifasHabilitadas` original al cargar el form (`armarForm()`); si el usuario no
+destilda especial/personalizada ya habilitada, se reusa su `idTarifa` real en vez de
+resetear a `''` en cada guardado — sin esto, cada edición de una entidad con tarifa
+especial/personalizada ya creada hubiera roto la referencia real a esa tarifa
+(pérdida de datos silenciosa).
+
+**Migración de datos (demo):** nuevo método `migrarTarifasHabilitadas()` en los 3
+`XxxMigrationService`, sobre documentos ya migrados una vez (no requiere backup nuevo,
+mismo criterio que los métodos `corregirIdXxx` ya existentes — transforma el campo
+puntual y sobreescribe el documento completo, `idTarifa`/`tarifaAsignada` intactos).
+Helper de conversión recreado en `servicios/migracion/tarifa-habilitada-migracion.util.ts`
+(`habilitadasDesdeTarifaTipoMigracion`, uso exclusivo de scripts de migración —
+trabajan sobre `any`, no sobre tipos de dominio). Choferes de proveedor migrados
+directo a `tarifasHabilitadas: null`, ignorando el `tarifaTipo` legacy que tenían
+(dato duplicado desde siempre, nunca fuente de verdad real). **Pendiente: réplica en
+Vantruck/producción**, diferida al proceso ya establecido (toda la reestructuración se
+corre en demo primero).
+
+**Ajustes post-prueba manual:**
+- Los 3 listados (`clientes`/`choferes`/`proveedores-listado`) mostraban solo la
+  PRIMERA tarifa habilitada en la columna "Tarifa" (`tarifaTipoDesdeHabilitadas` +
+  ternaria en cascada, correcto con selección única, incorrecto con multiplicidad).
+  Corregido a listar todas, separadas por coma. `TablaGenericaComponent` ganó `[title]`
+  en la celda genérica (afecta a todos los listados, no solo Tarifa) aprovechando el
+  truncado por columna que ya existía (`text-overflow: ellipsis` + `max-width` por
+  `col.width`).
+- **Código muerto eliminado en `ProveedoresAltaComponent`:** gestión de vehículos
+  completa (`vehiculos`, `openModalVehiculo`/`editarVehiculo`/`eliminarVehiculo`/
+  `cargarVehiculosProveedor`, y `ngOnDestroy`/`Subject`/`takeUntil` que solo existían
+  para esa suscripción) — nunca tuvo sección correspondiente en el `.html`, nunca se
+  renderizaba, y `addItem()` nunca la persistía (`guardarProveedor` sin vehículos, no
+  `guardarProveedorConVehiculos`). Confirmado con evidencia real que los vehículos de
+  proveedor se administran en un modal propio de `proveedores-listado.component.ts`
+  (acción `'vehiculos'` de `TablaAccionesComponent` → `mostrarVehiculos()` →
+  `guardarVehiculos()` → `ProveedorService.guardarProveedorConVehiculos`, su único
+  caller real, confirmado por grep) — no era un gap a corregir, era código que nunca
+  debió sobrevivir al copy-paste original entre `ChoferesAltaComponent` (que sí
+  gestiona vehículos, porque un chofer directo los necesita) y `ProveedoresAltaComponent`.
+
+**Deuda registrada (no resuelta en este frente, a propósito):**
+- `idTarifa: string`/`tarifaAsignada: boolean` en las 3 entidades: NO se tocaron.
+  Cumplían exactamente el rol que hoy vive en cada entrada `{ idTarifa }` de
+  `tarifasHabilitadas`, pero `RefTarifaHabilitada` no tiene `idTarifa` en los niveles
+  `general`/`eventual`, así que no alcanza para sustituirlos limpio todavía. Quedan con
+  `// TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada` en las 3 interfaces.
+  Auditoría confirmó consumidores externos activos en el módulo de Tarifas actual
+  (`Xxx-tarifa-gral.component.ts` × 3, `TarifasService.guardarTarifaPersonalizada`) —
+  ese módulo entero desaparece con el frente grande de Tarifas, momento natural para
+  resolver esta deuda también.
+- **Bug preexistente, no relacionado, detectado en la auditoría:**
+  `proveedores-tarifa-gral.component.ts` (líneas ~560, ~591) escribe `idTarifa` de un
+  `Chofer` en la colección `"proveedores"` en vez de `"choferes"`. No corregido — el
+  archivo entero se elimina con el frente grande de Tarifas.
+- **Bug preexistente, no relacionado, detectado en la auditoría:**
+  `modal-resumen-op.component.html` lee `op.cliente.tarifaTipo`/`op.chofer.tarifaTipo`
+  sobre `RefCliente`/`RefChofer`, que no tienen ese campo desde la Fase D (snapshots).
+  Probablemente lee `undefined` en runtime hoy. No corregido, fuera de alcance — queda
+  para revisión de ese componente en particular.
+- Módulo de Tarifas actual (`Xxx-tarifa-gral`/`Xxx-tarifa-especial`/
+  `cliente-tarifa-personalizada`, `TarifasService`): las líneas que leían/escribían
+  `entidad.tarifaTipo` fueron comentadas al mínimo (`// TODO: eliminar en frente
+  Tarifas — módulo completo a reescribir`) para mantener el árbol compilando. Ningún
+  tratamiento fino — el módulo entero desaparece con el frente grande.
+
 ---
 
 ### Pendiente

@@ -84,6 +84,17 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
     this.armarTabla();
   }
 
+  private readonly ETIQUETAS_TARIFA: Record<string, string> = {
+    general: 'General',
+    especial: 'Especial',
+    personalizada: 'Personalizada',
+    eventual: 'Eventual',
+  };
+
+  private tarifaLabel(c: ConIdType<Cliente>): string {
+    return c.tarifasHabilitadas.map(t => this.ETIQUETAS_TARIFA[t.nivel]).join(', ');
+  }
+
   armarTabla(): void {
     this.filas = this.clientesFiltrados.map(c => ({
       id: c.idCliente,
@@ -92,7 +103,7 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
       condFiscal: c.condFiscal,
       direccionFiscal: `${c.direccionFiscal.domicilio}, ${c.direccionFiscal.municipio}, ${c.direccionFiscal.provincia}`,
       direccionOperativa: `${c.direccionOperativa.domicilio}, ${c.direccionOperativa.municipio}, ${c.direccionOperativa.provincia}`,
-      tarifa: c.tarifaTipo.general ? 'General' : c.tarifaTipo.especial ? 'Especial' : c.tarifaTipo.personalizada ? 'Personalizada' : 'Eventual',
+      tarifa: this.tarifaLabel(c),
       estado: c.activo ? "Activo" : "Inactivo",
       /* contacto: c.contactos[0]?.apellido ?? 'Sin Datos',
       puesto: c.contactos[0]?.puesto ?? 'Sin Datos',

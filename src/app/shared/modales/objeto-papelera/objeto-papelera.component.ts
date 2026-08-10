@@ -7,11 +7,13 @@ import { InformeOp } from 'src/app/interfaces/informe-op';
 
 import { LogDoc } from 'src/app/interfaces/log-doc';
 import { Proveedor } from 'src/app/interfaces/proveedor';
+import { tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { LogService } from 'src/app/servicios/log/log.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 
 @Component({
     selector: 'app-modal-objeto',
@@ -32,7 +34,7 @@ export class ObjetoPapeleraComponent implements OnInit {
   chofer: string = "";
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
   
-  constructor(public activeModal: NgbActiveModal, private dbFirebase: DbFirestoreService, private storageService: StorageService,  private pdfServ: PdfService, private excelServ: ExcelService, private logService: LogService){}
+  constructor(public activeModal: NgbActiveModal, private dbFirebase: DbFirestoreService, private storageService: StorageService,  private pdfServ: PdfService, private excelServ: ExcelService, private logService: LogService, private proveedorService: ProveedorService){}
 
   ngOnInit(): void {  
     console.log("this.fromParent", this.fromParent);    
@@ -205,6 +207,19 @@ export class ObjetoPapeleraComponent implements OnInit {
       let choferDoc: LogDoc[] =  choferes.filter(cDoc => cDoc.objeto.idChofer === idChofer);
       console.log("choferDoc", choferDoc);
       this.chofer = choferDoc[0].objeto.apellido + " " + choferDoc[0].objeto.nombre
+    }
+
+    // TODO: refactor Tarifas — reemplazar por lectura directa de tarifasHabilitadas
+    getTarifaLabel(objeto: any): string {
+      if (objeto?.contratacion?.tipo === 'proveedor') {
+        // TODO: refactor Papelera — si el proveedor también está en papelera, no se puede resolver.
+        const proveedor = this.proveedorService.getProveedorPorId(objeto.contratacion.idProveedor);
+        if (!proveedor) return '—';
+        const tProveedor = tarifaTipoDesdeHabilitadas(proveedor.tarifasHabilitadas);
+        return tProveedor.general ? 'General' : tProveedor.especial ? 'Especial' : tProveedor.personalizada ? 'Personalizada' : 'Eventual';
+      }
+      const t = tarifaTipoDesdeHabilitadas(objeto?.tarifasHabilitadas ?? []);
+      return t.general ? 'General' : t.especial ? 'Especial' : t.personalizada ? 'Personalizada' : 'Eventual';
     }
 
     getCliente(id:number){

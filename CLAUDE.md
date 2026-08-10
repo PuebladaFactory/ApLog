@@ -181,13 +181,39 @@ Escritura: Component --> XxxService --> StorageService (log) --> DbFirestoreServ
 
 ### Sistema de tarifas
 
-Cada entidad (cliente, chofer, proveedor) tiene tres niveles: general (`Gral`), especial (`Esp`) y personalizada (`Pers`). `TarifasService` resuelve qué nivel aplica a cada operación. Es una regla de negocio central — los cambios acá afectan facturación y liquidaciones.
+Cada entidad (cliente, chofer, proveedor) tiene `tarifasHabilitadas:
+RefTarifaHabilitada[]` (`Chofer`: `| null`, ver abajo) — reemplaza al viejo
+`tarifaTipo: TarifaTipo` (4 booleanos, selección única). Una entidad puede tener
+múltiples tarifas habilitadas a la vez (ej. general + especial). `RefTarifaHabilitada`
+(`interfaces/tarifa-habilitada.ts`): `{ nivel: 'general' | 'eventual' }` o
+`{ nivel: 'especial' | 'personalizada'; idTarifa: string }` (`idTarifa: ''` = habilitado,
+tarifa concreta aún no creada — estado válido esperado, se completa desde el módulo de
+Tarifas). Reglas: `'eventual'` solo válida como única entrada; al menos una tarifa
+habilitada es obligatoria (`validarTarifasHabilitadas`, en los 3 factories).
 
-> **Refactor planificado (no iniciado):** se unificará en un tarifario único con interfaz
-> común para general/especial/personalizada (eventual queda aparte por ser ad-hoc por
-> operación), y `TarifaTipo` pasará de 4 booleanos a un union de string. Hasta entonces,
-> la lógica de cálculo de tarifas en los servicios de Operaciones se toca al mínimo para
-> compilar (marcada con `// TODO: refactor Tarifas`), no se reescribe.
+**Chofer de proveedor:** `tarifasHabilitadas: null` — no tiene tarifa propia, hereda la
+del proveedor. Resolver SIEMPRE vía
+`ProveedorService.resolverTarifasHabilitadasChofer(chofer)` (nunca leer
+`chofer.tarifasHabilitadas` directo sin chequear `contratacion.tipo` antes).
+
+**Shim de compatibilidad:** `tarifaTipoDesdeHabilitadas(lista): TarifaTipo`
+(`interfaces/tarifa-habilitada.ts`) reconstruye los 4 booleanos legacy para
+consumidores que aún no resuelven multiplicidad real: `OperacionFactoryService` (varios
+métodos), `operaciones-editor` (badges), `ProveedorService.getTarifaTipo`, los 3
+listados, `objeto-papelera`. Marcados `// TODO: refactor Tarifas`.
+
+> **Refactor grande planificado (no iniciado):** unificar en un tarifario único con
+> interfaz común para general/especial/personalizada (eventual aparte, por ser ad-hoc
+> por operación) — `TarifaBase`, `Tarifa`, `TarifaEspecial`, `TarifaEventual`. Incluye
+> resolver `operaciones-editor` para multiplicidad real (hoy usa el shim, que colapsa a
+> "la primera tarifa que matchea", igual que hacía `TarifaTipo` antes), migrar
+> `idTarifa`/`tarifaAsignada` de las 3 entidades a `RefTarifaHabilitada`, y reescribir el
+> módulo de Tarifas actual (`Xxx-tarifa-gral`/`Xxx-tarifa-especial`/
+> `cliente-tarifa-personalizada`, `TarifasService`), hoy con las líneas que leían
+> `tarifaTipo` comentadas al mínimo para compilar. Hasta entonces, la lógica de cálculo
+> de tarifas en los servicios de Operaciones se toca al mínimo (marcada con
+> `// TODO: refactor Tarifas`), no se reescribe. Ver `CHANGELOG.md` → mini-frente
+> "Multiplicidad de tarifas por entidad" para el detalle completo de lo ya resuelto.
 
 ### Operaciones — modelo de estado y reglas de dominio
 
@@ -635,6 +661,41 @@ difiere de la genérica `Resultado<T>` de interfaces — deuda de unificación p
 entidades (cliente inactivo con items → columna visible; chofer inactivo asignado →
 tarjeta visible). El estado activo controla disponibilidad FUTURA, no borra hechos ya
 cargados.
+
+### Decisiones de arquitectura — mini-frente RefTarifaHabilitada (multiplicidad de tarifas)
+
+Patrones fijados al resolver "una entidad puede tener múltiples tarifas habilitadas a
+la vez"; aplican como precedente al frente grande de Tarifas.
+
+**Union type discriminado por `nivel`, no un array de un tipo único con campos
+opcionales.** `RefTarifaHabilitada` fuerza en el tipo que solo `especial`/
+`personalizada` tienen `idTarifa` — `general`/`eventual` no pueden tenerlo por
+error. Mismo criterio que `SujetoAsignacion`/`ContratacionChofer` en el resto del
+proyecto.
+
+**`null` explícito en vez de estado "vacío pero técnicamente presente", cuando el dato
+no aplica.** `Chofer.tarifasHabilitadas: null` para chofer de proveedor, en vez de `[]`
+o de copiar la lista del proveedor al chofer. Un array vacío sería ambiguo ("no tiene
+ninguna tarifa" vs. "no aplica, mirar al proveedor"); copiar la lista duplica un
+estado que requeriría sincronizarse ante cada cambio del proveedor — mismo problema que
+ya tenía `ChoferFormData.tarifaTipo` antes de este frente. La resolución por ID contra
+el servicio vivo (patrón ya establecido en el proyecto) no tiene costo real: es un
+`.find()` en memoria sobre un `BehaviorSubject` ya cacheado, no una consulta a
+Firestore.
+
+**Puente de compatibilidad temporal, con TODO explícito de cuándo desaparece.**
+`habilitadasDesdeTarifaTipo` (inverso) existió solo mientras los formularios producían
+selección única; se eliminó al conectar los componentes al modelo real de lista, en el
+mismo bloque que originalmente lo marcó como su fecha de vencimiento. Útil como
+plantilla: un shim temporal necesita, desde que se escribe, el comentario de qué
+bloque futuro lo hace innecesario — no un TODO genérico sin fecha.
+
+**Preservar sub-estado no editable en la UI al reconstruir un objeto desde el
+formulario.** El formulario solo administra el booleano (¿está habilitado o no?), nunca
+`idTarifa` (responsabilidad de otro módulo). Al editar, si un nivel especial/
+personalizada no se destildó, se reusa su `idTarifa` real guardado al cargar el form,
+en vez de reconstruirlo con `''` cada vez — evitar que un formulario que solo conoce
+una parte del objeto destruya silenciosamente la parte que no administra.
 
 ### Frente Botones y Permisos (en progreso)
 
@@ -1548,3 +1609,25 @@ la fila y `*appPermiso="'operaciones.agregar'"` al botón de alta — el botón 
 Operación para `user` ahora refleja el resultado correcto en la UI (oculto, no solo
 bloqueado al escribir). Detalle completo en "Frente Botones y Permisos" → Bloque 6. El
 resto de los `*appRole`/`esRol()` puntuales sigue sin migrar, ver "Pendiente" ahí.
+
+### Deuda — `idTarifa`/`tarifaAsignada` en Cliente/Chofer/Proveedor
+
+Campos legacy sin migrar a `RefTarifaHabilitada` (que no tiene `idTarifa` en los
+niveles `general`/`eventual`, no alcanza para sustituirlos todavía). Consumidores
+activos confirmados por auditoría: el módulo de Tarifas actual completo
+(`Xxx-tarifa-gral.component.ts` × 3, `TarifasService.guardarTarifaPersonalizada`).
+Resolver junto con el frente grande de Tarifas, cuando ese módulo se reescriba.
+
+### Bug — `proveedores-tarifa-gral.component.ts` escribe en colección equivocada
+
+Líneas ~560/~591: al asignar `idTarifa` a un `Chofer` de proveedor, hace
+`updateItem("proveedores", ch, ...)` en vez de `"choferes"`. Detectado en auditoría del
+mini-frente RefTarifaHabilitada (Agosto 2026), no corregido — el archivo entero se
+elimina con el frente grande de Tarifas.
+
+### Bug — `modal-resumen-op.component.html` lee `tarifaTipo` sobre snapshots sin ese campo
+
+Lee `op.cliente.tarifaTipo`/`op.chofer.tarifaTipo` sobre `RefCliente`/`RefChofer`
+(snapshots de Operación, sin ese campo desde la Fase D). Probablemente `undefined` en
+runtime hoy. Detectado en auditoría del mini-frente RefTarifaHabilitada (Agosto 2026),
+no corregido, sin relación con ese frente — revisar en sesión propia de ese componente.

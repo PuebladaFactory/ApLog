@@ -168,10 +168,11 @@ export class TarifasService {
     nuevasTarifas
   ); */
 
-    this.actualizarReferenciaCliente(
+    // TODO: eliminar en frente Tarifas — módulo completo a reescribir. actualizarReferenciaCliente comentado (código muerto).
+    /* this.actualizarReferenciaCliente(
       tarifaActual.idCliente,
       tarifaNueva.idTarifa,
-    );
+    ); */
 
     return tarifaNueva;
   }
@@ -198,7 +199,8 @@ export class TarifasService {
   ); */
   }
 
-  private actualizarReferenciaCliente(
+  // TODO: eliminar en frente Tarifas — módulo completo a reescribir. Código muerto sin caller.
+  /* private actualizarReferenciaCliente(
     idCliente: number,
     idTarifaNueva: number,
   ) {
@@ -210,9 +212,9 @@ export class TarifasService {
       cliente.idTarifa = idTarifaNueva;
     }
 
-    /* REEMPLAZAR */
+    // REEMPLAZAR
     //this.storageService.saveInfo("clientes", clientes);
-  }
+  } */
 
   validarTarifa(form: TarifaForm): ErrorTarifa | null {
     if (!form.secciones.length) {
@@ -389,6 +391,7 @@ export class TarifasService {
         transaction.set(refNuevaTarifa, tarifa);
 
         // 4️⃣ Actualizar cliente
+        // TODO: eliminar en frente Tarifas — módulo completo a reescribir
         const refCliente = doc(db, `${this.basePath}/clientes`, cliente.id);
 
         transaction.update(refCliente, {

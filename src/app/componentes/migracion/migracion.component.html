@@ -76,6 +76,37 @@
   </div>
 
   <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+    <h4>Migración tarifasHabilitadas</h4>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="migrarTarifasClientes()"
+        [disabled]="ejecutando"
+        class="btn btn-warning me-2">
+        Migrar Tarifas Habilitadas - Clientes
+      </button>
+      <p *ngIf="estadoTarifasClientes" style="margin-top: 0.5rem;">{{ estadoTarifasClientes }}</p>
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="migrarTarifasChoferes()"
+        [disabled]="ejecutando"
+        class="btn btn-warning me-2">
+        Migrar Tarifas Habilitadas - Choferes
+      </button>
+      <p *ngIf="estadoTarifasChoferes" style="margin-top: 0.5rem;">{{ estadoTarifasChoferes }}</p>
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="migrarTarifasProveedores()"
+        [disabled]="ejecutando"
+        class="btn btn-warning me-2">
+        Migrar Tarifas Habilitadas - Proveedores
+      </button>
+      <p *ngIf="estadoTarifasProveedores" style="margin-top: 0.5rem;">{{ estadoTarifasProveedores }}</p>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
     <h4>Verificaciones previas</h4>
     <div style="margin-bottom: 1rem;">
       <button

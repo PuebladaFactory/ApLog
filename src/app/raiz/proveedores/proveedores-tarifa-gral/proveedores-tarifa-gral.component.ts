@@ -548,21 +548,23 @@ onGenerarNuevaTarifaAutomatica() {
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(proveedores.length > 0){
         proveedores.forEach((p:ConIdType<Proveedor>)=>{
-          if(p.tarifaTipo.general){
+          // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+          /* if(p.tarifaTipo.general){
             p.tarifaAsignada = true;
             p.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let {id, type, ...proveedor } = p
             this.storageService.updateItem("proveedores", proveedor, p.idProveedor,"INTERNA", "", p.id);
-          }
+          } */
         })
         choferes.forEach((c:ConIdType<Chofer>)=>{
-          if(c.tarifaTipo.general){
+          // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+          /* if(c.tarifaTipo.general){
             c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let{id, type, ...ch} = c
             this.storageService.updateItem("proveedores", ch, c.idChofer,"INTERNA", "", c.id);
-          }
+          } */
         })
-    }      
+    }
     }else if(this.tEspecial){
       console.log("aca??");
       
@@ -579,21 +581,23 @@ onGenerarNuevaTarifaAutomatica() {
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);      
       if(proveedores.length > 0){
         proveedores.forEach((p:ConIdType<Proveedor>)=>{
-          if(p.tarifaTipo.especial  && p.idProveedor === this.idProveedorEsp[0]){
+          // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+          /* if(p.tarifaTipo.especial  && p.idProveedor === this.idProveedorEsp[0]){
             p.tarifaAsignada = true;
             p.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let {id, type, ...proveedor } = p
             this.storageService.updateItem("proveedores", proveedor, p.idProveedor,"INTERNA", "", p.id);
-          }
+          } */
         })
         choferes.forEach((c:ConIdType<Chofer>)=>{
-          if(c.tarifaTipo.especial && (c.contratacion as any).idProveedor === this.idProveedorEsp[0]){
+          // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+          /* if(c.tarifaTipo.especial && (c.contratacion as any).idProveedor === this.idProveedorEsp[0]){
             c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let{id, type, ...ch} = c
-            this.storageService.updateItem("proveedores", ch, c.idChofer,"INTERNA", "", c.id);       
-          }
+            this.storageService.updateItem("proveedores", ch, c.idChofer,"INTERNA", "", c.id);
+          } */
         })
-      }    
+      }
         
     }
     //   
@@ -698,13 +702,14 @@ onGenerarNuevaTarifaAutomatica() {
       
           if(proveedores.length > 0){
             proveedores.forEach((c:Proveedor)=>{
-                if(c.tarifaTipo.general){
+                // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+                /* if(c.tarifaTipo.general){
                   c.tarifaAsignada = true;
                   c.idTarifa = String(this.ultTarifaGralProveedor.idTarifa);
                   //this.storageService.updateItem("proveedores", c, c.idProveedor, "INTERNA", "");
-                }
+                } */
               })
-          }      
+          }
       
       
     }
@@ -715,13 +720,14 @@ onGenerarNuevaTarifaAutomatica() {
           
           if(proveedores.length > 0){
             proveedores.forEach((c:Proveedor)=>{
-                if(c.tarifaTipo.especial  && c.idProveedor === this.idProveedorEsp[0] && this.ultTarifaEspecial){
+                // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+                /* if(c.tarifaTipo.especial  && c.idProveedor === this.idProveedorEsp[0] && this.ultTarifaEspecial){
                   c.tarifaAsignada = true;
                   c.idTarifa = String(this.ultTarifaEspecial.idTarifa);
                   //this.storageService.updateItem("proveedores", c, c.idProveedor, "INTERNA", "");
-                }
+                } */
               })
-          }      
+          }
   
     }
   

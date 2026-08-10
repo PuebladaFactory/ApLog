@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Proveedor, Contacto } from 'src/app/interfaces/proveedor';
-import { Direccion, TarifaTipo } from 'src/app/interfaces/chofer';
+import { Direccion } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
+import { RefTarifaHabilitada, validarTarifasHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 
 export interface ProveedorFormData {
   razonSocial: string;
@@ -15,7 +16,7 @@ export interface ProveedorFormData {
   municipioOperativa: string;
   localidadOperativa: string;
   domicilioOperativa: string;
-  tarifaTipo: TarifaTipo;
+  tarifasHabilitadas: RefTarifaHabilitada[];
   contactos: Contacto[];
 }
 
@@ -23,6 +24,8 @@ export interface ProveedorFormData {
 export class ProveedorFactoryService {
 
   crearProveedor(data: ProveedorFormData): Proveedor {
+    const tarifasHabilitadas = data.tarifasHabilitadas;
+    validarTarifasHabilitadas(tarifasHabilitadas);
     return {
       idProveedor: '',
       razonSocial: data.razonSocial,
@@ -37,7 +40,7 @@ export class ProveedorFactoryService {
         data.localidadOperativa, data.domicilioOperativa
       ),
       contactos: data.contactos,
-      tarifaTipo: data.tarifaTipo,
+      tarifasHabilitadas,
       tarifaAsignada: false,
       idTarifa: '',
       activo: true,
@@ -46,6 +49,8 @@ export class ProveedorFactoryService {
   }
 
   editarProveedor(original: ConIdType<Proveedor>, data: ProveedorFormData): Proveedor {
+    const tarifasHabilitadas = data.tarifasHabilitadas;
+    validarTarifasHabilitadas(tarifasHabilitadas);
     return {
       ...original,
       razonSocial: data.razonSocial,
@@ -60,7 +65,7 @@ export class ProveedorFactoryService {
         data.localidadOperativa, data.domicilioOperativa
       ),
       contactos: data.contactos,
-      tarifaTipo: data.tarifaTipo,
+      tarifasHabilitadas,
     };
   }
 

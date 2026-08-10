@@ -1,10 +1,16 @@
+import { RefTarifaHabilitada } from './tarifa-habilitada';
+
 export interface Chofer {
     idChofer: string;
     datosPersonales: DatosPersonales;
     condFiscal: string;
     contratacion: ContratacionChofer;
-    tarifaTipo: TarifaTipo;
+    // null = no aplica (chofer de proveedor): hereda la tarifa del proveedor,
+    // se resuelve siempre por ID vía ProveedorService.resolverTarifasHabilitadasChofer.
+    tarifasHabilitadas: RefTarifaHabilitada[] | null;
+    // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
     tarifaAsignada: boolean;
+    // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
     idTarifa: string;
     activo: boolean;
     visible?: boolean;

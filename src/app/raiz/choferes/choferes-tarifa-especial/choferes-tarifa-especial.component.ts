@@ -32,8 +32,9 @@ export class ChoferesTarifaEspecialComponent implements OnInit {
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.$choferes = data;     
+      // TODO: eliminar en frente Tarifas — módulo completo a reescribir
       this.$choferesEsp = this.$choferes
-      .filter((c:Chofer)=>{return c.tarifaTipo.especial === true && c.contratacion.tipo === 'directo'})
+      .filter((c:Chofer)=>{return false /* c.tarifaTipo.especial === true && c.contratacion.tipo === 'directo' */})
       .sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido));
       console.log("1)choferes especiales: ", this.$choferesEsp);      
       this.tEspecial = false;

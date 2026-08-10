@@ -6,6 +6,7 @@ import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
+import { ChoferFactoryService, ChoferFormData } from 'src/app/servicios/choferes/chofer-factory.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChoferService implements OnDestroy {
@@ -22,6 +23,7 @@ export class ChoferService implements OnDestroy {
     private db: DbFirestoreService,
     private storageService: StorageService,
     private legajosService: LegajosService,
+    private choferFactoryService: ChoferFactoryService,
   ) {}
 
   init(): void {
@@ -177,6 +179,24 @@ export class ChoferService implements OnDestroy {
         );
       }
     }
+  }
+
+  async altaChofer(data: ChoferFormData, vehiculos: ConIdType<Vehiculo>[]): Promise<void> {
+    const chofer = this.choferFactoryService.crearChofer(data) as ConIdType<Chofer>;
+    await this.guardarChoferConVehiculos(chofer, vehiculos, 'alta');
+  }
+
+  async editarChofer(
+    original: ConIdType<Chofer>,
+    data: ChoferFormData,
+    vehiculos: ConIdType<Vehiculo>[],
+  ): Promise<void> {
+    const choferEditado = {
+      ...this.choferFactoryService.editarChofer(original, data),
+      id: original.id,
+      type: original.type,
+    } as ConIdType<Chofer>;
+    await this.guardarChoferConVehiculos(choferEditado, vehiculos, 'edicion');
   }
 
   async eliminarChoferConVehiculos(

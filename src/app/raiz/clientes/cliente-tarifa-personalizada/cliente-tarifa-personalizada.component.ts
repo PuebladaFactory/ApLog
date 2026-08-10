@@ -99,7 +99,8 @@ export class ClienteTarifaPersonalizadaComponent implements OnInit {
 
   ngOnInit(): void {
     this.clientes = this.storageService.loadInfo("clientes");
-    this.clientesPers = this.clientes.filter((c) => c.tarifaTipo.personalizada);
+    // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+    this.clientesPers = this.clientes.filter((c) => false /* c.tarifaTipo.personalizada */);
     this.clientesPers = this.clientesPers.sort((a, b) =>
       a.razonSocial.localeCompare(b.razonSocial),
     );

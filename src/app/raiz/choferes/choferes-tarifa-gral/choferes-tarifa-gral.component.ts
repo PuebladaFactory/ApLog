@@ -703,14 +703,15 @@ onGenerarNuevaTarifaAutomatica() {
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(choferes.length > 0){
         choferes.forEach((c:ConIdType<Chofer>)=>{
-          if(c.tarifaTipo.general){
+          // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+          /* if(c.tarifaTipo.general){
             c.tarifaAsignada = true;
             c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let {id, type, ...chofer } = c
             this.storageService.updateItem("choferes", chofer, c.idChofer, "INTERNA", "", c.id);
-          }
+          } */
         })
-    }     
+    }
     }else if(this.tEspecial){
       this.nuevaTarifaGral.idChofer = this.idChoferEsp[0];
       this.nuevaTarifaGral.idCliente = this.idClienteEsp[0];
@@ -726,14 +727,15 @@ onGenerarNuevaTarifaAutomatica() {
       this.storageService.setInfo("consolaTarifa", this.consolaTarifa);
       if(choferes.length > 0){
         choferes.forEach((c:ConIdType<Chofer>)=>{
-          if(c.tarifaTipo.especial  && c.idChofer === String(this.idChoferEsp[0])){
+          // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+          /* if(c.tarifaTipo.especial  && c.idChofer === String(this.idChoferEsp[0])){
             c.tarifaAsignada = true;
             c.idTarifa = String(this.nuevaTarifaGral.idTarifa);
             let {id, type, ...chofer } = c
             this.storageService.updateItem("choferes", chofer, c.idChofer, "INTERNA", "", c.id);
-          }
+          } */
         })
-      }      
+      }
     }
     //   
   }
@@ -875,13 +877,14 @@ onGenerarNuevaTarifaAutomatica() {
     
         if(choferes.length > 0){
           choferes.forEach((c:Chofer)=>{
-              if(c.tarifaTipo.general && c.contratacion.tipo === 'directo'){
+              // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+              /* if(c.tarifaTipo.general && c.contratacion.tipo === 'directo'){
                 c.tarifaAsignada = true;
                 c.idTarifa = String(this.ultTarifaGralChofer.idTarifa);
                 //this.storageService.updateItem("choferes", c, c.idChofer, "INTERNA", "");
-              }
+              } */
             })
-        }      
+        }
     
     
   }
@@ -892,13 +895,14 @@ onGenerarNuevaTarifaAutomatica() {
         
         if(choferes.length > 0 ){
           choferes.forEach((c:Chofer)=>{
-              if(c.tarifaTipo.especial  && c.idChofer === String(this.idChoferEsp[0]) && this.ultTarifaEspecial){
+              // TODO: eliminar en frente Tarifas — módulo completo a reescribir
+              /* if(c.tarifaTipo.especial  && c.idChofer === String(this.idChoferEsp[0]) && this.ultTarifaEspecial){
                 c.tarifaAsignada = true;
                 c.idTarifa = String(this.ultTarifaEspecial.idTarifa);
                 //this.storageService.updateItem("choferes", c, c.idChofer, "INTERNA", "");
-              }
+              } */
             })
-        }      
+        }
 
   }
 

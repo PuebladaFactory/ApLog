@@ -1,5 +1,5 @@
 import { Direccion } from "./chofer";
-import { TarifaTipo } from "./tarifa-gral-cliente";
+import { RefTarifaHabilitada } from "./tarifa-habilitada";
 
 export interface Cliente {
     idCliente: string;
@@ -9,8 +9,10 @@ export interface Cliente {
     direccionOperativa: Direccion;
     condFiscal: string;
     contactos: Contacto[];
-    tarifaTipo: TarifaTipo;
+    tarifasHabilitadas: RefTarifaHabilitada[];
+    // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
     tarifaAsignada: boolean;
+    // TODO: refactor Tarifas — reemplazar por RefTarifaHabilitada
     idTarifa: string;
     // TODO: migrar lógica de vendedores cuando se refactorice ese módulo
     vendedor: string[];

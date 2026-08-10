@@ -70,24 +70,24 @@
                     <div class="w-100">
                       <div class="form-check form-switch ms-2 me-4">
                         <input formControlName="general" class="form-check-input" type="checkbox"
-                          (change)="onTarifaTipoChange('general')" id="tarifaGeneral" checked>
+                          (change)="onOtraTarifaChange()" id="tarifaGeneral">
                           <label class="form-check-label" for="tarifaGeneral">General</label>
                         </div>
                         <div class="form-check form-switch ms-2 me-4">
                           <input formControlName="especial" class="form-check-input" type="checkbox"
-                            (change)="onTarifaTipoChange('especial')" id="tarifaEspecial">
+                            (change)="onOtraTarifaChange()" id="tarifaEspecial">
                             <label class="form-check-label" for="tarifaEspecial">Especial</label>
                           </div>
                         </div>
                         <div class="w-100">
                           <div class="form-check form-switch me-4">
                             <input formControlName="eventual" class="form-check-input" type="checkbox"
-                              (change)="onTarifaTipoChange('eventual')" id="tarifaEventual">
+                              (change)="onEventualChange($any($event.target).checked)" id="tarifaEventual">
                               <label class="form-check-label" for="tarifaEventual">Eventual</label>
                             </div>
                             <div class="form-check form-switch me-4">
                               <input formControlName="personalizada" class="form-check-input" type="checkbox"
-                                (change)="onTarifaTipoChange('personalizada')" id="tarifaPersonalizada" >
+                                (change)="onOtraTarifaChange()" id="tarifaPersonalizada" >
                                 <label class="form-check-label" for="tarifaPersonalizada">Personalizada</label>
                               </div>
                             </div>

@@ -105,6 +105,20 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
     this.armarTabla();
   }
 
+  private readonly ETIQUETAS_TARIFA: Record<string, string> = {
+    general: 'General',
+    especial: 'Especial',
+    personalizada: 'Personalizada',
+    eventual: 'Eventual',
+  };
+
+  private tarifaLabel(c: ConIdType<Chofer>): string {
+    if (c.contratacion.tipo === 'proveedor') return 'Tarifa Proveedor';
+    // c.contratacion.tipo === 'directo' acá: tarifasHabilitadas nunca es null (solo lo es
+    // para choferes de proveedor), el ?? [] es solo para que TS no se queje del tipo nullable.
+    return (c.tarifasHabilitadas ?? []).map(t => this.ETIQUETAS_TARIFA[t.nivel]).join(', ');
+  }
+
   armarTabla(): void {
     this.filas = this.choferesFiltrados.map(c => ({
       idChofer: c.idChofer,
@@ -115,7 +129,7 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
       email: c.datosPersonales.email,
       //contratacion: c.contratacion.tipo === 'directo' ? 'Directo' : 'Proveedor',
       proveedor: c.contratacion.tipo === 'directo' ? 'No' : this.getProveedor(c.contratacion.idProveedor),
-      tarifa: c.contratacion.tipo === 'proveedor' ? 'Tarifa Proveedor' : c.tarifaTipo.general ? 'General' : c.tarifaTipo.especial ? 'Especial' : c.tarifaTipo.eventual ? 'Eventual' : 'Error',
+      tarifa: this.tarifaLabel(c),
       activo: c.activo ? 'Activo' : 'Inactivo',
       _objeto: c,
     }));

@@ -4,6 +4,7 @@ import { Operacion } from 'src/app/interfaces/operacion';
 import { AsignacionItem } from 'src/app/interfaces/asignacion';
 import { Chofer, Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
+import { tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 import { CategoriaTarifa, TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { OperacionCreada } from 'src/app/servicios/operaciones/operacion.service';
 import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
@@ -92,7 +93,8 @@ export class OperacionesEditorComponent implements OnInit {
           idCliente,
           razonSocial: c.operacion.cliente.razonSocial,
           tipoCliente: clienteVivo
-            ? this.tipoClienteLabel(clienteVivo.tarifaTipo)
+            // TODO: refactor Tarifas — operaciones-editor con multiplicidad
+            ? this.tipoClienteLabel(tarifaTipoDesdeHabilitadas(clienteVivo.tarifasHabilitadas))
             : this.tipoClienteLabel(c.operacion.tarifaTipo),  // fallback: cliente en papelera
           creadas: [],
         };
@@ -278,17 +280,17 @@ export class OperacionesEditorComponent implements OnInit {
   // BADGE INFORMATIVO: tarifa del chofer (resuelta por ID, no congelada)
   // ===========================================================================
 
-  /** Tarifa del chofer, para exhibición. Directo: chofer.tarifaTipo. Proveedor: la hereda
-   *  (ProveedorService.getTarifaTipo). Resuelta por ID — no está en el snapshot.
-   *  TODO: refactor Tarifas — rama especial deshabilitada en cálculo; acá es solo display. */
+  /** Tarifa del chofer, para exhibición. Resuelta por ID — no está en el snapshot.
+   *  Directo o proveedor: ambos casos los resuelve ProveedorService.resolverTarifasHabilitadasChofer
+   *  (directo lee del propio chofer, proveedor hereda del proveedor vivo).
+   *  TODO: refactor Tarifas — rama especial deshabilitada en cálculo; acá es solo display.
+   *  TODO: refactor Tarifas — operaciones-editor con multiplicidad */
   getChoferTarifaTipo(op: Operacion): 'General' | 'Especial' | 'Eventual' {
     if (op.chofer.id === '') return 'General';
-    let tarifa: TarifaTipo | undefined;
-    if (op.proveedor) {
-      tarifa = this.proveedorService.getTarifaTipo(op.proveedor.id);
-    } else {
-      tarifa = this.choferService.getChoferPorId(op.chofer.id)?.tarifaTipo;
-    }
+    const choferVivo = this.choferService.getChoferPorId(op.chofer.id);
+    const tarifa = choferVivo
+      ? tarifaTipoDesdeHabilitadas(this.proveedorService.resolverTarifasHabilitadasChofer(choferVivo))
+      : undefined;
     if (tarifa?.eventual) return 'Eventual';
     if (tarifa?.especial) return 'Especial';
     return 'General';

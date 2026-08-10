@@ -2,15 +2,16 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Cliente, Contacto  } from 'src/app/interfaces/cliente';
-import { TarifaGralCliente, TarifaTipo } from 'src/app/interfaces/tarifa-gral-cliente';
+import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import Swal from 'sweetalert2';
 import { ModalContactoComponent } from '../modal-contacto/modal-contacto.component';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { DomicilioService } from 'src/app/servicios/domicilio/domicilio.service';
-import { ClienteFactoryService, ClienteFormData } from 'src/app/servicios/clientes/cliente-factory.service';
+import { ClienteFormData } from 'src/app/servicios/clientes/cliente-factory.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
+import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 
 @Component({
     selector: 'app-cliente-alta',
@@ -46,12 +47,13 @@ export class ClienteAltaComponent implements OnInit {
   $municipioSeleccionadoO:string = "";
   $localidadesO!:any;
   $localidadSeleccionadaO:string = "";
-  direccionOperativaCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};  
+  direccionOperativaCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};
   cargando: boolean = false;
+  private tarifasHabilitadasOriginal: RefTarifaHabilitada[] = [];
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private domicilioServ: DomicilioService, private clienteFactoryService: ClienteFactoryService, private clienteService: ClienteService) {
-    this.form = this.fb.group({      
-      razonSocial: ["",[Validators.required, Validators.maxLength(30)]], 
+  constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private domicilioServ: DomicilioService, private clienteService: ClienteService) {
+    this.form = this.fb.group({
+      razonSocial: ["",[Validators.required, Validators.maxLength(30)]],
       cuit: [
         "",
         [
@@ -61,19 +63,20 @@ export class ClienteAltaComponent implements OnInit {
           ValidarService.cuitValido,
         ],
       ],
-      direccionFiscal: [""],        
-      direccionOperativa: [""],        
+      direccionFiscal: [""],
+      direccionOperativa: [""],
     });
 
+    // Alta: nada tildado por defecto — el usuario elige explícitamente.
     this.formTipoTarifa = this.fb.group({
-      general: [true],  // Seleccionado por defecto
+      general: [false],
       especial: [false],
       eventual: [false],
       personalizada: [false],
-    })    
-    
+    })
 
-   
+
+
    }
 
    ngOnInit(): void {
@@ -116,6 +119,9 @@ export class ClienteAltaComponent implements OnInit {
     if (this.condFiscal === '') {
       return this.mensajesError('Debe seleccionar una condición fiscal');
     }
+    if (this.getTarifasHabilitadas().length === 0) {
+      return this.mensajesError('Debe habilitar al menos un tipo de tarifa');
+    }
     if (this.form.valid) {
       if (this.fromParent.modo !== 'edicion') {
         const cuitIngresado = Number(this.form.value.cuit.replace(/-/g, ''));
@@ -135,27 +141,64 @@ export class ClienteAltaComponent implements OnInit {
     }
   }
 
-   onTarifaTipoChange(tipoSeleccionado: string) {
-    // Resetea los demás switches a false, excepto el seleccionado
-    this.formTipoTarifa.patchValue({
-      general: tipoSeleccionado === 'general',
-      especial: tipoSeleccionado === 'especial',
-      eventual: tipoSeleccionado === 'eventual',
-      personalizada: tipoSeleccionado === 'personalizada'
-    });
+  /** Tildar 'eventual' destilda y deshabilita los otros 3 (excluyente). */
+  onEventualChange(checked: boolean): void {
+    if (checked) {
+      this.formTipoTarifa.patchValue(
+        { general: false, especial: false, personalizada: false, eventual: true },
+        { emitEvent: false },
+      );
+    }
+    this.actualizarDisabledTarifa();
   }
 
-    // Método para obtener la selección actual del formulario
-    getTarifaTipo(): TarifaTipo {
-      const formValue = this.formTipoTarifa.value;
-      const tarifaTipo: TarifaTipo = {
-        general: formValue.general,
-        especial: formValue.especial,
-        eventual: formValue.eventual,
-        personalizada: formValue.personalizada
-      };
-      return tarifaTipo;
+  /** Tildar cualquiera de los otros 3 deshabilita 'eventual' mientras haya alguno activo. */
+  onOtraTarifaChange(): void {
+    this.actualizarDisabledTarifa();
+  }
+
+  /** Aplica la regla "eventual excluyente" al estado enabled/disabled de los 4 switches,
+   *  según el valor actual del form. Reusado por onEventualChange/onOtraTarifaChange/armarForm(). */
+  private actualizarDisabledTarifa(): void {
+    const v = this.formTipoTarifa.getRawValue();
+    if (v.eventual) {
+      this.formTipoTarifa.get('general')!.disable({ emitEvent: false });
+      this.formTipoTarifa.get('especial')!.disable({ emitEvent: false });
+      this.formTipoTarifa.get('personalizada')!.disable({ emitEvent: false });
+      this.formTipoTarifa.get('eventual')!.enable({ emitEvent: false });
+    } else {
+      this.formTipoTarifa.get('general')!.enable({ emitEvent: false });
+      this.formTipoTarifa.get('especial')!.enable({ emitEvent: false });
+      this.formTipoTarifa.get('personalizada')!.enable({ emitEvent: false });
+      const algunaActiva = v.general || v.especial || v.personalizada;
+      const eventualControl = this.formTipoTarifa.get('eventual')!;
+      algunaActiva ? eventualControl.disable({ emitEvent: false }) : eventualControl.enable({ emitEvent: false });
     }
+  }
+
+  /** Arma la lista de tarifas habilitadas desde el form, preservando el idTarifa
+   *  existente (edición) para especial/personalizada si no se destildaron. */
+  getTarifasHabilitadas(): RefTarifaHabilitada[] {
+    const v = this.formTipoTarifa.getRawValue();
+    if (v.eventual) return [{ nivel: 'eventual' }];
+    const lista: RefTarifaHabilitada[] = [];
+    if (v.general) lista.push({ nivel: 'general' });
+    if (v.especial) {
+      const previa = this.tarifasHabilitadasOriginal.find(t => t.nivel === 'especial');
+      lista.push({
+        nivel: 'especial',
+        idTarifa: previa && previa.nivel === 'especial' ? previa.idTarifa : '',
+      });
+    }
+    if (v.personalizada) {
+      const previa = this.tarifasHabilitadasOriginal.find(t => t.nivel === 'personalizada');
+      lista.push({
+        nivel: 'personalizada',
+        idTarifa: previa && previa.nivel === 'personalizada' ? previa.idTarifa : '',
+      });
+    }
+    return lista;
+  }
 
     changeCondFiscal(e:any){          
       this.condFiscal = e.target.value
@@ -188,17 +231,12 @@ export class ClienteAltaComponent implements OnInit {
           municipioOperativa: this.$municipioSeleccionadoO,
           localidadOperativa: this.$localidadSeleccionadaO,
           domicilioOperativa: this.form.value.direccionOperativa,
-          tarifaTipo: this.getTarifaTipo(),
+          tarifasHabilitadas: this.getTarifasHabilitadas(),
           contactos: this.contactos,
         };
 
         if (this.fromParent.modo === 'edicion') {
-          const clienteEditado = {
-            ...this.clienteFactoryService.editarCliente(this.clienteEditar as ConIdType<Cliente>, data),
-            id: this.clienteEditar.id,
-            type: (this.clienteEditar as any).type,
-          } as ConIdType<Cliente>;
-          this.clienteService.guardarCliente(clienteEditado, 'edicion')
+          this.clienteService.editarCliente(this.clienteEditar as ConIdType<Cliente>, data)
             .then(() => {
               this.cargando = false;
               Swal.fire('Confirmado', 'Cambios guardados', 'success').then(() => {
@@ -207,10 +245,10 @@ export class ClienteAltaComponent implements OnInit {
             })
             .catch(e => {
               this.cargando = false;
-              this.mensajesError(`Error al guardar: ${e.message}`)});
+              this.mensajesError(`Error al guardar: ${e.message}`);
+            });
         } else {
-          const clienteNuevo = this.clienteFactoryService.crearCliente(data) as ConIdType<Cliente>;
-          this.clienteService.guardarCliente(clienteNuevo, 'alta')
+          this.clienteService.altaCliente(data)
             .then(() => {
               this.cargando = false;
               Swal.fire('Confirmado', 'Alta exitosa', 'success').then(() => {
@@ -218,8 +256,9 @@ export class ClienteAltaComponent implements OnInit {
               });
             })
             .catch(e => {
-              this.cargando = false; 
-              this.mensajesError(`Error al guardar: ${e.message}`)});
+              this.cargando = false;
+              this.mensajesError(`Error al guardar: ${e.message}`);
+            });
         }
       }
     });
@@ -312,12 +351,15 @@ export class ClienteAltaComponent implements OnInit {
       direccionOperativa: this.clienteEditar.direccionOperativa.domicilio,
       cuit: this.formatCuit(this.clienteEditar.cuit),
     });
+    this.tarifasHabilitadasOriginal = this.clienteEditar.tarifasHabilitadas;
+    const tipoTarifaCliente = tarifaTipoDesdeHabilitadas(this.clienteEditar.tarifasHabilitadas);
     this.formTipoTarifa.patchValue({
-        general: this.clienteEditar.tarifaTipo.general, 
-        especial: this.clienteEditar.tarifaTipo.especial,
-        eventual: this.clienteEditar.tarifaTipo.eventual,
-        personalizada: this.clienteEditar.tarifaTipo.personalizada,      
+        general: tipoTarifaCliente.general,
+        especial: tipoTarifaCliente.especial,
+        eventual: tipoTarifaCliente.eventual,
+        personalizada: tipoTarifaCliente.personalizada,
     });
+    this.actualizarDisabledTarifa();
     this.$provinciaSeleccionadaF = this.clienteEditar.direccionFiscal.provincia;
     this.$municipioSeleccionadoF = this.clienteEditar.direccionFiscal.municipio;
     this.$localidadSeleccionadaF = this.clienteEditar.direccionFiscal.localidad;

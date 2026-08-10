@@ -4,6 +4,8 @@ import { Cliente } from 'src/app/interfaces/cliente';
 import { Chofer, TarifaTipo, Vehiculo } from 'src/app/interfaces/chofer';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { ConId } from 'src/app/interfaces/conId';
+import { tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
+import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 
 export interface DatosCrearOperacion {
   cliente:     ConId<Cliente>;
@@ -18,6 +20,8 @@ export interface DatosCrearOperacion {
 @Injectable({ providedIn: 'root' })
 export class OperacionFactoryService {
 
+  constructor(private proveedorService: ProveedorService) {}
+
   /**
    * Construye el esqueleto de una operación. Nace incompleta:
    * idOperacion vacío (lo asigna Firestore al guardar), vehículo vacío,
@@ -26,7 +30,11 @@ export class OperacionFactoryService {
   crearOperacionBase(datos: DatosCrearOperacion): Operacion {
     const { cliente, chofer, vehiculo, proveedor, fecha, observacion, hojaDeRuta } = datos;
 
-    const tarifaTipo = this.resolverJerarquiaTarifa(cliente, chofer?.tarifaTipo);
+    // TODO: refactor Tarifas — operaciones-editor con multiplicidad
+    const tarifaSecundariaChofer = chofer
+      ? tarifaTipoDesdeHabilitadas(this.proveedorService.resolverTarifasHabilitadasChofer(chofer))
+      : undefined;
+    const tarifaTipo = this.resolverJerarquiaTarifa(cliente, tarifaSecundariaChofer);
 
     return {
       idOperacion:      '',
@@ -97,9 +105,9 @@ export class OperacionFactoryService {
 
   /**
    * Jerarquía de tarifas: eventual > personalizada > especial > general.
-   * `tarifaSecundaria` es la tarifa de la entidad que acompaña al cliente:
-   * para chofer directo, chofer.tarifaTipo; para chofer de proveedor, la tarifa
-   * del proveedor (resuelta por quien llama vía ProveedorService.getTarifaTipo).
+   * `tarifaSecundaria` es la tarifa de la entidad que acompaña al cliente: para chofer
+   * directo o de proveedor por igual, tarifaTipoDesdeHabilitadas(proveedorService.
+   * resolverTarifasHabilitadasChofer(chofer)) — el resolver ya distingue ambos casos.
    * undefined cuando todavía no hay chofer/proveedor resuelto (alta con pendiente).
    * Personalizada es exclusiva del cliente; no la aporta la tarifa secundaria.
    * TODO: refactor Tarifas — esta lógica migrará al sistema de tarifas unificado.
@@ -108,13 +116,15 @@ export class OperacionFactoryService {
     cliente: Cliente,
     tarifaSecundaria: TarifaTipo | undefined,
   ): TarifaTipo {
-    if (cliente.tarifaTipo?.eventual || tarifaSecundaria?.eventual) {
+    // TODO: refactor Tarifas — operaciones-editor con multiplicidad
+    const tipoCliente = tarifaTipoDesdeHabilitadas(cliente.tarifasHabilitadas);
+    if (tipoCliente.eventual || tarifaSecundaria?.eventual) {
       return { general: false, especial: false, eventual: true,  personalizada: false };
     }
-    if (cliente.tarifaTipo?.personalizada) {
+    if (tipoCliente.personalizada) {
       return { general: false, especial: false, eventual: false, personalizada: true  };
     }
-    if (cliente.tarifaTipo?.especial || tarifaSecundaria?.especial) {
+    if (tipoCliente.especial || tarifaSecundaria?.especial) {
       return { general: false, especial: true,  eventual: false, personalizada: false };
     }
     return   { general: true,  especial: false, eventual: false, personalizada: false };
@@ -122,11 +132,12 @@ export class OperacionFactoryService {
 
   /**
    * Recalcula el tarifaTipo de una op cuando se resuelve el chofer pendiente
-   * (caso proveedor). Quien llama resuelve la tarifa secundaria y la pasa ya
-   * resuelta: para chofer directo, chofer.tarifaTipo; para chofer de proveedor,
-   * ProveedorService.getTarifaTipo(idProveedor). El factory NO inyecta services.
-   * Devuelve el nuevo TarifaTipo; NO muta la op (la mutación coherente, con
-   * datosTarifaX, la hace aplicarTarifaTipo más abajo si hace falta).
+   * (caso proveedor). Quien llama resuelve la tarifa secundaria y la pasa ya resuelta,
+   * vía proveedorService.resolverTarifasHabilitadasChofer(chofer) + tarifaTipoDesdeHabilitadas
+   * (mismo resolver para chofer directo o de proveedor). Devuelve el nuevo TarifaTipo;
+   * NO muta la op (la mutación coherente, con datosTarifaX, la hace aplicarTarifaTipo
+   * más abajo si hace falta).
+   * TODO: refactor Tarifas — operaciones-editor con multiplicidad
    */
   recalcularTarifaTipo(cliente: Cliente, tarifaSecundaria: TarifaTipo | undefined): TarifaTipo {
     return this.resolverJerarquiaTarifa(cliente, tarifaSecundaria);
@@ -150,6 +161,7 @@ export class OperacionFactoryService {
    * Lo usa operaciones-editor al resolver el chofer de un proveedor (el tipo se
    * recalcula con recalcularTarifaTipo y se aplica acá). Muta la op in-place.
    * TODO: refactor Tarifas — la mutación de datosTarifaX migrará al sistema unificado.
+   * TODO: refactor Tarifas — operaciones-editor con multiplicidad
    */
   aplicarTarifaTipo(op: Operacion, tipo: TarifaTipo): void {
     op.tarifaTipo = { ...tipo };
@@ -163,6 +175,7 @@ export class OperacionFactoryService {
       : null;
   }
 
+  // TODO: refactor Tarifas — operaciones-editor con multiplicidad
   aplicarTarifaEventual(
     op: Operacion,
     activar: boolean,
