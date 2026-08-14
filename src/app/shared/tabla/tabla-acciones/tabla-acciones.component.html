@@ -3,7 +3,7 @@
     <app-btn-leer name="Vehiculos" [modulo]="modulo" accion="vehiculos" (click)="ejecutar('vehiculos')"></app-btn-leer>
   }
   @if (tieneAccion('ver')) {
-    <app-btn-leer name="DetalleColor" [modulo]="modulo" accion="ver" (click)="ejecutar('ver')"></app-btn-leer>
+    <app-btn-leer name="DetalleColor" [modulo]="modulo" accion="ver" [disabled]="estaDeshabilitada('ver')" (click)="ejecutar('ver')"></app-btn-leer>
   }
   @if (tieneAccion('editar')) {
     <app-btn-editar name="EditarColor" [modulo]="modulo" accion="editar" [disabled]="estaDeshabilitada('editar')" (click)="ejecutar('editar')"></app-btn-editar>

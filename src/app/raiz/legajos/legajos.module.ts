@@ -7,6 +7,7 @@ import { TableroLegajosComponent } from './tablero-legajos/tablero-legajos.compo
 import { ConsultaLegajosComponent } from './consulta-legajos/consulta-legajos.component';
 import { CargarDocumentosComponent } from './cargar-documentos/cargar-documentos.component';
 import { GestionCategoriasDocumentacionComponent } from './gestion-categorias-documentacion/gestion-categorias-documentacion.component';
+import { VencimientosComponent } from './vencimientos/vencimientos.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 
@@ -22,6 +23,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ConsultaLegajosComponent,
     CargarDocumentosComponent,
     GestionCategoriasDocumentacionComponent,
+    VencimientosComponent,
 
   ],
   imports: [

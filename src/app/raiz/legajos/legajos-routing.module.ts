@@ -4,14 +4,16 @@ import { ControlComponent } from './control/control.component';
 import { TableroLegajosComponent } from './tablero-legajos/tablero-legajos.component';
 import { ConsultaLegajosComponent } from './consulta-legajos/consulta-legajos.component';
 import { CargarDocumentosComponent } from './cargar-documentos/cargar-documentos.component';
+import { VencimientosComponent } from './vencimientos/vencimientos.component';
 
 const routes: Routes = [
   {path: '', component:ControlComponent,
-    children: [    
-      {path: '', redirectTo: 'tablero', pathMatch: 'full' },        
-      {path: 'tablero', component:TableroLegajosComponent},    
+    children: [
+      {path: '', redirectTo: 'tablero', pathMatch: 'full' },
+      {path: 'tablero', component:TableroLegajosComponent},
       {path: 'consulta', component:ConsultaLegajosComponent},
-      {path: 'cargarDoc', component:CargarDocumentosComponent},      
+      {path: 'cargarDoc', component:CargarDocumentosComponent},
+      {path: 'vencimientos', component:VencimientosComponent},
   ]  },
 ];
 

@@ -135,7 +135,11 @@
                                 [style.max-width.px]="col.width"
                                 [title]="fila[col.field]"
                             >
-                                {{ fila[col.field] }}
+                                @if (col.claseCelda) {
+                                    <span class="badge badge-ancho-fijo fs-5" [ngClass]="col.claseCelda(fila)">{{ fila[col.field] }}</span>
+                                } @else {
+                                    {{ fila[col.field] }}
+                                }
                             </td>
                         }
                         <td

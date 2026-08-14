@@ -30,13 +30,30 @@ export interface DocumentacionHistorial {
 }
 
 /**
+ * Documento de la colección derivada `vencimientos`, generada y reconstruida
+ * enteramente por la Cloud Function `verificarVencimientosDocumentacion`
+ * (ver functions/src/verificarVencimientosDocumentacion.ts). Solo lectura desde
+ * el cliente — nadie escribe esto salvo la función.
+ */
+export interface Vencimiento {
+  idLegajo: string;
+  idChofer: string;
+  idCategoria: string;
+  titulo: string;
+  fechaVto: string | null;
+  estado: EstadoDocumentacion; // en la práctica siempre 'vencido' | 'porVencer' — la función solo genera alertas para esos dos casos
+}
+
+/**
  * Calcula el estado de una documentación en base a su fecha de vencimiento.
  * Única fuente de verdad para este cálculo — consumida por LegajoFactoryService
- * al crear/reemplazar un documento. Candidata a reutilizarse literal en la futura
- * Cloud Function de verificación periódica de vencimientos (frente aparte, no iniciado).
+ * al crear/reemplazar un documento. DUPLICADA manualmente en
+ * functions/src/verificarVencimientosDocumentacion.ts (Cloud Function de
+ * verificación periódica) — mantener ambas copias sincronizadas ante
+ * cualquier cambio en este cálculo.
  *
  * @param fechaVto ISO yyyy-MM-dd, o null si el documento no tiene vencimiento
- * @returns 'sinVto' si fechaVto es null; si no, 'vencido' | 'porVencer' (<=30 días) | 'enFecha'
+ * @returns 'sinVto' si fechaVto es null; si no, 'vencido' | 'porVencer' (<=45 días) | 'enFecha'
  */
 export function calcularEstadoDocumentacion(fechaVto: string | null): EstadoDocumentacion {
   if (!fechaVto) {
@@ -49,7 +66,7 @@ export function calcularEstadoDocumentacion(fechaVto: string | null): EstadoDocu
 
   if (diffDias < 0) {
     return 'vencido';
-  } else if (diffDias <= 30) {
+  } else if (diffDias <= 45) {
     return 'porVencer';
   } else {
     return 'enFecha';

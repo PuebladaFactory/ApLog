@@ -31,6 +31,13 @@ import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-s
       >
         Consultar Legajos
       </div>
+      <div
+        class="tab"
+        [class.active]="selectedTab === 'tab4'"
+        (click)="selectTab('tab4')"
+      >
+        Próximos Vencimientos
+      </div>
     </div>
     <router-outlet></router-outlet>
   `,
@@ -57,6 +64,8 @@ export class ControlComponent implements OnInit {
       this.router.navigate(["legajos/cargarDoc"]);
     } else if (tab === "tab3") {
       this.router.navigate(["legajos/consulta"]);
+    } else if (tab === "tab4") {
+      this.router.navigate(["legajos/vencimientos"]);
     }
   }
 }

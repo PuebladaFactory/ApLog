@@ -1618,6 +1618,150 @@ demo. Ver `CLAUDE.md` → "Deuda conocida".
 
 ---
 
+## Verificación periódica de vencimientos — Cloud Function programada (Agosto 2026)
+
+Cierra el backend del hueco documentado al cerrar el módulo Legajos: `estado` de cada
+`Documentacion` se calculaba una sola vez, al cargar/reemplazar el documento, y nunca
+avanzaba solo por el paso del tiempo. La pantalla "Próximos vencimientos" en el
+cliente queda para un frente aparte, no construida acá (decisión explícita de alcance).
+
+**`functions/src/verificarVencimientosDocumentacion.ts` (nuevo)** — primera función
+PROGRAMADA del proyecto (Cloud Scheduler vía `onSchedule`, 2nd gen; las 5 funciones
+previas son triggers `onWrite`/`onCall`). Corre diario, 03:00
+`America/Argentina/Buenos_Aires`. Recalcula `calcularEstadoDocumentacion()` sobre
+todos los `Documentacion[]` de todos los `legajos` y reescribe (batch) solo los
+legajos cuyo estado cambió. Genera además la colección nueva `vencimientos`
+(`idLegajo`, `idChofer`, `idCategoria`, `titulo`, `fechaVto`, `estado`) —
+reconstrucción TOTAL en cada corrida (borra todo, recrea con los `'vencido'`/
+`'porVencer'` vigentes), no diff incremental: más simple a esta escala (59 legajos en
+demo) y evita alertas huérfanas de documentos que pasaron a `'enFecha'` o se
+eliminaron. Sin nombre/apellido del chofer snapshoteado en `vencimientos` — a
+diferencia del patrón de snapshot histórico de Operaciones, acá no aplica: es una
+colección derivada que se reconstruye entera todos los días, no un registro histórico;
+el nombre se resuelve en el cliente contra `ChoferService`.
+
+**`calcularEstadoDocumentacion()` DUPLICADA manualmente**, no importada — Cloud
+Functions es un proyecto TypeScript separado (build/deploy propio vía
+`functions/tsconfig.json`) que no puede importar de `src/app/`. Comentario del
+original en `interfaces/legajo.ts` corregido: ya no dice "candidata a reutilizarse
+literal", dice dónde está la copia y que hay que mantener ambas sincronizadas.
+
+**Región `southamerica-east1` para todo el codebase de funciones.** Las 5 funciones
+anteriores corrían en la región default (`us-central1`, nunca declarada). Se alineó
+todo vía `setGlobalOptions({ region: 'southamerica-east1' })` — deployado solo contra
+`demoapplog`; implica delete + recreate de las 5 funciones ya existentes ahí (esperado
+en un cambio de región de una función 2nd gen, sin ventana de riesgo real por ser
+`demo`). **Deuda nueva:** alinear también `pf-logistics`/Vantruck cuando se aborde ese
+frente — ahí el mismo delete + recreate es un corte real en producción, coordinar el
+momento. Ver `CLAUDE.md` → "Deuda conocida".
+
+**`firestore.rules`:** `vencimientos` en `moduloDe()` con módulo propio (no reusa
+`'legajos'`), `permitido()` con solo `'leer'` para los 4 roles — sin
+`crear`/`editar`/`eliminar` desde el cliente para ninguno, ni siquiera `dev`; lo único
+que escribe ahí es la Cloud Function vía Admin SDK.
+
+**Verificado contra el emulador:** `functions/test-vencimientos-scheduler.mjs` (nuevo)
+siembra legajos con `estado` desactualizado a propósito, dispara la función manualmente
+vía el endpoint HTTP que el emulador de Functions expone para scheduled functions, y
+corre dos veces seguidas para confirmar reescritura selectiva de `legajos` (solo lo que
+cambió) y reconstrucción total de `vencimientos` en ambas corridas — 8/8 aserciones.
+`functions/test-vencimientos-rules.mjs` (nuevo) confirma lectura para los 4 roles y
+escritura denegada para los 4 desde el cliente — 8/8 aserciones. Detalle completo en
+`CLAUDE.md` → "Módulo Legajos" → "Verificación periódica de vencimientos" y →
+"Cloud Functions".
+
+---
+
+## Pantalla "Próximos Vencimientos" — frente cliente (Agosto 2026)
+
+Cierra el frente de vencimientos: consume la colección `vencimientos` (backend ya
+deployado en `demo`, ver entrada anterior). Nueva 4ta pestaña en `ControlComponent` de
+Legajos (`legajos/vencimientos`), al lado de Tablero/Cargar Documentos/Consultar.
+
+**`raiz/legajos/vencimientos/` (nuevo).** Listener LOCAL al componente (abre en
+`ngOnInit` vía `DbFirestoreService.getAllStateChanges`, cierra en `ngOnDestroy`) — no un
+service con `BehaviorSubject`/`init()` global, porque `vencimientos` no la consume nadie
+más que esta pantalla. Listado plano con `TablaGenericaComponent` (Chofer, Categoría,
+Fecha de Vencimiento, Estado), ordenado vencidos primero y luego por vencer, fecha
+ascendente dentro de cada grupo. Acción "ver" abre `CarruselComponent` con las imágenes
+del documento, resuelto contra `LegajoService.getLegajoPorChofer()` ya en memoria (sin
+query nueva) — deshabilitada si el legajo o el documento puntual ya no existen (baja de
+chofer, documento reemplazado desde que se generó la alerta). Chofer no resuelto: `—`,
+mismo fallback que `TableroLegajosComponent.getChofer()`.
+
+**`interfaces/legajo.ts`:** interfaz `Vencimiento` agregada (documento de la colección
+derivada, solo lectura desde el cliente).
+
+**Dos hallazgos reales corregidos de paso, no solo el feature nuevo:**
+- `TablaAccionesComponent` nunca pasaba `[disabled]` a `app-btn-leer` en la rama
+  `'ver'` (sí lo hacía para `'editar'`/`'eliminar'`) — el guard en `ejecutar()` ya
+  bloqueaba el click igual, pero el botón nunca se veía deshabilitado visualmente.
+  Ningún consumidor existente de `'ver'` lo necesitaba hasta ahora; esta pantalla es el
+  primer caso real. Corregido con una línea (`[disabled]="estaDeshabilitada('ver')"`),
+  mismo patrón que las otras dos acciones — no afecta a los ~90 usos existentes de
+  `'ver'` (ninguno pasa `disabled`).
+- `TablaGenericaComponent` no tenía ningún mecanismo para colorear una celda
+  condicionalmente (el `<td>` solo interpolaba texto plano) — necesario para el badge
+  rojo/amarillo de la columna Estado. Extendido de forma aditiva:
+  `ColumnaTablaGenerica.claseCelda?: (fila) => string` + `[ngClass]` en el `<td>` del
+  template compartido. Retrocompatible (ningún consumidor existente lo usa, así que
+  ninguno cambia); confirmado con el desarrollador antes de tocar el componente
+  compartido, no asumido. Las clases `.rojo`/`.amarillo` viven en
+  `tabla-generica.component.scss` (tienen que estar ahí, no en
+  `vencimientos.component.scss` — encapsulación de estilos de Angular, el CSS del padre
+  no le llega al `<td>` que renderiza el hijo).
+
+Detalle completo (las 5 decisiones de diseño, uno por uno) en `CLAUDE.md` → "Módulo
+Legajos" → "Pantalla 'Próximos Vencimientos' (frente cliente)".
+
+**Verificación:** build (`npm run build:demo`) y compilación AOT limpios, sin
+warnings/errores nuevos. Sin verificación manual en navegador contra `demo` real en
+esta sesión — sin credenciales de sesión disponibles, queda para el desarrollador
+confirmar contra su propia sesión: orden correcto (vencidos primero), fallback `—` en
+fecha/chofer no resueltos, badge de color por estado, botón "ver" deshabilitado cuando
+corresponde y abriendo el carrusel con la imagen correcta cuando sí resuelve.
+
+---
+
+## Ajustes sobre Vencimientos — umbral + badge (Agosto 2026)
+
+Dos cambios chicos, independientes, sobre el frente ya cerrado de Vencimientos.
+
+**Umbral de `'porVencer'`: 30 → 45 días.** Decisión de negocio, no técnica — 30 días
+quedaba corto para cubrir turno + trámite + emisión + carga del documento nuevo.
+Aplicado en las dos copias de `calcularEstadoDocumentacion()`
+(`interfaces/legajo.ts` y `functions/src/verificarVencimientosDocumentacion.ts`),
+docstring actualizado. **Deployado a `demo`** (`firebase deploy --only
+functions:verificarVencimientosDocumentacion --project demo`) — update in-place, sin
+delete+recreate (no hubo cambio de región esta vez). Se aplica a partir de la próxima
+corrida (schedule diario); sin migración de datos, la corrida siguiente recalcula todo
+con el umbral nuevo.
+
+**Badge de Estado: de celda pintada a `<span class="badge">` de ancho fijo.** La
+primera versión (ver entrada anterior) pintaba el `<td>` completo con clases propias
+`.rojo`/`.amarillo` — visualmente pesado y de ancho variable según el texto ("Vencido"
+vs. "Por vencer"). Reemplazado por un badge Bootstrap (`text-bg-danger`/
+`text-bg-warning`, Bootstrap 5.3+) dentro de la celda, con una clase propia
+`.badge-ancho-fijo` (`min-width: 90px`) para que no cambie de tamaño entre estados.
+`ColumnaTablaGenerica.claseCelda` (mismo campo del frente anterior) ahora devuelve
+clases Bootstrap directas en vez de clases CSS propias del proyecto — su comentario en
+`interfaces/tabla-generica.ts` actualizado para reflejarlo. Único consumidor real
+verificado antes de tocar el `.scss` compartido: Vencimientos — ningún otro listado
+(Choferes/Clientes/Proveedores/Usuarios) usa `claseCelda`, así que ninguno cambió de
+aspecto. Nota agregada en `CLAUDE.md` (no deuda, nada roto): candidato a reutilizarse
+cuando las tablas de Finanzas migren a `TablaGenericaComponent`, sin generalizar el
+mecanismo de antemano para ese caso — su necesidad real todavía no está relevada.
+
+Detalle completo en `CLAUDE.md` → "Módulo Legajos" → "Verificación periódica de
+vencimientos" (umbral) y → "Pantalla 'Próximos Vencimientos'" (badge).
+
+**Verificación:** build + lint de `functions/` limpios, deploy real confirmado exitoso
+(update in-place). Build de Angular (`npm run build:demo`) limpio, sin warnings/errores
+nuevos. Visual en `demo` real: pendiente de confirmación del desarrollador (mismo
+motivo que la entrada anterior — sin credenciales de sesión disponibles en esta sesión).
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)

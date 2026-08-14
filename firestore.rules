@@ -21,6 +21,7 @@ service cloud.firestore {
         'legajos': 'legajos',
         'categoriasDocumentacion': 'legajos',
         'documentacionHistorial': 'legajos',
+        'vencimientos': 'vencimientos',
         'vendedores': 'vendedores',
 
         'operaciones': 'operaciones',
@@ -86,6 +87,9 @@ service cloud.firestore {
           r in ['dev','admin'] ||
           (r == 'user' && accion in ['leer','crear','editar']) ||
           (r == 'demo' && accion == 'leer')
+        )) ||
+        (modulo == 'vencimientos' && (
+          accion == 'leer' && r in ['dev','admin','user','demo']
         )) ||
         (modulo == 'vendedores' && (
           r in ['dev','admin'] || (r == 'demo' && accion == 'leer')

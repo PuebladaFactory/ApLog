@@ -6,7 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Aplicación web de administración para empresa de logística (Vantruck). Angular 20 SPA con Firebase (Firestore + Auth + Hosting). En producción activa — se agregan funcionalidades, se mejoran las existentes y se corrigen errores.
 
-**Firebase plan gratuito: no hay Cloud Functions disponibles. Toda la lógica de negocio corre en el cliente.**
+**Firebase plan Blaze (pay-as-you-go). Cloud Functions disponibles y en uso** (gestión de
+usuarios, sync de roles, verificación programada de vencimientos — ver "Cloud Functions"
+más abajo). La migración desde el plan gratuito también habilitó Firebase Storage (ver
+"Módulo Legajos"). La lógica de negocio de dominio (Operaciones, Liquidaciones, Tarifas,
+etc.) sigue corriendo mayormente en el cliente por continuidad arquitectónica del proyecto,
+no por limitación de la plataforma.
 
 ## Stack técnico
 
@@ -291,6 +296,25 @@ proyecto vía `--project`).
 - `syncRoleClaim`: ver "Autenticación y roles".
 - `crearUsuario`/`editarUsuario`/`editarEmailUsuario`/`eliminarUsuario`:
   ver "Autenticación y roles".
+- `verificarVencimientosDocumentacion`: ver "Módulo Legajos — reconstrucción
+  completa" → "Verificación periódica de vencimientos (Cloud Scheduler)".
+  Primera función PROGRAMADA del proyecto (Cloud Scheduler vía `onSchedule`,
+  las anteriores son triggers `onWrite`/`onCall`) — puede ser la primera vez
+  que el proyecto usa Cloud Scheduler; si el deploy o la consola piden
+  habilitar esa API o definir una ubicación, es esperable, seguir el prompt.
+
+**Región `southamerica-east1`.** Las 5 funciones anteriores (`syncRoleClaim`
++ las 4 de `gestionUsuarios`) corrían en la región default (`us-central1`,
+implícita, nunca declarada). Al agregar `verificarVencimientosDocumentacion`
+se alineó TODO el codebase a `southamerica-east1` vía
+`setGlobalOptions({ region: 'southamerica-east1' })` — decisión explícita,
+`demo` es un proyecto sin riesgo de corte real. Un cambio de región en una
+función 2nd gen ya deployada implica delete + recreate (no hay move
+in-place); la CLI lo marca explícitamente al correr
+`firebase deploy --only functions --project demo` — es esperable, confirmar
+el prompt. **Deuda:** alinear también `pf-logistics`/Vantruck cuando ese
+frente se aborde — ahí sí es un corte real en producción, coordinar el
+momento. Ver "Deuda conocida".
 
 **Orden de deploy obligatorio** (evita ventanas de bloqueo): funciones
 primero (`firebase deploy --only functions --project <alias>`), esperar
@@ -309,7 +333,15 @@ gestión, 12 casos cubriendo la matriz de autorización completa),
 `asignaciones`: `user` puede leer/crear/eliminar, `demo` sin ningún
 acceso, `admin` de control — setea el Custom Claim directo vía Admin
 SDK, no necesita el emulador de `functions`, alcanza con
-`--only firestore,auth`).
+`--only firestore,auth`), `functions/test-vencimientos-scheduler.mjs`
+(siembra legajos con estado desactualizado, dispara
+`verificarVencimientosDocumentacion` manualmente vía el endpoint HTTP que
+el emulador de Functions expone para scheduled functions —
+`POST /{project}/{region}/{nombre}-0`, sufijo asignado por el emulador —
+corre dos veces seguidas para confirmar que `legajos` solo se reescribe
+cuando cambia y que `vencimientos` se reconstruye entera en cada corrida),
+`functions/test-vencimientos-rules.mjs` (lectura para los 4 roles, sin
+escritura desde el cliente para ninguno).
 
 ### Security Rules (`firestore.rules`)
 
@@ -374,7 +406,9 @@ Categorías especiales:
 - Respuestas concretas, sin relleno.
 - Si algo es ambiguo, preguntar antes de asumir.
 - No refactorizar funcionalidades existentes salvo que se indique explícitamente.
-- Tener en cuenta la limitación de Firebase sin Cloud Functions al proponer soluciones.
+- Cloud Functions están disponibles (plan Blaze) — evaluar caso por caso si una solución
+  nueva conviene en el cliente o en una Cloud Function, sin asumir la vieja limitación del
+  plan gratuito.
 
 ## Contexto adicional
 
@@ -1324,9 +1358,139 @@ crear/reemplazar un documento — nunca recalculado en el cliente al leer. Elimi
 patrón previo del módulo viejo (recálculo síncrono en cada carga de pantalla, e incluso
 en cada apertura de la app entera vía `HomeComponent`). El mantenimiento periódico de
 vencimientos (detectar que un documento pasó de "por vencer" a "vencido" sin que nadie
-lo haya vuelto a cargar) queda diferido a una futura Cloud Function con Cloud Scheduler
-— frente aparte, NO iniciado; `calcularEstadoDocumentacion()` ya está lista para
-reutilizarse ahí literal.
+lo haya vuelto a cargar) lo resuelve la Cloud Function `verificarVencimientosDocumentacion`
+— ver más abajo.
+
+### Verificación periódica de vencimientos (Cloud Scheduler)
+
+`functions/src/verificarVencimientosDocumentacion.ts` — primera función PROGRAMADA
+del proyecto (`onSchedule`, 2nd gen; ver "Cloud Functions" más arriba para el detalle
+de región/deploy). Corre diario a las 03:00 `America/Argentina/Buenos_Aires`. Cierra
+el hueco documentado arriba: sin esto, `estado` quedaba congelado en lo que era al
+momento de cargar/reemplazar el documento, y nunca avanzaba solo por el paso del
+tiempo (un documento "por vencer" nunca pasaba a "vencido" salvo que alguien
+reabriera y volviera a guardar ese legajo).
+
+- **Umbral de `'porVencer'`: 45 días** (antes 30, ajustado en Agosto 2026). Decisión de
+  negocio explícita, no un default técnico — 30 días quedaba corto para cubrir el ciclo
+  real de renovación de un documento (sacar turno + trámite + emisión + cargarlo de
+  nuevo en el legajo); 45 confirmado con el desarrollador. Vive en un solo lugar por
+  copia (el `if diffDias <= 45` de cada una de las dos copias de
+  `calcularEstadoDocumentacion()`) — sin tabla de configuración ni override por
+  categoría, un solo número para todo el proyecto.
+- **`calcularEstadoDocumentacion()` DUPLICADA manualmente**, no importada. Cloud
+  Functions es un proyecto TypeScript separado (`functions/tsconfig.json`, build/deploy
+  propio) que no puede importar de `src/app/` — se copió el cálculo literal en vez de
+  armar un mecanismo de código compartido entre los dos `tsconfig` para una función
+  pura de 15 líneas. Mantener AMBAS copias sincronizadas ante cualquier cambio en este
+  cálculo (comentario espejo en las dos puntas: `interfaces/legajo.ts` y el archivo de
+  la función).
+- **Recalcula TODOS los `Documentacion[]` de TODOS los `legajos`** en cada corrida, y
+  solo reescribe (`batch.update`) los legajos cuyo estado cambió — evita escrituras
+  innecesarias en los que ya estaban al día.
+- **Colección `vencimientos`: reconstrucción TOTAL en cada corrida**, no diff
+  incremental — se borra la colección entera y se recrea con los documentos
+  `'vencido'`/`'porVencer'` vigentes al momento de esa corrida. Es una colección
+  DERIVADA (una alerta calculada, no un registro histórico) — a la escala actual
+  (59 legajos en demo) reconstruir entera es más simple que diffear, y evita alertas
+  huérfanas de documentos que pasaron a `'enFecha'` o se eliminaron. Schema:
+  `{ idLegajo, idChofer, idCategoria, titulo, fechaVto, estado }` — **sin nombre/apellido
+  del chofer snapshoteado**: a diferencia del patrón de snapshot histórico de
+  Operaciones (ver "Snapshot + ID para registros históricos"), acá no aplica porque es
+  una colección derivada que se reconstruye entera todos los días, no un registro
+  histórico — el nombre se resuelve en el cliente contra `ChoferService` por `idChofer`.
+- **Nota de escala:** si `legajos` + `vencimientos` combinados superan ~400-500
+  escrituras en una corrida, particionar en batches de 500 (mismo patrón que
+  `commitBatch` en `DbFirestoreService`). No aplica hoy.
+- **`firestore.rules`:** `vencimientos` mapeada en `moduloDe()` al módulo propio
+  `'vencimientos'` (no reusa `'legajos'`), con `permitido()` dando solo `'leer'` a los
+  4 roles (`dev`/`admin`/`user`/`demo`) — sin `crear`/`editar`/`eliminar` desde el
+  cliente para ninguno, nunca. Lo único que escribe ahí es esta Cloud Function vía
+  Admin SDK, que bypassea las rules igual.
+- **Pantalla "Próximos vencimientos":** ver subsección propia justo abajo — ya
+  construida, consume esta colección.
+- Verificado contra el emulador con `functions/test-vencimientos-scheduler.mjs` (ver
+  "Cloud Functions") — confirma recalculo real, reescritura selectiva de `legajos`, y
+  reconstrucción total de `vencimientos` en corridas repetidas sin cambios de datos.
+
+### Pantalla "Próximos Vencimientos" (frente cliente)
+
+`raiz/legajos/vencimientos/` — 4ta pestaña de `ControlComponent` (`legajos/vencimientos`),
+al lado de Tablero/Cargar Documentos/Consultar. Consume la colección `vencimientos` ya
+poblada por la Cloud Function de arriba. 5 decisiones de diseño acordadas antes de
+implementar:
+
+1. **Ubicación:** 4ta pestaña dentro del módulo Legajos existente, no un módulo de
+   Reportes — es una vista derivada de Legajos, no un reporte transversal.
+2. **Carga de datos: listener LOCAL al componente**, no un service con
+   `BehaviorSubject` + `init()` global (patrón del resto de las entidades —
+   Choferes/Clientes/Legajos, calentadas al arranque de toda la app vía
+   `HomeComponent`). `vencimientos` no la consume nadie más que esta pantalla, así que
+   no se justifica una entrada más en el arranque global. Abre en `ngOnInit`
+   (`DbFirestoreService.getAllStateChanges('vencimientos')`, acumula
+   added/modified/removed igual que los servicios globales), cierra en `ngOnDestroy`
+   vía `Subject` + `takeUntil` — mismo mecanismo de limpieza, alcance de vida distinto.
+3. **Presentación: `TablaGenericaComponent`** (listado plano), no la matriz custom de
+   `tablero-legajos` (esa resuelve "categoría × chofer", acá es "una alerta por fila",
+   forma totalmente distinta). Columnas: Chofer, Categoría, Fecha de Vencimiento,
+   Estado. Orden: vencidos primero, luego por vencer; dentro de cada grupo, fecha
+   ascendente — se arma en el componente (`armarFilas()`), no vía el
+   filtro/orden-por-columna nativo de `TablaGenericaComponent` (ese es interactivo y
+   por columna, no una regla de negocio fija de dos niveles).
+4. **Acción por fila "ver"** abre `CarruselComponent` con las imágenes del documento
+   puntual, resuelto contra `LegajoService.getLegajoPorChofer()` (ya en memoria desde
+   el arranque de la app — sin query nueva a Firestore) buscando por
+   `idCategoria` dentro de `documentacion[]`. Deshabilitado (`AccionTablaGenerica.disabled`)
+   si no resuelve — ver el hallazgo de wiring más abajo.
+5. **Chofer no resuelto (baja):** `—`, mismo fallback y misma expresión
+   (`` `${apellido} ${nombre}` `` vía `ChoferService.getChoferPorId()`) que ya usa
+   `TableroLegajosComponent.getChofer()` — no una convención nueva.
+
+**Hallazgo real, corregido de paso:** `TablaAccionesComponent` (el wrapper que
+`TablaGenericaComponent` usa para renderizar los botones de acción por fila) pasaba
+`[disabled]` a `app-btn-editar`/`app-btn-eliminar` pero NUNCA a `app-btn-leer` en la
+rama `'ver'` — el `@Input() disabled` de `AccionTablaGenerica` se evaluaba igual en
+`ejecutar()` (el click quedaba bloqueado en los hechos), pero el botón nunca se veía
+gris para ningún consumidor existente de la acción `'ver'` en toda la app, porque
+ninguno hasta ahora necesitaba deshabilitarla — siempre estaba disponible o no se
+ofrecía la acción directamente. Esta pantalla es el primer caso real que necesita
+`'ver'` condicionalmente deshabilitado (alerta cuyo documento fue reemplazado o el
+chofer dado de baja desde que se generó). Corregido agregando
+`[disabled]="estaDeshabilitada('ver')"` en `tabla-acciones.component.html` — una línea,
+mismo patrón exacto que ya existía para `'editar'`/`'eliminar'`, sin tocar ningún otro
+comportamiento (los ~90 usos existentes de `'ver'` nunca pasan `disabled`, así que
+`estaDeshabilitada('ver')` sigue dando `false` para todos ellos).
+
+**Badge de color en la columna Estado — extensión aditiva de `TablaGenericaComponent`,**
+confirmada antes de tocar el componente compartido (no asumida). El `<td>` de
+`tabla-generica.component.html` solo interpolaba texto plano, sin ningún mecanismo de
+estilo condicional por celda. Se evaluaron dos caminos — extender el componente
+compartido vs. degradar a texto plano sin color — y se optó por extender:
+`ColumnaTablaGenerica` gana un campo opcional `claseCelda?: (fila: any) => string`
+(interfaces/tabla-generica.ts). Aditivo y retrocompatible: ningún consumidor existente
+(Choferes/Clientes/Proveedores/Usuarios) pasa ese campo, así que ninguno cambia.
+
+Diseño ajustado una vez visto en pantalla (iteración post-implementación, Agosto 2026):
+la primera versión pintaba el `<td>` completo vía `[ngClass]`, con clases propias
+`.rojo`/`.amarillo` — visualmente pesado, y el ancho de celda variaba según el largo del
+texto ("Vencido" vs. "Por vencer"). Reemplazado por un `<span class="badge">` DENTRO de
+la celda: el `<td>` de `tabla-generica.component.html` renderiza
+`<span class="badge badge-ancho-fijo" [ngClass]="col.claseCelda(fila)">` cuando la
+columna define `claseCelda`, texto plano si no. `claseCelda` ahora devuelve clases
+Bootstrap directas (`text-bg-danger`/`text-bg-warning`, Bootstrap 5.3+) en vez de clases
+propias — sin necesidad de definirlas en ningún `.scss` del proyecto. `.badge-ancho-fijo`
+(`tabla-generica.component.scss`, `min-width: 90px`) es la única clase propia que queda:
+fija el ancho del badge para que no salte entre estados con textos de largo distinto —
+tiene que vivir en el stylesheet de `TablaGenericaComponent` (no en
+`vencimientos.component.scss`): `ViewEncapsulation` por defecto de Angular no deja que
+el CSS de un componente padre alcance el DOM interno de un hijo, y `.badge-ancho-fijo` sí
+está en el DOM que `TablaGenericaComponent` renderiza. Queda como
+precedente/mecanismo reutilizable para la próxima pantalla que necesite un badge por
+celda en `TablaGenericaComponent` — nota (no deuda, nada roto): candidato natural para
+cuando las tablas de Finanzas migren a `TablaGenericaComponent`, pero no generalizado de
+antemano para ese caso — Finanzas no consume el componente todavía y su necesidad real
+(¿un badge por celda alcanza? ¿variantes más allá de rojo/amarillo?) no está relevada;
+diseñar para eso hoy sería especulativo.
 
 ### Servicios
 
@@ -1432,6 +1596,18 @@ precargada, es el estado esperado tras el reset, no un dato faltante.
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
+
+### Deuda — alinear región de Cloud Functions en `pf-logistics`/Vantruck
+
+Al agregar `verificarVencimientosDocumentacion` (ver "Cloud Functions"), todo el
+codebase de funciones se alineó a `southamerica-east1` vía `setGlobalOptions`. Esto
+solo se deployó contra `demoapplog` (`--project demo`) hasta ahora. Cuando este mismo
+frente (o cualquier deploy de funciones) se lleve a `pf-logistics`/Vantruck, las 5
+funciones ya existentes ahí (`syncRoleClaim` + las 4 de `gestionUsuarios`, corriendo en
+la región default) también van a requerir delete + recreate para adoptar la región
+nueva — ahí sí es un corte real en producción (a diferencia de `demo`, sin ventana de
+riesgo). Coordinar el momento del deploy con el desarrollador, en una franja que no
+afecte operación real, y no asumir que puede hacerse en cualquier momento como en demo.
 
 ### Deuda — verificar bucket de Storage de `pf-logistics` antes de migrar a Vantruck
 
