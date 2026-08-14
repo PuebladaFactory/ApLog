@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// Roles transcriptos literalmente desde la categoría 'legajos' de firestore.rules
+// (función permitido(), ver CLAUDE.md → "Security Rules"):
+//   dev/admin: sin restricción (todas las acciones)
+//   user:      leer + editar (NO tiene 'crear' en Firestore)
+//   demo:      solo leer
+//
+// NOTA sobre el mapeo crear/editar -> read/write de Storage:
+// Storage no distingue 'crear' de 'editar' a nivel de objeto binario como sí lo
+// hace Firestore a nivel de documento — StorageArchivosService.subir() genera un
+// nombre único por archivo (timestamp + nombre original), así que cada subida es
+// siempre un objeto nuevo en un path nuevo, nunca un overwrite real. Se interpreta
+// "subir un archivo de documentación" como parte de 'editar' el legajo (agregar/
+// reemplazar documentación de un legajo ya existente), no como 'crear' un legajo
+// nuevo (eso sigue siendo un alta en Firestore, fuera del alcance de este archivo).
+// Por eso 'user' (leer+editar, sin crear) recibe permiso de escritura acá.
+// Señalado explícitamente para confirmar con el desarrollador — no es una
+// transcripción 1:1 automática, es la interpretación más fiel posible dado que
+// Storage no tiene un verbo 'crear' propio distinto de 'write'.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /legajos/{idChofer}/{archivo} {
+      allow read: if request.auth != null
+        && request.auth.token.role in ['dev', 'admin', 'user', 'demo'];
+      allow write: if request.auth != null
+        && request.auth.token.role in ['dev', 'admin', 'user'];
+    }
+
+    // Cualquier otra ruta no listada queda denegada por defecto (fail-safe,
+    // mismo criterio que firestore.rules).
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

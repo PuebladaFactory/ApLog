@@ -5,7 +5,7 @@ import { Chofer, ContratacionChofer, Vehiculo } from 'src/app/interfaces/chofer'
 import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
-import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
+import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ChoferFactoryService, ChoferFormData } from 'src/app/servicios/choferes/chofer-factory.service';
 
 @Injectable({ providedIn: 'root' })
@@ -22,7 +22,7 @@ export class ChoferService implements OnDestroy {
   constructor(
     private db: DbFirestoreService,
     private storageService: StorageService,
-    private legajosService: LegajosService,
+    private legajoService: LegajoService,
     private choferFactoryService: ChoferFactoryService,
   ) {}
 
@@ -139,8 +139,8 @@ export class ChoferService implements OnDestroy {
         );
       }
 
-      // 3. Crear legajo
-      this.legajosService.crearLegajo(idChofer);
+      // 3. Crear legajo vacío asociado
+      await this.legajoService.crearLegajoParaChofer(idChofer);
 
     } else {
       // 1. Actualizar chofer
@@ -211,8 +211,9 @@ export class ChoferService implements OnDestroy {
       v.asignadoA.tipo === 'chofer' && v.asignadoA.idChofer === chofer.idChofer
     );
 
-    // 2. Obtener legajo
-    const legajo = await this.legajosService.eliminarLegajo(chofer.idChofer, motivo);
+    // 2. Obtener y eliminar legajo (baja simple, sin papelera propia — se incluye
+    // en el objeto compuesto de abajo, mismo criterio que Vehiculo en esta misma cascada)
+    const legajo = await this.legajoService.eliminarLegajoDeChofer(chofer.idChofer);
 
     // 3. Construir objeto compuesto para la papelera
     const objetoPapelera = {

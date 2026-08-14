@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { Legajo } from 'src/app/interfaces/legajo';
+import { Legajo, estadoGeneralDeLegajo } from 'src/app/interfaces/legajo';
+import { ConIdType } from 'src/app/interfaces/conId';
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import Swal from 'sweetalert2';
 
@@ -24,7 +26,7 @@ try {
 })
 export class SidebarComponent implements OnInit {
 
-  $legajos!: Legajo[];
+  $legajos!: ConIdType<Legajo>[];
   alertaRoja: boolean = false;
   alertaAmarilla: boolean = false;
   $usuario!: any;
@@ -34,14 +36,15 @@ export class SidebarComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private storageService: StorageService,
+    private legajoService: LegajoService,
     public usuarioSesion: UsuarioSesionService,
   ) { }
 
   ngOnInit(): void {
-    this.storageService.getObservable<Legajo>("legajos")
+    this.legajoService.legajos$
     .pipe(takeUntil(this.destroy$))
     .subscribe(data => {
-      this.$legajos = data;     
+      this.$legajos = data;
       this.buscarAlertas();
     });
     this.$usuario = this.usuarioSesion.getUsuarioActual();
@@ -79,21 +82,13 @@ export class SidebarComponent implements OnInit {
    }
     
   buscarAlertas(){
-    ////console.log("0)sidebar");
-    
-    this.$legajos.forEach((legajo:Legajo)=>{
-      if(legajo.estadoGral.porVencer || legajo.estadoGral.vencido){
-        if(legajo.estadoGral.vencido){
-          this.alertaRoja = true;
-          ////console.log("alerta roja: ", this.alertaRoja);          
-        } else{
-          if(legajo.estadoGral.porVencer){
-            this.alertaAmarilla = true;
-            ////console.log("alerta amarilla: ", this.alertaAmarilla);
-          }          
-        }
-      }
-    })
+    this.alertaRoja = false;
+    this.alertaAmarilla = false;
+    this.$legajos.forEach((legajo: ConIdType<Legajo>) => {
+      const estado = estadoGeneralDeLegajo(legajo);
+      if (estado === 'vencido') this.alertaRoja = true;
+      else if (estado === 'porVencer') this.alertaAmarilla = true;
+    });
   }
 
   navegar(ruta:string){

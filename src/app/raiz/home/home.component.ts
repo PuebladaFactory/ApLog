@@ -1,14 +1,14 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, Subject, take, takeUntil } from 'rxjs';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { Chofer } from 'src/app/interfaces/chofer';
 import { Cliente } from 'src/app/interfaces/cliente';
-import { Legajo } from 'src/app/interfaces/legajo';
 import { NoDisponibilidadChofer } from 'src/app/interfaces/no-disponibilidad-chofer';
 import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
 import { TarifaPersonalizadaCliente } from 'src/app/interfaces/tarifa-personalizada-cliente';
 import { Vendedor } from 'src/app/interfaces/vendedor';
-import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
+import { CategoriaDocumentacionService } from 'src/app/servicios/categoria-documentacion/categoria-documentacion.service';
+import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
@@ -33,29 +33,19 @@ export class HomeComponent implements OnInit {
 
   appVersion = version;
   activo!:boolean;
-  $legajos!:Legajo[];
   tarifas$!: Observable<any>;
   private destroy$ = new Subject<void>();
-  
-  constructor(private storageService: StorageService, private legajoServ: LegajosService, private router: Router, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService) { }
+
+  constructor(private storageService: StorageService, private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private router: Router, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService) { }
 
   ngOnInit(): void {
     this.choferService.init();
     this.proveedorService.init();
     this.clienteService.init();
+    this.categoriaDocumentacionService.init();
+    this.legajoService.init();
     this.setInitialSidebarState();
     window.addEventListener('resize', this.onResize);
-    this.storageService.legajos$
-      .pipe(take(1))
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe(data => {
-        this.$legajos = data;     
-        if(this.$legajos.length > 0){
-          this.legajoServ.verificarEstadosLegajos(this.$legajos);
-        };        
-        //this.router.navigate(['admin']);
-        
-      });
       //this.storageService.listenForChanges<Cliente>("clientes");
       //this.storageService.listenForChanges<Chofer>("choferes");
       //this.storageService.listenForChanges<Chofer>("proveedores");

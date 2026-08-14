@@ -3,12 +3,13 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Proveedor } from 'src/app/interfaces/proveedor';
 import { Chofer, Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
+import { Legajo } from 'src/app/interfaces/legajo';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
-import { LegajosService } from 'src/app/servicios/legajos/legajos.service';
+import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ProveedorFactoryService, ProveedorFormData } from 'src/app/servicios/proveedores/proveedor-factory.service';
 
 @Injectable({ providedIn: 'root' })
@@ -23,7 +24,7 @@ export class ProveedorService implements OnDestroy {
     private db: DbFirestoreService,
     private storageService: StorageService,
     private choferService: ChoferService,
-    private legajosService: LegajosService,
+    private legajoService: LegajoService,
     private proveedorFactoryService: ProveedorFactoryService,
   ) {}
 
@@ -220,11 +221,12 @@ export class ProveedorService implements OnDestroy {
       c.contratacion.idProveedor === proveedor.idProveedor
     );
 
-    // 3. Obtener legajos de cada chofer
-    const legajos: any[] = [];
+    // 3. Eliminar legajo de cada chofer del proveedor (baja simple, sin papelera propia)
+    // y acumular para el objeto compuesto de papelera
+    const legajos: ConIdType<Legajo>[] = [];
     for (const chofer of choferes) {
-      const resultado = await this.db.getByField('legajos', 'idChofer', chofer.idChofer);
-      if (resultado.length > 0) legajos.push(resultado[0].data);
+      const legajo = await this.legajoService.eliminarLegajoDeChofer(chofer.idChofer);
+      if (legajo) legajos.push(legajo);
     }
 
     // 4. Construir objeto compuesto para papelera
@@ -253,9 +255,8 @@ export class ProveedorService implements OnDestroy {
       );
     }
 
-    // 7. Eliminar choferes y sus legajos
+    // 7. Eliminar choferes (legajos ya eliminados arriba)
     for (const chofer of choferes) {
-      await this.legajosService.eliminarLegajo(chofer.idChofer, motivo);
       await this.storageService.deleteItemPapeleraCompuestoAsync(
         'choferes',
         chofer.idChofer,

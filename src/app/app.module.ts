@@ -12,6 +12,7 @@ import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideFunctions, getFunctions } from '@angular/fire/functions';
+import { provideStorage, getStorage } from '@angular/fire/storage';
 
 // LOGIN
 import { AuthService } from './servicios/autentificacion/auth.service';
@@ -85,6 +86,7 @@ registerLocaleData(localeEs);
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),
     provideFunctions(() => getFunctions()),
+    provideStorage(() => getStorage()),
     AuthService,
     provideHttpClient(withInterceptorsFromDi()),
      { provide: LOCALE_ID, useValue: 'es' } // Establece el español como locale

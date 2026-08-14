@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { ChoferMigrationService } from 'src/app/servicios/migracion/chofer-migration.service';
 import { ProveedorMigrationService } from 'src/app/servicios/migracion/proveedor-migration.service';
 import { ClienteMigrationService } from 'src/app/servicios/migracion/cliente-migration.service';
+import { LegajoMigrationService } from 'src/app/servicios/migracion/legajo-migracion.service';
 
 @Component({
   selector: 'app-migracion',
@@ -27,10 +28,19 @@ export class MigracionComponent {
   estadoTarifasChoferes: string = '';
   estadoTarifasProveedores: string = '';
 
+  estadoBackupLegajos: string = '';
+  estadoCatalogoLegajos: string = '';
+  estadoMigracionLegajos: string = '';
+  estadoVerificacionLegajos: string = '';
+  private mapaCategoriasLegajos: Map<string, string> | null = null;
+  documentosSinMatchCategoria: { idLegajo: string; idChofer: string; tituloOriginal: string }[] = [];
+  documentosFechaRequiereRevision: { idLegajo: string; idChofer: string; titulo: string; fechaVtoOriginal: any }[] = [];
+
   constructor(
     private choferMigration: ChoferMigrationService,
     private proveedorMigration: ProveedorMigrationService,
     private clienteMigration: ClienteMigrationService,
+    private legajoMigration: LegajoMigrationService,
   ) {}
 
   async migrarProveedores(): Promise<void> {
@@ -188,6 +198,76 @@ export class MigracionComponent {
     } catch (e: any) {
       this.estadoVerificacionCuits = `Error: ${e.message}`;
       console.error('Error en verificación de CUITs:', e);
+    } finally {
+      this.ejecutando = false;
+    }
+  }
+
+  async backupLegajos(): Promise<void> {
+    this.ejecutando = true;
+    this.estadoBackupLegajos = 'Generando backup de legajos...';
+    try {
+      await this.legajoMigration.backupLegajos();
+      this.estadoBackupLegajos = 'Backup completado. Revisá la consola para el detalle.';
+    } catch (e: any) {
+      this.estadoBackupLegajos = `Error: ${e.message}`;
+      console.error('Error en backup de legajos:', e);
+    } finally {
+      this.ejecutando = false;
+    }
+  }
+
+  async crearCatalogoCategoriasLegajos(): Promise<void> {
+    this.ejecutando = true;
+    this.estadoCatalogoLegajos = 'Creando catálogo de categorías de documentación...';
+    try {
+      this.mapaCategoriasLegajos = await this.legajoMigration.crearCatalogoCategorias();
+      this.estadoCatalogoLegajos = `Catálogo listo (${this.mapaCategoriasLegajos.size} categorías). Revisá la consola para el detalle.`;
+    } catch (e: any) {
+      this.estadoCatalogoLegajos = `Error: ${e.message}`;
+      console.error('Error creando catálogo de categorías:', e);
+    } finally {
+      this.ejecutando = false;
+    }
+  }
+
+  async migrarLegajosDocumentacion(): Promise<void> {
+    if (!this.mapaCategoriasLegajos) {
+      this.estadoMigracionLegajos = 'Primero hay que crear el catálogo de categorías (paso anterior).';
+      return;
+    }
+    this.ejecutando = true;
+    this.estadoMigracionLegajos = 'Migrando documentación de legajos...';
+    this.documentosSinMatchCategoria = [];
+    this.documentosFechaRequiereRevision = [];
+    try {
+      const resultado = await this.legajoMigration.migrarLegajos(this.mapaCategoriasLegajos);
+      this.documentosSinMatchCategoria = resultado.documentosSinMatchCategoria;
+      this.documentosFechaRequiereRevision = resultado.documentosFechaRequiereRevision;
+      this.estadoMigracionLegajos =
+        `Migración completada: ${resultado.legajosMigrados}/${resultado.totalLegajos} legajos. ` +
+        (resultado.documentosSinMatchCategoria.length > 0 || resultado.documentosFechaRequiereRevision.length > 0
+          ? 'Hay casos que requieren revisión manual — ver el detalle abajo.'
+          : 'Sin casos pendientes de revisión.');
+    } catch (e: any) {
+      this.estadoMigracionLegajos = `Error: ${e.message}`;
+      console.error('Error en migración de legajos:', e);
+    } finally {
+      this.ejecutando = false;
+    }
+  }
+
+  async verificarCantidadLegajos(): Promise<void> {
+    this.ejecutando = true;
+    this.estadoVerificacionLegajos = 'Verificando cantidad de documentos...';
+    try {
+      const resultado = await this.legajoMigration.verificarCantidad();
+      this.estadoVerificacionLegajos = resultado.coinciden
+        ? `✅ Coinciden: backup ${resultado.antes} = legajos actual ${resultado.despues}.`
+        : `⚠️ NO coinciden: backup ${resultado.antes} vs. legajos actual ${resultado.despues}.`;
+    } catch (e: any) {
+      this.estadoVerificacionLegajos = `Error: ${e.message}`;
+      console.error('Error en verificación de cantidad de legajos:', e);
     } finally {
       this.ejecutando = false;
     }

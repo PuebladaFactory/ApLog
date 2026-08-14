@@ -7,6 +7,7 @@ import { ConId } from "src/app/interfaces/conId";
 import { Proveedor } from "src/app/interfaces/proveedor";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
 import { StorageService } from "src/app/servicios/storage/storage.service";
+import { LegajoService } from "src/app/servicios/legajos/legajo.service";
 import Swal from "sweetalert2";
 
 @Component({
@@ -28,6 +29,7 @@ export class VisibilidadListadosComponent implements OnInit, OnDestroy {
     public activeModal: NgbActiveModal,
     private storageService: StorageService,
     private choferService: ChoferService,
+    private legajoService: LegajoService,
   ) {}
 
   ngOnInit(): void {
@@ -141,7 +143,7 @@ export class VisibilidadListadosComponent implements OnInit, OnDestroy {
         break;
       }
       case "legajos": {
-        this.updateItem(obj, this.info.tipo, obj.idLegajo);
+        this.legajoService.toggleVisibilidad(obj.idLegajo);
         break;
       }
       case "clientes": {

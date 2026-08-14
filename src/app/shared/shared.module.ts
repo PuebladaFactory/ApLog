@@ -57,6 +57,8 @@ import { CalcularPorcentajeV2Pipe } from './pipes/calcular-porcentaje-v2.pipe';
 import { FiltroPeriodoComponent } from './filtro-periodo/filtro-periodo.component';
 import { TablaAccionesComponent } from './tabla/tabla-acciones/tabla-acciones.component';
 import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.component';
+import { IconoArchivoPipe } from './pipes/icono-archivo.pipe';
+import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
 
 
 
@@ -105,7 +107,9 @@ import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.co
     CalcularPorcentajeV2Pipe,
     FiltroPeriodoComponent,
     TablaAccionesComponent,
-    TablaGenericaComponent
+    TablaGenericaComponent,
+    IconoArchivoPipe,
+    AcortarNombreArchivoPipe,
 
   ],
   imports: [
@@ -129,8 +133,9 @@ import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.co
     ConsolaTarifaComponent,
     TableroCalendarioComponent,
     HistorialTarifasGralComponent, 
-    TarifasEventualesComponent, 
+    TarifasEventualesComponent,
     CarruselComponent,
+    SafeUrlPipe,
     CuitFormatDirective,
     SoloNumerosDirective,
     FormatearValorPipe,
@@ -162,7 +167,9 @@ import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.co
     CalcularPorcentajeV2Pipe,
     FiltroPeriodoComponent,
     TablaAccionesComponent,
-    TablaGenericaComponent
+    TablaGenericaComponent,
+    IconoArchivoPipe,
+    AcortarNombreArchivoPipe,
   ]
 })
 export class SharedModule { }

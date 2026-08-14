@@ -131,4 +131,66 @@
       </div>
     </div>
   </div>
+
+  <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+    <h4>Migración Legajos (modelo nuevo de Documentación)</h4>
+
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="backupLegajos()"
+        [disabled]="ejecutando"
+        class="btn btn-danger me-2">
+        1. Backup de Legajos
+      </button>
+      <p *ngIf="estadoBackupLegajos" style="margin-top: 0.5rem;">{{ estadoBackupLegajos }}</p>
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="crearCatalogoCategoriasLegajos()"
+        [disabled]="ejecutando"
+        class="btn btn-warning me-2">
+        2. Crear catálogo de categorías
+      </button>
+      <p *ngIf="estadoCatalogoLegajos" style="margin-top: 0.5rem;">{{ estadoCatalogoLegajos }}</p>
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="migrarLegajosDocumentacion()"
+        [disabled]="ejecutando"
+        class="btn btn-warning me-2">
+        3. Migrar documentación de Legajos
+      </button>
+      <p *ngIf="estadoMigracionLegajos" style="margin-top: 0.5rem;">{{ estadoMigracionLegajos }}</p>
+
+      <div *ngIf="documentosSinMatchCategoria.length > 0" style="margin-top: 0.5rem;">
+        <p><strong>⚠️ Documentos sin match de categoría ({{ documentosSinMatchCategoria.length }}) — quedaron fuera de la migración, revisar a mano:</strong></p>
+        <ul>
+          <li *ngFor="let d of documentosSinMatchCategoria">
+            legajo {{ d.idLegajo }} (chofer {{ d.idChofer }}) — título original: "{{ d.tituloOriginal }}"
+          </li>
+        </ul>
+      </div>
+
+      <div *ngIf="documentosFechaRequiereRevision.length > 0" style="margin-top: 0.5rem;">
+        <p><strong>⚠️ Documentos con fecha irreconocible ({{ documentosFechaRequiereRevision.length }}) — migrados con fechaVto: null / estado: 'sinVto', revisar a mano:</strong></p>
+        <ul>
+          <li *ngFor="let d of documentosFechaRequiereRevision">
+            legajo {{ d.idLegajo }} (chofer {{ d.idChofer }}) — {{ d.titulo }} — valor original: "{{ d.fechaVtoOriginal }}"
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="verificarCantidadLegajos()"
+        [disabled]="ejecutando"
+        class="btn btn-info me-2">
+        4. Verificar cantidad (backup vs. actual)
+      </button>
+      <p *ngIf="estadoVerificacionLegajos" style="margin-top: 0.5rem;">{{ estadoVerificacionLegajos }}</p>
+    </div>
+  </div>
 </div>

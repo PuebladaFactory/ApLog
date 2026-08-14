@@ -1288,9 +1288,165 @@ transcripción (sin `ModuloPermiso` que la consuma todavía) — confirma que es
 una vez cerrado, sigue sirviendo como referencia para detectar y corregir esta clase de
 divergencia cliente/servidor.
 
+## Módulo Legajos — reconstrucción completa (Agosto 2026)
+
+Frente de reconstrucción completa (no migración incremental): `interfaces/legajo.ts`
+reescrita desde cero (Bloque 1) y los 3 componentes del módulo (`tablero-legajos`,
+`cargar-documentos`, `consulta-legajos`) reescritos uno por uno a medida que sus
+dependencias quedaban listas (Bloques 7, 9, 10), quedando rotos deliberadamente en el
+medio — excepción explícita al principio de "cada bloque compila", confirmada al
+arrancar el frente.
+
+### Modelo de datos
+
+`EstadoDocumentacion` como union type (`'enFecha' | 'porVencer' | 'vencido' | 'sinVto'`)
+— reemplaza los 4 booleanos independientes del modelo viejo (`Estado`), que permitían
+combinaciones inconsistentes (ej. `vencido` y `enFecha` ambos `true`).
+`CategoriaDocumentacion` es un catálogo editable por el usuario (colección
+`categoriasDocumentacion`, no una unión cerrada de strings), gestionado desde
+`GestionCategoriasDocumentacionComponent` — un modal accesible ÚNICAMENTE desde
+`tablero-legajos` (botón "Gestionar Categorías"), por diseño. `Documentacion` tiene
+`idCategoria` (referencia real al catálogo) + `titulo` (snapshot del nombre, congelado al
+momento de carga — mismo patrón que `RefCliente`/`RefChofer` en Operaciones: el nombre
+mostrado en un documento ya cargado no cambia si la categoría se renombra después).
+`Legajo` NO persiste `estadoGral` — se deriva en exhibición vía la función pura
+`estadoGeneralDeLegajo()` (`interfaces/legajo.ts`), nunca se guarda en Firestore.
+`DocumentacionHistorial` es una colección nueva: historial granular por documento
+(Opción B del diseño) — al reemplazar un documento, la versión vieja completa se archiva
+ahí ANTES de sobreescribir. Las imágenes de versiones históricas NO se borran de
+Storage (quedan accesibles desde el historial en `consulta-legajos`).
+
+### Cálculo de estado
+
+`calcularEstadoDocumentacion()` (`interfaces/legajo.ts`) es la única fuente de verdad,
+consumida por `LegajoFactoryService.crearDocumentacion()`. Se calcula UNA sola vez, al
+crear/reemplazar un documento — nunca recalculado en el cliente al leer. Elimina el
+patrón previo del módulo viejo (recálculo síncrono en cada carga de pantalla, e incluso
+en cada apertura de la app entera vía `HomeComponent`). El mantenimiento periódico de
+vencimientos (detectar que un documento pasó de "por vencer" a "vencido" sin que nadie
+lo haya vuelto a cargar) queda diferido a una futura Cloud Function con Cloud Scheduler
+— frente aparte, NO iniciado; `calcularEstadoDocumentacion()` ya está lista para
+reutilizarse ahí literal.
+
+### Servicios
+
+`CategoriaDocumentacionService`, `LegajoService`, `LegajoFactoryService`
+(`servicios/legajos/` y `servicios/categoria-documentacion/`) siguen el patrón estándar
+ya establecido en el proyecto: `BehaviorSubject` + `init()` (llamado desde
+`HomeComponent`) + getters síncronos (`getLegajoPorChofer`, `getCategoriasActivas`,
+etc.). `StorageArchivosService` (`servicios/storage-archivos/`) es GENÉRICO a propósito
+— sin ningún conocimiento de Legajos, pensado para reutilizarse cuando Facturación/
+Finanzas necesiten subir comprobantes.
+
+### Atomicidad Storage + Firestore
+
+Sin batch cruzado posible entre Firebase Storage y Firestore (limitación de la
+plataforma, no del proyecto). `LegajoService.guardarDocumentacion` usa una secuencia
+fija: Storage primero (subida de todos los archivos pendientes), Firestore después (con
+el archivado a `documentacionHistorial` incluido). Si la subida a Storage falla en
+cualquier punto, no se escribe nada en Firestore y el buffer local del componente queda
+intacto para reintentar sin perder lo ya armado.
+
+### Ownership del legajo en cascadas
+
+El legajo se comporta como `Vehiculo` en las cascadas de alta/baja de Chofer/Proveedor:
+baja simple (`LegajoService.eliminarLegajoDeChofer`), SIN entrada propia de papelera —
+viaja dentro del objeto compuesto de la entidad dueña. Creación ligada al alta de chofer
+(`ChoferService.guardarChoferConVehiculos` → `LegajoService.crearLegajoParaChofer`),
+cerrando una deuda que venía desde la creación original de `ChoferService` (antes
+llamaba al `LegajosService` viejo sin `await`, escondiendo en silencio cualquier error
+de permisos — ver el primer fix de `firestore.rules` abajo, que era exactamente ese
+error).
+
+### `firestore.rules` — dos fixes durante este frente
+
+1. **Módulo `legajos`: agregado `crear` para `user`.** La cascada de alta de chofer
+   requiere `crear` en `entidades` Y en `legajos` a la vez (crea el chofer y su legajo
+   vacío en el mismo gesto) — la regla real solo se lo daba en `entidades`. `user` es el
+   rol del único empleado activo en producción, así que este bug bloqueaba en silencio
+   (por la falta de `await` mencionada arriba) la creación de legajos para altas de
+   chofer hechas por ese rol.
+2. **`moduloDe()`: `categoriasDocumentacion` y `documentacionHistorial` no estaban
+   mapeadas.** Cualquier colección sin mapeo explícito queda denegada por defecto
+   (fail-safe ya establecido del proyecto — ver "Security Rules" más arriba), lo que
+   bloqueaba incluso a `dev`/`admin`, no era un problema de rol. Agregadas al mismo
+   módulo `legajos`. Encontrado en pruebas manuales reales (error real de permisos al
+   crear una categoría desde el modal), no en el diseño original del frente.
+   **Aprendizaje a dejar explícito:** cualquier colección nueva de un frente futuro debe
+   verificarse contra `moduloDe()` explícitamente antes de darlo por cerrado — no asumir
+   que hereda el mapeo de una colección "hermana" del mismo dominio.
+
+### `storage.rules` + activación de Firebase Storage en demo
+
+Primera vez que el proyecto usa Firebase Storage en código real (antes solo Cloudinary).
+Al probar la carga de archivos real, apareció un 404 en el preflight CORS que resultó
+ser un síntoma de algo más profundo: **el bucket de Storage de `demoapplog` no existía**
+— ni con el nombre legacy (`demoapplog.appspot.com`, el que tenía `environment.ts`) ni
+con el nuevo (`demoapplog.firebasestorage.app`, el que reporta el SDK config). El plan
+Blaze habilita la posibilidad de usar Storage, pero crear el bucket por defecto es un
+paso aparte (wizard "Comenzar" en Firebase Console → Storage) que nunca se había
+completado. Activado manualmente desde la Console, región `SOUTHAMERICA-EAST1` (elegida
+para consistencia futura con la región real de `pf-logistics`/Vantruck — **confirmar esa
+consistencia real, no asumirla, antes de la migración**, ver Deuda abajo).
+
+Tres piezas necesarias para que una subida funcione, verificadas cada una por
+separado (ninguna alcanza sin las otras dos):
+1. `storageBucket` correcto en `environment.ts`/`environment.prod.ts` (el bucket real,
+   confirmado contra el SDK config, no adivinado).
+2. CORS configurado a nivel de bucket — NO es código de la app, se configra aparte
+   (normalmente `gsutil cors set`; en este entorno sin `gsutil`/`gcloud` disponibles, se
+   hizo vía el cliente Node de Cloud Storage directo).
+3. `storage.rules` (existía desde el Bloque 2, pero solo se había verificado contra el
+   emulador) desplegado realmente a demo — sin esto, el bucket ya creado y con CORS
+   igual rechazaba todo con `storage/unauthorized`.
+
+Verificado end-to-end contra el browser real (no solo el emulador, que no aplica
+políticas CORS de la misma manera que un bucket real) — login real, subida real,
+`getDownloadURL()` devolviendo una URL válida, confirmado además leyendo el documento
+resultante directo de Firestore.
+
+**Aprendizaje a dejar explícito:** activar un producto de Firebase por primera vez no es
+solo escribir el código cliente — el bucket, su CORS, y el deploy de reglas son pasos de
+infraestructura separados, cada uno con su propio punto de falla, que hay que verificar
+uno por uno. Relevante para cuando Facturación/Finanzas empiecen a usar el mismo
+`StorageArchivosService`.
+
+### Migración de datos (demo) — estado real actualizado
+
+`LegajoMigrationService` se ejecutó una vez contra demo: 59/59 legajos migrados desde el
+modelo legacy, cero casos de `documentosSinMatchCategoria`/`documentosFechaRequiereRevision`
+(detalle técnico ya registrado en el cierre del Bloque 5). Sin embargo, esa migración
+heredó una mezcla de `idChofer` legacy (numérico) y nuevo (string) entre distintos
+legajos — arrastre de una migración de IDs anterior, sin relación con este frente (ver
+"Deuda — migración a Vantruck..." más abajo). Como los datos de `demoapplog` son
+enteramente ficticios, se optó por un reset manual posterior a la migración: se vació
+`legajos` por completo y se recreó un legajo vacío por cada chofer real existente
+(script ad-hoc de un solo uso, deliberadamente FUERA de `LegajoMigrationService` — ese
+servicio sigue representando la lógica de migración real que algún día correrá contra
+Vantruck, donde datos reales existentes nunca se borrarían y recrearían vacíos).
+
+**Estado actual de `legajos` en demo: cada chofer tiene exactamente un legajo vacío**,
+listo para pruebas reales de carga de documentación — no hay documentación real
+precargada, es el estado esperado tras el reset, no un dato faltante.
+
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
+
+### Deuda — verificar bucket de Storage de `pf-logistics` antes de migrar a Vantruck
+
+El mismo gap encontrado en demo (bucket de Storage nunca creado pese a que el SDK config
+ya reporta un `storageBucket` válido) puede repetirse en `pf-logistics`/Vantruck — un
+nombre correcto en `environment.vantruck.ts` NO es evidencia de que el bucket realmente
+exista. Antes de que Legajos (o cualquier otro módulo que use `StorageArchivosService`)
+llegue a producción: confirmar que el bucket existe de verdad (no solo por el nombre en
+config), que tiene CORS configurado para los dominios reales de Vantruck, y que
+`storage.rules` está desplegado ahí — mismas tres piezas verificadas en demo, ver
+"Módulo Legajos" más arriba para el detalle completo de por qué las tres son necesarias
+por separado. Aprovechar para confirmar también que la región del bucket de demo
+(`SOUTHAMERICA-EAST1`, elegida sin una referencia real al momento de crearlo) coincide
+con la de `pf-logistics` — si no coincide, no es un bloqueante pero vale la pena
+saberlo antes de migrar.
 
 ### Deuda — integración de callers para bajaOperacion/restaurarOperacion
 
@@ -1631,3 +1787,39 @@ Lee `op.cliente.tarifaTipo`/`op.chofer.tarifaTipo` sobre `RefCliente`/`RefChofer
 (snapshots de Operación, sin ese campo desde la Fase D). Probablemente `undefined` en
 runtime hoy. Detectado en auditoría del mini-frente RefTarifaHabilitada (Agosto 2026),
 no corregido, sin relación con ese frente — revisar en sesión propia de ese componente.
+
+### Deuda — migración a Vantruck: Choferes/Vehículos/Legajos (y Proveedores/Choferes-de-proveedor/Vehículos/Legajos) deben migrarse en un mismo proceso, no por colección aislada
+
+Detectado durante el chequeo de datos del frente de refactor de Legajos (Bloque 3.5,
+Agosto 2026), al cruzar `choferes` vs `legajos` en `demoapplog`: los legajos con
+`idChofer` en esquema legacy (numérico, ej. `1737721846747`) no matchean contra los
+choferes actuales (IDs de Firestore, ej. `0Uf2a9vefe875nscHT0t`) — arrastre de una
+migración de IDs anterior, no relacionado a permisos ni al frente de Legajos en sí.
+
+**Implicancia real para la migración de datos de producción a Vantruck (pendiente, no
+iniciada):** no alcanza con migrar `choferes`, `vehiculos` y `legajos` como tres
+colecciones independientes en tres pasadas separadas — sus IDs legacy se resuelven por
+relación cruzada entre colecciones, no por transformación aislada de cada una. Mismo
+problema, en espejo, para el lado de `proveedores` → choferes de proveedor → vehículos →
+legajos.
+
+**Secuencia correcta para este bloque de migración** (a definir en detalle cuando se
+encare, pero el orden de dependencia ya es claro):
+1. Backup de las colecciones involucradas (`choferes`, `vehiculos`, `legajos`,
+   `proveedores`), como todo backup de migración del proyecto.
+2. Migrar `choferes` primero (o `proveedores`, según el lado), generando los IDs nuevos
+   de Firestore.
+3. Con los choferes/proveedores ya migrados y su mapeo id-viejo → id-nuevo disponible
+   (posiblemente trazado guardando el id nuevo en el documento de backup del id viejo,
+   o alguna tabla de mapeo auxiliar), recién ahí migrar `legajos`, resolviendo
+   `idChofer` legacy → `idChofer` nuevo por algún campo estable de cruce (CUIT es el
+   candidato natural, dado que es el identificador de negocio que no cambia entre
+   esquemas — a confirmar contra los datos reales si alcanza para un match 1:1 sin
+   ambigüedad).
+4. `vehiculos` tiene la misma dependencia (se resuelve contra el chofer/proveedor ya
+   migrado), y probablemente conviene resolverse en el mismo proceso.
+
+**No es deuda del modelo de datos de Legajos en sí** (ese frente ya resuelve el modelo
+correcto hacia adelante) — es deuda del PROCESO de migración de datos legacy de
+producción, que corre aparte y más adelante, cuando se aborde el traspaso completo a
+Vantruck. Registrado acá para que no se pierda de vista al planificar ese proceso.

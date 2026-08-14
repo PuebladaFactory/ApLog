@@ -53,9 +53,18 @@ export class PermisosService {
       editar:   { dev: true, admin: true, manager: false, user: true,  demo: false },
       eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
     },
+    // 'crear' en 'user': true — crear un legajo nunca es un gesto propio del
+    // módulo Legajos, es consecuencia obligatoria e inseparable del alta de
+    // un Chofer (misma cascada choferes→vehiculos→legajos, mismo perfil de
+    // riesgo que crear el vehículo). Fix de bug real: la matriz (y la regla
+    // real) le negaban 'crear' a 'user' pese a que ChoferService.altaChofer
+    // ya lo necesitaba — mismo perfil que el bug de 'asignaciones'/
+    // 'operaciones' (ver CLAUDE.md → "Fix post-cierre"). No hay, ni va a
+    // haber, un botón de alta de legajo suelto — no se agrega ningún
+    // ModuloPermiso/AccionPermiso nuevo por esto.
     legajos: {
       leer:     { dev: true, admin: true, manager: false, user: true,  demo: true },
-      crear:    { dev: true, admin: true, manager: false, user: false, demo: false },
+      crear:    { dev: true, admin: true, manager: false, user: true,  demo: false },
       editar:   { dev: true, admin: true, manager: false, user: true,  demo: false },
       eliminar: { dev: true, admin: true, manager: false, user: false, demo: false },
     },

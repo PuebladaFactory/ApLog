@@ -90,3 +90,68 @@ li {
     cursor: not-allowed;
     opacity:0.5;
 }
+
+// El dato de una celda de categoría nunca justifica el ancho variable que
+// heredaba del largo del nombre en el header (dd/MM/yyyy, "Sin Vto" o "-") —
+// ancho fijo uniforme para todas, dimensionado al dato más largo posible.
+.col-categoria {
+  width: 80px;
+  max-width: 80px;
+}
+
+// table-layout: fixed (ver .panel-resultados table más abajo) toma los anchos
+// de TODA la fila de headers, no solo de las columnas de categoría — sin
+// anchos propios, Chofer/Estado quedarían a la deriva del reparto automático.
+.col-chofer {
+  width: 150px !important;
+}
+
+.col-estado {
+  width: 80px;
+}
+
+// El catálogo de categorías es editable por el usuario y puede crecer sin
+// límite fijo — con ancho fijo por columna, la tabla puede necesitar scroll
+// horizontal.
+.panel-resultados {
+  overflow-x: auto;
+
+  table {
+    table-layout: fixed;
+    // Bootstrap fuerza .table { width: 100% }, que con table-layout:auto
+    // comprime las columnas de categoría para que sumen exacto el ancho del
+    // contenedor en vez de respetar el ancho fijo. width:auto NO alcanza acá
+    // (una tabla block-level con width:auto sigue llenando el contenedor,
+    // no se ajusta al contenido) — width:max-content hace que la tabla mida
+    // exactamente la suma de los anchos fijos de columnas, creciendo más
+    // allá del contenedor cuando hace falta (dispara el scroll horizontal
+    // de arriba); min-width la mantiene ocupando el contenedor completo si
+    // hay pocas categorías y la suma de anchos no lo llena.
+    width: max-content;
+    min-width: 100%;
+  }
+}
+
+th {
+  // vertical-align: top para que el borde superior del texto quede a la
+  // misma altura en toda la fila de headers, sea de 1 o 2 líneas.
+  vertical-align: top;
+}
+
+// El line-clamp va en un <span> interno, no directo en el <th>: el <th> es
+// display:table-cell por default (necesario para que el ancho fijo de la
+// columna funcione bien) — display:-webkit-box en el <th> mismo rompería eso.
+.col-categoria-texto {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// El dropdown de proveedores queda debajo del thead.sticky-top (z-index
+// 1020 por default de Bootstrap) al desplegarse — subir el z-index solo acá,
+// scopeado a este dropdown puntual, sin tocar la clase global de Bootstrap.
+.btn-group.dropup .dropdown-menu {
+  z-index: 1030;
+}

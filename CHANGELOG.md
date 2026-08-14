@@ -1525,6 +1525,99 @@ corre en demo primero).
 
 ---
 
+## MÓDULO LEGAJOS — RECONSTRUCCIÓN COMPLETA — CERRADO (Agosto 2026)
+
+Reescritura completa del módulo (no migración incremental) — decisión inicial del
+frente, confirmada explícitamente: `interfaces/legajo.ts` se reescribió desde cero
+sabiendo que iba a romper la compilación de los 3 componentes existentes y de
+`VisibilidadListadosComponent` (en su rama `case 'legajos'`), excepción deliberada al
+principio de "cada bloque compila" que rige el resto del proyecto. 11 bloques en total
+(agrupados acá):
+
+**Modelo e infraestructura (Bloques 1-6):** `interfaces/legajo.ts` reescrita
+(`EstadoDocumentacion` como union type reemplaza los 4 booleanos de `Estado`;
+`CategoriaDocumentacion` como catálogo editable, no unión cerrada; `Documentacion` con
+`idCategoria` real + `titulo` snapshot; `Legajo` sin `estadoGral` persistido —
+`estadoGeneralDeLegajo()` lo deriva en exhibición). `StorageArchivosService` nuevo
+(`servicios/storage-archivos/`, genérico, reutilizable fuera de Legajos — primer uso
+real de Firebase Storage en el proyecto). `CategoriaDocumentacionService`/
+`LegajoService`/`LegajoFactoryService` nuevos, patrón estándar BehaviorSubject +
+`init()` + getters síncronos. Pipes `iconoArchivo`/`acortarNombreArchivo`
+(`shared/pipes/`) reemplazan los métodos de renderizado de SVG/nombre-corto duplicados
+idénticos en los 2 componentes viejos.
+
+**Empalme de callers (Bloque 4) — 2 bugs reales corregidos de paso, no solo
+refactor:**
+- `ChoferService.guardarChoferConVehiculos` (alta): la llamada al `LegajosService`
+  viejo no esperaba la promesa (`this.legajosService.crearLegajo(idChofer);` sin
+  `await`) — escondía en silencio cualquier error de permisos. El nuevo
+  `LegajoService.crearLegajoParaChofer` sí se espera.
+- `ProveedorService.eliminarProveedorConVehiculos` (baja en cascada): tenía una
+  doble lectura de legajos (una lectura cruda para armar el objeto de papelera, otra
+  llamada aparte para eliminar) — unificado en una sola pasada que lee y elimina en el
+  mismo lugar.
+- `LegajosService` viejo eliminado por completo (Bloque 4.5) tras confirmar por grep
+  cero callers reales (solo quedaba su propio `.spec.ts` boilerplate).
+
+**Componentes reescritos (Bloques 7-10):** `tablero-legajos` (columnas dinámicas por
+categoría en vez de 13 títulos hardcodeados; `GestionCategoriasDocumentacionComponent`
+nuevo, modal accesible solo desde acá) → `cargar-documentos` (fix del bug de fecha:
+`event.target.value` del `<input type="date">` directo, sin pasar nunca por
+`toLocaleString()`; archivos retenidos como `File[]` crudos hasta el guardado, sin
+lectura a base64 en ningún punto del flujo de selección; secuencia Storage→Firestore
+todo-o-nada) → `consulta-legajos` (UI de historial de versiones anteriores por
+documento, nueva — `LegajoService.getHistorialDocumento`; bug de duplicado de
+`SafeUrlPipe` resuelto: existían dos clases idénticas con el mismo `name: 'safeUrl'`,
+una en `SharedModule` sin `exports` — nunca había estado realmente disponible fuera de
+`SharedModule` — y otra copiada local en `consulta-legajos.component.ts`; quedó una
+sola, exportada correctamente).
+
+**`firestore.rules` — 2 fixes durante el frente** (detalle completo en `CLAUDE.md` →
+"Módulo Legajos"): `crear` agregado para `user` en el módulo `legajos` (la cascada de
+alta de chofer necesita `crear` en `entidades` Y `legajos` a la vez); `moduloDe()`
+sin mapear `categoriasDocumentacion`/`documentacionHistorial` (colecciones nuevas del
+frente) — bloqueaba incluso a `dev`/`admin` por el fail-safe de colección-sin-mapeo,
+encontrado en pruebas manuales reales, no en el diseño.
+
+**Activación de Firebase Storage en demo — primera vez que el proyecto usa este
+producto.** El bucket de `demoapplog` no existía (ni `.appspot.com` ni
+`.firebasestorage.app`) pese a que el SDK config ya reportaba un nombre válido —
+activado manualmente vía Firebase Console (región `SOUTHAMERICA-EAST1`). Tres piezas
+verificadas por separado antes de que una subida funcionara: bucket con nombre correcto
+en `environment.ts`, CORS configurado a nivel de bucket (vía cliente Node de Cloud
+Storage, sin `gsutil`/`gcloud` disponibles en el entorno), y `storage.rules` (existía
+desde el Bloque 2, nunca desplegado) desplegado realmente a demo. Verificado end-to-end
+contra el browser real con una subida real exitosa, no solo contra el emulador.
+
+**Migración de datos:** `LegajoMigrationService` corrido una vez contra demo — 59/59
+legajos migrados desde el modelo legacy, cero casos de revisión manual. Esa migración
+heredó una mezcla de `idChofer` legacy/nuevo (deuda de una migración de IDs anterior,
+sin relación con este frente). Como los datos de demo son ficticios, se optó por un
+reset manual posterior (script ad-hoc fuera de `LegajoMigrationService`, que sigue
+representando la lógica real para Vantruck): `legajos` vaciada y recreada con un legajo
+vacío por chofer real. **Estado actual de demo: cada chofer tiene un legajo vacío**,
+listo para pruebas reales, sin documentación precargada.
+
+**3 ajustes de UI post-pruebas manuales** (encontrados después del cierre técnico de
+los 10 bloques, corregidos en un bloque de pulido aparte): select de chofer en
+`cargar-documentos` sin binding real, no se limpiaba visualmente tras guardar; columnas
+de categoría en `tablero-legajos` con ancho variable según el largo del nombre del
+header en vez de uniforme (requirió `table-layout: fixed` + `width: max-content` en la
+tabla — `width`/`max-width` fijos por sí solos no alcanzaban contra el `width: 100%`
+que fuerza `.table` de Bootstrap); dropdown de proveedores tapado por
+`thead.sticky-top` (z-index scopeado al dropdown puntual, sin tocar la clase global de
+Bootstrap).
+
+Detalle técnico completo (los 11 bloques, uno por uno) en `CLAUDE.md` → "Módulo
+Legajos — reconstrucción completa (Agosto 2026)".
+
+**Deuda registrada:** confirmar antes de migrar a Vantruck que el bucket de Storage de
+`pf-logistics` existe de verdad (no solo por el nombre en config), tiene CORS para los
+dominios reales, y `storage.rules` desplegado ahí — mismo gap que se encontró recién en
+demo. Ver `CLAUDE.md` → "Deuda conocida".
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)
@@ -1532,7 +1625,6 @@ corre en demo primero).
 - Módulo Facturación
 - Módulo Finanzas
 - Módulo Reportes
-- Módulo Legajos (revisión post-migración)
 - Módulo Ajustes
 - Tarifas (refactorización del sistema completo)
 - Restauración desde papelera (EntidadResolverService)

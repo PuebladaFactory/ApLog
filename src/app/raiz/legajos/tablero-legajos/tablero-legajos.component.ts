@@ -1,14 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, takeUntil } from 'rxjs';
-import { Chofer } from 'src/app/interfaces/chofer';
-import { Documentacion, Estado, Legajo } from 'src/app/interfaces/legajo';
-import { Proveedor } from 'src/app/interfaces/proveedor';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
-
 import { ConIdType } from 'src/app/interfaces/conId';
-import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
+import { Chofer } from 'src/app/interfaces/chofer';
+import { Proveedor } from 'src/app/interfaces/proveedor';
+import { CategoriaDocumentacion, Documentacion, Legajo, estadoGeneralDeLegajo } from 'src/app/interfaces/legajo';
+import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
+import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
+import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
+import { CategoriaDocumentacionService } from 'src/app/servicios/categoria-documentacion/categoria-documentacion.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { VisibilidadListadosComponent } from 'src/app/shared/modales/visibilidad-listados/visibilidad-listados.component';
+import { GestionCategoriasDocumentacionComponent } from 'src/app/raiz/legajos/gestion-categorias-documentacion/gestion-categorias-documentacion.component';
 
 @Component({
     selector: 'app-tablero-legajos',
@@ -16,218 +19,138 @@ import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-s
     styleUrls: ['./tablero-legajos.component.scss'],
     standalone: false
 })
-export class TableroLegajosComponent implements OnInit {
-  $choferes!: ConIdType<Chofer>[];
-  $legajos!: ConIdType<Legajo>[];
-  choferSeleccionado!:ConIdType<Chofer>[];
-  legajoSeleccionado!: ConIdType<Legajo>[];
-  legajo!: ConIdType<Legajo>;
-  titulos: string[] = [
-    'DNI',
-    'Antecedentes Penales',
-    'Licencia',
-    'LINTI',
-    'Libreta Sanitaria',
-    'ART/ACC. Personales',
-    'Cedula',
-    'Título',
-    'Seguro',
-    'VTV/RTO',
-    'RUTA',
-    'Senasa',
-    'Fotos Camioneta'
-  ];
-  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
-  searchText: string = "";
-  $proveedores!: Proveedor [];
+export class TableroLegajosComponent implements OnInit, OnDestroy {
+
+  choferes: ConIdType<Chofer>[] = [];
+  legajos: ConIdType<Legajo>[] = [];
+  proveedores: ConIdType<Proveedor>[] = [];
+  categoriasActivas: ConIdType<CategoriaDocumentacion>[] = [];
+
+  choferesFiltrados: ConIdType<Chofer>[] = [];
+  legajosFiltrados: ConIdType<Legajo>[] = [];
   filtrosProveedores = '';
-  $choferesFiltrados!: ConIdType<Chofer>[];
-  $legajosFiltrados: ConIdType<Legajo>[] = [];
-  isLoading: boolean = false;
+  searchText: string = '';
+
+  /** Expuesta al template — deriva el estado general a partir de la documentación, nunca se persiste. */
+  readonly estadoGeneralDeLegajo = estadoGeneralDeLegajo;
+
+  private destroy$ = new Subject<void>();
 
   constructor(
-    private storageService: StorageService,
+    private choferService: ChoferService,
+    private proveedorService: ProveedorService,
+    private legajoService: LegajoService,
+    private categoriaDocumentacionService: CategoriaDocumentacionService,
     private modalService: NgbModal,
     public usuarioSesion: UsuarioSesionService,
-  ){}
-  
+  ) {}
+
   ngOnInit(): void {
-    this.storageService.listenForChanges<Legajo>("legajos");
-    this.$choferes = this.storageService.loadInfo("choferes");
-    this.$choferes = this.$choferes      
-      .sort((a, b) => a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido));
-    this.$choferesFiltrados = structuredClone(this.$choferes);
-      //console.log("1)choferes especiales: ", this.$choferes);
-    this.$proveedores = this.storageService.loadInfo("proveedores");
+    this.choferService.choferes$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        this.choferes = [...data].sort((a, b) =>
+          a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido)
+        );
+        this.choferesFiltrados = this.choferes;
+        this.filtrarLegajosConChoferes();
+      });
 
-    /* this.storageService.getObservable<ConIdType<Chofer>>("choferes")
-    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-    .subscribe(data => {
-      this.$choferes = data;     
-      this.$choferes = this.$choferes      
-      .sort((a, b) => a.apellido.localeCompare(b.apellido)); // Ordena por el nombre del chofer
-      this.$choferesFiltrados = structuredClone(this.$choferes);
-      //console.log("1)choferes especiales: ", this.$choferes);      
-      
-    })      */
-    this.storageService.getObservable<ConIdType<Legajo>>("legajos")
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(data => {
-      this.$legajos = [...data]; // aseguramos nuevo array
-      console.log("this.$legajos: ", this.$legajos);
-      
-      this.filtrarLegajosConChoferes();
-      this.verificarYActualizarEstadosLegajos(); // ← Aquí se ejecuta la verificación al iniciar
-    });
-    
+    this.proveedorService.proveedores$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        this.proveedores = data;
+      });
 
-    /* this.storageService.getObservable<ConIdType<Proveedor>>("proveedores")
-    .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
-    .subscribe(data => {
-      this.$proveedores = data;      
-    });
-    console.log(this.$proveedores); */
-    
-    //this.crearLegajos()
-    //this.storageService.syncChanges("legajos");
+    this.legajoService.legajos$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        this.legajos = data;
+        this.filtrarLegajosConChoferes();
+      });
+
+    this.categoriaDocumentacionService.categorias$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.categoriasActivas = this.categoriaDocumentacionService.getCategoriasActivas();
+      });
   }
 
   ngOnDestroy(): void {
-    // Completa el Subject para cancelar todas las suscripciones
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  actualizarLegajo(idChofer: string){
-    let legajo = this.getLegajo(idChofer);
-    console.log("legajo antes", legajo);
-    legajo = {
-      ...legajo,
-      visible: true
-    }
-    console.log("legajo desp", legajo);
-    let{id,type,...leg} = legajo;
-    this.storageService.updateItem("legajos", leg, legajo.idLegajo, "INTERNA", "", legajo.id)
+  getChofer(id: string): string {
+    const chofer = this.choferService.getChoferPorId(id);
+    return chofer ? `${chofer.datosPersonales.apellido} ${chofer.datosPersonales.nombre}` : '—';
   }
 
-  getDocumento(documentacion: Documentacion[], titulo: string): Documentacion | undefined {
-    return documentacion.find((doc) => doc.titulo === titulo);
+  getProveedor(idProveedor: string): string {
+    if (!idProveedor) return '';
+    const proveedor = this.proveedorService.getProveedorPorId(idProveedor);
+    return proveedor ? proveedor.razonSocial : '—';
   }
 
-  /*  crearLegajos(){
-    this.$choferes.forEach((chofer:Chofer)=>{
-      this.legajo ={
-        id: null,
-        idLegajo:new Date().getTime(),
-        idChofer: chofer.idChofer,
-        estadoGral:{
-          enFecha: false,
-          porVencer: false,
-          vencido: false,
-          sinVto: false,
-          vacio: true,
-        },
-        documentacion:[{
-          titulo: "",
-          fechaVto: 0,
-          estado:{
-            enFecha: false,
-            porVencer: false,
-            vencido: false,
-            sinVto: false,
-            vacio: true,
-          }, 
-          imagenes: [""]
-        },          
-        ]  
-      };
-      this.storageService.addItem("legajos", this.legajo)
+  getDocumento(documentacion: Documentacion[], idCategoria: string): Documentacion | undefined {
+    return documentacion.find(doc => doc.idCategoria === idCategoria);
+  }
 
-    })
-  }  */
-  
-    getChofer(id:string):string {
-      let chofer: Chofer[] = this.$choferes.filter(c=> c.idChofer === id);
-      return chofer[0].datosPersonales.apellido + " " + chofer[0].datosPersonales.nombre;
-    }
+  filtrarChoferes(idProveedor: string, razonSocial: string): void {
+    this.choferesFiltrados = this.choferes;
 
-    getLegajo(id:string):ConIdType<Legajo> {
-      let legajo: ConIdType<Legajo>[] = this.$legajos.filter(l=> l.idChofer === id);
-      return legajo[0];
-    }
-
-    getProveedor(idProveedor: string): string {
-      if (!idProveedor || idProveedor === '0') {
-        return "";
-      } else {
-        let proveedor: Proveedor[] = this.$proveedores.filter(p => p.idProveedor === idProveedor);
-        return proveedor[0].razonSocial;
-      }
-      
-    }
-
-  filtrarChoferes(idProveedor: string, razonSocial:string) {   
-    this.$choferesFiltrados = this.$choferes;
-
-    if (idProveedor !== "") {
+    if (idProveedor !== '') {
       this.filtrosProveedores = razonSocial;
-      this.$choferesFiltrados = this.$choferesFiltrados.filter(c => c.contratacion.tipo === 'proveedor' && (c.contratacion as any).idProveedor === String(idProveedor));
+      this.choferesFiltrados = this.choferesFiltrados.filter(c =>
+        c.contratacion.tipo === 'proveedor' && c.contratacion.idProveedor === idProveedor
+      );
     } else {
-      this.filtrosProveedores = "";
+      this.filtrosProveedores = '';
     }
 
     this.filtrarLegajosConChoferes();
   }
 
+  openModalChoferes(): void {
+    const modalRef = this.modalService.open(VisibilidadListadosComponent, {
+      windowClass: 'myCustomModalClass',
+      centered: true,
+      size: 'md',
+    });
 
-    obtenerFecha(vto: any){
-    /*   if (!fechaVto || fechaVto === 0) {
-        return 'Sin vencimiento';
-      } */
-    
-      const fecha = new Date(vto);
-      return fecha.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
-    }
+    const info = {
+      tipo: 'legajos',
+      // Clon superficial: evita que el toggle optimista del modal
+      // (obj.visible = !obj.visible, ver VisibilidadListadosComponent.actualizarObjeto)
+      // mute el objeto real que LegajoService.toggleVisibilidad() vuelve a leer de
+      // memoria — sin el clon, ambos pisos se pisarían entre sí (doble flip: se
+      // terminaría persistiendo el valor original en vez del nuevo).
+      objetos: this.legajos.map(l => ({ ...l })),
+    };
 
-      openModalChoferes(): void {      
-       {
-          const modalRef = this.modalService.open(VisibilidadListadosComponent, {
-            windowClass: 'myCustomModalClass',
-            centered: true,
-            size: 'md', 
-            //backdrop:"static" 
-          });      
-  
-        let info = {
-            tipo: 'legajos',
-            objetos: this.$legajos,
-          } 
-          //console.log()(info); */
-          
-          modalRef.componentInstance.info = info;
-          modalRef.result.then(
-  
-            () => {
-              // modal cancelado → no hacemos nada
-            }
-          );
-        }
-      }
+    modalRef.componentInstance.info = info;
+    modalRef.result.then(() => {
+      // modal cancelado → no hacemos nada
+    });
+  }
 
-      
+  abrirGestionCategorias(): void {
+    const modalRef = this.modalService.open(GestionCategoriasDocumentacionComponent, {
+      windowClass: 'myCustomModalClass',
+      centered: true,
+      size: 'lg',
+    });
+    modalRef.result.then(() => {}, () => {});
+  }
 
   private filtrarLegajosConChoferes(): void {
-    const idsChoferes = this.$choferesFiltrados.map(c => c.idChofer);
+    const idsChoferes = this.choferesFiltrados.map(c => c.idChofer);
 
-    this.$legajosFiltrados = this.$legajos
+    this.legajosFiltrados = this.legajos
       .filter(l => idsChoferes.includes(l.idChofer))
       .sort((a, b) => {
-        const choferA = this.$choferes.find(c => c.idChofer === a.idChofer);
-        const choferB = this.$choferes.find(c => c.idChofer === b.idChofer);
+        const choferA = this.choferes.find(c => c.idChofer === a.idChofer);
+        const choferB = this.choferes.find(c => c.idChofer === b.idChofer);
 
         if (!choferA || !choferB) return 0;
 
@@ -237,165 +160,4 @@ export class TableroLegajosComponent implements OnInit {
         return nombreCompletoA.localeCompare(nombreCompletoB);
       });
   }
-
-  verificarInconsistenciasLegajos(): void {
-    const legajosErroneos: ConIdType<Legajo>[] = [];
-
-    for (const legajo of this.$legajos) {
-      const docs = legajo.documentacion;
-
-      const estadoCalculado: Estado = {
-        enFecha: false,
-        porVencer: false,
-        vencido: false,
-        vacio: false,
-      };
-
-      if (!docs || docs.length === 0) {
-        estadoCalculado.vacio = true;
-      } else {
-        const docsConVto = docs.filter(doc => !doc.sinVto);
-
-        const tieneVencido = docsConVto.some(doc => doc.estado.vencido);
-        const tienePorVencer = docsConVto.some(doc => doc.estado.porVencer);
-        const todosEnFecha = docsConVto.every(doc => doc.estado.enFecha);
-
-        if (tieneVencido) {
-          estadoCalculado.vencido = true;
-        } else if (tienePorVencer) {
-          estadoCalculado.porVencer = true;
-        } else if (docsConVto.length > 0 && todosEnFecha) {
-          estadoCalculado.enFecha = true;
-        }
-      }
-
-      const estadoActual = legajo.estadoGral;
-
-      const inconsistente =
-        estadoActual.enFecha !== estadoCalculado.enFecha ||
-        estadoActual.porVencer !== estadoCalculado.porVencer ||
-        estadoActual.vencido !== estadoCalculado.vencido ||
-        estadoActual.vacio !== estadoCalculado.vacio;
-
-      if (inconsistente) {
-        legajosErroneos.push(structuredClone(legajo));
-      }
-    }
-
-    console.log(`Se encontraron ${legajosErroneos.length} legajos con inconsistencias.`);
-    legajosErroneos.forEach((l, index) => {
-      const chofer = this.getChofer(l.idChofer);
-      console.log(`${index + 1}) Chofer: ${chofer} - ID Legajo: ${l.idLegajo}`, l);
-    });
-  }
-
-  mostrarLegajo(legajo:ConIdType<Legajo>){
-      console.log("legajo: ", legajo);
-      
-  }
-
-  private verificarYActualizarEstadosLegajos(): void {
-    this.isLoading = true;
-    const hoy = new Date();
-    const MILIS_DIA = 1000 * 60 * 60 * 24;
-
-    const legajosModificados: ConIdType<Legajo>[] = [];
-
-    for (let legajo of this.$legajos) {
-      let modificado = false;
-
-      // Copia de documentos para poder detectar cambios
-      const docsActualizados = legajo.documentacion.map(doc => {
-        if (!doc.sinVto && doc.fechaVto) {
-          const fechaVto = new Date(doc.fechaVto);
-          const diffDias = Math.floor((fechaVto.getTime() - hoy.getTime()) / MILIS_DIA);
-
-          const nuevoEstado: Estado = {
-            enFecha: false,
-            porVencer: false,
-            vencido: false,
-            vacio: false
-          };
-
-          if (diffDias < 0) {
-            nuevoEstado.vencido = true;
-          } else if (diffDias <= 30) {
-            nuevoEstado.porVencer = true;
-          } else {
-            nuevoEstado.enFecha = true;
-          }
-
-          // Detectar si cambió el estado del documento
-          if (
-            doc.estado.enFecha !== nuevoEstado.enFecha ||
-            doc.estado.porVencer !== nuevoEstado.porVencer ||
-            doc.estado.vencido !== nuevoEstado.vencido
-          ) {
-            modificado = true;
-            doc = { ...doc, estado: nuevoEstado };
-          }
-        }
-        return doc;
-      });
-
-      // Recalcular estadoGral
-      const estadoCalculado: Estado = {
-        enFecha: false,
-        porVencer: false,
-        vencido: false,
-        vacio: false
-      };
-
-      if (!docsActualizados || docsActualizados.length === 0) {
-        estadoCalculado.vacio = true;
-      } else {
-        const docsConVto = docsActualizados.filter(doc => !doc.sinVto);
-        const tieneVencido = docsConVto.some(doc => doc.estado.vencido);
-        const tienePorVencer = docsConVto.some(doc => doc.estado.porVencer);
-        const todosEnFecha = docsConVto.every(doc => doc.estado.enFecha);
-
-        if (tieneVencido) {
-          estadoCalculado.vencido = true;
-        } else if (tienePorVencer) {
-          estadoCalculado.porVencer = true;
-        } else if (docsConVto.length > 0 && todosEnFecha) {
-          estadoCalculado.enFecha = true;
-        }
-      }
-
-      // Si cambió el estado general
-      if (
-        legajo.estadoGral.enFecha !== estadoCalculado.enFecha ||
-        legajo.estadoGral.porVencer !== estadoCalculado.porVencer ||
-        legajo.estadoGral.vencido !== estadoCalculado.vencido ||
-        legajo.estadoGral.vacio !== estadoCalculado.vacio
-      ) {
-        modificado = true;
-      }
-
-      if (modificado) {
-        const legajoActualizado = {
-          ...legajo,
-          documentacion: docsActualizados,
-          estadoGral: estadoCalculado
-        };
-        legajosModificados.push(legajoActualizado);
-      }
-    }
-
-    // Si hay legajos modificados, actualizarlos en la base
-    if (legajosModificados.length > 0) {
-      console.log(`Se actualizarán ${legajosModificados.length} legajos.`);
-      legajosModificados.forEach(l => {
-        const { id, type, ...leg } = l;
-        this.storageService.updateItem("legajos", leg, l.idLegajo, "INTERNA", "", l.id);
-      });
-    } else {
-      console.log("No se encontraron legajos para actualizar.");
-    }
-    this.isLoading = false;
-  }
-
-
-
 }

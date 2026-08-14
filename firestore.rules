@@ -19,6 +19,8 @@ service cloud.firestore {
         'proveedores': 'entidades', 'vehiculos': 'entidades',
 
         'legajos': 'legajos',
+        'categoriasDocumentacion': 'legajos',
+        'documentacionHistorial': 'legajos',
         'vendedores': 'vendedores',
 
         'operaciones': 'operaciones',
@@ -82,7 +84,7 @@ service cloud.firestore {
         )) ||
         (modulo == 'legajos' && (
           r in ['dev','admin'] ||
-          (r == 'user' && accion in ['leer','editar']) ||
+          (r == 'user' && accion in ['leer','crear','editar']) ||
           (r == 'demo' && accion == 'leer')
         )) ||
         (modulo == 'vendedores' && (
