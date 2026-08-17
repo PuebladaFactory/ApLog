@@ -3,8 +3,9 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { ClienteFactoryService, ClienteFormData } from 'src/app/servicios/clientes/cliente-factory.service';
 
 @Injectable({ providedIn: 'root' })
@@ -18,6 +19,7 @@ export class ClienteService implements OnDestroy {
   constructor(
     private db: DbFirestoreService,
     private storageService: StorageService,
+    private logRegistro: LogRegistroService,
     private clienteFactoryService: ClienteFactoryService,
   ) {}
 
@@ -76,22 +78,19 @@ export class ClienteService implements OnDestroy {
   ): Promise<void> {
     const clienteParaGuardar = this.toFirestore(cliente);
     const nombre = cliente.razonSocial;
+    const accion = modo === 'alta' ? 'ALTA' : 'EDITAR';
+    const id = modo === 'alta' ? this.db.generarId('clientes') : cliente.idCliente;
+    const msj = modo === 'alta' ? `Alta de Cliente ${nombre}` : `Edición de Cliente ${nombre}`;
 
-    if (modo === 'alta') {
-      await this.storageService.addItemAndGetId(
-        'clientes',
-        clienteParaGuardar,
-        'ALTA',
-        `Alta de Cliente ${nombre}`,
-      );
-    } else {
-      await this.storageService.updateItemAsync(
-        'clientes',
-        clienteParaGuardar,
-        cliente.idCliente,
-        'EDITAR',
-        `Edición de Cliente ${nombre}`,
-      );
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: 'clientes', id, data: clienteParaGuardar, modo: modo === 'alta' ? 'crear' : 'reemplazar' },
+    ];
+    await this.logRegistro.agregarAlBatch(escrituras, accion, 'clientes', id, msj);
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(accion, 'clientes', id, `Error: ${e?.message ?? e}`);
+      throw e;
     }
   }
 
@@ -109,6 +108,8 @@ export class ClienteService implements OnDestroy {
     await this.guardarCliente(clienteEditado, 'edicion');
   }
 
+  // Baja compuesta con papelera: fuera del frente de Log (escribe a la colección
+  // `papelera`/LogService viejo, mecanismo propio del frente de Papelera, aparte).
   async eliminarCliente(
     cliente: ConIdType<Cliente>,
     motivo: string,

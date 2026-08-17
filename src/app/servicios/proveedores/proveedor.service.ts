@@ -6,8 +6,9 @@ import { Chofer, Vehiculo, TarifaTipo } from 'src/app/interfaces/chofer';
 import { Legajo } from 'src/app/interfaces/legajo';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ProveedorFactoryService, ProveedorFormData } from 'src/app/servicios/proveedores/proveedor-factory.service';
@@ -23,10 +24,38 @@ export class ProveedorService implements OnDestroy {
   constructor(
     private db: DbFirestoreService,
     private storageService: StorageService,
+    private logRegistro: LogRegistroService,
     private choferService: ChoferService,
     private legajoService: LegajoService,
     private proveedorFactoryService: ProveedorFactoryService,
   ) {}
+
+  // ---- Escrituras simples con log en el mismo batch (reemplaza StorageService
+  // para el CRUD directo de este módulo: proveedores y vehículos) ----
+
+  private async crearConLog(coleccion: string, data: any, msj: string): Promise<string> {
+    const id = this.db.generarId(coleccion);
+    const escrituras: EscrituraBatch[] = [{ coleccion, id, data, modo: 'crear' }];
+    await this.logRegistro.agregarAlBatch(escrituras, 'ALTA', coleccion, id, msj);
+    try {
+      await this.db.commitBatch(escrituras);
+      return id;
+    } catch (e: any) {
+      await this.logRegistro.registrarError('ALTA', coleccion, id, `Error: ${e?.message ?? e}`);
+      throw e;
+    }
+  }
+
+  private async editarConLog(coleccion: string, id: string, data: any, msj: string): Promise<void> {
+    const escrituras: EscrituraBatch[] = [{ coleccion, id, data, modo: 'reemplazar' }];
+    await this.logRegistro.agregarAlBatch(escrituras, 'EDITAR', coleccion, id, msj);
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError('EDITAR', coleccion, id, `Error: ${e?.message ?? e}`);
+      throw e;
+    }
+  }
 
   init(): void {
     this.db.getAllStateChanges<Proveedor>('proveedores')
@@ -108,18 +137,16 @@ export class ProveedorService implements OnDestroy {
     const nombre = proveedor.razonSocial;
 
     if (modo === 'alta') {
-      await this.storageService.addItemAndGetId(
+      await this.crearConLog(
         'proveedores',
         proveedorParaGuardar,
-        'ALTA',
         `Alta de Proveedor ${nombre}`,
       );
     } else {
-      await this.storageService.updateItemAsync(
+      await this.editarConLog(
         'proveedores',
-        proveedorParaGuardar,
         proveedor.idProveedor,
-        'EDITAR',
+        proveedorParaGuardar,
         `Edición de Proveedor ${nombre}`,
       );
     }
@@ -157,49 +184,79 @@ export class ProveedorService implements OnDestroy {
     const nombre = proveedor.razonSocial;
 
     if (modo === 'alta') {
-      const idProveedor = await this.storageService.addItemAndGetId(
-        'proveedores',
-        proveedorParaGuardar,
-        'ALTA',
-        `Alta de Proveedor ${nombre}`,
+      // Batch único: proveedor + vehículos, con un log por cada escritura real
+      // (granularidad de auditoría preservada, ver "Frente Log" en CLAUDE.md).
+      const escrituras: EscrituraBatch[] = [];
+
+      const idProveedor = this.db.generarId('proveedores');
+      escrituras.push({ coleccion: 'proveedores', id: idProveedor, data: proveedorParaGuardar, modo: 'crear' });
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'ALTA', 'proveedores', idProveedor, `Alta de Proveedor ${nombre}`,
       );
+
       for (const vehiculo of vehiculos) {
+        const idVehiculo = this.db.generarId('vehiculos');
         const vehiculoParaGuardar = {
           ...this.choferService.vehiculoToFirestore(vehiculo),
           asignadoA: { tipo: 'proveedor', idProveedor },
         };
-        await this.storageService.addItemAndGetId(
-          'vehiculos',
-          vehiculoParaGuardar,
-          'ALTA',
+        escrituras.push({ coleccion: 'vehiculos', id: idVehiculo, data: vehiculoParaGuardar, modo: 'crear' });
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'ALTA', 'vehiculos', idVehiculo,
           `Alta de Vehículo ${vehiculo.dominio} - Proveedor ${nombre}`,
         );
       }
+
+      try {
+        await this.db.commitBatch(escrituras);
+      } catch (e: any) {
+        await this.logRegistro.registrarError(
+          'ALTA', 'proveedores', idProveedor,
+          `Error en alta de Proveedor ${nombre} (proveedor + vehículos): ${e?.message ?? e}`,
+        );
+        throw e;
+      }
+
     } else {
-      await this.storageService.updateItemAsync(
-        'proveedores',
-        proveedorParaGuardar,
-        proveedor.idProveedor,
-        'EDITAR',
-        `Edición de Proveedor ${nombre}`,
+      // Batch único: proveedor + reconciliación de vehículos, con un log por cada
+      // escritura real. Los vehículos idénticos (mismo dominio, mismos datos) se
+      // excluyen del batch — sin escritura, sin log.
+      const escrituras: EscrituraBatch[] = [
+        { coleccion: 'proveedores', id: proveedor.idProveedor, data: proveedorParaGuardar, modo: 'reemplazar' },
+      ];
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'EDITAR', 'proveedores', proveedor.idProveedor, `Edición de Proveedor ${nombre}`,
       );
+
       const vehiculosEnFirestore = await this.db.getByField<Vehiculo>(
         'vehiculos', 'asignadoA.idProveedor', proveedor.idProveedor
       );
-      for (const v of vehiculosEnFirestore) {
-        await this.storageService.deleteItemAsync(
-          'vehiculos', v.id, v.id, 'BAJA',
-          `Vehículo eliminado - Proveedor ${nombre}`,
+      const { aEliminar, aCrear } = this.choferService.reconciliarVehiculos(vehiculosEnFirestore, vehiculos);
+
+      for (const v of aEliminar) {
+        escrituras.push({ coleccion: 'vehiculos', id: v.id, data: null, modo: 'eliminar' });
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'BAJA', 'vehiculos', v.id, `Vehículo eliminado - Proveedor ${nombre}`,
         );
       }
-      for (const vehiculo of vehiculos) {
+      for (const vehiculo of aCrear) {
+        const idVehiculo = this.db.generarId('vehiculos');
         const vehiculoParaGuardar = this.choferService.vehiculoToFirestore(vehiculo);
-        await this.storageService.addItemAndGetId(
-          'vehiculos',
-          vehiculoParaGuardar,
-          'ALTA',
+        escrituras.push({ coleccion: 'vehiculos', id: idVehiculo, data: vehiculoParaGuardar, modo: 'crear' });
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'ALTA', 'vehiculos', idVehiculo,
           `Alta de Vehículo ${vehiculo.dominio} - Proveedor ${nombre}`,
         );
+      }
+
+      try {
+        await this.db.commitBatch(escrituras);
+      } catch (e: any) {
+        await this.logRegistro.registrarError(
+          'EDITAR', 'proveedores', proveedor.idProveedor,
+          `Error al editar Proveedor ${nombre} (proveedor + vehículos): ${e?.message ?? e}`,
+        );
+        throw e;
       }
     }
   }
@@ -221,13 +278,15 @@ export class ProveedorService implements OnDestroy {
       c.contratacion.idProveedor === proveedor.idProveedor
     );
 
-    // 3. Eliminar legajo de cada chofer del proveedor (baja simple, sin papelera propia)
-    // y acumular para el objeto compuesto de papelera
-    const legajos: ConIdType<Legajo>[] = [];
+    // 3. Leer y preparar (sin escribir) la baja del legajo de cada chofer del
+    // proveedor — baja simple, sin papelera propia; se acumula para el objeto
+    // compuesto de papelera.
+    const bajasLegajo: { legajo: ConIdType<Legajo>; escritura: EscrituraBatch }[] = [];
     for (const chofer of choferes) {
-      const legajo = await this.legajoService.eliminarLegajoDeChofer(chofer.idChofer);
-      if (legajo) legajos.push(legajo);
+      const baja = await this.legajoService.prepararBajaLegajoDeChofer(chofer.idChofer);
+      if (baja) bajasLegajo.push(baja);
     }
+    const legajos = bajasLegajo.map(b => b.legajo);
 
     // 4. Construir objeto compuesto para papelera
     const objetoPapelera = {
@@ -237,7 +296,8 @@ export class ProveedorService implements OnDestroy {
       legajos,
     };
 
-    // 5. Eliminar proveedor y guardar en papelera
+    // 5. Eliminar proveedor y guardar en papelera (baja compuesta con papelera:
+    // fuera del frente de Log, ver eliminarCliente)
     await this.storageService.deleteItemPapeleraCompuestoAsync(
       'proveedores',
       proveedor.idProveedor,
@@ -247,15 +307,37 @@ export class ProveedorService implements OnDestroy {
       motivo,
     );
 
-    // 6. Eliminar vehículos
+    // 6. Batch único: baja de vehículos + baja de legajos (sin papelera propia
+    // ninguno de los dos — la baja compuesta con papelera es solo la del proveedor
+    // y la de cada chofer, más abajo). Un log por cada escritura real.
+    const escrituras: EscrituraBatch[] = [];
     for (const v of vehiculos) {
-      await this.storageService.deleteItemAsync(
-        'vehiculos', v.id, v.id, 'BAJA',
-        `Vehículo eliminado por baja de Proveedor ${nombre}`,
+      escrituras.push({ coleccion: 'vehiculos', id: v.id, data: null, modo: 'eliminar' });
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'BAJA', 'vehiculos', v.id, `Vehículo eliminado por baja de Proveedor ${nombre}`,
       );
     }
+    for (const baja of bajasLegajo) {
+      escrituras.push(baja.escritura);
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'BAJA', 'legajos', baja.legajo.id,
+        `Legajo eliminado por baja de Proveedor ${nombre} (chofer ${baja.legajo.idChofer})`,
+      );
+    }
+    if (escrituras.length > 0) {
+      try {
+        await this.db.commitBatch(escrituras);
+      } catch (e: any) {
+        await this.logRegistro.registrarError(
+          'BAJA', 'vehiculos', proveedor.idProveedor,
+          `Error al eliminar vehículos/legajos por baja de Proveedor ${nombre}: ${e?.message ?? e}`,
+        );
+        throw e;
+      }
+    }
 
-    // 7. Eliminar choferes (legajos ya eliminados arriba)
+    // 7. Eliminar choferes (legajos ya eliminados arriba; baja compuesta con
+    // papelera, fuera del frente de Log)
     for (const chofer of choferes) {
       await this.storageService.deleteItemPapeleraCompuestoAsync(
         'choferes',

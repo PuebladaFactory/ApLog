@@ -2,8 +2,9 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, firstValueFrom, merge, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Asignacion, AsignacionItem, EstadoAsignacion } from 'src/app/interfaces/asignacion';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { LogService } from 'src/app/servicios/log/log.service';
+import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 
 interface BorradorEnCurso {
   fecha: string;
@@ -26,8 +27,9 @@ export class AsignacionService implements OnDestroy {
   private _ultimaFechaVista: string | null = null;
 
   constructor(
-    private db:         DbFirestoreService,
-    private logService: LogService,
+    private db:          DbFirestoreService,
+    private logService:  LogService,
+    private logRegistro: LogRegistroService,
   ) {}
 
   // ---- Lectura / estado ----
@@ -80,11 +82,18 @@ export class AsignacionService implements OnDestroy {
     const asignacion: Asignacion = {
       idAsignacion: fecha, fecha, asignado: false, timestamp: Date.now(), items,
     };
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: this.COLECCION, id: fecha, data: this.toFirestore(asignacion), modo: 'reemplazar' },
+    ];
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'ALTA', this.COLECCION, fecha, `Borrador de tablero ${fecha} guardado`,
+    );
     try {
-      await this.db.setDocSinId(this.COLECCION, fecha, this.toFirestore(asignacion));
-      this.registrarLog('ALTA', `Borrador de tablero ${fecha} guardado`, fecha, true);
-    } catch (e) {
-      this.registrarLog('ALTA', `Error al guardar borrador ${fecha}`, fecha, false);
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'ALTA', this.COLECCION, fecha, `Error al guardar borrador ${fecha}: ${e?.message ?? e}`,
+      );
       throw e;
     }
   }
@@ -95,11 +104,18 @@ export class AsignacionService implements OnDestroy {
     const asignacion: Asignacion = actual
       ? { ...actual, items: [...actual.items, item], timestamp: Date.now() }
       : { idAsignacion: fecha, fecha, asignado: true, timestamp: Date.now(), items: [item] };
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: this.COLECCION, id: fecha, data: this.toFirestore(asignacion), modo: 'reemplazar' },
+    ];
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'EDITAR', this.COLECCION, fecha, `Item agregado al tablero ${fecha}`,
+    );
     try {
-      await this.db.setDocSinId(this.COLECCION, fecha, this.toFirestore(asignacion));
-      this.registrarLog('EDITAR', `Item agregado al tablero ${fecha}`, fecha, true);
-    } catch (e) {
-      this.registrarLog('EDITAR', `Error al agregar item al tablero ${fecha}`, fecha, false);
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'EDITAR', this.COLECCION, fecha, `Error al agregar item al tablero ${fecha}: ${e?.message ?? e}`,
+      );
       throw e;
     }
   }
@@ -172,11 +188,18 @@ export class AsignacionService implements OnDestroy {
       it.idOperacion === idOperacion ? { ...it, observacion, hojaDeRuta } : it
     );
     const asignacion: Asignacion = { ...actual, items, timestamp: Date.now() };
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: this.COLECCION, id: fecha, data: this.toFirestore(asignacion), modo: 'reemplazar' },
+    ];
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'EDITAR', this.COLECCION, fecha, `Item actualizado (op ${idOperacion}) en tablero ${fecha}`,
+    );
     try {
-      await this.db.setDocSinId(this.COLECCION, fecha, this.toFirestore(asignacion));
-      this.registrarLog('EDITAR', `Item actualizado (op ${idOperacion}) en tablero ${fecha}`, fecha, true);
-    } catch (e) {
-      this.registrarLog('EDITAR', `Error al actualizar item en tablero ${fecha}`, fecha, false);
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'EDITAR', this.COLECCION, fecha, `Error al actualizar item en tablero ${fecha}: ${e?.message ?? e}`,
+      );
       throw e;
     }
   }
@@ -188,11 +211,18 @@ export class AsignacionService implements OnDestroy {
     if (actual.asignado) {
       throw new Error(`El tablero ${fecha} ya fue confirmado (asignado); no se puede descartar como borrador.`);
     }
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: this.COLECCION, id: fecha, data: null, modo: 'eliminar' },
+    ];
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'BAJA', this.COLECCION, fecha, `Borrador de tablero ${fecha} descartado`,
+    );
     try {
-      await this.db.deleteItem(this.COLECCION, fecha);
-      this.registrarLog('BAJA', `Borrador de tablero ${fecha} descartado`, fecha, true);
-    } catch (e) {
-      this.registrarLog('BAJA', `Error al descartar borrador ${fecha}`, fecha, false);
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'BAJA', this.COLECCION, fecha, `Error al descartar borrador ${fecha}: ${e?.message ?? e}`,
+      );
       throw e;
     }
   }

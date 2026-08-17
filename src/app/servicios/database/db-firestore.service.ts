@@ -729,6 +729,13 @@ export class DbFirestoreService {
     ) as Observable<T | null>;
   }
 
+  /** Lectura one-shot por id, sin listener. null si el documento no existe. */
+  async getById<T>(coleccion: string, id: string): Promise<T | null> {
+    const ref = doc(this.firestore, `/Vantruck/datos/${coleccion}/${id}`);
+    const snap = await getDoc(ref);
+    return snap.exists() ? (snap.data() as T) : null;
+  }
+
   get(id: string) {
     const estacionamiento1DocumentReference = doc(
       this.firestore,

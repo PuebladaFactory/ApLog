@@ -3,8 +3,9 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Chofer, ContratacionChofer, Vehiculo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
+import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ChoferFactoryService, ChoferFormData } from 'src/app/servicios/choferes/chofer-factory.service';
 
@@ -22,9 +23,50 @@ export class ChoferService implements OnDestroy {
   constructor(
     private db: DbFirestoreService,
     private storageService: StorageService,
+    private logRegistro: LogRegistroService,
     private legajoService: LegajoService,
     private choferFactoryService: ChoferFactoryService,
   ) {}
+
+  /** Compara dos vehículos ya normalizados a forma Firestore campo por campo (sin
+   *  recursión en objetos anidados) — evita la sensibilidad al orden de claves de
+   *  comparar los objetos completos con JSON.stringify. Mismo criterio que
+   *  LogRegistroService.diffCampos. */
+  private vehiculosIguales(a: any, b: any): boolean {
+    const campos = new Set([...Object.keys(a), ...Object.keys(b)]);
+    for (const campo of campos) {
+      if (JSON.stringify(a[campo]) !== JSON.stringify(b[campo])) return false;
+    }
+    return true;
+  }
+
+  /** Reconcilia vehículos existentes en Firestore vs. la lista nueva del formulario,
+   *  por `dominio` — única clave de negocio estable que tiene Vehiculo hoy (no hay
+   *  persistencia por id estable: cada guardado reconstruye la lista completa). Los
+   *  idénticos (mismo dominio, mismos datos) se excluyen sin escritura ni log. El
+   *  resto (agregados, sacados, o mismo dominio con datos distintos) se resuelve como
+   *  baja del doc viejo + alta de uno nuevo — mismo comportamiento que ya tenía el
+   *  módulo antes de esta consolidación, ahora aplicado selectivamente. Pública:
+   *  reusada por ProveedorService (dueño de `vehiculoToFirestore`, ver ese método). */
+  reconciliarVehiculos(
+    existentes: { id: string; data: Vehiculo }[],
+    nuevos: ConIdType<Vehiculo>[],
+  ): { aEliminar: { id: string }[]; aCrear: ConIdType<Vehiculo>[] } {
+    const aEliminar: { id: string }[] = [];
+    const aCrear: ConIdType<Vehiculo>[] = [];
+
+    for (const ex of existentes) {
+      const match = nuevos.find(n => n.dominio === ex.data.dominio);
+      const identico = !!match && this.vehiculosIguales(this.vehiculoToFirestore(match), ex.data);
+      if (!identico) aEliminar.push({ id: ex.id });
+    }
+    for (const nuevo of nuevos) {
+      const match = existentes.find(ex => ex.data.dominio === nuevo.dominio);
+      const identico = !!match && this.vehiculosIguales(this.vehiculoToFirestore(nuevo), match.data);
+      if (!identico) aCrear.push(nuevo);
+    }
+    return { aEliminar, aCrear };
+  }
 
   init(): void {
     this.db.getAllStateChanges<Chofer>('choferes')
@@ -117,66 +159,87 @@ export class ChoferService implements OnDestroy {
     const choferParaGuardar = this.toFirestore(chofer);
 
     if (modo === 'alta') {
-      // 1. Guardar chofer y obtener ID
-      const idChofer = await this.storageService.addItemAndGetId(
-        'choferes',
-        choferParaGuardar,
-        'ALTA',
-        `Alta de Chofer ${apellido} ${nombre}`,
+      // Batch único: chofer + vehículos + legajo, con un log por cada escritura real
+      // (granularidad de auditoría preservada, ver "Frente Log" en CLAUDE.md).
+      const escrituras: EscrituraBatch[] = [];
+
+      const idChofer = this.db.generarId('choferes');
+      escrituras.push({ coleccion: 'choferes', id: idChofer, data: choferParaGuardar, modo: 'crear' });
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'ALTA', 'choferes', idChofer, `Alta de Chofer ${apellido} ${nombre}`,
       );
 
-      // 2. Guardar cada vehículo con el idChofer real
       for (const vehiculo of vehiculos) {
+        const idVehiculo = this.db.generarId('vehiculos');
         const vehiculoParaGuardar = {
           ...this.vehiculoToFirestore(vehiculo),
           asignadoA: { tipo: 'chofer', idChofer },
         };
-        await this.storageService.addItemAndGetId(
-          'vehiculos',
-          vehiculoParaGuardar,
-          'ALTA',
+        escrituras.push({ coleccion: 'vehiculos', id: idVehiculo, data: vehiculoParaGuardar, modo: 'crear' });
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'ALTA', 'vehiculos', idVehiculo,
           `Alta de Vehículo ${vehiculo.dominio} - Chofer ${apellido} ${nombre}`,
         );
       }
 
-      // 3. Crear legajo vacío asociado
-      await this.legajoService.crearLegajoParaChofer(idChofer);
-
-    } else {
-      // 1. Actualizar chofer
-      await this.storageService.updateItemAsync(
-        'choferes',
-        choferParaGuardar,
-        chofer.idChofer,
-        'EDITAR',
-        `Chofer Editado ${apellido} ${nombre}`,
+      const escrituraLegajo = this.legajoService.prepararLegajoVacio(idChofer);
+      escrituras.push(escrituraLegajo);
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'ALTA', 'legajos', escrituraLegajo.id, `Alta de Legajo (chofer ${idChofer})`,
       );
 
-      // 2. Borrar todos los vehículos actuales del chofer en Firestore
+      try {
+        await this.db.commitBatch(escrituras);
+      } catch (e: any) {
+        await this.logRegistro.registrarError(
+          'ALTA', 'choferes', idChofer,
+          `Error en alta de Chofer ${apellido} ${nombre} (chofer + vehículos + legajo): ${e?.message ?? e}`,
+        );
+        throw e;
+      }
+
+    } else {
+      // Batch único: chofer + reconciliación de vehículos, con un log por cada
+      // escritura real. Los vehículos idénticos (mismo dominio, mismos datos) se
+      // excluyen del batch — sin escritura, sin log.
+      const escrituras: EscrituraBatch[] = [
+        { coleccion: 'choferes', id: chofer.idChofer, data: choferParaGuardar, modo: 'reemplazar' },
+      ];
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'EDITAR', 'choferes', chofer.idChofer, `Chofer Editado ${apellido} ${nombre}`,
+      );
+
       const vehiculosEnFirestore = await this.db.getByField<Vehiculo>(
         'vehiculos',
         'asignadoA.idChofer',
         chofer.idChofer,
       );
-      for (const v of vehiculosEnFirestore) {
-        await this.storageService.deleteItemAsync(
-          'vehiculos',
-          v.id,
-          v.id,
-          'BAJA',
-          `Vehículo eliminado - Chofer ${apellido} ${nombre}`,
+      const { aEliminar, aCrear } = this.reconciliarVehiculos(vehiculosEnFirestore, vehiculos);
+
+      for (const v of aEliminar) {
+        escrituras.push({ coleccion: 'vehiculos', id: v.id, data: null, modo: 'eliminar' });
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'BAJA', 'vehiculos', v.id, `Vehículo eliminado - Chofer ${apellido} ${nombre}`,
+        );
+      }
+      for (const vehiculo of aCrear) {
+        const idVehiculo = this.db.generarId('vehiculos');
+        const vehiculoParaGuardar = this.vehiculoToFirestore(vehiculo);
+        escrituras.push({ coleccion: 'vehiculos', id: idVehiculo, data: vehiculoParaGuardar, modo: 'crear' });
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'ALTA', 'vehiculos', idVehiculo,
+          `Alta de Vehículo ${vehiculo.dominio} - Chofer ${apellido} ${nombre}`,
         );
       }
 
-      // 3. Reescribir vehículos actuales
-      for (const vehiculo of vehiculos) {
-        const vehiculoParaGuardar = this.vehiculoToFirestore(vehiculo);
-        await this.storageService.addItemAndGetId(
-          'vehiculos',
-          vehiculoParaGuardar,
-          'ALTA',
-          `Alta de Vehículo ${vehiculo.dominio} - Chofer ${apellido} ${nombre}`,
+      try {
+        await this.db.commitBatch(escrituras);
+      } catch (e: any) {
+        await this.logRegistro.registrarError(
+          'EDITAR', 'choferes', chofer.idChofer,
+          `Error al editar Chofer ${apellido} ${nombre} (chofer + vehículos): ${e?.message ?? e}`,
         );
+        throw e;
       }
     }
   }
@@ -211,18 +274,20 @@ export class ChoferService implements OnDestroy {
       v.asignadoA.tipo === 'chofer' && v.asignadoA.idChofer === chofer.idChofer
     );
 
-    // 2. Obtener y eliminar legajo (baja simple, sin papelera propia — se incluye
-    // en el objeto compuesto de abajo, mismo criterio que Vehiculo en esta misma cascada)
-    const legajo = await this.legajoService.eliminarLegajoDeChofer(chofer.idChofer);
+    // 2. Leer y preparar (sin escribir) la baja del legajo — baja simple, sin
+    // papelera propia; se incluye en el objeto compuesto de abajo, mismo criterio
+    // que Vehiculo en esta misma cascada.
+    const bajaLegajo = await this.legajoService.prepararBajaLegajoDeChofer(chofer.idChofer);
 
     // 3. Construir objeto compuesto para la papelera
     const objetoPapelera = {
       chofer,
       vehiculos,
-      legajo: legajo ?? null,
+      legajo: bajaLegajo?.legajo ?? null,
     };
 
     // 4. Eliminar chofer de Firestore y guardar objeto compuesto en papelera
+    // (baja compuesta con papelera: fuera del frente de Log, ver eliminarCliente)
     await this.storageService.deleteItemPapeleraCompuestoAsync(
       'choferes',
       chofer.idChofer,
@@ -232,15 +297,34 @@ export class ChoferService implements OnDestroy {
       motivo,
     );
 
-    // 5. Eliminar vehículos de Firestore
+    // 5. Batch único: baja de vehículos + baja de legajo (sin papelera propia
+    // ninguno de los dos — la baja compuesta con papelera es solo la del chofer,
+    // arriba). Un log por cada escritura real.
+    const escrituras: EscrituraBatch[] = [];
     for (const vehiculo of vehiculos) {
-      await this.storageService.deleteItemAsync(
-        'vehiculos',
-        vehiculo.idVehiculo,
-        vehiculo.idVehiculo,
-        'BAJA',
+      escrituras.push({ coleccion: 'vehiculos', id: vehiculo.idVehiculo, data: null, modo: 'eliminar' });
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'BAJA', 'vehiculos', vehiculo.idVehiculo,
         `Vehículo eliminado por baja de Chofer ${apellido} ${nombre}`,
       );
+    }
+    if (bajaLegajo) {
+      escrituras.push(bajaLegajo.escritura);
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'BAJA', 'legajos', bajaLegajo.legajo.id,
+        `Legajo eliminado por baja de Chofer ${apellido} ${nombre}`,
+      );
+    }
+    if (escrituras.length > 0) {
+      try {
+        await this.db.commitBatch(escrituras);
+      } catch (e: any) {
+        await this.logRegistro.registrarError(
+          'BAJA', 'vehiculos', chofer.idChofer,
+          `Error al eliminar vehículos/legajo por baja de Chofer ${apellido} ${nombre}: ${e?.message ?? e}`,
+        );
+        throw e;
+      }
     }
   }
 

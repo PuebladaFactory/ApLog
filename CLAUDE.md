@@ -169,15 +169,20 @@ del servicio.
 (`servicios/storage/storage.service.ts`), que expone múltiples BehaviorSubjects y
 sincroniza con localStorage.
 
-`StorageService` NO desaparece: además del estado de los módulos viejos, sigue siendo la
-**capa de escritura centralizada** por la que pasan todas las mutaciones para garantizar
-el logging (ver "Escritura en Firestore" en Patrones de refactorización). Es decir, los
-`XxxService` leen su propio estado pero escriben a través de `StorageService`.
+`StorageService` NO desaparece: sigue manteniendo el estado de los módulos viejos, y
+sigue siendo el camino para las bajas con papelera de Clientes/Choferes/Proveedores
+(ver "Frente Log — mecanismo unificado"). Para alta/edición/baja simple de esos mismos
+módulos, el `XxxService` ya NO pasa por `StorageService` — escribe directo vía
+`DbFirestoreService.commitBatch` + `LogRegistroService` (ver "Escritura en Firestore"
+en Patrones de refactorización).
 
 Flujo de datos en módulos refactorizados:
 ```
 Lectura:   Firestore --(listener)--> XxxService (BehaviorSubject) --> Component
-Escritura: Component --> XxxService --> StorageService (log) --> DbFirestoreService --> Firestore
+Escritura (alta/edición/baja simple):
+           Component --> XxxService --> DbFirestoreService.commitBatch (log incluido) --> Firestore
+Escritura (baja con papelera, sin migrar):
+           Component --> XxxService --> StorageService (log viejo) --> DbFirestoreService --> Firestore
 ```
 
 ### Capa de datos
@@ -259,7 +264,8 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `usuario-sesion/` | Fuente única de la sesión en memoria (rol, uid, email del usuario logueado). Sin listener — no reactivo en vivo. |
 | `database/` | CRUD Firestore |
 | `storage/` | Estado de módulos no migrados (BehaviorSubjects + localStorage) y capa de escritura/logging centralizada para todos los módulos |
-| `log/` | Log de actividad (ALTA / EDITAR / BAJA) |
+| `log/` | Log de actividad viejo (colección `logs`) — sigue activo para lo no migrado (ver "Frente Log") |
+| `log-registro/` | `LogRegistroService`, mecanismo nuevo (colección `registroLog`) — log como escritura dentro del batch atómico de negocio, ver "Frente Log — mecanismo unificado" |
 | `tarifas/` | Resolución y cálculo de tarifas |
 | `liquidaciones/` | Cálculo de liquidaciones y transiciones de estado de operación (proformas, InformeLiq) |
 | `informes/` | Generación de reportes Excel y PDF |
@@ -393,7 +399,7 @@ Categorías especiales:
 ## Convenciones
 
 - **Interfaces:** definidas en `src/app/interfaces/`. Usar siempre interfaces tipadas, nunca `any`.
-- **Logging:** toda mutación de datos debe llamar a `LogService` con acción (`ALTA`, `EDITAR`, `BAJA`), nombre de colección e ID del registro. El rol `god` queda excluido del log.
+- **Logging:** toda mutación de datos debe quedar registrada con acción (`ALTA`, `EDITAR`, `BAJA`, `RESTAURAR`), nombre de colección e ID del registro. El rol `dev` queda excluido del log. Dos mecanismos conviven: el nuevo `LogRegistroService` (colección `registroLog`, log como escritura dentro del mismo batch atómico de negocio — usar este para código nuevo en los módulos ya migrados) y el viejo `LogService` (colección `logs`, log como llamada separada después del write — sigue vigente para lo no migrado). Ver "Frente Log — mecanismo unificado" para el detalle de qué está migrado y qué no.
 - **IDs secuenciales:** usar `NumeradorService` al crear operaciones o facturas — nunca generar IDs manualmente.
 - **Locale argentino:** fechas en `dd/MM/yyyy`, miles con `.` y decimales con `,`. Hay servicios de formateo para ambos.
 - **Formularios:** Reactive Forms (`FormBuilder`). Directivas propias manejan CUIT, solo-letras, solo-números y fechas.
@@ -468,12 +474,18 @@ ID canónico + los campos congelados al momento del alta. Criterio de qué va al
   (Clientes/Choferes/Proveedores), que acumulan added/modified/removed.
 
 ### Escritura en Firestore
-Siempre pasar por StorageService para mantener el log centralizado:
-- Alta: `addItemAndGetId()` — retorna el ID generado
-- Edición: `updateItemAsync()`
-- Baja simple: `deleteItemAsync()`
-- Baja con papelera: `deleteItemPapeleraCompuestoAsync()` con objeto compuesto
-  que incluye todas las entidades relacionadas
+Alta/edición/baja simple (Clientes/Choferes/Proveedores y sus sub-entidades
+`vehiculos`/`legajos`, más Legajos como módulo propio — categorías de documentación,
+visibilidad, documentación): migradas al mecanismo nuevo (ver "Frente Log — mecanismo
+unificado"). Escrituras de un solo doc: helpers privados `crearConLog()`/
+`editarConLog()`/`eliminarConLog()` en el propio `XxxService`. Cascadas (entidad
+principal + N relacionadas, ej. chofer + vehículos + legajo): un único
+`EscrituraBatch[]`/`commitBatch` por cascada, armado a mano en el método (no vía los
+helpers de 1 escritura), con un `agregarAlBatch` por cada escritura real — atomicidad
+completa sin perder granularidad de log (Frente 2). Ninguno de los dos casos pasa ya
+por `StorageService`. Baja con papelera: sigue igual que antes,
+`StorageService.deleteItemPapeleraCompuestoAsync()` con objeto compuesto que incluye
+todas las entidades relacionadas (fuera de este frente, ver deuda ahí).
 
 ### Operaciones compuestas
 Las operaciones que afectan múltiples entidades viven en XxxService, no en el componente:
@@ -1514,13 +1526,16 @@ intacto para reintentar sin perder lo ya armado.
 ### Ownership del legajo en cascadas
 
 El legajo se comporta como `Vehiculo` en las cascadas de alta/baja de Chofer/Proveedor:
-baja simple (`LegajoService.eliminarLegajoDeChofer`), SIN entrada propia de papelera —
-viaja dentro del objeto compuesto de la entidad dueña. Creación ligada al alta de chofer
-(`ChoferService.guardarChoferConVehiculos` → `LegajoService.crearLegajoParaChofer`),
+baja simple, SIN entrada propia de papelera — viaja dentro del objeto compuesto de la
+entidad dueña. Creación ligada al alta de chofer (`ChoferService.guardarChoferConVehiculos`),
 cerrando una deuda que venía desde la creación original de `ChoferService` (antes
 llamaba al `LegajosService` viejo sin `await`, escondiendo en silencio cualquier error
 de permisos — ver el primer fix de `firestore.rules` abajo, que era exactamente ese
-error).
+error). ⚠️ **Frente Log → Frente 2:** `LegajoService.crearLegajoParaChofer`/
+`eliminarLegajoDeChofer` (los métodos citados originalmente acá) pasaron a
+`prepararLegajoVacio`/`prepararBajaLegajoDeChofer` — ya no escriben, preparan la
+escritura para que `ChoferService`/`ProveedorService` la plieguen a su propio batch
+consolidado. Ver "Frente Log — mecanismo unificado" → Frente 2 para el detalle.
 
 ### `firestore.rules` — dos fixes durante este frente
 
@@ -1593,6 +1608,189 @@ Vantruck, donde datos reales existentes nunca se borrarían y recrearían vacío
 listo para pruebas reales de carga de documentación — no hay documentación real
 precargada, es el estado esperado tras el reset, no un dato faltante.
 
+## Frente Log — mecanismo unificado (Frente 1, Agosto 2026)
+
+Reemplaza el mecanismo disperso de logging (StorageService acoplado a cada CRUD +
+coordinadores atómicos llamando directo a `LogService`, con duplicados y registros
+faltantes confirmados) por un mecanismo único: **el registro de log es una escritura
+más dentro del mismo batch atómico que persiste el negocio**, no una llamada separada
+después. Si el batch no commitea, no hay log; si commitea, el log está garantizado
+adentro — estructuralmente imposible tener log duplicado o faltante en las mutaciones
+migradas.
+
+**Piezas nuevas, conviven con las viejas (no las reemplazan):**
+- `interfaces/registro-log.ts` (`RegistroLog`, `AccionLog`, `CambioCampo`) — nueva,
+  no reemplaza a `log-entry.ts`/`log-doc.ts`.
+- `LogRegistroService` (`servicios/log-registro/`) — nuevo, no reemplaza a `LogService`
+  (`servicios/log/`). Colección nueva `registroLog`, no reemplaza a `logs`.
+  `agregarAlBatch(escrituras, accion, coleccion, idObjet, details)` agrega la entrada
+  de log al MISMO `EscrituraBatch[]` que el caller ya armó para su negocio (no
+  commitea — el caller sigue llamando `db.commitBatch(escrituras)` después). Para
+  `accion === 'EDITAR'` hace una lectura one-shot (`DbFirestoreService.getById`, nuevo
+  método, agregado en este frente) del documento ANTES del commit y diffea
+  superficialmente (top-level, sin recursión en anidados) contra los datos que ya
+  están en `escrituras`, poblando `cambios?: CambioCampo[]` solo si hubo diffs.
+  `registrarAccion` (REIMPRIMIR/DESCARGAR — sin mutación, sin batch al que atarse) y
+  `registrarError` (siempre suelto, fuera de cualquier batch) completan la API.
+  Exclusión del rol `'dev'`: centralizada en un único punto (`construirEntrada`
+  privado, devuelve `null`) — no hay otro camino para escribir un `RegistroLog`, a
+  diferencia del mecanismo viejo donde cada caller de `StorageService`/`LogService`
+  repetía `!usuarioSesion.esRol('dev')` por su cuenta (y al menos un caller,
+  `AsignacionService.registrarLog`, se olvidaba de hacerlo — bug real corregido como
+  efecto colateral de este frente en los métodos migrados).
+
+**Migrado en este frente:**
+- CRUD directo de Clientes/Choferes/Proveedores (y `vehiculos`, sub-entidad de
+  Choferes/Proveedores): ALTA, EDITAR y BAJA SIMPLE (`ClienteService.guardarCliente`,
+  `ChoferService`/`ProveedorService` — sus escrituras de entidad principal y de
+  vehículos en `guardarChoferConVehiculos`/`guardarProveedorConVehiculos`, más las
+  bajas de vehículo dentro de `eliminarChoferConVehiculos`/
+  `eliminarProveedorConVehiculos`). ⚠️ **Granularidad de LOG preservada, pero
+  atomicidad de ESCRITURA consolidada en el Frente 2** (ver más abajo) — al cerrar
+  este Frente 1, Choferes/Proveedores todavía hacían un `commitBatch` separado por
+  cada escritura de la cascada (chofer, cada vehículo alta/baja); el Frente 2 lo
+  corrigió a un solo `commitBatch` por cascada sin perder ningún registro de log.
+- `OperacionService.altaDesdeAsignacion`: el `logService.logEvent('ALTA', ...)` que
+  antes corría DESPUÉS de `commitBatch` ahora se arma con `agregarAlBatch` ANTES,
+  dentro del mismo batch que ya escribía operaciones + tablero. Catch → `registrarError`.
+- `AsignacionService.guardarBorrador` / `agregarItem` / `actualizarItem` /
+  `descartarBorrador`: pasaron de escritura suelta (`setDocSinId`/`deleteItem` +
+  `registrarLog` después, sin atomicidad entre ambas) a `EscrituraBatch[]` de una sola
+  escritura + `agregarAlBatch` + `commitBatch`.
+
+**Explícitamente NO migrado en este frente (queda en el mecanismo viejo,
+`LogService`/colección `logs`):**
+- **Toda baja que pase por la colección `papelera`** — no solo las de Operaciones. Al
+  revisar el código real se confirmó que la baja "simple" de Cliente NO existe como tal
+  (`ClienteService.eliminarCliente` siempre usa
+  `StorageService.deleteItemPapeleraCompuestoAsync`), y que la baja principal de
+  Chofer/Proveedor (aunque sus vehículos sí tienen baja simple, migrada) también pasa
+  siempre por ahí. El mecanismo nuevo no tiene forma de escribir el objeto compuesto
+  de papelera (`LogDoc` con `objeto`/`motivoBaja`) — eso es del frente de Papelera,
+  aparte, no de este. Consecuencia real: **hoy ningún BAJA de Cliente llega a
+  `registroLog`** (todo Cliente-BAJA sigue en `logs`); Chofer/Proveedor si tienen algo
+  en `registroLog` para BAJA, pero solo por sus vehículos, nunca por la entidad
+  principal. Marcado con comentarios en `eliminarCliente`/`eliminarChoferConVehiculos`/
+  `eliminarProveedorConVehiculos` señalando el motivo puntual en cada sitio.
+- `OperacionService.bajaOperacion`/`restaurarOperacion` (papelera) y
+  `AsignacionService.marcarItemAnulado`/`reactivarItem` (usados hoy solo por
+  `TableroService`, facade vieja intacta) — sin cambios, ver "Deuda — integración de
+  callers para bajaOperacion/restaurarOperacion" más abajo, que sigue vigente tal cual.
+- Cualquier módulo sin `XxxService` propio confirmado (Vendedores, Tarifas,
+  Facturación, Liquidaciones, Finanzas) — sin tocar. ⚠️ **Corrección (Frente 2):** esta
+  entrada agrupaba a Legajos junto a estos módulos por error — `LegajoService` SÍ tiene
+  su propio `XxxService` con escritura propia desde la reconstrucción completa del
+  módulo (ver "Módulo Legajos — reconstrucción completa" más arriba), el mismo patrón
+  que Cliente/Chofer/Proveedor. La exclusión de este Frente 1 fue una omisión, no una
+  decisión de alcance — corregida en el Frente 2 (Legajos migrado completo, ver abajo).
+- `RegistroComponent` (pantalla de log) sigue leyendo de `logs` sin cambios — la
+  colección vieja pasa a ser, de hecho, el histórico de lo no migrado. Rediseño de la
+  pantalla, frente aparte y posterior.
+
+**Pendiente natural para el frente de Papelera** (cuando se aborde): decidir cómo el
+nuevo mecanismo (o una extensión de `LogRegistroService`) va a cubrir la escritura a
+`papelera`, para poder migrar de una vez las bajas reales de Cliente/Chofer/Proveedor
+que hoy quedan fuera por este motivo — no es solo el caso de Operaciones ya anotado
+abajo.
+
+### Frente 2 — consolidación de cascadas en batch (Chofer/Proveedor/Legajos, Agosto 2026)
+
+Continuación directa del Frente 1. Cerraba una brecha real: las cascadas de
+Chofer/Proveedor (entidad principal + N vehículos, + legajo en el alta de Chofer) y de
+Legajos (archivado de histórico + actualización del legajo) seguían haciendo un
+`commitBatch` **separado por cada escritura** — atómico escritura-por-escritura (log
+garantizado con su propio write, el problema que resolvió el Frente 1), pero NO atómico
+entre sí: si fallaba el segundo vehículo de tres, el chofer y el primer vehículo ya
+habían quedado committeados, dejando un estado a medio camino sin ningún rollback.
+Decisión de diseño explícita (evaluada antes de implementar): **un solo
+`EscrituraBatch[]`/`commitBatch` por cascada, con un `agregarAlBatch` por cada escritura
+real** — atomicidad completa de la cascada SIN perder granularidad de auditoría (mismo
+número de entradas en `registroLog` que antes, cada vehículo/legajo con su propio
+`idObjet`/`details`). Se descartó a propósito la alternativa de consolidar también los
+logs en una sola entrada por cascada: el diff `cambios` de
+`LogRegistroService.agregarAlBatch` es inherentemente de un solo documento (lee un
+"anterior" y lo compara contra una escritura de esa misma colección+id) — condensar
+chofer+vehículos en un único registro EDITAR habría perdido el diff estructurado de los
+vehículos (quedaría prosa armada a mano en `details`), sin ninguna ganancia real de
+atomicidad sobre la opción elegida.
+
+**Chofer/Proveedor + vehículos** (`ChoferService.guardarChoferConVehiculos`,
+`ProveedorService.guardarProveedorConVehiculos`, alta y edición de ambos):
+- **Reconciliación por `dominio`** en la rama de edición (`ChoferService.reconciliarVehiculos`,
+  pública — `ProveedorService` la reusa vía `this.choferService.reconciliarVehiculos(...)`
+  en vez de duplicarla, ya que solo necesita `vehiculoToFirestore`, que ChoferService ya
+  posee y expone; mismo patrón de delegación que `getVehiculosPorProveedor`). `dominio`
+  es la única clave de negocio estable que tiene `Vehiculo` — no hay persistencia por id
+  estable (cada guardado históricamente reconstruía la lista completa de vehículos del
+  chofer/proveedor, borrando y recreando todos). Los vehículos idénticos (mismo dominio,
+  mismos datos — comparados campo por campo con `vehiculosIguales`, no con
+  `JSON.stringify` del objeto completo, para no depender del orden de claves; mismo
+  criterio que `LogRegistroService.diffCampos`) se excluyen del batch por completo: sin
+  escritura, sin log. El resto (agregados, sacados, o mismo dominio con datos distintos)
+  se resuelve igual que antes de este frente — baja del doc viejo + alta de uno nuevo,
+  ahora aplicado selectivamente en vez de a la lista entera.
+  ⚠️ **Evaluado y descartado a propósito:** reconciliar por id estable (persistir
+  vehículos con un id de negocio en vez de un id de Firestore nuevo en cada guardado,
+  para que un vehículo editado apareciera como EDITAR con diff real en vez de
+  BAJA+ALTA). Requeriría cambiar el modelo de persistencia de `vehiculos` completo —
+  desproporcionado para este frente; la reconciliación por `dominio` ya resuelve el
+  problema real (escrituras/logs innecesarios para vehículos sin cambios).
+- **Alta de Chofer también incluye el legajo** en el mismo batch (ver punto siguiente)
+  — único caso con 3 tipos de entidad en una sola cascada (chofer + vehículos + legajo).
+  Alta/edición de Proveedor no crea legajo en ningún punto (los choferes de un
+  proveedor se dan de alta vía `ChoferService.altaChofer`, con `contratacion.tipo:
+  'proveedor'` — mismo camino y mismo legajo que cualquier chofer, no hay una cascada de
+  legajo separada en `ProveedorService`; confirmado antes de implementar, no asumido).
+
+**Legajo en las cascadas de Chofer/Proveedor** — `LegajoService` cambia de contrato:
+antes escribía por su cuenta (fuera de cualquier batch), ahora PREPARA la escritura sin
+ejecutarla, para que el dueño de la cascada (`ChoferService`/`ProveedorService`) la
+pliegue a su propio `EscrituraBatch[]`:
+- `crearLegajoParaChofer(idChofer): Promise<string>` (escribía) →
+  `prepararLegajoVacio(idChofer): EscrituraBatch` (sincrónico — `LegajoFactoryService.crearLegajoVacio`
+  ya era puro sin I/O, y `db.generarId` es local; no había ninguna razón real para que
+  fuera async). El caller hace `escrituras.push(...)` + su propio `agregarAlBatch`.
+- `eliminarLegajoDeChofer(idChofer): Promise<ConIdType<Legajo>|null>` (leía y escribía) →
+  `prepararBajaLegajoDeChofer(idChofer): Promise<{legajo, escritura}|null>` (sigue
+  async — todavía lee, vía `getByField`, para poder devolver el `legajo` completo que
+  el caller necesita para su objeto compuesto de papelera; solo deja de escribir). Usado
+  en `eliminarChoferConVehiculos` (baja de 1 legajo) y en
+  `eliminarProveedorConVehiculos` (baja de N legajos, uno por cada chofer del
+  proveedor — cascada confirmada existente antes de tocarla; mismo tratamiento).
+- En ambas cascadas de baja, el chofer/proveedor en sí sigue en el camino viejo de
+  papelera (`deleteItemPapeleraCompuestoAsync`, sin `EscrituraBatch[]` — no hay batch al
+  que sumarse ahí, ver Frente 1). Lo que SÍ se consolida es el resto: vehículos + legajo
+  (chofer) o vehículos + legajos de todos los choferes (proveedor), todos "sin papelera
+  propia", en un único `commitBatch` después de la baja compuesta del dueño.
+
+**Resto del CRUD de Legajos** (fuera de las cascadas de alta/baja de Chofer/Proveedor),
+migrado con el mismo patrón que Cliente/Chofer/Proveedor:
+- `LegajoService.toggleVisibilidad`: `EscrituraBatch[]` de 1 + `agregarAlBatch('EDITAR', ...)`
+  + `commitBatch`.
+- `LegajoService.guardarDocumentacion`: antes hacía 1 `addItemAndGetId` a
+  `documentacionHistorial` POR CADA documento reemplazado que ya tenía categoría, más 1
+  `updateItemAsync` final a `legajos` — mismo problema de cascada no atómica que
+  Chofer/Proveedor. Consolidado en un único `EscrituraBatch[]` (N archivados +
+  actualización final), un `agregarAlBatch` por cada escritura real, un `commitBatch`.
+  La subida a Storage (`StorageArchivosService`, resuelta por el caller ANTES de llamar
+  a este método) no se tocó — sin cambio de comportamiento ahí.
+- `CategoriaDocumentacionService` (`crearCategoria`/`editarNombreCategoria`/
+  `toggleActiva`/`actualizarOrden`): los 4 eran escritura simple de un solo doc, sin
+  cascada — migrados al patrón estándar (`crearConLog`/`editarConLog`, mismos helpers
+  privados que ya usa `ChoferService`/`ProveedorService`).
+- NO tocado: `LegajoService.getHistorialDocumento` (lectura, no escribe),
+  `LegajoMigrationService` (script de migración de datos, ad-hoc, no es CRUD en vivo).
+
+**`StorageService` queda sin ningún uso en `LegajoService`/`CategoriaDocumentacionService`**
+tras este frente — import y constructor param eliminados de ambos (ya no había ningún
+método que lo necesitara). Sigue en uso en `ClienteService`/`ChoferService`/
+`ProveedorService` únicamente para las bajas compuestas con papelera (Frente 1).
+
+**Verificado:** árbol compila limpio (`tsc --noEmit` + `ng build`); el error de budget de
+bundle (8.65 MB vs. 7 MB) es el mismo preexistente de siempre, confirmado por
+comparación directa contra el build previo al frente — la diferencia real introducida
+por este frente es de apenas ~0.01 MB.
+
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
@@ -1646,6 +1844,26 @@ Los coordinadores existen y son atómicos (ver "Coordinadores bajaOperacion / re
   - Caller de `bajaOperacion` para operaciones **cerradas** desde el módulo de
     Liquidaciones (hoy la baja de una op cerrada sigue el camino paso a paso legacy,
     lugar exacto a confirmar en esa sesión).
+- **Hallazgo (sesión de diseño del frente Log, ago-2026):** mientras `PapeleraComponent`
+  siga llamando a `TableroService.altaOperacionYActualizarTablero` /
+  `anularOperacionYActualizarTablero`, restaurar y dar de baja una operación generan
+  **dos registros de log por una sola acción de usuario**, no uno:
+  - Restaurar: `altaOperacionYActualizarTablero` loguea `'ALTA'` directo, y después llama
+    a `AsignacionService.reactivarItem`, que loguea su propio `'EDITAR'` (vía
+    `registrarLog`).
+  - Baja: `StorageService.deleteItemPapelera` loguea `'BAJA'`, y después
+    `TableroService.anularOperacionYActualizarTablero` llama a
+    `AsignacionService.marcarItemAnulado`, que loguea su propio `'EDITAR'` — el propio
+    comentario del método ya lo señala (línea ~127-130 de `asignacion.service.ts`).
+  - Los coordinadores atómicos (`bajaOperacion`/`restaurarOperacion`) YA evitan esto:
+    usan las versiones puras `anularItemEnLista`/`reactivarItemEnLista` (sin log
+    propio) en vez de `marcarItemAnulado`/`reactivarItem`. Migrar los callers de arriba
+    (`PapeleraComponent` → `restaurarOperacion`; baja paso a paso → `bajaOperacion`)
+    elimina el duplicado como efecto colateral — no requiere trabajo aparte.
+  - Diferido a propósito al frente de Papelera (no al frente de Log): decisión explícita
+    tomada en la sesión de diseño de Log, porque esta migración de callers cae del lado
+    "acciones que trabajan con papelera", excluido del nuevo mecanismo de log por
+    criterio de esa sesión.
 
 ### Switch completado — tablero-asignaciones / operaciones-editor / carga-asignacion
 

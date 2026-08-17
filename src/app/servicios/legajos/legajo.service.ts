@@ -3,8 +3,8 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Documentacion, DocumentacionHistorial, Legajo } from 'src/app/interfaces/legajo';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
+import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { StorageArchivosService } from 'src/app/servicios/storage-archivos/storage-archivos.service';
 import { LegajoFactoryService } from 'src/app/servicios/legajos/legajo-factory.service';
 
@@ -18,7 +18,7 @@ export class LegajoService implements OnDestroy {
 
   constructor(
     private db: DbFirestoreService,
-    private storageService: StorageService,
+    private logRegistro: LogRegistroService,
     private storageArchivosService: StorageArchivosService, // sin uso todavía en este bloque — ver nota en guardarDocumentacion
     private legajoFactoryService: LegajoFactoryService,
   ) {}
@@ -58,28 +58,29 @@ export class LegajoService implements OnDestroy {
   }
 
   /**
-   * Alta de legajo vacío al crear un chofer. Devuelve el idLegajo generado.
-   * Llamado desde ChoferService en el Bloque 4 (reemplaza a LegajosService.crearLegajo).
+   * Prepara (sin escribir) el alta de legajo vacío para un chofer nuevo. El caller
+   * (ChoferService, dueño de la cascada de alta) agrega la escritura devuelta a su
+   * propio EscrituraBatch[] consolidado y hace el commit + log — ver "Frente Log —
+   * mecanismo unificado" en CLAUDE.md. Reemplaza a crearLegajoParaChofer (escribía
+   * por su cuenta, fuera de cualquier batch).
    */
-  async crearLegajoParaChofer(idChofer: string): Promise<string> {
+  prepararLegajoVacio(idChofer: string): EscrituraBatch {
     const legajoVacio = this.legajoFactoryService.crearLegajoVacio(idChofer);
     const { idLegajo, ...paraGuardar } = legajoVacio;
-    return this.storageService.addItemAndGetId(
-      'legajos',
-      paraGuardar,
-      'ALTA',
-      `Alta de Legajo (chofer ${idChofer})`,
-    );
+    const id = this.db.generarId('legajos');
+    return { coleccion: 'legajos', id, data: paraGuardar, modo: 'crear' };
   }
 
   /**
-   * Baja SIMPLE, sin entrada propia de papelera — mismo criterio que Vehiculo en las
-   * cascadas de ChoferService/ProveedorService. El caller (dueño de la cascada) es
-   * responsable de incluir el legajo devuelto en su propio objeto compuesto de papelera.
-   * Devuelve el legajo eliminado (con su id), o null si el chofer no tenía legajo
-   * (caso anómalo — no debería pasar en datos sanos, ver nota en Bloque 4).
+   * Lee el legajo del chofer y prepara (sin escribir) su escritura de baja — misma
+   * categoría que Vehiculo en las cascadas de ChoferService/ProveedorService: sin
+   * papelera propia. El caller (dueño de la cascada de baja) agrega la escritura a su
+   * propio batch consolidado y hace el commit + log; usa el `legajo` devuelto para su
+   * objeto compuesto de papelera. null si el chofer no tenía legajo (caso anómalo, no
+   * debería pasar en datos sanos). Reemplaza a eliminarLegajoDeChofer (escribía por su
+   * cuenta, fuera de cualquier batch).
    */
-  async eliminarLegajoDeChofer(idChofer: string): Promise<ConIdType<Legajo> | null> {
+  async prepararBajaLegajoDeChofer(idChofer: string): Promise<{ legajo: ConIdType<Legajo>; escritura: EscrituraBatch } | null> {
     const resultados = await this.db.getByField<Legajo>('legajos', 'idChofer', idChofer);
     if (resultados.length === 0) {
       console.warn(`No se encontró legajo para el chofer ${idChofer} — caso anómalo, no debería pasar en datos sanos`);
@@ -89,14 +90,7 @@ export class LegajoService implements OnDestroy {
     // idLegajo se reconstruye desde el id real del doc, no desde data — mismo motivo
     // que en init(): el campo idXxx no se persiste dentro del documento (ver toFirestore).
     const legajo = { ...data, id, idLegajo: id, type: '' } as ConIdType<Legajo>;
-    await this.storageService.deleteItemAsync(
-      'legajos',
-      id,
-      id,
-      'BAJA',
-      `Legajo eliminado por baja de Chofer/Proveedor (chofer ${idChofer})`,
-    );
-    return legajo;
+    return { legajo, escritura: { coleccion: 'legajos', id, data: null, modo: 'eliminar' } };
   }
 
   async toggleVisibilidad(idLegajo: string): Promise<void> {
@@ -105,13 +99,22 @@ export class LegajoService implements OnDestroy {
       throw new Error(`No se encontró el legajo ${idLegajo} al intentar cambiar visibilidad`);
     }
     const paraGuardar = this.toFirestore({ ...legajo, visible: !legajo.visible });
-    await this.storageService.updateItemAsync(
-      'legajos',
-      paraGuardar,
-      legajo.id,
-      'EDITAR',
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: 'legajos', id: legajo.id, data: paraGuardar, modo: 'reemplazar' },
+    ];
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'EDITAR', 'legajos', legajo.id,
       `Visibilidad de legajo actualizada (legajo ${legajo.idLegajo})`,
     );
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'EDITAR', 'legajos', legajo.id,
+        `Error al actualizar visibilidad del legajo ${legajo.idLegajo}: ${e?.message ?? e}`,
+      );
+      throw e;
+    }
   }
 
   /**
@@ -131,6 +134,7 @@ export class LegajoService implements OnDestroy {
     }
 
     const documentacionActualizada = [...legajo.documentacion];
+    const escrituras: EscrituraBatch[] = [];
 
     for (const docNuevo of documentosNuevos) {
       const indexExistente = documentacionActualizada.findIndex(d => d.idCategoria === docNuevo.idCategoria);
@@ -144,10 +148,10 @@ export class LegajoService implements OnDestroy {
           documento: docViejo,
           fechaReemplazo: new Date().toISOString(),
         };
-        await this.storageService.addItemAndGetId(
-          'documentacionHistorial',
-          entradaHistorial,
-          'ALTA',
+        const idHistorial = this.db.generarId('documentacionHistorial');
+        escrituras.push({ coleccion: 'documentacionHistorial', id: idHistorial, data: entradaHistorial, modo: 'crear' });
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'ALTA', 'documentacionHistorial', idHistorial,
           `Archivado histórico de documentación (legajo ${legajo.idLegajo}, categoría ${docViejo.idCategoria})`,
         );
         documentacionActualizada[indexExistente] = docNuevo;
@@ -157,13 +161,20 @@ export class LegajoService implements OnDestroy {
     }
 
     const paraGuardar = this.toFirestore({ ...legajo, documentacion: documentacionActualizada });
-    await this.storageService.updateItemAsync(
-      'legajos',
-      paraGuardar,
-      legajo.id,
-      'EDITAR',
-      `Documentación actualizada (legajo ${legajo.idLegajo})`,
+    escrituras.push({ coleccion: 'legajos', id: legajo.id, data: paraGuardar, modo: 'reemplazar' });
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'EDITAR', 'legajos', legajo.id, `Documentación actualizada (legajo ${legajo.idLegajo})`,
     );
+
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'EDITAR', 'legajos', legajo.id,
+        `Error al guardar documentación del legajo ${legajo.idLegajo}: ${e?.message ?? e}`,
+      );
+      throw e;
+    }
   }
 
   /**

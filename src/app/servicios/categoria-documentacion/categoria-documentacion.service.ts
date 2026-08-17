@@ -3,8 +3,8 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CategoriaDocumentacion } from 'src/app/interfaces/legajo';
 import { ConIdType } from 'src/app/interfaces/conId';
-import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
+import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 
 @Injectable({ providedIn: 'root' })
 export class CategoriaDocumentacionService implements OnDestroy {
@@ -16,8 +16,35 @@ export class CategoriaDocumentacionService implements OnDestroy {
 
   constructor(
     private db: DbFirestoreService,
-    private storageService: StorageService,
+    private logRegistro: LogRegistroService,
   ) {}
+
+  // ---- Escrituras simples con log en el mismo batch (reemplaza StorageService
+  // para el CRUD directo de este módulo) ----
+
+  private async crearConLog(coleccion: string, data: any, msj: string): Promise<string> {
+    const id = this.db.generarId(coleccion);
+    const escrituras: EscrituraBatch[] = [{ coleccion, id, data, modo: 'crear' }];
+    await this.logRegistro.agregarAlBatch(escrituras, 'ALTA', coleccion, id, msj);
+    try {
+      await this.db.commitBatch(escrituras);
+      return id;
+    } catch (e: any) {
+      await this.logRegistro.registrarError('ALTA', coleccion, id, `Error: ${e?.message ?? e}`);
+      throw e;
+    }
+  }
+
+  private async editarConLog(coleccion: string, id: string, data: any, msj: string): Promise<void> {
+    const escrituras: EscrituraBatch[] = [{ coleccion, id, data, modo: 'reemplazar' }];
+    await this.logRegistro.agregarAlBatch(escrituras, 'EDITAR', coleccion, id, msj);
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError('EDITAR', coleccion, id, `Error: ${e?.message ?? e}`);
+      throw e;
+    }
+  }
 
   init(): void {
     this.db.getAllStateChanges<CategoriaDocumentacion>('categoriasDocumentacion')
@@ -68,10 +95,9 @@ export class CategoriaDocumentacionService implements OnDestroy {
       orden: ordenMax + 1,
     };
     const { idCategoria, ...paraGuardar } = categoriaNueva;
-    return this.storageService.addItemAndGetId(
+    return this.crearConLog(
       'categoriasDocumentacion',
       paraGuardar,
-      'ALTA',
       `Alta de categoría de documentación ${nombre}`,
     );
   }
@@ -82,11 +108,10 @@ export class CategoriaDocumentacionService implements OnDestroy {
       throw new Error(`No se encontró la categoría de documentación ${idCategoria}`);
     }
     const paraGuardar = this.toFirestore({ ...categoria, nombre: nuevoNombre });
-    await this.storageService.updateItemAsync(
+    await this.editarConLog(
       'categoriasDocumentacion',
-      paraGuardar,
       categoria.id,
-      'EDITAR',
+      paraGuardar,
       `Categoría de documentación renombrada a "${nuevoNombre}"`,
     );
   }
@@ -97,11 +122,10 @@ export class CategoriaDocumentacionService implements OnDestroy {
       throw new Error(`No se encontró la categoría de documentación ${idCategoria}`);
     }
     const paraGuardar = this.toFirestore({ ...categoria, activa: !categoria.activa });
-    await this.storageService.updateItemAsync(
+    await this.editarConLog(
       'categoriasDocumentacion',
-      paraGuardar,
       categoria.id,
-      'EDITAR',
+      paraGuardar,
       `Categoría de documentación ${categoria.activa ? 'desactivada' : 'activada'}: ${categoria.nombre}`,
     );
   }
@@ -112,11 +136,10 @@ export class CategoriaDocumentacionService implements OnDestroy {
       throw new Error(`No se encontró la categoría de documentación ${idCategoria}`);
     }
     const paraGuardar = this.toFirestore({ ...categoria, orden: nuevoOrden });
-    await this.storageService.updateItemAsync(
+    await this.editarConLog(
       'categoriasDocumentacion',
-      paraGuardar,
       categoria.id,
-      'EDITAR',
+      paraGuardar,
       `Orden de categoría de documentación actualizado: ${categoria.nombre}`,
     );
   }

@@ -16,6 +16,7 @@ import { ValoresOpService } from 'src/app/servicios/valores-op/valores-op/valore
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
 import { LogService } from 'src/app/servicios/log/log.service';
+import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { LogDoc } from 'src/app/interfaces/log-doc';
 
@@ -55,6 +56,7 @@ export class OperacionService implements OnDestroy {
     private numeradorService: NumeradorService,
     private asignacionService: AsignacionService,
     private logService:       LogService,
+    private logRegistro:      LogRegistroService,
   ) {}
 
   /**
@@ -315,15 +317,14 @@ export class OperacionService implements OnDestroy {
         },
       ];
 
-      await this.db.commitBatch(escrituras);
-
-      // 8. LOG — un registro por el alta (acción principal)
-      // TODO: refactor Roles — exclusión de 'dev' del log pendiente (igual que AsignacionService)
-      this.logService.logEvent(
-        'ALTA', 'operaciones',
-        `Alta de ${creadas.length} operación(es) — tablero ${fecha}`,
-        fecha, true,
+      // 8. LOG — un registro por el alta (acción principal), agregado AL MISMO
+      // batch antes de commitear (mecanismo LogRegistroService, ver interfaces/registro-log.ts)
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'ALTA', 'operaciones',
+        fecha, `Alta de ${creadas.length} operación(es) — tablero ${fecha}`,
       );
+
+      await this.db.commitBatch(escrituras);
 
       // 9. RESULTADO
       return {
@@ -333,10 +334,9 @@ export class OperacionService implements OnDestroy {
       };
 
     } catch (e: any) {
-      this.logService.logEvent(
-        'ALTA', 'operaciones',
+      await this.logRegistro.registrarError(
+        'ALTA', 'operaciones', fecha,
         `Error en alta de operaciones — tablero ${fecha}: ${e?.message ?? e}`,
-        fecha, false,
       );
       return {
         exito: false,
