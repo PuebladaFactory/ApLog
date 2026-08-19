@@ -6,6 +6,7 @@ import { Usuario } from 'src/app/interfaces/usuario';
 import { ColumnaTablaGenerica, AccionTablaGenerica } from 'src/app/interfaces/tabla-generica';
 import { GestionUsuariosService } from 'src/app/servicios/gestion-usuarios/gestion-usuarios.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
+import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { ModalUsuarioComponent, ResultadoModalUsuario } from './modal-usuario/modal-usuario.component';
 
 @Component({
@@ -31,6 +32,7 @@ export class GestionUsuariosComponent implements OnInit {
     private modalService: NgbModal,
     private functions: Functions,
     public usuarioSesion: UsuarioSesionService,
+    private logRegistro: LogRegistroService,
   ) {}
 
   ngOnInit(): void {
@@ -138,7 +140,10 @@ export class GestionUsuariosComponent implements OnInit {
 
       const llamarEliminarUsuario = httpsCallable(this.functions, 'eliminarUsuario');
       llamarEliminarUsuario({ uid: usuario.uid })
-        .then(() => {
+        .then(async () => {
+          await this.logRegistro.registrarMutacionSuelta(
+            'BAJA', 'users', usuario.uid, `Usuario ${usuario.email} eliminado.`,
+          );
           Swal.fire('Confirmado', 'El usuario ha sido eliminado', 'success');
           this.cargarUsuarios();
         })

@@ -8,10 +8,11 @@ import { Router } from '@angular/router';
     <h1>Configuración</h1>    
   </div>   
   <div class="tab-container">
-      <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab1')">Usuarios</div>      
-      <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Registro</div>      
-      <div class="tab" [class.active]="selectedTab === 'tab3'" (click)="selectTab('tab3')">Papelera</div>      
-      
+      <div class="tab" [class.active]="selectedTab === 'tab1'" (click)="selectTab('tab1')">Usuarios</div>
+      <div class="tab" [class.active]="selectedTab === 'tab2'" (click)="selectTab('tab2')">Registro</div>
+      <div class="tab" [class.active]="selectedTab === 'tab4'" (click)="selectTab('tab4')">Registro Log</div>
+      <div class="tab" [class.active]="selectedTab === 'tab3'" (click)="selectTab('tab3')">Papelera</div>
+
   </div>
   <router-outlet></router-outlet>
   `,
@@ -38,7 +39,10 @@ export class AjustesControlComponent implements OnInit {
       } 
       if (tab === 'tab3') {
         this.router.navigate(['ajustes/papelera']);
-      } 
+      }
+      if (tab === 'tab4') {
+        this.router.navigate(['ajustes/registro-log']);
+      }
     }
 
 }

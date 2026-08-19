@@ -20,9 +20,12 @@ import {
   query,
   runTransaction,
   setDoc,
+  startAfter,
   updateDoc,
   where,
   writeBatch,
+  QueryConstraint,
+  QueryDocumentSnapshot,
 } from "@angular/fire/firestore";
 import { firstValueFrom, from, Observable } from "rxjs";
 import { map } from "rxjs/operators";
@@ -62,6 +65,15 @@ export interface EscrituraBatch {
   id: string;
   data: any;
   modo: ModoEscritura;
+}
+
+/** Página de resultados de getPaginado(). `cursor: null` cuando la página devuelta
+ *  está vacía (nada más que paginar con este cursor); `hayMas` es la señal real de
+ *  si conviene seguir pidiendo páginas. */
+export interface PaginaResultado<T> {
+  items: ConId<T>[];
+  cursor: QueryDocumentSnapshot<DocumentData> | null;
+  hayMas: boolean;
 }
 
 export interface ResultadoEliminacion {
@@ -734,6 +746,46 @@ export class DbFirestoreService {
     const ref = doc(this.firestore, `/Vantruck/datos/${coleccion}/${id}`);
     const snap = await getDoc(ref);
     return snap.exists() ? (snap.data() as T) : null;
+  }
+
+  /** Lectura one-shot paginada por rango de un campo de fecha/timestamp, con cursor
+   *  real (`startAfter`, no offset/skip) y filtro de igualdad opcional sobre otro
+   *  campo. `cursor: null` en la primera página; para la siguiente, pasar el
+   *  `cursor` devuelto por la página anterior.
+   *
+   *  Pide `pageSize + 1` documentos para saber si hay más sin una query extra: si
+   *  vuelven más de `pageSize`, se descarta el último y `hayMas` da `true`.
+   *
+   *  Nota: filtrar por `campoIgualdad` junto con el rango de `campoFecha` requiere un
+   *  índice compuesto (`campoIgualdad` + `campoFecha`) — ver `firestore.indexes.json`. */
+  async getPaginado<T>(
+    coleccion: string,
+    campoFecha: string,
+    desde: number,
+    hasta: number,
+    pageSize: number,
+    cursor: QueryDocumentSnapshot<DocumentData> | null,
+    filtro?: { campo: string; valor: any },
+  ): Promise<PaginaResultado<T>> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const constraints: QueryConstraint[] = [
+      orderBy(campoFecha, "desc"),
+      where(campoFecha, ">=", desde),
+      where(campoFecha, "<=", hasta),
+    ];
+    if (filtro) constraints.push(where(filtro.campo, "==", filtro.valor));
+    if (cursor) constraints.push(startAfter(cursor));
+    constraints.push(limit(pageSize + 1));
+
+    const snap = await getDocs(query(colRef, ...constraints));
+    const docsPagina = snap.docs.slice(0, pageSize);
+    const items = docsPagina.map(d => ({ id: d.id, ...(d.data() as T) }));
+
+    return {
+      items,
+      cursor: docsPagina.length > 0 ? docsPagina[docsPagina.length - 1] : null,
+      hayMas: snap.docs.length > pageSize,
+    };
   }
 
   get(id: string) {

@@ -70,6 +70,7 @@ service cloud.firestore {
 
         'numeradores': 'numeradores',
         'logs': 'logs',
+        'registroLog': 'logs',
         'papelera': 'papelera',
       }[coleccion];
     }

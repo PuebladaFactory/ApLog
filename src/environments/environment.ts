@@ -4,7 +4,9 @@
 
 //ENVIRONMENT PARA DEMO
 
-export const environment = {
+import { Environment } from './environment.model';
+
+export const environment: Environment = {
   production: false,
   firebase: {
     apiKey: "AIzaSyCM-WuXYmaZU0AJQk7jVXyrSt1eMGIC0ps",
@@ -18,7 +20,8 @@ export const environment = {
   cloudinary: {
     cloudName: 'dfrstiqwd',
     uploadPreset: 'ml_default'
-  }
+  },
+  functionsRegion: 'southamerica-east1'
 };
 
 /*

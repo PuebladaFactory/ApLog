@@ -9,7 +9,7 @@ import {
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
 import { StorageService } from '../storage/storage.service';
-import { LogService } from '../log/log.service';
+import { LogRegistroService } from '../log-registro/log-registro.service';
 import { UsuarioSesionService } from '../usuario-sesion/usuario-sesion.service';
 import { Usuario } from '../../interfaces/usuario';
 
@@ -23,7 +23,7 @@ export class AuthService {
   constructor(
     private router: Router,
     private storage: StorageService,
-    private logService: LogService,
+    private logRegistro: LogRegistroService,
     private usuarioSesion: UsuarioSesionService
   ) {}
 
@@ -45,25 +45,15 @@ export class AuthService {
       const usuario = resultado;
       this.usuarioSesion.setUsuario(usuario);
 
-      if (usuario.role !== 'dev') {
-        await this.logService.logEvent(
-          'LOGIN',
-          'users',
-          `Usuario ${usuario.email} inició sesión.`,
-          0,
-          true
-        );
-      }
+      await this.logRegistro.registrarAccion(
+        'LOGIN', 'users', 0, `Usuario ${usuario.email} inició sesión.`
+      );
 
       this.router.navigate(['/carga']);
     } catch (error: any) {
       console.error(error.message);
-      await this.logService.logEvent(
-        'LOGIN',
-        'users',
-        `Error al iniciar sesión: ${error.message}`,
-        0,
-        false
+      await this.logRegistro.registrarError(
+        'LOGIN', 'users', 0, `Error al iniciar sesión: ${error.message}`
       );
       Swal.fire('Error', error.message, 'error');
     }
@@ -92,27 +82,22 @@ export class AuthService {
   async cerrarSesion(): Promise<void> {
     const usuario = this.usuarioSesion.getUsuarioActual();
     try {
-      await signOut(this.auth);
-      if (usuario && usuario.role !== 'dev') {
-        await this.logService.logEvent(
-          'LOGOUT',
-          'users',
-          `Usuario ${usuario.email} cerró sesión.`,
-          0,
-          true
+      // El log se escribe ANTES de signOut(): las reglas de Firestore exigen
+      // autenticado() para escribir en registroLog, y una vez cerrada la sesión
+      // el token ya no sirve para eso.
+      if (usuario) {
+        await this.logRegistro.registrarAccion(
+          'LOGOUT', 'users', 0, `Usuario ${usuario.email} cerró sesión.`
         );
       }
+      await signOut(this.auth);
       this.storage.clearAllLocalStorage();
       this.usuarioSesion.limpiar();
       this.router.navigate(['/login']);
     } catch (error: any) {
       console.error('Error al cerrar sesión:', error);
-      await this.logService.logEvent(
-        'LOGOUT',
-        'users',
-        `Error al cerrar sesión: ${error.message}`,
-        0,
-        false
+      await this.logRegistro.registrarError(
+        'LOGOUT', 'users', 0, `Error al cerrar sesión: ${error.message}`
       );
     }
   }

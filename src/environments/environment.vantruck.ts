@@ -1,5 +1,11 @@
 // ENVIRONMENT PARA VANTRUCK
-export const environment = {
+// functionsRegion queda sin definir a propósito: pf-logistics todavía no fue
+// realineado a southamerica-east1 del lado servidor (deuda registrada en
+// CLAUDE.md → "Deuda conocida"). Agregar `functionsRegion: 'southamerica-east1'`
+// acá recién cuando esa realineación se despliegue contra pf-logistics.
+import { Environment } from './environment.model';
+
+export const environment: Environment = {
     production: true,
     firebase: {
         apiKey: "AIzaSyB4jR5D6ORBu70EM7vN8fnZhIeszvz3QTs",

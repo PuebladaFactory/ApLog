@@ -85,7 +85,7 @@ registerLocaleData(localeEs);
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),
-    provideFunctions(() => getFunctions()),
+    provideFunctions(() => getFunctions(undefined, environment.functionsRegion)),
     provideStorage(() => getStorage()),
     AuthService,
     provideHttpClient(withInterceptorsFromDi()),

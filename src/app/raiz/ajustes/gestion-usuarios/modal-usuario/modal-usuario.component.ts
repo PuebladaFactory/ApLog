@@ -3,8 +3,10 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import { RolUsuario, Usuario } from 'src/app/interfaces/usuario';
+import { CambioCampo } from 'src/app/interfaces/registro-log';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { AuthService } from 'src/app/servicios/autentificacion/auth.service';
+import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 
 type VistaModal = 'formulario' | 'exito' | 'cambioEmail';
 
@@ -75,6 +77,7 @@ export class ModalUsuarioComponent implements OnInit {
     private functions: Functions,
     private usuarioSesion: UsuarioSesionService,
     private authService: AuthService,
+    private logRegistro: LogRegistroService,
   ) {}
 
   ngOnInit(): void {
@@ -108,6 +111,10 @@ export class ModalUsuarioComponent implements OnInit {
           'crearUsuario',
         );
         const resultado = await llamarCrearUsuario(this.form.value);
+        await this.logRegistro.registrarMutacionSuelta(
+          'ALTA', 'users', resultado.data.uid,
+          `Usuario ${this.form.value.email} creado (rol: ${this.form.value.role}).`,
+        );
         this.link = resultado.data.link;
         this.vista = 'exito';
       } else {
@@ -123,6 +130,18 @@ export class ModalUsuarioComponent implements OnInit {
           'editarUsuario',
         );
         await llamarEditarUsuario(payload);
+
+        const cambios: CambioCampo[] = [];
+        if (this.usuario!.name !== payload.name) {
+          cambios.push({ campo: 'name', anterior: this.usuario!.name, nuevo: payload.name });
+        }
+        if (!this.rolDeshabilitado && this.usuario!.role !== payload.role) {
+          cambios.push({ campo: 'role', anterior: this.usuario!.role, nuevo: payload.role });
+        }
+        await this.logRegistro.registrarMutacionSuelta(
+          'EDITAR', 'users', this.usuario!.uid, `Usuario ${this.usuario!.email} editado.`, cambios,
+        );
+
         this.activeModal.close({ refrescar: true, cambioDeRol: !this.rolDeshabilitado });
       }
     } catch (error: any) {
@@ -151,6 +170,11 @@ export class ModalUsuarioComponent implements OnInit {
         uid: this.usuario!.uid,
         nuevoEmail: this.nuevoEmail,
       });
+      await this.logRegistro.registrarMutacionSuelta(
+        'EDITAR', 'users', this.usuario!.uid,
+        `Email actualizado de ${this.usuario!.email} a ${this.nuevoEmail}.`,
+        [{ campo: 'email', anterior: this.usuario!.email, nuevo: this.nuevoEmail }],
+      );
       this.link = resultado.data.link;
       // Firebase revoca el refresh token del usuario afectado en cualquier
       // cambio de email/contraseña. Si el afectado es quien está usando

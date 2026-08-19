@@ -8,7 +8,9 @@ export type AccionLog =
   // atarse, se escriben sueltas. Ampliar esta lista a medida que se necesiten
   // (cobros/pagos y liquidación cuando se implemente Finanzas, etc.).
   | 'REIMPRIMIR'
-  | 'DESCARGAR';
+  | 'DESCARGAR'
+  | 'LOGIN'
+  | 'LOGOUT';
 
 export interface CambioCampo {
   campo: string;

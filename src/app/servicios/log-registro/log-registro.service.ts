@@ -72,21 +72,53 @@ export class LogRegistroService {
   }
 
   /** ACCIÓN SIN MUTACIÓN — escritura suelta, no atómica (no hay negocio con el que
-   *  ser atómico). Ej.: REIMPRIMIR, DESCARGAR. */
+   *  ser atómico). Ej.: REIMPRIMIR, DESCARGAR, LOGIN, LOGOUT.
+   *  Best-effort real: si la escritura falla (ej. LOGOUT con el token ya inválido
+   *  tras signOut()), no relanza — solo console.error. Un log fallido nunca debe
+   *  interrumpir el flujo del caller. */
   async registrarAccion(
-    accion: 'REIMPRIMIR' | 'DESCARGAR',
+    accion: 'REIMPRIMIR' | 'DESCARGAR' | 'LOGIN' | 'LOGOUT',
     coleccion: string,
     idObjet: string | number,
     details: string,
   ): Promise<void> {
     const entrada = this.construirEntrada(accion, coleccion, idObjet, details, 'SUCCESS');
     if (!entrada) return;
-    const logId = this.db.generarId(this.COLECCION);
-    await setDoc(doc(this.firestore, `/Vantruck/datos/${this.COLECCION}`, logId), entrada);
+    try {
+      const logId = this.db.generarId(this.COLECCION);
+      await setDoc(doc(this.firestore, `/Vantruck/datos/${this.COLECCION}`, logId), entrada);
+    } catch (e) {
+      console.error('Error al registrar acción en registroLog:', e);
+    }
+  }
+
+  /** MUTACIÓN cuya escritura real ocurrió fuera de cualquier EscrituraBatch propio
+   *  del cliente — ej.: Cloud Functions con Admin SDK (gestión de usuarios).
+   *  Escritura suelta, sin atomicidad con la mutación real (mismo trade-off que
+   *  LOGIN/LOGOUT). El caller arma `cambios` a mano si corresponde — no hay lectura
+   *  automática vía getById como en agregarAlBatch, porque el caller ya tiene el
+   *  antes/después en memoria. Best-effort real: nunca debe tirar (mismo criterio
+   *  que registrarAccion/registrarError). */
+  async registrarMutacionSuelta(
+    accion: 'ALTA' | 'EDITAR' | 'BAJA' | 'RESTAURAR',
+    coleccion: string,
+    idObjet: string | number,
+    details: string,
+    cambios?: CambioCampo[],
+  ): Promise<void> {
+    const entrada = this.construirEntrada(accion, coleccion, idObjet, details, 'SUCCESS', cambios);
+    if (!entrada) return;
+    try {
+      const logId = this.db.generarId(this.COLECCION);
+      await setDoc(doc(this.firestore, `/Vantruck/datos/${this.COLECCION}`, logId), entrada);
+    } catch (e) {
+      console.error('Error al registrar log:', e);
+    }
   }
 
   /** ERROR — best-effort, siempre fuera de cualquier batch (el negocio no se
-   *  escribió, no hay nada con qué ser atómico). Llamar desde el catch del caller. */
+   *  escribió, no hay nada con qué ser atómico). Llamar desde el catch del caller.
+   *  Best-effort real: si la escritura en sí falla, no relanza — solo console.error. */
   async registrarError(
     accion: AccionLog,
     coleccion: string,
@@ -95,8 +127,12 @@ export class LogRegistroService {
   ): Promise<void> {
     const entrada = this.construirEntrada(accion, coleccion, idObjet, details, 'ERROR');
     if (!entrada) return;
-    const logId = this.db.generarId(this.COLECCION);
-    await setDoc(doc(this.firestore, `/Vantruck/datos/${this.COLECCION}`, logId), entrada);
+    try {
+      const logId = this.db.generarId(this.COLECCION);
+      await setDoc(doc(this.firestore, `/Vantruck/datos/${this.COLECCION}`, logId), entrada);
+    } catch (e) {
+      console.error('Error al registrar error en registroLog:', e);
+    }
   }
 
   /** Diff superficial (top-level, sin recursión en objetos anidados). Solo

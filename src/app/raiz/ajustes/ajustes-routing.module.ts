@@ -5,11 +5,12 @@ import { GestionUsuariosComponent } from './gestion-usuarios/gestion-usuarios.co
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { RegistroComponent } from './registro/registro.component';
 import { PapeleraComponent } from './papelera/papelera.component';
+import { RegistroLogComponent } from './registro-log/registro-log.component';
 
 const routes: Routes = [
   {path: '', component:AjustesControlComponent,
-    children: [ 
-      { path: '', redirectTo: 'usuarios', pathMatch: 'full' },  
+    children: [
+      { path: '', redirectTo: 'usuarios', pathMatch: 'full' },
       {path: 'usuarios', component:GestionUsuariosComponent,
             canActivate: [RoleGuard],
             data: { roles: ['dev', 'admin'] },
@@ -17,6 +18,10 @@ const routes: Routes = [
       {path: 'registro', component:RegistroComponent,
         canActivate: [RoleGuard],
         data: { roles: ['dev', 'admin', 'demo'] }, // no se permiten usuarios
+      },
+      {path: 'registro-log', component:RegistroLogComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['dev', 'admin', 'demo'] }, // mismo criterio que 'registro' (screen de auditoría, no se permiten usuarios)
       },
       {path: 'papelera', component:PapeleraComponent,
         canActivate: [RoleGuard],
