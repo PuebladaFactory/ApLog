@@ -9,6 +9,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { RegistroComponent } from './registro/registro.component';
 import { NgbDatepickerModule } from '@ng-bootstrap/ng-bootstrap';
 import { PapeleraComponent } from './papelera/papelera.component';
+import { PapeleraLegadoComponent } from './papelera-legado/papelera-legado.component';
 import { RegistroLogComponent } from './registro-log/registro-log.component';
 import { FilterPipeModule } from 'ngx-filter-pipe';
 
@@ -21,6 +22,7 @@ import { FilterPipeModule } from 'ngx-filter-pipe';
     ModalUsuarioComponent,
     RegistroComponent,
     PapeleraComponent,
+    PapeleraLegadoComponent,
     RegistroLogComponent,
   ],
   imports: [

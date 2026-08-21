@@ -1,268 +1,182 @@
-import { Component, OnInit } from "@angular/core";
-import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
-import { distinctUntilChanged, Subject, takeUntil } from "rxjs";
-import { LogDoc } from "src/app/interfaces/log-doc";
-import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
-import { StorageService } from "src/app/servicios/storage/storage.service";
-import { TableroService } from "src/app/servicios/tablero/tablero.service";
-import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
-import { ObjetoPapeleraComponent } from "src/app/shared/modales/objeto-papelera/objeto-papelera.component";
-import Swal from "sweetalert2";
+import { Component, OnInit } from '@angular/core';
+import { DocumentData, QueryDocumentSnapshot } from '@angular/fire/firestore';
+import Swal from 'sweetalert2';
+import { ConId } from 'src/app/interfaces/conId';
+import { PapeleraEvento } from 'src/app/interfaces/registro-papelera';
+import { ModuloPermiso } from 'src/app/interfaces/permiso';
+import { PapeleraConsultaService } from 'src/app/servicios/papelera/papelera-consulta.service';
+import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
+import { VisualizadorObjetoService } from 'src/app/servicios/visualizador-objeto/visualizador-objeto.service';
+import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
+import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
+import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
+import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
+import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
+/** Pantalla nueva de papelera, basada en el mecanismo por referencia
+ *  (PapeleraEvento/objetosEliminados, ver CLAUDE.md → "Frente Papelera") — SOLO
+ *  para Cliente/Chofer/Proveedor/Operación, los 4 módulos ya migrados. El resto
+ *  (Vendedores/Facturación/Liquidación) sigue en PapeleraLegadoComponent, sin
+ *  cambios. */
 @Component({
-  selector: "app-papelera",
-  templateUrl: "./papelera.component.html",
-  styleUrls: ["./papelera.component.scss"],
+  selector: 'app-papelera',
+  templateUrl: './papelera.component.html',
+  styleUrls: ['./papelera.component.scss'],
   standalone: false,
 })
 export class PapeleraComponent implements OnInit {
-  searchText: string = "";
-  $usuariosTodos: any[] = [];
-  $usuario: any;
-  limite: number = 100;
-  papelera: LogDoc[] = [];
-  private destroy$ = new Subject<void>();
-  isLoading: boolean = false;
-  idObjConsulta: any;
+
+  // ---- Filtros server-side ----
+  fechaDesde = '';
+  fechaHasta = '';
+  estadoFiltro: 'activo' | 'restaurado' = 'activo';
+
+  // ---- Estado de paginación ----
+  eventos: ConId<PapeleraEvento>[] = [];
+  private cursor: QueryDocumentSnapshot<DocumentData> | null = null;
+  hayMas = false;
+  cargando = false;
+
+  private usuariosTodos: any[] = [];
 
   constructor(
-    private dbFirebase: DbFirestoreService,
+    private consultaServ: PapeleraConsultaService,
+    private papeleraService: PapeleraService,
+    public visualizador: VisualizadorObjetoService,
+    private clienteService: ClienteService,
+    private choferService: ChoferService,
+    private proveedorService: ProveedorService,
+    private operacionService: OperacionService,
     private storageService: StorageService,
-    private modalService: NgbModal,
-    private tableroServ: TableroService,
     public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
-    this.storageService.users$
-      .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
-      .subscribe((data) => {
-        if (data) {
-          this.$usuariosTodos = data;
-        }
-      });
-    this.consultarPapelera();
-    this.storageService.syncChangesLimit("papelera", "idDoc", this.limite);
+    this.usuariosTodos = this.storageService.loadInfo('users');
+    this.calcularRangoDefault();
+    this.buscar();
   }
 
-  getUsuario(email: string) {
-    let usuario = this.$usuariosTodos.find((u) => u.email === email);
-    //console.log("usuario encontrado: ",usuario);
-    return usuario ? (usuario.name !== "" ? usuario.name : usuario.email) : "";
+  /** Default: último mes — rango más amplio que Registro Log porque una baja
+   *  suele consultarse bastante después del hecho. */
+  private calcularRangoDefault(): void {
+    const hoy = new Date();
+    const haceUnMes = new Date(hoy);
+    haceUnMes.setMonth(hoy.getMonth() - 1);
+    this.fechaHasta = hoy.toISOString().split('T')[0];
+    this.fechaDesde = haceUnMes.toISOString().split('T')[0];
   }
 
-  getFecha(date: number) {
-    return new Date(date).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      weekday: "long",
-      hour: "2-digit",
-      hour12: false,
-      minute: "2-digit",
-      second: "2-digit",
+  async buscar(): Promise<void> {
+    this.eventos = [];
+    this.cursor = null;
+    this.hayMas = false;
+    await this.cargarPagina();
+  }
+
+  async cargarMas(): Promise<void> {
+    await this.cargarPagina();
+  }
+
+  private async cargarPagina(): Promise<void> {
+    if (this.cargando || !this.fechaDesde || !this.fechaHasta) return;
+    this.cargando = true;
+    try {
+      const desde = new Date(`${this.fechaDesde}T00:00:00`).getTime();
+      const hasta = new Date(`${this.fechaHasta}T23:59:59.999`).getTime();
+      const pagina = await this.consultaServ.cargarPagina(desde, hasta, this.cursor, this.estadoFiltro);
+      this.eventos = [...this.eventos, ...pagina.items];
+      this.cursor = pagina.cursor;
+      this.hayMas = pagina.hayMas;
+    } catch (e: any) {
+      Swal.fire('Error', `No se pudo consultar la papelera: ${e?.message ?? e}`, 'error');
+    } finally {
+      this.cargando = false;
+    }
+  }
+
+  getUsuario(email: string): string {
+    const usuario = this.usuariosTodos.find(u => u.email === email);
+    return usuario ? (usuario.name !== '' ? usuario.name : usuario.email) : email;
+  }
+
+  getFecha(timestamp: number): string {
+    return new Date(timestamp).toLocaleDateString(undefined, {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', hour12: false, minute: '2-digit', second: '2-digit',
     });
   }
 
-  consultarPapelera() {
-    this.dbFirebase
-      .getMostRecentLimit<LogDoc>("papelera", "idDoc", this.limite)
-      .pipe(
-        takeUntil(this.destroy$),
-        distinctUntilChanged(
-          (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
-        ), // Emitir solo si hay cambios reales
-      )
-      .subscribe((data) => {
-        console.log("data papelera:", data);
-
-        if (data) {
-          this.papelera = data;
-        }
-      });
+  /** Refs secundarias (principal:false) como resumen en línea — sin modal propio,
+   *  mismo criterio que hoy con vehículos/legajos en el modal viejo. */
+  secundarios(evento: PapeleraEvento): string {
+    const secundarios = evento.refs.filter(r => !r.principal);
+    if (secundarios.length === 0) return '—';
+    return secundarios.map(r => `${r.coleccion}: ${r.idOriginal}`).join(', ');
   }
 
-  modalObjeto(p: LogDoc) {
-    {
-      const modalRef = this.modalService.open(ObjetoPapeleraComponent, {
-        windowClass: "myCustomModalClass",
-        centered: true,
-        scrollable: true,
-        size:
-          p.logEntry.coleccion === "operaciones"
-            ? "lg"
-            : p.logEntry.coleccion === "facturaCliente" ||
-                p.logEntry.coleccion === "facturaChofer" ||
-                p.logEntry.coleccion === "facturaProveedor"
-              ? "md"
-              : "lg",
-      });
-
-      let info = {
-        modo: p.logEntry.coleccion,
-        item: p.objeto,
-      };
-      //////console.log()(info); */
-
-      modalRef.componentInstance.fromParent = info;
-      if (p.logEntry.coleccion === "legajos") {
-        modalRef.componentInstance.fromParentPapelera = this.papelera;
-      }
-
-      modalRef.result.then(
-        (result) => {},
-        (reason) => {},
-      );
-    }
+  moduloDe(evento: PapeleraEvento): ModuloPermiso {
+    // Cast deliberado, mismo criterio que RegistroLogComponent.moduloDe.
+    return evento.coleccionPrincipal as ModuloPermiso;
   }
 
-  async restaurarObjeto(logDoc: LogDoc) {
-    console.log("objeto", logDoc);
-    let id: number = 0;
-    let titulo: string = "";
-    switch (logDoc.logEntry.coleccion) {
-      case "operaciones":
-        id = logDoc.objeto.idOperacion;
-        titulo = "Operación";
-        // TODO: refactor restaurarOperacion — el estado inicial y km los reinicia
-        // ahora la fachada (TableroService.altaOperacionYActualizarTablero) vía
-        // OperacionFactoryService.estadoInicial(). Se comenta la mutación al EstadoOp
-        // viejo (7 flags) que producía un estado inválido.
-        // logDoc.objeto.estado = { abierta: true, cerrada: false, facturada: false };
-        // logDoc.objeto.km = 0;
-        break;
-      case "clientes":
-        id = logDoc.objeto.idCliente;
-        titulo = "Cliente";
-        break;
-      case "choferes":
-        id = logDoc.objeto.idChofer;
-        titulo = "Chofer";
-        break;
-      case "proveedores":
-        id = logDoc.objeto.proveedor;
-        titulo = "Proveedor";
-        break;
-      case "facturaCliente":
-        id = logDoc.objeto.idFacturaCliente;
-        titulo = "Factura Cliente";
-        break;
-      case "facturaChofer":
-        id = logDoc.objeto.idFacturaChofer;
-        titulo = "Factura Chofer";
-        break;
-      case "facturaProveedor":
-        id = logDoc.objeto.idFacturaProveedor;
-        titulo = "Factura Proveedor";
-        break;
-      case "legajos":
-        id = logDoc.objeto.idLegajo;
-        titulo = "Legajo";
-        break;
-      case "vendedores":
-        id = logDoc.objeto.idVendedor;
-        titulo = "Vendedor";
-        break;
-      default:
-        break;
+  /** Detalle del objeto principal: snapshot archivado si el evento sigue 'activo'
+   *  (el objeto ya no existe en su colección de origen), objeto vivo si ya fue
+   *  'restaurado' (undefined → VisualizadorObjetoService hace getById normal). */
+  async verObjeto(evento: ConId<PapeleraEvento>): Promise<void> {
+    let snapshot: any = undefined;
+    if (evento.estado === 'activo') {
+      snapshot = await this.papeleraService.getObjetoEliminado<any>(evento.coleccionPrincipal, evento.idPrincipal);
     }
-    console.log("id", id);
-    delete logDoc.objeto.id;
+    await this.visualizador.verObjeto(evento.coleccionPrincipal, evento.idPrincipal, snapshot);
+  }
+
+  puedeRestaurar(evento: PapeleraEvento): boolean {
+    return evento.estado === 'activo' && !this.usuarioSesion.esRol('demo');
+  }
+
+  async restaurar(evento: ConId<PapeleraEvento>): Promise<void> {
+    if (!this.puedeRestaurar(evento)) return;
 
     const confirmacion = await Swal.fire({
-      title: "¡Atención!",
-      text: "A la hora de restaurar un objeto debe tener en cuento que algunos items trabajan en relación con otros objetos. Ej: un legajo esta asignado a un chofer, un chofer puede estar asignado a un proveedor. Tenga en cuenta estas relaciones y restaure todos los objetos relacionados entre si para un correcto funcionamiento de la app. ¿Desea restaurar este objeto?",
-      icon: "warning",
+      title: '¿Restaurar este objeto?',
+      text: 'Tenga en cuenta las relaciones entre objetos (ej. un chofer puede pertenecer a un proveedor) al restaurar.',
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Confirmar",
-      cancelButtonText: "Cancelar",
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar',
     });
+    if (!confirmacion.isConfirmed) return;
 
-    if (confirmacion.isConfirmed) {
-      this.isLoading = true;
-      await this.addItem(logDoc, id, titulo); // ahora espera el resultado
-      this.isLoading = false;
-    } else if (confirmacion.dismiss === Swal.DismissReason.cancel) {
-      Swal.fire({
-        title: "Cancelado",
-        text: "El objeto no ha sido restaurado.",
-        icon: "info",
-        confirmButtonText: "Entendido",
-      });
-    }
-  }
-
-  async addItem(logDoc: LogDoc, id: number, titulo: string) {
-    if (logDoc.logEntry.coleccion === "operaciones") {
-      try {
-        await this.tableroServ.altaOperacionYActualizarTablero(logDoc.objeto);
-        this.storageService.deleteItem(
-          "papelera",
-          logDoc,
-          logDoc.idDoc,
-          "INTERNA",
-          "",
-        );
-        Swal.fire({
-          title: "Confirmado",
-          text: "El Objeto ha sido restaurado",
-          icon: "success",
-        });
-
-        this.ngOnInit();
-      } catch (error) {
-        this.mensajesError("error en la restauracion del objeto", "error");
-      }
-    } else {
-      try {
-        this.storageService.addItem(
-          logDoc.logEntry.coleccion,
-          logDoc.objeto,
-          id,
-          "RESTAURAR",
-          `${titulo} ${id} restaurado desde la Papelera`,
-        );
-        this.storageService.deleteItem(
-          "papelera",
-          logDoc,
-          logDoc.idDoc,
-          "INTERNA",
-          "",
-        );
-        Swal.fire({
-          title: "Confirmado",
-          text: "El Objeto ha sido restaurado",
-          icon: "success",
-        });
-        this.ngOnInit();
-      } catch (error) {
-        this.mensajesError("error en la restauracion del objeto", "error");
-      }
-    }
-  }
-
-  mensajesError(msj: string, resultado: string) {
-    Swal.fire({
-      icon: resultado === "error" ? "error" : "success",
-      //title: "Oops...",
-      text: `${msj}`,
-      //footer: `${msj}`
-    });
-  }
-
-  consultarId() {
-    this.idObjConsulta = Number(this.idObjConsulta);
-    console.log(this.idObjConsulta);
-    let respuesta;
-    this.dbFirebase
-      .getObjIdg<any>("papelera", "logEntry.idObjet", this.idObjConsulta)
-      .subscribe((data) => {
-        console.log(data);
-        if (data) {
-          this.papelera = data;
+    this.cargando = true;
+    try {
+      switch (evento.coleccionPrincipal) {
+        case 'clientes':
+          await this.clienteService.restaurarCliente(evento.id);
+          break;
+        case 'choferes':
+          await this.choferService.restaurarChofer(evento.id);
+          break;
+        case 'proveedores':
+          await this.proveedorService.restaurarProveedor(evento.id);
+          break;
+        case 'operaciones': {
+          const resultado = await this.operacionService.restaurarOperacion(evento.id);
+          if (!resultado.exito) throw new Error(resultado.mensaje);
+          break;
         }
-      });
+        default:
+          throw new Error(`Colección principal sin restaurador conocido: ${evento.coleccionPrincipal}`);
+      }
+      Swal.fire('Confirmado', 'El objeto ha sido restaurado.', 'success');
+      await this.buscar();
+    } catch (e: any) {
+      Swal.fire('Error', `No se pudo restaurar: ${e?.message ?? e}`, 'error');
+    } finally {
+      this.cargando = false;
+    }
   }
 }

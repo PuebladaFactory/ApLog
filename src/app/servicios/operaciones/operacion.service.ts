@@ -15,10 +15,9 @@ import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.serv
 import { ValoresOpService } from 'src/app/servicios/valores-op/valores-op/valores-op.service';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
-import { LogService } from 'src/app/servicios/log/log.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
+import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { Resultado } from 'src/app/interfaces/resultado';
-import { LogDoc } from 'src/app/interfaces/log-doc';
 
 export interface OperacionCreada {
   item:      AsignacionItem;
@@ -55,8 +54,8 @@ export class OperacionService implements OnDestroy {
     private formNumServ:      FormatoNumericoService,
     private numeradorService: NumeradorService,
     private asignacionService: AsignacionService,
-    private logService:       LogService,
     private logRegistro:      LogRegistroService,
+    private papeleraService:  PapeleraService,
   ) {}
 
   /**
@@ -410,30 +409,31 @@ export class OperacionService implements OnDestroy {
     }
     const items = this.asignacionService.anularItemEnLista(tablero.items, op.idOperacion, motivo);
 
-    const logEntry = this.logService.createLogEntry('BAJA', 'operaciones',
-      `Baja de operación ${op.idOperacion}`, op.idOperacion, true, 0);
-    const idPapelera = this.db.generarId('papelera');
-    const logDoc: LogDoc = { idDoc: logEntry.timestamp, logEntry, objeto: op, motivoBaja: motivo };
+    // Evento de papelera (referencia, ver PapeleraService). Sin secundarios — los
+    // informesOpXxx eliminados arriba no se archivan, comportamiento ya documentado
+    // y deliberado (ver CLAUDE.md → "Frente Papelera").
+    this.papeleraService.prepararBajaEnBatch(escrituras, motivo, [
+      { coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), principal: true },
+    ]);
 
-    escrituras.push(
-      { coleccion: 'papelera', id: idPapelera, data: logDoc, modo: 'crear' },
-      {
-        coleccion: 'asignaciones', id: fecha,
-        data: this.asignacionService.asignacionToFirestore({ ...tablero, items }),
-        modo: 'reemplazar',
-      },
+    escrituras.push({
+      coleccion: 'asignaciones', id: fecha,
+      data: this.asignacionService.asignacionToFirestore({ ...tablero, items }),
+      modo: 'reemplazar',
+    });
+
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'BAJA', 'operaciones', op.idOperacion, `Baja de operación ${op.idOperacion}`,
     );
 
     try {
       await this.db.commitBatch(escrituras);
     } catch (e: any) {
-      this.logService.logEvent('BAJA', 'operaciones',
-        `Error en baja de operación ${op.idOperacion}: ${e?.message ?? e}`, op.idOperacion, false);
+      await this.logRegistro.registrarError(
+        'BAJA', 'operaciones', op.idOperacion, `Error en baja de operación ${op.idOperacion}: ${e?.message ?? e}`,
+      );
       return { exito: false, mensaje: `Error al dar de baja la operación: ${e?.message ?? e}.` };
     }
-
-    this.logService.logEvent('BAJA', 'operaciones',
-      `Operación ${op.idOperacion} dada de baja`, op.idOperacion, true);
 
     return { exito: true, mensaje: `Operación ${op.idOperacion} dada de baja correctamente.` };
   }
@@ -442,19 +442,20 @@ export class OperacionService implements OnDestroy {
    *  InformeOp no se reconstruyen (fueron eliminados en la baja, no archivados).
    *  Si la op estaba 'cerrada' antes de la baja, hay que volver a cerrarla
    *  manualmente después de restaurar. */
-  async restaurarOperacion(logDoc: LogDoc): Promise<Resultado<void>> {
+  async restaurarOperacion(idEvento: string): Promise<Resultado<void>> {
 
-    const papeleraDocs = await this.db.getByField<LogDoc>('papelera', 'idDoc', logDoc.idDoc);
-    if (papeleraDocs.length === 0) {
+    const escrituras: EscrituraBatch[] = [];
+    const { evento, objetos } = await this.papeleraService.prepararRestauracionEnBatch(escrituras, idEvento);
+    if (evento.coleccionPrincipal !== 'operaciones') {
       return {
         exito: false,
-        mensaje: `No se encontró el registro de papelera para idDoc ${logDoc.idDoc}. ` +
-                 `Restauración abortada.`,
+        mensaje: `El evento de papelera ${idEvento} no corresponde a una Operación ` +
+                 `(coleccionPrincipal: ${evento.coleccionPrincipal}).`,
       };
     }
-    const idPapelera = papeleraDocs[0].id;
+    const principal = objetos.find(o => o.principal)!;
 
-    const op: ConId<Operacion> = logDoc.objeto;
+    const op: ConId<Operacion> = { ...principal.data, idOperacion: principal.idOriginal, id: principal.idOriginal };
     op.estado = this.operacionFactory.estadoInicial();
     op.km = 0;
 
@@ -468,32 +469,38 @@ export class OperacionService implements OnDestroy {
     }
     const items = this.asignacionService.reactivarItemEnLista(tablero.items, op.idOperacion);
 
-    const escrituras: EscrituraBatch[] = [
-      { coleccion: 'papelera', id: idPapelera, data: null, modo: 'eliminar' },
+    escrituras.push(
       { coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), modo: 'crear' },
       {
         coleccion: 'asignaciones', id: op.fecha,
         data: this.asignacionService.asignacionToFirestore({ ...tablero, items }),
         modo: 'reemplazar',
       },
-    ];
+    );
+
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'RESTAURAR', 'operaciones', op.idOperacion, `Operación ${op.idOperacion} restaurada desde papelera`,
+    );
 
     try {
       await this.db.commitBatch(escrituras);
     } catch (e: any) {
-      this.logService.logEvent('ALTA', 'operaciones',
-        `Error al restaurar operación ${op.idOperacion}: ${e?.message ?? e}`, op.idOperacion, false);
+      await this.logRegistro.registrarError(
+        'RESTAURAR', 'operaciones', op.idOperacion, `Error al restaurar operación ${op.idOperacion}: ${e?.message ?? e}`,
+      );
       return { exito: false, mensaje: `Error al restaurar la operación: ${e?.message ?? e}.` };
     }
-
-    this.logService.logEvent('ALTA', 'operaciones',
-      `Operación ${op.idOperacion} restaurada desde papelera`, op.idOperacion, true);
 
     return { exito: true, mensaje: `Operación ${op.idOperacion} restaurada correctamente.` };
   }
 
   private opToFirestore(op: Operacion): Omit<Operacion, 'idOperacion'> {
-    const { idOperacion, ...resto } = op;
+    // Excluimos idOperacion (se almacena solo como ID del documento, no como
+    // campo) e id (metadata de ConId, presente cuando el caller pasa
+    // ConId<Operacion> — bajaOperacion/restaurarOperacion — ausente cuando pasa
+    // Operacion a secas — altaDesdeAsignacion, op recién construida por el
+    // factory, sin id). Mismo patrón que Cliente/Chofer/Proveedor.toFirestore().
+    const { idOperacion, id, ...resto } = op as any;
     return resto;
   }
 

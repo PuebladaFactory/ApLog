@@ -1762,6 +1762,136 @@ motivo que la entrada anterior — sin credenciales de sesión disponibles en es
 
 ---
 
+## Frente Log — mecanismo unificado (Agosto 2026)
+
+Reemplaza el mecanismo disperso de logging (`StorageService` acoplado a cada CRUD +
+coordinadores atómicos llamando directo a `LogService`, con duplicados y registros
+faltantes confirmados) por uno único: el registro de log es una escritura más dentro
+del mismo batch atómico que persiste el negocio, no una llamada aparte después — si el
+batch no commitea, no hay log; si commitea, el log queda garantizado adentro.
+
+**Piezas nuevas, conviven con las viejas:** `RegistroLog`/`AccionLog`/`CambioCampo`
+(`interfaces/registro-log.ts`) y `LogRegistroService` (`servicios/log-registro/`),
+colección nueva `registroLog` — no reemplazan a `LogEntry`/`LogService`/`logs`.
+`agregarAlBatch()` pliega la entrada de log al mismo `EscrituraBatch[]` del caller;
+para EDITAR arma el diff (`cambios: CambioCampo[]`) leyendo el estado anterior antes
+del commit. Exclusión del rol `dev` centralizada en un único punto.
+
+**Migrado:** ALTA/EDITAR/BAJA simple de Cliente/Chofer/Proveedor y sus vehículos, alta
+de Operación desde Asignación, y los métodos de `AsignacionService` sobre el tablero.
+**Explícitamente NO migrado en esta primera etapa:** toda baja que pase por la
+colección vieja `papelera` (bajas principales de Cliente/Chofer/Proveedor, baja/
+restaurar de Operación) — brecha resuelta después por el Frente Papelera (ver entrada
+siguiente).
+
+**Consolidación de cascadas:** Chofer/Proveedor + vehículos, y el resto del CRUD de
+Legajos, pasaron de un `commitBatch` por escritura suelta (sin atomicidad entre sí) a
+un solo `commitBatch` por cascada completa, sin perder granularidad de auditoría.
+Reconciliación de vehículos por `dominio` (única clave de negocio estable) para evitar
+escrituras/logs innecesarios en vehículos sin cambios.
+
+**Pantalla `RegistroLogComponent`:** nueva, independiente de la pantalla vieja
+(`RegistroComponent`/`logs`, que sigue viva como histórico congelado — decisión
+explícita de no migrar los logs viejos, motivos completos en CLAUDE.md). Paginación
+con cursor real (`DbFirestoreService.getPaginado`, genérico), filtros de fecha/
+colección server-side y de acción/usuario/status client-side, fila expandible con el
+diff de EDITAR. `VisualizadorObjetoService` nuevo (dispatcher colección → modal real
+en modo vista), pensado desde el vamos para reusarse en Papelera — terminó conectado
+ahí en el frente siguiente.
+
+**Complementos:** login/logout y las 4 Cloud Functions de gestión de usuarios
+migrados también a `LogRegistroService` (`registrarMutacionSuelta()`, nuevo, para
+mutaciones que ya se escribieron fuera de un batch del cliente). **Bug real
+encontrado y corregido en el camino:** cerrar sesión con rol admin/user tiraba
+`permission-denied` y dejaba la sesión trabada — el log de LOGOUT se escribía después
+de `signOut()`, con el token ya inválido. Fix de dos partes: `registrarAccion()`/
+`registrarError()` pasaron a ser best-effort de verdad (nunca propagan), y el log se
+reordenó antes de `signOut()`.
+
+**Fix post-cierre — bloqueante, no detectado por `tsc`/`ng build`:** `registroLog`
+nunca se agregó a `moduloDe()` de `firestore.rules` — colección sin mapeo = denegada
+por defecto, lo que hacía fallar el batch ENTERO de cualquier mutación migrada (no
+solo el log), incluso para `dev`. Corregido y verificado contra el emulador, pero
+quedó sin deployar un tiempo — resuelto recién junto con el deploy del Frente
+Papelera (ver esa entrada).
+
+Detalle completo (los distintos frentes, los complementos y el fix) en `CLAUDE.md` →
+"Frente Log — mecanismo unificado".
+
+**Verificación:** `tsc --noEmit` + `ng build` limpios en cada etapa (mismo error de
+budget de bundle preexistente). Contra el emulador: `test-registro-log-rules.mjs`
+(14/14), `test-registro-log-paginacion.mjs` (8/8), `test-auth-log-registro.mjs`
+(6/6), `test-logout-orden.mjs` (4/4, reproduce y confirma el fix del bug de
+cerrarSesion), `test-gestion-usuarios-log.mjs` (11/11, contra las Cloud Functions
+reales). Prueba manual real (clics contra demo) pendiente de quien lo despliegue en
+varios puntos — detalle en CLAUDE.md.
+
+---
+
+## Frente Papelera — mecanismo de referencia (Agosto 2026)
+
+Reemplaza el mecanismo de papelera de Cliente/Chofer/Proveedor/Operación —
+escrituras sueltas no atómicas, objeto embebido compuesto con 3 formas distintas
+según el caller — por uno único, atómico, y conectado a `registroLog` (cierra la
+brecha que el Frente Log había dejado abierta a propósito: hoy BAJA/RESTAURAR de
+estas 4 entidades y sus sub-entidades generan entradas reales en `registroLog`, no
+solo en el `logs` viejo).
+
+**El modelo** (`interfaces/registro-papelera.ts`): `PapeleraEvento` — un doc por
+acción de baja, colección `papeleraEventos`, con `estado: 'activo'|'restaurado'`
+(nunca se borra, queda como historial) y `refs: RefObjetoPapelera[]` (una entrada por
+entidad tocada). `objetosEliminados` — un doc por entidad archivada (principal o
+secundaria), sin wrapper, id determinístico (`${coleccion}__${idOriginal}`) para
+lookup directo sin query. Separa el EVENTO del CONTENIDO archivado — a diferencia
+del mecanismo viejo, que guardaba todo embebido con una forma distinta por caller.
+
+**`PapeleraService`** (servicio de apoyo "tonto respecto al dominio", nunca importa
+Cliente/Chofer/Proveedor/OperacionService): arma las escrituras de baja/restauración
+sobre el `EscrituraBatch[]` que cada `XxxService` ya viene construyendo — no
+commitea. Cada servicio dueño de la entidad decide cómo reconstruirla al restaurar.
+`PapeleraConsultaService` para la paginación de la pantalla.
+
+**Atomicidad ganada de paso, más allá del log:** `eliminarChoferConVehiculos` y
+`eliminarProveedorConVehiculos` hacían 2 y 3 `commitBatch` separados respectivamente
+(el peor caso: un loop SIN batch, uno por cada chofer del proveedor) — ahora un solo
+`commitBatch` por cascada completa.
+
+**Pantallas:** la vieja se renombró a `PapeleraLegadoComponent`
+(`ajustes/papelera-legado`), sin tocar su lógica — sigue siendo el único camino de
+papelera para Vendedores/Facturación/Liquidación (fuera de alcance de este frente, a
+propósito). La ruta `ajustes/papelera` pasa a la pantalla nueva
+(`PapeleraComponent`), sobre el modelo por referencia, con detalle vía
+`VisualizadorObjetoService` (snapshot para eventos activos, objeto vivo para
+restaurados).
+
+**Dos fixes de Security Rules encontrados al implementar** (además del bug de
+permisos para `demo` que motivó el frente): `restaurarXxx()` marca el evento como
+`'restaurado'` con un `set()` sobre un doc existente — Firestore lo evalúa como
+`update`, por lo que faltaba `editar` para `admin`; y `getObjetoEliminado` es un
+`getById` alcanzable por `user` desde flujos de Operaciones/Liquidaciones sin pasar
+por la pantalla de Papelera, por lo que faltaba `leer` para ese rol. Verificado
+contra el emulador (32/32) sin regresión en `registroLog`/`asignaciones`.
+
+**Fix post-implementación:** `OperacionService.opToFirestore` no excluía el campo
+`id` (metadata de `ConId`) — al restaurar una operación, el documento quedaba con un
+`id` de más en el cuerpo. Bug preexistente al frente, no introducido por él;
+corregido.
+
+**Deployado a `demoapplog`** (`firebase deploy --only
+firestore:rules,firestore:indexes --project demoapplog`) — junto con los dos fixes
+de `registroLog` que habían quedado pendientes del Frente Log. NO deployado a
+`pf-logistics`/Vantruck.
+
+Detalle completo en `CLAUDE.md` → "Frente Papelera — mecanismo de referencia".
+
+**Verificación:** `tsc --noEmit` + `ng build:demo` limpios. Security Rules
+verificadas contra el emulador (ver arriba). Prueba manual del desarrollador contra
+`demo`, en curso: baja simple (Operación) y baja en cascada (Chofer, con vehículos +
+legajo) confirmadas OK; resto (Cliente, Proveedor, restaurar cada caso, pantallas de
+detalle) sigue en curso.
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)
@@ -1771,4 +1901,3 @@ motivo que la entrada anterior — sin credenciales de sesión disponibles en es
 - Módulo Reportes
 - Módulo Ajustes
 - Tarifas (refactorización del sistema completo)
-- Restauración desde papelera (EntidadResolverService)

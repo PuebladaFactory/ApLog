@@ -7,13 +7,14 @@ import { InformeOp } from 'src/app/interfaces/informe-op';
 
 import { LogDoc } from 'src/app/interfaces/log-doc';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
+import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.service';
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { PdfService } from 'src/app/servicios/informes/pdf/pdf.service';
 import { LogService } from 'src/app/servicios/log/log.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
+import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 
 @Component({
     selector: 'app-modal-objeto',
@@ -32,9 +33,12 @@ export class ObjetoPapeleraComponent implements OnInit {
   $choferes!: Chofer[];
   $proveedores!: Proveedor[];
   chofer: string = "";
+  /** Fallback cuando el proveedor de un chofer histórico también está en
+   *  papelera — ver getTarifaLabel/resolverTarifaProveedorFallback. */
+  private tarifasProveedorFallback: RefTarifaHabilitada[] | null = null;
   private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
-  
-  constructor(public activeModal: NgbActiveModal, private dbFirebase: DbFirestoreService, private storageService: StorageService,  private pdfServ: PdfService, private excelServ: ExcelService, private logService: LogService, private proveedorService: ProveedorService){}
+
+  constructor(public activeModal: NgbActiveModal, private dbFirebase: DbFirestoreService, private storageService: StorageService,  private pdfServ: PdfService, private excelServ: ExcelService, private logService: LogService, private proveedorService: ProveedorService, private papeleraService: PapeleraService){}
 
   ngOnInit(): void {  
     console.log("this.fromParent", this.fromParent);    
@@ -64,8 +68,9 @@ export class ObjetoPapeleraComponent implements OnInit {
       this.storageService.proveedores$
           .pipe(takeUntil(this.destroy$)) // Toma los valores hasta que destroy$ emita
           .subscribe(data => {
-            this.$proveedores = data;            
-          })    
+            this.$proveedores = data;
+          })
+      this.resolverTarifaProveedorFallback();
     }
     if(this.fromParent.modo === "legajos"){
       this.storageService.proveedores$
@@ -209,13 +214,28 @@ export class ObjetoPapeleraComponent implements OnInit {
       this.chofer = choferDoc[0].objeto.apellido + " " + choferDoc[0].objeto.nombre
     }
 
+    /** Resuelve, cuando el proveedor de un chofer histórico no está en memoria,
+     *  el fallback contra `objetosEliminados` — el proveedor también puede estar
+     *  en papelera. Async, por eso corre aparte de getTarifaLabel (sync, atado al
+     *  template); popula tarifasProveedorFallback, que dispara change detection
+     *  al resolver (zone.js patchea la promesa). */
+    private async resolverTarifaProveedorFallback(): Promise<void> {
+      const contratacion = this.objeto?.contratacion;
+      if (contratacion?.tipo !== 'proveedor') return;
+      if (this.proveedorService.getProveedorPorId(contratacion.idProveedor)) return;
+      const proveedorEliminado = await this.papeleraService.getObjetoEliminado<Proveedor>(
+        'proveedores', contratacion.idProveedor,
+      );
+      this.tarifasProveedorFallback = proveedorEliminado?.tarifasHabilitadas ?? null;
+    }
+
     // TODO: refactor Tarifas — reemplazar por lectura directa de tarifasHabilitadas
     getTarifaLabel(objeto: any): string {
       if (objeto?.contratacion?.tipo === 'proveedor') {
-        // TODO: refactor Papelera — si el proveedor también está en papelera, no se puede resolver.
         const proveedor = this.proveedorService.getProveedorPorId(objeto.contratacion.idProveedor);
-        if (!proveedor) return '—';
-        const tProveedor = tarifaTipoDesdeHabilitadas(proveedor.tarifasHabilitadas);
+        const tarifasHabilitadas = proveedor?.tarifasHabilitadas ?? this.tarifasProveedorFallback;
+        if (!tarifasHabilitadas) return '—';
+        const tProveedor = tarifaTipoDesdeHabilitadas(tarifasHabilitadas);
         return tProveedor.general ? 'General' : tProveedor.especial ? 'Especial' : tProveedor.personalizada ? 'Personalizada' : 'Eventual';
       }
       const t = tarifaTipoDesdeHabilitadas(objeto?.tarifasHabilitadas ?? []);

@@ -2,10 +2,11 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Chofer, ContratacionChofer, Vehiculo } from 'src/app/interfaces/chofer';
+import { Legajo } from 'src/app/interfaces/legajo';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
+import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ChoferFactoryService, ChoferFormData } from 'src/app/servicios/choferes/chofer-factory.service';
 
@@ -22,8 +23,8 @@ export class ChoferService implements OnDestroy {
 
   constructor(
     private db: DbFirestoreService,
-    private storageService: StorageService,
     private logRegistro: LogRegistroService,
+    private papeleraService: PapeleraService,
     private legajoService: LegajoService,
     private choferFactoryService: ChoferFactoryService,
   ) {}
@@ -139,6 +140,14 @@ export class ChoferService implements OnDestroy {
     // Excluimos id y type (metadata de ConIdType) e idVehiculo
     // (se almacena solo como ID del documento, no como campo)
     const { idVehiculo, id, type, ...resto } = vehiculo as any;
+    return resto;
+  }
+
+  /** Reusada por ProveedorService (delegación, mismo patrón que vehiculoToFirestore /
+   *  getVehiculosPorProveedor) para armar el objeto de papelera del legajo en la
+   *  cascada de baja de Proveedor. */
+  legajoToFirestore(legajo: ConIdType<Legajo>): Omit<Legajo, 'idLegajo'> {
+    const { idLegajo, id, type, ...resto } = legajo as any;
     return resto;
   }
 
@@ -274,57 +283,98 @@ export class ChoferService implements OnDestroy {
       v.asignadoA.tipo === 'chofer' && v.asignadoA.idChofer === chofer.idChofer
     );
 
-    // 2. Leer y preparar (sin escribir) la baja del legajo — baja simple, sin
-    // papelera propia; se incluye en el objeto compuesto de abajo, mismo criterio
-    // que Vehiculo en esta misma cascada.
+    // 2. Leer y preparar (sin escribir) la baja del legajo
     const bajaLegajo = await this.legajoService.prepararBajaLegajoDeChofer(chofer.idChofer);
 
-    // 3. Construir objeto compuesto para la papelera
-    const objetoPapelera = {
-      chofer,
-      vehiculos,
-      legajo: bajaLegajo?.legajo ?? null,
-    };
-
-    // 4. Eliminar chofer de Firestore y guardar objeto compuesto en papelera
-    // (baja compuesta con papelera: fuera del frente de Log, ver eliminarCliente)
-    await this.storageService.deleteItemPapeleraCompuestoAsync(
-      'choferes',
-      chofer.idChofer,
-      objetoPapelera,
-      'BAJA',
-      `Baja de Chofer ${apellido} ${nombre}`,
-      motivo,
-    );
-
-    // 5. Batch único: baja de vehículos + baja de legajo (sin papelera propia
-    // ninguno de los dos — la baja compuesta con papelera es solo la del chofer,
-    // arriba). Un log por cada escritura real.
-    const escrituras: EscrituraBatch[] = [];
+    // 3. Batch único: baja de chofer + vehículos + legajo + evento de papelera
+    // (referencia, ver PapeleraService), con un log por cada escritura real
+    // (granularidad de auditoría preservada, ver "Frente Papelera" en CLAUDE.md).
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: 'choferes', id: chofer.idChofer, data: null, modo: 'eliminar' },
+    ];
     for (const vehiculo of vehiculos) {
       escrituras.push({ coleccion: 'vehiculos', id: vehiculo.idVehiculo, data: null, modo: 'eliminar' });
+    }
+    if (bajaLegajo) {
+      escrituras.push(bajaLegajo.escritura);
+    }
+
+    this.papeleraService.prepararBajaEnBatch(escrituras, motivo, [
+      { coleccion: 'choferes', id: chofer.idChofer, data: this.toFirestore(chofer), principal: true },
+      ...vehiculos.map(v => ({
+        coleccion: 'vehiculos', id: v.idVehiculo, data: this.vehiculoToFirestore(v), principal: false,
+      })),
+      ...(bajaLegajo ? [{
+        coleccion: 'legajos', id: bajaLegajo.legajo.id, data: this.legajoToFirestore(bajaLegajo.legajo), principal: false,
+      }] : []),
+    ]);
+
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'BAJA', 'choferes', chofer.idChofer, `Baja de Chofer ${apellido} ${nombre}`,
+    );
+    for (const vehiculo of vehiculos) {
       await this.logRegistro.agregarAlBatch(
         escrituras, 'BAJA', 'vehiculos', vehiculo.idVehiculo,
         `Vehículo eliminado por baja de Chofer ${apellido} ${nombre}`,
       );
     }
     if (bajaLegajo) {
-      escrituras.push(bajaLegajo.escritura);
       await this.logRegistro.agregarAlBatch(
         escrituras, 'BAJA', 'legajos', bajaLegajo.legajo.id,
         `Legajo eliminado por baja de Chofer ${apellido} ${nombre}`,
       );
     }
-    if (escrituras.length > 0) {
-      try {
-        await this.db.commitBatch(escrituras);
-      } catch (e: any) {
-        await this.logRegistro.registrarError(
-          'BAJA', 'vehiculos', chofer.idChofer,
-          `Error al eliminar vehículos/legajo por baja de Chofer ${apellido} ${nombre}: ${e?.message ?? e}`,
-        );
-        throw e;
-      }
+
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'BAJA', 'choferes', chofer.idChofer,
+        `Error en baja de Chofer ${apellido} ${nombre} (chofer + vehículos + legajo): ${e?.message ?? e}`,
+      );
+      throw e;
+    }
+  }
+
+  async restaurarChofer(idEvento: string): Promise<void> {
+    const escrituras: EscrituraBatch[] = [];
+    const { evento, objetos } = await this.papeleraService.prepararRestauracionEnBatch(escrituras, idEvento);
+    if (evento.coleccionPrincipal !== 'choferes') {
+      throw new Error(
+        `El evento de papelera ${idEvento} no corresponde a Chofer (coleccionPrincipal: ${evento.coleccionPrincipal}).`,
+      );
+    }
+
+    for (const objeto of objetos) {
+      escrituras.push({ coleccion: objeto.coleccion, id: objeto.idOriginal, data: objeto.data, modo: 'crear' });
+    }
+
+    const principal = objetos.find(o => o.principal)!;
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'RESTAURAR', 'choferes', principal.idOriginal,
+      `Chofer ${principal.idOriginal} restaurado desde papelera`,
+    );
+    for (const objeto of objetos.filter(o => !o.principal && o.coleccion === 'vehiculos')) {
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'RESTAURAR', 'vehiculos', objeto.idOriginal,
+        `Vehículo ${objeto.idOriginal} restaurado por restauración de Chofer ${principal.idOriginal}`,
+      );
+    }
+    for (const objeto of objetos.filter(o => !o.principal && o.coleccion === 'legajos')) {
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'RESTAURAR', 'legajos', objeto.idOriginal,
+        `Legajo ${objeto.idOriginal} restaurado por restauración de Chofer ${principal.idOriginal}`,
+      );
+    }
+
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'RESTAURAR', 'choferes', principal.idOriginal,
+        `Error al restaurar Chofer ${principal.idOriginal} (chofer + vehículos + legajo): ${e?.message ?? e}`,
+      );
+      throw e;
     }
   }
 

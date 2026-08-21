@@ -169,20 +169,20 @@ del servicio.
 (`servicios/storage/storage.service.ts`), que expone múltiples BehaviorSubjects y
 sincroniza con localStorage.
 
-`StorageService` NO desaparece: sigue manteniendo el estado de los módulos viejos, y
-sigue siendo el camino para las bajas con papelera de Clientes/Choferes/Proveedores
-(ver "Frente Log — mecanismo unificado"). Para alta/edición/baja simple de esos mismos
-módulos, el `XxxService` ya NO pasa por `StorageService` — escribe directo vía
-`DbFirestoreService.commitBatch` + `LogRegistroService` (ver "Escritura en Firestore"
-en Patrones de refactorización).
+`StorageService` NO desaparece: sigue manteniendo el estado de los módulos viejos.
+**Actualizado (Frente Papelera, ver más abajo):** la baja con papelera de
+Cliente/Chofer/Proveedor/Operación (los 4 módulos ya migrados) YA NO pasa por
+`StorageService.deleteItemPapeleraCompuestoAsync()` — escribe atómico vía
+`DbFirestoreService.commitBatch` + `PapeleraService` + `LogRegistroService`, igual que
+el resto de sus escrituras. `StorageService` sigue siendo el único camino de papelera
+para Vendedores/Facturación/Liquidación, fuera de alcance de ese frente.
 
 Flujo de datos en módulos refactorizados:
 ```
 Lectura:   Firestore --(listener)--> XxxService (BehaviorSubject) --> Component
-Escritura (alta/edición/baja simple):
-           Component --> XxxService --> DbFirestoreService.commitBatch (log incluido) --> Firestore
-Escritura (baja con papelera, sin migrar):
-           Component --> XxxService --> StorageService (log viejo) --> DbFirestoreService --> Firestore
+Escritura (alta/edición/baja simple, y baja/restauración con papelera):
+           Component --> XxxService --> DbFirestoreService.commitBatch (log +
+           evento de papelera incluidos) --> Firestore
 ```
 
 ### Capa de datos
@@ -266,7 +266,8 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `storage/` | Estado de módulos no migrados (BehaviorSubjects + localStorage) y capa de escritura/logging centralizada para todos los módulos |
 | `log/` | Log de actividad viejo (colección `logs`) — sigue activo para lo no migrado (ver "Frente Log") |
 | `log-registro/` | `LogRegistroService` (escritura, dentro del batch atómico de negocio) + `RegistroLogConsultaService` (lectura/paginación, para `RegistroLogComponent`) sobre `registroLog` — ver "Frente Log — mecanismo unificado" |
-| `visualizador-objeto/` | `VisualizadorObjetoService` — dispatcher `coleccion -> modal de vista real`, usado por `RegistroLogComponent` (pensado para reusarse en Papelera, no conectado todavía) |
+| `papelera/` | `PapeleraService` (preparación de escrituras de baja/restauración por referencia, dentro del batch atómico de negocio) + `PapeleraConsultaService` (lectura/paginación, para `PapeleraComponent`) sobre `papeleraEventos`/`objetosEliminados` — ver "Frente Papelera — mecanismo de referencia" |
+| `visualizador-objeto/` | `VisualizadorObjetoService` — dispatcher `coleccion -> modal de vista real`, usado por `RegistroLogComponent` y (desde el Frente Papelera) por `PapeleraComponent` vía el parámetro `snapshot` de `verObjeto` |
 | `tarifas/` | Resolución y cálculo de tarifas |
 | `liquidaciones/` | Cálculo de liquidaciones y transiciones de estado de operación (proformas, InformeLiq) |
 | `informes/` | Generación de reportes Excel y PDF |
@@ -484,9 +485,13 @@ principal + N relacionadas, ej. chofer + vehículos + legajo): un único
 `EscrituraBatch[]`/`commitBatch` por cascada, armado a mano en el método (no vía los
 helpers de 1 escritura), con un `agregarAlBatch` por cada escritura real — atomicidad
 completa sin perder granularidad de log (Frente 2). Ninguno de los dos casos pasa ya
-por `StorageService`. Baja con papelera: sigue igual que antes,
-`StorageService.deleteItemPapeleraCompuestoAsync()` con objeto compuesto que incluye
-todas las entidades relacionadas (fuera de este frente, ver deuda ahí).
+por `StorageService`. **Baja con papelera (actualizado, Frente Papelera):** ya NO usa
+`StorageService.deleteItemPapeleraCompuestoAsync()` para Cliente/Chofer/Proveedor/
+Operación — un único `EscrituraBatch[]`/`commitBatch` por cascada, igual que
+alta/edición, con `PapeleraService.prepararBajaEnBatch()` armando el evento +
+objetos archivados por referencia (en vez de un objeto compuesto embebido) y
+`restaurarXxx()` en el `XxxService` dueño para la restauración — ver "Frente Papelera
+— mecanismo de referencia" más abajo.
 
 ### Operaciones compuestas
 Las operaciones que afectan múltiples entidades viven en XxxService, no en el componente:
@@ -1692,7 +1697,11 @@ migradas.
 nuevo mecanismo (o una extensión de `LogRegistroService`) va a cubrir la escritura a
 `papelera`, para poder migrar de una vez las bajas reales de Cliente/Chofer/Proveedor
 que hoy quedan fuera por este motivo — no es solo el caso de Operaciones ya anotado
-abajo.
+abajo. ✅ **Resuelto — ver "Frente Papelera — mecanismo de referencia" más abajo:**
+Cliente/Chofer/Proveedor/Operación (BAJA y RESTAURAR, entidad principal y
+sub-entidades) ya llegan a `registroLog`, vía `PapeleraService` + `LogRegistroService`
+dentro del mismo `commitBatch`. Vendedores/Facturación/Liquidación siguen fuera,
+igual que el resto de este Frente 1.
 
 ### Frente 2 — consolidación de cascadas en batch (Chofer/Proveedor/Legajos, Agosto 2026)
 
@@ -1821,12 +1830,13 @@ con guardar el archivo, sin reiniciar) y viendo caer a 5/14, incluido `dev`, ant
 restaurar el fix. Sin este chequeo contra el emulador el bug no se detecta: es
 puramente de Security Rules, invisible para `tsc`/`ng build`.
 
-⚠️ **Deploy pendiente:** el fix está en el archivo local (`firestore.rules`), pero
-Security Rules no tiene efecto real hasta desplegarse — `firebase deploy --only
-firestore:rules --project demo` (y, cuando corresponda, `--project vantruck`). Hasta
-ese deploy, el bloqueo sigue activo contra los proyectos reales aunque el código y el
-emulador ya estén corregidos. Mismo recordatorio que ya deja el resto de este archivo
-para cualquier cambio de `firestore.rules` (ver "Cloud Functions" → orden de deploy).
+**Deployado a `demoapplog`** — el fix quedó sin desplegar durante un tiempo (bloqueo
+real contra el proyecto real mientras tanto), resuelto recién junto con el deploy de
+Security Rules del Frente Papelera (`firebase deploy --only
+firestore:rules,firestore:indexes --project demoapplog`, ver "Frente Papelera" más
+abajo) — mismo archivo `firestore.rules`, un solo deploy cubrió ambos fixes
+acumulados. NO deployado a `pf-logistics`/Vantruck, mismo criterio que el resto de
+este archivo (ver "Cloud Functions" → orden de deploy).
 
 ### Frente 3 — pantalla `RegistroLogComponent` (Agosto 2026)
 
@@ -1869,10 +1879,11 @@ de `AjustesControlComponent` (`tab4`), junto a Usuarios/Registro/Papelera.
   índices en el proyecto hasta este frente — registrado en `firebase.json` →
   `firestore.indexes`). Una entrada: `registroLog` por `coleccion` (ASC) +
   `timestamp` (DESC) — necesaria porque el filtro de colección combina una igualdad
-  con el rango+orden de fecha. **Deploy pendiente**, igual que el fix de
-  `firestore.rules` de más arriba: `firebase deploy --only firestore:indexes --project
-  demo`. ⚠️ El emulador de Firestore NO exige índices compuestos (a diferencia de
-  producción) — verificado que la query en sí funciona bien contra el emulador
+  con el rango+orden de fecha. **Deployado a `demoapplog`**, junto con el fix de
+  `firestore.rules` de más arriba y el índice del Frente Papelera, en el mismo deploy
+  (ver nota de deploy más arriba). ⚠️ El emulador de Firestore NO exige índices
+  compuestos (a diferencia de producción) — verificado que la query en sí funciona
+  bien contra el emulador
   (`functions/test-registro-log-paginacion.mjs`, nuevo: siembra 40 documentos, pagina
   sin filtro y con filtro de colección, confirma orden desc, sin duplicados ni saltos
   entre páginas — 8/8 checks), pero la necesidad real del índice en producción/demo
@@ -2118,6 +2129,206 @@ escriba directo).
   preexistente). Prueba manual real (crear/editar/cambiar email/eliminar un usuario
   haciendo clic en la app, contra demo) pendiente de quien lo despliegue.
 
+### Decisión — sin migración de `logs` a `registroLog` (Agosto 2026)
+
+Evaluado y descartado explícitamente: migrar los registros viejos (colección
+`logs`, interfaz `LogEntry`) al mecanismo nuevo (`registroLog`, `RegistroLog`)
+cuando este frente llegue a Vantruck. Motivos:
+
+- Los EDITAR viejos no tienen diff (`LogEntry` no tiene el equivalente a
+  `cambios`) — cualquier migración degrada el dato, no lo preserva.
+- `idObjet` en los registros viejos usa los ids numéricos legacy de las
+  entidades. Resolverlos a los ids string de Firestore requeriría TODAS las
+  entidades ya migradas a id string, y ni así sería 1:1 garantizado — una
+  sub-entidad recreada varias veces (ej. vehículos) no tiene "el" id string
+  correspondiente a un momento pasado.
+- Uso esperado de esta pantalla: bajo (consulta ocasional de auditoría, no
+  registro con requisito de retención/compliance) — no justifica el costo.
+
+Alternativas evaluadas y descartadas: pantalla única que lea ambas colecciones
+(mismo problema de id sin resolver para el botón "ver objeto", más el costo de
+normalizar dos esquemas distintos en tiempo de lectura — `LogEntry` no tiene
+`cambios` ni `action` como unión cerrada); leer directo de los backups para
+reconstruir historial de entidades ya eliminadas (la más cara, para el caso
+más marginal).
+
+Decisión: `RegistroComponent` (pantalla vieja, colección `logs`) queda viva
+indefinidamente como histórico congelado a la fecha del corte a Vantruck —
+no recibe escrituras nuevas del mecanismo nuevo, solo se consulta.
+`RegistroLogComponent` (`registroLog`) arranca en blanco desde esa fecha.
+Sin fusión de pantallas ni migración de datos entre ambas colecciones.
+
+## Frente Papelera — mecanismo de referencia (Agosto 2026)
+
+Reemplaza el mecanismo de papelera de Cliente/Chofer/Proveedor/Operación (los 4
+módulos ya migrados al resto del refactor) — `StorageService.deleteItemPapelera*`,
+escrituras sueltas no atómicas, objeto embebido compuesto con 3 formas distintas
+según el caller (`{cliente}`, `{chofer, vehiculos, legajo}`,
+`{proveedor, vehiculos, choferes, legajos}`) — por uno único, atómico, y conectado a
+`registroLog` (ver "Frente Log — mecanismo unificado" más arriba). Cerraba la brecha
+que el Frente Log había dejado abierta a propósito ("Pendiente natural para el frente
+de Papelera", ver arriba): hoy BAJA/RESTAURAR de Cliente/Chofer/Proveedor/Operación
+(y sus sub-entidades vehículos/legajos) generan entradas reales en `registroLog`, no
+solo en el `logs` viejo.
+
+**Por qué por referencia y no embebido:** el mecanismo viejo guardaba el objeto
+completo (y sus relacionados) DENTRO del documento de papelera, con una forma
+distinta por caller — imposible de leer genéricamente. El nuevo separa el EVENTO
+(quién, cuándo, por qué, qué colecciones/ids tocó) del CONTENIDO archivado (una copia
+de cada entidad, en su propia colección, con id determinístico) — permite un
+point-lookup directo (`getObjetoEliminado`) sin tener que saber la forma del evento
+que lo generó, y una pantalla de listado genérica sobre los eventos.
+
+**El modelo** (`interfaces/registro-papelera.ts`):
+- `PapeleraEvento`: un doc por acción de baja del usuario, colección
+  `papeleraEventos`. `timestamp`/`userId`/`userEmail`/`motivoBaja` (paralelo a
+  `RegistroLog`), más `coleccionPrincipal`/`idPrincipal` (para poder listar/filtrar
+  sin desarmar `refs`), `estado: 'activo' | 'restaurado'` (no se borra al
+  restaurar — queda como historial, mismo criterio que `registroLog` nunca se
+  edita/borra) y `refs: RefObjetoPapelera[]` (una entrada por entidad tocada,
+  `{coleccion, idOriginal, principal}` — exactamente una con `principal: true`).
+- `objetosEliminados`: un doc por cada entidad archivada (principal o secundaria),
+  SIN wrapper — el documento es la entidad tal cual estaba en su colección de
+  origen (mismo shape que `toFirestore()`, sin id adentro). Id determinístico
+  `${coleccion}__${idOriginal}` — permite `getById` directo, sin query, tanto para
+  restaurar como para el fallback de los `// TODO: refactor Papelera`.
+- `PapeleraService` (`servicios/papelera/`): servicio de apoyo "tonto respecto al
+  dominio" (mismo principio que `LogRegistroService`/`db` — ver "Ownership por
+  entidad primaria" más arriba) — NUNCA importa
+  Cliente/Chofer/Proveedor/OperacionService ni conoce la forma de ninguna entidad.
+  `prepararBajaEnBatch()`/`prepararRestauracionEnBatch()` solo arman escrituras
+  sobre un `EscrituraBatch[]` que el caller ya viene armando (no commitean); cada
+  `XxxService` dueño de la entidad sigue siendo quien decide CÓMO reconstruirla al
+  restaurar (`restaurarCliente`/`restaurarChofer`/`restaurarProveedor`/
+  `restaurarOperacion`, todos con la firma `(idEvento: string) => Promise<...>`).
+  `PapeleraConsultaService` (paginación, mismo patrón que
+  `RegistroLogConsultaService`) es el otro servicio nuevo.
+- Patrón de caller, igual en los 4 `XxxService` (ver "Ownership por entidad
+  primaria — Servicios de apoyo de bajo nivel"): un solo `EscrituraBatch[]` con
+  delete(s) de la(s) colección(es) de origen + `papeleraService.prepararBajaEnBatch`
+  + un `logRegistro.agregarAlBatch('BAJA', ...)` por cada entidad tocada + un solo
+  `commitBatch`. Restaurar es el espejo: `papeleraService.prepararRestauracionEnBatch`
+  + un `crear` por cada objeto devuelto + un `agregarAlBatch('RESTAURAR', ...)` por
+  cada uno + un solo `commitBatch`. Mismo criterio de granularidad de log que el
+  Frente 2 (Chofer/Proveedor + vehículos/legajo) — NO se consolida en una sola
+  entrada por cascada.
+- **Chofer/Proveedor:** reemplaza además una brecha de atomicidad real que tenía el
+  código viejo, más allá del log — `eliminarChoferConVehiculos` hacía 2
+  `commitBatch` separados (chofer+papelera, después vehículos+legajo);
+  `eliminarProveedorConVehiculos` hacía 3 fases, la última un loop NO bacheado de N
+  `deleteItemPapeleraCompuestoAsync` (uno por chofer del proveedor). Ambos ahora un
+  solo `commitBatch` por cascada completa.
+- **Operación:** `bajaOperacion`/`restaurarOperacion` en `OperacionService` dejan de
+  construir un `LogDoc` a mano y de depender de `LogService`/`LogDoc` — usan
+  `PapeleraService` + `LogRegistroService.agregarAlBatch`, dentro del mismo
+  `commitBatch` que ya escribía operaciones/informes/tablero. `restaurarOperacion`
+  cambió de firma: de `(logDoc: LogDoc)` a `(idEvento: string)`. **Sin
+  secundarios** — los `informesOpXxx` que la baja elimina NO se archivan (mismo
+  comportamiento que ya tenía el código viejo, deliberado: los InformeOp no se
+  reconstruyen al restaurar, `restaurarOperacion` siempre deja la op `'abierta'`
+  con `km: 0`, ver "Coordinadores bajaOperacion / restaurarOperacion" más arriba).
+- **`VisualizadorObjetoService.verObjeto`** gana un tercer parámetro opcional
+  `snapshot?: any` — cuando viene con valor, se usa en vez de `getById` contra la
+  colección viva (el objeto principal de un evento `'activo'` ya no existe ahí) y
+  el aviso Swal cambia de "estado actual" a "objeto eliminado". Sin `snapshot`
+  (uso desde `RegistroLogComponent`, y desde `PapeleraComponent` para eventos
+  `'restaurado'`), comportamiento sin cambios.
+- **`// TODO: refactor Papelera` resueltos con fallback a
+  `papeleraService.getObjetoEliminado()`:** `TableroService` (fallback de
+  `getTipoContratacion` en la baja legacy `anularOperacionYActualizarTablero`,
+  método hoy sin caller real) y `liquidaciones-op.component.ts` (mismo fallback,
+  en la baja de operación cerrada desde Liquidaciones — ver Deuda actualizada
+  arriba). **`objeto-papelera.component.ts` resuelto distinto:** `getTarifaLabel`
+  corre síncrono desde el template, y `PapeleraService.getObjetoEliminado` es
+  async — se resuelve en `ngOnInit` (fire-and-forget, popula un campo que
+  `getTarifaLabel` lee) en vez de adentro del getter. **`proveedor.service.ts`
+  (`resolverTarifasHabilitadasChofer`) NO resuelto, TODO se mantiene a
+  propósito:** corre síncrono dentro de factories puras sin I/O por convención
+  (`OperacionFactoryService`, `operaciones-editor`) — el fallback async no encaja
+  ahí sin romper esa convención; documentado en el propio comentario, no forzado.
+
+**Pantallas (PASO 6):** la pantalla vieja (`raiz/ajustes/papelera/`) se renombró a
+`raiz/ajustes/papelera-legado/` (`PapeleraLegadoComponent`, ruta nueva
+`ajustes/papelera-legado`) SIN tocar su lógica interna — sigue siendo el único
+camino de papelera para Vendedores/Facturación/Liquidación. `raiz/ajustes/papelera/`
+(la ruta `ajustes/papelera` ya existente) pasa a ser la pantalla NUEVA
+(`PapeleraComponent`), sobre `PapeleraConsultaService`/`PapeleraEvento` — mismo
+look&feel que la vieja, filtro `estado` (`'activo'` por default, con opción de ver
+`'restaurado'`), detalle vía `VisualizadorObjetoService.verObjeto` (con snapshot
+para eventos `'activo'`), objetos secundarios listados en línea sin modal propio, y
+Restaurar deshabilitado si `estado !== 'activo'`. Tab nuevo ("Papelera (legado)") en
+`AjustesControlComponent`, mismo patrón que el tab de Registro Log.
+
+**Fuera de alcance — SIN tocar:** Facturación, Liquidación, Vendedores — siguen
+escribiendo a la colección vieja `papelera`/`LogDoc` vía `StorageService`, sin
+cambios. Motivo puntual de **Liquidación**: la baja de una operación cerrada desde
+`liquidaciones-op.component.ts` también elimina los informes de liquidación
+asociados (`eliminarOperacionEInformes`) — antes de poder unificarla con
+`OperacionService.bajaOperacion` hay que refactorizar esa eliminación de informes,
+que queda para el frente de Liquidación (ver Deuda actualizada arriba).
+`StorageService.deleteItemPapelera*`/`addSimpleLogPapelera`/
+`deleteItemPapeleraCompuestoAsync` quedan intactos — siguen siendo lo que usan estos
+3 módulos. `BajaObjetoComponent` (modal de motivo) tampoco se tocó — lo siguen
+usando callers viejos y nuevos por igual.
+
+**Fix de permisos encontrado (Security Rules):** la rama `papelera` de
+`permitido()` en `firestore.rules` no le daba a `demo` NINGÚN permiso, pese a que
+TANTO la ruta nueva (`ajustes/papelera`) como la vieja (`ajustes/papelera-legado`)
+permiten navegar como `demo` (mismo `RoleGuard` que `registro`/`registro-log`) —
+bug preexistente al mecanismo nuevo, corregido de paso. Agregada
+`(r == 'demo' && accion == 'leer')`, mismo criterio que `logs`/`registroLog`.
+**Dos fixes más, encontrados al implementar el mecanismo nuevo (no en el
+mecanismo viejo):** `restaurarXxx()` marca el `PapeleraEvento` como `'restaurado'`
+con una escritura `modo: 'reemplazar'` sobre un doc YA EXISTENTE — Firestore evalúa
+esto como `update`, no `create`, sin importar que el cliente use `set()` (no
+`update()`); sin `editar` en la matriz, esto fallaba incluso para `admin` (el único
+rol no-`dev` con acceso real a la pantalla de Papelera). Agregado `editar` a
+`admin`. Además, `PapeleraService.getObjetoEliminado` (fallback de los
+`// TODO: refactor Papelera`) es un `getById` alcanzable por `user` en flujos de
+Operaciones/Liquidaciones que no pasan por la pantalla de Papelera — agregado
+`leer` a `user`. `moduloDe()` gana `'papeleraEventos'`/`'objetosEliminados'` → bucket
+`'papelera'` (mismo patrón que `'registroLog'` → `'logs'`). Índice compuesto nuevo
+en `firestore.indexes.json`: `papeleraEventos` por `estado` (ASC) + `timestamp`
+(DESC), mismo patrón que el de `registroLog`. Verificado contra el emulador
+(`functions/test-papelera-rules.mjs`, nuevo, mismo patrón que
+`test-registro-log-rules.mjs`: 4 roles × leer/crear/editar/eliminar × 2
+colecciones, 32/32 checks) — y regresión confirmada en verde sobre
+`test-registro-log-rules.mjs`/`test-asignaciones-rules.mjs` (14/14 y 6/6) tras el
+cambio a `firestore.rules`.
+
+**Deployado a `demoapplog`** (`firebase deploy --only firestore:rules,firestore:indexes
+--project demoapplog`) — rules compiladas sin error, índice nuevo desplegado, sin
+`--force` (no se tocó ningún índice remoto preexistente). NO deployado a
+`pf-logistics`/Vantruck — pendiente hasta que se aborde ese frente, mismo criterio que
+el resto de este archivo (ver "Cloud Functions" → orden de deploy).
+
+**Fix post-implementación — `id` residual en `restaurarOperacion`:** verificación
+encontró que `OperacionService.opToFirestore` no excluía el campo `id` (metadata de
+`ConId`, solo `idOperacion`) — al restaurar una operación desde papelera, el
+documento escrito en Firestore quedaba con un campo `id` de más en el cuerpo. Bug
+preexistente al frente, no introducido por él. Fix: `opToFirestore` ahora
+destructura también `id` (vía `as any`, mismo patrón que
+Cliente/Chofer/Proveedor.toFirestore()). La firma del parámetro se mantuvo en
+`op: Operacion` (no se cambió a `ConId<Operacion>` como se había planteado
+inicialmente) porque `altaDesdeAsignacion` llama a `opToFirestore` con
+`c.operacion: Operacion` a secas (recién construida por el factory, nunca tiene
+`id`) — cambiar la firma rompía ese call site en `tsc`. `bajaOperacion`/
+`restaurarOperacion` siguen pasando `ConId<Operacion>`, asignable a `Operacion` por
+tipado estructural, así que el fix cubre ambos casos sin tocar ningún call site.
+
+**Verificado:** `tsc --noEmit` limpio (0 errores fuera de los preexistentes de
+archivos `.spec.ts`, sin type defs de test runner cargados — no relacionado con
+este frente). `ng build --configuration=demo` limpio, mismo error de budget de
+bundle preexistente (8.76 MB vs. 7 MB — línea consistente con el crecimiento ya
+documentado en frentes anteriores, delta real de este frente no medido por
+separado). Security Rules verificadas contra el emulador (ver arriba). **Prueba
+manual del desarrollador contra `demo`, en curso:** baja simple (Operación) y baja
+en cascada (Chofer, con vehículos + legajo) probadas — ambas OK. Pendiente todavía:
+baja de Cliente y de Proveedor (cascada N-choferes), restaurar cada caso, confirmar
+entradas BAJA/RESTAURAR en `RegistroLogComponent`, y confirmar en la pantalla de
+Papelera nueva que el detalle abre el snapshot correcto para eventos `'activo'` y
+el objeto vivo para `'restaurado'`.
+
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
@@ -2222,6 +2433,34 @@ Los coordinadores existen y son atómicos (ver "Coordinadores bajaOperacion / re
     tomada en la sesión de diseño de Log, porque esta migración de callers cae del lado
     "acciones que trabajan con papelera", excluido del nuevo mecanismo de log por
     criterio de esa sesión.
+
+⚠️ **Actualizado (Frente Papelera, Agosto 2026) — parcialmente saldada, NO borrar esta
+entrada, sigue habiendo deuda real:**
+- `OperacionService.bajaOperacion`/`restaurarOperacion` migraron al mecanismo de
+  papelera por referencia (`PapeleraService`) — `restaurarOperacion` cambió de firma,
+  de `(logDoc: LogDoc)` a `(idEvento: string)`. El caller nuevo es
+  `PapeleraComponent` (`raiz/ajustes/papelera/`, la pantalla NUEVA de este frente,
+  no la vieja renombrada `PapeleraLegadoComponent`) — el hallazgo de arriba (doble
+  log por restaurar/dar de baja una operación, vía
+  `TableroService.altaOperacionYActualizarTablero`/`anularOperacionYActualizarTablero`)
+  queda resuelto para este caller: `PapeleraComponent` llama directo a
+  `restaurarOperacion(idEvento)`, sin pasar por `TableroService`.
+  `bajaOperacion`/`restaurarOperacion` ya no dependen de `LogService`/`LogDoc` —
+  loguean vía `LogRegistroService.agregarAlBatch` dentro del mismo `commitBatch`.
+- **Sigue sin resolver, a propósito, fuera de este frente:** la baja de operación
+  **cerrada** desde Liquidaciones (`liquidaciones-op.component.ts` →
+  `openModalBaja`/`bajaInformeOp`) sigue en su camino legacy
+  (`eliminarOperacionEInformes` + `TableroService.anularOpEnTablero` +
+  `StorageService.addSimpleLogPapelera`) — NO pasa por `bajaOperacion`. Motivo
+  puntual (ver también "Fuera de alcance" del Frente Papelera): esa baja también
+  elimina los informes de liquidación, que habría que refactorizar antes de
+  poder unificarla con el coordinador atómico — queda para el frente de
+  Liquidación. `TableroService.anularOperacionYActualizarTablero` y
+  `DbFirestoreService.eliminarInformesPorIdOperacion` por lo tanto siguen sin
+  eliminarse (siguen intactos, sin caller nuevo agregado en este frente —
+  `anularOperacionYActualizarTablero` de hecho quedó sin ningún caller real, ver
+  nota en el propio método).
+- `editarOperacion` sigue diferido al refactor de Tarifas, sin cambios.
 
 ### Switch completado — tablero-asignaciones / operaciones-editor / carga-asignacion
 

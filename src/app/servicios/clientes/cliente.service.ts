@@ -4,8 +4,8 @@ import { map, takeUntil } from 'rxjs/operators';
 import { Cliente } from 'src/app/interfaces/cliente';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
+import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { ClienteFactoryService, ClienteFormData } from 'src/app/servicios/clientes/cliente-factory.service';
 
 @Injectable({ providedIn: 'root' })
@@ -18,8 +18,8 @@ export class ClienteService implements OnDestroy {
 
   constructor(
     private db: DbFirestoreService,
-    private storageService: StorageService,
     private logRegistro: LogRegistroService,
+    private papeleraService: PapeleraService,
     private clienteFactoryService: ClienteFactoryService,
   ) {}
 
@@ -108,21 +108,48 @@ export class ClienteService implements OnDestroy {
     await this.guardarCliente(clienteEditado, 'edicion');
   }
 
-  // Baja compuesta con papelera: fuera del frente de Log (escribe a la colección
-  // `papelera`/LogService viejo, mecanismo propio del frente de Papelera, aparte).
   async eliminarCliente(
     cliente: ConIdType<Cliente>,
     motivo: string,
   ): Promise<void> {
     const nombre = cliente.razonSocial;
-    await this.storageService.deleteItemPapeleraCompuestoAsync(
-      'clientes',
-      cliente.idCliente,
-      { cliente },
-      'BAJA',
-      `Baja de Cliente ${nombre}`,
-      motivo,
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: 'clientes', id: cliente.idCliente, data: null, modo: 'eliminar' },
+    ];
+    this.papeleraService.prepararBajaEnBatch(escrituras, motivo, [
+      { coleccion: 'clientes', id: cliente.idCliente, data: this.toFirestore(cliente), principal: true },
+    ]);
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'BAJA', 'clientes', cliente.idCliente, `Baja de Cliente ${nombre}`,
     );
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError('BAJA', 'clientes', cliente.idCliente, `Error: ${e?.message ?? e}`);
+      throw e;
+    }
+  }
+
+  async restaurarCliente(idEvento: string): Promise<void> {
+    const escrituras: EscrituraBatch[] = [];
+    const { evento, objetos } = await this.papeleraService.prepararRestauracionEnBatch(escrituras, idEvento);
+    if (evento.coleccionPrincipal !== 'clientes') {
+      throw new Error(
+        `El evento de papelera ${idEvento} no corresponde a Cliente (coleccionPrincipal: ${evento.coleccionPrincipal}).`,
+      );
+    }
+    const principal = objetos.find(o => o.principal)!;
+    escrituras.push({ coleccion: 'clientes', id: principal.idOriginal, data: principal.data, modo: 'crear' });
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'RESTAURAR', 'clientes', principal.idOriginal,
+      `Cliente ${principal.idOriginal} restaurado desde papelera`,
+    );
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError('RESTAURAR', 'clientes', principal.idOriginal, `Error: ${e?.message ?? e}`);
+      throw e;
+    }
   }
 
   ngOnDestroy(): void {

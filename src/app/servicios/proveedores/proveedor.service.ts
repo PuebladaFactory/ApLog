@@ -7,8 +7,8 @@ import { Legajo } from 'src/app/interfaces/legajo';
 import { ConId, ConIdType } from 'src/app/interfaces/conId';
 import { RefTarifaHabilitada, tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
-import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
+import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { LegajoService } from 'src/app/servicios/legajos/legajo.service';
 import { ProveedorFactoryService, ProveedorFormData } from 'src/app/servicios/proveedores/proveedor-factory.service';
@@ -23,8 +23,8 @@ export class ProveedorService implements OnDestroy {
 
   constructor(
     private db: DbFirestoreService,
-    private storageService: StorageService,
     private logRegistro: LogRegistroService,
+    private papeleraService: PapeleraService,
     private choferService: ChoferService,
     private legajoService: LegajoService,
     private proveedorFactoryService: ProveedorFactoryService,
@@ -114,7 +114,11 @@ export class ProveedorService implements OnDestroy {
    *  copian al chofer, para no duplicar un estado que habría que sincronizar
    *  ante cada cambio del proveedor.
    *  TODO: refactor Papelera — si el proveedor está en papelera (chofer histórico
-   *  de un proveedor eliminado), esto devuelve []. */
+   *  de un proveedor eliminado), esto devuelve []. Fallback a
+   *  PapeleraService.getObjetoEliminado evaluado y descartado acá: es async, y
+   *  este método corre síncrono dentro de factories puras sin I/O por convención
+   *  (OperacionFactoryService, operaciones-editor — ver "Servicios por entidad"
+   *  en CLAUDE.md). No resuelto en este frente. */
   resolverTarifasHabilitadasChofer(chofer: ConId<Chofer>): RefTarifaHabilitada[] {
     if (chofer.contratacion.tipo === 'directo') {
       return chofer.tarifasHabilitadas ?? [];
@@ -267,7 +271,7 @@ export class ProveedorService implements OnDestroy {
   ): Promise<void> {
     const nombre = proveedor.razonSocial;
 
-    // 1. Obtener vehículos del proveedor desde memoria
+    // 1. Obtener vehículos del proveedor
     const vehiculos = await this.db.getByField<Vehiculo>(
       'vehiculos', 'asignadoA.idProveedor', proveedor.idProveedor
     );
@@ -278,75 +282,118 @@ export class ProveedorService implements OnDestroy {
       c.contratacion.idProveedor === proveedor.idProveedor
     );
 
-    // 3. Leer y preparar (sin escribir) la baja del legajo de cada chofer del
-    // proveedor — baja simple, sin papelera propia; se acumula para el objeto
-    // compuesto de papelera.
+    // 3. Leer y preparar (sin escribir) la baja del legajo de cada chofer del proveedor
     const bajasLegajo: { legajo: ConIdType<Legajo>; escritura: EscrituraBatch }[] = [];
     for (const chofer of choferes) {
       const baja = await this.legajoService.prepararBajaLegajoDeChofer(chofer.idChofer);
       if (baja) bajasLegajo.push(baja);
     }
-    const legajos = bajasLegajo.map(b => b.legajo);
 
-    // 4. Construir objeto compuesto para papelera
-    const objetoPapelera = {
-      proveedor,
-      vehiculos: vehiculos.map(v => v.data),
-      choferes,
-      legajos,
-    };
-
-    // 5. Eliminar proveedor y guardar en papelera (baja compuesta con papelera:
-    // fuera del frente de Log, ver eliminarCliente)
-    await this.storageService.deleteItemPapeleraCompuestoAsync(
-      'proveedores',
-      proveedor.idProveedor,
-      objetoPapelera,
-      'BAJA',
-      `Baja de Proveedor ${nombre}`,
-      motivo,
-    );
-
-    // 6. Batch único: baja de vehículos + baja de legajos (sin papelera propia
-    // ninguno de los dos — la baja compuesta con papelera es solo la del proveedor
-    // y la de cada chofer, más abajo). Un log por cada escritura real.
-    const escrituras: EscrituraBatch[] = [];
+    // 4. Batch único: baja de proveedor + vehículos + choferes + legajos + evento
+    // de papelera (referencia, ver PapeleraService), con un log por cada escritura
+    // real (granularidad de auditoría preservada, ver "Frente Papelera" en CLAUDE.md).
+    // Reemplaza el loop NO bacheado de N choferes + papelera que tenía este método.
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: 'proveedores', id: proveedor.idProveedor, data: null, modo: 'eliminar' },
+    ];
     for (const v of vehiculos) {
       escrituras.push({ coleccion: 'vehiculos', id: v.id, data: null, modo: 'eliminar' });
+    }
+    for (const chofer of choferes) {
+      escrituras.push({ coleccion: 'choferes', id: chofer.idChofer, data: null, modo: 'eliminar' });
+    }
+    for (const baja of bajasLegajo) {
+      escrituras.push(baja.escritura);
+    }
+
+    this.papeleraService.prepararBajaEnBatch(escrituras, motivo, [
+      { coleccion: 'proveedores', id: proveedor.idProveedor, data: this.toFirestore(proveedor), principal: true },
+      ...vehiculos.map(v => ({ coleccion: 'vehiculos', id: v.id, data: v.data, principal: false })),
+      ...choferes.map(c => ({
+        coleccion: 'choferes', id: c.idChofer, data: this.choferService.toFirestore(c), principal: false,
+      })),
+      ...bajasLegajo.map(b => ({
+        coleccion: 'legajos', id: b.legajo.id, data: this.choferService.legajoToFirestore(b.legajo), principal: false,
+      })),
+    ]);
+
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'BAJA', 'proveedores', proveedor.idProveedor, `Baja de Proveedor ${nombre}`,
+    );
+    for (const v of vehiculos) {
       await this.logRegistro.agregarAlBatch(
         escrituras, 'BAJA', 'vehiculos', v.id, `Vehículo eliminado por baja de Proveedor ${nombre}`,
       );
     }
+    for (const chofer of choferes) {
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'BAJA', 'choferes', chofer.idChofer,
+        `Chofer ${chofer.datosPersonales.apellido} ${chofer.datosPersonales.nombre} eliminado por baja de Proveedor ${nombre}`,
+      );
+    }
     for (const baja of bajasLegajo) {
-      escrituras.push(baja.escritura);
       await this.logRegistro.agregarAlBatch(
         escrituras, 'BAJA', 'legajos', baja.legajo.id,
         `Legajo eliminado por baja de Proveedor ${nombre} (chofer ${baja.legajo.idChofer})`,
       );
     }
-    if (escrituras.length > 0) {
-      try {
-        await this.db.commitBatch(escrituras);
-      } catch (e: any) {
-        await this.logRegistro.registrarError(
-          'BAJA', 'vehiculos', proveedor.idProveedor,
-          `Error al eliminar vehículos/legajos por baja de Proveedor ${nombre}: ${e?.message ?? e}`,
-        );
-        throw e;
-      }
+
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'BAJA', 'proveedores', proveedor.idProveedor,
+        `Error en baja de Proveedor ${nombre} (proveedor + vehículos + choferes + legajos): ${e?.message ?? e}`,
+      );
+      throw e;
+    }
+  }
+
+  async restaurarProveedor(idEvento: string): Promise<void> {
+    const escrituras: EscrituraBatch[] = [];
+    const { evento, objetos } = await this.papeleraService.prepararRestauracionEnBatch(escrituras, idEvento);
+    if (evento.coleccionPrincipal !== 'proveedores') {
+      throw new Error(
+        `El evento de papelera ${idEvento} no corresponde a Proveedor (coleccionPrincipal: ${evento.coleccionPrincipal}).`,
+      );
     }
 
-    // 7. Eliminar choferes (legajos ya eliminados arriba; baja compuesta con
-    // papelera, fuera del frente de Log)
-    for (const chofer of choferes) {
-      await this.storageService.deleteItemPapeleraCompuestoAsync(
-        'choferes',
-        chofer.idChofer,
-        chofer,
-        'BAJA',
-        `Baja de Chofer ${chofer.datosPersonales.apellido} ${chofer.datosPersonales.nombre} por baja de Proveedor ${nombre}`,
-        motivo,
+    for (const objeto of objetos) {
+      escrituras.push({ coleccion: objeto.coleccion, id: objeto.idOriginal, data: objeto.data, modo: 'crear' });
+    }
+
+    const principal = objetos.find(o => o.principal)!;
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'RESTAURAR', 'proveedores', principal.idOriginal,
+      `Proveedor ${principal.idOriginal} restaurado desde papelera`,
+    );
+    for (const objeto of objetos.filter(o => !o.principal && o.coleccion === 'vehiculos')) {
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'RESTAURAR', 'vehiculos', objeto.idOriginal,
+        `Vehículo ${objeto.idOriginal} restaurado por restauración de Proveedor ${principal.idOriginal}`,
       );
+    }
+    for (const objeto of objetos.filter(o => !o.principal && o.coleccion === 'choferes')) {
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'RESTAURAR', 'choferes', objeto.idOriginal,
+        `Chofer ${objeto.idOriginal} restaurado por restauración de Proveedor ${principal.idOriginal}`,
+      );
+    }
+    for (const objeto of objetos.filter(o => !o.principal && o.coleccion === 'legajos')) {
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'RESTAURAR', 'legajos', objeto.idOriginal,
+        `Legajo ${objeto.idOriginal} restaurado por restauración de Proveedor ${principal.idOriginal}`,
+      );
+    }
+
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'RESTAURAR', 'proveedores', principal.idOriginal,
+        `Error al restaurar Proveedor ${principal.idOriginal} (proveedor + vehículos + choferes + legajos): ${e?.message ?? e}`,
+      );
+      throw e;
     }
   }
 

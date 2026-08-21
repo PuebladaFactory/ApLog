@@ -43,16 +43,24 @@ export class VisualizadorObjetoService {
     return coleccion in this.mapeo;
   }
 
-  /** Busca el objeto ACTUAL (no un snapshot del momento del log) y abre su modal de
-   *  alta/edición real en modo 'vista'. No hace nada si `coleccion` no está mapeada
-   *  (el caller ya debería haber deshabilitado el botón) ni si el objeto ya no existe
-   *  (fue dado de baja después de este registro) — en ese caso avisa con un mensaje. */
-  async verObjeto(coleccion: string, idObjet: string | number): Promise<void> {
+  /** Busca el objeto y abre su modal de alta/edición real en modo 'vista'. No hace
+   *  nada si `coleccion` no está mapeada (el caller ya debería haber deshabilitado
+   *  el botón).
+   *
+   *  `snapshot`: cuando viene con valor, se usa directamente en vez de hacer
+   *  `getById` contra la colección viva — pensado para Papelera (PASO 5, ver
+   *  CLAUDE.md → "Frente Papelera"): el objeto principal de un evento 'activo' ya
+   *  no existe en su colección de origen, solo en `objetosEliminados`. En ese caso
+   *  el aviso Swal cambia a "objeto eliminado" en vez de "estado actual, no foto
+   *  del momento". Sin `snapshot` (undefined), comportamiento sin cambios: `getById`
+   *  contra la colección viva + aviso "estado actual" (uso desde RegistroLogComponent,
+   *  y desde Papelera para eventos 'restaurado', donde el objeto volvió a existir). */
+  async verObjeto(coleccion: string, idObjet: string | number, snapshot?: any): Promise<void> {
     const handler = this.mapeo[coleccion];
     if (!handler) return;
 
     const id = String(idObjet);
-    const data = await this.db.getById<any>(coleccion, id);
+    const data = snapshot !== undefined ? snapshot : await this.db.getById<any>(coleccion, id);
     if (!data) {
       Swal.fire({
         icon: 'info',
@@ -62,14 +70,25 @@ export class VisualizadorObjetoService {
       return;
     }
 
-    Swal.fire({
-      icon: 'info',
-      title: 'Estado actual',
-      text: 'Se muestra el estado ACTUAL del objeto, no una foto del momento de esta acción.',
-      timer: 2500,
-      timerProgressBar: true,
-      showConfirmButton: false,
-    });
+    if (snapshot !== undefined) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Objeto eliminado',
+        text: 'Se muestra el objeto tal como estaba archivado al momento de la baja — no es el objeto vivo.',
+        timer: 2500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+    } else {
+      Swal.fire({
+        icon: 'info',
+        title: 'Estado actual',
+        text: 'Se muestra el estado ACTUAL del objeto, no una foto del momento de esta acción.',
+        timer: 2500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+    }
 
     const item = { ...data, id, type: '', [handler.idField]: id };
     const modalRef = this.modalService.open(handler.componente, {

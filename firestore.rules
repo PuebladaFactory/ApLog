@@ -72,6 +72,12 @@ service cloud.firestore {
         'logs': 'logs',
         'registroLog': 'logs',
         'papelera': 'papelera',
+
+        // Frente Papelera (mecanismo por referencia, Cliente/Chofer/Proveedor/
+        // Operación): reusa el bucket de permisos 'papelera' ya existente, mismo
+        // patrón que 'registroLog' -> 'logs'. Ver CLAUDE.md → "Frente Papelera".
+        'papeleraEventos': 'papelera',
+        'objetosEliminados': 'papelera',
       }[coleccion];
     }
 
@@ -124,8 +130,21 @@ service cloud.firestore {
         )) ||
         (modulo == 'papelera' && (
           r == 'dev' ||
-          (r == 'admin' && accion in ['leer','crear','eliminar']) ||
-          (r == 'user' && accion == 'crear')
+          // 'editar' agregado para admin: el Frente Papelera (mecanismo por
+          // referencia) restaura marcando el PapeleraEvento como 'restaurado' con
+          // un escritura modo 'reemplazar' sobre un doc YA EXISTENTE — Firestore
+          // evalúa esto como 'update', no 'create', sin importar que el cliente
+          // use set(). Sin 'editar' acá, restaurarCliente/Chofer/Proveedor/Operacion
+          // fallaban para 'admin' (único rol no-dev con acceso real a la pantalla de
+          // Papelera). Ver CLAUDE.md → "Frente Papelera".
+          (r == 'admin' && accion in ['leer','crear','editar','eliminar']) ||
+          // 'leer' agregado para user: PapeleraService.getObjetoEliminado (fallback
+          // de getChoferPorId/getTipoContratacion cuando la entidad está en
+          // papelera, ver tablero.service.ts / liquidaciones-op.component.ts) hace
+          // un getById sobre 'objetosEliminados' — alcanzable por 'user' en flujos
+          // de Operaciones/Liquidaciones que no pasan por la pantalla de Papelera.
+          (r == 'user' && accion in ['leer','crear']) ||
+          (r == 'demo' && accion == 'leer')
         ));
     }
 

@@ -3,9 +3,11 @@ import { DbFirestoreService } from '../database/db-firestore.service';
 import { StorageService } from '../storage/storage.service';
 import { ChoferService } from '../choferes/chofer.service';
 import { LogService } from '../log/log.service';
+import { PapeleraService } from '../papelera/papelera.service';
 import { AsignacionService } from '../operaciones/asignacion.service';
 import { OperacionFactoryService } from '../operaciones/operacion-factory.service';
 import { Operacion } from 'src/app/interfaces/operacion';
+import { Chofer } from 'src/app/interfaces/chofer';
 import { ConId } from 'src/app/interfaces/conId';
 
 @Injectable({
@@ -18,6 +20,7 @@ export class TableroService {
     private storageService:    StorageService,
     private choferService:     ChoferService,
     private logService:        LogService,
+    private papeleraService:   PapeleraService,
     private asignacionService: AsignacionService,
     private operacionFactory:  OperacionFactoryService,
   ) {}
@@ -53,12 +56,17 @@ export class TableroService {
       'operaciones', op, op.idOperacion, 'BAJA', mensaje, motivo,
     );
     if (op.estado.ciclo === 'cerrada') {
-      const tipoContratacion = this.choferService.getTipoContratacion(op.chofer.id);
-      // TODO: refactor Papelera — chofer en papelera → tipoContratacion undefined.
+      let tipoContratacion = this.choferService.getTipoContratacion(op.chofer.id);
+      if (tipoContratacion === undefined) {
+        // Chofer no está en memoria — probablemente en papelera. Fallback: resolver
+        // contra el objeto archivado antes de fallar (ver PapeleraService).
+        const choferEliminado = await this.papeleraService.getObjetoEliminado<Chofer>('choferes', op.chofer.id);
+        tipoContratacion = choferEliminado?.contratacion.tipo;
+      }
       if (tipoContratacion === undefined) {
         throw new Error(
           `No se pudo resolver la contratación del chofer ${op.chofer.id} ` +
-          `al borrar informes de la op ${op.idOperacion} (posible chofer en papelera).`,
+          `al borrar informes de la op ${op.idOperacion} (ni en memoria ni en papelera).`,
         );
       }
       await this.dbFirestore.eliminarInformesPorIdOperacion(op, tipoContratacion);

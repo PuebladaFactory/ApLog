@@ -33,6 +33,7 @@ import {
 import { CrearLiquidacionParams } from "src/app/servicios/liquidaciones/liquidacion-builder.service";
 import { LiquidacionService } from "src/app/servicios/liquidaciones/liquidacion.service";
 import { ChoferService } from "src/app/servicios/choferes/chofer.service";
+import { PapeleraService } from "src/app/servicios/papelera/papelera.service";
 import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 @Component({
   selector: "app-liquidaciones-op",
@@ -105,6 +106,7 @@ export class LiquidacionesOpComponent implements OnInit {
     private dateRangeService: DateRangeService,
     private liquidacionService: LiquidacionService,
     private choferService: ChoferService,
+    private papeleraService: PapeleraService,
     public usuarioSesion: UsuarioSesionService,
   ) {}
 
@@ -927,14 +929,20 @@ export class LiquidacionesOpComponent implements OnInit {
 
         let coleccionContraParte: string;
         if (this.llamadaOrigen === "cliente") {
-          const tipoContratacion = this.choferService.getTipoContratacion(this.operacion.chofer.id);
-          // TODO: refactor Papelera — chofer en papelera → no se puede resolver la colección
-          // contraparte. Solución futura: resolver contra la papelera (id + colección de origen).
+          let tipoContratacion = this.choferService.getTipoContratacion(this.operacion.chofer.id);
+          if (tipoContratacion === undefined) {
+            // Chofer no está en memoria — probablemente en papelera. Fallback:
+            // resolver contra el objeto archivado antes de fallar.
+            const choferEliminado = await this.papeleraService.getObjetoEliminado<Chofer>(
+              'choferes', this.operacion.chofer.id,
+            );
+            tipoContratacion = choferEliminado?.contratacion.tipo;
+          }
           if (tipoContratacion === undefined) {
             this.isLoading = false;
             Swal.fire({
               title: "Error",
-              text: "No se pudo resolver la contratación del chofer (posible chofer en papelera). La operación no fue anulada.",
+              text: "No se pudo resolver la contratación del chofer (ni en memoria ni en papelera). La operación no fue anulada.",
               icon: "error",
             });
             return;

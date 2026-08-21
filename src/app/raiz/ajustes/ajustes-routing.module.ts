@@ -5,6 +5,7 @@ import { GestionUsuariosComponent } from './gestion-usuarios/gestion-usuarios.co
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { RegistroComponent } from './registro/registro.component';
 import { PapeleraComponent } from './papelera/papelera.component';
+import { PapeleraLegadoComponent } from './papelera-legado/papelera-legado.component';
 import { RegistroLogComponent } from './registro-log/registro-log.component';
 
 const routes: Routes = [
@@ -24,6 +25,10 @@ const routes: Routes = [
         data: { roles: ['dev', 'admin', 'demo'] }, // mismo criterio que 'registro' (screen de auditoría, no se permiten usuarios)
       },
       {path: 'papelera', component:PapeleraComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['dev', 'admin', 'demo'] }, // no se permiten usuarios
+      },
+      {path: 'papelera-legado', component:PapeleraLegadoComponent,
         canActivate: [RoleGuard],
         data: { roles: ['dev', 'admin', 'demo'] }, // no se permiten usuarios
       },
