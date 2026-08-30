@@ -1,4 +1,5 @@
 import { TarifaTipo } from "./tarifa-gral-cliente";
+import { RefTarifaAplicada } from "./ref-tarifa-aplicada";
 
 export interface Operacion {
   idOperacion: string;              // document ID de Firestore. NO se persiste; se reconstruye al leer.
@@ -25,6 +26,19 @@ export interface Operacion {
   datosTarifaPersonalizada: DatosTarifaPersonalizada | null;
 
   valores: Valores;
+
+  // Sistema nuevo de Tarifas (Bloque 6) — corre en paralelo al sistema viejo
+  // (tarifaTipo/valores) sin reemplazarlo todavía. Se completa en el alta
+  // (ValoresTarifaService.calcularAlta, jerarquía Eventual > Personalizada >
+  // Especial > General) y se recalcula en el cierre (calcularCierre) sin
+  // volver a resolver la jerarquía. Si la resolución automática no puede
+  // determinar un único ganador queda en null — no bloquea el alta, se
+  // registra en el log de actividad. Eventual no usa tarifaAplicada*: se
+  // identifica leyendo datosTarifaEventual de la operación.
+  tarifaAplicadaCliente: RefTarifaAplicada | null;
+  tarifaAplicadaChofer: RefTarifaAplicada | null;
+  valoresNuevos: Valores | null;
+
   multiplicadorCliente: number;
   multiplicadorChofer: number;
   adExtraConcepto?: string;

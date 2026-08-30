@@ -1,0 +1,14 @@
+.tabla-categorias {
+  th, td {
+    font-size: 1.25rem;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  .col-nombre {
+    position: sticky;
+    left: 0;
+    background-color: #fff;
+    z-index: 1;
+  }
+}

@@ -8,19 +8,15 @@ label, input, textarea, select, td{
 }
 
 td, th {
-  //padding: 0.75rem !important;
   white-space: nowrap;
   vertical-align: middle;
 }
 
 thead th {
-  //text-transform: uppercase;
   font-weight: 600;
-  //letter-spacing: 0.5px;
-  background-color: #f1f1f1;  
+  background-color: #f1f1f1;
   font-size: 1.35rem;
 }
-
 
 .grupo-container {
   background-color: #fdfdfd;
@@ -28,16 +24,16 @@ thead th {
 
 /* 🔷 Anchos consistentes */
 .col-chofer {
-  width: 14.37%;
-  max-width: 14.37%;
+  width: 17%;
+  max-width: 17%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .col-vehiculo {
-  width: 7.26%;
-  max-width: 7.26%;
+  width: 8%;
+  max-width: 8%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -45,59 +41,36 @@ thead th {
 
 .col-acomp,
 .col-eventual-toogle {
-  width: 4.5%;
-  max-width: 4.5%;
+  width: 5%;
+  max-width: 5%;
 }
 
-.col-tarifa{
-  width: 5.41%;
-  max-width: 5.41%;
+.col-tarifa-cliente,
+.col-tarifa-chofer {
+  width: 13%;
+  max-width: 13%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .col-hojaRuta{
-  width: 6.63%;
-  max-width: 6.63%;
+  width: 8%;
+  max-width: 8%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .col-obs{
-  width: 7.67%;
-  max-width: 7.67%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-eventual-concepto{
-  width: 6.36%;
-  max-width: 6.36%;
-}
-
-.col-eventual-valor{
-  width: 6.46%;
-  max-width: 6.46%;
-}
-.col-seccion {
-  width: 7.26%;
-  max-width: 7.26%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.col-categoria {
-  width: 13.2%;
-  max-width: 13.2%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: 12%;
+  max-width: 12%;
+  white-space: normal;
 }
 
 .col-anular{
-  width: 3.55%;
-  max-width: 3.55%;
+  width: 4%;
+  max-width: 4%;
 }
 
 .isDisabled {
@@ -105,47 +78,27 @@ thead th {
   cursor: not-allowed;
   opacity:0.5;
 }
-  
+
 .isDisabled:hover {
   cursor: not-allowed;
   opacity:0.5;
 }
 
-/* 🔹 Colores suaves para columnas activas */
-.bg-eventual-header {
-  background-color: #cfe2ff;
-  font-weight: bold;
-}
+/* 🔹 Colores suaves para las secciones de la fila expandible */
 .bg-eventual-cell {
   background-color: #e3f2fd;
 }
 
-.bg-personalizada-header {
-  background-color: #ffeeba;
-  font-weight: bold;
-}
 .bg-personalizada-cell {
   background-color: #fff9e6;
 }
 
-/* 🔹 Bordes constantes */
-.col-eventual-border-left {
-  border-left: 2px solid #0d6efd;  
+.fila-detalle td {
+  white-space: normal;
+  border-top: none;
 }
 
-.col-eventual-border-right {  
-  border-right: 2px solid #0d6efd;
-}
-
-.col-personalizada-border-left {
-  border-left: 2px solid #ff9800;  
-}
-
-.col-personalizada-border-right {  
-  border-right: 2px solid #ff9800;
-}
-
-.vehiculos{  
+.vehiculos{
   border: 2px solid #9df395;
 }
 
@@ -173,6 +126,3 @@ thead th {
 .fila-error td {
   border-top: 1px solid #f5c6cb;
 }
-
-
-

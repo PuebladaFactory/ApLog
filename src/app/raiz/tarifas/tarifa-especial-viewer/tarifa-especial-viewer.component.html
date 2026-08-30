@@ -1,0 +1,34 @@
+<p><strong>Vigente desde:</strong> {{ tarifa.vigenciaDesde }}</p>
+<p><strong>Alcance:</strong> {{ alcanceLabel }}</p>
+
+<div class="table-responsive">
+  <table class="table table-sm table-bordered tabla-categorias">
+    <thead>
+      <tr>
+        <th class="col-nombre">Categoría</th>
+        <th>Valor</th>
+        <ng-container *ngIf="tieneKm">
+          <th>1er sector</th>
+          <th>Intervalo</th>
+        </ng-container>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let seccion of tarifa.secciones">
+        <tr *ngIf="seccion.nombre !== null">
+          <td [attr.colspan]="cantidadColumnas" class="fw-bold bg-light">{{ seccion.nombre }}</td>
+        </tr>
+        <tr *ngFor="let cat of seccion.categorias">
+          <td class="col-nombre">{{ cat.nombre }}</td>
+          <td>{{ cat.valor | currency }}</td>
+          <ng-container *ngIf="tieneKm">
+            <td>{{ cat.adicionalKm?.primerSector | currency }}</td>
+            <td>{{ cat.adicionalKm?.sectoresSiguientes | currency }}</td>
+          </ng-container>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+
+<p><strong>Adicional acompañante:</strong> {{ tarifa.adicionalAcompaniante | currency }}</p>

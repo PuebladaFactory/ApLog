@@ -89,56 +89,29 @@
                 <div>El modelo no debe superar los 30 caracteres.</div>
             }
         </div>
-        <div class="form-group">
-            <label for="Modelo">Categoria Nombre</label>
-            <div class="input-group">
-                <input
-                    formControlName="categoria"
-                    class="form-control"
-                    required
-                    type="text"
-                    [ngClass]="{
-                        'is-invalid':
-                            vehiculoForm.get('modelo').invalid &&
-                            (vehiculoForm.get('modelo').dirty ||
-                                vehiculoForm.get('modelo').touched),
-                    }"
-                    [ngClass]="{ isDisabled: soloVista }"
-                />
-            </div>
-            @if (hasError("categoria", "required")) {
-                <div>La categoria es obligatorio.</div>
-            }
-            @if (hasError("categoria", "maxlength")) {
-                <div>La categoria no debe superar los 50 caracteres.</div>
-            }
-        </div>
         <div class="form-group mt-1">
-            <label for="Categoria">Categoria Tipo</label>
+            <label for="Categoria">Categoría</label>
             <select
                 class="form-select"
-                (change)="changeCategoria($event)"
-                required
+                formControlName="categoria"
                 [ngClass]="{ isDisabled: soloVista }"
             >
-                <option>
-                    {{
-                        edicion
-                            ? tarifaGralCliente.cargasGenerales[
-                                  vehiculo.categoria.catOrden - 1
-                              ].nombre
-                            : "Seleccione"
-                    }}
-                </option>
-                @for (
-                    categoria of tarifaGralCliente.cargasGenerales;
-                    track categoria
-                ) {
-                    <option required [value]="categoria.orden">
+                <option value="" selected>Seleccione</option>
+                @for (categoria of categoriasGeneral; track categoria.nombre) {
+                    <option [value]="categoria.nombre">
                         {{ categoria.nombre }}
                     </option>
                 }
             </select>
+            @if (categoriaLegacyDesconocida) {
+                <div class="text-warning small mt-1">
+                    La categoría cargada anteriormente ("{{ categoriaLegacyDesconocida }}")
+                    ya no está en la tarifa General vigente — elegí una categoría válida.
+                </div>
+            }
+            @if (hasError("categoria", "required")) {
+                <div>La categoría es obligatoria.</div>
+            }
         </div>
         <div class="form-group mt-1">
             <label for="Categoria">Tipo de Combustible</label>

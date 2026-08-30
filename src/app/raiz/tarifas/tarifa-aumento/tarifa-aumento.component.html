@@ -1,0 +1,308 @@
+<form [formGroup]="form">
+
+  <div class="card mb-3">
+    <div class="card-header">Consola de aumento</div>
+    <div class="card-body">
+      <div class="btn-group mb-3" role="group">
+        <button type="button" class="btn" [class.btn-primary]="modo === 'unico'" [class.btn-outline-primary]="modo !== 'unico'" (click)="cambiarModo('unico')">Único</button>
+        <button type="button" class="btn" [class.btn-primary]="modo === 'segmentado'" [class.btn-outline-primary]="modo !== 'segmentado'" (click)="cambiarModo('segmentado')">Segmentado</button>
+        <button type="button" class="btn" [class.btn-primary]="modo === 'manual'" [class.btn-outline-primary]="modo !== 'manual'" (click)="cambiarModo('manual')">Manual</button>
+      </div>
+
+      <div class="row mb-3" *ngIf="modo === 'unico'">
+        <div class="col-md-3">
+          <label class="form-label">Porcentaje de aumento</label>
+          <div class="input-group has-validation">
+            <input type="text" inputmode="number" class="form-control" formControlName="porcentajeUnico"
+                   appMonto modo="porcentaje" [minimo]="0"
+                   [class.is-invalid]="invalido(form.get('porcentajeUnico'))">
+            <span class="input-group-text">%</span>
+            <div class="invalid-feedback d-block" *ngIf="invalido(form.get('porcentajeUnico'))">
+              No puede ser negativo.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-3" *ngIf="modo === 'segmentado'">
+        <div class="col-md-3">
+          <label class="form-label">% a cobrar</label>
+          <div class="input-group has-validation">
+            <input type="text" inputmode="number" class="form-control" formControlName="porcentajeCobrar"
+                   appMonto modo="porcentaje" [minimo]="0"
+                   [class.is-invalid]="invalido(form.get('porcentajeCobrar'))">
+            <span class="input-group-text">%</span>
+            <div class="invalid-feedback d-block" *ngIf="invalido(form.get('porcentajeCobrar'))">
+              No puede ser negativo.
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">% a pagar</label>
+          <div class="input-group has-validation">
+            <input type="text" inputmode="number" class="form-control" formControlName="porcentajePagar"
+                   appMonto modo="porcentaje" [minimo]="0"
+                   [class.is-invalid]="invalido(form.get('porcentajePagar'))">
+            <span class="input-group-text">%</span>
+            <div class="invalid-feedback d-block" *ngIf="invalido(form.get('porcentajePagar'))">
+              No puede ser negativo.
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3" *ngIf="usaProveedor">
+          <label class="form-label">% proveedor</label>
+          <div class="input-group has-validation">
+            <input type="text" inputmode="number" class="form-control" formControlName="porcentajeProveedor"
+                   appMonto modo="porcentaje" [minimo]="0"
+                   [class.is-invalid]="invalido(form.get('porcentajeProveedor'))">
+            <span class="input-group-text">%</span>
+            <div class="invalid-feedback d-block" *ngIf="invalido(form.get('porcentajeProveedor'))">
+              No puede ser negativo.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="usarRedondeo"
+                 [checked]="usarRedondeo" (change)="onChangeUsarRedondeo($event)">
+          <label class="form-check-label" for="usarRedondeo">Usar redondeo</label>
+        </div>
+        <select class="form-select form-select-sm w-auto"
+                [disabled]="!usarRedondeo || modo === 'manual'" (change)="onChangeTipoRedondeo($event)">
+          <option value="unidad" [selected]="tipoRedondeo === 'unidad'">Unidad</option>
+          <option value="decena" [selected]="tipoRedondeo === 'decena'">Decena</option>
+          <option value="centena" [selected]="tipoRedondeo === 'centena'">Centena</option>
+        </select>
+      </div>
+
+      <button type="button" class="btn btn-primary me-2" [disabled]="modo === 'manual'" (click)="aplicarAumento()">Aplicar aumento</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="resetearValores()">Resetear</button>
+    </div>
+  </div>
+
+  <div formArrayName="secciones">
+    <ng-container *ngFor="let seccion of tarifa.secciones; let si = index" [formGroupName]="si">
+      <div class="mb-4">
+        <div class="d-flex align-items-center gap-2 mb-2" *ngIf="seccion.nombre !== null">
+          <h5 class="mb-0">{{ seccion.nombre }}</h5>
+          <span class="badge" [ngClass]="{
+            'bg-success': calcularImpactoSeccion(si) > 0,
+            'bg-danger': calcularImpactoSeccion(si) < 0,
+            'bg-secondary': calcularImpactoSeccion(si) === 0
+          }">{{ calcularImpactoSeccion(si) | number:'1.0-1' }} %</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm tabla-categorias">
+            <thead>
+              <tr>
+                <th rowspan="2" class="col-nombre align-middle">Categoría</th>
+                <th [attr.colspan]="colspanGrupo" class="grupo-cobrar divisor text-center">A cobrar</th>
+                <th [attr.colspan]="colspanGrupo" class="grupo-pagar divisor text-center">A pagar</th>
+                <th *ngIf="usaProveedor" [attr.colspan]="colspanGrupo" class="grupo-proveedor divisor text-center">A pagar (proveedor)</th>
+                <th rowspan="2" class="align-middle">Impacto</th>
+              </tr>
+              <tr>
+                <th class="grupo-cobrar divisor">Base actual</th>
+                <th class="grupo-cobrar">Base nueva</th>
+                <ng-container *ngIf="kmActivo">
+                  <th class="grupo-cobrar">1er sector actual</th>
+                  <th class="grupo-cobrar">1er sector nueva</th>
+                  <th class="grupo-cobrar">Intervalo actual</th>
+                  <th class="grupo-cobrar">Intervalo nueva</th>
+                </ng-container>
+                <th class="grupo-pagar divisor">Base actual</th>
+                <th class="grupo-pagar">Base nueva</th>
+                <ng-container *ngIf="kmActivo">
+                  <th class="grupo-pagar">1er sector actual</th>
+                  <th class="grupo-pagar">1er sector nueva</th>
+                  <th class="grupo-pagar">Intervalo actual</th>
+                  <th class="grupo-pagar">Intervalo nueva</th>
+                </ng-container>
+                <ng-container *ngIf="usaProveedor">
+                  <th class="grupo-proveedor divisor">Base actual</th>
+                  <th class="grupo-proveedor">Base nueva</th>
+                  <ng-container *ngIf="kmActivo">
+                    <th class="grupo-proveedor">1er sector actual</th>
+                    <th class="grupo-proveedor">1er sector nueva</th>
+                    <th class="grupo-proveedor">Intervalo actual</th>
+                    <th class="grupo-proveedor">Intervalo nueva</th>
+                  </ng-container>
+                </ng-container>
+              </tr>
+            </thead>
+            <tbody formArrayName="categorias">
+              <tr *ngFor="let cat of seccion.categorias; let ci = index" [formGroupName]="ci">
+                <td class="col-nombre">{{ cat.nombre }}</td>
+
+                <td class="grupo-cobrar divisor">{{ cat.aCobrar | currency }}</td>
+                <td class="grupo-cobrar">
+                  <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="nuevoACobrar"
+                         appMonto prefijo="$ " [minimo]="0"
+                         [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('nuevoACobrar'))">
+                  <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('nuevoACobrar'))">
+                    No puede ser negativo.
+                  </div>
+                </td>
+                <ng-container *ngIf="kmActivo">
+                  <td class="grupo-cobrar">{{ cat.adicionalKmACobrar?.primerSector | currency }}</td>
+                  <td class="grupo-cobrar" formGroupName="nuevoAdicionalCobrar">
+                    <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="primerSector"
+                           appMonto prefijo="$ " [minimo]="0"
+                           [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalCobrar.primerSector'))">
+                    <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalCobrar.primerSector'))">
+                      No puede ser negativo.
+                    </div>
+                  </td>
+                  <td class="grupo-cobrar">{{ cat.adicionalKmACobrar?.sectoresSiguientes | currency }}</td>
+                  <td class="grupo-cobrar" formGroupName="nuevoAdicionalCobrar">
+                    <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="sectoresSiguientes"
+                           appMonto prefijo="$ " [minimo]="0"
+                           [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalCobrar.sectoresSiguientes'))">
+                    <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalCobrar.sectoresSiguientes'))">
+                      No puede ser negativo.
+                    </div>
+                  </td>
+                </ng-container>
+
+                <td class="grupo-pagar divisor">{{ cat.aPagar | currency }}</td>
+                <td class="grupo-pagar">
+                  <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="nuevoAPagar"
+                         appMonto prefijo="$ " [minimo]="0"
+                         [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('nuevoAPagar'))">
+                  <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('nuevoAPagar'))">
+                    No puede ser negativo.
+                  </div>
+                </td>
+                <ng-container *ngIf="kmActivo">
+                  <td class="grupo-pagar">{{ cat.adicionalKmAPagar?.primerSector | currency }}</td>
+                  <td class="grupo-pagar" formGroupName="nuevoAdicionalPagar">
+                    <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="primerSector"
+                           appMonto prefijo="$ " [minimo]="0"
+                           [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalPagar.primerSector'))">
+                    <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalPagar.primerSector'))">
+                      No puede ser negativo.
+                    </div>
+                  </td>
+                  <td class="grupo-pagar">{{ cat.adicionalKmAPagar?.sectoresSiguientes | currency }}</td>
+                  <td class="grupo-pagar" formGroupName="nuevoAdicionalPagar">
+                    <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="sectoresSiguientes"
+                           appMonto prefijo="$ " [minimo]="0"
+                           [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalPagar.sectoresSiguientes'))">
+                    <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalPagar.sectoresSiguientes'))">
+                      No puede ser negativo.
+                    </div>
+                  </td>
+                </ng-container>
+
+                <ng-container *ngIf="usaProveedor">
+                  <td class="grupo-proveedor divisor">{{ cat.aPagarProveedor !== undefined ? (cat.aPagarProveedor | currency) : '—' }}</td>
+                  <td class="grupo-proveedor">
+                    <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="nuevoAPagarProveedor"
+                           appMonto prefijo="$ " [minimo]="0"
+                           [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('nuevoAPagarProveedor'))">
+                    <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('nuevoAPagarProveedor'))">
+                      No puede ser negativo.
+                    </div>
+                  </td>
+                  <ng-container *ngIf="kmActivo">
+                    <td class="grupo-proveedor">{{ cat.adicionalKmAPagarProveedor?.primerSector !== undefined ? (cat.adicionalKmAPagarProveedor?.primerSector | currency) : '—' }}</td>
+                    <td class="grupo-proveedor" formGroupName="nuevoAdicionalPagarProveedor">
+                      <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="primerSector"
+                             appMonto prefijo="$ " [minimo]="0"
+                             [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalPagarProveedor.primerSector'))">
+                      <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalPagarProveedor.primerSector'))">
+                        No puede ser negativo.
+                      </div>
+                    </td>
+                    <td class="grupo-proveedor">{{ cat.adicionalKmAPagarProveedor?.sectoresSiguientes !== undefined ? (cat.adicionalKmAPagarProveedor?.sectoresSiguientes | currency) : '—' }}</td>
+                    <td class="grupo-proveedor" formGroupName="nuevoAdicionalPagarProveedor">
+                      <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="sectoresSiguientes"
+                             appMonto prefijo="$ " [minimo]="0"
+                             [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalPagarProveedor.sectoresSiguientes'))">
+                      <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('nuevoAdicionalPagarProveedor.sectoresSiguientes'))">
+                        No puede ser negativo.
+                      </div>
+                    </td>
+                  </ng-container>
+                </ng-container>
+
+                <td>
+                  <span class="badge" [ngClass]="{
+                    'bg-success': calcularImpactoCategoria(si, ci) > 0,
+                    'bg-danger': calcularImpactoCategoria(si, ci) < 0,
+                    'bg-secondary': calcularImpactoCategoria(si, ci) === 0
+                  }">{{ calcularImpactoCategoria(si, ci) | number:'1.0-1' }} %</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <label class="form-label">Acompañante — a cobrar</label>
+      <div class="d-flex gap-2 align-items-center">
+        <span>{{ tarifa.acompanianteACobrar | currency }}</span>
+        <span>→</span>
+        <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="nuevoAcompanianteACobrar"
+               appMonto prefijo="$ " [minimo]="0"
+               [class.is-invalid]="invalido(form.get('nuevoAcompanianteACobrar'))">
+      </div>
+      <div class="invalid-feedback d-block" *ngIf="invalido(form.get('nuevoAcompanianteACobrar'))">
+        No puede ser negativo.
+      </div>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Acompañante — a pagar</label>
+      <div class="d-flex gap-2 align-items-center">
+        <span>{{ tarifa.acompanianteAPagar | currency }}</span>
+        <span>→</span>
+        <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="nuevoAcompanianteAPagar"
+               appMonto prefijo="$ " [minimo]="0"
+               [class.is-invalid]="invalido(form.get('nuevoAcompanianteAPagar'))">
+      </div>
+      <div class="invalid-feedback d-block" *ngIf="invalido(form.get('nuevoAcompanianteAPagar'))">
+        No puede ser negativo.
+      </div>
+    </div>
+    <div class="col-md-4" *ngIf="usaProveedor">
+      <label class="form-label">Acompañante — a pagar (proveedor)</label>
+      <div class="d-flex gap-2 align-items-center">
+        <span>{{ tarifa.acompanianteAPagarProveedor !== undefined ? (tarifa.acompanianteAPagarProveedor | currency) : '—' }}</span>
+        <span>→</span>
+        <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="nuevoAcompanianteAPagarProveedor"
+               appMonto prefijo="$ " [minimo]="0"
+               [class.is-invalid]="invalido(form.get('nuevoAcompanianteAPagarProveedor'))">
+      </div>
+      <div class="invalid-feedback d-block" *ngIf="invalido(form.get('nuevoAcompanianteAPagarProveedor'))">
+        No puede ser negativo.
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <div *ngIf="hayCambios()" class="d-flex align-items-center gap-2">
+      <strong>Impacto total:</strong>
+      <span class="badge fs-6" [ngClass]="{
+        'bg-success': calcularImpactoTotal() > 0,
+        'bg-danger': calcularImpactoTotal() < 0,
+        'bg-secondary': calcularImpactoTotal() === 0
+      }">{{ calcularImpactoTotal() | number:'1.0-1' }} %</span>
+    </div>
+    <div *ngIf="!hayCambios()" class="text-muted">No hay cambios aplicados.</div>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="form.invalid && (form.dirty || form.touched)">
+    Hay campos inválidos — revisá los recuadros en rojo.
+  </div>
+
+  <button type="button" class="btn btn-primary" [disabled]="!hayCambios() || cargando" (click)="onSubmit()">Guardar aumento</button>
+  <button type="button" class="btn btn-secondary ms-2" [disabled]="cargando" (click)="onCancelar()">Cancelar</button>
+
+</form>

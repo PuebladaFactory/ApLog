@@ -79,7 +79,6 @@ export class ChoferesAltaComponent implements OnInit {
   condFiscal: string = "";
   tarifaAsignada: boolean = false;
   cargando: boolean = false;
-  private tarifasHabilitadasOriginal: RefTarifaHabilitada[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -142,7 +141,6 @@ export class ChoferesAltaComponent implements OnInit {
       general: [false],
       especial: [false],
       eventual: [false],
-      personalizada: [false],
     });
   }
 
@@ -207,7 +205,7 @@ export class ChoferesAltaComponent implements OnInit {
   onEventualChange(checked: boolean): void {
     if (checked) {
       this.formTipoTarifa.patchValue(
-        { general: false, especial: false, personalizada: false, eventual: true },
+        { general: false, especial: false, eventual: true },
         { emitEvent: false },
       );
     }
@@ -227,39 +225,22 @@ export class ChoferesAltaComponent implements OnInit {
     if (v.eventual) {
       this.formTipoTarifa.get('general')!.disable({ emitEvent: false });
       this.formTipoTarifa.get('especial')!.disable({ emitEvent: false });
-      this.formTipoTarifa.get('personalizada')!.disable({ emitEvent: false });
       this.formTipoTarifa.get('eventual')!.enable({ emitEvent: false });
     } else {
       this.formTipoTarifa.get('general')!.enable({ emitEvent: false });
       this.formTipoTarifa.get('especial')!.enable({ emitEvent: false });
-      this.formTipoTarifa.get('personalizada')!.enable({ emitEvent: false });
-      const algunaActiva = v.general || v.especial || v.personalizada;
+      const algunaActiva = v.general || v.especial;
       const eventualControl = this.formTipoTarifa.get('eventual')!;
       algunaActiva ? eventualControl.disable({ emitEvent: false }) : eventualControl.enable({ emitEvent: false });
     }
   }
 
-  /** Arma la lista de tarifas habilitadas desde el form, preservando el idTarifa
-   *  existente (edición) para especial/personalizada si no se destildaron. */
   getTarifasHabilitadas(): RefTarifaHabilitada[] {
     const v = this.formTipoTarifa.getRawValue();
     if (v.eventual) return [{ nivel: 'eventual' }];
     const lista: RefTarifaHabilitada[] = [];
     if (v.general) lista.push({ nivel: 'general' });
-    if (v.especial) {
-      const previa = this.tarifasHabilitadasOriginal.find(t => t.nivel === 'especial');
-      lista.push({
-        nivel: 'especial',
-        idTarifa: previa && previa.nivel === 'especial' ? previa.idTarifa : '',
-      });
-    }
-    if (v.personalizada) {
-      const previa = this.tarifasHabilitadasOriginal.find(t => t.nivel === 'personalizada');
-      lista.push({
-        nivel: 'personalizada',
-        idTarifa: previa && previa.nivel === 'personalizada' ? previa.idTarifa : '',
-      });
-    }
+    if (v.especial) lista.push({ nivel: 'especial' });
     return lista;
   }
 
@@ -277,13 +258,11 @@ export class ChoferesAltaComponent implements OnInit {
       direccion: this.chofer.datosPersonales.direccion.domicilio,
     });
     if (this.chofer.contratacion.tipo === "directo") {
-      this.tarifasHabilitadasOriginal = this.chofer.tarifasHabilitadas ?? [];
-      const tipoTarifaChofer = tarifaTipoDesdeHabilitadas(this.tarifasHabilitadasOriginal);
+      const tipoTarifaChofer = tarifaTipoDesdeHabilitadas(this.chofer.tarifasHabilitadas ?? []);
       this.formTipoTarifa.patchValue({
         general: tipoTarifaChofer.general,
         especial: tipoTarifaChofer.especial,
         eventual: tipoTarifaChofer.eventual,
-        personalizada: tipoTarifaChofer.personalizada,
       });
       this.actualizarDisabledTarifa();
     } else {

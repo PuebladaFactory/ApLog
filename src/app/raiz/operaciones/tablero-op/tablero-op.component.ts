@@ -722,7 +722,7 @@ onResizeEnd = () => {
         modo: "operaciones",
         item: this.opSeleccionada,
       }  
-      //////////////console.log()(info); */
+      ////////////////console.log()(info); */
       
       modalRef.componentInstance.fromParent = info;
       try {
@@ -791,13 +791,13 @@ onResizeEnd = () => {
 
 
   puedeEliminar(op: any): boolean {
-    console.log("op", op);
+    //console.log("op", op);
     
     return op.estado === 'Abierta';
   }
 
   async crearResumenOp(){
-    console.log(this.operacionesPeriodo.length);
+    //console.log(this.operacionesPeriodo.length);
     
     this.isLoading = true;
     const res = await this.reportesOp.reconstruirResumenes(this.operacionesPeriodo);
@@ -824,8 +824,8 @@ onResizeEnd = () => {
      }  */
     total += op.valores.cliente.aCobrar
     })
-    //console.log("opAcomp: ", opAcomp, "totalAcomp: ", cantAcomp );
-    console.log("total: ", total);
+    ////console.log("opAcomp: ", opAcomp, "totalAcomp: ", cantAcomp );
+    //console.log("total: ", total);
     
   }
 

@@ -19,7 +19,8 @@ import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
 import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.service';
 import { OperacionService, OperacionCreada, ResultadoCreacionOps, ErrorCreacionOp } from 'src/app/servicios/operaciones/operacion.service';
 import { OperacionesEditorComponent } from 'src/app/raiz/operaciones/operaciones-editor/operaciones-editor.component';
-import { StorageService } from 'src/app/servicios/storage/storage.service'; // TODO: refactor Tarifas
+import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
 import { ModalChoferesNoDisponiblesComponent } from '../modal-choferes-no-disponibles/modal-choferes-no-disponibles.component';
 
 interface VehiculoPool {
@@ -97,15 +98,16 @@ export class TableroAsignacionesComponent implements OnInit, OnDestroy {
     private asignacionService: AsignacionService,
     private operacionService: OperacionService,
     private storageService: StorageService,
+    private tarifarioService: TarifarioService,
     private modal: NgbModal,
   ) {}
 
   ngOnInit(): void {
-    // TODO: refactor Tarifas — categorías leídas desde StorageService
-    const storedTarifa = this.storageService.loadInfo('tarifasGralCliente');
-    const tarifaGeneral = storedTarifa[0];
-    if (tarifaGeneral?.cargasGenerales) {
-      this.categoriasOrdenadas = [...tarifaGeneral.cargasGenerales]
+    // Categorías desde la tarifa General del sistema nuevo (Tarifario) — la General
+    // tiene siempre 1 sola sección (invariante del motor de cálculo, Bloque 6).
+    const tarifaGeneral = this.tarifarioService.getTarifaGeneralVigente();
+    if (tarifaGeneral?.secciones?.[0]) {
+      this.categoriasOrdenadas = [...tarifaGeneral.secciones[0].categorias]
         .sort((a, b) => a.orden - b.orden)
         .map(cat => ({ catOrden: cat.orden, nombre: cat.nombre }));
     }

@@ -6,10 +6,11 @@ import { Subject, takeUntil } from 'rxjs';
 import { AsignacionVehiculo, Categoria, Vehiculo } from 'src/app/interfaces/chofer';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { Proveedor } from 'src/app/interfaces/proveedor';
-import { TarifaGralCliente } from 'src/app/interfaces/tarifa-gral-cliente';
+import { CategoriaTarifa } from 'src/app/interfaces/tarifa';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ValidarService } from 'src/app/servicios/validar/validar.service';
 import { VehiculoFactoryService, VehiculoFormData } from 'src/app/servicios/choferes/vehiculo-factory.service';
+import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
 import Swal from 'sweetalert2';
 
 
@@ -20,12 +21,11 @@ import Swal from 'sweetalert2';
     standalone: false
 })
 export class ModalVehiculoComponent implements OnInit {
-  
+
   @Input() fromParent: any;
   @Input() asignadoA!: AsignacionVehiculo;
 
-  $proveedores!: Proveedor;  
-  tarifaGralCliente!: TarifaGralCliente;
+  $proveedores!: Proveedor;
   vehiculoForm:any;
   seguimientoForm:any;
   categoriasForm:any;
@@ -37,16 +37,23 @@ export class ModalVehiculoComponent implements OnInit {
   vehiculo!: Vehiculo;
   soloVista: boolean = false;
   categoria!: Categoria;
-  ordCat!: number;
+  /** Categorías de la tarifa General vigente — universo real de opciones
+   *  para categorizar un vehículo, reemplaza el viejo `tarifaGralCliente.
+   *  cargasGenerales` (módulo de tarifas viejo, sin relación con esto). */
+  categoriasGeneral: CategoriaTarifa[] = [];
+  /** Si se está editando un vehículo cuya categoría (texto libre del
+   *  modelo viejo) no matchea ninguna categoría real de la General
+   *  vigente, se muestra acá para que el usuario elija una válida. */
+  categoriaLegacyDesconocida: string | null = null;
   edicion:boolean = false;
   private destroy$ = new Subject<void>();
 
-  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private vehiculoFactoryService: VehiculoFactoryService){
+  constructor(private fb: FormBuilder, private storageService: StorageService, private router:Router, public activeModal: NgbActiveModal, private modalService: NgbModal, private vehiculoFactoryService: VehiculoFactoryService, private tarifarioService: TarifarioService){
     this.vehiculoForm = this.fb.group({
       dominio: ["", [Validators.required, Validators.minLength(6), Validators.maxLength(8), ValidarService.validarDominio]],
-      marca:["",[Validators.required, Validators.maxLength(50)]], 
-      modelo: ["",[Validators.required, Validators.maxLength(30)]], 
-      categoria: ["",[Validators.required, Validators.maxLength(30)]], 
+      marca:["",[Validators.required, Validators.maxLength(50)]],
+      modelo: ["",[Validators.required, Validators.maxLength(30)]],
+      categoria: ["",[Validators.required]],
     })
 
     this.seguimientoForm = this.fb.group({
@@ -58,30 +65,27 @@ export class ModalVehiculoComponent implements OnInit {
       categorias: this.fb.array([]),
     });
   }
-  
-  
+
+
   ngOnInit(): void {
-    let tarifaGral = this.storageService.loadInfo("tarifasGralCliente");
-    this.tarifaGralCliente = tarifaGral[0];
-    console.log("data tarifasGralCliente: ", this.tarifaGralCliente);         
+    const general = this.tarifarioService.getTarifaGeneralVigente();
+    this.categoriasGeneral = general ? general.secciones.flatMap(s => s.categorias) : [];
+    if (!general) {
+      Swal.fire('Sin tarifa general', 'Hace falta una tarifa general vigente para poder categorizar el vehículo.', 'warning');
+    }
+
     this.storageService.proveedores$
     .pipe(takeUntil(this.destroy$)) // Detener la suscripción cuando sea necesario
     .subscribe(data => {
       this.$proveedores = data;
     });
-   /*  this.storageService.tarifasGralCliente$.subscribe(data =>{   
-      console.log("data tarifasGralCliente: ", data);         
-      this.tarifaGralCliente = data;      
-    }) */           
     console.log("1)",this.fromParent);
     if(this.fromParent !== undefined){
         this.edicion = true;
         this.vehiculo = this.fromParent;
-        this.ordCat = this.vehiculo.categoria.catOrden;
-        //this.tipoCombustible = this.vehiculo.tipoCombustible
         this.armarForms()
     }
-       
+
   }
 
   ngOnDestroy(): void {
@@ -89,45 +93,42 @@ export class ModalVehiculoComponent implements OnInit {
     this.destroy$.complete();
   }
 
-  guardarVehiculo(){ 
-    
-    if(this.ordCat === undefined){
-      return this.mensajesError("Debe seleccionar una Categoria Tipo")    
-    };
+  guardarVehiculo(){
+
     if(this.tipoCombustible.length === 0){
-      return this.mensajesError("Debe seleccionar un tipo de combustible")    
+      return this.mensajesError("Debe seleccionar un tipo de combustible")
     };
     if(this.tarjetaCombustible === undefined){
-      return this.mensajesError("Debe seleccionar si tiene tarjeta de combustible")    
+      return this.mensajesError("Debe seleccionar si tiene tarjeta de combustible")
     };
     if(this.publicidad === undefined){
-      return this.mensajesError("Debe seleccionar si tiene publicidad")    
+      return this.mensajesError("Debe seleccionar si tiene publicidad")
     };
     if(this.seguimiento === undefined){
-      return this.mensajesError("Debe seleccionar si tiene seguimiento satelital")    
+      return this.mensajesError("Debe seleccionar si tiene seguimiento satelital")
     };
     if(this.seguimiento && this.seguimientoForm.invalid){
-      return this.mensajesError("Debe ingresar un proveedor")    
+      return this.mensajesError("Debe ingresar un proveedor")
     }
     if (this.vehiculoForm.valid){
 
       //this.armarChofer();
-      this.armarVehiculo();    
+      this.armarVehiculo();
       //this.addItem();
       //this.armarLegajo();
-      this.activeModal.close(this.vehiculo);    
+      this.activeModal.close(this.vehiculo);
     } else{
       this.mensajesError("error en el formulario")
     }
-    
+
    }
 
    changeProveedor(e:any){
-        this.proveedorSeleccionado = e.target.value;   
-  }  
+        this.proveedorSeleccionado = e.target.value;
+  }
 
-  /* changeTipoCombustible(e: any) {    
-    this.tipoCombustible = e.target.value   
+  /* changeTipoCombustible(e: any) {
+    this.tipoCombustible = e.target.value
   } */
 
   changeTipoCombustible(event: Event): void {
@@ -147,25 +148,25 @@ export class ModalVehiculoComponent implements OnInit {
     console.log('Seleccionados:', this.tipoCombustible);
   }
 
-  changeTarjetaombustible(e: any) {    
+  changeTarjetaombustible(e: any) {
     if(e.target.value === "si"){
-      this.tarjetaCombustible = true;  
+      this.tarjetaCombustible = true;
     } else {
       this.tarjetaCombustible = false;
     }
-    
+
   }
 
-  changePublicidad(e: any) {    
+  changePublicidad(e: any) {
     if(e.target.value === "si"){
-      this.publicidad = true;  
+      this.publicidad = true;
     } else {
       this.publicidad = false;
     }
-    
+
   }
 
-  seguimientoSatelital(e:any){    
+  seguimientoSatelital(e:any){
     switch (e.target.value) {
       case "si":{
         this.seguimiento = true;
@@ -179,18 +180,13 @@ export class ModalVehiculoComponent implements OnInit {
         break;
       }
     }
-    
-  }
 
-  changeCategoria(e: any) {
-    ////console.log(e.target.value);
-    this.ordCat = Number(e.target.value);
- 
   }
 
   armarVehiculo(): void {
+    const categoriaGeneral = this.categoriasGeneral.find(c => c.nombre === this.vehiculoForm.value.categoria);
     const categoria: Categoria = {
-      catOrden: this.ordCat,
+      catOrden: categoriaGeneral?.orden ?? 0,
       nombre: this.vehiculoForm.value.categoria,
     };
     const data: VehiculoFormData = {
@@ -216,26 +212,28 @@ export class ModalVehiculoComponent implements OnInit {
   }
 
   armarForms() {
-    this.armarVehiculoForm();   
+    this.armarVehiculoForm();
   }
 
   armarVehiculoForm(){
+    const nombreActual = this.vehiculo.categoria.nombre;
+    const existe = this.categoriasGeneral.some(c => c.nombre === nombreActual);
+    this.categoriaLegacyDesconocida = existe ? null : nombreActual;
     this.vehiculoForm.patchValue({
       dominio: this.vehiculo.dominio,
       marca:this.vehiculo.marca,
       modelo: this.vehiculo.modelo,
-      categoria: this.vehiculo.categoria.nombre,
+      categoria: existe ? nombreActual : '',
     });
-    //this.categoriaSeleccionada = this.choferEditar.vehiculo.categoria; ///////////////////////////////////////////
     this.tipoCombustible = this.vehiculo.tipoCombustible;
     this.tarjetaCombustible = this.vehiculo.tarjetaCombustible;
-    this.publicidad = this.vehiculo.publicidad;    
+    this.publicidad = this.vehiculo.publicidad;
     this.armarSeguimientoSatelital();
   }
 
   armarSeguimientoSatelital(){
-    if(!this.vehiculo.segSat){      
-      this.seguimiento = false;      
+    if(!this.vehiculo.segSat){
+      this.seguimiento = false;
       this.seguimientoForm.patchValue({
         proveedor: "",
         //marcaGps: "",
@@ -253,7 +251,7 @@ export class ModalVehiculoComponent implements OnInit {
         const control = this.vehiculoForm.get(controlName);
         return control?.hasError(errorName) && control.touched;
       }
-    
+
        mensajesError(msj:string){
           Swal.fire({
             icon: "error",

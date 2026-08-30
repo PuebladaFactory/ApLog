@@ -26,6 +26,7 @@ import {
 } from "src/app/interfaces/tarifa-personalizada-cliente";
 import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
 import { ValoresOpService } from "src/app/servicios/valores-op/valores-op/valores-op.service";
+import { ValoresTarifaService } from "src/app/servicios/tarifario/valores-tarifa.service";
 import { FormatoNumericoService } from "src/app/servicios/formato-numerico/formato-numerico.service";
 import { StorageService } from "src/app/servicios/storage/storage.service";
 import Swal from "sweetalert2";
@@ -76,6 +77,7 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     private fb: FormBuilder,
     private storageService: StorageService,
     private valoresOpServ: ValoresOpService,
+    private valoresTarifaServ: ValoresTarifaService,
     private formNumServ: FormatoNumericoService,
     private dbFirebase: DbFirestoreService,
     private tableroServ: TableroService,
@@ -401,6 +403,12 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
 
     console.log("this.op.acompanianteCant :", this.op.acompanianteCant); */
 
+    const resultadoTarifaNueva = this.valoresTarifaServ.calcularCierre(this.op);
+    this.op = resultadoTarifaNueva.op as ConId<Operacion>;
+    if (resultadoTarifaNueva.errores.length > 0) {
+      console.warn("Tarifa nueva no se pudo recalcular al cierre:", resultadoTarifaNueva.errores);
+    }
+
     console.log("operacion: para cerrar", this.op);
     this.calcularValoresfinales();
   }
@@ -432,6 +440,10 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
               "Cierre de Operación",
               result.exito,
             );
+            if (this.op.datosTarifaEventual !== null) {
+              // Best-effort, no bloquea el cierre — ver ValoresTarifaService.
+              this.valoresTarifaServ.registrarEventualSiCorresponde(this.op);
+            }
             Swal.fire({
               title: "Confirmado",
               text: "La operación ha sido cerrada.",
@@ -583,36 +595,40 @@ export class ModalResumenOpComponent implements OnInit, AfterViewInit {
     this.recalcularValores();
   }
 
-  getClaseTarifa(op: Operacion, objeto: string): string {
-    if (op.tarifaTipo.eventual) {
-      return "bg-warning";
+  /**
+   * Nivel real aplicado a un lado de la operación, leído del sistema nuevo
+   * de Tarifas (tarifaAplicadaCliente/Chofer) — reemplaza la lectura vieja
+   * de op.tarifaTipo/op.cliente.tarifaTipo (op.cliente/op.chofer son
+   * snapshots sin tarifaTipo, ya no existe ese campo). Eventual es a nivel
+   * de operación completa (DatosTarifaEventual no distingue lado), por eso
+   * se chequea antes de mirar tarifaAplicada*.
+   */
+  nivelTarifaAplicada(op: Operacion, objeto: 'cliente' | 'chofer'): 'eventual' | 'personalizada' | 'especial' | 'general' | null {
+    if (op.datosTarifaEventual !== null) {
+      return 'eventual';
     }
-    if (op.tarifaTipo.personalizada) {
-      return "bg-success";
+    const ref = objeto === 'cliente' ? op.tarifaAplicadaCliente : op.tarifaAplicadaChofer;
+    return ref?.nivel ?? null;
+  }
+
+  etiquetaTarifaAplicada(op: Operacion, objeto: 'cliente' | 'chofer'): string {
+    switch (this.nivelTarifaAplicada(op, objeto)) {
+      case 'eventual': return 'Eventual';
+      case 'personalizada': return 'Personalizada';
+      case 'especial': return 'Especial';
+      case 'general': return 'General';
+      default: return 'Sin resolver';
     }
-    // TODO: refactor Tarifas — rama especial deshabilitada: op.cliente/op.chofer son snapshots
-    // (sin tarifaTipo). Mientras tanto 'especial' se muestra como 'general' (bg-primary),
-    // coherente con que la facturación trata especial como general. Recuperar al refactor de Tarifas.
-    if (op.tarifaTipo.especial) {
-      return "bg-primary";
-      // if (objeto === "cliente") {
-      //   if (op.cliente.tarifaTipo.especial) {
-      //     return "bg-info";
-      //   } else {
-      //     return "bg-primary";
-      //   }
-      // } else {
-      //   if (op.chofer.tarifaTipo.especial) {
-      //     return "bg-info";
-      //   } else {
-      //     return "bg-primary";
-      //   }
-      // }
+  }
+
+  getClaseTarifa(op: Operacion, objeto: 'cliente' | 'chofer'): string {
+    switch (this.nivelTarifaAplicada(op, objeto)) {
+      case 'eventual': return 'bg-warning';
+      case 'personalizada': return 'bg-success';
+      case 'especial': return 'bg-info';
+      case 'general': return 'bg-primary';
+      default: return 'bg-secondary';
     }
-    if (op.tarifaTipo.general) {
-      return "bg-primary";
-    }
-    return "bg-secondary";
   }
 
   obtenerTarifas() {

@@ -1,0 +1,103 @@
+<div class="container mt-4">
+  <h2>Tarifa Especial</h2>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Tipo de entidad</label>
+      <select class="form-select" [value]="entidadTipo" (change)="onCambioEntidadTipo($event)">
+        <option value="cliente">Cliente</option>
+        <option value="chofer">Chofer</option>
+        <option value="proveedor">Proveedor</option>
+      </select>
+    </div>
+    <div class="col-md-5">
+      <label class="form-label">Entidad</label>
+      <select class="form-select" (change)="seleccionarEntidad($event)" [value]="entidadSeleccionada?.id ?? ''">
+        <option value="" selected>Elegí una entidad…</option>
+        <option *ngFor="let o of opcionesEntidad" [value]="o.id">{{ o.nombre }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="!entidadSeleccionada" class="alert alert-info">
+    Elegí una entidad para ver sus tarifas especiales.
+  </div>
+
+  <ng-container *ngIf="entidadSeleccionada">
+
+    <div *ngIf="modo === 'listado'">
+      <div *ngIf="tarifas.length === 0" class="alert alert-info">
+        Esta entidad no tiene tarifas especiales cargadas todavía.
+      </div>
+
+      <div class="row row-cols-1 row-cols-md-3 g-3 mb-3">
+        <div class="col" *ngFor="let t of tarifas">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">{{ t.nombre }}</h5>
+              <p class="card-text">
+                {{ t.alcance.tipo === 'entidad' ? 'Todos los clientes' : ('Cliente: ' + (nombreClientePorId(t.alcance.idCliente) ?? t.alcance.idCliente)) }}
+              </p>
+              <button class="btn btn-sm btn-primary" (click)="ver(t)">Ver</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" *ngIf="puedeEditar" (click)="nuevaTarifa()">+ Nueva tarifa especial</button>
+    </div>
+
+    <div *ngIf="modo === 'viewer' && tarifaSeleccionada">
+      <app-tarifa-especial-viewer
+        [tarifa]="tarifaSeleccionada"
+        [nombreClienteAlcance]="tarifaSeleccionada.alcance.tipo === 'entidadCliente' ? nombreClientePorId(tarifaSeleccionada.alcance.idCliente) : null">
+      </app-tarifa-especial-viewer>
+      <button class="btn btn-secondary" (click)="volverAlListado()">Volver al listado</button>
+      <button class="btn btn-primary ms-2" *ngIf="puedeEditar" (click)="editar()">Editar (nueva versión)</button>
+      <button class="btn btn-outline-primary ms-2" *ngIf="puedeEditar" (click)="aumentar()">Aumentar %</button>
+      <button class="btn btn-outline-secondary ms-2" *ngIf="puedeEditar" (click)="duplicar()">Duplicar a otra entidad</button>
+      <button class="btn btn-outline-danger ms-2" *ngIf="puedeEditar" (click)="darDeBaja()">Dar de baja</button>
+    </div>
+
+    <app-tarifa-especial-form
+      *ngIf="modo === 'form'"
+      [entidadTipo]="entidadTipo"
+      [idEntidadDueño]="entidadSeleccionada.id"
+      [tarifa]="tarifaSeleccionada ?? undefined"
+      [cargando]="guardando"
+      (guardar)="onGuardado($event)"
+      (cancelar)="onCancelarForm()">
+    </app-tarifa-especial-form>
+
+    <app-tarifa-especial-aumento
+      *ngIf="modo === 'aumento' && tarifaSeleccionada"
+      [tarifa]="tarifaSeleccionada"
+      [cargando]="guardando"
+      (guardar)="onAumentoGuardado($event)"
+      (cancelar)="onAumentoCancelado()">
+    </app-tarifa-especial-aumento>
+
+    <div *ngIf="modo === 'duplicar' && tarifaSeleccionada">
+      <div class="mb-3">
+        <label class="form-label">Entidad destino</label>
+        <select class="form-select" style="max-width: 400px;" (change)="seleccionarEntidadDestino($event)">
+          <option value="" selected>Elegí la entidad destino…</option>
+          <option *ngFor="let o of opcionesEntidadDestino" [value]="o.id">{{ o.nombre }}</option>
+        </select>
+      </div>
+
+      <app-tarifa-especial-form
+        *ngIf="entidadDestino"
+        [entidadTipo]="entidadTipo"
+        [idEntidadDueño]="entidadDestino.id"
+        [tarifaPlantilla]="tarifaSeleccionada"
+        [cargando]="guardando"
+        (guardar)="onDuplicarGuardado($event)"
+        (cancelar)="onDuplicarCancelado()">
+      </app-tarifa-especial-form>
+
+      <button class="btn btn-secondary mt-2" *ngIf="!entidadDestino" (click)="onDuplicarCancelado()">Cancelar</button>
+    </div>
+
+  </ng-container>
+</div>

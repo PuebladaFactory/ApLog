@@ -1,10 +1,8 @@
 import { TarifaTipo } from './chofer';
 
 export type RefTarifaHabilitada =
-  | { nivel: 'general' }
-  | { nivel: 'especial'; idTarifa: string }       // '' = habilitado, tarifa aún no creada
-  | { nivel: 'personalizada'; idTarifa: string }  // '' = habilitado, tarifa aún no creada
-  | { nivel: 'eventual' };
+  | { nivel: 'general' } | { nivel: 'especial' }
+  | { nivel: 'personalizada' } | { nivel: 'eventual' };
 
 /**
  * Shim de compatibilidad — reconstruye los 4 booleanos legacy a partir de

@@ -13,6 +13,7 @@ import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.servic
 import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
 import { AsignacionService } from 'src/app/servicios/operaciones/asignacion.service';
 import { ValoresOpService } from 'src/app/servicios/valores-op/valores-op/valores-op.service';
+import { ValoresTarifaService } from 'src/app/servicios/tarifario/valores-tarifa.service';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
@@ -51,6 +52,7 @@ export class OperacionService implements OnDestroy {
     private proveedorService: ProveedorService,
     private operacionFactory: OperacionFactoryService,
     private valoresServ:      ValoresOpService,
+    private valoresTarifaServ: ValoresTarifaService,
     private formNumServ:      FormatoNumericoService,
     private numeradorService: NumeradorService,
     private asignacionService: AsignacionService,
@@ -165,35 +167,19 @@ export class OperacionService implements OnDestroy {
     return { creadas, errores };
   }
 
-  /** Calcula los valores iniciales (aCobrar/aPagar y derivados) de una op según su
-   *  tipo de tarifa. Centraliza lo que antes estaba partido entre el componente de
-   *  carga y ValoresOpService.
-   *  TODO: refactor Tarifas — esta operatoria de ramas debe mudarse por completo a
-   *  ValoresOpService, dejando este método como orquestador delgado (op, tarifa) →
-   *  op con valores. Hoy replica el flujo actual del componente. */
+  /** Copia op.valoresNuevos (calculado por ValoresTarifaService.calcularAlta,
+   *  que corre ANTES en el loop de altaDesdeAsignacion) a la estructura vieja
+   *  op.valores — única fuente de valores desde Bloque 7 Paso 2. Si
+   *  valoresNuevos quedó en null (algún lado no se pudo resolver — ya
+   *  registrado en el log de actividad por altaDesdeAsignacion) op.valores
+   *  queda en los ceros que trae crearOperacionBase. */
   calcularValoresIniciales(op: Operacion): Operacion {
-    if (op.tarifaTipo.general || op.tarifaTipo.especial) {
-      op = this.valoresServ.valoresIniciales(op);
+    if (op.valoresNuevos) {
+      op.valores = {
+        cliente: { ...op.valoresNuevos.cliente },
+        chofer: { ...op.valoresNuevos.chofer },
+      };
     }
-    if (op.tarifaTipo.personalizada) {
-      // TODO: refactor Tarifas — invariante: personalizada ⟺ datosTarifaPersonalizada !== null
-      op.valores.cliente.aCobrar = op.datosTarifaPersonalizada!.aCobrar;
-      op.valores.chofer.aPagar   = op.datosTarifaPersonalizada!.aPagar;
-    }
-    if (op.tarifaTipo.eventual) {
-      // TODO: refactor Tarifas — invariante: eventual ⟺ datosTarifaEventual !== null
-      op.datosTarifaEventual!.cliente.valor = this.formNumServ.convertirAValorNumerico(op.datosTarifaEventual!.cliente.valor);
-      op.datosTarifaEventual!.chofer.valor  = this.formNumServ.convertirAValorNumerico(op.datosTarifaEventual!.chofer.valor);
-      op.valores.cliente.aCobrar = op.datosTarifaEventual!.cliente.valor;
-      op.valores.chofer.aPagar   = op.datosTarifaEventual!.chofer.valor;
-    }
-    op.valores.cliente.tarifaBase = op.valores.cliente.aCobrar;
-    op.valores.chofer.tarifaBase  = op.valores.chofer.aPagar;
-
-    if (op.acompaniante) {
-      op = this.valoresServ.valoresOpAcompaniante(op);
-    }
-    op = this.valoresServ.recalcularValores(op);
     return op;
   }
 
@@ -210,6 +196,21 @@ export class OperacionService implements OnDestroy {
 
     // 3. CALCULAR VALORES + RECONSTRUIR SUJETO/REF DESDE OP FINAL (un solo recorrido, antes de tocar red)
     for (const c of creadas) {
+      // Sistema nuevo de Tarifas: resuelve jerarquía y calcula valoresNuevos.
+      // Corre ANTES de calcularValoresIniciales — desde Bloque 7 Paso 2,
+      // valoresNuevos es la única fuente de op.valores (ver ese método). No
+      // bloquea el alta si no puede resolver: deja tarifaAplicada*/valoresNuevos
+      // en null para ese lado y lo registra en el log de actividad.
+      const resultadoTarifaNueva = this.valoresTarifaServ.calcularAlta(c.operacion);
+      c.operacion = resultadoTarifaNueva.op;
+      if (resultadoTarifaNueva.errores.length > 0) {
+        await this.logRegistro.registrarError(
+          'ALTA', 'operaciones', fecha,
+          `Tarifa nueva no resuelta al alta (cliente ${c.operacion.cliente.id}, chofer ${c.operacion.chofer.id}): ` +
+          resultadoTarifaNueva.errores.join(' | '),
+        );
+      }
+
       c.operacion = this.calcularValoresIniciales(c.operacion);
 
       const op   = c.operacion;

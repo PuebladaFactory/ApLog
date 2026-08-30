@@ -1,0 +1,88 @@
+<div class="container mt-4">
+  <h2>Tarifa Personalizada</h2>
+
+  <div class="mb-3">
+    <label class="form-label">Cliente</label>
+    <select class="form-select" style="max-width: 400px;" (change)="seleccionarCliente($event)" [value]="clienteSeleccionado?.idCliente ?? ''">
+      <option value="" selected>Elegí un cliente…</option>
+      <option *ngFor="let c of clientes" [value]="c.idCliente">{{ c.razonSocial }}</option>
+    </select>
+  </div>
+
+  <div *ngIf="!clienteSeleccionado" class="alert alert-info">
+    Elegí un cliente para ver sus tarifas personalizadas.
+  </div>
+
+  <ng-container *ngIf="clienteSeleccionado">
+
+    <div *ngIf="modo === 'listado'">
+      <div *ngIf="tarifas.length === 0" class="alert alert-info">
+        Este cliente no tiene tarifas personalizadas cargadas todavía.
+      </div>
+
+      <div class="row row-cols-1 row-cols-md-3 g-3 mb-3">
+        <div class="col" *ngFor="let t of tarifas">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">{{ t.nombre }}</h5>
+              <p class="card-text">{{ modoTarifacionLabel(t) }}</p>
+              <button class="btn btn-sm btn-primary" (click)="ver(t)">Ver</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" *ngIf="puedeEditar" (click)="nuevaTarifa()">+ Nueva tarifa personalizada</button>
+    </div>
+
+    <div *ngIf="modo === 'viewer' && tarifaSeleccionada">
+      <app-tarifa-viewer [tarifa]="tarifaSeleccionada"></app-tarifa-viewer>
+      <button class="btn btn-secondary" (click)="volverAlListado()">Volver al listado</button>
+      <button class="btn btn-primary ms-2" *ngIf="puedeEditar" (click)="editar()">Editar (nueva versión)</button>
+      <button class="btn btn-outline-primary ms-2" *ngIf="puedeEditar" (click)="aumentar()">Aumentar %</button>
+      <button class="btn btn-outline-secondary ms-2" *ngIf="puedeEditar" (click)="duplicar()">Duplicar a otro cliente</button>
+      <button class="btn btn-outline-danger ms-2" *ngIf="puedeEditar" (click)="darDeBaja()">Dar de baja</button>
+    </div>
+
+    <app-tarifa-form
+      *ngIf="modo === 'form'"
+      nivel="personalizada"
+      [idEntidadDueño]="clienteSeleccionado.idCliente"
+      [tarifa]="tarifaSeleccionada ?? undefined"
+      [cargando]="guardando"
+      (guardar)="onGuardado($event)"
+      (cancelar)="onCancelarForm()">
+    </app-tarifa-form>
+
+    <app-tarifa-aumento
+      *ngIf="modo === 'aumento' && tarifaSeleccionada"
+      [tarifa]="tarifaSeleccionada"
+      [cargando]="guardando"
+      (guardar)="onAumentoGuardado($event)"
+      (cancelar)="onAumentoCancelado()">
+    </app-tarifa-aumento>
+
+    <div *ngIf="modo === 'duplicar' && tarifaSeleccionada">
+      <div class="mb-3">
+        <label class="form-label">Cliente destino</label>
+        <select class="form-select" style="max-width: 400px;" (change)="seleccionarClienteDestino($event)">
+          <option value="" selected>Elegí el cliente destino…</option>
+          <option *ngFor="let c of clientesParaDuplicar" [value]="c.idCliente">{{ c.razonSocial }}</option>
+        </select>
+      </div>
+
+      <app-tarifa-form
+        *ngIf="clienteDestino"
+        nivel="personalizada"
+        [idEntidadDueño]="clienteDestino.idCliente"
+        [tarifaPlantilla]="tarifaSeleccionada"
+        [cargando]="guardando"
+        (guardar)="onDuplicarGuardado($event)"
+        (cancelar)="onDuplicarCancelado()">
+      </app-tarifa-form>
+
+      <button class="btn btn-secondary mt-2" *ngIf="!clienteDestino" (click)="onDuplicarCancelado()">Cancelar</button>
+    </div>
+
+  </ng-container>
+</div>

@@ -70,6 +70,12 @@ const routes: Routes = [
       data: { roles: ['dev','admin', 'manager','user', 'demo'] }, // Accesible para todos los roles
     },
     {
+      path: 'tarifas',
+      loadChildren: () => import('./tarifas/tarifas.module').then(m => m.TarifasModule),
+      canActivate: [RoleGuard],
+      data: { roles: ['dev','admin','user','demo'] },
+    },
+    {
       path: 'finanzas',
       loadChildren: () => import('./finanzas/finanzas.module').then(m => m.FinanzasModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo

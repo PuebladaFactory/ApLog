@@ -214,6 +214,32 @@ this.tarifaBase = op.datosTarifaEventual!.cliente.valor * op.multiplicadorClient
     //return this.facturaOpCliente
   }
 
+  /** Bloque 7 Paso 2 — factura desde el motor nuevo de Tarifas
+   *  (op.valoresNuevos.cliente, ya calculado por ValoresTarifaService).
+   *  tarifaBase se persiste YA MULTIPLICADA por op.multiplicadorCliente
+   *  (convención del cierre viejo para op.valores/InformeOp) — valoresNuevos
+   *  siempre la trae cruda. idTarifa legacy (numérico) no tiene equivalente
+   *  para el id de Firestore de la tarifa nueva — se persiste en 0, mismo
+   *  criterio que $facturarOpEveCliente para eventual. */
+  $facturarOpClienteNuevo(op: Operacion) {
+    const v = op.valoresNuevos!.cliente;
+    this.tarifaBase = v.tarifaBase * op.multiplicadorCliente;
+    op.valores.cliente.tarifaBase = this.tarifaBase;
+    this.acompaniante = v.acompValor;
+    op.valores.cliente.acompValor = this.acompaniante;
+    this.kmValor = v.kmAdicional;
+    op.valores.cliente.kmAdicional = this.kmValor;
+    op.valores.cliente.aCobrar = v.aCobrar;
+
+    this.$crearFacturaOpCliente(op, 0);
+    return {
+      op,
+      factura: this.facturaOpCliente,
+      resultado: true,
+      msj: "",
+    };
+  }
+
   // TODO: refactor Tarifas — firma ampliada de Vehiculo a tipo estructural mínimo (solo usa categoria.catOrden)
   $calcularCG(tarifa: TarifaGralCliente, vehiculo: { categoria: { catOrden: number } }) {
     let catCg = tarifa.cargasGenerales.filter((cat: CategoriaTarifa) => {

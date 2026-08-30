@@ -49,7 +49,6 @@ export class ClienteAltaComponent implements OnInit {
   $localidadSeleccionadaO:string = "";
   direccionOperativaCompleta = {provincia:"", municipio: "", localidad: "", domicilio: ""};
   cargando: boolean = false;
-  private tarifasHabilitadasOriginal: RefTarifaHabilitada[] = [];
 
   constructor(private fb: FormBuilder, private storageService: StorageService, private modalService: NgbModal, public activeModal: NgbActiveModal, private domicilioServ: DomicilioService, private clienteService: ClienteService) {
     this.form = this.fb.group({
@@ -176,27 +175,13 @@ export class ClienteAltaComponent implements OnInit {
     }
   }
 
-  /** Arma la lista de tarifas habilitadas desde el form, preservando el idTarifa
-   *  existente (edición) para especial/personalizada si no se destildaron. */
   getTarifasHabilitadas(): RefTarifaHabilitada[] {
     const v = this.formTipoTarifa.getRawValue();
     if (v.eventual) return [{ nivel: 'eventual' }];
     const lista: RefTarifaHabilitada[] = [];
     if (v.general) lista.push({ nivel: 'general' });
-    if (v.especial) {
-      const previa = this.tarifasHabilitadasOriginal.find(t => t.nivel === 'especial');
-      lista.push({
-        nivel: 'especial',
-        idTarifa: previa && previa.nivel === 'especial' ? previa.idTarifa : '',
-      });
-    }
-    if (v.personalizada) {
-      const previa = this.tarifasHabilitadasOriginal.find(t => t.nivel === 'personalizada');
-      lista.push({
-        nivel: 'personalizada',
-        idTarifa: previa && previa.nivel === 'personalizada' ? previa.idTarifa : '',
-      });
-    }
+    if (v.especial) lista.push({ nivel: 'especial' });
+    if (v.personalizada) lista.push({ nivel: 'personalizada' });
     return lista;
   }
 
@@ -351,7 +336,6 @@ export class ClienteAltaComponent implements OnInit {
       direccionOperativa: this.clienteEditar.direccionOperativa.domicilio,
       cuit: this.formatCuit(this.clienteEditar.cuit),
     });
-    this.tarifasHabilitadasOriginal = this.clienteEditar.tarifasHabilitadas;
     const tipoTarifaCliente = tarifaTipoDesdeHabilitadas(this.clienteEditar.tarifasHabilitadas);
     this.formTipoTarifa.patchValue({
         general: tipoTarifaCliente.general,

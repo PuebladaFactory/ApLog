@@ -1,0 +1,277 @@
+<div *ngIf="eligiendoModo" class="mb-3">
+  <p>Elegí el modo de tarifación para esta tarifa personalizada:</p>
+  <button type="button" class="btn btn-outline-primary me-2" (click)="elegirModo('categoria')">Por categoría</button>
+  <button type="button" class="btn btn-outline-primary" (click)="elegirModo('km')">Por km</button>
+  <div class="mt-2">
+    <button type="button" class="btn btn-link" (click)="onCancelar()">Cancelar</button>
+  </div>
+</div>
+
+<form *ngIf="!eligiendoModo && form" [formGroup]="form" (ngSubmit)="onSubmit()">
+
+  <div class="alert alert-danger" *ngIf="form.invalid && (form.dirty || form.touched)">
+    Hay campos incompletos o inválidos — revisá los recuadros en rojo.
+  </div>
+
+  <div class="alert alert-warning" *ngIf="existenValoresCero()">
+    Algunas categorías tienen valor $0. Verificar antes de guardar.
+  </div>
+
+  <p *ngIf="nivel === 'personalizada' && modoTarifacion" class="text-muted">
+    <strong>Modo:</strong> {{ modoTarifacion === 'km' ? 'Por km' : 'Por categoría' }}
+  </p>
+
+  <div class="mb-3" *ngIf="nivel === 'personalizada'">
+    <label class="form-label">Nombre de la tarifa</label>
+    <input type="text" class="form-control" formControlName="nombre"
+           [class.is-invalid]="invalido(form.get('nombre'))">
+    <div class="invalid-feedback d-block" *ngIf="invalido(form.get('nombre'))">
+      Campo requerido.
+    </div>
+  </div>
+
+  <div class="card mb-3" *ngIf="kmActivo">
+    <div class="card-header">Configuración de distancia</div>
+    <div class="card-body row">
+      <div class="col-md-6">
+        <label class="form-label">Primer sector (km)</label>
+        <input type="text" inputmode="number" class="form-control" formControlName="kmPrimerSector"
+               appMonto [soloEntero]="true" [minimo]="0"
+               [class.is-invalid]="invalido(form.get('kmPrimerSector'))">
+        <div class="invalid-feedback d-block" *ngIf="invalido(form.get('kmPrimerSector'))">
+          <span *ngIf="form.get('kmPrimerSector')?.errors?.['required']">Campo requerido.</span>
+          <span *ngIf="form.get('kmPrimerSector')?.errors?.['min']">No puede ser negativo.</span>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Intervalo siguiente (km)</label>
+        <input type="text" inputmode="number" class="form-control" formControlName="kmSectoresSiguientes"
+               appMonto [soloEntero]="true" [minimo]="0"
+               [class.is-invalid]="invalido(form.get('kmSectoresSiguientes'))">
+        <div class="invalid-feedback d-block" *ngIf="invalido(form.get('kmSectoresSiguientes'))">
+          <span *ngIf="form.get('kmSectoresSiguientes')?.errors?.['required']">Campo requerido.</span>
+          <span *ngIf="form.get('kmSectoresSiguientes')?.errors?.['min']">No puede ser negativo.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-check mb-3" *ngIf="mostrarToggleAdicionalKm">
+    <input type="checkbox" class="form-check-input" id="usaAdicionalKm"
+           formControlName="usaAdicionalKm" (change)="toggleUsaAdicionalKm()">
+    <label class="form-check-label" for="usaAdicionalKm">¿Esta tarifa usa adicional por km?</label>
+  </div>
+
+  <div class="form-check mb-3">
+    <input type="checkbox" class="form-check-input" id="usaValoresProveedor"
+           formControlName="usaValoresProveedor" (change)="toggleUsaValoresProveedor()">
+    <label class="form-check-label" for="usaValoresProveedor">Usar valores diferenciados para proveedor</label>
+    <div *ngIf="!form.get('usaValoresProveedor')!.value" class="form-text text-muted">
+      Los valores de la columna Proveedor no se guardan si esta opción está desactivada.
+    </div>
+  </div>
+
+  <div formArrayName="secciones">
+    <div *ngFor="let seccionCtrl of seccionesArray.controls; let si = index" [formGroupName]="si" class="mb-4">
+
+      <div class="d-flex align-items-center gap-2 mb-2" *ngIf="permiteMultiplesSecciones">
+        <input type="text" class="form-control form-control-sm w-auto" placeholder="Nombre de la sección" formControlName="nombre">
+        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="duplicarSeccion(si)" title="Duplicar sección">Duplicar</button>
+        <button type="button" class="btn btn-sm btn-outline-danger" (click)="quitarSeccion(si)"
+                [disabled]="seccionesArray.length <= 1">Quitar sección</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm tabla-categorias">
+          <thead>
+            <tr>
+              <th rowspan="2" class="col-nombre align-middle">Categoría</th>
+              <th [attr.colspan]="colspanGrupo" class="grupo-cobrar divisor text-center">A cobrar</th>
+              <th [attr.colspan]="colspanGrupo" class="grupo-pagar divisor text-center">A pagar</th>
+              <th *ngIf="form.get('usaValoresProveedor')!.value" [attr.colspan]="colspanGrupo" class="grupo-proveedor divisor text-center">A pagar (proveedor)</th>
+              <th rowspan="2"></th>
+            </tr>
+            <tr>
+              <th class="grupo-cobrar divisor">Base</th>
+              <ng-container *ngIf="kmActivo">
+                <th class="grupo-cobrar">1er sector</th>
+                <th class="grupo-cobrar">Intervalo</th>
+              </ng-container>
+              <th class="grupo-pagar divisor">Base</th>
+              <ng-container *ngIf="kmActivo">
+                <th class="grupo-pagar">1er sector</th>
+                <th class="grupo-pagar">Intervalo</th>
+              </ng-container>
+              <ng-container *ngIf="form.get('usaValoresProveedor')!.value">
+                <th class="grupo-proveedor divisor">Base</th>
+                <ng-container *ngIf="kmActivo">
+                  <th class="grupo-proveedor">1er sector</th>
+                  <th class="grupo-proveedor">Intervalo</th>
+                </ng-container>
+              </ng-container>
+            </tr>
+          </thead>
+          <tbody formArrayName="categorias">
+            <tr *ngFor="let filaCtrl of categoriasDe(si).controls; let i = index" [formGroupName]="i">
+              <td class="col-nombre">
+                <input type="text" class="form-control form-control-sm" formControlName="nombre"
+                       [class.is-invalid]="invalido(categoriasDe(si).at(i).get('nombre'))">
+                <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(i).get('nombre'))">
+                  Requerido.
+                </div>
+              </td>
+
+              <td class="grupo-cobrar divisor">
+                <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="aCobrar"
+                       appMonto prefijo="$ " [minimo]="0"
+                       [class.is-invalid]="invalido(categoriasDe(si).at(i).get('aCobrar'))"
+                       [class.border-warning]="categoriasDe(si).at(i).get('aCobrar')!.value === 0">
+                <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(i).get('aCobrar'))">
+                  <span *ngIf="categoriasDe(si).at(i).get('aCobrar')?.errors?.['required']">Requerido.</span>
+                  <span *ngIf="categoriasDe(si).at(i).get('aCobrar')?.errors?.['min']">No puede ser negativo.</span>
+                </div>
+              </td>
+              <ng-container *ngIf="kmActivo">
+                <td class="grupo-cobrar" formGroupName="adicionalCobrar">
+                  <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="primerSector"
+                         appMonto prefijo="$ " [minimo]="0"
+                         [class.is-invalid]="invalido(categoriasDe(si).at(i).get('adicionalCobrar.primerSector'))"
+                         [class.border-warning]="categoriasDe(si).at(i).get('adicionalCobrar.primerSector')!.value === 0">
+                  <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(i).get('adicionalCobrar.primerSector'))">
+                    <span *ngIf="categoriasDe(si).at(i).get('adicionalCobrar.primerSector')?.errors?.['required']">Requerido.</span>
+                    <span *ngIf="categoriasDe(si).at(i).get('adicionalCobrar.primerSector')?.errors?.['min']">No puede ser negativo.</span>
+                  </div>
+                </td>
+                <td class="grupo-cobrar" formGroupName="adicionalCobrar">
+                  <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="sectoresSiguientes"
+                         appMonto prefijo="$ " [minimo]="0"
+                         [class.is-invalid]="invalido(categoriasDe(si).at(i).get('adicionalCobrar.sectoresSiguientes'))"
+                         [class.border-warning]="categoriasDe(si).at(i).get('adicionalCobrar.sectoresSiguientes')!.value === 0">
+                  <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(i).get('adicionalCobrar.sectoresSiguientes'))">
+                    <span *ngIf="categoriasDe(si).at(i).get('adicionalCobrar.sectoresSiguientes')?.errors?.['required']">Requerido.</span>
+                    <span *ngIf="categoriasDe(si).at(i).get('adicionalCobrar.sectoresSiguientes')?.errors?.['min']">No puede ser negativo.</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <td class="grupo-pagar divisor">
+                <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="aPagar"
+                       appMonto prefijo="$ " [minimo]="0"
+                       [class.is-invalid]="invalido(categoriasDe(si).at(i).get('aPagar'))"
+                       [class.border-warning]="categoriasDe(si).at(i).get('aPagar')!.value === 0">
+                <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(i).get('aPagar'))">
+                  <span *ngIf="categoriasDe(si).at(i).get('aPagar')?.errors?.['required']">Requerido.</span>
+                  <span *ngIf="categoriasDe(si).at(i).get('aPagar')?.errors?.['min']">No puede ser negativo.</span>
+                </div>
+              </td>
+              <ng-container *ngIf="kmActivo">
+                <td class="grupo-pagar" formGroupName="adicionalPagar">
+                  <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="primerSector"
+                         appMonto prefijo="$ " [minimo]="0"
+                         [class.is-invalid]="invalido(categoriasDe(si).at(i).get('adicionalPagar.primerSector'))"
+                         [class.border-warning]="categoriasDe(si).at(i).get('adicionalPagar.primerSector')!.value === 0">
+                  <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(i).get('adicionalPagar.primerSector'))">
+                    <span *ngIf="categoriasDe(si).at(i).get('adicionalPagar.primerSector')?.errors?.['required']">Requerido.</span>
+                    <span *ngIf="categoriasDe(si).at(i).get('adicionalPagar.primerSector')?.errors?.['min']">No puede ser negativo.</span>
+                  </div>
+                </td>
+                <td class="grupo-pagar" formGroupName="adicionalPagar">
+                  <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="sectoresSiguientes"
+                         appMonto prefijo="$ " [minimo]="0"
+                         [class.is-invalid]="invalido(categoriasDe(si).at(i).get('adicionalPagar.sectoresSiguientes'))"
+                         [class.border-warning]="categoriasDe(si).at(i).get('adicionalPagar.sectoresSiguientes')!.value === 0">
+                  <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(i).get('adicionalPagar.sectoresSiguientes'))">
+                    <span *ngIf="categoriasDe(si).at(i).get('adicionalPagar.sectoresSiguientes')?.errors?.['required']">Requerido.</span>
+                    <span *ngIf="categoriasDe(si).at(i).get('adicionalPagar.sectoresSiguientes')?.errors?.['min']">No puede ser negativo.</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <ng-container *ngIf="form.get('usaValoresProveedor')!.value">
+                <td class="grupo-proveedor divisor">
+                  <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="aPagarProveedor"
+                         appMonto prefijo="$ " [minimo]="0"
+                         [class.is-invalid]="invalido(categoriasDe(si).at(i).get('aPagarProveedor'))"
+                         [class.border-warning]="categoriasDe(si).at(i).get('aPagarProveedor')!.value === 0">
+                  <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(i).get('aPagarProveedor'))">
+                    No puede ser negativo.
+                  </div>
+                </td>
+                <ng-container *ngIf="kmActivo">
+                  <td class="grupo-proveedor" formGroupName="adicionalPagarProveedor">
+                    <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="primerSector"
+                           appMonto prefijo="$ " [minimo]="0"
+                           [class.is-invalid]="invalido(categoriasDe(si).at(i).get('adicionalPagarProveedor.primerSector'))"
+                           [class.border-warning]="categoriasDe(si).at(i).get('adicionalPagarProveedor.primerSector')!.value === 0">
+                    <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(i).get('adicionalPagarProveedor.primerSector'))">
+                      No puede ser negativo.
+                    </div>
+                  </td>
+                  <td class="grupo-proveedor" formGroupName="adicionalPagarProveedor">
+                    <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="sectoresSiguientes"
+                           appMonto prefijo="$ " [minimo]="0"
+                           [class.is-invalid]="invalido(categoriasDe(si).at(i).get('adicionalPagarProveedor.sectoresSiguientes'))"
+                           [class.border-warning]="categoriasDe(si).at(i).get('adicionalPagarProveedor.sectoresSiguientes')!.value === 0">
+                    <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(i).get('adicionalPagarProveedor.sectoresSiguientes'))">
+                      No puede ser negativo.
+                    </div>
+                  </td>
+                </ng-container>
+              </ng-container>
+
+              <td class="text-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy me-2" viewBox="0 0 16 16"
+                     role="button" title="Duplicar categoría" (click)="duplicarCategoria(si, i)">
+                  <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+                </svg>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="quitarCategoria(si, i)"
+                        [disabled]="categoriasDe(si).length <= 1">✕</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-secondary mb-3" (click)="agregarCategoria(si)">+ Agregar categoría</button>
+    </div>
+  </div>
+
+  <button type="button" class="btn btn-sm btn-outline-secondary mb-3" *ngIf="permiteMultiplesSecciones" (click)="agregarSeccion()">+ Agregar sección</button>
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <label class="form-label">Acompañante — a cobrar</label>
+      <input type="text" inputmode="number" class="form-control" formControlName="acompanianteACobrar"
+             appMonto prefijo="$ " [minimo]="0"
+             [class.is-invalid]="invalido(form.get('acompanianteACobrar'))"
+             [class.border-warning]="form.get('acompanianteACobrar')!.value === 0">
+      <div class="invalid-feedback d-block" *ngIf="invalido(form.get('acompanianteACobrar'))">
+        <span *ngIf="form.get('acompanianteACobrar')?.errors?.['required']">Campo requerido.</span>
+        <span *ngIf="form.get('acompanianteACobrar')?.errors?.['min']">No puede ser negativo.</span>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Acompañante — a pagar</label>
+      <input type="text" inputmode="number" class="form-control" formControlName="acompanianteAPagar"
+             appMonto prefijo="$ " [minimo]="0"
+             [class.is-invalid]="invalido(form.get('acompanianteAPagar'))"
+             [class.border-warning]="form.get('acompanianteAPagar')!.value === 0">
+      <div class="invalid-feedback d-block" *ngIf="invalido(form.get('acompanianteAPagar'))">
+        <span *ngIf="form.get('acompanianteAPagar')?.errors?.['required']">Campo requerido.</span>
+        <span *ngIf="form.get('acompanianteAPagar')?.errors?.['min']">No puede ser negativo.</span>
+      </div>
+    </div>
+    <div class="col-md-4" *ngIf="form.get('usaValoresProveedor')!.value">
+      <label class="form-label">Acompañante — a pagar (proveedor)</label>
+      <input type="text" inputmode="number" class="form-control" formControlName="acompanianteAPagarProveedor"
+             appMonto prefijo="$ " [minimo]="0"
+             [class.is-invalid]="invalido(form.get('acompanianteAPagarProveedor'))"
+             [class.border-warning]="form.get('acompanianteAPagarProveedor')!.value === 0">
+      <div class="invalid-feedback d-block" *ngIf="invalido(form.get('acompanianteAPagarProveedor'))">
+        No puede ser negativo.
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary" [disabled]="cargando">Guardar</button>
+  <button type="button" class="btn btn-secondary ms-2" (click)="onCancelar()" [disabled]="cargando">Cancelar</button>
+</form>

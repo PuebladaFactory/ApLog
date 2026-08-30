@@ -13,6 +13,7 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { ChoferService } from 'src/app/servicios/choferes/chofer.service';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
 import { ClienteService } from 'src/app/servicios/clientes/cliente.service';
+import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
 
 let version = 'v0.0.0'; // fallback por defecto
 
@@ -36,12 +37,13 @@ export class HomeComponent implements OnInit {
   tarifas$!: Observable<any>;
   private destroy$ = new Subject<void>();
 
-  constructor(private storageService: StorageService, private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private router: Router, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService) { }
+  constructor(private storageService: StorageService, private categoriaDocumentacionService: CategoriaDocumentacionService, private legajoService: LegajoService, private router: Router, private choferService: ChoferService, private proveedorService: ProveedorService, private clienteService: ClienteService, private tarifarioService: TarifarioService) { }
 
   ngOnInit(): void {
     this.choferService.init();
     this.proveedorService.init();
     this.clienteService.init();
+    this.tarifarioService.init();
     this.categoriaDocumentacionService.init();
     this.legajoService.init();
     this.setInitialSidebarState();

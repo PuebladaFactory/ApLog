@@ -1,0 +1,71 @@
+<p><strong>Vigente desde:</strong> {{ tarifa.vigenciaDesde }}</p>
+
+<div class="table-responsive">
+  <table class="table table-sm table-bordered tabla-categorias">
+    <thead>
+      <tr>
+        <th rowspan="2" class="col-nombre align-middle">Categoría</th>
+        <th [attr.colspan]="colspanGrupo" class="grupo-cobrar divisor text-center">A cobrar{{ sufijoKm }}</th>
+        <th [attr.colspan]="colspanGrupo" class="grupo-pagar divisor text-center">A pagar{{ sufijoKm }}</th>
+        <th *ngIf="tarifa.usaValoresProveedor" [attr.colspan]="colspanGrupo" class="grupo-proveedor divisor text-center">A pagar (proveedor){{ sufijoKm }}</th>
+      </tr>
+      <tr>
+        <th class="grupo-cobrar divisor">Base</th>
+        <ng-container *ngIf="tieneKm">
+          <th class="grupo-cobrar">1er sector</th>
+          <th class="grupo-cobrar">Intervalo</th>
+        </ng-container>
+        <th class="grupo-pagar divisor">Base</th>
+        <ng-container *ngIf="tieneKm">
+          <th class="grupo-pagar">1er sector</th>
+          <th class="grupo-pagar">Intervalo</th>
+        </ng-container>
+        <ng-container *ngIf="tarifa.usaValoresProveedor">
+          <th class="grupo-proveedor divisor">Base</th>
+          <ng-container *ngIf="tieneKm">
+            <th class="grupo-proveedor">1er sector</th>
+            <th class="grupo-proveedor">Intervalo</th>
+          </ng-container>
+        </ng-container>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let seccion of tarifa.secciones">
+        <tr *ngIf="seccion.nombre !== null">
+          <td [attr.colspan]="cantidadColumnas" class="fw-bold bg-light">{{ seccion.nombre }}</td>
+        </tr>
+        <tr *ngFor="let cat of seccion.categorias">
+          <td class="col-nombre">{{ cat.nombre }}</td>
+          <td class="grupo-cobrar divisor">{{ cat.aCobrar | currency }}</td>
+          <ng-container *ngIf="tieneKm">
+            <td class="grupo-cobrar">{{ cat.adicionalKmACobrar?.primerSector | currency }}</td>
+            <td class="grupo-cobrar">{{ cat.adicionalKmACobrar?.sectoresSiguientes | currency }}</td>
+          </ng-container>
+          <td class="grupo-pagar divisor">{{ cat.aPagar | currency }}</td>
+          <ng-container *ngIf="tieneKm">
+            <td class="grupo-pagar">{{ cat.adicionalKmAPagar?.primerSector | currency }}</td>
+            <td class="grupo-pagar">{{ cat.adicionalKmAPagar?.sectoresSiguientes | currency }}</td>
+          </ng-container>
+          <ng-container *ngIf="tarifa.usaValoresProveedor">
+            <td class="grupo-proveedor divisor">{{ cat.aPagarProveedor !== undefined ? (cat.aPagarProveedor | currency) : '—' }}</td>
+            <ng-container *ngIf="tieneKm">
+              <td class="grupo-proveedor">{{ cat.adicionalKmAPagarProveedor?.primerSector !== undefined ? (cat.adicionalKmAPagarProveedor?.primerSector | currency) : '—' }}</td>
+              <td class="grupo-proveedor">{{ cat.adicionalKmAPagarProveedor?.sectoresSiguientes !== undefined ? (cat.adicionalKmAPagarProveedor?.sectoresSiguientes | currency) : '—' }}</td>
+            </ng-container>
+          </ng-container>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+
+<p>
+  <strong>Acompañante</strong> — a cobrar: {{ tarifa.acompanianteACobrar | currency }},
+  a pagar: {{ tarifa.acompanianteAPagar | currency }}<span *ngIf="tarifa.usaValoresProveedor">,
+  a pagar (proveedor): {{ tarifa.acompanianteAPagarProveedor !== undefined ? (tarifa.acompanianteAPagarProveedor | currency) : '—' }}</span>
+</p>
+
+<p *ngIf="tieneKm">
+  <strong>Configuración de distancia</strong> — 1er sector: {{ tarifa.kmDistancia?.primerSector }} km,
+  intervalo siguiente: {{ tarifa.kmDistancia?.sectoresSiguientes }} km
+</p>

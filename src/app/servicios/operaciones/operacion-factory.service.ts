@@ -87,6 +87,11 @@ export class OperacionFactoryService {
         cliente: { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aCobrar: 0 },
         chofer:  { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aPagar:  0 },
       },
+
+      tarifaAplicadaCliente: null,
+      tarifaAplicadaChofer:  null,
+      valoresNuevos:         null,
+
       multiplicadorCliente: 1,
       multiplicadorChofer:  1,
 

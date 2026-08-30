@@ -1,0 +1,93 @@
+<div class="container mt-4">
+  <h2>Historial de Tarifas</h2>
+
+  <div class="row g-3 mb-3" *ngIf="!tarifaSeleccionada && !tarifaEspecialSeleccionada">
+    <div class="col-md-3">
+      <label class="form-label">Tipo de entidad</label>
+      <select class="form-select" [value]="entidadTipo" (change)="onCambioEntidadTipo($event)">
+        <option value="cliente">Cliente</option>
+        <option value="chofer">Chofer</option>
+        <option value="proveedor">Proveedor</option>
+      </select>
+    </div>
+    <div class="col-md-5">
+      <label class="form-label">Entidad</label>
+      <select class="form-select" (change)="seleccionarEntidad($event)" [value]="entidadSeleccionada?.id ?? ''">
+        <option value="" selected>Elegí una entidad…</option>
+        <option *ngFor="let o of opcionesEntidad" [value]="o.id">{{ o.nombre }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="!entidadSeleccionada && !tarifaSeleccionada && !tarifaEspecialSeleccionada" class="alert alert-info">
+    Elegí una entidad para ver su historial de tarifas.
+  </div>
+
+  <div *ngIf="tarifaSeleccionada">
+    <app-tarifa-viewer [tarifa]="tarifaSeleccionada"></app-tarifa-viewer>
+    <button class="btn btn-secondary mt-2" (click)="volverPersonalizada()">Volver al historial</button>
+  </div>
+
+  <div *ngIf="tarifaEspecialSeleccionada">
+    <app-tarifa-especial-viewer
+      [tarifa]="tarifaEspecialSeleccionada"
+      [nombreClienteAlcance]="tarifaEspecialSeleccionada.alcance.tipo === 'entidadCliente' ? nombreClientePorId(tarifaEspecialSeleccionada.alcance.idCliente) : null">
+    </app-tarifa-especial-viewer>
+    <button class="btn btn-secondary mt-2" (click)="volverEspecial()">Volver al historial</button>
+  </div>
+
+  <ng-container *ngIf="entidadSeleccionada && !tarifaSeleccionada && !tarifaEspecialSeleccionada">
+
+    <div *ngIf="mostrarPersonalizada" class="mb-4">
+      <h4>Personalizada</h4>
+      <div *ngIf="linajesPersonalizada.length === 0" class="alert alert-info">
+        Esta entidad no tiene tarifas personalizadas registradas.
+      </div>
+      <div class="card mb-3" *ngFor="let linaje of linajesPersonalizada">
+        <div class="card-header">{{ linaje[linaje.length - 1].nombre }}</div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let t of linaje; let i = index">
+            <span>
+              {{ t.vigenciaDesde | date:'dd/MM/yyyy' }}
+              <span class="badge bg-success ms-2" *ngIf="t.activo">ACTIVA</span>
+              <span class="text-muted ms-2 small" *ngIf="i > 0">
+                (variación aprox. — cobrar {{ deltaPersonalizada(t, linaje[i-1]).cobrar !== null ? (deltaPersonalizada(t, linaje[i-1]).cobrar | number:'1.0-1') + '%' : 's/d' }},
+                pagar {{ deltaPersonalizada(t, linaje[i-1]).pagar !== null ? (deltaPersonalizada(t, linaje[i-1]).pagar | number:'1.0-1') + '%' : 's/d' }})
+              </span>
+              <span class="text-muted ms-2 small d-block">
+                Actualizado por {{ t.actualizadoPor }}<span *ngIf="textoAumento(t) as texto"> — {{ texto }}</span>
+              </span>
+            </span>
+            <button class="btn btn-sm btn-outline-primary" (click)="verPersonalizada(t)">Ver</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div>
+      <h4>Especial</h4>
+      <div *ngIf="linajesEspecial.length === 0" class="alert alert-info">
+        Esta entidad no tiene tarifas especiales registradas.
+      </div>
+      <div class="card mb-3" *ngFor="let linaje of linajesEspecial">
+        <div class="card-header">{{ linaje[linaje.length - 1].nombre }}</div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let t of linaje; let i = index">
+            <span>
+              {{ t.vigenciaDesde | date:'dd/MM/yyyy' }}
+              <span class="badge bg-success ms-2" *ngIf="t.activo">ACTIVA</span>
+              <span class="text-muted ms-2 small" *ngIf="i > 0">
+                (variación aprox. — {{ deltaEspecial(t, linaje[i-1]) !== null ? (deltaEspecial(t, linaje[i-1]) | number:'1.0-1') + '%' : 's/d' }})
+              </span>
+              <span class="text-muted ms-2 small d-block">
+                Actualizado por {{ t.actualizadoPor }}<span *ngIf="textoAumento(t) as texto"> — {{ texto }}</span>
+              </span>
+            </span>
+            <button class="btn btn-sm btn-outline-primary" (click)="verEspecial(t)">Ver</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

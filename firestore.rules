@@ -37,6 +37,7 @@ service cloud.firestore {
         'tarifasPersCliente': 'tarifas', 'tarifasGralChofer': 'tarifas',
         'tarifasEspChofer': 'tarifas', 'tarifasGralProveedor': 'tarifas',
         'tarifasEspProveedor': 'tarifas', 'tarifasEventuales': 'tarifas',
+        'registrosOpEventuales': 'tarifas',
 
         'historialTarifasGralCliente': 'tarifasHistorial',
         'historialTarifasEspCliente': 'tarifasHistorial',
@@ -45,6 +46,13 @@ service cloud.firestore {
         'historialTarifasEspChofer': 'tarifasHistorial',
         'historialTarifasGralProveedor': 'tarifasHistorial',
         'historialTarifasEspProveedor': 'tarifasHistorial',
+
+        // Frente grande de Tarifas — colecciones nuevas, módulo unificado
+        // (a diferencia del viejo, general/personalizada comparten UNA colección
+        // porque ahora una Tarifa trae aCobrar Y aPagar en la misma categoría).
+        'tarifas': 'tarifas', 'tarifasEspeciales': 'tarifas',
+        'historialTarifas': 'tarifasHistorial',
+        'historialTarifasEspeciales': 'tarifasHistorial',
 
         'resumenLiq': 'finanzas', 'proforma': 'finanzas',
         'informesOpClientes': 'finanzas', 'informesOpChoferes': 'finanzas',

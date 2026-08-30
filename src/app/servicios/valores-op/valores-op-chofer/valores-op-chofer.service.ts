@@ -211,6 +211,32 @@ this.tarifaBase = op.datosTarifaEventual!.chofer.valor * op.multiplicadorChofer;
     //return this.facturaOpChofer
   }
 
+  /** Bloque 7 Paso 2 — factura desde el motor nuevo de Tarifas
+   *  (op.valoresNuevos.chofer). Compartido por chofer directo Y proveedor —
+   *  a diferencia del sistema viejo ($facturarOpChofer/$facturarOpProveedor
+   *  por separado), acá no hace falta distinguir: ValoresTarifaService.
+   *  calcularLado ya resolvió tarifaBase/adicionales del lado chofer según
+   *  esProveedor. idProveedor: '' para chofer directo, idProveedor real para
+   *  proveedor. idTarifa legacy en 0 (ver $facturarOpClienteNuevo). */
+  $facturarOpChoferNuevo(op: Operacion, idProveedor: string) {
+    const v = op.valoresNuevos!.chofer;
+    this.tarifaBase = v.tarifaBase * op.multiplicadorChofer;
+    op.valores.chofer.tarifaBase = this.tarifaBase;
+    this.acompaniante = v.acompValor;
+    op.valores.chofer.acompValor = this.acompaniante;
+    this.kmValor = v.kmAdicional;
+    op.valores.chofer.kmAdicional = this.kmValor;
+    op.valores.chofer.aPagar = v.aPagar;
+
+    this.$crearFacturaOpChofer(op, 0, idProveedor);
+    return {
+      op,
+      factura: this.facturaOpChofer,
+      resultado: true,
+      msj: "",
+    };
+  }
+
   // TODO: refactor Tarifas — firma ampliada a tipo estructural mínimo (solo usa categoria.catOrden).
   $calcularCG(tarifa: TarifaGralCliente, vehiculo: { categoria: { catOrden: number } }) {
     let catCg = tarifa.cargasGenerales.filter((cat: CategoriaTarifa) => {

@@ -1,0 +1,57 @@
+<div class="container mt-4">
+  <h2>Tarifa Eventual</h2>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Tipo de entidad</label>
+      <select class="form-select" [value]="entidadTipo" (change)="onCambioEntidadTipo($event)">
+        <option value="cliente">Cliente</option>
+        <option value="chofer">Chofer</option>
+        <option value="proveedor">Proveedor</option>
+      </select>
+    </div>
+    <div class="col-md-5">
+      <label class="form-label">Entidad</label>
+      <select class="form-select" (change)="seleccionarEntidad($event)" [value]="entidadSeleccionada?.id ?? ''">
+        <option value="" selected>Elegí una entidad…</option>
+        <option *ngFor="let o of opcionesEntidad" [value]="o.id">{{ o.nombre }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="!entidadSeleccionada" class="alert alert-info">
+    Elegí una entidad para ver sus operaciones con tarifa eventual.
+  </div>
+
+  <ng-container *ngIf="entidadSeleccionada">
+    <div *ngIf="registros.length === 0" class="alert alert-info">
+      Esta entidad no tiene operaciones con tarifa eventual registradas.
+    </div>
+
+    <div class="table-responsive" *ngIf="registros.length > 0">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Chofer / Proveedor</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of registros">
+            <td>{{ r.fecha | date:'dd/MM/yyyy' }}</td>
+            <td>{{ r.cliente.concepto }} — {{ r.cliente.valor | currency }}</td>
+            <td>
+              <span *ngIf="r.chofer">{{ r.chofer.concepto }} — {{ r.chofer.valor | currency }}</span>
+              <span *ngIf="r.proveedor">{{ r.proveedor.concepto }} — {{ r.proveedor.valor | currency }} (proveedor)</span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" (click)="verDetalle(r)">Ver operación</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</div>

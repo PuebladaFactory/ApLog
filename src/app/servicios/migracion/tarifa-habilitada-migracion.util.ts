@@ -6,7 +6,7 @@
  */
 export function habilitadasDesdeTarifaTipoMigracion(tarifaTipo: any): any[] {
   if (tarifaTipo?.eventual) return [{ nivel: 'eventual' }];
-  if (tarifaTipo?.especial) return [{ nivel: 'especial', idTarifa: '' }];
-  if (tarifaTipo?.personalizada) return [{ nivel: 'personalizada', idTarifa: '' }];
+  if (tarifaTipo?.especial) return [{ nivel: 'especial' }];
+  if (tarifaTipo?.personalizada) return [{ nivel: 'personalizada' }];
   return [{ nivel: 'general' }];
 }
