@@ -15,6 +15,10 @@ export interface TarifaFormData {
   acompanianteAPagarProveedor?: number;
   usaValoresProveedor: boolean;
   metadataAumento?: MetadataAumento;
+  /** Override manual de vigenciaDesde, exclusivo para migración de datos —
+   *  no seteado (undefined) en el uso normal del día a día, cae al default
+   *  de "hoy". */
+  vigenciaDesde?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -50,7 +54,7 @@ export class TarifaFactoryService {
         : {}),
       usaValoresProveedor: data.usaValoresProveedor,
       activo: true,
-      vigenciaDesde: fechaStr,
+      vigenciaDesde: data.vigenciaDesde ?? fechaStr,
       versionAnteriorId,
       fechaActualizacion: fechaStr,
       actualizadoPor: usuario?.email || 'Desconocido',

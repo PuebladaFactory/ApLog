@@ -1,9 +1,10 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { AbstractControl, FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { ConIdType } from 'src/app/interfaces/conId';
 import { CategoriaTarifa, ModoTarifacion, Seccion, Tarifa } from 'src/app/interfaces/tarifa';
 import { TarifaFormData } from 'src/app/servicios/tarifario/tarifa-factory.service';
+import { TarifarioService } from 'src/app/servicios/tarifario/tarifario.service';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 @Component({
@@ -24,6 +25,7 @@ export class TarifaFormComponent implements OnInit {
   eligiendoModo = false;
   modoTarifacion: ModoTarifacion | null = null;
   puedeEditar = false;
+  esDev = false;
   form!: FormGroup;
 
   /** Snapshot (JSON) del form tomado al construirlo — hayCambios() lo compara
@@ -33,11 +35,13 @@ export class TarifaFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private usuarioSesion: UsuarioSesionService,
+    private tarifarioService: TarifarioService,
   ) {}
 
   ngOnInit(): void {
     const usuario = this.usuarioSesion.getUsuarioActual();
     this.puedeEditar = !!usuario && ['dev', 'admin'].includes(usuario.role);
+    this.esDev = usuario?.role === 'dev';
 
     if (this.tarifaPlantilla) {
       // Duplicar: prellena con los valores de otra tarifa, pero apunta a
@@ -107,9 +111,12 @@ export class TarifaFormComponent implements OnInit {
       base?.secciones?.length ? base.secciones : [undefined];
 
     this.form = this.fb.group({
-      ...(this.nivel === 'personalizada' ? { nombre: [base?.nombre ?? '', Validators.required] } : {}),
+      ...(this.nivel === 'personalizada' ? {
+        nombre: [this.nombreInicial(base), [Validators.required, this.validadorNombreUnico()]],
+      } : {}),
       ...(this.mostrarToggleAdicionalKm ? { usaAdicionalKm: [usaAdicionalKmInicial] } : {}),
       usaValoresProveedor: [usaProveedor],
+      vigenciaDesde: [null],
       ...(necesitaControlesKm ? {
         kmPrimerSector: [{ value: base?.kmDistancia?.primerSector ?? 0, disabled: !kmActivoInicial }, [Validators.required, Validators.min(0)]],
         kmSectoresSiguientes: [{ value: base?.kmDistancia?.sectoresSiguientes ?? 0, disabled: !kmActivoInicial }, [Validators.required, Validators.min(0)]],
@@ -122,6 +129,34 @@ export class TarifaFormComponent implements OnInit {
 
     this.aplicarEstadoAdicionalKm(kmActivoInicial);
     this.formOriginal = JSON.stringify(this.form.value);
+  }
+
+  /** Al duplicar hacia la MISMA entidad dueña, sugiere "(copia)" en vez de
+   *  copiar el nombre tal cual — dos tarifas vigentes de la misma entidad no
+   *  deberían compartir nombre (ver validadorNombreUnico). Al duplicar hacia
+   *  otra entidad, o al editar/crear, el nombre original sigue siendo un
+   *  buen default. */
+  private nombreInicial(base?: ConIdType<Tarifa>): string {
+    const esDuplicadoMismaEntidad = !!this.tarifaPlantilla && this.tarifaPlantilla.idEntidadDueño === this.idEntidadDueño;
+    if (esDuplicadoMismaEntidad) return `${this.tarifaPlantilla!.nombre} (copia)`;
+    return base?.nombre ?? '';
+  }
+
+  /** Ninguna tarifa personalizada vigente de la misma entidad dueña puede
+   *  compartir `nombre` (comparación sin distinguir mayúsculas ni espacios
+   *  al borde) — evita ambigüedad en el picker manual de
+   *  operaciones-editor, que identifica las tarifas por nombre. Excluye la
+   *  propia tarifa que se está editando/duplicando de la comparación. */
+  private validadorNombreUnico(): ValidatorFn {
+    return (ctrl: AbstractControl) => {
+      if (!this.idEntidadDueño) return null;
+      const nombre = (ctrl.value ?? '').trim().toLowerCase();
+      if (!nombre) return null;
+      const propio = (this.tarifa ?? this.tarifaPlantilla)?.idTarifa;
+      const colisiona = this.tarifarioService.getTarifasPersonalizadasVigentes(this.idEntidadDueño)
+        .some(t => t.idTarifa !== propio && t.nombre.trim().toLowerCase() === nombre);
+      return colisiona ? { nombreDuplicado: true } : null;
+    };
   }
 
   private crearGrupoSeccion(seccion: Seccion<CategoriaTarifa> | undefined, usaProveedor: boolean): FormGroup {
@@ -157,6 +192,7 @@ export class TarifaFormComponent implements OnInit {
     const usaProveedor = this.form.get('usaValoresProveedor')!.value;
     this.seccionesArray.push(this.crearGrupoSeccion(undefined, usaProveedor));
     this.aplicarEstadoAdicionalKm(this.kmActivo);
+    this.enfocarNombreSeccion(this.seccionesArray.length - 1);
   }
 
   async quitarSeccion(si: number): Promise<void> {
@@ -203,6 +239,7 @@ export class TarifaFormComponent implements OnInit {
     const usaProveedor = this.form.get('usaValoresProveedor')!.value;
     this.categoriasDe(si).push(this.crearFilaCategoria(undefined, usaProveedor));
     this.aplicarEstadoAdicionalKm(this.kmActivo);
+    this.enfocarNombreCategoria(si, this.categoriasDe(si).length - 1);
   }
 
   async quitarCategoria(si: number, i: number): Promise<void> {
@@ -232,6 +269,25 @@ export class TarifaFormComponent implements OnInit {
     nuevaFila.patchValue({ ...original, nombre: original.nombre ? `${original.nombre} (copia)` : original.nombre });
     this.categoriasDe(si).insert(i + 1, nuevaFila);
     this.aplicarEstadoAdicionalKm(this.kmActivo);
+  }
+
+  /** Después de agregar una categoría nueva, lleva el foco a su input de
+   *  nombre — si no, queda en el botón "Agregar categoría" y hay que ir a
+   *  buscarlo con el mouse. setTimeout(0) espera a que Angular termine de
+   *  renderizar la fila nueva (el push() al FormArray es síncrono, pero el
+   *  DOM se actualiza recién en el próximo ciclo). */
+  private enfocarNombreCategoria(si: number, i: number): void {
+    setTimeout(() => {
+      document.getElementById(`cat-nombre-${si}-${i}`)?.focus();
+    });
+  }
+
+  /** Mismo criterio que enfocarNombreCategoria, para el input de nombre de
+   *  una sección recién agregada. */
+  private enfocarNombreSeccion(si: number): void {
+    setTimeout(() => {
+      document.getElementById(`seccion-nombre-${si}`)?.focus();
+    });
   }
 
   toggleUsaValoresProveedor(): void {
@@ -389,6 +445,7 @@ export class TarifaFormComponent implements OnInit {
       acompanianteAPagar: raw.acompanianteAPagar,
       acompanianteAPagarProveedor: raw.acompanianteAPagarProveedor,
       usaValoresProveedor: raw.usaValoresProveedor,
+      ...(raw.vigenciaDesde ? { vigenciaDesde: raw.vigenciaDesde } : {}),
     };
 
     // editor emite / padre persiste: este componente no llama a

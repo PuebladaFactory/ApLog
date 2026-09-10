@@ -28,4 +28,8 @@ export class TarifaViewerComponent {
   get sufijoKm(): string {
     return this.tarifa.modoTarifacion === 'km' ? ' (por km)' : '';
   }
+
+  get modoTarifacionLabel(): string {
+    return this.tarifa.modoTarifacion === 'km' ? 'Por km' : 'Por categoría';
+  }
 }

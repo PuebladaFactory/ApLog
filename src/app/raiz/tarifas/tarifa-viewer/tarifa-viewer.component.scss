@@ -1,6 +1,6 @@
 .tabla-categorias {
-  th, td, input{
-    font-size: 1.25rem;
+  th, td, input {
+    font-size: 1.3rem;
   }
 
   th, td {
@@ -24,10 +24,33 @@
     border-left: 2px solid #adb5bd;
   }
 
+  th.div-adicionales, tr.div-adicionales{
+    border-bottom: 2px solid #adb5bd;
+  }
+
   .col-nombre {
     position: sticky;
     left: 0;
     background-color: #fff;
     z-index: 1;
+  }
+}
+
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500 !important;
+}
+
+/* MINI TABLAS (Acompañante / Configuración de distancia): 2 columnas iguales */
+.tabla-mini {
+  table-layout: fixed;
+
+  th, td {
+    width: 50%;
   }
 }

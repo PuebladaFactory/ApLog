@@ -7,7 +7,7 @@ import { TarifaFormData } from 'src/app/servicios/tarifario/tarifa-factory.servi
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 
 type ModoAumento = 'unico' | 'segmentado' | 'manual';
-type TipoRedondeo = 'unidad' | 'decena' | 'centena';
+type TipoRedondeo = 'unidad' | 'decena' | 'centena' | 'miles';
 
 @Component({
   selector: 'app-tarifa-aumento',
@@ -26,6 +26,8 @@ export class TarifaAumentoComponent implements OnInit {
   usarRedondeo = true;
   tipoRedondeo: TipoRedondeo = 'unidad';
   puedeEditar = false;
+  esDev = false;
+  private ultimoModoAplicado: 'unico' | 'segmentado' | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -35,6 +37,7 @@ export class TarifaAumentoComponent implements OnInit {
   ngOnInit(): void {
     const usuario = this.usuarioSesion.getUsuarioActual();
     this.puedeEditar = !!usuario && ['dev', 'admin'].includes(usuario.role);
+    this.esDev = usuario?.role === 'dev';
     this.construirForm();
   }
 
@@ -78,6 +81,7 @@ export class TarifaAumentoComponent implements OnInit {
 
   private construirForm(): void {
     this.form = this.fb.group({
+      vigenciaDesde: [null],
       porcentajeUnico: [0, [Validators.min(0)]],
       porcentajeCobrar: [0, [Validators.min(0)]],
       porcentajePagar: [0, [Validators.min(0)]],
@@ -160,6 +164,7 @@ export class TarifaAumentoComponent implements OnInit {
 
   aplicarAumento(): void {
     if (this.modo === 'manual') return;
+    this.ultimoModoAplicado = this.modo;
     const raw = this.form.getRawValue();
     const pctCobrar = this.modo === 'unico' ? raw.porcentajeUnico : raw.porcentajeCobrar;
     const pctPagar = this.modo === 'unico' ? raw.porcentajeUnico : raw.porcentajePagar;
@@ -203,6 +208,7 @@ export class TarifaAumentoComponent implements OnInit {
     switch (this.tipoRedondeo) {
       case 'decena': return Math.round(resultado / 10) * 10;
       case 'centena': return Math.round(resultado / 100) * 100;
+      case 'miles': return Math.round(resultado / 1000) * 1000;
       default: return Math.round(resultado);
     }
   }
@@ -349,18 +355,27 @@ export class TarifaAumentoComponent implements OnInit {
 
     // metadataAumento: 'segmentado' solo completa cobrar/pagar/proveedor,
     // 'unico' solo porcentajeUnico — así el historial no muestra un
-    // porcentaje que no se llegó a aplicar. En modo manual el redondeo queda
-    // en null porque calcularValor() ni se ejecuta (los valores los tipeó
-    // el usuario a mano, no hay factor/redondeo real de por medio).
+    // porcentaje que no se llegó a aplicar. Si se pasó a manual solo para
+    // ajustar algún valor puntual después de aplicar un aumento automático,
+    // se conserva ese modo automático (`modoEfectivo`) en vez de 'manual',
+    // con `ajustadoManualmente: true` — el redondeo real (`calcularValor()`)
+    // sí se ejecutó para la enorme mayoría de los campos. En modo manual
+    // puro (sin aumento automático de por medio) el redondeo queda en null,
+    // como antes.
+    const modoEfectivo: ModoAumento = this.modo === 'manual' && this.ultimoModoAplicado
+      ? this.ultimoModoAplicado
+      : this.modo;
+
     const metadataAumento: MetadataAumento = {
-      modo: this.modo,
-      ...(this.modo === 'unico' ? { porcentajeUnico: raw.porcentajeUnico } : {}),
-      ...(this.modo === 'segmentado' ? {
+      modo: modoEfectivo,
+      ...(modoEfectivo === 'unico' ? { porcentajeUnico: raw.porcentajeUnico } : {}),
+      ...(modoEfectivo === 'segmentado' ? {
         porcentajeCobrar: raw.porcentajeCobrar,
         porcentajePagar: raw.porcentajePagar,
         ...(this.usaProveedor ? { porcentajeProveedor: raw.porcentajeProveedor } : {}),
       } : {}),
-      redondeo: this.modo !== 'manual' && this.usarRedondeo ? this.tipoRedondeo : null,
+      redondeo: modoEfectivo !== 'manual' && this.usarRedondeo ? this.tipoRedondeo : null,
+      ...(this.modo === 'manual' && this.ultimoModoAplicado ? { ajustadoManualmente: true } : {}),
     };
 
     const formData: TarifaFormData = {
@@ -375,6 +390,7 @@ export class TarifaAumentoComponent implements OnInit {
       ...(this.usaProveedor ? { acompanianteAPagarProveedor: raw.nuevoAcompanianteAPagarProveedor } : {}),
       usaValoresProveedor: this.usaProveedor,
       metadataAumento,
+      ...(raw.vigenciaDesde ? { vigenciaDesde: raw.vigenciaDesde } : {}),
     };
 
     // editor emite / padre persiste — el padre llama a
@@ -385,7 +401,20 @@ export class TarifaAumentoComponent implements OnInit {
     this.guardar.emit(formData);
   }
 
-  onCancelar(): void {
+  async onCancelar(): Promise<void> {
+    if (this.hayCambios()) {
+      const respuesta = await Swal.fire({
+        title: 'Hay cambios sin guardar',
+        text: 'Si salís ahora vas a perder los cambios realizados.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Salir sin guardar',
+        cancelButtonText: 'Continuar editando',
+      });
+      if (!respuesta.isConfirmed) return;
+    }
     this.cancelar.emit();
   }
 }

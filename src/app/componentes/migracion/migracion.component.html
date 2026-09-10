@@ -107,6 +107,139 @@
   </div>
 
   <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+    <h4>Auditoría de tarifas viejas</h4>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="auditarTarifasViejas()"
+        [disabled]="ejecutando"
+        class="btn btn-info me-2">
+        Auditar colecciones de tarifas viejas
+      </button>
+      <p *ngIf="estadoAuditoriaTarifas" style="margin-top: 0.5rem;">{{ estadoAuditoriaTarifas }}</p>
+      <div *ngIf="resultadoAuditoriaTarifas.length > 0" style="margin-top: 0.5rem;">
+        <table class="table table-sm table-bordered" style="max-width: 600px;">
+          <thead>
+            <tr>
+              <th>Colección</th>
+              <th>Documentos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of resultadoAuditoriaTarifas">
+              <td>{{ r.label }} ({{ r.coleccion }})</td>
+              <td>{{ r.cantidad }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <ul *ngIf="notasAuditoriaTarifas.length > 0">
+          <li *ngFor="let n of notasAuditoriaTarifas">{{ n }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+    <h4>Auditoría de categoría de vehículos</h4>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="auditarCategoriasVehiculo()"
+        [disabled]="ejecutando"
+        class="btn btn-info me-2">
+        Auditar categoría de vehículos
+      </button>
+      <p *ngIf="estadoAuditoriaVehiculos" style="margin-top: 0.5rem;">{{ estadoAuditoriaVehiculos }}</p>
+      <div *ngIf="resultadoAuditoriaVehiculos" style="margin-top: 0.5rem;">
+        <p><strong>Categorías válidas (Tarifa General vigente):</strong> {{ resultadoAuditoriaVehiculos.categoriasValidas.join(', ') }}</p>
+      </div>
+      <div *ngIf="vehiculosCategoriaInvalida.length > 0" style="margin-top: 0.5rem;">
+        <p><strong>Vehículos con categoría inválida o vacía ({{ vehiculosCategoriaInvalida.length }}):</strong></p>
+        <ul>
+          <li *ngFor="let v of vehiculosCategoriaInvalida">
+            {{ v.dominio }} (id: {{ v.idVehiculo }}) — {{ v.entidad }} — categoría cargada: "{{ v.nombreCargado }}"
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+    <h4>Migración de Eventual → RegistroOpEventual (demo)</h4>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="previsualizarMigracionEventual()"
+        [disabled]="ejecutando"
+        class="btn btn-info me-2">
+        Previsualizar migración de Eventual
+      </button>
+      <button
+        (click)="confirmarMigracionEventual()"
+        [disabled]="ejecutando || !previewEventual || previewEventual.resueltos.length === 0"
+        class="btn btn-danger me-2">
+        Confirmar y migrar
+      </button>
+      <p *ngIf="estadoPreviewEventual" style="margin-top: 0.5rem;">{{ estadoPreviewEventual }}</p>
+      <div *ngIf="previewEventual" style="margin-top: 0.5rem;">
+        <p>
+          <strong>Total tarifas eventuales:</strong> {{ previewEventual.total }} —
+          <strong>resueltas:</strong> {{ previewEventual.resueltos.length }} —
+          <strong>sin resolver:</strong> {{ previewEventual.noResueltos.length }}
+        </p>
+        <div *ngIf="previewEventual.resueltos.length > 0" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 0.5rem;">
+          <ul>
+            <li *ngFor="let r of previewEventual.resueltos">{{ r }}</li>
+          </ul>
+        </div>
+        <div *ngIf="previewEventual.noResueltos.length > 0" style="margin-top: 0.5rem;">
+          <p><strong>Sin resolver (no se van a migrar):</strong></p>
+          <ul>
+            <li *ngFor="let n of previewEventual.noResueltos">
+              Tarifa eventual {{ n.idTarifaVieja }}: {{ n.motivo }}
+            </li>
+          </ul>
+        </div>
+      </div>
+      <p *ngIf="estadoConfirmacionEventual" style="margin-top: 0.5rem;">{{ estadoConfirmacionEventual }}</p>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+    <h4>Limpieza de registrosOpEventuales de prueba (demo)</h4>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="auditarRegistrosOpEventualesHuerfanos()"
+        [disabled]="ejecutando"
+        class="btn btn-info me-2">
+        Auditar registrosOpEventuales huérfanos
+      </button>
+      <button
+        (click)="borrarRegistrosOpEventualesHuerfanos()"
+        [disabled]="ejecutando || huerfanosEventual.length === 0"
+        class="btn btn-danger me-2">
+        Borrar huérfanos
+      </button>
+      <p *ngIf="estadoAuditoriaHuerfanosEventual" style="margin-top: 0.5rem;">{{ estadoAuditoriaHuerfanosEventual }}</p>
+      <div *ngIf="huerfanosEventual.length > 0" style="margin-top: 0.5rem;">
+        <ul>
+          <li *ngFor="let h of huerfanosEventual">{{ h.resumen }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+    <h4>Volcado histórico de Tarifa General (para migración manual)</h4>
+    <div style="margin-bottom: 1rem;">
+      <button
+        (click)="volcarHistorialGeneral()"
+        [disabled]="ejecutando"
+        class="btn btn-info me-2">
+        Volcar historial de Tarifa General
+      </button>
+      <p *ngIf="estadoVolcadoGeneral" style="margin-top: 0.5rem;">{{ estadoVolcadoGeneral }}</p>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 2rem; border-top: 1px solid #ccc; padding-top: 1rem;">
     <h4>Verificaciones previas</h4>
     <div style="margin-bottom: 1rem;">
       <button

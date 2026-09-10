@@ -1,8 +1,16 @@
 .tabla-categorias {
-  th, td {
+  th, td{
     font-size: 1.25rem;
     white-space: nowrap;
     vertical-align: middle;
+  }
+
+  th.divisor, td.divisor {
+    border-left: 2px solid #adb5bd;
+  }
+
+  th.div-adicionales, tr.div-adicionales {
+    border-bottom: 2px solid #adb5bd;
   }
 
   .col-nombre {
@@ -11,4 +19,26 @@
     background-color: #fff;
     z-index: 1;
   }
+}
+
+/* CELDAS MONEDA */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500 !important;
+
+  input {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+}
+
+
+select, option, input {
+  font-size: 1.25rem;
 }

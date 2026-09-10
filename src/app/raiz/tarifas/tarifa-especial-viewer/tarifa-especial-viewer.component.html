@@ -1,34 +1,127 @@
-<p><strong>Vigente desde:</strong> {{ tarifa.vigenciaDesde }}</p>
-<p><strong>Alcance:</strong> {{ alcanceLabel }}</p>
-
-<div class="table-responsive">
-  <table class="table table-sm table-bordered tabla-categorias">
-    <thead>
-      <tr>
-        <th class="col-nombre">Categoría</th>
-        <th>Valor</th>
-        <ng-container *ngIf="tieneKm">
-          <th>1er sector</th>
-          <th>Intervalo</th>
-        </ng-container>
-      </tr>
-    </thead>
-    <tbody>
-      <ng-container *ngFor="let seccion of tarifa.secciones">
-        <tr *ngIf="seccion.nombre !== null">
-          <td [attr.colspan]="cantidadColumnas" class="fw-bold bg-light">{{ seccion.nombre }}</td>
-        </tr>
-        <tr *ngFor="let cat of seccion.categorias">
-          <td class="col-nombre">{{ cat.nombre }}</td>
-          <td>{{ cat.valor | currency }}</td>
-          <ng-container *ngIf="tieneKm">
-            <td>{{ cat.adicionalKm?.primerSector | currency }}</td>
-            <td>{{ cat.adicionalKm?.sectoresSiguientes | currency }}</td>
-          </ng-container>
-        </tr>
-      </ng-container>
-    </tbody>
-  </table>
+<div class="d-flex justify-content-between">
+    <div>
+        <p>
+            <strong>Vigente desde:</strong> {{ tarifa.vigenciaDesde }}
+            @if (!tarifa.activo && tarifa.fechaActualizacion) {
+                <strong>hasta:</strong> {{ tarifa.fechaActualizacion }}
+            }
+        </p>
+    </div>
+    <div>
+        <p><strong>Nombre de la Tarifa:</strong> {{ tarifa.nombre }}</p>
+        @if (tarifa.entidadTipo !== "cliente") {
+            <p><strong>Alcance:</strong> {{ alcanceLabel }}</p>
+        }
+    </div>
 </div>
 
-<p><strong>Adicional acompañante:</strong> {{ tarifa.adicionalAcompaniante | currency }}</p>
+<div class="table-responsive">
+    <table class="table table-sm table-bordered tabla-categorias">
+        <thead>
+            <tr>
+                <th class="col-nombre text-center">Categoría</th>
+                <th class="text-center">Valor</th>
+                @if (tieneKm) {
+                    <th class="text-center">1er sector</th>
+                    <th class="text-center">Intervalo</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (seccion of tarifa.secciones; track seccion) {
+                @if (seccion.nombre !== null) {
+                    <tr>
+                        <td
+                            [attr.colspan]="cantidadColumnas"
+                            class="fw-bold bg-light"
+                        >
+                            {{ seccion.nombre }}
+                        </td>
+                    </tr>
+                }
+                @for (cat of seccion.categorias; track cat) {
+                    <tr>
+                        <td class="col-nombre">{{ cat.nombre }}</td>
+                        <td class="col-numero">
+                            {{ cat.valor | formatearValor: "$" }}
+                        </td>
+                        @if (tieneKm) {
+                            <td class="col-numero">
+                                {{
+                                    cat.adicionalKm?.primerSector
+                                        | formatearValor: "$"
+                                }}
+                            </td>
+                            <td class="col-numero">
+                                {{
+                                    cat.adicionalKm?.sectoresSiguientes
+                                        | formatearValor: "$"
+                                }}
+                            </td>
+                        }
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="row mt-3">
+    <div class="col-6">
+        <div class="table-responsive">
+            <table
+                class="table table-sm table-bordered tabla-categorias tabla-mini shadow-sm mb-2 bg-body-tertiary rounded"
+            >
+                <thead class="text-center">
+                    <tr>
+                        <th colspan="2" class="div-adicionales">
+                            Adicional acompañante
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Valor</td>
+                        <td class="col-numero divisor">
+                            {{
+                                tarifa.adicionalAcompaniante
+                                    | formatearValor: "$"
+                            }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @if (tieneKm) {
+        <div class="col-6">
+            <div class="table-responsive">
+                <table
+                    class="table table-sm table-bordered tabla-categorias tabla-mini shadow-sm mb-2 bg-body-tertiary rounded"
+                >
+                    <thead class="text-center">
+                        <tr>
+                            <th colspan="2" class="div-adicionales">
+                                Configuración de distancia
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1er sector:</td>
+                            <td class="col-numero divisor">
+                                {{ tarifa.kmDistancia?.primerSector }} km
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Intervalos</td>
+                            <td class="col-numero divisor">
+                                {{ tarifa.kmDistancia?.sectoresSiguientes }} km
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -1482,7 +1482,10 @@ export class DbFirestoreService {
       }
       const refNuevo = doc(this.firestore, `/Vantruck/datos/${coleccion}/${idNuevo}`);
       transaction.set(refNuevo, dataNueva);
-      transaction.set(refAnterior, { ...anteriorData, activo: false });
+      // fechaActualizacion de la anterior pasa a ser la vigenciaDesde de la
+      // nueva — el instante en que una deja de aplicar es el mismo en que
+      // empieza a aplicar la otra, no hace falta un dato aparte.
+      transaction.set(refAnterior, { ...anteriorData, activo: false, fechaActualizacion: dataNueva.vigenciaDesde });
     });
   }
 

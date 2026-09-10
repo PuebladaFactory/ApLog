@@ -79,9 +79,23 @@ export class TarifasHistorialComponent implements OnInit, OnDestroy {
   /** Sin filtrar por tarifasHabilitadas — mismo criterio que Eventual: cualquier
    *  entidad puede tener historial sin importar su configuración actual. */
   get opcionesEntidad(): EntidadOpcion[] {
-    if (this.entidadTipo === 'cliente') return this.clientes.map(c => ({ id: c.idCliente, nombre: c.razonSocial }));
-    if (this.entidadTipo === 'chofer') return this.choferes.map(c => ({ id: c.idChofer, nombre: `${c.datosPersonales.nombre} ${c.datosPersonales.apellido}` }));
-    return this.proveedores.map(p => ({ id: p.idProveedor, nombre: p.razonSocial }));
+    if (this.entidadTipo === 'cliente') {
+      return [...this.clientes]
+        .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial, 'es', { sensitivity: 'base' }))
+        .map(c => ({ id: c.idCliente, nombre: c.razonSocial }));
+    }
+    if (this.entidadTipo === 'chofer') {
+      return [...this.choferes]
+        .sort((a, b) => {
+          const porApellido = a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido, 'es', { sensitivity: 'base' });
+          if (porApellido !== 0) return porApellido;
+          return a.datosPersonales.nombre.localeCompare(b.datosPersonales.nombre, 'es', { sensitivity: 'base' });
+        })
+        .map(c => ({ id: c.idChofer, nombre: `${c.datosPersonales.apellido}, ${c.datosPersonales.nombre}` }));
+    }
+    return [...this.proveedores]
+      .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial, 'es', { sensitivity: 'base' }))
+      .map(p => ({ id: p.idProveedor, nombre: p.razonSocial }));
   }
 
   onCambioEntidadTipo(e: any): void {
@@ -131,7 +145,8 @@ export class TarifasHistorialComponent implements OnInit, OnDestroy {
    *  ausente, tratado como null) como linajes genuinamente distintos de la
    *  misma entidad (ej. dos personalizadas con nombres distintos). Devuelve
    *  los linajes ordenados por fecha de la versión más reciente primero, cada
-   *  uno internamente de más vieja a más nueva. */
+   *  uno internamente de más nueva a más vieja (índice 0 = versión vigente o
+   *  más reciente del linaje). */
   private agruparLinajes<T extends ConLinaje>(tarifas: T[]): T[][] {
     const porId = new Map(tarifas.map(t => [t.idTarifa, t]));
     const hijosDe = new Map<string, T[]>();
@@ -160,9 +175,9 @@ export class TarifasHistorialComponent implements OnInit, OnDestroy {
           cadena.push(siguiente);
           actual = siguiente;
         }
-        return cadena;
+        return cadena.reverse();
       })
-      .sort((a, b) => b[b.length - 1].vigenciaDesde.localeCompare(a[a.length - 1].vigenciaDesde));
+      .sort((a, b) => b[0].vigenciaDesde.localeCompare(a[0].vigenciaDesde));
   }
 
   /** % de variación aproximado contra la versión inmediata anterior del mismo
@@ -197,14 +212,15 @@ export class TarifasHistorialComponent implements OnInit, OnDestroy {
     const m = t.metadataAumento;
     if (!m) return null;
     const redondeo = m.redondeo ? `, redondeo ${m.redondeo}` : '';
+    const ajuste = m.ajustadoManualmente ? ' (con ajuste manual)' : '';
     if (m.modo === 'manual') return `Aumento manual${redondeo}`;
-    if (m.modo === 'unico') return `Aumento único +${m.porcentajeUnico}%${redondeo}`;
+    if (m.modo === 'unico') return `Aumento único +${m.porcentajeUnico}%${redondeo}${ajuste}`;
     const partes = [
       m.porcentajeCobrar !== undefined ? `cobrar +${m.porcentajeCobrar}%` : null,
       m.porcentajePagar !== undefined ? `pagar +${m.porcentajePagar}%` : null,
       m.porcentajeProveedor !== undefined ? `proveedor +${m.porcentajeProveedor}%` : null,
     ].filter((p): p is string => p !== null);
-    return `Aumento segmentado — ${partes.join(', ')}${redondeo}`;
+    return `Aumento segmentado — ${partes.join(', ')}${redondeo}${ajuste}`;
   }
 
   /** Para resolver el nombre del cliente en el alcance de una Especial —

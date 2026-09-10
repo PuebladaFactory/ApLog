@@ -1,71 +1,250 @@
-<p><strong>Vigente desde:</strong> {{ tarifa.vigenciaDesde }}</p>
-
-<div class="table-responsive">
-  <table class="table table-sm table-bordered tabla-categorias">
-    <thead>
-      <tr>
-        <th rowspan="2" class="col-nombre align-middle">Categoría</th>
-        <th [attr.colspan]="colspanGrupo" class="grupo-cobrar divisor text-center">A cobrar{{ sufijoKm }}</th>
-        <th [attr.colspan]="colspanGrupo" class="grupo-pagar divisor text-center">A pagar{{ sufijoKm }}</th>
-        <th *ngIf="tarifa.usaValoresProveedor" [attr.colspan]="colspanGrupo" class="grupo-proveedor divisor text-center">A pagar (proveedor){{ sufijoKm }}</th>
-      </tr>
-      <tr>
-        <th class="grupo-cobrar divisor">Base</th>
-        <ng-container *ngIf="tieneKm">
-          <th class="grupo-cobrar">1er sector</th>
-          <th class="grupo-cobrar">Intervalo</th>
-        </ng-container>
-        <th class="grupo-pagar divisor">Base</th>
-        <ng-container *ngIf="tieneKm">
-          <th class="grupo-pagar">1er sector</th>
-          <th class="grupo-pagar">Intervalo</th>
-        </ng-container>
-        <ng-container *ngIf="tarifa.usaValoresProveedor">
-          <th class="grupo-proveedor divisor">Base</th>
-          <ng-container *ngIf="tieneKm">
-            <th class="grupo-proveedor">1er sector</th>
-            <th class="grupo-proveedor">Intervalo</th>
-          </ng-container>
-        </ng-container>
-      </tr>
-    </thead>
-    <tbody>
-      <ng-container *ngFor="let seccion of tarifa.secciones">
-        <tr *ngIf="seccion.nombre !== null">
-          <td [attr.colspan]="cantidadColumnas" class="fw-bold bg-light">{{ seccion.nombre }}</td>
-        </tr>
-        <tr *ngFor="let cat of seccion.categorias">
-          <td class="col-nombre">{{ cat.nombre }}</td>
-          <td class="grupo-cobrar divisor">{{ cat.aCobrar | currency }}</td>
-          <ng-container *ngIf="tieneKm">
-            <td class="grupo-cobrar">{{ cat.adicionalKmACobrar?.primerSector | currency }}</td>
-            <td class="grupo-cobrar">{{ cat.adicionalKmACobrar?.sectoresSiguientes | currency }}</td>
-          </ng-container>
-          <td class="grupo-pagar divisor">{{ cat.aPagar | currency }}</td>
-          <ng-container *ngIf="tieneKm">
-            <td class="grupo-pagar">{{ cat.adicionalKmAPagar?.primerSector | currency }}</td>
-            <td class="grupo-pagar">{{ cat.adicionalKmAPagar?.sectoresSiguientes | currency }}</td>
-          </ng-container>
-          <ng-container *ngIf="tarifa.usaValoresProveedor">
-            <td class="grupo-proveedor divisor">{{ cat.aPagarProveedor !== undefined ? (cat.aPagarProveedor | currency) : '—' }}</td>
-            <ng-container *ngIf="tieneKm">
-              <td class="grupo-proveedor">{{ cat.adicionalKmAPagarProveedor?.primerSector !== undefined ? (cat.adicionalKmAPagarProveedor?.primerSector | currency) : '—' }}</td>
-              <td class="grupo-proveedor">{{ cat.adicionalKmAPagarProveedor?.sectoresSiguientes !== undefined ? (cat.adicionalKmAPagarProveedor?.sectoresSiguientes | currency) : '—' }}</td>
-            </ng-container>
-          </ng-container>
-        </tr>
-      </ng-container>
-    </tbody>
-  </table>
+<div class="d-flex justify-content-between">
+    <div>
+        <p>
+            <strong>Vigente desde:</strong> {{ tarifa.vigenciaDesde }}
+            @if (!tarifa.activo && tarifa.fechaActualizacion) {
+                <strong>hasta:</strong> {{ tarifa.fechaActualizacion }}
+            }
+        </p>
+    </div>
+    <div>
+        @if (tarifa.nivel === "personalizada") {
+            <p>
+                <strong>Nombre de la Tarifa:</strong> {{ tarifa.nombre }}
+                <span class="text-muted"> - {{ modoTarifacionLabel }}</span>
+            </p>
+        }
+    </div>    
 </div>
 
-<p>
-  <strong>Acompañante</strong> — a cobrar: {{ tarifa.acompanianteACobrar | currency }},
-  a pagar: {{ tarifa.acompanianteAPagar | currency }}<span *ngIf="tarifa.usaValoresProveedor">,
-  a pagar (proveedor): {{ tarifa.acompanianteAPagarProveedor !== undefined ? (tarifa.acompanianteAPagarProveedor | currency) : '—' }}</span>
+<div class="table-responsive">
+    <table
+        class="table table-sm table-bordered tabla-categorias shadow-sm mb-2 bg-body-tertiary rounded"
+    >
+        <thead class="text-center">
+            <tr>
+                <th rowspan="2" class="col-nombre align-middle">Categoría</th>
+                <th
+                    [attr.colspan]="colspanGrupo"
+                    class="grupo-cobrar divisor text-center"
+                >
+                    A cobrar{{ sufijoKm }}
+                </th>
+                <th
+                    [attr.colspan]="colspanGrupo"
+                    class="grupo-pagar divisor text-center"
+                >
+                    A pagar{{ sufijoKm }}
+                </th>
+                @if (tarifa.usaValoresProveedor) {
+                    <th
+                        [attr.colspan]="colspanGrupo"
+                        class="grupo-proveedor divisor text-center"
+                    >
+                        A pagar (proveedor){{ sufijoKm }}
+                    </th>
+                }
+            </tr>
+            <tr
+                [ngClass]="{ 'div-adicionales': tarifa.secciones.length === 1 }"
+            >
+                <th class="grupo-cobrar divisor">Base</th>
+                @if (tieneKm) {
+                    <th class="grupo-cobrar">1er sector</th>
+                    <th class="grupo-cobrar">Intervalo</th>
+                }
+                <th class="grupo-pagar divisor">Base</th>
+                @if (tieneKm) {
+                    <th class="grupo-pagar">1er sector</th>
+                    <th class="grupo-pagar">Intervalo</th>
+                }
+                @if (tarifa.usaValoresProveedor) {
+                    <th class="grupo-proveedor divisor">Base</th>
+                    @if (tieneKm) {
+                        <th class="grupo-proveedor">1er sector</th>
+                        <th class="grupo-proveedor">Intervalo</th>
+                    }
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (seccion of tarifa.secciones; track seccion) {
+                @if (seccion.nombre !== null) {
+                    <tr>
+                        <td
+                            [attr.colspan]="cantidadColumnas"
+                            class="fw-bold bg-light"
+                        >
+                            {{ seccion.nombre }}
+                        </td>
+                    </tr>
+                }
+                @for (cat of seccion.categorias; track cat) {
+                    <tr>
+                        <td class="col-nombre">{{ cat.nombre }}</td>
+                        <td class="grupo-cobrar divisor col-numero">
+                            {{ cat.aCobrar | formatearValor: "$" }}
+                        </td>
+                        @if (tieneKm) {
+                            <td class="grupo-cobrar col-numero">
+                                {{
+                                    cat.adicionalKmACobrar?.primerSector
+                                        | formatearValor: "$"
+                                }}
+                            </td>
+                            <td class="grupo-cobrar col-numero">
+                                {{
+                                    cat.adicionalKmACobrar?.sectoresSiguientes
+                                        | formatearValor: "$"
+                                }}
+                            </td>
+                        }
+                        <td class="grupo-pagar divisor col-numero">
+                            {{ cat.aPagar | formatearValor: "$" }}
+                        </td>
+                        @if (tieneKm) {
+                            <td class="grupo-pagar col-numero">
+                                {{
+                                    cat.adicionalKmAPagar?.primerSector
+                                        | formatearValor: "$"
+                                }}
+                            </td>
+                            <td class="grupo-pagar col-numero">
+                                {{
+                                    cat.adicionalKmAPagar?.sectoresSiguientes
+                                        | formatearValor: "$"
+                                }}
+                            </td>
+                        }
+                        @if (tarifa.usaValoresProveedor) {
+                            <td class="grupo-proveedor divisor col-numero">
+                                {{
+                                    cat.aPagarProveedor !== undefined
+                                        ? (cat.aPagarProveedor
+                                          | formatearValor: "$")
+                                        : "—"
+                                }}
+                            </td>
+                            @if (tieneKm) {
+                                <td class="grupo-proveedor col-numero">
+                                    {{
+                                        cat.adicionalKmAPagarProveedor
+                                            ?.primerSector !== undefined
+                                            ? (cat.adicionalKmAPagarProveedor
+                                                  ?.primerSector
+                                              | formatearValor: "$")
+                                            : "—"
+                                    }}
+                                </td>
+                                <td class="grupo-proveedor col-numero">
+                                    {{
+                                        cat.adicionalKmAPagarProveedor
+                                            ?.sectoresSiguientes !== undefined
+                                            ? (cat.adicionalKmAPagarProveedor
+                                                  ?.sectoresSiguientes
+                                              | formatearValor: "$")
+                                            : "—"
+                                    }}
+                                </td>
+                            }
+                        }
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- <p>
+  <strong>Acompañante</strong> — a cobrar: <span class="col-numero">{{ tarifa.acompanianteACobrar | formatearValor : "$" }}</span>,
+  a pagar: <span class="col-numero">{{ tarifa.acompanianteAPagar | formatearValor : "$" }}</span>@if (tarifa.usaValoresProveedor) {
+  <span>,
+  a pagar (proveedor): <span class="col-numero">{{ tarifa.acompanianteAPagarProveedor !== undefined ? (tarifa.acompanianteAPagarProveedor | formatearValor : "$") : '—' }}</span></span>
+}
 </p>
 
-<p *ngIf="tieneKm">
-  <strong>Configuración de distancia</strong> — 1er sector: {{ tarifa.kmDistancia?.primerSector }} km,
-  intervalo siguiente: {{ tarifa.kmDistancia?.sectoresSiguientes }} km
-</p>
+@if (tieneKm) {
+  <p>
+    <strong>Configuración de distancia</strong> — 1er sector: {{ tarifa.kmDistancia?.primerSector }} km,
+    intervalo siguiente: {{ tarifa.kmDistancia?.sectoresSiguientes }} km
+  </p>
+} -->
+
+<div class="row column-gap-3 mt-3">
+    <div class="col">
+        <div class="table-responsive">
+            <table
+                class="table table-sm table-bordered tabla-categorias tabla-mini shadow-sm mb-2 bg-body-tertiary rounded"
+            >
+                <thead class="text-center">
+                    <tr>
+                        <th colspan="2" class="div-adicionales">Acompañante</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>A Cobrar</td>
+                        <td class="col-numero divisor">
+                            {{
+                                tarifa.acompanianteACobrar | formatearValor: "$"
+                            }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>A Pagar</td>
+                        <td class="col-numero divisor">
+                            {{
+                                tarifa.acompanianteAPagar | formatearValor: "$"
+                            }}
+                        </td>
+                    </tr>
+                    @if (tarifa.usaValoresProveedor) {
+                        <tr>
+                            <td>A pagar (proveedor)</td>
+                            <td class="col-numero divisor">
+                                {{
+                                    tarifa.acompanianteAPagarProveedor !==
+                                    undefined
+                                        ? (tarifa.acompanianteAPagarProveedor
+                                          | formatearValor: "$")
+                                        : "—"
+                                }}
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col">
+        @if (tieneKm) {
+            <div class="table-responsive">
+                <table
+                    class="table table-sm table-bordered tabla-categorias tabla-mini shadow-sm mb-2 bg-body-tertiary rounded"
+                >
+                    <thead class="text-center">
+                        <tr>
+                            <th colspan="2" class="div-adicionales">
+                                Configuración de distancia
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1er sector:</td>
+                            <td class="col-numero divisor">
+                                {{ tarifa.kmDistancia?.primerSector }} km
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Intervalos</td>
+                            <td class="col-numero divisor">
+                                {{ tarifa.kmDistancia?.sectoresSiguientes }} km
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

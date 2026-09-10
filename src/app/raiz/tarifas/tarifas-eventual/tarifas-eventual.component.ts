@@ -68,9 +68,23 @@ export class TarifasEventualComponent implements OnInit, OnDestroy {
    *  operaciones eventuales en su historial, sin importar su configuración
    *  de tarifa vigente actual. */
   get opcionesEntidad(): EntidadOpcion[] {
-    if (this.entidadTipo === 'cliente') return this.clientes.map(c => ({ id: c.idCliente, nombre: c.razonSocial }));
-    if (this.entidadTipo === 'chofer') return this.choferes.map(c => ({ id: c.idChofer, nombre: `${c.datosPersonales.nombre} ${c.datosPersonales.apellido}` }));
-    return this.proveedores.map(p => ({ id: p.idProveedor, nombre: p.razonSocial }));
+    if (this.entidadTipo === 'cliente') {
+      return [...this.clientes]
+        .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial, 'es', { sensitivity: 'base' }))
+        .map(c => ({ id: c.idCliente, nombre: c.razonSocial }));
+    }
+    if (this.entidadTipo === 'chofer') {
+      return [...this.choferes]
+        .sort((a, b) => {
+          const porApellido = a.datosPersonales.apellido.localeCompare(b.datosPersonales.apellido, 'es', { sensitivity: 'base' });
+          if (porApellido !== 0) return porApellido;
+          return a.datosPersonales.nombre.localeCompare(b.datosPersonales.nombre, 'es', { sensitivity: 'base' });
+        })
+        .map(c => ({ id: c.idChofer, nombre: `${c.datosPersonales.apellido}, ${c.datosPersonales.nombre}` }));
+    }
+    return [...this.proveedores]
+      .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial, 'es', { sensitivity: 'base' }))
+      .map(p => ({ id: p.idProveedor, nombre: p.razonSocial }));
   }
 
   onCambioEntidadTipo(e: any): void {

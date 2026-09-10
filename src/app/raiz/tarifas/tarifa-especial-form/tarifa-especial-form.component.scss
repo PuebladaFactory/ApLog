@@ -11,4 +11,32 @@
     background-color: #fff;
     z-index: 1;
   }
+
+  .col-numero {
+    text-align: right;
+    font-variant-numeric: tabular-nums !important;
+    font-family: "Inter", system-ui, sans-serif !important;
+    padding-left: 0.4rem !important;
+    padding-right: 0.4rem !important;
+    font-weight: 500 !important;
+
+    input {
+      font-size: 1.25rem;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-family: "Inter", system-ui, sans-serif;
+    }
+  }
+}
+
+
+.input-numero, input.ng-invalid {  
+  font-size: 1.25rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+select, option, input {
+  font-size: 1.25rem;
 }

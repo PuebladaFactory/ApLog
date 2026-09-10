@@ -1,0 +1,38 @@
+.panel-box {
+  
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.panel-resultados {
+  margin-top: 10px;
+  background: white;
+}
+
+/* CELDAS % (deltas del historial) */
+.col-numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 500 !important;
+}
+
+/* HISTORIAL: mismo ancho de columnas en todas las tablas (Fecha / Estado / Actualizado por / Detalle / Δ Cobrar / Δ Pagar / Ver) */
+.tabla-historial {
+  table-layout: fixed;
+
+  th:nth-child(1), td:nth-child(1) { width: 10%; }
+  th:nth-child(2), td:nth-child(2) { width: 10%; }
+  th:nth-child(3), td:nth-child(3) { width: 16%; }
+  th:nth-child(4), td:nth-child(4) { width: 32%; }
+  th:nth-child(5), td:nth-child(5) { width: 12%; }
+  th:nth-child(6), td:nth-child(6) { width: 12%; }
+  th:nth-child(7), td:nth-child(7) { width: 8%; }
+}
+
+select, option, th, td {
+    font-size: 1.2rem;
+}

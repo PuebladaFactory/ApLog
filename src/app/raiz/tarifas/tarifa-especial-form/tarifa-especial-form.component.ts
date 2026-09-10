@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { AbstractControl, FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 import { ConIdType } from 'src/app/interfaces/conId';
@@ -42,6 +42,7 @@ export class TarifaEspecialFormComponent implements OnInit, OnDestroy {
    *  `secciones`. */
   gruposCandidatos: { seccion: Seccion<CategoriaTarifa>; categorias: CategoriaTarifa[] }[] = [];
   puedeEditar = false;
+  esDev = false;
   form!: FormGroup;
 
   /** Snapshot (JSON) del form tomado al construirlo — hayCambios() lo compara
@@ -61,6 +62,7 @@ export class TarifaEspecialFormComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const usuario = this.usuarioSesion.getUsuarioActual();
     this.puedeEditar = !!usuario && ['dev', 'admin'].includes(usuario.role);
+    this.esDev = usuario?.role === 'dev';
 
     this.general = this.tarifarioService.getTarifaGeneralVigente() ?? null;
 
@@ -190,13 +192,48 @@ export class TarifaEspecialFormComponent implements OnInit, OnDestroy {
     });
 
     this.form = this.fb.group({
-      nombre: [fuente?.nombre ?? '', Validators.required],
+      nombre: [this.nombreInicial(fuente), [Validators.required, this.validadorNombreUnico()]],
       alcanceTipo: [this.alcanceTipoInicial(fuente)],
       alcanceIdCliente: [fuente?.alcance.tipo === 'entidadCliente' ? fuente.alcance.idCliente : null],
       secciones: this.fb.array(seccionesForm),
       adicionalAcompaniante: [fuente?.adicionalAcompaniante ?? 0, [Validators.required, Validators.min(0)]],
+      // Distancia propia de esta tarifa especial — YA NO se hereda de General en
+      // modo solo lectura (podía diferir del real, ej. un cliente con "1er sector"
+      // de 80km en vez de los 50km de la General). Default: la de `fuente` si se
+      // está editando/duplicando, si no la de la General vigente como punto de
+      // partida razonable — pero queda editable en ambos casos.
+      ...(this.tieneKm ? {
+        kmPrimerSector: [fuente?.kmDistancia?.primerSector ?? this.general?.kmDistancia?.primerSector ?? 0, [Validators.required, Validators.min(0)]],
+        kmSectoresSiguientes: [fuente?.kmDistancia?.sectoresSiguientes ?? this.general?.kmDistancia?.sectoresSiguientes ?? 0, [Validators.required, Validators.min(0)]],
+      } : {}),
+      vigenciaDesde: [null],
     });
     this.formOriginal = JSON.stringify(this.form.value);
+  }
+
+  /** Al duplicar hacia la MISMA entidad dueña, sugiere "(copia)" en vez de
+   *  copiar el nombre tal cual — ver validadorNombreUnico. Al duplicar hacia
+   *  otra entidad, o al editar/crear, el nombre original sigue siendo un
+   *  buen default. */
+  private nombreInicial(fuente?: ConIdType<TarifaEspecial>): string {
+    const esDuplicadoMismaEntidad = !!this.tarifaPlantilla && this.tarifaPlantilla.idEntidadDueño === this.idEntidadDueño;
+    if (esDuplicadoMismaEntidad) return `${this.tarifaPlantilla!.nombre} (copia)`;
+    return fuente?.nombre ?? '';
+  }
+
+  /** Ninguna tarifa especial vigente de la misma entidad dueña puede
+   *  compartir `nombre` (comparación sin distinguir mayúsculas ni espacios
+   *  al borde) — mismo criterio que TarifaFormComponent.validadorNombreUnico().
+   *  Excluye la propia tarifa que se está editando/duplicando. */
+  private validadorNombreUnico(): ValidatorFn {
+    return (ctrl: AbstractControl) => {
+      const nombre = (ctrl.value ?? '').trim().toLowerCase();
+      if (!nombre) return null;
+      const propio = (this.tarifa ?? this.tarifaPlantilla)?.idTarifa;
+      const colisiona = this.tarifarioService.getTarifasEspecialesVigentes(this.idEntidadDueño)
+        .some(t => t.idTarifa !== propio && t.nombre.trim().toLowerCase() === nombre);
+      return colisiona ? { nombreDuplicado: true } : null;
+    };
   }
 
   private alcanceTipoInicial(fuente?: ConIdType<TarifaEspecial>): 'entidad' | 'entidadCliente' {
@@ -344,9 +381,13 @@ export class TarifaEspecialFormComponent implements OnInit, OnDestroy {
       alcance,
       nombre: raw.nombre,
       modoTarifacion: general.modoTarifacion,
-      kmDistancia: general.kmDistancia,
+      // Propia de esta tarifa especial, no la de la General (ver comentario en
+      // construirForm) — General solo decide SI el adicional por km está activo
+      // (tieneKm), no los km exactos de cada sector.
+      kmDistancia: this.tieneKm ? { primerSector: raw.kmPrimerSector, sectoresSiguientes: raw.kmSectoresSiguientes } : null,
       secciones,
       adicionalAcompaniante: raw.adicionalAcompaniante,
+      ...(raw.vigenciaDesde ? { vigenciaDesde: raw.vigenciaDesde } : {}),
     };
 
     // editor emite / padre persiste: este componente no llama a

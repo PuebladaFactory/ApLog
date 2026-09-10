@@ -85,11 +85,18 @@ export class TarifasGeneralComponent implements OnInit, OnDestroy {
 
   /** General es singleton — un solo linaje posible, no hace falta reconstruir
    *  nada vía versionAnteriorId, alcanza con listar todas las versiones de
-   *  nivel 'general' ordenadas por fecha. */
+   *  nivel 'general' ordenadas por fecha (más reciente primero). Empate de
+   *  fecha (solo debería darse con datos de prueba) se resuelve poniendo la
+   *  vigente primero. */
   verHistorial(): void {
     this.historial = this.tarifarioService.getTarifasActuales()
       .filter(t => t.nivel === 'general')
-      .sort((a, b) => b.vigenciaDesde.localeCompare(a.vigenciaDesde));
+      .sort((a, b) => {
+        const porFecha = b.vigenciaDesde.localeCompare(a.vigenciaDesde);
+        if (porFecha !== 0) return porFecha;
+        if (a.activo !== b.activo) return a.activo ? -1 : 1;
+        return 0;
+      });
     this.tarifaHistorialSeleccionada = null;
     this.modo = 'historial';
   }
@@ -130,13 +137,14 @@ export class TarifasGeneralComponent implements OnInit, OnDestroy {
     const m = t.metadataAumento;
     if (!m) return null;
     const redondeo = m.redondeo ? `, redondeo ${m.redondeo}` : '';
+    const ajuste = m.ajustadoManualmente ? ' (con ajuste manual)' : '';
     if (m.modo === 'manual') return `Aumento manual${redondeo}`;
-    if (m.modo === 'unico') return `Aumento único +${m.porcentajeUnico}%${redondeo}`;
+    if (m.modo === 'unico') return `Aumento único +${m.porcentajeUnico}%${redondeo}${ajuste}`;
     const partes = [
       m.porcentajeCobrar !== undefined ? `cobrar +${m.porcentajeCobrar}%` : null,
       m.porcentajePagar !== undefined ? `pagar +${m.porcentajePagar}%` : null,
       m.porcentajeProveedor !== undefined ? `proveedor +${m.porcentajeProveedor}%` : null,
     ].filter((p): p is string => p !== null);
-    return `Aumento segmentado — ${partes.join(', ')}${redondeo}`;
+    return `Aumento segmentado — ${partes.join(', ')}${redondeo}${ajuste}`;
   }
 }

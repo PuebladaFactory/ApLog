@@ -1,134 +1,222 @@
-<form *ngIf="form" [formGroup]="form" (ngSubmit)="onSubmit()">
-
-  <div class="alert alert-danger" *ngIf="form.invalid && (form.dirty || form.touched)">
-    Hay campos incompletos o inválidos — revisá los recuadros en rojo.
-  </div>
-
-  <div class="alert alert-warning" *ngIf="existenValoresCero()">
-    Algunas categorías tienen valor $0. Verificar antes de guardar.
-  </div>
-
-  <div class="mb-3">
-    <label class="form-label">Nombre</label>
-    <input type="text" class="form-control" formControlName="nombre"
-           [class.is-invalid]="invalido(form.get('nombre'))">
-    <div class="invalid-feedback d-block" *ngIf="invalido(form.get('nombre'))">
-      Campo requerido.
-    </div>
-  </div>
-
-  <div class="card mb-3" *ngIf="mostrarAlcance">
-    <div class="card-header">Alcance</div>
-    <div class="card-body">
-      <div *ngIf="!tarifa" class="row g-2 align-items-end">
-        <div class="col-md-4">
-          <select class="form-select" formControlName="alcanceTipo" (change)="onCambioAlcanceTipo()">
-            <option value="entidad">Todos los clientes</option>
-            <option value="entidadCliente">Cliente específico</option>
-          </select>
-        </div>
-        <div class="col-md-6" *ngIf="form.get('alcanceTipo')!.value === 'entidadCliente'">
-          <select class="form-select" formControlName="alcanceIdCliente">
-            <option value="" selected>Elegí un cliente…</option>
-            <option *ngFor="let c of clientesElegibles" [value]="c.idCliente">{{ c.razonSocial }}</option>
-          </select>
-        </div>
-        <div class="col-12" *ngIf="form.get('alcanceTipo')!.value === 'entidadCliente' && clientesElegibles.length === 0">
-          <p class="text-muted mb-0 small">No hay clientes elegibles — necesitan tener habilitada la tarifa General o Especial.</p>
+@if (form) {
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    @if (form.invalid && (form.dirty || form.touched)) {
+      <div class="alert alert-danger">
+        Hay campos incompletos o inválidos — revisá los recuadros en rojo.
+      </div>
+    }
+    @if (existenValoresCero()) {
+      <div class="alert alert-warning">
+        Algunas categorías tienen valor $0. Verificar antes de guardar.
+      </div>
+    }
+    @if (esDev) {
+      <div class="mb-3 col-md-4">
+        <label class="form-label">Vigencia desde (solo dev — migración de datos)</label>
+        <input type="date" class="form-control" formControlName="vigenciaDesde">
+        <div class="form-text text-muted">
+          Vacío = hoy. Usar solo para migrar tarifas viejas respetando su fecha real.
         </div>
       </div>
-      <p *ngIf="tarifa" class="text-muted mb-0">
-        {{ form.get('alcanceTipo')!.value === 'entidadCliente' ? ('Cliente específico: ' + nombreClienteAlcanceActual) : 'Todos los clientes' }}
-        — el alcance no se puede cambiar al editar, solo al crear o duplicar.
-      </p>
+    }
+    <div class="mb-3">
+      <label class="form-label">Nombre</label>
+      <input type="text" class="form-control" formControlName="nombre"
+        [class.is-invalid]="invalido(form.get('nombre'))">
+      @if (invalido(form.get('nombre'))) {
+        <div class="invalid-feedback d-block">
+          @if (form.get('nombre')!.hasError('nombreDuplicado')) {
+            Ya existe una tarifa vigente de esta entidad con este nombre — elegí otro.
+          } @else {
+            Campo requerido.
+          }
+        </div>
+      }
     </div>
-  </div>
-
-  <div class="alert alert-info" *ngIf="tieneKm">
-    Distancia (heredada de la tarifa General): 1er sector {{ general?.kmDistancia?.primerSector }} km,
-    intervalo siguiente {{ general?.kmDistancia?.sectoresSiguientes }} km.
-  </div>
-
-  <p class="text-muted">
-    Marcá las categorías sobre las que aplica esta tarifa especial. Las que
-    no marques no se guardan — al calcular una operación con una categoría
-    no incluida acá, se usa el valor de la tarifa General.
-  </p>
-
-  <div formArrayName="secciones">
-    <div *ngFor="let grupo of gruposCandidatos; let si = index" [formGroupName]="si" class="mb-4">
-      <h5 *ngIf="grupo.seccion.nombre !== null">{{ grupo.seccion.nombre }}</h5>
-
-      <div class="table-responsive">
-        <table class="table table-sm tabla-categorias">
-          <thead>
-            <tr>
-              <th>Incluir</th>
-              <th class="col-nombre align-middle">Categoría</th>
-              <th>Valor</th>
-              <ng-container *ngIf="tieneKm">
-                <th>1er sector</th>
-                <th>Intervalo</th>
-              </ng-container>
-            </tr>
-          </thead>
-          <tbody formArrayName="categorias">
-            <tr *ngFor="let catGeneral of grupo.categorias; let ci = index" [formGroupName]="ci">
-              <td>
-                <input type="checkbox" class="form-check-input" [checked]="esSeleccionada(si, ci)" (change)="onToggleCategoria(si, ci, $event)">
-              </td>
-              <td class="col-nombre">{{ catGeneral.nombre }}</td>
-              <td>
-                <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="valor"
-                       appMonto prefijo="$ " [minimo]="0"
-                       [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('valor'))"
-                       [class.border-warning]="esSeleccionada(si, ci) && categoriasDe(si).at(ci).get('valor')!.value === 0">
-                <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('valor'))">
-                  <span *ngIf="categoriasDe(si).at(ci).get('valor')?.errors?.['required']">Requerido.</span>
-                  <span *ngIf="categoriasDe(si).at(ci).get('valor')?.errors?.['min']">No puede ser negativo.</span>
+    @if (mostrarAlcance) {
+      <div class="card mb-3">
+        <div class="card-header">Alcance</div>
+        <div class="card-body">
+          @if (!tarifa) {
+            <div class="row g-2 align-items-end">
+              <div class="col-md-4">
+                <select class="form-select" formControlName="alcanceTipo" (change)="onCambioAlcanceTipo()">
+                  <option value="entidad">Todos los clientes</option>
+                  <option value="entidadCliente">Cliente específico</option>
+                </select>
+              </div>
+              @if (form.get('alcanceTipo')!.value === 'entidadCliente') {
+                <div class="col-md-6">
+                  <select class="form-select" formControlName="alcanceIdCliente">
+                    <option value="" selected>Elegí un cliente…</option>
+                    @for (c of clientesElegibles; track c) {
+                      <option [value]="c.idCliente">{{ c.razonSocial }}</option>
+                    }
+                  </select>
                 </div>
-              </td>
-              <ng-container *ngIf="tieneKm">
-                <td formGroupName="adicionalKm">
-                  <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="primerSector"
-                         appMonto prefijo="$ " [minimo]="0"
-                         [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('adicionalKm.primerSector'))"
-                         [class.border-warning]="esSeleccionada(si, ci) && categoriasDe(si).at(ci).get('adicionalKm.primerSector')!.value === 0">
-                  <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('adicionalKm.primerSector'))">
-                    <span *ngIf="categoriasDe(si).at(ci).get('adicionalKm.primerSector')?.errors?.['required']">Requerido.</span>
-                    <span *ngIf="categoriasDe(si).at(ci).get('adicionalKm.primerSector')?.errors?.['min']">No puede ser negativo.</span>
-                  </div>
-                </td>
-                <td formGroupName="adicionalKm">
-                  <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="sectoresSiguientes"
-                         appMonto prefijo="$ " [minimo]="0"
-                         [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('adicionalKm.sectoresSiguientes'))"
-                         [class.border-warning]="esSeleccionada(si, ci) && categoriasDe(si).at(ci).get('adicionalKm.sectoresSiguientes')!.value === 0">
-                  <div class="invalid-feedback d-block" *ngIf="invalido(categoriasDe(si).at(ci).get('adicionalKm.sectoresSiguientes'))">
-                    <span *ngIf="categoriasDe(si).at(ci).get('adicionalKm.sectoresSiguientes')?.errors?.['required']">Requerido.</span>
-                    <span *ngIf="categoriasDe(si).at(ci).get('adicionalKm.sectoresSiguientes')?.errors?.['min']">No puede ser negativo.</span>
-                  </div>
-                </td>
-              </ng-container>
-            </tr>
-          </tbody>
-        </table>
+              }
+              @if (form.get('alcanceTipo')!.value === 'entidadCliente' && clientesElegibles.length === 0) {
+                <div class="col-12">
+                  <p class="text-muted mb-0 small">No hay clientes elegibles — necesitan tener habilitada la tarifa General o Especial.</p>
+                </div>
+              }
+            </div>
+          }
+          @if (tarifa) {
+            <p class="text-muted mb-0">
+              {{ form.get('alcanceTipo')!.value === 'entidadCliente' ? ('Cliente específico: ' + nombreClienteAlcanceActual) : 'Todos los clientes' }}
+              — el alcance no se puede cambiar al editar, solo al crear o duplicar.
+            </p>
+          }
+        </div>
       </div>
+    }
+    @if (tieneKm) {
+      <div class="card mb-3">
+        <div class="card-header">Configuración de distancia</div>
+        <div class="card-body row">
+          <div class="col-md-6">
+            <label class="form-label">Primer sector (km)</label>
+            <input type="text" inputmode="number" class="form-control input-numero" formControlName="kmPrimerSector"
+              appMonto [soloEntero]="true" [minimo]="0"
+              [class.is-invalid]="invalido(form.get('kmPrimerSector'))">
+            @if (invalido(form.get('kmPrimerSector'))) {
+              <div class="invalid-feedback d-block">
+                @if (form.get('kmPrimerSector')?.errors?.['required']) {
+                  <span>Campo requerido.</span>
+                }
+                @if (form.get('kmPrimerSector')?.errors?.['min']) {
+                  <span>No puede ser negativo.</span>
+                }
+              </div>
+            }
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Intervalo siguiente (km)</label>
+            <input type="text" inputmode="number" class="form-control input-numero" formControlName="kmSectoresSiguientes"
+              appMonto [soloEntero]="true" [minimo]="0"
+              [class.is-invalid]="invalido(form.get('kmSectoresSiguientes'))">
+            @if (invalido(form.get('kmSectoresSiguientes'))) {
+              <div class="invalid-feedback d-block">
+                @if (form.get('kmSectoresSiguientes')?.errors?.['required']) {
+                  <span>Campo requerido.</span>
+                }
+                @if (form.get('kmSectoresSiguientes')?.errors?.['min']) {
+                  <span>No puede ser negativo.</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+    <p class="text-muted">
+      Marcá las categorías sobre las que aplica esta tarifa especial. Las que
+      no marques no se guardan — al calcular una operación con una categoría
+      no incluida acá, se usa el valor de la tarifa General.
+    </p>
+    <div formArrayName="secciones">
+      @for (grupo of gruposCandidatos; track grupo; let si = $index) {
+        <div [formGroupName]="si" class="mb-4">
+          @if (grupo.seccion.nombre !== null) {
+            <h5>{{ grupo.seccion.nombre }}</h5>
+          }
+          <div class="table-responsive">
+            <table class="table table-sm tabla-categorias">
+              <thead>
+                <tr>
+                  <th>Incluir</th>
+                  <th class="col-nombre align-middle">Categoría</th>
+                  <th>Valor</th>
+                  @if (tieneKm) {
+                    <th>1er sector</th>
+                    <th>Intervalo</th>
+                  }
+                </tr>
+              </thead>
+              <tbody formArrayName="categorias">
+                @for (catGeneral of grupo.categorias; track catGeneral; let ci = $index) {
+                  <tr [formGroupName]="ci">
+                    <td>
+                      <input type="checkbox" class="form-check-input" [checked]="esSeleccionada(si, ci)" (change)="onToggleCategoria(si, ci, $event)">
+                    </td>
+                    <td class="col-nombre">{{ catGeneral.nombre }}</td>
+                    <td class="col-numero">
+                      <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="valor"
+                        appMonto prefijo="$ " [minimo]="0"
+                        [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('valor'))"
+                        [class.border-warning]="esSeleccionada(si, ci) && categoriasDe(si).at(ci).get('valor')!.value === 0">
+                      @if (invalido(categoriasDe(si).at(ci).get('valor'))) {
+                        <div class="invalid-feedback d-block">
+                          @if (categoriasDe(si).at(ci).get('valor')?.errors?.['required']) {
+                            <span>Requerido.</span>
+                          }
+                          @if (categoriasDe(si).at(ci).get('valor')?.errors?.['min']) {
+                            <span>No puede ser negativo.</span>
+                          }
+                        </div>
+                      }
+                    </td>
+                    @if (tieneKm) {
+                      <td class="col-numero" formGroupName="adicionalKm">
+                        <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="primerSector"
+                          appMonto prefijo="$ " [minimo]="0"
+                          [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('adicionalKm.primerSector'))"
+                          [class.border-warning]="esSeleccionada(si, ci) && categoriasDe(si).at(ci).get('adicionalKm.primerSector')!.value === 0">
+                        @if (invalido(categoriasDe(si).at(ci).get('adicionalKm.primerSector'))) {
+                          <div class="invalid-feedback d-block">
+                            @if (categoriasDe(si).at(ci).get('adicionalKm.primerSector')?.errors?.['required']) {
+                              <span>Requerido.</span>
+                            }
+                            @if (categoriasDe(si).at(ci).get('adicionalKm.primerSector')?.errors?.['min']) {
+                              <span>No puede ser negativo.</span>
+                            }
+                          </div>
+                        }
+                      </td>
+                      <td class="col-numero" formGroupName="adicionalKm">
+                        <input type="text" inputmode="number" class="form-control form-control-sm" formControlName="sectoresSiguientes"
+                          appMonto prefijo="$ " [minimo]="0"
+                          [class.is-invalid]="invalido(categoriasDe(si).at(ci).get('adicionalKm.sectoresSiguientes'))"
+                          [class.border-warning]="esSeleccionada(si, ci) && categoriasDe(si).at(ci).get('adicionalKm.sectoresSiguientes')!.value === 0">
+                        @if (invalido(categoriasDe(si).at(ci).get('adicionalKm.sectoresSiguientes'))) {
+                          <div class="invalid-feedback d-block">
+                            @if (categoriasDe(si).at(ci).get('adicionalKm.sectoresSiguientes')?.errors?.['required']) {
+                              <span>Requerido.</span>
+                            }
+                            @if (categoriasDe(si).at(ci).get('adicionalKm.sectoresSiguientes')?.errors?.['min']) {
+                              <span>No puede ser negativo.</span>
+                            }
+                          </div>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
     </div>
-  </div>
-
-  <div class="mb-3 col-md-4">
-    <label class="form-label">Adicional acompañante</label>
-    <input type="text" inputmode="number" class="form-control" formControlName="adicionalAcompaniante"
-           appMonto prefijo="$ " [minimo]="0"
-           [class.is-invalid]="invalido(form.get('adicionalAcompaniante'))"
-           [class.border-warning]="form.get('adicionalAcompaniante')!.value === 0">
-    <div class="invalid-feedback d-block" *ngIf="invalido(form.get('adicionalAcompaniante'))">
-      <span *ngIf="form.get('adicionalAcompaniante')?.errors?.['required']">Campo requerido.</span>
-      <span *ngIf="form.get('adicionalAcompaniante')?.errors?.['min']">No puede ser negativo.</span>
+    <div class="mb-3 col-md-4">
+      <label class="form-label">Adicional acompañante</label>
+      <input type="text" inputmode="number" class="form-control input-numero" formControlName="adicionalAcompaniante"
+        appMonto prefijo="$ " [minimo]="0"
+        [class.is-invalid]="invalido(form.get('adicionalAcompaniante'))"
+        [class.border-warning]="form.get('adicionalAcompaniante')!.value === 0">
+      @if (invalido(form.get('adicionalAcompaniante'))) {
+        <div class="invalid-feedback d-block">
+          @if (form.get('adicionalAcompaniante')?.errors?.['required']) {
+            <span>Campo requerido.</span>
+          }
+          @if (form.get('adicionalAcompaniante')?.errors?.['min']) {
+            <span>No puede ser negativo.</span>
+          }
+        </div>
+      }
     </div>
-  </div>
-
-  <button type="submit" class="btn btn-primary" [disabled]="cargando">Guardar</button>
-  <button type="button" class="btn btn-secondary ms-2" (click)="onCancelar()" [disabled]="cargando">Cancelar</button>
-</form>
+    <button type="submit" class="btn btn-primary" [disabled]="cargando">Guardar</button>
+    <button type="button" class="btn btn-secondary ms-2" (click)="onCancelar()" [disabled]="cargando">Cancelar</button>
+  </form>
+}

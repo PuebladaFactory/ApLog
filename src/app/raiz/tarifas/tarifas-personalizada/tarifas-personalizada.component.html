@@ -1,88 +1,197 @@
-<div class="container mt-4">
+<div class="mt-3">
   <h2>Tarifa Personalizada</h2>
 
   <div class="mb-3">
     <label class="form-label">Cliente</label>
     <select class="form-select" style="max-width: 400px;" (change)="seleccionarCliente($event)" [value]="clienteSeleccionado?.idCliente ?? ''">
       <option value="" selected>Elegí un cliente…</option>
-      <option *ngFor="let c of clientes" [value]="c.idCliente">{{ c.razonSocial }}</option>
+      @for (c of clientes; track c) {
+        <option [value]="c.idCliente">{{ c.razonSocial }}</option>
+      }
     </select>
   </div>
 
-  <div *ngIf="!clienteSeleccionado" class="alert alert-info">
-    Elegí un cliente para ver sus tarifas personalizadas.
-  </div>
+  @if (!clienteSeleccionado) {
+    <div class="alert alert-info">
+      Elegí un cliente para ver sus tarifas personalizadas.
+    </div>
+  }
 
-  <ng-container *ngIf="clienteSeleccionado">
-
-    <div *ngIf="modo === 'listado'">
-      <div *ngIf="tarifas.length === 0" class="alert alert-info">
-        Este cliente no tiene tarifas personalizadas cargadas todavía.
-      </div>
-
-      <div class="row row-cols-1 row-cols-md-3 g-3 mb-3">
-        <div class="col" *ngFor="let t of tarifas">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">{{ t.nombre }}</h5>
-              <p class="card-text">{{ modoTarifacionLabel(t) }}</p>
-              <button class="btn btn-sm btn-primary" (click)="ver(t)">Ver</button>
-            </div>
+  @if (clienteSeleccionado) {
+    @if (modo === 'listado') {
+      <div>
+        @if (tarifas.length === 0) {
+          <div class="alert alert-info">
+            Este cliente no tiene tarifas personalizadas cargadas todavía.
           </div>
+        }
+        <div class="row row-cols-1 row-cols-md-3 g-3 mb-3">
+          @for (t of tarifas; track t) {
+            <div class="col">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">{{ t.nombre }}</h5>
+                  <p class="card-text">{{ modoTarifacionLabel(t) }}</p>
+                  <button class="btn btn-sm btn-primary" (click)="ver(t)">Ver</button>
+                </div>
+              </div>
+            </div>
+          }
         </div>
+        @if (puedeEditar) {
+          <button class="btn btn-primary" (click)="nuevaTarifa()">+ Nueva tarifa personalizada</button>
+        }
       </div>
-
-      <button class="btn btn-primary" *ngIf="puedeEditar" (click)="nuevaTarifa()">+ Nueva tarifa personalizada</button>
-    </div>
-
-    <div *ngIf="modo === 'viewer' && tarifaSeleccionada">
-      <app-tarifa-viewer [tarifa]="tarifaSeleccionada"></app-tarifa-viewer>
-      <button class="btn btn-secondary" (click)="volverAlListado()">Volver al listado</button>
-      <button class="btn btn-primary ms-2" *ngIf="puedeEditar" (click)="editar()">Editar (nueva versión)</button>
-      <button class="btn btn-outline-primary ms-2" *ngIf="puedeEditar" (click)="aumentar()">Aumentar %</button>
-      <button class="btn btn-outline-secondary ms-2" *ngIf="puedeEditar" (click)="duplicar()">Duplicar a otro cliente</button>
-      <button class="btn btn-outline-danger ms-2" *ngIf="puedeEditar" (click)="darDeBaja()">Dar de baja</button>
-    </div>
-
-    <app-tarifa-form
-      *ngIf="modo === 'form'"
-      nivel="personalizada"
-      [idEntidadDueño]="clienteSeleccionado.idCliente"
-      [tarifa]="tarifaSeleccionada ?? undefined"
-      [cargando]="guardando"
-      (guardar)="onGuardado($event)"
-      (cancelar)="onCancelarForm()">
-    </app-tarifa-form>
-
-    <app-tarifa-aumento
-      *ngIf="modo === 'aumento' && tarifaSeleccionada"
-      [tarifa]="tarifaSeleccionada"
-      [cargando]="guardando"
-      (guardar)="onAumentoGuardado($event)"
-      (cancelar)="onAumentoCancelado()">
-    </app-tarifa-aumento>
-
-    <div *ngIf="modo === 'duplicar' && tarifaSeleccionada">
-      <div class="mb-3">
-        <label class="form-label">Cliente destino</label>
-        <select class="form-select" style="max-width: 400px;" (change)="seleccionarClienteDestino($event)">
-          <option value="" selected>Elegí el cliente destino…</option>
-          <option *ngFor="let c of clientesParaDuplicar" [value]="c.idCliente">{{ c.razonSocial }}</option>
-        </select>
+    }
+    @if (modo === 'viewer' && tarifaSeleccionada) {
+      <div>
+        <app-tarifa-viewer [tarifa]="tarifaSeleccionada"></app-tarifa-viewer>
+        <button class="btn btn-secondary" (click)="volverAlListado()">Volver al listado</button>
+        @if (puedeEditar) {
+          <button class="btn btn-primary ms-2" (click)="editar()">Editar (nueva versión)</button>
+        }
+        @if (puedeEditar) {
+          <button class="btn btn-outline-primary ms-2" (click)="aumentar()">Aumentar %</button>
+        }
+        @if (puedeEditar) {
+          <button class="btn btn-outline-secondary ms-2" (click)="duplicar()">Duplicar a otro cliente</button>
+        }
+        @if (puedeEditar) {
+          <button class="btn btn-outline-danger ms-2" (click)="darDeBaja()">Dar de baja</button>
+        }
+        <button class="btn btn-outline-secondary ms-2" (click)="verHistorial()">Ver historial</button>
       </div>
-
+    }
+    @if (modo === 'historial' && !tarifaHistorialSeleccionada) {
+      <div>
+        @if (historial.length === 0) {
+          <div class="alert alert-info">
+            No hay versiones anteriores de esta tarifa.
+          </div>
+        }
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle mb-0 tabla-historial">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Actualizado por</th>
+                <th>Detalle</th>
+                <th class="text-end">Δ Cobrar</th>
+                <th class="text-end">Δ Pagar</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of historial; track t; let i = $index) {
+                <tr>
+                  <td>{{ t.vigenciaDesde | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    @if (t.activo) {
+                      <span class="badge bg-success">ACTIVA</span>
+                    } @else {
+                      <span class="badge bg-secondary">Inactiva</span>
+                    }
+                  </td>
+                  <td>{{ t.actualizadoPor }}</td>
+                  <td>
+                    @if (textoAumento(t); as texto) {
+                      {{ texto }}
+                    }
+                  </td>
+                  <td class="text-end col-numero">
+                    @if (i < historial.length - 1) {
+                      @let delta = deltaPersonalizada(t, historial[i+1]).cobrar;
+                      @if (delta === null) {
+                        <span class="text-muted">s/d</span>
+                      } @else if (delta > 0) {
+                        <span class="text-success">▲ {{ delta | formatearValor : '%' : 'sufijo' }}</span>
+                      } @else if (delta < 0) {
+                        <span class="text-danger">▼ {{ delta | formatearValor : '%' : 'sufijo' }}</span>
+                      } @else {
+                        <span class="text-muted">{{ delta | formatearValor : '%' : 'sufijo' }}</span>
+                      }
+                    }
+                  </td>
+                  <td class="text-end col-numero">
+                    @if (i < historial.length - 1) {
+                      @let delta = deltaPersonalizada(t, historial[i+1]).pagar;
+                      @if (delta === null) {
+                        <span class="text-muted">s/d</span>
+                      } @else if (delta > 0) {
+                        <span class="text-success">▲ {{ delta | formatearValor : '%' : 'sufijo' }}</span>
+                      } @else if (delta < 0) {
+                        <span class="text-danger">▼ {{ delta | formatearValor : '%' : 'sufijo' }}</span>
+                      } @else {
+                        <span class="text-muted">{{ delta | formatearValor : '%' : 'sufijo' }}</span>
+                      }
+                    }
+                  </td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary" (click)="verVersionHistorial(t)">Ver</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <button class="btn btn-secondary mt-3" (click)="volverDesdeHistorial()">Volver</button>
+      </div>
+    }
+    @if (modo === 'historial' && tarifaHistorialSeleccionada) {
+      <div>
+        <app-tarifa-viewer [tarifa]="tarifaHistorialSeleccionada"></app-tarifa-viewer>
+        <button class="btn btn-secondary mt-2" (click)="volverDesdeVersion()">Volver al historial</button>
+      </div>
+    }
+    @if (modo === 'form') {
       <app-tarifa-form
-        *ngIf="clienteDestino"
         nivel="personalizada"
-        [idEntidadDueño]="clienteDestino.idCliente"
-        [tarifaPlantilla]="tarifaSeleccionada"
+        [idEntidadDueño]="clienteSeleccionado.idCliente"
+        [tarifa]="tarifaSeleccionada ?? undefined"
         [cargando]="guardando"
-        (guardar)="onDuplicarGuardado($event)"
-        (cancelar)="onDuplicarCancelado()">
+        (guardar)="onGuardado($event)"
+        (cancelar)="onCancelarForm()">
       </app-tarifa-form>
-
-      <button class="btn btn-secondary mt-2" *ngIf="!clienteDestino" (click)="onDuplicarCancelado()">Cancelar</button>
-    </div>
-
-  </ng-container>
+    }
+    @if (modo === 'aumento' && tarifaSeleccionada) {
+      <app-tarifa-aumento
+        [tarifa]="tarifaSeleccionada"
+        [cargando]="guardando"
+        (guardar)="onAumentoGuardado($event)"
+        (cancelar)="onAumentoCancelado()">
+      </app-tarifa-aumento>
+    }
+    @if (modo === 'duplicar' && tarifaSeleccionada) {
+      <div>
+        <div class="mb-3">
+          <label class="form-label">Cliente destino</label>
+          <select class="form-select" style="max-width: 400px;" (change)="seleccionarClienteDestino($event)">
+            <option value="" selected>Elegí el cliente destino…</option>
+            @for (c of clientesParaDuplicar; track c) {
+              <option [value]="c.idCliente">{{ c.razonSocial }}{{ c.idCliente === clienteSeleccionado?.idCliente ? ' (el mismo cliente)' : '' }}</option>
+            }
+          </select>
+        </div>
+        @if (duplicandoAlMismoCliente) {
+          <div class="alert alert-warning">
+            Vas a crear una tarifa nueva e independiente para el mismo cliente — la tarifa actual no se modifica ni se da de baja. Si la idea es reemplazarla, hacelo aparte desde "Dar de baja" una vez que confirmes la nueva.
+          </div>
+        }
+        @if (clienteDestino) {
+          <app-tarifa-form
+            nivel="personalizada"
+            [idEntidadDueño]="clienteDestino.idCliente"
+            [tarifaPlantilla]="tarifaSeleccionada"
+            [cargando]="guardando"
+            (guardar)="onDuplicarGuardado($event)"
+            (cancelar)="onDuplicarCancelado()">
+          </app-tarifa-form>
+        }
+        @if (!clienteDestino) {
+          <button class="btn btn-secondary mt-2" (click)="onDuplicarCancelado()">Cancelar</button>
+        }
+      </div>
+    }
+  }
 </div>

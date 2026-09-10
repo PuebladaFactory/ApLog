@@ -14,6 +14,10 @@ export interface TarifaEspecialFormData {
   secciones: Seccion<CategoriaEspecial>[];
   adicionalAcompaniante: number;
   metadataAumento?: MetadataAumento;
+  /** Override manual de vigenciaDesde, exclusivo para migración de datos —
+   *  no seteado (undefined) en el uso normal del día a día, cae al default
+   *  de "hoy". */
+  vigenciaDesde?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -34,7 +38,7 @@ export class TarifaEspecialFactoryService {
       secciones: data.secciones,
       adicionalAcompaniante: data.adicionalAcompaniante,
       activo: true,
-      vigenciaDesde: fechaStr,
+      vigenciaDesde: data.vigenciaDesde ?? fechaStr,
       versionAnteriorId,
       fechaActualizacion: fechaStr,
       actualizadoPor: usuario?.email || 'Desconocido',

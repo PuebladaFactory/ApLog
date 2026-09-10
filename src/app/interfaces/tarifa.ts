@@ -29,7 +29,13 @@ export interface MetadataAumento {
   porcentajeCobrar?: number;
   porcentajePagar?: number;
   porcentajeProveedor?: number;
-  redondeo: 'unidad' | 'decena' | 'centena' | null;
+  redondeo: 'unidad' | 'decena' | 'centena' | 'miles' | null;
+  // true = se aplicó un aumento automático (modo unico/segmentado) y después
+  // se pasó a manual para ajustar algún valor puntual (ej. corregir un
+  // redondeo) — el resto de los campos que no requerían ajuste quedaron
+  // igual que el cálculo automático. En ese caso `modo` conserva el modo
+  // automático original (no 'manual'), para no perder esa información.
+  ajustadoManualmente?: boolean;
 }
 
 export interface TarifaBase {
