@@ -1,0 +1,11 @@
+:host {
+  font-size: 1.2rem;
+}
+
+// Bootstrap fija estas clases en rem (relativo a la raíz del documento, no
+// al :host) — sin este override no escalan con el font-size de arriba.
+.form-control,
+.form-control-sm,
+.btn {
+  font-size: 1em;
+}

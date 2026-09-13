@@ -1,0 +1,72 @@
+<div [formGroup]="form" class="border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded">
+    <div class="row g-3 mb-3 align-items-end">
+        <div class="col">
+            <label class="form-label small mb-0">Patente</label>
+            <div>{{ op.vehiculo.dominio }} - {{ op.vehiculo.categoria.nombre }}</div>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small mb-0">Km recorridos</label>
+            <input
+                #kmInput
+                type="text"
+                inputmode="numeric"
+                class="form-control form-control-sm"
+                formControlName="km"
+                appMonto [minimo]="0"
+                (keyup.enter)="onKmEnter()"
+            />
+        </div>
+        <div class="col d-flex justify-content-between align-items-end">
+            <div class="form-check mb-0">
+                <input
+                    type="checkbox"
+                    class="form-check-input"
+                    id="detalleGeneralAcompaniante"
+                    formControlName="acompaniante"
+                    (change)="onAcompanianteToggle()"
+                    (keyup.enter)="onAcompanianteEnter()"
+                />
+                <label class="form-check-label" for="detalleGeneralAcompaniante">Acompañante</label>
+            </div>
+            <div class="text-end">
+                <label class="form-label small mb-0">Cantidad</label>
+                <input
+                    type="text"
+                    inputmode="numeric"
+                    class="form-control form-control-sm input-cantidad-acompaniante"
+                    formControlName="acompanianteCant"
+                    appDecimalInput [min]="0" [decimals]="0"
+                    (change)="onAcompanianteCantChange()"
+                />
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label class="form-label small mb-0">Hoja de ruta</label>
+            <textarea rows="2" class="form-control form-control-sm" formControlName="hojaRuta"></textarea>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small mb-0">Observaciones</label>
+            <textarea rows="2" class="form-control form-control-sm" formControlName="observaciones"></textarea>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <!-- Control simple por ahora — reemplazar por la UI real de carga de
+                 archivos (Firebase Storage vía StorageArchivosService) cuando se
+                 encare esa parte del frente. No requiere volver a tocar este layout. -->
+            <label class="form-label small mb-0">Documentación</label>
+            <input type="text" class="form-control form-control-sm" formControlName="documentacion" />
+        </div>
+        <div class="col-md-6">
+            <!-- Control raíz del form del shell (form.get('adExtraConcepto')), fuera de
+                 detalleGeneral — se referencia con [formControl] (no formControlName)
+                 porque no pertenece al [formGroup] de este componente. -->
+            <label class="form-label small mb-0">Adicional extra — concepto</label>
+            <input type="text" class="form-control form-control-sm" [formControl]="adExtraConcepto" />
+        </div>
+    </div>
+</div>

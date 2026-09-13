@@ -20,6 +20,8 @@ import { CarruselComponent, SafeUrlPipe } from './carrusel/carrusel.component';
 import { CuitFormatDirective } from './directives/cuit-format.directive';
 import { SoloNumerosDirective } from './directives/solo-numeros.directive';
 import { FormatearValorPipe } from './pipes/formatear-valor.pipe';
+import { EtiquetaNivelTarifaPipe } from './pipes/etiqueta-nivel-tarifa.pipe';
+import { ClaseNivelTarifaPipe } from './pipes/clase-nivel-tarifa.pipe';
 
 import { SoloLetrasDirective } from './directives/solo-letras.directive';
 
@@ -78,12 +80,14 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     CuitFormatDirective,
     SoloNumerosDirective,
     FormatearValorPipe,
-    
+    EtiquetaNivelTarifaPipe,
+    ClaseNivelTarifaPipe,
+
     SoloLetrasDirective,
-    
-    TarigaGralEdicionComponent,    
+
+    TarigaGralEdicionComponent,
     RoleDirective, PermisoDirective, BajaObjetoComponent,
-    ObjetoPapeleraComponent, 
+    ObjetoPapeleraComponent,
     FechaValidaDirective, 
     InformeLiqDetalleComponent, 
     ScrollToTopComponent, 
@@ -139,9 +143,11 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     CuitFormatDirective,
     SoloNumerosDirective,
     FormatearValorPipe,
-    
+    EtiquetaNivelTarifaPipe,
+    ClaseNivelTarifaPipe,
+
     SoloLetrasDirective,
-    
+
     TarigaGralEdicionComponent,
     RoleDirective,
     PermisoDirective,

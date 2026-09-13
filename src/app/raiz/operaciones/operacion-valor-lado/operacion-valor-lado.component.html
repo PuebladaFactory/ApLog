@@ -1,0 +1,98 @@
+<div [formGroup]="form">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>{{ lado === 'cliente' ? 'Cliente' : 'Chofer' }}</strong>
+        <div>
+            <strong>Tarifa Apliacada: </strong>
+            <span class="badge {{ nivel | claseNivelTarifa }}">{{ nivel | etiquetaNivelTarifa }}</span>
+        </div>        
+    </div>
+
+    <div class="row g-3 mb-2">
+        <div class="col-md-4">
+            <label class="form-label small mb-0">Tarifa base</label>
+            <div>{{ valores?.tarifaBase | formatearValor: "$" }}</div>
+        </div>
+        <div class="col-md-4 text-center">
+            <label class="form-label small mb-0">Acompañante</label>
+            <div>{{ valores?.acompValor | formatearValor: "$" }}</div>
+        </div>
+        <div class="col-md-4 text-end">
+            <label class="form-label small mb-0">Km adicional</label>
+            <div>{{ valores?.kmAdicional | formatearValor: "$" }}</div>
+        </div>
+    </div>
+
+    @if (lado === 'chofer' && esPersonalizadaDelCliente) {
+        <div class="text-muted small mb-2" title="La tarifa Personalizada del cliente determina también este lado — no se elige por separado">
+            Sección/Categoría = Personalizada cliente
+        </div>
+    } @else if (candidatoPersonalizada) {
+        <div class="row g-2 mb-2">
+            @if (!puedeEditarDetalleCompleto) {
+                <div class="col-12">
+                    Sección {{ refActual?.seccion }} — {{ refActual?.nombreCategoria }}
+                </div>
+            } @else {
+                @if (seccionesDisponibles.length > 1) {
+                    <div class="col-md-6">
+                        <label class="form-label small mb-0">Sección</label>
+                        <select class="form-select form-select-sm"
+                            [ngModel]="seccionEnCurso" [ngModelOptions]="{standalone: true}"
+                            (ngModelChange)="onSeccionChange($event)">
+                            <option [ngValue]="-1" disabled>Seleccione</option>
+                            @for (sec of seccionesDisponibles; track sec.orden) {
+                                <option [ngValue]="sec.orden">Sección {{ sec.orden }}@if (sec.nombre) { - {{ sec.nombre }} }</option>
+                            }
+                        </select>
+                    </div>
+                }
+                <div class="col-md-6">
+                    <label class="form-label small mb-0">Categoría</label>
+                    <select class="form-select form-select-sm"
+                        [ngModel]="categoriaEnCurso" [ngModelOptions]="{standalone: true}"
+                        (ngModelChange)="onCategoriaChange($event)">
+                        <option [ngValue]="-1" disabled>Seleccione</option>
+                        @for (cat of categoriasDisponibles; track cat.orden) {
+                            <option [ngValue]="cat.orden">{{ cat.nombre }}</option>
+                        }
+                    </select>
+                </div>
+            }
+        </div>
+    }
+
+    @if (nivel === 'eventual') {
+        <div class="row g-2 mb-2">
+            <div class="col-md-6">
+                <label class="form-label small mb-0">Concepto</label>
+                <input type="text" class="form-control form-control-sm"
+                    [(ngModel)]="datosEventualLado!.concepto" [ngModelOptions]="{standalone: true}"
+                    [disabled]="!puedeEditarDetalleCompleto"
+                    (ngModelChange)="recalcular.emit()" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small mb-0">Valor</label>
+                <input type="text" inputmode="numeric" class="form-control form-control-sm"
+                    [(ngModel)]="datosEventualLado!.valor" [ngModelOptions]="{standalone: true}"
+                    [disabled]="!puedeEditarDetalleCompleto"
+                    appMonto [minimo]="0"
+                    (ngModelChange)="recalcular.emit()" />
+            </div>
+        </div>
+    }
+    
+    <div class="row g-2 gap-3">
+        <div class="col d-flex align-items-center">
+            <!-- <label class="form-label small mb-0">Adicional extra — valor</label> -->
+            <div class="align-self-center ">Adicional extra — valor:</div>
+            
+        </div>
+        <div class="col">
+            <div class="input-group">                
+                <span class="input-group-text" id="basic-addon1">$</span>
+                <input type="text" inputmode="numeric" class="form-control form-control-sm text-end" [ngClass]="{'border-primary': lado === 'cliente', 'border-warning': lado === 'chofer'}"
+                    formControlName="adExtraValor" appMonto [minimo]="0" />
+            </div>            
+        </div>
+    </div>
+</div>

@@ -3,8 +3,9 @@
 // falta una interfaz de snapshot por nivel.
 // Cableada a Operacion desde Bloque 6 (ValoresTarifaService) — se resuelve y
 // congela en el alta (operacion.service.ts → calcularAlta) y NO se vuelve a
-// resolver en el cierre (modal-resumen-op.component.ts → calcularCierre
-// reutiliza esta misma referencia con valores actualizados).
+// resolver en el cierre (ValoresTarifaService.calcularCierre, llamado desde
+// ModalDetalleOpComponent, reutiliza esta misma referencia con valores
+// actualizados).
 export interface RefTarifaAplicada {
   idTarifa: string;
   nivel: 'general' | 'especial' | 'personalizada';   // eventual no usa esta referencia

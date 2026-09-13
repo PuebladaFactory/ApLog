@@ -417,6 +417,9 @@ Categorías especiales:
 - Cloud Functions están disponibles (plan Blaze) — evaluar caso por caso si una solución
   nueva conviene en el cliente o en una Cloud Function, sin asumir la vieja limitación del
   plan gratuito.
+- Instrucciones para Claude Code: entregar en un único bloque de código (con botón de
+  copiar), incluyendo razonamiento y todos los archivos/ediciones BUSCAR-REEMPLAZAR — no
+  repartidas en varios bloques separados dentro de la respuesta.
 
 ## Contexto adicional
 

@@ -38,6 +38,7 @@ import { inject } from "@angular/core";
 import { InformeOp } from "src/app/interfaces/informe-op";
 import { InformeLiq, ValoresFinancieros } from "src/app/interfaces/informe-liq";
 import { NumeradorService } from "../numerador/numerador.service";
+import { RegistroLog } from "src/app/interfaces/registro-log";
 import { InformeVenta } from "src/app/interfaces/informe-venta";
 
 import { MovimientoFinanciero } from "src/app/interfaces/movimiento-financiero";
@@ -814,6 +815,7 @@ export class DbFirestoreService {
     compChofer: string,
     infOpChofer: InformeOp,
     op: ConId<Operacion>,
+    entradaLog: { id: string; entrada: RegistroLog } | null,
     informesVenta?: InformeVenta[],
   ): Promise<{ exito: boolean; mensaje: string }> {
     const batch = writeBatch(this.firestore);
@@ -909,6 +911,15 @@ export class DbFirestoreService {
 
       batch.set(informeRefCliente, infOpCliente);
       batch.set(informeRefChofer, infOpChofer);
+
+      // ==========================================================
+      // 📝 LOG (mecanismo nuevo — ver LogRegistroService.construirEntradaSuelta)
+      // ==========================================================
+
+      if (entradaLog) {
+        const logRef = doc(this.firestore, `/Vantruck/datos/registroLog/${entradaLog.id}`);
+        batch.set(logRef, entradaLog.entrada);
+      }
 
       // ==========================================================
       // 🧾 ACTUALIZAR OPERACIÓN

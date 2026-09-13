@@ -1,0 +1,65 @@
+<div class="modal-header">
+    <h4 class="modal-title">Detalle de Operación N° {{ op.numeroOperacion }}</h4>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+    <app-operacion-cabecera [op]="op"></app-operacion-cabecera>
+
+    <hr />
+
+    <app-operacion-detalle-general
+        [op]="op"
+        [form]="$any(form.get('detalleGeneral'))"
+        [adExtraConcepto]="$any(form.get('adExtraConcepto'))"
+        [puedeEditarDetalleCompleto]="puedeEditarDetalleCompleto"
+        [puedeEditarKmYMultiplicadores]="puedeEditarKmYMultiplicadores"
+        [puedeEditarDocumentacion]="puedeEditarDocumentacion"
+        [puedeEditarAdExtraConcepto]="puedeEditarAdExtraConcepto"
+        [autofocarKm]="modo === 'cerrar'"
+        (kmEnter)="onKmEnter()"
+    ></app-operacion-detalle-general>
+
+    <hr />
+
+    <div class="row g-3 gap-3">
+        <div class="col border border-primary border-1 rounded-4 shadow p-2 bg-body-tertiary rounded">
+            <app-operacion-valor-lado
+                lado="cliente"
+                [op]="op"
+                [form]="$any(form.get('valorCliente'))"
+                [puedeEditarDetalleCompleto]="puedeEditarDetalleCompleto"
+                [candidatoPersonalizada]="candidatoPersonalizadaCliente"
+                (seccionCategoriaChange)="onSeccionCategoriaChangeCliente($event)"
+                (recalcular)="recalcular()"
+            ></app-operacion-valor-lado>
+        </div>
+        <div class="col border border-warning border-1 rounded-4 shadow p-2 bg-body-tertiary rounded">
+            <app-operacion-valor-lado
+                lado="chofer"
+                [op]="op"
+                [form]="$any(form.get('valorChofer'))"
+                [puedeEditarDetalleCompleto]="puedeEditarDetalleCompleto"
+                [esPersonalizadaDelCliente]="esPersonalizadaDelCliente"
+                (recalcular)="recalcular()"
+            ></app-operacion-valor-lado>
+        </div>
+    </div>
+
+    <hr />
+
+    <app-operacion-totales
+        [op]="op"
+        [form]="$any(form.get('totales'))"
+        [puedeEditarKmYMultiplicadores]="puedeEditarKmYMultiplicadores"
+    ></app-operacion-totales>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
+    @if (modo !== 'vista') {
+        <button type="button" class="btn btn-primary" [disabled]="isLoading" (click)="guardar()">
+            {{ modo === 'cerrar' ? 'Cerrar operación' : 'Guardar' }}
+        </button>
+    }
+</div>

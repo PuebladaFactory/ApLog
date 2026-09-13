@@ -1,0 +1,47 @@
+<!-- <div class="d-flex justify-content-between flex-wrap gap-3 mb-3">
+    <div>
+        <strong>Fecha:</strong> {{ op.fecha }}
+    </div>
+</div> -->
+
+<div class="row gap-2 px-2">
+    <div class="col-md-2 border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded">
+        <div>
+            <strong>Fecha:</strong> {{ op.fecha }}
+        </div>
+    </div>
+    <div class="col border border-primary border-1 rounded-4 shadow p-2 bg-body-tertiary rounded">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <strong>Cliente:</strong>
+                <br>
+                <strong>Tarifas Asignadas:</strong>
+            </div>
+            <div class="text-end">
+                <div>{{ op.cliente.razonSocial }}</div>
+                @for (t of tarifasHabilitadasCliente; track t.nivel) {
+                    <span class="badge me-1 {{ t.nivel | claseNivelTarifa }}">
+                        {{ t.nivel | etiquetaNivelTarifa }}
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col border border-warning border-1 rounded-4 shadow p-2 bg-body-tertiary rounded">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <strong>Chofer:</strong>
+                <br>
+                <strong>Tarifas Asignadas:</strong>
+            </div>
+            <div class="text-end">
+                <div>{{ op.chofer.apellido }}, {{ op.chofer.nombre }}</div>
+                @for (t of tarifasHabilitadasChofer; track t.nivel) {
+                    <span class="badge me-1 {{ t.nivel | claseNivelTarifa }}">
+                        {{ t.nivel | etiquetaNivelTarifa }}
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,95 @@
+<div [formGroup]="form">
+    <div class="row gap-3">
+        <div class="col border border-primary border-1 rounded-4 shadow p-2 bg-body-tertiary rounded d-flex flex-column justify-content-around">
+            <div class="d-flex justify-content-between">
+                <!-- <label class="form-label small mb-0">A Cobrar</label> -->
+                <div class="fw-bold fs-4">Total a Cobrar</div>
+                <div class="fw-bold fs-4">
+                    @if (op.valoresNuevos) {
+                        {{ op.valoresNuevos.cliente.aCobrar | formatearValor: "$" }}
+                    } @else {
+                        <span class="text-muted">Sin resolver</span>
+                    }
+                </div>
+            </div>
+            <div class="d-flex flex-wrap justify-content-between align-items-end">
+                <!-- <label class="form-label small mb-0">Multiplicador Cliente</label> -->
+                <div>Multiplicador Cliente: </div>
+                <input
+                    type="text"
+                    class="form-control form-control-sm input-multiplicador text-end mt-2"
+                    formControlName="multiplicadorCliente"
+                    appDecimalInput [min]="0" [max]="2" [decimals]="2" [vacioInvalido]="true"
+                />
+                <div class="invalid-feedback w-100 text-end">El multiplicador es obligatorio y debe estar entre 0 y 2.</div>
+            </div>
+        </div>
+        <div class="col border border-warning border-1 rounded-4 shadow p-2 bg-body-tertiary rounded d-flex flex-column justify-content-around">
+            <div class="d-flex justify-content-between">
+                <!-- <label class="form-label small mb-0">A Pagar</label> -->
+                <div class="fw-bold fs-4">Total a Pagar</div>
+                <div class="fw-bold fs-4">
+                    @if (op.valoresNuevos) {
+                        {{ op.valoresNuevos.chofer.aPagar | formatearValor: "$" }}
+                    } @else {
+                        <span class="text-muted">Sin resolver</span>
+                    }
+                </div>
+            </div>
+            <div class="d-flex flex-wrap justify-content-between align-items-end">
+                <!-- <label class="form-label small mb-0">Multiplicador Chofer</label> -->
+                <div>Multiplicador Chofer: </div>
+                <input
+                    type="text"
+                    class="form-control form-control-sm input-multiplicador text-end mt-2"
+                    formControlName="multiplicadorChofer"
+                    appDecimalInput [min]="0" [max]="2" [decimals]="2" [vacioInvalido]="true"
+                />
+                <div class="invalid-feedback w-100 text-end">El multiplicador es obligatorio y debe estar entre 0 y 2.</div>
+            </div>
+        </div>
+    </div>
+<!--     <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label class="form-label small mb-0">A Cobrar</label>
+            <div class="fw-bold">
+                @if (op.valoresNuevos) {
+                    {{ op.valoresNuevos.cliente.aCobrar | formatearValor: "$" }}
+                } @else {
+                    <span class="text-muted">Sin resolver</span>
+                }
+            </div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small mb-0">A Pagar</label>
+            <div class="fw-bold">
+                @if (op.valoresNuevos) {
+                    {{ op.valoresNuevos.chofer.aPagar | formatearValor: "$" }}
+                } @else {
+                    <span class="text-muted">Sin resolver</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label small mb-0">Multiplicador Cliente</label>
+            <input
+                type="text"
+                class="form-control form-control-sm"
+                formControlName="multiplicadorCliente"
+                appDecimalInput [min]="0" [max]="2" [decimals]="2"
+            />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small mb-0">Multiplicador Chofer</label>
+            <input
+                type="text"
+                class="form-control form-control-sm"
+                formControlName="multiplicadorChofer"
+                appDecimalInput [min]="0" [max]="2" [decimals]="2"
+            />
+        </div>
+    </div> -->
+</div>

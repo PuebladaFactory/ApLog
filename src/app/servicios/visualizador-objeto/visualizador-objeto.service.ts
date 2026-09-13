@@ -5,13 +5,16 @@ import { DbFirestoreService } from 'src/app/servicios/database/db-firestore.serv
 import { ClienteAltaComponent } from 'src/app/raiz/clientes/cliente-alta/cliente-alta.component';
 import { ChoferesAltaComponent } from 'src/app/raiz/choferes/choferes-alta/choferes-alta.component';
 import { ProveedoresAltaComponent } from 'src/app/raiz/proveedores/proveedores-alta/proveedores-alta.component';
-import { ModalResumenOpComponent } from 'src/app/raiz/operaciones/modal-resumen-op/modal-resumen-op.component';
+import { ModalDetalleOpComponent } from 'src/app/raiz/operaciones/modal-detalle-op/modal-detalle-op.component';
 
 interface HandlerVisualizador {
   componente: any;
   /** Campo idXxx que el modal de esa entidad espera en `fromParent.item` (además de `id`). */
   idField: string;
   tamano: 'sm' | 'md' | 'lg' | 'xl';
+  /** true si el modal usa el contrato tipado (@Input() op/modo) en vez de
+   *  fromParent — hoy solo ModalDetalleOpComponent (operaciones). */
+  contratoNuevo?: boolean;
 }
 
 /**
@@ -34,7 +37,7 @@ export class VisualizadorObjetoService {
     clientes: { componente: ClienteAltaComponent, idField: 'idCliente', tamano: 'lg' },
     choferes: { componente: ChoferesAltaComponent, idField: 'idChofer', tamano: 'lg' },
     proveedores: { componente: ProveedoresAltaComponent, idField: 'idProveedor', tamano: 'lg' },
-    operaciones: { componente: ModalResumenOpComponent, idField: 'idOperacion', tamano: 'lg' },
+    operaciones: { componente: ModalDetalleOpComponent, idField: 'idOperacion', tamano: 'lg', contratoNuevo: true },
   };
 
   /** true si `coleccion` tiene un modal de vista mapeado — el caller usa esto para
@@ -96,6 +99,11 @@ export class VisualizadorObjetoService {
       centered: true,
       size: handler.tamano,
     });
-    modalRef.componentInstance.fromParent = { modo: 'vista', item };
+    if (handler.contratoNuevo) {
+      modalRef.componentInstance.op = item;
+      modalRef.componentInstance.modo = 'vista';
+    } else {
+      modalRef.componentInstance.fromParent = { modo: 'vista', item };
+    }
   }
 }

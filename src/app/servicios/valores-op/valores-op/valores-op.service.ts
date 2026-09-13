@@ -11,11 +11,12 @@ import { TarifaGralCliente } from "src/app/interfaces/tarifa-gral-cliente";
 import { TarifaPersonalizadaCliente } from "src/app/interfaces/tarifa-personalizada-cliente";
 import { ValoresOpChoferService } from "../valores-op-chofer/valores-op-chofer.service";
 import { Proveedor } from "src/app/interfaces/proveedor";
-import { TarifaEventual } from "src/app/interfaces/tarifa-eventual";
 import { ConId, ConIdType } from "src/app/interfaces/conId";
 
 import { InformeOp } from "src/app/interfaces/informe-op";
 import { InformeVenta } from "src/app/interfaces/informe-venta";
+import { LogRegistroService } from "../../log-registro/log-registro.service";
+import { RegistroLog } from "src/app/interfaces/registro-log";
 
 @Injectable({
   providedIn: "root",
@@ -40,7 +41,6 @@ export class ValoresOpService {
   ProveedorFacOp!: InformeOp[];
   operacion!: ConId<Operacion>;
   proveedorSeleccionado!: ConId<Proveedor> | undefined;
-  tarifaEventual!: TarifaEventual;
   informesVenta: InformeVenta[] = [];
   respuesta: any;
 
@@ -49,10 +49,12 @@ export class ValoresOpService {
     private facturacionChofer: ValoresOpChoferService,
     private storageService: StorageService,
     private dbFirebase: DbFirestoreService,
+    private logRegistro: LogRegistroService,
   ) {}
 
   async facturarOperacion(
     op: ConId<Operacion>,
+    msj: string = 'Cierre de Operación',
   ): Promise<{ exito: boolean; mensaje: string }> {
     this.informesVenta = [];
     try {
@@ -78,7 +80,14 @@ export class ValoresOpService {
       await this.$facturarOpCliente(op);
       if (op.cliente.vendedor && op.cliente.vendedor.length > 0)
         this.asignacionComisionVenta(op);
-      return await this.$guardarFacturas(op);
+
+      // Log del cierre — se agrega al MISMO writeBatch que guardarFacturasOp usa
+      // para informesOp/resúmenes (ver DbFirestoreService.guardarFacturasOp).
+      // 'EDITAR' porque cerrar es editar op.estado (mismo criterio para todo el
+      // log: no hay acción 'CERRAR' separada en AccionLog).
+      const entradaLog = this.logRegistro.construirEntradaSuelta('EDITAR', 'operaciones', op.idOperacion, msj);
+
+      return await this.$guardarFacturas(op, entradaLog);
     } catch (error: any) {
       console.error("Error durante facturarOperacion:", error);
       return {
@@ -208,6 +217,7 @@ export class ValoresOpService {
 
   async $guardarFacturas(
     op: ConId<Operacion>,
+    entradaLog: { id: string; entrada: RegistroLog } | null,
   ): Promise<{ exito: boolean; mensaje: string }> {
     console.log("$guardarFacturas: informesVenta", this.informesVenta);
 
@@ -220,6 +230,7 @@ export class ValoresOpService {
           "informesOpChoferes",
           this.facturaOpChofer,
           op,
+          entradaLog,
           this.informesVenta,
         );
       } else {
@@ -229,51 +240,15 @@ export class ValoresOpService {
           "informesOpProveedores",
           this.facturaOpProveedor,
           op,
+          entradaLog,
           this.informesVenta,
         );
-      }
-      if (op.tarifaTipo.eventual) {
-        this.guardarTarifasEventuales(op);
       }
       return result;
     } catch (error: any) {
       throw new Error("Error al guardar facturas: " + error?.message);
     }
     return { exito: false, mensaje: "" };
-  }
-
-  guardarTarifasEventuales(op: Operacion) {
-    this.tarifaEventual = {
-      idTarifa: new Date().getTime() + Math.floor(Math.random() * 1000),
-      fecha: op.fecha,
-      // TODO: refactor Tarifas — invariante: eventual ⟺ datosTarifaEventual !== null
-      cliente: {
-        concepto: op.datosTarifaEventual!.cliente.concepto,
-        valor: op.datosTarifaEventual!.cliente.valor,
-      },
-      chofer: {
-        concepto: op.datosTarifaEventual!.chofer.concepto,
-        valor: op.datosTarifaEventual!.chofer.valor,
-      },
-      tipo: {
-        general: false,
-        especial: false,
-        eventual: true,
-        personalizada: false,
-      },
-      idCliente: Number(op.cliente.id), // TODO: migrar a string cuando se refactorice este módulo
-      idChofer: Number(op.chofer.id),   // TODO: migrar a string cuando se refactorice este módulo
-      idProveedor: Number(op.proveedor?.id ?? 0), // TODO: refactor Tarifas — idProveedor desde snapshot
-      idOperacion: op.idOperacion,
-      km: op.km,
-    };
-    this.storageService.addItem(
-      "tarifasEventuales",
-      this.tarifaEventual,
-      this.tarifaEventual.idTarifa,
-      "ALTA",
-      `Alta de Tarifa Eventual ${this.tarifaEventual.idTarifa}, Cliente ${op.cliente.razonSocial}, Chofer ${op.chofer.apellido} ${op.chofer.nombre} `,
-    );
   }
 
   asignacionComisionVenta(op: ConId<Operacion>) {

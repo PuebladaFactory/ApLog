@@ -12,8 +12,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
-import { ModalResumenOpComponent } from './modal-resumen-op/modal-resumen-op.component';
-
 import { FilterPipeModule } from 'ngx-filter-pipe';
 import { AgGridModule } from 'ag-grid-angular';
 
@@ -25,6 +23,11 @@ import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 import { TableroAsignacionesComponent } from './tablero-asignaciones/tablero-asignaciones.component';
 import { OperacionesEditorComponent } from './operaciones-editor/operaciones-editor.component';
 import { CargaAsignacionComponent } from './carga-asignacion/carga-asignacion.component';
+import { OperacionCabeceraComponent } from './operacion-cabecera/operacion-cabecera.component';
+import { OperacionDetalleGeneralComponent } from './operacion-detalle-general/operacion-detalle-general.component';
+import { OperacionTotalesComponent } from './operacion-totales/operacion-totales.component';
+import { OperacionValorLadoComponent } from './operacion-valor-lado/operacion-valor-lado.component';
+import { ModalDetalleOpComponent } from './modal-detalle-op/modal-detalle-op.component';
 import { ɵɵDir } from "@angular/cdk/scrolling";
 
 
@@ -33,13 +36,17 @@ import { ɵɵDir } from "@angular/cdk/scrolling";
 @NgModule({
   declarations: [
     OpControlComponent,
-    ModalResumenOpComponent,
     ModalObjetosActivosComponent,
     ModalChoferesNoDisponiblesComponent,
     TableroOpComponent,
     TableroAsignacionesComponent,
     OperacionesEditorComponent,
     CargaAsignacionComponent,
+    OperacionCabeceraComponent,
+    OperacionDetalleGeneralComponent,
+    OperacionTotalesComponent,
+    OperacionValorLadoComponent,
+    ModalDetalleOpComponent,
   ],
   imports: [
     CommonModule,

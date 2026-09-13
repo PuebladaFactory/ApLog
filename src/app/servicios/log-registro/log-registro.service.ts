@@ -71,6 +71,26 @@ export class LogRegistroService {
     escrituras.push({ coleccion: this.COLECCION, id: logId, data: entrada, modo: 'crear' });
   }
 
+  /** Construye una entrada de log + su id, SIN escribir y SIN pasar por
+   *  EscrituraBatch[]/commitBatch — pensado para callers con su propio batch
+   *  "crudo" ajeno al mecanismo estándar (hoy: DbFirestoreService.guardarFacturasOp,
+   *  que usa writeBatch directo porque necesita updates parciales de resúmenes que
+   *  commitBatch no soporta). El caller hace batch.set(doc(...,id), entrada) con
+   *  el resultado. A diferencia de agregarAlBatch, no diffea EDITAR (no hay un
+   *  EscrituraBatch[] del cual leer el "antes" — el caller arma su propio batch).
+   *  Devuelve null si el usuario actual es 'dev', mismo criterio que el resto del
+   *  servicio — el caller debe verificar antes de escribir. */
+  construirEntradaSuelta(
+    accion: AccionLog,
+    coleccion: string,
+    idObjet: string | number,
+    details: string,
+  ): { id: string; entrada: RegistroLog } | null {
+    const entrada = this.construirEntrada(accion, coleccion, idObjet, details, 'SUCCESS');
+    if (!entrada) return null;
+    return { id: this.db.generarId(this.COLECCION), entrada };
+  }
+
   /** ACCIÓN SIN MUTACIÓN — escritura suelta, no atómica (no hay negocio con el que
    *  ser atómico). Ej.: REIMPRIMIR, DESCARGAR, LOGIN, LOGOUT.
    *  Best-effort real: si la escritura falla (ej. LOGOUT con el token ya inválido

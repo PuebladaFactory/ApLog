@@ -495,6 +495,53 @@ export class OperacionService implements OnDestroy {
     return { exito: true, mensaje: `Operación ${op.idOperacion} restaurada correctamente.` };
   }
 
+  /** Edita una operación de forma atómica: doc de la operación + su log EDITAR +
+   *  sincronización de observaciones/hoja de ruta en el tablero de asignaciones
+   *  (item por idOperacion) + el log EDITAR de esa sincronización — un solo
+   *  commitBatch. Reemplaza al viejo StorageService.updateItem +
+   *  TableroService.actualizarAsignacionDesdeOperacion (dos escrituras separadas,
+   *  no atómicas). */
+  async editarOperacion(op: ConId<Operacion>, msj: string = 'Edición de Operación'): Promise<Resultado<void>> {
+    const escrituras: EscrituraBatch[] = [
+      { coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), modo: 'reemplazar' },
+    ];
+    await this.logRegistro.agregarAlBatch(escrituras, 'EDITAR', 'operaciones', op.idOperacion, msj);
+    await this.asignacionService.agregarEscrituraActualizarItem(
+      escrituras, op.fecha, op.idOperacion, op.observaciones ?? '', op.hojaRuta ?? '',
+    );
+
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'EDITAR', 'operaciones', op.idOperacion, `Error al editar operación ${op.idOperacion}: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `Error al guardar la edición: ${e?.message ?? e}.` };
+    }
+
+    return { exito: true, mensaje: `Operación ${op.idOperacion} editada correctamente.` };
+  }
+
+  /** Cierra una operación: calcula informesOp (motor nuevo de Tarifas) y los
+   *  persiste junto con la actualización de la operación (estado.ciclo →
+   *  'cerrada'), los resúmenes de Reportes y el log — todo atómico, ver
+   *  ValoresOpService.facturarOperacion → DbFirestoreService.guardarFacturasOp.
+   *  Registrar la tarifa eventual (si corresponde) queda deliberadamente FUERA
+   *  del batch — best-effort ya existente en ValoresTarifaService, mismo
+   *  criterio que el resto de esa clase (ver registrarEventualSiCorresponde). */
+  async cerrarOperacion(op: ConId<Operacion>, msj: string = 'Cierre de Operación'): Promise<Resultado<void>> {
+    const resultado = await this.valoresServ.facturarOperacion(op, msj);
+    if (!resultado.exito) {
+      return { exito: false, mensaje: resultado.mensaje };
+    }
+
+    if (op.datosTarifaEventual !== null) {
+      await this.valoresTarifaServ.registrarEventualSiCorresponde(op);
+    }
+
+    return { exito: true, mensaje: resultado.mensaje };
+  }
+
   private opToFirestore(op: Operacion): Omit<Operacion, 'idOperacion'> {
     // Excluimos idOperacion (se almacena solo como ID del documento, no como
     // campo) e id (metadata de ConId, presente cuando el caller pasa

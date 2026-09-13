@@ -179,8 +179,15 @@ export class AsignacionService implements OnDestroy {
     }
   }
 
-  /** Actualiza observacion/hojaDeRuta de un item por idOperacion. Log: EDITAR. */
-  async actualizarItem(fecha: string, idOperacion: string, observacion: string, hojaDeRuta: string): Promise<void> {
+  /** Arma (sin comitear) la escritura de actualización de observacion/hojaDeRuta
+   *  de un item por idOperacion + su propio log EDITAR, y los agrega a
+   *  `escrituras`. Extraído de actualizarItem() para que un caller externo (ej.
+   *  OperacionService.editarOperacion) pueda incluir esta escritura en SU PROPIO
+   *  batch atómico — ver TODO en TableroService.actualizarAsignacionDesdeOperacion. */
+  async agregarEscrituraActualizarItem(
+    escrituras: EscrituraBatch[], fecha: string, idOperacion: string,
+    observacion: string, hojaDeRuta: string,
+  ): Promise<void> {
     const actual = await this.getTableroPorFecha(fecha);
     if (!actual) throw new Error(`No existe tablero para la fecha ${fecha}`);
 
@@ -188,12 +195,20 @@ export class AsignacionService implements OnDestroy {
       it.idOperacion === idOperacion ? { ...it, observacion, hojaDeRuta } : it
     );
     const asignacion: Asignacion = { ...actual, items, timestamp: Date.now() };
-    const escrituras: EscrituraBatch[] = [
+    escrituras.push(
       { coleccion: this.COLECCION, id: fecha, data: this.toFirestore(asignacion), modo: 'reemplazar' },
-    ];
+    );
     await this.logRegistro.agregarAlBatch(
       escrituras, 'EDITAR', this.COLECCION, fecha, `Item actualizado (op ${idOperacion}) en tablero ${fecha}`,
     );
+  }
+
+  /** Actualiza observacion/hojaDeRuta de un item por idOperacion. Log: EDITAR.
+   *  Wrapper de agregarEscrituraActualizarItem + commit, para callers que solo
+   *  tocan el tablero (sin una operación atómica más amplia alrededor). */
+  async actualizarItem(fecha: string, idOperacion: string, observacion: string, hojaDeRuta: string): Promise<void> {
+    const escrituras: EscrituraBatch[] = [];
+    await this.agregarEscrituraActualizarItem(escrituras, fecha, idOperacion, observacion, hojaDeRuta);
     try {
       await this.db.commitBatch(escrituras);
     } catch (e: any) {

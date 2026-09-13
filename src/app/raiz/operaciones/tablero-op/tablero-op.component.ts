@@ -5,7 +5,7 @@ import { EstadoOp, Operacion } from 'src/app/interfaces/operacion';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
 import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ModalResumenOpComponent } from '../modal-resumen-op/modal-resumen-op.component';
+import { ModalDetalleOpComponent } from '../modal-detalle-op/modal-detalle-op.component';
 import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
 import Swal from 'sweetalert2';
@@ -661,7 +661,7 @@ onResizeEnd = () => {
     }  
   }
   
-  abrirModalDetalle(idOp:string, accion:string) {
+  abrirModalDetalle(idOp:string, accion: 'vista' | 'editar' | 'cerrar') {
   // emitir evento o abrir modal
     this.opSeleccionada = this.seleccionarOp(idOp);
     this.modalDetalle(accion);
@@ -685,24 +685,19 @@ onResizeEnd = () => {
             }); 
   }
 
-  modalDetalle(modo: string){
+  modalDetalle(modo: 'vista' | 'editar' | 'cerrar'){
     {
-      const modalRef = this.modalService.open(ModalResumenOpComponent, {
+      const modalRef = this.modalService.open(ModalDetalleOpComponent, {
         windowClass: 'myCustomModalClass',
         centered: true,
-        size: 'lg', 
-        //backdrop:"static" 
-      });      
+        size: 'lg',
+      });
 
-     let info = {
-        modo: modo,
-        item: this.opSeleccionada,
-      } 
-
-      modalRef.componentInstance.fromParent = info;
+      modalRef.componentInstance.op = this.opSeleccionada;
+      modalRef.componentInstance.modo = modo;
       modalRef.result.then(
         (result) => {
-         
+
         },
         (reason) => {}
       );

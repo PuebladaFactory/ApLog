@@ -413,6 +413,19 @@ export class ValoresTarifaService {
     };
   }
 
+  /** Reconstruye el CandidatoTarifa (con sus secciones/categorías) a partir de una
+   *  referencia ya congelada (tarifaAplicadaCliente/Chofer de una operación). Usado
+   *  por modal-detalle-op para ofrecer el picker de Sección/Categoría en edición de
+   *  Personalizada sin volver a resolver jerarquía — la tarifa del alta se mantiene
+   *  fija, solo cambia qué sección/categoría de ESA tarifa se usa. */
+  candidatoDesdeTarifaAplicada(ref: RefTarifaAplicada): CandidatoTarifa | null {
+    const tarifa = ref.nivel === 'especial'
+      ? this.tarifario.getTarifaEspecialPorId(ref.idTarifa)
+      : this.tarifario.getTarifaPorId(ref.idTarifa);
+    if (!tarifa) return null;
+    return this.aCandidato(tarifa);
+  }
+
   // ── Cálculo de valores (privado) ────────────────────────────────
 
   private armarValoresNuevos(
@@ -430,7 +443,13 @@ export class ValoresTarifaService {
     // Multiplicador 0 zanja todo el lado a 0 (acompañante, km adicional y
     // extra incluidos) — decisión de negocio confirmada, unificada acá para
     // que alta y cierre compartan el mismo criterio (Bloque 7 Paso 2).
-    const ladoCliente = op.multiplicadorCliente === 0
+    // (op.multiplicadorX ?? 0) — un multiplicador null/undefined (input vacío
+    // en el form, momentáneo o por un estado inconsistente) se trata igual
+    // que 0, nunca como si no aplicara: la rama "else" de abajo multiplica
+    // tarifaBase por el multiplicador crudo, y tarifaBase * null da 0 en JS
+    // sin afectar kmAdicional/acompValor/adExtraValor — quedaba una op con
+    // la base en cero y los adicionales sueltos (bug real, reportado).
+    const ladoCliente = (op.multiplicadorCliente ?? 0) === 0
       ? { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aCobrar: 0, adExtraValor: 0 }
       : {
           acompValor: cliente.acompValor,
@@ -440,7 +459,7 @@ export class ValoresTarifaService {
           adExtraValor: op.valores.cliente.adExtraValor ?? 0,
         };
 
-    const ladoChofer = op.multiplicadorChofer === 0
+    const ladoChofer = (op.multiplicadorChofer ?? 0) === 0
       ? { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aPagar: 0, adExtraValor: 0 }
       : {
           acompValor: chofer.acompValor,
@@ -541,8 +560,9 @@ export class ValoresTarifaService {
     const acompValorCliente = op.acompaniante ? acompCliente * (op.acompanianteCant ?? 1) : 0;
     const acompValorChofer = op.acompaniante ? acompChofer * (op.acompanianteCant ?? 1) : 0;
 
-    // Multiplicador 0 zanja todo el lado a 0 — mismo criterio que armarValoresNuevos.
-    const ladoCliente = op.multiplicadorCliente === 0
+    // Multiplicador 0 zanja todo el lado a 0 — mismo criterio que armarValoresNuevos
+    // (incluido el ?? 0 para null/undefined, ver comentario ahí).
+    const ladoCliente = (op.multiplicadorCliente ?? 0) === 0
       ? { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aCobrar: 0, adExtraValor: 0 }
       : {
           acompValor: acompValorCliente,
@@ -552,7 +572,7 @@ export class ValoresTarifaService {
           adExtraValor: op.valores.cliente.adExtraValor ?? 0,
         };
 
-    const ladoChofer = op.multiplicadorChofer === 0
+    const ladoChofer = (op.multiplicadorChofer ?? 0) === 0
       ? { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aPagar: 0, adExtraValor: 0 }
       : {
           acompValor: acompValorChofer,

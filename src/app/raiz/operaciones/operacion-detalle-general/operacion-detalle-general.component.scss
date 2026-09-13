@@ -1,0 +1,14 @@
+:host {
+  font-size: 1.3rem;
+}
+
+.form-control,
+.form-control-sm {
+  font-size: 1em;
+}
+
+// A lo sumo 2 dígitos (casi siempre 1) — no tiene sentido que ocupe el ancho
+// completo de la columna como el resto de los inputs.
+.input-cantidad-acompaniante {
+  max-width: 4.5rem;
+}
