@@ -1,12 +1,22 @@
 import { TarifaTipo } from "./tarifa-gral-cliente";
 import { RefTarifaAplicada } from "./ref-tarifa-aplicada";
 
+/** Un archivo adjunto a una Operación (remito, comprobante, foto de entrega, etc.).
+ *  Sin categorías ni historial de versiones — a diferencia de Documentacion (Legajos),
+ *  acá no hay ciclo de vencimiento/reemplazo: se carga una vez y queda. */
+export interface DocumentoOperacion {
+  nombre: string;
+  url: string;
+  fechaCarga: string; // ISO 8601, momento de la subida
+  usuario: string;    // email de quien lo cargó
+}
+
 export interface Operacion {
   idOperacion: string;              // document ID de Firestore. NO se persiste; se reconstruye al leer.
   numeroOperacion: number;          // correlativo visible para el usuario (generado por servicio contador)
   fecha: string;
   km: number;
-  documentacion: string | null;
+  documentacion: DocumentoOperacion[];
   hojaRuta: string;
   observaciones: string;
 

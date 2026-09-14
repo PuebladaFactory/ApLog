@@ -18,6 +18,14 @@ export class OperacionDetalleGeneralComponent implements OnChanges, AfterViewIni
   @Input() puedeEditarAdExtraConcepto = false;
   @Input() autofocarKm = false;                  // true en modo 'cerrar' (lo decide el shell)
 
+  // Estado transitorio del picker de archivos — el dueño real de estas listas es
+  // ModalDetalleOpComponent (arma la op final al guardar); acá solo se editan y
+  // se reflejan hacia arriba con banana-in-a-box.
+  @Input() archivosNuevos: File[] = [];
+  @Output() archivosNuevosChange = new EventEmitter<File[]>();
+  @Input() archivosAEliminar: string[] = [];
+  @Output() archivosAEliminarChange = new EventEmitter<string[]>();
+
   @Output() kmEnter = new EventEmitter<void>();
 
   @ViewChild('kmInput') kmInputRef?: ElementRef<HTMLInputElement>;
@@ -63,7 +71,6 @@ export class OperacionDetalleGeneralComponent implements OnChanges, AfterViewIni
     setEnabled('hojaRuta', this.puedeEditarDetalleCompleto);
     setEnabled('observaciones', this.puedeEditarDetalleCompleto);
     setEnabled('km', this.puedeEditarKmYMultiplicadores);
-    setEnabled('documentacion', this.puedeEditarDocumentacion);
 
     // adExtraConcepto no es parte de this.form (control raíz del shell, ver
     // @Input arriba) — se gatea aparte, directo sobre el FormControl.
@@ -94,5 +101,29 @@ export class OperacionDetalleGeneralComponent implements OnChanges, AfterViewIni
     if (cant === 0) this.form.get('acompaniante')?.setValue(false);
     if (cant > 0) this.form.get('acompaniante')?.setValue(true);
     this.aplicarGating();
+  }
+
+  onArchivosSeleccionados(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    this.archivosNuevos = [...this.archivosNuevos, ...Array.from(input.files)];
+    this.archivosNuevosChange.emit(this.archivosNuevos);
+    input.value = ''; // permite volver a seleccionar el mismo archivo si se lo saca antes de guardar
+  }
+
+  quitarArchivoNuevo(index: number): void {
+    this.archivosNuevos = this.archivosNuevos.filter((_, i) => i !== index);
+    this.archivosNuevosChange.emit(this.archivosNuevos);
+  }
+
+  marcarParaEliminar(url: string): void {
+    if (this.archivosAEliminar.includes(url)) return;
+    this.archivosAEliminar = [...this.archivosAEliminar, url];
+    this.archivosAEliminarChange.emit(this.archivosAEliminar);
+  }
+
+  deshacerEliminar(url: string): void {
+    this.archivosAEliminar = this.archivosAEliminar.filter(u => u !== url);
+    this.archivosAEliminarChange.emit(this.archivosAEliminar);
   }
 }

@@ -4,6 +4,7 @@ import { ProveedorMigrationService } from 'src/app/servicios/migracion/proveedor
 import { ClienteMigrationService } from 'src/app/servicios/migracion/cliente-migration.service';
 import { LegajoMigrationService } from 'src/app/servicios/migracion/legajo-migracion.service';
 import { TarifaMigrationService, ItemPreviewEventual, ItemHuerfanoEventual, ItemHistorialGeneral } from 'src/app/servicios/migracion/tarifa-migration.service';
+import { OperacionMigrationService } from 'src/app/servicios/migracion/operacion-migration.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -54,6 +55,8 @@ export class MigracionComponent {
 
   estadoVolcadoGeneral: string = '';
   private mapaCategoriasLegajos: Map<string, string> | null = null;
+
+  estadoDocumentacionOperaciones: string = '';
   documentosSinMatchCategoria: { idLegajo: string; idChofer: string; tituloOriginal: string }[] = [];
   documentosFechaRequiereRevision: { idLegajo: string; idChofer: string; titulo: string; fechaVtoOriginal: any }[] = [];
 
@@ -63,7 +66,22 @@ export class MigracionComponent {
     private clienteMigration: ClienteMigrationService,
     private legajoMigration: LegajoMigrationService,
     private tarifaMigration: TarifaMigrationService,
+    private operacionMigration: OperacionMigrationService,
   ) {}
+
+  async normalizarDocumentacionOperaciones(): Promise<void> {
+    this.ejecutando = true;
+    this.estadoDocumentacionOperaciones = 'Normalizando campo documentacion en operaciones...';
+    try {
+      await this.operacionMigration.normalizarDocumentacion();
+      this.estadoDocumentacionOperaciones = 'Normalización completada. Revisá la consola para el detalle.';
+    } catch (e: any) {
+      this.estadoDocumentacionOperaciones = `Error: ${e.message}`;
+      console.error('Error en normalización de documentacion de operaciones:', e);
+    } finally {
+      this.ejecutando = false;
+    }
+  }
 
   async migrarProveedores(): Promise<void> {
     this.ejecutando = true;

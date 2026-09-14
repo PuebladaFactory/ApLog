@@ -17,6 +17,8 @@
         [puedeEditarDocumentacion]="puedeEditarDocumentacion"
         [puedeEditarAdExtraConcepto]="puedeEditarAdExtraConcepto"
         [autofocarKm]="modo === 'cerrar'"
+        [(archivosNuevos)]="archivosNuevos"
+        [(archivosAEliminar)]="archivosAEliminar"
         (kmEnter)="onKmEnter()"
     ></app-operacion-detalle-general>
 
@@ -63,3 +65,8 @@
         </button>
     }
 </div>
+
+@if (isLoading) {
+    <app-spinner></app-spinner>
+}
+

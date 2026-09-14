@@ -165,7 +165,17 @@ export class LogRegistroService {
       const a = anterior[campo];
       const n = nuevo[campo];
       if (JSON.stringify(a) !== JSON.stringify(n)) {
-        cambios.push({ campo, anterior: a, nuevo: n });
+        // Firestore no acepta 'undefined' como valor de campo. Un campo puede
+        // faltar en 'anterior' (doc viejo, de antes de que ese campo existiera
+        // en el schema) o en 'nuevo' sin que sea un error real — es la evolución
+        // normal de Operacion (y del resto de las entidades) a través de los
+        // distintos frentes. Se normaliza a null para que el log sea siempre
+        // escribible.
+        cambios.push({
+          campo,
+          anterior: a === undefined ? null : a,
+          nuevo: n === undefined ? null : n,
+        });
       }
     }
     return cambios;

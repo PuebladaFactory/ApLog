@@ -24,6 +24,16 @@
 
   <div style="margin-bottom: 1rem;">
     <button
+      (click)="normalizarDocumentacionOperaciones()"
+      [disabled]="ejecutando"
+      class="btn btn-warning me-2">
+      Normalizar Documentación de Operaciones
+    </button>
+    <p *ngIf="estadoDocumentacionOperaciones" style="margin-top: 0.5rem;">{{ estadoDocumentacionOperaciones }}</p>
+  </div>
+
+  <div style="margin-bottom: 1rem;">
+    <button
       (click)="migrarProveedores()"
       [disabled]="ejecutando"
       class="btn btn-warning me-2">

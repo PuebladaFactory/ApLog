@@ -55,11 +55,35 @@
 
     <div class="row g-3 mb-3">
         <div class="col-md-6">
-            <!-- Control simple por ahora — reemplazar por la UI real de carga de
-                 archivos (Firebase Storage vía StorageArchivosService) cuando se
-                 encare esa parte del frente. No requiere volver a tocar este layout. -->
             <label class="form-label small mb-0">Documentación</label>
-            <input type="text" class="form-control form-control-sm" formControlName="documentacion" />
+            <ul class="list-unstyled small mb-1">
+                @for (documento of op.documentacion; track documento.url) {
+                    <li class="d-flex justify-content-between align-items-center">
+                        @if (archivosAEliminar.includes(documento.url)) {
+                            <span class="text-decoration-line-through text-muted">{{ documento.nombre }}</span>
+                            @if (puedeEditarDocumentacion) {
+                                <button type="button" class="btn btn-link btn-sm p-0" (click)="deshacerEliminar(documento.url)">Deshacer</button>
+                            }
+                        } @else {
+                            <a [href]="documento.url" target="_blank" rel="noopener">{{ documento.nombre }}</a>
+                            @if (puedeEditarDocumentacion) {
+                                <button type="button" class="btn-close" style="font-size: 0.65rem;" (click)="marcarParaEliminar(documento.url)" aria-label="Quitar"></button>
+                            }
+                        }
+                    </li>
+                }
+                @for (archivo of archivosNuevos; track $index) {
+                    <li class="d-flex justify-content-between align-items-center">
+                        <span class="text-success">{{ archivo.name }} (nuevo)</span>
+                        @if (puedeEditarDocumentacion) {
+                            <button type="button" class="btn-close" style="font-size: 0.65rem;" (click)="quitarArchivoNuevo($index)" aria-label="Quitar"></button>
+                        }
+                    </li>
+                }
+            </ul>
+            @if (puedeEditarDocumentacion) {
+                <input type="file" class="form-control form-control-sm" multiple (change)="onArchivosSeleccionados($event)" />
+            }
         </div>
         <div class="col-md-6">
             <!-- Control raíz del form del shell (form.get('adExtraConcepto')), fuera de

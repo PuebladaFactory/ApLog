@@ -41,7 +41,7 @@ export class OperacionFactoryService {
       numeroOperacion:  0,   // se asignará al guardar (NumeradorService)
       fecha,
       km:             0,
-      documentacion:  null,
+      documentacion:  [],
       hojaRuta:       hojaDeRuta,
       observaciones:  observacion,
 

@@ -776,7 +776,12 @@ onResizeEnd = () => {
   // --- VISIBILIDAD DE ACCIONES POR ESTADO ---
 
   puedeEditar(op: any): boolean {
-    return op.estado === 'Abierta';
+    // 'Cerrada' habilitado a partir del frente de Documentación (adjuntos reales,
+    // Cowork) — dentro del modal todo lo demás sigue bloqueado por ciclo==='abierta'
+    // (puedeEditarDetalleCompleto/puedeEditarKmYMultiplicadores/puedeEditarAdExtraConcepto/
+    // adExtraValor en operacion-valor-lado); lo único editable en una op cerrada es
+    // la documentación adjunta. Liquidada/Proforma quedan afuera a propósito.
+    return op.estado === 'Abierta' || op.estado === 'Cerrada';
   }
 
 
