@@ -196,34 +196,12 @@ export class ClientesListadoComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  clientesActivos(){
-    this.$clientes.map((c:ConId<Cliente>) => {
-        c.activo = true;
-        this.clientesActivo.push(c);
-      })
-    this.clientesActivo = this.clientesActivo.sort((a, b) =>
-      a.razonSocial.localeCompare(b.razonSocial)
-    );
-    console.log("this.clientesActivo", this.clientesActivo);   
-    
-  }
-
   editarClientes(){
     this.clientesActivo = structuredClone(this.$clientes);
     this.clientesActivo = this.anonimizarClientes(this.clientesActivo);
-   
-    console.log("this.clientesActivo", this.clientesActivo);   
-    
-  }
 
-  async actualizarActivos(){
-    this.isLoading = true;    
-    const resp = await this.dbFirestore.actualizarMultiple(this.clientesActivo, "clientes");
-    if(resp){
-      this.isLoading = false;
-      this.mensajesError(resp.mensaje)
-    }
-    
+    console.log("this.clientesActivo", this.clientesActivo);
+
   }
 
   mensajesError(msj:string){

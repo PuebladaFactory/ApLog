@@ -27,7 +27,6 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
   componente: string = "choferes";
   $choferes!: ConIdType<Chofer>[];
   $proveedores!: ConIdType<Proveedor>[];
-  choferesActualizados: any[] = [];
   private destroy$ = new Subject<void>();
 
   choferesFiltrados: ConIdType<Chofer>[] = [];
@@ -243,24 +242,6 @@ export class ChoferesListadoComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  editarChoferes() {
-    this.choferesActualizados = this.agregarCampoActivo(this.$choferes);
-    console.log("choferesActualizados", this.choferesActualizados);
-  }
-
-  agregarCampoActivo(choferes: any): ConIdType<Chofer>[] {
-    return choferes.map((chofer: any) => {
-      return {
-        ...chofer,
-        activo: true,
-      };
-    });
-  }
-
-  actualizarChoferes() {
-    this.dbFirebase.actualizarMultiple(this.choferesActualizados, "choferes");
   }
 
   descargarChoferes() {

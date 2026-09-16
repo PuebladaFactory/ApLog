@@ -64,14 +64,19 @@ export class TarifasEspecialComponent implements OnInit, OnDestroy {
     const usuario = this.usuarioSesion.getUsuarioActual();
     this.puedeEditar = !!usuario && ['dev', 'admin'].includes(usuario.role);
 
-    this.clienteService.getActivos()
+    // No se filtra por activo (getActivos()) en ninguno de los 3: ese campo es
+    // una preferencia de visibilidad del tablero de asignaciones, no un
+    // criterio de si la entidad puede tener tarifa especial. Los observables
+    // sin filtrar ya excluyen las dadas de baja (removed de Firestore) — ver
+    // auditoría del 16/09/2026.
+    this.clienteService.clientes$
       .pipe(takeUntil(this.destroy$))
       .subscribe(clientes => {
         this.clientesTodos = clientes;
         this.clientesHabilitados = clientes.filter(c => c.tarifasHabilitadas.some(t => t.nivel === 'especial'));
       });
 
-    this.choferService.getActivos()
+    this.choferService.choferes$
       .pipe(takeUntil(this.destroy$))
       .subscribe(choferes => {
         // Choferes de proveedor tienen tarifasHabilitadas === null (heredan
@@ -79,7 +84,7 @@ export class TarifasEspecialComponent implements OnInit, OnDestroy {
         this.choferesHabilitados = choferes.filter(c => c.tarifasHabilitadas !== null && c.tarifasHabilitadas.some(t => t.nivel === 'especial'));
       });
 
-    this.proveedorService.getActivos()
+    this.proveedorService.proveedores$
       .pipe(takeUntil(this.destroy$))
       .subscribe(proveedores => {
         this.proveedoresHabilitados = proveedores.filter(p => p.tarifasHabilitadas.some(t => t.nivel === 'especial'));

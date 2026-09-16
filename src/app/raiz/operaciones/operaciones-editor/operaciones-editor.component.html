@@ -1,291 +1,763 @@
 <div class="modal-header">
-  <h3 class="modal-title">Completar las operaciones del dia: {{fecha}}</h3>
-  <button type="button" class="btn-close" aria-label="Cerrar" (click)="cancelar()"></button>
+    <h3 class="modal-title">Completar las operaciones del dia: {{ fecha }}</h3>
+    <button
+        type="button"
+        class="btn-close"
+        aria-label="Cerrar"
+        (click)="cancelar()"
+    ></button>
 </div>
 
 <div class="modal-body">
+    @if (grupos.length === 0) {
+        <p class="text-muted">No hay operaciones para completar.</p>
+    }
 
-  @if (grupos.length === 0) {
-    <p class="text-muted">No hay operaciones para completar.</p>
-  }
+    @for (grupo of grupos; track grupo.idCliente) {
+        <div class="grupo-container mb-4 shadow-sm rounded border p-2">
+            <h5 class="mt-2">
+                {{ grupo.razonSocial }} — Tarifa Cliente:
+                <span
+                    class="badge align-middle mb-1"
+                    [ngClass]="{
+                        'bg-primary': grupo.tipoCliente === 'general',
+                        'bg-info': grupo.tipoCliente === 'especial',
+                        'bg-success': grupo.tipoCliente === 'personalizada',
+                        'bg-warning': grupo.tipoCliente === 'eventual',
+                    }"
+                >
+                    {{ grupo.tipoCliente }}
+                </span>
+            </h5>
 
-  @for (grupo of grupos; track grupo.idCliente) {
-    <div class="grupo-container mb-4 shadow-sm rounded border p-2">
-      <h5 class="mt-2">
-        {{ grupo.razonSocial }} — Tarifa Cliente:
-        <span class="badge align-middle mb-1"
-          [ngClass]="{
-            'bg-primary': grupo.tipoCliente === 'general',
-            'bg-info':    grupo.tipoCliente === 'especial',
-            'bg-success': grupo.tipoCliente === 'personalizada',
-            'bg-warning': grupo.tipoCliente === 'eventual'
-          }">
-          {{ grupo.tipoCliente }}
-        </span>
-      </h5>
+            <table class="table table-bordered table-sm mt-2">
+                <thead class="table-light text-center align-middle">
+                    <tr>
+                        <th class="col-chofer">Chofer</th>
+                        <th class="col-vehiculo">Vehículo</th>
+                        <th class="col-acomp">Acomp</th>
+                        <th class="col-acomp">Cant</th>
+                        <th class="col-tarifa-cliente">Tarifa Cliente</th>
+                        <th class="col-tarifa-chofer">Tarifa Chofer/Prov</th>
+                        <th class="col-hojaRuta">Hoja Ruta</th>
+                        <th class="col-obs">Obs</th>
+                        <th class="col-eventual-toogle">Eventual</th>
+                        <th class="col-anular">Quitar</th>
+                    </tr>
+                </thead>
 
-      <table class="table table-bordered table-sm mt-2">
-        <thead class="table-light text-center align-middle">
-          <tr>
-            <th class="col-chofer">Chofer</th>
-            <th class="col-vehiculo">Vehículo</th>
-            <th class="col-acomp">Acomp</th>
-            <th class="col-acomp">Cant</th>
-            <th class="col-tarifa-cliente">Tarifa Cliente</th>
-            <th class="col-tarifa-chofer">Tarifa Chofer/Prov</th>
-            <th class="col-hojaRuta">Hoja Ruta</th>
-            <th class="col-obs">Obs</th>
-            <th class="col-eventual-toogle">Eventual</th>
-            <th class="col-anular">Quitar</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          @for (c of grupo.creadas; track c.item.idItem) {
-            <tr [class.fila-error]="tieneErrores(c.operacion)" class="op-row">
-
-              <!-- CHOFER: pendiente (proveedor) → selector; resuelto → texto -->
-              <td>
-                @if (choferPendiente(c.operacion)) {
-                  <select class="form-select form-select-sm"
-                    [class.is-invalid]="c.operacion.chofer.id === ''"
-                    (change)="onChoferSeleccionado(c, $any($event.target).value)">
-                    <option value="">Seleccione chofer</option>
-                    @for (ch of choferesDisponibles(c.operacion); track ch.id) {
-                      <option [value]="ch.id">
-                        {{ ch.datosPersonales.apellido }}, {{ ch.datosPersonales.nombre }}
-                      </option>
-                    }
-                  </select>
-                } @else {
-                  {{ c.operacion.chofer.apellido }}, {{ c.operacion.chofer.nombre }}
-                }
-              </td>
-
-              <!-- VEHÍCULO: pendiente → selector; resuelto → dominio -->
-              <td>
-                @if (vehiculoPendiente(c.operacion)) {
-                  <select class="form-select form-select-sm"
-                    [class.is-invalid]="c.operacion.vehiculo.id === ''"
-                    (change)="onVehiculoSeleccionado(c, $any($event.target).value)">
-                    <option value="">Seleccione vehículo</option>
-                    @for (v of vehiculosDisponibles(c.operacion); track v.id) {
-                      <option [value]="v.id">{{ v.categoria.nombre }} — {{ v.dominio }}</option>
-                    }
-                  </select>
-                } @else {
-                  <input class="form-control form-control-sm" [value]="c.operacion.vehiculo.dominio" disabled />
-                }
-              </td>
-
-              <!-- ACOMPAÑANTE -->
-              <td>
-                <select class="form-select form-select-sm"
-                  [(ngModel)]="c.operacion.acompaniante"
-                  (change)="configurarAcompaniante(c.operacion)">
-                  <option [ngValue]="true">Sí</option>
-                  <option [ngValue]="false">No</option>
-                </select>
-              </td>
-              <td>
-                <input type="number" class="form-control form-control-sm"
-                  [(ngModel)]="c.operacion.acompanianteCant"
-                  (change)="configurarCantAcompaniante(c.operacion)"
-                  [disabled]="!c.operacion.acompaniante" />
-              </td>
-
-              <!-- TARIFA CLIENTE (sistema nuevo) -->
-              <td>
-                @if (esEventual(c.operacion)) {
-                  <span class="text-muted">Eventual</span>
-                } @else if (choferPendiente(c.operacion) || vehiculoPendiente(c.operacion)) {
-                  <span class="text-muted">—</span>
-                } @else {
-                  <select class="form-select form-select-sm"
-                    [class.is-invalid]="!c.operacion.tarifaAplicadaCliente"
-                    [title]="motivoSinTarifaCliente(c)"
-                    [disabled]="candidatosCliente(c).length <= 1"
-                    [ngModel]="candidatoElegidoCliente(c)?.idTarifa ?? ''"
-                    (ngModelChange)="onTarifaClienteChange(c, $event)">
-                    <option value="" disabled>Seleccione</option>
-                    @for (cand of candidatosCliente(c); track cand.idTarifa) {
-                      <option [value]="cand.idTarifa">{{ cand.nombreTarifa }} ({{ cand.nivel }}{{ cand.modoTarifacion === 'km' ? ', $/km' : '' }})</option>
-                    }
-                  </select>
-                }
-              </td>
-
-              <!-- TARIFA CHOFER/PROVEEDOR (sistema nuevo) -->
-              <td>
-                @if (esEventual(c.operacion)) {
-                  <span class="text-muted">Eventual</span>
-                } @else if (choferPendiente(c.operacion) || vehiculoPendiente(c.operacion)) {
-                  <span class="text-muted">—</span>
-                } @else if (clienteEsPersonalizada(c)) {
-                  <span class="text-muted" title="La tarifa Personalizada del cliente determina también el valor a pagar — no se elige por separado">
-                    = Personalizada cliente
-                  </span>
-                } @else {
-                  <select class="form-select form-select-sm"
-                    [class.is-invalid]="!c.operacion.tarifaAplicadaChofer"
-                    [title]="motivoSinTarifaChofer(c)"
-                    [disabled]="candidatosChofer(c).length <= 1"
-                    [ngModel]="candidatoElegidoChofer(c)?.idTarifa ?? ''"
-                    (ngModelChange)="onTarifaChoferChange(c, $event)">
-                    <option value="" disabled>Seleccione</option>
-                    @for (cand of candidatosChofer(c); track cand.idTarifa) {
-                      <option [value]="cand.idTarifa">{{ cand.nombreTarifa }} ({{ cand.nivel }}{{ cand.modoTarifacion === 'km' ? ', $/km' : '' }})</option>
-                    }
-                  </select>
-                }
-              </td>
-
-              <!-- HOJA RUTA -->
-              <td>
-                <input class="form-control form-control-sm"
-                  [(ngModel)]="c.operacion.hojaRuta" [title]="c.operacion.hojaRuta" />
-              </td>
-
-              <!-- OBS -->
-              <td class="align-middle">
-                <textarea class="form-control form-control-sm" rows="1"
-                  [(ngModel)]="c.operacion.observaciones" [title]="c.operacion.observaciones"></textarea>
-              </td>
-
-              <!-- EVENTUAL TOGGLE -->
-              <td class="text-center align-middle">
-                <select class="form-select form-select-sm"
-                  [ngModel]="esEventual(c.operacion)"
-                  (ngModelChange)="onEventualToggle(c, $event)">
-                  <option [ngValue]="true">Sí</option>
-                  <option [ngValue]="false">No</option>
-                </select>
-              </td>
-
-              <!-- QUITAR -->
-              <td class="text-center align-middle">
-                <app-btn-eliminar
-                  name="Eliminar"
-                  class="btn-delete"
-                  title="Quitar operación" (click)="eliminarOperacion(c)"
-                ></app-btn-eliminar>
-              </td>
-            </tr>
-
-            <!-- FILA EXPANDIBLE: Eventual (concepto/valor) y/o Personalizada (sección/categoría) -->
-            @if (mostrarDetalle(c)) {
-              <tr class="fila-detalle">
-                <td colspan="10">
-                  <div class="d-flex flex-wrap gap-4 py-1">
-
-                    @if (esEventual(c.operacion)) {
-                      <div class="bg-eventual-cell p-2 rounded">
-                        <div class="fw-semibold small mb-1">Tarifa Eventual</div>
-                        <div class="d-flex gap-2">
-                          <div>
-                            <label class="form-label small mb-0">Concepto Ch</label>
-                            <input class="form-control form-control-sm" [(ngModel)]="c.operacion.datosTarifaEventual!.chofer.concepto" />
-                          </div>
-                          <div>
-                            <label class="form-label small mb-0">Valor Ch</label>
-                            <input type="text" inputmode="numeric" class="form-control form-control-sm"
-                              [(ngModel)]="c.operacion.datosTarifaEventual!.chofer.valor" appMonto [minimo]="0" />
-                          </div>
-                          <div>
-                            <label class="form-label small mb-0">Concepto Cl</label>
-                            <input class="form-control form-control-sm" [(ngModel)]="c.operacion.datosTarifaEventual!.cliente.concepto" />
-                          </div>
-                          <div>
-                            <label class="form-label small mb-0">Valor Cl</label>
-                            <input type="text" inputmode="numeric" class="form-control form-control-sm"
-                              [(ngModel)]="c.operacion.datosTarifaEventual!.cliente.valor" appMonto [minimo]="0" />
-                          </div>
-                        </div>
-                      </div>
-                    }
-
-                    @if (requiereSeccionClienteManual(c)) {
-                      <div class="bg-personalizada-cell p-2 rounded">
-                        <div class="fw-semibold small mb-1">
-                          Tarifa Personalizada — Cliente
-                          @if (candidatoElegidoCliente(c)?.modoTarifacion === 'km') { (por km) }
-                        </div>
-                        <div class="d-flex gap-2">
-                          @if (seccionesDisponiblesCliente(c).length > 1) {
-                            <div>
-                              <label class="form-label small mb-0">Sección</label>
-                              <select class="form-select form-select-sm"
-                                [ngModel]="seccionEnCursoCliente(c)"
-                                (ngModelChange)="onSeccionClienteChange(c, $event)">
-                                <option [ngValue]="-1" disabled>Seleccione</option>
-                                @for (sec of seccionesDisponiblesCliente(c); track sec.orden) {
-                                  <option [ngValue]="sec.orden">Sección {{ sec.orden }}@if (sec.nombre) { - {{ sec.nombre }} }</option>
+                <tbody>
+                    @for (c of grupo.creadas; track c.item.idItem) {
+                        <tr
+                            [class.fila-error]="tieneErrores(c.operacion)"
+                            class="op-row"
+                        >
+                            <!-- CHOFER: pendiente (proveedor) → selector; resuelto → texto + Cambiar si había opciones -->
+                            <td>
+                                @if (choferPendiente(c.operacion)) {
+                                    <select
+                                        class="form-select form-select-sm"
+                                        [class.is-invalid]="
+                                            c.operacion.chofer.id === ''
+                                        "
+                                        (change)="
+                                            onChoferSeleccionado(
+                                                c,
+                                                $any($event.target).value
+                                            )
+                                        "
+                                    >
+                                        <option value="">
+                                            Seleccione chofer
+                                        </option>
+                                        @for (
+                                            ch of choferesDisponibles(
+                                                c.operacion
+                                            );
+                                            track ch.id
+                                        ) {
+                                            <option [value]="ch.id">
+                                                {{
+                                                    ch.datosPersonales.apellido
+                                                }},
+                                                {{ ch.datosPersonales.nombre }}
+                                            </option>
+                                        }
+                                    </select>
+                                } @else {
+                                    <div
+                                        class="d-flex align-items-center justify-content-between"
+                                    >
+                                        <span
+                                            >{{ c.operacion.chofer.apellido }},
+                                            {{
+                                                c.operacion.chofer.nombre
+                                            }}</span
+                                        >
+                                        @if (
+                                            choferesDisponibles(c.operacion)
+                                                .length > 1
+                                        ) {
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                fill="currentColor"
+                                                class="bi bi-arrow-repeat"
+                                                viewBox="0 0 16 16"
+                                                role="button"
+                                                title="Cambiar chofer"
+                                                (click)="cambiarChofer(c)"
+                                            >
+                                                <path
+                                                    d="M11.534 7H12.9a5.002 5.002 0 0 0-8.757-2.182.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7h1.617a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h1.617a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H.466a.25.25 0 0 1-.192-.41l1.966-2.36a.25.25 0 0 1 .384 0l1.966 2.36a.25.25 0 0 1-.192.41z"
+                                                />
+                                            </svg>
+                                        }
+                                    </div>
                                 }
-                              </select>
-                            </div>
-                          }
-                          <div>
-                            <label class="form-label small mb-0">Categoría</label>
-                            <select class="form-select form-select-sm"
-                              [ngModel]="categoriaEnCursoCliente(c)"
-                              (ngModelChange)="onCategoriaClienteChange(c, $event)">
-                              <option [ngValue]="-1" disabled>Seleccione</option>
-                              @for (cat of categoriasDisponiblesCliente(c); track cat.orden) {
-                                <option [ngValue]="cat.orden">{{ cat.nombre }}</option>
-                              }
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    }
+                            </td>
 
-                    @if (requiereSeccionChoferManual(c)) {
-                      <div class="bg-personalizada-cell p-2 rounded">
-                        <div class="fw-semibold small mb-1">
-                          Tarifa Personalizada — Chofer/Prov
-                          @if (candidatoElegidoChofer(c)?.modoTarifacion === 'km') { (por km) }
-                        </div>
-                        <div class="d-flex gap-2">
-                          @if (seccionesDisponiblesChofer(c).length > 1) {
-                            <div>
-                              <label class="form-label small mb-0">Sección</label>
-                              <select class="form-select form-select-sm"
-                                [ngModel]="seccionEnCursoChofer(c)"
-                                (ngModelChange)="onSeccionChoferChange(c, $event)">
-                                <option [ngValue]="-1" disabled>Seleccione</option>
-                                @for (sec of seccionesDisponiblesChofer(c); track sec.orden) {
-                                  <option [ngValue]="sec.orden">Sección {{ sec.orden }}@if (sec.nombre) { - {{ sec.nombre }} }</option>
+                            <!-- VEHÍCULO: pendiente → selector; resuelto → dominio + Cambiar si había opciones -->
+                            <td>
+                                @if (vehiculoPendiente(c.operacion)) {
+                                    <select
+                                        class="form-select form-select-sm"
+                                        [class.is-invalid]="
+                                            c.operacion.vehiculo.id === ''
+                                        "
+                                        (change)="
+                                            onVehiculoSeleccionado(
+                                                c,
+                                                $any($event.target).value
+                                            )
+                                        "
+                                    >
+                                        <option value="">
+                                            Seleccione vehículo
+                                        </option>
+                                        @for (
+                                            v of vehiculosDisponibles(
+                                                c.operacion
+                                            );
+                                            track v.id
+                                        ) {
+                                            <option [value]="v.id">
+                                                {{ v.categoria.nombre }} —
+                                                {{ v.dominio }}
+                                            </option>
+                                        }
+                                    </select>
+                                } @else {
+                                    <div
+                                        class="d-flex align-items-center gap-1"
+                                    >
+                                        <input
+                                            class="form-control form-control-sm"
+                                            [value]="
+                                                c.operacion.vehiculo.dominio
+                                            "
+                                            disabled
+                                        />
+                                        @if (
+                                            vehiculosDisponibles(c.operacion)
+                                                .length > 1
+                                        ) {
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                fill="currentColor"
+                                                class="bi bi-arrow-repeat"
+                                                viewBox="0 0 16 16"
+                                                role="button"
+                                                title="Cambiar vehículo"
+                                                (click)="cambiarVehiculo(c)"
+                                            >
+                                                <path
+                                                    d="M11.534 7H12.9a5.002 5.002 0 0 0-8.757-2.182.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7h1.617a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h1.617a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H.466a.25.25 0 0 1-.192-.41l1.966-2.36a.25.25 0 0 1 .384 0l1.966 2.36a.25.25 0 0 1-.192.41z"
+                                                />
+                                            </svg>
+                                        }
+                                    </div>
                                 }
-                              </select>
-                            </div>
-                          }
-                          <div>
-                            <label class="form-label small mb-0">Categoría</label>
-                            <select class="form-select form-select-sm"
-                              [ngModel]="categoriaEnCursoChofer(c)"
-                              (ngModelChange)="onCategoriaChoferChange(c, $event)">
-                              <option [ngValue]="-1" disabled>Seleccione</option>
-                              @for (cat of categoriasDisponiblesChofer(c); track cat.orden) {
-                                <option [ngValue]="cat.orden">{{ cat.nombre }}</option>
-                              }
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    }
+                            </td>
 
-                  </div>
-                </td>
-              </tr>
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+                            <!-- ACOMPAÑANTE -->
+                            <td>
+                                <select
+                                    class="form-select form-select-sm"
+                                    [(ngModel)]="c.operacion.acompaniante"
+                                    (change)="
+                                        configurarAcompaniante(c.operacion)
+                                    "
+                                >
+                                    <option [ngValue]="true">Sí</option>
+                                    <option [ngValue]="false">No</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input
+                                    type="number"
+                                    class="form-control form-control-sm"
+                                    [(ngModel)]="c.operacion.acompanianteCant"
+                                    (change)="
+                                        configurarCantAcompaniante(c.operacion)
+                                    "
+                                    [disabled]="!c.operacion.acompaniante"
+                                />
+                            </td>
+
+                            <!-- TARIFA CLIENTE (sistema nuevo) -->
+                            <td>
+                                @if (esEventual(c.operacion)) {
+                                    <span class="text-muted">Eventual</span>
+                                } @else if (
+                                    choferPendiente(c.operacion) ||
+                                    vehiculoPendiente(c.operacion)
+                                ) {
+                                    <span class="text-muted">—</span>
+                                } @else {
+                                    <select
+                                        class="form-select form-select-sm"
+                                        [class.is-invalid]="
+                                            !c.operacion.tarifaAplicadaCliente
+                                        "
+                                        [title]="motivoSinTarifaCliente(c)"
+                                        [disabled]="
+                                            candidatosCliente(c).length <= 1
+                                        "
+                                        [ngModel]="
+                                            candidatoElegidoCliente(c)
+                                                ?.idTarifa ?? ''
+                                        "
+                                        (ngModelChange)="
+                                            onTarifaClienteChange(c, $event)
+                                        "
+                                    >
+                                        <option value="" disabled>
+                                            Seleccione
+                                        </option>
+                                        @for (
+                                            cand of candidatosCliente(c);
+                                            track cand.idTarifa
+                                        ) {
+                                            <option [value]="cand.idTarifa">
+                                                {{ cand.nombreTarifa }} ({{
+                                                    cand.nivel
+                                                }}{{
+                                                    cand.modoTarifacion === "km"
+                                                        ? ", $/km"
+                                                        : ""
+                                                }})
+                                            </option>
+                                        }
+                                    </select>
+                                }
+                            </td>
+
+                            <!-- TARIFA CHOFER/PROVEEDOR (sistema nuevo) -->
+                            <td>
+                                @if (esEventual(c.operacion)) {
+                                    <span class="text-muted">Eventual</span>
+                                } @else if (
+                                    choferPendiente(c.operacion) ||
+                                    vehiculoPendiente(c.operacion)
+                                ) {
+                                    <span class="text-muted">—</span>
+                                } @else if (clienteEsPersonalizada(c)) {
+                                    <span
+                                        class="text-muted"
+                                        title="La tarifa Personalizada del cliente determina también el valor a pagar — no se elige por separado"
+                                    >
+                                        = Personalizada cliente
+                                    </span>
+                                } @else {
+                                    <select
+                                        class="form-select form-select-sm"
+                                        [class.is-invalid]="
+                                            !c.operacion.tarifaAplicadaChofer
+                                        "
+                                        [title]="motivoSinTarifaChofer(c)"
+                                        [disabled]="
+                                            candidatosChofer(c).length <= 1
+                                        "
+                                        [ngModel]="
+                                            candidatoElegidoChofer(c)
+                                                ?.idTarifa ?? ''
+                                        "
+                                        (ngModelChange)="
+                                            onTarifaChoferChange(c, $event)
+                                        "
+                                    >
+                                        <option value="" disabled>
+                                            Seleccione
+                                        </option>
+                                        @for (
+                                            cand of candidatosChofer(c);
+                                            track cand.idTarifa
+                                        ) {
+                                            <option [value]="cand.idTarifa">
+                                                {{ cand.nombreTarifa }} ({{
+                                                    cand.nivel
+                                                }}{{
+                                                    cand.modoTarifacion === "km"
+                                                        ? ", $/km"
+                                                        : ""
+                                                }})
+                                            </option>
+                                        }
+                                    </select>
+                                }
+                            </td>
+
+                            <!-- HOJA RUTA -->
+                            <td>
+                                <input
+                                    class="form-control form-control-sm"
+                                    [(ngModel)]="c.operacion.hojaRuta"
+                                    [title]="c.operacion.hojaRuta"
+                                />
+                            </td>
+
+                            <!-- OBS -->
+                            <td class="align-middle">
+                                <textarea
+                                    class="form-control form-control-sm"
+                                    rows="1"
+                                    [(ngModel)]="c.operacion.observaciones"
+                                    [title]="c.operacion.observaciones"
+                                ></textarea>
+                            </td>
+
+                            <!-- EVENTUAL TOGGLE -->
+                            <td class="text-center align-middle">
+                                <select
+                                    class="form-select form-select-sm"
+                                    [ngModel]="esEventual(c.operacion)"
+                                    (ngModelChange)="
+                                        onEventualToggle(c, $event)
+                                    "
+                                    [disabled]="esEventualForzada(c)"
+                                    [title]="
+                                        esEventualForzada(c)
+                                            ? 'El cliente o el chofer/proveedor tienen la tarifa Eventual como único nivel habilitado — la operación es inmutablemente eventual'
+                                            : ''
+                                    "
+                                >
+                                    <option [ngValue]="true">Sí</option>
+                                    <option [ngValue]="false">No</option>
+                                </select>
+                            </td>
+
+                            <!-- QUITAR -->
+                            <td class="text-center align-middle">
+                                <app-btn-eliminar
+                                    name="Eliminar"
+                                    class="btn-delete"
+                                    title="Quitar operación"
+                                    (click)="eliminarOperacion(c)"
+                                ></app-btn-eliminar>
+                            </td>
+                        </tr>
+
+                        <!-- FILA EXPANDIBLE: Eventual (concepto/valor) y/o Personalizada (sección/categoría) -->
+                        @if (mostrarDetalle(c)) {
+                            <tr class="fila-detalle">
+                                <td colspan="10">
+                                    <div class="d-flex flex-wrap gap-4 py-1">
+                                        @if (esEventual(c.operacion)) {
+                                            <div
+                                                class="bg-eventual-cell p-2 rounded w-100 d-flex justify-content-between"
+                                            >
+                                                <div
+                                                    class="d-flex align-items-center"
+                                                >
+                                                    <div class="fw-semibold">
+                                                        Tarifa Eventual
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="d-flex gap-2">
+                                                        <div
+                                                            class="col-eventual"
+                                                        >
+                                                            <label
+                                                                class="form-label small mb-0"
+                                                                >Concepto
+                                                                Cl</label
+                                                            >
+                                                            <input
+                                                                class="form-control form-control-sm"
+                                                                [(ngModel)]="
+                                                                    c.operacion
+                                                                        .datosTarifaEventual!
+                                                                        .cliente
+                                                                        .concepto
+                                                                "
+                                                            />
+                                                        </div>
+                                                        <div
+                                                            class="col-eventual"
+                                                        >
+                                                            <label
+                                                                class="form-label small mb-0"
+                                                                >Valor Cl</label
+                                                            >
+                                                            <div
+                                                                class="input-group m-0 p-0"
+                                                            >
+                                                                <span
+                                                                    class="input-group-text"
+                                                                    >$</span
+                                                                >
+                                                                <input
+                                                                    type="text"
+                                                                    inputmode="numeric"
+                                                                    class="form-control form-control-sm col-moneda"
+                                                                    [(ngModel)]="
+                                                                        c
+                                                                            .operacion
+                                                                            .datosTarifaEventual!
+                                                                            .cliente
+                                                                            .valor
+                                                                    "
+                                                                    appMonto
+                                                                    [minimo]="0"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="col-eventual"
+                                                        >
+                                                            <label
+                                                                class="form-label small mb-0"
+                                                                >Concepto
+                                                                Ch</label
+                                                            >
+                                                            <input
+                                                                class="form-control form-control-sm"
+                                                                [(ngModel)]="
+                                                                    c.operacion
+                                                                        .datosTarifaEventual!
+                                                                        .chofer
+                                                                        .concepto
+                                                                "
+                                                            />
+                                                        </div>
+                                                        <div
+                                                            class="col-eventual"
+                                                        >
+                                                            <label
+                                                                class="form-label small mb-0"
+                                                                >Valor Ch</label
+                                                            >
+                                                            <div
+                                                                class="input-group m-0 p-0"
+                                                            >
+                                                                <span
+                                                                    class="input-group-text"
+                                                                    >$</span
+                                                                >
+                                                                <input
+                                                                    type="text"
+                                                                    inputmode="numeric"
+                                                                    class="form-control form-control-sm col-moneda"
+                                                                    [(ngModel)]="
+                                                                        c
+                                                                            .operacion
+                                                                            .datosTarifaEventual!
+                                                                            .chofer
+                                                                            .valor
+                                                                    "
+                                                                    appMonto
+                                                                    [minimo]="0"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+
+                                        @if (requiereSeccionClienteManual(c)) {
+                                            <div
+                                                class="bg-personalizada-cell p-2 rounded d-flex justify-content-between w-100"
+                                            >
+                                                <div
+                                                    class="d-flex align-items-center"
+                                                >
+                                                    <div class="fw-semibold">
+                                                        Tarifa Personalizada —
+                                                        Cliente
+                                                        @if (
+                                                            candidatoElegidoCliente(
+                                                                c
+                                                            )
+                                                                ?.modoTarifacion ===
+                                                            "km"
+                                                        ) {
+                                                            (por km)
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="d-flex gap-2">
+                                                        @if (
+                                                            seccionesDisponiblesCliente(
+                                                                c
+                                                            ).length > 1
+                                                        ) {
+                                                            <div
+                                                                class="col-personalizada"
+                                                            >
+                                                                <label
+                                                                    class="form-label small mb-0"
+                                                                    >Sección</label
+                                                                >
+                                                                <select
+                                                                    class="form-select form-select-sm"
+                                                                    [ngModel]="
+                                                                        seccionEnCursoCliente(
+                                                                            c
+                                                                        )
+                                                                    "
+                                                                    (ngModelChange)="
+                                                                        onSeccionClienteChange(
+                                                                            c,
+                                                                            $event
+                                                                        )
+                                                                    "
+                                                                >
+                                                                    <option
+                                                                        [ngValue]="
+                                                                            -1
+                                                                        "
+                                                                        disabled
+                                                                    >
+                                                                        Seleccione
+                                                                    </option>
+                                                                    @for (
+                                                                        sec of seccionesDisponiblesCliente(
+                                                                            c
+                                                                        );
+                                                                        track sec.orden
+                                                                    ) {
+                                                                        <option
+                                                                            [ngValue]="
+                                                                                sec.orden
+                                                                            "
+                                                                        >
+                                                                            Sección
+                                                                            {{
+                                                                                sec.orden
+                                                                            }}
+                                                                            @if (
+                                                                                sec.nombre
+                                                                            ) {
+                                                                                -
+                                                                                {{
+                                                                                    sec.nombre
+                                                                                }}
+                                                                            }
+                                                                        </option>
+                                                                    }
+                                                                </select>
+                                                            </div>
+                                                        }
+                                                        <div
+                                                            class="col-personalizada"
+                                                        >
+                                                            <label
+                                                                class="form-label small mb-0"
+                                                                >Categoría</label
+                                                            >
+                                                            <select
+                                                                class="form-select form-select-sm"
+                                                                [ngModel]="
+                                                                    categoriaEnCursoCliente(
+                                                                        c
+                                                                    )
+                                                                "
+                                                                (ngModelChange)="
+                                                                    onCategoriaClienteChange(
+                                                                        c,
+                                                                        $event
+                                                                    )
+                                                                "
+                                                            >
+                                                                <option
+                                                                    [ngValue]="
+                                                                        -1
+                                                                    "
+                                                                    disabled
+                                                                >
+                                                                    Seleccione
+                                                                </option>
+                                                                @for (
+                                                                    cat of categoriasDisponiblesCliente(
+                                                                        c
+                                                                    );
+                                                                    track cat.orden
+                                                                ) {
+                                                                    <option
+                                                                        [ngValue]="
+                                                                            cat.orden
+                                                                        "
+                                                                    >
+                                                                        {{
+                                                                            cat.nombre
+                                                                        }}
+                                                                    </option>
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+
+                                        @if (requiereSeccionChoferManual(c)) {
+                                            <div
+                                                class="bg-personalizada-cell p-2 rounded"
+                                            >
+                                                <div
+                                                    class="fw-semibold small mb-1"
+                                                >
+                                                    Tarifa Personalizada —
+                                                    Chofer/Prov
+                                                    @if (
+                                                        candidatoElegidoChofer(
+                                                            c
+                                                        )?.modoTarifacion ===
+                                                        "km"
+                                                    ) {
+                                                        (por km)
+                                                    }
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    @if (
+                                                        seccionesDisponiblesChofer(
+                                                            c
+                                                        ).length > 1
+                                                    ) {
+                                                        <div>
+                                                            <label
+                                                                class="form-label small mb-0"
+                                                                >Sección</label
+                                                            >
+                                                            <select
+                                                                class="form-select form-select-sm"
+                                                                [ngModel]="
+                                                                    seccionEnCursoChofer(
+                                                                        c
+                                                                    )
+                                                                "
+                                                                (ngModelChange)="
+                                                                    onSeccionChoferChange(
+                                                                        c,
+                                                                        $event
+                                                                    )
+                                                                "
+                                                            >
+                                                                <option
+                                                                    [ngValue]="
+                                                                        -1
+                                                                    "
+                                                                    disabled
+                                                                >
+                                                                    Seleccione
+                                                                </option>
+                                                                @for (
+                                                                    sec of seccionesDisponiblesChofer(
+                                                                        c
+                                                                    );
+                                                                    track sec.orden
+                                                                ) {
+                                                                    <option
+                                                                        [ngValue]="
+                                                                            sec.orden
+                                                                        "
+                                                                    >
+                                                                        Sección
+                                                                        {{
+                                                                            sec.orden
+                                                                        }}
+                                                                        @if (
+                                                                            sec.nombre
+                                                                        ) {
+                                                                            -
+                                                                            {{
+                                                                                sec.nombre
+                                                                            }}
+                                                                        }
+                                                                    </option>
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                    }
+                                                    <div>
+                                                        <label
+                                                            class="form-label small mb-0"
+                                                            >Categoría</label
+                                                        >
+                                                        <select
+                                                            class="form-select form-select-sm"
+                                                            [ngModel]="
+                                                                categoriaEnCursoChofer(
+                                                                    c
+                                                                )
+                                                            "
+                                                            (ngModelChange)="
+                                                                onCategoriaChoferChange(
+                                                                    c,
+                                                                    $event
+                                                                )
+                                                            "
+                                                        >
+                                                            <option
+                                                                [ngValue]="-1"
+                                                                disabled
+                                                            >
+                                                                Seleccione
+                                                            </option>
+                                                            @for (
+                                                                cat of categoriasDisponiblesChofer(
+                                                                    c
+                                                                );
+                                                                track cat.orden
+                                                            ) {
+                                                                <option
+                                                                    [ngValue]="
+                                                                        cat.orden
+                                                                    "
+                                                                >
+                                                                    {{
+                                                                        cat.nombre
+                                                                    }}
+                                                                </option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>
 
 <div class="modal-footer">
-  <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
-  <button type="button" class="btn btn-primary" (click)="confirmar()">Confirmar alta</button>
+    <button type="button" class="btn btn-secondary" (click)="cancelar()">
+        Cancelar
+    </button>
+    <button type="button" class="btn btn-primary" (click)="confirmar()">
+        Confirmar alta
+    </button>
 </div>

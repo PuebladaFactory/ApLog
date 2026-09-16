@@ -64,13 +64,6 @@ export class OperacionesEditorComponent implements OnInit {
    *  la resolución (automática o manual) queda completa. */
   private seleccionPorOp = new Map<string, { cliente: SeleccionSeccionCategoria; chofer: SeleccionSeccionCategoria }>();
 
-  /** idItem de las ops cuyo cliente está habilitado para tarifa Personalizada —
-   *  en ese caso el lado chofer/proveedor no elige nada propio (ver
-   *  recalcularTarifasNuevoSistema/aplicarRef): la Personalizada del cliente
-   *  determina ambos lados de la operación (misma tarifa, misma categoría,
-   *  aCobrar y aPagar salen del mismo documento). */
-  private personalizadaPorOp = new Set<string>();
-
   fecha: string = "";
 
   constructor(
@@ -103,6 +96,8 @@ export class OperacionesEditorComponent implements OnInit {
 
     for (const c of this.operacionesCreadas) {
       if (this.eliminados.has(c.item.idItem)) continue;
+
+      this.autoResolverPendientesSiCorresponde(c);
 
       const idCliente = c.item.idCliente;
       let grupo = mapa.get(idCliente);
@@ -140,6 +135,23 @@ export class OperacionesEditorComponent implements OnInit {
     if (t.especial)      return 'especial';
     if (t.eventual)      return 'eventual';
     return 'general';
+  }
+
+  /** Si chofer o vehículo quedaron pendientes pero solo hay UNA opción disponible, se
+   *  resuelven solos — mismo criterio que la selección de tarifa (autoSeleccionarSiCorresponde):
+   *  con una sola opción no hay nada que elegir, no tiene sentido forzar al usuario a
+   *  confirmarla a mano. Con 2+ opciones sigue quedando pendiente para que el usuario
+   *  elija en el <select>. Se llama en cada reagrupar() — es idempotente: una vez
+   *  resuelto, choferPendiente/vehiculoPendiente da false y no vuelve a intervenir. */
+  private autoResolverPendientesSiCorresponde(c: OperacionCreada): void {
+    if (this.choferPendiente(c.operacion)) {
+      const disponibles = this.choferesDisponibles(c.operacion);
+      if (disponibles.length === 1) this.onChoferSeleccionado(c, disponibles[0].id);
+    }
+    if (this.vehiculoPendiente(c.operacion)) {
+      const disponibles = this.vehiculosDisponibles(c.operacion);
+      if (disponibles.length === 1) this.onVehiculoSeleccionado(c, disponibles[0].id);
+    }
   }
 
   // ===========================================================================
@@ -193,6 +205,18 @@ export class OperacionesEditorComponent implements OnInit {
     this.recalcularTarifasNuevoSistema(c);
   }
 
+  /** Vuelve a dejar el chofer de la op en pendiente para poder elegir otro (ej. si se
+   *  equivocó al resolver la ambigüedad inicial del proveedor) — mismo criterio que el
+   *  estado inicial de la op (chofer.id === ''). Limpia lo que dependía del chofer
+   *  anterior (tarifa aplicada / candidatos del sistema nuevo) vía
+   *  recalcularTarifasNuevoSistema; el vehículo no se toca (vehiculosDisponibles para
+   *  el caso proveedor se filtra por proveedor, no por chofer, así que sigue siendo
+   *  válido). */
+  cambiarChofer(c: OperacionCreada): void {
+    c.operacion.chofer = { id: '', nombre: '', apellido: '', cuit: 0 };
+    this.recalcularTarifasNuevoSistema(c);
+  }
+
   // ===========================================================================
   // PENDIENTE: VEHÍCULO (directo multi-vehículo o proveedor — op.vehiculo.id === '')
   // ===========================================================================
@@ -229,6 +253,13 @@ export class OperacionesEditorComponent implements OnInit {
     this.recalcularTarifasNuevoSistema(c);
   }
 
+  /** Análogo a cambiarChofer para vehículo — vuelve a dejarlo pendiente para elegir
+   *  otro entre los disponibles (chofer directo con varios vehículos, o proveedor). */
+  cambiarVehiculo(c: OperacionCreada): void {
+    c.operacion.vehiculo = { id: '', dominio: '', categoria: { catOrden: 0, nombre: '' } };
+    this.recalcularTarifasNuevoSistema(c);
+  }
+
   // ===========================================================================
   // TARIFA EVENTUAL (toggle reversible) — delega la mutación en el factory
   // ===========================================================================
@@ -250,13 +281,42 @@ export class OperacionesEditorComponent implements OnInit {
     this.recalcularTarifasNuevoSistema(c);
   }
 
+  /** True si la op es eventual porque el cliente o el chofer/proveedor tienen el
+   *  nivel Eventual habilitado (por invariante de validarTarifasHabilitadas, cuando
+   *  Eventual está habilitado es siempre el único nivel de esa entidad — no puede
+   *  tener otra tarifa). En ese caso la op es inmutablemente eventual y el toggle no
+   *  tiene nada para ofrecer: se deshabilita. Si ninguna de las dos entidades fuerza
+   *  eventual, la op solo puede estar eventual porque el usuario la marcó a mano
+   *  (onEventualToggle) — ahí el toggle sigue habilitado para poder volver atrás.
+   *  Con chofer pendiente todavía no se puede resolver la tarifa del proveedor —
+   *  se asume no forzado hasta ese momento, igual que tarifaTipo.eventual en ese
+   *  mismo estado transitorio (ver OperacionFactoryService.crearOperacionBase). */
+  esEventualForzada(c: OperacionCreada): boolean {
+    const op = c.operacion;
+
+    const cliente = this.clienteService.getClientePorId(op.cliente.id);
+    if (cliente?.tarifasHabilitadas.some(h => h.nivel === 'eventual')) return true;
+
+    if (op.chofer.id === '') return false;
+    const chofer = this.choferService.getChoferPorId(op.chofer.id);
+    if (!chofer) return false;
+
+    return this.proveedorService
+      .resolverTarifasHabilitadasChofer(chofer)
+      .some(h => h.nivel === 'eventual');
+  }
+
   // ===========================================================================
   // TARIFA CLIENTE / CHOFER-PROVEEDOR (sistema nuevo — Bloque 6/7, mini-frente)
   // ===========================================================================
 
   /** Recalcula candidatos y, si corresponde, resuelve automáticamente ambos lados para
    *  una op. Se llama al agrupar por primera vez y cada vez que cambia algo que puede
-   *  alterar los candidatos: chofer, vehículo o el toggle eventual. */
+   *  alterar los candidatos: chofer, vehículo o el toggle eventual. El lado chofer se
+   *  calcula SIEMPRE con su propia jerarquía (ajuste del 15/09/2026: antes se salteaba
+   *  cuando el cliente tenía Personalizada habilitada; ahora quién gobierna el lado
+   *  chofer lo decide sincronizarLadoChofer, dinámicamente, según lo que el usuario
+   *  TERMINE eligiendo para el cliente — ver esa función y aplicarRef). */
   private recalcularTarifasNuevoSistema(c: OperacionCreada): void {
     const op = c.operacion;
 
@@ -265,7 +325,6 @@ export class OperacionesEditorComponent implements OnInit {
       op.tarifaAplicadaChofer = null;
       this.candidatosPorOp.delete(c.item.idItem);
       this.seleccionPorOp.delete(c.item.idItem);
-      this.personalizadaPorOp.delete(c.item.idItem);
       return;
     }
 
@@ -274,7 +333,6 @@ export class OperacionesEditorComponent implements OnInit {
       op.tarifaAplicadaChofer = null;
       this.candidatosPorOp.delete(c.item.idItem);
       this.seleccionPorOp.delete(c.item.idItem);
-      this.personalizadaPorOp.delete(c.item.idItem);
       return;
     }
 
@@ -283,7 +341,6 @@ export class OperacionesEditorComponent implements OnInit {
     if (!cliente || !chofer) {
       this.candidatosPorOp.delete(c.item.idItem);
       this.seleccionPorOp.delete(c.item.idItem);
-      this.personalizadaPorOp.delete(c.item.idItem);
       return;
     }
 
@@ -296,20 +353,8 @@ export class OperacionesEditorComponent implements OnInit {
 
     const ladoCliente = this.valoresTarifaService.listarCandidatosLado(
       'cliente', cliente.id, cliente.tarifasHabilitadas, op.vehiculo.categoria, op.cliente.id);
-
-    // Personalizada es exclusiva de Clientes y determina AMBOS lados de la
-    // operación — cuando el cliente está habilitado para personalizada, el
-    // chofer/proveedor NO resuelve su propia jerarquía: el lado chofer queda
-    // espejado al mismo candidato/referencia que se resuelva del lado cliente
-    // (ver aplicarRef).
-    const esPersonalizada = tarifaTipoDesdeHabilitadas(cliente.tarifasHabilitadas).personalizada;
-    if (esPersonalizada) this.personalizadaPorOp.add(c.item.idItem);
-    else this.personalizadaPorOp.delete(c.item.idItem);
-
-    const ladoChofer: CandidatosLado = esPersonalizada
-      ? { nivelResuelto: null, candidatos: [], motivoSinCandidatos: null }
-      : this.valoresTarifaService.listarCandidatosLado(
-          entidadTipoChofer, idEntidadChofer, habilitadasChofer, op.vehiculo.categoria, op.cliente.id);
+    const ladoChofer = this.valoresTarifaService.listarCandidatosLado(
+      entidadTipoChofer, idEntidadChofer, habilitadasChofer, op.vehiculo.categoria, op.cliente.id);
 
     this.candidatosPorOp.set(c.item.idItem, { cliente: ladoCliente, chofer: ladoChofer });
     this.seleccionPorOp.delete(c.item.idItem);
@@ -317,9 +362,34 @@ export class OperacionesEditorComponent implements OnInit {
     op.tarifaAplicadaChofer = null;
 
     this.autoSeleccionarSiCorresponde(c, ladoCliente, 'cliente');
-    if (!esPersonalizada) {
-      this.autoSeleccionarSiCorresponde(c, ladoChofer, 'chofer');
+    this.sincronizarLadoChofer(c);
+  }
+
+  /** Decide qué gobierna el lado chofer/proveedor después de fijar (o limpiar) la
+   *  selección de cliente: si la tarifa elegida para cliente es Personalizada,
+   *  aplicarRef ya espejó tarifaAplicadaChofer — acá no hay nada que hacer. Si no
+   *  (General/Especial, o cliente todavía sin resolver por ambigüedad), el chofer se
+   *  rige por su propia jerarquía: si ya tenía una selección propia (de antes de
+   *  entrar a un espejo, o una elección manual), se reaplica tal cual — por si
+   *  tarifaAplicadaChofer había quedado pisada por un espejo que ya no rige — sin
+   *  perder esa elección. Si no tenía ninguna, se autoselecciona si su lado quedó con
+   *  un único candidato, igual que la resolución inicial. Se llama tanto desde
+   *  recalcularTarifasNuevoSistema (primera vez) como desde seleccionarTarifa (cuando
+   *  el usuario cambia la Tarifa Cliente a mano). */
+  private sincronizarLadoChofer(c: OperacionCreada): void {
+    if (this.candidatoElegidoCliente(c)?.nivel === 'personalizada') return;
+
+    const sel = this.ensureSeleccion(c.item.idItem).chofer;
+    if (!sel.candidato) {
+      const ladoChofer = this.candidatosPorOp.get(c.item.idItem)?.chofer;
+      if (ladoChofer) this.autoSeleccionarSiCorresponde(c, ladoChofer, 'chofer');
+      return;
     }
+
+    const ref = sel.seccion >= 0 && sel.categoria >= 0
+      ? this.valoresTarifaService.armarRefManual(sel.candidato, sel.seccion, sel.categoria)
+      : this.valoresTarifaService.resolverSeccionCategoria(sel.candidato, c.operacion.vehiculo.categoria).ref;
+    this.aplicarRef(c, 'chofer', ref);
   }
 
   /** Si hay un único candidato en el lado, lo selecciona automáticamente (y resuelve
@@ -348,9 +418,12 @@ export class OperacionesEditorComponent implements OnInit {
     if (cual === 'cliente') {
       op.tarifaAplicadaCliente = ref;
       // Personalizada determina también el lado chofer/proveedor (ver
-      // recalcularTarifasNuevoSistema) — se espeja automáticamente, no hay
-      // selección propia del lado chofer que pueda pisar esto.
-      if (this.personalizadaPorOp.has(c.item.idItem)) {
+      // sincronizarLadoChofer) — se espeja automáticamente, no hay selección
+      // propia del lado chofer que pueda pisar esto. Se mira la tarifa
+      // REALMENTE elegida (ref?.nivel), no una habilitación estática del
+      // cliente — así un cliente con Personalizada Y General habilitadas que
+      // termina eligiendo General no arrastra al chofer a espejarse igual.
+      if (ref?.nivel === 'personalizada') {
         op.tarifaAplicadaChofer = ref;
       }
     } else {
@@ -373,10 +446,13 @@ export class OperacionesEditorComponent implements OnInit {
 
     if (!candidato) {
       this.aplicarRef(c, cual, null);
-      return;
+    } else {
+      const res = this.valoresTarifaService.resolverSeccionCategoria(candidato, c.operacion.vehiculo.categoria);
+      this.aplicarRef(c, cual, res.ref);
     }
-    const res = this.valoresTarifaService.resolverSeccionCategoria(candidato, c.operacion.vehiculo.categoria);
-    this.aplicarRef(c, cual, res.ref);
+    // Cambió (o se limpió) la selección de cliente: puede haber dejado de ser
+    // Personalizada (o haber pasado a serlo) — resincronizar qué gobierna el chofer.
+    if (cual === 'cliente') this.sincronizarLadoChofer(c);
   }
 
   onTarifaClienteChange(c: OperacionCreada, idTarifa: string): void {
@@ -395,11 +471,14 @@ export class OperacionesEditorComponent implements OnInit {
     return this.candidatosPorOp.get(c.item.idItem)?.chofer.candidatos ?? [];
   }
 
-  /** True si el cliente de la op está habilitado para tarifa Personalizada —
-   *  en ese caso el lado chofer/proveedor no elige nada propio (ver
-   *  recalcularTarifasNuevoSistema/aplicarRef). */
+  /** True si la tarifa ACTUALMENTE elegida para el cliente es Personalizada — en ese
+   *  caso el lado chofer/proveedor no elige nada propio, queda espejado (ver
+   *  sincronizarLadoChofer/aplicarRef). A diferencia de antes, no mira si el cliente
+   *  tiene el nivel habilitado sino la selección real: un cliente con Personalizada Y
+   *  General habilitadas puede terminar en cualquiera de las dos según lo que se elija
+   *  (o se autoseleccione) en el select de Tarifa Cliente. */
   clienteEsPersonalizada(c: OperacionCreada): boolean {
-    return this.personalizadaPorOp.has(c.item.idItem);
+    return this.candidatoElegidoCliente(c)?.nivel === 'personalizada';
   }
 
   motivoSinTarifaCliente(c: OperacionCreada): string {
@@ -430,6 +509,10 @@ export class OperacionesEditorComponent implements OnInit {
   }
 
   requiereSeccionChoferManual(c: OperacionCreada): boolean {
+    // Espejado a Personalizada del cliente: no hay selección propia del chofer que
+    // completar acá (ver sincronizarLadoChofer/aplicarRef) — evita mostrar un picker
+    // de un candidato propio que quedó obsoleto de una sincronización anterior.
+    if (this.clienteEsPersonalizada(c)) return false;
     const cand = this.candidatoElegidoChofer(c);
     if (!cand) return false;
     if (cand.secciones.length > 1) return true;

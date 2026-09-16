@@ -126,3 +126,22 @@ thead th {
 .fila-error td {
   border-top: 1px solid #f5c6cb;
 }
+
+.col-personalizada{
+  min-width: 250px;
+}
+
+.col-eventual{
+  min-width: 200px;
+}
+
+.col-moneda {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  font-weight: 400;
+  /* font-size: 1.5rem; */
+  
+}

@@ -43,7 +43,11 @@ export class TarifasPersonalizadaComponent implements OnInit, OnDestroy {
     const usuario = this.usuarioSesion.getUsuarioActual();
     this.puedeEditar = !!usuario && ['dev', 'admin'].includes(usuario.role);
 
-    this.clienteService.getActivos()
+    // No se filtra por activo (getActivos()): ese campo es una preferencia de
+    // visibilidad del tablero de asignaciones, no un criterio de si la entidad
+    // puede tener tarifa. clientes$ ya excluye las dadas de baja (removed de
+    // Firestore) — ver auditoría del 16/09/2026.
+    this.clienteService.clientes$
       .pipe(takeUntil(this.destroy$))
       .subscribe(clientes => {
         this.clientes = clientes

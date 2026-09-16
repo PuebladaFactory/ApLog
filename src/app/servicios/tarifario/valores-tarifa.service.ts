@@ -296,11 +296,20 @@ export class ValoresTarifaService {
 
   // ── Listado de candidatos para selección manual (mini-frente operaciones-editor) ──
 
-  /** Mismo descenso de jerarquía que resolverLado (Personalizada > Especial > General),
-   *  pero en vez de exigir un único ganador devuelve TODOS los candidatos vigentes del
-   *  primer nivel que tenga alguno — el usuario elige en operaciones-editor cuando hay
-   *  más de uno. Eventual no pasa por acá: se detecta en el componente vía
-   *  op.datosTarifaEventual y usa sus propios campos, no RefTarifaAplicada. */
+  /** A diferencia de resolverLado (que exige un único ganador de la jerarquía
+   *  Personalizada > Especial > General), acá se devuelven TODOS los candidatos
+   *  vigentes de TODOS los niveles habilitados que tengan alguno — el usuario elige
+   *  en operaciones-editor cuando hay más de uno, incluso entre niveles distintos.
+   *  Eventual no pasa por acá: se detecta en el componente vía op.datosTarifaEventual
+   *  y usa sus propios campos, no RefTarifaAplicada.
+   *
+   *  Los 3 niveles se tratan igual (ajuste del 15/09/2026 — se sacó el fallback
+   *  implícito a General que había antes): cada uno contribuye candidatos SOLO si
+   *  está explícitamente habilitado, y si está habilitado pero sin vigente, no cae
+   *  a ningún otro nivel — se reporta como motivo y listo, mismo criterio que ya
+   *  regía para Personalizada. No hay más "General resuelve solo aunque no esté
+   *  tildada": si ningún nivel habilitado tiene vigente, la operación queda sin
+   *  candidatos y motivoSinCandidatos junta los motivos de cada nivel habilitado. */
   listarCandidatosLado(
     entidadTipo: EntidadTipo,
     idEntidad: string,
@@ -309,13 +318,16 @@ export class ValoresTarifaService {
     idClienteOp: string,
   ): CandidatosLado {
     const niveles = new Set(habilitadas.map(h => h.nivel));
+    const candidatos: CandidatoTarifa[] = [];
+    const motivos: string[] = [];
 
     if (niveles.has('personalizada')) {
       const candidatas = this.tarifario.getTarifasPersonalizadasVigentes(idEntidad);
       if (candidatas.length > 0) {
-        return { nivelResuelto: 'personalizada', candidatos: candidatas.map(t => this.aCandidato(t)), motivoSinCandidatos: null };
+        candidatos.push(...candidatas.map(t => this.aCandidato(t)));
+      } else {
+        motivos.push(`personalizada de ${entidadTipo} ${idEntidad}: sin tarifa vigente`);
       }
-      return { nivelResuelto: null, candidatos: [], motivoSinCandidatos: `personalizada de ${entidadTipo} ${idEntidad}: sin tarifa vigente` };
     }
 
     if (niveles.has('especial')) {
@@ -326,20 +338,36 @@ export class ValoresTarifaService {
         candidatas = especificas.length > 0 ? especificas : candidatas.filter(t => t.alcance.tipo === 'entidad');
       }
       // Mismo criterio que resolverLado: una especial de 1 sola sección que no cubre
-      // la categoría del vehículo no es candidata — cae a General.
+      // la categoría del vehículo no es candidata.
       candidatas = candidatas.filter(t =>
         t.secciones.length !== 1 || t.secciones[0].categorias.some((cat: any) => cat.nombre === categoriaVehiculo.nombre));
       if (candidatas.length > 0) {
-        return { nivelResuelto: 'especial', candidatos: candidatas.map(t => this.aCandidato(t)), motivoSinCandidatos: null };
+        candidatos.push(...candidatas.map(t => this.aCandidato(t)));
+      } else {
+        motivos.push(`especial de ${entidadTipo} ${idEntidad}: sin tarifa vigente que cubra la categoría`);
       }
-      // ninguna especial cubre la categoría → cae a General.
     }
 
-    const general = this.tarifario.getTarifaGeneralVigente();
-    if (general && general.modoTarifacion !== 'km') {
-      return { nivelResuelto: 'general', candidatos: [this.aCandidato(general)], motivoSinCandidatos: null };
+    if (niveles.has('general')) {
+      const general = this.tarifario.getTarifaGeneralVigente();
+      if (general && general.modoTarifacion !== 'km') {
+        candidatos.push(this.aCandidato(general));
+      } else {
+        motivos.push('no hay tarifa general vigente');
+      }
     }
-    return { nivelResuelto: null, candidatos: [], motivoSinCandidatos: 'no hay tarifa general vigente' };
+
+    if (candidatos.length === 0) {
+      return {
+        nivelResuelto: null,
+        candidatos: [],
+        motivoSinCandidatos: motivos.length > 0
+          ? motivos.join(' — ')
+          : `${entidadTipo} ${idEntidad}: sin ningún nivel de tarifa habilitado`,
+      };
+    }
+    const nivelResuelto = candidatos.length === 1 ? candidatos[0].nivel : null;
+    return { nivelResuelto, candidatos, motivoSinCandidatos: null };
   }
 
   private aCandidato(t: ConIdType<Tarifa> | ConIdType<TarifaEspecial>): CandidatoTarifa {
