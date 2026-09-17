@@ -160,6 +160,10 @@
                                 <span [class]="getEstadoBadgeClass(row.estado)">
                                     {{row.estado}}
                                 </span>
+                                } @else if (c === 'tarifa') {
+                                @for (b of row.tarifaBadges; track $index) {
+                                <span class="badge {{b.clase}} me-1">{{b.etiqueta}}</span>
+                                }
                                 } @else {
                                 {{row[c]}}
                                 }

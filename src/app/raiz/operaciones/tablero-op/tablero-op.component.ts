@@ -13,6 +13,9 @@ import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/forma
 import { ExcelService } from 'src/app/servicios/informes/excel/excel.service';
 import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
 import { CargaAsignacionComponent } from '../carga-asignacion/carga-asignacion.component';
+import { NivelTarifa } from 'src/app/interfaces/tarifa';
+import { EtiquetaNivelTarifaPipe } from 'src/app/shared/pipes/etiqueta-nivel-tarifa.pipe';
+import { ClaseNivelTarifaPipe } from 'src/app/shared/pipes/clase-nivel-tarifa.pipe';
 
 // =====================
 // MODELOS
@@ -30,6 +33,7 @@ interface OpRow {
   patente: string;
   acomp: string;
   tarifa: string;
+  tarifaBadges: { clase: string; etiqueta: string }[];
   aCobrar: string;      // formateado
   aPagar: string;       // formateado
   aCobrarNum: number;   // numérico real
@@ -65,6 +69,9 @@ interface FiltrosState {
 export class TableroOpComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
+
+  private readonly etiquetaNivelTarifaPipe = new EtiquetaNivelTarifaPipe();
+  private readonly claseNivelTarifaPipe = new ClaseNivelTarifaPipe();
 
   operacionesPeriodo: ConId<Operacion>[] = [];
   operacionesVista: OpRow[] = [];
@@ -208,8 +215,9 @@ private resizeStartWidth = 0;
 // ===================== MAPEO =====================
 
   private mapOp(op: ConId<Operacion>, i:number): OpRow {
-    const aCobrarNum = op.valores.cliente.aCobrar ?? 0;
-    const aPagarNum  = op.valores.chofer.aPagar ?? 0;
+    const aCobrarNum = op.valoresNuevos?.cliente.aCobrar ?? 0;
+    const aPagarNum  = op.valoresNuevos?.chofer.aPagar ?? 0;
+    const tarifaBadges = this.getTarifaBadges(op);
 
     return {
       indice: i+1,
@@ -223,7 +231,8 @@ private resizeStartWidth = 0;
       categoria: this.getCategoria(op),
       patente: op.vehiculo.dominio,
       acomp: op.acompaniante ? 'Sí':'No',
-      tarifa: this.getTarifa(op),
+      tarifa: tarifaBadges.map(b => b.etiqueta).join(' / '),
+      tarifaBadges,
       aCobrar: `$${this.formatoNum.convertirAValorFormateado(aCobrarNum)}`,
       aPagar: `$${this.formatoNum.convertirAValorFormateado(aPagarNum)}`,
       aCobrarNum,
@@ -566,11 +575,40 @@ private resizeStartWidth = 0;
     return op.vehiculo.categoria.nombre ?? 'Sin categoría';
   }
 
-  getTarifa(op:Operacion) {
-    if (op.tarifaTipo.especial) return 'Especial';
-    if (op.tarifaTipo.eventual) return 'Eventual';
-    if (op.tarifaTipo.personalizada) return 'Personalizada';
-    return 'General';
+  /** Nivel real aplicado a un lado de la operación — mismo criterio que
+   *  OperacionValorLadoComponent.nivel: Eventual es a nivel de operación
+   *  completa (se chequea antes que tarifaAplicada*), y en ese caso cliente
+   *  y chofer siempre coinciden por diseño (igual que Personalizada, que se
+   *  espeja al chofer/proveedor — ver sincronizarLadoChofer). Si la
+   *  resolución automática no pudo determinar un ganador (operación previa
+   *  a Bloque 7 Paso 1 — caso real en Vantruck — u otro caso no bloqueante
+   *  sin resolver), da null y el badge cae en "Sin resolver" (mismo default
+   *  que ya usan EtiquetaNivelTarifaPipe/ClaseNivelTarifaPipe). */
+  private nivelLado(op: Operacion, lado: 'cliente' | 'chofer'): NivelTarifa | null {
+    if (op.datosTarifaEventual !== null) return 'eventual';
+    const ref = lado === 'cliente' ? op.tarifaAplicadaCliente : op.tarifaAplicadaChofer;
+    return ref?.nivel ?? null;
+  }
+
+  private badgeDeNivel(nivel: NivelTarifa | null): { clase: string; etiqueta: string } {
+    return {
+      clase: this.claseNivelTarifaPipe.transform(nivel),
+      etiqueta: this.etiquetaNivelTarifaPipe.transform(nivel),
+    };
+  }
+
+  /** Un solo badge si cliente y chofer tienen el mismo nivel aplicado (caso
+   *  normal de Eventual/Personalizada, o General/Especial coincidentes);
+   *  dos badges — cliente primero, chofer después — cuando difieren (caso
+   *  real posible en General/Especial). */
+  getTarifaBadges(op: Operacion): { clase: string; etiqueta: string }[] {
+    const nivelCliente = this.nivelLado(op, 'cliente');
+    const nivelChofer = this.nivelLado(op, 'chofer');
+
+    if (nivelCliente === nivelChofer) {
+      return [this.badgeDeNivel(nivelCliente)];
+    }
+    return [this.badgeDeNivel(nivelCliente), this.badgeDeNivel(nivelChofer)];
   }
 
   // -----------------------------
@@ -812,59 +850,5 @@ onResizeEnd = () => {
       console.info(res.mensaje);
     }
   }
-
-  totalACobrar(){
-    let opAcomp = 0;
-    let cantAcomp = 0;
-    let total = 0;
-    this.operacionesPeriodo.map(op=>{
-     /* if(op.acompaniante) {
-        opAcomp ++ ;
-        cantAcomp += op.acompanianteCant ?? 1; 
-     }  */
-    total += op.valores.cliente.aCobrar
-    })
-    ////console.log("opAcomp: ", opAcomp, "totalAcomp: ", cantAcomp );
-    //console.log("total: ", total);
-    
-  }
-
-  validarOperaciones(): void {
-  const operacionesConError: string[] = [];
-
-  this.operacionesPeriodo.forEach(op => {
-    const v = op.valores;
-
-    // Cliente
-    const totalCliente =
-      (v.cliente.acompValor || 0) +
-      (v.cliente.kmAdicional || 0) +
-      (v.cliente.tarifaBase || 0) +
-      (v.cliente.adExtraValor || 0);
-
-    // Chofer
-    const totalChofer =
-      (v.chofer.acompValor || 0) +
-      (v.chofer.kmAdicional || 0) +
-      (v.chofer.tarifaBase || 0) +
-      (v.chofer.adExtraValor || 0);
-
-    const errorCliente = totalCliente !== v.cliente.aCobrar;
-    const errorChofer = totalChofer !== v.chofer.aPagar;
-
-    if (errorCliente || errorChofer) {
-      operacionesConError.push(op.idOperacion);
-    }
-  });
-
-  // Resultado final
-  if (operacionesConError.length === 0) {
-    alert('✅ Todas las operaciones son consistentes');
-  } else {
-    alert(
-      `❌ Se encontraron errores en las operaciones:\n${operacionesConError.join(', ')}`
-    );
-  }
-}
 
 }
