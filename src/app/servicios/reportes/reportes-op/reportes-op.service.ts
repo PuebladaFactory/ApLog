@@ -202,6 +202,18 @@ export class ReportesOpService {
   // =========================
   // 🔹 APLICAR OPERACIÓN
   // =========================
+  /** Nivel 2 (17-18/09/2026): a propósito sigue leyendo op.valores, NO
+   *  op.valoresNuevos. reconstruirResumenes recorre TODAS las operaciones
+   *  históricas de un período (botón "dev" en tablero-op) — tiene que
+   *  reflejar el estado ACTUAL de cada una, incluidas las editadas después
+   *  del cierre desde Liquidación (editar-tarifa-op/editar-inf-op, que
+   *  solo tocan op.valores, nunca valoresNuevos). op.valores es la única
+   *  fuente que queda al día en ese caso; valoresNuevos quedaría congelado
+   *  en el valor del cierre original. Ver "Nivel 2" en el doc de migración
+   *  de tarifas para el detalle completo de por qué no se migra este
+   *  método (a diferencia de ResumenOpCalculatorService.generarUpdates,
+   *  que sí se migró por ser un camino de escritura en vivo, de una sola
+   *  vez, sin este problema). */
   private aplicarOperacion(res: ResumenOpBase, op: Operacion): void {
     try {
       res.cantidadOps++;

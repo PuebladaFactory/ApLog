@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { increment } from "@angular/fire/firestore";
 import { ConId } from "src/app/interfaces/conId";
-import { Operacion } from "src/app/interfaces/operacion";
+import { Operacion, Valores } from "src/app/interfaces/operacion";
 import { TarifaTipo } from "src/app/interfaces/tarifa-gral-cliente";
 import { KeyResumen } from "./reportes-op.service";
 
@@ -23,7 +23,28 @@ export interface UpdateResumen {
 export class ResumenOpCalculatorService {
   basePath: string = "Vantruck/datos/resumenOpMensual";
 
+  /** Motor en vivo — se dispara siempre DESPUÉS de que
+   *  ValoresOpService.facturarOperacion() ya validó que op.valoresNuevos
+   *  existe (tira error antes si falta), así que acá se puede asumir
+   *  no-null con seguridad. Nivel 2 (17-18/09/2026): fuente migrada de
+   *  op.valores a op.valoresNuevos — ver resolverValores() más abajo.
+   *  generarUpdatesEliminacion NO reutiliza este método a propósito: sigue
+   *  leyendo op.valores directo, ver su comentario. */
   generarUpdates(op: Operacion): UpdateResumen[] {
+    const data = this.calcularIncrementos(op, this.resolverValores(op));
+
+    return this.armarUpdatesPorEntidad(op, data);
+  }
+
+  /** Arma las 3 entradas de resumen (general / cliente / chofer-proveedor)
+   *  para una op a partir de un set de incrementos ya calculado. Extraído
+   *  de generarUpdates para que generarUpdatesEliminacion pueda reusar el
+   *  mismo armado de claves con una fuente de datos distinta (op.valores,
+   *  no valoresNuevos) sin duplicar esta lógica. */
+  private armarUpdatesPorEntidad(
+    op: Operacion,
+    data: Record<string, any>,
+  ): UpdateResumen[] {
     const { anio, mes } = this.getPeriodo(op.fecha);
 
     const updates: UpdateResumen[] = [];
@@ -37,7 +58,11 @@ export class ResumenOpCalculatorService {
       mes,
     };
 
-    updates.push(this.buildUpdate(keyGeneral, op));
+    updates.push({
+      key: keyGeneral,
+      path: this.buildPath(keyGeneral),
+      data,
+    });
 
     // =========================
     // CLIENTE
@@ -50,7 +75,11 @@ export class ResumenOpCalculatorService {
       mes,
     };
 
-    updates.push(this.buildUpdate(keyCliente, op));
+    updates.push({
+      key: keyCliente,
+      path: this.buildPath(keyCliente),
+      data,
+    });
 
     // =========================
     // CHOFER / PROVEEDOR
@@ -64,7 +93,11 @@ export class ResumenOpCalculatorService {
         mes,
       };
 
-      updates.push(this.buildUpdate(keyProveedor, op));
+      updates.push({
+        key: keyProveedor,
+        path: this.buildPath(keyProveedor),
+        data,
+      });
     } else {
       const keyChofer: KeyResumen = {
         tipo: "entidad",
@@ -74,23 +107,23 @@ export class ResumenOpCalculatorService {
         mes,
       };
 
-      updates.push(this.buildUpdate(keyChofer, op));
+      updates.push({
+        key: keyChofer,
+        path: this.buildPath(keyChofer),
+        data,
+      });
     }
 
     return updates;
   }
 
-  private buildUpdate(key: KeyResumen, op: Operacion): UpdateResumen {
-    const data = this.calcularIncrementos(op);
+  private calcularIncrementos(
+    op: Operacion,
+    valores: Valores,
+  ): Record<string, any> {
+    const c = valores.cliente;
+    const ch = valores.chofer;
 
-    return {
-      key,
-      path: this.buildPath(key),
-      data,
-    };
-  }
-
-  private calcularIncrementos(op: Operacion): Record<string, any> {
     return {
       cantidadOps: increment(1),
       kmRecorridos: increment(op.km),
@@ -99,26 +132,57 @@ export class ResumenOpCalculatorService {
       acompanianteCantidadTotal: increment(op.acompanianteCant ?? 0),
 
       // cliente
-      "cliente.acompValor": increment(op.valores.cliente.acompValor),
-      "cliente.kmAdicional": increment(op.valores.cliente.kmAdicional),
-      "cliente.tarifaBase": increment(op.valores.cliente.tarifaBase),
-      "cliente.adExtraValor": increment(op.valores.cliente.adExtraValor ?? 0),
-      "cliente.total": increment(op.valores.cliente.aCobrar),
+      "cliente.acompValor": increment(c.acompValor),
+      "cliente.kmAdicional": increment(c.kmAdicional),
+      "cliente.tarifaBase": increment(c.tarifaBase),
+      "cliente.adExtraValor": increment(c.adExtraValor ?? 0),
+      "cliente.total": increment(c.aCobrar),
 
       // chofer
-      "chofer.acompValor": increment(op.valores.chofer.acompValor),
-      "chofer.kmAdicional": increment(op.valores.chofer.kmAdicional),
-      "chofer.tarifaBase": increment(op.valores.chofer.tarifaBase),
-      "chofer.adExtraValor": increment(op.valores.chofer.adExtraValor ?? 0),
-      "chofer.total": increment(op.valores.chofer.aPagar),
+      "chofer.acompValor": increment(ch.acompValor),
+      "chofer.kmAdicional": increment(ch.kmAdicional),
+      "chofer.tarifaBase": increment(ch.tarifaBase),
+      "chofer.adExtraValor": increment(ch.adExtraValor ?? 0),
+      "chofer.total": increment(ch.aPagar),
 
       // ganancia
-      ganancia: increment(
-        op.valores.cliente.aCobrar - op.valores.chofer.aPagar,
-      ),
+      ganancia: increment(c.aCobrar - ch.aPagar),
 
       // tarifa tipo
       [`tarifaTipo.${this.getTipoTarifa(op)}`]: increment(1),
+    };
+  }
+
+  /** Nivel 2 (17-18/09/2026) — fuente de datos para el cierre en vivo.
+   *  op.valoresNuevos.cliente/chofer.tarifaBase viene CRUDA (sin
+   *  multiplicar) — a diferencia de acompValor/kmAdicional/aCobrar/aPagar,
+   *  que ya vienen finales. Se aplica el mismo multiplicadorCliente/Chofer
+   *  que usa el motor de facturación al armar el espejo legacy (ver
+   *  $facturarOpClienteNuevo/$facturarOpChoferNuevo en
+   *  valores-op-cliente/chofer.service.ts) para que el resumen no arrastre
+   *  el bug de "tarifaBase mal en operaciones con multiplicador ≠ 1".
+   *  En este punto (justo después del cierre) el resultado es
+   *  matemáticamente idéntico a op.valores — no cambia ningún número hoy,
+   *  solo desacopla el motor en vivo del campo legacy de cara a Nivel 3. */
+  private resolverValores(op: Operacion): Valores {
+    if (!op.valoresNuevos) {
+      throw new Error(
+        "op.valoresNuevos inexistente al generar el resumen en vivo",
+      );
+    }
+
+    const multCliente = op.multiplicadorCliente ?? 1;
+    const multChofer = op.multiplicadorChofer ?? 1;
+
+    return {
+      cliente: {
+        ...op.valoresNuevos.cliente,
+        tarifaBase: op.valoresNuevos.cliente.tarifaBase * multCliente,
+      },
+      chofer: {
+        ...op.valoresNuevos.chofer,
+        tarifaBase: op.valoresNuevos.chofer.tarifaBase * multChofer,
+      },
     };
   }
 
@@ -172,7 +236,7 @@ export class ResumenOpCalculatorService {
     const { anio, mes } = this.getPeriodo(op.fecha);
 
     const updates: UpdateResumen[] = [];
-    
+
     const baseData = this.toNestedIncrement(delta);
 
     // =========================
@@ -339,15 +403,26 @@ export class ResumenOpCalculatorService {
     };
   }
 
+  /** Borrado de una operación cerrada (eliminarOperacionEInformes en
+   *  db-firestore.service.ts, disparado desde Liquidación). A propósito NO
+   *  reutiliza generarUpdates/resolverValores: tiene que invertir
+   *  exactamente lo que hoy está sumado en el resumen, y op.valoresNuevos
+   *  queda CONGELADO en el valor del cierre original — si la operación se
+   *  editó después desde Liquidación (editar-tarifa-op/editar-inf-op, que
+   *  solo tocan op.valores, nunca valoresNuevos), valoresNuevos ya no
+   *  coincide con lo que realmente está reflejado en el resumen. op.valores
+   *  sí queda siempre al día (la edición lo actualiza directo), así que es
+   *  la única fuente correcta acá — igual que generarDeltaUpdates. */
   generarUpdatesEliminacion(op: Operacion): UpdateResumen[] {
-  const updatesPositivos = this.generarUpdates(op);
+    const data = this.calcularIncrementos(op, op.valores);
+    const updatesPositivos = this.armarUpdatesPorEntidad(op, data);
 
-  // invertir todos los incrementos
-  return updatesPositivos.map((upd) => ({
-    ...upd,
-    data: this.invertirIncrementos(upd.data),
-  }));
-}
+    // invertir todos los incrementos
+    return updatesPositivos.map((upd) => ({
+      ...upd,
+      data: this.invertirIncrementos(upd.data),
+    }));
+  }
 
 private invertirIncrementos(
   data: Record<string, any>,
