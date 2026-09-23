@@ -1,47 +1,46 @@
 import { Injectable } from "@angular/core";
 
 import { Operacion } from "src/app/interfaces/operacion";
+import { Valores } from "src/app/interfaces/informe-op-nuevo";
 
 import {
   TarifaGralCliente,
   CategoriaTarifa,
 } from "src/app/interfaces/tarifa-gral-cliente";
-import { InformeOp } from "src/app/interfaces/informe-op";
 
 @Injectable({
   providedIn: "root",
 })
 export class ValoresOpClienteService {
-  facturaOpCliente!: InformeOp;
-  tarifaBase!: number;
-  acompaniante!: number;
-  kmValor!: number;
 
-  constructor() {}
-
-  /** Bloque 7 Paso 2 — factura desde el motor nuevo de Tarifas
+  /** Bloque 7 Paso 2 — calcula desde el motor nuevo de Tarifas
    *  (op.valoresNuevos.cliente, ya calculado por ValoresTarifaService).
    *  tarifaBase se persiste YA MULTIPLICADA por op.multiplicadorCliente
-   *  (convención del cierre viejo para op.valores/InformeOp) — valoresNuevos
-   *  siempre la trae cruda. idTarifa legacy (numérico) no tiene equivalente
-   *  para el id de Firestore de la tarifa nueva — se persiste en 0, mismo
-   *  criterio que $facturarOpEveCliente para eventual. */
-  $facturarOpClienteNuevo(op: Operacion) {
+   *  (convención heredada del cierre viejo, se mantiene para op.valores) —
+   *  valoresNuevos siempre la trae cruda. Muta op.valores.cliente (mismo
+   *  criterio que antes — es la fuente que lee el resto de la app para
+   *  mostrar la op) y devuelve el InformeOpNuevo.Valores del lado cliente,
+   *  para que el caller arme el InformeOp. El idTarifa legacy (numérico)
+   *  desaparece — InformeOpNuevo no lo tiene, la tarifa aplicada se
+   *  identifica con op.tarifaAplicadaCliente. */
+  calcularValoresCliente(op: Operacion): Valores {
     const v = op.valoresNuevos!.cliente;
-    this.tarifaBase = v.tarifaBase * op.multiplicadorCliente;
-    op.valores.cliente.tarifaBase = this.tarifaBase;
-    this.acompaniante = v.acompValor;
-    op.valores.cliente.acompValor = this.acompaniante;
-    this.kmValor = v.kmAdicional;
-    op.valores.cliente.kmAdicional = this.kmValor;
+    const tarifaBase = v.tarifaBase * op.multiplicadorCliente;
+    const acompaniante = v.acompValor;
+    const kmMonto = v.kmAdicional;
+    const adExtra = op.valores.cliente.adExtraValor ?? 0;
+
+    op.valores.cliente.tarifaBase = tarifaBase;
+    op.valores.cliente.acompValor = acompaniante;
+    op.valores.cliente.kmAdicional = kmMonto;
     op.valores.cliente.aCobrar = v.aCobrar;
 
-    this.$crearFacturaOpCliente(op, 0);
     return {
-      op,
-      factura: this.facturaOpCliente,
-      resultado: true,
-      msj: "",
+      tarifaBase,
+      acompaniante,
+      kmMonto,
+      adExtra,
+      total: tarifaBase + acompaniante + kmMonto + adExtra,
     };
   }
 
@@ -51,7 +50,6 @@ export class ValoresOpClienteService {
     let catCg = tarifa.cargasGenerales.filter((cat: CategoriaTarifa) => {
       return cat.orden === vehiculo.categoria.catOrden;
     });
-    ////console.log("catCg: ", catCg);
 
     let montoTotal = 0;
 
@@ -78,35 +76,5 @@ export class ValoresOpClienteService {
     }
 
     return montoTotal;
-  }
-
-  $crearFacturaOpCliente(op: Operacion, idTarifa: number) {
-    this.facturaOpCliente = {
-      idInfOp: new Date().getTime() + Math.floor(Math.random() * 1000),
-      idOperacion: op.idOperacion,
-      idCliente: Number(op.cliente.id),
-      idChofer: Number(op.chofer.id), // TODO: migrar a string cuando se refactorice este módulo
-      idProveedor: op.proveedor?.id ?? '0', // TODO: refactor Tarifas — idProveedor desde snapshot op.proveedor (string)
-      idTarifa: idTarifa,
-      fecha: op.fecha,
-      valores: {
-        tarifaBase: this.tarifaBase,
-        acompaniante: this.acompaniante,
-        kmMonto: this.kmValor,
-        adExtra: op.valores.cliente.adExtraValor ?? 0 ,
-        total: this.tarifaBase + this.acompaniante + this.kmValor + (op.valores.cliente.adExtraValor ?? 0),
-      },
-      km: op.km,
-      liquidacion: false,
-      contraParteMonto: 0,
-      contraParteId: 0,
-      // TODO: refactor Tarifas — usar snapshot op.tarifaTipo en lugar de resolver desde cliente vivo
-      tarifaTipo: { ...op.tarifaTipo },
-      observaciones: op.observaciones,
-      hojaRuta: op.hojaRuta,
-      patente: op.vehiculo.dominio,
-      proforma: false,
-      contraParteProforma: false,
-    };
   }
 }

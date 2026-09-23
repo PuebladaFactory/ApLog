@@ -24,6 +24,7 @@ import {
   updateDoc,
   where,
   writeBatch,
+  WriteBatch,
   QueryConstraint,
   QueryDocumentSnapshot,
 } from "@angular/fire/firestore";
@@ -36,10 +37,9 @@ import Swal from "sweetalert2";
 import { Firestore } from "@angular/fire/firestore";
 import { inject } from "@angular/core";
 import { InformeOp } from "src/app/interfaces/informe-op";
+import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
 import { InformeLiq, ValoresFinancieros } from "src/app/interfaces/informe-liq";
 import { NumeradorService } from "../numerador/numerador.service";
-import { RegistroLog } from "src/app/interfaces/registro-log";
-import { InformeVenta } from "src/app/interfaces/informe-venta";
 
 import { MovimientoFinanciero } from "src/app/interfaces/movimiento-financiero";
 import {
@@ -59,11 +59,15 @@ export interface ResultadoConObjeto {
   objeto: any;
 }
 
-export type ModoEscritura = 'crear' | 'reemplazar' | 'eliminar';
+export type ModoEscritura = 'crear' | 'reemplazar' | 'eliminar' | 'actualizar';
 
 export interface EscrituraBatch {
   coleccion: string;
   id: string;
+  /** Cuando modo === 'actualizar', las keys de campos anidados van en
+   *  notación de punto (ej. 'contraParte.monto'), NUNCA como objeto
+   *  anidado — batch.update() reemplaza el sub-objeto entero si se le
+   *  pasa un objeto, en vez de mergear el campo puntual. */
   data: any;
   modo: ModoEscritura;
 }
@@ -789,6 +793,74 @@ export class DbFirestoreService {
     };
   }
 
+  /** Paginado de informesOp por período + tipo (obligatorio, la UI es por tab) +
+   *  estado (opcional). Requiere índice compuesto (tipo, estado, fecha) — o
+   *  (tipo, fecha) cuando no se pasa estado — ver firestore.indexes.json. */
+  async getInformesOpPorPeriodo(
+    coleccion: string,
+    desde: string,
+    hasta: string,
+    tipo: 'cliente' | 'chofer' | 'proveedor',
+    estado: 'activo' | 'proforma' | 'liquidado' | 'anulado' | undefined,
+    pageSize: number,
+    cursor: QueryDocumentSnapshot<DocumentData> | null,
+  ): Promise<PaginaResultado<InformeOpNuevo>> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const constraints: QueryConstraint[] = [
+      where('tipo', '==', tipo),
+      orderBy('fecha', 'desc'),
+      where('fecha', '>=', desde),
+      where('fecha', '<=', hasta),
+    ];
+    if (estado) constraints.push(where('estado', '==', estado));
+    if (cursor) constraints.push(startAfter(cursor));
+    constraints.push(limit(pageSize + 1));
+
+    const snap = await getDocs(query(colRef, ...constraints));
+    const docsPagina = snap.docs.slice(0, pageSize);
+    // idInfOp se agrega a mano (patrón ConId) — NO viene en el body del
+    // documento (informe-op-nuevo.ts lo dice explícitamente). Sin esto
+    // queda undefined y cualquier escritura que lo use como id de
+    // documento (InformeOpService.agregarEscrituraInformeOpCompleto)
+    // termina en un documento fantasma "informesOp/undefined" en vez de
+    // actualizar el real — bug detectado en producción, ver conversación.
+    const items = docsPagina.map(d => ({ id: d.id, ...(d.data() as InformeOpNuevo), idInfOp: d.id }));
+
+    return {
+      items,
+      cursor: docsPagina.length > 0 ? docsPagina[docsPagina.length - 1] : null,
+      hayMas: snap.docs.length > pageSize,
+    };
+  }
+
+  /** Hermano en vivo de getInformesOpPorPeriodo — sin paginar, con estados
+   *  múltiples (in). Usado por InformeOpService.observarPorPeriodo. */
+  observarInformesOpPorPeriodo(
+    coleccion: string,
+    desde: string,
+    hasta: string,
+    tipo: 'cliente' | 'chofer' | 'proveedor',
+    estados: ('activo' | 'proforma' | 'liquidado' | 'anulado')[],
+  ): Observable<ConId<InformeOpNuevo>[]> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const q = query(
+      colRef,
+      where('tipo', '==', tipo),
+      where('estado', 'in', estados),
+      orderBy('fecha', 'desc'),
+      where('fecha', '>=', desde),
+      where('fecha', '<=', hasta),
+    );
+    // Mismo problema y mismo fix que getInformesOpPorPeriodo: collectionData
+    // con idField solo agrega 'id', no 'idInfOp'. Sin este map, todo lo que
+    // sale de acá (InformeOpListadoComponent.informesOp, la fuente de
+    // InformeOpEditorComponent.@Input() informeOp en cada "editar" del
+    // listado) queda con idInfOp undefined.
+    return (collectionData(q, { idField: 'id' }) as Observable<ConId<InformeOpNuevo>[]>).pipe(
+      map(items => items.map(item => ({ ...item, idInfOp: item.id }))),
+    );
+  }
+
   get(id: string) {
     const estacionamiento1DocumentReference = doc(
       this.firestore,
@@ -809,174 +881,28 @@ export class DbFirestoreService {
     );
   }
 
-  async guardarFacturasOp(
-    compCliente: string,
-    infOpCliente: InformeOp,
-    compChofer: string,
-    infOpChofer: InformeOp,
-    op: ConId<Operacion>,
-    entradaLog: { id: string; entrada: RegistroLog } | null,
-    informesVenta?: InformeVenta[],
-  ): Promise<{ exito: boolean; mensaje: string }> {
-    const batch = writeBatch(this.firestore);
+  /** Aplica los updates de resumen (ResumenOpCalculatorService.generarUpdates)
+   *  a un WriteBatch ya abierto por el caller — decide únicamente CÓMO
+   *  escribir (crear el doc base si no existe + aplicar el increment),
+   *  nunca QUÉ escribir (esa decisión es de ResumenOpCalculatorService).
+   *  Reemplaza al bloque de resúmenes que vivía adentro de
+   *  guardarFacturasOp (eliminado) — la orquestación completa del cierre
+   *  vive ahora en OperacionService.cerrarOperacion, que arma su propio
+   *  batch y llama a esta primitiva. */
+  async aplicarUpdatesResumen(batch: WriteBatch, updates: UpdateResumen[]): Promise<void> {
+    for (const upd of updates) {
+      const ref = doc(this.firestore, upd.path);
+      const snap = await getDoc(ref);
 
-    try {
-      // ==========================================================
-      // 🔍 VALIDACIONES
-      // ==========================================================
-
-      const refCliente = collection(
-        this.firestore,
-        `/Vantruck/datos/${compCliente}`,
-      );
-      const qCliente = query(
-        refCliente,
-        where("idOperacion", "==", infOpCliente.idOperacion),
-      );
-      const snapCliente = await getDocs(qCliente);
-
-      if (!snapCliente.empty) {
-        throw new Error(
-          `Ya existe un informe cliente para op ${infOpCliente.idOperacion}`,
-        );
+      if (!snap.exists()) {
+        const base = this.buildBaseData(upd.key);
+        batch.set(ref, base);
       }
 
-      const refChofer = collection(
-        this.firestore,
-        `/Vantruck/datos/${compChofer}`,
-      );
-      const qChofer = query(
-        refChofer,
-        where("idOperacion", "==", infOpChofer.idOperacion),
-      );
-      const snapChofer = await getDocs(qChofer);
-
-      if (!snapChofer.empty) {
-        throw new Error(
-          `Ya existe un informe chofer para op ${infOpChofer.idOperacion}`,
-        );
-      }
-
-      const docOpRef = doc(this.firestore, `/Vantruck/datos/operaciones/${op.idOperacion}`);
-      const opDocSnap = await getDoc(docOpRef);
-
-      if (!opDocSnap.exists()) {
-        throw new Error(`No se encontró operación ${op.idOperacion}`);
-      }
-
-      const opData = opDocSnap.data() as Operacion;
-
-      if (opData.resumenProcesado) {
-        throw new Error(
-          `La operación ${op.idOperacion} ya fue procesada en resúmenes`,
-        );
-      }
-
-      // ==========================================================
-      // 📦 INFORMES DE VENTA
-      // ==========================================================
-
-      if (informesVenta?.length) {
-        const colVenta = collection(
-          this.firestore,
-          `/Vantruck/datos/informesVenta`,
-        );
-
-        for (const infVenta of informesVenta) {
-          const qVenta = query(
-            colVenta,
-            where("idInfVenta", "==", infVenta.idInfVenta),
-          );
-          const snapVenta = await getDocs(qVenta);
-
-          if (!snapVenta.empty) {
-            throw new Error(`Ya existe InformeVenta ${infVenta.idInfVenta}`);
-          }
-
-          const newVentaRef = doc(colVenta);
-          batch.set(newVentaRef, infVenta);
-        }
-      }
-
-      // ==========================================================
-      // 📄 INFORMES OP
-      // ==========================================================
-
-      const informeRefCliente = doc(
-        collection(this.firestore, `/Vantruck/datos/${compCliente}`),
-      );
-      const informeRefChofer = doc(
-        collection(this.firestore, `/Vantruck/datos/${compChofer}`),
-      );
-
-      batch.set(informeRefCliente, infOpCliente);
-      batch.set(informeRefChofer, infOpChofer);
-
-      // ==========================================================
-      // 📝 LOG (mecanismo nuevo — ver LogRegistroService.construirEntradaSuelta)
-      // ==========================================================
-
-      if (entradaLog) {
-        const logRef = doc(this.firestore, `/Vantruck/datos/registroLog/${entradaLog.id}`);
-        batch.set(logRef, entradaLog.entrada);
-      }
-
-      // ==========================================================
-      // 🧾 ACTUALIZAR OPERACIÓN
-      // ==========================================================
-
-      const { id, ...opSinId } = op;
-      batch.update(docOpRef, {
-        ...opSinId,
-        resumenProcesado: true,
+      batch.update(ref, {
+        ...upd.data,
+        updatedAt: Date.now(),
       });
-
-      // ==========================================================
-      // 📊 RESÚMENES (🔥 NUEVO)
-      // ==========================================================
-
-      const updates = this.resumenOpCalculator.generarUpdates(op);
-
-      if (!updates || updates.length === 0) {
-        throw new Error("No se generaron updates de resumen");
-      }
-
-      for (const upd of updates) {
-        const ref = doc(this.firestore, upd.path);
-
-        const snap = await getDoc(ref);
-
-        // 🔹 Si NO existe → crear estructura completa
-        if (!snap.exists()) {
-          const base = this.buildBaseData(upd.key);
-
-          batch.set(ref, base); // sin merge
-        }
-
-        // 🔹 Aplicar increment SIEMPRE
-        batch.update(ref, {
-          ...upd.data,
-          updatedAt: Date.now(),
-        });
-      }
-
-      // ==========================================================
-      // 🚀 COMMIT
-      // ==========================================================
-
-      await batch.commit();
-
-      return {
-        exito: true,
-        mensaje: "Operación, informes y resúmenes guardados correctamente.",
-      };
-    } catch (error: any) {
-      console.error("❌ Error en guardarFacturasOp:", error);
-
-      return {
-        exito: false,
-        mensaje: error?.message || "Error al procesar la operación completa",
-      };
     }
   }
 
@@ -1446,6 +1372,16 @@ export class DbFirestoreService {
       const batch = writeBatch(this.firestore);
 
       for (const e of chunk) {
+        // Guarda defensiva: sin esto, un id undefined se cuela en el
+        // template literal de abajo como el string literal "undefined" y
+        // Firestore crea sin quejarse un documento fantasma en esa ruta,
+        // en vez de fallar. Así queda un error visible apenas se arma el
+        // batch, no un dato corrupto silencioso.
+        if (!e.id) {
+          throw new Error(
+            `commitBatch: escritura sin id válido en la colección "${e.coleccion}" (modo: ${e.modo}). Escritura abortada para evitar crear un documento "undefined".`,
+          );
+        }
         const ref = doc(this.firestore, `/Vantruck/datos/${e.coleccion}/${e.id}`);
         // TODO: anti-duplicado — cuando el SDK lo permita o se agregue idempotencia,
         // 'crear' debería fallar si el id ya existe. Hoy ambos modos usan set.
@@ -1453,6 +1389,8 @@ export class DbFirestoreService {
           batch.set(ref, e.data);
         } else if (e.modo === 'reemplazar') {
           batch.set(ref, e.data);
+        } else if (e.modo === 'actualizar') {
+          batch.update(ref, e.data);
         } else {
           batch.delete(ref);
         }

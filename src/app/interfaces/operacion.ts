@@ -28,8 +28,8 @@ export interface Operacion {
   acompaniante: boolean;
   acompanianteCant?: number;
 
-  informeOpCliente: number;
-  informeOpChofer: number;
+  informeOpCliente: string;
+  informeOpChofer: string;
 
   tarifaTipo: TarifaTipo;
   datosTarifaEventual: DatosTarifaEventual | null;
@@ -52,6 +52,14 @@ export interface Operacion {
   multiplicadorCliente: number;
   multiplicadorChofer: number;
   adExtraConcepto?: string;
+
+  // Override manual de tarifa base (Chunk 3 — edición de InformeOp): un
+  // número presente congela ese lado a ese valor exacto en vez de derivarlo
+  // de tarifaAplicadaCliente/Chofer — cubre acuerdos puntuales de
+  // facturación. null/ausente = comportamiento normal (resuelto por
+  // jerarquía). Lo respeta ValoresTarifaService.armarValoresNuevos.
+  tarifaBaseManualCliente?: number | null;
+  tarifaBaseManualChofer?: number | null;
 
   estado: EstadoOp;
 

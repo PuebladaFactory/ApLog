@@ -1,0 +1,575 @@
+<div class="modal-header">
+    @if (!cargando) {
+        <h4 class="modal-title">
+            Editar InformeOp — {{ nombreEntidadPropia }}
+            <span class="badge bg-secondary ms-1">{{ informeOp.tipo }}</span>
+        </h4>
+    } @else {
+        <h4 class="modal-title">Editar InformeOp</h4>
+    }
+    <button
+        type="button"
+        class="btn-close"
+        aria-label="Cerrar"
+        (click)="activeModal.dismiss()"
+    ></button>
+</div>
+
+@if (cargando) {
+    <div class="modal-body text-center py-5">
+        <div class="spinner-border" role="status"></div>
+    </div>
+}
+
+@if (!cargando) {
+    <div class="modal-body">
+        <!-- Cabecera: fecha / entidad propia / chofer -->
+        <div class="row g-2 gap-3 mb-3">
+            <div
+                class="col-md-2 border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+            >
+                <div><strong>Fecha:</strong> {{ informeOp.fecha }}</div>
+            </div>
+            <div
+                class="col border border-primary border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+            >
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>{{ nombreEntidadPropia }}</strong>
+                    <span class="badge bg-secondary">{{ informeOp.tipo }}</span>
+                </div>
+            </div>
+            <div
+                class="col border border-warning border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+            >
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>Chofer:</strong>
+                    <div class="text-end">
+                        {{ operacion.chofer.apellido }},
+                        {{ operacion.chofer.nombre }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contraparte -->
+        @if (contraparte) {
+            <div class="row mb-3">
+                <div
+                    class="col border border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+                    [ngClass]="
+                        contraparte.estado === 'activo'
+                            ? 'border-secondary'
+                            : contraparte.estado === 'anulado'
+                              ? 'border-danger'
+                              : 'border-warning'
+                    "
+                >
+                    <div
+                        class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+                    >
+                        <div>
+                            <strong>Contraparte:</strong>
+                            {{ nombreEntidadContraparte }}
+                            <span [class]="claseBadgeEstadoContraparte">{{
+                                contraparte.estado
+                            }}</span>
+                            — Total:
+                            {{
+                                contraparte.valores.total
+                                    | formatearValor: "$"
+                            }}
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            (click)="verDetalleContraparte()"
+                        >
+                            Ver detalle
+                        </button>
+                    </div>
+                    @if (contraparte.estado !== "activo") {
+                        <div class="small text-muted mt-1">
+                            @if (contraparte.estado === "anulado") {
+                                Contraparte anulada — no se va a modificar
+                                ni actualizar nada de ese lado.
+                            } @else {
+                                Contraparte en {{ contraparte.estado }} —
+                                sus valores no se van a modificar, solo se
+                                actualizará el monto que tiene registrado de
+                                este lado.
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        } @else {
+            <div class="alert alert-warning py-2 mb-3">
+                No se encontró InformeOp de contraparte para esta operación.
+            </div>
+        }
+
+        <form>
+            <!-- Detalle general -->
+            <div class="row g-3 mb-3">
+                <div
+                    class="border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded mx-0"
+                >
+                    <div class="row g-3 mb-3 align-items-end">
+                        <div class="col">
+                            <label class="form-label small mb-0"
+                                >Vehículo</label
+                            >
+                            <div>
+                                {{ operacion.vehiculo.dominio }} -
+                                {{ operacion.vehiculo.categoria.nombre }}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small mb-0"
+                                >Km recorridos</label
+                            >
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                class="form-control form-control-sm"
+                                [(ngModel)]="km"
+                                name="km"
+                                appMonto
+                                [minimo]="0"
+                            />
+                        </div>
+                        <div
+                            class="col d-flex justify-content-between align-items-end"
+                        >
+                            <div class="form-check mb-0">
+                                <input
+                                    type="checkbox"
+                                    class="form-check-input"
+                                    id="acompaniante"
+                                    [(ngModel)]="acompaniante"
+                                    name="acompaniante"
+                                />
+                                <label
+                                    class="form-check-label"
+                                    for="acompaniante"
+                                    >Acompañante</label
+                                >
+                            </div>
+                            <div class="text-end">
+                                <label class="form-label small mb-0"
+                                    >Cantidad</label
+                                >
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    class="form-control form-control-sm input-cantidad-acompaniante"
+                                    [(ngModel)]="acompanianteCant"
+                                    name="acompanianteCant"
+                                    appDecimalInput
+                                    [min]="0"
+                                    [decimals]="0"
+                                    [disabled]="!acompaniante"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col">
+                            <label class="form-label small mb-0"
+                                >Hoja de ruta</label
+                            >
+                            <textarea
+                                rows="2"
+                                class="form-control form-control-sm"
+                                [(ngModel)]="hojaRuta"
+                                name="hojaRuta"
+                            ></textarea>
+                        </div>
+                        <div class="col">
+                            <label class="form-label small mb-0"
+                                >Observaciones</label
+                            >
+                            <textarea
+                                rows="2"
+                                class="form-control form-control-sm"
+                                [(ngModel)]="observaciones"
+                                name="observaciones"
+                            ></textarea>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small mb-0"
+                                >Documentación</label
+                            >
+                            @if (operacion.documentacion.length > 0) {
+                                <ul class="list-unstyled small mb-0">
+                                    @for (
+                                        documento of operacion.documentacion;
+                                        track documento.url
+                                    ) {
+                                        <li>
+                                            <a
+                                                [href]="documento.url"
+                                                target="_blank"
+                                                rel="noopener"
+                                                >{{ documento.nombre }}</a
+                                            >
+                                        </li>
+                                    }
+                                </ul>
+                            } @else {
+                                <div class="text-muted small">
+                                    Sin archivos adjuntos.
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small mb-0">
+                                Adicional extra — concepto
+                                @if (adExtraValor > 0) {
+                                    <span class="text-danger">*</span>
+                                }
+                            </label>
+                            <input
+                                type="text"
+                                class="form-control form-control-sm"
+                                [(ngModel)]="adExtraConcepto"
+                                name="adExtraConcepto"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarifa aplicada | Valores -->
+            <div class="row g-3 gap-3 mb-3">
+                <div
+                    class="col border border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+                    [ngClass]="
+                        esLadoCliente ? 'border-primary' : 'border-warning'
+                    "
+                >
+                    <div
+                        class="d-flex justify-content-between align-items-center mb-2"
+                    >
+                        <strong>Tarifa aplicada</strong>
+                        <span
+                            class="badge {{
+                                nivelTarifaAplicada | claseNivelTarifa
+                            }}"
+                            >{{
+                                nivelTarifaAplicada | etiquetaNivelTarifa
+                            }}</span
+                        >
+                    </div>
+
+                    @if (nivelTarifaAplicada === "eventual") {
+                        <div class="row g-2 mt-2 mb-2 d-flex justify-content-between">
+                            <div>
+                                  Concepto {{ informeOp.tipo }}:
+                            </div>
+                            <div>
+                                {{
+                                    informeOp.datosOperacion.datosEventual
+                                        ?.concepto
+                                }}
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2 d-flex justify-content-between">
+                            <div>
+                                Valor {{ informeOp.tipo }}:
+                            </div>
+                            <div>
+                                {{
+                                    informeOp.datosOperacion.datosEventual
+                                        ?.valor | formatearValor: "$"
+                                }}
+                            </div>
+                        </div>
+                    } @else {
+                        <div class="row g-2">
+                            <div
+                                class="d-flex justify-content-between align-items-center mb-1"
+                            >
+                                <div class="">
+                                    <label class="form-label small mb-0"
+                                        >Nombre de la Tarifa:
+                                    </label>
+                                </div>
+                                <div>
+                                    {{
+                                        informeOp.datosOperacion.tarifaAplicada
+                                            ?.nombreTarifa
+                                    }}
+                                </div>
+                            </div>
+                            <div
+                                class="d-flex justify-content-between align-items-center mb-1"
+                            >
+                                <div class="">
+                                    <label class="form-label small mb-0"
+                                        >Modo de tarifación:
+                                    </label>
+                                </div>
+                                <div>
+                                    {{
+                                        modoTarifacionAplicada === "km"
+                                            ? "Por Km"
+                                            : modoTarifacionAplicada ===
+                                                "categoria"
+                                              ? "Por categorías"
+                                              : "—"
+                                    }}
+                                </div>
+                            </div>
+
+                            @if (nivelTarifaAplicada === "personalizada") {
+                                <div
+                                    class="d-flex justify-content-between align-items-center mb-1"
+                                >
+                                    <div class="">
+                                        <label class="form-label small mb-0"
+                                            >Sección:
+                                        </label>
+                                    </div>
+                                    <div>
+                                        {{
+                                            informeOp.datosOperacion.tarifaAplicada?.nombreSeccion
+                                                ?? ('Sección ' + informeOp.datosOperacion.tarifaAplicada?.seccion)
+                                        }}
+                                    </div>
+                                </div>
+                            }
+                            <div
+                                class="d-flex justify-content-between align-items-center mb-1"
+                            >
+                                <div class="">
+                                    <label class="form-label small mb-0"
+                                        >Categoria:
+                                    </label>
+                                </div>
+                                <div>
+                                    {{
+                                        informeOp.datosOperacion.tarifaAplicada
+                                            ?.nombreCategoria
+                                    }}
+                                </div>
+                            </div>
+                            <div
+                                class="d-flex justify-content-between align-items-center mb-1"
+                            >
+                                <div class="">
+                                    <label class="form-label small mb-0"
+                                        >Valor:
+                                    </label>
+                                </div>
+                                <div>
+                                    {{
+                                        informeOp.valores.tarifaBase | formatearValor: "$"
+                                    }}
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div
+                    class="col border border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+                    [ngClass]="
+                        esLadoCliente ? 'border-primary' : 'border-warning'
+                    "
+                >
+                    <div
+                        class="d-flex justify-content-between align-items-center mb-2"
+                    >
+                        <strong>Valores</strong>
+                        <div class="form-check mb-0">
+                            <input
+                                type="checkbox"
+                                class="form-check-input"
+                                id="usarManual"
+                                [(ngModel)]="usarTarifaManual"
+                                name="usarTarifaManual"
+                                (change)="onToggleTarifaManual()"
+                            />
+                            <label class="form-check-label" for="usarManual"
+                                >Usar valor manual</label
+                            >
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-1 align-items-start">
+                        <div class="col-6">
+                            <label class="form-label small mb-0"
+                                >Tarifa base:
+                            </label>
+                        </div>
+                        <div class="col-6 text-end">
+                            @if (!usarTarifaManual) {
+                                {{
+                                    tarifaBaseResuelta
+                                        | formatearValor: "$"
+                                }}
+                            } @else {
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">$</span>
+                                    <input
+                                        type="text"
+                                        inputmode="numeric"
+                                        class="form-control form-control-sm text-end"
+                                        [(ngModel)]="tarifaBaseManualValor"
+                                        name="tarifaBaseManualValor"
+                                        appMonto
+                                        [minimo]="0"
+                                    />
+                                </div>
+                                <div class="form-text">
+                                    Automático:
+                                    {{
+                                        tarifaBaseResuelta
+                                            | formatearValor: "$"
+                                    }}
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-1 align-items-center">
+                        <div class="col-6">
+                            <label class="form-label small mb-0"
+                                >Adicional Acompañante:
+                            </label>
+                        </div>
+                        <div class="col-6 text-end">
+                            {{
+                                valoresEnVivo?.acompaniante ?? 0
+                                    | formatearValor: "$"
+                            }}
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-1 align-items-center">
+                        <div class="col-6">
+                            <label class="form-label small mb-0"
+                                >Km adicional:
+                            </label>
+                        </div>
+                        <div class="col-6 text-end">
+                            {{
+                                valoresEnVivo?.kmMonto ?? 0
+                                    | formatearValor: "$"
+                            }}
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-1 align-items-center">
+                        <div class="col-6">
+                            <label class="form-label small mb-0"
+                                >Adicional extra — valor:
+                            </label>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    class="form-control form-control-sm text-end"
+                                    [(ngModel)]="adExtraValor"
+                                    name="adExtraValor"
+                                    appMonto
+                                    [minimo]="0"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 align-items-center">
+                        <div class="col-6">
+                            <label class="form-label small mb-0"
+                                >Multiplicador:
+                            </label>
+                        </div>
+                        <div class="col-6">
+                            <input
+                                type="text"
+                                class="form-control form-control-sm input-multiplicador ms-auto"
+                                [(ngModel)]="multiplicador"
+                                name="multiplicador"
+                                appDecimalInput
+                                [min]="0"
+                                [max]="2"
+                                [decimals]="2"
+                                [vacioInvalido]="true"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total -->
+            <div class="row g-3 mb-3">
+                <div
+                    class="col border border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+                    [ngClass]="
+                        esLadoCliente ? 'border-primary' : 'border-warning'
+                    "
+                >
+                    <div class="d-flex justify-content-between">
+                        <div class="fw-bold fs-4">
+                            {{
+                                esLadoCliente
+                                    ? "Total a Cobrar"
+                                    : "Total a Pagar"
+                            }}
+                        </div>
+                        <div class="fw-bold fs-4">
+                            {{
+                                valoresEnVivo?.total ?? 0 | formatearValor: "$"
+                            }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observación del informe -->
+            <div class="row g-3 mb-3">
+                <div
+                    class="col border border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+                    [ngClass]="
+                        esLadoCliente ? 'border-primary' : 'border-warning'
+                    "
+                >
+                    <label class="form-label small mb-0"
+                        >Observación del informe</label
+                    >
+                    <textarea
+                        rows="2"
+                        class="form-control form-control-sm"
+                        [(ngModel)]="observacionInforme"
+                        name="observacionInforme"
+                    ></textarea>
+                </div>
+            </div>
+        </form>
+    </div>
+}
+
+<div class="modal-footer">
+    <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="activeModal.dismiss()"
+    >
+        Cancelar
+    </button>
+    <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="cargando"
+        (click)="confirmar()"
+    >
+        Guardar cambios
+    </button>
+</div>

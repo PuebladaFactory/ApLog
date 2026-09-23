@@ -1,27 +1,21 @@
 import { Component, Input, OnInit, TemplateRef } from "@angular/core";
 import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
-import { Subject, take, takeUntil } from "rxjs";
-import { EditarTarifaOpComponent } from "src/app/raiz/liquidacion/modales/editar-tarifa-op/editar-tarifa-op.component";
-import { Chofer } from "src/app/interfaces/chofer";
-import { Cliente } from "src/app/interfaces/cliente";
+import { Subject } from "rxjs";
 import { ConId, ConIdType } from "src/app/interfaces/conId";
-import { Descuento, InformeLiq, Valores } from "src/app/interfaces/informe-liq";
-
-import { InformeOp } from "src/app/interfaces/informe-op";
-
-import { Operacion } from "src/app/interfaces/operacion";
-import { Proveedor } from "src/app/interfaces/proveedor";
-import { TarifaGralCliente } from "src/app/interfaces/tarifa-gral-cliente";
-import { TarifaPersonalizadaCliente } from "src/app/interfaces/tarifa-personalizada-cliente";
-import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
+import { Descuento, InformeLiq } from "src/app/interfaces/informe-liq";
+import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
+import { RefCliente, RefChofer, RefProveedor } from "src/app/interfaces/operacion";
 import { StorageService } from "src/app/servicios/storage/storage.service";
-import { EditarInfOpComponent } from "../editar-inf-op/editar-inf-op.component";
+import { InformeOpService } from "src/app/servicios/informes-op/informe-op.service";
 import { DescuentosComponent } from "../descuentos/descuentos.component";
 import Swal from "sweetalert2";
 import { PeriodoModalComponent } from "src/app/raiz/liquidacion/modales/periodo-modal/periodo-modal.component";
-import { BuscarTarifaService } from "src/app/servicios/buscarTarifa/buscar-tarifa.service";
 import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
 
+/** Modal compartido de detalle de liquidación/proforma — lo abren Proforma,
+ *  FacturacionListado y FacturacionHistorico. La edición individual de un
+ *  InformeOp (botón "Editar" por fila) está deshabilitada temporalmente —
+ *  vuelve en el chunk de edición, junto con EditarInfOpComponent. */
 @Component({
   selector: "app-modal-factura",
   templateUrl: "./informe-liq-detalle.component.html",
@@ -31,269 +25,77 @@ import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-s
 export class InformeLiqDetalleComponent implements OnInit {
   @Input() fromParent: any;
   titulo: string = "";
-  informesOp!: InformeOp[];
-  choferes!: Chofer[];
-  clientes!: Cliente[];
-  proveedores!: Proveedor[];
+  informesOp!: ConId<InformeOpNuevo>[];
   informeLiq!: ConIdType<InformeLiq>;
   searchText: string = "";
-  private destroy$ = new Subject<void>(); // Subject para manejar la destrucción
-  tarifaGral!: ConIdType<TarifaGralCliente> | undefined;
-  tarifaEsp!: ConIdType<TarifaGralCliente> | undefined;
-  tarifaPers!: ConIdType<TarifaPersonalizadaCliente> | undefined;
-  tarifaAplicada!: any;
-  operacion!: Operacion;
+  private destroy$ = new Subject<void>();
   descuentosEditar!: Descuento[];
   obsInterna: string = "";
   isLoading: boolean = false;
   periodoBoolean: boolean = true;
   periodo!: 'mes' | '1° quincena' | '2° quincena';
   tipoCliente!: boolean;
+  /** Nombre de la contraparte por idInfOp — contraParte solo trae
+   *  {idInfOp, monto}, no la identidad; se resuelve acá al abrir el modal. */
+  contraparteNombres: Record<string, string> = {};
 
   constructor(
     public activeModal: NgbActiveModal,
     private storageService: StorageService,
-    private dbFirebase: DbFirestoreService,
     private modalService: NgbModal,
-    private buscarTarifaServ: BuscarTarifaService,
+    private informeOpService: InformeOpService,
     public usuarioSesion: UsuarioSesionService,
   ) {}
 
   ngOnInit(): void {
-    this.clientes = this.storageService.loadInfo("clientes");
-    this.clientes = this.clientes.sort((a, b) =>
-      a.razonSocial.localeCompare(b.razonSocial),
-    ); // Ordena por el nombre del chofer
-    this.choferes = this.storageService.loadInfo("choferes");
-    this.choferes = this.choferes.sort((a, b) =>
-      a.datosPersonales?.apellido?.localeCompare(b.datosPersonales?.apellido),
-    ); // Ordena por el nombre del chofer
-    this.proveedores = this.storageService.loadInfo("proveedores");
-    this.proveedores = this.proveedores.sort((a, b) =>
-      a.razonSocial.localeCompare(b.razonSocial),
-    ); // Ordena por el nombre del chofer
-    console.log("0)fromParent", this.fromParent);
     this.informesOp = this.fromParent.facOp;
     this.informeLiq = this.fromParent.item;
     this.titulo = this.fromParent.item.entidad.razonSocial;
     this.periodo = this.informeLiq.periodo ?? "mes";
-    this.tipoCliente = this.fromParent.tipo === 'cliente' ? true: false;
-    console.log(this.fromParent);
-    
+    this.tipoCliente = this.fromParent.tipo === 'cliente' ? true : false;
+    this.cargarContrapartes();
   }
 
-  getChofer(idChofer: number) {
-    let chofer: Chofer[];
-    chofer = this.choferes.filter((chofer: Chofer) => {
-      return chofer.idChofer === String(idChofer);
-    });
-    if (chofer[0]) {
-      return chofer[0].datosPersonales.apellido + " " + chofer[0].datosPersonales.nombre;
-    } else {
-      return `Chofer dado de baja. idChofer ${idChofer}`;
+  /** Un fetch por informeOp en paralelo (contraParte.idInfOp), cacheado en
+   *  contraparteNombres. Fire-and-forget desde ngOnInit — cubierto por el
+   *  spinner (isLoading) igual que el resto de las operaciones async del
+   *  modal. */
+  private async cargarContrapartes(): Promise<void> {
+    this.isLoading = true;
+    try {
+      const fetches = this.informesOp.map(async (fac) => {
+        if (!fac.contraParte?.idInfOp) return;
+        const contraparte = await this.informeOpService.obtenerPorId(fac.contraParte.idInfOp);
+        if (contraparte) {
+          this.contraparteNombres[fac.idInfOp] = this.nombreEntidad(contraparte);
+        }
+      });
+      await Promise.all(fetches);
+    } finally {
+      this.isLoading = false;
     }
   }
 
-  getCliente(idCliente: number) {
-    let cliente: Cliente[];
-    cliente = this.clientes.filter((cliente: Cliente) => {
-      return cliente.idCliente === String(idCliente);
-    });
-    if (cliente[0]) {
-      return cliente[0].razonSocial;
-    } else {
-      return `Cliente dado de baja. idChofer ${idCliente}`;
+  private nombreEntidad(inf: ConId<InformeOpNuevo>): string {
+    if (inf.tipo === 'chofer') {
+      const ref = inf.entidad as RefChofer;
+      return `${ref.apellido} ${ref.nombre}`;
     }
+    return (inf.entidad as RefCliente | RefProveedor).razonSocial;
   }
 
-  editarFacOp(facOp: ConIdType<InformeOp>) {
-    //////console.log("facOp: ", facOp);
-    this.buscarTarifa(facOp);
+  editarFacOp(facOp: ConId<InformeOpNuevo>) {
+    Swal.fire({
+      icon: "info",
+      title: "Edición temporalmente deshabilitada",
+      text: "La edición de informes individuales está en migración — vuelve a estar disponible en un próximo paso.",
+    });
   }
 
   editarDesc() {
     //////console.log("facOp: ", facOp);
     this.descuentosEditar = this.informeLiq.descuentos;
     this.openModalDescuentos();
-  }
-
-  async buscarTarifa(informeOp: ConIdType<InformeOp>) {
-    ////console.log("0)",facturaOp);
-    this.tarifaAplicada = await this.buscarTarifaServ.buscarTarifa(
-      informeOp,
-      this.fromParent.item.tipo,
-    );
-
-
-/*     let coleccionHistorialTarfGral: string =
-      this.fromParent.tipo === "cliente"
-        ? "historialTarifasGralCliente"
-        : this.fromParent.tipo === "chofer"
-          ? "historialTarifasGralChofer"
-          : "historialTarifasGralProveedor";
-    let coleccionHistorialTarfEsp: string =
-      this.fromParent.tipo === "cliente"
-        ? "historialTarifasEspCliente"
-        : this.fromParent.tipo === "chofer"
-          ? "historialTarifasEspChofer"
-          : "historialTarifasEspProveedor";
-
-    if (facturaOp.tarifaTipo.general) {
-      this.tarifaGral = this.getTarifaGral(facturaOp.idTarifa);
-      ////console.log("1)this.tarifaGral", this.tarifaGral);
-      if (this.tarifaGral === undefined) {
-        this.dbFirebase
-          .obtenerTarifaIdTarifa(
-            coleccionHistorialTarfGral,
-            facturaOp.idTarifa,
-            "idTarifa",
-          )
-          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-          .subscribe((data) => {
-            this.tarifaAplicada = data;
-            ////console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);
-          });
-      } else {
-        this.tarifaAplicada = this.tarifaGral;
-      }
-      this.buscarOperacion(facturaOp);
-    }
-    if (facturaOp.tarifaTipo.especial) {
-      this.tarifaEsp = this.getTarifaEsp(facturaOp.idTarifa);
-      ////console.log("1)this.tarifaEsp", this.tarifaEsp);
-      if (this.tarifaEsp === undefined) {
-        this.dbFirebase
-          .obtenerTarifaIdTarifa(
-            coleccionHistorialTarfEsp,
-            facturaOp.idTarifa,
-            "idTarifa",
-          )
-          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-          .subscribe((data) => {
-            this.tarifaAplicada = data;
-            ////console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);
-          });
-      } else {
-        this.tarifaAplicada = this.tarifaEsp;
-      }
-      this.buscarOperacion(facturaOp);
-    }
-    if (facturaOp.tarifaTipo.eventual) {
-      this.tarifaAplicada = {};
-      ////console.log("1)TARIFA APLICADA: ", this.tarifaAplicada);
-      this.buscarOperacion(facturaOp);
-    }
-    if (facturaOp.tarifaTipo.personalizada) {
-      this.tarifaPers = this.getTarifaPers(facturaOp.idTarifa);
-      ////console.log("1)this.tarifaPers", this.tarifaPers);
-      if (this.tarifaPers === undefined) {
-        this.dbFirebase
-          .obtenerTarifaIdTarifa(
-            "tarifasPersCliente",
-            facturaOp.idTarifa,
-            "idTarifa",
-          )
-          .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-          .subscribe((data) => {
-            this.tarifaAplicada = data;
-            ////console.log("1.5) TARIFA APLICADA: ", this.tarifaAplicada);
-          });
-      } else {
-        this.tarifaAplicada = this.tarifaPers;
-      }
-      this.buscarOperacion(facturaOp);
-    } */
-    this.buscarOperacion(informeOp);
-  }
-
-  async openModalEditarInfOp(informeOp: ConIdType<InformeOp>) {
-    ////console.log("2)this.tarifaAplicada", this.tarifaAplicada);
-    ////console.log("3)this.operacion", this.operacion);
-    {
-      const modalRef = this.modalService.open(EditarInfOpComponent, {
-        windowClass: "modal-xxl",
-        centered: true,
-        size: "lg",
-        //backdrop:"static"
-      });
-
-      let origen = this.fromParent.tipo;
-
-      let info = {
-        infOp: informeOp,
-        tarifaAplicada: this.tarifaAplicada,
-        op: this.operacion,
-        origen: origen,
-        componente: this.fromParent.modo,
-      };
-      ////////console.log(info);
-
-      modalRef.componentInstance.fromParent = info;
-      const respuesta = await modalRef.result;
-      if (respuesta) {
-        this.isLoading = true;
-        console.log("respuesta:", respuesta);
-        informeOp = respuesta.infOp;
-        this.operacion = respuesta.op;
-        //console.log("informeOp:", informeOp);
-        this.recalcularFactura(informeOp);
-        let coleccionInfOp = this.getColeccionInfOp();
-        let coleccionInfLiq =
-          this.fromParent.modo === "facturacion"
-            ? "resumenLiq"
-            : this.fromParent.modo === "proforma"
-              ? "proforma"
-              : "";
-        if (coleccionInfOp === "")
-          return this.mensajesError(
-            "error en la colección del informe de op",
-            "error",
-          );
-        if (coleccionInfLiq === "")
-          return this.mensajesError(
-            "error en la colección del informe de Liquidación",
-            "error",
-          );
-        console.log(
-          "this.fromParent.modo: ",
-          this.fromParent.modo,
-          "\ninformeOp: ",
-          informeOp,
-          "\ncoleccionInfOp: ",
-          coleccionInfOp,
-          "\nthis.fromParent.modo: ",
-          this.fromParent.modo,
-          "\nthis.informeLiq: ",
-          this.informeLiq,
-          "\ncoleccionInfLiq: ",
-          coleccionInfLiq,
-        );
-
-        const resultado =
-          await this.dbFirebase.actualizarOperacionInformeOpYFactura(
-            this.operacion,
-            informeOp,
-            coleccionInfOp,
-            this.fromParent.modo,
-            respuesta.contraParte,
-            respuesta.contraParteColeccion,
-            this.informeLiq,
-            coleccionInfLiq,
-          );
-        console.log("resultado de la edicion de todo: ", resultado);
-        if (resultado.exito) {
-          this.isLoading = false;
-          await this.mensajesError(
-            "El informe se ha editado correctamente",
-            "success",
-          );
-          this.activeModal.close();
-        } else {
-          this.isLoading = false;
-          await this.mensajesError(`error: ${resultado.mensaje}`, "error");
-        }
-      }
-    }
   }
 
   async openModalDescuentos() {
@@ -385,84 +187,6 @@ export class InformeLiqDetalleComponent implements OnInit {
     this.isLoading = false;
   }
 
-  getTarifaGral(idTarifa: number): ConIdType<TarifaGralCliente> | undefined {
-    let tarifasGral: ConIdType<TarifaGralCliente>[];
-    let tarifa: ConIdType<TarifaGralCliente> | undefined;
-    let coleccion: string =
-      this.fromParent.tipo === "cliente"
-        ? "tarifasGralCliente"
-        : this.fromParent.tipo === "chofer"
-          ? "tarifasGralChofer"
-          : "tarifasGralProveedor";
-
-    tarifasGral = this.storageService.loadInfo(coleccion);
-    tarifa = tarifasGral.find((tarf: ConIdType<TarifaGralCliente>) => {
-      return tarf.idTarifa === idTarifa;
-    });
-    return tarifa;
-  }
-
-  getTarifaEsp(idTarifa: number): ConIdType<TarifaGralCliente> | undefined {
-    let tarifasGral: ConIdType<TarifaGralCliente>[];
-    let tarifa: ConIdType<TarifaGralCliente> | undefined;
-    let coleccion: string =
-      this.fromParent.tipo === "cliente"
-        ? "tarifasEspCliente"
-        : this.fromParent.tipo === "chofer"
-          ? "tarifasEspChofer"
-          : "tarifasEspProveedor";
-
-    tarifasGral = this.storageService.loadInfo(coleccion);
-    tarifa = tarifasGral.find((tarf: ConIdType<TarifaGralCliente>) => {
-      return tarf.idTarifa === idTarifa;
-    });
-    return tarifa;
-  }
-
-  getTarifaPers(
-    idTarifa: number,
-  ): ConIdType<TarifaPersonalizadaCliente> | undefined {
-    let tarifasPersonalizada: ConIdType<TarifaPersonalizadaCliente>[];
-    let tarifa: ConIdType<TarifaPersonalizadaCliente> | undefined;
-
-    tarifasPersonalizada = this.storageService.loadInfo("tarifasPersCliente");
-    tarifa = tarifasPersonalizada.find(
-      (tarf: ConIdType<TarifaPersonalizadaCliente>) => {
-        return tarf.idTarifa === idTarifa;
-      },
-    );
-    return tarifa;
-  }
-
-  buscarOperacion(facturaOp: ConIdType<InformeOp>) {
-    this.dbFirebase
-      .obtenerTarifaIdTarifa(
-        "operaciones",
-        facturaOp.idOperacion,
-        "idOperacion",
-      )
-      .pipe(take(1)) // Asegúrate de que la suscripción se complete después de la primera emisión
-      .subscribe((data) => {
-        this.operacion = data;
-        //////////console.log("OPERACION: ", this.operacion);
-        this.openModalEditarInfOp(facturaOp);
-      });
-  }
-
-  recalcularFactura(infOp: ConIdType<InformeOp>) {
-    this.informesOp; /// estas son las facturaOp de la factura
-    this.informeLiq; // esta es la proforma
-    infOp; // esta es la factura editada
-    //console.log("0)this.informesOp: ", this.informesOp);
-    this.informesOp = this.informesOp.filter(
-      (factura) => factura.idInfOp !== infOp.idInfOp,
-    );
-    //console.log("1)this.informesOp con elemnto eliminado: ", this.informesOp);
-    this.informesOp.push(infOp);
-    //console.log("2)this.informesOp con elemento agregado: ", this.informesOp);
-    this.actualizarInformeLiq();
-  }
-
   actualizarInformeLiq() {
     //console.log("3)factura antes: ",this.informeLiq );
 
@@ -475,7 +199,7 @@ export class InformeLiqDetalleComponent implements OnInit {
       totalContraParte: this.informeLiq.valores.totalContraParte,
       totalAdExtra: 0,
     };
-    this.informesOp.forEach((f: InformeOp) => {
+    this.informesOp.forEach((f: InformeOpNuevo) => {
       valores.totalTarifaBase += f.valores.tarifaBase;
       valores.totalAcompaniante += f.valores.acompaniante;
       valores.totalkmMonto += f.valores.kmMonto;
@@ -491,38 +215,6 @@ export class InformeLiqDetalleComponent implements OnInit {
       saldo: this.informeLiq.valores.total,
     };
     console.log("total de la liquidacion: ", this.informeLiq.valores.total);
-  }
-
-  ///obtener la colección del informe de op
-  ///si viene de facturación, son 3 opciones: infOpLiqClientes, infOpLiqChoferes, infOpLiqProveedores. y si viene de proforma: proforma. de liquidación no pasa por este método
-  getColeccionInfOp(): string {
-    let coleccion: string = "";
-    switch (this.fromParent.modo) {
-      case "facturacion":
-        coleccion =
-          this.informeLiq.tipo === "cliente"
-            ? "infOpLiqClientes"
-            : this.informeLiq.tipo === "chofer"
-              ? "infOpLiqChoferes"
-              : this.informeLiq.tipo === "proveedor"
-                ? "infOpLiqProveedores"
-                : "";
-        break;
-      case "proforma":
-        coleccion =
-          this.informeLiq.tipo === "cliente"
-            ? "informesOpClientes"
-            : this.informeLiq.tipo === "chofer"
-              ? "informesOpChoferes"
-              : this.informeLiq.tipo === "proveedor"
-                ? "informesOpProveedores"
-                : "";
-        break;
-      default:
-        coleccion = "";
-        break;
-    }
-    return coleccion;
   }
 
   async mensajesError(msj: string, resultado: string) {
@@ -555,7 +247,7 @@ export class InformeLiqDetalleComponent implements OnInit {
           ? "mes"
           : this.getQuincenaLiq(this.informesOp[0].fecha);
         this.actElementoUnico(componente)
-        
+
       },
       () => {
         // No debería entrar nunca acá
@@ -573,7 +265,7 @@ export class InformeLiqDetalleComponent implements OnInit {
     const date = new Date(year, month - 1, day); // mes - 1 porque los meses en JavaScript son 0-indexed
     console.log("dayv: ", day);
     // Determinar si está en la primera o segunda quincena
-    return day <= 15 ? "1° quincena" : "2° quincena";    
+    return day <= 15 ? "1° quincena" : "2° quincena";
   }
 
   getEncabezados(accion:string):string{
@@ -584,15 +276,11 @@ export class InformeLiqDetalleComponent implements OnInit {
     return respuesta;
   }
 
-  getEntidadContraParte(infOp: ConId<InformeOp>):string{
-    
-    let respuesta = this.fromParent.tipo === 'cliente' ? this.getChofer(infOp.idChofer) : this.getCliente(infOp.idCliente);
-    
-    
-    return respuesta;
+  getEntidadContraParte(infOp: ConId<InformeOpNuevo>): string {
+    return this.contraparteNombres[infOp.idInfOp] ?? '—';
   }
 
-  getPorcentaje():boolean{    
+  getPorcentaje():boolean{
     if(this.fromParent.tipo === 'cliente'){
       return false;
     } else {

@@ -15,9 +15,10 @@ import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
 import { LogService } from "src/app/servicios/log/log.service";
 import { Operacion } from "src/app/interfaces/operacion";
 import { PdfService } from "src/app/servicios/informes/pdf/pdf.service";
-import { InformeOp } from "src/app/interfaces/informe-op";
+import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import { NumeradorService } from "src/app/servicios/numerador/numerador.service";
+import { InformeOpService } from "src/app/servicios/informes-op/informe-op.service";
 import { CrearLiquidacionParams } from "src/app/servicios/liquidaciones/liquidacion-builder.service";
 import {
   AnularParams,
@@ -43,7 +44,7 @@ export class ProformaComponent implements OnInit {
   filtroChofer: string = "";
   filtroProveedor: string = "";
   isLoading: boolean = false;
-  informesOp: ConIdType<InformeOp>[] = [];
+  informesOp: ConId<InformeOpNuevo>[] = [];
   coleccionOrigen: string = "";
   coleccionDestino: string = "";
   coleccionInformeLiq: string = "";
@@ -63,6 +64,7 @@ export class ProformaComponent implements OnInit {
     private pdfServ: PdfService,
 
     private liquidacionService: LiquidacionService,
+    private informeOpService: InformeOpService,
     public usuarioSesion: UsuarioSesionService,
   ) {}
 
@@ -135,7 +137,7 @@ export class ProformaComponent implements OnInit {
     accion: string,
   ) {
     this.isLoading = true;
-    await this.consultarOperacionesSeleccionadas(proforma, origen); //acá se obtienen los informesOp
+    await this.consultarOperacionesSeleccionadas(proforma); //acá se obtienen los informesOp
 
     if (accion === "reimpresion") {
       this.preguntarDescarga(proforma, accion);
@@ -146,25 +148,9 @@ export class ProformaComponent implements OnInit {
     }
   }
 
-  async consultarOperacionesSeleccionadas(
-    proforma: ConId<InformeLiq>,
-    origen: string,
-  ) {
-    /*     if (!this.operaciones || this.operaciones.length === 0) {
-      Swal.fire('Error', 'No hay operaciones seleccionadas.', 'error');
-      return;
-    } */
-    //console.log("origen", origen);
-
-    let componente: string =
-      origen === "cliente"
-        ? "informesOpClientes"
-        : origen === "chofer"
-          ? "informesOpChoferes"
-          : "informesOpProveedores";
+  async consultarOperacionesSeleccionadas(proforma: ConId<InformeLiq>) {
     try {
-      const consulta = await this.dbFirebase.obtenerDocsPorIdsOperacion(
-        componente, // nombre de la colección
+      const consulta = await this.informeOpService.obtenerPorIdsOperacion(
         proforma.operaciones, // array de idsOperacion
       );
       //console.log("consulta", consulta);
@@ -191,7 +177,7 @@ export class ProformaComponent implements OnInit {
 
   openModalDetalleFactura(
     factura: any,
-    facturasOp: InformeOp[],
+    facturasOp: ConId<InformeOpNuevo>[],
     origen: string,
   ) {
     ////console.log("lega??");
@@ -311,7 +297,7 @@ export class ProformaComponent implements OnInit {
 
   async liquidarProforma(proforma: ConId<InformeLiq>) {
     
-    await this.consultarOperacionesSeleccionadas(proforma, proforma.tipo);
+    await this.consultarOperacionesSeleccionadas(proforma);
 
     let parametros: CrearLiquidacionParams = {
       tipo: proforma.tipo,
@@ -515,7 +501,7 @@ export class ProformaComponent implements OnInit {
 
   async calcularAnios(informesLiq: ConId<InformeLiq>[]) {
     for (const informe of informesLiq) {
-      await this.consultarOperacionesSeleccionadas(informe, informe.tipo);
+      await this.consultarOperacionesSeleccionadas(informe);
 
       if (this.informesOp.length > 0) {
         const fecha = this.informesOp[0].fecha;

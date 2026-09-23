@@ -286,6 +286,7 @@ export class ValoresTarifaService {
         nivel: tarifa.nivel as 'general' | 'especial' | 'personalizada',
         nombreTarifa: tarifa.nombre,
         seccion: seccion.orden,
+        nombreSeccion: seccion.nombre,
         categoria: categoria.orden,
         nombreCategoria: categoria.nombre,
       },
@@ -416,6 +417,7 @@ export class ValoresTarifaService {
         nivel: candidato.nivel,
         nombreTarifa: candidato.nombreTarifa,
         seccion: seccion.orden,
+        nombreSeccion: seccion.nombre,
         categoria: categoria.orden,
         nombreCategoria: categoria.nombre,
       },
@@ -436,6 +438,7 @@ export class ValoresTarifaService {
       nivel: candidato.nivel,
       nombreTarifa: candidato.nombreTarifa,
       seccion: seccion.orden,
+      nombreSeccion: seccion.nombre,
       categoria: categoria.orden,
       nombreCategoria: categoria.nombre,
     };
@@ -468,6 +471,13 @@ export class ValoresTarifaService {
     const chofer = this.calcularLado(op, refChofer, true, esProveedor);
     if (!cliente || !chofer) return null;
 
+    // Override manual de tarifa base (Chunk 3 — edición de InformeOp): un
+    // valor cargado a mano reemplaza al resuelto por jerarquía para ESE
+    // lado — el resto (km adicional, acompañante) se sigue derivando
+    // normalmente de la tarifa. null/ausente = comportamiento de siempre.
+    const tarifaBaseCliente = op.tarifaBaseManualCliente != null ? op.tarifaBaseManualCliente : cliente.tarifaBase;
+    const tarifaBaseChofer = op.tarifaBaseManualChofer != null ? op.tarifaBaseManualChofer : chofer.tarifaBase;
+
     // Multiplicador 0 zanja todo el lado a 0 (acompañante, km adicional y
     // extra incluidos) — decisión de negocio confirmada, unificada acá para
     // que alta y cierre compartan el mismo criterio (Bloque 7 Paso 2).
@@ -476,14 +486,16 @@ export class ValoresTarifaService {
     // que 0, nunca como si no aplicara: la rama "else" de abajo multiplica
     // tarifaBase por el multiplicador crudo, y tarifaBase * null da 0 en JS
     // sin afectar kmAdicional/acompValor/adExtraValor — quedaba una op con
-    // la base en cero y los adicionales sueltos (bug real, reportado).
+    // la base en cero y los adicionales sueltos (bug real, reportado). Un
+    // override manual de tarifaBase no exime de esta regla: multiplicador 0
+    // sigue anulando el lado entero.
     const ladoCliente = (op.multiplicadorCliente ?? 0) === 0
       ? { acompValor: 0, kmAdicional: 0, tarifaBase: 0, aCobrar: 0, adExtraValor: 0 }
       : {
           acompValor: cliente.acompValor,
           kmAdicional: cliente.kmAdicional,
-          tarifaBase: cliente.tarifaBase,
-          aCobrar: cliente.tarifaBase * op.multiplicadorCliente + cliente.kmAdicional + cliente.acompValor + (op.valores.cliente.adExtraValor ?? 0),
+          tarifaBase: tarifaBaseCliente,
+          aCobrar: tarifaBaseCliente * op.multiplicadorCliente + cliente.kmAdicional + cliente.acompValor + (op.valores.cliente.adExtraValor ?? 0),
           adExtraValor: op.valores.cliente.adExtraValor ?? 0,
         };
 
@@ -492,8 +504,8 @@ export class ValoresTarifaService {
       : {
           acompValor: chofer.acompValor,
           kmAdicional: chofer.kmAdicional,
-          tarifaBase: chofer.tarifaBase,
-          aPagar: chofer.tarifaBase * op.multiplicadorChofer + chofer.kmAdicional + chofer.acompValor + (op.valores.chofer.adExtraValor ?? 0),
+          tarifaBase: tarifaBaseChofer,
+          aPagar: tarifaBaseChofer * op.multiplicadorChofer + chofer.kmAdicional + chofer.acompValor + (op.valores.chofer.adExtraValor ?? 0),
           adExtraValor: op.valores.chofer.adExtraValor ?? 0,
         };
 

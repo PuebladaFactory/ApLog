@@ -57,11 +57,11 @@
               <td>{{fac.fecha}}</td>
               <td>{{fac.idOperacion}}</td>
               @if (fromParent.tipo === 'proveedor') {
-                <td class="text-center">{{getChofer(fac.idChofer)}}</td>
+                <td class="text-center">{{fac.datosOperacion.chofer.apellido}} {{fac.datosOperacion.chofer.nombre}}</td>
               }
               <td>{{getEntidadContraParte(fac)}}</td>
-              <td class="text-end col-numero" [ngClass]="{'text-danger': tipoCliente, 'text-success':!tipoCliente}">{{fac.contraParteMonto | formatearValor : "$"}}</td>              
-              <td class="text-end">{{(fac.contraParteMonto | calcularPorcentajeV2:fac.valores.total:getPorcentaje())}}</td>
+              <td class="text-end col-numero" [ngClass]="{'text-danger': tipoCliente, 'text-success':!tipoCliente}">{{fac.contraParte.monto | formatearValor : "$"}}</td>
+              <td class="text-end">{{(fac.contraParte.monto | calcularPorcentajeV2:fac.valores.total:getPorcentaje())}}</td>
               <td class="text-end col-numero" [ngClass]="{'text-danger': !tipoCliente, 'text-success':tipoCliente}">{{fac.valores.total | formatearValor : "$"}}</td>
               @if (fromParent.modo === 'proforma' || fromParent.accion === 'edicion') {
                 <td class="text-end"><app-btn-editar name="Editar" (click)="editarFacOp(fac)" [ngClass]="{'isDisabled':usuarioSesion.esRol('demo')}"></app-btn-editar> </td>

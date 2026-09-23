@@ -4,6 +4,7 @@ import {
   collection,
   collectionData,
   doc,
+  getDoc,
   orderBy,
   query,
   where,
@@ -18,7 +19,8 @@ import {
   ResumenOpGeneralMensual,
 } from "src/app/interfaces/resumen-op-base";
 import { ResumenBuilderService } from "./resumen-builder.service";
-import { Resultado } from "../../database/db-firestore.service";
+import { EscrituraBatch, Resultado } from "../../database/db-firestore.service";
+import { UpdateResumen } from "./resumen-op-calculator.service";
 import { map, Observable } from "rxjs";
 import { PeriodoFiltro } from "src/app/interfaces/periodo-filtro";
 
@@ -289,6 +291,42 @@ export class ReportesOpService {
       }
 
       await batch.commit();
+    }
+  }
+
+  // =========================
+  // 🔹 ESCRITURAS PARA EscrituraBatch[] (deltas en vivo — cierre/edición)
+  // =========================
+  /** Traduce UpdateResumen[] a EscrituraBatch[], para callers que arman su
+   *  propio batch atómico junto con otras escrituras (ej.
+   *  InformeOpService.editar). Método NUEVO, en paralelo a guardarResumenes
+   *  (que sigue sirviendo solo a reconstruirResumenes, con su propio
+   *  WriteBatch) — no lo reemplaza ni lo toca. Reusa
+   *  ResumenBuilderService.crearResumenBase como fuente única del esqueleto
+   *  base en vez de reimplementarlo (a diferencia de
+   *  DbFirestoreService.buildBaseData, que es una reimplementación paralela
+   *  vieja — se deja intacta, sirve solo a aplicarUpdatesResumen). */
+  async agregarEscriturasResumen(escrituras: EscrituraBatch[], updates: UpdateResumen[]): Promise<void> {
+    for (const upd of updates) {
+      const id = upd.path.split('/').pop()!;
+      const ref = doc(this.firestore, upd.path);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        escrituras.push({
+          coleccion: 'resumenOpMensual',
+          id,
+          data: this.resumenBuilder.crearResumenBase(upd.key),
+          modo: 'crear',
+        });
+      }
+
+      escrituras.push({
+        coleccion: 'resumenOpMensual',
+        id,
+        data: { ...upd.data, updatedAt: Date.now() },
+        modo: 'actualizar',
+      });
     }
   }
 

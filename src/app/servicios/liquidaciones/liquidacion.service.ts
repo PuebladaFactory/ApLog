@@ -1,23 +1,19 @@
 import { Injectable } from "@angular/core";
 import { ConId } from "src/app/interfaces/conId";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
-import { InformeOp } from "src/app/interfaces/informe-op";
+import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
 import {
-  addDoc,
   collection,
-  deleteDoc,
   doc,
   DocumentReference,
   Firestore,
   getDoc,
   getDocs,
   query,
-  QueryDocumentSnapshot,
   setDoc,
   where,
   WriteBatch,
   writeBatch,
-  deleteField,
 } from "@angular/fire/firestore";
 import { FinanzasResumenService } from "../finanzas/finanzas-resumen.service";
 import { EstadoOp, Operacion } from "src/app/interfaces/operacion";
@@ -28,23 +24,21 @@ import {
 } from "./liquidacion-builder.service";
 
 export interface ProcesarParams {
-  informesOp: ConId<InformeOp>[];
+  informesOp: ConId<InformeOpNuevo>[];
   tipo: "cliente" | "chofer" | "proveedor";
-  componenteAlta: string;
-  componenteBaja: string;
   componenteInfLiq: string;
   informeLiq: InformeLiq;
   modo: "factura" | "proforma";
 }
 
 export interface AnularParams {
-  informesOp: ConId<InformeOp>[],
+  informesOp: ConId<InformeOpNuevo>[],
   tipo: "cliente" | "chofer" | "proveedor",
   informeLiq: ConId<InformeLiq>,
-  modo: "factura" | "proforma",  
+  modo: "factura" | "proforma",
   anuladoMotivo: string;                 //motivo de anulacion
   anuladoPor: string;                 //usuario que realizó la anulación
-  fechaAnulacion: string;  
+  fechaAnulacion: string;
 }
 
 type OperacionRef = {
@@ -76,12 +70,10 @@ export class LiquidacionService {
     liqProforma?: boolean,
   ): Promise<{ exito: boolean; mensaje: string; informe: any }> {
     let operaciones: Map<string, OperacionRef> | null = null;
-    console.log("usuarioId: ", usuarioId);
 
     try {
       /* BLOQUEO DE LAS OPERACIONES*/
       operaciones = await this.obtenerOperaciones(params.informesOp);
-      console.log("operaciones", operaciones);
       await this.bloquearOperaciones(operaciones, usuarioId);
 
       /* CREAR INFORME LIQUIDACION*/
@@ -104,8 +96,6 @@ export class LiquidacionService {
       const parametros: ProcesarParams = {
         informesOp: params.informesOp,
         tipo: params.tipo,
-        componenteBaja: this.getColNoLiq(informeLiq.tipo),
-        componenteAlta: this.getColLiq(informeLiq.tipo),
         componenteInfLiq: params.modo === "factura" ? "resumenLiq" : "proforma",
         informeLiq: informeLiq,
         modo: params.modo,
@@ -181,31 +171,21 @@ export class LiquidacionService {
   // PROCESAR FACTURA
   // =====================================================
 
+  /** Transiciona cada InformeOp seleccionado a 'liquidado' (acepta origen
+   *  'activo' o 'proforma' — liquidar una proforma existente pasa por acá
+   *  también) y crea el InformeLiq. Ya no mueve el documento entre
+   *  colecciones — colección única, solo cambia estado + idInfLiq. */
   async procesarInformeLiq(
     params: ProcesarParams,
     batch: WriteBatch,
     operaciones: Map<string, OperacionRef>,
   ): Promise<{ exito: boolean; mensaje: string }> {
-    await this.verificarInformesOpOrigen(
-      params.informesOp,
-      params.componenteBaja,
-    );
+    await this.verificarEstadoInformes(params.informesOp, ['activo', 'proforma']);
+    await this.verificarInformeLiqDestino(params.informeLiq, params.componenteInfLiq);
 
-    await this.verificarInformeOpDestino(
-      params.informesOp,
-      params.componenteAlta,
+    const informeLiqRef = doc(
+      collection(this.firestore, `${this.basePath}/${params.componenteInfLiq}`),
     );
-
-    await this.verificarInformeLiqDestino(
-      params.informeLiq,
-      params.componenteInfLiq,
-    );
-
-    let contrapartes: Map<string, DocumentReference> | null = null;
-    if (params.tipo !== "cliente") {
-      const ids = params.informesOp.map((i) => i.idOperacion);
-      contrapartes = await this.obtenerContrapartes(ids);
-    }
 
     for (const informeOp of params.informesOp) {
       const op = operaciones.get(informeOp.idOperacion);
@@ -223,37 +203,27 @@ export class LiquidacionService {
         estado: nuevoEstado,
       });
 
-      const informeOrigenRef = doc(
+      const informeRef = doc(
         this.firestore,
-        `${this.basePath}/${params.componenteBaja}`,
-        informeOp.id,
+        `${this.basePath}/informesOp/${informeOp.idInfOp}`,
       );
 
-      const informeDestinoRef = doc(
-        this.firestore,
-        `${this.basePath}/${params.componenteAlta}`,
-        informeOp.id,
-      );
+      batch.update(informeRef, {
+        estado: 'liquidado',
+        idInfLiq: informeLiqRef.id,
+      });
 
-      const inf = this.actualizarInformeOp(informeOp);
-
-      batch.set(informeDestinoRef, inf);
-
-      batch.delete(informeOrigenRef);
-
-      if (contrapartes) {
-        await this.actualizarContraParte(
-          batch,
-          informeOp,
-          params.modo,
-          contrapartes,
+      // Mismo criterio asimétrico que el modelo viejo: solo el lado
+      // chofer/proveedor anota a su contraparte (siempre cliente) — ver
+      // razonamiento en el mensaje.
+      if (params.tipo !== "cliente" && informeOp.contraParte.idInfOp) {
+        const contraRef = doc(
+          this.firestore,
+          `${this.basePath}/informesOp/${informeOp.contraParte.idInfOp}`,
         );
+        batch.update(contraRef, { bloqueadoPorContraparte: false });
       }
     }
-
-    const informeLiqRef = doc(
-      collection(this.firestore, `${this.basePath}/${params.componenteInfLiq}`),
-    );
 
     batch.set(informeLiqRef, {
       ...params.informeLiq,
@@ -273,23 +243,14 @@ export class LiquidacionService {
   async procesarProforma(
     params: ProcesarParams,
     batch: WriteBatch,
-    operaciones: Map<string, OperacionRef>,    
+    operaciones: Map<string, OperacionRef>,
   ): Promise<{ exito: boolean; mensaje: string }> {
-    await this.verificarInformesOpOrigen(
-      params.informesOp,
-      params.componenteBaja,
-    );
+    await this.verificarEstadoInformes(params.informesOp, ['activo']);
+    await this.verificarInformeLiqDestino(params.informeLiq, params.componenteInfLiq);
 
-    await this.verificarInformeLiqDestino(
-      params.informeLiq,
-      params.componenteInfLiq,
+    const informeLiqRef = doc(
+      collection(this.firestore, `${this.basePath}/${params.componenteInfLiq}`),
     );
-
-    let contrapartes: Map<string, DocumentReference> | null = null;
-    if (params.tipo !== "cliente") {
-      const ids = params.informesOp.map((i) => i.idOperacion);
-      contrapartes = await this.obtenerContrapartes(ids);
-    }
 
     for (const informeOp of params.informesOp) {
       const op = operaciones.get(informeOp.idOperacion);
@@ -307,30 +268,24 @@ export class LiquidacionService {
         estado: nuevoEstado,
       });
 
-      const informeOrigenRef = doc(
+      const informeRef = doc(
         this.firestore,
-        `${this.basePath}/${params.componenteBaja}`,
-        informeOp.id,
+        `${this.basePath}/informesOp/${informeOp.idInfOp}`,
       );
 
-      const infActualizado = this.actualizarInformeProforma(informeOp, true);
+      batch.update(informeRef, {
+        estado: 'proforma',
+        idInfLiq: informeLiqRef.id,
+      });
 
-      batch.update(informeOrigenRef, infActualizado);
-
-      //Si modo !== 'clientes', buscar contra parte y marcarla
-      if (contrapartes) {
-        await this.actualizarContraParte(
-          batch,
-          informeOp,
-          params.modo,
-          contrapartes,
+      if (params.tipo !== "cliente" && informeOp.contraParte.idInfOp) {
+        const contraRef = doc(
+          this.firestore,
+          `${this.basePath}/informesOp/${informeOp.contraParte.idInfOp}`,
         );
+        batch.update(contraRef, { bloqueadoPorContraparte: true });
       }
     }
-
-    const informeLiqRef = doc(
-      collection(this.firestore, `${this.basePath}/${params.componenteInfLiq}`),
-    );
 
     batch.set(informeLiqRef, {
       ...params.informeLiq,
@@ -371,7 +326,7 @@ export class LiquidacionService {
   }
 
   async obtenerOperaciones(
-    informesOp: InformeOp[],
+    informesOp: ConId<InformeOpNuevo>[],
   ): Promise<Map<string, OperacionRef>> {
     const operacionesMap = new Map<string, OperacionRef>();
 
@@ -410,49 +365,28 @@ export class LiquidacionService {
   // INFORMES
   // =====================================================
 
-  async verificarInformesOpOrigen(
-    informes: ConId<InformeOp>[],
-    componenteOrigen: string,
-  ) {
-    const informesOpRef = collection(
-      this.firestore,
-      `${this.basePath}/${componenteOrigen}`,
-    );
-
+  /** Guarda de concurrencia — lee cada InformeOp FRESCO desde Firestore (no
+   *  confía en el estado en memoria que trae el caller, que puede estar
+   *  desactualizado si alguien más ya lo procesó) y verifica que su estado
+   *  actual esté entre los esperados antes de transicionarlo. Reemplaza a
+   *  verificarInformesOpOrigen + verificarInformeOpDestino del modelo viejo
+   *  (que hacían el mismo pre-check pero vía query a la colección origen/
+   *  destino — hoy innecesario: colección única, se lee por id directo,
+   *  porque idInfOp === id del documento). */
+  private async verificarEstadoInformes(
+    informes: ConId<InformeOpNuevo>[],
+    estadosEsperados: InformeOpNuevo['estado'][],
+  ): Promise<void> {
     const checks = informes.map(async (inf) => {
-      const informesOpQuery = query(
-        informesOpRef,
-        where("idInfOp", "==", inf.idInfOp),
-      );
-      const facturaSnap = await getDocs(informesOpQuery);
-      if (facturaSnap.empty) {
-        throw new Error(
-          `Pre-Check: No existe un informe con id ${inf.idInfOp} en ${componenteOrigen}`,
-        );
+      const ref = doc(this.firestore, `${this.basePath}/informesOp/${inf.idInfOp}`);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        throw new Error(`Pre-Check: no existe el InformeOp ${inf.idInfOp}`);
       }
-    });
-
-    await Promise.all(checks);
-  }
-
-  async verificarInformeOpDestino(
-    informes: ConId<InformeOp>[],
-    componenteDestino: string,
-  ) {
-    const informesOpRef = collection(
-      this.firestore,
-      `${this.basePath}/${componenteDestino}`,
-    );
-
-    const checks = informes.map(async (inf) => {
-      const informesOpQuery = query(
-        informesOpRef,
-        where("idInfOp", "==", inf.idInfOp),
-      );
-      const facturaSnap = await getDocs(informesOpQuery);
-      if (!facturaSnap.empty) {
+      const estadoActual = (snap.data() as InformeOpNuevo).estado;
+      if (!estadosEsperados.includes(estadoActual)) {
         throw new Error(
-          `Pre-Check: Ya existe un informe con id ${inf.idInfOp} en ${componenteDestino}`,
+          `Pre-Check: el InformeOp ${inf.idInfOp} está en estado '${estadoActual}', se esperaba uno de [${estadosEsperados.join(', ')}].`,
         );
       }
     });
@@ -478,49 +412,6 @@ export class LiquidacionService {
       throw new Error(
         `Pre-Check: Ya existe una informe con idInfLiq ${informe.idInfLiq} en ${componenteDestino}`,
       );
-    }
-  }
-
-  // =====================================================
-  // CONTRAPARTE
-  // =====================================================
-
-  async obtenerContrapartes(idsOperacion: string[]) {
-    const bloques = chunk(idsOperacion, 10);
-    const map = new Map<string, DocumentReference>();
-
-    for (const bloque of bloques) {
-      const q = query(
-        collection(this.firestore, `${this.basePath}/informesOpClientes`),
-        where("idOperacion", "in", bloque),
-      );
-
-      const snap = await getDocs(q);
-
-      snap.docs.forEach((docSnap) => {
-        const data = docSnap.data() as InformeOp;
-
-        map.set(data.idOperacion, docSnap.ref);
-      });
-    }
-
-    return map;
-  }
-
-  actualizarContraParte(
-    batch: WriteBatch,
-    informe: ConId<InformeOp>,
-    modo: "factura" | "proforma",
-    contrapartes: Map<string, DocumentReference>,
-  ) {
-    const contraRef = contrapartes.get(informe.idOperacion);
-
-    if (!contraRef) return;
-
-    if (modo === "proforma") {
-      batch.update(contraRef, { contraParteProforma: true });
-    } else {
-      batch.update(contraRef, { contraParteProforma: false });
     }
   }
 
@@ -576,32 +467,17 @@ export class LiquidacionService {
   // INFORMES UPDATE
   // =====================================================
 
-  actualizarInformeProforma(informe: ConId<InformeOp>, valor: boolean) {
-    return {
-      ...informe,
-      proforma: valor,
-    };
-  }
-
-  actualizarInformeOp(informeOp: ConId<InformeOp>) {
-    return {
-      ...informeOp,
-      proforma: false,
-      liquidacion: true,
-    };
-  }
-
   actualizarInformeLiq(
     informeLiq: InformeLiq,
     anuladorPor: string,
     anuladoMotivo:string,
-    anuladoFecha: string, 
+    anuladoFecha: string,
   ) {
     return {
-      ...informeLiq,      
+      ...informeLiq,
       estado: 'anulado',
-      anuladoMotivo: anuladoMotivo,                 
-      anuladoPor: anuladorPor,                 
+      anuladoMotivo: anuladoMotivo,
+      anuladoPor: anuladorPor,
       fechaAnulacion: anuladoFecha
     };
   }
@@ -609,21 +485,21 @@ export class LiquidacionService {
   // =====================================================
   // REVERTIR INFORMES
   // =====================================================
+
+  /** Revierte una proforma a 'activo'. Agregué el guard de
+   *  verificarEstadoInformes acá (el original no lo tenía en este método
+   *  puntual, sí en procesarInformeLiq/procesarProforma — parece un
+   *  descuido). Avisame si preferís que lo saque para fidelidad estricta
+   *  con el comportamiento anterior. */
   async revertirProforma(
     parametros: ProcesarParams,
     batch: WriteBatch,
     operaciones: Map<string, OperacionRef>,
     proforma: ConId<InformeLiq>
-  ) : Promise<{ exito: boolean; mensaje: string }>  {    
+  ) : Promise<{ exito: boolean; mensaje: string }>  {
+    await this.verificarEstadoInformes(parametros.informesOp, ['proforma']);
 
-    const ids = [...new Set(parametros.informesOp.map((i) => i.idOperacion))];
-
-    let contrapartes: Map<string, DocumentReference> | null = null;
-    if (parametros.tipo !== "cliente") {
-      contrapartes = await this.obtenerContrapartes(ids);
-    }    
-
-     for (const informeOp of parametros.informesOp) {
+    for (const informeOp of parametros.informesOp) {
       const op = operaciones.get(informeOp.idOperacion);
 
       if (!op) {
@@ -646,37 +522,38 @@ export class LiquidacionService {
         estado: nuevoEstado,
       });
 
-      const origenRef = doc(
+      const informeRef = doc(
         this.firestore,
-        `${this.basePath}/${parametros.componenteBaja}`,
-        informeOp.id,
+        `${this.basePath}/informesOp/${informeOp.idInfOp}`,
       );
 
-      const infActualizado = this.actualizarInformeProforma(informeOp, false);
+      batch.update(informeRef, {
+        estado: 'activo',
+        idInfLiq: null,
+      });
 
-      batch.update(origenRef, infActualizado);
-
-      //Si modo !== 'clientes', buscar contra parte y marcarla
-      if (contrapartes) {
-        await this.actualizarContraParte(
-          batch,
-          informeOp,
-          'factura',  //se usa factura para que asigne falso a la propiedad contraParteProforma
-          contrapartes,
+      if (parametros.tipo !== "cliente" && informeOp.contraParte.idInfOp) {
+        const contraRef = doc(
+          this.firestore,
+          `${this.basePath}/informesOp/${informeOp.contraParte.idInfOp}`,
         );
+        batch.update(contraRef, { bloqueadoPorContraparte: false });
       }
-
     }
 
-     /* ELIMINAR LA PROFORMA DE SU COLECCIÓN */
-      await this.bajaProforma(batch, proforma );
+    /* ELIMINAR LA PROFORMA DE SU COLECCIÓN */
+    await this.bajaProforma(batch, proforma);
 
-      return {
+    return {
       exito: true,
       mensaje: "El informe de Liquidación se procesó con éxito.",
     };
   }
 
+  /** Revierte una factura a 'activo'. NOTA: igual que el modelo viejo, NO
+   *  toca bloqueadoPorContraparte acá — el original tampoco lo hacía en
+   *  este método (calculaba `contrapartes` y nunca lo usaba). Gap
+   *  preexistente, lo preservo tal cual — no es parte de este cutover. */
   async revertirInformeLiq(
     parametros: ProcesarParams,
     batch: WriteBatch,
@@ -684,14 +561,10 @@ export class LiquidacionService {
     informeLiq: ConId<InformeLiq>,
     anuladorPor: string,
     anuladoMotivo:string,
-    anuladoFecha: string, 
+    anuladoFecha: string,
   ): Promise<{ exito: boolean; mensaje: string }> {
-    const ids = [...new Set(parametros.informesOp.map((i) => i.idOperacion))];
+    await this.verificarEstadoInformes(parametros.informesOp, ['liquidado']);
 
-    let contrapartes: Map<string, DocumentReference> | null = null;
-    if (parametros.tipo !== "cliente") {
-      contrapartes = await this.obtenerContrapartes(ids);
-    }
     for (const informeOp of parametros.informesOp) {
       const op = operaciones.get(informeOp.idOperacion);
 
@@ -717,40 +590,26 @@ export class LiquidacionService {
         estado: nuevoEstado,
       });
 
-      const origenRef = doc(
+      const informeRef = doc(
         this.firestore,
-        `${this.basePath}/${parametros.componenteBaja}`,
-        informeOp.id,
+        `${this.basePath}/informesOp/${informeOp.idInfOp}`,
       );
 
-      const destinoRef = doc(
-        this.firestore,
-        `${this.basePath}/${parametros.componenteAlta}`,
-        informeOp.id,
-      );
-
-      batch.set(destinoRef, {
-        ...informeOp,
-        liquidacion: false,
+      batch.update(informeRef, {
+        estado: 'activo',
+        idInfLiq: null,
       });
-
-      batch.delete(origenRef);
     }
 
-      const infLiqRef = doc(
-        this.firestore,
-        `${this.basePath}/${parametros.componenteInfLiq}`,
-        informeLiq.id,
-      );
+    const infLiqRef = doc(
+      this.firestore,
+      `${this.basePath}/${parametros.componenteInfLiq}`,
+      informeLiq.id,
+    );
 
+    const infActualizado = this.actualizarInformeLiq(parametros.informeLiq, anuladorPor, anuladoMotivo, anuladoFecha);
 
-      
-      const infActualizado = this.actualizarInformeLiq(parametros.informeLiq, anuladorPor, anuladoMotivo, anuladoFecha);
-      
-
-    
-
-      batch.update(infLiqRef, infActualizado );
+    batch.update(infLiqRef, infActualizado );
 
     return {
       exito: true,
@@ -771,9 +630,7 @@ export class LiquidacionService {
 
     for (const op of operaciones.values()) {
       const lock = op.data.lockLiquidacion;
-      console.log("op: ", op);
-      console.log("usuario: ", usuario);
-      console.log("lock", lock);
+
       if (lock) {
         const expirado = now - lock.timestamp > this.LOCK_TIMEOUT;
 
@@ -838,35 +695,10 @@ export class LiquidacionService {
     }
   }
 
-  private getColLiq(tipo: "cliente" | "chofer" | "proveedor"): string {
-    switch (tipo) {
-      case "cliente":
-        return "infOpLiqClientes";
-      case "chofer":
-        return "infOpLiqChoferes";
-      case "proveedor":
-        return "infOpLiqProveedores";
-      default:
-        throw new Error(`Tipo de informe inválido: ${tipo}`);
-    }
-  }
-
-  private getColNoLiq(tipo: "cliente" | "chofer" | "proveedor"): string {
-    switch (tipo) {
-      case "cliente":
-        return "informesOpClientes";
-      case "chofer":
-        return "informesOpChoferes";
-      case "proveedor":
-        return "informesOpProveedores";
-      default:
-        throw new Error(`Tipo de informe inválido: ${tipo}`);
-    }
-  }
   // =====================================================
   // PUNTO DE ENTRADA PARA ANULAR iNFORMES
   // =====================================================
-  async anularLiquidacion(    
+  async anularLiquidacion(
     params: AnularParams
   ): Promise<{ exito: boolean; mensaje: string; informe: any }> {
     let operaciones: Map<string, OperacionRef> | null = null;
@@ -881,11 +713,6 @@ export class LiquidacionService {
       const parametros: ProcesarParams = {
         informesOp: params.informesOp,
         tipo: params.tipo,
-        componenteBaja:
-          params.modo === "proforma"
-            ? this.getColNoLiq(params.informeLiq.tipo)
-            : this.getColLiq(params.informeLiq.tipo), ///depende del tipo de accion
-        componenteAlta: this.getColNoLiq(params.informeLiq.tipo),
         componenteInfLiq: params.modo === "factura" ? "resumenLiq" : "proforma",
         informeLiq: infLiqSinId,
         modo: params.modo,
@@ -928,9 +755,6 @@ export class LiquidacionService {
         if (!resultado.exito) {
           throw new Error(resultado.mensaje);
         }
-
-        /* ELIMINAR LA PROFORMA DE SU COLECCIÓN SI ES NECESARIO */
-        //if (liqProforma && proforma) await this.bajaProforma(batch, proforma);
 
         await batch.commit();
       }

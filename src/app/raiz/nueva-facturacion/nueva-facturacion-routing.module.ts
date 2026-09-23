@@ -6,13 +6,13 @@ import { FacturacionHistoricoComponent } from './facturacion-historico/facturaci
 
 const routes: Routes = [
     {path: '', component:ControlComponent,
-      children: [   
-        {path: '', redirectTo: 'listado', pathMatch: 'full' },                                 
+      children: [
+        {path: '', redirectTo: 'listado', pathMatch: 'full' },
         {path: 'listado', component:FacturacionListadoComponent},
-        {path: 'historial', component:FacturacionHistoricoComponent},                              
+        {path: 'historial', component:FacturacionHistoricoComponent},
     ]  },
-  
-    
+
+
 ];
 
 @NgModule({

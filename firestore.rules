@@ -59,6 +59,7 @@ service cloud.firestore {
         'informesOpProveedores': 'finanzas',
         'infOpLiqClientes': 'finanzas', 'infOpLiqChoferes': 'finanzas',
         'infOpLiqProveedores': 'finanzas',
+        'informesOp': 'finanzas', // colección única nuevo-modelo — sucesora de las 3 de arriba
         'resumenOpMensual': 'finanzas', 'resumenFinanzas': 'finanzas',
         'movimientos': 'finanzas',
 

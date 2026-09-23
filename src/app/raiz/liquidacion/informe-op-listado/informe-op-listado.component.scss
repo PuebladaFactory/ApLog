@@ -1,0 +1,32 @@
+th, td, input, select, option {
+  font-size: 1.3rem;
+}
+
+th.ordenable {
+  cursor: pointer;
+  user-select: none;
+}
+
+th.ordenable:hover {
+  background-color: #f1f1f1;
+}
+
+.panel-superior {
+  /* margin-top: 10px; */
+  max-width: 250px;
+  background: rgb(255, 255, 255);
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+}
+
+.panel-header {
+  font-weight: 600;
+  font-size: 1.05rem;
+  /* margin-left: 12px; */
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  /* padding-bottom: 6px; */
+  /* border-bottom: 1px solid #ececec; */
+  color: #6c757d;
+}
+

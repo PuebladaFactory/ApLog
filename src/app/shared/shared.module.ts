@@ -44,6 +44,8 @@ import { GlobalFilterPipe } from './pipes/global-filter.pipe';
 import { EstadoCellRendererComponent } from './estado-cell-renderer/estado-cell-renderer.component';
 import { AccionesCellRendererComponent } from './tabla/ag-cell-renderers/acciones-cell-renderer/acciones-cell-renderer.component';
 import { EditarInfOpComponent } from './modales/editar-inf-op/editar-inf-op.component';
+import { InformeOpDetalleComponent } from './modales/informe-op-detalle/informe-op-detalle.component';
+import { InformeOpEditorComponent } from './modales/informe-op-editor/informe-op-editor.component';
 import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { BuscarPorChoferPipe } from './pipes/buscar-por-chofer.pipe';
 import { VisibilidadListadosComponent } from './modales/visibilidad-listados/visibilidad-listados.component';
@@ -97,6 +99,8 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
 
     EstadoCellRendererComponent,
     EditarInfOpComponent,
+    InformeOpDetalleComponent,
+    InformeOpEditorComponent,
     DescuentosComponent,
     BuscarPorChoferPipe,
     VisibilidadListadosComponent,

@@ -276,43 +276,42 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (informeOp of informesDetalladoPorObjeto.get(objeto.id)  ?? [] | globalFilter:searchText2:['Fecha','Quincena', 'idOperacion', 'Chofer', 'km','valores.kmMonto','valores.acompaniante','valores.tarifaBase', 'valores.total', 'contraParteMonto']; track informeOp) {
-                      <tr [ngClass]="{'isDisabled':informeOp.proforma || informeOp.contraParteProforma}">
+                    @for (informeOp of informesDetalladoPorObjeto.get(objeto.id)  ?? [] | globalFilter:searchText2:['Fecha','Quincena', 'idOperacion', 'Chofer', 'datosOperacion.km','valores.kmMonto','valores.acompaniante','valores.tarifaBase', 'valores.total', 'contraParte.monto']; track informeOp) {
+                      <tr [ngClass]="{'isDisabled':informeOp.estado === 'proforma' || informeOp.bloqueadoPorContraparte}">
                         <td >
-                          <input type="checkbox" [checked]="informeOp.liquidacion" (change)="liquidarBoleano(informeOp)">
+                          <input type="checkbox" [checked]="seleccionados.has(informeOp.idInfOp)" (change)="liquidarBoleano(informeOp)">
                         </td>
                         <td>{{informeOp.fecha}}</td>
                         <td class="text-center" [innerHTML]="getQuincena(informeOp.fecha)"></td>
                         <!-- <td>{{informeOp.idOperacion}}</td> -->
                         @if (llamadaOrigen === 'cliente'){
-                            <td>{{getChofer(informeOp.idChofer)}}</td>
+                            <td>{{informeOp.datosOperacion.chofer.apellido}} {{informeOp.datosOperacion.chofer.nombre}}</td>
                         }@else {
-                            <td>{{getCliente(informeOp.idCliente)}}</td>
+                            <td>{{nombreEntidad(informeOp.contraParte.entidad)}}</td>
                         }
                         @if (llamadaOrigen === 'proveedor') {
-                            <td>{{getChofer(informeOp.idChofer)}}</td>
+                            <td>{{informeOp.datosOperacion.chofer.apellido}} {{informeOp.datosOperacion.chofer.nombre}}</td>
                         }
-                        <td>{{informeOp.hojaRuta}}</td>
-                        <td>{{informeOp.km | formatearValor }}</td>
+                        <td>{{informeOp.datosOperacion.hojaRuta}}</td>
+                        <td>{{informeOp.datosOperacion.km | formatearValor }}</td>
                         <td>{{informeOp.valores.kmMonto | formatearValor :"$"}}</td>
                         <td>{{informeOp.valores.acompaniante | formatearValor :"$"}}</td>
                         <td>{{informeOp.valores.tarifaBase | formatearValor :"$"}}</td>
                         <td class="table-success">{{informeOp.valores.total | formatearValor :"$"}}</td>
-                        <td>{{informeOp.contraParteMonto  | formatearValor :"$"}}</td>
-                        <!-- <td class="text-center table-warning">{{(100-((factura.contraParteMonto*100)/factura.valores.total)) | formatearValor}} %</td>     -->
+                        <td>{{informeOp.contraParte.monto  | formatearValor :"$"}}</td>
                          @if (llamadaOrigen === 'cliente'){
-                            <td class="text-center table-warning">{{ informeOp.contraParteMonto | calcularPorcentaje:informeOp.valores.total:true }}</td>
+                            <td class="text-center table-warning">{{ informeOp.contraParte.monto | calcularPorcentaje:informeOp.valores.total:true }}</td>
                          } @else {
-                            <td class="text-center table-warning">{{ informeOp.valores.total | calcularPorcentaje:informeOp.contraParteMonto:true }}</td>
+                            <td class="text-center table-warning">{{ informeOp.valores.total | calcularPorcentaje:informeOp.contraParte.monto:true }}</td>
                          }
-                        
+
                         <td>
-                          <span [ngClass]="{'eventual':informeOp.tarifaTipo.eventual, 'personalizada':informeOp.tarifaTipo.personalizada}" >
-                            {{informeOp.tarifaTipo.personalizada ? "Personalizada" : informeOp.tarifaTipo.eventual ? "Eventual" : informeOp.tarifaTipo.especial ? "Especial" : "General"}}
+                          <span [ngClass]="{'eventual': !informeOp.datosOperacion.tarifaAplicada, 'personalizada': informeOp.datosOperacion.tarifaAplicada?.nivel === 'personalizada'}" >
+                            {{!informeOp.datosOperacion.tarifaAplicada ? "Eventual" : informeOp.datosOperacion.tarifaAplicada.nivel === 'personalizada' ? "Personalizada" : informeOp.datosOperacion.tarifaAplicada.nivel === 'especial' ? "Especial" : "General"}}
                           </span>
                         </td>
                         <td >
-                          <span [ngClass]="{'op-facturada': informeOp.liquidacion, 'op-sinFacturar':!informeOp.liquidacion}">{{informeOp.liquidacion ? "Si" : "No"}}</span>
+                          <span [ngClass]="{'op-facturada': seleccionados.has(informeOp.idInfOp), 'op-sinFacturar': !seleccionados.has(informeOp.idInfOp)}">{{seleccionados.has(informeOp.idInfOp) ? "Si" : "No"}}</span>
                         </td>
                         <td *appPermiso="'liquidaciones.editar'">
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16" type="button" (click)="editarInformeOp(informeOp, i)">
@@ -347,131 +346,6 @@
   <app-spinner></app-spinner>
 }
 <div><small>Cantidad de Informes: {{informesOp.length}}</small></div>
-<!-- <br>
-<button class="btn btn-outline-secondary" (click)="filtrarObjeto()">2-Filtrar informes</button>
-<button class="btn btn-outline-secondary" (click)="eliminarObjetos()">Eliminar informes</button>
- -->
-<!-- 
-<button class="btn btn-outline-secondary" (click)="filtrarObjeto()">2-Filtrar informes</button>
-
-<button class="btn btn-outline-secondary" (click)="eliminarObjetos()">Eliminar informes</button> -->
-
-<!-- <hr>
-  <h1>DUPLICADAS LIQ: {{$facturasOpDuplicadas.length}}</h1>
-  <button class="btn btn-outline-danger" (click)="mostrarDuplicadasEnLiquidacion()">mostrar Duplicadas Liquidación</button>
-  
-  
-  <input class="form-control mt-2" type="text" [(ngModel)]="searchText" placeholder="Buscar por chofer">
-  <table class="table table-light table-striped table-bordered" >
-    <thead>
-      <tr>
-        <th scope="col" class="" style="width: 8.5%;">Id Firebase</th>
-        <th scope="col" class="" style="width: 8.5%;">Id Objeto</th>
-        <th scope="col" class="" style="width: 8.5%;">Cliente</th>
-        <th scope="col" class="" style="width: 8.5%;">Fecha</th>
-        <th scope="col" class="" style="width: 5.5%;">Quincena</th>
-        <th scope="col" class="" style="width: 5.5%;">Id Op</th>
-        <th scope="col" class="" style="width: 12%;">Cliente</th>
-        <th scope="col" class="" style="width: 4.5%;">Km</th>
-        <th scope="col" class="" style="width: 8%;">Km $</th>
-        <th scope="col" class="" style="width: 8%;">Acomp</th>
-        <th scope="col" class="" style="width: 11%;">Tarifa Base</th>
-        <th scope="col" class="" style="width: 11%;">Total a Pagar</th>
-        <th scope="col" class="" style="width: 11%;">A Cobrar</th>
-        <th scope="col" class="" style="width: 6%;">Ganancia</th>
-        <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let factura of $facturasOpDuplicadas  | filterBy: searchText;">
-        <td>{{factura.id}}</td>
-        <td>{{factura.idFacturaOp}}</td>
-        <td >
-          {{getCliente(factura.idCliente)}}
-        </td>
-        <td>{{factura.fecha}}</td>
-        <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>
-        <td>{{factura.idOperacion}}</td>
-        <td>{{getCliente(factura.idCliente)}}</td>
-        <td>{{factura.km | formatearValor}}</td>
-        <td>{{factura.valores.kmMonto | formatearValor :"$"}}</td>
-        <td>{{factura.valores.acompaniante | formatearValor :"$"}}</td>
-        <td>{{factura.valores.tarifaBase | formatearValor :"$"}}</td>
-        <td class="table-success">{{factura.valores.total | formatearValor :"$"}}</td>
-        <td>{{factura.contraParteMonto | formatearValor :"$"}}</td>
-        <td class="text-center table-warning">{{(100-((factura.valores.total*100)/factura.contraParteMonto)) | formatearValor}} %</td>
-        <td>
-          <span [ngClass]="{'eventual':factura.tarifaTipo.eventual, 'personalizada':factura.tarifaTipo.personalizada}" >
-            {{factura.tarifaTipo.personalizada ? "Personalizada" : factura.tarifaTipo.eventual ? "Eventual" : factura.tarifaTipo.especial ? "Especial" : "General"}}
-          </span>
-        </td>
-        <td class="text-center" >
-          <span [ngClass]="{'op-facturada': factura.liquidacion, 'op-sinFacturar':!factura.liquidacion}">{{factura.liquidacion ? "Si" : "No"}}</span>
-        </td>
-
-      </tr>
-    </tbody>
-  </table>
-  <hr>
-    <button class="btn btn-primary" (click)="verificarDuplicadosFacturadas()">Buscar Duplicados Liquidados</button>
-    <h1>DUPLICADAS FACTURADAS</h1>
-    
-    <input class="form-control mt-2" type="text" [(ngModel)]="searchText3" placeholder="Buscar por chofer">
-    <table class="table table-light table-striped table-bordered" >
-      <thead>
-        <tr>
-          <th scope="col" class="" style="width: 8.5%;">Id Firebase</th>
-          <th scope="col" class="" style="width: 8.5%;">Id Objeto</th>
-          <th scope="col" class="" style="width: 8.5%;">Cliente</th>
-          <th scope="col" class="" style="width: 8.5%;">Fecha</th>
-          <th scope="col" class="" style="width: 5.5%;">Quincena</th>
-          <th scope="col" class="" style="width: 5.5%;">Id Op</th>
-          <th scope="col" class="" style="width: 12%;">Cliente</th>
-          <th scope="col" class="" style="width: 4.5%;">Km</th>
-          <th scope="col" class="" style="width: 8%;">Km $</th>
-          <th scope="col" class="" style="width: 8%;">Acomp</th>
-          <th scope="col" class="" style="width: 11%;">Tarifa Base</th>
-          <th scope="col" class="" style="width: 11%;">Total a Pagar</th>
-          <th scope="col" class="" style="width: 11%;">A Cobrar</th>
-          <th scope="col" class="" style="width: 6%;">Ganancia</th>
-          <th scope="col" class="" style="width: 7%;">Tarifa Tipo</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let factura of $facLiqOpDuplicadas  | filterBy: searchText3;">
-          <td>{{factura.id}}</td>
-          <td>{{factura.idFacturaOp}}</td>
-          <td >
-            {{getCliente(factura.idCliente)}}
-          </td>
-          <td>{{factura.fecha}}</td>
-          <td class="text-center" [innerHTML]="getQuincena(factura.fecha)"></td>
-          <td>{{factura.idOperacion}}</td>
-          <td>{{getCliente(factura.idCliente)}}</td>
-          <td>{{factura.km | formatearValor}}</td>
-          <td>{{factura.valores.kmMonto | formatearValor :"$"}}</td>
-          <td>{{factura.valores.acompaniante | formatearValor :"$"}}</td>
-          <td>{{factura.valores.tarifaBase | formatearValor :"$"}}</td>
-          <td class="table-success">{{factura.valores.total | formatearValor :"$"}}</td>
-          <td>{{factura.contraParteMonto | formatearValor :"$"}}</td>
-          <td class="text-center table-warning">{{(100-((factura.valores.total*100)/factura.contraParteMonto)) | formatearValor}} %</td>
-          <td>
-            <span [ngClass]="{'eventual':factura.tarifaTipo.eventual, 'personalizada':factura.tarifaTipo.personalizada}" >
-              {{factura.tarifaTipo.personalizada ? "Personalizada" : factura.tarifaTipo.eventual ? "Eventual" : factura.tarifaTipo.especial ? "Especial" : "General"}}
-            </span>
-          </td>
-          <td class="text-center" >
-            <span [ngClass]="{'op-facturada': factura.liquidacion, 'op-sinFacturar':!factura.liquidacion}">{{factura.liquidacion ? "Si" : "No"}}</span>
-          </td>
-
-        </tr>
-      </tbody>
-    </table>
-
-
-<div>
-  <button class="btn btn-primary" (click)="borrarLiquidaciones()">Borrar </button>
-</div> -->
 
 
 

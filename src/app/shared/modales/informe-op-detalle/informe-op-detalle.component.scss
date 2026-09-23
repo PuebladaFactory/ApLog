@@ -1,0 +1,10 @@
+:host {
+  font-size: 1.3rem;
+}
+
+// Mismo criterio que informe-op-editor.component.scss — sin este override
+// los elementos con tamaños en rem (botones, badges) no escalan con el
+// font-size de acá arriba, por el reset global html { font-size: 60% }.
+.btn {
+  font-size: 1em;
+}

@@ -16,9 +16,8 @@ import { LogService } from "src/app/servicios/log/log.service";
 import { NumeradorService } from "src/app/servicios/numerador/numerador.service";
 import { StorageService } from "src/app/servicios/storage/storage.service";
 import Swal from "sweetalert2";
-import { ModalDetalleComponent } from "../modal-detalle/modal-detalle.component";
 import { InformeLiqDetalleComponent } from "src/app/shared/modales/informe-liq-detalle/informe-liq-detalle.component";
-import { InformeOp } from "src/app/interfaces/informe-op";
+import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
 import { Cliente } from "src/app/interfaces/cliente";
 import { Chofer } from "src/app/interfaces/chofer";
 import { Proveedor } from "src/app/interfaces/proveedor";
@@ -37,6 +36,7 @@ import {
 import { toISODateString } from "src/app/servicios/fechas/date-range.service";
 import { FinanzasResumenService } from "src/app/servicios/finanzas/finanzas-resumen.service";
 import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
+import { InformeOpService } from "src/app/servicios/informes-op/informe-op.service";
 
 @Component({
   selector: "app-facturacion-listado",
@@ -47,7 +47,7 @@ import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-s
 export class FacturacionListadoComponent implements OnInit {
   informesLiq: ConId<InformeLiq>[] = [];
   informesFiltrados: ConId<InformeLiq>[] = [];
-  informesOp: ConId<InformeOp>[] = [];
+  informesOp: ConId<InformeOpNuevo>[] = [];
   filtroTipo: string = "todos";
   filtroRazonSocial: string = "";
   fechaDesde: string = "";
@@ -230,6 +230,7 @@ export class FacturacionListadoComponent implements OnInit {
     private liquidacionService: LiquidacionService,
     private finanzasResumenService: FinanzasResumenService,
     private usuarioSesion: UsuarioSesionService,
+    private informeOpService: InformeOpService,
   ) {}
 
   ngOnInit(): void {
@@ -383,15 +384,8 @@ export class FacturacionListadoComponent implements OnInit {
 
   async obtenerInformesOp(informesLiq: ConId<InformeLiq>) {
     this.cargando = true;
-    let coleccion: string =
-      informesLiq.tipo === "cliente"
-        ? "infOpLiqClientes"
-        : informesLiq.tipo === "chofer"
-          ? "infOpLiqChoferes"
-          : "infOpLiqProveedores";
     try {
-      const consulta = await this.dbService.obtenerDocsPorIdsOperacion(
-        coleccion, // nombre de la colección
+      const consulta = await this.informeOpService.obtenerPorIdsOperacion(
         informesLiq.operaciones, // array de idsOperacion
       );
       console.log("consulta", consulta);

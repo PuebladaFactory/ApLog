@@ -11,7 +11,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
-import { InformeOp } from "src/app/interfaces/informe-op";
 import { Descuento, InformeLiq } from "src/app/interfaces/informe-liq";
 import { MovimientoImpresionVM } from "src/app/interfaces/movimiento-impresion-v-m";
 import { TDocumentDefinitions } from "pdfmake/interfaces";
@@ -30,7 +29,7 @@ export class PdfService {
 
   async exportToPdfInforme(
     informeLiq: InformeLiq,
-    informesOp: InformeOp[],
+    informesOp: any[], // ver comentario equivalente en ExcelService
     clientes: Cliente[],
     choferes: Chofer[],
     modo: string,
@@ -61,7 +60,7 @@ export class PdfService {
 
   async exportarPdfInfomeOpLiquidadas(
     informeLiq: InformeLiq,
-    informesOp: InformeOp[],
+    informesOp: any[],
     clientes: Cliente[],
     choferes: Chofer[],
     titulo: string,
@@ -305,11 +304,14 @@ export class PdfService {
 
   obtenerDatos(
     factura: any,
-    facturaOp: InformeOp,
+    facturaOp: any, // ConId<InformeOpNuevo> o InformeOp/ConId<InformeOp> viejo
     clientes: Cliente[],
     columna: any,
     choferes: Chofer[],
   ) {
+    // Puente temporal entre los dos modelos — datosOperacion solo existe en
+    // InformeOpNuevo. Se elimina cuando se unifique el frente de reportes.
+    const esNuevo = !!facturaOp && typeof facturaOp === 'object' && 'datosOperacion' in facturaOp;
     switch (columna) {
       case "Fecha": {
         return facturaOp.fecha;
@@ -318,29 +320,35 @@ export class PdfService {
         return this.getQuincena(facturaOp.fecha);
       }
       case "Chofer": {
-        return this.getChofer(facturaOp.idChofer, choferes);
+        return esNuevo
+          ? `${facturaOp.datosOperacion.chofer.apellido} ${facturaOp.datosOperacion.chofer.nombre}`
+          : this.getChofer(facturaOp.idChofer, choferes);
       }
       case "Cliente": {
+        if (esNuevo) {
+          // TODO(frente reportes Excel/PDF): la contraparte no viene en el
+          // InformeOp nuevo — hace falta resolverla vía contraParte.idInfOp
+          // (InformeOpService.obtenerPorId), mismo patrón que el modal.
+          return "";
+        }
         return this.getCliente(facturaOp.idCliente, clientes);
       }
       case "Patente": {
-        return facturaOp.patente;
+        return esNuevo ? facturaOp.datosOperacion.vehiculo.dominio : facturaOp.patente;
       }
       case "Concepto": {
-        return this.getCategoria(
-          facturaOp.patente,
-          facturaOp.idChofer,
-          choferes,
-        );
+        return esNuevo
+          ? facturaOp.datosOperacion.vehiculo.categoria.nombre
+          : this.getCategoria(facturaOp.patente, facturaOp.idChofer, choferes);
       }
       case "Observaciones": {
-        return facturaOp.observaciones;
+        return esNuevo ? facturaOp.datosOperacion.observaciones : facturaOp.observaciones;
       }
       case "Hoja de Ruta": {
-        return facturaOp.hojaRuta;
+        return esNuevo ? facturaOp.datosOperacion.hojaRuta : facturaOp.hojaRuta;
       }
       case "Km": {
-        return facturaOp.km;
+        return esNuevo ? facturaOp.datosOperacion.km : facturaOp.km;
       }
       case "Jornada": {
         return this.formatearValor(facturaOp.valores.tarifaBase);

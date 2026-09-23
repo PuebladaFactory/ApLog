@@ -1,6 +1,7 @@
-import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Subject, merge } from 'rxjs';
+import { Injectable, OnDestroy, inject } from '@angular/core';
+import { BehaviorSubject, Observable, Subject, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { Firestore, writeBatch, doc, collection, query, where, getDocs, getDoc } from '@angular/fire/firestore';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { ConId } from 'src/app/interfaces/conId';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
@@ -18,6 +19,8 @@ import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/forma
 import { NumeradorService } from 'src/app/servicios/numerador/numerador.service';
 import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.service';
 import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
+import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
+import { ResumenOpCalculatorService } from 'src/app/servicios/reportes/reportes-op/resumen-op-calculator.service';
 import { Resultado } from 'src/app/interfaces/resultado';
 
 export interface OperacionCreada {
@@ -44,6 +47,7 @@ export class OperacionService implements OnDestroy {
 
   private destroy$       = new Subject<void>();
   private cancelarRango$ = new Subject<void>();
+  private firestore = inject(Firestore);
 
   constructor(
     private db:               DbFirestoreService,
@@ -58,6 +62,8 @@ export class OperacionService implements OnDestroy {
     private asignacionService: AsignacionService,
     private logRegistro:      LogRegistroService,
     private papeleraService:  PapeleraService,
+    private informeOpServ:    InformeOpService,
+    private resumenOpCalculator: ResumenOpCalculatorService,
   ) {}
 
   /**
@@ -81,6 +87,30 @@ export class OperacionService implements OnDestroy {
 
   getOperacionesActuales(): ConId<Operacion>[] {
     return this._operaciones$.getValue();
+  }
+
+  /** Consulta puntual por id — un solo get, no live. Simétrico a
+   *  InformeOpService.obtenerPorId(); usado para cargar la Operación
+   *  asociada a un InformeOp antes de recalcular valores (modal de
+   *  edición de InformeOp, en diseño). */
+  async obtenerPorId(idOperacion: string): Promise<ConId<Operacion> | null> {
+    const operacion = await this.db.getById<Operacion>('operaciones', idOperacion);
+    if (!operacion) return null;
+    return { id: idOperacion, ...operacion, idOperacion };
+  }
+
+  /** Operaciones abiertas de un período — usado para advertir en los
+   *  listados de InformeOp si la entidad tiene operaciones sin cerrar
+   *  dentro del rango que se está por liquidar. Mismo método genérico de
+   *  DbFirestoreService que usaba el modelo viejo (getAllByDateValueField),
+   *  con el campo/valor del modelo nuevo ('estado.ciclo' === 'abierta' en
+   *  vez de 'estado.abierta' === true). Pese al tipo Observable, es un
+   *  one-shot (getDocs, no onSnapshot) — mismo criterio que el resto de
+   *  getAllByDateValueField; el caller lo consume con take(1). */
+  observarAbiertasPorPeriodo(desde: string, hasta: string): Observable<ConId<Operacion>[]> {
+    return this.db.getAllByDateValueField<Operacion>(
+      'operaciones', 'fecha', desde, hasta, 'estado.ciclo', 'abierta',
+    );
   }
 
   /**
@@ -522,34 +552,98 @@ export class OperacionService implements OnDestroy {
     return { exito: true, mensaje: `Operación ${op.idOperacion} editada correctamente.` };
   }
 
-  /** Cierra una operación: calcula informesOp (motor nuevo de Tarifas) y los
-   *  persiste junto con la actualización de la operación (estado.ciclo →
-   *  'cerrada'), los resúmenes de Reportes y el log — todo atómico, ver
-   *  ValoresOpService.facturarOperacion → DbFirestoreService.guardarFacturasOp.
-   *  Registrar la tarifa eventual (si corresponde) queda deliberadamente FUERA
-   *  del batch — best-effort ya existente en ValoresTarifaService, mismo
-   *  criterio que el resto de esa clase (ver registrarEventualSiCorresponde). */
+  /** Cierra una operación: calcula los valores del motor nuevo de Tarifas,
+   *  arma el par de InformeOpNuevo (InformeOpService.crearPar) y persiste
+   *  todo atómicamente en un único writeBatch — Operación (estado.ciclo →
+   *  'cerrada', informeOpCliente/informeOpChofer, resumenProcesado), los 2
+   *  InformeOpNuevo, los InformeVenta de comisión (si corresponde), el log
+   *  y los resúmenes de Reportes (DbFirestoreService.aplicarUpdatesResumen).
+   *  Reemplaza a ValoresOpService.facturarOperacion →
+   *  DbFirestoreService.guardarFacturasOp (esa cadena queda eliminada).
+   *  Guardas previas al batch: anti-duplicado de InformeOp
+   *  (InformeOpService.existeParaOperacion) y resumenProcesado — mismo
+   *  criterio que tenía guardarFacturasOp. Registrar la tarifa eventual (si
+   *  corresponde) queda deliberadamente FUERA del batch — best-effort ya
+   *  existente en ValoresTarifaService, mismo criterio que el resto de esa
+   *  clase (ver registrarEventualSiCorresponde). */
   async cerrarOperacion(op: ConId<Operacion>, msj: string = 'Cierre de Operación'): Promise<Resultado<void>> {
-    const resultado = await this.valoresServ.facturarOperacion(op, msj);
-    if (!resultado.exito) {
-      return { exito: false, mensaje: resultado.mensaje };
-    }
+    try {
+      if (await this.informeOpServ.existeParaOperacion(op.idOperacion)) {
+        return { exito: false, mensaje: `Ya existe un InformeOp para la operación ${op.idOperacion}.` };
+      }
 
-    if (op.datosTarifaEventual !== null) {
-      await this.valoresTarifaServ.registrarEventualSiCorresponde(op);
-    }
+      const docOpRef = doc(this.firestore, `/Vantruck/datos/operaciones/${op.idOperacion}`);
+      const opDocSnap = await getDoc(docOpRef);
+      if (!opDocSnap.exists()) {
+        return { exito: false, mensaje: `No se encontró la operación ${op.idOperacion}.` };
+      }
+      if ((opDocSnap.data() as Operacion).resumenProcesado) {
+        return { exito: false, mensaje: `La operación ${op.idOperacion} ya fue procesada en resúmenes.` };
+      }
 
-    return { exito: true, mensaje: resultado.mensaje };
+      const { valoresCliente, valoresOtro, tipoOtro, informesVenta } = this.valoresServ.calcularValoresCierre(op);
+      const { informeCliente, informeOtro } = this.informeOpServ.crearPar(op, valoresCliente, valoresOtro, tipoOtro);
+
+      op.estado = {
+        ciclo: 'cerrada',
+        liquidacion: { cliente: false, chofer: false },
+        proforma: { cliente: false, chofer: false },
+      };
+      op.informeOpCliente = informeCliente.idInfOp;
+      op.informeOpChofer = informeOtro.idInfOp;
+
+      const batch = writeBatch(this.firestore);
+
+      if (informesVenta.length > 0) {
+        const colVenta = collection(this.firestore, `/Vantruck/datos/informesVenta`);
+        for (const infVenta of informesVenta) {
+          const qVenta = query(colVenta, where('idInfVenta', '==', infVenta.idInfVenta));
+          const snapVenta = await getDocs(qVenta);
+          if (!snapVenta.empty) {
+            throw new Error(`Ya existe InformeVenta ${infVenta.idInfVenta}`);
+          }
+          batch.set(doc(colVenta), infVenta);
+        }
+      }
+
+      batch.set(doc(this.firestore, `/Vantruck/datos/informesOp/${informeCliente.idInfOp}`), informeCliente);
+      batch.set(doc(this.firestore, `/Vantruck/datos/informesOp/${informeOtro.idInfOp}`), informeOtro);
+
+      const entradaLog = this.logRegistro.construirEntradaSuelta('EDITAR', 'operaciones', op.idOperacion, msj);
+      if (entradaLog) {
+        batch.set(doc(this.firestore, `/Vantruck/datos/registroLog/${entradaLog.id}`), entradaLog.entrada);
+      }
+
+      batch.update(docOpRef, { ...this.opToFirestore(op), resumenProcesado: true });
+
+      const updates = this.resumenOpCalculator.generarUpdates(op);
+      if (!updates || updates.length === 0) {
+        throw new Error('No se generaron updates de resumen.');
+      }
+      await this.db.aplicarUpdatesResumen(batch, updates);
+
+      await batch.commit();
+
+      if (op.datosTarifaEventual !== null) {
+        await this.valoresTarifaServ.registrarEventualSiCorresponde(op);
+      }
+
+      return { exito: true, mensaje: `Operación ${op.idOperacion} cerrada correctamente.` };
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'EDITAR', 'operaciones', op.idOperacion, `Error al cerrar operación ${op.idOperacion}: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `Error al cerrar la operación: ${e?.message ?? e}.` };
+    }
   }
 
+  /** Delegado a OperacionFactoryService.opToFirestore — misma lógica exacta,
+   *  ahora con una sola fuente de verdad (la necesita también InformeOpService,
+   *  que no puede inyectar OperacionService por el ciclo con InformeOpService).
+   *  Se deja este wrapper privado para no tocar ninguno de los call sites
+   *  existentes en esta clase. */
   private opToFirestore(op: Operacion): Omit<Operacion, 'idOperacion'> {
-    // Excluimos idOperacion (se almacena solo como ID del documento, no como
-    // campo) e id (metadata de ConId, presente cuando el caller pasa
-    // ConId<Operacion> — bajaOperacion/restaurarOperacion — ausente cuando pasa
-    // Operacion a secas — altaDesdeAsignacion, op recién construida por el
-    // factory, sin id). Mismo patrón que Cliente/Chofer/Proveedor.toFirestore().
-    const { idOperacion, id, ...resto } = op as any;
-    return resto;
+    return this.operacionFactory.opToFirestore(op);
   }
 
   ngOnDestroy(): void {

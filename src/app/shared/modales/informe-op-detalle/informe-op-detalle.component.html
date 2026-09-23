@@ -1,0 +1,271 @@
+<div class="modal-header">
+    <h4 class="modal-title">
+        Detalle InformeOp — {{ nombreEntidad }}
+        <span [class]="claseBadgeEstado">{{ informeOp.estado }}</span>
+    </h4>
+    <button
+        type="button"
+        class="btn-close"
+        aria-label="Cerrar"
+        (click)="activeModal.dismiss()"
+    ></button>
+</div>
+
+<div class="modal-body">
+    <!-- Cabecera: fecha / entidad / chofer -->
+    <div class="row g-2 gap-3 mb-3">
+        <div
+            class="col-md-2 border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+        >
+            <div><strong>Fecha:</strong> {{ informeOp.fecha }}</div>
+        </div>
+        <div
+            class="col border border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+            [ngClass]="esLadoCliente ? 'border-primary' : 'border-warning'"
+        >
+            <div class="d-flex justify-content-between align-items-center">
+                <strong>{{ nombreEntidad }}</strong>
+                <span class="badge bg-secondary">{{ informeOp.tipo }}</span>
+            </div>
+        </div>
+        <div
+            class="col border border-warning border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+        >
+            <div class="d-flex justify-content-between align-items-center">
+                <strong>Chofer:</strong>
+                <div class="text-end">
+                    {{ informeOp.datosOperacion.chofer.apellido }},
+                    {{ informeOp.datosOperacion.chofer.nombre }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detalle general -->
+    <div class="row g-3 mb-3">
+        <div
+            class="border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded mx-0"
+        >
+            <div class="row g-3 mb-3">
+                <div class="col">
+                    <label class="form-label small mb-0">Vehículo</label>
+                    <div>
+                        {{ informeOp.datosOperacion.vehiculo.dominio }} -
+                        {{ informeOp.datosOperacion.vehiculo.categoria.nombre }}
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small mb-0"
+                        >Km recorridos</label
+                    >
+                    <div>{{ informeOp.datosOperacion.km }}</div>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col">
+                    <label class="form-label small mb-0">Hoja de ruta</label>
+                    <div>{{ informeOp.datosOperacion.hojaRuta || "—" }}</div>
+                </div>
+                <div class="col">
+                    <label class="form-label small mb-0"
+                        >Observaciones</label
+                    >
+                    <div>
+                        {{ informeOp.datosOperacion.observaciones || "—" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarifa aplicada | Valores -->
+    <div class="row g-3 gap-3 mb-3">
+        <div
+            class="col border border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+            [ngClass]="esLadoCliente ? 'border-primary' : 'border-warning'"
+        >
+            <div
+                class="d-flex justify-content-between align-items-center mb-2"
+            >
+                <strong>Tarifa aplicada</strong>
+                <span
+                    class="badge {{ nivelTarifaAplicada | claseNivelTarifa }}"
+                    >{{ nivelTarifaAplicada | etiquetaNivelTarifa }}</span
+                >
+            </div>
+
+            @if (esEventual) {
+                <div class="d-flex justify-content-between mb-1">
+                    <div>Concepto:</div>
+                    <div>
+                        {{
+                            informeOp.datosOperacion.datosEventual?.concepto
+                        }}
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <div>Valor:</div>
+                    <div>
+                        {{
+                            informeOp.datosOperacion.datosEventual?.valor
+                                | formatearValor: "$"
+                        }}
+                    </div>
+                </div>
+            } @else {
+                <div
+                    class="d-flex justify-content-between align-items-center mb-1"
+                >
+                    <label class="form-label small mb-0"
+                        >Nombre de la Tarifa:</label
+                    >
+                    <div>
+                        {{
+                            informeOp.datosOperacion.tarifaAplicada
+                                ?.nombreTarifa
+                        }}
+                    </div>
+                </div>
+                @if (nivelTarifaAplicada === "personalizada") {
+                    <div
+                        class="d-flex justify-content-between align-items-center mb-1"
+                    >
+                        <label class="form-label small mb-0">Sección:</label>
+                        <div>
+                            {{
+                                informeOp.datosOperacion.tarifaAplicada
+                                    ?.nombreSeccion ??
+                                    "Sección " +
+                                        informeOp.datosOperacion
+                                            .tarifaAplicada?.seccion
+                            }}
+                        </div>
+                    </div>
+                }
+                <div
+                    class="d-flex justify-content-between align-items-center mb-1"
+                >
+                    <label class="form-label small mb-0">Categoria:</label>
+                    <div>
+                        {{
+                            informeOp.datosOperacion.tarifaAplicada
+                                ?.nombreCategoria
+                        }}
+                    </div>
+                </div>
+                <div
+                    class="d-flex justify-content-between align-items-center"
+                >
+                    <label class="form-label small mb-0">Valor:</label>
+                    <div>
+                        {{
+                            informeOp.valores.tarifaBase
+                                | formatearValor: "$"
+                        }}
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div
+            class="col border border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+            [ngClass]="esLadoCliente ? 'border-primary' : 'border-warning'"
+        >
+            <div class="mb-2"><strong>Valores</strong></div>
+
+            <div class="row g-2 mb-1 align-items-center">
+                <div class="col-6">
+                    <label class="form-label small mb-0">
+                        Tarifa base:
+                        @if (informeOp.valores.tarifaBaseManual != null) {
+                            <span class="badge bg-secondary ms-1"
+                                >manual</span
+                            >
+                        }
+                    </label>
+                </div>
+                <div class="col-6 text-end">
+                    {{ informeOp.valores.tarifaBase | formatearValor: "$" }}
+                </div>
+            </div>
+
+            <div class="row g-2 mb-1 align-items-center">
+                <div class="col-6">
+                    <label class="form-label small mb-0"
+                        >Acompañante:</label
+                    >
+                </div>
+                <div class="col-6 text-end">
+                    {{ informeOp.valores.acompaniante | formatearValor: "$" }}
+                </div>
+            </div>
+
+            <div class="row g-2 mb-1 align-items-center">
+                <div class="col-6">
+                    <label class="form-label small mb-0"
+                        >Km adicional:</label
+                    >
+                </div>
+                <div class="col-6 text-end">
+                    {{ informeOp.valores.kmMonto | formatearValor: "$" }}
+                </div>
+            </div>
+
+            <div class="row g-2 align-items-center">
+                <div class="col-6">
+                    <label class="form-label small mb-0"
+                        >Adicional extra:</label
+                    >
+                </div>
+                <div class="col-6 text-end">
+                    {{
+                        (informeOp.valores.adExtra ?? 0)
+                            | formatearValor: "$"
+                    }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total -->
+    <div class="row g-3 mb-3">
+        <div
+            class="col border border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+            [ngClass]="esLadoCliente ? 'border-primary' : 'border-warning'"
+        >
+            <div class="d-flex justify-content-between">
+                <div class="fw-bold fs-4">
+                    {{ esLadoCliente ? "Total a Cobrar" : "Total a Pagar" }}
+                </div>
+                <div class="fw-bold fs-4">
+                    {{ informeOp.valores.total | formatearValor: "$" }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informe -->
+    <div class="row mb-1">
+        <div
+            class="col border border-secondary border-1 rounded-4 shadow p-2 bg-body-tertiary rounded"
+        >
+            <div>
+                <strong>Observación del informe:</strong>
+                {{ informeOp.observacionInforme || "—" }}
+            </div>
+            @if (informeOp.idInfLiq) {
+                <div><strong>Liquidación:</strong> {{ informeOp.idInfLiq }}</div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="activeModal.dismiss()"
+    >
+        Cerrar
+    </button>
+</div>

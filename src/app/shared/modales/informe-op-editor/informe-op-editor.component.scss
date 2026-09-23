@@ -1,0 +1,27 @@
+:host {
+  font-size: 1.3rem;
+}
+
+// Bootstrap fija estas clases en rem (relativo a la raíz del documento, no
+// al :host) — sin este override no escalan con el font-size de arriba.
+// Mismo criterio que modal-detalle-op.component.scss y sus hijos.
+.form-control,
+.form-control-sm,
+.form-select,
+.form-select-sm,
+.btn {
+  font-size: 1em;
+}
+
+// A lo sumo 2 dígitos — no tiene sentido que ocupe el ancho completo de la
+// columna (mismo criterio que operacion-detalle-general).
+.input-cantidad-acompaniante {
+  max-width: 4.5rem;
+}
+
+// Quedó definido dos veces (4.5rem y 7rem) — dejo solo el que efectivamente
+// estaba ganando por orden de cascada.
+.input-multiplicador {
+  max-width: 7rem;
+}
+

@@ -15,7 +15,6 @@ import { StorageService } from "../../storage/storage.service";
 import { ConId, ConIdType } from "src/app/interfaces/conId";
 
 import saveAs from "file-saver";
-import { InformeOp } from "src/app/interfaces/informe-op";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import { OpVenta, ResumenVenta } from "src/app/interfaces/resumen-venta";
 import { Workbook } from "exceljs";
@@ -55,7 +54,11 @@ export class ExcelService {
 
   async exportToExcelInforme(
     informeLiq: InformeLiq,
-    informesOp: InformeOp[],
+    // any: puente temporal entre InformeOp (viejo) e InformeOpNuevo — dos
+    // callers (modal-detalle de facturación vieja, objeto-papelera) todavía
+    // pasan el modelo viejo. Se unifica cuando se encare el frente de
+    // reportes Excel/PDF completo.
+    informesOp: any[],
     clientes: Cliente[],
     choferes: Chofer[],
     modo: string,
@@ -86,7 +89,7 @@ export class ExcelService {
 
   async exportarExcelInfomeOpLiquidadas(
     informeLiq: InformeLiq,
-    informesOp: InformeOp[],
+    informesOp: any[], // ver comentario en exportToExcelInforme
     clientes: Cliente[],
     choferes: Chofer[],
     titulo: string,
@@ -410,11 +413,14 @@ export class ExcelService {
 
   obtenerDatos(
     factura: InformeLiq,
-    informeOp: InformeOp,
+    informeOp: any, // ConId<InformeOpNuevo> o InformeOp/ConId<InformeOp> viejo
     clientes: Cliente[],
     columna: any,
     choferes: Chofer[],
   ) {
+    // Puente temporal entre los dos modelos — datosOperacion solo existe en
+    // InformeOpNuevo. Se elimina cuando se unifique el frente de reportes.
+    const esNuevo = !!informeOp && typeof informeOp === 'object' && 'datosOperacion' in informeOp;
     switch (columna) {
       case "Fecha": {
         return informeOp.fecha;
@@ -423,25 +429,35 @@ export class ExcelService {
         return this.getQuincena(informeOp.fecha);
       }
       case "Chofer": {
-        return this.getChofer(informeOp.idChofer, choferes);
+        return esNuevo
+          ? `${informeOp.datosOperacion.chofer.apellido} ${informeOp.datosOperacion.chofer.nombre}`
+          : this.getChofer(informeOp.idChofer, choferes);
       }
       case "Cliente": {
+        if (esNuevo) {
+          // TODO(frente reportes Excel/PDF): la contraparte no viene en el
+          // InformeOp nuevo — hace falta resolverla vía contraParte.idInfOp
+          // (InformeOpService.obtenerPorId), mismo patrón que el modal.
+          return "";
+        }
         return this.getCliente(informeOp.idCliente, clientes);
       }
       case "Patente": {
-        return informeOp.patente;
+        return esNuevo ? informeOp.datosOperacion.vehiculo.dominio : informeOp.patente;
       }
       case "Concepto": {
-        return this.getCategoria(informeOp.patente, informeOp.idChofer);
+        return esNuevo
+          ? informeOp.datosOperacion.vehiculo.categoria.nombre
+          : this.getCategoria(informeOp.patente, informeOp.idChofer);
       }
       case "Observaciones": {
-        return informeOp.observaciones;
+        return esNuevo ? informeOp.datosOperacion.observaciones : informeOp.observaciones;
       }
       case "Hoja de Ruta": {
-        return informeOp.hojaRuta;
+        return esNuevo ? informeOp.datosOperacion.hojaRuta : informeOp.hojaRuta;
       }
       case "Km": {
-        return informeOp.km;
+        return esNuevo ? informeOp.datosOperacion.km : informeOp.km;
       }
       case "Jornada": {
         return informeOp.valores.tarifaBase;

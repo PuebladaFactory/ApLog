@@ -6,7 +6,7 @@ import {
   Valores,
   ValoresFinancieros,
 } from "src/app/interfaces/informe-liq";
-import { InformeOp } from "src/app/interfaces/informe-op";
+import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
 import { NumeradorService } from "../numerador/numerador.service";
 import { ConId } from "src/app/interfaces/conId";
 import { toISODateString } from "../fechas/date-range.service";
@@ -14,7 +14,7 @@ import { toISODateString } from "../fechas/date-range.service";
 export interface CrearLiquidacionParams {
   tipo: "cliente" | "chofer" | "proveedor";
 
-  informesOp: ConId<InformeOp>[];
+  informesOp: ConId<InformeOpNuevo>[];
 
   entidad: EntidadLiq;
 
@@ -49,7 +49,7 @@ export interface CrearLiquidacionParams {
 })
 export class LiquidacionBuilderService {
   constructor
-  (private numeradorService: NumeradorService,    
+  (private numeradorService: NumeradorService,
   ) {}
 
   async construirInforme(params: CrearLiquidacionParams): Promise<InformeLiq> {
@@ -110,8 +110,12 @@ export class LiquidacionBuilderService {
     return informe;
   }
 
+  /** Suma los InformeOpNuevo seleccionados. Mismos nombres de campo que el
+   *  modelo viejo (tarifaBase/acompaniante/kmMonto/adExtra) — único cambio:
+   *  contraParteMonto (top-level en InformeOp) pasa a contraParte.monto
+   *  (InformeOpNuevo). */
   private calcularValores(
-    informes: InformeOp[],
+    informes: ConId<InformeOpNuevo>[],
     descuentos: Descuento[],
   ): Valores {
     let totalTarifaBase = 0;
@@ -132,7 +136,7 @@ export class LiquidacionBuilderService {
 
       totalAdExtra += v.adExtra ?? 0;
 
-      totalContraParte += inf.contraParteMonto ?? 0;
+      totalContraParte += inf.contraParte?.monto ?? 0;
     }
 
     for (const desc of descuentos) {

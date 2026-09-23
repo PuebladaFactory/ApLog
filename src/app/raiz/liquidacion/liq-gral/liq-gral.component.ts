@@ -41,11 +41,12 @@ export class LiqGralComponent implements OnInit {
   titulo: string = "liquidacion"
   btnConsulta:boolean = false;
   tabs = [
-    { id: 'tab1', name: 'Clientes', route: 'liquidacion/cliente'},    
-    { id: 'tab2', name: 'Choferes', route: 'liquidacion/chofer' },    
-    { id: 'tab3', name: 'Proveedores', route: 'liquidacion/proveedor' },    
-    { id: 'tab4', name: 'Proformas', route: 'liquidacion/proformas' },    
+    { id: 'tab1', name: 'Clientes', route: 'liquidacion/cliente'},
+    { id: 'tab2', name: 'Choferes', route: 'liquidacion/chofer' },
+    { id: 'tab3', name: 'Proveedores', route: 'liquidacion/proveedor' },
+    { id: 'tab4', name: 'Proformas', route: 'liquidacion/proformas' },
     /* { id: 'tab5', name: 'Migrar Datos', route: 'liquidacion/migrar' }, */
+    { id: 'tab6', name: 'Informes', route: 'liquidacion/informes' },
   ];
   ocultarCalendario: boolean = false;
 

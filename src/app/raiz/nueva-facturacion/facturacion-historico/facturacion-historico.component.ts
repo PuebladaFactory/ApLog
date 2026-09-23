@@ -3,7 +3,6 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { ConId } from "src/app/interfaces/conId";
 import { InformeLiq } from "src/app/interfaces/informe-liq";
 import { DbFirestoreService } from "src/app/servicios/database/db-firestore.service";
-import { ModalDetalleComponent } from "../modal-detalle/modal-detalle.component";
 import Swal from "sweetalert2";
 import {
   AccionInformeLiq,
@@ -14,13 +13,14 @@ import { ExcelService } from "src/app/servicios/informes/excel/excel.service";
 import { PdfService } from "src/app/servicios/informes/pdf/pdf.service";
 import { SupabaseStorageService } from "src/app/servicios/supabase/supabase-storage.service";
 import { InformeLiqDetalleComponent } from "src/app/shared/modales/informe-liq-detalle/informe-liq-detalle.component";
-import { InformeOp } from "src/app/interfaces/informe-op";
+import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
 import { Cliente } from "src/app/interfaces/cliente";
 import { Proveedor } from "src/app/interfaces/proveedor";
 import { Chofer } from "src/app/interfaces/chofer";
 import { BajaObjetoComponent } from "src/app/shared/modales/baja-objeto/baja-objeto.component";
 import { ColumnaInformesTabla } from "src/app/interfaces/informes-tabla";
 import { FinanzasResumenService } from "src/app/servicios/finanzas/finanzas-resumen.service";
+import { InformeOpService } from "src/app/servicios/informes-op/informe-op.service";
 
 @Component({
   selector: "app-facturacion-historico",
@@ -49,7 +49,7 @@ export class FacturacionHistoricoComponent implements OnInit {
   filtroRazonSocial: string = "";
 
   //reimpresion
-  informesOp: ConId<InformeOp>[] = [];
+  informesOp: ConId<InformeOpNuevo>[] = [];
   clientes: ConId<Cliente>[] = [];
   choferes: ConId<Chofer>[] = [];
   proveedores: ConId<Proveedor>[] = [];
@@ -172,6 +172,7 @@ export class FacturacionHistoricoComponent implements OnInit {
     private modalService: NgbModal,
     private supabaseStorageService: SupabaseStorageService,
     private finanzasResumenService: FinanzasResumenService,
+    private informeOpService: InformeOpService,
   ) {}
 
   ngOnInit(): void {
@@ -332,26 +333,9 @@ export class FacturacionHistoricoComponent implements OnInit {
 
   async obtenerInformesOp(informesLiq: ConId<InformeLiq>) {
     this.cargando = true;
-    let coleccion: string = "";
-    if (informesLiq.estado === "anulado") {
-      coleccion =
-        informesLiq.tipo === "cliente"
-          ? "informesOpClientes"
-          : informesLiq.tipo === "chofer"
-            ? "informesOpChoferes"
-            : "informesOpProveedores";
-    } else {
-      coleccion =
-        informesLiq.tipo === "cliente"
-          ? "infOpLiqClientes"
-          : informesLiq.tipo === "chofer"
-            ? "infOpLiqChoferes"
-            : "infOpLiqProveedores";
-    }
 
     try {
-      const consulta = await this.dbService.obtenerDocsPorIdsOperacion(
-        coleccion, // nombre de la colección
+      const consulta = await this.informeOpService.obtenerPorIdsOperacion(
         informesLiq.operaciones, // array de idsOperacion
       );
       console.log("consulta", consulta);

@@ -6,6 +6,7 @@ import { Proveedor } from 'src/app/interfaces/proveedor';
 import { ConId } from 'src/app/interfaces/conId';
 import { tarifaTipoDesdeHabilitadas } from 'src/app/interfaces/tarifa-habilitada';
 import { ProveedorService } from 'src/app/servicios/proveedores/proveedor.service';
+import { EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 
 export interface DatosCrearOperacion {
   cliente:     ConId<Cliente>;
@@ -71,8 +72,8 @@ export class OperacionFactoryService {
       acompaniante:     false,
       acompanianteCant: 0,
 
-      informeOpCliente: 0,
-      informeOpChofer:  0,
+      informeOpCliente: '',
+      informeOpChofer:  '',
 
       tarifaTipo,
       // Nacen con objeto en cero SOLO si la tarifa correspondiente aplica; sino null.
@@ -202,5 +203,29 @@ export class OperacionFactoryService {
            ?? { seccion: 0, categoria: 0, nombre: '', aCobrar: 0, aPagar: 0 })
         : null;
     }
+  }
+
+  /** Convierte una Operación (ConId) al body que se persiste en Firestore —
+   *  excluye idOperacion (id del documento, no campo) e id (metadata ConId).
+   *  Migrado desde OperacionService (que ahora delega acá vía un wrapper
+   *  privado) para que InformeOpService pueda reusarlo sin crear una
+   *  dependencia circular (OperacionService ya inyecta InformeOpService,
+   *  así que InformeOpService no puede inyectar OperacionService). */
+  opToFirestore(op: Operacion): Omit<Operacion, 'idOperacion'> {
+    const { idOperacion, id, ...resto } = op as any;
+    return resto;
+  }
+
+  /** Empuja la escritura de una Operación a un EscrituraBatch[] en curso —
+   *  no commitea, el caller sigue con su propio db.commitBatch(escrituras).
+   *  'crear'/'reemplazar' son mecánicamente idénticos en commitBatch (ambos
+   *  hacen batch.set) — el parámetro existe solo para declarar la intención
+   *  semántica del caller, no cambia el comportamiento. */
+  agregarEscrituraOperacion(
+    escrituras: EscrituraBatch[],
+    op: ConId<Operacion>,
+    modo: 'crear' | 'reemplazar' = 'reemplazar',
+  ): void {
+    escrituras.push({ coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), modo });
   }
 }
