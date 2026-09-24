@@ -228,4 +228,18 @@ export class OperacionFactoryService {
   ): void {
     escrituras.push({ coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), modo });
   }
+
+  /** Actualización PARCIAL de una Operación — solo los campos pasados en
+   *  `campos` (notación de punto para anidados, ej. 'estado.proforma.cliente').
+   *  Para transiciones que no reescriben la operación entera (liquidación,
+   *  proforma). No commitea. Hermano de agregarEscrituraOperacion (reemplazo
+   *  completo), mismo criterio de división por mecanismo que
+   *  InformeOpService (Completo/Parcial). */
+  agregarEscrituraOperacionParcial(
+    escrituras: EscrituraBatch[],
+    idOperacion: string,
+    campos: Record<string, any>,
+  ): void {
+    escrituras.push({ coleccion: 'operaciones', id: idOperacion, data: campos, modo: 'actualizar' });
+  }
 }

@@ -606,10 +606,14 @@ export class OperacionService implements OnDestroy {
         }
       }
 
-      batch.set(doc(this.firestore, `/Vantruck/datos/informesOp/${informeCliente.idInfOp}`), informeCliente);
-      batch.set(doc(this.firestore, `/Vantruck/datos/informesOp/${informeOtro.idInfOp}`), informeOtro);
+      // idInfOp NO se persiste en el body (patrón ConId — informe-op-nuevo.ts):
+      // es el id del documento y se agrega al leer.
+      const { idInfOp: idInfOpCliente, ...bodyCliente } = informeCliente;
+      const { idInfOp: idInfOpOtro, ...bodyOtro } = informeOtro;
+      batch.set(doc(this.firestore, `/Vantruck/datos/informesOp/${idInfOpCliente}`), bodyCliente);
+      batch.set(doc(this.firestore, `/Vantruck/datos/informesOp/${idInfOpOtro}`), bodyOtro);
 
-      const entradaLog = this.logRegistro.construirEntradaSuelta('EDITAR', 'operaciones', op.idOperacion, msj);
+      const entradaLog = this.logRegistro.construirEntradaSuelta('CERRAR', 'operaciones', op.idOperacion, msj);
       if (entradaLog) {
         batch.set(doc(this.firestore, `/Vantruck/datos/registroLog/${entradaLog.id}`), entradaLog.entrada);
       }
@@ -631,7 +635,7 @@ export class OperacionService implements OnDestroy {
       return { exito: true, mensaje: `Operación ${op.idOperacion} cerrada correctamente.` };
     } catch (e: any) {
       await this.logRegistro.registrarError(
-        'EDITAR', 'operaciones', op.idOperacion, `Error al cerrar operación ${op.idOperacion}: ${e?.message ?? e}`,
+        'CERRAR', 'operaciones', op.idOperacion, `Error al cerrar operación ${op.idOperacion}: ${e?.message ?? e}`,
       );
       return { exito: false, mensaje: `Error al cerrar la operación: ${e?.message ?? e}.` };
     }

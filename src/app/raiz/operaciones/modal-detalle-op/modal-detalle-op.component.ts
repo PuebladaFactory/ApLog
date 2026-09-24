@@ -66,6 +66,7 @@ export class ModalDetalleOpComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.opOriginal = this.op;
+    console.log("op: ", this.opOriginal);    
     this.op = structuredClone(this.opOriginal);
     this.op.acompanianteCant = this.op.acompanianteCant ?? 0;
     this.op.adExtraConcepto = this.op.adExtraConcepto ?? '';

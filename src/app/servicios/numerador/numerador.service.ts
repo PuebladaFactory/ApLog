@@ -2,6 +2,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { doc, DocumentReference, Firestore, runTransaction, Transaction } from '@angular/fire/firestore';
+import type { EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
 
 @Injectable({
   providedIn: 'root'
@@ -41,6 +42,40 @@ export class NumeradorService {
       console.error("Error en transacción para generar número interno:", error);
       throw new Error("No se pudo generar el número interno");
     }
+  }
+
+  /** Lee el próximo número interno de liquidación DENTRO de una transacción
+   *  y devuelve la escritura del contador para que el caller la sume a su
+   *  EscrituraBatch[] (commitEnTransaccion). Misma serie y formato que
+   *  generarNumeroInterno (LQCL/LQCH/LQPR-0000), pero sin transacción propia:
+   *  el número solo se consume si commitea la transacción completa del
+   *  caller, así que no quedan huecos por fallos posteriores. Mismo patrón
+   *  que leerProximoNumeroMovimiento. */
+  async leerProximoNumeroInterno(
+    tx: Transaction,
+    tipo: 'cliente' | 'chofer' | 'proveedor',
+  ): Promise<{ numeroInterno: string; escritura: EscrituraBatch }> {
+    const prefijos: Record<'cliente' | 'chofer' | 'proveedor', string> = {
+      cliente: 'LQCL',
+      chofer: 'LQCH',
+      proveedor: 'LQPR',
+    };
+    const prefijo = prefijos[tipo];
+
+    const snap = await tx.get(doc(this.firestore, `Vantruck/datos/numeradores/${prefijo}`));
+    const ultimo = snap.exists() ? ((snap.data() as { ultimoNumero?: number }).ultimoNumero ?? 0) : 0;
+    const nuevo = ultimo + 1;
+
+    return {
+      numeroInterno: `${prefijo}-${nuevo.toString().padStart(4, '0')}`,
+      escritura: {
+        coleccion: 'numeradores',
+        id: prefijo,
+        data: { ultimoNumero: nuevo },
+        // update si existe (no pisa otros campos del doc), set si no.
+        modo: snap.exists() ? 'actualizar' : 'crear',
+      },
+    };
   }
 
   /** Reserva N números de operación consecutivos en una transacción atómica.

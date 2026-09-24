@@ -4,6 +4,7 @@ export type AccionLog =
   | 'EDITAR'
   | 'BAJA'
   | 'RESTAURAR'
+  | 'CERRAR'      // cierre de operación (ciclo abierta → cerrada + alta del par de InformeOp)
   // Acciones operativas sin mutación de datos — no hay batch de negocio al cual
   // atarse, se escriben sueltas. Ampliar esta lista a medida que se necesiten
   // (cobros/pagos y liquidación cuando se implemente Finanzas, etc.).

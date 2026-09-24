@@ -25,6 +25,7 @@ import {
   where,
   writeBatch,
   WriteBatch,
+  Transaction,
   QueryConstraint,
   QueryDocumentSnapshot,
 } from "@angular/fire/firestore";
@@ -70,6 +71,15 @@ export interface EscrituraBatch {
    *  pasa un objeto, en vez de mergear el campo puntual. */
   data: any;
   modo: ModoEscritura;
+}
+
+/** Destino estructural común de WriteBatch y Transaction — ambos exponen
+ *  set/update/delete con la misma semántica, y eso es lo único que usa
+ *  aplicarEscritura(). */
+interface DestinoEscritura {
+  set(ref: DocumentReference<any>, data: any): unknown;
+  update(ref: DocumentReference<any>, data: any): unknown;
+  delete(ref: DocumentReference<any>): unknown;
 }
 
 /** Página de resultados de getPaginado(). `cursor: null` cuando la página devuelta
@@ -1372,32 +1382,76 @@ export class DbFirestoreService {
       const batch = writeBatch(this.firestore);
 
       for (const e of chunk) {
-        // Guarda defensiva: sin esto, un id undefined se cuela en el
-        // template literal de abajo como el string literal "undefined" y
-        // Firestore crea sin quejarse un documento fantasma en esa ruta,
-        // en vez de fallar. Así queda un error visible apenas se arma el
-        // batch, no un dato corrupto silencioso.
-        if (!e.id) {
-          throw new Error(
-            `commitBatch: escritura sin id válido en la colección "${e.coleccion}" (modo: ${e.modo}). Escritura abortada para evitar crear un documento "undefined".`,
-          );
-        }
-        const ref = doc(this.firestore, `/Vantruck/datos/${e.coleccion}/${e.id}`);
-        // TODO: anti-duplicado — cuando el SDK lo permita o se agregue idempotencia,
-        // 'crear' debería fallar si el id ya existe. Hoy ambos modos usan set.
-        if (e.modo === 'crear') {
-          batch.set(ref, e.data);
-        } else if (e.modo === 'reemplazar') {
-          batch.set(ref, e.data);
-        } else if (e.modo === 'actualizar') {
-          batch.update(ref, e.data);
-        } else {
-          batch.delete(ref);
-        }
+        this.aplicarEscritura(batch, e);
       }
 
       await batch.commit();
     }
+  }
+
+  /** Aplica UNA EscrituraBatch sobre un WriteBatch o una Transaction —
+   *  mapeo modo → operación compartido por commitBatch y commitEnTransaccion.
+   *  Guarda defensiva de id: sin esto, un id undefined se cuela en la ruta
+   *  como el string "undefined" y Firestore crea un documento fantasma en
+   *  vez de fallar.
+   *  TODO: anti-duplicado — 'crear' debería fallar si el id ya existe; hoy
+   *  'crear' y 'reemplazar' usan set (ver commitBatch). */
+  private aplicarEscritura(destino: DestinoEscritura, e: EscrituraBatch): void {
+    if (!e.id) {
+      throw new Error(
+        `aplicarEscritura: escritura sin id válido en la colección "${e.coleccion}" (modo: ${e.modo}). Escritura abortada para evitar crear un documento "undefined".`,
+      );
+    }
+    const ref = doc(this.firestore, `/Vantruck/datos/${e.coleccion}/${e.id}`);
+    if (e.modo === 'crear' || e.modo === 'reemplazar') {
+      destino.set(ref, e.data);
+    } else if (e.modo === 'actualizar') {
+      destino.update(ref, e.data);
+    } else {
+      destino.delete(ref);
+    }
+  }
+
+  /** Variante TRANSACCIONAL de commitBatch — mismo contrato EscrituraBatch[],
+   *  mismo mapeo (aplicarEscritura). Para acciones que necesitan LEER fresco
+   *  antes de escribir (verificar estados, reservar numeradores):
+   *    - `armar` recibe la Transaction, hace sus lecturas SOLO con
+   *      leerEnTransaccion() y devuelve { escrituras, resultado }.
+   *    - Recién después se aplican las escrituras: Firestore exige todas las
+   *      lecturas antes que cualquier escritura — acá se cumple por
+   *      construcción.
+   *    - `armar` puede ejecutarse MÁS DE UNA VEZ (el SDK reintenta ante
+   *      contención): tiene que ser pura — rearmar el array desde cero en
+   *      cada intento, sin efectos laterales fuera de lecturas.
+   *    - Sin chunking: si hay más escrituras que el límite, aborta (commitBatch,
+   *      en cambio, parte en chunks que no son atómicos entre sí).
+   *  Devuelve `resultado` (ej. el número interno reservado) una vez
+   *  commiteada la transacción. */
+  async commitEnTransaccion<R>(
+    armar: (tx: Transaction) => Promise<{ escrituras: EscrituraBatch[]; resultado: R }>,
+  ): Promise<R> {
+    const LIMITE = 500;
+    return runTransaction(this.firestore, async (tx) => {
+      const { escrituras, resultado } = await armar(tx);
+      if (escrituras.length > LIMITE) {
+        throw new Error(
+          `commitEnTransaccion: ${escrituras.length} escrituras superan el límite de ${LIMITE} por transacción.`,
+        );
+      }
+      for (const e of escrituras) {
+        this.aplicarEscritura(tx, e);
+      }
+      return resultado;
+    });
+  }
+
+  /** Lectura de un documento DENTRO de una transacción — para usar en el
+   *  callback `armar` de commitEnTransaccion. Encapsula la ruta base
+   *  (/Vantruck/datos) igual que getById. Devuelve el body tal cual está en
+   *  Firestore (sin agregar id: el caller aplica su patrón ConId). */
+  async leerEnTransaccion<T>(tx: Transaction, coleccion: string, id: string): Promise<T | null> {
+    const snap = await tx.get(doc(this.firestore, `/Vantruck/datos/${coleccion}/${id}`));
+    return snap.exists() ? (snap.data() as T) : null;
   }
 
   /** Reemplaza 'anterior' por una versión nueva de forma TRANSACCIONAL — la

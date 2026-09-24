@@ -40,27 +40,41 @@ export class LogRegistroService {
   /** MUTACIÓN — folding en batch. El caller ya armó su EscrituraBatch[] de negocio
    *  (incluida la escritura a `coleccion`/`idObjet`); esta función AGREGA la
    *  escritura del log a ese mismo array. No commitea — el caller sigue haciendo
-   *  su propio `db.commitBatch(escrituras)` después.
+   *  su propio commit (commitBatch o commitEnTransaccion) después.
    *
-   *  Si accion === 'EDITAR', hace una lectura one-shot de `coleccion`/`idObjet`
-   *  ANTES de que el batch se ejecute, y diffea contra los datos que ya están en
-   *  `escrituras` para esa misma colección/id. */
+   *  Si accion === 'EDITAR', diffea el documento anterior contra la escritura de
+   *  esa misma colección/id que ya está en `escrituras`:
+   *   - modo 'actualizar' (parcial, claves en notación de punto): diff SOLO de
+   *     las claves presentes en la escritura, resolviendo cada ruta sobre el
+   *     documento anterior ('valores.total' → anterior.valores.total).
+   *   - resto de los modos (reemplazo completo): diff superficial de primer
+   *     nivel, como siempre.
+   *  `anterior` es opcional: si el caller ya leyó el documento (ej. dentro de
+   *  una transacción) lo pasa y se evita la lectura extra; si no, se hace una
+   *  lectura one-shot vía getById, como hasta ahora. */
   async agregarAlBatch(
     escrituras: EscrituraBatch[],
     accion: 'ALTA' | 'EDITAR' | 'BAJA' | 'RESTAURAR',
     coleccion: string,
     idObjet: string | number,
     details: string,
+    anterior?: any,
   ): Promise<void> {
     let cambios: CambioCampo[] | undefined;
 
     if (accion === 'EDITAR') {
-      const anterior = await this.db.getById<any>(coleccion, String(idObjet));
       const escrituraNueva = escrituras.find(
         e => e.coleccion === coleccion && e.id === String(idObjet),
       );
-      if (anterior && escrituraNueva) {
-        cambios = this.diffCampos(anterior, escrituraNueva.data);
+      if (escrituraNueva) {
+        const previo = anterior !== undefined
+          ? anterior
+          : await this.db.getById<any>(coleccion, String(idObjet));
+        if (previo) {
+          cambios = escrituraNueva.modo === 'actualizar'
+            ? this.diffParcial(previo, escrituraNueva.data)
+            : this.diffCampos(previo, escrituraNueva.data);
+        }
       }
     }
 
@@ -173,6 +187,26 @@ export class LogRegistroService {
         // escribible.
         cambios.push({
           campo,
+          anterior: a === undefined ? null : a,
+          nuevo: n === undefined ? null : n,
+        });
+      }
+    }
+    return cambios;
+  }
+
+  /** Diff de una escritura PARCIAL (modo 'actualizar'): solo las claves
+   *  presentes en `parcial`, cada una resuelta como ruta con puntos sobre
+   *  `anterior`. El nombre del campo en el log es la ruta completa
+   *  ('contraParte.monto'). Misma normalización undefined → null que
+   *  diffCampos. */
+  private diffParcial(anterior: any, parcial: Record<string, any>): CambioCampo[] {
+    const cambios: CambioCampo[] = [];
+    for (const [ruta, n] of Object.entries(parcial ?? {})) {
+      const a = ruta.split('.').reduce((obj: any, clave) => obj?.[clave], anterior);
+      if (JSON.stringify(a) !== JSON.stringify(n)) {
+        cambios.push({
+          campo: ruta,
           anterior: a === undefined ? null : a,
           nuevo: n === undefined ? null : n,
         });

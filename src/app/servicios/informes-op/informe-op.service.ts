@@ -90,9 +90,11 @@ export class InformeOpService {
   }
 
   async obtenerPorOperacion(idOperacion: string): Promise<ConId<InformeOpNuevo>[]> {
-    return firstValueFrom(
+    const informes = await firstValueFrom(
       this.db.getByFieldValue<InformeOpNuevo>(this.COLECCION, 'idOperacion', idOperacion),
     );
+    // idInfOp = id del documento (patrón ConId) — no viene en el body.
+    return informes.map(inf => ({ ...inf, idInfOp: inf.id }));
   }
 
   async obtenerPorPeriodo(
@@ -114,7 +116,13 @@ export class InformeOpService {
   async obtenerPorIdsOperacion(
     idsOperacion: string[],
   ): Promise<{ encontrados: ConId<InformeOpNuevo>[]; idsFaltantes: string[] }> {
-    return this.db.obtenerDocsPorIdsOperacion(this.COLECCION, idsOperacion);
+    const r = await this.db.obtenerDocsPorIdsOperacion(this.COLECCION, idsOperacion);
+    // idInfOp = id del documento (patrón ConId) — obtenerDocsPorIdsOperacion
+    // es genérico y solo agrega `id`.
+    return {
+      encontrados: r.encontrados.map((d: any) => ({ ...d, idInfOp: d.id })),
+      idsFaltantes: r.idsFaltantes,
+    };
   }
 
   /** Consulta puntual por id — usado para resolver la contraparte on-demand
@@ -174,17 +182,17 @@ export class InformeOpService {
     escrituras.push({ coleccion: this.COLECCION, id: idInfOp, data: campos, modo: 'actualizar' });
   }
 
-  /** Edita un InformeOp de forma atómica: Operación + InformeOp editado +
-   *  InformeOp de la contraparte (completo o solo contraParte.monto, según
-   *  su estado — null si está 'anulado') + logs + delta de resúmenes, todo
-   *  en un único commitBatch. Orquestador — vive acá porque el punto de
-   *  entrada semántico es "editar un InformeOp" (InformeOpEditorComponent),
-   *  aunque los campos realmente editados (km, tarifa, etc.) sean de
-   *  Operación. */
-  async editar(
+  /** Arma TODAS las escrituras de la edición de un InformeOp, sin commitear:
+   *  Operación + InformeOp editado + contraparte (completo o solo
+   *  contraParte.monto, según su estado — nada si está 'anulado') + logs +
+   *  delta de resúmenes. Pública para que otros orquestadores (ej.
+   *  InformeLiqService.editarInformeOp, que además recalcula el InformeLiq)
+   *  reutilicen exactamente la misma lógica y sumen sus propias escrituras
+   *  antes de un único commit. */
+  async armarEscriturasEdicion(
     resultado: ResultadoEdicionInformeOp,
     msj: string = 'Edición de InformeOp',
-  ): Promise<Resultado<void>> {
+  ): Promise<EscrituraBatch[]> {
     const { operacionVieja, operacion, informeEditado, contraparte } = resultado;
 
     const escrituras: EscrituraBatch[] = [];
@@ -217,6 +225,22 @@ export class InformeOpService {
 
     const updates: UpdateResumen[] = this.resumenOpCalculator.generarDeltaUpdates(operacionVieja, operacion);
     await this.reportesOp.agregarEscriturasResumen(escrituras, updates);
+
+    return escrituras;
+  }
+
+  /** Edita un InformeOp de forma atómica — armarEscriturasEdicion + un único
+   *  commitBatch. Orquestador — vive acá porque el punto de entrada semántico
+   *  es "editar un InformeOp" (InformeOpEditorComponent), aunque los campos
+   *  realmente editados (km, tarifa, etc.) sean de Operación. Solo para
+   *  InformeOp 'activo': uno que está dentro de un InformeLiq se edita por
+   *  InformeLiqService.editarInformeOp (B3). */
+  async editar(
+    resultado: ResultadoEdicionInformeOp,
+    msj: string = 'Edición de InformeOp',
+  ): Promise<Resultado<void>> {
+    const escrituras = await this.armarEscriturasEdicion(resultado, msj);
+    const { informeEditado } = resultado;
 
     try {
       await this.db.commitBatch(escrituras);
