@@ -42,8 +42,8 @@ export class LogRegistroService {
    *  escritura del log a ese mismo array. No commitea — el caller sigue haciendo
    *  su propio commit (commitBatch o commitEnTransaccion) después.
    *
-   *  Si accion === 'EDITAR', diffea el documento anterior contra la escritura de
-   *  esa misma colección/id que ya está en `escrituras`:
+   *  Si accion es 'EDITAR' o 'EMITIR', diffea el documento anterior contra la
+   *  escritura de esa misma colección/id que ya está en `escrituras`:
    *   - modo 'actualizar' (parcial, claves en notación de punto): diff SOLO de
    *     las claves presentes en la escritura, resolviendo cada ruta sobre el
    *     documento anterior ('valores.total' → anterior.valores.total).
@@ -51,10 +51,12 @@ export class LogRegistroService {
    *     nivel, como siempre.
    *  `anterior` es opcional: si el caller ya leyó el documento (ej. dentro de
    *  una transacción) lo pasa y se evita la lectura extra; si no, se hace una
-   *  lectura one-shot vía getById, como hasta ahora. */
+   *  lectura one-shot vía getById, como hasta ahora. Pasar `anterior = null`
+   *  explícito indica documento nuevo (no hay estado previo): no se lee ni
+   *  se diffea. */
   async agregarAlBatch(
     escrituras: EscrituraBatch[],
-    accion: 'ALTA' | 'EDITAR' | 'BAJA' | 'RESTAURAR',
+    accion: 'ALTA' | 'EDITAR' | 'BAJA' | 'RESTAURAR' | 'EMITIR',
     coleccion: string,
     idObjet: string | number,
     details: string,
@@ -62,7 +64,7 @@ export class LogRegistroService {
   ): Promise<void> {
     let cambios: CambioCampo[] | undefined;
 
-    if (accion === 'EDITAR') {
+    if (accion === 'EDITAR' || accion === 'EMITIR') {
       const escrituraNueva = escrituras.find(
         e => e.coleccion === coleccion && e.id === String(idObjet),
       );

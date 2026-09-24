@@ -5,6 +5,7 @@ export type AccionLog =
   | 'BAJA'
   | 'RESTAURAR'
   | 'CERRAR'      // cierre de operación (ciclo abierta → cerrada + alta del par de InformeOp)
+  | 'EMITIR'      // emisión de un informe de liquidación (asigna numeroInterno) — lleva diff
   // Acciones operativas sin mutación de datos — no hay batch de negocio al cual
   // atarse, se escriben sueltas. Ampliar esta lista a medida que se necesiten
   // (cobros/pagos y liquidación cuando se implemente Finanzas, etc.).
@@ -28,5 +29,5 @@ export interface RegistroLog {
   idObjet: string | number;
   details: string;
   status: 'SUCCESS' | 'ERROR';
-  cambios?: CambioCampo[];  // solo presente en action === 'EDITAR', y solo si hubo diffs
+  cambios?: CambioCampo[];  // solo presente en action 'EDITAR' / 'EMITIR', y solo si hubo diffs
 }

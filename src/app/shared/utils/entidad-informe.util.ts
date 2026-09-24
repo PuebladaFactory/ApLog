@@ -26,3 +26,11 @@ export function claseBadgeEstadoInforme(estado: 'activo' | 'proforma' | 'liquida
     case 'anulado':   return 'badge bg-danger';
   }
 }
+
+/** Nombre para mostrar de un snapshot Ref* suelto (sin el InformeOp que lo
+ *  contiene) — RefChofer es el único con apellido/nombre. Mismo criterio
+ *  estructural que InformeOpListadoComponent.nombreContraparte. Usado por
+ *  InformeLiqNuevo (entidad), donde no hay un InformeOp a mano. */
+export function nombreEntidadRef(entidad: RefCliente | RefChofer | RefProveedor): string {
+  return 'apellido' in entidad ? `${entidad.apellido} ${entidad.nombre}` : entidad.razonSocial;
+}

@@ -108,6 +108,27 @@ export class InformeLiqFactoryService {
     return resto;
   }
 
+  /** Ventana de fechas (ISO YYYY-MM-DD, inclusiva) que define un período:
+   *  mes → 1 al último día; 1q → 1 al 15; 2q → 16 al último día. La usan
+   *  InformeLiqService (validación) y la UI de liquidación (preselección, B2). */
+  ventanaPeriodo(periodo: PeriodoLiq): { desde: string; hasta: string } {
+    const mm = String(periodo.mes).padStart(2, '0');
+    const ultimoDia = new Date(periodo.anio, periodo.mes, 0).getDate();
+    const diaDesde = periodo.tramo === '2q' ? 16 : 1;
+    const diaHasta = periodo.tramo === '1q' ? 15 : ultimoDia;
+    return {
+      desde: `${periodo.anio}-${mm}-${String(diaDesde).padStart(2, '0')}`,
+      hasta: `${periodo.anio}-${mm}-${String(diaHasta).padStart(2, '0')}`,
+    };
+  }
+
+  /** Texto legible del período para logs y títulos: "09/2026 · 1° quincena". */
+  textoPeriodo(periodo: PeriodoLiq): string {
+    const tramo = periodo.tramo === 'mes' ? 'mes completo'
+      : periodo.tramo === '1q' ? '1° quincena' : '2° quincena';
+    return `${String(periodo.mes).padStart(2, '0')}/${periodo.anio} · ${tramo}`;
+  }
+
   private valoresFinancierosIniciales(total: number): ValoresFinancierosLiq {
     return { total, totalCobrado: 0, saldo: total };
   }

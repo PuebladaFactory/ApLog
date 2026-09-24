@@ -125,6 +125,22 @@ export class InformeOpService {
     };
   }
 
+  /** InformeOp que componen un InformeLiqNuevo — link inverso
+   *  InformeOpNuevo.idInfLiq. Trae solo el lado de ese informe (la
+   *  contraparte tiene otro idInfLiq o null). Válido mientras el InformeLiq
+   *  está vigente (borrador/emitido): al revertirse, los InformeOp vuelven a
+   *  idInfLiq = null (la composición histórica queda en
+   *  InformeLiqNuevo.informesOp). Ordenados por fecha ascendente, en memoria
+   *  (sin índice compuesto). */
+  async obtenerPorInformeLiq(idInfLiq: string): Promise<ConId<InformeOpNuevo>[]> {
+    const informes = await firstValueFrom(
+      this.db.getByFieldValue<InformeOpNuevo>(this.COLECCION, 'idInfLiq', idInfLiq),
+    );
+    return informes
+      .map(inf => ({ ...inf, idInfOp: inf.id }))
+      .sort((a, b) => a.fecha.localeCompare(b.fecha));
+  }
+
   /** Consulta puntual por id — usado para resolver la contraparte on-demand
    *  (InformeLiqDetalleComponent) vía contraParte.idInfOp. */
   async obtenerPorId(idInfOp: string): Promise<ConId<InformeOpNuevo> | null> {
