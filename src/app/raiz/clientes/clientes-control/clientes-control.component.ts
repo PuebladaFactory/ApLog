@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 
 
 @Component({
@@ -25,14 +26,18 @@ import { Router } from '@angular/router';
 })
 export class ClientesControlComponent implements OnInit {  
 
-  selectedTab: string = 'tab1';
   tabs = [
-    { id: 'tab1', name: 'Alta/Listado', route: 'clientes/listado' },    
-    { id: 'tab2', name: 'Tarifa General', route: 'clientes/general' }, 
-    { id: 'tab3', name: 'Tarifa Especial', route: 'clientes/especial' }, 
+    { id: 'tab1', name: 'Alta/Listado', route: 'clientes/listado', alias: ['clientes/alta'] },
+    { id: 'tab2', name: 'Tarifa General', route: 'clientes/general' },
+    { id: 'tab3', name: 'Tarifa Especial', route: 'clientes/especial' },
     { id: 'tab4', name: 'Tarifa Personalizada', route: 'clientes/personalizada' },
     { id: 'tab5', name: 'Tarifa Eventual', route: 'clientes/eventual' },
   ];
+
+  /** Pestaña activa derivada de la URL real (ver tabs-url.util). */
+  get selectedTab(): string {
+    return tabActivaDesdeUrl(this.tabs, this.router.url);
+  }
 
   constructor(private router: Router) {}
 
@@ -41,7 +46,6 @@ export class ClientesControlComponent implements OnInit {
   }
 
   selectTab(tabId: string) {
-    this.selectedTab = tabId;
     const tab = this.tabs.find(t => t.id === tabId);
     if (tab) {
       this.router.navigate([tab.route]);

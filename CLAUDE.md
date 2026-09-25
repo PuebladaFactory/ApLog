@@ -269,7 +269,9 @@ Por eso `Proforma CH` tiene mayor prioridad visual que `Proforma CL` en el badge
 | `papelera/` | `PapeleraService` (preparación de escrituras de baja/restauración por referencia, dentro del batch atómico de negocio) + `PapeleraConsultaService` (lectura/paginación, para `PapeleraComponent`) sobre `papeleraEventos`/`objetosEliminados` — ver "Frente Papelera — mecanismo de referencia" |
 | `visualizador-objeto/` | `VisualizadorObjetoService` — dispatcher `coleccion -> modal de vista real`, usado por `RegistroLogComponent` y (desde el Frente Papelera) por `PapeleraComponent` vía el parámetro `snapshot` de `verObjeto` |
 | `tarifas/` | Resolución y cálculo de tarifas |
-| `liquidaciones/` | Cálculo de liquidaciones y transiciones de estado de operación (proformas, InformeLiq) |
+| `liquidaciones/` | Cálculo de liquidaciones y transiciones de estado de operación (proformas, InformeLiq) — camino VIEJO (InformeLiq/resumenLiq/proforma), reemplazado por `informes-liq/`; sin tocar hasta retirar el camino viejo |
+| `informes-op/` | `InformeOpService` (+ Factory) — `InformeOpNuevo` en la colección única `informesOp` (un doc por lado de cada operación, con `contraParte`). `armarEscriturasEdicion` (armado sin commit) + `editar` (armado + commit) |
+| `informes-liq/` | `InformeLiqService` + `InformeLiqFactoryService` — `InformeLiqNuevo` en `informesLiq`: borradores, emisión, edición. Ver "Frente Liquidación — InformeLiqNuevo" |
 | `informes/` | Generación de reportes Excel y PDF |
 | `numerador/` | Generación de IDs secuenciales (operaciones, facturas) |
 | `validar/` | Validación de reglas de negocio |
@@ -2332,6 +2334,124 @@ entradas BAJA/RESTAURAR en `RegistroLogComponent`, y confirmar en la pantalla de
 Papelera nueva que el detalle abre el snapshot correcto para eventos `'activo'` y
 el objeto vivo para `'restaurado'`.
 
+## Frente Liquidación — InformeLiqNuevo (Septiembre 2026)
+
+Camino nuevo de liquidación, PARALELO al viejo: `InformeLiq` / `resumenLiq` /
+`proforma` / `LiquidacionService` / `LiquidacionBuilderService` no se tocaron
+y se retiran en un frente aparte. En demo se arrancó de cero (sin migrar
+datos). Vantruck tendrá su propio frente de migración. Diseño completo y
+decisiones: doc de proyecto `claude/diseno-informe-liq-nuevo.md`.
+
+### Modelo
+- `interfaces/informe-liq-nuevo.ts` → `InformeLiqNuevo`, colección `informesLiq`
+  (`firestore.rules`: módulo `finanzas`). `idInfLiq` = doc id, patrón ConId (no
+  se persiste; se agrega al leer).
+- `estado`: 'borrador' (ex proforma, `numeroInterno` null) | 'emitido' |
+  'facturado' | 'anulado'. Los dos últimos los escribe Facturación (pendiente).
+- `entidad`: snapshot `RefCliente | RefChofer | RefProveedor`.
+- `periodo: {anio, mes 1-12, tramo 'mes'|'1q'|'2q'}`. Una liquidación no mezcla
+  meses. El período no se edita en un borrador.
+- `informesOp: string[]` (idInfOp). Hace falta porque una transacción no puede
+  hacer queries: es la lista de refs a releer dentro de la tx. En la UI el
+  detalle lee con `where('idInfLiq','==',id)` sobre `informesOp`. La
+  composición de un borrador no se edita (para cambiarla: eliminar y rearmar).
+- `valores`: totales de este lado + `totalContraParte` (informativo).
+  `descuentos` (ajustes, +/-), `columnas: string[]` (nombres persistidos; ver
+  "Columnas"), `observaciones`.
+- `valoresFinancieros` / `estadoFinanciero`: se inicializan, pero la cascada de
+  Finanzas es TODO.
+- Tope: `MAX_INFORMES_OP = 150` por liquidación (presupuesto de 500
+  escrituras por commit, sin chunking).
+
+### Transiciones (InformeLiqService)
+| Acción | InformeLiqNuevo | InformeOp (este lado) | Contraparte | Operación.estado |
+|---|---|---|---|---|
+| crearBorrador | set 'borrador' | activo → 'proforma', idInfLiq | tipo ≠ cliente: bloqueadoPorContraparte = true | proforma.<lado> = true |
+| emitir (directo) | set 'emitido', número, fechaEmision | activo → 'liquidado', idInfLiq | bloqueado = false | liquidacion.<lado> = true (ciclo 'liquidada' si ambos lados) |
+| emitirBorrador | mismo doc → 'emitido', número | proforma → 'liquidado' | bloqueado = false | proforma.<lado> = false, liquidacion.<lado> = true |
+| eliminarBorrador | delete | proforma → 'activo', idInfLiq = null | bloqueado = false | proforma.<lado> = false |
+`<lado>` = cliente | chofer (proveedor usa el flag chofer). Numeración:
+misma serie LQCL/LQCH/LQPR (`NumeradorService.leerProximoNumeroInterno(tx, tipo)`).
+
+Ediciones:
+- `editarDatos(id, CambiosDatosLiq)` (descuentos/observaciones/columnas,
+  borrador o emitido): recalcula `descuentoTotal`/`total`/`valoresFinancieros`
+  sin pisar `totalCobrado`.
+- `editarInformeOp(resultado)`: toma `InformeOpService.armarEscriturasEdicion`
+  SIN commitear, recalcula por delta el InformeLiq propio y el de la
+  contraparte (solo `totalContraParte`) y hace un solo `commitBatch`.
+- Ruteo de UI: un InformeOp 'activo' se edita en InformeOpListado
+  (`InformeOpService.editar`); uno en 'proforma' solo desde Borradores →
+  detalle (`InformeLiqService.editarInformeOp`); 'liquidado' → pantalla de
+  emitidos (Facturación, pendiente).
+
+### Escritura: `commitEnTransaccion`
+`DbFirestoreService.commitEnTransaccion<R>(armar)`: mismo contrato
+EscrituraBatch[] que `commitBatch`, aplicado dentro de `runTransaction`. Ambos
+comparten `aplicarEscritura(destino, e)` (WriteBatch y Transaction tienen la
+misma firma set/update/delete). Reglas:
+- `armar` es PURA: Firestore puede reintentarla. Rearma el array en cada
+  intento, sin efectos laterales.
+- Todas las lecturas protegidas van por `leerEnTransaccion` (tx.get). Las
+  escrituras se aplican recién cuando `armar` termina: lecturas antes que
+  escrituras por construcción.
+- Sin chunking (rompe la atomicidad); límite 500 escrituras.
+- Transacción para crear/emitir/eliminar (leen fresco, verifican estados,
+  reservan número). `commitBatch` para ediciones (el caller ya leyó).
+  `lockLiquidacion` no se usa en el camino nuevo.
+Helpers síncronos en el servicio dueño, divididos por mecanismo:
+`agregarEscrituraInformeLiqCompleto` / `Parcial` / `agregarEliminacionInformeLiq`,
+`OperacionFactoryService.agregarEscrituraOperacionParcial` (dot-notation sobre
+`estado.*`).
+
+### Log
+- Un registro por InformeLiq, no por InformeOp: ALTA (borrador), EMITIR
+  (emisión directa con `anterior = null`, y emitirBorrador con diff), BAJA
+  (eliminar borrador), EDITAR (con diff).
+- AccionLog suma 'CERRAR' (`OperacionService.cerrarOperacion`) y 'EMITIR'.
+  `LogRegistroService.agregarAlBatch(..., anterior?)` calcula diff en
+  EDITAR | EMITIR.
+- `diffParcial`: diff para escrituras parciales en dot-notation (antes el diff
+  de 'actualizar' salía roto).
+- Igualdad de valores en diffs y en "hay cambios" de UI: `igualesPorContenido`
+  (`shared/utils/igualdad.util.ts`), serialización con claves ordenadas.
+  **No usar JSON.stringify para comparar objetos leídos de Firestore:**
+  Firestore no preserva el orden de las claves de un map, y eso producía
+  diffs falsos y "cambios sin guardar" fantasma.
+- `cerrarOperacion` ya no persiste `idInfOp` en el body de la operación (generaba un diff
+  falso `idInfOp → null`).
+
+### UI (raiz/liquidacion)
+- `LiqGralComponent`: pestañas Informes (`liquidacion/informes`) y Borradores
+  (`liquidacion/borradores`). Las del modelo viejo quedan comentadas. El
+  calendario se oculta en Borradores.
+- `InformeOpListadoComponent`: resumen por entidad + detalle expandible.
+  "Liquidar" por fila (`liquidaciones.liquidar`) abre `LiquidacionNuevaComponent`.
+  El lápiz aparece solo en activo y no bloqueado. Badges de estado y de
+  "Bloqueado". Filas en proforma o bloqueadas atenuadas (`.isDisabled`).
+  Columnas: "Total a Cobrar/Pagar" (monto propio) y "Contraparte a
+  Pagar/Cobrar" (Σ contraParte.monto). Orden por encabezado con ícono. El
+  orden se conserva entre emisiones del listener. La expansión va por id de
+  entidad.
+- `LiquidacionNuevaComponent` (modal): mes/año/tramo → preselección automática,
+  en la que solo se puede desmarcar. Alertas arriba y repetidas en la
+  confirmación, ajustes (verde ≥0 / rojo <0), observaciones, columnas (la
+  tabla se arma con las seleccionadas). Devuelve `{accion: 'emitir'|'borrador',
+  datos}`. Botón "Vista previa" sin conectar (pendiente Excel/PDF).
+- `BorradoresLiqComponent`: listado en vivo (`observarBorradores`), filtro por
+  tipo, búsqueda, orden por encabezado. Acciones Ver/Emitir/Eliminar.
+- `InformeLiqNuevoDetalleComponent` (modal): columnas guardadas, edición de
+  InformeOp vía `InformeOpEditorComponent` → `editarInformeOp`. editarDatos con
+  Guardar/Descartar. Totales en vivo con badge "sin guardar". "Vista previa"
+  sin conectar.
+
+### Columnas (`shared/utils/columnas-liquidacion.util.ts`)
+`columnasPorTipo`, `esColumnaMonto`, `valorColumnaInformeOp`, `etiquetaColumna`.
+El nombre PERSISTIDO de la columna de monto propio es 'A Cobrar' para todo
+tipo. `etiquetaColumna(nombre, tipo)` lo muestra como 'A Pagar' para
+chofer/proveedor. Cualquier salida nueva (Excel/PDF) debe usar
+`etiquetaColumna`, no el nombre crudo.
+
 ## Deuda conocida
 
 Deuda técnica activa. Actualizar cuando se salda.
@@ -2487,18 +2607,21 @@ operaciones-editor + altaDesdeAsignacion.
 conectados a `PermisosService` vía `*appPermiso`. Detalle completo, incluidos los dos
 primeros `overrides` reales del servicio, en "Frente Botones y Permisos" → Bloque 7.
 
-### Deuda — desincronización selectedTab vs. ruta activa (patrón shell-con-pestañas)
+### Resuelto — pestaña activa derivada de la URL (shell-con-pestañas)
 
-**Desincronización selectedTab vs. ruta activa (OpControlComponent y patrón
-shell-con-pestañas):** el resaltado de la pestaña activa depende solo de clicks previos en
-la sesión del componente (selectedTab), no de la URL real. Al refrescar (F5) o entrar por
-deep-link a una ruta hija (ej. /op/asignaciones), el router-outlet renderiza el componente
-correcto pero la pestaña resaltada queda desincronizada (siempre vuelve a 'Tablero de
-Operaciones'). Detectado en op-control.component.ts durante el switch de Asignaciones; el
-mismo patrón se repite en los otros ~12 componentes *-control del proyecto (uno por módulo
-bajo raiz/). No resuelto, no bloqueante — candidato a frente propio si se decide atacarlo
-(ActivatedRoute + Router.events para sincronizar selectedTab con la URL real, en vez de
-solo con clicks).
+Resuelto en el cierre del frente InformeLiqNuevo (B4). `selectedTab` dejó de
+ser un campo actualizado por clicks y es un getter que deriva la pestaña de
+`router.url` con `tabActivaDesdeUrl(tabs, url)` (`shared/utils/tabs-url.util.ts`).
+Así no hace falta suscripción ni desuscripción, y F5/deep-link/atrás-adelante/
+redirect quedan alineados. Compara por segmentos completos y gana la ruta
+más larga ('ajustes/registro' ya no matchea 'ajustes/registro-log').
+`alias` cubre pantallas hijas sin pestaña propia
+(ej. 'finanzas/movimiento' → Historial, '<modulo>/alta' → Alta/Listado).
+Derivados de la pestaña (`ocultarCalendario` en LiqGral y Vendedores) también
+son getters. Aplicado a los 13 shells, incluido LiqGral; tarifas-control y
+finanzas-control abandonaron su suscripción propia (la de finanzas no se
+desuscribía). **Convención para shells nuevos:** `tabs: TabRuta[]` + getter
+`selectedTab` + `selectTab` que solo navega.
 
 ### Deuda menor — tablero-asignaciones
 
@@ -2817,3 +2940,21 @@ encare, pero el orden de dependencia ya es claro):
 correcto hacia adelante) — es deuda del PROCESO de migración de datos legacy de
 producción, que corre aparte y más adelante, cuando se aborde el traspaso completo a
 Vantruck. Registrado acá para que no se pierda de vista al planificar ese proceso.
+
+### Deuda — Liquidación (camino InformeLiqNuevo)
+- Excel/PDF para `InformeLiqNuevo` (descarga post-emisión, reimpresión) y los
+  dos botones "Vista previa" (LiquidacionNueva: informe armado en memoria,
+  antes de persistir; Detalle: borrador persistido). Sin número interno y con
+  marca visible BORRADOR/VISTA PREVIA. Usar `etiquetaColumna`.
+- Camino nuevo de Facturación para emitidos: ver, editar (incluye InformeOp
+  'liquidado'), vincular factura y anular.
+- Cascada de Finanzas sobre `InformeLiqNuevo` (resumenFinanzas, cuenta
+  corriente, aging, movimientos, ledger, informe-liq-cuenta-corriente siguen
+  leyendo las colecciones viejas), incluido el impacto de editar un emitido.
+- `OperacionService.bajaOperacion` no bloquea la baja si `estado.proforma.*`
+  es true.
+- Reportes: `Number(op.cliente.id)` da NaN con ids string.
+- `revertirInformeLiq` (camino viejo) no restaura `bloqueadoPorContraparte`.
+- Retirar el camino viejo (LiquidacionesOp, Proforma, LiquidacionService,
+  LiquidacionBuilderService, rutas comentadas en liquidacion-routing y
+  LiqGral) una vez migrado Vantruck.

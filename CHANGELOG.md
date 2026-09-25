@@ -1892,6 +1892,32 @@ detalle) sigue en curso.
 
 ---
 
+## Frente Liquidación — InformeLiqNuevo (Septiembre 2026)
+
+- Liquidación — camino nuevo `InformeLiqNuevo` (colección `informesLiq`),
+  paralelo al viejo: borradores, emisión directa o desde borrador,
+  eliminación de borradores, edición de datos (ajustes/observaciones/
+  columnas) y de InformeOp dentro de una liquidación, con recálculo de la
+  contraparte.
+- `DbFirestoreService.commitEnTransaccion` / `leerEnTransaccion` /
+  `observarPorCampo`; `aplicarEscritura` compartido con `commitBatch`.
+- Log: acciones CERRAR y EMITIR; `diffParcial` para escrituras dot-notation;
+  comparación independiente del orden de claves (`igualesPorContenido`), que
+  elimina diffs falsos en todos los logs EDITAR/EMITIR.
+- UI Liquidación: pestañas Informes y Borradores; modal de liquidación nueva
+  por período; modal de detalle; badges de estado; totales en vivo; orden por
+  encabezado con ícono; etiquetas de monto por tipo de entidad.
+- Fix: `cerrarOperacion` persistía `idInfOp` en el body de la operación.
+- Fix: pestaña activa desincronizada de la URL en los 13 componentes
+  shell-con-pestañas (F5/deep-link/atrás-adelante); de paso se elimina un
+  listener sin desuscribir en finanzas-control.
+
+Detalle completo en `CLAUDE.md` → "Frente Liquidación — InformeLiqNuevo".
+
+**Verificación:** `ng build --configuration=demo` limpio.
+
+---
+
 ### Pendiente
 
 - Módulo Vendedores (incluye lógica de vendedor[] en Cliente)

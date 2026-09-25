@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 
 @Component({
     selector: 'app-ajustes-control',
@@ -22,30 +23,29 @@ import { Router } from '@angular/router';
 })
 export class AjustesControlComponent implements OnInit {
 
-   selectedTab: string = 'tab1';
-  
+  tabs = [
+    { id: 'tab1', route: 'ajustes/usuarios' },
+    { id: 'tab2', route: 'ajustes/registro' },
+    { id: 'tab3', route: 'ajustes/papelera' },
+    { id: 'tab4', route: 'ajustes/registro-log' },
+    { id: 'tab5', route: 'ajustes/papelera-legado' },
+  ];
+
+  /** Pestaña activa derivada de la URL real (ver tabs-url.util). */
+  get selectedTab(): string {
+    return tabActivaDesdeUrl(this.tabs, this.router.url);
+  }
+
     constructor(private router: Router) {}
-  
+
     ngOnInit(): void {
       //this.selectTab("tab1");
     }
-  
-    selectTab(tab: string) {
-      this.selectedTab = tab;
-      if (tab === 'tab1') {
-        this.router.navigate(['ajustes/usuarios']);
-      } 
-      if (tab === 'tab2') {
-        this.router.navigate(['ajustes/registro']);
-      } 
-      if (tab === 'tab3') {
-        this.router.navigate(['ajustes/papelera']);
-      }
-      if (tab === 'tab4') {
-        this.router.navigate(['ajustes/registro-log']);
-      }
-      if (tab === 'tab5') {
-        this.router.navigate(['ajustes/papelera-legado']);
+
+    selectTab(tabId: string) {
+      const tab = this.tabs.find(t => t.id === tabId);
+      if (tab) {
+        this.router.navigate([tab.route]);
       }
     }
 

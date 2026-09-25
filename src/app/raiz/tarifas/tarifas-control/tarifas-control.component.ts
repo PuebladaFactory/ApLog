@@ -1,6 +1,6 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 
 @Component({
     selector: 'app-tarifas-control',
@@ -23,9 +23,8 @@ import { Subject, takeUntil } from 'rxjs';
     styleUrls: ['./tarifas-control.component.scss'],
     standalone: false
 })
-export class TarifasControlComponent implements OnInit, OnDestroy {
+export class TarifasControlComponent {
 
-  selectedTab: string = 'tab1';
   tabs = [
     { id: 'tab1', name: 'General', route: 'tarifas/general' },
     { id: 'tab2', name: 'Personalizada', route: 'tarifas/personalizada' },
@@ -34,39 +33,14 @@ export class TarifasControlComponent implements OnInit, OnDestroy {
     { id: 'tab5', name: 'Historial', route: 'tarifas/historial' },
   ];
 
-  private destroy$ = new Subject<void>();
+  /** Pestaña activa derivada de la URL real (ver tabs-url.util). */
+  get selectedTab(): string {
+    return tabActivaDesdeUrl(this.tabs, this.router.url);
+  }
 
   constructor(private router: Router) {}
 
-  ngOnInit(): void {
-    // Sincroniza el tab resaltado con la ruta real. Sin esto, entrar por un
-    // link directo, recargar la página, o navegar con atrás/adelante del
-    // navegador deja el resaltado en 'tab1' (o en lo último clickeado acá)
-    // aunque el router-outlet ya esté mostrando otra pestaña — selectTab()
-    // solo actualizaba selectedTab cuando el cambio de ruta salía de un click
-    // en este mismo componente.
-    this.actualizarTabDesdeUrl(this.router.url);
-    this.router.events
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(event => {
-        if (event instanceof NavigationEnd) {
-          this.actualizarTabDesdeUrl(event.urlAfterRedirects);
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  private actualizarTabDesdeUrl(url: string): void {
-    const tab = this.tabs.find(t => url.includes(t.route));
-    if (tab) this.selectedTab = tab.id;
-  }
-
   selectTab(tabId: string) {
-    this.selectedTab = tabId;
     const tab = this.tabs.find(t => t.id === tabId);
     if (tab) {
       this.router.navigate([tab.route]);

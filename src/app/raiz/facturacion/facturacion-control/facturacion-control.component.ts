@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 
 @Component({
     selector: 'app-facturacion-control',
@@ -22,11 +23,15 @@ import { Router } from '@angular/router';
 })
 export class FacturacionControlComponent implements OnInit {
 
-  selectedTab: string = 'tab1';
     tabs = [
-    { id: 'tab2', name: 'Informes Emitidos', route: 'facturacion/emitidos'},    
-    { id: 'tab1', name: 'General', route: 'facturacion/gral' },       
+    { id: 'tab2', name: 'Informes Emitidos', route: 'facturacion/emitidos'},
+    { id: 'tab1', name: 'General', route: 'facturacion/gral' },
   ];
+
+  /** Pestaña activa derivada de la URL real (ver tabs-url.util). */
+  get selectedTab(): string {
+    return tabActivaDesdeUrl(this.tabs, this.router.url);
+  }
 
   constructor(private router: Router) {}
 
@@ -35,7 +40,6 @@ export class FacturacionControlComponent implements OnInit {
   }
 
   selectTab(tabId: string) {
-    this.selectedTab = tabId;    
     const tab = this.tabs.find(t => t.id === tabId);
     if (tab) {
       this.router.navigate([tab.route]);

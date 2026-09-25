@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Vendedor } from 'src/app/interfaces/vendedor';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 
 @Component({
   selector: 'app-vendedor-control',
@@ -34,17 +35,26 @@ import { StorageService } from 'src/app/servicios/storage/storage.service';
 export class VendedorControlComponent implements OnInit {
 
   modo: string = 'vendedores';
-  ocultarCalendario: boolean = false;
-  selectedTab: string = 'tab1';
   tabs = [
-    { id: 'tab1', name: 'Tablero de Actividad', route: 'vendedores/tableroVendedores' },    
-    { id: 'tab2', name: 'Listado', route: 'vendedores/listado' }, 
-    { id: 'tab3', name: 'Historial', route: 'vendedores/historial' }, 
+    { id: 'tab1', name: 'Tablero de Actividad', route: 'vendedores/tableroVendedores' },
+    { id: 'tab2', name: 'Listado', route: 'vendedores/listado', alias: ['vendedores/alta'] },
+    { id: 'tab3', name: 'Historial', route: 'vendedores/historial' },
   ];
+
+  /** Pestaña activa derivada de la URL real (ver tabs-url.util). */
+  get selectedTab(): string {
+    return tabActivaDesdeUrl(this.tabs, this.router.url);
+  }
+
+  /** El calendario no aplica a Listado ni Historial. Se deriva de la
+   *  pestaña activa (antes se seteaba en el click y quedaba mal con F5). */
+  get ocultarCalendario(): boolean {
+    return this.selectedTab === 'tab2' || this.selectedTab === 'tab3';
+  }
 
   constructor(
     private router: Router,
-    private storageService: StorageService, 
+    private storageService: StorageService,
   ) {}
 
   ngOnInit(): void {
@@ -53,8 +63,6 @@ export class VendedorControlComponent implements OnInit {
   }
 
   selectTab(tabId: string) {
-    this.selectedTab = tabId;
-    if(tabId === 'tab2' || tabId === 'tab3'){this.ocultarCalendario = true} else {this.ocultarCalendario = false}
     const tab = this.tabs.find(t => t.id === tabId);
     if (tab) {
       this.router.navigate([tab.route]);

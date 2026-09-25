@@ -1,6 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-sesion.service";
+import { tabActivaDesdeUrl } from "src/app/shared/utils/tabs-url.util";
 
 @Component({
   selector: "app-control",
@@ -45,7 +46,17 @@ import { UsuarioSesionService } from "src/app/servicios/usuario-sesion/usuario-s
   standalone: false,
 })
 export class ControlComponent implements OnInit {
-  selectedTab: string = "tab1";
+  tabs = [
+    { id: 'tab1', route: 'legajos/tablero' },
+    { id: 'tab2', route: 'legajos/cargarDoc' },
+    { id: 'tab3', route: 'legajos/consulta' },
+    { id: 'tab4', route: 'legajos/vencimientos' },
+  ];
+
+  /** Pestaña activa derivada de la URL real (ver tabs-url.util). */
+  get selectedTab(): string {
+    return tabActivaDesdeUrl(this.tabs, this.router.url);
+  }
 
   constructor(
     private router: Router,
@@ -56,16 +67,10 @@ export class ControlComponent implements OnInit {
     //this.selectTab("tab1");
   }
 
-  selectTab(tab: string) {
-    this.selectedTab = tab;
-    if (tab === "tab1") {
-      this.router.navigate(["legajos/tablero"]);
-    } else if (tab === "tab2") {
-      this.router.navigate(["legajos/cargarDoc"]);
-    } else if (tab === "tab3") {
-      this.router.navigate(["legajos/consulta"]);
-    } else if (tab === "tab4") {
-      this.router.navigate(["legajos/vencimientos"]);
+  selectTab(tabId: string) {
+    const tab = this.tabs.find(t => t.id === tabId);
+    if (tab) {
+      this.router.navigate([tab.route]);
     }
   }
 }

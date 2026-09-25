@@ -2,6 +2,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { DateRangeService } from 'src/app/servicios/fechas/date-range.service';
 import { StorageService } from 'src/app/servicios/storage/storage.service';
+import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 
 @Component({
     selector: 'app-liq-gral',
@@ -15,7 +16,6 @@ export class LiqGralComponent implements OnInit {
   @Output() newItemEvent = new EventEmitter<any>();
 
   modo: string = 'liquidaciones'
-  selectedTab: string = 'tab6';
   componenteConsulta: string = "Liquidacion"
   fechasConsulta: any = {
     fechaDesde: 0,
@@ -50,21 +50,29 @@ export class LiqGralComponent implements OnInit {
     // { id: 'tab4', name: 'Proformas', route: 'liquidacion/proformas' },
     /* { id: 'tab5', name: 'Migrar Datos', route: 'liquidacion/migrar' }, */
   ];
-  ocultarCalendario: boolean = false;
 
-  constructor(private storageService: StorageService, private router: Router){    
+  /** Pestaña activa derivada de la URL real (ver tabs-url.util). */
+  get selectedTab(): string {
+    return tabActivaDesdeUrl(this.tabs, this.router.url);
   }
-  
-  ngOnInit(): void { 
+
+  /** El calendario no aplica a Borradores. Derivado de la pestaña
+   *  activa (antes se seteaba en el click y quedaba mal con F5). */
+  get ocultarCalendario(): boolean {
+    return this.selectedTab === 'tab7';
+  }
+
+  constructor(private storageService: StorageService, private router: Router){
+  }
+
+  ngOnInit(): void {
 
     //this.selectTab("tab1");
     //this.consultaMes();
-   
+
   }
 
   selectTab(tabId: string) {
-    this.selectedTab = tabId;
-    this.ocultarCalendario = tabId === 'tab7';
     const tab = this.tabs.find(t => t.id === tabId);
     if (tab) {
       this.router.navigate([tab.route]);

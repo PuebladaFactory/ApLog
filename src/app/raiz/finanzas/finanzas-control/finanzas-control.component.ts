@@ -1,6 +1,6 @@
-import { Component, OnInit } from "@angular/core";
-import { NavigationEnd, Router } from "@angular/router";
-import { filter } from "rxjs";
+import { Component } from "@angular/core";
+import { Router } from "@angular/router";
+import { tabActivaDesdeUrl } from "src/app/shared/utils/tabs-url.util";
 
 @Component({
   selector: "app-finanzas-control",
@@ -55,62 +55,30 @@ import { filter } from "rxjs";
     `,
   ],
 })
-export class FinanzasControlComponent implements OnInit {
+export class FinanzasControlComponent {
   tabs = [
     { id: "tab1", name: "Cobros", route: "finanzas/cobros" },
     { id: "tab2", name: "Pagos", route: "finanzas/pagos" },
-    { id: "tab3", name: "Historial de Movimientos", route: "finanzas/historial" },
+    { id: "tab3", name: "Historial de Movimientos", route: "finanzas/historial", alias: ["finanzas/movimiento"] },
     {
       id: "tab4",
       name: "Cuenta Corriente",
       route: "finanzas/cuenta-corriente",
+      alias: ["finanzas/informe"],
     },
     { id: "tab5", name: "Ledger Entidad", route: "finanzas/ledger" },
-    { id: "tab6", name: "Aging Listado", route: "finanzas/aging" },     
-    { id: "tab7", name: "Riesgo Financiero", route: "finanzas/ranking" }, 
+    { id: "tab6", name: "Aging Listado", route: "finanzas/aging" },
+    { id: "tab7", name: "Riesgo Financiero", route: "finanzas/ranking" },
   ];
 
-  selectedTab: string = "";
+  /** Pestaña activa derivada de la URL real (ver tabs-url.util). */
+  get selectedTab(): string {
+    return tabActivaDesdeUrl(this.tabs, this.router.url);
+  }
 
   constructor(private router: Router) {}
 
-  ngOnInit() {
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.actualizarTabActivo();
-      });
-
-    // 👇 importante para carga inicial (nueva pestaña)
-    this.actualizarTabActivo();
-  }
-
-  actualizarTabActivo() {
-    const url = this.router.url;
-
-    if (url.includes("finanzas/movimiento")) {
-      this.selectedTab = "tab3";
-      return;
-    }
-
-    if (url.includes("finanzas/cuenta-corriente")) {
-      this.selectedTab = "tab4";
-      return;
-    }
-
-    if (url.includes("finanzas/informe")) {
-      this.selectedTab = "tab4";
-      return;
-    }
-
-    const tab = this.tabs.find((t) => url.includes(t.route));
-    if (tab) {
-      this.selectedTab = tab.id;
-    }
-  }
-
   selectTab(tabId: string) {
-    this.selectedTab = tabId;
     const tab = this.tabs.find((t) => t.id === tabId);
     if (tab) {
       this.router.navigate([tab.route]);

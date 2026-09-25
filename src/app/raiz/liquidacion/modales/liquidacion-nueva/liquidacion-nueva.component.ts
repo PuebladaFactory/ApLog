@@ -163,18 +163,6 @@ export class LiquidacionNuevaComponent implements OnInit {
     return !this.cargando && this.seleccion.size > 0 && this.seleccion.size <= this.MAX;
   }
 
-  nombreContraparte(inf: ConId<InformeOpNuevo>): string {
-    return nombreEntidadRef(inf.contraParte.entidad);
-  }
-
-  nombreChofer(inf: ConId<InformeOpNuevo>): string {
-    return `${inf.datosOperacion.chofer.apellido} ${inf.datosOperacion.chofer.nombre}`;
-  }
-
-  quincena(fecha: string): string {
-    return Number(fecha.split('-')[2]) <= 15 ? '1°' : '2°';
-  }
-
   /** Valor de una celda según la columna — mismos criterios que
    *  ResumenOpLiquidadasComponent.obtenerDatoColumna (camino viejo), sobre
    *  InformeOpNuevo. */
