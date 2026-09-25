@@ -15,7 +15,7 @@ export class LiqGralComponent implements OnInit {
   @Output() newItemEvent = new EventEmitter<any>();
 
   modo: string = 'liquidaciones'
-  selectedTab: string = 'tab1';
+  selectedTab: string = 'tab6';
   componenteConsulta: string = "Liquidacion"
   fechasConsulta: any = {
     fechaDesde: 0,
@@ -41,12 +41,14 @@ export class LiqGralComponent implements OnInit {
   titulo: string = "liquidacion"
   btnConsulta:boolean = false;
   tabs = [
-    { id: 'tab1', name: 'Clientes', route: 'liquidacion/cliente'},
-    { id: 'tab2', name: 'Choferes', route: 'liquidacion/chofer' },
-    { id: 'tab3', name: 'Proveedores', route: 'liquidacion/proveedor' },
-    { id: 'tab4', name: 'Proformas', route: 'liquidacion/proformas' },
-    /* { id: 'tab5', name: 'Migrar Datos', route: 'liquidacion/migrar' }, */
     { id: 'tab6', name: 'Informes', route: 'liquidacion/informes' },
+    { id: 'tab7', name: 'Borradores', route: 'liquidacion/borradores' },
+    // Camino viejo — rutas comentadas en liquidacion-routing.module.ts:
+    // { id: 'tab1', name: 'Clientes', route: 'liquidacion/cliente'},
+    // { id: 'tab2', name: 'Choferes', route: 'liquidacion/chofer' },
+    // { id: 'tab3', name: 'Proveedores', route: 'liquidacion/proveedor' },
+    // { id: 'tab4', name: 'Proformas', route: 'liquidacion/proformas' },
+    /* { id: 'tab5', name: 'Migrar Datos', route: 'liquidacion/migrar' }, */
   ];
   ocultarCalendario: boolean = false;
 
@@ -62,7 +64,7 @@ export class LiqGralComponent implements OnInit {
 
   selectTab(tabId: string) {
     this.selectedTab = tabId;
-    if(tabId === 'tab4'){this.ocultarCalendario = true} else {this.ocultarCalendario = false}
+    this.ocultarCalendario = tabId === 'tab7';
     const tab = this.tabs.find(t => t.id === tabId);
     if (tab) {
       this.router.navigate([tab.route]);

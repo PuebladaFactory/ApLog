@@ -134,7 +134,7 @@
                             type="checkbox"
                             class="form-check-input me-1"
                             [(ngModel)]="c.seleccionada"
-                        />{{ c.nombre }}
+                        />{{ etiqueta(c.nombre) }}
                     </label>
                 }
             </div>
@@ -156,7 +156,7 @@
                             <th style="width: 3%"></th>
                             @for (c of columnasVisibles; track c.nombre) {
                                 <th [class.text-end]="esColumnaMonto(c.nombre)">
-                                    {{ c.nombre }}
+                                    {{ etiqueta(c.nombre) }}
                                 </th>
                             }
                         </tr>
@@ -198,18 +198,18 @@
             <!-- 7. DESCUENTOS / OBSERVACIONES -->
 
             <div class="row g-3 mt-1">
-                <div class="col-md-6 mt-0">
-                    <label class="form-label mb-0">Observaciones</label>
+                <div class="col-md-6 mt-0 align-self-end">
+                    <label class="form-label mb-0 mt-0">Observaciones</label>
                     <textarea
                         class="form-control"
                         rows="2"
                         [(ngModel)]="observaciones"
                     ></textarea>
                 </div>
-                <div class="col-md-6 mt-0">
+                <div class="col-md-6 mt-0 align-self-end">
                     @if (descuentos.length > 0) {
                         <table
-                            class="table table-bordered table-striped table-hover table-responsive table-sm"
+                            class="table table-bordered table-striped table-hover table-responsive table-sm mb-0"
                         >
                             <tbody>
                                 @for (
@@ -219,7 +219,10 @@
                                 ) {
                                     <tr>
                                         <td>{{ d.concepto }}</td>
-                                        <td class="col-moneda">
+                                        <td
+                                            class="col-moneda"
+                                            [ngClass]="d.valor >= 0 ? 'positivo' : 'negativo'"
+                                        >
                                             {{ d.valor | formatearValor: "$" }}
                                         </td>
                                         <td class="text-center">
@@ -262,7 +265,7 @@
                 >
                 <span
                     >Ajustes:
-                    <b>{{ descuentoTotal | formatearValor: "$" }}</b></span
+                    <b [ngClass]="descuentoTotal >= 0 ? 'positivo' : 'negativo'">{{ descuentoTotal | formatearValor: "$" }}</b></span
                 >
                 <span
                     >Total: <b>{{ total | formatearValor: "$" }}</b></span
@@ -275,7 +278,7 @@
 <div class="modal-footer">
     <!-- BOTON PARA LA VISTA PREVIA DEL INFORME COMPLETO, AUN NO IMPLMENTADO -->
     <button type="button" class="btn btn-outline-info">
-        Vista Previa
+        Vista previa
     </button>
     <button
         type="button"

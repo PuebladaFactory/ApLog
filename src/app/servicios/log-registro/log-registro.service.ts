@@ -3,6 +3,7 @@ import { Firestore, doc, setDoc } from '@angular/fire/firestore';
 import { AccionLog, CambioCampo, RegistroLog } from 'src/app/interfaces/registro-log';
 import { UsuarioSesionService } from 'src/app/servicios/usuario-sesion/usuario-sesion.service';
 import { DbFirestoreService, EscrituraBatch } from 'src/app/servicios/database/db-firestore.service';
+import { igualesPorContenido } from 'src/app/shared/utils/igualdad.util';
 
 @Injectable({ providedIn: 'root' })
 export class LogRegistroService {
@@ -180,7 +181,7 @@ export class LogRegistroService {
     for (const campo of campos) {
       const a = anterior[campo];
       const n = nuevo[campo];
-      if (JSON.stringify(a) !== JSON.stringify(n)) {
+      if (!igualesPorContenido(a, n)) {
         // Firestore no acepta 'undefined' como valor de campo. Un campo puede
         // faltar en 'anterior' (doc viejo, de antes de que ese campo existiera
         // en el schema) o en 'nuevo' sin que sea un error real — es la evolución
@@ -206,7 +207,7 @@ export class LogRegistroService {
     const cambios: CambioCampo[] = [];
     for (const [ruta, n] of Object.entries(parcial ?? {})) {
       const a = ruta.split('.').reduce((obj: any, clave) => obj?.[clave], anterior);
-      if (JSON.stringify(a) !== JSON.stringify(n)) {
+      if (!igualesPorContenido(a, n)) {
         cambios.push({
           campo: ruta,
           anterior: a === undefined ? null : a,

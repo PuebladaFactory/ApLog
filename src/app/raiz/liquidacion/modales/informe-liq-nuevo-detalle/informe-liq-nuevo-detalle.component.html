@@ -1,0 +1,250 @@
+<div class="modal-header">
+    <h4 class="modal-title">
+        {{
+            liq?.estado === "borrador"
+                ? "Borrador de liquidación"
+                : "Liquidación " + (liq?.numeroInterno ?? "")
+        }}
+        — <span class="badge text-bg-info text-light">{{ nombreEntidad }}</span>
+    </h4>
+    <button type="button" class="btn-close" (click)="cerrar()"></button>
+</div>
+
+<div class="modal-body">
+    @if (cargando || !liq) {
+        <app-spinner></app-spinner>
+    } @else {
+        <div class="d-flex justify-content-between">
+            <!-- CABECERA (no editable) -->
+            <div class="d-flex flex-wrap gap-4 mb-3">
+                <span
+                    >Tipo: <b class="text-capitalize">{{ liq.tipo }}</b></span
+                >
+                <span
+                    >Período: <b>{{ textoPeriodo }}</b></span
+                >
+                <span
+                    >Creado: <b>{{ liq.fechaCreacion }}</b></span
+                >
+                <span
+                    >Informes: <b>{{ liq.cantidadOperaciones }}</b></span
+                >
+                <span
+                    class="badge"
+                    [class.bg-warning]="liq.estado === 'borrador'"
+                    [class.text-dark]="liq.estado === 'borrador'"
+                    [class.bg-success]="liq.estado !== 'borrador'"
+                    >{{ liq.estado }}</span
+                >
+            </div>
+            <!-- BOTON EDITAR -->
+            <div class="d-flex align-items-center mb-1 justify-content-end">
+                <h6 class="mb-0 me-2">Ajustes</h6>
+                @if (editable) {
+                    <button
+                        type="button"
+                        class="btn btn-outline-primary btn-sm"
+                        (click)="abrirDescuentos()"
+                    >
+                        Editar
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div
+            class="border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded mb-3"
+        >
+            <h6 class="mb-1">Columnas del informe</h6>
+            <div class="d-flex flex-wrap gap-2">
+                @for (c of columnas; track c.nombre) {
+                    <label class="form-check-label small">
+                        <input
+                            type="checkbox"
+                            class="form-check-input me-1"
+                            [(ngModel)]="c.seleccionada"
+                            [disabled]="!editable"
+                        />{{ etiqueta(c.nombre) }}
+                    </label>
+                }
+            </div>
+        </div>
+
+        <!-- INFORMES (columnas guardadas) -->
+        <div class="table-responsive" style="max-height: 45vh">
+            <table class="table table-sm table-striped table-bordered">
+                <thead class="sticky-top">
+                    <tr>
+                        @for (c of columnasVisibles; track c.nombre) {
+                            <th [class.col-moneda]="esColumnaMonto(c.nombre)">
+                                {{ etiqueta(c.nombre) }}
+                            </th>
+                        }
+                        @if (editable) {
+                            <th
+                                class="text-center"
+                                *appPermiso="'liquidaciones.editar'"
+                            >
+                                Editar
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (inf of informes; track inf.idInfOp) {
+                        <tr>
+                            @for (c of columnasVisibles; track c.nombre) {
+                                <td
+                                    [class.col-moneda]="
+                                        esColumnaMonto(c.nombre)
+                                    "
+                                >
+                                    {{ valorColumna(inf, c.nombre) }}
+                                </td>
+                            }
+                            @if (editable) {
+                                <td
+                                    class="text-center"
+                                    *appPermiso="'liquidaciones.editar'"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        fill="currentColor"
+                                        class="bi bi-pencil"
+                                        viewBox="0 0 16 16"
+                                        type="button"
+                                        (click)="editarInformeOp(inf)"
+                                    >
+                                        <path
+                                            d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"
+                                        />
+                                    </svg>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- DATOS EDITABLES -->
+        <div class="row g-3 mt-1">
+            <div class="col-md-6 mt-0 align-self-end">
+                <label class="form-label mt-0 mb-0">Observaciones</label>
+                <textarea
+                    class="form-control mb-0"
+                    rows="2"
+                    [(ngModel)]="observaciones"
+                    [disabled]="!editable"
+                ></textarea>
+            </div>
+            <div class="col-md-6 mt-0 align-self-end">
+                @if (descuentos.length > 0) {
+                    <table
+                        class="table table-bordered table-striped table-hover table-responsive table-sm mb-0"
+                    >
+                        <tbody>
+                            @for (
+                                d of descuentos;
+                                track $index;
+                                let i = $index
+                            ) {
+                                <tr>
+                                    <td>{{ d.concepto }}</td>
+                                    <td
+                                        class="col-moneda"
+                                        [ngClass]="d.valor >= 0 ? 'positivo' : 'negativo'"
+                                    >
+                                        {{ d.valor | formatearValor: "$" }}
+                                    </td>
+                                    <td class="text-center">
+                                        @if (editable) {
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                fill="currentColor"
+                                                class="bi bi-x-circle text-danger"
+                                                type="button"
+                                                viewBox="0 0 16 16"
+                                                (click)="quitarDescuento(i)"
+                                            >
+                                                <path
+                                                    d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+                                                />
+                                                <path
+                                                    d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"
+                                                />
+                                            </svg>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+
+        <!-- TOTALES (del informe guardado; los ajustes sin guardar se muestran aparte) -->
+        <div
+            class="d-flex justify-content-end gap-4 mt-3 border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded mb-3 totales"
+        >
+            <span
+                >Subtotal:
+                <b>{{ subtotalBase | formatearValor: "$" }}</b></span
+            >
+            <span
+                >Ajustes:
+                <b [ngClass]="descuentoTotalEditado >= 0 ? 'positivo' : 'negativo'">{{
+                    descuentoTotalEditado | formatearValor: "$"
+                }}</b></span
+            >
+            <span
+                >Total:
+                <b>{{ totalEditado | formatearValor: "$" }}</b>
+                @if (ajustesSinGuardar) {
+                    <span class="badge bg-warning text-dark ms-1">sin guardar</span>
+                }</span
+            >
+            <span class="text-muted"
+                >Contraparte:
+                {{ liq.valores.totalContraParte | formatearValor: "$" }}</span
+            >
+        </div>
+    }
+</div>
+
+<div class="modal-footer">
+    <!-- BOTON PARA LA VISTA PREVIA DEL INFORME COMPLETO, AUN NO IMPLMENTADO -->
+    <button type="button" class="btn btn-outline-info">Vista previa</button>
+    <button type="button" class="btn btn-secondary" (click)="cerrar()">
+        Cerrar
+    </button>
+    @if (editable) {
+        <ng-container *appPermiso="'liquidaciones.editar'">
+            <button
+                type="button"
+                class="btn btn-outline-secondary"
+                [disabled]="!hayCambios || guardando"
+                (click)="descartarCambios()"
+            >
+                Descartar
+            </button>
+            <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="!hayCambios || guardando"
+                (click)="guardarCambios()"
+            >
+                Guardar cambios
+            </button>
+        </ng-container>
+    }
+</div>
+
+@if (guardando) {
+    <app-spinner></app-spinner>
+}

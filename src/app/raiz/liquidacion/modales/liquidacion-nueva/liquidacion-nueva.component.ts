@@ -6,6 +6,7 @@ import { ConId } from 'src/app/interfaces/conId';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
 import { Operacion, RefCliente, RefChofer, RefProveedor } from 'src/app/interfaces/operacion';
 import { DescuentoLiq, PeriodoLiq } from 'src/app/interfaces/informe-liq-nuevo';
+import { ColumnaLiq, columnasPorTipo, esColumnaMonto, etiquetaColumna, valorColumnaInformeOp } from 'src/app/shared/utils/columnas-liquidacion.util';
 import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
 import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
@@ -18,11 +19,6 @@ import { DescuentosComponent } from '../descuentos/descuentos.component';
 export interface ResultadoLiquidacionNueva {
   accion: 'emitir' | 'borrador';
   datos: DatosLiquidacion;
-}
-
-interface ColumnaLiq {
-  nombre: string;
-  seleccionada: boolean;
 }
 
 /** Armado de una liquidación nueva (InformeLiqNuevo) para UNA entidad:
@@ -70,22 +66,6 @@ export class LiquidacionNuevaComponent implements OnInit {
   // Mismos nombres de columna que el camino viejo (se persisten como string[]
   // para la exportación futura).
   columnas: ColumnaLiq[] = [];
-  private readonly COLUMNAS_BASE: ColumnaLiq[] = [
-    { nombre: 'Fecha', seleccionada: true },
-    { nombre: 'Quincena', seleccionada: true },
-    { nombre: 'Chofer', seleccionada: true },
-    { nombre: 'Cliente', seleccionada: true },
-    { nombre: 'Patente', seleccionada: false },
-    { nombre: 'Concepto', seleccionada: true },
-    { nombre: 'Observaciones', seleccionada: false },
-    { nombre: 'Hoja de Ruta', seleccionada: false },
-    { nombre: 'Km', seleccionada: true },
-    { nombre: 'Jornada', seleccionada: true },
-    { nombre: 'Ad Km', seleccionada: true },
-    { nombre: 'Ad Acomp', seleccionada: true },
-    { nombre: 'Extra', seleccionada: true },
-    { nombre: 'A Cobrar', seleccionada: true },
-  ];
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -99,12 +79,7 @@ export class LiquidacionNuevaComponent implements OnInit {
     this.anio = this.periodoInicial.anio;
     this.mes = this.periodoInicial.mes;
     this.nombreEntidad = nombreEntidadRef(this.entidad);
-    // Mismo criterio que ResumenOpLiquidadasComponent: sin la columna de la
-    // propia entidad.
-    this.columnas = this.COLUMNAS_BASE
-      .filter(c => !(this.tipo === 'cliente' && c.nombre === 'Cliente'))
-      .filter(c => !(this.tipo === 'chofer' && c.nombre === 'Chofer'))
-      .map(c => ({ ...c }));
+    this.columnas = columnasPorTipo(this.tipo);
     this.cargar();
   }
 
@@ -204,32 +179,18 @@ export class LiquidacionNuevaComponent implements OnInit {
    *  ResumenOpLiquidadasComponent.obtenerDatoColumna (camino viejo), sobre
    *  InformeOpNuevo. */
   valorColumna(inf: ConId<InformeOpNuevo>, columna: string): string {
-    switch (columna) {
-      case 'Fecha': return inf.fecha;
-      case 'Quincena': return this.quincena(inf.fecha);
-      case 'Chofer': return this.nombreChofer(inf);
-      case 'Cliente': return this.nombreContraparte(inf);
-      case 'Patente': return inf.datosOperacion.vehiculo.dominio;
-      case 'Concepto': return inf.datosOperacion.vehiculo.categoria.nombre;
-      case 'Observaciones': return inf.datosOperacion.observaciones ?? '';
-      case 'Hoja de Ruta': return inf.datosOperacion.hojaRuta ?? '';
-      case 'Km': return String(inf.datosOperacion.km ?? 0);
-      case 'Jornada': return this.moneda(inf.valores.tarifaBase);
-      case 'Ad Km': return this.moneda(inf.valores.kmMonto);
-      case 'Ad Acomp': return this.moneda(inf.valores.acompaniante);
-      case 'Extra': return this.moneda(inf.valores.adExtra ?? 0);
-      case 'A Cobrar': return this.moneda(inf.valores.total);
-      default: return '';
-    }
+    return valorColumnaInformeOp(inf, columna);
   }
 
   /** Columnas de importe — se alinean a la derecha. */
   esColumnaMonto(columna: string): boolean {
-    return ['Jornada', 'Ad Km', 'Ad Acomp', 'Extra', 'A Cobrar'].includes(columna);
+    return esColumnaMonto(columna);
   }
 
-  private moneda(valor: number): string {
-    return `$ ${(valor ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  /** Etiqueta visible de la columna según el tipo ('A Cobrar' → 'A Pagar'
+   *  para chofer/proveedor). */
+  etiqueta(columna: string): string {
+    return etiquetaColumna(columna, this.tipo);
   }
 
   async abrirDescuentos(): Promise<void> {

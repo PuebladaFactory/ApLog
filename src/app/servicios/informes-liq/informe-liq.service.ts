@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Transaction } from '@angular/fire/firestore';
+import { Observable, map } from 'rxjs';
 import { ConId } from 'src/app/interfaces/conId';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { InformeOpNuevo } from 'src/app/interfaces/informe-op-nuevo';
@@ -12,6 +13,7 @@ import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.servi
 import { OperacionFactoryService } from 'src/app/servicios/operaciones/operacion-factory.service';
 import { toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
+import { ResultadoEdicionInformeOp } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
 import { InformeLiqFactoryService } from './informe-liq-factory.service';
 
 /** Lo que manda la UI para crear un InformeLiqNuevo (borrador o emitido).
@@ -29,6 +31,14 @@ export interface DatosLiquidacion {
 export interface ResultadoLiquidacion {
   idInfLiq: string;
   numeroInterno: string | null;     // null si se creó un borrador
+}
+
+/** Campos editables de un InformeLiqNuevo (borrador o emitido). Período y
+ *  composición NO son editables. Solo se aplican los que vienen definidos. */
+export interface CambiosDatosLiq {
+  descuentos?: DescuentoLiq[];
+  observaciones?: string;
+  columnas?: string[];
 }
 
 /** Lado de la operación que representa un InformeLiq — el proveedor usa el
@@ -73,6 +83,16 @@ export class InformeLiqService {
   /** InformeOp vigentes del informe (link inverso idInfLiq). */
   obtenerInformesOp(idInfLiq: string): Promise<ConId<InformeOpNuevo>[]> {
     return this.informeOpServ.obtenerPorInformeLiq(idInfLiq);
+  }
+
+  /** Borradores en vivo (todas las entidades y tipos), más recientes
+   *  primero. Una sola igualdad (estado) → sin índice compuesto. */
+  observarBorradores(): Observable<ConId<InformeLiqNuevo>[]> {
+    return this.db.observarPorCampo<InformeLiqNuevo>(this.COLECCION, 'estado', 'borrador').pipe(
+      map(items => items
+        .map(i => ({ ...i, idInfLiq: i.id }))
+        .sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion))),
+    );
   }
 
   // =====================================================================
@@ -228,6 +248,162 @@ export class InformeLiqService {
         'BAJA', this.COLECCION, idInfLiq, `Error al eliminar borrador ${idInfLiq}: ${e?.message ?? e}`,
       );
       return { exito: false, mensaje: `Error al eliminar el borrador: ${e?.message ?? e}` };
+    }
+  }
+
+  /** Edita descuentos / observaciones / columnas de un InformeLiq en
+   *  'borrador' o 'emitido'. Si cambian los descuentos, recalcula
+   *  valores.descuentoTotal, valores.total y valoresFinancieros (sin pisar
+   *  totalCobrado). Un solo commitBatch con log EDITAR (diff por campo).
+   *  TODO Finanzas: sobre un 'emitido', un cambio de total impacta en
+   *  resumenFinanzas cuando se conecte la cascada. */
+  async editarDatos(idInfLiq: string, cambios: CambiosDatosLiq): Promise<Resultado<void>> {
+    const liq = await this.obtenerPorId(idInfLiq);
+    if (!liq) return { exito: false, mensaje: `No existe el informe de liquidación ${idInfLiq}.` };
+    if (liq.estado !== 'borrador' && liq.estado !== 'emitido') {
+      return { exito: false, mensaje: `El informe está en estado '${liq.estado}' y no se puede editar.` };
+    }
+
+    const campos: Record<string, any> = {};
+    if (cambios.descuentos !== undefined) {
+      const valores = this.factory.recalcularTotal(liq.valores, cambios.descuentos);
+      const vf = this.factory.recalcularValoresFinancieros(liq.valoresFinancieros, valores.total);
+      campos['descuentos'] = cambios.descuentos.map(d => ({ concepto: d.concepto, valor: d.valor }));
+      campos['valores.descuentoTotal'] = valores.descuentoTotal;
+      campos['valores.total'] = valores.total;
+      campos['valoresFinancieros.total'] = vf.total;
+      campos['valoresFinancieros.saldo'] = vf.saldo;
+    }
+    if (cambios.observaciones !== undefined) campos['observaciones'] = cambios.observaciones;
+    if (cambios.columnas !== undefined) campos['columnas'] = [...cambios.columnas];
+
+    if (Object.keys(campos).length === 0) return { exito: true, mensaje: 'Sin cambios.' };
+
+    const escrituras: EscrituraBatch[] = [];
+    this.agregarEscrituraInformeLiqParcial(escrituras, idInfLiq, campos);
+    const { id, idInfLiq: _omit, ...anterior } = liq as any;
+    await this.logRegistro.agregarAlBatch(
+      escrituras, 'EDITAR', this.COLECCION, idInfLiq,
+      `Edición de datos del informe de liquidación — ${liq.tipo} ${nombreEntidadRef(liq.entidad)}`,
+      anterior,
+    );
+
+    try {
+      await this.db.commitBatch(escrituras);
+    } catch (e: any) {
+      await this.logRegistro.registrarError('EDITAR', this.COLECCION, idInfLiq, `Error al editar datos: ${e?.message ?? e}`);
+      return { exito: false, mensaje: `Error al guardar: ${e?.message ?? e}` };
+    }
+    return { exito: true, mensaje: 'Informe actualizado correctamente.' };
+  }
+
+  /** Edita un InformeOp que está DENTRO de un InformeLiq ('proforma' o
+   *  'liquidado'). Reutiliza InformeOpService.armarEscriturasEdicion (misma
+   *  lógica que editar: Operación, InformeOp, contraparte, logs, resúmenes)
+   *  y suma, en el MISMO commitBatch:
+   *   1. InformeLiq propio: delta de los 4 totales base (valores viejos del
+   *      InformeOp releídos vs. valores editados) + delta de totalContraParte
+   *      (si cambió el contraParte.monto propio, caso contraparte 'activo'),
+   *      total recalculado con sus descuentos, valoresFinancieros.
+   *   2. InformeLiq de la contraparte: si la contraparte está en
+   *      'proforma'/'liquidado' (sync 'soloMonto'), cambia su
+   *      contraParte.monto → delta de SU valores.totalContraParte.
+   *  Lecturas previas no transaccionales (mismo criterio que editar: la
+   *  ventana de carrera es la del editor abierto).
+   *  TODO Finanzas: sobre un 'emitido', el cambio de total impacta en
+   *  resumenFinanzas cuando se conecte la cascada. */
+  async editarInformeOp(
+    resultado: ResultadoEdicionInformeOp,
+    msj: string = 'Edición de InformeOp en liquidación',
+  ): Promise<Resultado<void>> {
+    const editado = resultado.informeEditado;
+    const idInfOp = editado.idInfOp;
+
+    try {
+      // — Lecturas (estado previo a la edición) —
+      const previo = await this.informeOpServ.obtenerPorId(idInfOp);
+      if (!previo) return { exito: false, mensaje: `No existe el informe ${idInfOp}.` };
+      if ((previo.estado !== 'proforma' && previo.estado !== 'liquidado') || !previo.idInfLiq) {
+        return {
+          exito: false,
+          mensaje: `El informe ${idInfOp} no está dentro de una liquidación (estado '${previo.estado}'). Editalo desde el listado de informes.`,
+        };
+      }
+      const liq = await this.obtenerPorId(previo.idInfLiq);
+      if (!liq) return { exito: false, mensaje: `No existe el informe de liquidación ${previo.idInfLiq}.` };
+      if (liq.estado !== 'borrador' && liq.estado !== 'emitido') {
+        return { exito: false, mensaje: `El informe de liquidación está en estado '${liq.estado}' y no se puede editar.` };
+      }
+
+      let liqContra: ConId<InformeLiqNuevo> | null = null;
+      let deltaContraDeLaContraparte = 0;
+      if (resultado.contraparte?.sync === 'soloMonto') {
+        const contraPrevia = await this.informeOpServ.obtenerPorId(resultado.contraparte.idInfOp);
+        if (contraPrevia?.idInfLiq) {
+          liqContra = await this.obtenerPorId(contraPrevia.idInfLiq);
+          const nuevoMonto = (resultado.contraparte.informe as { contraParte: { monto: number } }).contraParte.monto;
+          deltaContraDeLaContraparte = nuevoMonto - (contraPrevia.contraParte?.monto ?? 0);
+        }
+      }
+
+      // — Escrituras de la edición del InformeOp (misma lógica que editar) —
+      const escrituras = await this.informeOpServ.armarEscriturasEdicion(resultado, msj);
+
+      // — 1. InformeLiq propio —
+      const d = {
+        tarifaBase: (editado.valores.tarifaBase ?? 0) - (previo.valores.tarifaBase ?? 0),
+        acompaniante: (editado.valores.acompaniante ?? 0) - (previo.valores.acompaniante ?? 0),
+        kmMonto: (editado.valores.kmMonto ?? 0) - (previo.valores.kmMonto ?? 0),
+        adExtra: (editado.valores.adExtra ?? 0) - (previo.valores.adExtra ?? 0),
+        contraParte: (editado.contraParte?.monto ?? 0) - (previo.contraParte?.monto ?? 0),
+      };
+      const valores = this.factory.recalcularTotal({
+        ...liq.valores,
+        totalTarifaBase: liq.valores.totalTarifaBase + d.tarifaBase,
+        totalAcompaniante: liq.valores.totalAcompaniante + d.acompaniante,
+        totalKmMonto: liq.valores.totalKmMonto + d.kmMonto,
+        totalAdExtra: liq.valores.totalAdExtra + d.adExtra,
+        totalContraParte: liq.valores.totalContraParte + d.contraParte,
+      }, liq.descuentos);
+      const vf = this.factory.recalcularValoresFinancieros(liq.valoresFinancieros, valores.total);
+
+      this.agregarEscrituraInformeLiqParcial(escrituras, liq.idInfLiq, {
+        'valores.totalTarifaBase': valores.totalTarifaBase,
+        'valores.totalAcompaniante': valores.totalAcompaniante,
+        'valores.totalKmMonto': valores.totalKmMonto,
+        'valores.totalAdExtra': valores.totalAdExtra,
+        'valores.total': valores.total,
+        'valores.totalContraParte': valores.totalContraParte,
+        'valoresFinancieros.total': vf.total,
+        'valoresFinancieros.saldo': vf.saldo,
+      });
+      const { id: _i1, idInfLiq: _l1, ...anteriorLiq } = liq as any;
+      await this.logRegistro.agregarAlBatch(
+        escrituras, 'EDITAR', this.COLECCION, liq.idInfLiq,
+        `Recálculo por edición del informe ${idInfOp} — ${liq.tipo} ${nombreEntidadRef(liq.entidad)}`,
+        anteriorLiq,
+      );
+
+      // — 2. InformeLiq de la contraparte (solo totalContraParte) —
+      if (liqContra && deltaContraDeLaContraparte !== 0) {
+        this.agregarEscrituraInformeLiqParcial(escrituras, liqContra.idInfLiq, {
+          'valores.totalContraParte': liqContra.valores.totalContraParte + deltaContraDeLaContraparte,
+        });
+        const { id: _i2, idInfLiq: _l2, ...anteriorContra } = liqContra as any;
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'EDITAR', this.COLECCION, liqContra.idInfLiq,
+          `Actualización de total contraparte por edición del informe ${idInfOp}`,
+          anteriorContra,
+        );
+      }
+
+      await this.db.commitBatch(escrituras);
+      return { exito: true, mensaje: 'Informe editado y liquidación recalculada correctamente.' };
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'EDITAR', 'informesOp', idInfOp, `Error al editar InformeOp en liquidación: ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: `Error al guardar la edición: ${e?.message ?? e}` };
     }
   }
 

@@ -871,6 +871,16 @@ export class DbFirestoreService {
     );
   }
 
+  /** Listener en vivo de los documentos de `coleccion` con `campo == valor`.
+   *  Una sola igualdad → no requiere índice compuesto (el orden se resuelve
+   *  en memoria en el caller). Agrega `id` (doc id); el caller aplica su
+   *  propio patrón ConId (idInfLiq, idInfOp, …). */
+  observarPorCampo<T>(coleccion: string, campo: string, valor: any): Observable<ConId<T>[]> {
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const q = query(colRef, where(campo, '==', valor));
+    return collectionData(q, { idField: 'id' }) as Observable<ConId<T>[]>;
+  }
+
   get(id: string) {
     const estacionamiento1DocumentReference = doc(
       this.firestore,

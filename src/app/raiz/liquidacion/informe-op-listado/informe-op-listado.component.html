@@ -37,6 +37,7 @@
                     (click)="ordenar('razonSocial')"
                 >
                     Razón Social
+                    <span class="icono-orden" [class.activo]="ordenColumna === 'razonSocial'">{{ iconoOrden('razonSocial') }}</span>
                 </th>
                 <th
                     style="width: 8%"
@@ -44,6 +45,7 @@
                     (click)="ordenar('opAbiertas')"
                 >
                     Op Abiertas
+                    <span class="icono-orden" [class.activo]="ordenColumna === 'opAbiertas'">{{ iconoOrden('opAbiertas') }}</span>
                 </th>
                 <th
                     style="width: 14%"
@@ -51,6 +53,7 @@
                     (click)="ordenar('opSinFacturarTotal')"
                 >
                     Sin Facturar
+                    <span class="icono-orden" [class.activo]="ordenColumna === 'opSinFacturarTotal'">{{ iconoOrden('opSinFacturarTotal') }}</span>
                 </th>
                 <th
                     style="width: 14%"
@@ -58,24 +61,24 @@
                     (click)="ordenar('opFacturadasTotal')"
                 >
                     En Proforma
+                    <span class="icono-orden" [class.activo]="ordenColumna === 'opFacturadasTotal'">{{ iconoOrden('opFacturadasTotal') }}</span>
                 </th>
                 <th
                     style="width: 12%"
                     class="table-success ordenable"
                     (click)="ordenar('total')"
                 >
-                    Total
+                    Total a {{ etiquetaPropio }}
+                    <span class="icono-orden" [class.activo]="ordenColumna === 'total'">{{ iconoOrden('total') }}</span>
                 </th>
                 <th
                     style="width: 14%"
                     class="ordenable"
                     (click)="ordenar('aPagarOCobrar')"
+                    title="Monto de la contraparte de las operaciones (lo que se paga o cobra del otro lado)"
                 >
-                    {{
-                        tipoConsulta === "cliente"
-                            ? "Total a Pagar"
-                            : "Total a Cobrar"
-                    }}
+                    Contraparte a {{ etiquetaContraparte }}
+                    <span class="icono-orden" [class.activo]="ordenColumna === 'aPagarOCobrar'">{{ iconoOrden('aPagarOCobrar') }}</span>
                 </th>
                 <th
                     style="width: 6%"
@@ -83,6 +86,7 @@
                     (click)="ordenar('ganancia')"
                 >
                     Ganancia
+                    <span class="icono-orden" [class.activo]="ordenColumna === 'ganancia'">{{ iconoOrden('ganancia') }}</span>
                 </th>
                 <th style="width: 11%" class="text-center">Liquidar</th>
             </tr>
@@ -93,8 +97,7 @@
                 @for (
                     fila of datosTabla
                         | globalFilter: searchText : ["razonSocial"];
-                    track fila.id;
-                    let i = $index
+                    track fila.id
                 ) {
                     <tr>
                         <td>
@@ -104,9 +107,9 @@
                                 height="16"
                                 fill="currentColor"
                                 viewBox="0 0 16 16"
-                                (click)="mostrarMasDatos(i)"
+                                (click)="mostrarMasDatos(fila.id)"
                             >
-                                @if (!mostrarTabla[i]) {
+                                @if (!expandidas.has(fila.id)) {
                                     <ng-container>
                                         <path
                                             d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
@@ -116,7 +119,7 @@
                                         />
                                     </ng-container>
                                 }
-                                @if (mostrarTabla[i]) {
+                                @if (expandidas.has(fila.id)) {
                                     <ng-container>
                                         <path
                                             d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
@@ -166,7 +169,7 @@
                         </td>
                     </tr>
 
-                    @if (mostrarTabla[i]) {
+                    @if (expandidas.has(fila.id)) {
                         <tr>
                             <td [attr.colspan]="9">
                                 <input
@@ -203,13 +206,9 @@
                                             <th style="width: 9%">
                                                 Tarifa Base
                                             </th>
-                                            <th style="width: 8%">Total</th>
+                                            <th style="width: 8%">A {{ etiquetaPropio }}</th>
                                             <th style="width: 8%">
-                                                {{
-                                                    tipoConsulta === "cliente"
-                                                        ? "A Pagar"
-                                                        : "A Cobrar"
-                                                }}
+                                                Contrap. a {{ etiquetaContraparte }}
                                             </th>
                                             <th style="width: 5%">%</th>
                                             <th style="width: 7%">Tarifa</th>

@@ -70,9 +70,11 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
   opAbiertas: ConId<Operacion>[] = [];
   datosTabla: FilaEntidadInformeOp[] = [];
   informesDetalladoPorObjeto = new Map<string, ConId<InformeOpNuevo>[]>();
-  mostrarTabla: boolean[] = [];
+  /** Entidades con el detalle expandido (por id, no por posición:
+   *  sobrevive a ordenar y a filtrar). */
+  expandidas = new Set<string>();
 
-  ordenColumna = '';
+  ordenColumna = 'razonSocial';
   ordenAscendente = true;
   searchText = '';
   searchText2 = '';
@@ -129,7 +131,7 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
 
     this.cancelarConsulta$.next();
     this.cargando = true;
-    this.mostrarTabla = [];
+    this.expandidas.clear();
 
     this.operacionServ.observarAbiertasPorPeriodo(this.fechaDesde, this.fechaHasta)
       .pipe(take(1))
@@ -187,7 +189,8 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
       fila.opAbiertas = this.contarOpAbiertas(fila.id);
     }
 
-    this.datosTabla = Array.from(map.values()).sort((a, b) => a.razonSocial.localeCompare(b.razonSocial));
+    this.datosTabla = Array.from(map.values());
+    this.aplicarOrden();
   }
 
   /** Cuenta directo por op.cliente.id/op.chofer.id/op.proveedor?.id — en el
@@ -202,10 +205,13 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
     }).length;
   }
 
-  mostrarMasDatos(index: number): void {
-    this.mostrarTabla[index] = !this.mostrarTabla[index];
-    const idEntidad = this.datosTabla[index].id;
-    this.informesDetalladoPorObjeto.set(idEntidad, this.informesDeEntidad(idEntidad));
+  mostrarMasDatos(idEntidad: string): void {
+    if (this.expandidas.has(idEntidad)) {
+      this.expandidas.delete(idEntidad);
+    } else {
+      this.expandidas.add(idEntidad);
+      this.informesDetalladoPorObjeto.set(idEntidad, this.informesDeEntidad(idEntidad));
+    }
   }
 
   private informesDeEntidad(idEntidad: string): ConId<InformeOpNuevo>[] {
@@ -225,10 +231,6 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
     for (const idEntidad of this.informesDetalladoPorObjeto.keys()) {
       this.informesDetalladoPorObjeto.set(idEntidad, this.informesDeEntidad(idEntidad));
     }
-  }
-
-  cerrarTabla(index: number): void {
-    this.mostrarTabla[index] = !this.mostrarTabla[index];
   }
 
   getQuincena(fecha: string): string {
@@ -259,14 +261,38 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
       this.ordenColumna = columna;
       this.ordenAscendente = true;
     }
-    this.datosTabla.sort((a: any, b: any) => {
-      const valorA = a[columna];
-      const valorB = b[columna];
-      if (typeof valorA === 'string') {
-        return this.ordenAscendente ? valorA.localeCompare(valorB) : valorB.localeCompare(valorA);
-      }
-      return this.ordenAscendente ? valorA - valorB : valorB - valorA;
+    this.aplicarOrden();
+  }
+
+  /** Ordena datosTabla según ordenColumna/ordenAscendente. Se llama también
+   *  desde procesarTabla(), así cada emisión del listener conserva el orden
+   *  elegido. */
+  private aplicarOrden(): void {
+    const col = this.ordenColumna as keyof FilaEntidadInformeOp;
+    const dir = this.ordenAscendente ? 1 : -1;
+    this.datosTabla.sort((a, b) => {
+      const va = a[col] as any;
+      const vb = b[col] as any;
+      const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb;
+      return cmp * dir;
     });
+  }
+
+  /** ▲/▼ en la columna activa; ⇅ en las demás. */
+  iconoOrden(columna: string): string {
+    if (this.ordenColumna !== columna) return '⇅';
+    return this.ordenAscendente ? '▲' : '▼';
+  }
+
+  /** Verbo del monto propio de la entidad: a los clientes se les cobra, a
+   *  choferes/proveedores se les paga. */
+  get etiquetaPropio(): string {
+    return this.tipoConsulta === 'cliente' ? 'Cobrar' : 'Pagar';
+  }
+
+  /** Verbo del monto de la contraparte (el opuesto al propio). */
+  get etiquetaContraparte(): string {
+    return this.tipoConsulta === 'cliente' ? 'Pagar' : 'Cobrar';
   }
 
   /** Abre InformeOpEditorComponent, que resuelve Operación y contraparte
