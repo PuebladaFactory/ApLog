@@ -8,11 +8,16 @@ import { Operacion, RefCliente, RefChofer, RefProveedor } from 'src/app/interfac
 import { DateRange, DateRangeService, toISODateString } from 'src/app/servicios/fechas/date-range.service';
 import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
 import { OperacionService } from 'src/app/servicios/operaciones/operacion.service';
-import { nombreEntidadInforme } from 'src/app/shared/utils/entidad-informe.util';
+import { claseBadgeEstadoInforme, nombreEntidadInforme } from 'src/app/shared/utils/entidad-informe.util';
 import {
   InformeOpEditorComponent,
   ResultadoEdicionInformeOp,
 } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
+import { InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
+import {
+  LiquidacionNuevaComponent,
+  ResultadoLiquidacionNueva,
+} from '../modales/liquidacion-nueva/liquidacion-nueva.component';
 
 /** Fila-resumen por entidad — agregados sobre 'activo' + 'proforma' (todo lo
  *  que trae InformeOpService.observarPorPeriodo). */
@@ -28,14 +33,11 @@ interface FilaEntidadInformeOp {
   total: number;
   aPagarOCobrar: number;
   ganancia: number;
-  seleccionCantidad: number;
-  seleccionTotal: number;
 }
 
 /** Listado de InformeOpNuevo por período + tipoConsulta, agrupado por
- *  entidad con detalle expandible, edición puntual y selección para una
- *  futura liquidación (armar y persistir el InformeLiq queda para la
- *  sesión siguiente — acá la selección solo se arma y se muestra).
+ *  entidad con detalle expandible, edición puntual y creación de
+ *  liquidaciones por período vía LiquidacionNuevaComponent (InformeLiqNuevo).
  *
  *  Vive en LiquidacionModule, integrado a LiqGralComponent (tab nuevo) —
  *  mismo lugar que LiquidacionesOpComponent (modelo viejo, sin tocar).
@@ -69,7 +71,6 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
   datosTabla: FilaEntidadInformeOp[] = [];
   informesDetalladoPorObjeto = new Map<string, ConId<InformeOpNuevo>[]>();
   mostrarTabla: boolean[] = [];
-  seleccionados = new Set<string>();
 
   ordenColumna = '';
   ordenAscendente = true;
@@ -85,6 +86,7 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
     private informeOpServ: InformeOpService,
     private operacionServ: OperacionService,
     private dateRangeService: DateRangeService,
+    private informeLiqServ: InformeLiqService,
   ) {}
 
   ngOnInit(): void {
@@ -128,7 +130,6 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
     this.cancelarConsulta$.next();
     this.cargando = true;
     this.mostrarTabla = [];
-    this.seleccionados.clear();
 
     this.operacionServ.observarAbiertasPorPeriodo(this.fechaDesde, this.fechaHasta)
       .pipe(take(1))
@@ -164,8 +165,6 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
           total: 0,
           aPagarOCobrar: 0,
           ganancia: 0,
-          seleccionCantidad: 0,
-          seleccionTotal: 0,
         });
       }
 
@@ -179,11 +178,6 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
       }
       fila.total += inf.valores.total;
       fila.aPagarOCobrar += inf.contraParte.monto;
-
-      if (this.seleccionados.has(inf.idInfOp)) {
-        fila.seleccionCantidad++;
-        fila.seleccionTotal += inf.valores.total;
-      }
     }
 
     for (const fila of map.values()) {
@@ -237,32 +231,15 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
     this.mostrarTabla[index] = !this.mostrarTabla[index];
   }
 
-  toggleSeleccion(informe: ConId<InformeOpNuevo>): void {
-    if (this.seleccionados.has(informe.idInfOp)) {
-      this.seleccionados.delete(informe.idInfOp);
-    } else {
-      this.seleccionados.add(informe.idInfOp);
-    }
-    this.procesarTabla();
-  }
-
-  /** Selecciona/deselecciona todos los InformeOp de la fila expandida —
-   *  salteando los que no están habilitados (mismo criterio que el
-   *  checkbox individual: 'activo' && !bloqueadoPorContraparte). */
-  seleccionarTodos(event: any, idEntidad: string): void {
-    const marcar = event.target.checked;
-    const informes = this.informesDetalladoPorObjeto.get(idEntidad);
-    informes?.forEach(inf => {
-      if (inf.estado !== 'activo' || inf.bloqueadoPorContraparte) return;
-      if (marcar) this.seleccionados.add(inf.idInfOp);
-      else this.seleccionados.delete(inf.idInfOp);
-    });
-    this.procesarTabla();
-  }
-
   getQuincena(fecha: string): string {
     const dia = Number(fecha.split('-')[2]);
     return dia <= 15 ? '1<sup> ra</sup>' : '2<sup> da</sup>';
+  }
+
+  /** Clase de badge por estado — util compartido con InformeOpDetalle /
+   *  InformeOpEditor (verde activo, amarillo proforma). */
+  claseBadgeEstado(estado: InformeOpNuevo['estado']): string {
+    return claseBadgeEstadoInforme(estado);
   }
 
   /** Nombre de la contraparte de un InformeOp puntual — a diferencia de
@@ -317,6 +294,37 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
       } else {
         Swal.fire({ icon: 'error', text: res.mensaje });
       }
+    } finally {
+      this.guardando = false;
+    }
+  }
+
+  /** Abre el armado de una liquidación nueva para la entidad de la fila y,
+   *  si el usuario confirma, la crea (borrador o emitida) vía
+   *  InformeLiqService. No hace falta refrescar: observarPorPeriodo es un
+   *  listener y refleja solo los InformeOp que pasan a proforma/liquidado. */
+  async liquidar(fila: FilaEntidadInformeOp): Promise<void> {
+    const [anio, mes] = this.fechaDesde.split('-').map(Number);
+    const modalRef = this.modalService.open(LiquidacionNuevaComponent, {
+      size: 'xl', centered: true, scrollable: true, backdrop: 'static',
+    });
+    modalRef.componentInstance.tipo = this.tipoConsulta;
+    modalRef.componentInstance.entidad = fila.entidad;
+    modalRef.componentInstance.periodoInicial = { anio, mes };
+
+    let resultado: ResultadoLiquidacionNueva;
+    try {
+      resultado = await modalRef.result;
+    } catch {
+      return; // cancelado
+    }
+
+    this.guardando = true;
+    try {
+      const res = resultado.accion === 'emitir'
+        ? await this.informeLiqServ.emitir(resultado.datos)
+        : await this.informeLiqServ.crearBorrador(resultado.datos);
+      Swal.fire({ icon: res.exito ? 'success' : 'error', text: res.mensaje });
     } finally {
       this.guardando = false;
     }

@@ -1,0 +1,303 @@
+<div class="modal-header">
+    <h4 class="modal-title">
+        Nueva liquidación —
+        <span class="badge text-bg-info text-light">{{ nombreEntidad }}</span>
+    </h4>
+    <button
+        type="button"
+        class="btn-close"
+        (click)="activeModal.dismiss()"
+    ></button>
+</div>
+
+<div class="modal-body">
+    <div class="align-items-end mb-3 row g-2">
+        <!-- 1. PERÍODO -->
+        <div class="col-md-4 d-flex justify-content-start">
+            <div>
+                <label class="form-label mb-0">Mes</label>
+                <select
+                    class="form-select meses"
+                    [(ngModel)]="mes"
+                    (change)="cargar()"
+                >
+                    @for (m of meses; track m; let i = $index) {
+                        <option [ngValue]="i + 1">{{ m }}</option>
+                    }
+                </select>
+            </div>
+            <div class="ms-2">
+                <label class="form-label mb-0">Año</label>
+                <input
+                    type="number"
+                    class="form-control anio"
+                    [(ngModel)]="anio"
+                    (change)="cargar()"
+                />
+            </div>
+        </div>
+        <!-- 2. TIPO -->
+        <div class="col-md-4 text-center">
+            <label class="form-label mb-0 d-block">Tipo de liquidación</label>
+            <div class="btn-group" role="group">
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="tramo"
+                    id="tramoMes"
+                    value="mes"
+                    [(ngModel)]="tramo"
+                    (change)="cargar()"
+                />
+                <label class="btn btn-outline-primary btn-sm" for="tramoMes"
+                    >Mes completo</label
+                >
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="tramo"
+                    id="tramo1q"
+                    value="1q"
+                    [(ngModel)]="tramo"
+                    (change)="cargar()"
+                />
+                <label class="btn btn-outline-primary btn-sm" for="tramo1q"
+                    >1° quincena</label
+                >
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="tramo"
+                    id="tramo2q"
+                    value="2q"
+                    [(ngModel)]="tramo"
+                    (change)="cargar()"
+                />
+                <label class="btn btn-outline-primary btn-sm" for="tramo2q"
+                    >2° quincena</label
+                >
+            </div>
+        </div>
+        <!-- 3. BOTON AJUSTES/DESCUENTOS -->
+        <div
+            class="col-md-4 d-flex align-items-center justify-content-end mb-1"
+        >
+            <h6 class="mb-0 me-2">Ajustes</h6>
+            <button
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                (click)="abrirDescuentos()"
+            >
+                Editar
+            </button>
+        </div>
+    </div>
+
+    @if (cargando) {
+        <app-spinner></app-spinner>
+    } @else {
+        <!-- 4. ALERTAS (al inicio del proceso) -->
+        @if (hayAlertas) {
+            <div class="alert alert-warning">
+                <ul class="mb-0">
+                    @if (opAbiertas.length) {
+                        <li>
+                            {{ opAbiertas.length }} operación(es) todavía
+                            abierta(s) en {{ textoPeriodo }}.
+                        </li>
+                    }
+                    @if (bloqueados.length) {
+                        <li>
+                            {{ bloqueados.length }} informe(s) bloqueado(s) por
+                            una proforma de la contraparte — no se pueden
+                            incluir.
+                        </li>
+                    }
+                    @if (enBorrador.length) {
+                        <li>
+                            {{ enBorrador.length }} informe(s) de este período
+                            ya están en un borrador — no se incluyen.
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+        <!-- 5. COLUMNAS -->
+        <div
+            class="border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded mb-3"
+        >
+            <h6 class="mb-1">Columnas del informe</h6>
+            <div class="d-flex flex-wrap gap-2">
+                @for (c of columnas; track c.nombre) {
+                    <label class="form-check-label small">
+                        <input
+                            type="checkbox"
+                            class="form-check-input me-1"
+                            [(ngModel)]="c.seleccionada"
+                        />{{ c.nombre }}
+                    </label>
+                }
+            </div>
+        </div>
+
+        <!-- 6. PRESELECCIÓN (solo desmarcar) -->
+        @if (informes.length === 0) {
+            <div class="alert alert-info">
+                No hay informes disponibles para liquidar en {{ textoPeriodo }}.
+            </div>
+        } @else {
+            <div
+                class="table table-bordered table-striped table-hover table-responsive"
+                style="max-height: 45vh"
+            >
+                <table class="table table-sm table-striped table-bordered">
+                    <thead class="sticky-top">
+                        <tr>
+                            <th style="width: 3%"></th>
+                            @for (c of columnasVisibles; track c.nombre) {
+                                <th [class.text-end]="esColumnaMonto(c.nombre)">
+                                    {{ c.nombre }}
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (inf of informes; track inf.idInfOp) {
+                            <tr
+                                [class.text-muted]="!seleccion.has(inf.idInfOp)"
+                            >
+                                <td class="text-center">
+                                    <input
+                                        type="checkbox"
+                                        [checked]="seleccion.has(inf.idInfOp)"
+                                        (change)="toggle(inf)"
+                                    />
+                                </td>
+                                @for (c of columnasVisibles; track c.nombre) {
+                                    <td
+                                        [class.text-end]="
+                                            esColumnaMonto(c.nombre)
+                                        "
+                                    >
+                                        {{ valorColumna(inf, c.nombre) }}
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (seleccion.size > MAX) {
+                <div class="alert alert-danger">
+                    Una liquidación admite hasta {{ MAX }} informes
+                    (seleccionados: {{ seleccion.size }}).
+                </div>
+            }
+
+            <!-- 7. DESCUENTOS / OBSERVACIONES -->
+
+            <div class="row g-3 mt-1">
+                <div class="col-md-6 mt-0">
+                    <label class="form-label mb-0">Observaciones</label>
+                    <textarea
+                        class="form-control"
+                        rows="2"
+                        [(ngModel)]="observaciones"
+                    ></textarea>
+                </div>
+                <div class="col-md-6 mt-0">
+                    @if (descuentos.length > 0) {
+                        <table
+                            class="table table-bordered table-striped table-hover table-responsive table-sm"
+                        >
+                            <tbody>
+                                @for (
+                                    d of descuentos;
+                                    track $index;
+                                    let i = $index
+                                ) {
+                                    <tr>
+                                        <td>{{ d.concepto }}</td>
+                                        <td class="col-moneda">
+                                            {{ d.valor | formatearValor: "$" }}
+                                        </td>
+                                        <td class="text-center">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                fill="currentColor"
+                                                class="bi bi-x-circle text-danger"
+                                                type="button"
+                                                viewBox="0 0 16 16"
+                                                (click)="quitarDescuento(i)"
+                                            >
+                                                <path
+                                                    d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+                                                />
+                                                <path
+                                                    d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"
+                                                />
+                                            </svg>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+
+            <!-- 5. TOTALES -->
+            <div
+                class="d-flex justify-content-end gap-4 mt-3 border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded mb-3 totales"
+            >
+                <span
+                    >Informes: <b>{{ seleccion.size }}</b> /
+                    {{ informes.length }}</span
+                >
+                <span
+                    >Subtotal: <b>{{ subtotal | formatearValor: "$" }}</b></span
+                >
+                <span
+                    >Ajustes:
+                    <b>{{ descuentoTotal | formatearValor: "$" }}</b></span
+                >
+                <span
+                    >Total: <b>{{ total | formatearValor: "$" }}</b></span
+                >
+            </div>
+        }
+    }
+</div>
+
+<div class="modal-footer">
+    <!-- BOTON PARA LA VISTA PREVIA DEL INFORME COMPLETO, AUN NO IMPLMENTADO -->
+    <button type="button" class="btn btn-outline-info">
+        Vista Previa
+    </button>
+    <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="activeModal.dismiss()"
+    >
+        Cancelar
+    </button>
+    <button
+        type="button"
+        class="btn btn-outline-primary"
+        [disabled]="!puedeConfirmar"
+        (click)="confirmar('borrador')"
+    >
+        Guardar borrador
+    </button>
+    <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="!puedeConfirmar"
+        (click)="confirmar('emitir')"
+    >
+        Emitir
+    </button>
+</div>
