@@ -1,6 +1,7 @@
 import { inject, Injectable } from "@angular/core";
 import {
   Firestore,
+  Transaction,
   collection,
   collectionData,
   doc,
@@ -328,6 +329,35 @@ export class ReportesOpService {
         modo: 'actualizar',
       });
     }
+  }
+
+  /** Reversión de resúmenes DENTRO de una transacción (baja de operación
+   *  cerrada). A diferencia de agregarEscriturasResumen, NO crea el
+   *  documento base si falta: si un resumen no existe no hay nada que
+   *  revertir, y se omite (mismo criterio que el borrado viejo). Lee con
+   *  tx.get. Devuelve los ids omitidos, para que el caller los mencione en
+   *  el log. */
+  async agregarEscriturasResumenReversion(
+    tx: Transaction,
+    escrituras: EscrituraBatch[],
+    updates: UpdateResumen[],
+  ): Promise<string[]> {
+    const omitidos: string[] = [];
+    for (const upd of updates) {
+      const id = upd.path.split('/').pop()!;
+      const snap = await tx.get(doc(this.firestore, upd.path));
+      if (!snap.exists()) {
+        omitidos.push(id);
+        continue;
+      }
+      escrituras.push({
+        coleccion: 'resumenOpMensual',
+        id,
+        data: { ...upd.data, updatedAt: Date.now() },
+        modo: 'actualizar',
+      });
+    }
+    return omitidos;
   }
 
   private getTipoTarifa(

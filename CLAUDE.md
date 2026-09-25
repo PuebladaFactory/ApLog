@@ -623,33 +623,39 @@ dispara ni por las entidades secundarias que toca.
 
 #### Coordinadores bajaOperacion / restaurarOperacion (Operaciones)
 
-- **Alcance:** SOLO operaciones NO liquidadas (`estado.liquidacion.cliente` y `.chofer`
-  ambos `false`). Liquidadas quedan fuera — revertir la liquidación
-  (`LiquidacionService.revertirInformeLiq`) es un gesto previo y separado.
-- **Regla de ciclo en la baja:** `ciclo === 'abierta'` → no busca informes. `ciclo === 'cerrada'`
-  → DEBE existir informe en `informesOpClientes` y en `informesOpChoferes`/`Proveedores` (según
-  `tipoContratacion`); si falta alguno, ABORTA toda la operatoria sin escribir nada (es una
-  inconsistencia real, no un caso vacío legítimo). Corrige el bug del código legacy
-  (`eliminarInformesPorIdOperacion`) donde el `throw` quedaba atrapado en un try/catch que solo
-  hacía `console.error` sin re-lanzar.
-- **Atomicidad real:** un solo `commitBatch` con delete de la operación (+ informes si
-  corresponde) + crear entrada de papelera + reemplazar tablero del día. Reemplaza las 3
-  escrituras independientes sin rollback del código legacy
-  (`TableroService.anularOperacionYActualizarTablero` + `eliminarInformesPorIdOperacion`).
-- **restaurarOperacion** SIEMPRE deja la op en `'abierta'` (estado vía
-  `OperacionFactoryService.estadoInicial()`, `km:0`). Los `InformeOp` NO se reconstruyen — se
-  eliminaron en la baja, no se archivaron. Si la op estaba `'cerrada'` antes de la baja, hay que
-  volver a cerrarla manualmente tras restaurar.
-- **Item de asignación:** nunca se borra, se anula/reactiva vía métodos puros nuevos en
-  `AsignacionService` (`anularItemEnLista`/`reactivarItemEnLista` — arman la lista, no
-  escriben), consumidos directo por el batch del coordinador. `marcarItemAnulado`/
-  `reactivarItem` (los async existentes) pasaron a ser wrappers finos sobre estos puros — mismo
-  comportamiento externo, sin duplicar lógica.
-- **EscrituraBatch/commitBatch** (`DbFirestoreService`) extendido con un tercer modo
-  `'eliminar'` (`batch.delete`), aditivo — no cambia `'crear'`/`'reemplazar'`.
-- **Caller legacy** (`TableroService.anularOperacionYActualizarTablero`,
-  `DbFirestoreService.eliminarInformesPorIdOperacion`) queda INTACTO, no migrado en esta
-  sesión — candidato a eliminar en sesión futura de integración de callers.
+- **Dos orquestadores de baja, por gesto** (`OperacionService`, ambos con
+  `commitEnTransaccion`; la operación, el tablero y los InformeOp se releen
+  frescos dentro de la transacción):
+  - `bajaOperacion(op, motivo)` — operación ABIERTA, desde tablero-op.
+    Rechaza cerradas ("se da de baja desde Liquidación").
+  - `bajaOperacionCerrada(idInfOp, motivo)` — operación CERRADA, desde
+    InformeOpListado (tacho por InformeOp, permiso `liquidaciones.eliminar`).
+- **Reglas** (`validarBaja(op, cicloEsperado)`): sin liquidación ni proforma
+  en ningún lado; ciclo igual al esperado. En la cerrada, además: el
+  InformeOp y su contraparte existen, son de esa operación, están en
+  'activo' y sin `idInfLiq`. Falta la contraparte → inconsistencia, aborta.
+- **Piezas encapsuladas** (empujan EscrituraBatch, no commitean, no loguean):
+  `OperacionService.agregarEscriturasBaja` (delete op + papelera + item de
+  tablero anulado), `AsignacionService.leerTableroEnTransaccion` /
+  `agregarEscrituraAnularItem`, `InformeOpService.leerEnTransaccion` /
+  `agregarAnulacionInformeOp`, `ResumenOpCalculatorService.generarUpdatesEliminacion`
+  + `ReportesOpService.agregarEscriturasResumenReversion` (omite resúmenes
+  inexistentes, no crea el doc base). Un único log BAJA por gesto, lo pone
+  el orquestador.
+- **InformeOp en la baja de una cerrada: se ANULAN, no se borran.**
+  `existeParaOperacion` ignora los anulados, así que la operación restaurada
+  se puede volver a cerrar (genera un par nuevo).
+- **Resúmenes:** se revierten solo si `op.resumenProcesado`. La reversión
+  usa incrementos con signo (`calcularIncrementos(op, op.valores, -1)`),
+  NUNCA leyendo el valor interno de `increment()` (propiedad minificada del
+  SDK; así estaba antes y podía no restar nada, en silencio).
+- **restaurarOperacion** SIEMPRE deja la op en 'abierta' (`estadoInicial()`,
+  `km: 0`, `resumenProcesado: false`, `informeOpCliente/Chofer: ''`). Los
+  InformeOp no se reconstruyen.
+- **Item de asignación:** nunca se borra, se anula/reactiva
+  (`anularItemEnLista`/`reactivarItemEnLista`).
+- **Fuera de alcance:** InformeVenta del cierre (comisiones) quedan sin tocar
+  en la baja de una cerrada.
 
 ### Decisiones de arquitectura — frente tablero-asignaciones
 
@@ -2516,6 +2522,11 @@ saberlo antes de migrar.
 
 ### Deuda — integración de callers para bajaOperacion/restaurarOperacion
 
+**Saldada (frente Baja de Operación, Septiembre 2026):** la baja de operación
+cerrada desde Liquidación ya tiene camino nuevo (`bajaOperacionCerrada`,
+ver "Coordinadores"). El texto de abajo queda como historial. El código
+legacy sin callers se elimina en el bloque C3 de ese frente.
+
 Los coordinadores existen y son atómicos (ver "Coordinadores bajaOperacion / restaurarOperacion
 (Operaciones)" más arriba) pero NO tienen caller nuevo todavía. Pendiente:
 - `PapeleraComponent.addItem` (caso `'operaciones'`): hoy llama a
@@ -2951,10 +2962,17 @@ Vantruck. Registrado acá para que no se pierda de vista al planificar ese proce
 - Cascada de Finanzas sobre `InformeLiqNuevo` (resumenFinanzas, cuenta
   corriente, aging, movimientos, ledger, informe-liq-cuenta-corriente siguen
   leyendo las colecciones viejas), incluido el impacto de editar un emitido.
-- `OperacionService.bajaOperacion` no bloquea la baja si `estado.proforma.*`
-  es true.
 - Reportes: `Number(op.cliente.id)` da NaN con ids string.
 - `revertirInformeLiq` (camino viejo) no restaura `bloqueadoPorContraparte`.
 - Retirar el camino viejo (LiquidacionesOp, Proforma, LiquidacionService,
   LiquidacionBuilderService, rutas comentadas en liquidacion-routing y
   LiqGral) una vez migrado Vantruck.
+- InformeVenta (comisiones) quedan huérfanos al dar de baja una operación
+  cerrada.
+- Resúmenes: `ResumenOpCalculatorService.getPeriodo` hace
+  `new Date('YYYY-MM-DD')` (UTC) y lee el mes en hora local: en Argentina
+  una operación del día 1 cae en el mes anterior. Cierre, edición y reversión
+  usan la misma función (consistentes entre sí), pero el mes es incorrecto.
+- Pantallas viejas que leen por `InformeOpService.obtenerPorIdsOperacion`
+  (proforma, facturación vieja) no filtran InformeOp 'anulado'. Se retiran
+  con el camino viejo.

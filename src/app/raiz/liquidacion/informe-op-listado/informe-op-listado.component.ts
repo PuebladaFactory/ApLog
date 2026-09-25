@@ -18,6 +18,7 @@ import {
   LiquidacionNuevaComponent,
   ResultadoLiquidacionNueva,
 } from '../modales/liquidacion-nueva/liquidacion-nueva.component';
+import { BajaObjetoComponent } from 'src/app/shared/modales/baja-objeto/baja-objeto.component';
 
 /** Fila-resumen por entidad — agregados sobre 'activo' + 'proforma' (todo lo
  *  que trae InformeOpService.observarPorPeriodo). */
@@ -320,6 +321,44 @@ export class InformeOpListadoComponent implements OnInit, OnDestroy {
       } else {
         Swal.fire({ icon: 'error', text: res.mensaje });
       }
+    } finally {
+      this.guardando = false;
+    }
+  }
+
+  /** Baja de la operación de este InformeOp (cerrada, desde Liquidación):
+   *  pide el motivo con BajaObjetoComponent (modo 'liquidaciones', que
+   *  muestra la operación) y delega en OperacionService.bajaOperacionCerrada,
+   *  que valida todo fresco en una transacción. Sin refresco manual: el
+   *  listener quita los dos InformeOp al pasar a 'anulado'. */
+  async darDeBaja(informe: ConId<InformeOpNuevo>): Promise<void> {
+    const op = await this.operacionServ.obtenerPorId(informe.idOperacion);
+    if (!op) {
+      Swal.fire({ icon: 'error', text: `No se encontró la operación ${informe.idOperacion}.` });
+      return;
+    }
+
+    const modalRef = this.modalService.open(BajaObjetoComponent, {
+      windowClass: 'myCustomModalClass', centered: true, scrollable: true, size: 'sm',
+    });
+    modalRef.componentInstance.fromParent = { modo: 'liquidaciones', item: op };
+
+    let motivo: string | undefined;
+    try {
+      motivo = await modalRef.result;
+    } catch {
+      return; // dismiss
+    }
+    if (!motivo) return;
+
+    this.guardando = true;
+    try {
+      const res = await this.operacionServ.bajaOperacionCerrada(informe.idInfOp, motivo);
+      Swal.fire({
+        icon: res.exito ? 'success' : 'error',
+        title: res.exito ? 'Operación dada de baja' : 'No se pudo dar de baja',
+        text: res.mensaje,
+      });
     } finally {
       this.guardando = false;
     }

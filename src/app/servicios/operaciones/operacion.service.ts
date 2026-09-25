@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, merge } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Firestore, writeBatch, doc, collection, query, where, getDocs, getDoc } from '@angular/fire/firestore';
+import { Firestore, Transaction, writeBatch, doc, collection, query, where, getDocs, getDoc } from '@angular/fire/firestore';
 import { Operacion } from 'src/app/interfaces/operacion';
 import { ConId } from 'src/app/interfaces/conId';
 import { Chofer, Vehiculo } from 'src/app/interfaces/chofer';
@@ -21,6 +21,7 @@ import { LogRegistroService } from 'src/app/servicios/log-registro/log-registro.
 import { PapeleraService } from 'src/app/servicios/papelera/papelera.service';
 import { InformeOpService } from 'src/app/servicios/informes-op/informe-op.service';
 import { ResumenOpCalculatorService } from 'src/app/servicios/reportes/reportes-op/resumen-op-calculator.service';
+import { ReportesOpService } from 'src/app/servicios/reportes/reportes-op/reportes-op.service';
 import { Resultado } from 'src/app/interfaces/resultado';
 
 export interface OperacionCreada {
@@ -64,6 +65,7 @@ export class OperacionService implements OnDestroy {
     private papeleraService:  PapeleraService,
     private informeOpServ:    InformeOpService,
     private resumenOpCalculator: ResumenOpCalculatorService,
+    private reportesOp: ReportesOpService,
   ) {}
 
   /**
@@ -376,103 +378,171 @@ export class OperacionService implements OnDestroy {
     }
   }
 
-  /** Baja atómica de una operación NO liquidada (papelera + informes si
-   *  corresponde + anulación del item de asignación). Ownership: OperacionService
-   *  es el dueño (entidad primaria = Operación), AsignacionService es secundario.
-   *  Alcance: SOLO ciclo 'abierta' | 'cerrada'. Liquidadas quedan fuera (revertir
-   *  la liquidación es un gesto previo, propio de LiquidacionService). */
-  async bajaOperacion(op: ConId<Operacion>, motivo: string): Promise<Resultado<void>> {
+  // ---- Baja — piezas encapsuladas ----
 
+  /** Reglas de baja de una operación. `cicloEsperado`: 'abierta' (baja
+   *  desde Operaciones) o 'cerrada' (baja desde Liquidación, vía un
+   *  InformeOp). Devuelve el motivo del rechazo, o null si se puede. */
+  validarBaja(op: Operacion, cicloEsperado: 'abierta' | 'cerrada'): string | null {
+    const num = op.numeroOperacion ?? op.idOperacion;
     if (op.estado.liquidacion.cliente || op.estado.liquidacion.chofer) {
-      return {
-        exito: false,
-        mensaje: `La operación ${op.idOperacion} tiene liquidación en curso o ` +
-                 `completa. Debe revertir la liquidación antes de darla de baja.`,
-      };
+      return `La operación ${num} está liquidada (total o parcialmente). No se puede dar de baja.`;
     }
-
-    const tipo = this.choferService.getTipoContratacion(op.chofer.id);
-    if (!tipo) {
-      return {
-        exito: false,
-        mensaje: `No se pudo resolver la contratación del chofer ${op.chofer.id}. ` +
-                 `No se dio de baja la operación.`,
-      };
+    if (op.estado.proforma.cliente || op.estado.proforma.chofer) {
+      return `La operación ${num} está en un borrador de liquidación. Eliminá el borrador antes de darla de baja.`;
     }
-
-    const escrituras: EscrituraBatch[] = [
-      { coleccion: 'operaciones', id: op.idOperacion, data: null, modo: 'eliminar' },
-    ];
-
-    // Informes: SOLO si 'cerrada'. Ausencia = inconsistencia real, aborta todo.
-    if (op.estado.ciclo === 'cerrada') {
-      const infoCliente = await this.db.getByField<any>('informesOpClientes', 'idOperacion', op.idOperacion);
-      if (infoCliente.length === 0) {
-        return {
-          exito: false,
-          mensaje: `Inconsistencia: la operación ${op.idOperacion} está cerrada ` +
-                   `pero no tiene informe en informesOpClientes. Baja abortada.`,
-        };
-      }
-      const coleccionSecundaria = tipo === 'directo' ? 'informesOpChoferes' : 'informesOpProveedores';
-      const infoSecundario = await this.db.getByField<any>(coleccionSecundaria, 'idOperacion', op.idOperacion);
-      if (infoSecundario.length === 0) {
-        return {
-          exito: false,
-          mensaje: `Inconsistencia: la operación ${op.idOperacion} está cerrada ` +
-                   `pero no tiene informe en ${coleccionSecundaria}. Baja abortada.`,
-        };
-      }
-      escrituras.push(
-        { coleccion: 'informesOpClientes', id: infoCliente[0].id, data: null, modo: 'eliminar' },
-        { coleccion: coleccionSecundaria, id: infoSecundario[0].id, data: null, modo: 'eliminar' },
-      );
+    if (op.estado.ciclo !== cicloEsperado) {
+      return op.estado.ciclo === 'cerrada'
+        ? `La operación ${num} está cerrada: se da de baja desde Liquidación.`
+        : `La operación ${num} está en ciclo '${op.estado.ciclo}' (se esperaba '${cicloEsperado}').`;
     }
+    return null;
+  }
 
-    const fecha = op.fecha;
-    const tablero = await this.asignacionService.getTableroPorFecha(fecha);
-    if (!tablero) {
-      return {
-        exito: false,
-        mensaje: `Inconsistencia: no existe tablero de asignaciones para la fecha ` +
-                 `${fecha} de la operación ${op.idOperacion}. Baja abortada.`,
-      };
-    }
-    const items = this.asignacionService.anularItemEnLista(tablero.items, op.idOperacion, motivo);
+  /** Relee la operación dentro de la transacción (patrón ConId). Aborta si
+   *  no existe. */
+  private async leerOperacionEnTransaccion(tx: Transaction, idOperacion: string): Promise<ConId<Operacion>> {
+    const data = await this.db.leerEnTransaccion<Operacion>(tx, 'operaciones', idOperacion);
+    if (!data) throw new Error(`La operación ${idOperacion} no existe.`);
+    return { ...data, idOperacion, id: idOperacion };
+  }
 
-    // Evento de papelera (referencia, ver PapeleraService). Sin secundarios — los
-    // informesOpXxx eliminados arriba no se archivan, comportamiento ya documentado
-    // y deliberado (ver CLAUDE.md → "Frente Papelera").
+  /** Escrituras comunes a toda baja de operación: delete de la operación +
+   *  evento de papelera (la operación tal como estaba, objeto principal) +
+   *  item del tablero anulado con el motivo. No commitea, no loguea: cada
+   *  orquestador (bajaOperacion / bajaOperacionCerrada) suma lo suyo y un
+   *  único log. */
+  agregarEscriturasBaja(
+    escrituras: EscrituraBatch[],
+    op: ConId<Operacion>,
+    tablero: Asignacion,
+    motivo: string,
+  ): void {
+    escrituras.push({ coleccion: 'operaciones', id: op.idOperacion, data: null, modo: 'eliminar' });
     this.papeleraService.prepararBajaEnBatch(escrituras, motivo, [
       { coleccion: 'operaciones', id: op.idOperacion, data: this.opToFirestore(op), principal: true },
     ]);
+    this.asignacionService.agregarEscrituraAnularItem(escrituras, tablero, op.idOperacion, motivo);
+  }
 
-    escrituras.push({
-      coleccion: 'asignaciones', id: fecha,
-      data: this.asignacionService.asignacionToFirestore({ ...tablero, items }),
-      modo: 'reemplazar',
-    });
-
-    await this.logRegistro.agregarAlBatch(
-      escrituras, 'BAJA', 'operaciones', op.idOperacion, `Baja de operación ${op.idOperacion}`,
-    );
-
+  /** Baja de una operación ABIERTA (caller: tablero-op). Transacción: relee
+   *  la operación y el tablero, valida (validarBaja 'abierta') y arma
+   *  agregarEscriturasBaja + un log BAJA. Una operación cerrada se rechaza:
+   *  se da de baja desde Liquidación (bajaOperacionCerrada). */
+  async bajaOperacion(op: ConId<Operacion>, motivo: string): Promise<Resultado<void>> {
     try {
-      await this.db.commitBatch(escrituras);
+      await this.db.commitEnTransaccion<void>(async (tx) => {
+        const escrituras: EscrituraBatch[] = [];
+
+        const actual = await this.leerOperacionEnTransaccion(tx, op.idOperacion);
+        const rechazo = this.validarBaja(actual, 'abierta');
+        if (rechazo) throw new Error(rechazo);
+        const tablero = await this.asignacionService.leerTableroEnTransaccion(tx, actual.fecha);
+        if (!tablero) {
+          throw new Error(
+            `Inconsistencia: no existe tablero de asignaciones para la fecha ${actual.fecha} ` +
+            `de la operación ${actual.numeroOperacion}. Baja abortada.`,
+          );
+        }
+        // — fin de lecturas —
+
+        this.agregarEscriturasBaja(escrituras, actual, tablero, motivo);
+        await this.logRegistro.agregarAlBatch(
+          escrituras, 'BAJA', 'operaciones', actual.idOperacion,
+          `Baja de operación ${actual.numeroOperacion} (abierta) — motivo: ${motivo}`,
+        );
+
+        return { escrituras, resultado: undefined };
+      });
     } catch (e: any) {
       await this.logRegistro.registrarError(
         'BAJA', 'operaciones', op.idOperacion, `Error en baja de operación ${op.idOperacion}: ${e?.message ?? e}`,
       );
-      return { exito: false, mensaje: `Error al dar de baja la operación: ${e?.message ?? e}.` };
+      return { exito: false, mensaje: e?.message ?? String(e) };
     }
 
-    return { exito: true, mensaje: `Operación ${op.idOperacion} dada de baja correctamente.` };
+    return { exito: true, mensaje: `Operación ${op.numeroOperacion} dada de baja correctamente.` };
   }
 
-  /** Restaura una operación desde papelera. SIEMPRE queda 'abierta' — los
-   *  InformeOp no se reconstruyen (fueron eliminados en la baja, no archivados).
-   *  Si la op estaba 'cerrada' antes de la baja, hay que volver a cerrarla
-   *  manualmente después de restaurar. */
+  /** Baja de una operación CERRADA desde Liquidación, a partir de uno de sus
+   *  InformeOp (caller: InformeOpListado). Transacción: relee el InformeOp,
+   *  su contraparte, la operación, el tablero y los resúmenes; valida;
+   *  arma agregarEscriturasBaja + anulación de los dos InformeOp +
+   *  reversión de resúmenes + un único log BAJA. Los InformeOp NO se borran:
+   *  quedan 'anulado' (InformeOpListado solo consulta activo/proforma).
+   *  TODO: InformeVenta del cierre (comisiones) quedan sin tocar. */
+  async bajaOperacionCerrada(idInfOp: string, motivo: string): Promise<Resultado<void>> {
+    try {
+      const numero = await this.db.commitEnTransaccion<number>(async (tx) => {
+        const escrituras: EscrituraBatch[] = [];
+
+        const informe = await this.informeOpServ.leerEnTransaccion(tx, idInfOp);
+        if (!informe) throw new Error(`No existe el InformeOp ${idInfOp}.`);
+        const idContra = informe.contraParte?.idInfOp;
+        const contraparte = idContra ? await this.informeOpServ.leerEnTransaccion(tx, idContra) : null;
+        if (!contraparte) {
+          throw new Error(
+            `Inconsistencia: no existe el InformeOp de la contraparte (${idContra ?? 'sin id'}). Baja abortada.`,
+          );
+        }
+        const op = await this.leerOperacionEnTransaccion(tx, informe.idOperacion);
+        if (contraparte.idOperacion !== op.idOperacion) {
+          throw new Error(
+            `Inconsistencia: la contraparte ${contraparte.idInfOp} pertenece a otra operación. Baja abortada.`,
+          );
+        }
+        const rechazo = this.validarBaja(op, 'cerrada');
+        if (rechazo) throw new Error(rechazo);
+        for (const inf of [informe, contraparte]) {
+          if (inf.estado !== 'activo' || inf.idInfLiq) {
+            throw new Error(
+              `El informe ${inf.idInfOp} (${inf.tipo}) está en estado '${inf.estado}'. ` +
+              `No se puede dar de baja la operación ${op.numeroOperacion}.`,
+            );
+          }
+        }
+        const tablero = await this.asignacionService.leerTableroEnTransaccion(tx, op.fecha);
+        if (!tablero) {
+          throw new Error(
+            `Inconsistencia: no existe tablero de asignaciones para la fecha ${op.fecha} ` +
+            `de la operación ${op.numeroOperacion}. Baja abortada.`,
+          );
+        }
+        const omitidos = op.resumenProcesado
+          ? await this.reportesOp.agregarEscriturasResumenReversion(
+              tx, escrituras, this.resumenOpCalculator.generarUpdatesEliminacion(op))
+          : [];
+        // — fin de lecturas —
+
+        this.agregarEscriturasBaja(escrituras, op, tablero, motivo);
+        this.informeOpServ.agregarAnulacionInformeOp(escrituras, informe.idInfOp);
+        this.informeOpServ.agregarAnulacionInformeOp(escrituras, contraparte.idInfOp);
+
+        let detalle =
+          `Baja de operación ${op.numeroOperacion} (cerrada) desde Liquidación — motivo: ${motivo} — ` +
+          `InformeOp anulados: ${informe.idInfOp}, ${contraparte.idInfOp}`;
+        if (!op.resumenProcesado) detalle += ' — sin reversión de resúmenes (no procesada)';
+        if (omitidos.length > 0) detalle += ` — resúmenes inexistentes omitidos: ${omitidos.join(', ')}`;
+        await this.logRegistro.agregarAlBatch(escrituras, 'BAJA', 'operaciones', op.idOperacion, detalle);
+
+        return { escrituras, resultado: op.numeroOperacion };
+      });
+
+      return { exito: true, mensaje: `Operación ${numero} dada de baja correctamente.` };
+    } catch (e: any) {
+      await this.logRegistro.registrarError(
+        'BAJA', 'operaciones', idInfOp,
+        `Error en baja de operación cerrada (InformeOp ${idInfOp}): ${e?.message ?? e}`,
+      );
+      return { exito: false, mensaje: e?.message ?? String(e) };
+    }
+  }
+
+  /** Restaura una operación desde papelera. SIEMPRE queda 'abierta'. Si la
+   *  op estaba 'cerrada' antes de la baja, sus InformeOp quedaron
+   *  'anulados' (no se reconstruyen, ver bajaOperacionCerrada) — hay que
+   *  volver a cerrarla manualmente después de restaurar, lo que genera un
+   *  par de InformeOp nuevo. */
   async restaurarOperacion(idEvento: string): Promise<Resultado<void>> {
 
     const escrituras: EscrituraBatch[] = [];
@@ -489,6 +559,12 @@ export class OperacionService implements OnDestroy {
     const op: ConId<Operacion> = { ...principal.data, idOperacion: principal.idOriginal, id: principal.idOriginal };
     op.estado = this.operacionFactory.estadoInicial();
     op.km = 0;
+    // Una op que estaba cerrada vuelve sin rastro del cierre anterior: sin
+    // esto, cerrarOperacion la rechaza por resumenProcesado y los ids de
+    // InformeOp apuntan a informes anulados.
+    op.resumenProcesado = false;
+    op.informeOpCliente = '';
+    op.informeOpChofer = '';
 
     const tablero = await this.asignacionService.getTableroPorFecha(op.fecha);
     if (!tablero) {

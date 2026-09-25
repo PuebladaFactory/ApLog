@@ -120,36 +120,37 @@ export class ResumenOpCalculatorService {
   private calcularIncrementos(
     op: Operacion,
     valores: Valores,
+    signo: 1 | -1 = 1,
   ): Record<string, any> {
     const c = valores.cliente;
     const ch = valores.chofer;
 
     return {
-      cantidadOps: increment(1),
-      kmRecorridos: increment(op.km),
+      cantidadOps: increment(signo * 1),
+      kmRecorridos: increment(signo * op.km),
 
-      acompanianteOps: increment(op.acompaniante ? 1 : 0),
-      acompanianteCantidadTotal: increment(op.acompanianteCant ?? 0),
+      acompanianteOps: increment(signo * (op.acompaniante ? 1 : 0)),
+      acompanianteCantidadTotal: increment(signo * (op.acompanianteCant ?? 0)),
 
       // cliente
-      "cliente.acompValor": increment(c.acompValor),
-      "cliente.kmAdicional": increment(c.kmAdicional),
-      "cliente.tarifaBase": increment(c.tarifaBase),
-      "cliente.adExtraValor": increment(c.adExtraValor ?? 0),
-      "cliente.total": increment(c.aCobrar),
+      "cliente.acompValor": increment(signo * c.acompValor),
+      "cliente.kmAdicional": increment(signo * c.kmAdicional),
+      "cliente.tarifaBase": increment(signo * c.tarifaBase),
+      "cliente.adExtraValor": increment(signo * (c.adExtraValor ?? 0)),
+      "cliente.total": increment(signo * c.aCobrar),
 
       // chofer
-      "chofer.acompValor": increment(ch.acompValor),
-      "chofer.kmAdicional": increment(ch.kmAdicional),
-      "chofer.tarifaBase": increment(ch.tarifaBase),
-      "chofer.adExtraValor": increment(ch.adExtraValor ?? 0),
-      "chofer.total": increment(ch.aPagar),
+      "chofer.acompValor": increment(signo * ch.acompValor),
+      "chofer.kmAdicional": increment(signo * ch.kmAdicional),
+      "chofer.tarifaBase": increment(signo * ch.tarifaBase),
+      "chofer.adExtraValor": increment(signo * (ch.adExtraValor ?? 0)),
+      "chofer.total": increment(signo * ch.aPagar),
 
       // ganancia
-      ganancia: increment(c.aCobrar - ch.aPagar),
+      ganancia: increment(signo * (c.aCobrar - ch.aPagar)),
 
       // tarifa tipo
-      [`tarifaTipo.${this.getTipoTarifa(op)}`]: increment(1),
+      [`tarifaTipo.${this.getTipoTarifa(op)}`]: increment(signo * 1),
     };
   }
 
@@ -403,8 +404,10 @@ export class ResumenOpCalculatorService {
     };
   }
 
-  /** Borrado de una operación cerrada (eliminarOperacionEInformes en
-   *  db-firestore.service.ts, disparado desde Liquidación). A propósito NO
+  /** Reversión de los resúmenes al dar de baja una operación cerrada
+   *  (OperacionService.bajaOperacionCerrada). Incrementos negativos
+   *  calculados con signo — NO se invierten leyendo el valor interno de
+   *  increment() (propiedad minificada del SDK, frágil). A propósito NO
    *  reutiliza generarUpdates/resolverValores: tiene que invertir
    *  exactamente lo que hoy está sumado en el resumen, y op.valoresNuevos
    *  queda CONGELADO en el valor del cierre original — si la operación se
@@ -414,36 +417,6 @@ export class ResumenOpCalculatorService {
    *  sí queda siempre al día (la edición lo actualiza directo), así que es
    *  la única fuente correcta acá — igual que generarDeltaUpdates. */
   generarUpdatesEliminacion(op: Operacion): UpdateResumen[] {
-    const data = this.calcularIncrementos(op, op.valores);
-    const updatesPositivos = this.armarUpdatesPorEntidad(op, data);
-
-    // invertir todos los incrementos
-    return updatesPositivos.map((upd) => ({
-      ...upd,
-      data: this.invertirIncrementos(upd.data),
-    }));
+    return this.armarUpdatesPorEntidad(op, this.calcularIncrementos(op, op.valores, -1));
   }
-
-private invertirIncrementos(
-  data: Record<string, any>,
-): Record<string, any> {
-  const result: Record<string, any> = {};
-
-  for (const key of Object.keys(data)) {
-    const inc = this.getIncrementValue(data[key]);
-
-    if (inc !== 0) {
-      result[key] = increment(-inc);
-    }
-  }
-
-  return result;
-}
-
-private getIncrementValue(value: any): number {
-  if (!value) return 0;
-
-  // Firestore increment internals
-  return value?.Cc ?? 0;
-}
 }

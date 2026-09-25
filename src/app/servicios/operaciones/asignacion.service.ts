@@ -1,4 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
+import { Transaction } from '@angular/fire/firestore';
 import { BehaviorSubject, firstValueFrom, merge, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Asignacion, AsignacionItem, EstadoAsignacion } from 'src/app/interfaces/asignacion';
@@ -53,6 +54,13 @@ export class AsignacionService implements OnDestroy {
     const data = await firstValueFrom(
       this.db.getDocObservable<Asignacion>(this.COLECCION, fecha)
     );
+    return data ? { ...data, idAsignacion: fecha } : null;
+  }
+
+  /** Lectura del tablero de una fecha DENTRO de una transacción (para el
+   *  callback armar de commitEnTransaccion). */
+  async leerTableroEnTransaccion(tx: Transaction, fecha: string): Promise<Asignacion | null> {
+    const data = await this.db.leerEnTransaccion<Asignacion>(tx, this.COLECCION, fecha);
     return data ? { ...data, idAsignacion: fecha } : null;
   }
 
@@ -127,6 +135,23 @@ export class AsignacionService implements OnDestroy {
         ? { ...it, estado: { estado: 'anulada', motivo, timestamp: Date.now() } as EstadoAsignacion }
         : it
     );
+  }
+
+  /** Empuja el reemplazo del tablero con el item de la operación anulado.
+   *  No commitea, no loguea (el log lo pone el orquestador del gesto). */
+  agregarEscrituraAnularItem(
+    escrituras: EscrituraBatch[],
+    tablero: Asignacion,
+    idOperacion: string,
+    motivo: string,
+  ): void {
+    const items = this.anularItemEnLista(tablero.items, idOperacion, motivo);
+    escrituras.push({
+      coleccion: this.COLECCION,
+      id: tablero.idAsignacion,
+      data: this.toFirestore({ ...tablero, items }),
+      modo: 'reemplazar',
+    });
   }
 
   /** Puro: devuelve items con el idOperacion dado reactivado (estado → 'activa'). Sin efectos de red. */

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
-import { QueryDocumentSnapshot, DocumentData } from '@angular/fire/firestore';
+import { QueryDocumentSnapshot, DocumentData, Transaction } from '@angular/fire/firestore';
 import { ConId } from 'src/app/interfaces/conId';
 import { Resultado } from 'src/app/interfaces/resultado';
 import { Operacion } from 'src/app/interfaces/operacion';
@@ -81,12 +81,14 @@ export class InformeOpService {
     );
   }
 
-  /** Guarda anti-duplicado del cierre — ¿ya existe algún InformeOp para esta
-   *  operación? El caller (OperacionService.cerrarOperacion) no necesita
-   *  conocer el nombre de la colección para esto. */
+  /** Guarda anti-duplicado del cierre — ¿ya existe algún InformeOp ACTIVO
+   *  para esta operación? El caller (OperacionService.cerrarOperacion) no
+   *  necesita conocer el nombre de la colección para esto. */
   async existeParaOperacion(idOperacion: string): Promise<boolean> {
     const informes = await this.obtenerPorOperacion(idOperacion);
-    return informes.length > 0;
+    // Los anulados (baja de operación cerrada) no cuentan: una operación
+    // restaurada desde papelera vuelve a cerrarse y genera un par nuevo.
+    return informes.some(inf => inf.estado !== 'anulado');
   }
 
   async obtenerPorOperacion(idOperacion: string): Promise<ConId<InformeOpNuevo>[]> {
@@ -149,35 +151,16 @@ export class InformeOpService {
     return { id: idInfOp, ...informe, idInfOp };
   }
 
-  /** Transición a 'anulado' — no borra el documento (reemplaza el borrado
-   *  físico que hacía eliminarOperacionEInformes; el cutover de ese flujo
-   *  es un chunk posterior). Atómico con su propia entrada de log; no toca
-   *  Operación ni la contraparte acá — eso lo decide el caller según el
-   *  camino que dispare la anulación. */
-  async anular(idInfOp: string, msj: string = 'Anulación de InformeOp'): Promise<Resultado<void>> {
-    const informe = await this.db.getById<InformeOpNuevo>(this.COLECCION, idInfOp);
-    if (!informe) {
-      return { exito: false, mensaje: `No se encontró el InformeOp ${idInfOp}.` };
-    }
-    if (informe.estado === 'anulado') {
-      return { exito: true, mensaje: `El InformeOp ${idInfOp} ya estaba anulado.` };
-    }
+  /** Lectura de un InformeOp DENTRO de una transacción (patrón ConId). */
+  async leerEnTransaccion(tx: Transaction, idInfOp: string): Promise<ConId<InformeOpNuevo> | null> {
+    const data = await this.db.leerEnTransaccion<InformeOpNuevo>(tx, this.COLECCION, idInfOp);
+    return data ? { ...data, id: idInfOp, idInfOp } : null;
+  }
 
-    const escrituras: EscrituraBatch[] = [
-      { coleccion: this.COLECCION, id: idInfOp, data: { ...informe, estado: 'anulado' }, modo: 'reemplazar' },
-    ];
-    await this.logRegistro.agregarAlBatch(escrituras, 'EDITAR', this.COLECCION, idInfOp, msj);
-
-    try {
-      await this.db.commitBatch(escrituras);
-    } catch (e: any) {
-      await this.logRegistro.registrarError(
-        'EDITAR', this.COLECCION, idInfOp, `Error al anular InformeOp ${idInfOp}: ${e?.message ?? e}`,
-      );
-      return { exito: false, mensaje: `Error al anular: ${e?.message ?? e}.` };
-    }
-
-    return { exito: true, mensaje: `InformeOp ${idInfOp} anulado correctamente.` };
+  /** Anulación de un InformeOp (baja de su operación cerrada): solo cambia
+   *  el estado. No commitea, no loguea. */
+  agregarAnulacionInformeOp(escrituras: EscrituraBatch[], idInfOp: string): void {
+    this.agregarEscrituraInformeOpParcial(escrituras, idInfOp, { estado: 'anulado' });
   }
 
   /** Reemplazo completo de un InformeOp — cuando el documento cambia de
