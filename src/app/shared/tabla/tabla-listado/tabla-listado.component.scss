@@ -1,0 +1,39 @@
+th, td {
+  font-size: 1.3rem;
+}
+
+th.ordenable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+th.ordenable:hover {
+  background-color: #f1f1f1;
+}
+
+.icono-orden {
+  margin-left: 4px;
+  font-size: 0.8em;
+  opacity: 0.35;
+}
+
+.icono-orden.activo {
+  opacity: 1;
+}
+
+/* Celdas numéricas / moneda: alineadas y con dígitos de ancho fijo. */
+.col-numero {
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", system-ui, sans-serif;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.bloqueada {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.5;
+}

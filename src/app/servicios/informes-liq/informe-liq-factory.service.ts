@@ -130,6 +130,13 @@ export class InformeLiqFactoryService {
     return `${periodo.anio}-${String(periodo.mes).padStart(2, '0')}`;
   }
 
+  /** Clave numérica para ORDENAR períodos: año, mes y tramo (1q < 2q < mes)
+   *  en un solo número. Pura; la usan los listados. */
+  ordenPeriodo(periodo: PeriodoLiq): number {
+    const tramo = periodo.tramo === '1q' ? 0 : periodo.tramo === '2q' ? 1 : 2;
+    return periodo.anio * 1000 + periodo.mes * 10 + tramo;
+  }
+
   /** Texto legible del período para logs y títulos: "09/2026 · 1° quincena". */
   textoPeriodo(periodo: PeriodoLiq): string {
     const tramo = periodo.tramo === 'mes' ? 'mes completo'

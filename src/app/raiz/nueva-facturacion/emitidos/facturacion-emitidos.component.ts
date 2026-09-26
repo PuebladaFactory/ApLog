@@ -4,19 +4,21 @@ import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 import { ConId } from 'src/app/interfaces/conId';
 import { InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
+import {
+  AccionListado, ColumnaListado, EventoAccionListado, OrdenListado,
+} from 'src/app/interfaces/tabla-listado';
 import { InformeLiqConsultaService } from 'src/app/servicios/informes-liq/informe-liq-consulta.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
 import { InformeLiqNuevoDetalleComponent } from 'src/app/shared/modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
 
-type ColumnaOrdenEmitido =
-  'numeroInterno' | 'fechaEmision' | 'tipo' | 'entidad' | 'periodo' | 'cantidadOperaciones' | 'total';
+type Fila = ConId<InformeLiqNuevo>;
 
 /** Facturación — bandeja de InformeLiqNuevo en estado 'emitido' (pendientes
- *  de facturar), en vivo, de todas las entidades. Acciones: ver/editar
- *  (detalle con modulo='facturacion'). Facturar y revertir se agregan en los
- *  bloques siguientes. Camino paralelo a FacturacionListadoComponent (modelo
- *  viejo, resumenLiq). */
+ *  de facturar), en vivo, de todas las entidades. Tabla: TablaListadoComponent.
+ *  Acciones: ver/editar (detalle con modulo='facturacion'). Facturar y
+ *  revertir se agregan en los bloques siguientes. Camino paralelo a
+ *  FacturacionListadoComponent (modelo viejo, resumenLiq). */
 @Component({
   selector: 'app-facturacion-emitidos',
   standalone: false,
@@ -25,13 +27,27 @@ type ColumnaOrdenEmitido =
 })
 export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
 
-  emitidos: ConId<InformeLiqNuevo>[] = [];
+  emitidos: Fila[] = [];
+  filtrados: Fila[] = [];
   filtroTipo: 'todos' | 'cliente' | 'chofer' | 'proveedor' = 'todos';
   searchText = '';
-  // Por defecto: emitidos más recientes primero.
-  ordenColumna: ColumnaOrdenEmitido = 'fechaEmision';
-  ordenAscendente = false;
   cargando = true;
+
+  readonly ordenInicial: OrdenListado = { key: 'fechaEmision', asc: false };
+
+  readonly columnas: ColumnaListado<Fila>[] = [
+    { key: 'numeroInterno', label: 'N° Informe', valor: b => b.numeroInterno, orden: b => b.numeroInterno ?? '' },
+    { key: 'fechaEmision', label: 'Emisión', valor: b => b.fechaEmision, orden: b => b.fechaEmision ?? b.fechaCreacion },
+    { key: 'tipo', label: 'Tipo', valor: b => b.tipo, orden: b => b.tipo, clase: 'text-capitalize' },
+    { key: 'entidad', label: 'Entidad', valor: b => this.nombre(b), orden: b => this.nombre(b) },
+    { key: 'periodo', label: 'Período', valor: b => this.factory.textoPeriodo(b.periodo), orden: b => this.factory.ordenPeriodo(b.periodo) },
+    { key: 'cantidadOperaciones', label: 'Informes', valor: b => b.cantidadOperaciones, orden: b => b.cantidadOperaciones, tipo: 'numero', align: 'center' },
+    { key: 'total', label: 'Total', valor: b => b.valores.total, orden: b => b.valores.total, tipo: 'moneda', clase: 'table-success' },
+  ];
+
+  readonly acciones: AccionListado<Fila>[] = [
+    { id: 'ver', label: 'Ver' },
+  ];
 
   private destroy$ = new Subject<void>();
 
@@ -45,7 +61,11 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
     this.consulta.observarPorEstado('emitido')
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: data => { this.emitidos = data; this.cargando = false; },
+        next: data => {
+          this.emitidos = data;
+          this.aplicarFiltros();
+          this.cargando = false;
+        },
         error: e => {
           this.cargando = false;
           Swal.fire({ icon: 'error', text: `No se pudieron cargar los informes emitidos: ${e?.message ?? e}` });
@@ -58,67 +78,30 @@ export class FacturacionEmitidosComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /** Filtro (tipo + texto sobre entidad o número interno) y orden, en memoria. */
-  get filtrados(): ConId<InformeLiqNuevo>[] {
+  /** Filtro en memoria: tipo + texto sobre entidad o número interno. Se
+   *  llama al llegar datos y al cambiar un filtro (no es un getter: la tabla
+   *  recibe un array estable). El orden lo resuelve la tabla. */
+  aplicarFiltros(): void {
     const texto = this.searchText.trim().toLowerCase();
-    const dir = this.ordenAscendente ? 1 : -1;
-    return this.emitidos
-      .filter(b =>
-        (this.filtroTipo === 'todos' || b.tipo === this.filtroTipo) &&
-        (!texto ||
-          this.nombre(b).toLowerCase().includes(texto) ||
-          (b.numeroInterno ?? '').toLowerCase().includes(texto)),
-      )
-      .sort((a, b) => {
-        const va = this.valorOrden(a);
-        const vb = this.valorOrden(b);
-        const cmp = typeof va === 'string'
-          ? va.localeCompare(vb as string)
-          : (va as number) - (vb as number);
-        return cmp * dir;
-      });
+    this.filtrados = this.emitidos.filter(b =>
+      (this.filtroTipo === 'todos' || b.tipo === this.filtroTipo) &&
+      (!texto ||
+        this.nombre(b).toLowerCase().includes(texto) ||
+        (b.numeroInterno ?? '').toLowerCase().includes(texto)),
+    );
   }
 
-  nombre(b: InformeLiqNuevo): string {
+  onAccion(e: EventoAccionListado<Fila>): void {
+    switch (e.id) {
+      case 'ver': this.verDetalle(e.item); break;
+    }
+  }
+
+  private nombre(b: InformeLiqNuevo): string {
     return nombreEntidadRef(b.entidad);
   }
 
-  periodo(b: InformeLiqNuevo): string {
-    return this.factory.textoPeriodo(b.periodo);
-  }
-
-  ordenar(columna: ColumnaOrdenEmitido): void {
-    if (this.ordenColumna === columna) {
-      this.ordenAscendente = !this.ordenAscendente;
-    } else {
-      this.ordenColumna = columna;
-      this.ordenAscendente = true;
-    }
-  }
-
-  /** ▲/▼ en la columna activa; ⇅ en las demás. */
-  iconoOrden(columna: ColumnaOrdenEmitido): string {
-    if (this.ordenColumna !== columna) return '⇅';
-    return this.ordenAscendente ? '▲' : '▼';
-  }
-
-  /** Clave de orden. Período: año, mes y tramo (1q < 2q < mes) en un número. */
-  private valorOrden(b: InformeLiqNuevo): string | number {
-    switch (this.ordenColumna) {
-      case 'numeroInterno': return b.numeroInterno ?? '';
-      case 'fechaEmision': return b.fechaEmision ?? b.fechaCreacion;
-      case 'tipo': return b.tipo;
-      case 'entidad': return this.nombre(b);
-      case 'periodo': {
-        const tramo = b.periodo.tramo === '1q' ? 0 : b.periodo.tramo === '2q' ? 1 : 2;
-        return b.periodo.anio * 1000 + b.periodo.mes * 10 + tramo;
-      }
-      case 'cantidadOperaciones': return b.cantidadOperaciones;
-      case 'total': return b.valores.total;
-    }
-  }
-
-  verDetalle(b: ConId<InformeLiqNuevo>): void {
+  private verDetalle(b: Fila): void {
     const modalRef = this.modalService.open(InformeLiqNuevoDetalleComponent, {
       size: 'xl', centered: true, scrollable: true, backdrop: 'static',
     });

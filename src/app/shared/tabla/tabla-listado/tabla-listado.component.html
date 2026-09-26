@@ -1,0 +1,57 @@
+<div [class.bloqueada]="bloqueada">
+  <table class="table table-striped table-bordered align-middle">
+    <thead>
+      <tr>
+        @for (col of columnas; track col.key) {
+          <th [ngClass]="clasesEncabezado(col)" (click)="ordenar(col)">
+            {{ col.label }}
+            @if (col.orden) {
+              <span class="icono-orden" [class.activo]="orden?.key === col.key">{{ iconoOrden(col) }}</span>
+            }
+          </th>
+        }
+        @if (hayAcciones) {
+          <th class="text-center">Acciones</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of filas; track trackKey(item)) {
+        <tr>
+          @for (col of columnas; track col.key) {
+            <td [ngClass]="clasesCelda(col, item)">
+              @if (col.tipo === 'moneda') {
+                {{ valorMoneda(col, item) | formatearValor: '$' }}
+              } @else {
+                {{ col.valor(item) }}
+              }
+            </td>
+          }
+          @if (hayAcciones) {
+            <td class="text-center text-nowrap">
+              @for (a of accionesPermitidas; track a.id) {
+                @if (esVisible(a, item)) {
+                  <button
+                    type="button"
+                    class="btn btn-sm me-1"
+                    [ngClass]="a.clase ?? 'btn-outline-primary'"
+                    [disabled]="estaDeshabilitada(a, item)"
+                    (click)="ejecutar(a, item)"
+                  >{{ a.label }}</button>
+                }
+              }
+            </td>
+          }
+        </tr>
+      } @empty {
+        @if (!cargando) {
+          <tr><td [attr.colspan]="totalColumnas">{{ mensajeVacio }}</td></tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (cargando) {
+  <app-spinner></app-spinner>
+}

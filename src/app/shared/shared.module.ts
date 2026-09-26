@@ -63,6 +63,7 @@ import { CalcularPorcentajeV2Pipe } from './pipes/calcular-porcentaje-v2.pipe';
 import { FiltroPeriodoComponent } from './filtro-periodo/filtro-periodo.component';
 import { TablaAccionesComponent } from './tabla/tabla-acciones/tabla-acciones.component';
 import { TablaGenericaComponent } from './tabla/tabla-generica/tabla-generica.component';
+import { TablaListadoComponent } from './tabla/tabla-listado/tabla-listado.component';
 import { IconoArchivoPipe } from './pipes/icono-archivo.pipe';
 import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
 
@@ -120,6 +121,7 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     FiltroPeriodoComponent,
     TablaAccionesComponent,
     TablaGenericaComponent,
+    TablaListadoComponent,
     IconoArchivoPipe,
     AcortarNombreArchivoPipe,
 
@@ -182,6 +184,7 @@ import { AcortarNombreArchivoPipe } from './pipes/acortar-nombre-archivo.pipe';
     FiltroPeriodoComponent,
     TablaAccionesComponent,
     TablaGenericaComponent,
+    TablaListadoComponent,
     IconoArchivoPipe,
     AcortarNombreArchivoPipe,
   ]
