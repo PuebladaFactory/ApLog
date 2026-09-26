@@ -12,7 +12,7 @@ import { OperacionService } from 'src/app/servicios/operaciones/operacion.servic
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { DatosLiquidacion, InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
-import { DescuentosComponent } from '../descuentos/descuentos.component';
+import { AjustesLiqComponent } from 'src/app/shared/modales/ajustes-liq/ajustes-liq.component';
 
 /** Lo que devuelve el modal al cerrarse con una confirmación. El caller
  *  (InformeOpListadoComponent) llama a InformeLiqService según `accion`. */
@@ -182,10 +182,10 @@ export class LiquidacionNuevaComponent implements OnInit {
   }
 
   async abrirDescuentos(): Promise<void> {
-    const modalRef = this.modalService.open(DescuentosComponent, {
+    const modalRef = this.modalService.open(AjustesLiqComponent, {
       windowClass: 'myCustomModalClass', centered: true, size: 'md',
     });
-    // Copia: DescuentosComponent muta el array que recibe.
+    // Copia: AjustesLiqComponent muta el array que recibe.
     modalRef.componentInstance.fromParent = { descuentos: this.descuentos.map(d => ({ ...d })) };
     try {
       const r = await modalRef.result;

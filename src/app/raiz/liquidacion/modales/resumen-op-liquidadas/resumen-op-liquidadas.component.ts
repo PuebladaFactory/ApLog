@@ -2,7 +2,7 @@ import { AfterViewInit, Component, Input, OnInit } from "@angular/core";
 
 import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import Swal from "sweetalert2";
-import { DescuentosComponent } from "../descuentos/descuentos.component";
+import { AjustesLiqComponent } from "src/app/shared/modales/ajustes-liq/ajustes-liq.component";
 
 import { ConId } from "src/app/interfaces/conId";
 import { InformeOpNuevo } from "src/app/interfaces/informe-op-nuevo";
@@ -256,7 +256,7 @@ export class ResumenOpLiquidadasComponent implements OnInit, AfterViewInit {
 
   abrirModalDescuentos() {
     {
-      const modalRef = this.modalService.open(DescuentosComponent, {
+      const modalRef = this.modalService.open(AjustesLiqComponent, {
         windowClass: "myCustomModalClass",
         centered: true,
         size: "md",

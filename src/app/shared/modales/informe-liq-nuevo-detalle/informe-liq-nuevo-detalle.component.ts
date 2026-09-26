@@ -15,7 +15,7 @@ import {
   InformeOpEditorComponent,
   ResultadoEdicionInformeOp,
 } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
-import { DescuentosComponent } from '../descuentos/descuentos.component';
+import { AjustesLiqComponent } from '../ajustes-liq/ajustes-liq.component';
 
 /** Detalle de un InformeLiqNuevo. En 'borrador' permite editar cada
  *  InformeOp (InformeLiqService.editarInformeOp: recalcula el informe) y los
@@ -175,10 +175,10 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
   }
 
   async abrirDescuentos(): Promise<void> {
-    const modalRef = this.modalService.open(DescuentosComponent, {
+    const modalRef = this.modalService.open(AjustesLiqComponent, {
       windowClass: 'myCustomModalClass', centered: true, size: 'md',
     });
-    // Copia: DescuentosComponent muta el array que recibe.
+    // Copia: AjustesLiqComponent muta el array que recibe.
     modalRef.componentInstance.fromParent = { descuentos: this.descuentos.map(d => ({ ...d })) };
     try {
       const r = await modalRef.result;

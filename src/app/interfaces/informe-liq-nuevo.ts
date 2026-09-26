@@ -71,6 +71,9 @@ export interface InformeLiqNuevo {
   anulacion: AnulacionLiq | null;
 }
 
+/** Estados posibles de un InformeLiqNuevo (alias para filtros y consultas). */
+export type EstadoInformeLiqNuevo = InformeLiqNuevo['estado'];
+
 export interface PeriodoLiq {
   anio: number;
   mes: number;                      // 1–12

@@ -881,6 +881,36 @@ export class DbFirestoreService {
     return collectionData(q, { idField: 'id' }) as Observable<ConId<T>[]>;
   }
 
+  /** Consulta one-shot: `campoIn in valores` + rango inclusivo sobre
+   *  `campoRango`, ordenada por `campoRango`. Requiere índice compuesto
+   *  (campoIn, campoRango) en firestore.indexes.json. `valores`: 1 a 30
+   *  elementos (límite de Firestore para 'in'). Agrega `id` (doc id); el
+   *  caller aplica su propio patrón ConId (idInfLiq, …). */
+  async consultarPorInYRango<T>(
+    coleccion: string,
+    campoIn: string,
+    valores: any[],
+    campoRango: string,
+    desde: string,
+    hasta: string,
+    orden: 'asc' | 'desc' = 'desc',
+  ): Promise<ConId<T>[]> {
+    if (valores.length === 0) return [];
+    if (valores.length > 30) {
+      throw new Error(`consultarPorInYRango: 'in' admite hasta 30 valores (recibidos: ${valores.length}).`);
+    }
+    const colRef = collection(this.firestore, `/Vantruck/datos/${coleccion}`);
+    const q = query(
+      colRef,
+      where(campoIn, 'in', valores),
+      where(campoRango, '>=', desde),
+      where(campoRango, '<=', hasta),
+      orderBy(campoRango, orden),
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...(d.data() as T) }));
+  }
+
   get(id: string) {
     const estacionamiento1DocumentReference = doc(
       this.firestore,

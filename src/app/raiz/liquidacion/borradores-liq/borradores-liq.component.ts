@@ -7,7 +7,7 @@ import { InformeLiqNuevo } from 'src/app/interfaces/informe-liq-nuevo';
 import { InformeLiqService } from 'src/app/servicios/informes-liq/informe-liq.service';
 import { InformeLiqFactoryService } from 'src/app/servicios/informes-liq/informe-liq-factory.service';
 import { nombreEntidadRef } from 'src/app/shared/utils/entidad-informe.util';
-import { InformeLiqNuevoDetalleComponent } from '../modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
+import { InformeLiqNuevoDetalleComponent } from 'src/app/shared/modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
 
 type ColumnaOrdenBorrador = 'fechaCreacion' | 'tipo' | 'entidad' | 'periodo' | 'cantidadOperaciones' | 'total';
 

@@ -5,12 +5,18 @@ import { Descuento } from 'src/app/interfaces/informe-liq';
 import { FormatoNumericoService } from 'src/app/servicios/formato-numerico/formato-numerico.service';
 
 @Component({
-    selector: 'app-descuentos',
-    templateUrl: './descuentos.component.html',
-    styleUrls: ['./descuentos.component.scss'],
+    selector: 'app-ajustes-liq',
+    templateUrl: './ajustes-liq.component.html',
+    styleUrls: ['./ajustes-liq.component.scss'],
     standalone: false
 })
-export class DescuentosComponent implements OnInit{
+/** Modal de ajustes (descuentos/recargos, +/-) de un InformeLiqNuevo — lo
+ *  usan LiquidacionNuevaComponent, InformeLiqNuevoDetalleComponent y
+ *  ResumenOpLiquidadasComponent (camino viejo). Muta el array que recibe en
+ *  fromParent.descuentos (los callers pasan una copia). Devuelve
+ *  {descuentos, total}. No confundir con shared/modales/descuentos
+ *  (DescuentosComponent), que usa el InformeLiqDetalleComponent viejo. */
+export class AjustesLiqComponent implements OnInit{
   
   @Input() fromParent: any;
   descuentos!: Descuento[];

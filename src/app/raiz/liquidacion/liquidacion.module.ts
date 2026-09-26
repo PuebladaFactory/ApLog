@@ -11,7 +11,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { ResumenOpLiquidadasComponent } from './modales/resumen-op-liquidadas/resumen-op-liquidadas.component';
 import { EditarTarifaOpComponent } from './modales/editar-tarifa-op/editar-tarifa-op.component';
 import { ProformaComponent } from './proforma/proforma.component';
@@ -23,7 +22,6 @@ import { PeriodoModalComponent } from './modales/periodo-modal/periodo-modal.com
 import { InformeOpListadoComponent } from './informe-op-listado/informe-op-listado.component';
 import { LiquidacionNuevaComponent } from './modales/liquidacion-nueva/liquidacion-nueva.component';
 import { BorradoresLiqComponent } from './borradores-liq/borradores-liq.component';
-import { InformeLiqNuevoDetalleComponent } from './modales/informe-liq-nuevo-detalle/informe-liq-nuevo-detalle.component';
 import { InformeOpAnuladosComponent } from './informe-op-anulados/informe-op-anulados.component';
 
 
@@ -37,7 +35,6 @@ import { InformeOpAnuladosComponent } from './informe-op-anulados/informe-op-anu
 
     LiquidacionesOpComponent,
     MigrarDatosComponent,
-    DescuentosComponent,
     ResumenOpLiquidadasComponent,
     EditarTarifaOpComponent,
     ProformaComponent,
@@ -45,7 +42,6 @@ import { InformeOpAnuladosComponent } from './informe-op-anulados/informe-op-anu
     InformeOpListadoComponent,
     LiquidacionNuevaComponent,
     BorradoresLiqComponent,
-    InformeLiqNuevoDetalleComponent,
     InformeOpAnuladosComponent
 
   ],
