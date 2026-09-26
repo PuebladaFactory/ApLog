@@ -16,14 +16,17 @@ import {
   ResultadoEdicionInformeOp,
 } from 'src/app/shared/modales/informe-op-editor/informe-op-editor.component';
 import { AjustesLiqComponent } from '../ajustes-liq/ajustes-liq.component';
+import { PermisosService } from 'src/app/servicios/permisos/permisos.service';
 
-/** Detalle de un InformeLiqNuevo. En 'borrador' permite editar cada
- *  InformeOp (InformeLiqService.editarInformeOp: recalcula el informe) y los
- *  datos del informe (descuentos, observaciones, columnas —
- *  InformeLiqService.editarDatos). Período y composición no son editables.
- *  Relee todo después de cada guardado. Emitir/eliminar viven en el listado.
- *  (El servicio también admite editar 'emitido'; la UI para emitidos llega
- *  con el camino nuevo de Facturación.) */
+/** Detalle de un InformeLiqNuevo. Lo abren Liquidación (Borradores,
+ *  modulo='liquidaciones') y Facturación (Emitidos, modulo='facturacion').
+ *  En 'borrador' y 'emitido' —y con permiso `<modulo>.editar`— permite editar
+ *  cada InformeOp (InformeLiqService.editarInformeOp: recalcula el informe)
+ *  y los datos del informe (descuentos, observaciones, columnas —
+ *  InformeLiqService.editarDatos). En cualquier otro estado es solo lectura.
+ *  Período y composición no son editables. Relee todo después de cada
+ *  guardado. Las transiciones (emitir, eliminar, revertir, facturar) viven en
+ *  los listados, no acá. */
 @Component({
   selector: 'app-informe-liq-nuevo-detalle',
   standalone: false,
@@ -33,6 +36,9 @@ import { AjustesLiqComponent } from '../ajustes-liq/ajustes-liq.component';
 export class InformeLiqNuevoDetalleComponent implements OnInit {
 
   @Input() idInfLiq!: string;
+  /** Módulo desde el que se abre: define el permiso de edición
+   *  (`<modulo>.editar`). */
+  @Input() modulo: 'liquidaciones' | 'facturacion' = 'liquidaciones';
 
   liq: ConId<InformeLiqNuevo> | null = null;
   informes: ConId<InformeOpNuevo>[] = [];
@@ -49,14 +55,33 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
     private modalService: NgbModal,
     private informeLiqServ: InformeLiqService,
     private factory: InformeLiqFactoryService,
+    private permisos: PermisosService,
   ) {}
 
   ngOnInit(): void {
     this.cargar();
   }
 
+  /** Editable = estado que admite edición (borrador | emitido; los servicios
+   *  validan lo mismo) Y permiso de edición en el módulo que abrió el modal.
+   *  Controla todo lo editable del template (ajustes, columnas,
+   *  observaciones, lápiz de InformeOp, guardar/descartar). */
   get editable(): boolean {
-    return this.liq?.estado === 'borrador';
+    if (!this.liq) return false;
+    const estadoEditable = this.liq.estado === 'borrador' || this.liq.estado === 'emitido';
+    return estadoEditable && this.permisos.puede(this.modulo, 'editar');
+  }
+
+  /** Clase del badge de estado. */
+  get claseEstado(): string {
+    switch (this.liq?.estado) {
+      case 'borrador':  return 'bg-warning text-dark';
+      case 'emitido':   return 'bg-primary';
+      case 'facturado': return 'bg-success';
+      case 'revertido': return 'bg-secondary';
+      case 'anulado':   return 'bg-danger';
+      default:          return 'bg-light text-dark';
+    }
   }
 
   get nombreEntidad(): string {
@@ -119,7 +144,7 @@ export class InformeLiqNuevoDetalleComponent implements OnInit {
     try {
       this.liq = await this.informeLiqServ.obtenerPorId(this.idInfLiq);
       if (!this.liq) {
-        Swal.fire({ icon: 'error', text: 'El informe ya no existe (¿fue emitido o eliminado?).' });
+        Swal.fire({ icon: 'error', text: 'El informe de liquidación ya no existe (¿fue eliminado?).' });
         this.activeModal.dismiss();
         return;
       }

@@ -29,13 +29,12 @@
                 <span
                     >Informes: <b>{{ liq.cantidadOperaciones }}</b></span
                 >
-                <span
-                    class="badge"
-                    [class.bg-warning]="liq.estado === 'borrador'"
-                    [class.text-dark]="liq.estado === 'borrador'"
-                    [class.bg-success]="liq.estado !== 'borrador'"
-                    >{{ liq.estado }}</span
-                >
+                @if (liq.fechaEmision) {
+                    <span
+                        >Emitido: <b>{{ liq.fechaEmision }}</b></span
+                    >
+                }
+                <span class="badge" [ngClass]="claseEstado">{{ liq.estado }}</span>
             </div>
             <!-- BOTON EDITAR -->
             <div class="d-flex align-items-center mb-1 justify-content-end">
@@ -51,6 +50,13 @@
                 }
             </div>
         </div>
+
+        @if (editable && liq.estado === 'emitido') {
+            <div class="alert alert-warning py-2 mb-3">
+                Informe emitido: los cambios modifican el total de una
+                liquidación que ya tiene número interno.
+            </div>
+        }
 
         <div
             class="border border-info border-1 rounded-4 shadow p-2 bg-body-tertiary rounded mb-3"
@@ -81,12 +87,7 @@
                             </th>
                         }
                         @if (editable) {
-                            <th
-                                class="text-center"
-                                *appPermiso="'liquidaciones.editar'"
-                            >
-                                Editar
-                            </th>
+                            <th class="text-center">Editar</th>
                         }
                     </tr>
                 </thead>
@@ -103,10 +104,7 @@
                                 </td>
                             }
                             @if (editable) {
-                                <td
-                                    class="text-center"
-                                    *appPermiso="'liquidaciones.editar'"
-                                >
+                                <td class="text-center">
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         width="16"
@@ -224,7 +222,7 @@
         Cerrar
     </button>
     @if (editable) {
-        <ng-container *appPermiso="'liquidaciones.editar'">
+        <ng-container>
             <button
                 type="button"
                 class="btn btn-outline-secondary"

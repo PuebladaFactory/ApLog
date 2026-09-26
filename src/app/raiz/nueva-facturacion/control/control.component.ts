@@ -55,8 +55,10 @@ import { tabActivaDesdeUrl } from 'src/app/shared/utils/tabs-url.util';
 })
 export class ControlComponent implements OnInit{
   tabs = [
-    { id: 'tab1', name: 'Informes Emitidos', route: 'nuevaFacturacion/listado' },
-    { id: 'tab2', name: 'Informes Facturados', route: 'nuevaFacturacion/historial' },
+    { id: 'tab3', name: 'Emitidos', route: 'nuevaFacturacion/emitidos' },
+    // Camino viejo — rutas comentadas en nueva-facturacion-routing.module.ts:
+    // { id: 'tab1', name: 'Informes Emitidos', route: 'nuevaFacturacion/listado' },
+    // { id: 'tab2', name: 'Informes Facturados', route: 'nuevaFacturacion/historial' },
   ];
 
   /** Pestaña activa derivada de la URL real (ver tabs-url.util). */

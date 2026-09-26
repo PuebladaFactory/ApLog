@@ -11,6 +11,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ModalVincularFacturaComponent } from './modal-vincular-factura/modal-vincular-factura.component';
 import { FacturacionHistoricoComponent } from './facturacion-historico/facturacion-historico.component';
 import { InformesTablaComponent } from './informes-tabla/informes-tabla.component';
+import { FacturacionEmitidosComponent } from './emitidos/facturacion-emitidos.component';
 
 
 @NgModule({
@@ -19,7 +20,8 @@ import { InformesTablaComponent } from './informes-tabla/informes-tabla.componen
     FacturacionListadoComponent,
     ModalVincularFacturaComponent,
     FacturacionHistoricoComponent,
-    InformesTablaComponent
+    InformesTablaComponent,
+    FacturacionEmitidosComponent,
   ],
   imports: [
     CommonModule,

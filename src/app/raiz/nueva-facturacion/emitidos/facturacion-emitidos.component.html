@@ -1,0 +1,57 @@
+<div class="row g-3 mt-2 mb-3 align-items-center">
+  <div class="col-md-3">
+    <select class="form-select" [(ngModel)]="filtroTipo">
+      <option value="todos">Todos</option>
+      <option value="cliente">Clientes</option>
+      <option value="chofer">Choferes</option>
+      <option value="proveedor">Proveedores</option>
+    </select>
+  </div>
+  <div class="col-md-4">
+    <input class="form-control" type="text" [(ngModel)]="searchText" placeholder="Buscar por razón social o N° de informe" />
+  </div>
+  <div class="col-md-5 text-end text-muted">
+    {{ filtrados.length }} informe(s) pendiente(s) de facturar
+  </div>
+</div>
+
+<div class="panel-box panel-resultados">
+  <table class="table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th class="ordenable" (click)="ordenar('numeroInterno')">N° Informe<span class="icono-orden" [class.activo]="ordenColumna === 'numeroInterno'">{{ iconoOrden('numeroInterno') }}</span></th>
+        <th class="ordenable" (click)="ordenar('fechaEmision')">Emisión<span class="icono-orden" [class.activo]="ordenColumna === 'fechaEmision'">{{ iconoOrden('fechaEmision') }}</span></th>
+        <th class="ordenable" (click)="ordenar('tipo')">Tipo<span class="icono-orden" [class.activo]="ordenColumna === 'tipo'">{{ iconoOrden('tipo') }}</span></th>
+        <th class="ordenable" (click)="ordenar('entidad')">Entidad<span class="icono-orden" [class.activo]="ordenColumna === 'entidad'">{{ iconoOrden('entidad') }}</span></th>
+        <th class="ordenable" (click)="ordenar('periodo')">Período<span class="icono-orden" [class.activo]="ordenColumna === 'periodo'">{{ iconoOrden('periodo') }}</span></th>
+        <th class="text-center ordenable" (click)="ordenar('cantidadOperaciones')">Informes<span class="icono-orden" [class.activo]="ordenColumna === 'cantidadOperaciones'">{{ iconoOrden('cantidadOperaciones') }}</span></th>
+        <th class="text-end ordenable" (click)="ordenar('total')">Total<span class="icono-orden" [class.activo]="ordenColumna === 'total'">{{ iconoOrden('total') }}</span></th>
+        <th class="text-center">Detalle</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (b of filtrados; track b.idInfLiq) {
+        <tr>
+          <td>{{ b.numeroInterno }}</td>
+          <td>{{ b.fechaEmision }}</td>
+          <td class="text-capitalize">{{ b.tipo }}</td>
+          <td>{{ nombre(b) }}</td>
+          <td>{{ periodo(b) }}</td>
+          <td class="text-center">{{ b.cantidadOperaciones }}</td>
+          <td class="text-end">{{ b.valores.total | formatearValor: '$' }}</td>
+          <td class="text-center">
+            <button type="button" class="btn btn-outline-primary btn-sm" (click)="verDetalle(b)">Ver</button>
+          </td>
+        </tr>
+      } @empty {
+        @if (!cargando) {
+          <tr><td colspan="8">No hay informes emitidos pendientes de facturar.</td></tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (cargando) {
+  <app-spinner></app-spinner>
+}
