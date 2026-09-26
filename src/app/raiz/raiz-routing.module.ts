@@ -34,12 +34,6 @@ const routes: Routes = [
       data: { roles: ['dev','admin','manager','user', 'demo'] }, // Accesible para todos los roles
     },  
     {
-      path: 'facturacion',
-      loadChildren: () => import('./facturacion/facturacion.module').then(m => m.FacturacionModule),
-      canActivate: [RoleGuard], // Protege acceso dentro del módulo
-      data: { roles: ['dev','admin','manager','user', 'demo'] }, // Accesible para todos los roles
-    },  
-    {
       path: 'liquidacion',
       loadChildren: () => import('./liquidacion/liquidacion.module').then(m => m.LiquidacionModule),
       canActivate: [RoleGuard], // Protege acceso dentro del módulo

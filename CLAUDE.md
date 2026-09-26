@@ -1251,7 +1251,7 @@ barrido de `*appRole`/`esRol()`/`ngClass` sueltos del audit original.
 **Bloque 6 CERRADO.** Verificado por grep: el único `*appRole` que queda en toda la app
 son los 6 sitios de Tarifas (`cliente`/`choferes`/`proveedores` × `gral`/`especial`),
 excluidos a propósito — pertenecen al frente de Tarifas, pendiente y separado de este.
-(`facturacion/modal-detalle` legacy, comentado, y `acciones-cell-renderer`, wrapper sin
+(`facturacion/modal-detalle` legacy, comentado, (eliminado — frente Facturación, F0) y `acciones-cell-renderer`, wrapper sin
 caller activo, también usan `*appRole` pero están fuera de alcance por ser código muerto
 u orfandad ya documentada, no por pertenecer a Tarifas.)
 

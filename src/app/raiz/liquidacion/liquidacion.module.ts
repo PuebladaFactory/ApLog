@@ -10,7 +10,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { FacturacionModule } from '../facturacion/facturacion.module';
 
 import { DescuentosComponent } from './modales/descuentos/descuentos.component';
 import { ResumenOpLiquidadasComponent } from './modales/resumen-op-liquidadas/resumen-op-liquidadas.component';
@@ -58,7 +57,6 @@ import { InformeOpAnuladosComponent } from './informe-op-anulados/informe-op-anu
     ReactiveFormsModule,
     SharedModule,
     FilterPipeModule,
-    FacturacionModule
   ],
    exports:[
       MigrarDatosComponent,
