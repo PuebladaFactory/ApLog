@@ -13,6 +13,12 @@ export class LogRegistroService {
 
   private readonly COLECCION = 'registroLog';
 
+  /** Acciones que diffean el documento anterior contra la escritura del
+   *  batch (todas son transiciones o ediciones sobre un documento que ya
+   *  existe). ALTA/BAJA/RESTAURAR no diffean. */
+  static readonly ACCIONES_CON_DIFF: ReadonlyArray<AccionLog> =
+    ['EDITAR', 'EMITIR', 'REVERTIR', 'FACTURAR', 'DESVINCULAR', 'ANULAR'];
+
   /** Pura. Devuelve null si el usuario actual es 'dev' — ÚNICO lugar donde se
    *  aplica la exclusión, no hay otro camino para escribir un registro. */
   private construirEntrada(
@@ -43,7 +49,8 @@ export class LogRegistroService {
    *  escritura del log a ese mismo array. No commitea — el caller sigue haciendo
    *  su propio commit (commitBatch o commitEnTransaccion) después.
    *
-   *  Si accion es 'EDITAR' o 'EMITIR', diffea el documento anterior contra la
+   *  Si accion está en ACCIONES_CON_DIFF (EDITAR, EMITIR, REVERTIR, FACTURAR,
+   *  DESVINCULAR, ANULAR), diffea el documento anterior contra la
    *  escritura de esa misma colección/id que ya está en `escrituras`:
    *   - modo 'actualizar' (parcial, claves en notación de punto): diff SOLO de
    *     las claves presentes en la escritura, resolviendo cada ruta sobre el
@@ -57,7 +64,8 @@ export class LogRegistroService {
    *  se diffea. */
   async agregarAlBatch(
     escrituras: EscrituraBatch[],
-    accion: 'ALTA' | 'EDITAR' | 'BAJA' | 'RESTAURAR' | 'EMITIR',
+    accion: 'ALTA' | 'EDITAR' | 'BAJA' | 'RESTAURAR' | 'EMITIR'
+      | 'REVERTIR' | 'FACTURAR' | 'DESVINCULAR' | 'ANULAR',
     coleccion: string,
     idObjet: string | number,
     details: string,
@@ -65,7 +73,7 @@ export class LogRegistroService {
   ): Promise<void> {
     let cambios: CambioCampo[] | undefined;
 
-    if (accion === 'EDITAR' || accion === 'EMITIR') {
+    if (LogRegistroService.ACCIONES_CON_DIFF.includes(accion)) {
       const escrituraNueva = escrituras.find(
         e => e.coleccion === coleccion && e.id === String(idObjet),
       );

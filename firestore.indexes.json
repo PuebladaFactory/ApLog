@@ -24,6 +24,14 @@
         { "fieldPath": "estado", "order": "ASCENDING" },
         { "fieldPath": "fecha", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "informesLiq",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estado", "order": "ASCENDING" },
+        { "fieldPath": "periodoClave", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

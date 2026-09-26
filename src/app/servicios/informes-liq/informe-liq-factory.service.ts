@@ -47,6 +47,7 @@ export class InformeLiqFactoryService {
       fechaCreacion: d.fecha,
       fechaEmision: emitido ? d.fecha : null,
       periodo: { ...d.periodo },
+      periodoClave: this.clavePeriodo(d.periodo),
       informesOp: d.informesOp.map(i => i.idInfOp),
       cantidadOperaciones: d.informesOp.length,
       valores,
@@ -57,6 +58,7 @@ export class InformeLiqFactoryService {
       estadoFinanciero: 'pendiente',
       facturaUrl: null,
       factura: null,
+      reversion: null,
       anulacion: null,
     };
   }
@@ -120,6 +122,12 @@ export class InformeLiqFactoryService {
       desde: `${periodo.anio}-${mm}-${String(diaDesde).padStart(2, '0')}`,
       hasta: `${periodo.anio}-${mm}-${String(diaHasta).padStart(2, '0')}`,
     };
+  }
+
+  /** Clave ordenable del período ('YYYY-MM') para consultas por rango
+   *  (índice informesLiq: estado + periodoClave). */
+  clavePeriodo(periodo: PeriodoLiq): string {
+    return `${periodo.anio}-${String(periodo.mes).padStart(2, '0')}`;
   }
 
   /** Texto legible del período para logs y títulos: "09/2026 · 1° quincena". */

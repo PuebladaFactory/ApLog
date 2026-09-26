@@ -61,6 +61,8 @@ service cloud.firestore {
         'infOpLiqProveedores': 'finanzas',
         'informesOp': 'finanzas', // colección única nuevo-modelo — sucesora de las 3 de arriba
         'informesLiq': 'finanzas', // informes de liquidación nuevo-modelo — sucesora de resumenLiq + proforma
+        'informesLiqSnapshots': 'finanzas', // copia congelada de los InformeOp al revertir un InformeLiq (doc id = idInfLiq)
+        'facturasVinculadas': 'finanzas', // unicidad de factura electrónica → InformeLiq (doc id = cuitEmisor_ptoVta_tipo_nro)
         'resumenOpMensual': 'finanzas', 'resumenFinanzas': 'finanzas',
         'movimientos': 'finanzas',
 
